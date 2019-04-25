@@ -113,7 +113,7 @@ public class SkipPatternProviderConfigTest {
 
 		then(pattern).isNotEmpty();
 		then(pattern.get().pattern())
-				.isEqualTo("/actuator/(info|info/.*|health|health/.*)");
+				.isEqualTo("/actuator(/|/(info|info/.*|health|health/.*))?");
 	}
 
 	@Test
@@ -136,7 +136,7 @@ public class SkipPatternProviderConfigTest {
 
 		then(pattern).isNotEmpty();
 		then(pattern.get().pattern())
-				.isEqualTo("foo/actuator/(info|info/.*|health|health/.*)");
+				.isEqualTo("foo/actuator(/|/(info|info/.*|health|health/.*))?");
 	}
 
 	@Test
@@ -181,7 +181,7 @@ public class SkipPatternProviderConfigTest {
 				.skipPattern();
 
 		then(pattern).isNotEmpty();
-		then(pattern.get().pattern()).isEqualTo("foo/(info|info/.*|health|health/.*)");
+		then(pattern.get().pattern()).isEqualTo("foo(/|/(info|info/.*|health|health/.*))?");
 	}
 
 	@Test
@@ -214,7 +214,7 @@ public class SkipPatternProviderConfigTest {
 
 		then(patternSamePort).isNotEmpty();
 		then(patternSamePort.get().pattern())
-				.isEqualTo("foo/(info|info/.*|health|health/.*)");
+				.isEqualTo("foo(/|/(info|info/.*|health|health/.*))?");
 	}
 
 	@Test
@@ -238,7 +238,7 @@ public class SkipPatternProviderConfigTest {
 
 		then(patternDifferentPort).isNotEmpty();
 		then(patternDifferentPort.get().pattern())
-				.isEqualTo("/mgt/(info|info/.*|health|health/.*)");
+				.isEqualTo("/mgt(/|/(info|info/.*|health|health/.*))?");
 
 		Optional<Pattern> patternSamePort = new TraceWebAutoConfiguration.ActuatorSkipPatternProviderConfig()
 				.skipPatternForActuatorEndpointsSamePort(properties,
@@ -247,7 +247,7 @@ public class SkipPatternProviderConfigTest {
 
 		then(patternSamePort).isNotEmpty();
 		then(patternSamePort.get().pattern())
-				.isEqualTo("foo/mgt/(info|info/.*|health|health/.*)");
+				.isEqualTo("foo/mgt(/|/(info|info/.*|health|health/.*))?");
 	}
 
 	@Test
@@ -271,7 +271,7 @@ public class SkipPatternProviderConfigTest {
 
 		then(patternDifferentPort).isNotEmpty();
 		then(patternDifferentPort.get().pattern())
-				.isEqualTo("/actuator/(info|info/.*|health|health/.*)");
+				.isEqualTo("/actuator(/|/(info|info/.*|health|health/.*))?");
 
 		Optional<Pattern> patternSamePort = new TraceWebAutoConfiguration.ActuatorSkipPatternProviderConfig()
 				.skipPatternForActuatorEndpointsSamePort(properties,
@@ -280,7 +280,7 @@ public class SkipPatternProviderConfigTest {
 
 		then(patternSamePort).isNotEmpty();
 		then(patternSamePort.get().pattern())
-				.isEqualTo("/foo/actuator/(info|info/.*|health|health/.*)");
+				.isEqualTo("/foo/actuator(/|/(info|info/.*|health|health/.*))?");
 	}
 
 	@Test

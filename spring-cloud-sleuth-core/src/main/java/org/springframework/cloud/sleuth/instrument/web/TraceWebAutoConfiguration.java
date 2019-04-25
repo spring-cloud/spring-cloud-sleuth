@@ -51,6 +51,7 @@ import org.springframework.util.StringUtils;
  * based web application.
  *
  * @author Marcin Grzejszczak
+ * @author Tim Ysewyn
  * @since 1.0.0
  */
 @Configuration
@@ -118,12 +119,12 @@ public class TraceWebAutoConfiguration {
 				return Optional.empty();
 			}
 
+			String basePath = webEndpointProperties.getBasePath();
 			String pattern = endpoints.stream().map(PathMappedEndpoint::getRootPath)
-					.map(path -> path + "|" + path + "/.*").collect(
-							Collectors.joining("|",
-									getPathPrefix(contextPath,
-											webEndpointProperties.getBasePath()) + "/(",
-									")"));
+					.map(path -> path + "|" + path + "/.*")
+					.collect(Collectors.joining("|",
+							getPathPrefix(contextPath, basePath),
+							getPathSuffix(contextPath, basePath)));
 			if (StringUtils.hasText(pattern)) {
 				return Optional.of(Pattern.compile(pattern));
 			}
@@ -137,6 +138,21 @@ public class TraceWebAutoConfiguration {
 			}
 			if (!actuatorBasePath.equals("/")) {
 				result += actuatorBasePath;
+			}
+			boolean ignoreBase = StringUtils.hasText(result) && !result.equals("/");
+			String suffix = "/(";
+			if (ignoreBase) {
+				suffix = "(/|" + suffix;
+			}
+			return result + suffix;
+		}
+
+		private static String getPathSuffix(String contextPath, String actuatorBasePath) {
+			String result = ")";
+			if (StringUtils.hasText(contextPath) ||
+					(StringUtils.hasText(actuatorBasePath)
+							&& !"/".equals(actuatorBasePath))) {
+				result += ")?";
 			}
 			return result;
 		}
