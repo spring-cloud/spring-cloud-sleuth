@@ -52,8 +52,9 @@ import static org.springframework.boot.test.context.SpringBootTest.WebEnvironmen
  * @author Marcin Grzejszczak
  */
 @RunWith(SpringJUnit4ClassRunner.class)
-@SpringBootTest(classes = {
-		TraceWebAsyncClientAutoConfigurationTests.TestConfiguration.class }, webEnvironment = RANDOM_PORT)
+@SpringBootTest(
+		classes = { TraceWebAsyncClientAutoConfigurationTests.TestConfiguration.class },
+		webEnvironment = RANDOM_PORT)
 public class TraceWebAsyncClientAutoConfigurationTests {
 
 	@Autowired

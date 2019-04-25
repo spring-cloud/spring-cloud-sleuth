@@ -69,8 +69,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.BDDAssertions.then;
 
 @RunWith(SpringRunner.class)
-@SpringBootTest(classes = SampleZuulProxyApplication.class, properties = {
-		"zuul.routes.simple: /simple/**" }, webEnvironment = WebEnvironment.RANDOM_PORT)
+@SpringBootTest(classes = SampleZuulProxyApplication.class,
+		properties = { "zuul.routes.simple: /simple/**" },
+		webEnvironment = WebEnvironment.RANDOM_PORT)
 @DirtiesContext
 public class TraceZuulIntegrationTests {
 

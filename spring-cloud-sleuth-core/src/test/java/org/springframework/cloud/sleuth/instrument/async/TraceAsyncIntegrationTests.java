@@ -44,8 +44,8 @@ import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.BDDAssertions.then;
 
 @RunWith(SpringRunner.class)
-@SpringBootTest(classes = {
-		TraceAsyncIntegrationTests.TraceAsyncITestConfiguration.class })
+@SpringBootTest(
+		classes = { TraceAsyncIntegrationTests.TraceAsyncITestConfiguration.class })
 public class TraceAsyncIntegrationTests {
 
 	@Autowired

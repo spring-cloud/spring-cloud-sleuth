@@ -28,7 +28,8 @@ import static io.grpc.stub.ServerCalls.asyncUnimplementedUnaryCall;
  * The Hello service definition.
  * </pre>
  */
-@javax.annotation.Generated(value = "by gRPC proto compiler (version 1.15.1)", comments = "Source: HelloService.proto")
+@javax.annotation.Generated(value = "by gRPC proto compiler (version 1.15.1)",
+		comments = "Source: HelloService.proto")
 public final class HelloServiceGrpc {
 
 	public static final String SERVICE_NAME = "HelloService";
@@ -43,8 +44,9 @@ public final class HelloServiceGrpc {
 	private HelloServiceGrpc() {
 	}
 
-	@io.grpc.stub.annotations.RpcMethod(fullMethodName = SERVICE_NAME + '/'
-			+ "SayHello", requestType = HelloRequest.class, responseType = HelloReply.class, methodType = io.grpc.MethodDescriptor.MethodType.UNARY)
+	@io.grpc.stub.annotations.RpcMethod(fullMethodName = SERVICE_NAME + '/' + "SayHello",
+			requestType = HelloRequest.class, responseType = HelloReply.class,
+			methodType = io.grpc.MethodDescriptor.MethodType.UNARY)
 	public static io.grpc.MethodDescriptor<HelloRequest, HelloReply> getSayHelloMethod() {
 		io.grpc.MethodDescriptor<HelloRequest, HelloReply> getSayHelloMethod;
 		if ((getSayHelloMethod = HelloServiceGrpc.getSayHelloMethod) == null) {

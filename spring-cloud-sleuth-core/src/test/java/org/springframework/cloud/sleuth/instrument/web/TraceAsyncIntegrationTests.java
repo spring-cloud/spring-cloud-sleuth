@@ -44,8 +44,9 @@ import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.BDDAssertions.then;
 
 @RunWith(SpringRunner.class)
-@SpringBootTest(classes = {
-		TraceAsyncIntegrationTests.TraceAsyncITestConfiguration.class }, properties = "spring.sleuth.http.legacy.enabled=true")
+@SpringBootTest(
+		classes = { TraceAsyncIntegrationTests.TraceAsyncITestConfiguration.class },
+		properties = "spring.sleuth.http.legacy.enabled=true")
 public class TraceAsyncIntegrationTests {
 
 	@Autowired

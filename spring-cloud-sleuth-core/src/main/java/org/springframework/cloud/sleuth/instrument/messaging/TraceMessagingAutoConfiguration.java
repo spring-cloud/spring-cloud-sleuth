@@ -80,7 +80,8 @@ import org.springframework.util.ReflectionUtils;
 public class TraceMessagingAutoConfiguration {
 
 	@Configuration
-	@ConditionalOnProperty(value = "spring.sleuth.messaging.rabbit.enabled", matchIfMissing = true)
+	@ConditionalOnProperty(value = "spring.sleuth.messaging.rabbit.enabled",
+			matchIfMissing = true)
 	@ConditionalOnClass(RabbitTemplate.class)
 	protected static class SleuthRabbitConfiguration {
 
@@ -105,7 +106,8 @@ public class TraceMessagingAutoConfiguration {
 	}
 
 	@Configuration
-	@ConditionalOnProperty(value = "spring.sleuth.messaging.kafka.enabled", matchIfMissing = true)
+	@ConditionalOnProperty(value = "spring.sleuth.messaging.kafka.enabled",
+			matchIfMissing = true)
 	@ConditionalOnClass(ProducerFactory.class)
 	protected static class SleuthKafkaConfiguration {
 
@@ -128,7 +130,8 @@ public class TraceMessagingAutoConfiguration {
 	}
 
 	@Configuration
-	@ConditionalOnProperty(value = "spring.sleuth.messaging.jms.enabled", matchIfMissing = true)
+	@ConditionalOnProperty(value = "spring.sleuth.messaging.jms.enabled",
+			matchIfMissing = true)
 	@ConditionalOnClass(JmsListenerConfigurer.class)
 	@ConditionalOnBean(JmsListenerEndpointRegistry.class)
 	@Role(BeanDefinition.ROLE_INFRASTRUCTURE)

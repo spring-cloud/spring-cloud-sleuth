@@ -37,7 +37,8 @@ import org.springframework.test.context.junit4.SpringRunner;
  * @author Marcin Grzejszczak
  */
 @RunWith(SpringRunner.class)
-@SpringBootTest(classes = SpanAdjusterTests.SpanAdjusterAspectTestsConfig.class, webEnvironment = SpringBootTest.WebEnvironment.NONE)
+@SpringBootTest(classes = SpanAdjusterTests.SpanAdjusterAspectTestsConfig.class,
+		webEnvironment = SpringBootTest.WebEnvironment.NONE)
 public class SpanAdjusterTests {
 
 	@Autowired

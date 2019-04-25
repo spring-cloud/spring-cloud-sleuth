@@ -42,7 +42,8 @@ import org.springframework.context.annotation.Configuration;
 @AutoConfigureAfter(TraceAutoConfiguration.class)
 @ConditionalOnBean(Tracing.class)
 @ConditionalOnClass(RxJavaSchedulersHook.class)
-@ConditionalOnProperty(value = "spring.sleuth.rxjava.schedulers.hook.enabled", matchIfMissing = true)
+@ConditionalOnProperty(value = "spring.sleuth.rxjava.schedulers.hook.enabled",
+		matchIfMissing = true)
 @EnableConfigurationProperties(SleuthRxJavaSchedulersProperties.class)
 public class RxJavaAutoConfiguration {
 

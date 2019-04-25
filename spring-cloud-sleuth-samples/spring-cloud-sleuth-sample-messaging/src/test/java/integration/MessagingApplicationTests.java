@@ -44,8 +44,10 @@ import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.BDDAssertions.then;
 
 @RunWith(SpringJUnit4ClassRunner.class)
-@SpringBootTest(classes = { IntegrationSpanCollectorConfig.class,
-		SampleMessagingApplication.class }, webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT)
+@SpringBootTest(
+		classes = { IntegrationSpanCollectorConfig.class,
+				SampleMessagingApplication.class },
+		webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT)
 @TestPropertySource(properties = { "sample.zipkin.enabled=true",
 		"spring.sleuth.http.legacy.enabled=true" })
 @DirtiesContext

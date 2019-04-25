@@ -29,7 +29,8 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.test.context.junit4.SpringRunner;
 
-@SpringBootTest(classes = SleuthSpanCreatorCircularDependencyTests.TestConfiguration.class)
+@SpringBootTest(
+		classes = SleuthSpanCreatorCircularDependencyTests.TestConfiguration.class)
 @RunWith(SpringRunner.class)
 public class SleuthSpanCreatorCircularDependencyTests {
 

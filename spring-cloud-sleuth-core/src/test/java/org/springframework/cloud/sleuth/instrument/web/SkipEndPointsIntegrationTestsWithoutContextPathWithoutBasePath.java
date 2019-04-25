@@ -40,10 +40,12 @@ import org.springframework.web.client.RestTemplate;
 import static org.assertj.core.api.BDDAssertions.then;
 
 @RunWith(SpringRunner.class)
-@SpringBootTest(classes = SkipEndPointsIntegrationTestsWithoutContextPathWithoutBasePath.Config.class, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT, properties = {
-		"management.endpoints.web.exposure.include:*",
-		"spring.sleuth.http.legacy.enabled:true",
-		"management.endpoints.web.base-path:/" })
+@SpringBootTest(
+		classes = SkipEndPointsIntegrationTestsWithoutContextPathWithoutBasePath.Config.class,
+		webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
+		properties = { "management.endpoints.web.exposure.include:*",
+				"spring.sleuth.http.legacy.enabled:true",
+				"management.endpoints.web.base-path:/" })
 public class SkipEndPointsIntegrationTestsWithoutContextPathWithoutBasePath {
 
 	@LocalServerPort

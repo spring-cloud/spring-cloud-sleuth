@@ -58,8 +58,9 @@ interface MyNameRemote {
  * @author Marcin Grzejszczak
  */
 @RunWith(SpringRunner.class)
-@SpringBootTest(classes = Application.class, webEnvironment = SpringBootTest.WebEnvironment.NONE, properties = {
-		"feign.hystrix.enabled=false" })
+@SpringBootTest(classes = Application.class,
+		webEnvironment = SpringBootTest.WebEnvironment.NONE,
+		properties = { "feign.hystrix.enabled=false" })
 public class Issue502Tests {
 
 	@Autowired

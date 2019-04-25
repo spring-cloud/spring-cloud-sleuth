@@ -60,10 +60,10 @@ import static org.assertj.core.api.Assertions.fail;
 import static org.assertj.core.api.BDDAssertions.then;
 
 @RunWith(JUnitParamsRunner.class)
-@SpringBootTest(classes = {
-		WebClientExceptionTests.TestConfiguration.class }, properties = {
-				"ribbon.ConnectTimeout=30000",
-				"spring.application.name=exceptionservice" }, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@SpringBootTest(classes = { WebClientExceptionTests.TestConfiguration.class },
+		properties = { "ribbon.ConnectTimeout=30000",
+				"spring.application.name=exceptionservice" },
+		webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 public class WebClientExceptionTests {
 
 	@ClassRule
@@ -145,7 +145,8 @@ public class WebClientExceptionTests {
 	@Configuration
 	@EnableAutoConfiguration
 	@EnableFeignClients
-	@RibbonClient(value = "exceptionservice", configuration = ExceptionServiceRibbonClientConfiguration.class)
+	@RibbonClient(value = "exceptionservice",
+			configuration = ExceptionServiceRibbonClientConfiguration.class)
 	public static class TestConfiguration {
 
 		@LoadBalanced

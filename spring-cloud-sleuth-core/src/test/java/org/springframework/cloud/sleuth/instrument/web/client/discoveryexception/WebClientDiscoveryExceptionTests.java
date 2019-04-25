@@ -54,8 +54,8 @@ import static org.assertj.core.api.BDDAssertions.then;
 import static org.springframework.boot.test.context.SpringBootTest.WebEnvironment.RANDOM_PORT;
 
 @RunWith(SpringJUnit4ClassRunner.class)
-@SpringBootTest(classes = {
-		WebClientDiscoveryExceptionTests.TestConfiguration.class }, webEnvironment = RANDOM_PORT)
+@SpringBootTest(classes = { WebClientDiscoveryExceptionTests.TestConfiguration.class },
+		webEnvironment = RANDOM_PORT)
 @TestPropertySource(properties = { "spring.application.name=exceptionservice",
 		"spring.sleuth.http.legacy.enabled=true" })
 @DirtiesContext

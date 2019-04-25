@@ -46,7 +46,8 @@ public class SamplerAutoConfiguration {
 	}
 
 	@Configuration
-	@ConditionalOnBean(type = "org.springframework.cloud.context.scope.refresh.RefreshScope")
+	@ConditionalOnBean(
+			type = "org.springframework.cloud.context.scope.refresh.RefreshScope")
 	protected static class RefreshScopedSamplerConfiguration {
 
 		@Bean
@@ -59,7 +60,8 @@ public class SamplerAutoConfiguration {
 	}
 
 	@Configuration
-	@ConditionalOnMissingBean(type = "org.springframework.cloud.context.scope.refresh.RefreshScope")
+	@ConditionalOnMissingBean(
+			type = "org.springframework.cloud.context.scope.refresh.RefreshScope")
 	protected static class NonRefreshScopeSamplerConfiguration {
 
 		@Bean

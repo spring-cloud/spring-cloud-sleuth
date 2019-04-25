@@ -62,7 +62,8 @@ interface MyFeignClient {
  * @author Marcin Grzejszczak
  */
 @RunWith(SpringJUnit4ClassRunner.class)
-@SpringBootTest(classes = Application.class, webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT)
+@SpringBootTest(classes = Application.class,
+		webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT)
 @TestPropertySource(properties = { "ribbon.eureka.enabled=false",
 		"feign.hystrix.enabled=false", "server.port=9988" })
 public class Issue350Tests {

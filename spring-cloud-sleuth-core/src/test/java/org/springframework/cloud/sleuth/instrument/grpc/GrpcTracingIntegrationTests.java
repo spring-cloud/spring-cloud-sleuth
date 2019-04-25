@@ -63,8 +63,9 @@ import static org.assertj.core.api.Assertions.assertThat;
  * @author Tyler Van Gorder
  */
 @RunWith(SpringJUnit4ClassRunner.class)
-@SpringBootTest(classes = GrpcTracingIntegrationTests.TestConfiguration.class, webEnvironment = SpringBootTest.WebEnvironment.NONE, properties = {
-		"grpc.enabled=false", "grpc.inProcessServerName=testServer" })
+@SpringBootTest(classes = GrpcTracingIntegrationTests.TestConfiguration.class,
+		webEnvironment = SpringBootTest.WebEnvironment.NONE,
+		properties = { "grpc.enabled=false", "grpc.inProcessServerName=testServer" })
 @DirtiesContext
 public class GrpcTracingIntegrationTests {
 

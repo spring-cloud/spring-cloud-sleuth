@@ -59,7 +59,8 @@ import static org.springframework.boot.test.context.SpringBootTest.WebEnvironmen
  *
  * @author Marcin Grzejszczak
  */
-@SpringBootTest(classes = ITTracingChannelInterceptorTests.App.class, webEnvironment = WebEnvironment.NONE)
+@SpringBootTest(classes = ITTracingChannelInterceptorTests.App.class,
+		webEnvironment = WebEnvironment.NONE)
 @RunWith(SpringRunner.class)
 @DirtiesContext
 public class ITTracingChannelInterceptorTests implements MessageHandler {

@@ -50,7 +50,8 @@ import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExcep
 import static org.assertj.core.api.BDDAssertions.then;
 
 @RunWith(SpringRunner.class)
-@SpringBootTest(classes = TestConfig.class, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@SpringBootTest(classes = TestConfig.class,
+		webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 public class Issue585Tests {
 
 	TestRestTemplate testRestTemplate = new TestRestTemplate();

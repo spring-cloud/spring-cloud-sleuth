@@ -41,7 +41,8 @@ import org.springframework.context.annotation.Configuration;
 @AutoConfigureAfter(TraceAutoConfiguration.class)
 @ConditionalOnClass(HystrixCommand.class)
 @ConditionalOnBean(Tracing.class)
-@ConditionalOnProperty(value = "spring.sleuth.hystrix.strategy.enabled", matchIfMissing = true)
+@ConditionalOnProperty(value = "spring.sleuth.hystrix.strategy.enabled",
+		matchIfMissing = true)
 public class SleuthHystrixAutoConfiguration {
 
 	@Bean

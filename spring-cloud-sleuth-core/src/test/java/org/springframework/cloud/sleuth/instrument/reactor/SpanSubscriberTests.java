@@ -47,7 +47,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.BDDAssertions.then;
 
 @RunWith(SpringRunner.class)
-@SpringBootTest(classes = SpanSubscriberTests.Config.class, webEnvironment = SpringBootTest.WebEnvironment.NONE)
+@SpringBootTest(classes = SpanSubscriberTests.Config.class,
+		webEnvironment = SpringBootTest.WebEnvironment.NONE)
 public class SpanSubscriberTests {
 
 	private static final Log log = LogFactory.getLog(SpanSubscriberTests.class);

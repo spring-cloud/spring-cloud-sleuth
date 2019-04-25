@@ -51,6 +51,7 @@ import org.springframework.util.StringUtils;
  * based web application.
  *
  * @author Marcin Grzejszczak
+ * @author Tim Ysewyn
  * @since 1.0.0
  */
 @Configuration
@@ -74,7 +75,8 @@ public class TraceWebAutoConfiguration {
 
 	@Configuration
 	@ConditionalOnClass(ManagementServerProperties.class)
-	@ConditionalOnProperty(value = "spring.sleuth.web.ignoreAutoConfiguredSkipPatterns", havingValue = "false", matchIfMissing = true)
+	@ConditionalOnProperty(value = "spring.sleuth.web.ignoreAutoConfiguredSkipPatterns",
+			havingValue = "false", matchIfMissing = true)
 	protected static class ManagementSkipPatternProviderConfig {
 
 		/**
@@ -106,7 +108,8 @@ public class TraceWebAutoConfiguration {
 	@ConditionalOnClass({ ServerProperties.class, EndpointsSupplier.class,
 			ExposableWebEndpoint.class })
 	@ConditionalOnBean(ServerProperties.class)
-	@ConditionalOnProperty(value = "spring.sleuth.web.ignoreAutoConfiguredSkipPatterns", havingValue = "false", matchIfMissing = true)
+	@ConditionalOnProperty(value = "spring.sleuth.web.ignoreAutoConfiguredSkipPatterns",
+			havingValue = "false", matchIfMissing = true)
 	protected static class ActuatorSkipPatternProviderConfig {
 
 		static Optional<Pattern> getEndpointsPatterns(String contextPath,
@@ -118,12 +121,11 @@ public class TraceWebAutoConfiguration {
 				return Optional.empty();
 			}
 
+			String basePath = webEndpointProperties.getBasePath();
 			String pattern = endpoints.stream().map(PathMappedEndpoint::getRootPath)
-					.map(path -> path + "|" + path + "/.*").collect(
-							Collectors.joining("|",
-									getPathPrefix(contextPath,
-											webEndpointProperties.getBasePath()) + "/(",
-									")"));
+					.map(path -> path + "|" + path + "/.*")
+					.collect(Collectors.joining("|", getPathPrefix(contextPath, basePath),
+							getPathSuffix(contextPath, basePath)));
 			if (StringUtils.hasText(pattern)) {
 				return Optional.of(Pattern.compile(pattern));
 			}
@@ -137,6 +139,20 @@ public class TraceWebAutoConfiguration {
 			}
 			if (!actuatorBasePath.equals("/")) {
 				result += actuatorBasePath;
+			}
+			boolean ignoreBase = StringUtils.hasText(result) && !result.equals("/");
+			String suffix = "/(";
+			if (ignoreBase) {
+				suffix = "(/|" + suffix;
+			}
+			return result + suffix;
+		}
+
+		private static String getPathSuffix(String contextPath, String actuatorBasePath) {
+			String result = ")";
+			if (StringUtils.hasText(contextPath) || (StringUtils.hasText(actuatorBasePath)
+					&& !"/".equals(actuatorBasePath))) {
+				result += ")?";
 			}
 			return result;
 		}
@@ -154,7 +170,8 @@ public class TraceWebAutoConfiguration {
 
 		@Bean
 		@ConditionalOnManagementPort(ManagementPortType.DIFFERENT)
-		@ConditionalOnProperty(name = "management.server.servlet.context-path", havingValue = "/", matchIfMissing = true)
+		@ConditionalOnProperty(name = "management.server.servlet.context-path",
+				havingValue = "/", matchIfMissing = true)
 		public SingleSkipPattern skipPatternForActuatorEndpointsDifferentPort(
 				final ServerProperties serverProperties,
 				final WebEndpointProperties webEndpointProperties,

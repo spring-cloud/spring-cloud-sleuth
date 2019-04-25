@@ -43,7 +43,8 @@ import org.springframework.lang.Nullable;
  */
 @Configuration
 @ConditionalOnBean(Tracing.class)
-@ConditionalOnProperty(name = "spring.sleuth.http.enabled", havingValue = "true", matchIfMissing = true)
+@ConditionalOnProperty(name = "spring.sleuth.http.enabled", havingValue = "true",
+		matchIfMissing = true)
 @AutoConfigureAfter(TraceWebAutoConfiguration.class)
 @EnableConfigurationProperties({ TraceKeys.class, SleuthHttpLegacyProperties.class })
 public class TraceHttpAutoConfiguration {
@@ -74,13 +75,15 @@ public class TraceHttpAutoConfiguration {
 	}
 
 	@Bean
-	@ConditionalOnProperty(name = "spring.sleuth.http.legacy.enabled", havingValue = "true")
+	@ConditionalOnProperty(name = "spring.sleuth.http.legacy.enabled",
+			havingValue = "true")
 	HttpClientParser sleuthHttpClientParser(TraceKeys traceKeys) {
 		return new SleuthHttpClientParser(traceKeys);
 	}
 
 	@Bean
-	@ConditionalOnProperty(name = "spring.sleuth.http.legacy.enabled", havingValue = "false", matchIfMissing = true)
+	@ConditionalOnProperty(name = "spring.sleuth.http.legacy.enabled",
+			havingValue = "false", matchIfMissing = true)
 	@ConditionalOnMissingBean
 	HttpClientParser httpClientParser(ErrorParser errorParser) {
 		return new HttpClientParser() {
@@ -92,14 +95,16 @@ public class TraceHttpAutoConfiguration {
 	}
 
 	@Bean
-	@ConditionalOnProperty(name = "spring.sleuth.http.legacy.enabled", havingValue = "true")
+	@ConditionalOnProperty(name = "spring.sleuth.http.legacy.enabled",
+			havingValue = "true")
 	HttpServerParser sleuthHttpServerParser(TraceKeys traceKeys,
 			ErrorParser errorParser) {
 		return new SleuthHttpServerParser(traceKeys, errorParser);
 	}
 
 	@Bean
-	@ConditionalOnProperty(name = "spring.sleuth.http.legacy.enabled", havingValue = "false", matchIfMissing = true)
+	@ConditionalOnProperty(name = "spring.sleuth.http.legacy.enabled",
+			havingValue = "false", matchIfMissing = true)
 	@ConditionalOnMissingBean
 	HttpServerParser defaultHttpServerParser() {
 		return new HttpServerParser();

@@ -61,7 +61,8 @@ interface MyNameRemote {
  * @author Marcin Grzejszczak
  */
 @RunWith(SpringJUnit4ClassRunner.class)
-@SpringBootTest(classes = Application.class, webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT)
+@SpringBootTest(classes = Application.class,
+		webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT)
 @TestPropertySource(properties = { "spring.application.name=demo-feign-uri",
 		"server.port=9978", "eureka.client.enabled=true", "ribbon.eureka.enabled=true" })
 public class Issue393Tests {

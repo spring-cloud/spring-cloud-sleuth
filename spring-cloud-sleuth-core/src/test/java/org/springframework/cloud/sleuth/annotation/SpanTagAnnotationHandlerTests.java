@@ -129,8 +129,8 @@ public class SpanTagAnnotationHandlerTests {
 
 		// tag::spel[]
 		@NewSpan
-		public void getAnnotationForTagValueExpression(
-				@SpanTag(key = "test", expression = "'hello' + ' characters'") String test) {
+		public void getAnnotationForTagValueExpression(@SpanTag(key = "test",
+				expression = "'hello' + ' characters'") String test) {
 		}
 		// end::spel[]
 

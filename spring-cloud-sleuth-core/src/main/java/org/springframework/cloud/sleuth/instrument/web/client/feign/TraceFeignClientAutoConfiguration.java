@@ -54,8 +54,8 @@ public class TraceFeignClientAutoConfiguration {
 
 	@Bean
 	@Scope("prototype")
-	@ConditionalOnClass(name = { "com.netflix.hystrix.HystrixCommand",
-			"feign.hystrix.HystrixFeign" })
+	@ConditionalOnClass(
+			name = { "com.netflix.hystrix.HystrixCommand", "feign.hystrix.HystrixFeign" })
 	@ConditionalOnProperty(name = "feign.hystrix.enabled", havingValue = "true")
 	Feign.Builder feignHystrixBuilder(BeanFactory beanFactory) {
 		return SleuthHystrixFeignBuilder.builder(beanFactory);
@@ -64,7 +64,8 @@ public class TraceFeignClientAutoConfiguration {
 	@Bean
 	@ConditionalOnMissingBean
 	@Scope("prototype")
-	@ConditionalOnProperty(name = "feign.hystrix.enabled", havingValue = "false", matchIfMissing = true)
+	@ConditionalOnProperty(name = "feign.hystrix.enabled", havingValue = "false",
+			matchIfMissing = true)
 	Feign.Builder feignBuilder(BeanFactory beanFactory) {
 		return SleuthFeignBuilder.builder(beanFactory);
 	}
@@ -80,7 +81,8 @@ public class TraceFeignClientAutoConfiguration {
 	}
 
 	@Configuration
-	@ConditionalOnProperty(name = "spring.sleuth.feign.processor.enabled", matchIfMissing = true)
+	@ConditionalOnProperty(name = "spring.sleuth.feign.processor.enabled",
+			matchIfMissing = true)
 	protected static class FeignBeanPostProcessorConfiguration {
 
 		@Bean

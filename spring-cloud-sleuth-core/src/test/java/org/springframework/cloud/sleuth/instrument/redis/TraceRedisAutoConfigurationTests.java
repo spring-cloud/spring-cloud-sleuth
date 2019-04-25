@@ -35,7 +35,8 @@ import static org.assertj.core.api.BDDAssertions.then;
  * @author Chao Chang
  */
 @RunWith(SpringRunner.class)
-@SpringBootTest(classes = TraceRedisAutoConfigurationTests.Config.class, webEnvironment = SpringBootTest.WebEnvironment.NONE)
+@SpringBootTest(classes = TraceRedisAutoConfigurationTests.Config.class,
+		webEnvironment = SpringBootTest.WebEnvironment.NONE)
 public class TraceRedisAutoConfigurationTests {
 
 	@Autowired

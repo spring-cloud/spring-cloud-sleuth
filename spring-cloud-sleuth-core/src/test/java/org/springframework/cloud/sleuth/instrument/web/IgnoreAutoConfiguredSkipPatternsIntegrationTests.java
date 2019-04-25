@@ -40,11 +40,12 @@ import org.springframework.web.client.RestTemplate;
 import static org.assertj.core.api.BDDAssertions.then;
 
 @RunWith(SpringRunner.class)
-@SpringBootTest(classes = IgnoreAutoConfiguredSkipPatternsIntegrationTests.Config.class, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT, properties = {
-		"management.endpoints.web.exposure.include:*",
-		"server.servlet.context-path:/context-path",
-		"spring.sleuth.http.legacy.enabled:true",
-		"spring.sleuth.web.ignoreAutoConfiguredSkipPatterns:true" })
+@SpringBootTest(classes = IgnoreAutoConfiguredSkipPatternsIntegrationTests.Config.class,
+		webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
+		properties = { "management.endpoints.web.exposure.include:*",
+				"server.servlet.context-path:/context-path",
+				"spring.sleuth.http.legacy.enabled:true",
+				"spring.sleuth.web.ignoreAutoConfiguredSkipPatterns:true" })
 public class IgnoreAutoConfiguredSkipPatternsIntegrationTests {
 
 	@Autowired

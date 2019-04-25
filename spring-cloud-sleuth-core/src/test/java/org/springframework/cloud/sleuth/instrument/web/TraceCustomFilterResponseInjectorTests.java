@@ -55,7 +55,8 @@ import static org.assertj.core.api.BDDAssertions.then;
 import static org.springframework.boot.test.context.SpringBootTest.WebEnvironment.RANDOM_PORT;
 
 @RunWith(SpringJUnit4ClassRunner.class)
-@SpringBootTest(classes = TraceCustomFilterResponseInjectorTests.Config.class, webEnvironment = RANDOM_PORT)
+@SpringBootTest(classes = TraceCustomFilterResponseInjectorTests.Config.class,
+		webEnvironment = RANDOM_PORT)
 @DirtiesContext
 public class TraceCustomFilterResponseInjectorTests {
 

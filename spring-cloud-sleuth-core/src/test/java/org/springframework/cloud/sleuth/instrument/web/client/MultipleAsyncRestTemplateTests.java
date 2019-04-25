@@ -66,9 +66,11 @@ import static org.assertj.core.api.BDDAssertions.then;
  * @author Marcin Grzejszczak
  */
 @RunWith(SpringRunner.class)
-@SpringBootTest(classes = { MultipleAsyncRestTemplateTests.Config.class,
-		MultipleAsyncRestTemplateTests.CustomExecutorConfig.class,
-		MultipleAsyncRestTemplateTests.ControllerConfig.class }, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@SpringBootTest(
+		classes = { MultipleAsyncRestTemplateTests.Config.class,
+				MultipleAsyncRestTemplateTests.CustomExecutorConfig.class,
+				MultipleAsyncRestTemplateTests.ControllerConfig.class },
+		webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @DirtiesContext
 public class MultipleAsyncRestTemplateTests {
 

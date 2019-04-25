@@ -52,7 +52,8 @@ public class SleuthLogAutoConfiguration {
 	protected static class Slf4jConfiguration {
 
 		@Bean
-		@ConditionalOnProperty(value = "spring.sleuth.log.slf4j.enabled", matchIfMissing = true)
+		@ConditionalOnProperty(value = "spring.sleuth.log.slf4j.enabled",
+				matchIfMissing = true)
 		public CurrentTraceContext.ScopeDecorator slf4jSpanDecorator(
 				SleuthProperties sleuthProperties,
 				SleuthSlf4jProperties sleuthSlf4jProperties) {

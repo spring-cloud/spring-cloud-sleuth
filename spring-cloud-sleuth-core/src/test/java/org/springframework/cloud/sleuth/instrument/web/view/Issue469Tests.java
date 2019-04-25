@@ -30,7 +30,8 @@ import org.springframework.web.client.RestTemplate;
 import static org.assertj.core.api.BDDAssertions.then;
 
 @RunWith(SpringRunner.class)
-@SpringBootTest(classes = Issue469.class, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@SpringBootTest(classes = Issue469.class,
+		webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @TestPropertySource(properties = { "spring.mvc.view.prefix=/WEB-INF/jsp/",
 		"spring.mvc.view.suffix=.jsp" })
 public class Issue469Tests {

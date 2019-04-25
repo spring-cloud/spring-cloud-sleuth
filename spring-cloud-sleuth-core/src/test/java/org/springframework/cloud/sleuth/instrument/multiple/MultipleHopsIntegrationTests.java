@@ -56,7 +56,8 @@ import static org.springframework.boot.test.context.SpringBootTest.WebEnvironmen
 @RunWith(SpringJUnit4ClassRunner.class)
 @TestPropertySource(properties = { "spring.application.name=multiplehopsintegrationtests",
 		"spring.sleuth.http.legacy.enabled=true" })
-@SpringBootTest(classes = MultipleHopsIntegrationTests.Config.class, webEnvironment = RANDOM_PORT)
+@SpringBootTest(classes = MultipleHopsIntegrationTests.Config.class,
+		webEnvironment = RANDOM_PORT)
 @ActiveProfiles("baggage")
 public class MultipleHopsIntegrationTests {
 

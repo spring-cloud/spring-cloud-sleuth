@@ -41,7 +41,8 @@ public class HelloWorldRestController {
 	@Autowired
 	private ApplicationContext applicationContext;
 
-	@RequestMapping(path = "getHelloWorldMessage", method = RequestMethod.GET, produces = MediaType.TEXT_PLAIN_VALUE)
+	@RequestMapping(path = "getHelloWorldMessage", method = RequestMethod.GET,
+			produces = MediaType.TEXT_PLAIN_VALUE)
 	public ResponseEntity<String> getHelloWorld() throws Exception {
 
 		LOG.info("Inside getHelloWorldMessage");

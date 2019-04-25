@@ -60,7 +60,8 @@ import org.springframework.web.client.RestTemplate;
 import static org.assertj.core.api.Assertions.fail;
 import static org.assertj.core.api.BDDAssertions.then;
 
-@FeignClient(value = "myFeignClient", url = "http://localhost:9998", configuration = CustomConfig.class)
+@FeignClient(value = "myFeignClient", url = "http://localhost:9998",
+		configuration = CustomConfig.class)
 interface MyFeignClient {
 
 	@RequestMapping("/service/ok")
@@ -75,7 +76,8 @@ interface MyFeignClient {
  * @author Marcin Grzejszczak
  */
 @RunWith(SpringJUnit4ClassRunner.class)
-@SpringBootTest(classes = Application.class, webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT)
+@SpringBootTest(classes = Application.class,
+		webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT)
 @TestPropertySource(properties = { "ribbon.eureka.enabled=false",
 		"feign.hystrix.enabled=false", "server.port=9998" })
 public class Issue362Tests {

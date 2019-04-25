@@ -62,10 +62,11 @@ import org.springframework.web.client.RestTemplate;
  */
 @Configuration
 @EnableConfigurationProperties(ZipkinProperties.class)
-@ConditionalOnProperty(value = { "spring.sleuth.enabled",
-		"spring.zipkin.enabled" }, matchIfMissing = true)
+@ConditionalOnProperty(value = { "spring.sleuth.enabled", "spring.zipkin.enabled" },
+		matchIfMissing = true)
 @AutoConfigureBefore(TraceAutoConfiguration.class)
-@AutoConfigureAfter(name = "org.springframework.cloud.autoconfigure.RefreshAutoConfiguration")
+@AutoConfigureAfter(
+		name = "org.springframework.cloud.autoconfigure.RefreshAutoConfiguration")
 @Import({ ZipkinSenderConfigurationImportSelector.class, SamplerAutoConfiguration.class })
 public class ZipkinAutoConfiguration {
 
@@ -100,7 +101,8 @@ public class ZipkinAutoConfiguration {
 
 	@Configuration
 	@ConditionalOnMissingBean(EndpointLocator.class)
-	@ConditionalOnProperty(value = "spring.zipkin.locator.discovery.enabled", havingValue = "false", matchIfMissing = true)
+	@ConditionalOnProperty(value = "spring.zipkin.locator.discovery.enabled",
+			havingValue = "false", matchIfMissing = true)
 	protected static class DefaultEndpointLocatorConfiguration {
 
 		@Autowired(required = false)
@@ -126,7 +128,8 @@ public class ZipkinAutoConfiguration {
 	@Configuration
 	@ConditionalOnClass(Registration.class)
 	@ConditionalOnMissingBean(EndpointLocator.class)
-	@ConditionalOnProperty(value = "spring.zipkin.locator.discovery.enabled", havingValue = "true")
+	@ConditionalOnProperty(value = "spring.zipkin.locator.discovery.enabled",
+			havingValue = "true")
 	protected static class RegistrationEndpointLocatorConfiguration {
 
 		@Autowired(required = false)

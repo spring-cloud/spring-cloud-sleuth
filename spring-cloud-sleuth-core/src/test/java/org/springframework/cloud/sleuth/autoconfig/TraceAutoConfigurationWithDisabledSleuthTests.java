@@ -37,7 +37,9 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 @RunWith(SpringJUnit4ClassRunner.class)
-@SpringBootTest(classes = TraceAutoConfigurationWithDisabledSleuthTests.Config.class, properties = "spring.sleuth.enabled=false", webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@SpringBootTest(classes = TraceAutoConfigurationWithDisabledSleuthTests.Config.class,
+		properties = "spring.sleuth.enabled=false",
+		webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @ActiveProfiles("disabled")
 public class TraceAutoConfigurationWithDisabledSleuthTests {
 

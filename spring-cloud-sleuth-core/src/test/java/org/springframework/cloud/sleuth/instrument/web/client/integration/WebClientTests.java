@@ -100,7 +100,8 @@ import static org.assertj.core.api.Assertions.fail;
 import static org.assertj.core.api.BDDAssertions.then;
 
 @RunWith(JUnitParamsRunner.class)
-@SpringBootTest(classes = WebClientTests.TestConfiguration.class, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@SpringBootTest(classes = WebClientTests.TestConfiguration.class,
+		webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @TestPropertySource(properties = { "spring.sleuth.http.legacy.enabled=true",
 		"spring.application.name=fooservice", "feign.hystrix.enabled=false" })
 @DirtiesContext
@@ -543,7 +544,8 @@ public class WebClientTests {
 			GatewayClassPathWarningAutoConfiguration.class,
 			GatewayAutoConfiguration.class })
 	@EnableFeignClients
-	@RibbonClient(value = "fooservice", configuration = SimpleRibbonClientConfiguration.class)
+	@RibbonClient(value = "fooservice",
+			configuration = SimpleRibbonClientConfiguration.class)
 	public static class TestConfiguration {
 
 		@Bean

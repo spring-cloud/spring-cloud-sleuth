@@ -101,7 +101,7 @@ public class SkipPatternProviderConfigTest {
 				.withPropertyValues("management.server.servlet.context-path=foo")
 				.run(context -> {
 					then(extractAllPatterns(context)).containsExactlyInAnyOrder(
-							"/actuator/(health|health/.*|info|info/.*)", "foo.*",
+							"/actuator(/|/(health|health/.*|info|info/.*))?", "foo.*",
 							SleuthWebProperties.DEFAULT_SKIP_PATTERN);
 				});
 	}
@@ -123,7 +123,7 @@ public class SkipPatternProviderConfigTest {
 				.withConfiguration(UserConfigurations.of(ServerPropertiesConfig.class))
 				.run(context -> {
 					then(extractAllPatterns(context)).containsExactlyInAnyOrder(
-							"/actuator/(health|health/.*|info|info/.*)",
+							"/actuator(/|/(health|health/.*|info|info/.*))?",
 							SleuthWebProperties.DEFAULT_SKIP_PATTERN);
 				});
 	}
@@ -134,7 +134,7 @@ public class SkipPatternProviderConfigTest {
 				.withConfiguration(UserConfigurations.of(ServerPropertiesConfig.class))
 				.withPropertyValues("server.servlet.context-path=foo").run(context -> {
 					then(extractAllPatterns(context)).containsExactlyInAnyOrder(
-							"foo/actuator/(health|health/.*|info|info/.*)",
+							"foo/actuator(/|/(health|health/.*|info|info/.*))?",
 							SleuthWebProperties.DEFAULT_SKIP_PATTERN);
 				});
 	}
@@ -159,7 +159,7 @@ public class SkipPatternProviderConfigTest {
 						"server.servlet.context-path=foo")
 				.run(context -> {
 					then(extractAllPatterns(context)).containsExactlyInAnyOrder(
-							"foo/(health|health/.*|info|info/.*)",
+							"foo(/|/(health|health/.*|info|info/.*))?",
 							SleuthWebProperties.DEFAULT_SKIP_PATTERN);
 				});
 	}
@@ -185,7 +185,7 @@ public class SkipPatternProviderConfigTest {
 						"server.servlet.context-path=foo")
 				.run(context -> {
 					then(extractAllPatterns(context)).containsExactlyInAnyOrder(
-							"foo/mgt/(health|health/.*|info|info/.*)",
+							"foo/mgt(/|/(health|health/.*|info|info/.*))?",
 							SleuthWebProperties.DEFAULT_SKIP_PATTERN);
 				});
 	}
@@ -198,7 +198,7 @@ public class SkipPatternProviderConfigTest {
 						"server.servlet.context-path=foo")
 				.run(context -> {
 					then(extractAllPatterns(context)).containsExactlyInAnyOrder(
-							"/actuator/(health|health/.*|info|info/.*)",
+							"/actuator(/|/(health|health/.*|info|info/.*))?",
 							SleuthWebProperties.DEFAULT_SKIP_PATTERN);
 				});
 	}
@@ -211,7 +211,7 @@ public class SkipPatternProviderConfigTest {
 						"management.server.port=0", "server.servlet.context-path=foo")
 				.run(context -> {
 					then(extractAllPatterns(context)).containsExactlyInAnyOrder(
-							"/mgt/(health|health/.*|info|info/.*)",
+							"/mgt(/|/(health|health/.*|info|info/.*))?",
 							SleuthWebProperties.DEFAULT_SKIP_PATTERN);
 				});
 	}
@@ -224,7 +224,7 @@ public class SkipPatternProviderConfigTest {
 						"server.servlet.context-path=foo")
 				.run(context -> {
 					then(extractAllPatterns(context)).containsExactlyInAnyOrder(
-							"/actuator/(health|health/.*|info|info/.*)",
+							"/actuator(/|/(health|health/.*|info|info/.*))?",
 							SleuthWebProperties.DEFAULT_SKIP_PATTERN);
 				});
 	}

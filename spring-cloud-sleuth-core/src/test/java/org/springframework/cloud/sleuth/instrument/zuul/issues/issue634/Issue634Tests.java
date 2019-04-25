@@ -43,9 +43,9 @@ import static org.assertj.core.api.BDDAssertions.then;
 import static org.springframework.boot.test.context.SpringBootTest.WebEnvironment.RANDOM_PORT;
 
 @RunWith(SpringRunner.class)
-@SpringBootTest(classes = TestZuulApplication.class, webEnvironment = RANDOM_PORT, properties = {
-		"feign.hystrix.enabled=false", "zuul.routes.dp.path:/display/**",
-		"zuul.routes.dp.path.url: http://localhost:9987/unknown" })
+@SpringBootTest(classes = TestZuulApplication.class, webEnvironment = RANDOM_PORT,
+		properties = { "feign.hystrix.enabled=false", "zuul.routes.dp.path:/display/**",
+				"zuul.routes.dp.path.url: http://localhost:9987/unknown" })
 @DirtiesContext
 public class Issue634Tests {
 

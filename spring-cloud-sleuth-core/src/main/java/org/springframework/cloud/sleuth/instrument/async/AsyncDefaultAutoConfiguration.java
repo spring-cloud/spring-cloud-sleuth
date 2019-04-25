@@ -72,7 +72,8 @@ public class AsyncDefaultAutoConfiguration {
 	 */
 	@Configuration
 	@ConditionalOnMissingBean(AsyncConfigurer.class)
-	@ConditionalOnProperty(value = "spring.sleuth.async.configurer.enabled", matchIfMissing = true)
+	@ConditionalOnProperty(value = "spring.sleuth.async.configurer.enabled",
+			matchIfMissing = true)
 	@Role(BeanDefinition.ROLE_INFRASTRUCTURE)
 	static class DefaultAsyncConfigurerSupport extends AsyncConfigurerSupport {
 
