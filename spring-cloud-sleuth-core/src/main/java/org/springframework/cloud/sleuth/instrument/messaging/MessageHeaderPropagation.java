@@ -85,7 +85,9 @@ enum MessageHeaderPropagation
 						nativeHeaders = new LinkedMultiValueMap<>());
 			}
 			if (nativeHeaders instanceof Map<?, ?>) {
-				((Map) nativeHeaders).put(key, Collections.singletonList(value));
+				Map<String, List<String>> copy = new LinkedMultiValueMap<>((Map<String, List<String>>) nativeHeaders);
+				copy.put(key, Collections.singletonList(value));
+				accessor.setHeader(NATIVE_HEADERS, copy);
 			}
 		}
 	}
