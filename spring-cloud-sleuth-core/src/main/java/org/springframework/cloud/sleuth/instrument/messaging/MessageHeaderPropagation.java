@@ -151,9 +151,16 @@ enum MessageHeaderPropagation
 						nativeHeaders);
 			}
 			if (nativeHeaders instanceof Map<?, ?>) {
-				((Map) nativeHeaders).put(key, Collections.singletonList(value));
+				Map<String, List<String>> copy = toNativeHeaderMap(
+						(Map<String, List<String>>) nativeHeaders);
+				copy.put(key, Collections.singletonList(value));
+				accessor.setHeader(NativeMessageHeaderAccessor.NATIVE_HEADERS, copy);
 			}
 		}
+	}
+
+	private Map<String, List<String>> toNativeHeaderMap(Map<String, List<String>> map) {
+		return (map != null ? new LinkedMultiValueMap<>(map) : Collections.emptyMap());
 	}
 
 	@Override
