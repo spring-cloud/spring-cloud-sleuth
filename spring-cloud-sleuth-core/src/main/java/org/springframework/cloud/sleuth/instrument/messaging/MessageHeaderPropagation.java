@@ -24,6 +24,7 @@ import java.util.Map;
 import brave.propagation.Propagation;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+
 import org.springframework.messaging.support.MessageHeaderAccessor;
 import org.springframework.messaging.support.NativeMessageHeaderAccessor;
 import org.springframework.util.LinkedMultiValueMap;
@@ -58,10 +59,12 @@ enum MessageHeaderPropagation
 		LEGACY_HEADER_MAPPING.put(FLAGS_NAME, TraceMessageHeaders.SPAN_FLAGS_NAME);
 	}
 
-	@Override public void put(MessageHeaderAccessor accessor, String key, String value) {
+	@Override
+	public void put(MessageHeaderAccessor accessor, String key, String value) {
 		try {
 			doPut(accessor, key, value);
-		} catch (Exception e) {
+		}
+		catch (Exception e) {
 			if (log.isDebugEnabled()) {
 				log.debug("An exception happened when we tried to retrieve the [" + key + "] from message", e);
 			}
@@ -85,18 +88,26 @@ enum MessageHeaderPropagation
 						nativeHeaders = new LinkedMultiValueMap<>());
 			}
 			if (nativeHeaders instanceof Map<?, ?>) {
-				((Map) nativeHeaders).put(key, Collections.singletonList(value));
+				Map<String, List<String>> copy = toNativeHeaderMap((Map<String, List<String>>) nativeHeaders);
+				copy.put(key, Collections.singletonList(value));
+				accessor.setHeader(NATIVE_HEADERS, copy);
 			}
 		}
 	}
 
-	@Override public String get(MessageHeaderAccessor accessor, String key) {
+	private Map<String, List<String>> toNativeHeaderMap(Map<String, List<String>> map) {
+		return (map != null ? new LinkedMultiValueMap<>(map) : Collections.emptyMap());
+	}
+
+	@Override
+	public String get(MessageHeaderAccessor accessor, String key) {
 		try {
 			String value = doGet(accessor, key);
 			if (StringUtils.hasText(value)) {
 				return value;
 			}
-		} catch (Exception e) {
+		}
+		catch (Exception e) {
 			if (log.isDebugEnabled()) {
 				log.debug("An exception happened when we tried to retrieve the [" + key + "] from message", e);
 			}
@@ -119,7 +130,8 @@ enum MessageHeaderPropagation
 			if (result != null) {
 				return result;
 			}
-		} else {
+		}
+		else {
 			Object nativeHeaders = accessor.getHeader(NATIVE_HEADERS);
 			if (nativeHeaders instanceof Map) {
 				Object result = ((Map) nativeHeaders).get(key);
@@ -156,7 +168,8 @@ enum MessageHeaderPropagation
 			if (accessor instanceof NativeMessageHeaderAccessor) {
 				NativeMessageHeaderAccessor nativeAccessor = (NativeMessageHeaderAccessor) accessor;
 				nativeAccessor.removeNativeHeader(keyToRemove);
-			} else {
+			}
+			else {
 				Object nativeHeaders = accessor.getHeader(NATIVE_HEADERS);
 				if (nativeHeaders instanceof Map) {
 					((Map) nativeHeaders).remove(keyToRemove);
@@ -165,7 +178,8 @@ enum MessageHeaderPropagation
 		}
 	}
 
-	@Override public String toString() {
+	@Override
+	public String toString() {
 		return "MessageHeaderPropagation{}";
 	}
 }
