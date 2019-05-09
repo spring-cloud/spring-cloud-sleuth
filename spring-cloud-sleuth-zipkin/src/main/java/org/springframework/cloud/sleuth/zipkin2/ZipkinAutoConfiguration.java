@@ -82,6 +82,12 @@ public class ZipkinAutoConfiguration {
 	 */
 	public static final String SENDER_BEAN_NAME = "zipkinSender";
 
+	/**
+	 * Zipkin rest template bean name. Name of the bean matters for supporting multiple
+	 * tracing systems.
+	 */
+	public static final String REST_TEMPLATE_BEAN_NAME = "zipkinRestTemplate";
+
 	@Bean(REPORTER_BEAN_NAME)
 	@ConditionalOnMissingBean(name = REPORTER_BEAN_NAME)
 	public Reporter<Span> reporter(ReporterMetrics reporterMetrics,

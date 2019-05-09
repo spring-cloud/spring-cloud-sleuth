@@ -429,6 +429,18 @@ To do this you can use respectively `ZipkinAutoConfiguration.REPORTER_BEAN_NAME`
 include::../../../spring-cloud-sleuth-zipkin/src/test/java/org/springframework/cloud/sleuth/zipkin2/ZipkinAutoConfigurationTests.java[tags=override_default_beans,indent=0]
 ----
 
+The default web sender uses a specific `RestTemplate` that you can customize by providing a bean of type
+`ZipkinRestTemplateCustomizer`. If you wish to use a more specific RestTemplate (e.g. a OAUth2RestTemplate) 
+then you need to give your bean the specific name 
+`ZipkinAutoConfiguration.REST_TEMPLATE_BEAN_NAME`. 
+To avoid creating a 'loop of span reporting' your RestTemplate must reject the tracer interceptors. For this you can use the 
+utility class `SleuthWebClientInterceptorRemover`.
+
+[source,java]
+----
+include::../../../spring-cloud-sleuth-zipkin/src/test/java/org/springframework/cloud/sleuth/zipkin2/sender/ZipkinRestTemplateSenderConfigurationTest.java[tags=override_web_default_beans,indent=0]
+----
+
 == Additional Resources
 
 You can watch a video of https://twitter.com/reshmi9k[Reshmi Krishna] and https://twitter.com/mgrzejszczak[Marcin Grzejszczak] talking about Spring Cloud

@@ -18,18 +18,21 @@ package org.springframework.cloud.sleuth.zipkin2.sender;
 
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.List;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import zipkin2.reporter.Sender;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.cloud.client.loadbalancer.LoadBalancerClient;
+import org.springframework.cloud.sleuth.instrument.web.client.SleuthWebClientInterceptorRemover;
 import org.springframework.cloud.sleuth.zipkin2.ZipkinAutoConfiguration;
 import org.springframework.cloud.sleuth.zipkin2.ZipkinLoadBalancer;
 import org.springframework.cloud.sleuth.zipkin2.ZipkinProperties;
@@ -38,6 +41,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Conditional;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
+import org.springframework.http.client.ClientHttpRequestInterceptor;
 import org.springframework.web.client.RequestCallback;
 import org.springframework.web.client.ResponseExtractor;
 import org.springframework.web.client.RestClientException;
@@ -52,12 +56,18 @@ class ZipkinRestTemplateSenderConfiguration {
 	@Autowired
 	ZipkinUrlExtractor extractor;
 
+	@Bean(ZipkinAutoConfiguration.REST_TEMPLATE_BEAN_NAME)
+	@ConditionalOnMissingBean(name = ZipkinAutoConfiguration.REST_TEMPLATE_BEAN_NAME)
+	public RestTemplate zipkinRestTemplate(ZipkinProperties zipkin) {
+		return new ZipkinRestTemplateWrapper(zipkin, this.extractor);
+	}
+
 	@Bean(ZipkinAutoConfiguration.SENDER_BEAN_NAME)
 	public Sender restTemplateSender(ZipkinProperties zipkin,
-			ZipkinRestTemplateCustomizer zipkinRestTemplateCustomizer) {
-		RestTemplate restTemplate = new ZipkinRestTemplateWrapper(zipkin, this.extractor);
-		zipkinRestTemplateCustomizer.customize(restTemplate);
-		return new RestTemplateSender(restTemplate, zipkin.getBaseUrl(),
+			ZipkinRestTemplateCustomizer zipkinRestTemplateCustomizer,
+			@Qualifier(ZipkinAutoConfiguration.REST_TEMPLATE_BEAN_NAME) RestTemplate zipkinRestTemplate) {
+		zipkinRestTemplateCustomizer.customize(zipkinRestTemplate);
+		return new RestTemplateSender(zipkinRestTemplate, zipkin.getBaseUrl(),
 				zipkin.getEncoder());
 	}
 
@@ -91,8 +101,7 @@ class ZipkinRestTemplateSenderConfiguration {
 	static class DiscoveryClientZipkinUrlExtractorConfiguration {
 
 		@Configuration
-		@ConditionalOnProperty(value = "spring.zipkin.discoveryClientEnabled",
-				havingValue = "true", matchIfMissing = true)
+		@ConditionalOnProperty(value = "spring.zipkin.discoveryClientEnabled", havingValue = "true", matchIfMissing = true)
 		static class ZipkinClientLoadBalancedConfiguration {
 
 			@Autowired(required = false)
@@ -109,8 +118,7 @@ class ZipkinRestTemplateSenderConfiguration {
 		}
 
 		@Configuration
-		@ConditionalOnProperty(value = "spring.zipkin.discoveryClientEnabled",
-				havingValue = "false")
+		@ConditionalOnProperty(value = "spring.zipkin.discoveryClientEnabled", havingValue = "false")
 		static class ZipkinClientNoOpConfiguration {
 
 			@Bean
@@ -149,10 +157,17 @@ class ZipkinRestTemplateWrapper extends RestTemplate {
 
 	private final ZipkinUrlExtractor extractor;
 
+	private final SleuthWebClientInterceptorRemover interceptorFilter = new SleuthWebClientInterceptorRemover();
+
 	ZipkinRestTemplateWrapper(ZipkinProperties zipkinProperties,
 			ZipkinUrlExtractor extractor) {
 		this.zipkinProperties = zipkinProperties;
 		this.extractor = extractor;
+	}
+
+	@Override
+	public void setInterceptors(List<ClientHttpRequestInterceptor> interceptors) {
+		super.setInterceptors(interceptorFilter.filter(interceptors));
 	}
 
 	@Override

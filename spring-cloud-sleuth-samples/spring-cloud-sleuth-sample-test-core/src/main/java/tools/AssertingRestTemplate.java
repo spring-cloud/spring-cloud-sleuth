@@ -18,11 +18,14 @@ package tools;
 
 import java.io.IOException;
 import java.net.URI;
+import java.util.List;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import org.springframework.cloud.sleuth.instrument.web.client.SleuthWebClientInterceptorRemover;
 import org.springframework.http.HttpMethod;
+import org.springframework.http.client.ClientHttpRequestInterceptor;
 import org.springframework.http.client.ClientHttpResponse;
 import org.springframework.web.client.DefaultResponseErrorHandler;
 import org.springframework.web.client.RequestCallback;
@@ -51,6 +54,11 @@ public class AssertingRestTemplate extends RestTemplate {
 				}
 			}
 		});
+	}
+
+	@Override
+	public void setInterceptors(List<ClientHttpRequestInterceptor> interceptors) {
+		super.setInterceptors(new SleuthWebClientInterceptorRemover().filter(interceptors));
 	}
 
 	@Override
