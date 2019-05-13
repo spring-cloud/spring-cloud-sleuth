@@ -43,7 +43,7 @@ import org.springframework.util.StringUtils;
  * @since 2.1.0
  */
 class ReactorSleuthMethodInvocationProcessor
-		extends AbstractSleuthMethodInvocationProcessor {
+		extends AbstractAnnotationSleuthMethodInvocationProcessor {
 
 	Tracing tracing;
 

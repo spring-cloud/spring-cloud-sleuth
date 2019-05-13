@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.springframework.cloud.sleuth.annotation;
+package org.springframework.cloud.sleuth;
 
 import brave.Span;
 import brave.Tracer;
@@ -27,12 +27,12 @@ import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.BeanFactoryAware;
 
 /**
- * Sleuth annotation processor.
+ * Sleuth method invocation processor.
  *
  * @author Marcin Grzejszczak
  */
-abstract class AbstractSleuthMethodInvocationProcessor
-		implements SleuthMethodInvocationProcessor, BeanFactoryAware {
+public abstract class AbstractSleuthMethodInvocationProcessor
+		implements BeanFactoryAware {
 
 	private static final Log logger = LogFactory
 			.getLog(AbstractSleuthMethodInvocationProcessor.class);
@@ -41,83 +41,37 @@ abstract class AbstractSleuthMethodInvocationProcessor
 
 	private static final String METHOD_KEY = "method";
 
-	BeanFactory beanFactory;
-
-	private NewSpanParser newSpanParser;
+	protected BeanFactory beanFactory;
 
 	private Tracer tracer;
 
-	private SpanTagAnnotationHandler spanTagAnnotationHandler;
-
-	void before(MethodInvocation invocation, Span span, String log, boolean hasLog) {
-		if (hasLog) {
-			logEvent(span, log + ".before");
-		}
-		spanTagAnnotationHandler().addAnnotatedParameters(invocation);
+	protected void before(MethodInvocation invocation, Span span) {
 		addTags(invocation, span);
 	}
 
-	void after(Span span, boolean isNewSpan, String log, boolean hasLog) {
-		if (hasLog) {
-			logEvent(span, log + ".after");
-		}
+	protected void after(Span span, boolean isNewSpan) {
 		if (isNewSpan) {
 			span.finish();
 		}
 	}
 
-	void onFailure(Span span, String log, boolean hasLog, Throwable e) {
+	protected void onFailure(Span span, Throwable e) {
 		if (logger.isDebugEnabled()) {
 			logger.debug("Exception occurred while trying to continue the pointcut", e);
-		}
-		if (hasLog) {
-			logEvent(span, log + ".afterFailure");
 		}
 		span.error(e);
 	}
 
-	void addTags(MethodInvocation invocation, Span span) {
+	private void addTags(MethodInvocation invocation, Span span) {
 		span.tag(CLASS_KEY, invocation.getThis().getClass().getSimpleName());
 		span.tag(METHOD_KEY, invocation.getMethod().getName());
 	}
 
-	void logEvent(Span span, String name) {
-		if (span == null) {
-			logger.warn("You were trying to continue a span which was null. Please "
-					+ "remember that if two proxied methods are calling each other from "
-					+ "the same class then the aspect will not be properly resolved");
-			return;
-		}
-		span.annotate(name);
-	}
-
-	String log(ContinueSpan continueSpan) {
-		if (continueSpan != null) {
-			return continueSpan.log();
-		}
-		return "";
-	}
-
-	Tracer tracer() {
+	protected Tracer tracer() {
 		if (this.tracer == null) {
 			this.tracer = this.beanFactory.getBean(Tracer.class);
 		}
 		return this.tracer;
-	}
-
-	NewSpanParser newSpanParser() {
-		if (this.newSpanParser == null) {
-			this.newSpanParser = this.beanFactory.getBean(NewSpanParser.class);
-		}
-		return this.newSpanParser;
-	}
-
-	SpanTagAnnotationHandler spanTagAnnotationHandler() {
-		if (this.spanTagAnnotationHandler == null) {
-			this.spanTagAnnotationHandler = new SpanTagAnnotationHandler(
-					this.beanFactory);
-		}
-		return this.spanTagAnnotationHandler;
 	}
 
 	@Override

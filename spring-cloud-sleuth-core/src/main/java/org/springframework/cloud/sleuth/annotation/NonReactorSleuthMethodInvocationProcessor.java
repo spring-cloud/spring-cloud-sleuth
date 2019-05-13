@@ -29,7 +29,7 @@ import org.springframework.util.StringUtils;
  * @since 2.1.0
  */
 class NonReactorSleuthMethodInvocationProcessor
-		extends AbstractSleuthMethodInvocationProcessor {
+		extends AbstractAnnotationSleuthMethodInvocationProcessor {
 
 	@Override
 	public Object process(MethodInvocation invocation, NewSpan newSpan,
