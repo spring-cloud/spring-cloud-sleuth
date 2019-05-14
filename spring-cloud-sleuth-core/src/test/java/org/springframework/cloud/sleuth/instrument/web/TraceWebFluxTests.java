@@ -381,10 +381,13 @@ class SleuthSpanCreatorAspectWebFlux {
 
 		Awaitility.await().untilAsserted(() -> {
 			List<zipkin2.Span> spans = getSpans();
-			then(spans).hasSize(1);
-			then(spans.get(0).kind()).isEqualTo(zipkin2.Span.Kind.SERVER);
-			then(spans.get(0).name()).isEqualTo("get /test/ping");
-			then(spans.get(0).id()).isEqualTo(toHexString(newSpanId));
+			zipkin2.Span spanToFind = spans.stream()
+					.filter(span -> span.name().equals("get /test/ping")).findFirst()
+					.orElseThrow(() -> new AssertionError(
+							"No span with name [get /test/ping] found"));
+			then(spanToFind.kind()).isEqualTo(zipkin2.Span.Kind.SERVER);
+			then(spanToFind.name()).isEqualTo("get /test/ping");
+			then(spanToFind.id()).isEqualTo(toHexString(newSpanId));
 			then(this.tracer.currentSpan()).isNull();
 		});
 	}
@@ -406,10 +409,13 @@ class SleuthSpanCreatorAspectWebFlux {
 
 		Awaitility.await().untilAsserted(() -> {
 			List<zipkin2.Span> spans = getSpans();
-			then(spans).hasSize(1);
-			then(spans.get(0).kind()).isEqualTo(zipkin2.Span.Kind.SERVER);
-			then(spans.get(0).name()).isEqualTo("get /test/pingfromcontext");
-			then(spans.get(0).id()).isEqualTo(toHexString(newSpanId));
+			zipkin2.Span pingFromContext = spans.stream()
+					.filter(span -> span.name().equals("get /test/pingfromcontext"))
+					.findFirst().orElseThrow(() -> new AssertionError(
+							"No span with name [get /test/pingfromcontext] found"));
+			then(pingFromContext.name()).isEqualTo("get /test/pingfromcontext");
+			then(pingFromContext.kind()).isEqualTo(zipkin2.Span.Kind.SERVER);
+			then(pingFromContext.id()).isEqualTo(toHexString(newSpanId));
 			then(this.tracer.currentSpan()).isNull();
 		});
 	}
@@ -425,10 +431,12 @@ class SleuthSpanCreatorAspectWebFlux {
 
 		Awaitility.await().untilAsserted(() -> {
 			List<zipkin2.Span> spans = getSpans();
-			then(spans).hasSize(1);
-			then(spans.get(0).kind()).isEqualTo(zipkin2.Span.Kind.SERVER);
-			then(spans.get(0).name()).isEqualTo("get /test/continuespan");
-			then(spans.get(0).id()).isEqualTo(toHexString(newSpanId));
+			zipkin2.Span spanToFind = spans.stream().filter(span -> span.name().equals("get /test/continuespan"))
+					.findFirst()
+					.orElseThrow(() -> new AssertionError("No span with name [get /test/continuespan] found"));
+			then(spanToFind.kind()).isEqualTo(zipkin2.Span.Kind.SERVER);
+			then(spanToFind.name()).isEqualTo("get /test/continuespan");
+			then(spanToFind.id()).isEqualTo(toHexString(newSpanId));
 			then(this.tracer.currentSpan()).isNull();
 		});
 	}
