@@ -423,18 +423,24 @@ public class SleuthSpanCreatorAspectMonoTests {
 
 		Pair<Pair<Long, Long>, Long> pair = mono.block();
 		Long outerSpanIdBefore = pair.getFirst().getFirst();
-		Long outerSpanIdAfter = pair.getFirst().getSecond();
 		Long innerSpanId = pair.getSecond();
 
-		then(outerSpanIdBefore).isEqualTo(outerSpanIdAfter).isNotEqualTo(innerSpanId);
+		then(outerSpanIdBefore).isNotEqualTo(innerSpanId);
 
 		Awaitility.await().untilAsserted(() -> {
 			List<zipkin2.Span> spans = this.reporter.getSpans();
-			then(spans).hasSize(2);
-			then(spans.get(0).name()).isEqualTo("outer-span-in-trace-context");
-			then(spans.get(0).id()).isEqualTo(toHexString(outerSpanIdBefore));
-			then(spans.get(1).name()).isEqualTo("span-in-trace-context");
-			then(spans.get(1).id()).isEqualTo(toHexString(innerSpanId));
+			zipkin2.Span outerSpan = spans.stream()
+					.filter(span -> span.name().equals("outer-span-in-trace-context"))
+					.findFirst().orElseThrow(() -> new AssertionError(
+							"No span with name [outer-span-in-trace-context] found"));
+			then(outerSpan.name()).isEqualTo("outer-span-in-trace-context");
+			then(outerSpan.id()).isEqualTo(toHexString(outerSpanIdBefore));
+			zipkin2.Span innerSpan = spans.stream()
+					.filter(span -> span.name().equals("span-in-trace-context"))
+					.findFirst().orElseThrow(() -> new AssertionError(
+							"No span with name [span-in-trace-context] found"));
+			then(innerSpan.name()).isEqualTo("span-in-trace-context");
+			then(innerSpan.id()).isEqualTo(toHexString(innerSpanId));
 			then(this.tracer.currentSpan()).isNull();
 		});
 	}
@@ -465,18 +471,24 @@ public class SleuthSpanCreatorAspectMonoTests {
 
 		Pair<Pair<Long, Long>, Long> pair = mono.block();
 		Long outerSpanIdBefore = pair.getFirst().getFirst();
-		Long outerSpanIdAfter = pair.getFirst().getSecond();
 		Long innerSpanId = pair.getSecond();
 
-		then(outerSpanIdBefore).isEqualTo(outerSpanIdAfter).isNotEqualTo(innerSpanId);
+		then(outerSpanIdBefore).isNotEqualTo(innerSpanId);
 
 		Awaitility.await().untilAsserted(() -> {
 			List<zipkin2.Span> spans = this.reporter.getSpans();
-			then(spans).hasSize(2);
-			then(spans.get(0).name()).isEqualTo("outer-span-in-subscriber-context");
-			then(spans.get(0).id()).isEqualTo(toHexString(outerSpanIdBefore));
-			then(spans.get(1).name()).isEqualTo("span-in-subscriber-context");
-			then(spans.get(1).id()).isEqualTo(toHexString(innerSpanId));
+			zipkin2.Span outerSpan = spans.stream().filter(
+					span -> span.name().equals("outer-span-in-subscriber-context"))
+					.findFirst().orElseThrow(() -> new AssertionError(
+							"No span with name [outer-span-in-subscriber-context] found"));
+			then(outerSpan.name()).isEqualTo("outer-span-in-subscriber-context");
+			then(outerSpan.id()).isEqualTo(toHexString(outerSpanIdBefore));
+			zipkin2.Span innerSpan = spans.stream()
+					.filter(span -> span.name().equals("span-in-subscriber-context"))
+					.findFirst().orElseThrow(() -> new AssertionError(
+							"No span with name [span-in-subscriber-context] found"));
+			then(innerSpan.name()).isEqualTo("span-in-subscriber-context");
+			then(innerSpan.id()).isEqualTo(toHexString(innerSpanId));
 			then(this.tracer.currentSpan()).isNull();
 		});
 	}
