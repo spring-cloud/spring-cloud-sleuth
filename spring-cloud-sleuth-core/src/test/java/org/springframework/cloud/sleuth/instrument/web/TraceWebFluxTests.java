@@ -138,11 +138,10 @@ public class TraceWebFluxTests {
 
 	private void thenSpanWasReportedWithTags(ArrayListSpanReporter accumulator,
 			ClientResponse response) {
-		Awaitility.await().untilAsserted(() -> {
-			then(response.statusCode().value()).isEqualTo(200);
-		});
+		Awaitility.await()
+				.untilAsserted(() -> then(response.statusCode().value()).isEqualTo(200));
 		List<zipkin2.Span> spans = accumulator.getSpans().stream()
-				.filter(span -> span.name().equals("get /api/c2/{id}"))
+				.filter(span -> "get /api/c2/{id}".equals(span.name()))
 				.collect(Collectors.toList());
 		then(spans).hasSize(1);
 		then(spans.get(0).name()).isEqualTo("get /api/c2/{id}");
@@ -152,11 +151,10 @@ public class TraceWebFluxTests {
 
 	private void thenSpanWasReportedForFunction(ArrayListSpanReporter accumulator,
 			ClientResponse response) {
-		Awaitility.await().untilAsserted(() -> {
-			then(response.statusCode().value()).isEqualTo(200);
-		});
+		Awaitility.await()
+				.untilAsserted(() -> then(response.statusCode().value()).isEqualTo(200));
 		List<zipkin2.Span> spans = accumulator.getSpans().stream()
-				.filter(span -> span.name().equals("get")).collect(Collectors.toList());
+				.filter(span -> "get".equals(span.name())).collect(Collectors.toList());
 		then(spans).hasSize(1);
 	}
 
@@ -382,7 +380,7 @@ class SleuthSpanCreatorAspectWebFlux {
 		Awaitility.await().untilAsserted(() -> {
 			List<zipkin2.Span> spans = getSpans();
 			zipkin2.Span spanToFind = spans.stream()
-					.filter(span -> span.name().equals("get /test/ping")).findFirst()
+					.filter(span -> "get /test/ping".equals(span.name())).findFirst()
 					.orElseThrow(() -> new AssertionError(
 							"No span with name [get /test/ping] found"));
 			then(spanToFind.kind()).isEqualTo(zipkin2.Span.Kind.SERVER);
@@ -410,7 +408,7 @@ class SleuthSpanCreatorAspectWebFlux {
 		Awaitility.await().untilAsserted(() -> {
 			List<zipkin2.Span> spans = getSpans();
 			zipkin2.Span pingFromContext = spans.stream()
-					.filter(span -> span.name().equals("get /test/pingfromcontext"))
+					.filter(span -> "get /test/pingfromcontext".equals(span.name()))
 					.findFirst().orElseThrow(() -> new AssertionError(
 							"No span with name [get /test/pingfromcontext] found"));
 			then(pingFromContext.name()).isEqualTo("get /test/pingfromcontext");
@@ -431,9 +429,10 @@ class SleuthSpanCreatorAspectWebFlux {
 
 		Awaitility.await().untilAsserted(() -> {
 			List<zipkin2.Span> spans = getSpans();
-			zipkin2.Span spanToFind = spans.stream().filter(span -> span.name().equals("get /test/continuespan"))
-					.findFirst()
-					.orElseThrow(() -> new AssertionError("No span with name [get /test/continuespan] found"));
+			zipkin2.Span spanToFind = spans.stream()
+					.filter(span -> "get /test/continuespan".equals(span.name()))
+					.findFirst().orElseThrow(() -> new AssertionError(
+							"No span with name [get /test/continuespan] found"));
 			then(spanToFind.kind()).isEqualTo(zipkin2.Span.Kind.SERVER);
 			then(spanToFind.name()).isEqualTo("get /test/continuespan");
 			then(spanToFind.id()).isEqualTo(toHexString(newSpanId));
