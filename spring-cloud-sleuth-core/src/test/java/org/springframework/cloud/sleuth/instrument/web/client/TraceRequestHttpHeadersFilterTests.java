@@ -16,6 +16,7 @@
 
 package org.springframework.cloud.sleuth.instrument.web.client;
 
+import java.util.Arrays;
 import java.util.Collections;
 
 import brave.Tracing;
@@ -86,6 +87,30 @@ public class TraceRequestHttpHeadersFilterTests {
 		BDDAssertions.then(filteredHeaders.get("X-B3-SpanId")).isNotEmpty();
 		BDDAssertions.then(filteredHeaders.get("X-Hello"))
 				.isEqualTo(Collections.singletonList("World"));
+		BDDAssertions.then(filteredHeaders.get("X-Hello-Request"))
+				.isEqualTo(Collections.singletonList("Request World"));
+		BDDAssertions
+				.then((Object) exchange
+						.getAttribute(TraceRequestHttpHeadersFilter.SPAN_ATTRIBUTE))
+				.isNotNull();
+	}
+
+	// #1352
+	@Test
+	public void should_set_tracing_headers_with_multiple_values() {
+		HttpHeadersFilter filter = TraceRequestHttpHeadersFilter.create(this.httpTracing);
+		HttpHeaders httpHeaders = new HttpHeaders();
+		httpHeaders.addAll("X-Hello", Arrays.asList("World1", "World2"));
+		MockServerHttpRequest request = MockServerHttpRequest.post("foo/bar")
+				.headers(httpHeaders).build();
+		MockServerWebExchange exchange = MockServerWebExchange.builder(request).build();
+
+		HttpHeaders filteredHeaders = filter.filter(requestHeaders(), exchange);
+
+		BDDAssertions.then(filteredHeaders.get("X-B3-TraceId")).isNotEmpty();
+		BDDAssertions.then(filteredHeaders.get("X-B3-SpanId")).isNotEmpty();
+		BDDAssertions.then(filteredHeaders.get("X-Hello"))
+				.isEqualTo(Arrays.asList("World1", "World2"));
 		BDDAssertions.then(filteredHeaders.get("X-Hello-Request"))
 				.isEqualTo(Collections.singletonList("Request World"));
 		BDDAssertions

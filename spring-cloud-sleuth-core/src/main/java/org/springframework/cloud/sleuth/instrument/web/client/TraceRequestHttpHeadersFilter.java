@@ -57,8 +57,8 @@ final class TraceRequestHttpHeadersFilter extends AbstractHttpHeadersFilter {
 		}
 		exchange.getAttributes().put(SPAN_ATTRIBUTE, span);
 		HttpHeaders headersWithInput = new HttpHeaders();
-		headersWithInput.setAll(input.toSingleValueMap());
-		headersWithInput.setAll(builder.build().getHeaders().toSingleValueMap());
+		headersWithInput.addAll(input);
+		builder.build().getHeaders().forEach(headersWithInput::put);
 		return headersWithInput;
 	}
 
