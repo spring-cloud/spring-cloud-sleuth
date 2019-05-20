@@ -52,8 +52,9 @@ import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.BDDAssertions.then;
 
 @RunWith(SpringJUnit4ClassRunner.class)
-@SpringBootTest(classes = { WaitUntilZipkinIsUpConfig.class,
-		SampleZipkinApplication.class }, webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT)
+@SpringBootTest(
+		classes = { WaitUntilZipkinIsUpConfig.class, SampleZipkinApplication.class },
+		webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT)
 @TestPropertySource(properties = { "sample.zipkin.enabled=true" })
 public class ZipkinTests extends AbstractIntegrationTest {
 

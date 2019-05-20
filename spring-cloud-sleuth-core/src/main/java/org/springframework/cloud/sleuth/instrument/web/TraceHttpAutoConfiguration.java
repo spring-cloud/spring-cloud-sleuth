@@ -24,7 +24,9 @@ import brave.http.HttpSampler;
 import brave.http.HttpServerParser;
 import brave.http.HttpTracing;
 
+import org.springframework.boot.actuate.autoconfigure.info.InfoContributorAutoConfiguration;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
+import org.springframework.boot.autoconfigure.AutoConfigureBefore;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -46,6 +48,7 @@ import org.springframework.lang.Nullable;
 @ConditionalOnProperty(name = "spring.sleuth.http.enabled", havingValue = "true",
 		matchIfMissing = true)
 @AutoConfigureAfter(TraceWebAutoConfiguration.class)
+@AutoConfigureBefore(InfoContributorAutoConfiguration.class)
 @EnableConfigurationProperties({ TraceKeys.class, SleuthHttpLegacyProperties.class })
 public class TraceHttpAutoConfiguration {
 
