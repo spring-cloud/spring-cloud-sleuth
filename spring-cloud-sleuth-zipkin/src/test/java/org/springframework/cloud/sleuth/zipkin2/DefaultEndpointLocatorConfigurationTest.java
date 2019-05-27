@@ -26,6 +26,7 @@ import org.mockito.Mockito;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
+import org.springframework.boot.autoconfigure.security.reactive.ReactiveSecurityAutoConfiguration;
 import org.springframework.boot.autoconfigure.web.ServerProperties;
 import org.springframework.cloud.client.serviceregistry.Registration;
 import org.springframework.cloud.commons.util.InetUtils;
@@ -178,13 +179,13 @@ public class DefaultEndpointLocatorConfigurationTest {
 	}
 
 	@Configuration
-	@EnableAutoConfiguration
+	@EnableAutoConfiguration(exclude = ReactiveSecurityAutoConfiguration.class)
 	public static class EmptyConfiguration {
 
 	}
 
 	@Configuration
-	@EnableAutoConfiguration
+	@EnableAutoConfiguration(exclude = ReactiveSecurityAutoConfiguration.class)
 	public static class ConfigurationWithRegistration {
 
 		@Bean
@@ -225,7 +226,7 @@ public class DefaultEndpointLocatorConfigurationTest {
 	}
 
 	@Configuration
-	@EnableAutoConfiguration
+	@EnableAutoConfiguration(exclude = ReactiveSecurityAutoConfiguration.class)
 	public static class ConfigurationWithCustomLocator {
 
 		static EndpointLocator locator = Mockito.mock(EndpointLocator.class);

@@ -106,7 +106,7 @@ public class TraceWebAutoConfiguration {
 
 	@Configuration
 	@ConditionalOnClass({ ServerProperties.class, EndpointsSupplier.class,
-			ExposableWebEndpoint.class })
+			ExposableWebEndpoint.class, WebEndpointProperties.class })
 	@ConditionalOnBean(ServerProperties.class)
 	@ConditionalOnProperty(value = "spring.sleuth.web.ignoreAutoConfiguredSkipPatterns",
 			havingValue = "false", matchIfMissing = true)

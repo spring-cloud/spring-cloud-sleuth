@@ -20,6 +20,8 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
+import org.springframework.boot.autoconfigure.integration.IntegrationAutoConfiguration;
+import org.springframework.boot.autoconfigure.security.reactive.ReactiveSecurityAutoConfiguration;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
@@ -34,7 +36,7 @@ public class ZipkinWithDisabledSleuthTests {
 
 	}
 
-	@EnableAutoConfiguration
+	@EnableAutoConfiguration(exclude = {IntegrationAutoConfiguration.class, ReactiveSecurityAutoConfiguration.class})
 	static class Config {
 
 	}
