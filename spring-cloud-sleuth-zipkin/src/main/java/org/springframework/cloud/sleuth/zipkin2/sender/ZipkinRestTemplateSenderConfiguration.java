@@ -25,8 +25,6 @@ import zipkin2.reporter.Sender;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.boot.autoconfigure.AutoConfigureAfter;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingClass;
@@ -65,7 +63,7 @@ class ZipkinRestTemplateSenderConfiguration {
 	}
 
 	@Configuration
-	@AutoConfigureAfter(OAuth2RestTemplateSenderConfiguration.class)
+	@Conditional(RestSenderCondition.StandardRestSenderCondition.class)
 	static class DefaultRestTemplateSenderConfiguration {
 		@Autowired
 		ZipkinUrlExtractor extractor;
@@ -82,9 +80,7 @@ class ZipkinRestTemplateSenderConfiguration {
 	}
 
 	@Configuration
-	@ConditionalOnClass({ OAuth2ProtectedResourceDetails.class,
-			OAuth2RestTemplate.class })
-	@ConditionalOnBean(value = OAuth2ProtectedResourceDetails.class, name = ZipkinAutoConfiguration.OAUTH2_RESOURCE_BEAN_NAME)
+	@Conditional(RestSenderCondition.OAuth2RestSenderCondition.class)
 	static class OAuth2RestTemplateSenderConfiguration {
 
 		@Autowired
