@@ -24,6 +24,9 @@ import org.apache.commons.logging.LogFactory;
 import zipkin2.reporter.Sender;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.boot.autoconfigure.AutoConfigureAfter;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingClass;
@@ -38,6 +41,8 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Conditional;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
+import org.springframework.security.oauth2.client.OAuth2RestTemplate;
+import org.springframework.security.oauth2.client.resource.OAuth2ProtectedResourceDetails;
 import org.springframework.web.client.RequestCallback;
 import org.springframework.web.client.ResponseExtractor;
 import org.springframework.web.client.RestClientException;
@@ -49,18 +54,6 @@ import org.springframework.web.client.RestTemplate;
 @EnableConfigurationProperties(ZipkinSenderProperties.class)
 class ZipkinRestTemplateSenderConfiguration {
 
-	@Autowired
-	ZipkinUrlExtractor extractor;
-
-	@Bean(ZipkinAutoConfiguration.SENDER_BEAN_NAME)
-	public Sender restTemplateSender(ZipkinProperties zipkin,
-			ZipkinRestTemplateCustomizer zipkinRestTemplateCustomizer) {
-		RestTemplate restTemplate = new ZipkinRestTemplateWrapper(zipkin, this.extractor);
-		zipkinRestTemplateCustomizer.customize(restTemplate);
-		return new RestTemplateSender(restTemplate, zipkin.getBaseUrl(),
-				zipkin.getEncoder());
-	}
-
 	@Bean
 	ZipkinUrlExtractor zipkinUrlExtractor(final ZipkinLoadBalancer zipkinLoadBalancer) {
 		return new ZipkinUrlExtractor() {
@@ -69,6 +62,46 @@ class ZipkinRestTemplateSenderConfiguration {
 				return zipkinLoadBalancer.instance();
 			}
 		};
+	}
+
+	@Configuration
+	@AutoConfigureAfter(OAuth2RestTemplateSenderConfiguration.class)
+	static class DefaultRestTemplateSenderConfiguration {
+		@Autowired
+		ZipkinUrlExtractor extractor;
+
+		@ConditionalOnMissingBean(name = ZipkinAutoConfiguration.SENDER_BEAN_NAME)
+		@Bean(ZipkinAutoConfiguration.SENDER_BEAN_NAME)
+		public Sender restTemplateSender(ZipkinProperties zipkin,
+				ZipkinRestTemplateCustomizer zipkinRestTemplateCustomizer) {
+			RestTemplate restTemplate = new ZipkinRestTemplateWrapper(zipkin, this.extractor, new ZipkinUriResolver());
+			zipkinRestTemplateCustomizer.customize(restTemplate);
+			return new RestTemplateSender(restTemplate, zipkin.getBaseUrl(),
+					zipkin.getEncoder());
+		}
+	}
+
+	@Configuration
+	@ConditionalOnClass({ OAuth2ProtectedResourceDetails.class,
+			OAuth2RestTemplate.class })
+	@ConditionalOnBean(value = OAuth2ProtectedResourceDetails.class, name = ZipkinAutoConfiguration.OAUTH2_RESOURCE_BEAN_NAME)
+	static class OAuth2RestTemplateSenderConfiguration {
+
+		@Autowired
+		ZipkinUrlExtractor extractor;
+
+		@Autowired
+		@Qualifier(ZipkinAutoConfiguration.OAUTH2_RESOURCE_BEAN_NAME)
+		OAuth2ProtectedResourceDetails resource;
+
+		@Bean(ZipkinAutoConfiguration.SENDER_BEAN_NAME)
+		public Sender restTemplateSender(ZipkinProperties zipkin,
+				ZipkinRestTemplateCustomizer zipkinRestTemplateCustomizer) {
+			RestTemplate restTemplate = new ZipkinOAuth2RestTemplateWrapper(zipkin, this.extractor, new ZipkinUriResolver(), resource);
+			zipkinRestTemplateCustomizer.customize(restTemplate);
+			return new RestTemplateSender(restTemplate, zipkin.getBaseUrl(),
+					zipkin.getEncoder());
+		}
 	}
 
 	@Configuration
@@ -143,16 +176,17 @@ interface ZipkinUrlExtractor {
  */
 class ZipkinRestTemplateWrapper extends RestTemplate {
 
-	private static final Log log = LogFactory.getLog(ZipkinRestTemplateWrapper.class);
-
 	private final ZipkinProperties zipkinProperties;
 
 	private final ZipkinUrlExtractor extractor;
 
+	private final ZipkinUriResolver resolver;
+
 	ZipkinRestTemplateWrapper(ZipkinProperties zipkinProperties,
-			ZipkinUrlExtractor extractor) {
+			ZipkinUrlExtractor extractor, ZipkinUriResolver resolver) {
 		this.zipkinProperties = zipkinProperties;
 		this.extractor = extractor;
+		this.resolver = resolver;
 	}
 
 	@Override
@@ -160,11 +194,48 @@ class ZipkinRestTemplateWrapper extends RestTemplate {
 			RequestCallback requestCallback, ResponseExtractor<T> responseExtractor)
 			throws RestClientException {
 		URI uri = this.extractor.zipkinUrl(this.zipkinProperties);
-		URI newUri = resolvedZipkinUri(originalUrl, uri);
+		URI newUri = resolver.resolvedZipkinUri(originalUrl, uri);
 		return super.doExecute(newUri, method, requestCallback, responseExtractor);
 	}
 
-	private URI resolvedZipkinUri(URI originalUrl, URI resolvedZipkinUri) {
+}
+
+/**
+ * Resolves at runtime where the Zipkin server is. If there's no discovery client then
+ * {@link URI} from the properties is taken. Otherwise service discovery is pinged for
+ * current Zipkin address.
+ */
+class ZipkinOAuth2RestTemplateWrapper extends OAuth2RestTemplate {
+
+	private final ZipkinProperties zipkinProperties;
+
+	private final ZipkinUrlExtractor extractor;
+
+	private final ZipkinUriResolver resolver;
+
+	ZipkinOAuth2RestTemplateWrapper(ZipkinProperties zipkinProperties,
+			ZipkinUrlExtractor extractor, ZipkinUriResolver resolver, OAuth2ProtectedResourceDetails resource) {
+		super(resource);
+		this.zipkinProperties = zipkinProperties;
+		this.extractor = extractor;
+		this.resolver = resolver;
+	}
+
+	@Override
+	protected <T> T doExecute(URI originalUrl, HttpMethod method,
+			RequestCallback requestCallback, ResponseExtractor<T> responseExtractor)
+			throws RestClientException {
+		URI uri = this.extractor.zipkinUrl(this.zipkinProperties);
+		URI newUri = resolver.resolvedZipkinUri(originalUrl, uri);
+		return super.doExecute(newUri, method, requestCallback, responseExtractor);
+	}
+
+}
+
+class ZipkinUriResolver {
+	private static final Log log = LogFactory.getLog(ZipkinUriResolver.class);
+
+	URI resolvedZipkinUri(URI originalUrl, URI resolvedZipkinUri) {
 		try {
 			return new URI(resolvedZipkinUri.getScheme(), resolvedZipkinUri.getUserInfo(),
 					resolvedZipkinUri.getHost(), resolvedZipkinUri.getPort(),
@@ -179,7 +250,6 @@ class ZipkinRestTemplateWrapper extends RestTemplate {
 			return originalUrl;
 		}
 	}
-
 }
 
 class NoOpZipkinLoadBalancer implements ZipkinLoadBalancer {

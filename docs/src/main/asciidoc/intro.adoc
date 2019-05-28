@@ -429,6 +429,13 @@ To do this you can use respectively `ZipkinAutoConfiguration.REPORTER_BEAN_NAME`
 include::../../../spring-cloud-sleuth-zipkin/src/test/java/org/springframework/cloud/sleuth/zipkin2/ZipkinAutoConfigurationTests.java[tags=override_default_beans,indent=0]
 ----
 
+Default web `Sender` uses a `RestTemplate`. 
+If you want to use OAuth2 you need to provide a bean of type `OAuth2ProtectedResourceDetails` with name `ZipkinAutoConfiguration.OAUTH2_RESOURCE_BEAN_NAME` (usually a `ClientCredentialsResourceDetails`).
+
+----
+include::../../../spring-cloud-sleuth-zipkin/src/test/java/org/springframework/cloud/sleuth/zipkin2/sender/ZipkinWithOAuth2RestTemplateTests.java[tags=use_oauth2_resttemplate,indent=0]
+----
+
 == Additional Resources
 
 You can watch a video of https://twitter.com/reshmi9k[Reshmi Krishna] and https://twitter.com/mgrzejszczak[Marcin Grzejszczak] talking about Spring Cloud

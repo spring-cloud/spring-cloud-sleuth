@@ -42,6 +42,8 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 import org.springframework.core.env.Environment;
+import org.springframework.security.oauth2.client.resource.OAuth2ProtectedResourceDetails;
+import org.springframework.security.oauth2.client.token.grant.client.ClientCredentialsResourceDetails;
 import org.springframework.web.client.RestTemplate;
 
 /**
@@ -81,6 +83,15 @@ public class ZipkinAutoConfiguration {
 	 * systems.
 	 */
 	public static final String SENDER_BEAN_NAME = "zipkinSender";
+
+	/**
+	 * Zipkin OAuth2ProtectedResourceDetails bean name.
+	 * Declare a bean of type {@link OAuth2ProtectedResourceDetails}
+	 * with this name to configure the default zipkin web sender to use OAuth2
+	 * to authenticate to Zipkin server. Usually a bean of type
+	 * {@link ClientCredentialsResourceDetails}.
+	 */
+	public static final String OAUTH2_RESOURCE_BEAN_NAME = "zipkinOauth2ResourceDetails";
 
 	@Bean(REPORTER_BEAN_NAME)
 	@ConditionalOnMissingBean(name = REPORTER_BEAN_NAME)
