@@ -265,7 +265,7 @@ public class WebClientTests {
 		try (Tracer.SpanInScope ws = this.tracer.withSpanInScope(span)) {
 			ResponseEntity<String> response = provider.get(this);
 
-			// http://github.com/spring-cloud/spring-cloud-sleuth/issues/327
+			// https://github.com/spring-cloud/spring-cloud-sleuth/issues/327
 			// we don't want to respond with any tracing data
 			then(getHeader(response, SAMPLED_NAME)).isNull();
 			then(getHeader(response, TRACE_ID_NAME)).isNull();

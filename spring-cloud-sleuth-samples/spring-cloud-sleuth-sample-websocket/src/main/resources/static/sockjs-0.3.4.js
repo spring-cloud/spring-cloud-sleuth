@@ -1048,7 +1048,7 @@ SockJS = (function () {
 
 
 // References:
-//   http://ajaxian.com/archives/100-line-ajax-wrapper
+//   https://ajaxian.com/archives/100-line-ajax-wrapper
 //   https://msdn.microsoft.com/en-us/library/cc288060(v=VS.85).aspx
     var XDRObject = utils.XDRObject = function (method, url, payload) {
         var that = this;
