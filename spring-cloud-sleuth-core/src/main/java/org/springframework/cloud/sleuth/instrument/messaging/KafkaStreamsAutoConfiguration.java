@@ -39,6 +39,8 @@ import org.springframework.kafka.config.StreamsBuilderFactoryBean;
 /**
  * {@link org.springframework.boot.autoconfigure.EnableAutoConfiguration
  * Auto-configuration} enables Kafka Streams span creation and reporting.
+ *
+ * @author Tim te Beek
  */
 @Configuration
 @ConditionalOnBean({ Tracing.class, KafkaStreamsConfiguration.class })
