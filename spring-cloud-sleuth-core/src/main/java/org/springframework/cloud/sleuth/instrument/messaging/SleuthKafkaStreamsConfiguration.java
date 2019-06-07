@@ -25,6 +25,7 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.kafka.clients.consumer.Consumer;
 import org.apache.kafka.clients.producer.Producer;
 import org.apache.kafka.streams.processor.internals.DefaultKafkaClientSupplier;
+
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.config.BeanPostProcessor;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
@@ -46,7 +47,10 @@ import org.springframework.kafka.config.StreamsBuilderFactoryBean;
 @ConditionalOnBean({ Tracing.class, KafkaStreamsConfiguration.class })
 @ConditionalOnProperty(value = "spring.sleuth.messaging.kafka.streams.enabled", matchIfMissing = true)
 @AutoConfigureAfter({ SleuthKafkaConfiguration.class })
-public class KafkaStreamsAutoConfiguration {
+public class SleuthKafkaStreamsConfiguration {
+
+	protected SleuthKafkaStreamsConfiguration() {
+	}
 
 	@Bean
 	static KafkaStreamsBuilderFactoryBeanPostProcessor kafkaStreamsBuilderFactoryBeanPostProcessor(
@@ -86,7 +90,7 @@ class SleuthKafkaClientSupplier extends DefaultKafkaClientSupplier {
 
 	private final KafkaTracing kafkaTracing;
 
-	public SleuthKafkaClientSupplier(KafkaTracing kafkaTracing) {
+	SleuthKafkaClientSupplier(KafkaTracing kafkaTracing) {
 		this.kafkaTracing = kafkaTracing;
 	}
 
