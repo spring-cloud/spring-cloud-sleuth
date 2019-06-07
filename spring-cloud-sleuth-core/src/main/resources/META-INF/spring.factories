@@ -21,7 +21,7 @@ org.springframework.cloud.sleuth.instrument.reactor.TraceReactorAutoConfiguratio
 org.springframework.cloud.sleuth.instrument.web.TraceWebFluxAutoConfiguration,\
 org.springframework.cloud.sleuth.instrument.zuul.TraceZuulAutoConfiguration,\
 org.springframework.cloud.sleuth.instrument.grpc.TraceGrpcAutoConfiguration,\
-org.springframework.cloud.sleuth.instrument.messaging.KafkaStreamsAutoConfiguration,\
+org.springframework.cloud.sleuth.instrument.messaging.SleuthKafkaStreamsConfiguration,\
 org.springframework.cloud.sleuth.instrument.messaging.TraceMessagingAutoConfiguration,\
 org.springframework.cloud.sleuth.instrument.messaging.TraceSpringIntegrationAutoConfiguration,\
 org.springframework.cloud.sleuth.instrument.messaging.websocket.TraceWebSocketAutoConfiguration,\
