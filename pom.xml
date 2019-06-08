@@ -21,7 +21,7 @@
 	<modelVersion>4.0.0</modelVersion>
 
 	<artifactId>spring-cloud-sleuth</artifactId>
-	<version>2.0.4.BUILD-SNAPSHOT</version>
+	<version>2.0.4.RELEASE</version>
 	<packaging>pom</packaging>
 	<name>Spring Cloud Sleuth</name>
 	<description>Spring Cloud Sleuth</description>
@@ -29,7 +29,7 @@
 	<parent>
 		<groupId>org.springframework.cloud</groupId>
 		<artifactId>spring-cloud-build</artifactId>
-		<version>2.0.5.BUILD-SNAPSHOT</version>
+		<version>2.0.6.RELEASE</version>
 		<relativePath/>
 		<!-- lookup parent from repository -->
 	</parent>
@@ -274,11 +274,11 @@
 		<maven.compiler.testSource>1.8</maven.compiler.testSource>
 		<surefire.plugin.version>2.19.1</surefire.plugin.version>
 		<checkstyle.version>2.17</checkstyle.version>
-		<spring-cloud-build.version>2.0.5.BUILD-SNAPSHOT</spring-cloud-build.version>
-		<spring-cloud-commons.version>2.0.0.BUILD-SNAPSHOT</spring-cloud-commons.version>
-		<spring-cloud-stream.version>Elmhurst.BUILD-SNAPSHOT</spring-cloud-stream.version>
-		<spring-cloud-netflix.version>2.0.0.BUILD-SNAPSHOT</spring-cloud-netflix.version>
-		<spring-cloud-openfeign.version>2.0.0.BUILD-SNAPSHOT</spring-cloud-openfeign.version>
+		<spring-cloud-build.version>2.0.6.RELEASE</spring-cloud-build.version>
+		<spring-cloud-commons.version>2.0.4.RELEASE</spring-cloud-commons.version>
+		<spring-cloud-stream.version>Elmhurst.SR3</spring-cloud-stream.version>
+		<spring-cloud-netflix.version>2.0.4.RELEASE</spring-cloud-netflix.version>
+		<spring-cloud-openfeign.version>2.0.4.RELEASE</spring-cloud-openfeign.version>
 		<brave.version>5.6.1</brave.version>
 		<spring-security-boot-autoconfigure.version>2.0.0.RELEASE</spring-security-boot-autoconfigure.version>
 	</properties>
