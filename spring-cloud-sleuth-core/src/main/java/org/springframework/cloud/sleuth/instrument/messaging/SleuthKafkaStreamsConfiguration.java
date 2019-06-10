@@ -20,6 +20,7 @@ import java.util.Map;
 
 import brave.Tracing;
 import brave.kafka.clients.KafkaTracing;
+import brave.kafka.streams.KafkaStreamsTracing;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.kafka.clients.consumer.Consumer;
@@ -30,6 +31,7 @@ import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.config.BeanPostProcessor;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.cloud.sleuth.instrument.messaging.TraceMessagingAutoConfiguration.SleuthKafkaConfiguration;
 import org.springframework.context.annotation.Bean;
@@ -50,6 +52,12 @@ import org.springframework.kafka.config.StreamsBuilderFactoryBean;
 public class SleuthKafkaStreamsConfiguration {
 
 	protected SleuthKafkaStreamsConfiguration() {
+	}
+
+	@Bean
+	@ConditionalOnMissingBean
+	KafkaStreamsTracing kafkaStreamsTracing(Tracing tracing) {
+		return KafkaStreamsTracing.create(tracing);
 	}
 
 	@Bean
