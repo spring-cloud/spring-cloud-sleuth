@@ -1,40 +1,13 @@
-<html><head>
-      <meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
-   <title>11.&nbsp;Span Data as Messages</title><link rel="stylesheet" type="text/css" href="css/manual-multipage.css"><meta name="generator" content="DocBook XSL Stylesheets V1.78.1"><link rel="home" href="multi_spring-cloud-sleuth.html" title="Spring Cloud Sleuth"><link rel="up" href="multi_spring-cloud-sleuth.html" title="Spring Cloud Sleuth"><link rel="prev" href="multi__sending_spans_to_zipkin.html" title="10.&nbsp;Sending spans to Zipkin"><link rel="next" href="multi__metrics.html" title="12.&nbsp;Metrics"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">11.&nbsp;Span Data as Messages</th></tr><tr><td width="20%" align="left"><a accesskey="p" href="multi__sending_spans_to_zipkin.html">Prev</a>&nbsp;</td><th width="60%" align="center">&nbsp;</th><td width="20%" align="right">&nbsp;<a accesskey="n" href="multi__metrics.html">Next</a></td></tr></table><hr></div><div class="chapter"><div class="titlepage"><div><div><h1 class="title"><a name="_span_data_as_messages" href="#_span_data_as_messages"></a>11.&nbsp;Span Data as Messages</h1></div></div></div><div class="important" style="margin-left: 0.5in; margin-right: 0.5in;"><table border="0" summary="Important"><tr><td rowspan="2" align="center" valign="top" width="25"><img alt="[Important]" src="images/important.png"></td><th align="left">Important</th></tr><tr><td align="left" valign="top"><p>The suggested approach is to use the Zipkin&#8217;s
-native support for message based span sending. Starting from
-Edgware Zipkin Stream server is deprecated and in Finchley
-it got removed.</p></td></tr></table></div><p>You can accumulate and send span data over
-<a class="link" href="https://cloud.spring.io/spring-cloud-stream" target="_top">Spring Cloud Stream</a> by
-including the <code class="literal">spring-cloud-sleuth-stream</code> jar as a dependency, and
-adding a Channel Binder implementation
-(e.g. <code class="literal">spring-cloud-starter-stream-rabbit</code> for RabbitMQ or
-<code class="literal">spring-cloud-starter-stream-kafka</code> for Kafka). This will
-automatically turn your app into a producer of messages with payload
-type <code class="literal">Spans</code>. The channel name to which the spans will be sent
-is called <code class="literal">sleuth</code>.</p><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="_zipkin_consumer" href="#_zipkin_consumer"></a>11.1&nbsp;Zipkin Consumer</h2></div></div></div><p>Please refer to the <a class="link" href="https://cloud.spring.io/spring-cloud-static/Dalston.SR4/multi/multi__span_data_as_messages.html#_zipkin_consumer" target="_top">Dalston Documentaion</a>
-on how to create a Stream Zipkin server. That approach has been
-deprecated in Edgware and removed in Finchley release.</p></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="_custom_consumer" href="#_custom_consumer"></a>11.2&nbsp;Custom Consumer</h2></div></div></div><p>A custom consumer can also easily be implemented using
-<code class="literal">spring-cloud-sleuth-stream</code> and binding to the <code class="literal">SleuthSink</code>. Example:</p><pre class="programlisting"><em><span class="hl-annotation" style="color: gray">@EnableBinding(SleuthSink.class)</span></em>
-<em><span class="hl-annotation" style="color: gray">@SpringBootApplication(exclude = SleuthStreamAutoConfiguration.class)</span></em>
-<em><span class="hl-annotation" style="color: gray">@MessageEndpoint</span></em>
-<span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">public</span> <span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">class</span> Consumer {
+<!DOCTYPE HTML>
 
-    <em><span class="hl-annotation" style="color: gray">@ServiceActivator(inputChannel = SleuthSink.INPUT)</span></em>
-    <span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">public</span> <span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">void</span> sink(Spans input) <span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">throws</span> Exception {
-        <span xmlns:d="http://docbook.org/ns/docbook" class="hl-comment">// ... process spans</span>
-    }
-}</pre><div class="note" style="margin-left: 0.5in; margin-right: 0.5in;"><table border="0" summary="Note"><tr><td rowspan="2" align="center" valign="top" width="25"><img alt="[Note]" src="images/note.png"></td><th align="left">Note</th></tr><tr><td align="left" valign="top"><p>the sample consumer application above explicitly excludes
-<code class="literal">SleuthStreamAutoConfiguration</code> so it doesn&#8217;t send messages to itself,
-but this is optional (you might actually want to trace requests into
-the consumer app).</p></td></tr></table></div><p>In order to customize the polling mechanism you can create a bean of <code class="literal">PollerMetadata</code> type
-with name equal to <code class="literal">StreamSpanReporter.POLLER</code>. Here you can find an example of such a configuration.</p><pre class="programlisting"><em><span class="hl-annotation" style="color: gray">@Configuration</span></em>
-<span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">public</span> <span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">static</span> <span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">class</span> CustomPollerConfiguration {
+<meta charset="UTF-8">
+<meta http-equiv="refresh" content="1; url=https://cloud.spring.io/spring-cloud-sleuth/spring-cloud-sleuth.html">
 
-	<em><span class="hl-annotation" style="color: gray">@Bean(name = StreamSpanReporter.POLLER)</span></em>
-	PollerMetadata customPoller() {
-		PollerMetadata poller = <span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">new</span> PollerMetadata();
-		poller.setMaxMessagesPerPoll(<span class="hl-number">500</span>);
-		poller.setTrigger(<span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">new</span> PeriodicTrigger(<span class="hl-number">5000L</span>));
-		<span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">return</span> poller;
-	}
-}</pre></div></div><div class="navfooter"><hr><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="multi__sending_spans_to_zipkin.html">Prev</a>&nbsp;</td><td width="20%" align="center">&nbsp;</td><td width="40%" align="right">&nbsp;<a accesskey="n" href="multi__metrics.html">Next</a></td></tr><tr><td width="40%" align="left" valign="top">10.&nbsp;Sending spans to Zipkin&nbsp;</td><td width="20%" align="center"><a accesskey="h" href="multi_spring-cloud-sleuth.html">Home</a></td><td width="40%" align="right" valign="top">&nbsp;12.&nbsp;Metrics</td></tr></table></div></body></html>
+<script>
+  window.location.href = "https://cloud.spring.io/spring-cloud-sleuth/spring-cloud-sleuth.html"
+</script>
+
+<title>Page Redirection</title>
+
+<!-- Note: don't tell people to `click` the link, just tell them that it is a link. -->
+If you are not redirected automatically, follow the <a href='https://cloud.spring.io/spring-cloud-sleuth/spring-cloud-sleuth.html'>link to the documentation</a>

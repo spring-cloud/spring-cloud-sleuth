@@ -1,63 +1,13 @@
-<html><head>
-      <meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
-   <title>6.&nbsp;Span lifecycle</title><link rel="stylesheet" type="text/css" href="css/manual-multipage.css"><meta name="generator" content="DocBook XSL Stylesheets V1.78.1"><link rel="home" href="spring-cloud-sleuth.html" title="Spring Cloud Sleuth"><link rel="up" href="spring-cloud-sleuth.html" title="Spring Cloud Sleuth"><link rel="prev" href="_instrumentation.html" title="5.&nbsp;Instrumentation"><link rel="next" href="_naming_spans.html" title="7.&nbsp;Naming spans"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">6.&nbsp;Span lifecycle</th></tr><tr><td width="20%" align="left"><a accesskey="p" href="_instrumentation.html">Prev</a>&nbsp;</td><th width="60%" align="center">&nbsp;</th><td width="20%" align="right">&nbsp;<a accesskey="n" href="_naming_spans.html">Next</a></td></tr></table><hr></div><div class="chapter"><div class="titlepage"><div><div><h1 class="title"><a name="_span_lifecycle" href="#_span_lifecycle"></a>6.&nbsp;Span lifecycle</h1></div></div></div><p>You can do the following operations on the Span by means of <span class="strong"><strong>org.springframework.cloud.sleuth.Tracer</strong></span> interface:</p><div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><a class="link" href="_span_lifecycle.html#creating-and-closing-spans" title="6.1&nbsp;Creating and closing spans">start</a> - when you start a span its name is assigned and start timestamp is recorded.</li><li class="listitem"><a class="link" href="_span_lifecycle.html#creating-and-closing-spans" title="6.1&nbsp;Creating and closing spans">close</a> - the span gets finished (the end time of the span is recorded) and if
-the span is <span class="strong"><strong>exportable</strong></span> then it will be eligible for collection to Zipkin.
-The span is also removed from the current thread.</li><li class="listitem"><a class="link" href="_span_lifecycle.html#continuing-spans" title="6.2&nbsp;Continuing spans">continue</a> - a new instance of span will be created whereas it will be a copy of the
-one that it continues.</li><li class="listitem"><a class="link" href="_span_lifecycle.html#continuing-spans" title="6.2&nbsp;Continuing spans">detach</a> - the span doesn&#8217;t get stopped or closed. It only gets removed from the current thread.</li><li class="listitem"><a class="link" href="_span_lifecycle.html#creating-spans-with-explicit-parent" title="6.3&nbsp;Creating spans with an explicit parent">create with explicit parent</a> - you can create a new span and set an explicit parent to it</li></ul></div><div class="tip" style="margin-left: 0.5in; margin-right: 0.5in;"><table border="0" summary="Tip"><tr><td rowspan="2" align="center" valign="top" width="25"><img alt="[Tip]" src="images/tip.png"></td><th align="left">Tip</th></tr><tr><td align="left" valign="top"><p>Spring creates the instance of <code class="literal">Tracer</code> for you. In order to use it all you need is to just autowire it.</p></td></tr></table></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="creating-and-closing-spans" href="#creating-and-closing-spans"></a>6.1&nbsp;Creating and closing spans</h2></div></div></div><p>You can manually create spans by using the <span class="strong"><strong>Tracer</strong></span> interface.</p><pre class="programlisting"><span xmlns:d="http://docbook.org/ns/docbook" class="hl-comment">// Start a span. If there was a span present in this thread it will become</span>
-<span xmlns:d="http://docbook.org/ns/docbook" class="hl-comment">// the `newSpan`'s parent.</span>
-Span newSpan = <span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">this</span>.tracer.createSpan(<span xmlns:d="http://docbook.org/ns/docbook" class="hl-string">"calculateTax"</span>);
-<span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">try</span> {
-	<span xmlns:d="http://docbook.org/ns/docbook" class="hl-comment">// ...</span>
-	<span xmlns:d="http://docbook.org/ns/docbook" class="hl-comment">// You can tag a span</span>
-	<span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">this</span>.tracer.addTag(<span xmlns:d="http://docbook.org/ns/docbook" class="hl-string">"taxValue"</span>, taxValue);
-	<span xmlns:d="http://docbook.org/ns/docbook" class="hl-comment">// ...</span>
-	<span xmlns:d="http://docbook.org/ns/docbook" class="hl-comment">// You can log an event on a span</span>
-	newSpan.logEvent(<span xmlns:d="http://docbook.org/ns/docbook" class="hl-string">"taxCalculated"</span>);
-} <span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">finally</span> {
-	<span xmlns:d="http://docbook.org/ns/docbook" class="hl-comment">// Once done remember to close the span. This will allow collecting</span>
-	<span xmlns:d="http://docbook.org/ns/docbook" class="hl-comment">// the span to send it to Zipkin</span>
-	<span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">this</span>.tracer.close(newSpan);
-}</pre><p>In this example we could see how to create a new instance of span. Assuming that there already
-was a span present in this thread then it would become the parent of that span.</p><div class="important" style="margin-left: 0.5in; margin-right: 0.5in;"><table border="0" summary="Important"><tr><td rowspan="2" align="center" valign="top" width="25"><img alt="[Important]" src="images/important.png"></td><th align="left">Important</th></tr><tr><td align="left" valign="top"><p>Always clean after you create a span! Don&#8217;t forget to close a span if you want to send it to Zipkin.</p></td></tr></table></div><div class="important" style="margin-left: 0.5in; margin-right: 0.5in;"><table border="0" summary="Important"><tr><td rowspan="2" align="center" valign="top" width="25"><img alt="[Important]" src="images/important.png"></td><th align="left">Important</th></tr><tr><td align="left" valign="top"><p>If your span contains a name greater than 50 chars, then that name will
-be truncated to 50 chars. Your names have to be explicit and concrete. Big names lead to
-latency issues and sometimes even thrown exceptions.</p></td></tr></table></div></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="continuing-spans" href="#continuing-spans"></a>6.2&nbsp;Continuing spans</h2></div></div></div><p>Sometimes you don&#8217;t want to create a new span but you want to continue one. Example of such a
-situation might be (of course it all depends on the use-case):</p><div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><span class="strong"><strong>AOP</strong></span> - If there was already a span created before an aspect was reached then you might not want to create a new span.</li><li class="listitem"><span class="strong"><strong>Hystrix</strong></span> - executing a Hystrix command is most likely a logical part of the current processing. It&#8217;s in fact
-only a technical implementation detail that you wouldn&#8217;t necessarily want to reflect in tracing as a separate being.</li></ul></div><p>The continued instance of span is equal to the one that it continues:</p><pre class="programlisting">Span continuedSpan = <span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">this</span>.tracer.continueSpan(spanToContinue);
-assertThat(continuedSpan).isEqualTo(spanToContinue);</pre><p>To continue a span you can use the <span class="strong"><strong>Tracer</strong></span> interface.</p><pre class="programlisting"><span xmlns:d="http://docbook.org/ns/docbook" class="hl-comment">// let's assume that we're in a thread Y and we've received</span>
-<span xmlns:d="http://docbook.org/ns/docbook" class="hl-comment">// the `initialSpan` from thread X</span>
-Span continuedSpan = <span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">this</span>.tracer.continueSpan(initialSpan);
-<span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">try</span> {
-	<span xmlns:d="http://docbook.org/ns/docbook" class="hl-comment">// ...</span>
-	<span xmlns:d="http://docbook.org/ns/docbook" class="hl-comment">// You can tag a span</span>
-	<span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">this</span>.tracer.addTag(<span xmlns:d="http://docbook.org/ns/docbook" class="hl-string">"taxValue"</span>, taxValue);
-	<span xmlns:d="http://docbook.org/ns/docbook" class="hl-comment">// ...</span>
-	<span xmlns:d="http://docbook.org/ns/docbook" class="hl-comment">// You can log an event on a span</span>
-	continuedSpan.logEvent(<span xmlns:d="http://docbook.org/ns/docbook" class="hl-string">"taxCalculated"</span>);
-} <span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">finally</span> {
-	<span xmlns:d="http://docbook.org/ns/docbook" class="hl-comment">// Once done remember to detach the span. That way you'll</span>
-	<span xmlns:d="http://docbook.org/ns/docbook" class="hl-comment">// safely remove it from the current thread without closing it</span>
-	<span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">this</span>.tracer.detach(continuedSpan);
-}</pre><div class="important" style="margin-left: 0.5in; margin-right: 0.5in;"><table border="0" summary="Important"><tr><td rowspan="2" align="center" valign="top" width="25"><img alt="[Important]" src="images/important.png"></td><th align="left">Important</th></tr><tr><td align="left" valign="top"><p>Always clean after you create a span! Don&#8217;t forget to detach a span if some work was done started in one
- thread (e.g. thread X) and it&#8217;s waiting for other threads (e.g. Y, Z) to finish.
- Then the spans in the threads Y, Z should be detached at the end of their work. When the results are collected
- the span in thread X should be closed.</p></td></tr></table></div></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="creating-spans-with-explicit-parent" href="#creating-spans-with-explicit-parent"></a>6.3&nbsp;Creating spans with an explicit parent</h2></div></div></div><p>There is a possibility that you want to start a new span and provide an explicit parent of that span.
-Let&#8217;s assume that the parent of a span is in one thread and you want to start a new span in another thread. The
-<code class="literal">startSpan</code> method of the <code class="literal">Tracer</code> interface is the method you are looking for.</p><pre class="programlisting"><span xmlns:d="http://docbook.org/ns/docbook" class="hl-comment">// let's assume that we're in a thread Y and we've received</span>
-<span xmlns:d="http://docbook.org/ns/docbook" class="hl-comment">// the `initialSpan` from thread X. `initialSpan` will be the parent</span>
-<span xmlns:d="http://docbook.org/ns/docbook" class="hl-comment">// of the `newSpan`</span>
-Span newSpan = <span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">this</span>.tracer.createSpan(<span xmlns:d="http://docbook.org/ns/docbook" class="hl-string">"calculateCommission"</span>, initialSpan);
-<span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">try</span> {
-	<span xmlns:d="http://docbook.org/ns/docbook" class="hl-comment">// ...</span>
-	<span xmlns:d="http://docbook.org/ns/docbook" class="hl-comment">// You can tag a span</span>
-	<span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">this</span>.tracer.addTag(<span xmlns:d="http://docbook.org/ns/docbook" class="hl-string">"commissionValue"</span>, commissionValue);
-	<span xmlns:d="http://docbook.org/ns/docbook" class="hl-comment">// ...</span>
-	<span xmlns:d="http://docbook.org/ns/docbook" class="hl-comment">// You can log an event on a span</span>
-	newSpan.logEvent(<span xmlns:d="http://docbook.org/ns/docbook" class="hl-string">"commissionCalculated"</span>);
-} <span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">finally</span> {
-	<span xmlns:d="http://docbook.org/ns/docbook" class="hl-comment">// Once done remember to close the span. This will allow collecting</span>
-	<span xmlns:d="http://docbook.org/ns/docbook" class="hl-comment">// the span to send it to Zipkin. The tags and events set on the</span>
-	<span xmlns:d="http://docbook.org/ns/docbook" class="hl-comment">// newSpan will not be present on the parent</span>
-	<span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">this</span>.tracer.close(newSpan);
-}</pre><div class="important" style="margin-left: 0.5in; margin-right: 0.5in;"><table border="0" summary="Important"><tr><td rowspan="2" align="center" valign="top" width="25"><img alt="[Important]" src="images/important.png"></td><th align="left">Important</th></tr><tr><td align="left" valign="top"><p>After having created such a span remember to close it. Otherwise you will see a lot of warnings in your logs
- related to the fact that you have a span present in the current thread other than the one you&#8217;re trying to close.
- What&#8217;s worse your spans won&#8217;t get closed properly thus will not get collected to Zipkin.</p></td></tr></table></div></div></div><div class="navfooter"><hr><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="_instrumentation.html">Prev</a>&nbsp;</td><td width="20%" align="center">&nbsp;</td><td width="40%" align="right">&nbsp;<a accesskey="n" href="_naming_spans.html">Next</a></td></tr><tr><td width="40%" align="left" valign="top">5.&nbsp;Instrumentation&nbsp;</td><td width="20%" align="center"><a accesskey="h" href="spring-cloud-sleuth.html">Home</a></td><td width="40%" align="right" valign="top">&nbsp;7.&nbsp;Naming spans</td></tr></table></div></body></html>
+<!DOCTYPE HTML>
+
+<meta charset="UTF-8">
+<meta http-equiv="refresh" content="1; url=https://cloud.spring.io/spring-cloud-sleuth/spring-cloud-sleuth.html">
+
+<script>
+  window.location.href = "https://cloud.spring.io/spring-cloud-sleuth/spring-cloud-sleuth.html"
+</script>
+
+<title>Page Redirection</title>
+
+<!-- Note: don't tell people to `click` the link, just tell them that it is a link. -->
+If you are not redirected automatically, follow the <a href='https://cloud.spring.io/spring-cloud-sleuth/spring-cloud-sleuth.html'>link to the documentation</a>

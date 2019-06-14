@@ -1,26 +1,13 @@
-<html><head>
-      <meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
-   <title>4.&nbsp;Sampling</title><link rel="stylesheet" type="text/css" href="css/manual-multipage.css"><meta name="generator" content="DocBook XSL Stylesheets V1.78.1"><link rel="home" href="spring-cloud-sleuth.html" title="Spring Cloud Sleuth"><link rel="up" href="spring-cloud-sleuth.html" title="Spring Cloud Sleuth"><link rel="prev" href="_features.html" title="3.&nbsp;Features"><link rel="next" href="_instrumentation.html" title="5.&nbsp;Instrumentation"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">4.&nbsp;Sampling</th></tr><tr><td width="20%" align="left"><a accesskey="p" href="_features.html">Prev</a>&nbsp;</td><th width="60%" align="center">&nbsp;</th><td width="20%" align="right">&nbsp;<a accesskey="n" href="_instrumentation.html">Next</a></td></tr></table><hr></div><div class="chapter"><div class="titlepage"><div><div><h1 class="title"><a name="_sampling" href="#_sampling"></a>4.&nbsp;Sampling</h1></div></div></div><p>In distributed tracing the data volumes can be very high so sampling
-can be important (you usually don&#8217;t need to export all spans to get a
-good picture of what is happening). Spring Cloud Sleuth has a
-<code class="literal">Sampler</code> strategy that you can implement to take control of the
-sampling algorithm. Samplers do not stop span (correlation) ids from
-being generated, but they do prevent the tags and events being
-attached and exported. By default you get a strategy that continues to
-trace if a span is already active, but new ones are always marked as
-non-exportable. If all your apps run with this sampler you will see
-traces in logs, but not in any remote store. For testing the default
-is often enough, and it probably is all you need if you are only using
-the logs (e.g. with an ELK aggregator). If you are exporting span data
-to Zipkin or Spring Cloud Stream, there is also an <code class="literal">AlwaysSampler</code>
-that exports everything and a <code class="literal">PercentageBasedSampler</code> that samples a
-fixed fraction of spans.</p><div class="note" style="margin-left: 0.5in; margin-right: 0.5in;"><table border="0" summary="Note"><tr><td rowspan="2" align="center" valign="top" width="25"><img alt="[Note]" src="images/note.png"></td><th align="left">Note</th></tr><tr><td align="left" valign="top"><p>the <code class="literal">PercentageBasedSampler</code> is the default if you are using
-<code class="literal">spring-cloud-sleuth-zipkin</code> or <code class="literal">spring-cloud-sleuth-stream</code>. You can
-configure the exports using <code class="literal">spring.sleuth.sampler.percentage</code>. The passed
-value needs to be a double from <code class="literal">0.0</code> to <code class="literal">1.0</code> so it&#8217;s not a percentage.
-For backwards compatibility reasons we&#8217;re not changing the property name.</p></td></tr></table></div><p>A sampler can be installed just by creating a bean definition, e.g:</p><pre class="programlisting"><em><span class="hl-annotation" style="color: gray">@Bean</span></em>
-<span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">public</span> Sampler defaultSampler() {
-	<span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">return</span> <span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">new</span> AlwaysSampler();
-}</pre><div class="tip" style="margin-left: 0.5in; margin-right: 0.5in;"><table border="0" summary="Tip"><tr><td rowspan="2" align="center" valign="top" width="25"><img alt="[Tip]" src="images/tip.png"></td><th align="left">Tip</th></tr><tr><td align="left" valign="top"><p>You can set the HTTP header <code class="literal">X-B3-Flags</code> to <code class="literal">1</code> or when doing messaging you can
-set <code class="literal">spanFlags</code> header to <code class="literal">1</code>. Then the current span will be forced to be exportable
-regardless of the sampling decision.</p></td></tr></table></div></div><div class="navfooter"><hr><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="_features.html">Prev</a>&nbsp;</td><td width="20%" align="center">&nbsp;</td><td width="40%" align="right">&nbsp;<a accesskey="n" href="_instrumentation.html">Next</a></td></tr><tr><td width="40%" align="left" valign="top">3.&nbsp;Features&nbsp;</td><td width="20%" align="center"><a accesskey="h" href="spring-cloud-sleuth.html">Home</a></td><td width="40%" align="right" valign="top">&nbsp;5.&nbsp;Instrumentation</td></tr></table></div></body></html>
+<!DOCTYPE HTML>
+
+<meta charset="UTF-8">
+<meta http-equiv="refresh" content="1; url=https://cloud.spring.io/spring-cloud-sleuth/spring-cloud-sleuth.html">
+
+<script>
+  window.location.href = "https://cloud.spring.io/spring-cloud-sleuth/spring-cloud-sleuth.html"
+</script>
+
+<title>Page Redirection</title>
+
+<!-- Note: don't tell people to `click` the link, just tell them that it is a link. -->
+If you are not redirected automatically, follow the <a href='https://cloud.spring.io/spring-cloud-sleuth/spring-cloud-sleuth.html'>link to the documentation</a>

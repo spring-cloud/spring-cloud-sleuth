@@ -1,19 +1,13 @@
-<html><head>
-      <meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
-   <title>7.&nbsp;Current Span</title><link rel="stylesheet" type="text/css" href="css/manual-multipage.css"><meta name="generator" content="DocBook XSL Stylesheets V1.79.1"><link rel="home" href="multi_spring-cloud-sleuth.html" title="Spring Cloud Sleuth"><link rel="up" href="multi_spring-cloud-sleuth.html" title="Spring Cloud Sleuth"><link rel="prev" href="multi__current_tracing_component.html" title="6.&nbsp;Current Tracing Component"><link rel="next" href="multi__instrumentation.html" title="8.&nbsp;Instrumentation"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">7.&nbsp;Current Span</th></tr><tr><td width="20%" align="left"><a accesskey="p" href="multi__current_tracing_component.html">Prev</a>&nbsp;</td><th width="60%" align="center">&nbsp;</th><td width="20%" align="right">&nbsp;<a accesskey="n" href="multi__instrumentation.html">Next</a></td></tr></table><hr></div><div class="chapter"><div class="titlepage"><div><div><h1 class="title"><a name="_current_span" href="#_current_span"></a>7.&nbsp;Current Span</h1></div></div></div><p>Brave supports a "<code class="literal">current span</code>" concept which represents the in-flight operation.
-You can use <code class="literal">Tracer.currentSpan()</code> to add custom tags to a span and <code class="literal">Tracer.nextSpan()</code> to create a child of whatever is in-flight.</p><div class="important" style="margin-left: 0.5in; margin-right: 0.5in;"><table border="0" summary="Important"><tr><td rowspan="2" align="center" valign="top" width="25"><img alt="[Important]" src="images/important.png"></td><th align="left">Important</th></tr><tr><td align="left" valign="top"><p>In Sleuth, you can autowire the <code class="literal">Tracer</code> bean to retrieve the current span via
-<code class="literal">tracer.currentSpan()</code> method. To retrieve the current context just call
-<code class="literal">tracer.currentSpan().context()</code>. To get the current trace id as String
-you can use the <code class="literal">traceIdString()</code> method like this: <code class="literal">tracer.currentSpan().context().traceIdString()</code>.</p></td></tr></table></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="_setting_a_span_in_scope_manually" href="#_setting_a_span_in_scope_manually"></a>7.1&nbsp;Setting a span in scope manually</h2></div></div></div><p>When writing new instrumentation, it is important to place a span you created in scope as the current span.
-Not only does doing so let users access it with <code class="literal">Tracer.currentSpan()</code>, but it also allows customizations such as SLF4J MDC to see the current trace IDs.</p><p><code class="literal">Tracer.withSpanInScope(Span)</code> facilitates this and is most conveniently employed by using the try-with-resources idiom.
-Whenever external code might be invoked (such as proceeding an interceptor or otherwise), place the span in scope, as shown in the following example:</p><pre class="programlisting"><em><span class="hl-annotation" style="color: gray">@Autowired</span></em> Tracer tracer;
+<!DOCTYPE HTML>
 
-<span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">try</span> (SpanInScope ws = tracer.withSpanInScope(span)) {
-  <span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">return</span> inboundRequest.invoke();
-} <span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">finally</span> { <span xmlns:d="http://docbook.org/ns/docbook" class="hl-comment">// note the scope is independent of the span</span>
-  span.finish();
-}</pre><p>In edge cases, you may need to clear the current span temporarily (for example, launching a task that should not be associated with the current request). To do tso, pass null to <code class="literal">withSpanInScope</code>, as shown in the following example:</p><pre class="programlisting"><em><span class="hl-annotation" style="color: gray">@Autowired</span></em> Tracer tracer;
+<meta charset="UTF-8">
+<meta http-equiv="refresh" content="1; url=https://cloud.spring.io/spring-cloud-sleuth/spring-cloud-sleuth.html">
 
-<span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">try</span> (SpanInScope cleared = tracer.withSpanInScope(null)) {
-  startBackgroundThread();
-}</pre></div></div><div class="navfooter"><hr><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="multi__current_tracing_component.html">Prev</a>&nbsp;</td><td width="20%" align="center">&nbsp;</td><td width="40%" align="right">&nbsp;<a accesskey="n" href="multi__instrumentation.html">Next</a></td></tr><tr><td width="40%" align="left" valign="top">6.&nbsp;Current Tracing Component&nbsp;</td><td width="20%" align="center"><a accesskey="h" href="multi_spring-cloud-sleuth.html">Home</a></td><td width="40%" align="right" valign="top">&nbsp;8.&nbsp;Instrumentation</td></tr></table></div></body></html>
+<script>
+  window.location.href = "https://cloud.spring.io/spring-cloud-sleuth/spring-cloud-sleuth.html"
+</script>
+
+<title>Page Redirection</title>
+
+<!-- Note: don't tell people to `click` the link, just tell them that it is a link. -->
+If you are not redirected automatically, follow the <a href='https://cloud.spring.io/spring-cloud-sleuth/spring-cloud-sleuth.html'>link to the documentation</a>

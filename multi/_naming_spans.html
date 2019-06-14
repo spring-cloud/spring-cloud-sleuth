@@ -1,27 +1,13 @@
-<html><head>
-      <meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
-   <title>7.&nbsp;Naming spans</title><link rel="stylesheet" type="text/css" href="css/manual-multipage.css"><meta name="generator" content="DocBook XSL Stylesheets V1.78.1"><link rel="home" href="spring-cloud-sleuth.html" title="Spring Cloud Sleuth"><link rel="up" href="spring-cloud-sleuth.html" title="Spring Cloud Sleuth"><link rel="prev" href="_span_lifecycle.html" title="6.&nbsp;Span lifecycle"><link rel="next" href="_managing_spans_with_annotations.html" title="8.&nbsp;Managing spans with annotations"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">7.&nbsp;Naming spans</th></tr><tr><td width="20%" align="left"><a accesskey="p" href="_span_lifecycle.html">Prev</a>&nbsp;</td><th width="60%" align="center">&nbsp;</th><td width="20%" align="right">&nbsp;<a accesskey="n" href="_managing_spans_with_annotations.html">Next</a></td></tr></table><hr></div><div class="chapter"><div class="titlepage"><div><div><h1 class="title"><a name="_naming_spans" href="#_naming_spans"></a>7.&nbsp;Naming spans</h1></div></div></div><p>Picking a span name is not a trivial task. Span name should depict an operation name. The name should
-be low cardinality (e.g. not include identifiers).</p><p>Since there is a lot of instrumentation going on some of the span names will be
-artificial like:</p><div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><code class="literal">controller-method-name</code> when received by a Controller with a method name <code class="literal">conrollerMethodName</code></li><li class="listitem"><code class="literal">async</code> for asynchronous operations done via wrapped <code class="literal">Callable</code> and <code class="literal">Runnable</code>.</li><li class="listitem"><code class="literal">@Scheduled</code> annotated methods will return the simple name of the class.</li></ul></div><p>Fortunately, for the asynchronous processing you can provide explicit naming.</p><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="__spanname_annotation" href="#__spanname_annotation"></a>7.1&nbsp;@SpanName annotation</h2></div></div></div><p>You can name the span explicitly via the <code class="literal">@SpanName</code> annotation.</p><pre class="programlisting"><em><span class="hl-annotation" style="color: gray">@SpanName("calculateTax")</span></em>
-<span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">class</span> TaxCountingRunnable <span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">implements</span> Runnable {
+<!DOCTYPE HTML>
 
-	<em><span class="hl-annotation" style="color: gray">@Override</span></em> <span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">public</span> <span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">void</span> run() {
-		<span xmlns:d="http://docbook.org/ns/docbook" class="hl-comment">// perform logic</span>
-	}
-}</pre><p>In this case, when processed in the following manner:</p><pre class="programlisting">Runnable runnable = <span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">new</span> TraceRunnable(tracer, spanNamer, <span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">new</span> TaxCountingRunnable());
-Future&lt;?&gt; future = executorService.submit(runnable);
-<span xmlns:d="http://docbook.org/ns/docbook" class="hl-comment">// ... some additional logic ...</span>
-future.get();</pre><p>The span will be named <code class="literal">calculateTax</code>.</p></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="_tostring_method" href="#_tostring_method"></a>7.2&nbsp;toString() method</h2></div></div></div><p>It&#8217;s pretty rare to create separate classes for <code class="literal">Runnable</code> or <code class="literal">Callable</code>. Typically one creates an anonymous
-instance of those classes. You can&#8217;t annotate such classes thus to override that, if there is no <code class="literal">@SpanName</code> annotation present,
-we&#8217;re checking if the class has a custom implementation of the <code class="literal">toString()</code> method.</p><p>So executing such code:</p><pre class="programlisting">Runnable runnable = <span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">new</span> TraceRunnable(tracer, spanNamer, <span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">new</span> Runnable() {
-	<em><span class="hl-annotation" style="color: gray">@Override</span></em> <span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">public</span> <span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">void</span> run() {
-		<span xmlns:d="http://docbook.org/ns/docbook" class="hl-comment">// perform logic</span>
-	}
+<meta charset="UTF-8">
+<meta http-equiv="refresh" content="1; url=https://cloud.spring.io/spring-cloud-sleuth/spring-cloud-sleuth.html">
 
-	<em><span class="hl-annotation" style="color: gray">@Override</span></em> <span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">public</span> String toString() {
-		<span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">return</span> <span xmlns:d="http://docbook.org/ns/docbook" class="hl-string">"calculateTax"</span>;
-	}
-});
-Future&lt;?&gt; future = executorService.submit(runnable);
-<span xmlns:d="http://docbook.org/ns/docbook" class="hl-comment">// ... some additional logic ...</span>
-future.get();</pre><p>will lead in creating a span named <code class="literal">calculateTax</code>.</p></div></div><div class="navfooter"><hr><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="_span_lifecycle.html">Prev</a>&nbsp;</td><td width="20%" align="center">&nbsp;</td><td width="40%" align="right">&nbsp;<a accesskey="n" href="_managing_spans_with_annotations.html">Next</a></td></tr><tr><td width="40%" align="left" valign="top">6.&nbsp;Span lifecycle&nbsp;</td><td width="20%" align="center"><a accesskey="h" href="spring-cloud-sleuth.html">Home</a></td><td width="40%" align="right" valign="top">&nbsp;8.&nbsp;Managing spans with annotations</td></tr></table></div></body></html>
+<script>
+  window.location.href = "https://cloud.spring.io/spring-cloud-sleuth/spring-cloud-sleuth.html"
+</script>
+
+<title>Page Redirection</title>
+
+<!-- Note: don't tell people to `click` the link, just tell them that it is a link. -->
+If you are not redirected automatically, follow the <a href='https://cloud.spring.io/spring-cloud-sleuth/spring-cloud-sleuth.html'>link to the documentation</a>
