@@ -16,16 +16,10 @@
 
 package org.springframework.cloud.sleuth.instrument.messaging;
 
-import java.util.Map;
-
 import brave.Tracing;
-import brave.kafka.clients.KafkaTracing;
 import brave.kafka.streams.KafkaStreamsTracing;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.kafka.clients.consumer.Consumer;
-import org.apache.kafka.clients.producer.Producer;
-import org.apache.kafka.streams.processor.internals.DefaultKafkaClientSupplier;
 
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.config.BeanPostProcessor;
@@ -36,7 +30,6 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.cloud.sleuth.instrument.messaging.TraceMessagingAutoConfiguration.SleuthKafkaConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.kafka.config.KafkaStreamsConfiguration;
 import org.springframework.kafka.config.StreamsBuilderFactoryBean;
 
 /**
@@ -46,8 +39,9 @@ import org.springframework.kafka.config.StreamsBuilderFactoryBean;
  * @author Tim te Beek
  */
 @Configuration
-@ConditionalOnBean({ Tracing.class, KafkaStreamsConfiguration.class })
-@ConditionalOnProperty(value = "spring.sleuth.messaging.kafka.streams.enabled", matchIfMissing = true)
+@ConditionalOnBean(Tracing.class)
+@ConditionalOnProperty(value = "spring.sleuth.messaging.kafka.streams.enabled",
+		matchIfMissing = true)
 @AutoConfigureAfter({ SleuthKafkaConfiguration.class })
 public class SleuthKafkaStreamsConfiguration {
 
@@ -62,8 +56,8 @@ public class SleuthKafkaStreamsConfiguration {
 
 	@Bean
 	static KafkaStreamsBuilderFactoryBeanPostProcessor kafkaStreamsBuilderFactoryBeanPostProcessor(
-			KafkaTracing tracing) {
-		return new KafkaStreamsBuilderFactoryBeanPostProcessor(tracing);
+			KafkaStreamsTracing kafkaStreamsTracing) {
+		return new KafkaStreamsBuilderFactoryBeanPostProcessor(kafkaStreamsTracing);
 	}
 
 }
@@ -73,10 +67,10 @@ class KafkaStreamsBuilderFactoryBeanPostProcessor implements BeanPostProcessor {
 	private static final Log log = LogFactory
 			.getLog(KafkaStreamsBuilderFactoryBeanPostProcessor.class);
 
-	private final KafkaTracing kafkaTracing;
+	private final KafkaStreamsTracing kafkaStreamsTracing;
 
-	KafkaStreamsBuilderFactoryBeanPostProcessor(KafkaTracing kafkaTracing) {
-		this.kafkaTracing = kafkaTracing;
+	KafkaStreamsBuilderFactoryBeanPostProcessor(KafkaStreamsTracing kafkaStreamsTracing) {
+		this.kafkaStreamsTracing = kafkaStreamsTracing;
 	}
 
 	@Override
@@ -85,40 +79,12 @@ class KafkaStreamsBuilderFactoryBeanPostProcessor implements BeanPostProcessor {
 		if (bean instanceof StreamsBuilderFactoryBean) {
 			StreamsBuilderFactoryBean sbfb = (StreamsBuilderFactoryBean) bean;
 			if (log.isDebugEnabled()) {
-				log.debug("StreamsBuilderFactoryBean bean is auto-configured to enable tracing.");
+				log.debug(
+						"StreamsBuilderFactoryBean bean is auto-configured to enable tracing.");
 			}
-			sbfb.setClientSupplier(new SleuthKafkaClientSupplier(kafkaTracing));
+			sbfb.setClientSupplier(kafkaStreamsTracing.kafkaClientSupplier());
 		}
 		return bean;
 	}
 
-}
-
-class SleuthKafkaClientSupplier extends DefaultKafkaClientSupplier {
-
-	private final KafkaTracing kafkaTracing;
-
-	SleuthKafkaClientSupplier(KafkaTracing kafkaTracing) {
-		this.kafkaTracing = kafkaTracing;
-	}
-
-	@Override
-	public Producer<byte[], byte[]> getProducer(Map<String, Object> config) {
-		return kafkaTracing.producer(super.getProducer(config));
-	}
-
-	@Override
-	public Consumer<byte[], byte[]> getConsumer(Map<String, Object> config) {
-		return kafkaTracing.consumer(super.getConsumer(config));
-	}
-
-	@Override
-	public Consumer<byte[], byte[]> getRestoreConsumer(Map<String, Object> config) {
-		return kafkaTracing.consumer(super.getRestoreConsumer(config));
-	}
-
-	@Override
-	public Consumer<byte[], byte[]> getGlobalConsumer(Map<String, Object> config) {
-		return kafkaTracing.consumer(super.getGlobalConsumer(config));
-	}
 }
