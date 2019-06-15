@@ -20,11 +20,13 @@ import brave.Tracing;
 import brave.kafka.streams.KafkaStreamsTracing;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.kafka.streams.KafkaStreams;
 
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.config.BeanPostProcessor;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.cloud.sleuth.autoconfig.TraceAutoConfiguration;
@@ -43,6 +45,7 @@ import org.springframework.kafka.config.StreamsBuilderFactoryBean;
 @AutoConfigureAfter({ TraceAutoConfiguration.class })
 @OnMessagingEnabled
 @ConditionalOnProperty(value = "spring.sleuth.messaging.kafka.streams.enabled", matchIfMissing = true)
+@ConditionalOnClass(KafkaStreams.class)
 public class SleuthKafkaStreamsConfiguration {
 
 	protected SleuthKafkaStreamsConfiguration() {
