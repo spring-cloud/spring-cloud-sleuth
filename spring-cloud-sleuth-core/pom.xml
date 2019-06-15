@@ -113,6 +113,11 @@
 			<optional>true</optional>
 		</dependency>
 		<dependency>
+			<groupId>org.apache.kafka</groupId>
+			<artifactId>kafka-streams</artifactId>
+			<optional>true</optional>
+		</dependency>
+		<dependency>
 			<groupId>org.springframework.security.oauth</groupId>
 			<artifactId>spring-security-oauth2</artifactId>
 			<version>2.2.0.RELEASE</version>
@@ -196,6 +201,10 @@
 		<dependency>
 			<groupId>io.zipkin.brave</groupId>
 			<artifactId>brave-instrumentation-kafka-clients</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>io.zipkin.brave</groupId>
+			<artifactId>brave-instrumentation-kafka-streams</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>io.zipkin.brave</groupId>
