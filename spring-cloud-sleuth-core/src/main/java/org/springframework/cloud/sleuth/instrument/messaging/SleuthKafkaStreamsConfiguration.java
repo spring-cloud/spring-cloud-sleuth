@@ -51,6 +51,12 @@ public class SleuthKafkaStreamsConfiguration {
 	protected SleuthKafkaStreamsConfiguration() {
 	}
 
+	/**
+	 * Expose {@link KafkaStreamsTracing} as bean to allow for filter/map/peek/transform operations.
+	 *
+	 * @param tracing
+	 * @return
+	 */
 	@Bean
 	@ConditionalOnMissingBean
 	KafkaStreamsTracing kafkaStreamsTracing(Tracing tracing) {
@@ -58,13 +64,19 @@ public class SleuthKafkaStreamsConfiguration {
 	}
 
 	@Bean
-	static KafkaStreamsBuilderFactoryBeanPostProcessor kafkaStreamsBuilderFactoryBeanPostProcessor(
+	KafkaStreamsBuilderFactoryBeanPostProcessor kafkaStreamsBuilderFactoryBeanPostProcessor(
 			KafkaStreamsTracing kafkaStreamsTracing) {
 		return new KafkaStreamsBuilderFactoryBeanPostProcessor(kafkaStreamsTracing);
 	}
 
 }
 
+/**
+ * Invoke {@link StreamsBuilderFactoryBean#setClientSupplier(org.apache.kafka.streams.KafkaClientSupplier)} with
+ * {@link KafkaStreamsTracing#kafkaClientSupplier()} to enable producer/consumer header injection.<br/>
+ * Explicitly not using {@link org.springframework.kafka.config.StreamsBuilderFactoryBeanCustomizer} as that only allows
+ * for a single instance, which could conflict with a user supplied instance.
+ */
 class KafkaStreamsBuilderFactoryBeanPostProcessor implements BeanPostProcessor {
 
 	private static final Log log = LogFactory
@@ -82,8 +94,7 @@ class KafkaStreamsBuilderFactoryBeanPostProcessor implements BeanPostProcessor {
 		if (bean instanceof StreamsBuilderFactoryBean) {
 			StreamsBuilderFactoryBean sbfb = (StreamsBuilderFactoryBean) bean;
 			if (log.isDebugEnabled()) {
-				log.debug(
-						"StreamsBuilderFactoryBean bean is auto-configured to enable tracing.");
+				log.debug("StreamsBuilderFactoryBean bean is auto-configured to enable tracing.");
 			}
 			sbfb.setClientSupplier(kafkaStreamsTracing.kafkaClientSupplier());
 		}
