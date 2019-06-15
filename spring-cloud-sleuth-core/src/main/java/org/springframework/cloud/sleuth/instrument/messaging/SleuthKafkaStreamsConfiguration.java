@@ -23,11 +23,9 @@ import org.apache.commons.logging.LogFactory;
 
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.config.BeanPostProcessor;
-import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.cloud.sleuth.instrument.messaging.TraceMessagingAutoConfiguration.SleuthKafkaConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.kafka.config.StreamsBuilderFactoryBean;
@@ -42,7 +40,6 @@ import org.springframework.kafka.config.StreamsBuilderFactoryBean;
 @ConditionalOnBean(Tracing.class)
 @ConditionalOnProperty(value = "spring.sleuth.messaging.kafka.streams.enabled",
 		matchIfMissing = true)
-@AutoConfigureAfter({ SleuthKafkaConfiguration.class })
 public class SleuthKafkaStreamsConfiguration {
 
 	protected SleuthKafkaStreamsConfiguration() {
