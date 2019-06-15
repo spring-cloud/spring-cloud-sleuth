@@ -37,7 +37,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import zipkin2.reporter.Sender;
 import zipkin2.reporter.amqp.RabbitMQSender;
-import zipkin2.reporter.kafka11.KafkaSender;
+import zipkin2.reporter.kafka.KafkaSender;
 
 import static org.assertj.core.api.BDDAssertions.then;
 import static org.springframework.boot.test.util.EnvironmentTestUtils.addEnvironment;
