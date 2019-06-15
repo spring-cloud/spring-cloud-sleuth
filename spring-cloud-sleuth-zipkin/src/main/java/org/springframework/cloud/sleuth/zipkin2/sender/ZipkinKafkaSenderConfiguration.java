@@ -21,7 +21,7 @@ import java.util.Map;
 
 import org.apache.kafka.common.serialization.ByteArraySerializer;
 import zipkin2.reporter.Sender;
-import zipkin2.reporter.kafka11.KafkaSender;
+import zipkin2.reporter.kafka.KafkaSender;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
