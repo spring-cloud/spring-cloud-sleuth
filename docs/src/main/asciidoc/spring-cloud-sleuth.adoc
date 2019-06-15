@@ -1359,6 +1359,15 @@ so that tracing headers get injected into the created Spring Kafka's
 
 To block this feature, set `spring.sleuth.messaging.kafka.enabled` to `false`.
 
+==== Spring Kafka Streams
+
+We instrument the `KafkaStreams` `KafkaClientSupplier` so that tracing headers
+get injected into the `Producer` and `Consumer`s. A `KafkaStreamsTracing` bean
+allows for further instrumentation through additional `TransformerSupplier` and
+`ProcessorSupplier` methods.
+
+To block this feature, set `spring.sleuth.messaging.kafka.streams.enabled` to `false`.
+
 ==== Spring JMS
 
 We instrument the `JmsTemplate` so that tracing headers get injected
