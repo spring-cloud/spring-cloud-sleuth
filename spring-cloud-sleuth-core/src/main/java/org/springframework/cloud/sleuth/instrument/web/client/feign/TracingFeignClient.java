@@ -20,7 +20,7 @@ import java.io.IOException;
 import java.nio.charset.Charset;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 import brave.Span;
@@ -89,7 +89,7 @@ final class TracingFeignClient implements Client {
 
 	@Override
 	public Response execute(Request request, Request.Options options) throws IOException {
-		Map<String, Collection<String>> headers = new HashMap<>(request.headers());
+		Map<String, Collection<String>> headers = new LinkedHashMap<>(request.headers());
 		Span span = handleSend(headers, request, null);
 		if (log.isDebugEnabled()) {
 			log.debug("Handled send of " + span);
