@@ -48,6 +48,7 @@ import org.springframework.util.ReflectionUtils;
  * @author Marcin Grzejszczak
  * @author Jesus Alonso
  * @author Denys Ivano
+ * @author Vladislav Fefelov
  * @since 1.1.4
  */
 class ExecutorBeanPostProcessor implements BeanPostProcessor {
@@ -71,8 +72,14 @@ class ExecutorBeanPostProcessor implements BeanPostProcessor {
 	@Override
 	public Object postProcessAfterInitialization(Object bean, String beanName)
 			throws BeansException {
-		if (bean instanceof ThreadPoolTaskExecutor
-				&& !(bean instanceof LazyTraceThreadPoolTaskExecutor)) {
+		if (bean instanceof LazyTraceThreadPoolTaskExecutor
+				|| bean instanceof TraceableExecutorService
+				|| bean instanceof LazyTraceAsyncTaskExecutor
+				|| bean instanceof LazyTraceExecutor) {
+			log.info("Bean is already instrumented " + beanName);
+			return bean;
+		}
+		if (bean instanceof ThreadPoolTaskExecutor) {
 			if (isProxyNeeded(beanName)) {
 				return wrapThreadPoolTaskExecutor(bean);
 			}
@@ -80,8 +87,7 @@ class ExecutorBeanPostProcessor implements BeanPostProcessor {
 				log.info("Not instrumenting bean " + beanName);
 			}
 		}
-		else if (bean instanceof ExecutorService
-				&& !(bean instanceof TraceableExecutorService)) {
+		else if (bean instanceof ExecutorService) {
 			if (isProxyNeeded(beanName)) {
 				return wrapExecutorService(bean);
 			}
@@ -89,8 +95,7 @@ class ExecutorBeanPostProcessor implements BeanPostProcessor {
 				log.info("Not instrumenting bean " + beanName);
 			}
 		}
-		else if (bean instanceof AsyncTaskExecutor
-				&& !(bean instanceof LazyTraceAsyncTaskExecutor)) {
+		else if (bean instanceof AsyncTaskExecutor) {
 			if (isProxyNeeded(beanName)) {
 				return wrapAsyncTaskExecutor(bean);
 			}
@@ -98,7 +103,7 @@ class ExecutorBeanPostProcessor implements BeanPostProcessor {
 				log.info("Not instrumenting bean " + beanName);
 			}
 		}
-		else if (bean instanceof Executor && !(bean instanceof LazyTraceExecutor)) {
+		else if (bean instanceof Executor) {
 			return wrapExecutor(bean);
 		}
 		return bean;
@@ -190,14 +195,13 @@ class ExecutorBeanPostProcessor implements BeanPostProcessor {
 
 	Object createExecutorServiceProxy(Object bean, boolean cglibProxy,
 			ExecutorService executor) {
-		return getProxiedObject(bean, cglibProxy, executor,
-				() -> {
-					if (executor instanceof ScheduledExecutorService) {
-						return new TraceableScheduledExecutorService(this.beanFactory, executor);
-					}
+		return getProxiedObject(bean, cglibProxy, executor, () -> {
+			if (executor instanceof ScheduledExecutorService) {
+				return new TraceableScheduledExecutorService(this.beanFactory, executor);
+			}
 
-					return new TraceableExecutorService(this.beanFactory, executor);
-				});
+			return new TraceableExecutorService(this.beanFactory, executor);
+		});
 	}
 
 	Object createAsyncTaskExecutorProxy(Object bean, boolean cglibProxy,
