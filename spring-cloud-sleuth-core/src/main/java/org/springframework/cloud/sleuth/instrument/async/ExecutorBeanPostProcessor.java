@@ -21,6 +21,7 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.function.Supplier;
 
@@ -190,7 +191,13 @@ class ExecutorBeanPostProcessor implements BeanPostProcessor {
 	Object createExecutorServiceProxy(Object bean, boolean cglibProxy,
 			ExecutorService executor) {
 		return getProxiedObject(bean, cglibProxy, executor,
-				() -> new TraceableExecutorService(this.beanFactory, executor));
+				() -> {
+					if (executor instanceof ScheduledExecutorService) {
+						return new TraceableScheduledExecutorService(this.beanFactory, executor);
+					}
+
+					return new TraceableExecutorService(this.beanFactory, executor);
+				});
 	}
 
 	Object createAsyncTaskExecutorProxy(Object bean, boolean cglibProxy,
