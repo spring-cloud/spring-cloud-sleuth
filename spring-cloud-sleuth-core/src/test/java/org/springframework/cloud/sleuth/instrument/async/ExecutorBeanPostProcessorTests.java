@@ -53,6 +53,7 @@ import static org.assertj.core.api.BDDAssertions.thenThrownBy;
 /**
  * @author Marcin Grzejszczak
  * @author Denys Ivano
+ * @author Vladislav Fefelov
  */
 @RunWith(MockitoJUnitRunner.class)
 public class ExecutorBeanPostProcessorTests {
@@ -86,15 +87,86 @@ public class ExecutorBeanPostProcessorTests {
 	}
 
 	@Test
-	public void should_fallback_to_sleuth_implementation_when_cglib_cannot_be_created()
+	public void should_fallback_to_sleuth_implementation_when_cglib_cannot_be_created_for_executor()
 			throws Exception {
-		ScheduledExecutorService service = Executors.newSingleThreadScheduledExecutor();
+		ExecutorService service = Executors.newSingleThreadExecutor();
 
 		Object o = new ExecutorBeanPostProcessor(this.beanFactory)
 				.postProcessAfterInitialization(service, "foo");
 
 		then(o).isInstanceOf(TraceableExecutorService.class);
 		service.shutdown();
+	}
+
+	@Test
+	public void should_fallback_to_sleuth_implementation_when_cglib_cannot_be_created_for_scheduled_executor()
+			throws Exception {
+		ScheduledExecutorService service = Executors.newSingleThreadScheduledExecutor();
+
+		Object o = new ExecutorBeanPostProcessor(this.beanFactory)
+				.postProcessAfterInitialization(service, "foo");
+
+		then(o).isInstanceOf(TraceableScheduledExecutorService.class);
+		service.shutdown();
+	}
+
+	@Test
+	public void should_do_nothing_when_bean_is_already_lazy_trace_async_task_executor()
+			throws Exception {
+		LazyTraceAsyncTaskExecutor service = BDDMockito
+				.mock(LazyTraceAsyncTaskExecutor.class);
+
+		Object o = new ExecutorBeanPostProcessor(this.beanFactory)
+				.postProcessAfterInitialization(service, "foo");
+
+		then(o).isSameAs(service);
+	}
+
+	@Test
+	public void should_do_nothing_when_bean_is_already_lazy_trace_executor()
+			throws Exception {
+		LazyTraceExecutor service = BDDMockito.mock(LazyTraceExecutor.class);
+
+		Object o = new ExecutorBeanPostProcessor(this.beanFactory)
+				.postProcessAfterInitialization(service, "foo");
+
+		then(o).isSameAs(service);
+	}
+
+	@Test
+	public void should_do_nothing_when_bean_is_already_lazy_thread_pool_task_executor()
+			throws Exception {
+		LazyTraceThreadPoolTaskExecutor service = BDDMockito
+				.mock(LazyTraceThreadPoolTaskExecutor.class);
+
+		Object o = new ExecutorBeanPostProcessor(this.beanFactory)
+				.postProcessAfterInitialization(service, "foo");
+
+		then(o).isSameAs(service);
+	}
+
+	@Test
+	public void should_do_nothing_when_bean_is_already_traceable_executor()
+			throws Exception {
+		TraceableExecutorService service = BDDMockito
+				.mock(TraceableExecutorService.class);
+
+		Object o = new ExecutorBeanPostProcessor(this.beanFactory)
+				.postProcessAfterInitialization(service, "foo");
+
+		then(o).isSameAs(service);
+	}
+
+	@Test
+	public void should_do_nothing_when_bean_is_already_traceable_scheduled_executor()
+			throws Exception {
+		TraceableScheduledExecutorService service = BDDMockito
+				.mock(TraceableScheduledExecutorService.class);
+
+		Object o = new ExecutorBeanPostProcessor(this.beanFactory)
+				.postProcessAfterInitialization(service, "foo");
+
+		then(o).isSameAs(service);
 	}
 
 	@Test
@@ -112,7 +184,7 @@ public class ExecutorBeanPostProcessorTests {
 
 		Object wrappedService = bpp.postProcessAfterInitialization(service, "foo");
 
-		then(wrappedService).isInstanceOf(TraceableExecutorService.class);
+		then(wrappedService).isInstanceOf(TraceableScheduledExecutorService.class);
 		service.shutdown();
 	}
 
