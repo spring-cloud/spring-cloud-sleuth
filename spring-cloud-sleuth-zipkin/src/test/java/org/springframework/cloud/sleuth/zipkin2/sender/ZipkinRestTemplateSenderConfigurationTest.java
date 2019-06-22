@@ -21,6 +21,9 @@ import org.springframework.cloud.client.loadbalancer.LoadBalancerClient;
 import org.springframework.cloud.sleuth.zipkin2.ZipkinLoadBalancer;
 import org.springframework.cloud.sleuth.zipkin2.ZipkinProperties;
 
+/**
+ * @author liaochuntao
+ */
 public class ZipkinRestTemplateSenderConfigurationTest {
 
 	@Test
