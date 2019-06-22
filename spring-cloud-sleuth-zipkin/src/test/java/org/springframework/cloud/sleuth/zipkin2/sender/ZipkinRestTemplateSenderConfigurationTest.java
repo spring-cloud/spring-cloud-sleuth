@@ -20,28 +20,28 @@ import org.junit.Test;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingClass;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
-import org.springframework.context.ConfigurableApplicationContext;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Bean;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.cloud.client.loadbalancer.LoadBalancerClient;
 import org.springframework.cloud.sleuth.zipkin2.ZipkinLoadBalancer;
 import org.springframework.cloud.sleuth.zipkin2.ZipkinProperties;
+import org.springframework.context.ConfigurableApplicationContext;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * @author liaochuntao
  */
-public class ZipkinRestTemplateSenderConfigurationTest {
+public class ZipkinRestTemplateSenderConfigurationTests {
 
 	@Test
-	public void endpointLocatorShouldDefaultToServerPropertiesEndpointLocator() {
+	public void disableZipkinDiscoveryClient() {
 		ConfigurableApplicationContext ctxt = new SpringApplication(
-				ZipkinRestTemplateSenderConfigurationTest.MyDiscoveryClientZipkinUrlExtractorConfiguration.class)
+				ZipkinRestTemplateSenderConfigurationTests.MyDiscoveryClientZipkinUrlExtractorConfiguration.class,
+				ZipkinProperties.class)
 				.run("--spring.zipkin.discovery-client-enabled=false");
 		assertThat(ctxt.getBean(ZipkinLoadBalancer.class))
 				.isInstanceOf(NoOpZipkinLoadBalancer.class);
@@ -49,9 +49,10 @@ public class ZipkinRestTemplateSenderConfigurationTest {
 	}
 
 	@Test
-	public void endpointLocatorShouldDefaultToServerPropertiesEndpointLocatorEvenWhenDiscoveryClientPresent() {
+	public void enableZipkinDiscoveryClient() {
 		ConfigurableApplicationContext ctxt = new SpringApplication(
-				ZipkinRestTemplateSenderConfigurationTest.MyDiscoveryClientZipkinUrlExtractorConfiguration.class)
+				ZipkinRestTemplateSenderConfigurationTests.MyDiscoveryClientZipkinUrlExtractorConfiguration.class,
+				ZipkinProperties.class)
 				.run("--spring.zipkin.discovery-client-enabled=true");
 		assertThat(ctxt.getBean(ZipkinLoadBalancer.class))
 				.isInstanceOf(LoadBalancerClientZipkinLoadBalancer.class);
@@ -63,8 +64,7 @@ public class ZipkinRestTemplateSenderConfigurationTest {
 	static class MyDiscoveryClientZipkinUrlExtractorConfiguration {
 
 		@Configuration
-		@ConditionalOnProperty(value = "spring.zipkin.discovery-client-enabled",
-				havingValue = "true", matchIfMissing = true)
+		@ConditionalOnProperty(value = "spring.zipkin.discovery-client-enabled", havingValue = "true", matchIfMissing = true)
 		static class ZipkinClientLoadBalancedConfiguration {
 
 			@Autowired(required = false)
@@ -81,8 +81,7 @@ public class ZipkinRestTemplateSenderConfigurationTest {
 		}
 
 		@Configuration
-		@ConditionalOnProperty(value = "spring.zipkin.discovery-client-enabled",
-				havingValue = "false")
+		@ConditionalOnProperty(value = "spring.zipkin.discovery-client-enabled", havingValue = "false")
 		static class ZipkinClientNoOpConfiguration {
 
 			@Bean
