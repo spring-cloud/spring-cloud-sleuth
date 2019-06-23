@@ -82,8 +82,7 @@ public class ZipkinRestTemplateSenderConfigurationTest {
 		}
 
 		@Configuration
-		@ConditionalOnProperty(value = "spring.zipkin.discovery-client-enabled",
-				havingValue = "false")
+		@ConditionalOnProperty(value = "spring.zipkin.discovery-client-enabled", havingValue = "false")
 		static class ZipkinClientNoOpConfiguration {
 
 			@Bean
