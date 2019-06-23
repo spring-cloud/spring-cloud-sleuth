@@ -42,7 +42,7 @@ public class ZipkinRestTemplateSenderConfigurationTest {
 		ConfigurableApplicationContext ctxt = new SpringApplication(
 				ZipkinRestTemplateSenderConfigurationTest.MyDiscoveryClientZipkinUrlExtractorConfiguration.class,
 				ZipkinProperties.class)
-				.run("--spring.zipkin.discovery-client-enabled=false");
+						.run("--spring.zipkin.discovery-client-enabled=false");
 		assertThat(ctxt.getBean(ZipkinLoadBalancer.class))
 				.isInstanceOf(NoOpZipkinLoadBalancer.class);
 		ctxt.close();
@@ -53,7 +53,7 @@ public class ZipkinRestTemplateSenderConfigurationTest {
 		ConfigurableApplicationContext ctxt = new SpringApplication(
 				ZipkinRestTemplateSenderConfigurationTest.MyDiscoveryClientZipkinUrlExtractorConfiguration.class,
 				ZipkinProperties.class)
-				.run("--spring.zipkin.discovery-client-enabled=true");
+						.run("--spring.zipkin.discovery-client-enabled=true");
 		assertThat(ctxt.getBean(ZipkinLoadBalancer.class))
 				.isInstanceOf(LoadBalancerClientZipkinLoadBalancer.class);
 		ctxt.close();
@@ -64,8 +64,7 @@ public class ZipkinRestTemplateSenderConfigurationTest {
 	static class MyDiscoveryClientZipkinUrlExtractorConfiguration {
 
 		@Configuration
-		@ConditionalOnProperty(value = "spring.zipkin.discovery-client-enabled",
-				havingValue = "true", matchIfMissing = true)
+		@ConditionalOnProperty(value = "spring.zipkin.discovery-client-enabled", havingValue = "true", matchIfMissing = true)
 		static class ZipkinClientLoadBalancedConfiguration {
 
 			@Autowired(required = false)
