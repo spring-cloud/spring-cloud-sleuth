@@ -53,7 +53,7 @@ An example from Kibana would resemble the following image:</p><div class="inform
               match =&gt; { "message" =&gt; "(?m)OUT\s+%{TIMESTAMP_ISO8601:timestamp}\s+%{LOGLEVEL:severity}\s+\[%{DATA:service},%{DATA:trace},%{DATA:span},%{DATA:exportable}\]\s+%{DATA:pid}\s+---\s+\[%{DATA:thread}\]\s+%{DATA:class}\s+:\s+%{GREEDYDATA:rest}" }
        }
 }</pre><div class="section"><div class="titlepage"><div><div><h4 class="title"><a name="_json_logback_with_logstash" href="#_json_logback_with_logstash"></a>JSON Logback with Logstash</h4></div></div></div><p>Often, you do not want to store your logs in a text file but in a JSON file that Logstash can immediately pick.
-To do so, you have to do the following (for readability, we pass the dependencies in the <code class="literal">groupId:artifactId:version</code> notation).</p><p><span class="strong"><strong>Dependencies Setup</strong></span></p><div class="orderedlist"><ol class="orderedlist" type="1"><li class="listitem">Ensure that Logback is on the classpath (<code class="literal">ch.qos.logback:logback-core</code>).</li><li class="listitem">Add Logstash Logback encode. For example, to use version <code class="literal">4.6</code>, add <code class="literal">net.logstash.logback:logstash-logback-encoder:4.6</code>.</li></ol></div><p><span class="strong"><strong>Logback Setup</strong></span></p><p>Consider the following example of a Logback configuration file (named <a class="link" href="https://github.com/spring-cloud-samples/sleuth-documentation-apps/blob/master/service1/src/main/resources/logback-spring.xml" target="_top">logback-spring.xml</a>).</p><pre class="programlisting"><span class="hl-directive" style="color: maroon">&lt;?xml version="1.0" encoding="UTF-8"?&gt;</span>
+To do so, you have to do the following (for readability, we pass the dependencies in the <code class="literal">groupId:artifactId:version</code> notation).</p><p><span class="strong"><strong>Dependencies Setup</strong></span></p><div class="orderedlist"><ol class="orderedlist" type="1"><li class="listitem">Ensure that Logback is on the classpath (<code class="literal">ch.qos.logback:logback-core</code>).</li><li class="listitem">Add Logstash Logback encode. For example, to use version <code class="literal">4.6</code>, add <code class="literal">net.logstash.logback:logstash-logback-encoder:4.6</code>.</li></ol></div><p><span class="strong"><strong>Logback Setup</strong></span></p><p>Consider the following example of a Logback configuration file (named <a class="link" href="https://github.com/spring-cloud-samples/sleuth-documentation-apps/blob/master/service1/src/main/resources/logback-spring.xml" target="_top">logback-spring.xml</a>).</p><pre class="programlisting"><xslthl:directive xmlns:xslthl="http://xslthl.sourceforge.net/">&lt;?xml version="1.0" encoding="UTF-8"?&gt;</xslthl:directive>
 <span xmlns:d="http://docbook.org/ns/docbook" class="hl-tag">&lt;configuration&gt;</span>
 	<span xmlns:d="http://docbook.org/ns/docbook" class="hl-tag">&lt;include</span> <span xmlns:d="http://docbook.org/ns/docbook" class="hl-attribute">resource</span>=<span xmlns:d="http://docbook.org/ns/docbook" class="hl-value">"org/springframework/boot/logging/logback/defaults.xml"</span><span xmlns:d="http://docbook.org/ns/docbook" class="hl-tag">/&gt;</span>
 	&#8203;
@@ -244,15 +244,15 @@ dependencies {
 </p><div class="calloutlist"><table border="0" summary="Callout list"><tr><td width="5%" valign="top" align="left"><p><a href="#CO6-1"><span><img src="images/callouts/1.png" alt="1" border="0"></span></a> </p></td><td valign="top" align="left"><p>We recommend that you add the dependency management through the Spring BOM so that you need not manage versions yourself.</p></td></tr><tr><td width="5%" valign="top" align="left"><p><a href="#CO6-2"><span><img src="images/callouts/2.png" alt="2" border="0"></span></a> </p></td><td valign="top" align="left"><p>Add the dependency to <code class="literal">spring-cloud-starter-zipkin</code>. That way, all nested dependencies get downloaded.</p></td></tr><tr><td width="5%" valign="top" align="left"><p><a href="#CO6-3"><span><img src="images/callouts/3.png" alt="3" border="0"></span></a> </p></td><td valign="top" align="left"><p>To automatically configure RabbitMQ, add the <code class="literal">spring-rabbit</code> dependency.</p></td></tr></table></div></div></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="_overriding_the_auto_configuration_of_zipkin" href="#_overriding_the_auto_configuration_of_zipkin"></a>1.4&nbsp;Overriding the auto-configuration of Zipkin</h2></div></div></div><p>Spring Cloud Sleuth supports sending traces to multiple tracing systems as of version 2.1.0.
 In order to get this to work, every tracing system needs to have a <code class="literal">Reporter&lt;Span&gt;</code> and <code class="literal">Sender</code>.
 If you want to override the provided beans you need to give them a specific name.
-To do this you can use respectively <code class="literal">ZipkinAutoConfiguration.REPORTER_BEAN_NAME</code> and <code class="literal">ZipkinAutoConfiguration.SENDER_BEAN_NAME</code>.</p><pre class="programlisting"><em><span class="hl-annotation" style="color: gray">@Configuration</span></em>
+To do this you can use respectively <code class="literal">ZipkinAutoConfiguration.REPORTER_BEAN_NAME</code> and <code class="literal">ZipkinAutoConfiguration.SENDER_BEAN_NAME</code>.</p><pre class="programlisting"><xslthl:annotation xmlns:xslthl="http://xslthl.sourceforge.net/">@Configuration</xslthl:annotation>
 <span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">protected</span> <span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">static</span> <span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">class</span> MyConfig {
 
-	<em><span class="hl-annotation" style="color: gray">@Bean(ZipkinAutoConfiguration.REPORTER_BEAN_NAME)</span></em>
+	<xslthl:annotation xmlns:xslthl="http://xslthl.sourceforge.net/">@Bean(ZipkinAutoConfiguration.REPORTER_BEAN_NAME)</xslthl:annotation>
 	Reporter&lt;zipkin2.Span&gt; myReporter() {
 		<span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">return</span> AsyncReporter.create(mySender());
 	}
 
-	<em><span class="hl-annotation" style="color: gray">@Bean(ZipkinAutoConfiguration.SENDER_BEAN_NAME)</span></em>
+	<xslthl:annotation xmlns:xslthl="http://xslthl.sourceforge.net/">@Bean(ZipkinAutoConfiguration.SENDER_BEAN_NAME)</xslthl:annotation>
 	MySender mySender() {
 		<span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">return</span> <span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">new</span> MySender();
 	}
@@ -265,22 +265,22 @@ To do this you can use respectively <code class="literal">ZipkinAutoConfiguratio
 			<span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">return</span> <span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">this</span>.spanSent;
 		}
 
-		<em><span class="hl-annotation" style="color: gray">@Override</span></em>
+		<xslthl:annotation xmlns:xslthl="http://xslthl.sourceforge.net/">@Override</xslthl:annotation>
 		<span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">public</span> Encoding encoding() {
 			<span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">return</span> Encoding.JSON;
 		}
 
-		<em><span class="hl-annotation" style="color: gray">@Override</span></em>
+		<xslthl:annotation xmlns:xslthl="http://xslthl.sourceforge.net/">@Override</xslthl:annotation>
 		<span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">public</span> <span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">int</span> messageMaxBytes() {
 			<span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">return</span> Integer.MAX_VALUE;
 		}
 
-		<em><span class="hl-annotation" style="color: gray">@Override</span></em>
+		<xslthl:annotation xmlns:xslthl="http://xslthl.sourceforge.net/">@Override</xslthl:annotation>
 		<span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">public</span> <span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">int</span> messageSizeInBytes(List&lt;<span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">byte</span>[]&gt; encodedSpans) {
 			<span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">return</span> encoding().listSizeInBytes(encodedSpans);
 		}
 
-		<em><span class="hl-annotation" style="color: gray">@Override</span></em>
+		<xslthl:annotation xmlns:xslthl="http://xslthl.sourceforge.net/">@Override</xslthl:annotation>
 		<span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">public</span> Call&lt;Void&gt; sendSpans(List&lt;<span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">byte</span>[]&gt; encodedSpans) {
 			<span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">this</span>.spanSent = true;
 			<span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">return</span> Call.create(null);

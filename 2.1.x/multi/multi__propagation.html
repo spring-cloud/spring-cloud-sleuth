@@ -16,14 +16,14 @@ The most common propagation approach is to copy a trace context from a client by
 &#9474; &#9492;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9496; &#9474;          &#9492;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9496;        &#9474; &#9492;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9496; &#9474;
 &#9474;                  &#9474;                                       &#9474;                  &#9474;
 &#9492;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9496;                                       &#9492;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9496;</pre><p>The names above are from <a class="link" href="https://github.com/openzipkin/b3-propagation" target="_top">B3 Propagation</a>, which is built-in to Brave and has implementations in many languages and frameworks.</p><p>Most users use a framework interceptor to automate propagation.
-The next two examples show how that might work for a client and a server.</p><p>The following example shows how client-side propagation might work:</p><pre class="programlisting"><em><span class="hl-annotation" style="color: gray">@Autowired</span></em> Tracing tracing;
+The next two examples show how that might work for a client and a server.</p><p>The following example shows how client-side propagation might work:</p><pre class="programlisting"><xslthl:annotation xmlns:xslthl="http://xslthl.sourceforge.net/">@Autowired</xslthl:annotation> Tracing tracing;
 
 <span xmlns:d="http://docbook.org/ns/docbook" class="hl-comment">// configure a function that injects a trace context into a request</span>
 injector = tracing.propagation().injector(Request.Builder::addHeader);
 
 <span xmlns:d="http://docbook.org/ns/docbook" class="hl-comment">// before a request is sent, add the current span's context to it</span>
-injector.inject(span.context(), request);</pre><p>The following example shows how server-side propagation might work:</p><pre class="programlisting"><em><span class="hl-annotation" style="color: gray">@Autowired</span></em> Tracing tracing;
-<em><span class="hl-annotation" style="color: gray">@Autowired</span></em> Tracer tracer;
+injector.inject(span.context(), request);</pre><p>The following example shows how server-side propagation might work:</p><pre class="programlisting"><xslthl:annotation xmlns:xslthl="http://xslthl.sourceforge.net/">@Autowired</xslthl:annotation> Tracing tracing;
+<xslthl:annotation xmlns:xslthl="http://xslthl.sourceforge.net/">@Autowired</xslthl:annotation> Tracer tracer;
 
 <span xmlns:d="http://docbook.org/ns/docbook" class="hl-comment">// configure a function that extracts the trace context from a request</span>
 extractor = tracing.propagation().extractor(Request::getHeader);

@@ -3,12 +3,12 @@
    <title>15.&nbsp;Integrations</title><link rel="stylesheet" type="text/css" href="css/manual-multipage.css"><meta name="generator" content="DocBook XSL Stylesheets V1.79.1"><link rel="home" href="multi_spring-cloud-sleuth.html" title="Spring Cloud Sleuth"><link rel="up" href="multi_spring-cloud-sleuth.html" title="Spring Cloud Sleuth"><link rel="prev" href="multi__zipkin_stream_span_consumer.html" title="14.&nbsp;Zipkin Stream Span Consumer"><link rel="next" href="multi__running_examples.html" title="16.&nbsp;Running examples"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">15.&nbsp;Integrations</th></tr><tr><td width="20%" align="left"><a accesskey="p" href="multi__zipkin_stream_span_consumer.html">Prev</a>&nbsp;</td><th width="60%" align="center">&nbsp;</th><td width="20%" align="right">&nbsp;<a accesskey="n" href="multi__running_examples.html">Next</a></td></tr></table><hr></div><div class="chapter"><div class="titlepage"><div><div><h1 class="title"><a name="_integrations" href="#_integrations"></a>15.&nbsp;Integrations</h1></div></div></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="_opentracing" href="#_opentracing"></a>15.1&nbsp;OpenTracing</h2></div></div></div><p>Spring Cloud Sleuth is compatible with <a class="link" href="https://opentracing.io/" target="_top">OpenTracing</a>.
 If you have OpenTracing on the classpath, we automatically register the OpenTracing <code class="literal">Tracer</code> bean.
 If you wish to disable this, set <code class="literal">spring.sleuth.opentracing.enabled</code> to <code class="literal">false</code></p></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="_runnable_and_callable" href="#_runnable_and_callable"></a>15.2&nbsp;Runnable and Callable</h2></div></div></div><p>If you wrap your logic in <code class="literal">Runnable</code> or <code class="literal">Callable</code>, you can wrap those classes in their Sleuth representative, as shown in the following example for <code class="literal">Runnable</code>:</p><pre class="programlisting">Runnable runnable = <span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">new</span> Runnable() {
-	<em><span class="hl-annotation" style="color: gray">@Override</span></em>
+	<xslthl:annotation xmlns:xslthl="http://xslthl.sourceforge.net/">@Override</xslthl:annotation>
 	<span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">public</span> <span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">void</span> run() {
 		<span xmlns:d="http://docbook.org/ns/docbook" class="hl-comment">// do some work</span>
 	}
 
-	<em><span class="hl-annotation" style="color: gray">@Override</span></em>
+	<xslthl:annotation xmlns:xslthl="http://xslthl.sourceforge.net/">@Override</xslthl:annotation>
 	<span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">public</span> String toString() {
 		<span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">return</span> <span xmlns:d="http://docbook.org/ns/docbook" class="hl-string">"spanNameFromToStringMethod"</span>;
 	}
@@ -20,12 +20,12 @@ Runnable traceRunnable = <span xmlns:d="http://docbook.org/ns/docbook" class="hl
 <span xmlns:d="http://docbook.org/ns/docbook" class="hl-comment">// in the thread of `Runnable`</span>
 Runnable traceRunnableFromTracer = <span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">this</span>.tracing.currentTraceContext()
 		.wrap(runnable);</pre><p>The following example shows how to do so for <code class="literal">Callable</code>:</p><pre class="programlisting">Callable&lt;String&gt; callable = <span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">new</span> Callable&lt;String&gt;() {
-	<em><span class="hl-annotation" style="color: gray">@Override</span></em>
+	<xslthl:annotation xmlns:xslthl="http://xslthl.sourceforge.net/">@Override</xslthl:annotation>
 	<span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">public</span> String call() <span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">throws</span> Exception {
 		<span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">return</span> someLogic();
 	}
 
-	<em><span class="hl-annotation" style="color: gray">@Override</span></em>
+	<xslthl:annotation xmlns:xslthl="http://xslthl.sourceforge.net/">@Override</xslthl:annotation>
 	<span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">public</span> String toString() {
 		<span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">return</span> <span xmlns:d="http://docbook.org/ns/docbook" class="hl-string">"spanNameFromToStringMethod"</span>;
 	}
@@ -39,13 +39,13 @@ Callable&lt;String&gt; traceCallableFromTracer = <span xmlns:d="http://docbook.o
 		.wrap(callable);</pre><p>That way, you ensure that a new span is created and closed for each execution.</p></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="_hystrix" href="#_hystrix"></a>15.3&nbsp;Hystrix</h2></div></div></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="_custom_concurrency_strategy" href="#_custom_concurrency_strategy"></a>15.3.1&nbsp;Custom Concurrency Strategy</h3></div></div></div><p>We register a custom <a class="link" href="https://github.com/Netflix/Hystrix/wiki/Plugins#concurrencystrategy" target="_top"><code class="literal">HystrixConcurrencyStrategy</code></a> called <code class="literal">TraceCallable</code> that wraps all <code class="literal">Callable</code> instances in their Sleuth representative.
 The strategy either starts or continues a span, depending on whether tracing was already going on before the Hystrix command was called.
 To disable the custom Hystrix Concurrency Strategy, set the <code class="literal">spring.sleuth.hystrix.strategy.enabled</code> to <code class="literal">false</code>.</p></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="_manual_command_setting" href="#_manual_command_setting"></a>15.3.2&nbsp;Manual Command setting</h3></div></div></div><p>Assume that you have the following <code class="literal">HystrixCommand</code>:</p><pre class="programlisting">HystrixCommand&lt;String&gt; hystrixCommand = <span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">new</span> HystrixCommand&lt;String&gt;(setter) {
-	<em><span class="hl-annotation" style="color: gray">@Override</span></em>
+	<xslthl:annotation xmlns:xslthl="http://xslthl.sourceforge.net/">@Override</xslthl:annotation>
 	<span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">protected</span> String run() <span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">throws</span> Exception {
 		<span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">return</span> someLogic();
 	}
 };</pre><p>To pass the tracing information, you have to wrap the same logic in the Sleuth version of the <code class="literal">HystrixCommand</code>, which is called
 <code class="literal">TraceCommand</code>, as shown in the following example:</p><pre class="programlisting">TraceCommand&lt;String&gt; traceCommand = <span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">new</span> TraceCommand&lt;String&gt;(tracer, setter) {
-	<em><span class="hl-annotation" style="color: gray">@Override</span></em>
+	<xslthl:annotation xmlns:xslthl="http://xslthl.sourceforge.net/">@Override</xslthl:annotation>
 	<span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">public</span> String doRun() <span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">throws</span> Exception {
 		<span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">return</span> someLogic();
 	}
@@ -88,11 +88,11 @@ Then we instrument it.</p></td></tr></table></div><p>To block the <code class="l
 To disable creation of the default <code class="literal">TraceAsyncClientHttpRequestFactoryWrapper</code>, set <code class="literal">spring.sleuth.web.async.client.factory.enabled</code>
 to <code class="literal">false</code>.
 If you do not want to create <code class="literal">AsyncRestClient</code> at all, set <code class="literal">spring.sleuth.web.async.client.template.enabled</code> to <code class="literal">false</code>.</p><div class="section"><div class="titlepage"><div><div><h4 class="title"><a name="_multiple_asynchronous_rest_templates" href="#_multiple_asynchronous_rest_templates"></a>Multiple Asynchronous Rest Templates</h4></div></div></div><p>Sometimes you need to use multiple implementations of the Asynchronous Rest Template.
-In the following snippet, you can see an example of how to set up such a custom <code class="literal">AsyncRestTemplate</code>:</p><pre class="programlisting"><em><span class="hl-annotation" style="color: gray">@Configuration</span></em>
-<em><span class="hl-annotation" style="color: gray">@EnableAutoConfiguration</span></em>
+In the following snippet, you can see an example of how to set up such a custom <code class="literal">AsyncRestTemplate</code>:</p><pre class="programlisting"><xslthl:annotation xmlns:xslthl="http://xslthl.sourceforge.net/">@Configuration</xslthl:annotation>
+<xslthl:annotation xmlns:xslthl="http://xslthl.sourceforge.net/">@EnableAutoConfiguration</xslthl:annotation>
 <span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">static</span> <span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">class</span> Config {
 
-	<em><span class="hl-annotation" style="color: gray">@Bean(name = "customAsyncRestTemplate")</span></em>
+	<xslthl:annotation xmlns:xslthl="http://xslthl.sourceforge.net/">@Bean(name = "customAsyncRestTemplate")</xslthl:annotation>
 	<span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">public</span> AsyncRestTemplate traceAsyncRestTemplate() {
 		<span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">return</span> <span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">new</span> AsyncRestTemplate(asyncClientFactory(),
 				clientHttpRequestFactory());
@@ -113,7 +113,7 @@ In the following snippet, you can see an example of how to set up such a custom 
 }</pre></div></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="_webclient" href="#_webclient"></a>15.6.3&nbsp;<code class="literal">WebClient</code></h3></div></div></div><p>We inject a <code class="literal">ExchangeFilterFunction</code> implementation that creates a span and, through on-success and on-error callbacks, takes care of closing client-side spans.</p><p>To block this feature, set <code class="literal">spring.sleuth.web.client.enabled</code> to <code class="literal">false</code>.</p><div class="important" style="margin-left: 0.5in; margin-right: 0.5in;"><table border="0" summary="Important"><tr><td rowspan="2" align="center" valign="top" width="25"><img alt="[Important]" src="images/important.png"></td><th align="left">Important</th></tr><tr><td align="left" valign="top"><p>You have to register <code class="literal">WebClient</code> as a bean so that the tracing instrumentation gets applied.
 If you create a <code class="literal">WebClient</code> instance with a <code class="literal">new</code> keyword,  the instrumentation does NOT work.</p></td></tr></table></div></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="_traverson" href="#_traverson"></a>15.6.4&nbsp;Traverson</h3></div></div></div><p>If you use the <a class="link" href="https://docs.spring.io/spring-hateoas/docs/current/reference/html/#client.traverson" target="_top">Traverson</a> library, you can inject a <code class="literal">RestTemplate</code> as a bean into your Traverson object.
 Since <code class="literal">RestTemplate</code> is already intercepted, you get full support for tracing in your client. The following pseudo code
-shows how to do that:</p><pre class="programlisting"><em><span class="hl-annotation" style="color: gray">@Autowired</span></em> RestTemplate restTemplate;
+shows how to do that:</p><pre class="programlisting"><xslthl:annotation xmlns:xslthl="http://xslthl.sourceforge.net/">@Autowired</xslthl:annotation> RestTemplate restTemplate;
 
 Traverson traverson = <span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">new</span> Traverson(URI.create(<span xmlns:d="http://docbook.org/ns/docbook" class="hl-string">"http://some/address"</span>),
     MediaType.APPLICATION_JSON, MediaType.APPLICATION_JSON_UTF8).setRestOperations(restTemplate);
@@ -138,30 +138,30 @@ You can disable this behavior by setting the value of <code class="literal">spri
 If you use <code class="literal">spring-cloud-sleuth-stream</code> and <code class="literal">spring-cloud-netflix-hystrix-stream</code> together, a span is created for each Hystrix metrics and sent to Zipkin.
 This behavior may be annoying. That&#8217;s why, by default, <code class="literal">spring.sleuth.scheduled.skipPattern=org.springframework.cloud.netflix.hystrix.stream.HystrixStreamTask</code>.</p></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="_executor_executorservice_and_scheduledexecutorservice" href="#_executor_executorservice_and_scheduledexecutorservice"></a>15.9.3&nbsp;Executor, ExecutorService, and ScheduledExecutorService</h3></div></div></div><p>We provide <code class="literal">LazyTraceExecutor</code>, <code class="literal">TraceableExecutorService</code>, and <code class="literal">TraceableScheduledExecutorService</code>. Those implementations create spans each time a new task is submitted, invoked, or scheduled.</p><p>The following example shows how to pass tracing information with <code class="literal">TraceableExecutorService</code> when working with <code class="literal">CompletableFuture</code>:</p><pre class="programlisting">CompletableFuture&lt;Long&gt; completableFuture = CompletableFuture.supplyAsync(() -&gt; {
 	<span xmlns:d="http://docbook.org/ns/docbook" class="hl-comment">// perform some logic</span>
-	<span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">return</span> <span class="hl-number">1</span>_<span class="hl-number">000</span>_<span class="hl-number">000L</span>;
+	<span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">return</span> <xslthl:number xmlns:xslthl="http://xslthl.sourceforge.net/">1</xslthl:number>_<xslthl:number xmlns:xslthl="http://xslthl.sourceforge.net/">000</xslthl:number>_<xslthl:number xmlns:xslthl="http://xslthl.sourceforge.net/">000L</xslthl:number>;
 }, <span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">new</span> TraceableExecutorService(beanFactory, executorService,
 		<span xmlns:d="http://docbook.org/ns/docbook" class="hl-comment">// 'calculateTax' explicitly names the span - this param is optional</span>
 		<span xmlns:d="http://docbook.org/ns/docbook" class="hl-string">"calculateTax"</span>));</pre><div class="important" style="margin-left: 0.5in; margin-right: 0.5in;"><table border="0" summary="Important"><tr><td rowspan="2" align="center" valign="top" width="25"><img alt="[Important]" src="images/important.png"></td><th align="left">Important</th></tr><tr><td align="left" valign="top"><p>Sleuth does not work with <code class="literal">parallelStream()</code> out of the box.
 If you want to have the tracing information propagated through the stream, you have to use the approach with <code class="literal">supplyAsync(...)</code>, as shown earlier.</p></td></tr></table></div><p>If there are beans that implement the <code class="literal">Executor</code> interface that you would like
 to exclude from span creation, you can use the <code class="literal">spring.sleuth.async.ignored-beans</code>
 property where you can provide a list of bean names.</p><div class="section"><div class="titlepage"><div><div><h4 class="title"><a name="_customization_of_executors" href="#_customization_of_executors"></a>Customization of Executors</h4></div></div></div><p>Sometimes, you need to set up a custom instance of the <code class="literal">AsyncExecutor</code>.
-The following example shows how to set up such a custom <code class="literal">Executor</code>:</p><pre class="programlisting"><em><span class="hl-annotation" style="color: gray">@Configuration</span></em>
-<em><span class="hl-annotation" style="color: gray">@EnableAutoConfiguration</span></em>
-<em><span class="hl-annotation" style="color: gray">@EnableAsync</span></em>
+The following example shows how to set up such a custom <code class="literal">Executor</code>:</p><pre class="programlisting"><xslthl:annotation xmlns:xslthl="http://xslthl.sourceforge.net/">@Configuration</xslthl:annotation>
+<xslthl:annotation xmlns:xslthl="http://xslthl.sourceforge.net/">@EnableAutoConfiguration</xslthl:annotation>
+<xslthl:annotation xmlns:xslthl="http://xslthl.sourceforge.net/">@EnableAsync</xslthl:annotation>
 <span xmlns:d="http://docbook.org/ns/docbook" class="hl-comment">// add the infrastructure role to ensure that the bean gets auto-proxied</span>
-<em><span class="hl-annotation" style="color: gray">@Role(BeanDefinition.ROLE_INFRASTRUCTURE)</span></em>
+<xslthl:annotation xmlns:xslthl="http://xslthl.sourceforge.net/">@Role(BeanDefinition.ROLE_INFRASTRUCTURE)</xslthl:annotation>
 <span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">static</span> <span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">class</span> CustomExecutorConfig <span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">extends</span> AsyncConfigurerSupport {
 
-	<em><span class="hl-annotation" style="color: gray">@Autowired</span></em>
+	<xslthl:annotation xmlns:xslthl="http://xslthl.sourceforge.net/">@Autowired</xslthl:annotation>
 	BeanFactory beanFactory;
 
-	<em><span class="hl-annotation" style="color: gray">@Override</span></em>
+	<xslthl:annotation xmlns:xslthl="http://xslthl.sourceforge.net/">@Override</xslthl:annotation>
 	<span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">public</span> Executor getAsyncExecutor() {
 		ThreadPoolTaskExecutor executor = <span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">new</span> ThreadPoolTaskExecutor();
 		<span xmlns:d="http://docbook.org/ns/docbook" class="hl-comment">// CUSTOMIZE HERE</span>
-		executor.setCorePoolSize(<span class="hl-number">7</span>);
-		executor.setMaxPoolSize(<span class="hl-number">42</span>);
-		executor.setQueueCapacity(<span class="hl-number">11</span>);
+		executor.setCorePoolSize(<xslthl:number xmlns:xslthl="http://xslthl.sourceforge.net/">7</xslthl:number>);
+		executor.setMaxPoolSize(<xslthl:number xmlns:xslthl="http://xslthl.sourceforge.net/">42</xslthl:number>);
+		executor.setQueueCapacity(<xslthl:number xmlns:xslthl="http://xslthl.sourceforge.net/">11</xslthl:number>);
 		executor.setThreadNamePrefix(<span xmlns:d="http://docbook.org/ns/docbook" class="hl-string">"MyExecutor-"</span>);
 		<span xmlns:d="http://docbook.org/ns/docbook" class="hl-comment">// DON'T FORGET TO INITIALIZE</span>
 		executor.initialize();

@@ -41,7 +41,7 @@ It also includes libraries to propagate the trace context over network boundarie
 Your names have to be explicit and concrete.
 Big names lead to latency issues and sometimes even thrown exceptions.</p></td></tr></table></div><p>The tracer creates and joins spans that model the latency of potentially distributed work.
 It can employ sampling to reduce overhead during the process, to reduce the amount of data sent to Zipkin, or both.</p><p>Spans returned by a tracer report data to Zipkin when finished or do nothing if unsampled.
-After starting a span, you can annotate events of interest or add tags containing details or lookup keys.</p><p>Spans have a context that includes trace identifiers that place the span at the correct spot in the tree representing the distributed operation.</p></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="_local_tracing" href="#_local_tracing"></a>3.1.2&nbsp;Local Tracing</h3></div></div></div><p>When tracing code that never leaves your process, run it inside a scoped span.</p><pre class="programlisting"><em><span class="hl-annotation" style="color: gray">@Autowired</span></em> Tracer tracer;
+After starting a span, you can annotate events of interest or add tags containing details or lookup keys.</p><p>Spans have a context that includes trace identifiers that place the span at the correct spot in the tree representing the distributed operation.</p></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="_local_tracing" href="#_local_tracing"></a>3.1.2&nbsp;Local Tracing</h3></div></div></div><p>When tracing code that never leaves your process, run it inside a scoped span.</p><pre class="programlisting"><xslthl:annotation xmlns:xslthl="http://xslthl.sourceforge.net/">@Autowired</xslthl:annotation> Tracer tracer;
 
 <span xmlns:d="http://docbook.org/ns/docbook" class="hl-comment">// Start a new trace or a span within an existing trace representing an operation</span>
 ScopedSpan span = tracer.startScopedSpan(<span xmlns:d="http://docbook.org/ns/docbook" class="hl-string">"encode"</span>);
@@ -53,7 +53,7 @@ ScopedSpan span = tracer.startScopedSpan(<span xmlns:d="http://docbook.org/ns/do
   <span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">throw</span> e;
 } <span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">finally</span> {
   span.finish(); <span xmlns:d="http://docbook.org/ns/docbook" class="hl-comment">// always finish the span</span>
-}</pre><p>When you need more features, or finer control, use the <code class="literal">Span</code> type:</p><pre class="programlisting"><em><span class="hl-annotation" style="color: gray">@Autowired</span></em> Tracer tracer;
+}</pre><p>When you need more features, or finer control, use the <code class="literal">Span</code> type:</p><pre class="programlisting"><xslthl:annotation xmlns:xslthl="http://xslthl.sourceforge.net/">@Autowired</xslthl:annotation> Tracer tracer;
 
 <span xmlns:d="http://docbook.org/ns/docbook" class="hl-comment">// Start a new trace or a span within an existing trace representing an operation</span>
 Span span = tracer.nextSpan().name(<span xmlns:d="http://docbook.org/ns/docbook" class="hl-string">"encode"</span>).start();
@@ -75,19 +75,19 @@ The former is simpler to understand and test and does not tempt users with span 
   callback.request(request, span);
 }</pre></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="_implicitly_looking_up_the_current_span" href="#_implicitly_looking_up_the_current_span"></a>3.1.4&nbsp;Implicitly Looking up the Current Span</h3></div></div></div><p>Sometimes, you do not know if a trace is in progress or not, and you do not want users to do null checks.
 <code class="literal">brave.CurrentSpanCustomizer</code> handles this problem by adding data to any span that&#8217;s in progress or drops, as shown in the following example:</p><p>Ex.</p><pre class="programlisting"><span xmlns:d="http://docbook.org/ns/docbook" class="hl-comment">// The user code can then inject this without a chance of it being null.</span>
-<em><span class="hl-annotation" style="color: gray">@Autowired</span></em> SpanCustomizer span;
+<xslthl:annotation xmlns:xslthl="http://xslthl.sourceforge.net/">@Autowired</xslthl:annotation> SpanCustomizer span;
 
 <span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">void</span> userCode() {
   span.annotate(<span xmlns:d="http://docbook.org/ns/docbook" class="hl-string">"tx.started"</span>);
   ...
-}</pre></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="_rpc_tracing" href="#_rpc_tracing"></a>3.1.5&nbsp;RPC tracing</h3></div></div></div><div class="tip" style="margin-left: 0.5in; margin-right: 0.5in;"><table border="0" summary="Tip"><tr><td rowspan="2" align="center" valign="top" width="25"><img alt="[Tip]" src="images/tip.png"></td><th align="left">Tip</th></tr><tr><td align="left" valign="top"><p>Check for <a class="link" href="https://github.com/openzipkin/brave/tree/master/instrumentation" target="_top">instrumentation written here</a> and <a class="link" href="https://zipkin.io/pages/existing_instrumentations.html" target="_top">Zipkin&#8217;s list</a> before rolling your own RPC instrumentation.</p></td></tr></table></div><p>RPC tracing is often done automatically by interceptors. Behind the scenes, they add tags and events that relate to their role in an RPC operation.</p><p>The following example shows how to add a client span:</p><pre class="programlisting"><em><span class="hl-annotation" style="color: gray">@Autowired</span></em> Tracing tracing;
-<em><span class="hl-annotation" style="color: gray">@Autowired</span></em> Tracer tracer;
+}</pre></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="_rpc_tracing" href="#_rpc_tracing"></a>3.1.5&nbsp;RPC tracing</h3></div></div></div><div class="tip" style="margin-left: 0.5in; margin-right: 0.5in;"><table border="0" summary="Tip"><tr><td rowspan="2" align="center" valign="top" width="25"><img alt="[Tip]" src="images/tip.png"></td><th align="left">Tip</th></tr><tr><td align="left" valign="top"><p>Check for <a class="link" href="https://github.com/openzipkin/brave/tree/master/instrumentation" target="_top">instrumentation written here</a> and <a class="link" href="https://zipkin.io/pages/existing_instrumentations.html" target="_top">Zipkin&#8217;s list</a> before rolling your own RPC instrumentation.</p></td></tr></table></div><p>RPC tracing is often done automatically by interceptors. Behind the scenes, they add tags and events that relate to their role in an RPC operation.</p><p>The following example shows how to add a client span:</p><pre class="programlisting"><xslthl:annotation xmlns:xslthl="http://xslthl.sourceforge.net/">@Autowired</xslthl:annotation> Tracing tracing;
+<xslthl:annotation xmlns:xslthl="http://xslthl.sourceforge.net/">@Autowired</xslthl:annotation> Tracer tracer;
 
 <span xmlns:d="http://docbook.org/ns/docbook" class="hl-comment">// before you send a request, add metadata that describes the operation</span>
 span = tracer.nextSpan().name(service + <span xmlns:d="http://docbook.org/ns/docbook" class="hl-string">"/"</span> + method).kind(CLIENT);
 span.tag(<span xmlns:d="http://docbook.org/ns/docbook" class="hl-string">"myrpc.version"</span>, <span xmlns:d="http://docbook.org/ns/docbook" class="hl-string">"1.0.0"</span>);
 span.remoteServiceName(<span xmlns:d="http://docbook.org/ns/docbook" class="hl-string">"backend"</span>);
-span.remoteIpAndPort(<span xmlns:d="http://docbook.org/ns/docbook" class="hl-string">"172.3.4.1"</span>, <span class="hl-number">8108</span>);
+span.remoteIpAndPort(<span xmlns:d="http://docbook.org/ns/docbook" class="hl-string">"172.3.4.1"</span>, <xslthl:number xmlns:xslthl="http://xslthl.sourceforge.net/">8108</xslthl:number>);
 
 <span xmlns:d="http://docbook.org/ns/docbook" class="hl-comment">// Add the trace context to the request, so it can be propagated in-band</span>
 tracing.propagation().injector(Request::addHeader)
@@ -105,8 +105,8 @@ span.error(exception);
 span.finish();</pre><div class="section"><div class="titlepage"><div><div><h4 class="title"><a name="_one_way_tracing" href="#_one_way_tracing"></a>One-Way tracing</h4></div></div></div><p>Sometimes, you need to model an asynchronous operation where there is a
 request but no response. In normal RPC tracing, you use <code class="literal">span.finish()</code>
 to indicate that the response was received. In one-way tracing, you use
-<code class="literal">span.flush()</code> instead, as you do not expect a response.</p><p>The following example shows how a client might model a one-way operation:</p><pre class="programlisting"><em><span class="hl-annotation" style="color: gray">@Autowired</span></em> Tracing tracing;
-<em><span class="hl-annotation" style="color: gray">@Autowired</span></em> Tracer tracer;
+<code class="literal">span.flush()</code> instead, as you do not expect a response.</p><p>The following example shows how a client might model a one-way operation:</p><pre class="programlisting"><xslthl:annotation xmlns:xslthl="http://xslthl.sourceforge.net/">@Autowired</xslthl:annotation> Tracing tracing;
+<xslthl:annotation xmlns:xslthl="http://xslthl.sourceforge.net/">@Autowired</xslthl:annotation> Tracer tracer;
 
 <span xmlns:d="http://docbook.org/ns/docbook" class="hl-comment">// start a new span representing a client request</span>
 oneWaySend = tracer.nextSpan().name(service + <span xmlns:d="http://docbook.org/ns/docbook" class="hl-string">"/"</span> + method).kind(CLIENT);
@@ -119,8 +119,8 @@ tracing.propagation().injector(Request::addHeader)
 request.execute();
 
 <span xmlns:d="http://docbook.org/ns/docbook" class="hl-comment">// start the client side and flush instead of finish</span>
-oneWaySend.start().flush();</pre><p>The following example shows how a server might handle a one-way operation:</p><pre class="programlisting"><em><span class="hl-annotation" style="color: gray">@Autowired</span></em> Tracing tracing;
-<em><span class="hl-annotation" style="color: gray">@Autowired</span></em> Tracer tracer;
+oneWaySend.start().flush();</pre><p>The following example shows how a server might handle a one-way operation:</p><pre class="programlisting"><xslthl:annotation xmlns:xslthl="http://xslthl.sourceforge.net/">@Autowired</xslthl:annotation> Tracing tracing;
+<xslthl:annotation xmlns:xslthl="http://xslthl.sourceforge.net/">@Autowired</xslthl:annotation> Tracer tracer;
 
 <span xmlns:d="http://docbook.org/ns/docbook" class="hl-comment">// pull the context out of the incoming request</span>
 extractor = tracing.propagation().extractor(Request::getHeader);

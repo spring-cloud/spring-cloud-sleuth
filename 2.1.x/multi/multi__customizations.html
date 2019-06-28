@@ -10,14 +10,14 @@ register a bean of type <code class="literal">brave.http.HttpSampler</code> and 
  reference the bean names via their static String <code class="literal">NAME</code> fields.</p><p>Check out Brave&#8217;s code to see an example of how to make a path-based sampler
 <a class="link" href="https://github.com/openzipkin/brave/tree/master/instrumentation/http#sampling-policy" target="_top">https://github.com/openzipkin/brave/tree/master/instrumentation/http#sampling-policy</a></p><p>If you want to completely rewrite the <code class="literal">HttpTracing</code> bean you can use the <code class="literal">SkipPatternProvider</code>
 interface to retrieve the URL <code class="literal">Pattern</code> for spans that should be not sampled. Below you can see
-an example of usage of <code class="literal">SkipPatternProvider</code> inside a server side, <code class="literal">HttpSampler</code>.</p><pre class="programlisting"><em><span class="hl-annotation" style="color: gray">@Configuration</span></em>
+an example of usage of <code class="literal">SkipPatternProvider</code> inside a server side, <code class="literal">HttpSampler</code>.</p><pre class="programlisting"><xslthl:annotation xmlns:xslthl="http://xslthl.sourceforge.net/">@Configuration</xslthl:annotation>
 <span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">class</span> Config {
-  <em><span class="hl-annotation" style="color: gray">@Bean(name = ServerSampler.NAME)</span></em>
+  <xslthl:annotation xmlns:xslthl="http://xslthl.sourceforge.net/">@Bean(name = ServerSampler.NAME)</xslthl:annotation>
   HttpSampler myHttpSampler(SkipPatternProvider provider) {
   	Pattern pattern = provider.skipPattern();
   	<span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">return</span> <span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">new</span> HttpSampler() {
 
-  		<em><span class="hl-annotation" style="color: gray">@Override</span></em>
+  		<xslthl:annotation xmlns:xslthl="http://xslthl.sourceforge.net/">@Override</xslthl:annotation>
   		<span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">public</span> &lt;Req&gt; Boolean trySample(HttpAdapter&lt;Req, ?&gt; adapter, Req request) {
   			String url = adapter.path(request);
   			<span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">boolean</span> shouldSkip = pattern.matcher(url).matches();
@@ -29,8 +29,8 @@ an example of usage of <code class="literal">SkipPatternProvider</code> inside a
   	};
   }
 }</pre></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="_tracingfilter" href="#_tracingfilter"></a>12.2&nbsp;<code class="literal">TracingFilter</code></h2></div></div></div><p>You can also modify the behavior of the <code class="literal">TracingFilter</code>, which is the component that is responsible for processing the input HTTP request and adding tags basing on the HTTP response.
-You can customize the tags or modify the response headers by registering your own instance of the <code class="literal">TracingFilter</code> bean.</p><p>In the following example, we register the <code class="literal">TracingFilter</code> bean, add the <code class="literal">ZIPKIN-TRACE-ID</code> response header containing the current Span&#8217;s trace id, and add a tag with key <code class="literal">custom</code> and a value <code class="literal">tag</code> to the span.</p><pre class="programlisting"><em><span class="hl-annotation" style="color: gray">@Component</span></em>
-<em><span class="hl-annotation" style="color: gray">@Order(TraceWebServletAutoConfiguration.TRACING_FILTER_ORDER + 1)</span></em>
+You can customize the tags or modify the response headers by registering your own instance of the <code class="literal">TracingFilter</code> bean.</p><p>In the following example, we register the <code class="literal">TracingFilter</code> bean, add the <code class="literal">ZIPKIN-TRACE-ID</code> response header containing the current Span&#8217;s trace id, and add a tag with key <code class="literal">custom</code> and a value <code class="literal">tag</code> to the span.</p><pre class="programlisting"><xslthl:annotation xmlns:xslthl="http://xslthl.sourceforge.net/">@Component</xslthl:annotation>
+<xslthl:annotation xmlns:xslthl="http://xslthl.sourceforge.net/">@Order(TraceWebServletAutoConfiguration.TRACING_FILTER_ORDER + 1)</xslthl:annotation>
 <span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">class</span> MyFilter <span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">extends</span> GenericFilterBean {
 
 	<span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">private</span> <span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">final</span> Tracer tracer;
@@ -39,7 +39,7 @@ You can customize the tags or modify the response headers by registering your ow
 		<span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">this</span>.tracer = tracer;
 	}
 
-	<em><span class="hl-annotation" style="color: gray">@Override</span></em>
+	<xslthl:annotation xmlns:xslthl="http://xslthl.sourceforge.net/">@Override</xslthl:annotation>
 	<span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">public</span> <span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">void</span> doFilter(ServletRequest request, ServletResponse response,
 			FilterChain chain) <span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">throws</span> IOException, ServletException {
 		Span currentSpan = <span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">this</span>.tracer.currentSpan();
@@ -61,10 +61,10 @@ There are situations in which you want to explicitly provide a different service
 To achieve that, you can pass the following property to your application to override that value (the example is for a service named <code class="literal">myService</code>):</p><pre class="programlisting"><span xmlns:d="http://docbook.org/ns/docbook" class="hl-attribute">spring.zipkin.service.name</span>: myService</pre></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="_customization_of_reported_spans" href="#_customization_of_reported_spans"></a>12.4&nbsp;Customization of Reported Spans</h2></div></div></div><p>Before reporting spans (for example, to Zipkin) you may want to modify that span in some way.
 You can do so by using the <code class="literal">FinishedSpanHandler</code> interface.</p><p>In Sleuth, we generate spans with a fixed name.
 Some users want to modify the name depending on values of tags.
-You can implement the <code class="literal">FinishedSpanHandler</code> interface to alter that name.</p><p>The following example shows how to register two beans that implement <code class="literal">FinishedSpanHandler</code>:</p><pre class="programlisting"><em><span class="hl-annotation" style="color: gray">@Bean</span></em>
+You can implement the <code class="literal">FinishedSpanHandler</code> interface to alter that name.</p><p>The following example shows how to register two beans that implement <code class="literal">FinishedSpanHandler</code>:</p><pre class="programlisting"><xslthl:annotation xmlns:xslthl="http://xslthl.sourceforge.net/">@Bean</xslthl:annotation>
 FinishedSpanHandler handlerOne() {
 	<span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">return</span> <span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">new</span> FinishedSpanHandler() {
-		<em><span class="hl-annotation" style="color: gray">@Override</span></em>
+		<xslthl:annotation xmlns:xslthl="http://xslthl.sourceforge.net/">@Override</xslthl:annotation>
 		<span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">public</span> <span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">boolean</span> handle(TraceContext traceContext, MutableSpan span) {
 			span.name(<span xmlns:d="http://docbook.org/ns/docbook" class="hl-string">"foo"</span>);
 			<span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">return</span> true; <span xmlns:d="http://docbook.org/ns/docbook" class="hl-comment">// keep this span</span>
@@ -72,10 +72,10 @@ FinishedSpanHandler handlerOne() {
 	};
 }
 
-<em><span class="hl-annotation" style="color: gray">@Bean</span></em>
+<xslthl:annotation xmlns:xslthl="http://xslthl.sourceforge.net/">@Bean</xslthl:annotation>
 FinishedSpanHandler handlerTwo() {
 	<span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">return</span> <span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">new</span> FinishedSpanHandler() {
-		<em><span class="hl-annotation" style="color: gray">@Override</span></em>
+		<xslthl:annotation xmlns:xslthl="http://xslthl.sourceforge.net/">@Override</xslthl:annotation>
 		<span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">public</span> <span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">boolean</span> handle(TraceContext traceContext, MutableSpan span) {
 			span.name(span.name() + <span xmlns:d="http://docbook.org/ns/docbook" class="hl-string">" bar"</span>);
 			<span xmlns:d="http://docbook.org/ns/docbook" class="hl-keyword">return</span> true; <span xmlns:d="http://docbook.org/ns/docbook" class="hl-comment">// keep this span</span>
