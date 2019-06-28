@@ -270,6 +270,7 @@ $(addBlockSwitches);
 <li><a href="#_spring_integration_and_spring_cloud_stream">Spring Integration and Spring Cloud Stream</a></li>
 <li><a href="#_spring_rabbitmq">Spring RabbitMq</a></li>
 <li><a href="#_spring_kafka">Spring Kafka</a></li>
+<li><a href="#_spring_kafka_streams">Spring Kafka Streams</a></li>
 <li><a href="#_spring_jms">Spring JMS</a></li>
 </ul>
 </li>
@@ -3554,6 +3555,18 @@ so that tracing headers get injected into the created Spring Kafka&#8217;s
 </div>
 <div class="paragraph">
 <p>To block this feature, set <code>spring.sleuth.messaging.kafka.enabled</code> to <code>false</code>.</p>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_spring_kafka_streams"><a class="link" href="#_spring_kafka_streams">Spring Kafka Streams</a></h4>
+<div class="paragraph">
+<p>We instrument the <code>KafkaStreams</code> <code>KafkaClientSupplier</code> so that tracing headers
+get injected into the <code>Producer</code> and <code>Consumer`s. A `KafkaStreamsTracing</code> bean
+allows for further instrumentation through additional <code>TransformerSupplier</code> and
+<code>ProcessorSupplier</code> methods.</p>
+</div>
+<div class="paragraph">
+<p>To block this feature, set <code>spring.sleuth.messaging.kafka.streams.enabled</code> to <code>false</code>.</p>
 </div>
 </div>
 <div class="sect3">
