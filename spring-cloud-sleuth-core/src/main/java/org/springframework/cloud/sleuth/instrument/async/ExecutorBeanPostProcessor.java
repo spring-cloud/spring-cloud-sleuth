@@ -110,15 +110,13 @@ class ExecutorBeanPostProcessor implements BeanPostProcessor {
 	}
 
 	private Object wrapExecutor(Object bean) {
-		Method execute = ReflectionUtils.findMethod(bean.getClass(), "execute",
-				Runnable.class);
-		boolean methodFinal = Modifier.isFinal(execute.getModifiers());
+		Executor executor = (Executor) bean;
+		boolean methodFinal = anyFinalMethods(executor, Executor.class);
 		boolean classFinal = Modifier.isFinal(bean.getClass().getModifiers());
 		boolean cglibProxy = !methodFinal && !classFinal;
-		Executor executor = (Executor) bean;
 		try {
 			return createProxy(bean, cglibProxy,
-					new ExecutorMethodInterceptor(executor, this.beanFactory));
+					new ExecutorMethodInterceptor<>(executor, this.beanFactory));
 		}
 		catch (AopConfigException ex) {
 			if (cglibProxy) {
@@ -128,46 +126,33 @@ class ExecutorBeanPostProcessor implements BeanPostProcessor {
 							ex);
 				}
 				return createProxy(bean, false,
-						new ExecutorMethodInterceptor(executor, this.beanFactory));
+						new ExecutorMethodInterceptor<>(executor, this.beanFactory));
 			}
 			throw ex;
 		}
 	}
 
 	private Object wrapThreadPoolTaskExecutor(Object bean) {
-		boolean classFinal = Modifier.isFinal(bean.getClass().getModifiers());
-		boolean cglibProxy = !classFinal;
 		ThreadPoolTaskExecutor executor = (ThreadPoolTaskExecutor) bean;
+		boolean classFinal = Modifier.isFinal(bean.getClass().getModifiers());
+		boolean methodsFinal = anyFinalMethods(executor, ThreadPoolTaskExecutor.class);
+		boolean cglibProxy = !classFinal && !methodsFinal;
 		return createThreadPoolTaskExecutorProxy(bean, cglibProxy, executor);
 	}
 
-	private ProxyFactoryBean wrapThreadPoolTaskScheduler(Object bean) {
-		boolean classFinal = Modifier.isFinal(bean.getClass().getModifiers());
-		boolean cglibProxy = !classFinal;
-		ThreadPoolTaskScheduler executor = (ThreadPoolTaskScheduler) bean;
-		return proxyFactoryBean(bean, cglibProxy, executor,
-				createThreadPoolTaskSchedulerProxy(executor));
-	}
-
-	private ProxyFactoryBean wrapScheduledThreadPoolExecutor(Object bean) {
-		boolean classFinal = Modifier.isFinal(bean.getClass().getModifiers());
-		boolean cglibProxy = !classFinal;
-		ScheduledThreadPoolExecutor executor = (ScheduledThreadPoolExecutor) bean;
-		return proxyFactoryBean(bean, cglibProxy, executor,
-				createScheduledThreadPoolExecutorProxy(executor));
-	}
-
 	private Object wrapExecutorService(Object bean) {
-		boolean classFinal = Modifier.isFinal(bean.getClass().getModifiers());
-		boolean cglibProxy = !classFinal;
 		ExecutorService executor = (ExecutorService) bean;
+		boolean classFinal = Modifier.isFinal(bean.getClass().getModifiers());
+		boolean methodFinal = anyFinalMethods(executor, ExecutorService.class);
+		boolean cglibProxy = !classFinal && !methodFinal;
 		return createExecutorServiceProxy(bean, cglibProxy, executor);
 	}
 
 	private Object wrapAsyncTaskExecutor(Object bean) {
-		boolean classFinal = Modifier.isFinal(bean.getClass().getModifiers());
-		boolean cglibProxy = !classFinal;
 		AsyncTaskExecutor executor = (AsyncTaskExecutor) bean;
+		boolean classFinal = Modifier.isFinal(bean.getClass().getModifiers());
+		boolean methodsFinal = anyFinalMethods(executor, AsyncTaskExecutor.class);
+		boolean cglibProxy = !classFinal && !methodsFinal;
 		return createAsyncTaskExecutorProxy(bean, cglibProxy, executor);
 	}
 
@@ -178,15 +163,18 @@ class ExecutorBeanPostProcessor implements BeanPostProcessor {
 
 	Object createThreadPoolTaskExecutorProxy(Object bean, boolean cglibProxy,
 			ThreadPoolTaskExecutor executor) {
+		if (!cglibProxy) {
+			return new LazyTraceThreadPoolTaskExecutor(this.beanFactory, executor);
+		}
 		return getProxiedObject(bean, cglibProxy, executor,
 				() -> new LazyTraceThreadPoolTaskExecutor(this.beanFactory, executor));
 	}
 
-	Supplier createThreadPoolTaskSchedulerProxy(ThreadPoolTaskScheduler executor) {
+	Supplier<Executor> createThreadPoolTaskSchedulerProxy(ThreadPoolTaskScheduler executor) {
 		return () -> new LazyTraceThreadPoolTaskScheduler(this.beanFactory, executor);
 	}
 
-	Supplier createScheduledThreadPoolExecutorProxy(
+	Supplier<Executor> createScheduledThreadPoolExecutorProxy(
 			ScheduledThreadPoolExecutor executor) {
 		return () -> new LazyTraceScheduledThreadPoolExecutor(executor.getCorePoolSize(),
 				executor.getThreadFactory(), executor.getRejectedExecutionHandler(),
@@ -258,8 +246,8 @@ class ExecutorBeanPostProcessor implements BeanPostProcessor {
 		factory.addAdvice(
 				new ExecutorMethodInterceptor<Executor>(executor, this.beanFactory) {
 					@Override
-					<T extends Executor> T executor(BeanFactory beanFactory, T executor) {
-						return (T) supplier.get();
+					Executor executor(BeanFactory beanFactory, Executor executor) {
+						return supplier.get();
 					}
 				});
 		factory.setTarget(bean);
@@ -285,6 +273,16 @@ class ExecutorBeanPostProcessor implements BeanPostProcessor {
 					.getBean(SleuthAsyncProperties.class);
 		}
 		return this.sleuthAsyncProperties;
+	}
+
+	private static <T> boolean anyFinalMethods(T object, Class<T> iface) {
+		for (Method method : ReflectionUtils.getDeclaredMethods(iface)) {
+			Method m = ReflectionUtils.findMethod(object.getClass(), method.getName(), method.getParameterTypes());
+			if (m != null && Modifier.isFinal(m.getModifiers())) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 }
@@ -329,8 +327,7 @@ class ExecutorMethodInterceptor<T extends Executor> implements MethodInterceptor
 				method.getParameterTypes());
 	}
 
-	<T extends Executor> T executor(BeanFactory beanFactory, T executor) {
+	T executor(BeanFactory beanFactory, T executor) {
 		return (T) new LazyTraceExecutor(beanFactory, executor);
 	}
-
 }
