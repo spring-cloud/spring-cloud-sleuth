@@ -29,6 +29,7 @@ import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import brave.Tracing;
 import org.aopalliance.aop.Advice;
@@ -43,9 +44,12 @@ import org.mockito.junit.MockitoJUnitRunner;
 
 import org.springframework.aop.framework.AopConfigException;
 import org.springframework.aop.framework.ProxyFactoryBean;
+import org.springframework.aop.support.AopUtils;
 import org.springframework.beans.factory.BeanFactory;
+import org.springframework.core.task.AsyncTaskExecutor;
+import org.springframework.core.task.SimpleAsyncTaskExecutor;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
-import org.springframework.util.ClassUtils;
+import org.springframework.security.concurrent.DelegatingSecurityContextExecutorService;
 
 import static org.assertj.core.api.BDDAssertions.then;
 import static org.assertj.core.api.BDDAssertions.thenThrownBy;
@@ -82,7 +86,7 @@ public class ExecutorBeanPostProcessorTests {
 				.postProcessAfterInitialization(new Foo(), "foo");
 
 		then(o).isInstanceOf(Foo.class);
-		then(ClassUtils.isCglibProxy(o)).isTrue();
+		then(AopUtils.isCglibProxy(o)).isTrue();
 	}
 
 	@Test
@@ -123,7 +127,7 @@ public class ExecutorBeanPostProcessorTests {
 				.postProcessAfterInitialization(new FooThreadPoolTaskExecutor(), "foo");
 
 		then(o).isInstanceOf(FooThreadPoolTaskExecutor.class);
-		then(ClassUtils.isCglibProxy(o)).isTrue();
+		then(AopUtils.isCglibProxy(o)).isTrue();
 	}
 
 	@Test
@@ -246,6 +250,60 @@ public class ExecutorBeanPostProcessorTests {
 	}
 
 	@Test
+	public void should_use_jdk_proxy_when_executor_has_final_methods() {
+		ExecutorBeanPostProcessor beanPostProcessor = new ExecutorBeanPostProcessor(this.beanFactory);
+		Executor executor = Runnable::run;
+		Executor wrappedExecutor = (Executor) beanPostProcessor.postProcessAfterInitialization(
+				executor, "executor");
+
+		then(AopUtils.isJdkDynamicProxy(wrappedExecutor)).isTrue();
+		then(AopUtils.isCglibProxy(wrappedExecutor)).isFalse();
+
+		AtomicBoolean wasCalled = new AtomicBoolean(false);
+		wrappedExecutor.execute(() -> { wasCalled.set(true); });
+		then(wasCalled).isTrue();
+	}
+
+	@Test
+	public void should_use_jdk_proxy_when_executor_service_has_final_methods() throws Exception {
+		ExecutorBeanPostProcessor beanPostProcessor = new ExecutorBeanPostProcessor(this.beanFactory);
+		ExecutorService executorService = new DelegatingSecurityContextExecutorService(Executors.newSingleThreadExecutor());
+		ExecutorService wrappedExecutor = (ExecutorService) beanPostProcessor.postProcessAfterInitialization(
+				executorService, "executorService");
+
+		then(AopUtils.isJdkDynamicProxy(wrappedExecutor)).isTrue();
+		then(AopUtils.isCglibProxy(wrappedExecutor)).isFalse();
+		then(wrappedExecutor.submit(() -> "done").get()).isEqualTo("done");
+		wrappedExecutor.shutdownNow();
+	}
+
+	@Test
+	public void should_use_jdk_proxy_when_async_task_executor_has_final_methods() throws Exception {
+		ExecutorBeanPostProcessor beanPostProcessor = new ExecutorBeanPostProcessor(this.beanFactory);
+
+		AsyncTaskExecutor wrappedExecutor = (AsyncTaskExecutor) beanPostProcessor.postProcessAfterInitialization(
+				new DirectTaskExecutor(), "taskExecutor");
+
+		then(AopUtils.isJdkDynamicProxy(wrappedExecutor)).isTrue();
+		then(AopUtils.isCglibProxy(wrappedExecutor)).isFalse();
+		then(wrappedExecutor.submit(() -> "done").get()).isEqualTo("done");
+	}
+
+	@Test
+	public void should_fallback_to_sleuth_impl_when_thread_pool_task_executor_has_final_methods() {
+		ExecutorBeanPostProcessor postProcessor = new ExecutorBeanPostProcessor(this.beanFactory);
+		ThreadPoolTaskExecutor threadPoolTaskExecutor = new PoolTaskExecutor();
+
+		ThreadPoolTaskExecutor wrappedTaskExecutor = (ThreadPoolTaskExecutor) postProcessor
+				.postProcessAfterInitialization(threadPoolTaskExecutor, "threadPoolTaskExecutor");
+
+		then(wrappedTaskExecutor).isInstanceOf(LazyTraceThreadPoolTaskExecutor.class);
+		then(AopUtils.isCglibProxy(wrappedTaskExecutor)).isFalse();
+		then(AopUtils.isJdkDynamicProxy(wrappedTaskExecutor)).isFalse();
+		threadPoolTaskExecutor.shutdown();
+	}
+
+	@Test
 	public void proxy_is_not_needed() throws Exception {
 		this.sleuthAsyncProperties
 				.setIgnoredBeans(Collections.singletonList("fooExecutor"));
@@ -274,7 +332,7 @@ public class ExecutorBeanPostProcessorTests {
 						"fooExecutor");
 
 		then(o).isInstanceOf(ThreadPoolTaskExecutor.class);
-		then(ClassUtils.isCglibProxy(o)).isFalse();
+		then(AopUtils.isCglibProxy(o)).isFalse();
 	}
 
 	@Test
@@ -284,7 +342,7 @@ public class ExecutorBeanPostProcessorTests {
 						"fooExecutor");
 
 		then(o).isInstanceOf(RejectedExecutionExecutor.class);
-		then(ClassUtils.isCglibProxy(o)).isTrue();
+		then(AopUtils.isCglibProxy(o)).isTrue();
 		thenThrownBy(() -> ((RejectedExecutionExecutor) o).execute(() -> {
 		})).isInstanceOf(RejectedExecutionException.class).hasMessage("rejected");
 	}
@@ -311,4 +369,22 @@ public class ExecutorBeanPostProcessorTests {
 
 	}
 
+	static class DirectTaskExecutor extends SimpleAsyncTaskExecutor {
+		@Override
+		public final <T> Future<T> submit(Callable<T> callable) {
+			return super.submit(callable);
+		}
+
+		@Override
+		protected void doExecute(Runnable task) {
+			task.run();
+		}
+	}
+
+	static class PoolTaskExecutor extends ThreadPoolTaskExecutor {
+		@Override
+		public final void execute(Runnable task, long startTimeout) {
+			super.execute(task, startTimeout);
+		}
+	}
 }
