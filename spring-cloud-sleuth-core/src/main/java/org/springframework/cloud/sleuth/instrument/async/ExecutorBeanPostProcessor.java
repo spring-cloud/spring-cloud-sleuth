@@ -277,7 +277,7 @@ class ExecutorBeanPostProcessor implements BeanPostProcessor {
 	}
 
 	private static <T> boolean anyFinalMethods(T object, Class<T> iface) {
-		for (Method method : ReflectionUtils.getAllDeclaredMethods(iface)) {
+		for (Method method : ReflectionUtils.getDeclaredMethods(iface)) {
 			Method m = ReflectionUtils.findMethod(object.getClass(), method.getName(),
 					method.getParameterTypes());
 			if (m != null && Modifier.isFinal(m.getModifiers())) {
