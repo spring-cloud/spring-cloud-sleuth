@@ -29,8 +29,7 @@ import brave.propagation.TraceContext;
 import brave.sampler.Sampler;
 import io.opentracing.Scope;
 import io.opentracing.propagation.Format;
-import io.opentracing.propagation.TextMapExtractAdapter;
-import io.opentracing.propagation.TextMapInjectAdapter;
+import io.opentracing.propagation.TextMapAdapter;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -71,16 +70,12 @@ public class BraveTracerTest {
 	@Autowired
 	BraveTracer opentracing;
 
-	private static TraceContext getTraceContext(Scope scope) {
-		return ((BraveSpanContext) scope.span().context()).unwrap();
-	}
-
 	@Test
 	public void startWithOpenTracingAndFinishWithBrave() {
-		io.opentracing.Span openTracingSpan = this.opentracing.buildSpan("encode")
+		BraveSpan openTracingSpan = this.opentracing.buildSpan("encode")
 				.withTag("lc", "codec").withStartTimestamp(1L).start();
 
-		Span braveSpan = ((BraveSpan) openTracingSpan).unwrap();
+		Span braveSpan = openTracingSpan.unwrap();
 
 		braveSpan.annotate(2L, "pump fake");
 		braveSpan.finish(3L);
@@ -89,21 +84,21 @@ public class BraveTracerTest {
 	}
 
 	@Test
-	public void extractTraceContext() throws Exception {
+	public void extractTraceContext() {
 		Map<String, String> map = new LinkedHashMap<>();
 		map.put("X-B3-TraceId", "0000000000000001");
 		map.put("X-B3-SpanId", "0000000000000002");
 		map.put("X-B3-Sampled", "1");
 
-		BraveSpanContext openTracingContext = (BraveSpanContext) this.opentracing
-				.extract(Format.Builtin.HTTP_HEADERS, new TextMapExtractAdapter(map));
+		BraveSpanContext openTracingContext = this.opentracing
+				.extract(Format.Builtin.HTTP_HEADERS, new TextMapAdapter(map));
 
 		assertThat(openTracingContext.unwrap()).isEqualTo(
 				TraceContext.newBuilder().traceId(1L).spanId(2L).sampled(true).build());
 	}
 
 	@Test
-	public void extractBaggage() throws Exception {
+	public void extractBaggage() {
 		Map<String, String> map = new LinkedHashMap<>();
 		map.put("X-B3-TraceId", "0000000000000001");
 		map.put("X-B3-SpanId", "0000000000000002");
@@ -111,48 +106,48 @@ public class BraveTracerTest {
 		map.put("baggage-country-code", "FO");
 
 		BraveSpanContext openTracingContext = this.opentracing
-				.extract(Format.Builtin.HTTP_HEADERS, new TextMapExtractAdapter(map));
+				.extract(Format.Builtin.HTTP_HEADERS, new TextMapAdapter(map));
 
 		assertThat(openTracingContext.baggageItems())
 				.containsExactly(entry("country-code", "FO"));
 	}
 
 	@Test
-	public void extractTraceContextTextMap() throws Exception {
+	public void extractTraceContextTextMap() {
 		Map<String, String> map = new LinkedHashMap<>();
 		map.put("X-B3-TraceId", "0000000000000001");
 		map.put("X-B3-SpanId", "0000000000000002");
 		map.put("X-B3-Sampled", "1");
 
-		BraveSpanContext openTracingContext = (BraveSpanContext) this.opentracing
-				.extract(Format.Builtin.TEXT_MAP, new TextMapExtractAdapter(map));
+		BraveSpanContext openTracingContext = this.opentracing
+				.extract(Format.Builtin.TEXT_MAP, new TextMapAdapter(map));
 
 		assertThat(openTracingContext.unwrap()).isEqualTo(
 				TraceContext.newBuilder().traceId(1L).spanId(2L).sampled(true).build());
 	}
 
 	@Test
-	public void extractTraceContextCaseInsensitive() throws Exception {
+	public void extractTraceContextCaseInsensitive() {
 		Map<String, String> map = new LinkedHashMap<>();
 		map.put("X-B3-TraceId", "0000000000000001");
 		map.put("x-b3-spanid", "0000000000000002");
 		map.put("x-b3-SaMpLeD", "1");
 		map.put("other", "1");
 
-		BraveSpanContext openTracingContext = (BraveSpanContext) this.opentracing
-				.extract(Format.Builtin.HTTP_HEADERS, new TextMapExtractAdapter(map));
+		BraveSpanContext openTracingContext = this.opentracing
+				.extract(Format.Builtin.HTTP_HEADERS, new TextMapAdapter(map));
 
 		assertThat(openTracingContext.unwrap()).isEqualTo(
 				TraceContext.newBuilder().traceId(1L).spanId(2L).sampled(true).build());
 	}
 
 	@Test
-	public void injectTraceContext_baggage() throws Exception {
+	public void injectTraceContext_baggage() {
 		BraveSpan span = this.opentracing.buildSpan("foo").start();
 		span.setBaggageItem("country-code", "FO");
 
 		Map<String, String> map = new LinkedHashMap<>();
-		TextMapInjectAdapter carrier = new TextMapInjectAdapter(map);
+		TextMapAdapter carrier = new TextMapAdapter(map);
 		this.opentracing.inject(span.context(), Format.Builtin.HTTP_HEADERS, carrier);
 
 		assertThat(map).containsEntry("baggage-country-code", "FO");
@@ -170,43 +165,20 @@ public class BraveTracerTest {
 	}
 
 	@Test
-	public void subsequentChildrenNestProperly_OTStyle() {
-		// this test is semantically identical to
-		// subsequentChildrenNestProperly_BraveStyle, but uses
-		// the OpenTracingAPI instead of the Brave API.
+	public void activate_nested() {
+		BraveSpan spanA = this.opentracing.buildSpan("spanA").start();
+		BraveSpan spanB = this.opentracing.buildSpan("spanB").start();
 
-		Long idOfSpanA;
-		Long shouldBeIdOfSpanA;
-		Long idOfSpanB;
-		Long shouldBeIdOfSpanB;
-		Long parentIdOfSpanB;
-		Long parentIdOfSpanC;
+		try (Scope scopeA = this.opentracing.scopeManager().activate(spanA)) {
+			try (Scope scopeB = this.opentracing.scopeManager().activate(spanB)) {
+				assertThat(
+						this.opentracing.scopeManager().activeSpan().context().unwrap())
+								.isEqualTo(spanB.context().unwrap());
+			}
 
-		try (Scope scopeA = this.opentracing.buildSpan("spanA").startActive(false)) {
-			idOfSpanA = getTraceContext(scopeA).spanId();
-			try (Scope scopeB = this.opentracing.buildSpan("spanB").startActive(false)) {
-				idOfSpanB = getTraceContext(scopeB).spanId();
-				parentIdOfSpanB = getTraceContext(scopeB).parentId();
-				shouldBeIdOfSpanB = getTraceContext(
-						this.opentracing.scopeManager().active()).spanId();
-			}
-			shouldBeIdOfSpanA = getTraceContext(this.opentracing.scopeManager().active())
-					.spanId();
-			try (Scope scopeC = this.opentracing.buildSpan("spanC").startActive(false)) {
-				parentIdOfSpanC = getTraceContext(scopeC).parentId();
-			}
+			assertThat(opentracing.scopeManager().activeSpan().context().unwrap())
+					.isEqualTo(spanA.context().unwrap());
 		}
-
-		assertThat(shouldBeIdOfSpanA)
-				.as("SpanA should have been active again after closing B")
-				.isEqualTo(idOfSpanA);
-		assertThat(shouldBeIdOfSpanB)
-				.as("SpanB should have been active prior to its closure")
-				.isEqualTo(idOfSpanB);
-		assertThat(parentIdOfSpanB).as("SpanB's parent should be SpanA")
-				.isEqualTo(idOfSpanA);
-		assertThat(parentIdOfSpanC).as("SpanC's parent should be SpanA")
-				.isEqualTo(idOfSpanA);
 	}
 
 	@Test
@@ -265,40 +237,23 @@ public class BraveTracerTest {
 	}
 
 	@Test
-	public void implicitParentFromSpanManager_startActive() {
-		try (Scope scopeA = this.opentracing.buildSpan("spanA").startActive(true)) {
-			try (Scope scopeB = this.opentracing.buildSpan("spanA").startActive(true)) {
-				assertThat(getTraceContext(scopeB).parentId())
-						.isEqualTo(getTraceContext(scopeA).spanId());
-			}
-		}
-	}
-
-	@Test
 	public void implicitParentFromSpanManager_start() {
-		try (Scope scopeA = this.opentracing.buildSpan("spanA").startActive(true)) {
-			BraveSpan span = this.opentracing.buildSpan("spanB").start();
-			assertThat(span.unwrap().context().parentId())
-					.isEqualTo(getTraceContext(scopeA).spanId());
-		}
-	}
-
-	@Test
-	public void implicitParentFromSpanManager_startActive_ignoreActiveSpan() {
-		try (Scope scopeA = this.opentracing.buildSpan("spanA").startActive(true)) {
-			try (Scope scopeB = this.opentracing.buildSpan("spanA").ignoreActiveSpan()
-					.startActive(true)) {
-				assertThat(getTraceContext(scopeB).parentId()).isNull(); // new trace
-			}
+		BraveSpan spanA = this.opentracing.buildSpan("spanA").start();
+		try (Scope scopeA = this.opentracing.activateSpan(spanA)) {
+			BraveSpan spanB = this.opentracing.buildSpan("spanB").start();
+			// OpenTracing doesn't expose parent ID, so we will check trace ID instead
+			assertThat(spanB.context().toTraceId())
+					.isEqualTo(spanA.context().toTraceId());
 		}
 	}
 
 	@Test
 	public void implicitParentFromSpanManager_start_ignoreActiveSpan() {
-		try (Scope scopeA = this.opentracing.buildSpan("spanA").startActive(true)) {
-			BraveSpan span = this.opentracing.buildSpan("spanB").ignoreActiveSpan()
+		BraveSpan spanA = this.opentracing.buildSpan("spanA").start();
+		try (Scope scopeA = this.opentracing.activateSpan(spanA)) {
+			BraveSpan spanB = this.opentracing.buildSpan("spanB").ignoreActiveSpan()
 					.start();
-			assertThat(span.unwrap().context().parentId()).isNull(); // new trace
+			assertThat(spanB.unwrap().context().parentId()).isNull(); // new trace
 		}
 	}
 
