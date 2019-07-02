@@ -181,7 +181,8 @@ public class SkipPatternProviderConfigTest {
 				.skipPattern();
 
 		then(pattern).isNotEmpty();
-		then(pattern.get().pattern()).isEqualTo("foo(/|/(info|info/.*|health|health/.*))?");
+		then(pattern.get().pattern())
+				.isEqualTo("foo(/|/(info|info/.*|health|health/.*))?");
 	}
 
 	@Test

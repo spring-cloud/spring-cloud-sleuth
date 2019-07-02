@@ -122,8 +122,7 @@ public class TraceWebAutoConfiguration {
 			String basePath = webEndpointProperties.getBasePath();
 			String pattern = endpoints.stream().map(PathMappedEndpoint::getRootPath)
 					.map(path -> path + "|" + path + "/.*")
-					.collect(Collectors.joining("|",
-							getPathPrefix(contextPath, basePath),
+					.collect(Collectors.joining("|", getPathPrefix(contextPath, basePath),
 							getPathSuffix(contextPath, basePath)));
 			if (StringUtils.hasText(pattern)) {
 				return Optional.of(Pattern.compile(pattern));
@@ -149,9 +148,8 @@ public class TraceWebAutoConfiguration {
 
 		private static String getPathSuffix(String contextPath, String actuatorBasePath) {
 			String result = ")";
-			if (StringUtils.hasText(contextPath) ||
-					(StringUtils.hasText(actuatorBasePath)
-							&& !"/".equals(actuatorBasePath))) {
+			if (StringUtils.hasText(contextPath) || (StringUtils.hasText(actuatorBasePath)
+					&& !"/".equals(actuatorBasePath))) {
 				result += ")?";
 			}
 			return result;
