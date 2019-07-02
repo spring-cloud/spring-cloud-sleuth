@@ -170,7 +170,8 @@ class ExecutorBeanPostProcessor implements BeanPostProcessor {
 				() -> new LazyTraceThreadPoolTaskExecutor(this.beanFactory, executor));
 	}
 
-	Supplier<Executor> createThreadPoolTaskSchedulerProxy(ThreadPoolTaskScheduler executor) {
+	Supplier<Executor> createThreadPoolTaskSchedulerProxy(
+			ThreadPoolTaskScheduler executor) {
 		return () -> new LazyTraceThreadPoolTaskScheduler(this.beanFactory, executor);
 	}
 
@@ -276,8 +277,9 @@ class ExecutorBeanPostProcessor implements BeanPostProcessor {
 	}
 
 	private static <T> boolean anyFinalMethods(T object, Class<T> iface) {
-		for (Method method : ReflectionUtils.getDeclaredMethods(iface)) {
-			Method m = ReflectionUtils.findMethod(object.getClass(), method.getName(), method.getParameterTypes());
+		for (Method method : ReflectionUtils.getAllDeclaredMethods(iface)) {
+			Method m = ReflectionUtils.findMethod(object.getClass(), method.getName(),
+					method.getParameterTypes());
 			if (m != null && Modifier.isFinal(m.getModifiers())) {
 				return true;
 			}
@@ -330,4 +332,5 @@ class ExecutorMethodInterceptor<T extends Executor> implements MethodInterceptor
 	T executor(BeanFactory beanFactory, T executor) {
 		return (T) new LazyTraceExecutor(beanFactory, executor);
 	}
+
 }
