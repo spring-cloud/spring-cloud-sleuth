@@ -22,6 +22,7 @@ import java.lang.reflect.Modifier;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Supplier;
 
 import org.aopalliance.aop.Advice;
@@ -266,14 +267,16 @@ class ExecutorBeanPostProcessor implements BeanPostProcessor {
 	}
 
 	private static <T> boolean anyFinalMethods(T object, Class<T> iface) {
-		for (Method method : ReflectionUtils.getAllDeclaredMethods(iface)) {
-			Method m = ReflectionUtils.findMethod(object.getClass(), method.getName(),
-					method.getParameterTypes());
-			if (m != null && Modifier.isFinal(m.getModifiers())) {
-				return true;
-			}
-		}
-		return false;
+		AtomicBoolean finalMethodPresent = new AtomicBoolean();
+		ReflectionUtils.doWithMethods(iface, method -> finalMethodPresent.set(true),
+				method -> {
+					Method m = ReflectionUtils.findMethod(object.getClass(),
+							method.getName(), method.getParameterTypes());
+					return m != null &&
+							!ReflectionUtils.isObjectMethod(m) &&
+							Modifier.isFinal(m.getModifiers());
+				});
+		return finalMethodPresent.get();
 	}
 
 }
