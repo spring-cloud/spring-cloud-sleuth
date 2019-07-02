@@ -251,25 +251,31 @@ public class ExecutorBeanPostProcessorTests {
 
 	@Test
 	public void should_use_jdk_proxy_when_executor_has_final_methods() {
-		ExecutorBeanPostProcessor beanPostProcessor = new ExecutorBeanPostProcessor(this.beanFactory);
+		ExecutorBeanPostProcessor beanPostProcessor = new ExecutorBeanPostProcessor(
+				this.beanFactory);
 		Executor executor = Runnable::run;
-		Executor wrappedExecutor = (Executor) beanPostProcessor.postProcessAfterInitialization(
-				executor, "executor");
+		Executor wrappedExecutor = (Executor) beanPostProcessor
+				.postProcessAfterInitialization(executor, "executor");
 
 		then(AopUtils.isJdkDynamicProxy(wrappedExecutor)).isTrue();
 		then(AopUtils.isCglibProxy(wrappedExecutor)).isFalse();
 
 		AtomicBoolean wasCalled = new AtomicBoolean(false);
-		wrappedExecutor.execute(() -> { wasCalled.set(true); });
+		wrappedExecutor.execute(() -> {
+			wasCalled.set(true);
+		});
 		then(wasCalled).isTrue();
 	}
 
 	@Test
-	public void should_use_jdk_proxy_when_executor_service_has_final_methods() throws Exception {
-		ExecutorBeanPostProcessor beanPostProcessor = new ExecutorBeanPostProcessor(this.beanFactory);
-		ExecutorService executorService = new DelegatingSecurityContextExecutorService(Executors.newSingleThreadExecutor());
-		ExecutorService wrappedExecutor = (ExecutorService) beanPostProcessor.postProcessAfterInitialization(
-				executorService, "executorService");
+	public void should_use_jdk_proxy_when_executor_service_has_final_methods()
+			throws Exception {
+		ExecutorBeanPostProcessor beanPostProcessor = new ExecutorBeanPostProcessor(
+				this.beanFactory);
+		ExecutorService executorService = new DelegatingSecurityContextExecutorService(
+				Executors.newSingleThreadExecutor());
+		ExecutorService wrappedExecutor = (ExecutorService) beanPostProcessor
+				.postProcessAfterInitialization(executorService, "executorService");
 
 		then(AopUtils.isJdkDynamicProxy(wrappedExecutor)).isTrue();
 		then(AopUtils.isCglibProxy(wrappedExecutor)).isFalse();
@@ -278,11 +284,13 @@ public class ExecutorBeanPostProcessorTests {
 	}
 
 	@Test
-	public void should_use_jdk_proxy_when_async_task_executor_has_final_methods() throws Exception {
-		ExecutorBeanPostProcessor beanPostProcessor = new ExecutorBeanPostProcessor(this.beanFactory);
+	public void should_use_jdk_proxy_when_async_task_executor_has_final_methods()
+			throws Exception {
+		ExecutorBeanPostProcessor beanPostProcessor = new ExecutorBeanPostProcessor(
+				this.beanFactory);
 
-		AsyncTaskExecutor wrappedExecutor = (AsyncTaskExecutor) beanPostProcessor.postProcessAfterInitialization(
-				new DirectTaskExecutor(), "taskExecutor");
+		AsyncTaskExecutor wrappedExecutor = (AsyncTaskExecutor) beanPostProcessor
+				.postProcessAfterInitialization(new DirectTaskExecutor(), "taskExecutor");
 
 		then(AopUtils.isJdkDynamicProxy(wrappedExecutor)).isTrue();
 		then(AopUtils.isCglibProxy(wrappedExecutor)).isFalse();
@@ -291,11 +299,13 @@ public class ExecutorBeanPostProcessorTests {
 
 	@Test
 	public void should_fallback_to_sleuth_impl_when_thread_pool_task_executor_has_final_methods() {
-		ExecutorBeanPostProcessor postProcessor = new ExecutorBeanPostProcessor(this.beanFactory);
+		ExecutorBeanPostProcessor postProcessor = new ExecutorBeanPostProcessor(
+				this.beanFactory);
 		ThreadPoolTaskExecutor threadPoolTaskExecutor = new PoolTaskExecutor();
 
 		ThreadPoolTaskExecutor wrappedTaskExecutor = (ThreadPoolTaskExecutor) postProcessor
-				.postProcessAfterInitialization(threadPoolTaskExecutor, "threadPoolTaskExecutor");
+				.postProcessAfterInitialization(threadPoolTaskExecutor,
+						"threadPoolTaskExecutor");
 
 		then(wrappedTaskExecutor).isInstanceOf(LazyTraceThreadPoolTaskExecutor.class);
 		then(AopUtils.isCglibProxy(wrappedTaskExecutor)).isFalse();
@@ -370,6 +380,7 @@ public class ExecutorBeanPostProcessorTests {
 	}
 
 	static class DirectTaskExecutor extends SimpleAsyncTaskExecutor {
+
 		@Override
 		public final <T> Future<T> submit(Callable<T> callable) {
 			return super.submit(callable);
@@ -379,12 +390,16 @@ public class ExecutorBeanPostProcessorTests {
 		protected void doExecute(Runnable task) {
 			task.run();
 		}
+
 	}
 
 	static class PoolTaskExecutor extends ThreadPoolTaskExecutor {
+
 		@Override
 		public final void execute(Runnable task, long startTimeout) {
 			super.execute(task, startTimeout);
 		}
+
 	}
+
 }
