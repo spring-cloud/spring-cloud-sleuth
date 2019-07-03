@@ -398,7 +398,18 @@ final class TraceExchangeFilterFunction implements ExchangeFilterFunction {
 
 		@Override
 		public Integer statusCode(ClientResponse response) {
-			return response.statusCode().value();
+			int result = statusCodeAsInt(response);
+			return result != 0 ? result : null;
+		}
+
+		@Override
+		public int statusCodeAsInt(ClientResponse response) {
+			try {
+				return response.rawStatusCode();
+			}
+			catch (Exception dontCare) {
+				return 0;
+			}
 		}
 
 	}
