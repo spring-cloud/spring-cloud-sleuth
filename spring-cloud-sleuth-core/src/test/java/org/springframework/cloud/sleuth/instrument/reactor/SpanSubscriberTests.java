@@ -16,6 +16,7 @@
 
 package org.springframework.cloud.sleuth.instrument.reactor;
 
+import java.time.Duration;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
 
@@ -297,6 +298,28 @@ public class SpanSubscriberTests {
 		}
 
 		then(spanInSubscriberContext).hasValue(initSpan.context().spanId()); // ok here
+	}
+
+	@Test
+	public void should_pass_tracing_info_into_inner_publishers() {
+		Span span = this.tracer.nextSpan().name("foo").start();
+		final AtomicReference<Span> spanInOperation = new AtomicReference<>();
+
+		try (Tracer.SpanInScope ws = this.tracer.withSpanInScope(span)) {
+			Flux
+					.range(0, 5)
+					.flatMap(it -> Mono
+							.delay(Duration.ofMillis(1))
+							.map(context -> this.tracer.currentSpan())
+							.doOnNext(spanInOperation::set)
+					)
+					.blockFirst();
+		}
+		finally {
+			span.finish();
+		}
+
+		then(spanInOperation.get().context().spanId()).isEqualTo(span.context().spanId());
 	}
 
 	@EnableAutoConfiguration
