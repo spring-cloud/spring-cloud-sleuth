@@ -22,7 +22,7 @@
 	<name>Benchmarks</name>
 	<description>Benchmarks (JMH)</description>
 	<groupId>org.springframework.cloud</groupId>
-	<version>2.2.0.M1</version>
+	<version>2.2.0.BUILD-SNAPSHOT</version>
 	<artifactId>benchmarks</artifactId>
 
 	<properties>
@@ -33,7 +33,7 @@
 		<sonar.skip>true</sonar.skip>
 		<maven.compiler.target>1.8</maven.compiler.target>
 		<maven.compiler.source>1.8</maven.compiler.source>
-		<spring-boot.version>2.2.0.M4</spring-boot.version>
+		<spring-boot.version>2.2.0.BUILD-SNAPSHOT</spring-boot.version>
 		<brave.version>5.6.6</brave.version>
 	</properties>
 
