@@ -306,13 +306,10 @@ public class SpanSubscriberTests {
 		final AtomicReference<Span> spanInOperation = new AtomicReference<>();
 
 		try (Tracer.SpanInScope ws = this.tracer.withSpanInScope(span)) {
-			Flux
-					.range(0, 5)
-					.flatMap(it -> Mono
-							.delay(Duration.ofMillis(1))
+			Flux.range(0, 5)
+					.flatMap(it -> Mono.delay(Duration.ofMillis(1))
 							.map(context -> this.tracer.currentSpan())
-							.doOnNext(spanInOperation::set)
-					)
+							.doOnNext(spanInOperation::set))
 					.blockFirst();
 		}
 		finally {

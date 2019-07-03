@@ -18,6 +18,7 @@
 <configuration>
 	<include resource="org/springframework/boot/logging/logback/base.xml"/>
 	<logger name="feign" level="DEBUG"/>
+	<logger name="com.netflix.discovery.InstanceInfoReplicator" level="ERROR"/>
 	<logger name="org.springframework.cloud.sleuth" level="TRACE"/>
 	<logger name="org.springframework.boot.autoconfigure.logging" level="INFO"/>
 	<logger name="org.springframework.cloud.sleuth.log" level="DEBUG"/>

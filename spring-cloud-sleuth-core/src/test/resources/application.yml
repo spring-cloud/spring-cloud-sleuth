@@ -17,6 +17,7 @@ spring.sleuth.scheduled.skipPattern: "^org.*TestBeanWithScheduledMethodToBeIgnor
 spring.sleuth.rxjava.schedulers.ignoredthreads: HystixMetricPoller,^MyCustomThread.*$,^RxComputation.*$
 
 logging.level.org.springframework.cloud: DEBUG
+logging.level.com.netflix.discovery.InstanceInfoReplicator: ERROR
 logging.level.org.springframework.cloud.sleuth.instrument.web.client.feign: TRACE
 
 #disable hibernate by default
