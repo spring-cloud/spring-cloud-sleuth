@@ -42,6 +42,7 @@ import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.config.BeanPostProcessor;
 import org.springframework.cloud.sleuth.instrument.reactor.ReactorSleuth;
 import org.springframework.core.io.buffer.DataBuffer;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.reactive.function.client.ClientRequest;
 import org.springframework.web.reactive.function.client.ClientResponse;
@@ -349,7 +350,7 @@ final class TraceExchangeFilterFunction implements ExchangeFilterFunction {
 
 			void terminateSpan(@Nullable ClientResponse clientResponse,
 					@Nullable Throwable throwable) {
-				if (clientResponse == null || clientResponse.statusCode() == null) {
+				if (clientResponse == null || tryStatusCode(clientResponse) == null) {
 					if (log.isDebugEnabled()) {
 						log.debug("No response was returned. Will close the span ["
 								+ this.span + "]");
@@ -371,6 +372,15 @@ final class TraceExchangeFilterFunction implements ExchangeFilterFunction {
 							+ clientResponse.statusCode().getReasonPhrase() + "]");
 				}
 				handleReceive(this.span, this.ws, clientResponse, throwable);
+			}
+
+			private HttpStatus tryStatusCode(ClientResponse clientResponse) {
+				try {
+					return clientResponse.statusCode();
+				}
+				catch (Exception ex) {
+					return null;
+				}
 			}
 
 		}
