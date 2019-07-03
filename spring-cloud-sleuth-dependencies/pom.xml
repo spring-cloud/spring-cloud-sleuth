@@ -31,6 +31,7 @@
 	<name>spring-cloud-sleuth-dependencies</name>
 	<description>Spring Cloud Sleuth Dependencies</description>
 	<properties>
+		<brave.version>5.6.6</brave.version>
 		<brave.opentracing.version>0.34.1</brave.opentracing.version>
 		<grpc.spring.boot.version>3.0.1</grpc.spring.boot.version>
 	</properties>
@@ -72,6 +73,13 @@
 				<version>${project.version}</version>
 			</dependency>
 			<!-- BRAVE -->
+			<dependency>
+				<groupId>io.zipkin.brave</groupId>
+				<artifactId>brave-bom</artifactId>
+				<version>${brave.version}</version>
+				<type>pom</type>
+				<scope>import</scope>
+			</dependency>
 			<dependency>
 				<groupId>io.opentracing.brave</groupId>
 				<artifactId>brave-opentracing</artifactId>
