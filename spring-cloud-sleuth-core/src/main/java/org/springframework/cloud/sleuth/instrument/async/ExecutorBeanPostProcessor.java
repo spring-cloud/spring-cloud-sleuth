@@ -272,9 +272,8 @@ class ExecutorBeanPostProcessor implements BeanPostProcessor {
 				method -> {
 					Method m = ReflectionUtils.findMethod(object.getClass(),
 							method.getName(), method.getParameterTypes());
-					return m != null &&
-							!ReflectionUtils.isObjectMethod(m) &&
-							Modifier.isFinal(m.getModifiers());
+					return m != null && !ReflectionUtils.isObjectMethod(m)
+							&& Modifier.isFinal(m.getModifiers());
 				});
 		return finalMethodPresent.get();
 	}
