@@ -42,17 +42,6 @@ https://www.w3.org/2001/XMLSchema-instance ">
 	<build>
 		<plugins>
 			<plugin>
-				<groupId>org.springframework.boot</groupId>
-				<artifactId>spring-boot-maven-plugin</artifactId>
-				<executions>
-					<execution>
-						<goals>
-							<goal>repackage</goal>
-						</goals>
-					</execution>
-				</executions>
-			</plugin>
-			<plugin>
 				<!--skip deploy -->
 				<artifactId>maven-deploy-plugin</artifactId>
 				<configuration>

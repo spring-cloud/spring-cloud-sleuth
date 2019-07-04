@@ -42,8 +42,7 @@ final class SleuthFeignBuilder {
 
 	private static Client client(BeanFactory beanFactory) {
 		try {
-			Client client = beanFactory.getBean(Client.class);
-			return new LazyClient(beanFactory, client);
+			return new LazyClient(beanFactory);
 		}
 		catch (BeansException ex) {
 			return TracingFeignClient.create(beanFactory.getBean(HttpTracing.class),
