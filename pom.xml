@@ -47,6 +47,7 @@
 	<modules>
 		<module>spring-cloud-sleuth-dependencies</module>
 		<module>spring-cloud-sleuth-core</module>
+		<module>tests</module>
 		<module>spring-cloud-sleuth-zipkin</module>
 		<module>spring-cloud-starter-sleuth</module>
 		<module>spring-cloud-starter-zipkin</module>

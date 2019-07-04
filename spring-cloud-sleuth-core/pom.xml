@@ -258,7 +258,7 @@
 			<artifactId>brave-instrumentation-grpc</artifactId>
 			<optional>true</optional>
 		</dependency>
-		<!-- Instrumentation of Lettcuce -->
+		<!-- Instrumentation of Lettuce -->
 		<dependency>
 			<groupId>io.lettuce</groupId>
 			<artifactId>lettuce-core</artifactId>
@@ -336,13 +336,6 @@
 		<dependency>
 			<groupId>org.apache.activemq</groupId>
 			<artifactId>activemq-ra</artifactId>
-			<scope>test</scope>
-		</dependency>
-		<!-- This forces the guava version to 20 within the test scope, which is required by GRPC -->
-		<dependency>
-			<groupId>com.google.guava</groupId>
-			<artifactId>guava</artifactId>
-			<version>20.0</version>
 			<scope>test</scope>
 		</dependency>
 	</dependencies>
