@@ -18,10 +18,12 @@ package org.springframework.cloud.sleuth.instrument.web.client.feign;
 
 import java.io.IOException;
 
+import brave.http.HttpTracing;
 import feign.Client;
 import feign.Request;
 import feign.Response;
 
+import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.BeanFactory;
 
 /**
@@ -33,18 +35,36 @@ class LazyClient implements Client {
 
 	private final BeanFactory beanFactory;
 
-	private final Client delegate;
+	private Client delegate;
 
 	private TraceFeignObjectWrapper wrapper;
 
-	LazyClient(BeanFactory beanFactory, Client delegate) {
+	LazyClient(BeanFactory beanFactory, Client client) {
 		this.beanFactory = beanFactory;
-		this.delegate = delegate;
+		this.delegate = client;
+	}
+
+	LazyClient(BeanFactory beanFactory) {
+		this.beanFactory = beanFactory;
 	}
 
 	@Override
 	public Response execute(Request request, Request.Options options) throws IOException {
-		return ((Client) wrapper().wrap(this.delegate)).execute(request, options);
+		return ((Client) wrapper().wrap(delegate())).execute(request, options);
+	}
+
+	private Client delegate() {
+		if (this.delegate == null) {
+			try {
+				this.delegate = this.beanFactory.getBean(Client.class);
+			}
+			catch (BeansException ex) {
+				this.delegate = TracingFeignClient.create(
+						beanFactory.getBean(HttpTracing.class),
+						new Client.Default(null, null));
+			}
+		}
+		return this.delegate;
 	}
 
 	private TraceFeignObjectWrapper wrapper() {

@@ -18,6 +18,9 @@ package org.springframework.cloud.sleuth.annotation;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.stream.Collector;
 import java.util.stream.Collectors;
 
 import javax.annotation.concurrent.NotThreadSafe;
@@ -40,7 +43,6 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.cloud.sleuth.util.ArrayListSpanReporter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.data.util.Pair;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.junit4.SpringRunner;
 
@@ -709,6 +711,55 @@ public class SleuthSpanCreatorAspectMonoTests {
 			return Sampler.ALWAYS_SAMPLE;
 		}
 
+	}
+
+}
+
+/**
+ * Copied from Spring Data
+ */
+final class Pair<S, T> {
+
+	private final S first;
+
+	private final T second;
+
+	Pair(S first, T second) {
+		this.first = first;
+		this.second = second;
+	}
+
+	public static <S, T> Pair<S, T> of(S first, T second) {
+		return new Pair<>(first, second);
+	}
+
+	public S getFirst() {
+		return first;
+	}
+
+	public T getSecond() {
+		return second;
+	}
+
+	public static <S, T> Collector<Pair<S, T>, ?, Map<S, T>> toMap() {
+		return Collectors.toMap(Pair::getFirst, Pair::getSecond);
+	}
+
+	@Override
+	public boolean equals(Object o) {
+		if (this == o) {
+			return true;
+		}
+		if (o == null || getClass() != o.getClass()) {
+			return false;
+		}
+		Pair<?, ?> pair = (Pair<?, ?>) o;
+		return Objects.equals(first, pair.first) && Objects.equals(second, pair.second);
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hash(first, second);
 	}
 
 }
