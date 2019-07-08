@@ -171,24 +171,6 @@ public class TraceWebFluxTests {
 		Controller2 controller2(Tracer tracer) {
 			return new Controller2(tracer);
 		}
-
-		@Bean
-		TestBean testBean(Tracer tracer) {
-			return new TestBean(tracer);
-		}
-
-		@Bean
-		SleuthSpanCreatorAspectWebFlux.AccessLoggingHttpTraceRepository accessLoggingHttpTraceRepository() {
-			return new SleuthSpanCreatorAspectWebFlux.AccessLoggingHttpTraceRepository();
-		}
-
-		@Bean
-		SleuthSpanCreatorAspectWebFlux sleuthSpanCreatorAspectWebFlux(Tracer tracer,
-				SleuthSpanCreatorAspectWebFlux.AccessLoggingHttpTraceRepository repository,
-				ArrayListSpanReporter reporter) {
-			return new SleuthSpanCreatorAspectWebFlux(tracer, repository, reporter);
-		}
-
 	}
 
 	@RestController
