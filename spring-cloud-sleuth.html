@@ -2624,22 +2624,7 @@ an example of usage of <code>SkipPatternProvider</code> inside a server side, <c
 <div class="content">
 <pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">@Configuration
 class Config {
-  @Bean(name = ServerSampler.NAME)
-  HttpSampler myHttpSampler(SkipPatternProvider provider) {
-  	Pattern pattern = provider.skipPattern();
-  	return new HttpSampler() {
-
-  		@Override
-  		public &lt;Req&gt; Boolean trySample(HttpAdapter&lt;Req, ?&gt; adapter, Req request) {
-  			String url = adapter.path(request);
-  			boolean shouldSkip = pattern.matcher(url).matches();
-  			if (shouldSkip) {
-  				return false;
-  			}
-  			return null;
-  		}
-  	};
-  }
+Unresolved directive in spring-cloud-sleuth.adoc - include::../../../spring-cloud-sleuth-core/src/test/java/org/springframework/cloud/sleuth/instrument/web/TraceFilterWebIntegrationTests.java[tags=custom_server_sampler,indent=2]
 }</code></pre>
 </div>
 </div>
@@ -2655,33 +2640,7 @@ You can customize the tags or modify the response headers by registering your ow
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">@Component
-@Order(TraceWebServletAutoConfiguration.TRACING_FILTER_ORDER + 1)
-class MyFilter extends GenericFilterBean {
-
-	private final Tracer tracer;
-
-	MyFilter(Tracer tracer) {
-		this.tracer = tracer;
-	}
-
-	@Override
-	public void doFilter(ServletRequest request, ServletResponse response,
-			FilterChain chain) throws IOException, ServletException {
-		Span currentSpan = this.tracer.currentSpan();
-		if (currentSpan == null) {
-			chain.doFilter(request, response);
-			return;
-		}
-		// for readability we're returning trace id in a hex form
-		((HttpServletResponse) response).addHeader("ZIPKIN-TRACE-ID",
-				currentSpan.context().traceIdString());
-		// we can also add some custom tags
-		currentSpan.tag("custom", "tag");
-		chain.doFilter(request, response);
-	}
-
-}</code></pre>
+<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">Unresolved directive in spring-cloud-sleuth.adoc - include::../../..//spring-cloud-sleuth-core/src/test/java/org/springframework/cloud/sleuth/instrument/web/TraceFilterIntegrationTests.java[tags=response_headers,indent=0]</code></pre>
 </div>
 </div>
 </div>
