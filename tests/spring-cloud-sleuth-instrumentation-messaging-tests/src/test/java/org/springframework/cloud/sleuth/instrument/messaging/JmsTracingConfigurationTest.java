@@ -62,6 +62,7 @@ import org.springframework.jms.config.JmsListenerEndpointRegistrar;
 import org.springframework.jms.config.SimpleJmsListenerEndpoint;
 import org.springframework.jms.core.JmsTemplate;
 import org.springframework.jms.listener.endpoint.JmsMessageEndpointManager;
+import org.springframework.test.annotation.DirtiesContext;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -70,6 +71,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 /**
  * @author Adrian Cole
  */
+@DirtiesContext
 public class JmsTracingConfigurationTest {
 
 	final ApplicationContextRunner contextRunner = new ApplicationContextRunner()
