@@ -31,8 +31,8 @@ import org.junit.runner.RunWith;
 import zipkin2.Span;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.cloud.sleuth.instrument.DefaultTestAutoConfiguration;
 import org.springframework.cloud.sleuth.util.ArrayListSpanReporter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
@@ -181,7 +181,7 @@ public class RestTemplateTraceAspectIntegrationTests {
 				.andExpect(status().isOk());
 	}
 
-	@DefaultTestAutoConfiguration
+	@EnableAutoConfiguration
 	@Import(AspectTestingController.class)
 	public static class Config {
 
