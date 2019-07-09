@@ -855,7 +855,7 @@ an example of usage of `SkipPatternProvider` inside a server side, `HttpSampler`
 ----
 @Configuration
 class Config {
-include::../../../spring-cloud-sleuth-core/src/test/java/org/springframework/cloud/sleuth/instrument/web/TraceFilterWebIntegrationTests.java[tags=custom_server_sampler,indent=2]
+include::../../../tests/spring-cloud-sleuth-instrumentation-mvc-tests/src/test/java/org/springframework/cloud/sleuth/instrument/web/TraceFilterWebIntegrationTests.java[tags=custom_server_sampler,indent=2]
 }
 ----
 
@@ -868,7 +868,7 @@ In the following example, we register the `TracingFilter` bean, add the `ZIPKIN-
 
 [source,java]
 ----
-include::../../..//spring-cloud-sleuth-core/src/test/java/org/springframework/cloud/sleuth/instrument/web/TraceFilterIntegrationTests.java[tags=response_headers,indent=0]
+include::../../../tests/spring-cloud-sleuth-instrumentation-mvc-tests/src/test/java/org/springframework/cloud/sleuth/instrument/web/TraceFilterIntegrationTests.java[tags=response_headers,indent=0]
 ----
 
 === Custom service name
