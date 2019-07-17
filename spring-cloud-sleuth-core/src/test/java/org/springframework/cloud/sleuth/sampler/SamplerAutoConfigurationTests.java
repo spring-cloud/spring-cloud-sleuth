@@ -46,7 +46,7 @@ public class SamplerAutoConfigurationTests {
 	}
 
 	@Test
-	public void should_use_rate_limiting_sampler_when_both_rate_and_probability_is_set() {
+	public void should_use_probability_sampler_when_both_rate_and_probability_is_set() {
 		SamplerProperties properties = new SamplerProperties();
 		properties.setProbability(10f);
 		properties.setRate(20);
