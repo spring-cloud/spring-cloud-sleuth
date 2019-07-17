@@ -50,9 +50,6 @@ CAUTION: `spring-cloud-sleuth-stream` is deprecated and should no longer be used
 
 * Spring Cloud Sleuth is https://opentracing.io/[OpenTracing] compatible.
 
-IMPORTANT: If you use Zipkin, configure the probability of spans exported by setting `spring.sleuth.sampler.probability`
-(default: 0.1, which is 10 percent). Otherwise, you might think that Sleuth is not working be cause it omits some spans.
-
 NOTE: The SLF4J MDC is always set and logback users immediately see the trace and span IDs in logs per the example
 shown earlier.
 Other logging systems have to configure their own formatter to get the same result.

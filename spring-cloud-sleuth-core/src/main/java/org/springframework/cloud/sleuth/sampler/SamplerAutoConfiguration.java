@@ -39,10 +39,10 @@ import org.springframework.context.annotation.Configuration;
 public class SamplerAutoConfiguration {
 
 	static Sampler samplerFromProps(SamplerProperties config) {
-		if (config.getRate() != null) {
-			return new RateLimitingSampler(config);
+		if (config.getProbability() != null) {
+			return new ProbabilityBasedSampler(config);
 		}
-		return new ProbabilityBasedSampler(config);
+		return new RateLimitingSampler(config);
 	}
 
 	@Configuration

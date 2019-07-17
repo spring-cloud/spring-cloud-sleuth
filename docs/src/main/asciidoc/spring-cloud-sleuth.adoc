@@ -315,11 +315,10 @@ Span nextSpan(final Request input) {
 By default Spring Cloud Sleuth sets all spans to non-exportable.
 That means that traces appear in logs but not in any remote store.
 For testing the default is often enough, and it probably is all you need if you use only the logs (for example, with an ELK aggregator).
-If you export span data to Zipkin, there is also an `Sampler.ALWAYS_SAMPLE` setting that exports everything and a `ProbabilityBasedSampler` setting that samples a fixed fraction of spans.
+If you export span data to Zipkin, there is also an `Sampler.ALWAYS_SAMPLE` setting that exports everything, `RateLimitingSampler` setting that samples X transactions per second (defaults to `1000`) or `ProbabilityBasedSampler` setting that samples a fixed fraction of spans.
 
-NOTE: The `ProbabilityBasedSampler` is the default if you use `spring-cloud-sleuth-zipkin`.
-You can configure the exports by setting `spring.sleuth.sampler.probability`.
-The passed value needs to be a double from `0.0` to `1.0`.
+NOTE: The `RateLimitingSampler` is the default if you use `spring-cloud-sleuth-zipkin`.
+You can configure the rate limit by setting `spring.sleuth.sampler.rate`.
 
 A sampler can be installed by creating a bean definition, as shown in the following example:
 
