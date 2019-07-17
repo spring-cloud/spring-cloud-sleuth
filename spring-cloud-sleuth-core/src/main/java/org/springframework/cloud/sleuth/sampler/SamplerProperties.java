@@ -33,7 +33,7 @@ public class SamplerProperties {
 	 * sampled. The precision is whole-numbers only (i.e. there's no support for 0.1% of
 	 * the traces).
 	 */
-	private float probability = 0.1f;
+	private Float probability;
 
 	/**
 	 * A rate per second can be a nice choice for low-traffic endpoints as it allows you
@@ -45,13 +45,13 @@ public class SamplerProperties {
 	 * (named Reservoir) for this purpose. Brave has taken the same approach via the
 	 * {@link brave.sampler.RateLimitingSampler}.
 	 */
-	private Integer rate;
+	private Integer rate = 1000;
 
-	public float getProbability() {
+	public Float getProbability() {
 		return this.probability;
 	}
 
-	public void setProbability(float probability) {
+	public void setProbability(Float probability) {
 		this.probability = probability;
 	}
 

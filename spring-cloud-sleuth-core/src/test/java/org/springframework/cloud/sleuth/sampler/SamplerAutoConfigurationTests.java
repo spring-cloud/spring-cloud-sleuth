@@ -27,9 +27,18 @@ import org.junit.Test;
 public class SamplerAutoConfigurationTests {
 
 	@Test
-	public void should_use_rate_limit_sampler_when_property_set() {
+	public void should_use_probability_sampler_when_property_set() {
 		SamplerProperties properties = new SamplerProperties();
-		properties.setRate(10);
+		properties.setProbability(10f);
+
+		Sampler sampler = SamplerAutoConfiguration.samplerFromProps(properties);
+
+		BDDAssertions.then(sampler).isInstanceOf(ProbabilityBasedSampler.class);
+	}
+
+	@Test
+	public void should_use_rate_limiting_sampler_when_probability_not_set() {
+		SamplerProperties properties = new SamplerProperties();
 
 		Sampler sampler = SamplerAutoConfiguration.samplerFromProps(properties);
 
@@ -37,8 +46,10 @@ public class SamplerAutoConfigurationTests {
 	}
 
 	@Test
-	public void should_use_probability_sampler_when_rate_limiting_not_set() {
+	public void should_use_rate_limiting_sampler_when_both_rate_and_probability_is_set() {
 		SamplerProperties properties = new SamplerProperties();
+		properties.setProbability(10f);
+		properties.setRate(20);
 
 		Sampler sampler = SamplerAutoConfiguration.samplerFromProps(properties);
 
