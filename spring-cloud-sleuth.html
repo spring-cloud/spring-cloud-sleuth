@@ -1277,19 +1277,6 @@ You can configure the location of the service by setting <code>spring.zipkin.bas
 </li>
 </ul>
 </div>
-<div class="admonitionblock important">
-<table>
-<tr>
-<td class="icon">
-<i class="fa icon-important" title="Important"></i>
-</td>
-<td class="content">
-If you use Zipkin, configure the probability of spans exported by setting <code>spring.sleuth.sampler.probability</code>
-(default: 0.1, which is 10 percent). Otherwise, you might think that Sleuth is not working be cause it omits some spans.
-</td>
-</tr>
-</table>
-</div>
 <div class="admonitionblock note">
 <table>
 <tr>
@@ -1697,7 +1684,7 @@ Span nextSpan(final Request input) {
 <p>By default Spring Cloud Sleuth sets all spans to non-exportable.
 That means that traces appear in logs but not in any remote store.
 For testing the default is often enough, and it probably is all you need if you use only the logs (for example, with an ELK aggregator).
-If you export span data to Zipkin, there is also an <code>Sampler.ALWAYS_SAMPLE</code> setting that exports everything and a <code>ProbabilityBasedSampler</code> setting that samples a fixed fraction of spans.</p>
+If you export span data to Zipkin, there is also an <code>Sampler.ALWAYS_SAMPLE</code> setting that exports everything, <code>RateLimitingSampler</code> setting that samples X transactions per second (defaults to <code>1000</code>) or <code>ProbabilityBasedSampler</code> setting that samples a fixed fraction of spans.</p>
 </div>
 <div class="admonitionblock note">
 <table>
@@ -1706,9 +1693,8 @@ If you export span data to Zipkin, there is also an <code>Sampler.ALWAYS_SAMPLE<
 <i class="fa icon-note" title="Note"></i>
 </td>
 <td class="content">
-The <code>ProbabilityBasedSampler</code> is the default if you use <code>spring-cloud-sleuth-zipkin</code>.
-You can configure the exports by setting <code>spring.sleuth.sampler.probability</code>.
-The passed value needs to be a double from <code>0.0</code> to <code>1.0</code>.
+The <code>RateLimitingSampler</code> is the default if you use <code>spring-cloud-sleuth-zipkin</code>.
+You can configure the rate limit by setting <code>spring.sleuth.sampler.rate</code>.
 </td>
 </tr>
 </table>
