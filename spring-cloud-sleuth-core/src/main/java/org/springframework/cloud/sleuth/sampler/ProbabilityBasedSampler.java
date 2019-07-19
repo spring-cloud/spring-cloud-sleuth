@@ -22,6 +22,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import brave.sampler.Sampler;
 
+import org.springframework.util.Assert;
+
 /**
  * This sampler is appropriate for low-traffic instrumentation (ex servers that each
  * receive <100K requests), or those who do not provision random trace ids. It not
@@ -52,6 +54,8 @@ public class ProbabilityBasedSampler extends Sampler {
 	private final SamplerProperties configuration;
 
 	public ProbabilityBasedSampler(SamplerProperties configuration) {
+		Assert.notNull(configuration.getProbability(),
+				"probability property is required for ProbabilityBasedSampler");
 		int outOf100 = (int) (configuration.getProbability() * 100.0f);
 		this.sampleDecisions = randomBitSet(100, outOf100, new Random());
 		this.configuration = configuration;
