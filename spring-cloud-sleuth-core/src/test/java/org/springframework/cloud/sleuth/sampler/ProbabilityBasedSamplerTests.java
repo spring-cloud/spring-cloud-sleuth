@@ -21,6 +21,7 @@ import java.util.Random;
 import brave.sampler.Sampler;
 import org.junit.Test;
 
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.BDDAssertions.then;
 
 /**
@@ -76,6 +77,13 @@ public class ProbabilityBasedSamplerTests {
 
 		int threshold = (int) (numberOfIterations * probability);
 		then(numberOfSampledElements).isEqualTo(threshold);
+	}
+
+	@Test
+	public void should_fail_given_no_probability() {
+		assertThatThrownBy(() -> new ProbabilityBasedSampler(this.samplerConfiguration))
+				.isInstanceOf(IllegalArgumentException.class).hasMessage(
+						"probability property is required for ProbabilityBasedSampler");
 	}
 
 	private int countNumberOfSampledElements(int numberOfIterations) {
