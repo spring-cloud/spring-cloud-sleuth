@@ -171,6 +171,7 @@ public class TraceWebFluxTests {
 		Controller2 controller2(Tracer tracer) {
 			return new Controller2(tracer);
 		}
+
 	}
 
 	@RestController

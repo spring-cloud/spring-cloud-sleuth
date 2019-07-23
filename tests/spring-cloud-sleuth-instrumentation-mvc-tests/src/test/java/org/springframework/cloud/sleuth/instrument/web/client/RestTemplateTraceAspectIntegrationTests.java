@@ -64,7 +64,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @RunWith(SpringJUnit4ClassRunner.class)
-@SpringBootTest(classes = RestTemplateTraceAspectIntegrationTests.Config.class, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT, properties = "spring.sleuth.web.client.skipPattern=/issue.*")
+@SpringBootTest(classes = RestTemplateTraceAspectIntegrationTests.Config.class,
+		webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
+		properties = "spring.sleuth.web.client.skipPattern=/issue.*")
 @DirtiesContext
 public class RestTemplateTraceAspectIntegrationTests {
 
@@ -231,42 +233,49 @@ public class RestTemplateTraceAspectIntegrationTests {
 			this.traceId = null;
 		}
 
-		@RequestMapping(value = "/issue1047_end", method = RequestMethod.GET, produces = MediaType.TEXT_PLAIN_VALUE)
+		@RequestMapping(value = "/issue1047_end", method = RequestMethod.GET,
+				produces = MediaType.TEXT_PLAIN_VALUE)
 		public String issue1047() {
 			return "should_filter_out_this_endpoint";
 		}
 
-		@RequestMapping(value = "/issue1047_start", method = RequestMethod.GET, produces = MediaType.TEXT_PLAIN_VALUE)
+		@RequestMapping(value = "/issue1047_start", method = RequestMethod.GET,
+				produces = MediaType.TEXT_PLAIN_VALUE)
 		public String issue1047Start() {
 			return callAndReturnIssue1047();
 		}
 
-		@RequestMapping(value = "/", method = RequestMethod.GET, produces = MediaType.TEXT_PLAIN_VALUE)
+		@RequestMapping(value = "/", method = RequestMethod.GET,
+				produces = MediaType.TEXT_PLAIN_VALUE)
 		public String home(
 				@RequestHeader(value = "X-B3-SpanId", required = false) String traceId) {
 			this.traceId = traceId == null ? "UNKNOWN" : traceId;
 			return "trace=" + this.getTraceId();
 		}
 
-		@RequestMapping(value = "/customTag", method = RequestMethod.GET, produces = MediaType.TEXT_PLAIN_VALUE)
+		@RequestMapping(value = "/customTag", method = RequestMethod.GET,
+				produces = MediaType.TEXT_PLAIN_VALUE)
 		public String customTag(
 				@RequestHeader(value = "X-B3-TraceId", required = false) String traceId) {
 			this.traceId = traceId == null ? "UNKNOWN" : traceId;
 			return "trace=" + this.getTraceId();
 		}
 
-		@RequestMapping(value = "/asyncRestTemplate", method = RequestMethod.GET, produces = MediaType.TEXT_PLAIN_VALUE)
+		@RequestMapping(value = "/asyncRestTemplate", method = RequestMethod.GET,
+				produces = MediaType.TEXT_PLAIN_VALUE)
 		public String asyncRestTemplate()
 				throws ExecutionException, InterruptedException {
 			return callViaAsyncRestTemplateAndReturnOk();
 		}
 
-		@RequestMapping(value = "/syncPing", method = RequestMethod.GET, produces = MediaType.TEXT_PLAIN_VALUE)
+		@RequestMapping(value = "/syncPing", method = RequestMethod.GET,
+				produces = MediaType.TEXT_PLAIN_VALUE)
 		public String syncPing() {
 			return callAndReturnOk();
 		}
 
-		@RequestMapping(value = "/callablePing", method = RequestMethod.GET, produces = MediaType.TEXT_PLAIN_VALUE)
+		@RequestMapping(value = "/callablePing", method = RequestMethod.GET,
+				produces = MediaType.TEXT_PLAIN_VALUE)
 		public Callable<String> asyncPing() {
 			return new Callable<String>() {
 				@Override
@@ -276,7 +285,8 @@ public class RestTemplateTraceAspectIntegrationTests {
 			};
 		}
 
-		@RequestMapping(value = "/webAsyncTaskPing", method = RequestMethod.GET, produces = MediaType.TEXT_PLAIN_VALUE)
+		@RequestMapping(value = "/webAsyncTaskPing", method = RequestMethod.GET,
+				produces = MediaType.TEXT_PLAIN_VALUE)
 		public WebAsyncTask<String> webAsyncTaskPing() {
 			return new WebAsyncTask<>(new Callable<String>() {
 				@Override

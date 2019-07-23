@@ -222,7 +222,8 @@ public class JmsTracingConfigurationTest {
 	@EnableJms
 	static class SimpleJmsListenerConfiguration implements JmsListenerConfigurer {
 
-		private static final Log log = LogFactory.getLog(AnnotationJmsListenerConfiguration.class);
+		private static final Log log = LogFactory
+				.getLog(AnnotationJmsListenerConfiguration.class);
 
 		@Autowired
 		CurrentTraceContext current;
@@ -252,7 +253,8 @@ public class JmsTracingConfigurationTest {
 	@EnableJms
 	static class AnnotationJmsListenerConfiguration {
 
-		private static final Log log = LogFactory.getLog(AnnotationJmsListenerConfiguration.class);
+		private static final Log log = LogFactory
+				.getLog(AnnotationJmsListenerConfiguration.class);
 
 		@Autowired
 		CurrentTraceContext current;
