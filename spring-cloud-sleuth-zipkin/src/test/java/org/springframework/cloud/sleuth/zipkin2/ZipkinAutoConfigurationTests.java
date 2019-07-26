@@ -36,11 +36,14 @@ import zipkin2.codec.Encoding;
 import zipkin2.reporter.AsyncReporter;
 import zipkin2.reporter.Reporter;
 import zipkin2.reporter.Sender;
+import zipkin2.reporter.activemq.ActiveMQSender;
 import zipkin2.reporter.amqp.RabbitMQSender;
 import zipkin2.reporter.kafka.KafkaSender;
 
 import org.springframework.boot.autoconfigure.amqp.RabbitAutoConfiguration;
 import org.springframework.boot.autoconfigure.context.PropertyPlaceholderAutoConfiguration;
+import org.springframework.boot.autoconfigure.jms.JmsAutoConfiguration;
+import org.springframework.boot.autoconfigure.jms.activemq.ActiveMQAutoConfiguration;
 import org.springframework.boot.autoconfigure.kafka.KafkaAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.cloud.sleuth.autoconfig.TraceAutoConfiguration;
@@ -151,6 +154,24 @@ public class ZipkinAutoConfigurationTests {
 		this.context.refresh();
 
 		then(this.context.getBean(Sender.class)).isInstanceOf(KafkaSender.class);
+
+		this.context.close();
+	}
+
+	@Test
+	public void overrideActiveMqQueue() throws Exception {
+		this.context = new AnnotationConfigApplicationContext();
+		environment().setProperty("spring.jms.cache.enabled", "false");
+		environment().setProperty("spring.zipkin.activemq.queue", "zipkin2");
+		environment().setProperty("spring.zipkin.activemq.message-max-bytes", "50");
+		environment().setProperty("spring.zipkin.sender.type", "activemq");
+		this.context.register(PropertyPlaceholderAutoConfiguration.class,
+				JmsAutoConfiguration.class, ActiveMQAutoConfiguration.class,
+				ZipkinAutoConfiguration.class, TraceAutoConfiguration.class,
+				ZipkinBackwardsCompatibilityAutoConfiguration.class);
+		this.context.refresh();
+
+		then(this.context.getBean(Sender.class)).isInstanceOf(ActiveMQSender.class);
 
 		this.context.close();
 	}
