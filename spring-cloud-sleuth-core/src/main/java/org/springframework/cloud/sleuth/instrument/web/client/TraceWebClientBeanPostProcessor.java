@@ -33,6 +33,7 @@ import org.apache.commons.logging.LogFactory;
 import org.reactivestreams.Publisher;
 import org.reactivestreams.Subscription;
 import reactor.core.CoreSubscriber;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.util.annotation.Nullable;
 import reactor.util.context.Context;
@@ -41,14 +42,22 @@ import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.config.BeanPostProcessor;
 import org.springframework.cloud.sleuth.instrument.reactor.ReactorSleuth;
+import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.core.io.buffer.DataBuffer;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseCookie;
+import org.springframework.http.ResponseEntity;
+import org.springframework.http.client.reactive.ClientHttpResponse;
+import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestClientException;
+import org.springframework.web.reactive.function.BodyExtractor;
 import org.springframework.web.reactive.function.client.ClientRequest;
 import org.springframework.web.reactive.function.client.ClientResponse;
 import org.springframework.web.reactive.function.client.ExchangeFilterFunction;
 import org.springframework.web.reactive.function.client.ExchangeFunction;
+import org.springframework.web.reactive.function.client.ExchangeStrategies;
 import org.springframework.web.reactive.function.client.WebClient;
+import org.springframework.web.reactive.function.client.WebClientResponseException;
 
 /**
  * {@link BeanPostProcessor} to wrap a {@link WebClient} instance into its trace
@@ -294,15 +303,105 @@ final class TraceExchangeFilterFunction implements ExchangeFilterFunction {
 				this.done = true;
 				try {
 					// decorate response body
-					this.actual
-							.onNext(ClientResponse.from(response)
-									.body(response.bodyToFlux(DataBuffer.class)
-											.transform(this.scopePassingTransformer))
-									.build());
+					this.actual.onNext(wrapped(response));
 				}
 				finally {
 					terminateSpan(response, null);
 				}
+			}
+
+			// TODO: Remove once fixed
+			// https://github.com/spring-projects/spring-framework/issues/23366
+			private ClientResponse wrapped(ClientResponse response) {
+				return new ClientResponse() {
+					@Override
+					public HttpStatus statusCode() {
+						try {
+							return response.statusCode();
+						}
+						catch (IllegalArgumentException ex) {
+							return null;
+						}
+					}
+
+					@Override
+					public int rawStatusCode() {
+						return response.rawStatusCode();
+					}
+
+					@Override
+					public Headers headers() {
+						return response.headers();
+					}
+
+					@Override
+					public MultiValueMap<String, ResponseCookie> cookies() {
+						return response.cookies();
+					}
+
+					@Override
+					public ExchangeStrategies strategies() {
+						return response.strategies();
+					}
+
+					@Override
+					public <T> T body(
+							BodyExtractor<T, ? super ClientHttpResponse> extractor) {
+						return response.body(extractor);
+					}
+
+					@Override
+					public <T> Mono<T> bodyToMono(Class<? extends T> elementClass) {
+						return response.bodyToMono(elementClass);
+					}
+
+					@Override
+					public <T> Mono<T> bodyToMono(
+							ParameterizedTypeReference<T> typeReference) {
+						return response.bodyToMono(typeReference);
+					}
+
+					@Override
+					public <T> Flux<T> bodyToFlux(Class<? extends T> elementClass) {
+						return (Flux<T>) response.bodyToFlux(DataBuffer.class)
+								.transform(scopePassingTransformer);
+					}
+
+					@Override
+					public <T> Flux<T> bodyToFlux(
+							ParameterizedTypeReference<T> typeReference) {
+						return (Flux<T>) response.bodyToFlux(DataBuffer.class)
+								.transform(scopePassingTransformer);
+					}
+
+					@Override
+					public <T> Mono<ResponseEntity<T>> toEntity(Class<T> bodyType) {
+						return response.toEntity(bodyType);
+					}
+
+					@Override
+					public <T> Mono<ResponseEntity<T>> toEntity(
+							ParameterizedTypeReference<T> typeReference) {
+						return response.toEntity(typeReference);
+					}
+
+					@Override
+					public <T> Mono<ResponseEntity<List<T>>> toEntityList(
+							Class<T> elementType) {
+						return response.toEntityList(elementType);
+					}
+
+					@Override
+					public <T> Mono<ResponseEntity<List<T>>> toEntityList(
+							ParameterizedTypeReference<T> typeReference) {
+						return response.toEntityList(typeReference);
+					}
+
+					@Override
+					public Mono<WebClientResponseException> createException() {
+						return response.createException();
+					}
+				};
 			}
 
 			@Override
@@ -350,7 +449,7 @@ final class TraceExchangeFilterFunction implements ExchangeFilterFunction {
 
 			void terminateSpan(@Nullable ClientResponse clientResponse,
 					@Nullable Throwable throwable) {
-				if (clientResponse == null || tryStatusCode(clientResponse) == null) {
+				if (clientResponse == null) {
 					if (log.isDebugEnabled()) {
 						log.debug("No response was returned. Will close the span ["
 								+ this.span + "]");
@@ -358,8 +457,8 @@ final class TraceExchangeFilterFunction implements ExchangeFilterFunction {
 					handleReceive(this.span, this.ws, clientResponse, throwable);
 					return;
 				}
-				boolean error = clientResponse.statusCode().is4xxClientError()
-						|| clientResponse.statusCode().is5xxServerError();
+				int statusCode = statusCodeAsInt(clientResponse);
+				boolean error = isError(statusCode);
 				if (error) {
 					if (log.isDebugEnabled()) {
 						log.debug(
@@ -367,19 +466,31 @@ final class TraceExchangeFilterFunction implements ExchangeFilterFunction {
 										+ this.span + "]");
 					}
 					throwable = new RestClientException("Status code of the response is ["
-							+ clientResponse.statusCode().value()
-							+ "] and the reason is ["
-							+ clientResponse.statusCode().getReasonPhrase() + "]");
+							+ statusCode + "] and the reason is ["
+							+ reasonPhrase(clientResponse) + "]");
 				}
 				handleReceive(this.span, this.ws, clientResponse, throwable);
 			}
 
-			private HttpStatus tryStatusCode(ClientResponse clientResponse) {
+			private String reasonPhrase(ClientResponse clientResponse) {
 				try {
-					return clientResponse.statusCode();
+					return clientResponse.statusCode().getReasonPhrase();
 				}
-				catch (Exception ex) {
-					return null;
+				catch (IllegalArgumentException ex) {
+					return "";
+				}
+			}
+
+			private boolean isError(int code) {
+				return code >= 400;
+			}
+
+			private int statusCodeAsInt(ClientResponse response) {
+				try {
+					return response.rawStatusCode();
+				}
+				catch (Exception dontCare) {
+					return 0;
 				}
 			}
 

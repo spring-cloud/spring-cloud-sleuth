@@ -379,6 +379,22 @@ public class WebClientTests {
 	}
 
 	@Test
+	@SuppressWarnings("unchecked")
+	public void shouldNotBreakWhenCustomStatusCodeIsSetViaWebClient() {
+		Span span = this.tracer.nextSpan().name("foo").start();
+
+		try (Tracer.SpanInScope ws = this.tracer.withSpanInScope(span)) {
+			this.webClient.get()
+					.uri("http://localhost:" + this.port + "/customstatuscode").exchange()
+					.block();
+		}
+		finally {
+			span.finish();
+		}
+		then(this.tracer.currentSpan()).isNull();
+	}
+
+	@Test
 	@Ignore("Flakey on CI")
 	public void shouldReportTraceForCancelledRequestViaWebClient() {
 		Span span = this.tracer.nextSpan().name("foo").start();
@@ -663,6 +679,12 @@ public class WebClientTests {
 			then(spanId).isNotEmpty();
 			this.span = this.tracer.currentSpan();
 			return traceId;
+		}
+
+		@RequestMapping(value = "/customstatuscode", method = RequestMethod.GET)
+		public ResponseEntity customStatusCode() {
+			this.span = this.tracer.currentSpan();
+			return ResponseEntity.status(499).build();
 		}
 
 		@RequestMapping("/")

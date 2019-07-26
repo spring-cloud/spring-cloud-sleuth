@@ -16,7 +16,6 @@
 
 package org.springframework.cloud.sleuth.instrument.web.client.feign;
 
-import brave.http.HttpTracing;
 import feign.Client;
 import feign.Feign;
 import feign.Retryer;
@@ -45,8 +44,7 @@ final class SleuthFeignBuilder {
 			return new LazyClient(beanFactory);
 		}
 		catch (BeansException ex) {
-			return TracingFeignClient.create(beanFactory.getBean(HttpTracing.class),
-					new Client.Default(null, null));
+			return new LazyClient(beanFactory, new Client.Default(null, null));
 		}
 	}
 
