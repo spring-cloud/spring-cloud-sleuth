@@ -6,7 +6,3 @@ logging.level.com.netflix.discovery: 'OFF'
 sample:
   zipkin:
     enabled: false
-
-spring:
-  application:
-    name: testSleuthFeign
