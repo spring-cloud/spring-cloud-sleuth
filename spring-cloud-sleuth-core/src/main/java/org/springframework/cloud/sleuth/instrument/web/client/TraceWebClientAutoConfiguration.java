@@ -84,7 +84,7 @@ public class TraceWebClientAutoConfiguration {
 		protected static class TraceInterceptorConfiguration {
 
 			@Autowired
-			private TracingClientHttpRequestInterceptor clientInterceptor;
+			private BeanFactory beanFactory;
 
 			@Bean
 			static TraceRestTemplateBeanPostProcessor traceRestTemplateBeanPostProcessor(
@@ -95,7 +95,8 @@ public class TraceWebClientAutoConfiguration {
 			@Bean
 			@Order
 			RestTemplateCustomizer traceRestTemplateCustomizer() {
-				return new TraceRestTemplateCustomizer(this.clientInterceptor);
+				return new TraceRestTemplateCustomizer(
+						new LazyTracingClientHttpRequestInterceptor(this.beanFactory));
 			}
 
 		}
@@ -247,9 +248,9 @@ class RestTemplateInterceptorInjector {
 
 class TraceRestTemplateCustomizer implements RestTemplateCustomizer {
 
-	private final TracingClientHttpRequestInterceptor interceptor;
+	private final ClientHttpRequestInterceptor interceptor;
 
-	TraceRestTemplateCustomizer(TracingClientHttpRequestInterceptor interceptor) {
+	TraceRestTemplateCustomizer(ClientHttpRequestInterceptor interceptor) {
 		this.interceptor = interceptor;
 	}
 
