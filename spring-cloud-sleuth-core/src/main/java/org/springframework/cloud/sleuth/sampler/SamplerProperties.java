@@ -23,10 +23,13 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  *
  * @author Marcin Grzejszczak
  * @author Adrian Cole
+ * @author Tim Ysewyn
  * @since 1.0.0
  */
 @ConfigurationProperties("spring.sleuth.sampler")
 public class SamplerProperties {
+
+	private boolean enabled = false;
 
 	/**
 	 * Probability of requests that should be sampled. E.g. 1.0 - 100% requests should be
@@ -46,6 +49,14 @@ public class SamplerProperties {
 	 * {@link brave.sampler.RateLimitingSampler}.
 	 */
 	private Integer rate;
+
+	public boolean isEnabled() {
+		return enabled;
+	}
+
+	public void setEnabled(boolean enabled) {
+		this.enabled = enabled;
+	}
 
 	public float getProbability() {
 		return this.probability;

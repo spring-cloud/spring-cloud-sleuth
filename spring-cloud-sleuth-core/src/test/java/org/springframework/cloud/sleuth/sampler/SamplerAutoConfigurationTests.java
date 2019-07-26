@@ -20,29 +20,51 @@ import brave.sampler.Sampler;
 import org.assertj.core.api.BDDAssertions;
 import org.junit.Test;
 
+import org.springframework.boot.autoconfigure.AutoConfigurations;
+import org.springframework.boot.test.context.runner.ApplicationContextRunner;
+
 /**
  * @author Marcin Grzejszczak
+ * @author Tim Ysewyn
  * @since
  */
 public class SamplerAutoConfigurationTests {
 
+	private final ApplicationContextRunner contextRunner = new ApplicationContextRunner()
+			.withConfiguration(AutoConfigurations.of(SamplerAutoConfiguration.class))
+			.withPropertyValues("spring.sleuth.enabled=true",
+					"spring.sleuth.sampler.enabled=false");
+
 	@Test
-	public void should_use_rate_limit_sampler_when_property_set() {
-		SamplerProperties properties = new SamplerProperties();
-		properties.setRate(10);
-
-		Sampler sampler = SamplerAutoConfiguration.samplerFromProps(properties);
-
-		BDDAssertions.then(sampler).isInstanceOf(RateLimitingSampler.class);
+	public void notEnabledByDefault() {
+		this.contextRunner.run((context) -> BDDAssertions
+				.then(context.getBeanNamesForType(Sampler.class)).isEmpty());
 	}
 
 	@Test
-	public void should_use_probability_sampler_when_rate_limiting_not_set() {
-		SamplerProperties properties = new SamplerProperties();
+	public void notEnabledWhenSleuthIsDisabled() {
+		this.contextRunner
+				.withPropertyValues("spring.sleuth.enabled=false",
+						"spring.sleuth.sampler.enabled=true")
+				.run((context) -> BDDAssertions
+						.then(context.getBeanNamesForType(Sampler.class)).isEmpty());
+	}
 
-		Sampler sampler = SamplerAutoConfiguration.samplerFromProps(properties);
+	@Test
+	public void enabledWhenPropertySet() {
+		this.contextRunner.withPropertyValues("spring.sleuth.sampler.enabled=true")
+				.run((context) -> BDDAssertions
+						.then(context.getBean(ProbabilityBasedSampler.class))
+						.isNotNull());
+	}
 
-		BDDAssertions.then(sampler).isInstanceOf(ProbabilityBasedSampler.class);
+	@Test
+	public void shouldUseRateLimitingSampler() {
+		this.contextRunner
+				.withPropertyValues("spring.sleuth.sampler.enabled=true",
+						"spring.sleuth.sampler.rate=10")
+				.run((context) -> BDDAssertions
+						.then(context.getBean(RateLimitingSampler.class)).isNotNull());
 	}
 
 }

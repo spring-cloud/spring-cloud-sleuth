@@ -18,11 +18,13 @@ package org.springframework.cloud.sleuth.sampler;
 
 import brave.sampler.Sampler;
 
+import org.springframework.boot.autoconfigure.AutoConfigureBefore;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.cloud.context.config.annotation.RefreshScope;
+import org.springframework.cloud.sleuth.autoconfig.TraceAutoConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -31,11 +33,13 @@ import org.springframework.context.annotation.Configuration;
  * Auto-configuration} to setup sampling for Spring Cloud Sleuth.
  *
  * @author Marcin Grzejszczak
+ * @author Tim Ysewyn
  * @since 2.1.0
  */
 @Configuration
-@ConditionalOnProperty(value = "spring.sleuth.enabled", matchIfMissing = true)
+@ConditionalOnProperty({ "spring.sleuth.enabled", "spring.sleuth.sampler.enabled" })
 @EnableConfigurationProperties(SamplerProperties.class)
+@AutoConfigureBefore(TraceAutoConfiguration.class)
 public class SamplerAutoConfiguration {
 
 	static Sampler samplerFromProps(SamplerProperties config) {
