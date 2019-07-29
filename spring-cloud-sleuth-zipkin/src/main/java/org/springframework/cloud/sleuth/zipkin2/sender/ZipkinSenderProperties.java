@@ -46,6 +46,11 @@ public class ZipkinSenderProperties {
 	public enum SenderType {
 
 		/**
+		 * ActiveMQ sender.
+		 */
+		ACTIVEMQ,
+
+		/**
 		 * RabbitMQ sender.
 		 */
 		RABBIT,

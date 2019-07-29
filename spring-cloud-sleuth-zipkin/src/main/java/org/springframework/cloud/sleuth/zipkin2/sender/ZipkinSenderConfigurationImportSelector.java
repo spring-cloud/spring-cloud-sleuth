@@ -36,6 +36,7 @@ public class ZipkinSenderConfigurationImportSelector implements ImportSelector {
 	static {
 		// Mappings in descending priority (highest is last)
 		Map<String, String> mappings = new LinkedHashMap<>();
+		mappings.put("activemq", ZipkinActiveMqSenderConfiguration.class.getName());
 		mappings.put("rabbit", ZipkinRabbitSenderConfiguration.class.getName());
 		mappings.put("kafka", ZipkinKafkaSenderConfiguration.class.getName());
 		mappings.put("web", ZipkinRestTemplateSenderConfiguration.class.getName());
