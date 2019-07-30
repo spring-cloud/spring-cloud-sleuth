@@ -92,7 +92,10 @@ public class ZipkinAutoConfigurationTests {
 		span.finish();
 
 		Awaitility.await().untilAsserted(
-				() -> then(this.server.getRequestCount()).isGreaterThan(0));
+				() -> then(this.server.getRequestCount()).isGreaterThan(1));
+		// first request is for health check
+		this.server.takeRequest();
+		// second request is the span one
 		RecordedRequest request = this.server.takeRequest();
 		then(request.getPath()).isEqualTo("/api/v2/spans");
 		then(request.getBody().readUtf8()).contains("localEndpoint");
@@ -120,6 +123,9 @@ public class ZipkinAutoConfigurationTests {
 
 		Awaitility.await().untilAsserted(
 				() -> then(this.server.getRequestCount()).isGreaterThan(0));
+		// first request is for health check
+		this.server.takeRequest();
+		// second request is the span one
 		RecordedRequest request = this.server.takeRequest();
 		then(request.getPath()).isEqualTo("/api/v1/spans");
 		then(request.getBody().readUtf8()).contains("binaryAnnotations");
@@ -246,7 +252,10 @@ public class ZipkinAutoConfigurationTests {
 		span.finish();
 
 		Awaitility.await().untilAsserted(
-				() -> then(this.server.getRequestCount()).isGreaterThan(0));
+				() -> then(this.server.getRequestCount()).isGreaterThan(1));
+		// first request is for health check
+		this.server.takeRequest();
+		// second request is the span one
 		RecordedRequest request = this.server.takeRequest();
 		then(request.getPath()).isEqualTo("/api/v2/spans");
 		then(request.getBody().readUtf8()).contains("localEndpoint");

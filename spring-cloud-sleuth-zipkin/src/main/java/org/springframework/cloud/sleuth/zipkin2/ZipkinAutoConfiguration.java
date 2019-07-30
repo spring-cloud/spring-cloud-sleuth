@@ -16,8 +16,15 @@
 
 package org.springframework.cloud.sleuth.zipkin2;
 
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import zipkin2.CheckResult;
 import zipkin2.Span;
 import zipkin2.reporter.AsyncReporter;
 import zipkin2.reporter.Reporter;
@@ -62,13 +69,14 @@ import org.springframework.web.client.RestTemplate;
  */
 @Configuration
 @EnableConfigurationProperties(ZipkinProperties.class)
-@ConditionalOnProperty(value = { "spring.sleuth.enabled", "spring.zipkin.enabled" },
-		matchIfMissing = true)
+@ConditionalOnProperty(value = { "spring.sleuth.enabled",
+		"spring.zipkin.enabled" }, matchIfMissing = true)
 @AutoConfigureBefore(TraceAutoConfiguration.class)
-@AutoConfigureAfter(
-		name = "org.springframework.cloud.autoconfigure.RefreshAutoConfiguration")
+@AutoConfigureAfter(name = "org.springframework.cloud.autoconfigure.RefreshAutoConfiguration")
 @Import({ ZipkinSenderConfigurationImportSelector.class, SamplerAutoConfiguration.class })
 public class ZipkinAutoConfiguration {
+
+	private static final Log log = LogFactory.getLog(ZipkinAutoConfiguration.class);
 
 	/**
 	 * Zipkin reporter bean name. Name of the bean matters for supporting multiple tracing
@@ -87,9 +95,32 @@ public class ZipkinAutoConfiguration {
 	public Reporter<Span> reporter(ReporterMetrics reporterMetrics,
 			ZipkinProperties zipkin, @Qualifier(SENDER_BEAN_NAME) Sender sender) {
 		// historical constraint. Note: AsyncReporter supports memory bounds
-		return AsyncReporter.builder(sender).queuedMaxSpans(1000)
+		AsyncReporter<Span> asyncReporter = AsyncReporter.builder(sender)
+				.queuedMaxSpans(1000)
 				.messageTimeout(zipkin.getMessageTimeout(), TimeUnit.SECONDS)
 				.metrics(reporterMetrics).build(zipkin.getEncoder());
+		CheckResult checkResult = checkResult(asyncReporter);
+		if (log.isDebugEnabled()) {
+			log.debug("Check result of the async reporter is [" + checkResult + "]");
+		}
+		return asyncReporter;
+	}
+
+	private CheckResult checkResult(AsyncReporter<Span> asyncReporter) {
+		ExecutorService executor = Executors.newSingleThreadExecutor();
+		Callable<CheckResult> task = asyncReporter::check;
+		Future<CheckResult> future = executor.submit(task);
+		try {
+			return future.get(1, TimeUnit.SECONDS);
+		} catch (Exception ex) {
+			if (log.isDebugEnabled()) {
+				log.debug("An exception took place when trying to retrieve the check result. Will return null.", ex);
+			}
+			return null;
+		} finally {
+			future.cancel(true);
+			executor.shutdown();
+		}
 	}
 
 	@Bean
@@ -101,8 +132,7 @@ public class ZipkinAutoConfiguration {
 
 	@Configuration
 	@ConditionalOnMissingBean(EndpointLocator.class)
-	@ConditionalOnProperty(value = "spring.zipkin.locator.discovery.enabled",
-			havingValue = "false", matchIfMissing = true)
+	@ConditionalOnProperty(value = "spring.zipkin.locator.discovery.enabled", havingValue = "false", matchIfMissing = true)
 	protected static class DefaultEndpointLocatorConfiguration {
 
 		@Autowired(required = false)
@@ -128,8 +158,7 @@ public class ZipkinAutoConfiguration {
 	@Configuration
 	@ConditionalOnClass(Registration.class)
 	@ConditionalOnMissingBean(EndpointLocator.class)
-	@ConditionalOnProperty(value = "spring.zipkin.locator.discovery.enabled",
-			havingValue = "true")
+	@ConditionalOnProperty(value = "spring.zipkin.locator.discovery.enabled", havingValue = "true")
 	protected static class RegistrationEndpointLocatorConfiguration {
 
 		@Autowired(required = false)
