@@ -1,0 +1,1640 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<!--[if IE]><meta http-equiv="X-UA-Compatible" content="IE=edge"><![endif]-->
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="generator" content="Asciidoctor 1.5.7.1">
+<title>Spring Cloud Sleuth</title>
+<link rel="stylesheet" href="css/spring.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+
+<style>
+.hidden {
+	display: none;
+}
+
+.switch {
+	border-width: 1px 1px 0 1px;
+	border-style: solid;
+	border-color: #7a2518;
+	display: inline-block;
+}
+
+.switch--item {
+	padding: 10px;
+	background-color: #ffffff;
+	color: #7a2518;
+	display: inline-block;
+	cursor: pointer;
+}
+
+.switch--item:not(:first-child) {
+	border-width: 0 0 0 1px;
+	border-style: solid;
+	border-color: #7a2518;
+}
+
+.switch--item.selected {
+	background-color: #7a2519;
+	color: #ffffff;
+}
+</style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/zepto/1.2.0/zepto.min.js"></script>
+<script type="text/javascript">
+function addBlockSwitches() {
+	$('.primary').each(function() {
+		primary = $(this);
+		createSwitchItem(primary, createBlockSwitch(primary)).item.addClass("selected");
+		primary.children('.title').remove();
+	});
+	$('.secondary').each(function(idx, node) {
+		secondary = $(node);
+		primary = findPrimary(secondary);
+		switchItem = createSwitchItem(secondary, primary.children('.switch'));
+		switchItem.content.addClass('hidden');
+		findPrimary(secondary).append(switchItem.content);
+		secondary.remove();
+	});
+}
+
+function createBlockSwitch(primary) {
+	blockSwitch = $('<div class="switch"></div>');
+	primary.prepend(blockSwitch);
+	return blockSwitch;
+}
+
+function findPrimary(secondary) {
+	candidate = secondary.prev();
+	while (!candidate.is('.primary')) {
+		candidate = candidate.prev();
+	}
+	return candidate;
+}
+
+function createSwitchItem(block, blockSwitch) {
+	blockName = block.children('.title').text();
+	content = block.children('.content').first().append(block.next('.colist'));
+	item = $('<div class="switch--item">' + blockName + '</div>');
+	item.on('click', '', content, function(e) {
+		$(this).addClass('selected');
+		$(this).siblings().removeClass('selected');
+		e.data.siblings('.content').addClass('hidden');
+		e.data.removeClass('hidden');
+	});
+	blockSwitch.append(item);
+	return {'item': item, 'content': content};
+}
+
+$(addBlockSwitches);
+</script>
+
+</head>
+<body class="book toc2 toc-left">
+<div id="header">
+<div id="toc" class="toc2">
+<div id="toctitle">Table of Contents</div>
+<ul class="sectlevel1">
+<li><a href="#_spring_cloud_sleuth">Spring Cloud Sleuth</a>
+<ul class="sectlevel2">
+<li><a href="#_quick_start">Quick Start</a></li>
+</ul>
+</li>
+<li><a href="#_introduction">Introduction</a>
+<ul class="sectlevel2">
+<li><a href="#_terminology">Terminology</a></li>
+<li><a href="#_purpose">Purpose</a></li>
+<li><a href="#sleuth-adding-project">Adding Sleuth to the Project</a></li>
+<li><a href="#_overriding_the_auto_configuration_of_zipkin">Overriding the auto-configuration of Zipkin</a></li>
+</ul>
+</li>
+<li><a href="#_additional_resources">Additional Resources</a></li>
+<li><a href="#_features">Features</a></li>
+<li><a href="#_building">Building</a>
+<ul class="sectlevel2">
+<li><a href="#_basic_compile_and_test">Basic Compile and Test</a></li>
+<li><a href="#_documentation">Documentation</a></li>
+<li><a href="#_working_with_the_code">Working with the code</a></li>
+</ul>
+</li>
+<li><a href="#_contributing">Contributing</a>
+<ul class="sectlevel2">
+<li><a href="#_sign_the_contributor_license_agreement">Sign the Contributor License Agreement</a></li>
+<li><a href="#_code_of_conduct">Code of Conduct</a></li>
+<li><a href="#_code_conventions_and_housekeeping">Code Conventions and Housekeeping</a></li>
+<li><a href="#_checkstyle">Checkstyle</a></li>
+<li><a href="#_ide_setup">IDE setup</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
+<div id="content">
+<div id="preamble">
+<div class="sectionbody">
+<div class="imageblock">
+<div class="content">
+<a class="image" href="https://circleci.com/gh/spring-cloud/spring-cloud-sleuth"><img src="https://circleci.com/gh/spring-cloud/spring-cloud-sleuth.svg?style=svg" alt="CircleCI"></a>
+</div>
+</div>
+<div class="imageblock">
+<div class="content">
+<a class="image" href="https://codecov.io/gh/spring-cloud/spring-cloud-sleuth"><img src="https://codecov.io/gh/spring-cloud/spring-cloud-sleuth/branch/origin/master/graph/badge.svg" alt="codecov"></a>
+</div>
+</div>
+<div class="imageblock">
+<div class="content">
+<a class="image" href="https://gitter.im/spring-cloud/spring-cloud-sleuth?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge"><img src="https://badges.gitter.im/spring-cloud/spring-cloud-sleuth.svg" alt="Gitter"></a>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_spring_cloud_sleuth"><a class="link" href="#_spring_cloud_sleuth">Spring Cloud Sleuth</a></h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Spring Cloud Sleuth is a distributed tracing tool for Spring Cloud. It borrows from <a href="https://research.google.com/pubs/pub36356.html">Dapper</a>, <a href="https://github.com/openzipkin/zipkin">Zipkin</a>, and <a href="https://htrace.incubator.apache.org/">HTrace</a>.</p>
+</div>
+<div class="sect2">
+<h3 id="_quick_start"><a class="link" href="#_quick_start">Quick Start</a></h3>
+<div class="paragraph">
+<p>Add sleuth to the classpath of a Spring Boot application (see &#8220;<a href="#sleuth-adding-project">Adding Sleuth to the Project</a>&#8221; for Maven and Gradle examples), and you can see the correlation data being collected in logs, as long as you are logging requests.</p>
+</div>
+<div class="paragraph">
+<p>For example, consider the following HTTP handler:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">@RestController
+public class DemoController {
+  private static Logger log = LoggerFactory.getLogger(DemoController.class);
+  @RequestMapping("/")
+  public String home() {
+    log.info("Handling home");
+    ...
+    return "Hello World";
+  }
+}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>If you add that handler to a controller, you can see the calls to <code>home()</code> being traced in the logs and in Zipkin, if Zipkin is configured.</p>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+Instead of logging the request in the handler explicitly, you
+could set <code>logging.level.org.springframework.web.servlet.DispatcherServlet=DEBUG</code>.
+</td>
+</tr>
+</table>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+Set <code>spring.application.name=myService</code> (for instance) to see the service name as well as the trace and span IDs.
+</td>
+</tr>
+</table>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_introduction"><a class="link" href="#_introduction">Introduction</a></h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Spring Cloud Sleuth implements a distributed tracing solution for <a href="https://cloud.spring.io">Spring Cloud</a>.</p>
+</div>
+<div class="sect2">
+<h3 id="_terminology"><a class="link" href="#_terminology">Terminology</a></h3>
+<div class="paragraph">
+<p>Spring Cloud Sleuth borrows <a href="https://research.google.com/pubs/pub36356.html">Dapper&#8217;s</a> terminology.</p>
+</div>
+<div class="paragraph">
+<p><strong>Span</strong>: The basic unit of work. For example, sending an RPC is a new span, as is sending a response to an RPC.
+Spans are identified by a unique 64-bit ID for the span and another 64-bit ID for the trace the span is a part of.
+Spans also have other data, such as descriptions, timestamped events, key-value annotations (tags), the ID of the span that caused them, and process IDs (normally IP addresses).</p>
+</div>
+<div class="paragraph">
+<p>Spans can be started and stopped, and they keep track of their timing information.
+Once you create a span, you must stop it at some point in the future.</p>
+</div>
+<div class="admonitionblock tip">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-tip" title="Tip"></i>
+</td>
+<td class="content">
+The initial span that starts a trace is called a <code>root span</code>. The value of the ID
+of that span is equal to the trace ID.
+</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p><strong>Trace:</strong> A set of spans forming a tree-like structure.
+For example, if you run a distributed big-data store, a trace might be formed by a <code>PUT</code> request.</p>
+</div>
+<div class="paragraph">
+<p><strong>Annotation:</strong>  Used to record the existence of an event in time. With
+<a href="https://github.com/openzipkin/brave">Brave</a> instrumentation, we no longer need to set special events
+for <a href="https://zipkin.io/">Zipkin</a> to understand who the client and server are, where
+the request started, and where it ended. For learning purposes,
+however, we mark these events to highlight what kind
+of an action took place.</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>cs</strong>: Client Sent. The client has made a request. This annotation indicates the start of the span.</p>
+</li>
+<li>
+<p><strong>sr</strong>: Server Received: The server side got the request and started processing it.
+Subtracting the <code>cs</code> timestamp from this timestamp reveals the network latency.</p>
+</li>
+<li>
+<p><strong>ss</strong>: Server Sent. Annotated upon completion of request processing (when the response got sent back to the client).
+Subtracting the <code>sr</code> timestamp from this timestamp reveals the time needed by the server side to process the request.</p>
+</li>
+<li>
+<p><strong>cr</strong>: Client Received. Signifies the end of the span.
+The client has successfully received the response from the server side.
+Subtracting the <code>cs</code> timestamp from this timestamp reveals the whole time needed by the client to receive the response from the server.</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>The following image shows how <strong>Span</strong> and <strong>Trace</strong> look in a system, together with the Zipkin annotations:</p>
+</div>
+<div class="imageblock">
+<div class="content">
+<img src="https://raw.githubusercontent.com/spring-cloud/spring-cloud-sleuth/master/docs/src/main/asciidoc/images/trace-id.png" alt="Trace Info propagation">
+</div>
+</div>
+<div class="paragraph">
+<p>Each color of a note signifies a span (there are seven spans - from <strong>A</strong> to <strong>G</strong>).
+Consider the following note:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code>Trace Id = X
+Span Id = D
+Client Sent</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>This note indicates that the current span has <strong>Trace Id</strong> set to <strong>X</strong> and <strong>Span Id</strong> set to <strong>D</strong>.
+Also, the <code>Client Sent</code> event took place.</p>
+</div>
+<div class="paragraph">
+<p>The following image shows how parent-child relationships of spans look:</p>
+</div>
+<div class="imageblock">
+<div class="content">
+<img src="https://raw.githubusercontent.com/spring-cloud/spring-cloud-sleuth/master/docs/src/main/asciidoc/images/parents.png" alt="Parent child relationship">
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_purpose"><a class="link" href="#_purpose">Purpose</a></h3>
+<div class="paragraph">
+<p>The following sections refer to the example shown in the preceding image.</p>
+</div>
+<div class="sect3">
+<h4 id="_distributed_tracing_with_zipkin"><a class="link" href="#_distributed_tracing_with_zipkin">Distributed Tracing with Zipkin</a></h4>
+<div class="paragraph">
+<p>This example has seven spans.
+If you go to traces in Zipkin, you can see this number in the second trace, as shown in the following image:</p>
+</div>
+<div class="imageblock">
+<div class="content">
+<img src="https://raw.githubusercontent.com/spring-cloud/spring-cloud-sleuth/master/docs/src/main/asciidoc/images/zipkin-traces.png" alt="Traces">
+</div>
+</div>
+<div class="paragraph">
+<p>However, if you pick a particular trace, you can see four spans, as shown in the following image:</p>
+</div>
+<div class="imageblock">
+<div class="content">
+<img src="https://raw.githubusercontent.com/spring-cloud/spring-cloud-sleuth/master/docs/src/main/asciidoc/images/zipkin-ui.png" alt="Traces Info propagation">
+</div>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+When you pick a particular trace, you see merged spans.
+That means that, if there were two spans sent to Zipkin with Server Received and Server Sent or Client Received and Client Sent annotations, they are presented as a single span.
+</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>Why is there a difference between the seven and four spans in this case?</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>One span comes from the <code>http:/start</code> span. It has the Server Received (<code>sr</code>) and Server Sent (<code>ss</code>) annotations.</p>
+</li>
+<li>
+<p>Two spans come from the RPC call from <code>service1</code> to <code>service2</code> to the <code>http:/foo</code> endpoint.
+The Client Sent (<code>cs</code>) and Client Received (<code>cr</code>) events took place on the <code>service1</code> side.
+Server Received (<code>sr</code>) and Server Sent (<code>ss</code>) events took place on the <code>service2</code> side.
+These two spans form one logical span related to an RPC call.</p>
+</li>
+<li>
+<p>Two spans come from the RPC call from <code>service2</code> to <code>service3</code> to the <code>http:/bar</code> endpoint.
+The Client Sent (<code>cs</code>) and Client Received (<code>cr</code>) events took place on the <code>service2</code> side.
+The Server Received (<code>sr</code>) and Server Sent (<code>ss</code>) events took place on the <code>service3</code> side.
+These two spans form one logical span related to an RPC call.</p>
+</li>
+<li>
+<p>Two spans come from the RPC call from <code>service2</code> to <code>service4</code> to the <code>http:/baz</code> endpoint.
+The Client Sent (<code>cs</code>) and Client Received (<code>cr</code>) events took place on the <code>service2</code> side.
+Server Received (<code>sr</code>) and Server Sent (<code>ss</code>) events took place on the <code>service4</code> side.
+These two spans form one logical span related to an RPC call.</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>So, if we count the physical spans, we have one from <code>http:/start</code>, two from <code>service1</code> calling <code>service2</code>, two from <code>service2</code>
+calling <code>service3</code>, and two from <code>service2</code> calling <code>service4</code>. In sum, we have a total of seven spans.</p>
+</div>
+<div class="paragraph">
+<p>Logically, we see the information of four total Spans because we have one span related to the incoming request
+to <code>service1</code> and three spans related to RPC calls.</p>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_visualizing_errors"><a class="link" href="#_visualizing_errors">Visualizing errors</a></h4>
+<div class="paragraph">
+<p>Zipkin lets you visualize errors in your trace.
+When an exception was thrown and was not caught, we set proper tags on the span, which Zipkin can then properly colorize.
+You could see in the list of traces one trace that is red. That appears because an exception was thrown.</p>
+</div>
+<div class="paragraph">
+<p>If you click that trace, you see a similar picture, as follows:</p>
+</div>
+<div class="imageblock">
+<div class="content">
+<img src="https://raw.githubusercontent.com/spring-cloud/spring-cloud-sleuth/master/docs/src/main/asciidoc/images/zipkin-error-traces.png" alt="Error Traces">
+</div>
+</div>
+<div class="paragraph">
+<p>If you then click on one of the spans, you see the following</p>
+</div>
+<div class="imageblock">
+<div class="content">
+<img src="https://raw.githubusercontent.com/spring-cloud/spring-cloud-sleuth/master/docs/src/main/asciidoc/images/zipkin-error-trace-screenshot.png" alt="Error Traces Info propagation">
+</div>
+</div>
+<div class="paragraph">
+<p>The span shows the reason for the error and the whole stack trace related to it.</p>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_distributed_tracing_with_brave"><a class="link" href="#_distributed_tracing_with_brave">Distributed Tracing with Brave</a></h4>
+<div class="paragraph">
+<p>Starting with version <code>2.0.0</code>, Spring Cloud Sleuth uses <a href="https://github.com/openzipkin/brave">Brave</a> as the tracing library.
+Consequently, Sleuth no longer takes care of storing the context but delegates that work to Brave.</p>
+</div>
+<div class="paragraph">
+<p>Due to the fact that Sleuth had different naming and tagging conventions than Brave, we decided to follow Brave&#8217;s conventions from now on.
+However, if you want to use the legacy Sleuth approaches, you can set the <code>spring.sleuth.http.legacy.enabled</code> property to <code>true</code>.</p>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_live_examples"><a class="link" href="#_live_examples">Live examples</a></h4>
+<div class="imageblock">
+<div class="content">
+<a class="image" href="https://docssleuth-zipkin-server.cfapps.io/"><img src="https://raw.githubusercontent.com/spring-cloud/spring-cloud-sleuth/master/docs/src/main/asciidoc/images/pws.png" alt="Zipkin deployed on Pivotal Web Services" width="150" height="74"></a>
+</div>
+<div class="title">Click the Pivotal Web Services icon to see it live!Click the Pivotal Web Services icon to see it live!</div>
+</div>
+<div class="paragraph">
+<p><a href="https://docssleuth-zipkin-server.cfapps.io/">Click here to see it live!</a></p>
+</div>
+<div class="paragraph">
+<p>The dependency graph in Zipkin should resemble the following image:</p>
+</div>
+<div class="imageblock">
+<div class="content">
+<img src="https://raw.githubusercontent.com/spring-cloud/spring-cloud-sleuth/master/docs/src/main/asciidoc/images/dependencies.png" alt="Dependencies">
+</div>
+</div>
+<div class="imageblock">
+<div class="content">
+<a class="image" href="https://docssleuth-zipkin-server.cfapps.io/dependency"><img src="https://raw.githubusercontent.com/spring-cloud/spring-cloud-sleuth/master/docs/src/main/asciidoc/images/pws.png" alt="Zipkin deployed on Pivotal Web Services" width="150" height="74"></a>
+</div>
+<div class="title">Click the Pivotal Web Services icon to see it live!Click the Pivotal Web Services icon to see it live!</div>
+</div>
+<div class="paragraph">
+<p><a href="https://docssleuth-zipkin-server.cfapps.io/dependency">Click here to see it live!</a></p>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_log_correlation"><a class="link" href="#_log_correlation">Log correlation</a></h4>
+<div class="paragraph">
+<p>When using grep to read the logs of those four applications by scanning for a trace ID equal to (for example) <code>2485ec27856c56f4</code>, you get output resembling the following:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code>service1.log:2016-02-26 11:15:47.561  INFO [service1,2485ec27856c56f4,2485ec27856c56f4,true] 68058 --- [nio-8081-exec-1] i.s.c.sleuth.docs.service1.Application   : Hello from service1. Calling service2
+service2.log:2016-02-26 11:15:47.710  INFO [service2,2485ec27856c56f4,9aa10ee6fbde75fa,true] 68059 --- [nio-8082-exec-1] i.s.c.sleuth.docs.service2.Application   : Hello from service2. Calling service3 and then service4
+service3.log:2016-02-26 11:15:47.895  INFO [service3,2485ec27856c56f4,1210be13194bfe5,true] 68060 --- [nio-8083-exec-1] i.s.c.sleuth.docs.service3.Application   : Hello from service3
+service2.log:2016-02-26 11:15:47.924  INFO [service2,2485ec27856c56f4,9aa10ee6fbde75fa,true] 68059 --- [nio-8082-exec-1] i.s.c.sleuth.docs.service2.Application   : Got response from service3 [Hello from service3]
+service4.log:2016-02-26 11:15:48.134  INFO [service4,2485ec27856c56f4,1b1845262ffba49d,true] 68061 --- [nio-8084-exec-1] i.s.c.sleuth.docs.service4.Application   : Hello from service4
+service2.log:2016-02-26 11:15:48.156  INFO [service2,2485ec27856c56f4,9aa10ee6fbde75fa,true] 68059 --- [nio-8082-exec-1] i.s.c.sleuth.docs.service2.Application   : Got response from service4 [Hello from service4]
+service1.log:2016-02-26 11:15:48.182  INFO [service1,2485ec27856c56f4,2485ec27856c56f4,true] 68058 --- [nio-8081-exec-1] i.s.c.sleuth.docs.service1.Application   : Got response from service2 [Hello from service2, response from service3 [Hello from service3] and from service4 [Hello from service4]]</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>If you use a log aggregating tool (such as <a href="https://www.elastic.co/products/kibana">Kibana</a>, <a href="https://www.splunk.com/">Splunk</a>, and others), you can order the events that took place.
+An example from Kibana would resemble the following image:</p>
+</div>
+<div class="imageblock">
+<div class="content">
+<img src="https://raw.githubusercontent.com/spring-cloud/spring-cloud-sleuth/master/docs/src/main/asciidoc/images/kibana.png" alt="Log correlation with Kibana">
+</div>
+</div>
+<div class="paragraph">
+<p>If you want to use <a href="https://www.elastic.co/guide/en/logstash/current/index.html">Logstash</a>, the following listing shows the Grok pattern for Logstash:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code>filter {
+       # pattern matching logback pattern
+       grok {
+              match =&gt; { "message" =&gt; "%{TIMESTAMP_ISO8601:timestamp}\s+%{LOGLEVEL:severity}\s+\[%{DATA:service},%{DATA:trace},%{DATA:span},%{DATA:exportable}\]\s+%{DATA:pid}\s+---\s+\[%{DATA:thread}\]\s+%{DATA:class}\s+:\s+%{GREEDYDATA:rest}" }
+       }
+}</code></pre>
+</div>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+If you want to use Grok together with the logs from Cloud Foundry, you have to use the following pattern:
+</td>
+</tr>
+</table>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code>filter {
+       # pattern matching logback pattern
+       grok {
+              match =&gt; { "message" =&gt; "(?m)OUT\s+%{TIMESTAMP_ISO8601:timestamp}\s+%{LOGLEVEL:severity}\s+\[%{DATA:service},%{DATA:trace},%{DATA:span},%{DATA:exportable}\]\s+%{DATA:pid}\s+---\s+\[%{DATA:thread}\]\s+%{DATA:class}\s+:\s+%{GREEDYDATA:rest}" }
+       }
+}</code></pre>
+</div>
+</div>
+<div class="sect4">
+<h5 id="_json_logback_with_logstash"><a class="link" href="#_json_logback_with_logstash">JSON Logback with Logstash</a></h5>
+<div class="paragraph">
+<p>Often, you do not want to store your logs in a text file but in a JSON file that Logstash can immediately pick.
+To do so, you have to do the following (for readability, we pass the dependencies in the <code>groupId:artifactId:version</code> notation).</p>
+</div>
+<div class="paragraph">
+<p><strong>Dependencies Setup</strong></p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>Ensure that Logback is on the classpath (<code>ch.qos.logback:logback-core</code>).</p>
+</li>
+<li>
+<p>Add Logstash Logback encode. For example, to use version <code>4.6</code>, add <code>net.logstash.logback:logstash-logback-encoder:4.6</code>.</p>
+</li>
+</ol>
+</div>
+<div class="paragraph">
+<p><strong>Logback Setup</strong></p>
+</div>
+<div class="paragraph">
+<p>Consider the following example of a Logback configuration file (named <a href="https://github.com/spring-cloud-samples/sleuth-documentation-apps/blob/master/service1/src/main/resources/logback-spring.xml">logback-spring.xml</a>).</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-xml hljs" data-lang="xml">&lt;?xml version="1.0" encoding="UTF-8"?&gt;
+&lt;configuration&gt;
+	&lt;include resource="org/springframework/boot/logging/logback/defaults.xml"/&gt;
+	​
+	&lt;springProperty scope="context" name="springAppName" source="spring.application.name"/&gt;
+	&lt;!-- Example for logging into the build folder of your project --&gt;
+	&lt;property name="LOG_FILE" value="${BUILD_FOLDER:-build}/${springAppName}"/&gt;​
+
+	&lt;!-- You can override this to have a custom pattern --&gt;
+	&lt;property name="CONSOLE_LOG_PATTERN"
+			  value="%clr(%d{yyyy-MM-dd HH:mm:ss.SSS}){faint} %clr(${LOG_LEVEL_PATTERN:-%5p}) %clr(${PID:- }){magenta} %clr(---){faint} %clr([%15.15t]){faint} %clr(%-40.40logger{39}){cyan} %clr(:){faint} %m%n${LOG_EXCEPTION_CONVERSION_WORD:-%wEx}"/&gt;
+
+	&lt;!-- Appender to log to console --&gt;
+	&lt;appender name="console" class="ch.qos.logback.core.ConsoleAppender"&gt;
+		&lt;filter class="ch.qos.logback.classic.filter.ThresholdFilter"&gt;
+			&lt;!-- Minimum logging level to be presented in the console logs--&gt;
+			&lt;level&gt;DEBUG&lt;/level&gt;
+		&lt;/filter&gt;
+		&lt;encoder&gt;
+			&lt;pattern&gt;${CONSOLE_LOG_PATTERN}&lt;/pattern&gt;
+			&lt;charset&gt;utf8&lt;/charset&gt;
+		&lt;/encoder&gt;
+	&lt;/appender&gt;
+
+	&lt;!-- Appender to log to file --&gt;​
+	&lt;appender name="flatfile" class="ch.qos.logback.core.rolling.RollingFileAppender"&gt;
+		&lt;file&gt;${LOG_FILE}&lt;/file&gt;
+		&lt;rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy"&gt;
+			&lt;fileNamePattern&gt;${LOG_FILE}.%d{yyyy-MM-dd}.gz&lt;/fileNamePattern&gt;
+			&lt;maxHistory&gt;7&lt;/maxHistory&gt;
+		&lt;/rollingPolicy&gt;
+		&lt;encoder&gt;
+			&lt;pattern&gt;${CONSOLE_LOG_PATTERN}&lt;/pattern&gt;
+			&lt;charset&gt;utf8&lt;/charset&gt;
+		&lt;/encoder&gt;
+	&lt;/appender&gt;
+	​
+	&lt;!-- Appender to log to file in a JSON format --&gt;
+	&lt;appender name="logstash" class="ch.qos.logback.core.rolling.RollingFileAppender"&gt;
+		&lt;file&gt;${LOG_FILE}.json&lt;/file&gt;
+		&lt;rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy"&gt;
+			&lt;fileNamePattern&gt;${LOG_FILE}.json.%d{yyyy-MM-dd}.gz&lt;/fileNamePattern&gt;
+			&lt;maxHistory&gt;7&lt;/maxHistory&gt;
+		&lt;/rollingPolicy&gt;
+		&lt;encoder class="net.logstash.logback.encoder.LoggingEventCompositeJsonEncoder"&gt;
+			&lt;providers&gt;
+				&lt;timestamp&gt;
+					&lt;timeZone&gt;UTC&lt;/timeZone&gt;
+				&lt;/timestamp&gt;
+				&lt;pattern&gt;
+					&lt;pattern&gt;
+						{
+						"severity": "%level",
+						"service": "${springAppName:-}",
+						"trace": "%X{X-B3-TraceId:-}",
+						"span": "%X{X-B3-SpanId:-}",
+						"parent": "%X{X-B3-ParentSpanId:-}",
+						"exportable": "%X{X-Span-Export:-}",
+						"pid": "${PID:-}",
+						"thread": "%thread",
+						"class": "%logger{40}",
+						"rest": "%message"
+						}
+					&lt;/pattern&gt;
+				&lt;/pattern&gt;
+			&lt;/providers&gt;
+		&lt;/encoder&gt;
+	&lt;/appender&gt;
+	​
+	&lt;root level="INFO"&gt;
+		&lt;appender-ref ref="console"/&gt;
+		&lt;!-- uncomment this to have also JSON logs --&gt;
+		&lt;!--&lt;appender-ref ref="logstash"/&gt;--&gt;
+		&lt;!--&lt;appender-ref ref="flatfile"/&gt;--&gt;
+	&lt;/root&gt;
+&lt;/configuration&gt;</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>That Logback configuration file:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>Logs information from the application in a JSON format to a <code>build/${spring.application.name}.json</code> file.</p>
+</li>
+<li>
+<p>Has commented out two additional appenders: console and standard log file.</p>
+</li>
+<li>
+<p>Has the same logging pattern as the one presented in the previous section.</p>
+</li>
+</ul>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+If you use a custom <code>logback-spring.xml</code>, you must pass the <code>spring.application.name</code> in the  <code>bootstrap</code> rather than the <code>application</code> property file.
+Otherwise, your custom logback file does not properly read the property.
+</td>
+</tr>
+</table>
+</div>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_propagating_span_context"><a class="link" href="#_propagating_span_context">Propagating Span Context</a></h4>
+<div class="paragraph">
+<p>The span context is the state that must get propagated to any child spans across process boundaries.
+Part of the Span Context is the Baggage. The trace and span IDs are a required part of the span context.
+Baggage is an optional part.</p>
+</div>
+<div class="paragraph">
+<p>Baggage is a set of key:value pairs stored in the span context.
+Baggage travels together with the trace and is attached to every span.
+Spring Cloud Sleuth understands that a header is baggage-related if the HTTP header is prefixed with <code>baggage-</code> and, for messaging, it starts with <code>baggage_</code>.</p>
+</div>
+<div class="admonitionblock important">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-important" title="Important"></i>
+</td>
+<td class="content">
+There is currently no limitation of the count or size of baggage items.
+However, keep in mind that too many can decrease system throughput or increase RPC latency.
+In extreme cases, too much baggage can crash the application, due to exceeding transport-level message or header capacity.
+</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>The following example shows setting baggage on a span:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">Unresolved directive in intro.adoc - include::https://raw.githubusercontent.com/spring-cloud/spring-cloud-sleuth/origin/master/spring-cloud-sleuth-core/src/test/java/org/springframework/cloud/sleuth/instrument/multiple/MultipleHopsIntegrationTests.java[tags=baggage,indent=0]</code></pre>
+</div>
+</div>
+<div class="sect4">
+<h5 id="_baggage_versus_span_tags"><a class="link" href="#_baggage_versus_span_tags">Baggage versus Span Tags</a></h5>
+<div class="paragraph">
+<p>Baggage travels with the trace (every child span contains the baggage of its parent).
+Zipkin has no knowledge of baggage and does not receive that information.</p>
+</div>
+<div class="admonitionblock important">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-important" title="Important"></i>
+</td>
+<td class="content">
+Starting from Sleuth 2.0.0 you have to pass the baggage key names explicitly
+in your project configuration. Read more about that setup <a href="#prefixed-fields">here</a>
+</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>Tags are attached to a specific span. In other words, they are presented only for that particular span.
+However, you can search by tag to find the trace, assuming a span having the searched tag value exists.</p>
+</div>
+<div class="paragraph">
+<p>If you want to be able to lookup a span based on baggage, you should add a corresponding entry as a tag in the root span.</p>
+</div>
+<div class="admonitionblock important">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-important" title="Important"></i>
+</td>
+<td class="content">
+The span must be in scope.
+</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>The following listing shows integration tests that use baggage:</p>
+</div>
+<div class="listingblock">
+<div class="title">The setup</div>
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-yml hljs" data-lang="yml">Unresolved directive in intro.adoc - include::https://raw.githubusercontent.com/spring-cloud/spring-cloud-sleuth/origin/master/spring-cloud-sleuth-core/src/test/resources/application-baggage.yml[indent=0]</code></pre>
+</div>
+</div>
+<div class="listingblock">
+<div class="title">The code</div>
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">Unresolved directive in intro.adoc - include::https://raw.githubusercontent.com/spring-cloud/spring-cloud-sleuth/origin/master/spring-cloud-sleuth-core/src/test/java/org/springframework/cloud/sleuth/instrument/multiple/MultipleHopsIntegrationTests.java[tags=baggage_tag,indent=0]</code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="sleuth-adding-project"><a class="link" href="#sleuth-adding-project">Adding Sleuth to the Project</a></h3>
+<div class="paragraph">
+<p>This section addresses how to add Sleuth to your project with either Maven or Gradle.</p>
+</div>
+<div class="admonitionblock important">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-important" title="Important"></i>
+</td>
+<td class="content">
+To ensure that your application name is properly displayed in Zipkin, set the <code>spring.application.name</code> property in <code>bootstrap.yml</code>.
+</td>
+</tr>
+</table>
+</div>
+<div class="sect3">
+<h4 id="_only_sleuth_log_correlation"><a class="link" href="#_only_sleuth_log_correlation">Only Sleuth (log correlation)</a></h4>
+<div class="paragraph">
+<p>If you want to use only Spring Cloud Sleuth without the Zipkin integration, add the <code>spring-cloud-starter-sleuth</code> module to your project.</p>
+</div>
+<div class="paragraph">
+<p>The following example shows how to add Sleuth with Maven:</p>
+</div>
+<div class="listingblock primary">
+<div class="title">Maven</div>
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-xml hljs" data-lang="xml">&lt;dependencyManagement&gt; <i class="conum" data-value="1"></i><b>(1)</b>
+      &lt;dependencies&gt;
+          &lt;dependency&gt;
+              &lt;groupId&gt;org.springframework.cloud&lt;/groupId&gt;
+              &lt;artifactId&gt;spring-cloud-dependencies&lt;/artifactId&gt;
+              &lt;version&gt;${release.train.version}&lt;/version&gt;
+              &lt;type&gt;pom&lt;/type&gt;
+              &lt;scope&gt;import&lt;/scope&gt;
+          &lt;/dependency&gt;
+      &lt;/dependencies&gt;
+&lt;/dependencyManagement&gt;
+
+&lt;dependency&gt; <i class="conum" data-value="2"></i><b>(2)</b>
+    &lt;groupId&gt;org.springframework.cloud&lt;/groupId&gt;
+    &lt;artifactId&gt;spring-cloud-starter-sleuth&lt;/artifactId&gt;
+&lt;/dependency&gt;</code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>We recommend that you add the dependency management through the Spring BOM so that you need not manage versions yourself.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="2"></i><b>2</b></td>
+<td>Add the dependency to <code>spring-cloud-starter-sleuth</code>.</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>The following example shows how to add Sleuth with Gradle:</p>
+</div>
+<div class="listingblock secondary">
+<div class="title">Gradle</div>
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-groovy hljs" data-lang="groovy">dependencyManagement { <i class="conum" data-value="1"></i><b>(1)</b>
+    imports {
+        mavenBom "org.springframework.cloud:spring-cloud-dependencies:${releaseTrainVersion}"
+    }
+}
+
+dependencies { <i class="conum" data-value="2"></i><b>(2)</b>
+    compile "org.springframework.cloud:spring-cloud-starter-sleuth"
+}</code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>We recommend that you add the dependency management through the Spring BOM so that you need not manage versions yourself.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="2"></i><b>2</b></td>
+<td>Add the dependency to <code>spring-cloud-starter-sleuth</code>.</td>
+</tr>
+</table>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_sleuth_with_zipkin_via_http"><a class="link" href="#_sleuth_with_zipkin_via_http">Sleuth with Zipkin via HTTP</a></h4>
+<div class="paragraph">
+<p>If you want both Sleuth and Zipkin, add the <code>spring-cloud-starter-zipkin</code> dependency.</p>
+</div>
+<div class="paragraph">
+<p>The following example shows how to do so for Maven:</p>
+</div>
+<div class="listingblock primary">
+<div class="title">Maven</div>
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-xml hljs" data-lang="xml">&lt;dependencyManagement&gt; <i class="conum" data-value="1"></i><b>(1)</b>
+      &lt;dependencies&gt;
+          &lt;dependency&gt;
+              &lt;groupId&gt;org.springframework.cloud&lt;/groupId&gt;
+              &lt;artifactId&gt;spring-cloud-dependencies&lt;/artifactId&gt;
+              &lt;version&gt;${release.train.version}&lt;/version&gt;
+              &lt;type&gt;pom&lt;/type&gt;
+              &lt;scope&gt;import&lt;/scope&gt;
+          &lt;/dependency&gt;
+      &lt;/dependencies&gt;
+&lt;/dependencyManagement&gt;
+
+&lt;dependency&gt; <i class="conum" data-value="2"></i><b>(2)</b>
+    &lt;groupId&gt;org.springframework.cloud&lt;/groupId&gt;
+    &lt;artifactId&gt;spring-cloud-starter-zipkin&lt;/artifactId&gt;
+&lt;/dependency&gt;</code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>We recommend that you add the dependency management through the Spring BOM so that you need not manage versions yourself.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="2"></i><b>2</b></td>
+<td>Add the dependency to <code>spring-cloud-starter-zipkin</code>.</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>The following example shows how to do so for Gradle:</p>
+</div>
+<div class="listingblock secondary">
+<div class="title">Gradle</div>
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-groovy hljs" data-lang="groovy">dependencyManagement { <i class="conum" data-value="1"></i><b>(1)</b>
+    imports {
+        mavenBom "org.springframework.cloud:spring-cloud-dependencies:${releaseTrainVersion}"
+    }
+}
+
+dependencies { <i class="conum" data-value="2"></i><b>(2)</b>
+    compile "org.springframework.cloud:spring-cloud-starter-zipkin"
+}</code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>We recommend that you add the dependency management through the Spring BOM so that you need not manage versions yourself.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="2"></i><b>2</b></td>
+<td>Add the dependency to <code>spring-cloud-starter-zipkin</code>.</td>
+</tr>
+</table>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_sleuth_with_zipkin_over_rabbitmq_or_kafka"><a class="link" href="#_sleuth_with_zipkin_over_rabbitmq_or_kafka">Sleuth with Zipkin over RabbitMQ or Kafka</a></h4>
+<div class="paragraph">
+<p>If you want to use RabbitMQ or Kafka instead of HTTP, add the <code>spring-rabbit</code> or <code>spring-kafka</code> dependency.
+The default destination name is <code>zipkin</code>.</p>
+</div>
+<div class="paragraph">
+<p>If using Kafka, you must set the property <code>spring.zipkin.sender.type</code> property accordingly:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-yaml hljs" data-lang="yaml">spring.zipkin.sender.type: kafka</code></pre>
+</div>
+</div>
+<div class="admonitionblock caution">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-caution" title="Caution"></i>
+</td>
+<td class="content">
+<code>spring-cloud-sleuth-stream</code> is deprecated and incompatible with these destinations.
+</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>If you want Sleuth over RabbitMQ, add the <code>spring-cloud-starter-zipkin</code> and <code>spring-rabbit</code>
+dependencies.</p>
+</div>
+<div class="paragraph">
+<p>The following example shows how to do so for Gradle:</p>
+</div>
+<div class="listingblock primary">
+<div class="title">Maven</div>
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-xml hljs" data-lang="xml">&lt;dependencyManagement&gt; <i class="conum" data-value="1"></i><b>(1)</b>
+      &lt;dependencies&gt;
+          &lt;dependency&gt;
+              &lt;groupId&gt;org.springframework.cloud&lt;/groupId&gt;
+              &lt;artifactId&gt;spring-cloud-dependencies&lt;/artifactId&gt;
+              &lt;version&gt;${release.train.version}&lt;/version&gt;
+              &lt;type&gt;pom&lt;/type&gt;
+              &lt;scope&gt;import&lt;/scope&gt;
+          &lt;/dependency&gt;
+      &lt;/dependencies&gt;
+&lt;/dependencyManagement&gt;
+
+&lt;dependency&gt; <i class="conum" data-value="2"></i><b>(2)</b>
+    &lt;groupId&gt;org.springframework.cloud&lt;/groupId&gt;
+    &lt;artifactId&gt;spring-cloud-starter-zipkin&lt;/artifactId&gt;
+&lt;/dependency&gt;
+&lt;dependency&gt; <i class="conum" data-value="3"></i><b>(3)</b>
+    &lt;groupId&gt;org.springframework.amqp&lt;/groupId&gt;
+    &lt;artifactId&gt;spring-rabbit&lt;/artifactId&gt;
+&lt;/dependency&gt;</code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>We recommend that you add the dependency management through the Spring BOM so that you need not manage versions yourself.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="2"></i><b>2</b></td>
+<td>Add the dependency to <code>spring-cloud-starter-zipkin</code>. That way, all nested dependencies get downloaded.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="3"></i><b>3</b></td>
+<td>To automatically configure RabbitMQ, add the <code>spring-rabbit</code> dependency.</td>
+</tr>
+</table>
+</div>
+<div class="listingblock secondary">
+<div class="title">Gradle</div>
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-groovy hljs" data-lang="groovy">dependencyManagement { <i class="conum" data-value="1"></i><b>(1)</b>
+    imports {
+        mavenBom "org.springframework.cloud:spring-cloud-dependencies:${releaseTrainVersion}"
+    }
+}
+
+dependencies {
+    compile "org.springframework.cloud:spring-cloud-starter-zipkin" <i class="conum" data-value="2"></i><b>(2)</b>
+    compile "org.springframework.amqp:spring-rabbit" <i class="conum" data-value="3"></i><b>(3)</b>
+}</code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>We recommend that you add the dependency management through the Spring BOM so that you need not manage versions yourself.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="2"></i><b>2</b></td>
+<td>Add the dependency to <code>spring-cloud-starter-zipkin</code>. That way, all nested dependencies get downloaded.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="3"></i><b>3</b></td>
+<td>To automatically configure RabbitMQ, add the <code>spring-rabbit</code> dependency.</td>
+</tr>
+</table>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_overriding_the_auto_configuration_of_zipkin"><a class="link" href="#_overriding_the_auto_configuration_of_zipkin">Overriding the auto-configuration of Zipkin</a></h3>
+<div class="paragraph">
+<p>Spring Cloud Sleuth supports sending traces to multiple tracing systems as of version 2.1.0.
+In order to get this to work, every tracing system needs to have a <code>Reporter&lt;Span&gt;</code> and <code>Sender</code>.
+If you want to override the provided beans you need to give them a specific name.
+To do this you can use respectively <code>ZipkinAutoConfiguration.REPORTER_BEAN_NAME</code> and <code>ZipkinAutoConfiguration.SENDER_BEAN_NAME</code>.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">Unresolved directive in intro.adoc - include::https://raw.githubusercontent.com/spring-cloud/spring-cloud-sleuth/origin/master/spring-cloud-sleuth-zipkin/src/test/java/org/springframework/cloud/sleuth/zipkin2/ZipkinAutoConfigurationTests.java[tags=override_default_beans,indent=0]</code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_additional_resources"><a class="link" href="#_additional_resources">Additional Resources</a></h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>You can watch a video of <a href="https://twitter.com/reshmi9k">Reshmi Krishna</a> and <a href="https://twitter.com/mgrzejszczak">Marcin Grzejszczak</a> talking about Spring Cloud
+Sleuth and Zipkin <a href="https://content.pivotal.io/springone-platform-2017/distributed-tracing-latency-analysis-for-your-microservices-grzejszczak-krishna">by clicking here</a>.</p>
+</div>
+<div class="paragraph">
+<p>You can check different setups of Sleuth and Brave <a href="https://github.com/openzipkin/sleuth-webmvc-example">in the openzipkin/sleuth-webmvc-example repository</a>.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_features"><a class="link" href="#_features">Features</a></h2>
+<div class="sectionbody">
+<div class="ulist">
+<ul>
+<li>
+<p>Adds trace and span IDs to the Slf4J MDC, so you can extract all the logs from a given trace or span in a log aggregator, as shown in the following example logs:</p>
+<div class="listingblock">
+<div class="content">
+<pre>2016-02-02 15:30:57.902  INFO [bar,6bfd228dc00d216b,6bfd228dc00d216b,false] 23030 --- [nio-8081-exec-3] ...
+2016-02-02 15:30:58.372 ERROR [bar,6bfd228dc00d216b,6bfd228dc00d216b,false] 23030 --- [nio-8081-exec-3] ...
+2016-02-02 15:31:01.936  INFO [bar,46ab0d418373cbc9,46ab0d418373cbc9,false] 23030 --- [nio-8081-exec-4] ...</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Notice the <code>[appname,traceId,spanId,exportable]</code> entries from the MDC:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><strong><code>spanId</code></strong>: The ID of a specific operation that took place.</p>
+</li>
+<li>
+<p><strong><code>appname</code></strong>: The name of the application that logged the span.</p>
+</li>
+<li>
+<p><strong><code>traceId</code></strong>: The ID of the latency graph that contains the span.</p>
+</li>
+<li>
+<p><strong><code>exportable</code></strong>: Whether the log should be exported to Zipkin.
+When would you like the span not to be exportable?
+When you want to wrap some operation in a Span and have it written to the logs only.</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<p>Provides an abstraction over common distributed tracing data models: traces, spans (forming a DAG), annotations, and key-value annotations.
+Spring Cloud Sleuth is loosely based on HTrace but is compatible with Zipkin (Dapper).</p>
+</li>
+<li>
+<p>Sleuth records timing information to aid in latency analysis.
+By using sleuth, you can pinpoint causes of latency in your applications.</p>
+</li>
+<li>
+<p>Sleuth is written to not log too much and to not cause your production application to crash.
+To that end, Sleuth:</p>
+<div class="ulist">
+<ul>
+<li>
+<p>Propagates structural data about your call graph in-band and the rest out-of-band.</p>
+</li>
+<li>
+<p>Includes opinionated instrumentation of layers such as HTTP.</p>
+</li>
+<li>
+<p>Includes a sampling policy to manage volume.</p>
+</li>
+<li>
+<p>Can report to a Zipkin system for query and visualization.</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<p>Instruments common ingress and egress points from Spring applications (servlet filter, async endpoints, rest template, scheduled actions, message channels, Zuul filters, and Feign client).</p>
+</li>
+<li>
+<p>Sleuth includes default logic to join a trace across HTTP or messaging boundaries.
+For example, HTTP propagation works over Zipkin-compatible request headers.</p>
+</li>
+<li>
+<p>Sleuth can propagate context (also known as baggage) between processes.
+Consequently, if you set  a baggage element on a Span, it is sent downstream to other processes over either HTTP or messaging.</p>
+</li>
+<li>
+<p>Provides a way to create or continue spans and add tags and logs through annotations.</p>
+</li>
+<li>
+<p>If <code>spring-cloud-sleuth-zipkin</code> is on the classpath, the app generates and collects Zipkin-compatible traces.
+By default, it sends them over HTTP to a Zipkin server on localhost (port 9411).
+You can configure the location of the service by setting <code>spring.zipkin.baseUrl</code>.</p>
+<div class="ulist">
+<ul>
+<li>
+<p>If you depend on <code>spring-rabbit</code>, your app sends traces to a RabbitMQ broker instead of HTTP.</p>
+</li>
+<li>
+<p>If you depend on <code>spring-kafka</code>, and set <code>spring.zipkin.sender.type: kafka</code>, your app sends traces to a Kafka broker instead of HTTP.</p>
+</li>
+</ul>
+</div>
+</li>
+</ul>
+</div>
+<div class="admonitionblock caution">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-caution" title="Caution"></i>
+</td>
+<td class="content">
+<code>spring-cloud-sleuth-stream</code> is deprecated and should no longer be used.
+</td>
+</tr>
+</table>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>Spring Cloud Sleuth is <a href="https://opentracing.io/">OpenTracing</a> compatible.</p>
+</li>
+</ul>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+The SLF4J MDC is always set and logback users immediately see the trace and span IDs in logs per the example
+shown earlier.
+Other logging systems have to configure their own formatter to get the same result.
+The default is as follows:
+<code>logging.pattern.level</code> set to <code>%5p [${spring.zipkin.service.name:${spring.application.name:-}},%X{X-B3-TraceId:-},%X{X-B3-SpanId:-},%X{X-Span-Export:-}]</code>
+(this is a Spring Boot feature for logback users).
+If you do not use SLF4J, this pattern is NOT automatically applied.
+</td>
+</tr>
+</table>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_building"><a class="link" href="#_building">Building</a></h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="_basic_compile_and_test"><a class="link" href="#_basic_compile_and_test">Basic Compile and Test</a></h3>
+<div class="paragraph">
+<p>To build the source you will need to install JDK 1.7.</p>
+</div>
+<div class="paragraph">
+<p>Spring Cloud uses Maven for most build-related activities, and you
+should be able to get off the ground quite quickly by cloning the
+project you are interested in and typing</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>$ ./mvnw install</pre>
+</div>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+You can also install Maven (&gt;=3.3.3) yourself and run the <code>mvn</code> command
+in place of <code>./mvnw</code> in the examples below. If you do that you also
+might need to add <code>-P spring</code> if your local Maven settings do not
+contain repository declarations for spring pre-release artifacts.
+</td>
+</tr>
+</table>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+Be aware that you might need to increase the amount of memory
+available to Maven by setting a <code>MAVEN_OPTS</code> environment variable with
+a value like <code>-Xmx512m -XX:MaxPermSize=128m</code>. We try to cover this in
+the <code>.mvn</code> configuration, so if you find you have to do it to make a
+build succeed, please raise a ticket to get the settings added to
+source control.
+</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>For hints on how to build the project look in <code>.travis.yml</code> if there
+is one. There should be a "script" and maybe "install" command. Also
+look at the "services" section to see if any services need to be
+running locally (e.g. mongo or rabbit).  Ignore the git-related bits
+that you might find in "before_install" since they&#8217;re related to setting git
+credentials and you already have those.</p>
+</div>
+<div class="paragraph">
+<p>The projects that require middleware generally include a
+<code>docker-compose.yml</code>, so consider using
+<a href="https://docs.docker.com/compose/">Docker Compose</a> to run the middeware servers
+in Docker containers. See the README in the
+<a href="https://github.com/spring-cloud-samples/scripts">scripts demo
+repository</a> for specific instructions about the common cases of mongo,
+rabbit and redis.</p>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+If all else fails, build with the command from <code>.travis.yml</code> (usually
+<code>./mvnw install</code>).
+</td>
+</tr>
+</table>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_documentation"><a class="link" href="#_documentation">Documentation</a></h3>
+<div class="paragraph">
+<p>The spring-cloud-build module has a "docs" profile, and if you switch
+that on it will try to build asciidoc sources from
+<code>src/main/asciidoc</code>. As part of that process it will look for a
+<code>README.adoc</code> and process it by loading all the includes, but not
+parsing or rendering it, just copying it to <code>${main.basedir}</code>
+(defaults to <code>${basedir}</code>, i.e. the root of the project). If there are
+any changes in the README it will then show up after a Maven build as
+a modified file in the correct place. Just commit it and push the change.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_working_with_the_code"><a class="link" href="#_working_with_the_code">Working with the code</a></h3>
+<div class="paragraph">
+<p>If you don&#8217;t have an IDE preference we would recommend that you use
+<a href="https://www.springsource.com/developer/sts">Spring Tools Suite</a> or
+<a href="https://eclipse.org">Eclipse</a> when working with the code. We use the
+<a href="https://eclipse.org/m2e/">m2eclipse</a> eclipse plugin for maven support. Other IDEs and tools
+should also work without issue as long as they use Maven 3.3.3 or better.</p>
+</div>
+<div class="sect3">
+<h4 id="_importing_into_eclipse_with_m2eclipse"><a class="link" href="#_importing_into_eclipse_with_m2eclipse">Importing into eclipse with m2eclipse</a></h4>
+<div class="paragraph">
+<p>We recommend the <a href="https://eclipse.org/m2e/">m2eclipse</a> eclipse plugin when working with
+eclipse. If you don&#8217;t already have m2eclipse installed it is available from the "eclipse
+marketplace".</p>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+Older versions of m2e do not support Maven 3.3, so once the
+projects are imported into Eclipse you will also need to tell
+m2eclipse to use the right profile for the projects.  If you
+see many different errors related to the POMs in the projects, check
+that you have an up to date installation.  If you can&#8217;t upgrade m2e,
+add the "spring" profile to your <code>settings.xml</code>. Alternatively you can
+copy the repository settings from the "spring" profile of the parent
+pom into your <code>settings.xml</code>.
+</td>
+</tr>
+</table>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_importing_into_eclipse_without_m2eclipse"><a class="link" href="#_importing_into_eclipse_without_m2eclipse">Importing into eclipse without m2eclipse</a></h4>
+<div class="paragraph">
+<p>If you prefer not to use m2eclipse you can generate eclipse project metadata using the
+following command:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>$ ./mvnw eclipse:eclipse</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>The generated eclipse projects can be imported by selecting <code>import existing projects</code>
+from the <code>file</code> menu.</p>
+</div>
+<div class="admonitionblock important">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-important" title="Important"></i>
+</td>
+<td class="content">
+Spring Cloud Sleuth uses two different versions of language level. Java 1.7 is used for main sources, and
+Java 1.8 is used for tests. When importing your project to an IDE, you should activate the <code>ide</code> Maven profile to turn on
+Java 1.8 for both main and test sources. You MUST NOT use Java 1.8 features in the main sources. If you do
+so, your app breaks during the Maven build.
+</td>
+</tr>
+</table>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_contributing"><a class="link" href="#_contributing">Contributing</a></h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Spring Cloud is released under the non-restrictive Apache 2.0 license,
+and follows a very standard Github development process, using Github
+tracker for issues and merging pull requests into master. If you want
+to contribute even something trivial please do not hesitate, but
+follow the guidelines below.</p>
+</div>
+<div class="sect2">
+<h3 id="_sign_the_contributor_license_agreement"><a class="link" href="#_sign_the_contributor_license_agreement">Sign the Contributor License Agreement</a></h3>
+<div class="paragraph">
+<p>Before we accept a non-trivial patch or pull request we will need you to sign the
+<a href="https://cla.pivotal.io/sign/spring">Contributor License Agreement</a>.
+Signing the contributor&#8217;s agreement does not grant anyone commit rights to the main
+repository, but it does mean that we can accept your contributions, and you will get an
+author credit if we do.  Active contributors might be asked to join the core team, and
+given the ability to merge pull requests.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_code_of_conduct"><a class="link" href="#_code_of_conduct">Code of Conduct</a></h3>
+<div class="paragraph">
+<p>This project adheres to the Contributor Covenant <a href="https://github.com/spring-cloud/spring-cloud-build/blob/master/docs/src/main/asciidoc/code-of-conduct.adoc">code of
+conduct</a>. By participating, you  are expected to uphold this code. Please report
+unacceptable behavior to <a href="mailto:spring-code-of-conduct@pivotal.io">spring-code-of-conduct@pivotal.io</a>.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_code_conventions_and_housekeeping"><a class="link" href="#_code_conventions_and_housekeeping">Code Conventions and Housekeeping</a></h3>
+<div class="paragraph">
+<p>None of these is essential for a pull request, but they will all help.  They can also be
+added after the original pull request but before a merge.</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>Use the Spring Framework code format conventions. If you use Eclipse
+you can import formatter settings using the
+<code>eclipse-code-formatter.xml</code> file from the
+<a href="https://raw.githubusercontent.com/spring-cloud/spring-cloud-build/master/spring-cloud-dependencies-parent/eclipse-code-formatter.xml">Spring
+Cloud Build</a> project. If using IntelliJ, you can use the
+<a href="https://plugins.jetbrains.com/plugin/6546">Eclipse Code Formatter
+Plugin</a> to import the same file.</p>
+</li>
+<li>
+<p>Make sure all new <code>.java</code> files to have a simple Javadoc class comment with at least an
+<code>@author</code> tag identifying you, and preferably at least a paragraph on what the class is
+for.</p>
+</li>
+<li>
+<p>Add the ASF license header comment to all new <code>.java</code> files (copy from existing files
+in the project)</p>
+</li>
+<li>
+<p>Add yourself as an <code>@author</code> to the .java files that you modify substantially (more
+than cosmetic changes).</p>
+</li>
+<li>
+<p>Add some Javadocs and, if you change the namespace, some XSD doc elements.</p>
+</li>
+<li>
+<p>A few unit tests would help a lot as well&#8201;&#8212;&#8201;someone has to do it.</p>
+</li>
+<li>
+<p>If no-one else is using your branch, please rebase it against the current master (or
+other target branch in the main project).</p>
+</li>
+<li>
+<p>When writing a commit message please follow <a href="https://tbaggery.com/2008/04/19/a-note-about-git-commit-messages.html">these conventions</a>,
+if you are fixing an existing issue please add <code>Fixes gh-XXXX</code> at the end of the commit
+message (where XXXX is the issue number).</p>
+</li>
+</ul>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_checkstyle"><a class="link" href="#_checkstyle">Checkstyle</a></h3>
+<div class="paragraph">
+<p>Spring Cloud Build comes with a set of checkstyle rules. You can find them in the <code>spring-cloud-build-tools</code> module. The most notable files under the module are:</p>
+</div>
+<div class="listingblock">
+<div class="title">spring-cloud-build-tools/</div>
+<div class="content">
+<pre>└── src
+    ├── checkstyle
+    │   └── checkstyle-suppressions.xml <i class="conum" data-value="3"></i><b>(3)</b>
+    └── main
+        └── resources
+            ├── checkstyle-header.txt <i class="conum" data-value="2"></i><b>(2)</b>
+            └── checkstyle.xml <i class="conum" data-value="1"></i><b>(1)</b></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>Default Checkstyle rules</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="2"></i><b>2</b></td>
+<td>File header setup</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="3"></i><b>3</b></td>
+<td>Default suppression rules</td>
+</tr>
+</table>
+</div>
+<div class="sect3">
+<h4 id="_checkstyle_configuration"><a class="link" href="#_checkstyle_configuration">Checkstyle configuration</a></h4>
+<div class="paragraph">
+<p>Checkstyle rules are <strong>disabled by default</strong>. To add checkstyle to your project just define the following properties and plugins.</p>
+</div>
+<div class="listingblock">
+<div class="title">pom.xml</div>
+<div class="content">
+<pre>&lt;properties&gt;
+&lt;maven-checkstyle-plugin.failsOnError&gt;true&lt;/maven-checkstyle-plugin.failsOnError&gt; <i class="conum" data-value="1"></i><b>(1)</b>
+        &lt;maven-checkstyle-plugin.failsOnViolation&gt;true
+        &lt;/maven-checkstyle-plugin.failsOnViolation&gt; <i class="conum" data-value="2"></i><b>(2)</b>
+        &lt;maven-checkstyle-plugin.includeTestSourceDirectory&gt;true
+        &lt;/maven-checkstyle-plugin.includeTestSourceDirectory&gt; <i class="conum" data-value="3"></i><b>(3)</b>
+&lt;/properties&gt;
+
+&lt;build&gt;
+        &lt;plugins&gt;
+            &lt;plugin&gt; <i class="conum" data-value="4"></i><b>(4)</b>
+                &lt;groupId&gt;io.spring.javaformat&lt;/groupId&gt;
+                &lt;artifactId&gt;spring-javaformat-maven-plugin&lt;/artifactId&gt;
+            &lt;/plugin&gt;
+            &lt;plugin&gt; <i class="conum" data-value="5"></i><b>(5)</b>
+                &lt;groupId&gt;org.apache.maven.plugins&lt;/groupId&gt;
+                &lt;artifactId&gt;maven-checkstyle-plugin&lt;/artifactId&gt;
+            &lt;/plugin&gt;
+        &lt;/plugins&gt;
+
+    &lt;reporting&gt;
+        &lt;plugins&gt;
+            &lt;plugin&gt; <i class="conum" data-value="5"></i><b>(5)</b>
+                &lt;groupId&gt;org.apache.maven.plugins&lt;/groupId&gt;
+                &lt;artifactId&gt;maven-checkstyle-plugin&lt;/artifactId&gt;
+            &lt;/plugin&gt;
+        &lt;/plugins&gt;
+    &lt;/reporting&gt;
+&lt;/build&gt;</pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>Fails the build upon Checkstyle errors</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="2"></i><b>2</b></td>
+<td>Fails the build upon Checkstyle violations</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="3"></i><b>3</b></td>
+<td>Checkstyle analyzes also the test sources</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="4"></i><b>4</b></td>
+<td>Add the Spring Java Format plugin that will reformat your code to pass most of the Checkstyle formatting rules</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="5"></i><b>5</b></td>
+<td>Add checkstyle plugin to your build and reporting phases</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>If you need to suppress some rules (e.g. line length needs to be longer), then it&#8217;s enough for you to define a file under <code>${project.root}/src/checkstyle/checkstyle-suppressions.xml</code> with your suppressions. Example:</p>
+</div>
+<div class="listingblock">
+<div class="title">projectRoot/src/checkstyle/checkstyle-suppresions.xml</div>
+<div class="content">
+<pre>&lt;?xml version="1.0"?&gt;
+&lt;!DOCTYPE suppressions PUBLIC
+		"-//Puppy Crawl//DTD Suppressions 1.1//EN"
+		"https://www.puppycrawl.com/dtds/suppressions_1_1.dtd"&gt;
+&lt;suppressions&gt;
+	&lt;suppress files=".*ConfigServerApplication\.java" checks="HideUtilityClassConstructor"/&gt;
+	&lt;suppress files=".*ConfigClientWatch\.java" checks="LineLengthCheck"/&gt;
+&lt;/suppressions&gt;</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>It&#8217;s advisable to copy the <code>${spring-cloud-build.rootFolder}/.editorconfig</code> and <code>${spring-cloud-build.rootFolder}/.springformat</code> to your project. That way, some default formatting rules will be applied. You can do so by running this script:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">$ curl https://raw.githubusercontent.com/spring-cloud/spring-cloud-build/master/.editorconfig -o .editorconfig
+$ touch .springformat</code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_ide_setup"><a class="link" href="#_ide_setup">IDE setup</a></h3>
+<div class="sect3">
+<h4 id="_intellij_idea"><a class="link" href="#_intellij_idea">Intellij IDEA</a></h4>
+<div class="paragraph">
+<p>In order to setup Intellij you should import our coding conventions, inspection profiles and set up the checkstyle plugin.
+The following files can be found in the <a href="https://github.com/spring-cloud/spring-cloud-build/tree/master/spring-cloud-build-tools">Spring Cloud Build</a> project.</p>
+</div>
+<div class="listingblock">
+<div class="title">spring-cloud-build-tools/</div>
+<div class="content">
+<pre>└── src
+    ├── checkstyle
+    │   └── checkstyle-suppressions.xml <i class="conum" data-value="3"></i><b>(3)</b>
+    └── main
+        └── resources
+            ├── checkstyle-header.txt <i class="conum" data-value="2"></i><b>(2)</b>
+            ├── checkstyle.xml <i class="conum" data-value="1"></i><b>(1)</b>
+            └── intellij
+                ├── Intellij_Project_Defaults.xml <i class="conum" data-value="4"></i><b>(4)</b>
+                └── Intellij_Spring_Boot_Java_Conventions.xml <i class="conum" data-value="5"></i><b>(5)</b></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>Default Checkstyle rules</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="2"></i><b>2</b></td>
+<td>File header setup</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="3"></i><b>3</b></td>
+<td>Default suppression rules</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="4"></i><b>4</b></td>
+<td>Project defaults for Intellij that apply most of Checkstyle rules</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="5"></i><b>5</b></td>
+<td>Project style conventions for Intellij that apply most of Checkstyle rules</td>
+</tr>
+</table>
+</div>
+<div class="imageblock">
+<div class="content">
+<img src="https://raw.githubusercontent.com/spring-cloud/spring-cloud-build/master/docs/src/main/asciidoc/images/intellij-code-style.png" alt="Code style">
+</div>
+<div class="title">Figure 1. Code style</div>
+</div>
+<div class="paragraph">
+<p>Go to <code>File</code> &#8594; <code>Settings</code> &#8594; <code>Editor</code> &#8594; <code>Code style</code>. There click on the icon next to the <code>Scheme</code> section. There, click on the <code>Import Scheme</code> value and pick the <code>Intellij IDEA code style XML</code> option. Import the <code>spring-cloud-build-tools/src/main/resources/intellij/Intellij_Spring_Boot_Java_Conventions.xml</code> file.</p>
+</div>
+<div class="imageblock">
+<div class="content">
+<img src="https://raw.githubusercontent.com/spring-cloud/spring-cloud-build/master/docs/src/main/asciidoc/images/intellij-inspections.png" alt="Code style">
+</div>
+<div class="title">Figure 2. Inspection profiles</div>
+</div>
+<div class="paragraph">
+<p>Go to <code>File</code> &#8594; <code>Settings</code> &#8594; <code>Editor</code> &#8594; <code>Inspections</code>. There click on the icon next to the <code>Profile</code> section. There, click on the <code>Import Profile</code> and import the <code>spring-cloud-build-tools/src/main/resources/intellij/Intellij_Project_Defaults.xml</code> file.</p>
+</div>
+<div class="paragraph">
+<div class="title">Checkstyle</div>
+<p>To have Intellij work with Checkstyle, you have to install the <code>Checkstyle</code> plugin. It&#8217;s advisable to also install the <code>Assertions2Assertj</code> to automatically convert the JUnit assertions</p>
+</div>
+<div class="imageblock">
+<div class="content">
+<img src="https://raw.githubusercontent.com/spring-cloud/spring-cloud-build/master/docs/src/main/asciidoc/images/intellij-checkstyle.png" alt="Checkstyle">
+</div>
+</div>
+<div class="paragraph">
+<p>Go to <code>File</code> &#8594; <code>Settings</code> &#8594; <code>Other settings</code> &#8594; <code>Checkstyle</code>. There click on the <code>+</code> icon in the <code>Configuration file</code> section. There, you&#8217;ll have to define where the checkstyle rules should be picked from. In the image above, we&#8217;ve picked the rules from the cloned Spring Cloud Build repository. However, you can point to the Spring Cloud Build&#8217;s GitHub repository (e.g. for the <code>checkstyle.xml</code> : <code><a href="https://raw.githubusercontent.com/spring-cloud/spring-cloud-build/master/spring-cloud-build-tools/src/main/resources/checkstyle.xml" class="bare">https://raw.githubusercontent.com/spring-cloud/spring-cloud-build/master/spring-cloud-build-tools/src/main/resources/checkstyle.xml</a></code>). We need to provide the following variables:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><code>checkstyle.header.file</code> - please point it to the Spring Cloud Build&#8217;s, <code>spring-cloud-build-tools/src/main/resources/checkstyle/checkstyle-header.txt</code> file either in your cloned repo or via the <code><a href="https://raw.githubusercontent.com/spring-cloud/spring-cloud-build/master/spring-cloud-build-tools/src/main/resources/checkstyle-header.txt" class="bare">https://raw.githubusercontent.com/spring-cloud/spring-cloud-build/master/spring-cloud-build-tools/src/main/resources/checkstyle-header.txt</a></code> URL.</p>
+</li>
+<li>
+<p><code>checkstyle.suppressions.file</code> - default suppressions. Please point it to the Spring Cloud Build&#8217;s, <code>spring-cloud-build-tools/src/checkstyle/checkstyle-suppressions.xml</code> file either in your cloned repo or via the <code><a href="https://raw.githubusercontent.com/spring-cloud/spring-cloud-build/master/spring-cloud-build-tools/src/checkstyle/checkstyle-suppressions.xml" class="bare">https://raw.githubusercontent.com/spring-cloud/spring-cloud-build/master/spring-cloud-build-tools/src/checkstyle/checkstyle-suppressions.xml</a></code> URL.</p>
+</li>
+<li>
+<p><code>checkstyle.additional.suppressions.file</code> - this variable corresponds to suppressions in your local project. E.g. you&#8217;re working on <code>spring-cloud-contract</code>. Then point to the <code>project-root/src/checkstyle/checkstyle-suppressions.xml</code> folder. Example for <code>spring-cloud-contract</code> would be: <code>/home/username/spring-cloud-contract/src/checkstyle/checkstyle-suppressions.xml</code>.</p>
+</li>
+</ul>
+</div>
+<div class="admonitionblock important">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-important" title="Important"></i>
+</td>
+<td class="content">
+Remember to set the <code>Scan Scope</code> to <code>All sources</code> since we apply checkstyle rules for production and test sources.
+</td>
+</tr>
+</table>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<script type="text/javascript" src="js/tocbot/tocbot.min.js"></script>
+<script type="text/javascript" src="js/toc.js"></script>
+<link rel="stylesheet" href="js/highlight/styles/atom-one-dark-reasonable.min.css">
+<script src="js/highlight/highlight.min.js"></script>
+<script>hljs.initHighlighting()</script>
+</body>
+</html>

@@ -1,0 +1,3324 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<!--[if IE]><meta http-equiv="X-UA-Compatible" content="IE=edge"><![endif]-->
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="generator" content="Asciidoctor 1.5.7.1">
+<meta name="author" content="Adrian Cole, Spencer Gibb, Marcin Grzejszczak, Dave Syer, Jay Bryant">
+<title>Spring Cloud Sleuth</title>
+<link rel="stylesheet" href="css/spring.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+
+<style>
+.hidden {
+	display: none;
+}
+
+.switch {
+	border-width: 1px 1px 0 1px;
+	border-style: solid;
+	border-color: #7a2518;
+	display: inline-block;
+}
+
+.switch--item {
+	padding: 10px;
+	background-color: #ffffff;
+	color: #7a2518;
+	display: inline-block;
+	cursor: pointer;
+}
+
+.switch--item:not(:first-child) {
+	border-width: 0 0 0 1px;
+	border-style: solid;
+	border-color: #7a2518;
+}
+
+.switch--item.selected {
+	background-color: #7a2519;
+	color: #ffffff;
+}
+</style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/zepto/1.2.0/zepto.min.js"></script>
+<script type="text/javascript">
+function addBlockSwitches() {
+	$('.primary').each(function() {
+		primary = $(this);
+		createSwitchItem(primary, createBlockSwitch(primary)).item.addClass("selected");
+		primary.children('.title').remove();
+	});
+	$('.secondary').each(function(idx, node) {
+		secondary = $(node);
+		primary = findPrimary(secondary);
+		switchItem = createSwitchItem(secondary, primary.children('.switch'));
+		switchItem.content.addClass('hidden');
+		findPrimary(secondary).append(switchItem.content);
+		secondary.remove();
+	});
+}
+
+function createBlockSwitch(primary) {
+	blockSwitch = $('<div class="switch"></div>');
+	primary.prepend(blockSwitch);
+	return blockSwitch;
+}
+
+function findPrimary(secondary) {
+	candidate = secondary.prev();
+	while (!candidate.is('.primary')) {
+		candidate = candidate.prev();
+	}
+	return candidate;
+}
+
+function createSwitchItem(block, blockSwitch) {
+	blockName = block.children('.title').text();
+	content = block.children('.content').first().append(block.next('.colist'));
+	item = $('<div class="switch--item">' + blockName + '</div>');
+	item.on('click', '', content, function(e) {
+		$(this).addClass('selected');
+		$(this).siblings().removeClass('selected');
+		e.data.siblings('.content').addClass('hidden');
+		e.data.removeClass('hidden');
+	});
+	blockSwitch.append(item);
+	return {'item': item, 'content': content};
+}
+
+$(addBlockSwitches);
+</script>
+
+</head>
+<body class="book toc2 toc-left">
+<div id="header">
+<h1>Spring Cloud Sleuth</h1>
+<div class="details">
+<span id="author" class="author">Adrian Cole, Spencer Gibb, Marcin Grzejszczak, Dave Syer, Jay Bryant</span><br>
+</div>
+<div id="toc" class="toc2">
+<div id="toctitle">Table of Contents</div>
+<ul class="sectlevel1">
+<li><a href="#_introduction">Introduction</a>
+<ul class="sectlevel2">
+<li><a href="#_terminology">Terminology</a></li>
+<li><a href="#_purpose">Purpose</a>
+<ul class="sectlevel3">
+<li><a href="#_distributed_tracing_with_zipkin">Distributed Tracing with Zipkin</a></li>
+<li><a href="#_visualizing_errors">Visualizing errors</a></li>
+<li><a href="#_distributed_tracing_with_brave">Distributed Tracing with Brave</a></li>
+<li><a href="#_live_examples">Live examples</a></li>
+<li><a href="#_log_correlation">Log correlation</a>
+<ul class="sectlevel4">
+<li><a href="#_json_logback_with_logstash">JSON Logback with Logstash</a></li>
+</ul>
+</li>
+<li><a href="#_propagating_span_context">Propagating Span Context</a>
+<ul class="sectlevel4">
+<li><a href="#_baggage_versus_span_tags">Baggage versus Span Tags</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a href="#sleuth-adding-project">Adding Sleuth to the Project</a>
+<ul class="sectlevel3">
+<li><a href="#_only_sleuth_log_correlation">Only Sleuth (log correlation)</a></li>
+<li><a href="#_sleuth_with_zipkin_via_http">Sleuth with Zipkin via HTTP</a></li>
+<li><a href="#_sleuth_with_zipkin_over_rabbitmq_or_kafka">Sleuth with Zipkin over RabbitMQ or Kafka</a></li>
+</ul>
+</li>
+<li><a href="#_overriding_the_auto_configuration_of_zipkin">Overriding the auto-configuration of Zipkin</a></li>
+</ul>
+</li>
+<li><a href="#_additional_resources">Additional Resources</a></li>
+<li><a href="#_features">Features</a>
+<ul class="sectlevel2">
+<li><a href="#_introduction_to_brave">Introduction to Brave</a>
+<ul class="sectlevel3">
+<li><a href="#_tracing">Tracing</a></li>
+<li><a href="#_local_tracing">Local Tracing</a></li>
+<li><a href="#_customizing_spans">Customizing Spans</a></li>
+<li><a href="#_implicitly_looking_up_the_current_span">Implicitly Looking up the Current Span</a></li>
+<li><a href="#_rpc_tracing">RPC tracing</a>
+<ul class="sectlevel4">
+<li><a href="#_one_way_tracing">One-Way tracing</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a href="#_sampling">Sampling</a>
+<ul class="sectlevel2">
+<li><a href="#_declarative_sampling">Declarative sampling</a></li>
+<li><a href="#_custom_sampling">Custom sampling</a></li>
+<li><a href="#_sampling_in_spring_cloud_sleuth">Sampling in Spring Cloud Sleuth</a></li>
+</ul>
+</li>
+<li><a href="#_propagation">Propagation</a>
+<ul class="sectlevel2">
+<li><a href="#_propagating_extra_fields">Propagating extra fields</a>
+<ul class="sectlevel3">
+<li><a href="#prefixed-fields">Prefixed fields</a></li>
+<li><a href="#_extracting_a_propagated_context">Extracting a Propagated Context</a></li>
+<li><a href="#_sharing_span_ids_between_client_and_server">Sharing span IDs between Client and Server</a></li>
+<li><a href="#_implementing_propagation">Implementing Propagation</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a href="#_current_tracing_component">Current Tracing Component</a></li>
+<li><a href="#_current_span">Current Span</a>
+<ul class="sectlevel2">
+<li><a href="#_setting_a_span_in_scope_manually">Setting a span in scope manually</a></li>
+</ul>
+</li>
+<li><a href="#_instrumentation">Instrumentation</a></li>
+<li><a href="#_span_lifecycle">Span lifecycle</a>
+<ul class="sectlevel2">
+<li><a href="#creating-and-finishing-spans">Creating and finishing spans</a></li>
+<li><a href="#continuing-spans">Continuing Spans</a></li>
+<li><a href="#creating-spans-with-explicit-parent">Creating a Span with an explicit Parent</a></li>
+</ul>
+</li>
+<li><a href="#_naming_spans">Naming spans</a>
+<ul class="sectlevel2">
+<li><a href="#_spanname_annotation"><code>@SpanName</code> Annotation</a></li>
+<li><a href="#_tostring_method"><code>toString()</code> method</a></li>
+</ul>
+</li>
+<li><a href="#_managing_spans_with_annotations">Managing Spans with Annotations</a>
+<ul class="sectlevel2">
+<li><a href="#_rationale">Rationale</a></li>
+<li><a href="#_creating_new_spans">Creating New Spans</a></li>
+<li><a href="#_continuing_spans">Continuing Spans</a></li>
+<li><a href="#_advanced_tag_setting">Advanced Tag Setting</a>
+<ul class="sectlevel3">
+<li><a href="#_custom_extractor">Custom extractor</a></li>
+<li><a href="#_resolving_expressions_for_a_value">Resolving Expressions for a Value</a></li>
+<li><a href="#_using_the_tostring_method">Using the <code>toString()</code> method</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a href="#_customizations">Customizations</a>
+<ul class="sectlevel2">
+<li><a href="#_http">HTTP</a></li>
+<li><a href="#_tracingfilter"><code>TracingFilter</code></a></li>
+<li><a href="#_custom_service_name">Custom service name</a></li>
+<li><a href="#_customization_of_reported_spans">Customization of Reported Spans</a></li>
+<li><a href="#_host_locator">Host Locator</a></li>
+</ul>
+</li>
+<li><a href="#_sending_spans_to_zipkin">Sending Spans to Zipkin</a></li>
+<li><a href="#_zipkin_stream_span_consumer">Zipkin Stream Span Consumer</a></li>
+<li><a href="#_integrations">Integrations</a>
+<ul class="sectlevel2">
+<li><a href="#_opentracing">OpenTracing</a></li>
+<li><a href="#_runnable_and_callable">Runnable and Callable</a></li>
+<li><a href="#_hystrix">Hystrix</a>
+<ul class="sectlevel3">
+<li><a href="#_custom_concurrency_strategy">Custom Concurrency Strategy</a></li>
+<li><a href="#_manual_command_setting">Manual Command setting</a></li>
+</ul>
+</li>
+<li><a href="#_rxjava">RxJava</a></li>
+<li><a href="#_http_integration">HTTP integration</a>
+<ul class="sectlevel3">
+<li><a href="#_http_filter">HTTP Filter</a></li>
+<li><a href="#_handlerinterceptor">HandlerInterceptor</a></li>
+<li><a href="#_async_servlet_support">Async Servlet support</a></li>
+<li><a href="#_webflux_support">WebFlux support</a></li>
+<li><a href="#_dubbo_rpc_support">Dubbo RPC support</a></li>
+</ul>
+</li>
+<li><a href="#_http_client_integration">HTTP Client Integration</a>
+<ul class="sectlevel3">
+<li><a href="#_synchronous_rest_template">Synchronous Rest Template</a></li>
+<li><a href="#_asynchronous_rest_template">Asynchronous Rest Template</a>
+<ul class="sectlevel4">
+<li><a href="#_multiple_asynchronous_rest_templates">Multiple Asynchronous Rest Templates</a></li>
+</ul>
+</li>
+<li><a href="#_webclient"><code>WebClient</code></a></li>
+<li><a href="#_traverson">Traverson</a></li>
+<li><a href="#_apache_httpclientbuilder_and_httpasyncclientbuilder">Apache <code>HttpClientBuilder</code> and <code>HttpAsyncClientBuilder</code></a></li>
+<li><a href="#_netty_httpclient">Netty <code>HttpClient</code></a></li>
+<li><a href="#_userinforesttemplatecustomizer"><code>UserInfoRestTemplateCustomizer</code></a></li>
+</ul>
+</li>
+<li><a href="#_feign">Feign</a></li>
+<li><a href="#_grpc">gRPC</a>
+<ul class="sectlevel3">
+<li><a href="#_variant_1">Variant 1</a>
+<ul class="sectlevel4">
+<li><a href="#_dependencies">Dependencies</a></li>
+<li><a href="#_server_instrumentation">Server Instrumentation</a></li>
+<li><a href="#_client_instrumentation">Client Instrumentation</a></li>
+</ul>
+</li>
+<li><a href="#_variant_2">Variant 2</a></li>
+</ul>
+</li>
+<li><a href="#_asynchronous_communication">Asynchronous Communication</a>
+<ul class="sectlevel3">
+<li><a href="#_async_annotated_methods"><code>@Async</code> Annotated methods</a></li>
+<li><a href="#_scheduled_annotated_methods"><code>@Scheduled</code> Annotated Methods</a></li>
+<li><a href="#_executor_executorservice_and_scheduledexecutorservice">Executor, ExecutorService, and ScheduledExecutorService</a>
+<ul class="sectlevel4">
+<li><a href="#_customization_of_executors">Customization of Executors</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a href="#_messaging">Messaging</a>
+<ul class="sectlevel3">
+<li><a href="#_spring_integration_and_spring_cloud_stream">Spring Integration and Spring Cloud Stream</a></li>
+<li><a href="#_spring_rabbitmq">Spring RabbitMq</a></li>
+<li><a href="#_spring_kafka">Spring Kafka</a></li>
+<li><a href="#_spring_kafka_streams">Spring Kafka Streams</a></li>
+<li><a href="#_spring_jms">Spring JMS</a></li>
+</ul>
+</li>
+<li><a href="#_zuul">Zuul</a></li>
+<li><a href="#_redis">Redis</a></li>
+</ul>
+</li>
+<li><a href="#_running_examples">Running examples</a></li>
+</ul>
+</div>
+</div>
+<div id="content">
+<div id="preamble">
+<div class="sectionbody">
+<div class="paragraph">
+<p><strong>{spring-cloud-version}</strong></p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_introduction"><a class="link" href="#_introduction">Introduction</a></h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Spring Cloud Sleuth implements a distributed tracing solution for <a href="https://cloud.spring.io">Spring Cloud</a>.</p>
+</div>
+<div class="sect2">
+<h3 id="_terminology"><a class="link" href="#_terminology">Terminology</a></h3>
+<div class="paragraph">
+<p>Spring Cloud Sleuth borrows <a href="https://research.google.com/pubs/pub36356.html">Dapper&#8217;s</a> terminology.</p>
+</div>
+<div class="paragraph">
+<p><strong>Span</strong>: The basic unit of work. For example, sending an RPC is a new span, as is sending a response to an RPC.
+Spans are identified by a unique 64-bit ID for the span and another 64-bit ID for the trace the span is a part of.
+Spans also have other data, such as descriptions, timestamped events, key-value annotations (tags), the ID of the span that caused them, and process IDs (normally IP addresses).</p>
+</div>
+<div class="paragraph">
+<p>Spans can be started and stopped, and they keep track of their timing information.
+Once you create a span, you must stop it at some point in the future.</p>
+</div>
+<div class="admonitionblock tip">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-tip" title="Tip"></i>
+</td>
+<td class="content">
+The initial span that starts a trace is called a <code>root span</code>. The value of the ID
+of that span is equal to the trace ID.
+</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p><strong>Trace:</strong> A set of spans forming a tree-like structure.
+For example, if you run a distributed big-data store, a trace might be formed by a <code>PUT</code> request.</p>
+</div>
+<div class="paragraph">
+<p><strong>Annotation:</strong>  Used to record the existence of an event in time. With
+<a href="https://github.com/openzipkin/brave">Brave</a> instrumentation, we no longer need to set special events
+for <a href="https://zipkin.io/">Zipkin</a> to understand who the client and server are, where
+the request started, and where it ended. For learning purposes,
+however, we mark these events to highlight what kind
+of an action took place.</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>cs</strong>: Client Sent. The client has made a request. This annotation indicates the start of the span.</p>
+</li>
+<li>
+<p><strong>sr</strong>: Server Received: The server side got the request and started processing it.
+Subtracting the <code>cs</code> timestamp from this timestamp reveals the network latency.</p>
+</li>
+<li>
+<p><strong>ss</strong>: Server Sent. Annotated upon completion of request processing (when the response got sent back to the client).
+Subtracting the <code>sr</code> timestamp from this timestamp reveals the time needed by the server side to process the request.</p>
+</li>
+<li>
+<p><strong>cr</strong>: Client Received. Signifies the end of the span.
+The client has successfully received the response from the server side.
+Subtracting the <code>cs</code> timestamp from this timestamp reveals the whole time needed by the client to receive the response from the server.</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>The following image shows how <strong>Span</strong> and <strong>Trace</strong> look in a system, together with the Zipkin annotations:</p>
+</div>
+<div class="imageblock">
+<div class="content">
+<img src="https://raw.githubusercontent.com/spring-cloud/spring-cloud-sleuth/master/docs/src/main/asciidoc/images/trace-id.png" alt="Trace Info propagation">
+</div>
+</div>
+<div class="paragraph">
+<p>Each color of a note signifies a span (there are seven spans - from <strong>A</strong> to <strong>G</strong>).
+Consider the following note:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code>Trace Id = X
+Span Id = D
+Client Sent</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>This note indicates that the current span has <strong>Trace Id</strong> set to <strong>X</strong> and <strong>Span Id</strong> set to <strong>D</strong>.
+Also, the <code>Client Sent</code> event took place.</p>
+</div>
+<div class="paragraph">
+<p>The following image shows how parent-child relationships of spans look:</p>
+</div>
+<div class="imageblock">
+<div class="content">
+<img src="https://raw.githubusercontent.com/spring-cloud/spring-cloud-sleuth/master/docs/src/main/asciidoc/images/parents.png" alt="Parent child relationship">
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_purpose"><a class="link" href="#_purpose">Purpose</a></h3>
+<div class="paragraph">
+<p>The following sections refer to the example shown in the preceding image.</p>
+</div>
+<div class="sect3">
+<h4 id="_distributed_tracing_with_zipkin"><a class="link" href="#_distributed_tracing_with_zipkin">Distributed Tracing with Zipkin</a></h4>
+<div class="paragraph">
+<p>This example has seven spans.
+If you go to traces in Zipkin, you can see this number in the second trace, as shown in the following image:</p>
+</div>
+<div class="imageblock">
+<div class="content">
+<img src="https://raw.githubusercontent.com/spring-cloud/spring-cloud-sleuth/master/docs/src/main/asciidoc/images/zipkin-traces.png" alt="Traces">
+</div>
+</div>
+<div class="paragraph">
+<p>However, if you pick a particular trace, you can see four spans, as shown in the following image:</p>
+</div>
+<div class="imageblock">
+<div class="content">
+<img src="https://raw.githubusercontent.com/spring-cloud/spring-cloud-sleuth/master/docs/src/main/asciidoc/images/zipkin-ui.png" alt="Traces Info propagation">
+</div>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+When you pick a particular trace, you see merged spans.
+That means that, if there were two spans sent to Zipkin with Server Received and Server Sent or Client Received and Client Sent annotations, they are presented as a single span.
+</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>Why is there a difference between the seven and four spans in this case?</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>One span comes from the <code>http:/start</code> span. It has the Server Received (<code>sr</code>) and Server Sent (<code>ss</code>) annotations.</p>
+</li>
+<li>
+<p>Two spans come from the RPC call from <code>service1</code> to <code>service2</code> to the <code>http:/foo</code> endpoint.
+The Client Sent (<code>cs</code>) and Client Received (<code>cr</code>) events took place on the <code>service1</code> side.
+Server Received (<code>sr</code>) and Server Sent (<code>ss</code>) events took place on the <code>service2</code> side.
+These two spans form one logical span related to an RPC call.</p>
+</li>
+<li>
+<p>Two spans come from the RPC call from <code>service2</code> to <code>service3</code> to the <code>http:/bar</code> endpoint.
+The Client Sent (<code>cs</code>) and Client Received (<code>cr</code>) events took place on the <code>service2</code> side.
+The Server Received (<code>sr</code>) and Server Sent (<code>ss</code>) events took place on the <code>service3</code> side.
+These two spans form one logical span related to an RPC call.</p>
+</li>
+<li>
+<p>Two spans come from the RPC call from <code>service2</code> to <code>service4</code> to the <code>http:/baz</code> endpoint.
+The Client Sent (<code>cs</code>) and Client Received (<code>cr</code>) events took place on the <code>service2</code> side.
+Server Received (<code>sr</code>) and Server Sent (<code>ss</code>) events took place on the <code>service4</code> side.
+These two spans form one logical span related to an RPC call.</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>So, if we count the physical spans, we have one from <code>http:/start</code>, two from <code>service1</code> calling <code>service2</code>, two from <code>service2</code>
+calling <code>service3</code>, and two from <code>service2</code> calling <code>service4</code>. In sum, we have a total of seven spans.</p>
+</div>
+<div class="paragraph">
+<p>Logically, we see the information of four total Spans because we have one span related to the incoming request
+to <code>service1</code> and three spans related to RPC calls.</p>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_visualizing_errors"><a class="link" href="#_visualizing_errors">Visualizing errors</a></h4>
+<div class="paragraph">
+<p>Zipkin lets you visualize errors in your trace.
+When an exception was thrown and was not caught, we set proper tags on the span, which Zipkin can then properly colorize.
+You could see in the list of traces one trace that is red. That appears because an exception was thrown.</p>
+</div>
+<div class="paragraph">
+<p>If you click that trace, you see a similar picture, as follows:</p>
+</div>
+<div class="imageblock">
+<div class="content">
+<img src="https://raw.githubusercontent.com/spring-cloud/spring-cloud-sleuth/master/docs/src/main/asciidoc/images/zipkin-error-traces.png" alt="Error Traces">
+</div>
+</div>
+<div class="paragraph">
+<p>If you then click on one of the spans, you see the following</p>
+</div>
+<div class="imageblock">
+<div class="content">
+<img src="https://raw.githubusercontent.com/spring-cloud/spring-cloud-sleuth/master/docs/src/main/asciidoc/images/zipkin-error-trace-screenshot.png" alt="Error Traces Info propagation">
+</div>
+</div>
+<div class="paragraph">
+<p>The span shows the reason for the error and the whole stack trace related to it.</p>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_distributed_tracing_with_brave"><a class="link" href="#_distributed_tracing_with_brave">Distributed Tracing with Brave</a></h4>
+<div class="paragraph">
+<p>Starting with version <code>2.0.0</code>, Spring Cloud Sleuth uses <a href="https://github.com/openzipkin/brave">Brave</a> as the tracing library.
+Consequently, Sleuth no longer takes care of storing the context but delegates that work to Brave.</p>
+</div>
+<div class="paragraph">
+<p>Due to the fact that Sleuth had different naming and tagging conventions than Brave, we decided to follow Brave&#8217;s conventions from now on.
+However, if you want to use the legacy Sleuth approaches, you can set the <code>spring.sleuth.http.legacy.enabled</code> property to <code>true</code>.</p>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_live_examples"><a class="link" href="#_live_examples">Live examples</a></h4>
+<div class="imageblock">
+<div class="content">
+<a class="image" href="https://docssleuth-zipkin-server.cfapps.io/"><img src="https://raw.githubusercontent.com/spring-cloud/spring-cloud-sleuth/master/docs/src/main/asciidoc/images/pws.png" alt="Zipkin deployed on Pivotal Web Services" width="150" height="74"></a>
+</div>
+<div class="title">Click the Pivotal Web Services icon to see it live!Click the Pivotal Web Services icon to see it live!</div>
+</div>
+<div class="paragraph">
+<p><a href="https://docssleuth-zipkin-server.cfapps.io/">Click here to see it live!</a></p>
+</div>
+<div class="paragraph">
+<p>The dependency graph in Zipkin should resemble the following image:</p>
+</div>
+<div class="imageblock">
+<div class="content">
+<img src="https://raw.githubusercontent.com/spring-cloud/spring-cloud-sleuth/master/docs/src/main/asciidoc/images/dependencies.png" alt="Dependencies">
+</div>
+</div>
+<div class="imageblock">
+<div class="content">
+<a class="image" href="https://docssleuth-zipkin-server.cfapps.io/dependency"><img src="https://raw.githubusercontent.com/spring-cloud/spring-cloud-sleuth/master/docs/src/main/asciidoc/images/pws.png" alt="Zipkin deployed on Pivotal Web Services" width="150" height="74"></a>
+</div>
+<div class="title">Click the Pivotal Web Services icon to see it live!Click the Pivotal Web Services icon to see it live!</div>
+</div>
+<div class="paragraph">
+<p><a href="https://docssleuth-zipkin-server.cfapps.io/dependency">Click here to see it live!</a></p>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_log_correlation"><a class="link" href="#_log_correlation">Log correlation</a></h4>
+<div class="paragraph">
+<p>When using grep to read the logs of those four applications by scanning for a trace ID equal to (for example) <code>2485ec27856c56f4</code>, you get output resembling the following:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code>service1.log:2016-02-26 11:15:47.561  INFO [service1,2485ec27856c56f4,2485ec27856c56f4,true] 68058 --- [nio-8081-exec-1] i.s.c.sleuth.docs.service1.Application   : Hello from service1. Calling service2
+service2.log:2016-02-26 11:15:47.710  INFO [service2,2485ec27856c56f4,9aa10ee6fbde75fa,true] 68059 --- [nio-8082-exec-1] i.s.c.sleuth.docs.service2.Application   : Hello from service2. Calling service3 and then service4
+service3.log:2016-02-26 11:15:47.895  INFO [service3,2485ec27856c56f4,1210be13194bfe5,true] 68060 --- [nio-8083-exec-1] i.s.c.sleuth.docs.service3.Application   : Hello from service3
+service2.log:2016-02-26 11:15:47.924  INFO [service2,2485ec27856c56f4,9aa10ee6fbde75fa,true] 68059 --- [nio-8082-exec-1] i.s.c.sleuth.docs.service2.Application   : Got response from service3 [Hello from service3]
+service4.log:2016-02-26 11:15:48.134  INFO [service4,2485ec27856c56f4,1b1845262ffba49d,true] 68061 --- [nio-8084-exec-1] i.s.c.sleuth.docs.service4.Application   : Hello from service4
+service2.log:2016-02-26 11:15:48.156  INFO [service2,2485ec27856c56f4,9aa10ee6fbde75fa,true] 68059 --- [nio-8082-exec-1] i.s.c.sleuth.docs.service2.Application   : Got response from service4 [Hello from service4]
+service1.log:2016-02-26 11:15:48.182  INFO [service1,2485ec27856c56f4,2485ec27856c56f4,true] 68058 --- [nio-8081-exec-1] i.s.c.sleuth.docs.service1.Application   : Got response from service2 [Hello from service2, response from service3 [Hello from service3] and from service4 [Hello from service4]]</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>If you use a log aggregating tool (such as <a href="https://www.elastic.co/products/kibana">Kibana</a>, <a href="https://www.splunk.com/">Splunk</a>, and others), you can order the events that took place.
+An example from Kibana would resemble the following image:</p>
+</div>
+<div class="imageblock">
+<div class="content">
+<img src="https://raw.githubusercontent.com/spring-cloud/spring-cloud-sleuth/master/docs/src/main/asciidoc/images/kibana.png" alt="Log correlation with Kibana">
+</div>
+</div>
+<div class="paragraph">
+<p>If you want to use <a href="https://www.elastic.co/guide/en/logstash/current/index.html">Logstash</a>, the following listing shows the Grok pattern for Logstash:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code>filter {
+       # pattern matching logback pattern
+       grok {
+              match =&gt; { "message" =&gt; "%{TIMESTAMP_ISO8601:timestamp}\s+%{LOGLEVEL:severity}\s+\[%{DATA:service},%{DATA:trace},%{DATA:span},%{DATA:exportable}\]\s+%{DATA:pid}\s+---\s+\[%{DATA:thread}\]\s+%{DATA:class}\s+:\s+%{GREEDYDATA:rest}" }
+       }
+}</code></pre>
+</div>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+If you want to use Grok together with the logs from Cloud Foundry, you have to use the following pattern:
+</td>
+</tr>
+</table>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code>filter {
+       # pattern matching logback pattern
+       grok {
+              match =&gt; { "message" =&gt; "(?m)OUT\s+%{TIMESTAMP_ISO8601:timestamp}\s+%{LOGLEVEL:severity}\s+\[%{DATA:service},%{DATA:trace},%{DATA:span},%{DATA:exportable}\]\s+%{DATA:pid}\s+---\s+\[%{DATA:thread}\]\s+%{DATA:class}\s+:\s+%{GREEDYDATA:rest}" }
+       }
+}</code></pre>
+</div>
+</div>
+<div class="sect4">
+<h5 id="_json_logback_with_logstash"><a class="link" href="#_json_logback_with_logstash">JSON Logback with Logstash</a></h5>
+<div class="paragraph">
+<p>Often, you do not want to store your logs in a text file but in a JSON file that Logstash can immediately pick.
+To do so, you have to do the following (for readability, we pass the dependencies in the <code>groupId:artifactId:version</code> notation).</p>
+</div>
+<div class="paragraph">
+<p><strong>Dependencies Setup</strong></p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>Ensure that Logback is on the classpath (<code>ch.qos.logback:logback-core</code>).</p>
+</li>
+<li>
+<p>Add Logstash Logback encode. For example, to use version <code>4.6</code>, add <code>net.logstash.logback:logstash-logback-encoder:4.6</code>.</p>
+</li>
+</ol>
+</div>
+<div class="paragraph">
+<p><strong>Logback Setup</strong></p>
+</div>
+<div class="paragraph">
+<p>Consider the following example of a Logback configuration file (named <a href="https://github.com/spring-cloud-samples/sleuth-documentation-apps/blob/master/service1/src/main/resources/logback-spring.xml">logback-spring.xml</a>).</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-xml hljs" data-lang="xml">&lt;?xml version="1.0" encoding="UTF-8"?&gt;
+&lt;configuration&gt;
+	&lt;include resource="org/springframework/boot/logging/logback/defaults.xml"/&gt;
+	​
+	&lt;springProperty scope="context" name="springAppName" source="spring.application.name"/&gt;
+	&lt;!-- Example for logging into the build folder of your project --&gt;
+	&lt;property name="LOG_FILE" value="${BUILD_FOLDER:-build}/${springAppName}"/&gt;​
+
+	&lt;!-- You can override this to have a custom pattern --&gt;
+	&lt;property name="CONSOLE_LOG_PATTERN"
+			  value="%clr(%d{yyyy-MM-dd HH:mm:ss.SSS}){faint} %clr(${LOG_LEVEL_PATTERN:-%5p}) %clr(${PID:- }){magenta} %clr(---){faint} %clr([%15.15t]){faint} %clr(%-40.40logger{39}){cyan} %clr(:){faint} %m%n${LOG_EXCEPTION_CONVERSION_WORD:-%wEx}"/&gt;
+
+	&lt;!-- Appender to log to console --&gt;
+	&lt;appender name="console" class="ch.qos.logback.core.ConsoleAppender"&gt;
+		&lt;filter class="ch.qos.logback.classic.filter.ThresholdFilter"&gt;
+			&lt;!-- Minimum logging level to be presented in the console logs--&gt;
+			&lt;level&gt;DEBUG&lt;/level&gt;
+		&lt;/filter&gt;
+		&lt;encoder&gt;
+			&lt;pattern&gt;${CONSOLE_LOG_PATTERN}&lt;/pattern&gt;
+			&lt;charset&gt;utf8&lt;/charset&gt;
+		&lt;/encoder&gt;
+	&lt;/appender&gt;
+
+	&lt;!-- Appender to log to file --&gt;​
+	&lt;appender name="flatfile" class="ch.qos.logback.core.rolling.RollingFileAppender"&gt;
+		&lt;file&gt;${LOG_FILE}&lt;/file&gt;
+		&lt;rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy"&gt;
+			&lt;fileNamePattern&gt;${LOG_FILE}.%d{yyyy-MM-dd}.gz&lt;/fileNamePattern&gt;
+			&lt;maxHistory&gt;7&lt;/maxHistory&gt;
+		&lt;/rollingPolicy&gt;
+		&lt;encoder&gt;
+			&lt;pattern&gt;${CONSOLE_LOG_PATTERN}&lt;/pattern&gt;
+			&lt;charset&gt;utf8&lt;/charset&gt;
+		&lt;/encoder&gt;
+	&lt;/appender&gt;
+	​
+	&lt;!-- Appender to log to file in a JSON format --&gt;
+	&lt;appender name="logstash" class="ch.qos.logback.core.rolling.RollingFileAppender"&gt;
+		&lt;file&gt;${LOG_FILE}.json&lt;/file&gt;
+		&lt;rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy"&gt;
+			&lt;fileNamePattern&gt;${LOG_FILE}.json.%d{yyyy-MM-dd}.gz&lt;/fileNamePattern&gt;
+			&lt;maxHistory&gt;7&lt;/maxHistory&gt;
+		&lt;/rollingPolicy&gt;
+		&lt;encoder class="net.logstash.logback.encoder.LoggingEventCompositeJsonEncoder"&gt;
+			&lt;providers&gt;
+				&lt;timestamp&gt;
+					&lt;timeZone&gt;UTC&lt;/timeZone&gt;
+				&lt;/timestamp&gt;
+				&lt;pattern&gt;
+					&lt;pattern&gt;
+						{
+						"severity": "%level",
+						"service": "${springAppName:-}",
+						"trace": "%X{X-B3-TraceId:-}",
+						"span": "%X{X-B3-SpanId:-}",
+						"parent": "%X{X-B3-ParentSpanId:-}",
+						"exportable": "%X{X-Span-Export:-}",
+						"pid": "${PID:-}",
+						"thread": "%thread",
+						"class": "%logger{40}",
+						"rest": "%message"
+						}
+					&lt;/pattern&gt;
+				&lt;/pattern&gt;
+			&lt;/providers&gt;
+		&lt;/encoder&gt;
+	&lt;/appender&gt;
+	​
+	&lt;root level="INFO"&gt;
+		&lt;appender-ref ref="console"/&gt;
+		&lt;!-- uncomment this to have also JSON logs --&gt;
+		&lt;!--&lt;appender-ref ref="logstash"/&gt;--&gt;
+		&lt;!--&lt;appender-ref ref="flatfile"/&gt;--&gt;
+	&lt;/root&gt;
+&lt;/configuration&gt;</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>That Logback configuration file:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>Logs information from the application in a JSON format to a <code>build/${spring.application.name}.json</code> file.</p>
+</li>
+<li>
+<p>Has commented out two additional appenders: console and standard log file.</p>
+</li>
+<li>
+<p>Has the same logging pattern as the one presented in the previous section.</p>
+</li>
+</ul>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+If you use a custom <code>logback-spring.xml</code>, you must pass the <code>spring.application.name</code> in the  <code>bootstrap</code> rather than the <code>application</code> property file.
+Otherwise, your custom logback file does not properly read the property.
+</td>
+</tr>
+</table>
+</div>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_propagating_span_context"><a class="link" href="#_propagating_span_context">Propagating Span Context</a></h4>
+<div class="paragraph">
+<p>The span context is the state that must get propagated to any child spans across process boundaries.
+Part of the Span Context is the Baggage. The trace and span IDs are a required part of the span context.
+Baggage is an optional part.</p>
+</div>
+<div class="paragraph">
+<p>Baggage is a set of key:value pairs stored in the span context.
+Baggage travels together with the trace and is attached to every span.
+Spring Cloud Sleuth understands that a header is baggage-related if the HTTP header is prefixed with <code>baggage-</code> and, for messaging, it starts with <code>baggage_</code>.</p>
+</div>
+<div class="admonitionblock important">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-important" title="Important"></i>
+</td>
+<td class="content">
+There is currently no limitation of the count or size of baggage items.
+However, keep in mind that too many can decrease system throughput or increase RPC latency.
+In extreme cases, too much baggage can crash the application, due to exceeding transport-level message or header capacity.
+</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>The following example shows setting baggage on a span:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">Unresolved directive in intro.adoc - include::https://raw.githubusercontent.com/spring-cloud/spring-cloud-sleuth/origin/master/spring-cloud-sleuth-core/src/test/java/org/springframework/cloud/sleuth/instrument/multiple/MultipleHopsIntegrationTests.java[tags=baggage,indent=0]</code></pre>
+</div>
+</div>
+<div class="sect4">
+<h5 id="_baggage_versus_span_tags"><a class="link" href="#_baggage_versus_span_tags">Baggage versus Span Tags</a></h5>
+<div class="paragraph">
+<p>Baggage travels with the trace (every child span contains the baggage of its parent).
+Zipkin has no knowledge of baggage and does not receive that information.</p>
+</div>
+<div class="admonitionblock important">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-important" title="Important"></i>
+</td>
+<td class="content">
+Starting from Sleuth 2.0.0 you have to pass the baggage key names explicitly
+in your project configuration. Read more about that setup <a href="#prefixed-fields">here</a>
+</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>Tags are attached to a specific span. In other words, they are presented only for that particular span.
+However, you can search by tag to find the trace, assuming a span having the searched tag value exists.</p>
+</div>
+<div class="paragraph">
+<p>If you want to be able to lookup a span based on baggage, you should add a corresponding entry as a tag in the root span.</p>
+</div>
+<div class="admonitionblock important">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-important" title="Important"></i>
+</td>
+<td class="content">
+The span must be in scope.
+</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>The following listing shows integration tests that use baggage:</p>
+</div>
+<div class="listingblock">
+<div class="title">The setup</div>
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-yml hljs" data-lang="yml">Unresolved directive in intro.adoc - include::https://raw.githubusercontent.com/spring-cloud/spring-cloud-sleuth/origin/master/spring-cloud-sleuth-core/src/test/resources/application-baggage.yml[indent=0]</code></pre>
+</div>
+</div>
+<div class="listingblock">
+<div class="title">The code</div>
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">Unresolved directive in intro.adoc - include::https://raw.githubusercontent.com/spring-cloud/spring-cloud-sleuth/origin/master/spring-cloud-sleuth-core/src/test/java/org/springframework/cloud/sleuth/instrument/multiple/MultipleHopsIntegrationTests.java[tags=baggage_tag,indent=0]</code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="sleuth-adding-project"><a class="link" href="#sleuth-adding-project">Adding Sleuth to the Project</a></h3>
+<div class="paragraph">
+<p>This section addresses how to add Sleuth to your project with either Maven or Gradle.</p>
+</div>
+<div class="admonitionblock important">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-important" title="Important"></i>
+</td>
+<td class="content">
+To ensure that your application name is properly displayed in Zipkin, set the <code>spring.application.name</code> property in <code>bootstrap.yml</code>.
+</td>
+</tr>
+</table>
+</div>
+<div class="sect3">
+<h4 id="_only_sleuth_log_correlation"><a class="link" href="#_only_sleuth_log_correlation">Only Sleuth (log correlation)</a></h4>
+<div class="paragraph">
+<p>If you want to use only Spring Cloud Sleuth without the Zipkin integration, add the <code>spring-cloud-starter-sleuth</code> module to your project.</p>
+</div>
+<div class="paragraph">
+<p>The following example shows how to add Sleuth with Maven:</p>
+</div>
+<div class="listingblock primary">
+<div class="title">Maven</div>
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-xml hljs" data-lang="xml">&lt;dependencyManagement&gt; <i class="conum" data-value="1"></i><b>(1)</b>
+      &lt;dependencies&gt;
+          &lt;dependency&gt;
+              &lt;groupId&gt;org.springframework.cloud&lt;/groupId&gt;
+              &lt;artifactId&gt;spring-cloud-dependencies&lt;/artifactId&gt;
+              &lt;version&gt;${release.train.version}&lt;/version&gt;
+              &lt;type&gt;pom&lt;/type&gt;
+              &lt;scope&gt;import&lt;/scope&gt;
+          &lt;/dependency&gt;
+      &lt;/dependencies&gt;
+&lt;/dependencyManagement&gt;
+
+&lt;dependency&gt; <i class="conum" data-value="2"></i><b>(2)</b>
+    &lt;groupId&gt;org.springframework.cloud&lt;/groupId&gt;
+    &lt;artifactId&gt;spring-cloud-starter-sleuth&lt;/artifactId&gt;
+&lt;/dependency&gt;</code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>We recommend that you add the dependency management through the Spring BOM so that you need not manage versions yourself.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="2"></i><b>2</b></td>
+<td>Add the dependency to <code>spring-cloud-starter-sleuth</code>.</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>The following example shows how to add Sleuth with Gradle:</p>
+</div>
+<div class="listingblock secondary">
+<div class="title">Gradle</div>
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-groovy hljs" data-lang="groovy">dependencyManagement { <i class="conum" data-value="1"></i><b>(1)</b>
+    imports {
+        mavenBom "org.springframework.cloud:spring-cloud-dependencies:${releaseTrainVersion}"
+    }
+}
+
+dependencies { <i class="conum" data-value="2"></i><b>(2)</b>
+    compile "org.springframework.cloud:spring-cloud-starter-sleuth"
+}</code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>We recommend that you add the dependency management through the Spring BOM so that you need not manage versions yourself.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="2"></i><b>2</b></td>
+<td>Add the dependency to <code>spring-cloud-starter-sleuth</code>.</td>
+</tr>
+</table>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_sleuth_with_zipkin_via_http"><a class="link" href="#_sleuth_with_zipkin_via_http">Sleuth with Zipkin via HTTP</a></h4>
+<div class="paragraph">
+<p>If you want both Sleuth and Zipkin, add the <code>spring-cloud-starter-zipkin</code> dependency.</p>
+</div>
+<div class="paragraph">
+<p>The following example shows how to do so for Maven:</p>
+</div>
+<div class="listingblock primary">
+<div class="title">Maven</div>
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-xml hljs" data-lang="xml">&lt;dependencyManagement&gt; <i class="conum" data-value="1"></i><b>(1)</b>
+      &lt;dependencies&gt;
+          &lt;dependency&gt;
+              &lt;groupId&gt;org.springframework.cloud&lt;/groupId&gt;
+              &lt;artifactId&gt;spring-cloud-dependencies&lt;/artifactId&gt;
+              &lt;version&gt;${release.train.version}&lt;/version&gt;
+              &lt;type&gt;pom&lt;/type&gt;
+              &lt;scope&gt;import&lt;/scope&gt;
+          &lt;/dependency&gt;
+      &lt;/dependencies&gt;
+&lt;/dependencyManagement&gt;
+
+&lt;dependency&gt; <i class="conum" data-value="2"></i><b>(2)</b>
+    &lt;groupId&gt;org.springframework.cloud&lt;/groupId&gt;
+    &lt;artifactId&gt;spring-cloud-starter-zipkin&lt;/artifactId&gt;
+&lt;/dependency&gt;</code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>We recommend that you add the dependency management through the Spring BOM so that you need not manage versions yourself.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="2"></i><b>2</b></td>
+<td>Add the dependency to <code>spring-cloud-starter-zipkin</code>.</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>The following example shows how to do so for Gradle:</p>
+</div>
+<div class="listingblock secondary">
+<div class="title">Gradle</div>
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-groovy hljs" data-lang="groovy">dependencyManagement { <i class="conum" data-value="1"></i><b>(1)</b>
+    imports {
+        mavenBom "org.springframework.cloud:spring-cloud-dependencies:${releaseTrainVersion}"
+    }
+}
+
+dependencies { <i class="conum" data-value="2"></i><b>(2)</b>
+    compile "org.springframework.cloud:spring-cloud-starter-zipkin"
+}</code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>We recommend that you add the dependency management through the Spring BOM so that you need not manage versions yourself.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="2"></i><b>2</b></td>
+<td>Add the dependency to <code>spring-cloud-starter-zipkin</code>.</td>
+</tr>
+</table>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_sleuth_with_zipkin_over_rabbitmq_or_kafka"><a class="link" href="#_sleuth_with_zipkin_over_rabbitmq_or_kafka">Sleuth with Zipkin over RabbitMQ or Kafka</a></h4>
+<div class="paragraph">
+<p>If you want to use RabbitMQ or Kafka instead of HTTP, add the <code>spring-rabbit</code> or <code>spring-kafka</code> dependency.
+The default destination name is <code>zipkin</code>.</p>
+</div>
+<div class="paragraph">
+<p>If using Kafka, you must set the property <code>spring.zipkin.sender.type</code> property accordingly:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-yaml hljs" data-lang="yaml">spring.zipkin.sender.type: kafka</code></pre>
+</div>
+</div>
+<div class="admonitionblock caution">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-caution" title="Caution"></i>
+</td>
+<td class="content">
+<code>spring-cloud-sleuth-stream</code> is deprecated and incompatible with these destinations.
+</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>If you want Sleuth over RabbitMQ, add the <code>spring-cloud-starter-zipkin</code> and <code>spring-rabbit</code>
+dependencies.</p>
+</div>
+<div class="paragraph">
+<p>The following example shows how to do so for Gradle:</p>
+</div>
+<div class="listingblock primary">
+<div class="title">Maven</div>
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-xml hljs" data-lang="xml">&lt;dependencyManagement&gt; <i class="conum" data-value="1"></i><b>(1)</b>
+      &lt;dependencies&gt;
+          &lt;dependency&gt;
+              &lt;groupId&gt;org.springframework.cloud&lt;/groupId&gt;
+              &lt;artifactId&gt;spring-cloud-dependencies&lt;/artifactId&gt;
+              &lt;version&gt;${release.train.version}&lt;/version&gt;
+              &lt;type&gt;pom&lt;/type&gt;
+              &lt;scope&gt;import&lt;/scope&gt;
+          &lt;/dependency&gt;
+      &lt;/dependencies&gt;
+&lt;/dependencyManagement&gt;
+
+&lt;dependency&gt; <i class="conum" data-value="2"></i><b>(2)</b>
+    &lt;groupId&gt;org.springframework.cloud&lt;/groupId&gt;
+    &lt;artifactId&gt;spring-cloud-starter-zipkin&lt;/artifactId&gt;
+&lt;/dependency&gt;
+&lt;dependency&gt; <i class="conum" data-value="3"></i><b>(3)</b>
+    &lt;groupId&gt;org.springframework.amqp&lt;/groupId&gt;
+    &lt;artifactId&gt;spring-rabbit&lt;/artifactId&gt;
+&lt;/dependency&gt;</code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>We recommend that you add the dependency management through the Spring BOM so that you need not manage versions yourself.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="2"></i><b>2</b></td>
+<td>Add the dependency to <code>spring-cloud-starter-zipkin</code>. That way, all nested dependencies get downloaded.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="3"></i><b>3</b></td>
+<td>To automatically configure RabbitMQ, add the <code>spring-rabbit</code> dependency.</td>
+</tr>
+</table>
+</div>
+<div class="listingblock secondary">
+<div class="title">Gradle</div>
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-groovy hljs" data-lang="groovy">dependencyManagement { <i class="conum" data-value="1"></i><b>(1)</b>
+    imports {
+        mavenBom "org.springframework.cloud:spring-cloud-dependencies:${releaseTrainVersion}"
+    }
+}
+
+dependencies {
+    compile "org.springframework.cloud:spring-cloud-starter-zipkin" <i class="conum" data-value="2"></i><b>(2)</b>
+    compile "org.springframework.amqp:spring-rabbit" <i class="conum" data-value="3"></i><b>(3)</b>
+}</code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>We recommend that you add the dependency management through the Spring BOM so that you need not manage versions yourself.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="2"></i><b>2</b></td>
+<td>Add the dependency to <code>spring-cloud-starter-zipkin</code>. That way, all nested dependencies get downloaded.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="3"></i><b>3</b></td>
+<td>To automatically configure RabbitMQ, add the <code>spring-rabbit</code> dependency.</td>
+</tr>
+</table>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_overriding_the_auto_configuration_of_zipkin"><a class="link" href="#_overriding_the_auto_configuration_of_zipkin">Overriding the auto-configuration of Zipkin</a></h3>
+<div class="paragraph">
+<p>Spring Cloud Sleuth supports sending traces to multiple tracing systems as of version 2.1.0.
+In order to get this to work, every tracing system needs to have a <code>Reporter&lt;Span&gt;</code> and <code>Sender</code>.
+If you want to override the provided beans you need to give them a specific name.
+To do this you can use respectively <code>ZipkinAutoConfiguration.REPORTER_BEAN_NAME</code> and <code>ZipkinAutoConfiguration.SENDER_BEAN_NAME</code>.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">Unresolved directive in intro.adoc - include::https://raw.githubusercontent.com/spring-cloud/spring-cloud-sleuth/origin/master/spring-cloud-sleuth-zipkin/src/test/java/org/springframework/cloud/sleuth/zipkin2/ZipkinAutoConfigurationTests.java[tags=override_default_beans,indent=0]</code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_additional_resources"><a class="link" href="#_additional_resources">Additional Resources</a></h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>You can watch a video of <a href="https://twitter.com/reshmi9k">Reshmi Krishna</a> and <a href="https://twitter.com/mgrzejszczak">Marcin Grzejszczak</a> talking about Spring Cloud
+Sleuth and Zipkin <a href="https://content.pivotal.io/springone-platform-2017/distributed-tracing-latency-analysis-for-your-microservices-grzejszczak-krishna">by clicking here</a>.</p>
+</div>
+<div class="paragraph">
+<p>You can check different setups of Sleuth and Brave <a href="https://github.com/openzipkin/sleuth-webmvc-example">in the openzipkin/sleuth-webmvc-example repository</a>.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_features"><a class="link" href="#_features">Features</a></h2>
+<div class="sectionbody">
+<div class="ulist">
+<ul>
+<li>
+<p>Adds trace and span IDs to the Slf4J MDC, so you can extract all the logs from a given trace or span in a log aggregator, as shown in the following example logs:</p>
+<div class="listingblock">
+<div class="content">
+<pre>2016-02-02 15:30:57.902  INFO [bar,6bfd228dc00d216b,6bfd228dc00d216b,false] 23030 --- [nio-8081-exec-3] ...
+2016-02-02 15:30:58.372 ERROR [bar,6bfd228dc00d216b,6bfd228dc00d216b,false] 23030 --- [nio-8081-exec-3] ...
+2016-02-02 15:31:01.936  INFO [bar,46ab0d418373cbc9,46ab0d418373cbc9,false] 23030 --- [nio-8081-exec-4] ...</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Notice the <code>[appname,traceId,spanId,exportable]</code> entries from the MDC:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><strong><code>spanId</code></strong>: The ID of a specific operation that took place.</p>
+</li>
+<li>
+<p><strong><code>appname</code></strong>: The name of the application that logged the span.</p>
+</li>
+<li>
+<p><strong><code>traceId</code></strong>: The ID of the latency graph that contains the span.</p>
+</li>
+<li>
+<p><strong><code>exportable</code></strong>: Whether the log should be exported to Zipkin.
+When would you like the span not to be exportable?
+When you want to wrap some operation in a Span and have it written to the logs only.</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<p>Provides an abstraction over common distributed tracing data models: traces, spans (forming a DAG), annotations, and key-value annotations.
+Spring Cloud Sleuth is loosely based on HTrace but is compatible with Zipkin (Dapper).</p>
+</li>
+<li>
+<p>Sleuth records timing information to aid in latency analysis.
+By using sleuth, you can pinpoint causes of latency in your applications.</p>
+</li>
+<li>
+<p>Sleuth is written to not log too much and to not cause your production application to crash.
+To that end, Sleuth:</p>
+<div class="ulist">
+<ul>
+<li>
+<p>Propagates structural data about your call graph in-band and the rest out-of-band.</p>
+</li>
+<li>
+<p>Includes opinionated instrumentation of layers such as HTTP.</p>
+</li>
+<li>
+<p>Includes a sampling policy to manage volume.</p>
+</li>
+<li>
+<p>Can report to a Zipkin system for query and visualization.</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<p>Instruments common ingress and egress points from Spring applications (servlet filter, async endpoints, rest template, scheduled actions, message channels, Zuul filters, and Feign client).</p>
+</li>
+<li>
+<p>Sleuth includes default logic to join a trace across HTTP or messaging boundaries.
+For example, HTTP propagation works over Zipkin-compatible request headers.</p>
+</li>
+<li>
+<p>Sleuth can propagate context (also known as baggage) between processes.
+Consequently, if you set  a baggage element on a Span, it is sent downstream to other processes over either HTTP or messaging.</p>
+</li>
+<li>
+<p>Provides a way to create or continue spans and add tags and logs through annotations.</p>
+</li>
+<li>
+<p>If <code>spring-cloud-sleuth-zipkin</code> is on the classpath, the app generates and collects Zipkin-compatible traces.
+By default, it sends them over HTTP to a Zipkin server on localhost (port 9411).
+You can configure the location of the service by setting <code>spring.zipkin.baseUrl</code>.</p>
+<div class="ulist">
+<ul>
+<li>
+<p>If you depend on <code>spring-rabbit</code>, your app sends traces to a RabbitMQ broker instead of HTTP.</p>
+</li>
+<li>
+<p>If you depend on <code>spring-kafka</code>, and set <code>spring.zipkin.sender.type: kafka</code>, your app sends traces to a Kafka broker instead of HTTP.</p>
+</li>
+</ul>
+</div>
+</li>
+</ul>
+</div>
+<div class="admonitionblock caution">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-caution" title="Caution"></i>
+</td>
+<td class="content">
+<code>spring-cloud-sleuth-stream</code> is deprecated and should no longer be used.
+</td>
+</tr>
+</table>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>Spring Cloud Sleuth is <a href="https://opentracing.io/">OpenTracing</a> compatible.</p>
+</li>
+</ul>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+The SLF4J MDC is always set and logback users immediately see the trace and span IDs in logs per the example
+shown earlier.
+Other logging systems have to configure their own formatter to get the same result.
+The default is as follows:
+<code>logging.pattern.level</code> set to <code>%5p [${spring.zipkin.service.name:${spring.application.name:-}},%X{X-B3-TraceId:-},%X{X-B3-SpanId:-},%X{X-Span-Export:-}]</code>
+(this is a Spring Boot feature for logback users).
+If you do not use SLF4J, this pattern is NOT automatically applied.
+</td>
+</tr>
+</table>
+</div>
+<div class="sect2">
+<h3 id="_introduction_to_brave"><a class="link" href="#_introduction_to_brave">Introduction to Brave</a></h3>
+<div class="admonitionblock important">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-important" title="Important"></i>
+</td>
+<td class="content">
+Starting with version <code>2.0.0</code>, Spring Cloud Sleuth uses
+<a href="https://github.com/openzipkin/brave">Brave</a> as the tracing library.
+For your convenience, we embed part of the Brave&#8217;s docs here.
+</td>
+</tr>
+</table>
+</div>
+<div class="admonitionblock important">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-important" title="Important"></i>
+</td>
+<td class="content">
+In the vast majority of cases you need to just use the <code>Tracer</code>
+or <code>SpanCustomizer</code> beans from Brave that Sleuth provides. The documentation below contains
+a high overview of what Brave is and how it works.
+</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>Brave is a library used to capture and report latency information about distributed operations to Zipkin.
+Most users do not use Brave directly. They use libraries or frameworks rather than employ Brave on their behalf.</p>
+</div>
+<div class="paragraph">
+<p>This module includes a tracer that creates and joins spans that model the latency of potentially distributed work.
+It also includes libraries to propagate the trace context over network boundaries (for example, with HTTP headers).</p>
+</div>
+<div class="sect3">
+<h4 id="_tracing"><a class="link" href="#_tracing">Tracing</a></h4>
+<div class="paragraph">
+<p>Most importantly, you need a <code>brave.Tracer</code>, configured to <a href="https://github.com/openzipkin/zipkin-reporter-java">report to Zipkin</a>.</p>
+</div>
+<div class="paragraph">
+<p>The following example setup sends trace data (spans) to Zipkin over HTTP (as opposed to Kafka):</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">class MyClass {
+
+    private final Tracer tracer;
+
+    // Tracer will be autowired
+    MyClass(Tracer tracer) {
+        this.tracer = tracer;
+    }
+
+    void doSth() {
+        Span span = tracer.newTrace().name("encode").start();
+        // ...
+    }
+}</code></pre>
+</div>
+</div>
+<div class="admonitionblock important">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-important" title="Important"></i>
+</td>
+<td class="content">
+If your span contains a name longer than 50 chars, then that name is truncated to 50 chars.
+Your names have to be explicit and concrete.
+Big names lead to latency issues and sometimes even thrown exceptions.
+</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>The tracer creates and joins spans that model the latency of potentially distributed work.
+It can employ sampling to reduce overhead during the process, to reduce the amount of data sent to Zipkin, or both.</p>
+</div>
+<div class="paragraph">
+<p>Spans returned by a tracer report data to Zipkin when finished or do nothing if unsampled.
+After starting a span, you can annotate events of interest or add tags containing details or lookup keys.</p>
+</div>
+<div class="paragraph">
+<p>Spans have a context that includes trace identifiers that place the span at the correct spot in the tree representing the distributed operation.</p>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_local_tracing"><a class="link" href="#_local_tracing">Local Tracing</a></h4>
+<div class="paragraph">
+<p>When tracing code that never leaves your process, run it inside a scoped span.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">@Autowired Tracer tracer;
+
+// Start a new trace or a span within an existing trace representing an operation
+ScopedSpan span = tracer.startScopedSpan("encode");
+try {
+  // The span is in "scope" meaning downstream code such as loggers can see trace IDs
+  return encoder.encode();
+} catch (RuntimeException | Error e) {
+  span.error(e); // Unless you handle exceptions, you might not know the operation failed!
+  throw e;
+} finally {
+  span.finish(); // always finish the span
+}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>When you need more features, or finer control, use the <code>Span</code> type:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">@Autowired Tracer tracer;
+
+// Start a new trace or a span within an existing trace representing an operation
+Span span = tracer.nextSpan().name("encode").start();
+// Put the span in "scope" so that downstream code such as loggers can see trace IDs
+try (SpanInScope ws = tracer.withSpanInScope(span)) {
+  return encoder.encode();
+} catch (RuntimeException | Error e) {
+  span.error(e); // Unless you handle exceptions, you might not know the operation failed!
+  throw e;
+} finally {
+  span.finish(); // note the scope is independent of the span. Always finish a span.
+}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Both of the above examples report the exact same span on finish!</p>
+</div>
+<div class="paragraph">
+<p>In the above example, the span will be either a new root span or the
+next child in an existing trace.</p>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_customizing_spans"><a class="link" href="#_customizing_spans">Customizing Spans</a></h4>
+<div class="paragraph">
+<p>Once you have a span, you can add tags to it.
+The tags can be used as lookup keys or details.
+For example, you might add a tag with your runtime version, as shown in the following example:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">span.tag("clnt/finagle.version", "6.36.0");</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>When exposing the ability to customize spans to third parties, prefer <code>brave.SpanCustomizer</code> as opposed to <code>brave.Span</code>.
+The former is simpler to understand and test and does not tempt users with span lifecycle hooks.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">interface MyTraceCallback {
+  void request(Request request, SpanCustomizer customizer);
+}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Since <code>brave.Span</code> implements <code>brave.SpanCustomizer</code>, you can pass it to users, as shown in the following example:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">for (MyTraceCallback callback : userCallbacks) {
+  callback.request(request, span);
+}</code></pre>
+</div>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_implicitly_looking_up_the_current_span"><a class="link" href="#_implicitly_looking_up_the_current_span">Implicitly Looking up the Current Span</a></h4>
+<div class="paragraph">
+<p>Sometimes, you do not know if a trace is in progress or not, and you do not want users to do null checks.
+<code>brave.CurrentSpanCustomizer</code> handles this problem by adding data to any span that&#8217;s in progress or drops, as shown in the following example:</p>
+</div>
+<div class="paragraph">
+<p>Ex.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">// The user code can then inject this without a chance of it being null.
+@Autowired SpanCustomizer span;
+
+void userCode() {
+  span.annotate("tx.started");
+  ...
+}</code></pre>
+</div>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_rpc_tracing"><a class="link" href="#_rpc_tracing">RPC tracing</a></h4>
+<div class="admonitionblock tip">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-tip" title="Tip"></i>
+</td>
+<td class="content">
+Check for <a href="https://github.com/openzipkin/brave/tree/master/instrumentation">instrumentation written here</a> and <a href="https://zipkin.io/pages/existing_instrumentations.html">Zipkin&#8217;s list</a> before rolling your own RPC instrumentation.
+</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>RPC tracing is often done automatically by interceptors. Behind the scenes, they add tags and events that relate to their role in an RPC operation.</p>
+</div>
+<div class="paragraph">
+<p>The following example shows how to add a client span:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">@Autowired Tracing tracing;
+@Autowired Tracer tracer;
+
+// before you send a request, add metadata that describes the operation
+span = tracer.nextSpan().name(service + "/" + method).kind(CLIENT);
+span.tag("myrpc.version", "1.0.0");
+span.remoteServiceName("backend");
+span.remoteIpAndPort("172.3.4.1", 8108);
+
+// Add the trace context to the request, so it can be propagated in-band
+tracing.propagation().injector(Request::addHeader)
+                     .inject(span.context(), request);
+
+// when the request is scheduled, start the span
+span.start();
+
+// if there is an error, tag the span
+span.tag("error", error.getCode());
+// or if there is an exception
+span.error(exception);
+
+// when the response is complete, finish the span
+span.finish();</code></pre>
+</div>
+</div>
+<div class="sect4">
+<h5 id="_one_way_tracing"><a class="link" href="#_one_way_tracing">One-Way tracing</a></h5>
+<div class="paragraph">
+<p>Sometimes, you need to model an asynchronous operation where there is a
+request but no response. In normal RPC tracing, you use <code>span.finish()</code>
+to indicate that the response was received. In one-way tracing, you use
+<code>span.flush()</code> instead, as you do not expect a response.</p>
+</div>
+<div class="paragraph">
+<p>The following example shows how a client might model a one-way operation:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">@Autowired Tracing tracing;
+@Autowired Tracer tracer;
+
+// start a new span representing a client request
+oneWaySend = tracer.nextSpan().name(service + "/" + method).kind(CLIENT);
+
+// Add the trace context to the request, so it can be propagated in-band
+tracing.propagation().injector(Request::addHeader)
+                     .inject(oneWaySend.context(), request);
+
+// fire off the request asynchronously, totally dropping any response
+request.execute();
+
+// start the client side and flush instead of finish
+oneWaySend.start().flush();</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>The following example shows how a server might handle a one-way operation:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">@Autowired Tracing tracing;
+@Autowired Tracer tracer;
+
+// pull the context out of the incoming request
+extractor = tracing.propagation().extractor(Request::getHeader);
+
+// convert that context to a span which you can name and add tags to
+oneWayReceive = nextSpan(tracer, extractor.extract(request))
+    .name("process-request")
+    .kind(SERVER)
+    ... add tags etc.
+
+// start the server side and flush instead of finish
+oneWayReceive.start().flush();
+
+// you should not modify this span anymore as it is complete. However,
+// you can create children to represent follow-up work.
+next = tracer.newSpan(oneWayReceive.context()).name("step2").start();</code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_sampling"><a class="link" href="#_sampling">Sampling</a></h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Sampling may be employed to reduce the data collected and reported out of process.
+When a span is not sampled, it adds no overhead (a noop).</p>
+</div>
+<div class="paragraph">
+<p>Sampling is an up-front decision, meaning that the decision to report data is made at the first operation in a trace and that decision is propagated downstream.</p>
+</div>
+<div class="paragraph">
+<p>By default, a global sampler applies a single rate to all traced operations.
+<code>Tracer.Builder.sampler</code> controls this setting, and it defaults to tracing every request.</p>
+</div>
+<div class="sect2">
+<h3 id="_declarative_sampling"><a class="link" href="#_declarative_sampling">Declarative sampling</a></h3>
+<div class="paragraph">
+<p>Some applications need to sample based on the type or annotations of a java method.</p>
+</div>
+<div class="paragraph">
+<p>Most users use a framework interceptor to automate this sort of policy.
+The following example shows how that might work internally:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">@Autowired Tracer tracer;
+
+// derives a sample rate from an annotation on a java method
+DeclarativeSampler&lt;Traced&gt; sampler = DeclarativeSampler.create(Traced::sampleRate);
+
+@Around("@annotation(traced)")
+public Object traceThing(ProceedingJoinPoint pjp, Traced traced) throws Throwable {
+  // When there is no trace in progress, this decides using an annotation
+  Sampler decideUsingAnnotation = declarativeSampler.toSampler(traced);
+  Tracer tracer = tracer.withSampler(decideUsingAnnotation);
+
+  // This code looks the same as if there was no declarative override
+  ScopedSpan span = tracer.startScopedSpan(spanName(pjp));
+  try {
+    return pjp.proceed();
+  } catch (RuntimeException | Error e) {
+    span.error(e);
+    throw e;
+  } finally {
+    span.finish();
+  }
+}</code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_custom_sampling"><a class="link" href="#_custom_sampling">Custom sampling</a></h3>
+<div class="paragraph">
+<p>Depending on what the operation is, you may want to apply different policies.
+For example, you might not want to trace requests to static resources such as images, or you might want to trace all requests to a new api.</p>
+</div>
+<div class="paragraph">
+<p>Most users use a framework interceptor to automate this sort of policy.
+The following example shows how that might work internally:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">@Autowired Tracer tracer;
+@Autowired Sampler fallback;
+
+Span nextSpan(final Request input) {
+  Sampler requestBased = Sampler() {
+    @Override public boolean isSampled(long traceId) {
+      if (input.url().startsWith("/experimental")) {
+        return true;
+      } else if (input.url().startsWith("/static")) {
+        return false;
+      }
+      return fallback.isSampled(traceId);
+    }
+  };
+  return tracer.withSampler(requestBased).nextSpan();
+}</code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_sampling_in_spring_cloud_sleuth"><a class="link" href="#_sampling_in_spring_cloud_sleuth">Sampling in Spring Cloud Sleuth</a></h3>
+<div class="paragraph">
+<p>By default Spring Cloud Sleuth sets all spans to non-exportable.
+That means that traces appear in logs but not in any remote store.
+For testing the default is often enough, and it probably is all you need if you use only the logs (for example, with an ELK aggregator).
+If you export span data to Zipkin, there is also an <code>Sampler.ALWAYS_SAMPLE</code> setting that exports everything, <code>RateLimitingSampler</code> setting that samples X transactions per second (defaults to <code>1000</code>) or <code>ProbabilityBasedSampler</code> setting that samples a fixed fraction of spans.</p>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+The <code>RateLimitingSampler</code> is the default if you use <code>spring-cloud-sleuth-zipkin</code>.
+You can configure the rate limit by setting <code>spring.sleuth.sampler.rate</code>.
+</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>A sampler can be installed by creating a bean definition, as shown in the following example:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">Unresolved directive in spring-cloud-sleuth.adoc - include::https://raw.githubusercontent.com/spring-cloud/spring-cloud-sleuth/origin/master/spring-cloud-sleuth-core/src/test/java/org/springframework/cloud/sleuth/documentation/SpringCloudSleuthDocTests.java[tags=always_sampler,indent=0]</code></pre>
+</div>
+</div>
+<div class="admonitionblock tip">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-tip" title="Tip"></i>
+</td>
+<td class="content">
+You can set the HTTP header <code>X-B3-Flags</code> to <code>1</code>, or, when doing messaging, you can set the <code>spanFlags</code> header to <code>1</code>.
+Doing so forces the current span to be exportable regardless of the sampling decision.
+</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>In order to use the rate-limited sampler set the <code>spring.sleuth.sampler.rate</code> property to choose an amount of traces to accept on a per-second interval. The minimum number is 0 and the max is 2,147,483,647 (max int).</p>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_propagation"><a class="link" href="#_propagation">Propagation</a></h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Propagation is needed to ensure activities originating from the same root are collected together in the same trace.
+The most common propagation approach is to copy a trace context from a client by sending an RPC request to a server receiving it.</p>
+</div>
+<div class="paragraph">
+<p>For example, when a downstream HTTP call is made, its trace context is encoded as request headers and sent along with it, as shown in the following image:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code>   Client Span                                                Server Span
+┌──────────────────┐                                       ┌──────────────────┐
+│                  │                                       │                  │
+│   TraceContext   │           Http Request Headers        │   TraceContext   │
+│ ┌──────────────┐ │          ┌───────────────────┐        │ ┌──────────────┐ │
+│ │ TraceId      │ │          │ X─B3─TraceId      │        │ │ TraceId      │ │
+│ │              │ │          │                   │        │ │              │ │
+│ │ ParentSpanId │ │ Extract  │ X─B3─ParentSpanId │ Inject │ │ ParentSpanId │ │
+│ │              ├─┼─────────&gt;│                   ├────────┼&gt;│              │ │
+│ │ SpanId       │ │          │ X─B3─SpanId       │        │ │ SpanId       │ │
+│ │              │ │          │                   │        │ │              │ │
+│ │ Sampled      │ │          │ X─B3─Sampled      │        │ │ Sampled      │ │
+│ └──────────────┘ │          └───────────────────┘        │ └──────────────┘ │
+│                  │                                       │                  │
+└──────────────────┘                                       └──────────────────┘</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>The names above are from <a href="https://github.com/openzipkin/b3-propagation">B3 Propagation</a>, which is built-in to Brave and has implementations in many languages and frameworks.</p>
+</div>
+<div class="paragraph">
+<p>Most users use a framework interceptor to automate propagation.
+The next two examples show how that might work for a client and a server.</p>
+</div>
+<div class="paragraph">
+<p>The following example shows how client-side propagation might work:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">@Autowired Tracing tracing;
+
+// configure a function that injects a trace context into a request
+injector = tracing.propagation().injector(Request.Builder::addHeader);
+
+// before a request is sent, add the current span's context to it
+injector.inject(span.context(), request);</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>The following example shows how server-side propagation might work:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">@Autowired Tracing tracing;
+@Autowired Tracer tracer;
+
+// configure a function that extracts the trace context from a request
+extractor = tracing.propagation().extractor(Request::getHeader);
+
+// when a server receives a request, it joins or starts a new trace
+span = tracer.nextSpan(extractor.extract(request));</code></pre>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_propagating_extra_fields"><a class="link" href="#_propagating_extra_fields">Propagating extra fields</a></h3>
+<div class="paragraph">
+<p>Sometimes you need to propagate extra fields, such as a request ID or an alternate trace context.
+For example, if you are in a Cloud Foundry environment, you might want to pass the request ID, as shown in the following example:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">// when you initialize the builder, define the extra field you want to propagate
+Tracing.newBuilder().propagationFactory(
+  ExtraFieldPropagation.newFactory(B3Propagation.FACTORY, "x-vcap-request-id")
+);
+
+// later, you can tag that request ID or use it in log correlation
+requestId = ExtraFieldPropagation.get("x-vcap-request-id");</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>You may also need to propagate a trace context that you are not using.
+For example, you may be in an Amazon Web Services environment but not be reporting data to X-Ray.
+To ensure X-Ray can co-exist correctly, pass-through its tracing header, as shown in the following example:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">tracingBuilder.propagationFactory(
+  ExtraFieldPropagation.newFactory(B3Propagation.FACTORY, "x-amzn-trace-id")
+);</code></pre>
+</div>
+</div>
+<div class="admonitionblock tip">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-tip" title="Tip"></i>
+</td>
+<td class="content">
+In Spring Cloud Sleuth all elements of the tracing builder <code>Tracing.newBuilder()</code>
+are defined as beans. So if you want to pass a custom <code>PropagationFactory</code>, it&#8217;s enough
+for you to create a bean of that type and we will set it in the <code>Tracing</code> bean.
+</td>
+</tr>
+</table>
+</div>
+<div class="sect3">
+<h4 id="prefixed-fields"><a class="link" href="#prefixed-fields">Prefixed fields</a></h4>
+<div class="paragraph">
+<p>If they follow a common pattern, you can also prefix fields.
+The following example shows how to propagate <code>x-vcap-request-id</code> the field as-is but send the <code>country-code</code> and <code>user-id</code> fields on the wire as <code>x-baggage-country-code</code> and <code>x-baggage-user-id</code>, respectively:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">Tracing.newBuilder().propagationFactory(
+  ExtraFieldPropagation.newFactoryBuilder(B3Propagation.FACTORY)
+                       .addField("x-vcap-request-id")
+                       .addPrefixedFields("x-baggage-", Arrays.asList("country-code", "user-id"))
+                       .build()
+);</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Later, you can call the following code to affect the country code of the current trace context:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">ExtraFieldPropagation.set("x-country-code", "FO");
+String countryCode = ExtraFieldPropagation.get("x-country-code");</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Alternatively, if you have a reference to a trace context, you can use it explicitly, as shown in the following example:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">ExtraFieldPropagation.set(span.context(), "x-country-code", "FO");
+String countryCode = ExtraFieldPropagation.get(span.context(), "x-country-code");</code></pre>
+</div>
+</div>
+<div class="admonitionblock important">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-important" title="Important"></i>
+</td>
+<td class="content">
+A difference from previous versions of Sleuth is that, with Brave, you must pass the list of baggage keys.
+There are two properties to achieve this.
+With the <code>spring.sleuth.baggage-keys</code>, you set keys that get prefixed with <code>baggage-</code> for HTTP calls and <code>baggage_</code> for messaging.
+You can also use the <code>spring.sleuth.propagation-keys</code> property to pass a list of prefixed keys that are whitelisted without any prefix.
+Notice that there&#8217;s no <code>x-</code> in front of the header keys.
+</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>In order to automatically set the baggage values to Slf4j&#8217;s MDC, you have to set
+the <code>spring.sleuth.log.slf4j.whitelisted-mdc-keys</code> property with a list of whitelisted
+baggage and propagation keys. E.g. <code>spring.sleuth.log.slf4j.whitelisted-mdc-keys=foo</code> will set the value of the <code>foo</code> baggage into MDC.</p>
+</div>
+<div class="admonitionblock important">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-important" title="Important"></i>
+</td>
+<td class="content">
+Remember that adding entries to MDC can drastically decrease the performance of your application!
+</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>If you want to add the baggage entries as tags, to make it possible to search for spans via the baggage entries, you can set the value of
+<code>spring.sleuth.propagation.tag.whitelisted-keys</code> with a list of whitelisted baggage keys. To disable the feature you have to pass the <code>spring.sleuth.propagation.tag.enabled=false</code> property.</p>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_extracting_a_propagated_context"><a class="link" href="#_extracting_a_propagated_context">Extracting a Propagated Context</a></h4>
+<div class="paragraph">
+<p>The <code>TraceContext.Extractor&lt;C&gt;</code> reads trace identifiers and sampling status from an incoming request or message.
+The carrier is usually a request object or headers.</p>
+</div>
+<div class="paragraph">
+<p>This utility is used in standard instrumentation (such as <code>HttpServerHandler</code>) but can also be used for custom RPC or messaging code.</p>
+</div>
+<div class="paragraph">
+<p><code>TraceContextOrSamplingFlags</code> is usually used only with <code>Tracer.nextSpan(extracted)</code>, unless you are
+sharing span IDs between a client and a server.</p>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_sharing_span_ids_between_client_and_server"><a class="link" href="#_sharing_span_ids_between_client_and_server">Sharing span IDs between Client and Server</a></h4>
+<div class="paragraph">
+<p>A normal instrumentation pattern is to create a span representing the server side of an RPC.
+<code>Extractor.extract</code> might return a complete trace context when applied to an incoming client request.
+<code>Tracer.joinSpan</code> attempts to continue this trace, using the same span ID if supported or creating a child span
+if not. When the span ID is shared, the reported data includes a flag saying so.</p>
+</div>
+<div class="paragraph">
+<p>The following image shows an example of B3 propagation:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code>                              ┌───────────────────┐      ┌───────────────────┐
+ Incoming Headers             │   TraceContext    │      │   TraceContext    │
+┌───────────────────┐(extract)│ ┌───────────────┐ │(join)│ ┌───────────────┐ │
+│ X─B3-TraceId      │─────────┼─┼&gt; TraceId      │ │──────┼─┼&gt; TraceId      │ │
+│                   │         │ │               │ │      │ │               │ │
+│ X─B3-ParentSpanId │─────────┼─┼&gt; ParentSpanId │ │──────┼─┼&gt; ParentSpanId │ │
+│                   │         │ │               │ │      │ │               │ │
+│ X─B3-SpanId       │─────────┼─┼&gt; SpanId       │ │──────┼─┼&gt; SpanId       │ │
+└───────────────────┘         │ │               │ │      │ │               │ │
+                              │ │               │ │      │ │  Shared: true │ │
+                              │ └───────────────┘ │      │ └───────────────┘ │
+                              └───────────────────┘      └───────────────────┘</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Some propagation systems forward only the parent span ID, detected when <code>Propagation.Factory.supportsJoin() == false</code>.
+In this case, a new span ID is always provisioned, and the incoming context determines the parent ID.</p>
+</div>
+<div class="paragraph">
+<p>The following image shows an example of AWS propagation:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code>                              ┌───────────────────┐      ┌───────────────────┐
+ x-amzn-trace-id              │   TraceContext    │      │   TraceContext    │
+┌───────────────────┐(extract)│ ┌───────────────┐ │(join)│ ┌───────────────┐ │
+│ Root              │─────────┼─┼&gt; TraceId      │ │──────┼─┼&gt; TraceId      │ │
+│                   │         │ │               │ │      │ │               │ │
+│ Parent            │─────────┼─┼&gt; SpanId       │ │──────┼─┼&gt; ParentSpanId │ │
+└───────────────────┘         │ └───────────────┘ │      │ │               │ │
+                              └───────────────────┘      │ │  SpanId: New  │ │
+                                                         │ └───────────────┘ │
+                                                         └───────────────────┘</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Note: Some span reporters do not support sharing span IDs.
+For example, if you set <code>Tracing.Builder.spanReporter(amazonXrayOrGoogleStackdrive)</code>, you should disable join by setting <code>Tracing.Builder.supportsJoin(false)</code>.
+Doing so forces a new child span on <code>Tracer.joinSpan()</code>.</p>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_implementing_propagation"><a class="link" href="#_implementing_propagation">Implementing Propagation</a></h4>
+<div class="paragraph">
+<p><code>TraceContext.Extractor&lt;C&gt;</code> is implemented by a <code>Propagation.Factory</code> plugin.
+Internally, this code creates the union type, <code>TraceContextOrSamplingFlags</code>, with one of the following:
+* <code>TraceContext</code> if trace and span IDs were present.
+* <code>TraceIdContext</code> if a trace ID was present but span IDs were not present.
+* <code>SamplingFlags</code> if no identifiers were present.</p>
+</div>
+<div class="paragraph">
+<p>Some <code>Propagation</code> implementations carry extra data from the point of extraction (for example, reading incoming headers) to injection (for example, writing outgoing headers).
+For example, it might carry a request ID.
+When implementations have extra data, they handle it as follows:
+* If a <code>TraceContext</code> were extracted, add the extra data as <code>TraceContext.extra()</code>.
+* Otherwise, add it as <code>TraceContextOrSamplingFlags.extra()</code>, which <code>Tracer.nextSpan</code> handles.</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_current_tracing_component"><a class="link" href="#_current_tracing_component">Current Tracing Component</a></h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Brave supports a "<code>current tracing component</code>" concept, which should only be used when you have no other way to get a reference.
+This was made for JDBC connections, as they often initialize prior to the tracing component.</p>
+</div>
+<div class="paragraph">
+<p>The most recent tracing component instantiated is available through <code>Tracing.current()</code>.
+You can also use <code>Tracing.currentTracer()</code> to get only the tracer.
+If you use either of these methods, do not cache the result.
+Instead, look them up each time you need them.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_current_span"><a class="link" href="#_current_span">Current Span</a></h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Brave supports a "<code>current span</code>" concept which represents the in-flight operation.
+You can use <code>Tracer.currentSpan()</code> to add custom tags to a span and <code>Tracer.nextSpan()</code> to create a child of whatever is in-flight.</p>
+</div>
+<div class="admonitionblock important">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-important" title="Important"></i>
+</td>
+<td class="content">
+In Sleuth, you can autowire the <code>Tracer</code> bean to retrieve the current span via
+<code>tracer.currentSpan()</code> method. To retrieve the current context just call
+<code>tracer.currentSpan().context()</code>. To get the current trace id as String
+you can use the <code>traceIdString()</code> method like this: <code>tracer.currentSpan().context().traceIdString()</code>.
+</td>
+</tr>
+</table>
+</div>
+<div class="sect2">
+<h3 id="_setting_a_span_in_scope_manually"><a class="link" href="#_setting_a_span_in_scope_manually">Setting a span in scope manually</a></h3>
+<div class="paragraph">
+<p>When writing new instrumentation, it is important to place a span you created in scope as the current span.
+Not only does doing so let users access it with <code>Tracer.currentSpan()</code>, but it also allows customizations such as SLF4J MDC to see the current trace IDs.</p>
+</div>
+<div class="paragraph">
+<p><code>Tracer.withSpanInScope(Span)</code> facilitates this and is most conveniently employed by using the try-with-resources idiom.
+Whenever external code might be invoked (such as proceeding an interceptor or otherwise), place the span in scope, as shown in the following example:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">@Autowired Tracer tracer;
+
+try (SpanInScope ws = tracer.withSpanInScope(span)) {
+  return inboundRequest.invoke();
+} finally { // note the scope is independent of the span
+  span.finish();
+}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>In edge cases, you may need to clear the current span temporarily (for example, launching a task that should not be associated with the current request). To do tso, pass null to <code>withSpanInScope</code>, as shown in the following example:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">@Autowired Tracer tracer;
+
+try (SpanInScope cleared = tracer.withSpanInScope(null)) {
+  startBackgroundThread();
+}</code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_instrumentation"><a class="link" href="#_instrumentation">Instrumentation</a></h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Spring Cloud Sleuth automatically instruments all your Spring applications, so you should not have to do anything to activate it.
+The instrumentation is added by using a variety of technologies according to the stack that is available. For example, for a servlet web application, we use a <code>Filter</code>, and, for Spring Integration, we use <code>ChannelInterceptors</code>.</p>
+</div>
+<div class="paragraph">
+<p>You can customize the keys used in span tags.
+To limit the volume of span data, an HTTP request is, by default, tagged only with a handful of metadata, such as the status code, the host, and the URL.
+You can add request headers by configuring <code>spring.sleuth.keys.http.headers</code> (a list of header names).</p>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+Tags are collected and exported only if there is a <code>Sampler</code> that allows it. By default, there is no such <code>Sampler</code>, to ensure that there is no danger of accidentally collecting too much data without configuring something).
+</td>
+</tr>
+</table>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_span_lifecycle"><a class="link" href="#_span_lifecycle">Span lifecycle</a></h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>You can do the following operations on the Span by means of <code>brave.Tracer</code>:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><a href="#creating-and-finishing-spans">start</a>: When you start a span, its name is assigned and the start timestamp is recorded.</p>
+</li>
+<li>
+<p><a href="#creating-and-finishing-spans">close</a>: The span gets finished (the end time of the span is recorded) and, if the span is sampled, it is eligible for collection (for example, to Zipkin).</p>
+</li>
+<li>
+<p><a href="#continuing-spans">continue</a>: A new instance of span is created.
+It is a copy of the one that it continues.</p>
+</li>
+<li>
+<p><a href="#continuing-spans">detach</a>: The span does not get stopped or closed.
+It only gets removed from the current thread.</p>
+</li>
+<li>
+<p><a href="#creating-spans-with-explicit-parent">create with explicit parent</a>: You can create a new span and set an explicit parent for it.</p>
+</li>
+</ul>
+</div>
+<div class="admonitionblock tip">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-tip" title="Tip"></i>
+</td>
+<td class="content">
+Spring Cloud Sleuth creates an instance of <code>Tracer</code> for you. In order to use it, you can autowire it.
+</td>
+</tr>
+</table>
+</div>
+<div class="sect2">
+<h3 id="creating-and-finishing-spans"><a class="link" href="#creating-and-finishing-spans">Creating and finishing spans</a></h3>
+<div class="paragraph">
+<p>You can manually create spans by using the <code>Tracer</code>, as shown in the following example:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">Unresolved directive in spring-cloud-sleuth.adoc - include::https://raw.githubusercontent.com/spring-cloud/spring-cloud-sleuth/origin/master/spring-cloud-sleuth-core/src/test/java/org/springframework/cloud/sleuth/documentation/SpringCloudSleuthDocTests.java[tags=manual_span_creation,indent=0]</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>In the preceding example, we could see how to create a new instance of the span.
+If there is already a span in this thread, it becomes the parent of the new span.</p>
+</div>
+<div class="admonitionblock important">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-important" title="Important"></i>
+</td>
+<td class="content">
+Always clean after you create a span. Also, always finish any span that you want to send to Zipkin.
+</td>
+</tr>
+</table>
+</div>
+<div class="admonitionblock important">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-important" title="Important"></i>
+</td>
+<td class="content">
+If your span contains a name greater than 50 chars, that name is truncated to 50 chars.
+Your names have to be explicit and concrete. Big names lead to latency issues and sometimes even exceptions.
+</td>
+</tr>
+</table>
+</div>
+</div>
+<div class="sect2">
+<h3 id="continuing-spans"><a class="link" href="#continuing-spans">Continuing Spans</a></h3>
+<div class="paragraph">
+<p>Sometimes, you do not want to create a new span but you want to continue one. An example of such a
+situation might be as follows:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>AOP</strong>: If there was already a span created before an aspect was reached, you might not want to create a new span.</p>
+</li>
+<li>
+<p><strong>Hystrix</strong>: Executing a Hystrix command is most likely a logical part of the current processing.
+It is in fact merely a technical implementation detail that you would not necessarily want to reflect in tracing as a separate being.</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>To continue a span, you can use <code>brave.Tracer</code>, as shown in the following example:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">Unresolved directive in spring-cloud-sleuth.adoc - include::https://raw.githubusercontent.com/spring-cloud/spring-cloud-sleuth/origin/master/spring-cloud-sleuth-core/src/test/java/org/springframework/cloud/sleuth/documentation/SpringCloudSleuthDocTests.java[tags=manual_span_continuation,indent=0]</code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="creating-spans-with-explicit-parent"><a class="link" href="#creating-spans-with-explicit-parent">Creating a Span with an explicit Parent</a></h3>
+<div class="paragraph">
+<p>You might want to start a new span and provide an explicit parent of that span.
+Assume that the parent of a span is in one thread and you want to start a new span in another thread.
+In Brave, whenever you call <code>nextSpan()</code>, it creates a span in reference to the span that is currently in scope.
+You can put the span in scope and then call <code>nextSpan()</code>, as shown in the following example:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">Unresolved directive in spring-cloud-sleuth.adoc - include::https://raw.githubusercontent.com/spring-cloud/spring-cloud-sleuth/origin/master/spring-cloud-sleuth-core/src/test/java/org/springframework/cloud/sleuth/documentation/SpringCloudSleuthDocTests.java[tags=manual_span_joining,indent=0]</code></pre>
+</div>
+</div>
+<div class="admonitionblock important">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-important" title="Important"></i>
+</td>
+<td class="content">
+After creating such a span, you must finish it. Otherwise it is not reported (for example, to Zipkin).
+</td>
+</tr>
+</table>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_naming_spans"><a class="link" href="#_naming_spans">Naming spans</a></h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Picking a span name is not a trivial task. A span name should depict an operation name.
+The name should be low cardinality, so it should not include identifiers.</p>
+</div>
+<div class="paragraph">
+<p>Since there is a lot of instrumentation going on, some span names are artificial:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><code>controller-method-name</code> when received by a Controller with a method name of <code>controllerMethodName</code></p>
+</li>
+<li>
+<p><code>async</code> for asynchronous operations done with wrapped <code>Callable</code> and <code>Runnable</code> interfaces.</p>
+</li>
+<li>
+<p>Methods annotated with <code>@Scheduled</code> return the simple name of the class.</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>Fortunately, for asynchronous processing, you can provide explicit naming.</p>
+</div>
+<div class="sect2">
+<h3 id="_spanname_annotation"><a class="link" href="#_spanname_annotation"><code>@SpanName</code> Annotation</a></h3>
+<div class="paragraph">
+<p>You can name the span explicitly by using the <code>@SpanName</code> annotation, as shown in the following example:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">Unresolved directive in spring-cloud-sleuth.adoc - include::https://raw.githubusercontent.com/spring-cloud/spring-cloud-sleuth/origin/master/spring-cloud-sleuth-core/src/test/java/org/springframework/cloud/sleuth/documentation/SpringCloudSleuthDocTests.java[tags=span_name_annotation,indent=0]</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>In this case, when processed in the following manner, the span is named <code>calculateTax</code>:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">Unresolved directive in spring-cloud-sleuth.adoc - include::https://raw.githubusercontent.com/spring-cloud/spring-cloud-sleuth/origin/master/spring-cloud-sleuth-core/src/test/java/org/springframework/cloud/sleuth/documentation/SpringCloudSleuthDocTests.java[tags=span_name_annotated_runnable_execution,indent=0]</code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_tostring_method"><a class="link" href="#_tostring_method"><code>toString()</code> method</a></h3>
+<div class="paragraph">
+<p>It is pretty rare to create separate classes for <code>Runnable</code> or <code>Callable</code>.
+Typically, one creates an anonymous instance of those classes.
+You cannot annotate such classes.
+To overcome that limitation, if there is no <code>@SpanName</code> annotation present, we check whether the class has a custom implementation of the <code>toString()</code> method.</p>
+</div>
+<div class="paragraph">
+<p>Running such code leads to creating a span named <code>calculateTax</code>, as shown in the following example:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">Unresolved directive in spring-cloud-sleuth.adoc - include::https://raw.githubusercontent.com/spring-cloud/spring-cloud-sleuth/origin/master/spring-cloud-sleuth-core/src/test/java/org/springframework/cloud/sleuth/documentation/SpringCloudSleuthDocTests.java[tags=span_name_to_string_runnable_execution,indent=0]</code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_managing_spans_with_annotations"><a class="link" href="#_managing_spans_with_annotations">Managing Spans with Annotations</a></h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>You can manage spans with a variety of annotations.</p>
+</div>
+<div class="sect2">
+<h3 id="_rationale"><a class="link" href="#_rationale">Rationale</a></h3>
+<div class="paragraph">
+<p>There are a number of good reasons to manage spans with annotations, including:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>API-agnostic means to collaborate with a span. Use of annotations lets users add to a span with no library dependency on a span api.
+Doing so lets Sleuth change its core API to create less impact to user code.</p>
+</li>
+<li>
+<p>Reduced surface area for basic span operations. Without this feature, you must use the span api, which has lifecycle commands that could be used incorrectly.
+By only exposing scope, tag, and log functionality, you can collaborate without accidentally breaking span lifecycle.</p>
+</li>
+<li>
+<p>Collaboration with runtime generated code. With libraries such as Spring Data and Feign, the implementations of interfaces are generated at runtime.
+Consequently, span wrapping of objects was tedious.
+Now you can provide annotations over interfaces and the arguments of those interfaces.</p>
+</li>
+</ul>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_creating_new_spans"><a class="link" href="#_creating_new_spans">Creating New Spans</a></h3>
+<div class="paragraph">
+<p>If you do not want to create local spans manually, you can use the <code>@NewSpan</code> annotation.
+Also, we provide the <code>@SpanTag</code> annotation to add tags in an automated fashion.</p>
+</div>
+<div class="paragraph">
+<p>Now we can consider some examples of usage.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">Unresolved directive in spring-cloud-sleuth.adoc - include::https://raw.githubusercontent.com/spring-cloud/spring-cloud-sleuth/origin/master/spring-cloud-sleuth-core/src/test/java/org/springframework/cloud/sleuth/annotation/SleuthSpanCreatorAspectTests.java[tags=annotated_method,indent=0]</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Annotating the method without any parameter leads to creating a new span whose name equals the annotated method name.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">Unresolved directive in spring-cloud-sleuth.adoc - include::https://raw.githubusercontent.com/spring-cloud/spring-cloud-sleuth/origin/master/spring-cloud-sleuth-core/src/test/java/org/springframework/cloud/sleuth/annotation/SleuthSpanCreatorAspectTests.java[tags=custom_name_on_annotated_method,indent=0]</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>If you provide the value in the annotation (either directly or by setting the <code>name</code> parameter), the created span has the provided value as the name.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">// method declaration
+Unresolved directive in spring-cloud-sleuth.adoc - include::https://raw.githubusercontent.com/spring-cloud/spring-cloud-sleuth/origin/master/spring-cloud-sleuth-core/src/test/java/org/springframework/cloud/sleuth/annotation/SleuthSpanCreatorAspectTests.java[tags=custom_name_and_tag_on_annotated_method,indent=0]
+
+// and method execution
+Unresolved directive in spring-cloud-sleuth.adoc - include::https://raw.githubusercontent.com/spring-cloud/spring-cloud-sleuth/origin/master/spring-cloud-sleuth-core/src/test/java/org/springframework/cloud/sleuth/annotation/SleuthSpanCreatorAspectTests.java[tags=execution,indent=0]</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>You can combine both the name and a tag. Let&#8217;s focus on the latter.
+In this case, the value of the annotated method&#8217;s parameter runtime value becomes the value of the tag.
+In our sample, the tag key is <code>testTag</code>, and the tag value is <code>test</code>.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">Unresolved directive in spring-cloud-sleuth.adoc - include::https://raw.githubusercontent.com/spring-cloud/spring-cloud-sleuth/origin/master/spring-cloud-sleuth-core/src/test/java/org/springframework/cloud/sleuth/annotation/SleuthSpanCreatorAspectTests.java[tags=name_on_implementation,indent=0]</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>You can place the <code>@NewSpan</code> annotation on both the class and an interface.
+If you override the interface&#8217;s method and provide a different value for the <code>@NewSpan</code> annotation, the most
+concrete one wins (in this case <code>customNameOnTestMethod3</code> is set).</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_continuing_spans"><a class="link" href="#_continuing_spans">Continuing Spans</a></h3>
+<div class="paragraph">
+<p>If you want to add tags and annotations to an existing span, you can use the <code>@ContinueSpan</code> annotation, as shown in the following example:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">// method declaration
+Unresolved directive in spring-cloud-sleuth.adoc - include::https://raw.githubusercontent.com/spring-cloud/spring-cloud-sleuth/origin/master/spring-cloud-sleuth-core/src/test/java/org/springframework/cloud/sleuth/annotation/SleuthSpanCreatorAspectTests.java[tags=continue_span,indent=0]
+
+// method execution
+Unresolved directive in spring-cloud-sleuth.adoc - include::https://raw.githubusercontent.com/spring-cloud/spring-cloud-sleuth/origin/master/spring-cloud-sleuth-core/src/test/java/org/springframework/cloud/sleuth/annotation/SleuthSpanCreatorAspectTests.java[tags=continue_span_execution,indent=0]</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>(Note that, in contrast with the <code>@NewSpan</code> annotation ,you can also add logs with the <code>log</code> parameter.)</p>
+</div>
+<div class="paragraph">
+<p>That way, the span gets continued and:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>Log entries named <code>testMethod11.before</code> and <code>testMethod11.after</code> are created.</p>
+</li>
+<li>
+<p>If an exception is thrown, a log entry named <code>testMethod11.afterFailure</code> is also created.</p>
+</li>
+<li>
+<p>A tag with a key of <code>testTag11</code> and a value of <code>test</code> is created.</p>
+</li>
+</ul>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_advanced_tag_setting"><a class="link" href="#_advanced_tag_setting">Advanced Tag Setting</a></h3>
+<div class="paragraph">
+<p>There are 3 different ways to add tags to a span. All of them are controlled by the <code>SpanTag</code> annotation.
+The precedence is as follows:</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>Try with a bean of <code>TagValueResolver</code> type and a provided name.</p>
+</li>
+<li>
+<p>If the bean name has not been provided, try to evaluate an expression.
+We search for a <code>TagValueExpressionResolver</code> bean.
+The default implementation uses SPEL expression resolution.
+<strong>IMPORTANT</strong> You can only reference properties from the SPEL expression. Method execution is not allowed due to security constraints.</p>
+</li>
+<li>
+<p>If we do not find any expression to evaluate, return the <code>toString()</code> value of the parameter.</p>
+</li>
+</ol>
+</div>
+<div class="sect3">
+<h4 id="_custom_extractor"><a class="link" href="#_custom_extractor">Custom extractor</a></h4>
+<div class="paragraph">
+<p>The value of the tag for the following method is computed by an implementation of <code>TagValueResolver</code> interface.
+Its class name has to be passed as the value of the <code>resolver</code> attribute.</p>
+</div>
+<div class="paragraph">
+<p>Consider the following annotated method:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">Unresolved directive in spring-cloud-sleuth.adoc - include::https://raw.githubusercontent.com/spring-cloud/spring-cloud-sleuth/origin/master/spring-cloud-sleuth-core/src/test/java/org/springframework/cloud/sleuth/annotation/SpanTagAnnotationHandlerTests.java[tags=resolver_bean,indent=0]</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Now further consider the following <code>TagValueResolver</code> bean implementation:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">Unresolved directive in spring-cloud-sleuth.adoc - include::https://raw.githubusercontent.com/spring-cloud/spring-cloud-sleuth/origin/master/spring-cloud-sleuth-core/src/test/java/org/springframework/cloud/sleuth/annotation/SpanTagAnnotationHandlerTests.java[tags=custom_resolver,indent=0]</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>The two preceding examples lead to setting a tag value equal to <code>Value from myCustomTagValueResolver</code>.</p>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_resolving_expressions_for_a_value"><a class="link" href="#_resolving_expressions_for_a_value">Resolving Expressions for a Value</a></h4>
+<div class="paragraph">
+<p>Consider the following annotated method:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">Unresolved directive in spring-cloud-sleuth.adoc - include::https://raw.githubusercontent.com/spring-cloud/spring-cloud-sleuth/origin/master/spring-cloud-sleuth-core/src/test/java/org/springframework/cloud/sleuth/annotation/SpanTagAnnotationHandlerTests.java[tags=spel,indent=0]</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>No custom implementation of a <code>TagValueExpressionResolver</code> leads to evaluation of the SPEL expression, and a tag with a value of <code>4 characters</code> is set on the span.
+If you want to use some other expression resolution mechanism, you can create your own implementation of the bean.</p>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_using_the_tostring_method"><a class="link" href="#_using_the_tostring_method">Using the <code>toString()</code> method</a></h4>
+<div class="paragraph">
+<p>Consider the following annotated method:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">Unresolved directive in spring-cloud-sleuth.adoc - include::https://raw.githubusercontent.com/spring-cloud/spring-cloud-sleuth/origin/master/spring-cloud-sleuth-core/src/test/java/org/springframework/cloud/sleuth/annotation/SpanTagAnnotationHandlerTests.java[tags=toString,indent=0]</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Running the preceding method with a value of <code>15</code> leads to setting a tag with a String value of <code>"15"</code>.</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_customizations"><a class="link" href="#_customizations">Customizations</a></h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="_http"><a class="link" href="#_http">HTTP</a></h3>
+<div class="paragraph">
+<p>If a customization of client / server parsing of the HTTP related spans is required,
+just register a bean of type <code>brave.http.HttpClientParser</code> or
+<code>brave.http.HttpServerParser</code>. If client /server sampling is required, just
+register a bean of type <code>brave.http.HttpSampler</code> and name the bean
+ <code>sleuthClientSampler</code> for client sampler and <code>sleuthServerSampler</code> for server sampler.
+ For your convenience the <code>@ClientSampler</code> and <code>@ServerSampler</code>
+ annotations can be used to inject the proper beans or to
+ reference the bean names via their static String <code>NAME</code> fields.</p>
+</div>
+<div class="paragraph">
+<p>Check out Brave&#8217;s code to see an example of how to make a path-based sampler
+<a href="https://github.com/openzipkin/brave/tree/master/instrumentation/http#sampling-policy" class="bare">https://github.com/openzipkin/brave/tree/master/instrumentation/http#sampling-policy</a></p>
+</div>
+<div class="paragraph">
+<p>If you want to completely rewrite the <code>HttpTracing</code> bean you can use the <code>SkipPatternProvider</code>
+interface to retrieve the URL <code>Pattern</code> for spans that should be not sampled. Below you can see
+an example of usage of <code>SkipPatternProvider</code> inside a server side, <code>HttpSampler</code>.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">@Configuration
+class Config {
+Unresolved directive in spring-cloud-sleuth.adoc - include::https://raw.githubusercontent.com/spring-cloud/spring-cloud-sleuth/origin/master/tests/spring-cloud-sleuth-instrumentation-mvc-tests/src/test/java/org/springframework/cloud/sleuth/instrument/web/TraceFilterWebIntegrationTests.java[tags=custom_server_sampler,indent=2]
+}</code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_tracingfilter"><a class="link" href="#_tracingfilter"><code>TracingFilter</code></a></h3>
+<div class="paragraph">
+<p>You can also modify the behavior of the <code>TracingFilter</code>, which is the component that is responsible for processing the input HTTP request and adding tags basing on the HTTP response.
+You can customize the tags or modify the response headers by registering your own instance of the <code>TracingFilter</code> bean.</p>
+</div>
+<div class="paragraph">
+<p>In the following example, we register the <code>TracingFilter</code> bean, add the <code>ZIPKIN-TRACE-ID</code> response header containing the current Span&#8217;s trace id, and add a tag with key <code>custom</code> and a value <code>tag</code> to the span.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">Unresolved directive in spring-cloud-sleuth.adoc - include::https://raw.githubusercontent.com/spring-cloud/spring-cloud-sleuth/origin/master/tests/spring-cloud-sleuth-instrumentation-mvc-tests/src/test/java/org/springframework/cloud/sleuth/instrument/web/TraceFilterIntegrationTests.java[tags=response_headers,indent=0]</code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_custom_service_name"><a class="link" href="#_custom_service_name">Custom service name</a></h3>
+<div class="paragraph">
+<p>By default, Sleuth assumes that, when you send a span to Zipkin, you want the span&#8217;s service name to be equal to the value of the <code>spring.application.name</code> property.
+That is not always the case, though.
+There are situations in which you want to explicitly provide a different service name for all spans coming from your application.
+To achieve that, you can pass the following property to your application to override that value (the example is for a service named <code>myService</code>):</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-yaml hljs" data-lang="yaml">spring.zipkin.service.name: myService</code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_customization_of_reported_spans"><a class="link" href="#_customization_of_reported_spans">Customization of Reported Spans</a></h3>
+<div class="paragraph">
+<p>Before reporting spans (for example, to Zipkin) you may want to modify that span in some way.
+You can do so by using the <code>FinishedSpanHandler</code> interface.</p>
+</div>
+<div class="paragraph">
+<p>In Sleuth, we generate spans with a fixed name.
+Some users want to modify the name depending on values of tags.
+You can implement the <code>FinishedSpanHandler</code> interface to alter that name.</p>
+</div>
+<div class="paragraph">
+<p>The following example shows how to register two beans that implement <code>FinishedSpanHandler</code>:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">Unresolved directive in spring-cloud-sleuth.adoc - include::https://raw.githubusercontent.com/spring-cloud/spring-cloud-sleuth/origin/master//spring-cloud-sleuth-core/src/test/java/org/springframework/cloud/sleuth/FinishedSpanHandlerTests.java[tags=finishedSpanHandler,indent=0]</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>The preceding example results in changing the name of the reported span to <code>foo bar</code>, just before it gets reported (for example, to Zipkin).</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_host_locator"><a class="link" href="#_host_locator">Host Locator</a></h3>
+<div class="admonitionblock important">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-important" title="Important"></i>
+</td>
+<td class="content">
+This section is about defining <strong>host</strong> from service discovery.
+It is <strong>NOT</strong> about finding Zipkin through service discovery.
+</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>To define the host that corresponds to a particular span, we need to resolve the host name and port.
+The default approach is to take these values from server properties.
+If those are not set, we try to retrieve the host name from the network interfaces.</p>
+</div>
+<div class="paragraph">
+<p>If you have the discovery client enabled and prefer to retrieve the host address from the registered instance in a service registry, you have to set the <code>spring.zipkin.locator.discovery.enabled</code> property (it is applicable for both HTTP-based and Stream-based span reporting), as follows:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-yaml hljs" data-lang="yaml">spring.zipkin.locator.discovery.enabled: true</code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_sending_spans_to_zipkin"><a class="link" href="#_sending_spans_to_zipkin">Sending Spans to Zipkin</a></h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>By default, if you add <code>spring-cloud-starter-zipkin</code> as a dependency to your project, when the span is closed, it is sent to Zipkin over HTTP.
+The communication is asynchronous.
+You can configure the URL by setting the <code>spring.zipkin.baseUrl</code> property, as follows:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-yaml hljs" data-lang="yaml">spring.zipkin.baseUrl: https://192.168.99.100:9411/</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>If you want to find Zipkin through service discovery, you can pass the Zipkin&#8217;s service ID inside the URL, as shown in the following example for <code>zipkinserver</code> service ID:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-yaml hljs" data-lang="yaml">spring.zipkin.baseUrl: https://zipkinserver/</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>To disable this feature just set <code>spring.zipkin.discoveryClientEnabled</code> to `false.</p>
+</div>
+<div class="paragraph">
+<p>When the Discovery Client feature is enabled, Sleuth uses
+<code>LoadBalancerClient</code> to find the URL of the Zipkin Server. It means
+that you can set up the load balancing configuration e.g. via Ribbon.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-yaml hljs" data-lang="yaml">zipkinserver:
+  ribbon:
+    ListOfServers: host1,host2</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>If you have web, rabbit, or kafka together on the classpath, you might need to pick the means by which you would like to send spans to zipkin.
+To do so, set <code>web</code>, <code>rabbit</code>, or <code>kafka</code> to the <code>spring.zipkin.sender.type</code> property.
+The following example shows setting the sender type for <code>web</code>:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-yaml hljs" data-lang="yaml">spring.zipkin.sender.type: web</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>To customize the <code>RestTemplate</code> that sends spans to Zipkin via HTTP, you can register
+the <code>ZipkinRestTemplateCustomizer</code> bean.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">@Configuration
+class MyConfig {
+	@Bean ZipkinRestTemplateCustomizer myCustomizer() {
+		return new ZipkinRestTemplateCustomizer() {
+			@Override
+			void customize(RestTemplate restTemplate) {
+				// customize the RestTemplate
+			}
+		};
+	}
+}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>If, however, you would like to control the full process of creating the <code>RestTemplate</code>
+object, you will have to create a bean of <code>zipkin2.reporter.Sender</code> type.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">	@Bean Sender myRestTemplateSender(ZipkinProperties zipkin,
+			ZipkinRestTemplateCustomizer zipkinRestTemplateCustomizer) {
+		RestTemplate restTemplate = mySuperCustomRestTemplate();
+		zipkinRestTemplateCustomizer.customize(restTemplate);
+		return myCustomSender(zipkin, restTemplate);
+	}</code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_zipkin_stream_span_consumer"><a class="link" href="#_zipkin_stream_span_consumer">Zipkin Stream Span Consumer</a></h2>
+<div class="sectionbody">
+<div class="admonitionblock important">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-important" title="Important"></i>
+</td>
+<td class="content">
+We recommend using Zipkin&#8217;s native support for message-based span sending.
+Starting from the Edgware release, the Zipkin Stream server is deprecated.
+In the Finchley release, it got removed.
+</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>If for some reason you need to create the deprecated Stream Zipkin server, see the <a href="https://cloud.spring.io/spring-cloud-static/Dalston.SR4/multi/multi__span_data_as_messages.html#_zipkin_consumer">Dalston Documentation</a>.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_integrations"><a class="link" href="#_integrations">Integrations</a></h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="_opentracing"><a class="link" href="#_opentracing">OpenTracing</a></h3>
+<div class="paragraph">
+<p>Spring Cloud Sleuth is compatible with <a href="https://opentracing.io/">OpenTracing</a>.
+If you have OpenTracing on the classpath, we automatically register the OpenTracing <code>Tracer</code> bean.
+If you wish to disable this, set <code>spring.sleuth.opentracing.enabled</code> to <code>false</code></p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_runnable_and_callable"><a class="link" href="#_runnable_and_callable">Runnable and Callable</a></h3>
+<div class="paragraph">
+<p>If you wrap your logic in <code>Runnable</code> or <code>Callable</code>, you can wrap those classes in their Sleuth representative, as shown in the following example for <code>Runnable</code>:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">Unresolved directive in spring-cloud-sleuth.adoc - include::https://raw.githubusercontent.com/spring-cloud/spring-cloud-sleuth/origin/master/spring-cloud-sleuth-core/src/test/java/org/springframework/cloud/sleuth/documentation/SpringCloudSleuthDocTests.java[tags=trace_runnable,indent=0]</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>The following example shows how to do so for <code>Callable</code>:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">Unresolved directive in spring-cloud-sleuth.adoc - include::https://raw.githubusercontent.com/spring-cloud/spring-cloud-sleuth/origin/master/spring-cloud-sleuth-core/src/test/java/org/springframework/cloud/sleuth/documentation/SpringCloudSleuthDocTests.java[tags=trace_callable,indent=0]</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>That way, you ensure that a new span is created and closed for each execution.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_hystrix"><a class="link" href="#_hystrix">Hystrix</a></h3>
+<div class="sect3">
+<h4 id="_custom_concurrency_strategy"><a class="link" href="#_custom_concurrency_strategy">Custom Concurrency Strategy</a></h4>
+<div class="paragraph">
+<p>We register a custom <a href="https://github.com/Netflix/Hystrix/wiki/Plugins#concurrencystrategy"><code>HystrixConcurrencyStrategy</code></a> called <code>TraceCallable</code> that wraps all <code>Callable</code> instances in their Sleuth representative.
+The strategy either starts or continues a span, depending on whether tracing was already going on before the Hystrix command was called.
+To disable the custom Hystrix Concurrency Strategy, set the <code>spring.sleuth.hystrix.strategy.enabled</code> to <code>false</code>.</p>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_manual_command_setting"><a class="link" href="#_manual_command_setting">Manual Command setting</a></h4>
+<div class="paragraph">
+<p>Assume that you have the following <code>HystrixCommand</code>:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">Unresolved directive in spring-cloud-sleuth.adoc - include::https://raw.githubusercontent.com/spring-cloud/spring-cloud-sleuth/origin/master/spring-cloud-sleuth-core/src/test/java/org/springframework/cloud/sleuth/instrument/hystrix/TraceCommandTests.java[tags=hystrix_command,indent=0]</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>To pass the tracing information, you have to wrap the same logic in the Sleuth version of the <code>HystrixCommand</code>, which is called
+<code>TraceCommand</code>, as shown in the following example:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">Unresolved directive in spring-cloud-sleuth.adoc - include::https://raw.githubusercontent.com/spring-cloud/spring-cloud-sleuth/origin/master/spring-cloud-sleuth-core/src/test/java/org/springframework/cloud/sleuth/instrument/hystrix/TraceCommandTests.java[tags=trace_hystrix_command,indent=0]</code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_rxjava"><a class="link" href="#_rxjava">RxJava</a></h3>
+<div class="paragraph">
+<p>We registering a custom <a href="https://github.com/ReactiveX/RxJava/wiki/Plugins#rxjavaschedulershook"><code>RxJavaSchedulersHook</code></a> that wraps all <code>Action0</code> instances in their Sleuth representative, which is called <code>TraceAction</code>.
+The hook either starts or continues a span, depending on whether tracing was already going on before the Action was scheduled.
+To disable the custom <code>RxJavaSchedulersHook</code>, set the <code>spring.sleuth.rxjava.schedulers.hook.enabled</code> to <code>false</code>.</p>
+</div>
+<div class="paragraph">
+<p>You can define a list of regular expressions for thread names for which you do not want spans to be created.
+To do so, provide a comma-separated list of regular expressions in the <code>spring.sleuth.rxjava.schedulers.ignoredthreads</code> property.</p>
+</div>
+<div class="admonitionblock important">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-important" title="Important"></i>
+</td>
+<td class="content">
+The suggest approach to reactive programming and Sleuth is to use
+the Reactor support.
+</td>
+</tr>
+</table>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_http_integration"><a class="link" href="#_http_integration">HTTP integration</a></h3>
+<div class="paragraph">
+<p>Features from this section can be disabled by setting the <code>spring.sleuth.web.enabled</code> property with value equal to <code>false</code>.</p>
+</div>
+<div class="sect3">
+<h4 id="_http_filter"><a class="link" href="#_http_filter">HTTP Filter</a></h4>
+<div class="paragraph">
+<p>Through the <code>TracingFilter</code>, all sampled incoming requests result in creation of a Span.
+That Span&#8217;s name is <code>http:</code> + the path to which the request was sent.
+For example, if the request was sent to <code>/this/that</code> then the name will be <code>http:/this/that</code>.
+You can configure which URIs you would like to skip by setting the <code>spring.sleuth.web.skipPattern</code> property.
+If you have <code>ManagementServerProperties</code> on classpath, its value of <code>contextPath</code> gets appended to the provided skip pattern.
+If you want to reuse the Sleuth&#8217;s default skip patterns and just append your own, pass those patterns by using the <code>spring.sleuth.web.additionalSkipPattern</code>.</p>
+</div>
+<div class="paragraph">
+<p>By default, all the spring boot actuator endpoints are automatically added to the skip pattern.
+If you want to disable this behaviour set <code>spring.sleuth.web.ignore-auto-configured-skip-patterns</code>
+to <code>true</code>.</p>
+</div>
+<div class="paragraph">
+<p>To change the order of tracing filter registration, please set the
+<code>spring.sleuth.web.filter-order</code> property.</p>
+</div>
+<div class="paragraph">
+<p>To disable the filter that logs uncaught exceptions you can disable the
+<code>spring.sleuth.web.exception-throwing-filter-enabled</code> property.</p>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_handlerinterceptor"><a class="link" href="#_handlerinterceptor">HandlerInterceptor</a></h4>
+<div class="paragraph">
+<p>Since we want the span names to be precise, we use a <code>TraceHandlerInterceptor</code> that either wraps an existing <code>HandlerInterceptor</code> or is added directly to the list of existing <code>HandlerInterceptors</code>.
+The <code>TraceHandlerInterceptor</code> adds a special request attribute to the given <code>HttpServletRequest</code>.
+If the the <code>TracingFilter</code> does not see this attribute, it creates a "<code>fallback</code>" span, which is an additional span created on the server side so that the trace is presented properly in the UI.
+If that happens, there is probably missing instrumentation.
+In that case, please file an issue in Spring Cloud Sleuth.</p>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_async_servlet_support"><a class="link" href="#_async_servlet_support">Async Servlet support</a></h4>
+<div class="paragraph">
+<p>If your controller returns a <code>Callable</code> or a <code>WebAsyncTask</code>, Spring Cloud Sleuth continues the existing span instead of creating a new one.</p>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_webflux_support"><a class="link" href="#_webflux_support">WebFlux support</a></h4>
+<div class="paragraph">
+<p>Through <code>TraceWebFilter</code>, all sampled incoming requests result in creation of a Span.
+That Span&#8217;s name is <code>http:</code> + the path to which the request was sent.
+For example, if the request was sent to <code>/this/that</code>, the name is <code>http:/this/that</code>.
+You can configure which URIs you would like to skip by using the <code>spring.sleuth.web.skipPattern</code> property.
+If you have <code>ManagementServerProperties</code> on the classpath, its value of <code>contextPath</code> gets appended to the provided skip pattern.
+If you want to reuse Sleuth&#8217;s default skip patterns and append your own, pass those patterns by using the <code>spring.sleuth.web.additionalSkipPattern</code>.</p>
+</div>
+<div class="paragraph">
+<p>To change the order of tracing filter registration, please set the
+<code>spring.sleuth.web.filter-order</code> property.</p>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_dubbo_rpc_support"><a class="link" href="#_dubbo_rpc_support">Dubbo RPC support</a></h4>
+<div class="paragraph">
+<p>Via the integration with Brave, Spring Cloud Sleuth supports <a href="https://dubbo.apache.org/">Dubbo</a>.
+It&#8217;s enough to add the <code>brave-instrumentation-dubbo-rpc</code> dependency:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-xml hljs" data-lang="xml">&lt;dependency&gt;
+    &lt;groupId&gt;io.zipkin.brave&lt;/groupId&gt;
+    &lt;artifactId&gt;brave-instrumentation-dubbo-rpc&lt;/artifactId&gt;
+&lt;/dependency&gt;</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>You need to also set a <code>dubbo.properties</code> file with the following contents:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-properties hljs" data-lang="properties">dubbo.provider.filter=tracing
+dubbo.consumer.filter=tracing</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>You can read more about Brave - Dubbo integration <a href="https://github.com/openzipkin/brave/tree/master/instrumentation/dubbo-rpc">here</a>.
+An example of Spring Cloud Sleuth and Dubbo can be found <a href="https://github.com/openzipkin/sleuth-webmvc-example/compare/add-dubbo-tracing">here</a>.</p>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_http_client_integration"><a class="link" href="#_http_client_integration">HTTP Client Integration</a></h3>
+<div class="sect3">
+<h4 id="_synchronous_rest_template"><a class="link" href="#_synchronous_rest_template">Synchronous Rest Template</a></h4>
+<div class="paragraph">
+<p>We inject a <code>RestTemplate</code> interceptor to ensure that all the tracing information is passed to the requests.
+Each time a call is made, a new Span is created.
+It gets closed upon receiving the response.
+To block the synchronous <code>RestTemplate</code> features, set <code>spring.sleuth.web.client.enabled</code> to <code>false</code>.</p>
+</div>
+<div class="admonitionblock important">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-important" title="Important"></i>
+</td>
+<td class="content">
+You have to register <code>RestTemplate</code> as a bean so that the interceptors get injected.
+If you create a <code>RestTemplate</code> instance with a <code>new</code> keyword, the instrumentation does NOT work.
+</td>
+</tr>
+</table>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_asynchronous_rest_template"><a class="link" href="#_asynchronous_rest_template">Asynchronous Rest Template</a></h4>
+<div class="admonitionblock important">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-important" title="Important"></i>
+</td>
+<td class="content">
+Starting with Sleuth <code>2.0.0</code>, we no longer register a bean of <code>AsyncRestTemplate</code> type.
+It is up to you to create such a bean.
+Then we instrument it.
+</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>To block the <code>AsyncRestTemplate</code> features, set <code>spring.sleuth.web.async.client.enabled</code> to <code>false</code>.
+To disable creation of the default <code>TraceAsyncClientHttpRequestFactoryWrapper</code>, set <code>spring.sleuth.web.async.client.factory.enabled</code>
+to <code>false</code>.
+If you do not want to create <code>AsyncRestClient</code> at all, set <code>spring.sleuth.web.async.client.template.enabled</code> to <code>false</code>.</p>
+</div>
+<div class="sect4">
+<h5 id="_multiple_asynchronous_rest_templates"><a class="link" href="#_multiple_asynchronous_rest_templates">Multiple Asynchronous Rest Templates</a></h5>
+<div class="paragraph">
+<p>Sometimes you need to use multiple implementations of the Asynchronous Rest Template.
+In the following snippet, you can see an example of how to set up such a custom <code>AsyncRestTemplate</code>:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">Unresolved directive in spring-cloud-sleuth.adoc - include::https://raw.githubusercontent.com/spring-cloud/spring-cloud-sleuth/origin/master/spring-cloud-sleuth-core/src/test/java/org/springframework/cloud/sleuth/instrument/web/client/MultipleAsyncRestTemplateTests.java[tags=custom_async_rest_template,indent=0]</code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_webclient"><a class="link" href="#_webclient"><code>WebClient</code></a></h4>
+<div class="paragraph">
+<p>We inject a <code>ExchangeFilterFunction</code> implementation that creates a span and, through on-success and on-error callbacks, takes care of closing client-side spans.</p>
+</div>
+<div class="paragraph">
+<p>To block this feature, set <code>spring.sleuth.web.client.enabled</code> to <code>false</code>.</p>
+</div>
+<div class="admonitionblock important">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-important" title="Important"></i>
+</td>
+<td class="content">
+You have to register <code>WebClient</code> as a bean so that the tracing instrumentation gets applied.
+If you create a <code>WebClient</code> instance with a <code>new</code> keyword,  the instrumentation does NOT work.
+</td>
+</tr>
+</table>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_traverson"><a class="link" href="#_traverson">Traverson</a></h4>
+<div class="paragraph">
+<p>If you use the <a href="https://docs.spring.io/spring-hateoas/docs/current/reference/html/#client.traverson">Traverson</a> library, you can inject a <code>RestTemplate</code> as a bean into your Traverson object.
+Since <code>RestTemplate</code> is already intercepted, you get full support for tracing in your client. The following pseudo code
+shows how to do that:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">@Autowired RestTemplate restTemplate;
+
+Traverson traverson = new Traverson(URI.create("https://some/address"),
+    MediaType.APPLICATION_JSON, MediaType.APPLICATION_JSON_UTF8).setRestOperations(restTemplate);
+// use Traverson</code></pre>
+</div>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_apache_httpclientbuilder_and_httpasyncclientbuilder"><a class="link" href="#_apache_httpclientbuilder_and_httpasyncclientbuilder">Apache <code>HttpClientBuilder</code> and <code>HttpAsyncClientBuilder</code></a></h4>
+<div class="paragraph">
+<p>We instrument the <code>HttpClientBuilder</code> and <code>HttpAsyncClientBuilder</code> so that
+tracing context gets injected to the sent requests.</p>
+</div>
+<div class="paragraph">
+<p>To block these features, set <code>spring.sleuth.web.client.enabled</code> to <code>false</code>.</p>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_netty_httpclient"><a class="link" href="#_netty_httpclient">Netty <code>HttpClient</code></a></h4>
+<div class="paragraph">
+<p>We instrument the Netty&#8217;s <code>HttpClient</code>.</p>
+</div>
+<div class="paragraph">
+<p>To block this feature, set <code>spring.sleuth.web.client.enabled</code> to <code>false</code>.</p>
+</div>
+<div class="admonitionblock important">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-important" title="Important"></i>
+</td>
+<td class="content">
+You have to register <code>HttpClient</code> as a bean so that the instrumentation happens.
+If you create a <code>HttpClient</code> instance with a <code>new</code> keyword, the instrumentation does NOT work.
+</td>
+</tr>
+</table>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_userinforesttemplatecustomizer"><a class="link" href="#_userinforesttemplatecustomizer"><code>UserInfoRestTemplateCustomizer</code></a></h4>
+<div class="paragraph">
+<p>We instrument the Spring Security&#8217;s <code>UserInfoRestTemplateCustomizer</code>.</p>
+</div>
+<div class="paragraph">
+<p>To block this feature, set <code>spring.sleuth.web.client.enabled</code> to <code>false</code>.</p>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_feign"><a class="link" href="#_feign">Feign</a></h3>
+<div class="paragraph">
+<p>By default, Spring Cloud Sleuth provides integration with Feign through <code>TraceFeignClientAutoConfiguration</code>.
+You can disable it entirely by setting <code>spring.sleuth.feign.enabled</code> to <code>false</code>.
+If you do so, no Feign-related instrumentation take place.</p>
+</div>
+<div class="paragraph">
+<p>Part of Feign instrumentation is done through a <code>FeignBeanPostProcessor</code>.
+You can disable it by setting <code>spring.sleuth.feign.processor.enabled</code> to <code>false</code>.
+If you set it to <code>false</code>, Spring Cloud Sleuth does not instrument any of your custom Feign components.
+However, all the default instrumentation is still there.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_grpc"><a class="link" href="#_grpc">gRPC</a></h3>
+<div class="paragraph">
+<p>Spring Cloud Sleuth provides instrumentation for <a href="https://grpc.io/">gRPC</a> through <code>TraceGrpcAutoConfiguration</code>. You can disable it entirely by setting <code>spring.sleuth.grpc.enabled</code> to <code>false</code>.</p>
+</div>
+<div class="sect3">
+<h4 id="_variant_1"><a class="link" href="#_variant_1">Variant 1</a></h4>
+<div class="sect4">
+<h5 id="_dependencies"><a class="link" href="#_dependencies">Dependencies</a></h5>
+<div class="admonitionblock important">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-important" title="Important"></i>
+</td>
+<td class="content">
+The gRPC integration relies on two external libraries to instrument clients and servers and both of those libraries must be on the class path to enable the instrumentation.
+</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>Maven:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code>		&lt;dependency&gt;
+			&lt;groupId&gt;io.github.lognet&lt;/groupId&gt;
+			&lt;artifactId&gt;grpc-spring-boot-starter&lt;/artifactId&gt;
+		&lt;/dependency&gt;
+		&lt;dependency&gt;
+			&lt;groupId&gt;io.zipkin.brave&lt;/groupId&gt;
+			&lt;artifactId&gt;brave-instrumentation-grpc&lt;/artifactId&gt;
+		&lt;/dependency&gt;</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Gradle:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code>    compile("io.github.lognet:grpc-spring-boot-starter")
+    compile("io.zipkin.brave:brave-instrumentation-grpc")</code></pre>
+</div>
+</div>
+</div>
+<div class="sect4">
+<h5 id="_server_instrumentation"><a class="link" href="#_server_instrumentation">Server Instrumentation</a></h5>
+<div class="paragraph">
+<p>Spring Cloud Sleuth leverages grpc-spring-boot-starter to register Brave&#8217;s gRPC server interceptor with all services annotated with <code>@GRpcService</code>.</p>
+</div>
+</div>
+<div class="sect4">
+<h5 id="_client_instrumentation"><a class="link" href="#_client_instrumentation">Client Instrumentation</a></h5>
+<div class="paragraph">
+<p>gRPC clients leverage a <code>ManagedChannelBuilder</code> to construct a <code>ManagedChannel</code> used to communicate to the gRPC server. The native <code>ManagedChannelBuilder</code> provides static methods as entry points for construction of <code>ManagedChannel</code> instances, however, this mechanism is outside the influence of the Spring application context.</p>
+</div>
+<div class="admonitionblock important">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-important" title="Important"></i>
+</td>
+<td class="content">
+Spring Cloud Sleuth provides a <code>SpringAwareManagedChannelBuilder</code> that can be customized through the Spring application context and injected by gRPC clients. <strong>This builder must be used when creating <code>ManagedChannel</code> instances.</strong>
+</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>Sleuth creates a <code>TracingManagedChannelBuilderCustomizer</code> which inject Brave&#8217;s client interceptor into the <code>SpringAwareManagedChannelBuilder</code>.</p>
+</div>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_variant_2"><a class="link" href="#_variant_2">Variant 2</a></h4>
+<div class="paragraph">
+<p><a href="https://github.com/yidongnan/grpc-spring-boot-starter">Grpc Spring Boot Starter</a> automatically detects the presence of Spring Cloud Sleuth and brave&#8217;s instrumentation for gRPC and registers the necessary client and/or server tooling.</p>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_asynchronous_communication"><a class="link" href="#_asynchronous_communication">Asynchronous Communication</a></h3>
+<div class="sect3">
+<h4 id="_async_annotated_methods"><a class="link" href="#_async_annotated_methods"><code>@Async</code> Annotated methods</a></h4>
+<div class="paragraph">
+<p>In Spring Cloud Sleuth, we instrument async-related components so that the tracing information is passed between threads.
+You can disable this behavior by setting the value of <code>spring.sleuth.async.enabled</code> to <code>false</code>.</p>
+</div>
+<div class="paragraph">
+<p>If you annotate your method with <code>@Async</code>, we automatically create a new Span with the following characteristics:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>If the method is annotated with <code>@SpanName</code>, the value of the annotation is the Span&#8217;s name.</p>
+</li>
+<li>
+<p>If the method is not annotated with <code>@SpanName</code>, the Span name is the annotated method name.</p>
+</li>
+<li>
+<p>The span is tagged with the method&#8217;s class name and method name.</p>
+</li>
+</ul>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_scheduled_annotated_methods"><a class="link" href="#_scheduled_annotated_methods"><code>@Scheduled</code> Annotated Methods</a></h4>
+<div class="paragraph">
+<p>In Spring Cloud Sleuth, we instrument scheduled method execution so that the tracing information is passed between threads.
+You can disable this behavior by setting the value of <code>spring.sleuth.scheduled.enabled</code> to <code>false</code>.</p>
+</div>
+<div class="paragraph">
+<p>If you annotate your method with <code>@Scheduled</code>, we automatically create a new span with the following characteristics:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>The span name is the annotated method name.</p>
+</li>
+<li>
+<p>The span is tagged with the method&#8217;s class name and method name.</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>If you want to skip span creation for some <code>@Scheduled</code> annotated classes, you can set the <code>spring.sleuth.scheduled.skipPattern</code> with a regular expression that matches the fully qualified name of the <code>@Scheduled</code> annotated class.
+If you use <code>spring-cloud-sleuth-stream</code> and <code>spring-cloud-netflix-hystrix-stream</code> together, a span is created for each Hystrix metrics and sent to Zipkin.
+This behavior may be annoying. That&#8217;s why, by default, <code>spring.sleuth.scheduled.skipPattern=org.springframework.cloud.netflix.hystrix.stream.HystrixStreamTask</code>.</p>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_executor_executorservice_and_scheduledexecutorservice"><a class="link" href="#_executor_executorservice_and_scheduledexecutorservice">Executor, ExecutorService, and ScheduledExecutorService</a></h4>
+<div class="paragraph">
+<p>We provide <code>LazyTraceExecutor</code>, <code>TraceableExecutorService</code>, and <code>TraceableScheduledExecutorService</code>. Those implementations create spans each time a new task is submitted, invoked, or scheduled.</p>
+</div>
+<div class="paragraph">
+<p>The following example shows how to pass tracing information with <code>TraceableExecutorService</code> when working with <code>CompletableFuture</code>:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">Unresolved directive in spring-cloud-sleuth.adoc - include::https://raw.githubusercontent.com/spring-cloud/spring-cloud-sleuth/origin/master/spring-cloud-sleuth-core/src/test/java/org/springframework/cloud/sleuth/instrument/async/TraceableExecutorServiceTests.java[tags=completablefuture,indent=0]</code></pre>
+</div>
+</div>
+<div class="admonitionblock important">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-important" title="Important"></i>
+</td>
+<td class="content">
+Sleuth does not work with <code>parallelStream()</code> out of the box.
+If you want to have the tracing information propagated through the stream, you have to use the approach with <code>supplyAsync(...)</code>, as shown earlier.
+</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>If there are beans that implement the <code>Executor</code> interface that you would like
+to exclude from span creation, you can use the <code>spring.sleuth.async.ignored-beans</code>
+property where you can provide a list of bean names.</p>
+</div>
+<div class="sect4">
+<h5 id="_customization_of_executors"><a class="link" href="#_customization_of_executors">Customization of Executors</a></h5>
+<div class="paragraph">
+<p>Sometimes, you need to set up a custom instance of the <code>AsyncExecutor</code>.
+The following example shows how to set up such a custom <code>Executor</code>:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">Unresolved directive in spring-cloud-sleuth.adoc - include::https://raw.githubusercontent.com/spring-cloud/spring-cloud-sleuth/origin/master/spring-cloud-sleuth-core/src/test/java/org/springframework/cloud/sleuth/instrument/web/client/MultipleAsyncRestTemplateTests.java[tags=custom_executor,indent=0]</code></pre>
+</div>
+</div>
+<div class="admonitionblock tip">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-tip" title="Tip"></i>
+</td>
+<td class="content">
+To ensure that your configuration gets post processed, remember
+to add the <code>@Role(BeanDefinition.ROLE_INFRASTRUCTURE)</code> on your
+<code>@Configuration</code> class
+</td>
+</tr>
+</table>
+</div>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_messaging"><a class="link" href="#_messaging">Messaging</a></h3>
+<div class="paragraph">
+<p>Features from this section can be disabled by setting the <code>spring.sleuth.messaging.enabled</code> property with value equal to <code>false</code>.</p>
+</div>
+<div class="sect3">
+<h4 id="_spring_integration_and_spring_cloud_stream"><a class="link" href="#_spring_integration_and_spring_cloud_stream">Spring Integration and Spring Cloud Stream</a></h4>
+<div class="paragraph">
+<p>Spring Cloud Sleuth integrates with <a href="https://projects.spring.io/spring-integration/">Spring Integration</a>.
+It creates spans for publish and subscribe events.
+To disable Spring Integration instrumentation, set <code>spring.sleuth.integration.enabled</code> to <code>false</code>.</p>
+</div>
+<div class="paragraph">
+<p>You can provide the <code>spring.sleuth.integration.patterns</code> pattern to explicitly provide the names of channels that you want to include for tracing.
+By default, all channels but <code>hystrixStreamOutput</code> channel are included.</p>
+</div>
+<div class="admonitionblock important">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-important" title="Important"></i>
+</td>
+<td class="content">
+When using the <code>Executor</code> to build a Spring Integration <code>IntegrationFlow</code>, you must use the untraced version of the <code>Executor</code>.
+Decorating the Spring Integration Executor Channel with <code>TraceableExecutorService</code> causes the spans to be improperly closed.
+</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>If you want to customize the way tracing context is read from and written to message headers,
+it&#8217;s enough for you to register beans of types:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><code>Propagation.Setter&lt;MessageHeaderAccessor, String&gt;</code> - for writing headers to the message</p>
+</li>
+<li>
+<p><code>Propagation.Getter&lt;MessageHeaderAccessor, String&gt;</code> - for reading headers from the message</p>
+</li>
+</ul>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_spring_rabbitmq"><a class="link" href="#_spring_rabbitmq">Spring RabbitMq</a></h4>
+<div class="paragraph">
+<p>We instrument the <code>RabbitTemplate</code> so that tracing headers get injected
+into the message.</p>
+</div>
+<div class="paragraph">
+<p>To block this feature, set <code>spring.sleuth.messaging.rabbit.enabled</code> to <code>false</code>.</p>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_spring_kafka"><a class="link" href="#_spring_kafka">Spring Kafka</a></h4>
+<div class="paragraph">
+<p>We instrument the Spring Kafka&#8217;s <code>ProducerFactory</code> and <code>ConsumerFactory</code>
+so that tracing headers get injected into the created Spring Kafka&#8217;s
+<code>Producer</code> and <code>Consumer</code>.</p>
+</div>
+<div class="paragraph">
+<p>To block this feature, set <code>spring.sleuth.messaging.kafka.enabled</code> to <code>false</code>.</p>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_spring_kafka_streams"><a class="link" href="#_spring_kafka_streams">Spring Kafka Streams</a></h4>
+<div class="paragraph">
+<p>We instrument the <code>KafkaStreams</code> <code>KafkaClientSupplier</code> so that tracing headers
+get injected into the <code>Producer</code> and <code>Consumer`s. A `KafkaStreamsTracing</code> bean
+allows for further instrumentation through additional <code>TransformerSupplier</code> and
+<code>ProcessorSupplier</code> methods.</p>
+</div>
+<div class="paragraph">
+<p>To block this feature, set <code>spring.sleuth.messaging.kafka.streams.enabled</code> to <code>false</code>.</p>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_spring_jms"><a class="link" href="#_spring_jms">Spring JMS</a></h4>
+<div class="paragraph">
+<p>We instrument the <code>JmsTemplate</code> so that tracing headers get injected
+into the message. We also support <code>@JmsListener</code> annotated methods on the consumer side.</p>
+</div>
+<div class="paragraph">
+<p>To block this feature, set <code>spring.sleuth.messaging.jms.enabled</code> to <code>false</code>.</p>
+</div>
+<div class="admonitionblock important">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-important" title="Important"></i>
+</td>
+<td class="content">
+We don&#8217;t support baggage propagation for JMS
+</td>
+</tr>
+</table>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_zuul"><a class="link" href="#_zuul">Zuul</a></h3>
+<div class="paragraph">
+<p>We instrument the Zuul Ribbon integration by enriching the Ribbon requests with tracing information.
+To disable Zuul support, set the <code>spring.sleuth.zuul.enabled</code> property to <code>false</code>.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_redis"><a class="link" href="#_redis">Redis</a></h3>
+<div class="paragraph">
+<p>We set <code>tracing</code> property to Lettcue <code>ClientResources</code> instance to enable Brave tracing built in Lettuce .
+To disable Redis support, set the <code>spring.sleuth.redis.enabled</code> property to <code>false</code>.</p>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_running_examples"><a class="link" href="#_running_examples">Running examples</a></h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>You can see the running examples deployed in the <a href="https://run.pivotal.io/">Pivotal Web Services</a>.
+Check them out at the following links:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><a href="https://docssleuth-zipkin-server.cfapps.io/">Zipkin for apps presented in the samples to the top</a>. First make
+a request to <a href="https://docssleuth-service1.cfapps.io/start">Service 1</a> and then check out the trace in Zipkin.</p>
+</li>
+<li>
+<p><a href="https://docsbrewing-zipkin-server.cfapps.io/">Zipkin for Brewery on PWS</a>, its <a href="https://github.com/spring-cloud-samples/brewery">Github Code</a>.
+Ensure that you&#8217;ve picked the lookback period of 7 days. If there are no traces, go to <a href="https://docsbrewing-presenting.cfapps.io/">Presenting application</a>
+and order some beers. Then check Zipkin for traces.</p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+</div>
+<script type="text/javascript" src="js/tocbot/tocbot.min.js"></script>
+<script type="text/javascript" src="js/toc.js"></script>
+<link rel="stylesheet" href="js/highlight/styles/atom-one-dark-reasonable.min.css">
+<script src="js/highlight/highlight.min.js"></script>
+<script>hljs.initHighlighting()</script>
+</body>
+</html>
