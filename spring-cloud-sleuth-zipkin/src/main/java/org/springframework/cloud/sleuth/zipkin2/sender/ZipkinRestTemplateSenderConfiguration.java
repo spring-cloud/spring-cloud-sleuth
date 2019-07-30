@@ -38,6 +38,8 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Conditional;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
+import org.springframework.http.client.ClientHttpRequestFactory;
+import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.web.client.RequestCallback;
 import org.springframework.web.client.ResponseExtractor;
 import org.springframework.web.client.RestClientException;
@@ -145,6 +147,8 @@ class ZipkinRestTemplateWrapper extends RestTemplate {
 
 	private static final Log log = LogFactory.getLog(ZipkinRestTemplateWrapper.class);
 
+	private static final int DEFAULT_TIMEOUT = 500;
+
 	private final ZipkinProperties zipkinProperties;
 
 	private final ZipkinUrlExtractor extractor;
@@ -153,6 +157,14 @@ class ZipkinRestTemplateWrapper extends RestTemplate {
 			ZipkinUrlExtractor extractor) {
 		this.zipkinProperties = zipkinProperties;
 		this.extractor = extractor;
+		setRequestFactory(clientHttpRequestFactory());
+	}
+
+	private ClientHttpRequestFactory clientHttpRequestFactory() {
+		SimpleClientHttpRequestFactory factory = new SimpleClientHttpRequestFactory();
+		factory.setReadTimeout(DEFAULT_TIMEOUT);
+		factory.setConnectTimeout(DEFAULT_TIMEOUT);
+		return factory;
 	}
 
 	@Override
