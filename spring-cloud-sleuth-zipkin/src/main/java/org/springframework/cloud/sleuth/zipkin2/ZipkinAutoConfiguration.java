@@ -100,10 +100,19 @@ public class ZipkinAutoConfiguration {
 				.messageTimeout(zipkin.getMessageTimeout(), TimeUnit.SECONDS)
 				.metrics(reporterMetrics).build(zipkin.getEncoder());
 		CheckResult checkResult = checkResult(asyncReporter);
-		if (log.isDebugEnabled()) {
-			log.debug("Check result of the async reporter is [" + checkResult + "]");
-		}
+		logCheckResult(asyncReporter, checkResult);
 		return asyncReporter;
+	}
+
+	private void logCheckResult(AsyncReporter asyncReporter, CheckResult checkResult) {
+		if (log.isDebugEnabled() && checkResult != null && checkResult.ok()) {
+			log.debug("Check result of the [" + asyncReporter.toString() + "] is ["
+					+ checkResult + "]");
+		}
+		else if (checkResult != null && !checkResult.ok()) {
+			log.warn("Check result of the [" + asyncReporter.toString()
+					+ "] contains an error [" + checkResult + "]");
+		}
 	}
 
 	private CheckResult checkResult(AsyncReporter<Span> asyncReporter) {
@@ -112,12 +121,14 @@ public class ZipkinAutoConfiguration {
 		Future<CheckResult> future = executor.submit(task);
 		try {
 			return future.get(1, TimeUnit.SECONDS);
-		} catch (Exception ex) {
-			if (log.isDebugEnabled()) {
-				log.debug("An exception took place when trying to retrieve the check result. Will return null.", ex);
-			}
+		}
+		catch (Exception ex) {
+			log.warn(
+					"An exception took place when trying to retrieve the check result. Will return null.",
+					ex);
 			return null;
-		} finally {
+		}
+		finally {
 			future.cancel(true);
 			executor.shutdown();
 		}
