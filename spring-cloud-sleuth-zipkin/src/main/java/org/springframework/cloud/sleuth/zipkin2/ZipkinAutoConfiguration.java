@@ -16,8 +16,15 @@
 
 package org.springframework.cloud.sleuth.zipkin2;
 
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import zipkin2.CheckResult;
 import zipkin2.Span;
 import zipkin2.reporter.AsyncReporter;
 import zipkin2.reporter.Reporter;
@@ -70,6 +77,8 @@ import org.springframework.web.client.RestTemplate;
 @Import({ ZipkinSenderConfigurationImportSelector.class, SamplerAutoConfiguration.class })
 public class ZipkinAutoConfiguration {
 
+	private static final Log log = LogFactory.getLog(ZipkinAutoConfiguration.class);
+
 	/**
 	 * Zipkin reporter bean name. Name of the bean matters for supporting multiple tracing
 	 * systems.
@@ -87,9 +96,43 @@ public class ZipkinAutoConfiguration {
 	public Reporter<Span> reporter(ReporterMetrics reporterMetrics,
 			ZipkinProperties zipkin, @Qualifier(SENDER_BEAN_NAME) Sender sender) {
 		// historical constraint. Note: AsyncReporter supports memory bounds
-		return AsyncReporter.builder(sender).queuedMaxSpans(1000)
+		AsyncReporter<Span> asyncReporter = AsyncReporter.builder(sender)
+				.queuedMaxSpans(1000)
 				.messageTimeout(zipkin.getMessageTimeout(), TimeUnit.SECONDS)
 				.metrics(reporterMetrics).build(zipkin.getEncoder());
+		CheckResult checkResult = checkResult(asyncReporter);
+		logCheckResult(asyncReporter, checkResult);
+		return asyncReporter;
+	}
+
+	private void logCheckResult(AsyncReporter asyncReporter, CheckResult checkResult) {
+		if (log.isDebugEnabled() && checkResult != null && checkResult.ok()) {
+			log.debug("Check result of the [" + asyncReporter.toString() + "] is ["
+					+ checkResult + "]");
+		}
+		else if (checkResult != null && !checkResult.ok()) {
+			log.warn("Check result of the [" + asyncReporter.toString()
+					+ "] contains an error [" + checkResult + "]");
+		}
+	}
+
+	private CheckResult checkResult(AsyncReporter<Span> asyncReporter) {
+		ExecutorService executor = Executors.newSingleThreadExecutor();
+		Callable<CheckResult> task = asyncReporter::check;
+		Future<CheckResult> future = executor.submit(task);
+		try {
+			return future.get(1, TimeUnit.SECONDS);
+		}
+		catch (Exception ex) {
+			log.warn(
+					"An exception took place when trying to retrieve the check result. Will return null.",
+					ex);
+			return null;
+		}
+		finally {
+			future.cancel(true);
+			executor.shutdown();
+		}
 	}
 
 	@Bean

@@ -29,6 +29,7 @@ import integration.ZipkinTests.WaitUntilZipkinIsUpConfig;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
 import okhttp3.mockwebserver.RecordedRequest;
+import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -39,8 +40,8 @@ import zipkin2.Span;
 import zipkin2.codec.SpanBytesDecoder;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.web.server.LocalServerPort;
 import org.springframework.cloud.sleuth.zipkin2.ZipkinProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -66,13 +67,22 @@ public class ZipkinTests extends AbstractIntegrationTest {
 	@Autowired
 	ZipkinProperties zipkinProperties;
 
-	@Value("${local.server.port}")
+	@LocalServerPort
 	private int port = 3380;
 
 	private String sampleAppUrl = "http://localhost:" + this.port;
 
+	@BeforeClass
+	public static void setup() {
+		// enqueues a request for async reporter health check
+		zipkin.enqueue(new MockResponse());
+	}
+
 	@Test
 	public void should_propagate_spans_to_zipkin() throws Exception {
+		// takes the received request for async reporter health check
+		zipkin.takeRequest();
+		// enqueues a request for spans
 		zipkin.enqueue(new MockResponse());
 
 		long traceId = new Random().nextLong();
@@ -96,11 +106,11 @@ public class ZipkinTests extends AbstractIntegrationTest {
 		List<String> traceIdsNotFoundInZipkin = traceIdsNotFoundInZipkin(spans, traceId);
 		List<String> serviceNamesNotFoundInZipkin = serviceNamesNotFoundInZipkin(spans);
 		List<String> tagsNotFoundInZipkin = hasRequiredTag(spans);
-		log.info(String.format("The following trace IDs were not found in Zipkin [%s]",
+		log.info(String.format("The following trace IDs were not found in Zipkin %s",
 				traceIdsNotFoundInZipkin));
-		log.info(String.format("The following services were not found in Zipkin [%s]",
+		log.info(String.format("The following services were not found in Zipkin %s",
 				serviceNamesNotFoundInZipkin));
-		log.info(String.format("The following tags were not found in Zipkin [%s]",
+		log.info(String.format("The following tags were not found in Zipkin %s",
 				tagsNotFoundInZipkin));
 		then(traceIdsNotFoundInZipkin).isEmpty();
 		then(serviceNamesNotFoundInZipkin).isEmpty();
