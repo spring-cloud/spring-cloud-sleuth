@@ -45,7 +45,7 @@ public class SamplerProperties {
 	 * (named Reservoir) for this purpose. Brave has taken the same approach via the
 	 * {@link brave.sampler.RateLimitingSampler}.
 	 */
-	private Integer rate = 1000;
+	private Integer rate = 10;
 
 	public Float getProbability() {
 		return this.probability;
