@@ -762,7 +762,9 @@ In extreme cases, too much baggage can crash the application, due to exceeding t
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">Unresolved directive in intro.adoc - include::https://raw.githubusercontent.com/spring-cloud/spring-cloud-sleuth/origin/master/spring-cloud-sleuth-core/src/test/java/org/springframework/cloud/sleuth/instrument/multiple/MultipleHopsIntegrationTests.java[tags=baggage,indent=0]</code></pre>
+<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">Span initialSpan = this.tracer.nextSpan().name("span").start();
+ExtraFieldPropagation.set(initialSpan.context(), "foo", "bar");
+ExtraFieldPropagation.set(initialSpan.context(), "UPPER_CASE", "someValue");</code></pre>
 </div>
 </div>
 <div class="sect4">
@@ -809,13 +811,22 @@ The span must be in scope.
 <div class="listingblock">
 <div class="title">The setup</div>
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-yml hljs" data-lang="yml">Unresolved directive in intro.adoc - include::https://raw.githubusercontent.com/spring-cloud/spring-cloud-sleuth/origin/master/spring-cloud-sleuth-core/src/test/resources/application-baggage.yml[indent=0]</code></pre>
+<pre class="highlightjs highlight"><code class="language-yml hljs" data-lang="yml">spring.sleuth:
+  baggage-keys:
+    - baz
+    - bizarrecase
+  propagation-keys:
+    - foo
+    - upper_case</code></pre>
 </div>
 </div>
 <div class="listingblock">
 <div class="title">The code</div>
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">Unresolved directive in intro.adoc - include::https://raw.githubusercontent.com/spring-cloud/spring-cloud-sleuth/origin/master/spring-cloud-sleuth-core/src/test/java/org/springframework/cloud/sleuth/instrument/multiple/MultipleHopsIntegrationTests.java[tags=baggage_tag,indent=0]</code></pre>
+<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">initialSpan.tag("foo",
+		ExtraFieldPropagation.get(initialSpan.context(), "foo"));
+initialSpan.tag("UPPER_CASE",
+		ExtraFieldPropagation.get(initialSpan.context(), "UPPER_CASE"));</code></pre>
 </div>
 </div>
 </div>
@@ -1097,7 +1108,51 @@ To do this you can use respectively <code>ZipkinAutoConfiguration.REPORTER_BEAN_
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">Unresolved directive in intro.adoc - include::https://raw.githubusercontent.com/spring-cloud/spring-cloud-sleuth/origin/master/spring-cloud-sleuth-zipkin/src/test/java/org/springframework/cloud/sleuth/zipkin2/ZipkinAutoConfigurationTests.java[tags=override_default_beans,indent=0]</code></pre>
+<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">@Configuration
+protected static class MyConfig {
+
+	@Bean(ZipkinAutoConfiguration.REPORTER_BEAN_NAME)
+	Reporter&lt;zipkin2.Span&gt; myReporter() {
+		return AsyncReporter.create(mySender());
+	}
+
+	@Bean(ZipkinAutoConfiguration.SENDER_BEAN_NAME)
+	MySender mySender() {
+		return new MySender();
+	}
+
+	static class MySender extends Sender {
+
+		private boolean spanSent = false;
+
+		boolean isSpanSent() {
+			return this.spanSent;
+		}
+
+		@Override
+		public Encoding encoding() {
+			return Encoding.JSON;
+		}
+
+		@Override
+		public int messageMaxBytes() {
+			return Integer.MAX_VALUE;
+		}
+
+		@Override
+		public int messageSizeInBytes(List&lt;byte[]&gt; encodedSpans) {
+			return encoding().listSizeInBytes(encodedSpans);
+		}
+
+		@Override
+		public Call&lt;Void&gt; sendSpans(List&lt;byte[]&gt; encodedSpans) {
+			this.spanSent = true;
+			return Call.create(null);
+		}
+
+	}
+
+}</code></pre>
 </div>
 </div>
 </div>
@@ -1656,7 +1711,10 @@ You can configure the rate limit by setting <code>spring.sleuth.sampler.rate</co
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">Unresolved directive in index.adoc - include::https://raw.githubusercontent.com/spring-cloud/spring-cloud-sleuth/origin/master/spring-cloud-sleuth-core/src/test/java/org/springframework/cloud/sleuth/documentation/SpringCloudSleuthDocTests.java[tags=always_sampler,indent=0]</code></pre>
+<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">@Bean
+public Sampler defaultSampler() {
+	return Sampler.ALWAYS_SAMPLE;
+}</code></pre>
 </div>
 </div>
 <div class="admonitionblock tip">
@@ -2091,7 +2149,22 @@ Spring Cloud Sleuth creates an instance of <code>Tracer</code> for you. In order
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">Unresolved directive in index.adoc - include::https://raw.githubusercontent.com/spring-cloud/spring-cloud-sleuth/origin/master/spring-cloud-sleuth-core/src/test/java/org/springframework/cloud/sleuth/documentation/SpringCloudSleuthDocTests.java[tags=manual_span_creation,indent=0]</code></pre>
+<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">// Start a span. If there was a span present in this thread it will become
+// the `newSpan`'s parent.
+Span newSpan = this.tracer.nextSpan().name("calculateTax");
+try (Tracer.SpanInScope ws = this.tracer.withSpanInScope(newSpan.start())) {
+	// ...
+	// You can tag a span
+	newSpan.tag("taxValue", taxValue);
+	// ...
+	// You can log an event on a span
+	newSpan.annotate("taxCalculated");
+}
+finally {
+	// Once done remember to finish the span. This will allow collecting
+	// the span to send it to Zipkin
+	newSpan.finish();
+}</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -2146,7 +2219,22 @@ It is in fact merely a technical implementation detail that you would not necess
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">Unresolved directive in index.adoc - include::https://raw.githubusercontent.com/spring-cloud/spring-cloud-sleuth/origin/master/spring-cloud-sleuth-core/src/test/java/org/springframework/cloud/sleuth/documentation/SpringCloudSleuthDocTests.java[tags=manual_span_continuation,indent=0]</code></pre>
+<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">// let's assume that we're in a thread Y and we've received
+// the `initialSpan` from thread X
+Span continuedSpan = this.tracer.toSpan(newSpan.context());
+try {
+	// ...
+	// You can tag a span
+	continuedSpan.tag("taxValue", taxValue);
+	// ...
+	// You can log an event on a span
+	continuedSpan.annotate("taxCalculated");
+}
+finally {
+	// Once done remember to flush the span. That means that
+	// it will get reported but the span itself is not yet finished
+	continuedSpan.flush();
+}</code></pre>
 </div>
 </div>
 </div>
@@ -2160,7 +2248,27 @@ You can put the span in scope and then call <code>nextSpan()</code>, as shown in
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">Unresolved directive in index.adoc - include::https://raw.githubusercontent.com/spring-cloud/spring-cloud-sleuth/origin/master/spring-cloud-sleuth-core/src/test/java/org/springframework/cloud/sleuth/documentation/SpringCloudSleuthDocTests.java[tags=manual_span_joining,indent=0]</code></pre>
+<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">// let's assume that we're in a thread Y and we've received
+// the `initialSpan` from thread X. `initialSpan` will be the parent
+// of the `newSpan`
+Span newSpan = null;
+try (Tracer.SpanInScope ws = this.tracer.withSpanInScope(initialSpan)) {
+	newSpan = this.tracer.nextSpan().name("calculateCommission");
+	// ...
+	// You can tag a span
+	newSpan.tag("commissionValue", commissionValue);
+	// ...
+	// You can log an event on a span
+	newSpan.annotate("commissionCalculated");
+}
+finally {
+	// Once done remember to finish the span. This will allow collecting
+	// the span to send it to Zipkin. The tags and events set on the
+	// newSpan will not be present on the parent
+	if (newSpan != null) {
+		newSpan.finish();
+	}
+}</code></pre>
 </div>
 </div>
 <div class="admonitionblock important">
@@ -2211,7 +2319,17 @@ The name should be low cardinality, so it should not include identifiers.</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">Unresolved directive in index.adoc - include::https://raw.githubusercontent.com/spring-cloud/spring-cloud-sleuth/origin/master/spring-cloud-sleuth-core/src/test/java/org/springframework/cloud/sleuth/documentation/SpringCloudSleuthDocTests.java[tags=span_name_annotation,indent=0]</code></pre>
+<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">	@SpanName("calculateTax")
+	class TaxCountingRunnable implements Runnable {
+
+		@Override
+		public void run() {
+			// perform logic
+		}
+
+	}
+
+}</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -2219,7 +2337,11 @@ The name should be low cardinality, so it should not include identifiers.</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">Unresolved directive in index.adoc - include::https://raw.githubusercontent.com/spring-cloud/spring-cloud-sleuth/origin/master/spring-cloud-sleuth-core/src/test/java/org/springframework/cloud/sleuth/documentation/SpringCloudSleuthDocTests.java[tags=span_name_annotated_runnable_execution,indent=0]</code></pre>
+<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">Runnable runnable = new TraceRunnable(this.tracing, spanNamer,
+		new TaxCountingRunnable());
+Future&lt;?&gt; future = executorService.submit(runnable);
+// ... some additional logic ...
+future.get();</code></pre>
 </div>
 </div>
 </div>
@@ -2236,7 +2358,20 @@ To overcome that limitation, if there is no <code>@SpanName</code> annotation pr
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">Unresolved directive in index.adoc - include::https://raw.githubusercontent.com/spring-cloud/spring-cloud-sleuth/origin/master/spring-cloud-sleuth-core/src/test/java/org/springframework/cloud/sleuth/documentation/SpringCloudSleuthDocTests.java[tags=span_name_to_string_runnable_execution,indent=0]</code></pre>
+<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">Runnable runnable = new TraceRunnable(this.tracing, spanNamer, new Runnable() {
+	@Override
+	public void run() {
+		// perform logic
+	}
+
+	@Override
+	public String toString() {
+		return "calculateTax";
+	}
+});
+Future&lt;?&gt; future = executorService.submit(runnable);
+// ... some additional logic ...
+future.get();</code></pre>
 </div>
 </div>
 </div>
@@ -2282,7 +2417,8 @@ Also, we provide the <code>@SpanTag</code> annotation to add tags in an automate
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">Unresolved directive in index.adoc - include::https://raw.githubusercontent.com/spring-cloud/spring-cloud-sleuth/origin/master/spring-cloud-sleuth-core/src/test/java/org/springframework/cloud/sleuth/annotation/SleuthSpanCreatorAspectTests.java[tags=annotated_method,indent=0]</code></pre>
+<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">@NewSpan
+void testMethod();</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -2290,7 +2426,8 @@ Also, we provide the <code>@SpanTag</code> annotation to add tags in an automate
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">Unresolved directive in index.adoc - include::https://raw.githubusercontent.com/spring-cloud/spring-cloud-sleuth/origin/master/spring-cloud-sleuth-core/src/test/java/org/springframework/cloud/sleuth/annotation/SleuthSpanCreatorAspectTests.java[tags=custom_name_on_annotated_method,indent=0]</code></pre>
+<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">@NewSpan("customNameOnTestMethod4")
+void testMethod4();</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -2299,10 +2436,11 @@ Also, we provide the <code>@SpanTag</code> annotation to add tags in an automate
 <div class="listingblock">
 <div class="content">
 <pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">// method declaration
-Unresolved directive in index.adoc - include::https://raw.githubusercontent.com/spring-cloud/spring-cloud-sleuth/origin/master/spring-cloud-sleuth-core/src/test/java/org/springframework/cloud/sleuth/annotation/SleuthSpanCreatorAspectTests.java[tags=custom_name_and_tag_on_annotated_method,indent=0]
+@NewSpan(name = "customNameOnTestMethod5")
+void testMethod5(@SpanTag("testTag") String param);
 
 // and method execution
-Unresolved directive in index.adoc - include::https://raw.githubusercontent.com/spring-cloud/spring-cloud-sleuth/origin/master/spring-cloud-sleuth-core/src/test/java/org/springframework/cloud/sleuth/annotation/SleuthSpanCreatorAspectTests.java[tags=execution,indent=0]</code></pre>
+this.testBean.testMethod5("test");</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -2312,7 +2450,10 @@ In our sample, the tag key is <code>testTag</code>, and the tag value is <code>t
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">Unresolved directive in index.adoc - include::https://raw.githubusercontent.com/spring-cloud/spring-cloud-sleuth/origin/master/spring-cloud-sleuth-core/src/test/java/org/springframework/cloud/sleuth/annotation/SleuthSpanCreatorAspectTests.java[tags=name_on_implementation,indent=0]</code></pre>
+<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">@NewSpan(name = "customNameOnTestMethod3")
+@Override
+public void testMethod3() {
+}</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -2329,10 +2470,12 @@ concrete one wins (in this case <code>customNameOnTestMethod3</code> is set).</p
 <div class="listingblock">
 <div class="content">
 <pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">// method declaration
-Unresolved directive in index.adoc - include::https://raw.githubusercontent.com/spring-cloud/spring-cloud-sleuth/origin/master/spring-cloud-sleuth-core/src/test/java/org/springframework/cloud/sleuth/annotation/SleuthSpanCreatorAspectTests.java[tags=continue_span,indent=0]
+@ContinueSpan(log = "testMethod11")
+void testMethod11(@SpanTag("testTag11") String param);
 
 // method execution
-Unresolved directive in index.adoc - include::https://raw.githubusercontent.com/spring-cloud/spring-cloud-sleuth/origin/master/spring-cloud-sleuth-core/src/test/java/org/springframework/cloud/sleuth/annotation/SleuthSpanCreatorAspectTests.java[tags=continue_span_execution,indent=0]</code></pre>
+this.testBean.testMethod11("test");
+this.testBean.testMethod13();</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -2388,7 +2531,10 @@ Its class name has to be passed as the value of the <code>resolver</code> attrib
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">Unresolved directive in index.adoc - include::https://raw.githubusercontent.com/spring-cloud/spring-cloud-sleuth/origin/master/spring-cloud-sleuth-core/src/test/java/org/springframework/cloud/sleuth/annotation/SpanTagAnnotationHandlerTests.java[tags=resolver_bean,indent=0]</code></pre>
+<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">@NewSpan
+public void getAnnotationForTagValueResolver(
+		@SpanTag(key = "test", resolver = TagValueResolver.class) String test) {
+}</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -2396,7 +2542,10 @@ Its class name has to be passed as the value of the <code>resolver</code> attrib
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">Unresolved directive in index.adoc - include::https://raw.githubusercontent.com/spring-cloud/spring-cloud-sleuth/origin/master/spring-cloud-sleuth-core/src/test/java/org/springframework/cloud/sleuth/annotation/SpanTagAnnotationHandlerTests.java[tags=custom_resolver,indent=0]</code></pre>
+<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">@Bean(name = "myCustomTagValueResolver")
+public TagValueResolver tagValueResolver() {
+	return parameter -&gt; "Value from myCustomTagValueResolver";
+}</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -2410,7 +2559,10 @@ Its class name has to be passed as the value of the <code>resolver</code> attrib
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">Unresolved directive in index.adoc - include::https://raw.githubusercontent.com/spring-cloud/spring-cloud-sleuth/origin/master/spring-cloud-sleuth-core/src/test/java/org/springframework/cloud/sleuth/annotation/SpanTagAnnotationHandlerTests.java[tags=spel,indent=0]</code></pre>
+<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">@NewSpan
+public void getAnnotationForTagValueExpression(@SpanTag(key = "test",
+		expression = "'hello' + ' characters'") String test) {
+}</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -2425,7 +2577,9 @@ If you want to use some other expression resolution mechanism, you can create yo
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">Unresolved directive in index.adoc - include::https://raw.githubusercontent.com/spring-cloud/spring-cloud-sleuth/origin/master/spring-cloud-sleuth-core/src/test/java/org/springframework/cloud/sleuth/annotation/SpanTagAnnotationHandlerTests.java[tags=toString,indent=0]</code></pre>
+<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">@NewSpan
+public void getAnnotationForArgumentToString(@SpanTag("test") Long param) {
+}</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -2463,7 +2617,22 @@ an example of usage of <code>SkipPatternProvider</code> inside a server side, <c
 <div class="content">
 <pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">@Configuration
 class Config {
-Unresolved directive in index.adoc - include::https://raw.githubusercontent.com/spring-cloud/spring-cloud-sleuth/origin/master/tests/spring-cloud-sleuth-instrumentation-mvc-tests/src/test/java/org/springframework/cloud/sleuth/instrument/web/TraceFilterWebIntegrationTests.java[tags=custom_server_sampler,indent=2]
+  @Bean(name = ServerSampler.NAME)
+  HttpSampler myHttpSampler(SkipPatternProvider provider) {
+  	Pattern pattern = provider.skipPattern();
+  	return new HttpSampler() {
+
+  		@Override
+  		public &lt;Req&gt; Boolean trySample(HttpAdapter&lt;Req, ?&gt; adapter, Req request) {
+  			String url = adapter.path(request);
+  			boolean shouldSkip = pattern.matcher(url).matches();
+  			if (shouldSkip) {
+  				return false;
+  			}
+  			return null;
+  		}
+  	};
+  }
 }</code></pre>
 </div>
 </div>
@@ -2479,7 +2648,33 @@ You can customize the tags or modify the response headers by registering your ow
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">Unresolved directive in index.adoc - include::https://raw.githubusercontent.com/spring-cloud/spring-cloud-sleuth/origin/master/tests/spring-cloud-sleuth-instrumentation-mvc-tests/src/test/java/org/springframework/cloud/sleuth/instrument/web/TraceFilterIntegrationTests.java[tags=response_headers,indent=0]</code></pre>
+<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">@Component
+@Order(TraceWebServletAutoConfiguration.TRACING_FILTER_ORDER + 1)
+class MyFilter extends GenericFilterBean {
+
+	private final Tracer tracer;
+
+	MyFilter(Tracer tracer) {
+		this.tracer = tracer;
+	}
+
+	@Override
+	public void doFilter(ServletRequest request, ServletResponse response,
+			FilterChain chain) throws IOException, ServletException {
+		Span currentSpan = this.tracer.currentSpan();
+		if (currentSpan == null) {
+			chain.doFilter(request, response);
+			return;
+		}
+		// for readability we're returning trace id in a hex form
+		((HttpServletResponse) response).addHeader("ZIPKIN-TRACE-ID",
+				currentSpan.context().traceIdString());
+		// we can also add some custom tags
+		currentSpan.tag("custom", "tag");
+		chain.doFilter(request, response);
+	}
+
+}</code></pre>
 </div>
 </div>
 </div>
@@ -2513,7 +2708,27 @@ You can implement the <code>FinishedSpanHandler</code> interface to alter that n
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">Unresolved directive in index.adoc - include::https://raw.githubusercontent.com/spring-cloud/spring-cloud-sleuth/origin/master//spring-cloud-sleuth-core/src/test/java/org/springframework/cloud/sleuth/FinishedSpanHandlerTests.java[tags=finishedSpanHandler,indent=0]</code></pre>
+<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">@Bean
+FinishedSpanHandler handlerOne() {
+	return new FinishedSpanHandler() {
+		@Override
+		public boolean handle(TraceContext traceContext, MutableSpan span) {
+			span.name("foo");
+			return true; // keep this span
+		}
+	};
+}
+
+@Bean
+FinishedSpanHandler handlerTwo() {
+	return new FinishedSpanHandler() {
+		@Override
+		public boolean handle(TraceContext traceContext, MutableSpan span) {
+			span.name(span.name() + " bar");
+			return true; // keep this span
+		}
+	};
+}</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -2672,7 +2887,24 @@ If you wish to disable this, set <code>spring.sleuth.opentracing.enabled</code> 
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">Unresolved directive in index.adoc - include::https://raw.githubusercontent.com/spring-cloud/spring-cloud-sleuth/origin/master/spring-cloud-sleuth-core/src/test/java/org/springframework/cloud/sleuth/documentation/SpringCloudSleuthDocTests.java[tags=trace_runnable,indent=0]</code></pre>
+<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">Runnable runnable = new Runnable() {
+	@Override
+	public void run() {
+		// do some work
+	}
+
+	@Override
+	public String toString() {
+		return "spanNameFromToStringMethod";
+	}
+};
+// Manual `TraceRunnable` creation with explicit "calculateTax" Span name
+Runnable traceRunnable = new TraceRunnable(this.tracing, spanNamer, runnable,
+		"calculateTax");
+// Wrapping `Runnable` with `Tracing`. That way the current span will be available
+// in the thread of `Runnable`
+Runnable traceRunnableFromTracer = this.tracing.currentTraceContext()
+		.wrap(runnable);</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -2680,7 +2912,24 @@ If you wish to disable this, set <code>spring.sleuth.opentracing.enabled</code> 
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">Unresolved directive in index.adoc - include::https://raw.githubusercontent.com/spring-cloud/spring-cloud-sleuth/origin/master/spring-cloud-sleuth-core/src/test/java/org/springframework/cloud/sleuth/documentation/SpringCloudSleuthDocTests.java[tags=trace_callable,indent=0]</code></pre>
+<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">Callable&lt;String&gt; callable = new Callable&lt;String&gt;() {
+	@Override
+	public String call() throws Exception {
+		return someLogic();
+	}
+
+	@Override
+	public String toString() {
+		return "spanNameFromToStringMethod";
+	}
+};
+// Manual `TraceCallable` creation with explicit "calculateTax" Span name
+Callable&lt;String&gt; traceCallable = new TraceCallable&lt;&gt;(this.tracing, spanNamer,
+		callable, "calculateTax");
+// Wrapping `Callable` with `Tracing`. That way the current span will be available
+// in the thread of `Callable`
+Callable&lt;String&gt; traceCallableFromTracer = this.tracing.currentTraceContext()
+		.wrap(callable);</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -2704,7 +2953,12 @@ To disable the custom Hystrix Concurrency Strategy, set the <code>spring.sleuth.
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">Unresolved directive in index.adoc - include::https://raw.githubusercontent.com/spring-cloud/spring-cloud-sleuth/origin/master/spring-cloud-sleuth-core/src/test/java/org/springframework/cloud/sleuth/instrument/hystrix/TraceCommandTests.java[tags=hystrix_command,indent=0]</code></pre>
+<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">HystrixCommand&lt;String&gt; hystrixCommand = new HystrixCommand&lt;String&gt;(setter) {
+	@Override
+	protected String run() throws Exception {
+		return someLogic();
+	}
+};</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -2713,7 +2967,12 @@ To disable the custom Hystrix Concurrency Strategy, set the <code>spring.sleuth.
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">Unresolved directive in index.adoc - include::https://raw.githubusercontent.com/spring-cloud/spring-cloud-sleuth/origin/master/spring-cloud-sleuth-core/src/test/java/org/springframework/cloud/sleuth/instrument/hystrix/TraceCommandTests.java[tags=trace_hystrix_command,indent=0]</code></pre>
+<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">TraceCommand&lt;String&gt; traceCommand = new TraceCommand&lt;String&gt;(tracer, setter) {
+	@Override
+	public String doRun() throws Exception {
+		return someLogic();
+	}
+};</code></pre>
 </div>
 </div>
 </div>
@@ -2886,7 +3145,29 @@ In the following snippet, you can see an example of how to set up such a custom 
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">Unresolved directive in index.adoc - include::https://raw.githubusercontent.com/spring-cloud/spring-cloud-sleuth/origin/master/spring-cloud-sleuth-core/src/test/java/org/springframework/cloud/sleuth/instrument/web/client/MultipleAsyncRestTemplateTests.java[tags=custom_async_rest_template,indent=0]</code></pre>
+<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">@Configuration
+@EnableAutoConfiguration
+static class Config {
+
+	@Bean(name = "customAsyncRestTemplate")
+	public AsyncRestTemplate traceAsyncRestTemplate() {
+		return new AsyncRestTemplate(asyncClientFactory(),
+				clientHttpRequestFactory());
+	}
+
+	private ClientHttpRequestFactory clientHttpRequestFactory() {
+		ClientHttpRequestFactory clientHttpRequestFactory = new CustomClientHttpRequestFactory();
+		// CUSTOMIZE HERE
+		return clientHttpRequestFactory;
+	}
+
+	private AsyncClientHttpRequestFactory asyncClientFactory() {
+		AsyncClientHttpRequestFactory factory = new CustomAsyncClientHttpRequestFactory();
+		// CUSTOMIZE HERE
+		return factory;
+	}
+
+}</code></pre>
 </div>
 </div>
 </div>
@@ -3127,7 +3408,12 @@ This behavior may be annoying. That&#8217;s why, by default, <code>spring.sleuth
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">Unresolved directive in index.adoc - include::https://raw.githubusercontent.com/spring-cloud/spring-cloud-sleuth/origin/master/spring-cloud-sleuth-core/src/test/java/org/springframework/cloud/sleuth/instrument/async/TraceableExecutorServiceTests.java[tags=completablefuture,indent=0]</code></pre>
+<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">CompletableFuture&lt;Long&gt; completableFuture = CompletableFuture.supplyAsync(() -&gt; {
+	// perform some logic
+	return 1_000_000L;
+}, new TraceableExecutorService(beanFactory, executorService,
+		// 'calculateTax' explicitly names the span - this param is optional
+		"calculateTax"));</code></pre>
 </div>
 </div>
 <div class="admonitionblock important">
@@ -3156,7 +3442,30 @@ The following example shows how to set up such a custom <code>Executor</code>:</
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">Unresolved directive in index.adoc - include::https://raw.githubusercontent.com/spring-cloud/spring-cloud-sleuth/origin/master/spring-cloud-sleuth-core/src/test/java/org/springframework/cloud/sleuth/instrument/web/client/MultipleAsyncRestTemplateTests.java[tags=custom_executor,indent=0]</code></pre>
+<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">@Configuration
+@EnableAutoConfiguration
+@EnableAsync
+// add the infrastructure role to ensure that the bean gets auto-proxied
+@Role(BeanDefinition.ROLE_INFRASTRUCTURE)
+static class CustomExecutorConfig extends AsyncConfigurerSupport {
+
+	@Autowired
+	BeanFactory beanFactory;
+
+	@Override
+	public Executor getAsyncExecutor() {
+		ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
+		// CUSTOMIZE HERE
+		executor.setCorePoolSize(7);
+		executor.setMaxPoolSize(42);
+		executor.setQueueCapacity(11);
+		executor.setThreadNamePrefix("MyExecutor-");
+		// DON'T FORGET TO INITIALIZE
+		executor.initialize();
+		return new LazyTraceExecutor(this.beanFactory, executor);
+	}
+
+}</code></pre>
 </div>
 </div>
 <div class="admonitionblock tip">

@@ -139,7 +139,7 @@ $(addBlockSwitches);
 </div>
 <div class="imageblock">
 <div class="content">
-<a class="image" href="https://codecov.io/gh/spring-cloud/spring-cloud-sleuth"><img src="https://codecov.io/gh/spring-cloud/spring-cloud-sleuth/branch/origin/master/graph/badge.svg" alt="codecov"></a>
+<a class="image" href="https://codecov.io/gh/spring-cloud/spring-cloud-sleuth"><img src="https://codecov.io/gh/spring-cloud/spring-cloud-sleuth/branch/master/graph/badge.svg" alt="codecov"></a>
 </div>
 </div>
 <div class="imageblock">
@@ -673,7 +673,9 @@ In extreme cases, too much baggage can crash the application, due to exceeding t
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">Unresolved directive in intro.adoc - include::https://raw.githubusercontent.com/spring-cloud/spring-cloud-sleuth/origin/master/spring-cloud-sleuth-core/src/test/java/org/springframework/cloud/sleuth/instrument/multiple/MultipleHopsIntegrationTests.java[tags=baggage,indent=0]</code></pre>
+<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">Span initialSpan = this.tracer.nextSpan().name("span").start();
+ExtraFieldPropagation.set(initialSpan.context(), "foo", "bar");
+ExtraFieldPropagation.set(initialSpan.context(), "UPPER_CASE", "someValue");</code></pre>
 </div>
 </div>
 <div class="sect4">
@@ -720,13 +722,22 @@ The span must be in scope.
 <div class="listingblock">
 <div class="title">The setup</div>
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-yml hljs" data-lang="yml">Unresolved directive in intro.adoc - include::https://raw.githubusercontent.com/spring-cloud/spring-cloud-sleuth/origin/master/spring-cloud-sleuth-core/src/test/resources/application-baggage.yml[indent=0]</code></pre>
+<pre class="highlightjs highlight"><code class="language-yml hljs" data-lang="yml">spring.sleuth:
+  baggage-keys:
+    - baz
+    - bizarrecase
+  propagation-keys:
+    - foo
+    - upper_case</code></pre>
 </div>
 </div>
 <div class="listingblock">
 <div class="title">The code</div>
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">Unresolved directive in intro.adoc - include::https://raw.githubusercontent.com/spring-cloud/spring-cloud-sleuth/origin/master/spring-cloud-sleuth-core/src/test/java/org/springframework/cloud/sleuth/instrument/multiple/MultipleHopsIntegrationTests.java[tags=baggage_tag,indent=0]</code></pre>
+<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">initialSpan.tag("foo",
+		ExtraFieldPropagation.get(initialSpan.context(), "foo"));
+initialSpan.tag("UPPER_CASE",
+		ExtraFieldPropagation.get(initialSpan.context(), "UPPER_CASE"));</code></pre>
 </div>
 </div>
 </div>
@@ -1008,7 +1019,51 @@ To do this you can use respectively <code>ZipkinAutoConfiguration.REPORTER_BEAN_
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">Unresolved directive in intro.adoc - include::https://raw.githubusercontent.com/spring-cloud/spring-cloud-sleuth/origin/master/spring-cloud-sleuth-zipkin/src/test/java/org/springframework/cloud/sleuth/zipkin2/ZipkinAutoConfigurationTests.java[tags=override_default_beans,indent=0]</code></pre>
+<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">@Configuration
+protected static class MyConfig {
+
+	@Bean(ZipkinAutoConfiguration.REPORTER_BEAN_NAME)
+	Reporter&lt;zipkin2.Span&gt; myReporter() {
+		return AsyncReporter.create(mySender());
+	}
+
+	@Bean(ZipkinAutoConfiguration.SENDER_BEAN_NAME)
+	MySender mySender() {
+		return new MySender();
+	}
+
+	static class MySender extends Sender {
+
+		private boolean spanSent = false;
+
+		boolean isSpanSent() {
+			return this.spanSent;
+		}
+
+		@Override
+		public Encoding encoding() {
+			return Encoding.JSON;
+		}
+
+		@Override
+		public int messageMaxBytes() {
+			return Integer.MAX_VALUE;
+		}
+
+		@Override
+		public int messageSizeInBytes(List&lt;byte[]&gt; encodedSpans) {
+			return encoding().listSizeInBytes(encodedSpans);
+		}
+
+		@Override
+		public Call&lt;Void&gt; sendSpans(List&lt;byte[]&gt; encodedSpans) {
+			this.spanSent = true;
+			return Call.create(null);
+		}
+
+	}
+
+}</code></pre>
 </div>
 </div>
 </div>
