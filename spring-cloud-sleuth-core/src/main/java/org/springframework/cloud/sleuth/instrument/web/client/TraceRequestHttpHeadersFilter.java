@@ -16,6 +16,9 @@
 
 package org.springframework.cloud.sleuth.instrument.web.client;
 
+import java.util.List;
+import java.util.Map;
+
 import brave.Span;
 import brave.Tracer;
 import brave.http.HttpClientHandler;
@@ -58,8 +61,18 @@ final class TraceRequestHttpHeadersFilter extends AbstractHttpHeadersFilter {
 		exchange.getAttributes().put(SPAN_ATTRIBUTE, span);
 		HttpHeaders headersWithInput = new HttpHeaders();
 		headersWithInput.addAll(input);
-		builder.build().getHeaders().forEach(headersWithInput::put);
+		addHeadersWithInput(builder, headersWithInput);
 		return headersWithInput;
+	}
+
+	private void addHeadersWithInput(ServerHttpRequest.Builder builder,
+			HttpHeaders headersWithInput) {
+		for (Map.Entry<String, List<String>> entry : builder.build().getHeaders()
+				.entrySet()) {
+			String key = entry.getKey();
+			List<String> value = entry.getValue();
+			headersWithInput.put(key, value);
+		}
 	}
 
 	@Override

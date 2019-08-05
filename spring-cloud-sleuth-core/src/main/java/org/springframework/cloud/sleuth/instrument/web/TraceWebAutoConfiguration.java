@@ -20,8 +20,8 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
+import java.util.StringJoiner;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 
 import brave.Tracing;
 
@@ -32,7 +32,6 @@ import org.springframework.boot.actuate.autoconfigure.web.server.ManagementPortT
 import org.springframework.boot.actuate.autoconfigure.web.server.ManagementServerProperties;
 import org.springframework.boot.actuate.endpoint.EndpointsSupplier;
 import org.springframework.boot.actuate.endpoint.web.ExposableWebEndpoint;
-import org.springframework.boot.actuate.endpoint.web.PathMappedEndpoint;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
@@ -67,10 +66,18 @@ public class TraceWebAutoConfiguration {
 	@Bean
 	@ConditionalOnMissingBean
 	SkipPatternProvider sleuthSkipPatternProvider() {
-		return () -> Pattern
-				.compile(this.patterns.stream().map(SingleSkipPattern::skipPattern)
-						.filter(Optional::isPresent).map(Optional::get)
-						.map(Pattern::pattern).collect(Collectors.joining("|")));
+		return () -> {
+			StringJoiner joiner = new StringJoiner("|");
+			for (SingleSkipPattern pattern : this.patterns) {
+				Optional<Pattern> skipPattern = pattern.skipPattern();
+				if (skipPattern.isPresent()) {
+					Pattern pattern1 = skipPattern.get();
+					String s = pattern1.pattern();
+					joiner.add(s);
+				}
+			}
+			return Pattern.compile(joiner.toString());
+		};
 	}
 
 	@Configuration
@@ -116,20 +123,28 @@ public class TraceWebAutoConfiguration {
 				WebEndpointProperties webEndpointProperties,
 				EndpointsSupplier<ExposableWebEndpoint> endpointsSupplier) {
 			Collection<ExposableWebEndpoint> endpoints = endpointsSupplier.getEndpoints();
-
 			if (endpoints.isEmpty()) {
 				return Optional.empty();
 			}
-
 			String basePath = webEndpointProperties.getBasePath();
-			String pattern = endpoints.stream().map(PathMappedEndpoint::getRootPath)
-					.map(path -> path + "|" + path + "/.*")
-					.collect(Collectors.joining("|", getPathPrefix(contextPath, basePath),
-							getPathSuffix(contextPath, basePath)));
+			String pattern = patternFromEndpoints(contextPath, endpoints, basePath);
 			if (StringUtils.hasText(pattern)) {
 				return Optional.of(Pattern.compile(pattern));
 			}
 			return Optional.empty();
+		}
+
+		private static String patternFromEndpoints(String contextPath,
+				Collection<ExposableWebEndpoint> endpoints, String basePath) {
+			StringJoiner joiner = new StringJoiner("|",
+					getPathPrefix(contextPath, basePath),
+					getPathSuffix(contextPath, basePath));
+			for (ExposableWebEndpoint endpoint : endpoints) {
+				String path = endpoint.getRootPath();
+				String paths = path + "|" + path + "/.*";
+				joiner.add(paths);
+			}
+			return joiner.toString();
 		}
 
 		private static String getPathPrefix(String contextPath, String actuatorBasePath) {

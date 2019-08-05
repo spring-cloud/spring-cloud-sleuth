@@ -59,12 +59,12 @@ class SleuthHttpClientParser extends HttpClientParser {
 		URI uri = URI.create(url);
 		addRequestTags(customizer, url, uri.getHost(), uri.getPath(),
 				adapter.method(req));
-		this.traceKeys.getHttp().getHeaders().forEach(((s) -> {
-			String headerValue = adapter.requestHeader(req, s);
+		for (String header : this.traceKeys.getHttp().getHeaders()) {
+			String headerValue = adapter.requestHeader(req, header);
 			if (headerValue != null) {
-				customizer.tag(key(s), headerValue);
+				customizer.tag(key(header), headerValue);
 			}
-		}));
+		}
 	}
 
 	private String key(String key) {

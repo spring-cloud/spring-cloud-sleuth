@@ -130,4 +130,21 @@ public class Slf4JSpanLoggerTest {
 		assertThat(MDC.get("traceId")).isEqualTo("A");
 	}
 
+	@Test
+	public void should_clear_any_mdc_entries_when_their_keys_are_whitelisted() throws Exception {
+		MDC.put("my-baggage", "A");
+		MDC.put("my-propagation", "B");
+
+		Scope scope = this.slf4jScopeDecorator.decorateScope(this.span.context(), () -> {
+		});
+
+		assertThat(MDC.get("my-baggage")).isEqualTo("A");
+		assertThat(MDC.get("my-propagation")).isEqualTo("B");
+
+		scope.close();
+
+		assertThat(MDC.get("my-baggage")).isNullOrEmpty();
+		assertThat(MDC.get("my-propagation")).isNullOrEmpty();
+	}
+
 }

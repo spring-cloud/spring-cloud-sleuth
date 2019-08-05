@@ -153,10 +153,11 @@ class HttpClientBeanPostProcessor implements BeanPostProcessor {
 
 		@Override
 		public void accept(HttpClientRequest req, Connection connection) {
-			if (propagation().keys().stream()
-					.anyMatch(key -> req.requestHeaders().contains(key))) {
-				// request already instrumented
-				return;
+			// request already instrumented
+			for (String key : propagation().keys()) {
+				if (req.requestHeaders().contains(key)) {
+					return;
+				}
 			}
 			AtomicReference reference = req.currentContext()
 					.getOrDefault(AtomicReference.class, new AtomicReference());

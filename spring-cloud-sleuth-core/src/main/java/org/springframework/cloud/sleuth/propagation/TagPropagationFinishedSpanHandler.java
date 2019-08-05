@@ -17,8 +17,8 @@
 package org.springframework.cloud.sleuth.propagation;
 
 import java.util.AbstractMap;
-import java.util.Collection;
-import java.util.stream.Stream;
+import java.util.Arrays;
+import java.util.List;
 
 import brave.handler.FinishedSpanHandler;
 import brave.handler.MutableSpan;
@@ -50,14 +50,18 @@ public class TagPropagationFinishedSpanHandler extends FinishedSpanHandler {
 
 	@Override
 	public boolean handle(TraceContext context, MutableSpan span) {
-		Stream.of(this.sleuthProperties.getBaggageKeys(),
-				this.sleuthProperties.getPropagationKeys()).flatMap(Collection::stream)
-				.filter(key -> this.tagPropagationProperties.getWhitelistedKeys()
-						.contains(key))
-				.map(baggageItemKey -> new AbstractMap.SimpleEntry<>(baggageItemKey,
-						ExtraFieldPropagation.get(context, baggageItemKey)))
-				.filter(entry -> nonNull(entry.getValue()))
-				.forEach(entry -> span.tag(entry.getKey(), entry.getValue()));
+		for (List<String> strings : Arrays.asList(this.sleuthProperties.getBaggageKeys(),
+				this.sleuthProperties.getPropagationKeys())) {
+			for (String key : strings) {
+				if (this.tagPropagationProperties.getWhitelistedKeys().contains(key)) {
+					AbstractMap.SimpleEntry<String, String> entry = new AbstractMap.SimpleEntry<>(
+							key, ExtraFieldPropagation.get(context, key));
+					if (nonNull(entry.getValue())) {
+						span.tag(entry.getKey(), entry.getValue());
+					}
+				}
+			}
+		}
 		return true;
 	}
 

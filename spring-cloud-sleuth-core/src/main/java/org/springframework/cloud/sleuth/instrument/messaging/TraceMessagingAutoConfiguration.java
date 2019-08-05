@@ -17,8 +17,6 @@
 package org.springframework.cloud.sleuth.instrument.messaging;
 
 import java.lang.reflect.Field;
-import java.util.Arrays;
-import java.util.Optional;
 
 import brave.Span;
 import brave.Tracer;
@@ -313,15 +311,14 @@ class MessageListenerMethodInterceptor<T extends MessageListener>
 			return invocation.proceed();
 		}
 		Object[] arguments = invocation.getArguments();
-		Optional<Object> record = Arrays.stream(arguments)
-				.filter(o -> o instanceof ConsumerRecord).findFirst();
-		if (!record.isPresent()) {
+		Object record = record(arguments);
+		if (record == null) {
 			return invocation.proceed();
 		}
 		if (log.isDebugEnabled()) {
 			log.debug("Wrapping onMessage call");
 		}
-		Span span = this.kafkaTracing.nextSpan((ConsumerRecord<?, ?>) record.get())
+		Span span = this.kafkaTracing.nextSpan((ConsumerRecord<?, ?>) record)
 				.name("on-message").start();
 		try (Tracer.SpanInScope ws = this.tracer.withSpanInScope(span)) {
 			return invocation.proceed();
@@ -337,6 +334,15 @@ class MessageListenerMethodInterceptor<T extends MessageListener>
 		finally {
 			span.finish();
 		}
+	}
+
+	private Object record(Object[] arguments) {
+		for (Object object : arguments) {
+			if (object instanceof ConsumerRecord) {
+				return object;
+			}
+		}
+		return null;
 	}
 
 }
