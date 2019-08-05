@@ -100,11 +100,21 @@ final class TraceWebClientBeanPostProcessor implements BeanPostProcessor {
 
 	private Consumer<List<ExchangeFilterFunction>> addTraceExchangeFilterFunctionIfNotPresent() {
 		return functions -> {
-			if (functions.stream()
-					.noneMatch(f -> f instanceof TraceExchangeFilterFunction)) {
+			boolean noneMatch = noneMatchTraceExchangeFunction(functions);
+			if (noneMatch) {
 				functions.add(new TraceExchangeFilterFunction(this.beanFactory));
 			}
 		};
+	}
+
+	private boolean noneMatchTraceExchangeFunction(
+			List<ExchangeFilterFunction> functions) {
+		for (ExchangeFilterFunction function : functions) {
+			if (function instanceof TraceExchangeFilterFunction) {
+				return false;
+			}
+		}
+		return true;
 	}
 
 }

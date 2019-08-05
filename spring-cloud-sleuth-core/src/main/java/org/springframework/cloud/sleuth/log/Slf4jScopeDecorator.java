@@ -86,7 +86,8 @@ final class Slf4jScopeDecorator implements CurrentTraceContext.ScopeDecorator {
 		final String legacyPreviousParentId = MDC.get(LEGACY_PARENT_ID_NAME);
 		final String legacyPreviousSpanId = MDC.get(LEGACY_SPAN_ID_NAME);
 		final String legacySpanExportable = MDC.get(LEGACY_EXPORTABLE_NAME);
-		final List<AbstractMap.SimpleEntry<String, String>> previousMdc = Stream
+		final List<AbstractMap.SimpleEntry<String, String>> previousMdc =
+				Stream
 				.concat(whitelistedBaggageKeysWithValue(currentSpan),
 						whitelistedPropagationKeysWithValue(currentSpan))
 				.map((s) -> new AbstractMap.SimpleEntry<>(s, MDC.get(s)))
@@ -149,7 +150,9 @@ final class Slf4jScopeDecorator implements CurrentTraceContext.ScopeDecorator {
 				replace(LEGACY_PARENT_ID_NAME, legacyPreviousParentId);
 				replace(LEGACY_SPAN_ID_NAME, legacyPreviousSpanId);
 				replace(LEGACY_EXPORTABLE_NAME, legacySpanExportable);
-				previousMdc.forEach((e) -> replace(e.getKey(), e.getValue()));
+				for (AbstractMap.SimpleEntry<String, String> entry : previousMdc) {
+					replace(entry.getKey(), entry.getValue());
+				}
 			}
 
 		}

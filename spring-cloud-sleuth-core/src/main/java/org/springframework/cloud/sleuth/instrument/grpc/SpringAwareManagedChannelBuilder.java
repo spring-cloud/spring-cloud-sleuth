@@ -45,32 +45,29 @@ public class SpringAwareManagedChannelBuilder {
 	}
 
 	public ManagedChannelBuilder<?> forAddress(String name, int port) {
-
 		ManagedChannelBuilder<?> builder = ManagedChannelBuilder.forAddress(name, port);
-
-		if (this.customizers != null) {
-			this.customizers.stream()
-					.forEach(customizer -> customizer.customize(builder));
-		}
+		customize(builder);
 		return builder;
 	}
 
 	public ManagedChannelBuilder<?> forTarget(String target) {
 		ManagedChannelBuilder<?> builder = ManagedChannelBuilder.forTarget(target);
-		if (this.customizers != null) {
-			this.customizers.stream()
-					.forEach(customizer -> customizer.customize(builder));
-		}
+		customize(builder);
 		return builder;
 	}
 
 	public ManagedChannelBuilder<?> inProcessChannelBuilder(String serverName) {
 		ManagedChannelBuilder<?> builder = InProcessChannelBuilder.forName(serverName);
-		if (this.customizers != null) {
-			this.customizers.stream()
-					.forEach(customizer -> customizer.customize(builder));
-		}
+		customize(builder);
 		return builder;
+	}
+
+	private void customize(ManagedChannelBuilder<?> builder) {
+		if (this.customizers != null) {
+			for (GrpcManagedChannelBuilderCustomizer customizer : this.customizers) {
+				customizer.customize(builder);
+			}
+		}
 	}
 
 }
