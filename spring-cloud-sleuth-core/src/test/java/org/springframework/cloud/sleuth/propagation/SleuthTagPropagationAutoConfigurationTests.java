@@ -31,9 +31,10 @@ public class SleuthTagPropagationAutoConfigurationTests {
 					AutoConfigurations.of(SleuthTagPropagationAutoConfiguration.class));
 
 	@Test
-	public void shouldNotCreateHandler() {
-		this.contextRunner.run((context) -> {
-			assertThat(context).doesNotHaveBean(TagPropagationFinishedSpanHandler.class);
+	public void shouldCreateHandlerByDefault() {
+		this.contextRunner
+				.withUserConfiguration(TraceAutoConfiguration.class).run((context) -> {
+			assertThat(context).hasSingleBean(TagPropagationFinishedSpanHandler.class);
 		});
 	}
 
@@ -60,4 +61,14 @@ public class SleuthTagPropagationAutoConfigurationTests {
 				});
 	}
 
+	@Test
+	public void shouldCreateHandlerWithYml() {
+		this.contextRunner
+				.withPropertyValues(
+						"spring.profiles.active=tag-propagation")
+				.withUserConfiguration(TraceAutoConfiguration.class).run((context) -> {
+					assertThat(context)
+							.hasSingleBean(TagPropagationFinishedSpanHandler.class);
+				});
+	}
 }

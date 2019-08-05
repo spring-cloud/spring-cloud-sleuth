@@ -1,0 +1,3 @@
+spring.sleuth.propagation.tag.whitelisted-keys:
+  - foo
+  - bar
