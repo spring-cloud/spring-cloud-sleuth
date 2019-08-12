@@ -114,6 +114,27 @@ public class Slf4JSpanLoggerTest {
 	}
 
 	@Test
+	public void should_remove_entries_from_mdc_for_null_span_and_mdc_fields_set_directly()
+			throws Exception {
+		MDC.put("my-baggage", "my-value");
+		MDC.put("my-propagation", "my-propagation-value");
+
+		this.slf4jScopeDecorator.decorateScope(this.span.context(), () -> {
+		});
+
+		assertThat(MDC.get("my-baggage")).isEqualTo("my-value");
+		assertThat(MDC.get("my-propagation")).isEqualTo("my-propagation-value");
+
+		Scope scope = this.slf4jScopeDecorator.decorateScope(null, () -> {
+		});
+
+		scope.close();
+
+		assertThat(MDC.get("my-baggage")).isNullOrEmpty();
+		assertThat(MDC.get("my-propagation")).isNullOrEmpty();
+	}
+
+	@Test
 	public void should_remove_entries_from_mdc_from_null_span() throws Exception {
 		MDC.put("X-B3-TraceId", "A");
 		MDC.put("traceId", "A");
@@ -128,6 +149,48 @@ public class Slf4JSpanLoggerTest {
 
 		assertThat(MDC.get("X-B3-TraceId")).isEqualTo("A");
 		assertThat(MDC.get("traceId")).isEqualTo("A");
+	}
+
+	// #1416
+	@Test
+	public void should_clear_any_mdc_entries_when_their_keys_are_whitelisted()
+			throws Exception {
+
+		Scope scope = this.slf4jScopeDecorator.decorateScope(this.span.context(), () -> {
+		});
+
+		MDC.put("my-baggage", "A");
+		MDC.put("my-propagation", "B");
+
+		assertThat(MDC.get("my-baggage")).isEqualTo("A");
+		assertThat(MDC.get("my-propagation")).isEqualTo("B");
+
+		scope.close();
+
+		assertThat(MDC.get("my-baggage")).isNullOrEmpty();
+		assertThat(MDC.get("my-propagation")).isNullOrEmpty();
+	}
+
+	@Test
+	public void should_pick_previous_mdc_entries_when_their_keys_are_whitelisted()
+			throws Exception {
+
+		MDC.put("my-baggage", "A1");
+		MDC.put("my-propagation", "B1");
+
+		Scope scope = this.slf4jScopeDecorator.decorateScope(this.span.context(), () -> {
+		});
+
+		MDC.put("my-baggage", "A2");
+		MDC.put("my-propagation", "B2");
+
+		assertThat(MDC.get("my-baggage")).isEqualTo("A2");
+		assertThat(MDC.get("my-propagation")).isEqualTo("B2");
+
+		scope.close();
+
+		assertThat(MDC.get("my-baggage")).isEqualTo("A1");
+		assertThat(MDC.get("my-propagation")).isEqualTo("B1");
 	}
 
 }
