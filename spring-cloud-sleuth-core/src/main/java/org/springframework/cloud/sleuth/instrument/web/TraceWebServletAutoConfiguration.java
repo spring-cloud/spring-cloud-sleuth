@@ -16,13 +16,22 @@
 
 package org.springframework.cloud.sleuth.instrument.web;
 
+import java.io.IOException;
+
 import javax.servlet.DispatcherType;
+import javax.servlet.Filter;
+import javax.servlet.FilterChain;
+import javax.servlet.FilterConfig;
+import javax.servlet.ServletException;
+import javax.servlet.ServletRequest;
+import javax.servlet.ServletResponse;
 
 import brave.Tracing;
 import brave.http.HttpTracing;
 import brave.servlet.TracingFilter;
 import brave.spring.webmvc.SpanCustomizingAsyncHandlerInterceptor;
 
+import org.springframework.beans.factory.BeanFactory;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
@@ -63,10 +72,10 @@ public class TraceWebServletAutoConfiguration {
 	}
 
 	@Bean
-	public FilterRegistrationBean traceWebFilter(TracingFilter tracingFilter,
+	public FilterRegistrationBean traceWebFilter(BeanFactory beanFactory,
 			SleuthWebProperties webProperties) {
 		FilterRegistrationBean filterRegistrationBean = new FilterRegistrationBean(
-				tracingFilter);
+				new LazyTracingFilter(beanFactory));
 		filterRegistrationBean.setDispatcherTypes(DispatcherType.ASYNC,
 				DispatcherType.ERROR, DispatcherType.FORWARD, DispatcherType.INCLUDE,
 				DispatcherType.REQUEST);
@@ -103,6 +112,41 @@ public class TraceWebServletAutoConfiguration {
 	@ConditionalOnClass(WebMvcConfigurer.class)
 	@Import(TraceWebMvcConfigurer.class)
 	protected static class TraceWebMvcAutoConfiguration {
+
+	}
+
+	private static final class LazyTracingFilter implements Filter {
+
+		private final BeanFactory beanFactory;
+
+		private Filter tracingFilter;
+
+		private LazyTracingFilter(BeanFactory beanFactory) {
+			this.beanFactory = beanFactory;
+		}
+
+		@Override
+		public void init(FilterConfig filterConfig) throws ServletException {
+			tracingFilter().init(filterConfig);
+		}
+
+		@Override
+		public void doFilter(ServletRequest request, ServletResponse response,
+				FilterChain chain) throws IOException, ServletException {
+			tracingFilter().doFilter(request, response, chain);
+		}
+
+		@Override
+		public void destroy() {
+			tracingFilter().destroy();
+		}
+
+		private Filter tracingFilter() {
+			if (this.tracingFilter == null) {
+				this.tracingFilter = this.beanFactory.getBean(TracingFilter.class);
+			}
+			return this.tracingFilter;
+		}
 
 	}
 
