@@ -29,20 +29,29 @@ import brave.http.HttpSampler;
  */
 class SleuthHttpSampler extends HttpSampler {
 
-	private final Pattern pattern;
+	private final SkipPatternProvider provider;
+
+	private Pattern pattern;
 
 	SleuthHttpSampler(SkipPatternProvider provider) {
-		this.pattern = provider.skipPattern();
+		this.provider = provider;
 	}
 
 	@Override
 	public <Req> Boolean trySample(HttpAdapter<Req, ?> adapter, Req request) {
 		String url = adapter.path(request);
-		boolean shouldSkip = this.pattern.matcher(url).matches();
+		boolean shouldSkip = pattern().matcher(url).matches();
 		if (shouldSkip) {
 			return false;
 		}
 		return null;
+	}
+
+	private Pattern pattern() {
+		if (this.pattern == null) {
+			this.pattern = this.provider.skipPattern();
+		}
+		return this.pattern;
 	}
 
 }
