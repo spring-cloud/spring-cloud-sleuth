@@ -215,7 +215,7 @@ final class Slf4jScopeDecorator implements CurrentTraceContext.ScopeDecorator {
 	}
 
 	private List<String> whitelistedRedactedKeys() {
-		return whitelistedKeys(this.sleuthProperties.getRedactedKeys());
+		return whitelistedKeys(this.sleuthProperties.getLocalKeys());
 	}
 
 	private List<String> whitelistedPropagationKeysWithValue(TraceContext context) {

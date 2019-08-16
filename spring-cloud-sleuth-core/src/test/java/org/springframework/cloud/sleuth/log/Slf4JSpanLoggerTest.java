@@ -41,8 +41,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.NONE, properties = {
 		"spring.sleuth.baggage-keys=my-baggage",
 		"spring.sleuth.propagation-keys=my-propagation",
-		"spring.sleuth.redacted-keys=my-redacted",
-		"spring.sleuth.log.slf4j.whitelisted-mdc-keys=my-baggage,my-propagation,my-redacted" })
+		"spring.sleuth.local-keys=my-local",
+		"spring.sleuth.log.slf4j.whitelisted-mdc-keys=my-baggage,my-propagation,my-local" })
 @SpringBootConfiguration
 @EnableAutoConfiguration
 public class Slf4JSpanLoggerTest {
@@ -82,20 +82,20 @@ public class Slf4JSpanLoggerTest {
 		ExtraFieldPropagation.set(this.span.context(), "my-baggage", "my-value");
 		ExtraFieldPropagation.set(this.span.context(), "my-propagation",
 				"my-propagation-value");
-		ExtraFieldPropagation.set(this.span.context(), "my-redacted",
-				"my-redacted-value");
+		ExtraFieldPropagation.set(this.span.context(), "my-local",
+				"my-local-value");
 		Scope scope = this.slf4jScopeDecorator.decorateScope(this.span.context(), () -> {
 		});
 
 		assertThat(MDC.get("my-baggage")).isEqualTo("my-value");
 		assertThat(MDC.get("my-propagation")).isEqualTo("my-propagation-value");
-		assertThat(MDC.get("my-redacted")).isEqualTo("my-redacted-value");
+		assertThat(MDC.get("my-local")).isEqualTo("my-local-value");
 
 		scope.close();
 
 		assertThat(MDC.get("my-baggage")).isNullOrEmpty();
 		assertThat(MDC.get("my-propagation")).isNullOrEmpty();
-		assertThat(MDC.get("my-redacted")).isNullOrEmpty();
+		assertThat(MDC.get("my-local")).isNullOrEmpty();
 	}
 
 	@Test
