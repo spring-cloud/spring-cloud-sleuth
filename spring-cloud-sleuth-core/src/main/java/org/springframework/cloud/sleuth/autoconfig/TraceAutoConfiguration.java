@@ -155,6 +155,11 @@ public class TraceAutoConfiguration {
 				factoryBuilder = factoryBuilder.addField(key);
 			}
 		}
+		if (!sleuthProperties.getLocalKeys().isEmpty()) {
+			for (String key : sleuthProperties.getLocalKeys()) {
+				factoryBuilder = factoryBuilder.addRedactedField(key);
+			}
+		}
 		return factoryBuilder.build();
 	}
 
