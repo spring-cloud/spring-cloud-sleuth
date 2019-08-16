@@ -1886,9 +1886,10 @@ String countryCode = ExtraFieldPropagation.get(span.context(), "x-country-code")
 </td>
 <td class="content">
 A difference from previous versions of Sleuth is that, with Brave, you must pass the list of baggage keys.
-There are two properties to achieve this.
+There are the following properties to achieve this.
 With the <code>spring.sleuth.baggage-keys</code>, you set keys that get prefixed with <code>baggage-</code> for HTTP calls and <code>baggage_</code> for messaging.
-You can also use the <code>spring.sleuth.propagation-keys</code> property to pass a list of prefixed keys that are whitelisted without any prefix.
+You can also use the <code>spring.sleuth.propagation-keys</code> property to pass a list of prefixed keys that are propagated to remote services without any prefix.
+You can also use the <code>spring.sleuth.local-keys</code> property to pass a list keys that will be propagated locally but will not be propagated over the wire.
 Notice that there&#8217;s no <code>x-</code> in front of the header keys.
 </td>
 </tr>
