@@ -62,6 +62,13 @@ public class SleuthProperties {
 	 */
 	private List<String> propagationKeys = new ArrayList<>();
 
+	/**
+	 * Same as {@link #propagationKeys} except that this field is redacted from downstream propagation.
+	 *
+	 * @see brave.propagation.ExtraFieldPropagation.FactoryBuilder#addRedactedField(String)
+	 */
+	private List<String> redactedKeys = new ArrayList<>();
+
 	public boolean isEnabled() {
 		return this.enabled;
 	}
@@ -102,4 +109,11 @@ public class SleuthProperties {
 		this.propagationKeys = propagationKeys;
 	}
 
+	public List<String> getRedactedKeys() {
+		return this.redactedKeys;
+	}
+
+	public void setRedactedKeys(List<String> redactedKeys) {
+		this.redactedKeys = redactedKeys;
+	}
 }

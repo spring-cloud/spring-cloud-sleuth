@@ -114,6 +114,9 @@ final class Slf4jScopeDecorator implements CurrentTraceContext.ScopeDecorator {
 			for (String key : whitelistedPropagationKeysWithValue(currentSpan)) {
 				MDC.put(key, ExtraFieldPropagation.get(currentSpan, key));
 			}
+			for (String key : whitelistedRedactedKeysWithValue(currentSpan)) {
+				MDC.put(key, ExtraFieldPropagation.get(currentSpan, key));
+			}
 		}
 		else {
 			MDC.remove("traceId");
@@ -128,6 +131,9 @@ final class Slf4jScopeDecorator implements CurrentTraceContext.ScopeDecorator {
 				MDC.remove(s);
 			}
 			for (String s : whitelistedPropagationKeys()) {
+				MDC.remove(s);
+			}
+			for (String s : whitelistedRedactedKeys()) {
 				MDC.remove(s);
 			}
 			previousMdc.clear();
@@ -165,6 +171,7 @@ final class Slf4jScopeDecorator implements CurrentTraceContext.ScopeDecorator {
 		List<AbstractMap.SimpleEntry<String, String>> previousMdc = new ArrayList<>();
 		List<String> keys = new ArrayList<>(whitelistedBaggageKeys());
 		keys.addAll(whitelistedPropagationKeys());
+		keys.addAll(whitelistedRedactedKeys());
 		for (String key : keys) {
 			previousMdc.add(new AbstractMap.SimpleEntry<>(key, MDC.get(key)));
 		}
@@ -207,8 +214,16 @@ final class Slf4jScopeDecorator implements CurrentTraceContext.ScopeDecorator {
 		return whitelistedKeys(this.sleuthProperties.getPropagationKeys());
 	}
 
+	private List<String> whitelistedRedactedKeys() {
+		return whitelistedKeys(this.sleuthProperties.getRedactedKeys());
+	}
+
 	private List<String> whitelistedPropagationKeysWithValue(TraceContext context) {
 		return whitelistedKeysWithValue(context, whitelistedPropagationKeys());
+	}
+
+	private List<String> whitelistedRedactedKeysWithValue(TraceContext context) {
+		return whitelistedKeysWithValue(context, whitelistedRedactedKeys());
 	}
 
 	private void log(String text, TraceContext span) {
