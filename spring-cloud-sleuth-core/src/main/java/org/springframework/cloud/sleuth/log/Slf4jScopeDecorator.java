@@ -114,7 +114,7 @@ final class Slf4jScopeDecorator implements CurrentTraceContext.ScopeDecorator {
 			for (String key : whitelistedPropagationKeysWithValue(currentSpan)) {
 				MDC.put(key, ExtraFieldPropagation.get(currentSpan, key));
 			}
-			for (String key : whitelistedRedactedKeysWithValue(currentSpan)) {
+			for (String key : whitelistedLocalKeysWithValue(currentSpan)) {
 				MDC.put(key, ExtraFieldPropagation.get(currentSpan, key));
 			}
 		}
@@ -133,7 +133,7 @@ final class Slf4jScopeDecorator implements CurrentTraceContext.ScopeDecorator {
 			for (String s : whitelistedPropagationKeys()) {
 				MDC.remove(s);
 			}
-			for (String s : whitelistedRedactedKeys()) {
+			for (String s : whitelistedLocalKeys()) {
 				MDC.remove(s);
 			}
 			previousMdc.clear();
@@ -171,7 +171,7 @@ final class Slf4jScopeDecorator implements CurrentTraceContext.ScopeDecorator {
 		List<AbstractMap.SimpleEntry<String, String>> previousMdc = new ArrayList<>();
 		List<String> keys = new ArrayList<>(whitelistedBaggageKeys());
 		keys.addAll(whitelistedPropagationKeys());
-		keys.addAll(whitelistedRedactedKeys());
+		keys.addAll(whitelistedLocalKeys());
 		for (String key : keys) {
 			previousMdc.add(new AbstractMap.SimpleEntry<>(key, MDC.get(key)));
 		}
@@ -214,7 +214,7 @@ final class Slf4jScopeDecorator implements CurrentTraceContext.ScopeDecorator {
 		return whitelistedKeys(this.sleuthProperties.getPropagationKeys());
 	}
 
-	private List<String> whitelistedRedactedKeys() {
+	private List<String> whitelistedLocalKeys() {
 		return whitelistedKeys(this.sleuthProperties.getLocalKeys());
 	}
 
@@ -222,8 +222,8 @@ final class Slf4jScopeDecorator implements CurrentTraceContext.ScopeDecorator {
 		return whitelistedKeysWithValue(context, whitelistedPropagationKeys());
 	}
 
-	private List<String> whitelistedRedactedKeysWithValue(TraceContext context) {
-		return whitelistedKeysWithValue(context, whitelistedRedactedKeys());
+	private List<String> whitelistedLocalKeysWithValue(TraceContext context) {
+		return whitelistedKeysWithValue(context, whitelistedLocalKeys());
 	}
 
 	private void log(String text, TraceContext span) {
