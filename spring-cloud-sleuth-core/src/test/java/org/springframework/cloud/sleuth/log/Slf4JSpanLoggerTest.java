@@ -82,8 +82,7 @@ public class Slf4JSpanLoggerTest {
 		ExtraFieldPropagation.set(this.span.context(), "my-baggage", "my-value");
 		ExtraFieldPropagation.set(this.span.context(), "my-propagation",
 				"my-propagation-value");
-		ExtraFieldPropagation.set(this.span.context(), "my-local",
-				"my-local-value");
+		ExtraFieldPropagation.set(this.span.context(), "my-local", "my-local-value");
 		Scope scope = this.slf4jScopeDecorator.decorateScope(this.span.context(), () -> {
 		});
 

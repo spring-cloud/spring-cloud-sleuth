@@ -63,7 +63,8 @@ public class SleuthProperties {
 	private List<String> propagationKeys = new ArrayList<>();
 
 	/**
-	 * Same as {@link #propagationKeys} except that this field is not propagated to remote services.
+	 * Same as {@link #propagationKeys} except that this field is not propagated to remote
+	 * services.
 	 *
 	 * @see brave.propagation.ExtraFieldPropagation.FactoryBuilder#addRedactedField(String)
 	 */
@@ -116,4 +117,5 @@ public class SleuthProperties {
 	public void setLocalKeys(List<String> localKeys) {
 		this.localKeys = localKeys;
 	}
+
 }
