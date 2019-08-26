@@ -21,6 +21,7 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 
 import brave.Tracing;
+import brave.propagation.CurrentTraceContext;
 import brave.propagation.StrictScopeDecorator;
 import brave.propagation.ThreadLocalCurrentTraceContext;
 import brave.propagation.TraceContext;
@@ -130,12 +131,13 @@ public class SleuthHystrixConcurrencyStrategyTest {
 				this.tracing, new DefaultSpanNamer(), true);
 
 		TraceContext traceContext = TraceContext.newBuilder().traceId(123L).spanId(456L).build();
-		tracing.currentTraceContext().newScope(traceContext);
+		CurrentTraceContext.Scope scope = tracing.currentTraceContext().newScope(traceContext);
 
 		Callable<TraceContext> callable = strategy.wrapCallable(() -> tracing.currentTraceContext().get());
 
 		then(callable).isNotInstanceOf(TraceCallable.class);
 		then(callable.call()).isEqualTo(traceContext);
+		scope.close();
 	}
 
 	@Test
