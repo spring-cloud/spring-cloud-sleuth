@@ -42,15 +42,16 @@ import org.springframework.context.annotation.Configuration;
 @AutoConfigureAfter(TraceAutoConfiguration.class)
 @ConditionalOnClass(HystrixCommand.class)
 @ConditionalOnBean(Tracing.class)
-@ConditionalOnProperty(value = "spring.sleuth.hystrix.strategy.enabled", matchIfMissing = true)
+@ConditionalOnProperty(value = "spring.sleuth.hystrix.strategy.enabled",
+		matchIfMissing = true)
 @EnableConfigurationProperties(SleuthHystrixConcurrencyStrategyProperties.class)
 public class SleuthHystrixAutoConfiguration {
 
 	@Bean
 	SleuthHystrixConcurrencyStrategy sleuthHystrixConcurrencyStrategy(Tracing tracing,
-																	  SpanNamer spanNamer,
-																	  SleuthHystrixConcurrencyStrategyProperties properties) {
-		return new SleuthHystrixConcurrencyStrategy(tracing, spanNamer, properties.isPassthrough());
+			SpanNamer spanNamer, SleuthHystrixConcurrencyStrategyProperties properties) {
+		return new SleuthHystrixConcurrencyStrategy(tracing, spanNamer,
+				properties.isPassthrough());
 	}
 
 }

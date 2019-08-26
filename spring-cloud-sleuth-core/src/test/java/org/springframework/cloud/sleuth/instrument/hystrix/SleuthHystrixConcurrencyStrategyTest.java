@@ -126,14 +126,18 @@ public class SleuthHystrixConcurrencyStrategyTest {
 	}
 
 	@Test
-	public void should_propagate_trace_context_when_passthrough_is_enabled() throws Exception {
+	public void should_propagate_trace_context_when_passthrough_is_enabled()
+			throws Exception {
 		SleuthHystrixConcurrencyStrategy strategy = new SleuthHystrixConcurrencyStrategy(
 				this.tracing, new DefaultSpanNamer(), true);
 
-		TraceContext traceContext = TraceContext.newBuilder().traceId(123L).spanId(456L).build();
-		CurrentTraceContext.Scope scope = tracing.currentTraceContext().newScope(traceContext);
+		TraceContext traceContext = TraceContext.newBuilder().traceId(123L).spanId(456L)
+				.build();
+		CurrentTraceContext.Scope scope = tracing.currentTraceContext()
+				.newScope(traceContext);
 
-		Callable<TraceContext> callable = strategy.wrapCallable(() -> tracing.currentTraceContext().get());
+		Callable<TraceContext> callable = strategy
+				.wrapCallable(() -> tracing.currentTraceContext().get());
 
 		then(callable).isNotInstanceOf(TraceCallable.class);
 		then(callable.call()).isEqualTo(traceContext);

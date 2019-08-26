@@ -55,15 +55,19 @@ public class SleuthHystrixConcurrencyStrategy extends HystrixConcurrencyStrategy
 			.getLog(SleuthHystrixConcurrencyStrategy.class);
 
 	private final Tracing tracing;
+
 	private final SpanNamer spanNamer;
+
 	private HystrixConcurrencyStrategy delegate;
+
 	private boolean passthrough;
 
 	public SleuthHystrixConcurrencyStrategy(Tracing tracing, SpanNamer spanNamer) {
-		 this(tracing, spanNamer, false);
+		this(tracing, spanNamer, false);
 	}
 
-	public SleuthHystrixConcurrencyStrategy(Tracing tracing, SpanNamer spanNamer, boolean passthrough) {
+	public SleuthHystrixConcurrencyStrategy(Tracing tracing, SpanNamer spanNamer,
+			boolean passthrough) {
 		this.tracing = tracing;
 		this.spanNamer = spanNamer;
 		this.passthrough = passthrough;
@@ -114,14 +118,17 @@ public class SleuthHystrixConcurrencyStrategy extends HystrixConcurrencyStrategy
 			return callable;
 		}
 
-		Callable<T> wrappedCallable = this.delegate != null ? this.delegate.wrapCallable(callable) : callable;
+		Callable<T> wrappedCallable = this.delegate != null
+				? this.delegate.wrapCallable(callable) : callable;
+
 		if (wrappedCallable instanceof TraceCallable) {
 			return wrappedCallable;
 		}
 
 		if (passthrough) {
 			return this.tracing.currentTraceContext().wrap(callable);
-		} else {
+		}
+		else {
 			return new TraceCallable<>(this.tracing, this.spanNamer, wrappedCallable,
 					HYSTRIX_COMPONENT);
 		}
