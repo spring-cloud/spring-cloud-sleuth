@@ -27,7 +27,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 public class SleuthHystrixConcurrencyStrategyProperties {
 
 	private boolean enabled = true;
-	private boolean passthrough = true;
+	private boolean passthrough = false;
 
 	public boolean isEnabled() {
 		return this.enabled;
