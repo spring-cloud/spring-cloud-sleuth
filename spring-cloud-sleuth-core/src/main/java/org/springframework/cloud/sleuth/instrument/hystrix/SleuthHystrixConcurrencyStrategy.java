@@ -55,14 +55,18 @@ public class SleuthHystrixConcurrencyStrategy extends HystrixConcurrencyStrategy
 			.getLog(SleuthHystrixConcurrencyStrategy.class);
 
 	private final Tracing tracing;
-
 	private final SpanNamer spanNamer;
-
 	private HystrixConcurrencyStrategy delegate;
+	private boolean passthrough;
 
 	public SleuthHystrixConcurrencyStrategy(Tracing tracing, SpanNamer spanNamer) {
+		 this(tracing, spanNamer, false);
+	}
+
+	public SleuthHystrixConcurrencyStrategy(Tracing tracing, SpanNamer spanNamer, boolean passthrough) {
 		this.tracing = tracing;
 		this.spanNamer = spanNamer;
+		this.passthrough = passthrough;
 		try {
 			this.delegate = HystrixPlugins.getInstance().getConcurrencyStrategy();
 			if (this.delegate instanceof SleuthHystrixConcurrencyStrategy) {
@@ -77,7 +81,7 @@ public class SleuthHystrixConcurrencyStrategy extends HystrixConcurrencyStrategy
 					.getMetricsPublisher();
 			HystrixPropertiesStrategy propertiesStrategy = HystrixPlugins.getInstance()
 					.getPropertiesStrategy();
-			logCurrentStateOfHysrixPlugins(eventNotifier, metricsPublisher,
+			logCurrentStateOfHystrixPlugins(eventNotifier, metricsPublisher,
 					propertiesStrategy);
 			HystrixPlugins.reset();
 			HystrixPlugins.getInstance().registerConcurrencyStrategy(this);
@@ -92,7 +96,7 @@ public class SleuthHystrixConcurrencyStrategy extends HystrixConcurrencyStrategy
 		}
 	}
 
-	private void logCurrentStateOfHysrixPlugins(HystrixEventNotifier eventNotifier,
+	private void logCurrentStateOfHystrixPlugins(HystrixEventNotifier eventNotifier,
 			HystrixMetricsPublisher metricsPublisher,
 			HystrixPropertiesStrategy propertiesStrategy) {
 		if (log.isDebugEnabled()) {
@@ -109,13 +113,18 @@ public class SleuthHystrixConcurrencyStrategy extends HystrixConcurrencyStrategy
 		if (callable instanceof TraceCallable) {
 			return callable;
 		}
-		Callable<T> wrappedCallable = this.delegate != null
-				? this.delegate.wrapCallable(callable) : callable;
+
+		Callable<T> wrappedCallable = this.delegate != null ? this.delegate.wrapCallable(callable) : callable;
 		if (wrappedCallable instanceof TraceCallable) {
 			return wrappedCallable;
 		}
-		return new TraceCallable<>(this.tracing, this.spanNamer, wrappedCallable,
-				HYSTRIX_COMPONENT);
+
+		if (passthrough) {
+			return this.tracing.currentTraceContext().wrap(callable);
+		} else {
+			return new TraceCallable<>(this.tracing, this.spanNamer, wrappedCallable,
+					HYSTRIX_COMPONENT);
+		}
 	}
 
 	@Override
