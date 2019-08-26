@@ -18,6 +18,7 @@ package org.springframework.cloud.sleuth.instrument.hystrix;
 
 import brave.Tracing;
 import com.netflix.hystrix.HystrixCommand;
+
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
