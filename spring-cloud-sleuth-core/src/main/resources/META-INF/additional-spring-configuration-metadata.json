@@ -25,18 +25,6 @@
       "defaultValue": true
     },
     {
-      "name": "spring.sleuth.hystrix.strategy.enabled",
-      "type": "java.lang.Boolean",
-      "description": "Enable custom HystrixConcurrencyStrategy that wraps all Callable instances into their Sleuth representative - the TraceCallable.",
-      "defaultValue": true
-    },
-    {
-      "name": "spring.sleuth.hystrix.strategy.passthrough",
-      "type": "java.lang.Boolean",
-      "description": "When enabled the tracing information is passed to the Hystrix execution threads but spans are not created for each execution.",
-      "defaultValue": false
-    },
-    {
       "name": "spring.sleuth.feign.enabled",
       "type": "java.lang.Boolean",
       "description": "Enable span information propagation when using Feign.",

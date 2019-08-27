@@ -26,8 +26,16 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 @ConfigurationProperties("spring.sleuth.hystrix.strategy")
 public class SleuthHystrixConcurrencyStrategyProperties {
 
+	/**
+	 * Enable custom HystrixConcurrencyStrategy that wraps all Callable instances into
+	 * their Sleuth representative - the TraceCallable.
+	 */
 	private boolean enabled = true;
 
+	/**
+	 * When enabled the tracing information is passed to the Hystrix execution threads but
+	 * spans are not created for each execution.
+	 */
 	private boolean passthrough = false;
 
 	public boolean isEnabled() {
