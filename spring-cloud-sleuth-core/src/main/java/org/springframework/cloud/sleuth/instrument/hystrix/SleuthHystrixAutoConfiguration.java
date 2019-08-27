@@ -23,6 +23,7 @@ import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.cloud.sleuth.SpanNamer;
 import org.springframework.cloud.sleuth.autoconfig.TraceAutoConfiguration;
 import org.springframework.context.annotation.Bean;
@@ -34,8 +35,8 @@ import org.springframework.context.annotation.Configuration;
  * {@link com.netflix.hystrix.strategy.concurrency.HystrixConcurrencyStrategy}.
  *
  * @author Marcin Grzejszczak
- * @since 1.0.0
  * @see SleuthHystrixConcurrencyStrategy
+ * @since 1.0.0
  */
 @Configuration
 @AutoConfigureAfter(TraceAutoConfiguration.class)
@@ -43,12 +44,14 @@ import org.springframework.context.annotation.Configuration;
 @ConditionalOnBean(Tracing.class)
 @ConditionalOnProperty(value = "spring.sleuth.hystrix.strategy.enabled",
 		matchIfMissing = true)
+@EnableConfigurationProperties(SleuthHystrixConcurrencyStrategyProperties.class)
 public class SleuthHystrixAutoConfiguration {
 
 	@Bean
 	SleuthHystrixConcurrencyStrategy sleuthHystrixConcurrencyStrategy(Tracing tracing,
-			SpanNamer spanNamer) {
-		return new SleuthHystrixConcurrencyStrategy(tracing, spanNamer);
+			SpanNamer spanNamer, SleuthHystrixConcurrencyStrategyProperties properties) {
+		return new SleuthHystrixConcurrencyStrategy(tracing, spanNamer,
+				properties.isPassthrough());
 	}
 
 }

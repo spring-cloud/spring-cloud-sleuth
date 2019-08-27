@@ -21,8 +21,10 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 
 import brave.Tracing;
+import brave.propagation.CurrentTraceContext;
 import brave.propagation.StrictScopeDecorator;
 import brave.propagation.ThreadLocalCurrentTraceContext;
+import brave.propagation.TraceContext;
 import com.netflix.hystrix.HystrixThreadPoolKey;
 import com.netflix.hystrix.HystrixThreadPoolProperties;
 import com.netflix.hystrix.strategy.HystrixPlugins;
@@ -121,6 +123,25 @@ public class SleuthHystrixConcurrencyStrategyTest {
 
 		then(callable).isInstanceOf(TraceCallable.class);
 		then(this.reporter.getSpans()).hasSize(1);
+	}
+
+	@Test
+	public void should_propagate_trace_context_when_passthrough_is_enabled()
+			throws Exception {
+		SleuthHystrixConcurrencyStrategy strategy = new SleuthHystrixConcurrencyStrategy(
+				this.tracing, new DefaultSpanNamer(), true);
+
+		TraceContext traceContext = TraceContext.newBuilder().traceId(123L).spanId(456L)
+				.build();
+		CurrentTraceContext.Scope scope = tracing.currentTraceContext()
+				.newScope(traceContext);
+
+		Callable<TraceContext> callable = strategy
+				.wrapCallable(() -> tracing.currentTraceContext().get());
+
+		then(callable).isNotInstanceOf(TraceCallable.class);
+		then(callable.call()).isEqualTo(traceContext);
+		scope.close();
 	}
 
 	@Test

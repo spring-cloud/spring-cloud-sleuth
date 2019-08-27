@@ -1028,6 +1028,7 @@ That way, you ensure that a new span is created and closed for each execution.
 
 We register a custom https://github.com/Netflix/Hystrix/wiki/Plugins#concurrencystrategy[`HystrixConcurrencyStrategy`] called `TraceCallable` that wraps all `Callable` instances in their Sleuth representative.
 The strategy either starts or continues a span, depending on whether tracing was already going on before the Hystrix command was called.
+Optionally, you can set `spring.sleuth.hystrix.strategy.passthrough` to `true` to just propagate the trace context to the Hystrix execution thread if you don't wish to start a new span.
 To disable the custom Hystrix Concurrency Strategy, set the `spring.sleuth.hystrix.strategy.enabled` to `false`.
 
 ==== Manual Command setting
