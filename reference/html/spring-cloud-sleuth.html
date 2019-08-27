@@ -2944,6 +2944,7 @@ Callable&lt;String&gt; traceCallableFromTracer = this.tracing.currentTraceContex
 <div class="paragraph">
 <p>We register a custom <a href="https://github.com/Netflix/Hystrix/wiki/Plugins#concurrencystrategy"><code>HystrixConcurrencyStrategy</code></a> called <code>TraceCallable</code> that wraps all <code>Callable</code> instances in their Sleuth representative.
 The strategy either starts or continues a span, depending on whether tracing was already going on before the Hystrix command was called.
+Optionally, you can set <code>spring.sleuth.hystrix.strategy.passthrough</code> to <code>true</code> to just propagate the trace context to the Hystrix execution thread if you don&#8217;t wish to start a new span.
 To disable the custom Hystrix Concurrency Strategy, set the <code>spring.sleuth.hystrix.strategy.enabled</code> to <code>false</code>.</p>
 </div>
 </div>
