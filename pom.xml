@@ -253,7 +253,7 @@
 		<spring-cloud-netflix.version>2.2.0.BUILD-SNAPSHOT</spring-cloud-netflix.version>
 		<spring-cloud-openfeign.version>2.2.0.BUILD-SNAPSHOT
 		</spring-cloud-openfeign.version>
-		<spring-security-boot-autoconfigure.version>2.1.3.RELEASE
+		<spring-security-boot-autoconfigure.version>2.1.7.RELEASE
 		</spring-security-boot-autoconfigure.version>
 		<disable.nohttp.checks>false</disable.nohttp.checks>
 	</properties>
