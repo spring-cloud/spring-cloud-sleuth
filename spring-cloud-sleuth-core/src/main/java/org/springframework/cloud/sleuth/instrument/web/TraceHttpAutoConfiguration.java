@@ -42,7 +42,7 @@ import org.springframework.lang.Nullable;
  * @since 2.0.0
  */
 @Configuration
-@ConditionalOnBean(Tracing.class)
+@ConditionalOnBean(TraceWebAutoConfiguration.class)
 @ConditionalOnProperty(name = "spring.sleuth.http.enabled", havingValue = "true",
 		matchIfMissing = true)
 @AutoConfigureAfter(TraceWebAutoConfiguration.class)

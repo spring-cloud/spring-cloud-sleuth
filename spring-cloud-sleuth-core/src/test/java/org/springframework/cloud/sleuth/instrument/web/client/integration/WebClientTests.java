@@ -16,7 +16,6 @@
 
 package org.springframework.cloud.sleuth.instrument.web.client.integration;
 
-import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -53,7 +52,6 @@ import org.awaitility.Awaitility;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.ClassRule;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -392,32 +390,6 @@ public class WebClientTests {
 			span.finish();
 		}
 		then(this.tracer.currentSpan()).isNull();
-	}
-
-	@Test
-	@Ignore("Flakey on CI")
-	public void shouldReportTraceForCancelledRequestViaWebClient() {
-		Span span = this.tracer.nextSpan().name("foo").start();
-
-		try (Tracer.SpanInScope ws = this.tracer.withSpanInScope(span)) {
-			this.webClient.get().uri("http://localhost:" + this.port + "/noresponse")
-					.retrieve().bodyToMono(String.class).timeout(Duration.ofMillis(0))
-					.block();
-		}
-		catch (Exception e) {
-
-		}
-		finally {
-			span.finish();
-		}
-
-		Awaitility.await().untilAsserted(() -> {
-			System.out.println("Found spans " + this.reporter.getSpans());
-			final Optional<zipkin2.Span> clientSpan = this.reporter.getSpans().stream()
-					.filter(s -> s.kind() == zipkin2.Span.Kind.CLIENT).findFirst();
-			then(clientSpan).isPresent();
-			then(clientSpan.get().tags()).containsEntry("error", "CANCELLED");
-		});
 	}
 
 	Object[] parametersForShouldAttachTraceIdWhenCallingAnotherService() {
