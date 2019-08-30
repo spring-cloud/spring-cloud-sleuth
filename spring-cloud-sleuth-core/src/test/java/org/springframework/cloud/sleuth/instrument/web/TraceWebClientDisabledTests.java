@@ -28,9 +28,9 @@ import org.springframework.test.context.junit4.SpringRunner;
  * @author Marcin Grzejszczak
  */
 @RunWith(SpringRunner.class)
-@SpringBootTest(classes = { TraceWebDisabledTests.Config.class }, properties = {
-		"spring.sleuth.web.enabled=false" })
-public class TraceWebDisabledTests {
+@SpringBootTest(classes = { TraceWebClientDisabledTests.Config.class }, properties = {
+		"spring.sleuth.web.enabled=true", "spring.sleuth.web.client.enabled=false" })
+public class TraceWebClientDisabledTests {
 
 	@Test
 	public void should_load_context() {

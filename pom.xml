@@ -274,6 +274,11 @@
 		</maven-checkstyle-plugin.failsOnViolation>
 		<maven-checkstyle-plugin.includeTestSourceDirectory>true
 		</maven-checkstyle-plugin.includeTestSourceDirectory>
+
+		<okhttp.version>3.10.0</okhttp.version>
+		<mockwebserver.version>3.10.0</mockwebserver.version>
+		<guava.version>20.0</guava.version>
+		<javax.resource-api.version>1.7.1</javax.resource-api.version>
 	</properties>
 
 	<profiles>

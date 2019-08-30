@@ -143,6 +143,11 @@
 			<optional>true</optional>
 		</dependency>
 		<dependency>
+			<groupId>io.github.openfeign.form</groupId>
+			<artifactId>feign-form-spring</artifactId>
+			<optional>true</optional>
+		</dependency>
+		<dependency>
 			<groupId>com.netflix.zuul</groupId>
 			<artifactId>zuul-core</artifactId>
 			<optional>true</optional>
@@ -161,6 +166,7 @@
 		<dependency>
 			<groupId>com.squareup.okhttp3</groupId>
 			<artifactId>okhttp</artifactId>
+			<version>${okhttp.version}</version>
 			<optional>true</optional>
 		</dependency>
 		<dependency>
@@ -273,7 +279,7 @@
 		<dependency>
 			<groupId>com.squareup.okhttp3</groupId>
 			<artifactId>mockwebserver</artifactId>
-			<version>3.5.0</version>
+			<version>${mockwebserver.version}</version>
 			<scope>test</scope>
 		</dependency>
 		<dependency>
@@ -325,7 +331,7 @@
 		<dependency>
 			<groupId>javax.resource</groupId>
 			<artifactId>javax.resource-api</artifactId>
-			<version>1.7.1</version>
+			<version>${javax.resource-api.version}</version>
 			<scope>test</scope>
 		</dependency>
 		<dependency>
@@ -337,7 +343,7 @@
 		<dependency>
 			<groupId>com.google.guava</groupId>
 			<artifactId>guava</artifactId>
-			<version>20.0</version>
+			<version>${guava.version}</version>
 			<scope>test</scope>
 		</dependency>
 		<dependency>
