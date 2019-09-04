@@ -385,6 +385,11 @@ final class TraceExchangeFilterFunction implements ExchangeFilterFunction {
 					}
 
 					@Override
+					public Mono<Void> releaseBody() {
+						return response.releaseBody();
+					}
+
+					@Override
 					public <T> Mono<ResponseEntity<T>> toEntity(Class<T> bodyType) {
 						return response.toEntity(bodyType);
 					}
@@ -405,6 +410,11 @@ final class TraceExchangeFilterFunction implements ExchangeFilterFunction {
 					public <T> Mono<ResponseEntity<List<T>>> toEntityList(
 							ParameterizedTypeReference<T> typeReference) {
 						return response.toEntityList(typeReference);
+					}
+
+					@Override
+					public Mono<ResponseEntity<Void>> toBodilessEntity() {
+						return response.toBodilessEntity();
 					}
 
 					@Override
