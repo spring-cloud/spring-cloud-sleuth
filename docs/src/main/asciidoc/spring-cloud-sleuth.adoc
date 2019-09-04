@@ -1229,7 +1229,7 @@ Spring Cloud Sleuth provides instrumentation for https://grpc.io/[gRPC] through 
 ===== Dependencies
 IMPORTANT: The gRPC integration relies on two external libraries to instrument clients and servers and both of those libraries must be on the class path to enable the instrumentation.
 
-Maven: 
+Maven:
 ```
 		<dependency>
 			<groupId>io.github.lognet</groupId>
@@ -1248,7 +1248,7 @@ Gradle:
 
 ===== Server Instrumentation
 
-Spring Cloud Sleuth leverages grpc-spring-boot-starter to register Brave's gRPC server interceptor with all services annotated with `@GRpcService`. 
+Spring Cloud Sleuth leverages grpc-spring-boot-starter to register Brave's gRPC server interceptor with all services annotated with `@GRpcService`.
 
 ===== Client Instrumentation
 
@@ -1387,6 +1387,12 @@ To disable Zuul support, set the `spring.sleuth.zuul.enabled` property to `false
 
 We set `tracing` property to Lettcue `ClientResources` instance to enable Brave tracing built in Lettuce .
 To disable Redis support, set the `spring.sleuth.redis.enabled` property to `false`.
+
+=== Quartz
+
+We instrument quartz jobs by adding Job/Trigger listeners to the Quartz Scheduler.
+
+To turn off this feature, set the `spring.sleuth.quartz.enabled` property to `false`.
 
 == Running examples
 
