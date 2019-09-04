@@ -283,6 +283,7 @@ $(addBlockSwitches);
 </li>
 <li><a href="#_zuul">Zuul</a></li>
 <li><a href="#_redis">Redis</a></li>
+<li><a href="#_quartz">Quartz</a></li>
 </ul>
 </li>
 <li><a href="#_running_examples">Running examples</a></li>
@@ -3599,6 +3600,15 @@ To disable Zuul support, set the <code>spring.sleuth.zuul.enabled</code> propert
 <div class="paragraph">
 <p>We set <code>tracing</code> property to Lettcue <code>ClientResources</code> instance to enable Brave tracing built in Lettuce .
 To disable Redis support, set the <code>spring.sleuth.redis.enabled</code> property to <code>false</code>.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_quartz"><a class="link" href="#_quartz">Quartz</a></h3>
+<div class="paragraph">
+<p>We instrument quartz jobs by adding Job/Trigger listeners to the Quartz Scheduler.</p>
+</div>
+<div class="paragraph">
+<p>To turn off this feature, set the <code>spring.sleuth.quartz.enabled</code> property to <code>false</code>.</p>
 </div>
 </div>
 </div>
