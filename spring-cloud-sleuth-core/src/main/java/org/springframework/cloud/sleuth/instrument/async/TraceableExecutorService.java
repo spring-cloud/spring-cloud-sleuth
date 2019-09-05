@@ -63,7 +63,7 @@ public class TraceableExecutorService implements ExecutorService {
 
 	@Override
 	public void execute(Runnable command) {
-		this.delegate.submit(ContextUtil.isContextInCreation(this.beanFactory) ? command
+		this.delegate.execute(ContextUtil.isContextInCreation(this.beanFactory) ? command
 				: new TraceRunnable(tracing(), spanNamer(), command, this.spanName));
 	}
 
