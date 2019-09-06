@@ -1537,6 +1537,22 @@ public void getAnnotationForArgumentToString(@SpanTag("test") Long param) {
 </chapter>
 <chapter xml:id="_customizations">
 <title>Customizations</title>
+<section xml:id="_customizers">
+<title>Customizers</title>
+<simpara>With Brave 5.7 you have various options of providing customizers for your project. Brave ships with</simpara>
+<itemizedlist>
+<listitem>
+<simpara><literal>TracingCustomizer</literal> - allows configuration plugins to collaborate on building an instance of <literal>Tracing</literal>.</simpara>
+</listitem>
+<listitem>
+<simpara><literal>CurrentTraceContextCustomizer</literal> - allows configuration plugins to collaborate on building an instance of <literal>CurrentTraceContext</literal>.</simpara>
+</listitem>
+<listitem>
+<simpara><literal>ExtraFieldCustomizer</literal> - allows configuration plugins to collaborate on building an instance of <literal>ExtraFieldPropagation.Factory</literal>.</simpara>
+</listitem>
+</itemizedlist>
+<simpara>Sleuth will search for beans of those types and automatically apply customizations.</simpara>
+</section>
 <section xml:id="_http">
 <title>HTTP</title>
 <simpara>If a customization of client / server parsing of the HTTP related spans is required,
