@@ -24,6 +24,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.amqp.RabbitProperties;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.cloud.sleuth.zipkin2.ZipkinAutoConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Conditional;
@@ -33,6 +34,7 @@ import org.springframework.context.annotation.Configuration;
 @ConditionalOnBean(CachingConnectionFactory.class)
 @ConditionalOnMissingBean(name = ZipkinAutoConfiguration.SENDER_BEAN_NAME)
 @Conditional(ZipkinSenderCondition.class)
+@ConditionalOnProperty(value = "spring.zipkin.sender.type", havingValue = "rabbit")
 class ZipkinRabbitSenderConfiguration {
 
 	@Value("${spring.zipkin.rabbitmq.queue:zipkin}")

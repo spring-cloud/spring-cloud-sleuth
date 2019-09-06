@@ -216,6 +216,7 @@ public class ZipkinAutoConfigurationTests {
 	@Test
 	public void rabbitWinsWhenKafkaPresent() throws Exception {
 		this.context = new AnnotationConfigApplicationContext();
+		environment().setProperty("spring.zipkin.sender.type", "rabbit");
 		this.context.register(PropertyPlaceholderAutoConfiguration.class,
 				RabbitAutoConfiguration.class, KafkaAutoConfiguration.class,
 				ZipkinAutoConfiguration.class, TraceAutoConfiguration.class,
