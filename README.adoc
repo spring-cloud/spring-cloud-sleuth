@@ -616,6 +616,22 @@ Sleuth and Zipkin https://content.pivotal.io/springone-platform-2017/distributed
 
 You can check different setups of Sleuth and Brave https://github.com/openzipkin/sleuth-webmvc-example[in the openzipkin/sleuth-webmvc-example repository].
 
+:doctype: book
+:idprefix:
+:idseparator: -
+:toc: left
+:toclevels: 4
+:tabsize: 4
+:numbered:
+:sectanchors:
+:sectnums:
+:icons: font
+:hide-uri-scheme:
+:docinfo: shared,private
+
+:sc-ext: java
+:project-full-name: Spring Cloud Sleuth
+
 == Features
 
 * Adds trace and span IDs to the Slf4J MDC, so you can extract all the logs from a given trace or span in a log aggregator, as shown in the following example logs:

@@ -1,3 +1,5 @@
+include::_attributes.adoc[]
+
 == Features
 
 * Adds trace and span IDs to the Slf4J MDC, so you can extract all the logs from a given trace or span in a log aggregator, as shown in the following example logs:

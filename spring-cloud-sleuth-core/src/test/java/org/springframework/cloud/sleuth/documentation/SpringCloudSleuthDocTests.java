@@ -114,7 +114,6 @@ public class SpringCloudSleuthDocTests {
 		then(spans.get(0).name()).isEqualTo("calculatetax");
 		executorService.shutdown();
 	}
-	// end::span_name_annotation[]
 
 	@Test
 	public void should_create_a_span_with_tracer() {
@@ -305,5 +304,6 @@ public class SpringCloudSleuthDocTests {
 		}
 
 	}
+	// end::span_name_annotation[]
 
 }
