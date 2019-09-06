@@ -24,9 +24,12 @@ import brave.CurrentSpanCustomizer;
 import brave.ErrorParser;
 import brave.Tracer;
 import brave.Tracing;
+import brave.TracingCustomizer;
 import brave.handler.FinishedSpanHandler;
 import brave.propagation.B3Propagation;
 import brave.propagation.CurrentTraceContext;
+import brave.propagation.CurrentTraceContextCustomizer;
+import brave.propagation.ExtraFieldCustomizer;
 import brave.propagation.ExtraFieldPropagation;
 import brave.propagation.Propagation;
 import brave.propagation.ThreadLocalCurrentTraceContext;
@@ -87,6 +90,15 @@ public class TraceAutoConfiguration {
 	@Autowired(required = false)
 	ExtraFieldPropagation.FactoryBuilder extraFieldPropagationFactoryBuilder;
 
+	@Autowired(required = false)
+	List<TracingCustomizer> tracingCustomizers = new ArrayList<>();
+
+	@Autowired(required = false)
+	List<CurrentTraceContextCustomizer> currentTraceContextCustomizers = new ArrayList<>();
+
+	@Autowired(required = false)
+	List<ExtraFieldCustomizer> extraFieldCustomizers = new ArrayList<>();
+
 	@Bean
 	@ConditionalOnMissingBean
 	// NOTE: stable bean name as might be used outside sleuth
@@ -106,6 +118,9 @@ public class TraceAutoConfiguration {
 				.supportsJoin(sleuthProperties.isSupportsJoin());
 		for (FinishedSpanHandler finishedSpanHandlerFactory : this.finishedSpanHandlers) {
 			builder.addFinishedSpanHandler(finishedSpanHandlerFactory);
+		}
+		for (TracingCustomizer customizer : this.tracingCustomizers) {
+			customizer.customize(builder);
 		}
 		return builder.build();
 	}
@@ -155,6 +170,9 @@ public class TraceAutoConfiguration {
 				factoryBuilder = factoryBuilder.addField(key);
 			}
 		}
+		for (ExtraFieldCustomizer customizer : this.extraFieldCustomizers) {
+			customizer.customize(factoryBuilder);
+		}
 		return factoryBuilder.build();
 	}
 
@@ -162,6 +180,9 @@ public class TraceAutoConfiguration {
 	CurrentTraceContext sleuthCurrentTraceContext(CurrentTraceContext.Builder builder) {
 		for (CurrentTraceContext.ScopeDecorator scopeDecorator : this.scopeDecorators) {
 			builder.addScopeDecorator(scopeDecorator);
+		}
+		for (CurrentTraceContextCustomizer customizer : this.currentTraceContextCustomizers) {
+			customizer.customize(builder);
 		}
 		return builder.build();
 	}

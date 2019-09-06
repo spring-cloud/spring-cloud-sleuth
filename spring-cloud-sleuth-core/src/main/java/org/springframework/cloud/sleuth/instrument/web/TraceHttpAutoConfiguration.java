@@ -16,6 +16,9 @@
 
 package org.springframework.cloud.sleuth.instrument.web;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import brave.ErrorParser;
 import brave.Tracing;
 import brave.http.HttpAdapter;
@@ -23,7 +26,9 @@ import brave.http.HttpClientParser;
 import brave.http.HttpSampler;
 import brave.http.HttpServerParser;
 import brave.http.HttpTracing;
+import brave.http.HttpTracingCustomizer;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -50,6 +55,9 @@ public class TraceHttpAutoConfiguration {
 
 	static final int TRACING_FILTER_ORDER = Ordered.HIGHEST_PRECEDENCE + 5;
 
+	@Autowired(required = false)
+	List<HttpTracingCustomizer> httpTracingCustomizers = new ArrayList<>();
+
 	@Bean
 	@ConditionalOnMissingBean
 	// NOTE: stable bean name as might be used outside sleuth
@@ -59,9 +67,13 @@ public class TraceHttpAutoConfiguration {
 			@Nullable @ServerSampler HttpSampler serverSampler) {
 		HttpSampler combinedSampler = combineUserProvidedSamplerWithSkipPatternSampler(
 				serverSampler, provider);
-		return HttpTracing.newBuilder(tracing).clientParser(clientParser)
-				.serverParser(serverParser).clientSampler(clientSampler)
-				.serverSampler(combinedSampler).build();
+		HttpTracing.Builder builder = HttpTracing.newBuilder(tracing)
+				.clientParser(clientParser).serverParser(serverParser)
+				.clientSampler(clientSampler).serverSampler(combinedSampler);
+		for (HttpTracingCustomizer customizer : this.httpTracingCustomizers) {
+			customizer.customize(builder);
+		}
+		return builder.build();
 	}
 
 	private HttpSampler combineUserProvidedSamplerWithSkipPatternSampler(

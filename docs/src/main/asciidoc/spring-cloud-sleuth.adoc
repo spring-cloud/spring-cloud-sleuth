@@ -833,6 +833,16 @@ Running the preceding method with a value of `15` leads to setting a tag with a 
 
 == Customizations
 
+=== Customizers
+
+With Brave 5.7 you have various options of providing customizers for your project. Brave ships with
+
+* `TracingCustomizer` - allows configuration plugins to collaborate on building an instance of `Tracing`.
+* `CurrentTraceContextCustomizer` - allows configuration plugins to collaborate on building an instance of `CurrentTraceContext`.
+* `ExtraFieldCustomizer` - allows configuration plugins to collaborate on building an instance of `ExtraFieldPropagation.Factory`.
+
+Sleuth will search for beans of those types and automatically apply customizations.
+
 === HTTP
 
 If a customization of client / server parsing of the HTTP related spans is required,
