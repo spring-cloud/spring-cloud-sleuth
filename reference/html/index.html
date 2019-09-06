@@ -204,6 +204,7 @@ $(addBlockSwitches);
 </li>
 <li><a href="#_customizations">Customizations</a>
 <ul class="sectlevel2">
+<li><a href="#_customizers">Customizers</a></li>
 <li><a href="#_http">HTTP</a></li>
 <li><a href="#_tracingfilter"><code>TracingFilter</code></a></li>
 <li><a href="#_custom_service_name">Custom service name</a></li>
@@ -2594,6 +2595,28 @@ public void getAnnotationForArgumentToString(@SpanTag("test") Long param) {
 <div class="sect1">
 <h2 id="_customizations"><a class="link" href="#_customizations">Customizations</a></h2>
 <div class="sectionbody">
+<div class="sect2">
+<h3 id="_customizers"><a class="link" href="#_customizers">Customizers</a></h3>
+<div class="paragraph">
+<p>With Brave 5.7 you have various options of providing customizers for your project. Brave ships with</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><code>TracingCustomizer</code> - allows configuration plugins to collaborate on building an instance of <code>Tracing</code>.</p>
+</li>
+<li>
+<p><code>CurrentTraceContextCustomizer</code> - allows configuration plugins to collaborate on building an instance of <code>CurrentTraceContext</code>.</p>
+</li>
+<li>
+<p><code>ExtraFieldCustomizer</code> - allows configuration plugins to collaborate on building an instance of <code>ExtraFieldPropagation.Factory</code>.</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>Sleuth will search for beans of those types and automatically apply customizations.</p>
+</div>
+</div>
 <div class="sect2">
 <h3 id="_http"><a class="link" href="#_http">HTTP</a></h3>
 <div class="paragraph">
