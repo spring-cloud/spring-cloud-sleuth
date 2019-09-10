@@ -18,7 +18,12 @@ package org.springframework.cloud.sleuth.annotation;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.stream.Collector;
 import java.util.stream.Collectors;
+
+import javax.annotation.concurrent.NotThreadSafe;
 
 import brave.Span;
 import brave.Tracer;
@@ -26,7 +31,6 @@ import brave.sampler.Sampler;
 import org.apache.commons.lang3.StringUtils;
 import org.awaitility.Awaitility;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import reactor.core.publisher.Mono;
@@ -39,7 +43,6 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.cloud.sleuth.util.ArrayListSpanReporter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.data.util.Pair;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.junit4.SpringRunner;
 
@@ -51,6 +54,7 @@ import static reactor.core.publisher.Mono.just;
 @SpringBootTest(classes = SleuthSpanCreatorAspectMonoTests.TestConfiguration.class)
 @RunWith(SpringRunner.class)
 @DirtiesContext(methodMode = BEFORE_METHOD)
+@NotThreadSafe
 public class SleuthSpanCreatorAspectMonoTests {
 
 	@Autowired
@@ -413,7 +417,6 @@ public class SleuthSpanCreatorAspectMonoTests {
 	}
 
 	@Test
-	@Ignore
 	public void shouldReturnNewSpanFromTraceContextOuter() {
 		Mono<Pair<Pair<Long, Long>, Long>> mono = this.testBeanOuter
 				.outerNewSpanInTraceContext();
@@ -422,18 +425,24 @@ public class SleuthSpanCreatorAspectMonoTests {
 
 		Pair<Pair<Long, Long>, Long> pair = mono.block();
 		Long outerSpanIdBefore = pair.getFirst().getFirst();
-		Long outerSpanIdAfter = pair.getFirst().getSecond();
 		Long innerSpanId = pair.getSecond();
 
-		then(outerSpanIdBefore).isEqualTo(outerSpanIdAfter).isNotEqualTo(innerSpanId);
+		then(outerSpanIdBefore).isNotEqualTo(innerSpanId);
 
 		Awaitility.await().untilAsserted(() -> {
 			List<zipkin2.Span> spans = this.reporter.getSpans();
-			then(spans).hasSize(2);
-			then(spans.get(0).name()).isEqualTo("outer-span-in-trace-context");
-			then(spans.get(0).id()).isEqualTo(toHexString(outerSpanIdBefore));
-			then(spans.get(1).name()).isEqualTo("span-in-trace-context");
-			then(spans.get(1).id()).isEqualTo(toHexString(innerSpanId));
+			zipkin2.Span outerSpan = spans.stream()
+					.filter(span -> span.name().equals("outer-span-in-trace-context"))
+					.findFirst().orElseThrow(() -> new AssertionError(
+							"No span with name [outer-span-in-trace-context] found"));
+			then(outerSpan.name()).isEqualTo("outer-span-in-trace-context");
+			then(outerSpan.id()).isEqualTo(toHexString(outerSpanIdBefore));
+			zipkin2.Span innerSpan = spans.stream()
+					.filter(span -> span.name().equals("span-in-trace-context"))
+					.findFirst().orElseThrow(() -> new AssertionError(
+							"No span with name [span-in-trace-context] found"));
+			then(innerSpan.name()).isEqualTo("span-in-trace-context");
+			then(innerSpan.id()).isEqualTo(toHexString(innerSpanId));
 			then(this.tracer.currentSpan()).isNull();
 		});
 	}
@@ -456,7 +465,6 @@ public class SleuthSpanCreatorAspectMonoTests {
 	}
 
 	@Test
-	@Ignore
 	public void shouldReturnNewSpanFromSubscriberContextOuter() {
 		Mono<Pair<Pair<Long, Long>, Long>> mono = this.testBeanOuter
 				.outerNewSpanInSubscriberContext();
@@ -465,18 +473,24 @@ public class SleuthSpanCreatorAspectMonoTests {
 
 		Pair<Pair<Long, Long>, Long> pair = mono.block();
 		Long outerSpanIdBefore = pair.getFirst().getFirst();
-		Long outerSpanIdAfter = pair.getFirst().getSecond();
 		Long innerSpanId = pair.getSecond();
 
-		then(outerSpanIdBefore).isEqualTo(outerSpanIdAfter).isNotEqualTo(innerSpanId);
+		then(outerSpanIdBefore).isNotEqualTo(innerSpanId);
 
 		Awaitility.await().untilAsserted(() -> {
 			List<zipkin2.Span> spans = this.reporter.getSpans();
-			then(spans).hasSize(2);
-			then(spans.get(0).name()).isEqualTo("outer-span-in-subscriber-context");
-			then(spans.get(0).id()).isEqualTo(toHexString(outerSpanIdBefore));
-			then(spans.get(1).name()).isEqualTo("span-in-subscriber-context");
-			then(spans.get(1).id()).isEqualTo(toHexString(innerSpanId));
+			zipkin2.Span outerSpan = spans.stream().filter(
+					span -> span.name().equals("outer-span-in-subscriber-context"))
+					.findFirst().orElseThrow(() -> new AssertionError(
+							"No span with name [outer-span-in-subscriber-context] found"));
+			then(outerSpan.name()).isEqualTo("outer-span-in-subscriber-context");
+			then(outerSpan.id()).isEqualTo(toHexString(outerSpanIdBefore));
+			zipkin2.Span innerSpan = spans.stream()
+					.filter(span -> span.name().equals("span-in-subscriber-context"))
+					.findFirst().orElseThrow(() -> new AssertionError(
+							"No span with name [span-in-subscriber-context] found"));
+			then(innerSpan.name()).isEqualTo("span-in-subscriber-context");
+			then(innerSpan.id()).isEqualTo(toHexString(innerSpanId));
 			then(this.tracer.currentSpan()).isNull();
 		});
 	}
@@ -697,6 +711,55 @@ public class SleuthSpanCreatorAspectMonoTests {
 			return Sampler.ALWAYS_SAMPLE;
 		}
 
+	}
+
+}
+
+/**
+ * Copied from Spring Data
+ */
+final class Pair<S, T> {
+
+	private final S first;
+
+	private final T second;
+
+	Pair(S first, T second) {
+		this.first = first;
+		this.second = second;
+	}
+
+	public static <S, T> Pair<S, T> of(S first, T second) {
+		return new Pair<>(first, second);
+	}
+
+	public S getFirst() {
+		return first;
+	}
+
+	public T getSecond() {
+		return second;
+	}
+
+	public static <S, T> Collector<Pair<S, T>, ?, Map<S, T>> toMap() {
+		return Collectors.toMap(Pair::getFirst, Pair::getSecond);
+	}
+
+	@Override
+	public boolean equals(Object o) {
+		if (this == o) {
+			return true;
+		}
+		if (o == null || getClass() != o.getClass()) {
+			return false;
+		}
+		Pair<?, ?> pair = (Pair<?, ?>) o;
+		return Objects.equals(first, pair.first) && Objects.equals(second, pair.second);
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hash(first, second);
 	}
 
 }
