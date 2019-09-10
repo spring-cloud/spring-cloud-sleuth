@@ -26,6 +26,7 @@ import brave.sampler.Sampler;
 import org.apache.commons.lang3.StringUtils;
 import org.awaitility.Awaitility;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import reactor.core.publisher.Mono;
@@ -412,6 +413,7 @@ public class SleuthSpanCreatorAspectMonoTests {
 	}
 
 	@Test
+	@Ignore
 	public void shouldReturnNewSpanFromTraceContextOuter() {
 		Mono<Pair<Pair<Long, Long>, Long>> mono = this.testBeanOuter
 				.outerNewSpanInTraceContext();
@@ -454,6 +456,7 @@ public class SleuthSpanCreatorAspectMonoTests {
 	}
 
 	@Test
+	@Ignore
 	public void shouldReturnNewSpanFromSubscriberContextOuter() {
 		Mono<Pair<Pair<Long, Long>, Long>> mono = this.testBeanOuter
 				.outerNewSpanInSubscriberContext();
