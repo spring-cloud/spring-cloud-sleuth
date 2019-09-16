@@ -42,7 +42,8 @@ public class SleuthTagPropagationAutoConfiguration {
 	protected static class TagPropagationConfiguration {
 
 		@Bean
-		public FinishedSpanHandler finishedSpanHandler(SleuthProperties sleuthProperties,
+		public FinishedSpanHandler sleuthFinishedSpanHandler(
+				SleuthProperties sleuthProperties,
 				SleuthTagPropagationProperties tagPropagationProperties) {
 			return new TagPropagationFinishedSpanHandler(sleuthProperties,
 					tagPropagationProperties);

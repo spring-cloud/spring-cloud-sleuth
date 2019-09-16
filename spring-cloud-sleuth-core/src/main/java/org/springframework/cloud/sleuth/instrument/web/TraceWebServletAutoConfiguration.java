@@ -115,39 +115,39 @@ public class TraceWebServletAutoConfiguration {
 
 	}
 
-	private static final class LazyTracingFilter implements Filter {
+}
 
-		private final BeanFactory beanFactory;
+final class LazyTracingFilter implements Filter {
 
-		private Filter tracingFilter;
+	private final BeanFactory beanFactory;
 
-		private LazyTracingFilter(BeanFactory beanFactory) {
-			this.beanFactory = beanFactory;
+	private Filter tracingFilter;
+
+	LazyTracingFilter(BeanFactory beanFactory) {
+		this.beanFactory = beanFactory;
+	}
+
+	@Override
+	public void init(FilterConfig filterConfig) throws ServletException {
+		tracingFilter().init(filterConfig);
+	}
+
+	@Override
+	public void doFilter(ServletRequest request, ServletResponse response,
+			FilterChain chain) throws IOException, ServletException {
+		tracingFilter().doFilter(request, response, chain);
+	}
+
+	@Override
+	public void destroy() {
+		tracingFilter().destroy();
+	}
+
+	private Filter tracingFilter() {
+		if (this.tracingFilter == null) {
+			this.tracingFilter = this.beanFactory.getBean(TracingFilter.class);
 		}
-
-		@Override
-		public void init(FilterConfig filterConfig) throws ServletException {
-			tracingFilter().init(filterConfig);
-		}
-
-		@Override
-		public void doFilter(ServletRequest request, ServletResponse response,
-				FilterChain chain) throws IOException, ServletException {
-			tracingFilter().doFilter(request, response, chain);
-		}
-
-		@Override
-		public void destroy() {
-			tracingFilter().destroy();
-		}
-
-		private Filter tracingFilter() {
-			if (this.tracingFilter == null) {
-				this.tracingFilter = this.beanFactory.getBean(TracingFilter.class);
-			}
-			return this.tracingFilter;
-		}
-
+		return this.tracingFilter;
 	}
 
 }
