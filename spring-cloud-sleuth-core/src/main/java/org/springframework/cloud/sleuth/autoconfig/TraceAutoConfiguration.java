@@ -42,11 +42,11 @@ import zipkin2.reporter.Reporter;
 import zipkin2.reporter.ReporterMetrics;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.cloud.sleuth.DefaultSpanNamer;
+import org.springframework.cloud.sleuth.LocalServiceName;
 import org.springframework.cloud.sleuth.SpanAdjuster;
 import org.springframework.cloud.sleuth.SpanNamer;
 import org.springframework.context.annotation.Bean;
@@ -102,10 +102,9 @@ public class TraceAutoConfiguration {
 	@Bean
 	@ConditionalOnMissingBean
 	// NOTE: stable bean name as might be used outside sleuth
-	Tracing tracing(
-			@Value("${spring.zipkin.service.name:${spring.application.name:default}}") String serviceName,
-			Propagation.Factory factory, CurrentTraceContext currentTraceContext,
-			Sampler sampler, ErrorParser errorParser, SleuthProperties sleuthProperties,
+	Tracing tracing(@LocalServiceName String serviceName, Propagation.Factory factory,
+			CurrentTraceContext currentTraceContext, Sampler sampler,
+			ErrorParser errorParser, SleuthProperties sleuthProperties,
 			@Nullable List<Reporter<zipkin2.Span>> spanReporters) {
 		Tracing.Builder builder = Tracing.newBuilder().sampler(sampler)
 				.errorParser(errorParser)
