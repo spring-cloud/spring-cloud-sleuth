@@ -28,7 +28,7 @@ import org.springframework.web.client.RestTemplate;
 
 /**
  * Default {@link ZipkinRestTemplateCustomizer} that provides the GZip compression if
- * {@link ZipkinProperties#compression} is enabled.
+ * {@link ZipkinProperties#getCompression()} is enabled.
  *
  * @author Marcin Grzejszczak
  * @since 1.1.0
@@ -42,10 +42,11 @@ public class DefaultZipkinRestTemplateCustomizer implements ZipkinRestTemplateCu
 	}
 
 	@Override
-	public void customize(RestTemplate restTemplate) {
+	public RestTemplate customizeTemplate(RestTemplate restTemplate) {
 		if (this.zipkinProperties.getCompression().isEnabled()) {
 			restTemplate.getInterceptors().add(0, new GZipInterceptor());
 		}
+		return restTemplate;
 	}
 
 	private class GZipInterceptor implements ClientHttpRequestInterceptor {

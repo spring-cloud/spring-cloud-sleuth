@@ -58,7 +58,7 @@ class ZipkinRestTemplateSenderConfiguration {
 	public Sender restTemplateSender(ZipkinProperties zipkin,
 			ZipkinRestTemplateCustomizer zipkinRestTemplateCustomizer) {
 		RestTemplate restTemplate = new ZipkinRestTemplateWrapper(zipkin, this.extractor);
-		zipkinRestTemplateCustomizer.customize(restTemplate);
+		restTemplate = zipkinRestTemplateCustomizer.customizeTemplate(restTemplate);
 		return new RestTemplateSender(restTemplate, zipkin.getBaseUrl(),
 				zipkin.getEncoder());
 	}
