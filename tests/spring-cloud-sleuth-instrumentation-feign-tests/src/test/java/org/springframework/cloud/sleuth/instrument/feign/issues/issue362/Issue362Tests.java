@@ -210,7 +210,7 @@ class CustomConfig {
 		public Exception decode(String methodKey, Response response) {
 			this.feignComponentAsserter.executedComponents.put(ErrorDecoder.class, true);
 			if (response.status() == 409) {
-				return new RetryableException(409, "Article not Ready",
+				return new RetryableException(response.status(), "Article not Ready",
 						Request.HttpMethod.GET, new Date(), response.request());
 			}
 			else {
