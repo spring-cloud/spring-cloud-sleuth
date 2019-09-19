@@ -185,8 +185,13 @@ class ExecutorBeanPostProcessor implements BeanPostProcessor {
 
 	Object createAsyncTaskExecutorProxy(Object bean, boolean cglibProxy,
 			AsyncTaskExecutor executor) {
-		return getProxiedObject(bean, cglibProxy, executor,
-				() -> new LazyTraceAsyncTaskExecutor(this.beanFactory, executor));
+		return getProxiedObject(bean, cglibProxy, executor, () -> {
+			if (bean instanceof ThreadPoolTaskScheduler) {
+				return new LazyTraceThreadPoolTaskScheduler(this.beanFactory,
+						(ThreadPoolTaskScheduler) executor);
+			}
+			return new LazyTraceAsyncTaskExecutor(this.beanFactory, executor);
+		});
 	}
 
 	private Object getProxiedObject(Object bean, boolean cglibProxy, Executor executor,
