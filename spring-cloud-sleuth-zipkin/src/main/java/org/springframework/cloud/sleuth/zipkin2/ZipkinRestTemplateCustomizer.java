@@ -31,6 +31,25 @@ import org.springframework.web.client.RestTemplate;
  */
 public interface ZipkinRestTemplateCustomizer {
 
-	void customize(RestTemplate restTemplate);
+	/**
+	 * Customizes the {@link RestTemplate}.
+	 * @deprecated use
+	 * {@link ZipkinRestTemplateCustomizer#customizeTemplate(RestTemplate)}
+	 * @param restTemplate object to customize
+	 */
+	@Deprecated
+	default void customize(RestTemplate restTemplate) {
+		customizeTemplate(restTemplate);
+	};
+
+	/**
+	 * Customizes the {@link RestTemplate} instance. Might return a new one if necessary.
+	 * @param restTemplate default object to customize
+	 * @return customized {@link RestTemplate} or a new object
+	 * @since 2.2.0
+	 */
+	default RestTemplate customizeTemplate(RestTemplate restTemplate) {
+		return restTemplate;
+	}
 
 }
