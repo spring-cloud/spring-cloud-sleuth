@@ -21,10 +21,13 @@ import brave.Tracer;
 import brave.Tracing;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.BDDMockito;
 import org.mockito.junit.MockitoJUnitRunner;
 import reactor.core.CoreSubscriber;
 import reactor.core.publisher.BaseSubscriber;
 import reactor.util.context.Context;
+
+import org.springframework.beans.factory.BeanFactory;
 
 import static org.assertj.core.api.BDDAssertions.then;
 
@@ -58,12 +61,18 @@ public class ScopePassingSpanSubscriberTests {
 		try (Tracer.SpanInScope ws = this.tracing.tracer()
 				.withSpanInScope(span.start())) {
 			CoreSubscriber<?> subscriber = ReactorSleuth.scopePassingSpanSubscription(
-					this.tracing, new BaseSubscriber<Object>() {
+					beanFactory(), new BaseSubscriber<Object>() {
 					});
 
 			then(subscriber.currentContext().get(Span.class)).isEqualTo(span);
 		}
 
+	}
+
+	private BeanFactory beanFactory() {
+		BeanFactory beanFactory = BDDMockito.mock(BeanFactory.class);
+		BDDMockito.given(beanFactory.getBean(Tracing.class)).willReturn(this.tracing);
+		return beanFactory;
 	}
 
 }
