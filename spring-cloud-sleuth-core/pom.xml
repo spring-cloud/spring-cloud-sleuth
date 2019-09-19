@@ -194,11 +194,6 @@
 			<groupId>org.aspectj</groupId>
 			<artifactId>aspectjrt</artifactId>
 		</dependency>
-		<dependency>
-			<groupId>commons-logging</groupId>
-			<artifactId>commons-logging</artifactId>
-			<optional>true</optional>
-		</dependency>
 		<!-- BRAVE -->
 		<dependency>
 			<groupId>io.zipkin.brave</groupId>
