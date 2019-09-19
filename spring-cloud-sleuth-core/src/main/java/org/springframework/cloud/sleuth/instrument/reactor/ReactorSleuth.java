@@ -16,6 +16,8 @@
 
 package org.springframework.cloud.sleuth.instrument.reactor;
 
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.BooleanSupplier;
 import java.util.function.Function;
 
@@ -84,8 +86,7 @@ public abstract class ReactorSleuth {
 							+ "]");
 				}
 
-				return scopePassingSpanSubscription(beanFactory.getBean(Tracing.class),
-						sub);
+				return scopePassingSpanSubscription(beanFactory, sub);
 			}
 			if (log.isTraceEnabled()) {
 				log.trace("Spring Context [" + beanFactory
@@ -104,9 +105,12 @@ public abstract class ReactorSleuth {
 				scannable.name());
 	}
 
-	static <T> CoreSubscriber<? super T> scopePassingSpanSubscription(Tracing tracing,
-			CoreSubscriber<? super T> sub) {
+	private static Map<BeanFactory, Tracing> CACHE = new ConcurrentHashMap<>();
 
+	static <T> CoreSubscriber<? super T> scopePassingSpanSubscription(
+			BeanFactory beanFactory, CoreSubscriber<? super T> sub) {
+		Tracing tracing = CACHE.computeIfAbsent(beanFactory,
+				beanFactory1 -> beanFactory1.getBean(Tracing.class));
 		Context context = sub.currentContext();
 
 		Span root = context.hasKey(Span.class) ? context.get(Span.class)
