@@ -192,7 +192,7 @@ instead of logging the request in the handler explicitly, you could set <code>lo
 <i class="fa icon-important" title="Important"></i>
 </td>
 <td class="content">
-If you use Zipkin (up till 2.1.x), configure the probability of spans exported by setting <code>spring.sleuth.sampler.percentage</code> (default: 0.1, which is 10 percent). Otherwise, you might think that Sleuth is not working because it omits some spans. Starting from 2.2.0, Sleuth will default to rate limited sampler. That means that it will sample up to 1000 transactions per second.
+If you use Zipkin (up till 2.1.x), configure the probability of spans exported by setting <code>spring.sleuth.sampler.probability</code> (default: 0.1, which is 10 percent). Otherwise, you might think that Sleuth is not working because it omits some spans. Starting from 2.2.0, Sleuth will default to rate limited sampler. That means that it will sample up to 1000 transactions per second.
 </td>
 </tr>
 </table>
