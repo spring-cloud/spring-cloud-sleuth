@@ -13,6 +13,11 @@
       "defaultValue": "zipkin"
     },
     {
+      "name": "spring.zipkin.rabbitmq.addresses",
+      "type": "java.lang.String",
+      "description": "Addresses of the RabbitMQ brokers used to send spans to Zipkin"
+    },
+    {
       "name": "spring.zipkin.activemq.queue",
       "type": "java.lang.String",
       "description": "Name of the ActiveMQ queue where spans should be sent to Zipkin.",

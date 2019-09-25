@@ -29,6 +29,7 @@ import org.springframework.cloud.sleuth.zipkin2.ZipkinAutoConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Conditional;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.util.StringUtils;
 
 @Configuration
 @ConditionalOnBean(CachingConnectionFactory.class)
@@ -40,12 +41,17 @@ class ZipkinRabbitSenderConfiguration {
 	@Value("${spring.zipkin.rabbitmq.queue:zipkin}")
 	private String queue;
 
+	@Value("${spring.zipkin.rabbitmq.addresses:}")
+	private String addresses;
+
 	@Bean(ZipkinAutoConfiguration.SENDER_BEAN_NAME)
 	Sender rabbitSender(CachingConnectionFactory connectionFactory,
 			RabbitProperties config) {
+		String addresses = StringUtils.hasText(this.addresses) ? this.addresses
+				: config.determineAddresses();
 		return RabbitMQSender.newBuilder()
 				.connectionFactory(connectionFactory.getRabbitConnectionFactory())
-				.queue(this.queue).addresses(config.determineAddresses()).build();
+				.queue(this.queue).addresses(addresses).build();
 	}
 
 }
