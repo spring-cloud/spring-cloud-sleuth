@@ -69,6 +69,6 @@ Run this app and then hit the home page. You will see traceId and spanId populat
 
 IMPORTANT: instead of logging the request in the handler explicitly, you could set `logging.level.org.springframework.web.servlet.DispatcherServlet=DEBUG`
 
-IMPORTANT: If you use Zipkin (up till 2.1.x), configure the probability of spans exported by setting `spring.sleuth.sampler.percentage` (default: 0.1, which is 10 percent). Otherwise, you might think that Sleuth is not working because it omits some spans. Starting from 2.2.0, Sleuth will default to rate limited sampler. That means that it will sample up to 1000 transactions per second.
+IMPORTANT: If you use Zipkin (up till 2.1.x), configure the probability of spans exported by setting `spring.sleuth.sampler.probability` (default: 0.1, which is 10 percent). Otherwise, you might think that Sleuth is not working because it omits some spans. Starting from 2.2.0, Sleuth will default to rate limited sampler. That means that it will sample up to 1000 transactions per second.
 
 IMPORTANT: Set `spring.application.name=bar` (for instance) to see the service name as well as the trace and span ids.
