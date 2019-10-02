@@ -18,8 +18,8 @@ package org.springframework.cloud.sleuth.instrument.web;
 
 import java.util.regex.Pattern;
 
-import brave.http.HttpAdapter;
-import brave.http.HttpSampler;
+import brave.http.HttpRequest;
+import brave.sampler.SamplerFunction;
 
 /**
  * Doesn't sample a span if skip pattern is matched.
@@ -27,7 +27,7 @@ import brave.http.HttpSampler;
  * @author Marcin Grzejszczak
  * @since 2.0.0
  */
-class SleuthHttpSampler extends HttpSampler {
+class SleuthHttpSampler implements SamplerFunction<HttpRequest> {
 
 	private final SkipPatternProvider provider;
 
@@ -38,8 +38,8 @@ class SleuthHttpSampler extends HttpSampler {
 	}
 
 	@Override
-	public <Req> Boolean trySample(HttpAdapter<Req, ?> adapter, Req request) {
-		String url = adapter.path(request);
+	public Boolean trySample(HttpRequest request) {
+		String url = request.path();
 		boolean shouldSkip = pattern().matcher(url).matches();
 		if (shouldSkip) {
 			return false;

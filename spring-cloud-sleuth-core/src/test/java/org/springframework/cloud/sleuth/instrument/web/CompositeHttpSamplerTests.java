@@ -16,8 +16,8 @@
 
 package org.springframework.cloud.sleuth.instrument.web;
 
-import brave.http.HttpAdapter;
-import brave.http.HttpSampler;
+import brave.http.HttpRequest;
+import brave.sampler.SamplerFunction;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -31,17 +31,15 @@ import static org.mockito.BDDMockito.given;
 public class CompositeHttpSamplerTests {
 
 	@Mock
-	HttpAdapter adapter;
+	SamplerFunction<HttpRequest> left;
 
 	@Mock
-	HttpSampler left;
+	SamplerFunction<HttpRequest> right;
 
 	@Mock
-	HttpSampler right;
+	HttpRequest request;
 
-	HttpSampler sampler;
-
-	Object request = new Object();
+	SamplerFunction<HttpRequest> sampler;
 
 	@Before
 	public void init() {
@@ -50,41 +48,41 @@ public class CompositeHttpSamplerTests {
 
 	@Test
 	public void should_return_null_on_both_null() {
-		given(this.left.trySample(this.adapter, this.request)).willReturn(null);
-		given(this.right.trySample(this.adapter, this.request)).willReturn(null);
+		given(this.left.trySample(this.request)).willReturn(null);
+		given(this.right.trySample(this.request)).willReturn(null);
 
-		then(this.sampler.trySample(this.adapter, this.request)).isNull();
+		then(this.sampler.trySample(this.request)).isNull();
 	}
 
 	@Test
 	public void should_return_false_on_any_false() {
-		given(this.left.trySample(this.adapter, this.request)).willReturn(false);
-		given(this.right.trySample(this.adapter, this.request)).willReturn(null);
+		given(this.left.trySample(this.request)).willReturn(false);
+		given(this.right.trySample(this.request)).willReturn(null);
 
-		then(this.sampler.trySample(this.adapter, this.request)).isFalse();
+		then(this.sampler.trySample(this.request)).isFalse();
 
-		given(this.left.trySample(this.adapter, this.request)).willReturn(null);
-		given(this.right.trySample(this.adapter, this.request)).willReturn(false);
+		given(this.left.trySample(this.request)).willReturn(null);
+		given(this.right.trySample(this.request)).willReturn(false);
 
-		then(this.sampler.trySample(this.adapter, this.request)).isFalse();
+		then(this.sampler.trySample(this.request)).isFalse();
 
-		given(this.left.trySample(this.adapter, this.request)).willReturn(false);
-		given(this.right.trySample(this.adapter, this.request)).willReturn(true);
+		given(this.left.trySample(this.request)).willReturn(false);
+		given(this.right.trySample(this.request)).willReturn(true);
 
-		then(this.sampler.trySample(this.adapter, this.request)).isFalse();
+		then(this.sampler.trySample(this.request)).isFalse();
 
-		given(this.left.trySample(this.adapter, this.request)).willReturn(true);
-		given(this.right.trySample(this.adapter, this.request)).willReturn(false);
+		given(this.left.trySample(this.request)).willReturn(true);
+		given(this.right.trySample(this.request)).willReturn(false);
 
-		then(this.sampler.trySample(this.adapter, this.request)).isFalse();
+		then(this.sampler.trySample(this.request)).isFalse();
 	}
 
 	@Test
 	public void should_return_true_on_both_true() {
-		given(this.left.trySample(this.adapter, this.request)).willReturn(true);
-		given(this.right.trySample(this.adapter, this.request)).willReturn(true);
+		given(this.left.trySample(this.request)).willReturn(true);
+		given(this.right.trySample(this.request)).willReturn(true);
 
-		then(this.sampler.trySample(this.adapter, this.request)).isTrue();
+		then(this.sampler.trySample(this.request)).isTrue();
 	}
 
 }

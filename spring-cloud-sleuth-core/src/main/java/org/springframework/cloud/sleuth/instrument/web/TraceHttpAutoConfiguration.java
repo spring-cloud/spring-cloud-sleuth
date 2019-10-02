@@ -21,12 +21,12 @@ import java.util.List;
 
 import brave.ErrorParser;
 import brave.Tracing;
-import brave.http.HttpAdapter;
 import brave.http.HttpClientParser;
-import brave.http.HttpSampler;
+import brave.http.HttpRequest;
 import brave.http.HttpServerParser;
 import brave.http.HttpTracing;
 import brave.http.HttpTracingCustomizer;
+import brave.sampler.SamplerFunction;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
@@ -64,9 +64,9 @@ public class TraceHttpAutoConfiguration {
 	// NOTE: stable bean name as might be used outside sleuth
 	HttpTracing httpTracing(Tracing tracing, SkipPatternProvider provider,
 			HttpClientParser clientParser, HttpServerParser serverParser,
-			@ClientSampler HttpSampler clientSampler,
-			@Nullable @ServerSampler HttpSampler serverSampler) {
-		HttpSampler combinedSampler = combineUserProvidedSamplerWithSkipPatternSampler(
+			@ClientSampler SamplerFunction<HttpRequest> clientSampler,
+			@Nullable @ServerSampler SamplerFunction<HttpRequest> serverSampler) {
+		SamplerFunction<HttpRequest> combinedSampler = combineUserProvidedSamplerWithSkipPatternSampler(
 				serverSampler, provider);
 		HttpTracing.Builder builder = HttpTracing.newBuilder(tracing)
 				.clientParser(clientParser).serverParser(serverParser)
@@ -77,8 +77,8 @@ public class TraceHttpAutoConfiguration {
 		return builder.build();
 	}
 
-	private HttpSampler combineUserProvidedSamplerWithSkipPatternSampler(
-			HttpSampler serverSampler, SkipPatternProvider provider) {
+	private SamplerFunction<HttpRequest> combineUserProvidedSamplerWithSkipPatternSampler(
+			SamplerFunction<HttpRequest> serverSampler, SkipPatternProvider provider) {
 		SleuthHttpSampler skipPatternSampler = new SleuthHttpSampler(provider);
 		if (serverSampler == null) {
 			return skipPatternSampler;
@@ -124,7 +124,8 @@ public class TraceHttpAutoConfiguration {
 
 	@Bean
 	@ConditionalOnMissingBean(name = ClientSampler.NAME)
-	HttpSampler sleuthClientSampler(SleuthWebProperties sleuthWebProperties) {
+	SamplerFunction<HttpRequest> sleuthClientSampler(
+			SleuthWebProperties sleuthWebProperties) {
 		return new PathMatchingHttpSampler(sleuthWebProperties);
 	}
 
@@ -135,25 +136,26 @@ public class TraceHttpAutoConfiguration {
  *
  * @author Adrian Cole
  */
-class CompositeHttpSampler extends HttpSampler {
+class CompositeHttpSampler implements SamplerFunction<HttpRequest> {
 
-	private final HttpSampler left;
+	private final SamplerFunction<HttpRequest> left;
 
-	private final HttpSampler right;
+	private final SamplerFunction<HttpRequest> right;
 
-	CompositeHttpSampler(HttpSampler left, HttpSampler right) {
+	CompositeHttpSampler(SamplerFunction<HttpRequest> left,
+			SamplerFunction<HttpRequest> right) {
 		this.left = left;
 		this.right = right;
 	}
 
 	@Override
-	public <Req> Boolean trySample(HttpAdapter<Req, ?> adapter, Req request) {
+	public Boolean trySample(HttpRequest request) {
 		// If either decision is false, return false
-		Boolean leftDecision = this.left.trySample(adapter, request);
+		Boolean leftDecision = this.left.trySample(request);
 		if (Boolean.FALSE.equals(leftDecision)) {
 			return false;
 		}
-		Boolean rightDecision = this.right.trySample(adapter, request);
+		Boolean rightDecision = this.right.trySample(request);
 		if (Boolean.FALSE.equals(rightDecision)) {
 			return false;
 		}
@@ -165,7 +167,7 @@ class CompositeHttpSampler extends HttpSampler {
 			return leftDecision;
 		}
 		// Neither are null and at least one is true
-		return leftDecision && rightDecision;
+		return rightDecision;
 	}
 
 }
@@ -175,7 +177,7 @@ class CompositeHttpSampler extends HttpSampler {
  *
  * @author Marcin Grzejszczak
  */
-class PathMatchingHttpSampler extends HttpSampler {
+class PathMatchingHttpSampler implements SamplerFunction<HttpRequest> {
 
 	private final SleuthWebProperties properties;
 
@@ -184,8 +186,8 @@ class PathMatchingHttpSampler extends HttpSampler {
 	}
 
 	@Override
-	public <Req> Boolean trySample(HttpAdapter<Req, ?> adapter, Req request) {
-		String path = adapter.path(request);
+	public Boolean trySample(HttpRequest request) {
+		String path = request.path();
 		if (path == null) {
 			return null;
 		}

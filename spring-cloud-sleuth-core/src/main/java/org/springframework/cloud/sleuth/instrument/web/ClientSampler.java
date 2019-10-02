@@ -23,11 +23,13 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
+import brave.sampler.SamplerFunction;
+
 import org.springframework.beans.factory.annotation.Qualifier;
 
 /**
- * Annotate a client {@link brave.http.HttpSampler} that hsould be injected to
- * {@link brave.http.HttpTracing}.
+ * Annotate a client {@link brave.sampler.SamplerFunction} that should be injected to
+ * {@link brave.http.HttpTracing.Builder#clientSampler(SamplerFunction)}.
  *
  * @author Marcin Grzejszczak
  * @since 2.0.0

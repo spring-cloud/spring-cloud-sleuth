@@ -18,7 +18,7 @@ package org.springframework.cloud.sleuth.instrument.web;
 
 import java.util.regex.Pattern;
 
-import brave.http.HttpAdapter;
+import brave.http.HttpRequest;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.BDDMockito;
@@ -34,24 +34,24 @@ import static org.assertj.core.api.BDDAssertions.then;
 public class SleuthHttpSamplerTests {
 
 	@Mock
-	HttpAdapter adapter;
+	HttpRequest request;
 
 	@Test
 	public void should_delegate_sampling_decision_if_pattern_is_not_matched() {
 		SkipPatternProvider provider = () -> Pattern.compile("foo");
-		BDDMockito.given(this.adapter.path(BDDMockito.any())).willReturn("url");
+		BDDMockito.given(this.request.path()).willReturn("url");
 		SleuthHttpSampler sampler = new SleuthHttpSampler(provider);
 
-		then(sampler.trySample(this.adapter, new Object())).isNull();
+		then(sampler.trySample(this.request)).isNull();
 	}
 
 	@Test
 	public void should_not_sample_if_pattern_is_matched() {
 		SkipPatternProvider provider = () -> Pattern.compile(".*");
-		BDDMockito.given(this.adapter.path(BDDMockito.any())).willReturn("url");
+		BDDMockito.given(this.request.path()).willReturn("url");
 		SleuthHttpSampler sampler = new SleuthHttpSampler(provider);
 
-		then(sampler.trySample(this.adapter, new Object())).isFalse();
+		then(sampler.trySample(this.request)).isFalse();
 	}
 
 }

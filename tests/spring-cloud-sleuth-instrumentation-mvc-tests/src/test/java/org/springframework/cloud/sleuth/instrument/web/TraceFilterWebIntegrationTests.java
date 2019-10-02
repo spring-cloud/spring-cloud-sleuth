@@ -23,9 +23,9 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import brave.Tracing;
-import brave.http.HttpAdapter;
-import brave.http.HttpSampler;
+import brave.http.HttpRequest;
 import brave.sampler.Sampler;
+import brave.sampler.SamplerFunction;
 import org.assertj.core.api.BDDAssertions;
 import org.junit.After;
 import org.junit.Before;
@@ -75,7 +75,7 @@ public class TraceFilterWebIntegrationTests {
 
 	@Autowired
 	@ServerSampler
-	HttpSampler sampler;
+	SamplerFunction<HttpRequest> sampler;
 
 	@Autowired
 	Environment environment;
@@ -164,19 +164,15 @@ public class TraceFilterWebIntegrationTests {
 
 		// tag::custom_server_sampler[]
 		@Bean(name = ServerSampler.NAME)
-		HttpSampler myHttpSampler(SkipPatternProvider provider) {
+		SamplerFunction<HttpRequest> myHttpSampler(SkipPatternProvider provider) {
 			Pattern pattern = provider.skipPattern();
-			return new HttpSampler() {
-
-				@Override
-				public <Req> Boolean trySample(HttpAdapter<Req, ?> adapter, Req request) {
-					String url = adapter.path(request);
-					boolean shouldSkip = pattern.matcher(url).matches();
-					if (shouldSkip) {
-						return false;
-					}
-					return null;
+			return request -> {
+				String url = request.path();
+				boolean shouldSkip = pattern.matcher(url).matches();
+				if (shouldSkip) {
+					return false;
 				}
+				return null;
 			};
 		}
 		// end::custom_server_sampler[]
