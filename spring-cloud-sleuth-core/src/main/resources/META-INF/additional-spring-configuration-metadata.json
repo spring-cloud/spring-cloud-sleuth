@@ -53,6 +53,30 @@
       "type": "java.lang.Boolean",
       "description": "Enable span information propagation when using Redis.",
       "defaultValue": true
+    },
+    {
+      "name": "spring.sleuth.messaging.jms.enabled",
+      "type": "java.lang.Boolean",
+      "description": "Enable tracing of JMS.",
+      "defaultValue": true
+    },
+    {
+      "name": "spring.sleuth.messaging.rabbit.enabled",
+      "type": "java.lang.Boolean",
+      "description": "Enable tracing of RabbitMQ.",
+      "defaultValue": true
+    },
+    {
+      "name": "spring.sleuth.messaging.kafka.enabled",
+      "type": "java.lang.Boolean",
+      "description": "Enable tracing of Kafka.",
+      "defaultValue": true
+    },
+    {
+      "name": "spring.sleuth.messaging.kafka.mapper.enabled",
+      "type": "java.lang.Boolean",
+      "description": "Enable DefaultKafkaHeaderMapper tracing for Kafka.",
+      "defaultValue": true
     }
   ]
 }

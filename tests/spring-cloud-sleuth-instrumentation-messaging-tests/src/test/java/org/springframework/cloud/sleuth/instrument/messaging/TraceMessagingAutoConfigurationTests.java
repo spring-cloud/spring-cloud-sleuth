@@ -49,8 +49,7 @@ import static org.assertj.core.api.BDDAssertions.then;
  * @author Marcin Grzejszczak
  */
 @RunWith(SpringRunner.class)
-@SpringBootTest(classes = TraceMessagingAutoConfigurationTests.Config.class,
-		webEnvironment = SpringBootTest.WebEnvironment.NONE)
+@SpringBootTest(classes = TraceMessagingAutoConfigurationTests.Config.class, webEnvironment = SpringBootTest.WebEnvironment.NONE)
 public class TraceMessagingAutoConfigurationTests {
 
 	@Autowired
@@ -67,6 +66,9 @@ public class TraceMessagingAutoConfigurationTests {
 
 	@Autowired
 	MySleuthKafkaAspect mySleuthKafkaAspect;
+
+	@Autowired
+	TestSleuthKafkaHeaderMapperBeanPostProcessor testSleuthKafkaHeaderMapperBeanPostProcessor;
 
 	@Autowired
 	ProducerFactory producerFactory;
@@ -95,6 +97,8 @@ public class TraceMessagingAutoConfigurationTests {
 		then(this.mySleuthKafkaAspect.consumerWrapped).isTrue();
 
 		then(this.mySleuthKafkaAspect.adapterWrapped).isTrue();
+
+		then(this.testSleuthKafkaHeaderMapperBeanPostProcessor.tracingCalled).isTrue();
 	}
 
 	@Configuration
@@ -126,6 +130,11 @@ public class TraceMessagingAutoConfigurationTests {
 		TestSleuthJmsBeanPostProcessor sleuthJmsBeanPostProcessor(
 				BeanFactory beanFactory) {
 			return new TestSleuthJmsBeanPostProcessor(beanFactory);
+		}
+
+		@Bean
+		TestSleuthKafkaHeaderMapperBeanPostProcessor testSleuthKafkaHeaderMapperBeanPostProcessor() {
+			return new TestSleuthKafkaHeaderMapperBeanPostProcessor();
 		}
 
 		@KafkaListener(topics = "backend", groupId = "foo")
@@ -201,4 +210,16 @@ class TestSleuthJmsBeanPostProcessor extends TracingConnectionFactoryBeanPostPro
 		return super.postProcessAfterInitialization(bean, beanName);
 	}
 
+}
+
+class TestSleuthKafkaHeaderMapperBeanPostProcessor
+		extends SleuthKafkaHeaderMapperBeanPostProcessor {
+
+	boolean tracingCalled = false;
+
+	@Override
+	Object sleuthDefaultKafkaHeaderMapper(Object bean) {
+		this.tracingCalled = true;
+		return super.sleuthDefaultKafkaHeaderMapper(bean);
+	}
 }

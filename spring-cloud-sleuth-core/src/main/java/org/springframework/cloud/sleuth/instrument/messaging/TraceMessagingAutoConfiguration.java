@@ -61,6 +61,7 @@ import org.springframework.kafka.listener.AbstractMessageListenerContainer;
 import org.springframework.kafka.listener.MessageListener;
 import org.springframework.kafka.listener.MessageListenerContainer;
 import org.springframework.kafka.listener.adapter.MessagingMessageListenerAdapter;
+import org.springframework.kafka.support.DefaultKafkaHeaderMapper;
 import org.springframework.util.ReflectionUtils;
 
 /**
@@ -116,6 +117,21 @@ public class TraceMessagingAutoConfiguration {
 					.remoteServiceName(
 							properties.getMessaging().getKafka().getRemoteServiceName())
 					.build();
+		}
+
+		@Bean(name = SleuthDefaultKafkaHeaderMapper.BEAN_NAME)
+		@ConditionalOnMissingBean
+		DefaultKafkaHeaderMapper sleuthDefaultKafkaHeaderMapper() {
+			return new SleuthDefaultKafkaHeaderMapper();
+		}
+
+		@Bean
+		@ConditionalOnProperty(value = "spring.sleuth.messaging.kafka.mapper.enabled",
+				matchIfMissing = true)
+		// for tests
+		@ConditionalOnMissingBean
+		SleuthKafkaHeaderMapperBeanPostProcessor sleuthDefaultKafkaHeaderMapperBeanPostProcessor() {
+			return new SleuthKafkaHeaderMapperBeanPostProcessor();
 		}
 
 		@Bean
@@ -372,6 +388,37 @@ class TracingJmsBeanPostProcessor implements BeanPostProcessor {
 	private boolean typeMatches(Object bean) {
 		return bean instanceof JmsListenerEndpointRegistry
 				&& !(bean instanceof TracingJmsListenerEndpointRegistry);
+	}
+
+}
+
+class SleuthDefaultKafkaHeaderMapper extends DefaultKafkaHeaderMapper {
+
+	// related to #1430
+	static final String BEAN_NAME = "kafkaBinderHeaderMapper";
+
+	SleuthDefaultKafkaHeaderMapper() {
+		setMapAllStringsOut(true);
+	}
+
+}
+
+class SleuthKafkaHeaderMapperBeanPostProcessor implements BeanPostProcessor {
+
+	@Override
+	public Object postProcessAfterInitialization(Object bean, String beanName)
+			throws BeansException {
+		if (bean instanceof SleuthDefaultKafkaHeaderMapper) {
+			return sleuthDefaultKafkaHeaderMapper(bean);
+		}
+		else if (bean instanceof DefaultKafkaHeaderMapper) {
+			((DefaultKafkaHeaderMapper) bean).setMapAllStringsOut(true);
+		}
+		return bean;
+	}
+
+	Object sleuthDefaultKafkaHeaderMapper(Object bean) {
+		return bean;
 	}
 
 }
