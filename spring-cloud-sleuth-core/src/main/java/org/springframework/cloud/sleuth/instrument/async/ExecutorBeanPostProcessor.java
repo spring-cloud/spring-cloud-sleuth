@@ -282,12 +282,20 @@ class ExecutorBeanPostProcessor implements BeanPostProcessor {
 	}
 
 	private static <T> boolean anyFinalMethods(T object, Class<T> iface) {
-		for (Method method : ReflectionUtils.getDeclaredMethods(iface)) {
-			Method m = ReflectionUtils.findMethod(object.getClass(), method.getName(),
-					method.getParameterTypes());
-			if (m != null && Modifier.isFinal(m.getModifiers())) {
-				return true;
+		try {
+			for (Method method : ReflectionUtils.getDeclaredMethods(iface)) {
+				Method m = ReflectionUtils.findMethod(object.getClass(), method.getName(),
+						method.getParameterTypes());
+				if (m != null && Modifier.isFinal(m.getModifiers())) {
+					return true;
+				}
 			}
+		}
+		catch (IllegalAccessError er) {
+			if (log.isDebugEnabled()) {
+				log.debug("Error occurred while trying to access methods", er);
+			}
+			return false;
 		}
 		return false;
 	}
