@@ -146,7 +146,8 @@ public class TraceAutoConfiguration {
 	@ConditionalOnMissingBean
 	Propagation.Factory sleuthPropagation(SleuthProperties sleuthProperties) {
 		if (sleuthProperties.getBaggageKeys().isEmpty()
-				&& sleuthProperties.getPropagationKeys().isEmpty()) {
+				&& sleuthProperties.getPropagationKeys().isEmpty()
+				&& extraFieldCustomizers.isEmpty()) {
 			return B3Propagation.FACTORY;
 		}
 		ExtraFieldPropagation.FactoryBuilder factoryBuilder;
