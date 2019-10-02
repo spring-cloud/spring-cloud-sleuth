@@ -43,10 +43,14 @@ import org.springframework.test.context.junit4.SpringRunner;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.boot.test.context.SpringBootTest.WebEnvironment.NONE;
 
-@SpringBootTest(classes = ITTracingMethodMessageHandlerAdapterTests.TestingConfiguration.class, webEnvironment = NONE)
+@SpringBootTest(
+		classes = ITTracingMethodMessageHandlerAdapterTests.TestingConfiguration.class,
+		webEnvironment = NONE)
 @RunWith(SpringRunner.class)
 public class ITTracingMethodMessageHandlerAdapterTests {
+
 	private static final String TRACE_ID = "12345678123456781234567812345678";
+
 	private static final String SPAN_ID = "1234567812345678";
 
 	@Autowired
@@ -77,7 +81,8 @@ public class ITTracingMethodMessageHandlerAdapterTests {
 			probedSpan.set(tracing.tracer().currentSpan());
 		}));
 
-		messageHandler.handleMessage(new GenericMessage<>("message", Collections.singletonMap("LogicalResourceId", "test")));
+		messageHandler.handleMessage(new GenericMessage<>("message",
+				Collections.singletonMap("LogicalResourceId", "test")));
 
 		assertThat(probedSpan.get()).isNotNull();
 	}
@@ -104,10 +109,12 @@ public class ITTracingMethodMessageHandlerAdapterTests {
 	@EnableAutoConfiguration
 	@Configuration
 	static class TestingConfiguration {
+
 		@Bean
 		TestingMessageHandler testingMessageHandler() {
 			return new TestingMessageHandler();
 		}
+
 	}
 
 	static class TestingMessageHandler {
@@ -122,5 +129,7 @@ public class ITTracingMethodMessageHandlerAdapterTests {
 		public void handle(MessageHeaders header, String payload) {
 			testProbe.accept(header, payload);
 		}
+
 	}
+
 }

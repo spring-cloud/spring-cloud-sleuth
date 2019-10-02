@@ -36,7 +36,9 @@ import org.springframework.messaging.support.GenericMessage;
 import static org.assertj.core.api.Assertions.assertThat;
 
 public class SqsQueueMessageHandlerTests {
-	@Rule public MockitoRule rule = MockitoJUnit.rule().strictness(Strictness.STRICT_STUBS);
+
+	@Rule
+	public MockitoRule rule = MockitoJUnit.rule().strictness(Strictness.STRICT_STUBS);
 
 	@Mock
 	TracingMethodMessageHandlerAdapter adapter;
@@ -51,15 +53,21 @@ public class SqsQueueMessageHandlerTests {
 	@Test
 	public void sqsQueueMessageHandlerDelegatesToAdapter() {
 		ArgumentCaptor<Message> messageCapture = ArgumentCaptor.forClass(Message.class);
-		ArgumentCaptor<MessageHandler> handlerCapture = ArgumentCaptor.forClass(MessageHandler.class);
-		ArgumentCaptor<BiConsumer> spanTaggerCapture = ArgumentCaptor.forClass(BiConsumer.class);
-		Mockito.doNothing().when(adapter).wrapMethodMessageHandler(messageCapture.capture(), handlerCapture.capture(), spanTaggerCapture.capture());
+		ArgumentCaptor<MessageHandler> handlerCapture = ArgumentCaptor
+				.forClass(MessageHandler.class);
+		ArgumentCaptor<BiConsumer> spanTaggerCapture = ArgumentCaptor
+				.forClass(BiConsumer.class);
+		Mockito.doNothing().when(adapter).wrapMethodMessageHandler(
+				messageCapture.capture(), handlerCapture.capture(),
+				spanTaggerCapture.capture());
 
 		subject.handleMessage(new GenericMessage<>("a"));
 
-		Mockito.verify(adapter, Mockito.times(1)).wrapMethodMessageHandler(Mockito.any(), Mockito.any(), Mockito.any());
+		Mockito.verify(adapter, Mockito.times(1)).wrapMethodMessageHandler(Mockito.any(),
+				Mockito.any(), Mockito.any());
 		assertThat(messageCapture.getValue().getPayload().toString()).isEqualTo("a");
 		assertThat(handlerCapture.getValue()).isNotNull();
 		assertThat(spanTaggerCapture.getValue()).isNotNull();
 	}
+
 }

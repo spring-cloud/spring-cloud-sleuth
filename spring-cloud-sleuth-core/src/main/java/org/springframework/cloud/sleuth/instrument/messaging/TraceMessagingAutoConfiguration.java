@@ -83,7 +83,8 @@ import org.springframework.util.ReflectionUtils;
  */
 @Configuration
 @ConditionalOnBean(Tracing.class)
-@AutoConfigureAfter({ TraceAutoConfiguration.class, TraceSpringMessagingAutoConfiguration.class })
+@AutoConfigureAfter({ TraceAutoConfiguration.class,
+		TraceSpringMessagingAutoConfiguration.class })
 @OnMessagingEnabled
 @EnableConfigurationProperties(SleuthMessagingProperties.class)
 public class TraceMessagingAutoConfiguration {
@@ -199,7 +200,8 @@ public class TraceMessagingAutoConfiguration {
 	}
 
 	@Configuration
-	@ConditionalOnProperty(value = "spring.sleuth.messaging.sqs.enabled", matchIfMissing = true)
+	@ConditionalOnProperty(value = "spring.sleuth.messaging.sqs.enabled",
+			matchIfMissing = true)
 	@ConditionalOnClass(QueueMessageHandler.class)
 	protected static class SleuthSqsConfiguration {
 
@@ -441,7 +443,8 @@ class SleuthKafkaHeaderMapperBeanPostProcessor implements BeanPostProcessor {
 			throws BeansException {
 		if (bean instanceof SleuthDefaultKafkaHeaderMapper) {
 			return sleuthDefaultKafkaHeaderMapper(bean);
-		} else if (bean instanceof DefaultKafkaHeaderMapper) {
+		}
+		else if (bean instanceof DefaultKafkaHeaderMapper) {
 			((DefaultKafkaHeaderMapper) bean).setMapAllStringsOut(true);
 		}
 		return bean;
@@ -450,6 +453,7 @@ class SleuthKafkaHeaderMapperBeanPostProcessor implements BeanPostProcessor {
 	Object sleuthDefaultKafkaHeaderMapper(Object bean) {
 		return bean;
 	}
+
 }
 
 class SqsQueueMessageHandlerFactory extends QueueMessageHandlerFactory {
@@ -472,7 +476,8 @@ class SqsQueueMessageHandlerFactory extends QueueMessageHandlerFactory {
 
 class SqsQueueMessageHandler extends QueueMessageHandler {
 
-	private static final String LOGICAL_RESOURCE_ID = "LogicalResourceId"; // copied from QueueMessageHandler
+	// copied from QueueMessageHandler
+	private static final String LOGICAL_RESOURCE_ID = "LogicalResourceId";
 
 	private TracingMethodMessageHandlerAdapter handlerAdapter;
 
@@ -484,13 +489,16 @@ class SqsQueueMessageHandler extends QueueMessageHandler {
 
 	@Override
 	public void handleMessage(Message<?> message) throws MessagingException {
-		handlerAdapter.wrapMethodMessageHandler(message, super::handleMessage, this::messageSpanTagger);
+		handlerAdapter.wrapMethodMessageHandler(message, super::handleMessage,
+				this::messageSpanTagger);
 	}
 
 	private void messageSpanTagger(Span span, Message<?> message) {
 		span.remoteServiceName("sqs");
 		if (message.getHeaders().get(LOGICAL_RESOURCE_ID) != null) {
-			span.tag("sqs.queue_url", message.getHeaders().get(LOGICAL_RESOURCE_ID).toString());
+			span.tag("sqs.queue_url",
+					message.getHeaders().get(LOGICAL_RESOURCE_ID).toString());
 		}
 	}
+
 }

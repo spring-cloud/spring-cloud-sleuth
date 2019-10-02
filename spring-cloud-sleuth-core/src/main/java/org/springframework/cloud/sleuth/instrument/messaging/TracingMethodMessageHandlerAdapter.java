@@ -33,23 +33,24 @@ import static brave.Span.Kind.CONSUMER;
 
 /**
  * Adds tracing extraction to an instance of
- * {@link org.springframework.messaging.handler.invocation.AbstractMethodMessageHandler} in a
- * reusable way. When sub-classing a provider specific class of that type you would wrap the
- * <pre>super.handleMessage(...)</pre> call with a call to this. See
- * {@link org.springframework.cloud.sleuth.instrument.messaging.SqsQueueMessageHandler} for an
- * example.
+ * {@link org.springframework.messaging.handler.invocation.AbstractMethodMessageHandler}
+ * in a reusable way. When sub-classing a provider specific class of that type you would
+ * wrap the <pre>super.handleMessage(...)</pre> call with a call to this. See
+ * {@link org.springframework.cloud.sleuth.instrument.messaging.SqsQueueMessageHandler}
+ * for an example.
  *
- * This implementation also allows for supplying a {@link java.util.function.BiConsumer} instance
- * that can be used to add queue specific tags and modifications to the span.
+ * This implementation also allows for supplying a {@link java.util.function.BiConsumer}
+ * instance that can be used to add queue specific tags and modifications to the span.
  *
  * @author Brian Devins-Suresh
  */
 class TracingMethodMessageHandlerAdapter {
 
 	private Tracing tracing;
-	private Tracer tracer;
-	private TraceContext.Extractor<MessageHeaderAccessor> extractor;
 
+	private Tracer tracer;
+
+	private TraceContext.Extractor<MessageHeaderAccessor> extractor;
 
 	TracingMethodMessageHandlerAdapter(Tracing tracing,
 			Propagation.Getter<MessageHeaderAccessor, String> traceMessagePropagationGetter) {
@@ -58,8 +59,8 @@ class TracingMethodMessageHandlerAdapter {
 		this.extractor = tracing.propagation().extractor(traceMessagePropagationGetter);
 	}
 
-	void wrapMethodMessageHandler(Message<?> message,
-			MessageHandler messageHandler, BiConsumer<Span, Message<?>> messageSpanTagger) {
+	void wrapMethodMessageHandler(Message<?> message, MessageHandler messageHandler,
+			BiConsumer<Span, Message<?>> messageSpanTagger) {
 		TraceContextOrSamplingFlags extracted = extractAndClearHeaders(message);
 
 		Span consumerSpan = tracer.nextSpan(extracted);
@@ -72,7 +73,8 @@ class TracingMethodMessageHandlerAdapter {
 			}
 
 			// incur timestamp overhead only once
-			long timestamp = tracing.clock(consumerSpan.context()).currentTimeMicroseconds();
+			long timestamp = tracing.clock(consumerSpan.context())
+					.currentTimeMicroseconds();
 			consumerSpan.start(timestamp);
 			long consumerFinish = timestamp + 1L; // save a clock reading
 			consumerSpan.finish(consumerFinish);
@@ -83,10 +85,12 @@ class TracingMethodMessageHandlerAdapter {
 
 		try (Tracer.SpanInScope ws = tracer.withSpanInScope(listenerSpan)) {
 			messageHandler.handleMessage(message);
-		} catch (Throwable t) {
+		}
+		catch (Throwable t) {
 			listenerSpan.error(t);
 			throw t;
-		} finally {
+		}
+		finally {
 			listenerSpan.finish();
 		}
 	}
@@ -101,4 +105,5 @@ class TracingMethodMessageHandlerAdapter {
 
 		return extracted;
 	}
+
 }
