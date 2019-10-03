@@ -246,8 +246,8 @@ Also, you can define your own properties.
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock">spring.sleuth.messaging.jms.enabled</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">false</p></td>
-<td class="tableblock halign-left valign-top"></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">true</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Enable tracing of JMS.</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock">spring.sleuth.messaging.jms.remote-service-name</p></td>
@@ -256,8 +256,13 @@ Also, you can define your own properties.
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock">spring.sleuth.messaging.kafka.enabled</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">false</p></td>
-<td class="tableblock halign-left valign-top"></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">true</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Enable tracing of Kafka.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">spring.sleuth.messaging.kafka.mapper.enabled</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">true</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Enable DefaultKafkaHeaderMapper tracing for Kafka.</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock">spring.sleuth.messaging.kafka.remote-service-name</p></td>
@@ -266,8 +271,8 @@ Also, you can define your own properties.
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock">spring.sleuth.messaging.rabbit.enabled</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">false</p></td>
-<td class="tableblock halign-left valign-top"></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">true</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Enable tracing of RabbitMQ.</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock">spring.sleuth.messaging.rabbit.remote-service-name</p></td>
