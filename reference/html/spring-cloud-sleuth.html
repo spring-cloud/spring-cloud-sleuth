@@ -3505,6 +3505,16 @@ We don&#8217;t support baggage propagation for JMS
 </table>
 </div>
 </div>
+<div class="sect3">
+<h4 id="spring-cloud-aws-messaging-sqs"><a class="anchor" href="#spring-cloud-aws-messaging-sqs"></a><a class="link" href="#spring-cloud-aws-messaging-sqs">15.10.6. Spring Cloud AWS Messaging SQS</a></h4>
+<div class="paragraph">
+<p>We instrument <code>@SqsListener</code> which is provided by <code>org.springframework.cloud:spring-cloud-aws-messaging</code>
+so that tracing headers get extracted from the message and a trace gets put into the context.</p>
+</div>
+<div class="paragraph">
+<p>To block this feature, set <code>spring.sleuth.messaging.sqs.enabled</code> to <code>false</code>.</p>
+</div>
+</div>
 </div>
 <div class="sect2">
 <h3 id="zuul"><a class="anchor" href="#zuul"></a><a class="link" href="#zuul">15.11. Zuul</a></h3>
