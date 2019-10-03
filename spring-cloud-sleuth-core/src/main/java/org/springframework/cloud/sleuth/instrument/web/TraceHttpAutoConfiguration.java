@@ -23,6 +23,7 @@ import brave.ErrorParser;
 import brave.Tracing;
 import brave.http.HttpClientParser;
 import brave.http.HttpRequest;
+import brave.http.HttpSampler;
 import brave.http.HttpServerParser;
 import brave.http.HttpTracing;
 import brave.http.HttpTracingCustomizer;
@@ -65,7 +66,11 @@ public class TraceHttpAutoConfiguration {
 	HttpTracing httpTracing(Tracing tracing, SkipPatternProvider provider,
 			HttpClientParser clientParser, HttpServerParser serverParser,
 			@HttpClientSampler SamplerFunction<HttpRequest> httpClientSampler,
+			@Nullable @ServerSampler HttpSampler serverSampler,
 			@Nullable @HttpServerSampler SamplerFunction<HttpRequest> httpServerSampler) {
+		if (httpServerSampler == null) {
+			httpServerSampler = serverSampler;
+		}
 		SamplerFunction<HttpRequest> combinedSampler = combineUserProvidedSamplerWithSkipPatternSampler(
 				httpServerSampler, provider);
 		HttpTracing.Builder builder = HttpTracing.newBuilder(tracing)
@@ -78,8 +83,10 @@ public class TraceHttpAutoConfiguration {
 	}
 
 	private SamplerFunction<HttpRequest> combineUserProvidedSamplerWithSkipPatternSampler(
-			SamplerFunction<HttpRequest> serverSampler, SkipPatternProvider provider) {
-		SleuthHttpSampler skipPatternSampler = new SleuthHttpSampler(provider);
+			@Nullable SamplerFunction<HttpRequest> serverSampler,
+			SkipPatternProvider provider) {
+		SkipPatternHttpServerSampler skipPatternSampler = new SkipPatternHttpServerSampler(
+				provider);
 		if (serverSampler == null) {
 			return skipPatternSampler;
 		}
@@ -125,8 +132,12 @@ public class TraceHttpAutoConfiguration {
 	@Bean
 	@ConditionalOnMissingBean(name = HttpClientSampler.NAME)
 	SamplerFunction<HttpRequest> sleuthHttpClientSampler(
+			@Nullable @ClientSampler HttpSampler sleuthClientSampler,
 			SleuthWebProperties sleuthWebProperties) {
-		return new PathMatchingHttpSampler(sleuthWebProperties);
+		if (sleuthClientSampler != null) {
+			return sleuthClientSampler;
+		}
+		return new SkipPatternHttpClientSampler(sleuthWebProperties);
 	}
 
 }
@@ -138,9 +149,9 @@ public class TraceHttpAutoConfiguration {
  */
 class CompositeHttpSampler implements SamplerFunction<HttpRequest> {
 
-	private final SamplerFunction<HttpRequest> left;
+	final SamplerFunction<HttpRequest> left;
 
-	private final SamplerFunction<HttpRequest> right;
+	final SamplerFunction<HttpRequest> right;
 
 	CompositeHttpSampler(SamplerFunction<HttpRequest> left,
 			SamplerFunction<HttpRequest> right) {
@@ -177,11 +188,11 @@ class CompositeHttpSampler implements SamplerFunction<HttpRequest> {
  *
  * @author Marcin Grzejszczak
  */
-class PathMatchingHttpSampler implements SamplerFunction<HttpRequest> {
+class SkipPatternHttpClientSampler implements SamplerFunction<HttpRequest> {
 
 	private final SleuthWebProperties properties;
 
-	PathMatchingHttpSampler(SleuthWebProperties properties) {
+	SkipPatternHttpClientSampler(SleuthWebProperties properties) {
 		this.properties = properties;
 	}
 

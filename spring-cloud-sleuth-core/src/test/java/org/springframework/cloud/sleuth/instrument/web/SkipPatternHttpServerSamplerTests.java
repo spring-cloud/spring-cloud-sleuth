@@ -31,7 +31,7 @@ import static org.assertj.core.api.BDDAssertions.then;
  * @author Marcin Grzejszczak
  */
 @RunWith(MockitoJUnitRunner.class)
-public class SleuthHttpSamplerTests {
+public class SkipPatternHttpServerSamplerTests {
 
 	@Mock
 	HttpRequest request;
@@ -40,7 +40,7 @@ public class SleuthHttpSamplerTests {
 	public void should_delegate_sampling_decision_if_pattern_is_not_matched() {
 		SkipPatternProvider provider = () -> Pattern.compile("foo");
 		BDDMockito.given(this.request.path()).willReturn("url");
-		SleuthHttpSampler sampler = new SleuthHttpSampler(provider);
+		SkipPatternHttpServerSampler sampler = new SkipPatternHttpServerSampler(provider);
 
 		then(sampler.trySample(this.request)).isNull();
 	}
@@ -49,7 +49,7 @@ public class SleuthHttpSamplerTests {
 	public void should_not_sample_if_pattern_is_matched() {
 		SkipPatternProvider provider = () -> Pattern.compile(".*");
 		BDDMockito.given(this.request.path()).willReturn("url");
-		SleuthHttpSampler sampler = new SleuthHttpSampler(provider);
+		SkipPatternHttpServerSampler sampler = new SkipPatternHttpServerSampler(provider);
 
 		then(sampler.trySample(this.request)).isFalse();
 	}

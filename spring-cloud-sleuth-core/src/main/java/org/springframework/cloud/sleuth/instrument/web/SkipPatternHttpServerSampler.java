@@ -27,13 +27,13 @@ import brave.sampler.SamplerFunction;
  * @author Marcin Grzejszczak
  * @since 2.0.0
  */
-class SleuthHttpSampler implements SamplerFunction<HttpRequest> {
+class SkipPatternHttpServerSampler implements SamplerFunction<HttpRequest> {
 
 	private final SkipPatternProvider provider;
 
 	private Pattern pattern;
 
-	SleuthHttpSampler(SkipPatternProvider provider) {
+	SkipPatternHttpServerSampler(SkipPatternProvider provider) {
 		this.provider = provider;
 	}
 
