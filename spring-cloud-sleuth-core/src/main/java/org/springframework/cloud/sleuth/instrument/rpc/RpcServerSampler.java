@@ -39,8 +39,8 @@ import org.springframework.beans.factory.annotation.Qualifier;
 @Retention(RetentionPolicy.RUNTIME)
 @Inherited
 @Documented
-@Qualifier(ServerSampler.NAME)
-public @interface ServerSampler {
+@Qualifier(RpcServerSampler.NAME)
+public @interface RpcServerSampler {
 
 	/**
 	 * Default name for RPC server sampler.

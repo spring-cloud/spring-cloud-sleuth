@@ -39,7 +39,6 @@ import org.springframework.lang.Nullable;
  * {@link org.springframework.boot.autoconfigure.EnableAutoConfiguration
  * Auto-configuration} related to RPC based communication.
  *
- * @author Marcin Grzejszczak
  * @since 2.2.0
  */
 @Configuration
@@ -56,8 +55,8 @@ public class TraceRpcAutoConfiguration {
 	@ConditionalOnMissingBean
 	// NOTE: stable bean name as might be used outside sleuth
 	RpcTracing rpcTracing(Tracing tracing,
-			@Nullable @ClientSampler SamplerFunction<RpcRequest> clientSampler,
-			@Nullable @ServerSampler SamplerFunction<RpcRequest> serverSampler) {
+			@Nullable @RpcClientSampler SamplerFunction<RpcRequest> clientSampler,
+			@Nullable @RpcServerSampler SamplerFunction<RpcRequest> serverSampler) {
 
 		RpcTracing.Builder builder = RpcTracing.newBuilder(tracing);
 		if (clientSampler != null) {

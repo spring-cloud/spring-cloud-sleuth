@@ -64,13 +64,13 @@ public class TraceHttpAutoConfiguration {
 	// NOTE: stable bean name as might be used outside sleuth
 	HttpTracing httpTracing(Tracing tracing, SkipPatternProvider provider,
 			HttpClientParser clientParser, HttpServerParser serverParser,
-			@ClientSampler SamplerFunction<HttpRequest> clientSampler,
-			@Nullable @ServerSampler SamplerFunction<HttpRequest> serverSampler) {
+			@HttpClientSampler SamplerFunction<HttpRequest> httpClientSampler,
+			@Nullable @HttpServerSampler SamplerFunction<HttpRequest> httpServerSampler) {
 		SamplerFunction<HttpRequest> combinedSampler = combineUserProvidedSamplerWithSkipPatternSampler(
-				serverSampler, provider);
+				httpServerSampler, provider);
 		HttpTracing.Builder builder = HttpTracing.newBuilder(tracing)
 				.clientParser(clientParser).serverParser(serverParser)
-				.clientSampler(clientSampler).serverSampler(combinedSampler);
+				.clientSampler(httpClientSampler).serverSampler(combinedSampler);
 		for (HttpTracingCustomizer customizer : this.httpTracingCustomizers) {
 			customizer.customize(builder);
 		}
@@ -123,8 +123,8 @@ public class TraceHttpAutoConfiguration {
 	}
 
 	@Bean
-	@ConditionalOnMissingBean(name = ClientSampler.NAME)
-	SamplerFunction<HttpRequest> sleuthClientSampler(
+	@ConditionalOnMissingBean(name = HttpClientSampler.NAME)
+	SamplerFunction<HttpRequest> sleuthHttpClientSampler(
 			SleuthWebProperties sleuthWebProperties) {
 		return new PathMatchingHttpSampler(sleuthWebProperties);
 	}

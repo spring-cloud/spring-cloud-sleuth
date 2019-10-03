@@ -44,7 +44,7 @@ import static org.assertj.core.api.BDDAssertions.then;
 public class TraceRpcAutoConfigurationIntegrationTests {
 
 	@Autowired
-	@ServerSampler
+	@RpcServerSampler
 	SamplerFunction<RpcRequest> sampler;
 
 	@Test
@@ -62,7 +62,7 @@ public class TraceRpcAutoConfigurationIntegrationTests {
 		}
 
 		// tag::custom_rpc_server_sampler[]
-		@Bean(name = ServerSampler.NAME)
+		@Bean(name = RpcServerSampler.NAME)
 		SamplerFunction<RpcRequest> myRpcSampler() {
 			Matcher<RpcRequest> userAuth = and(serviceEquals("users.UserService"),
 					methodEquals("GetUserToken"));

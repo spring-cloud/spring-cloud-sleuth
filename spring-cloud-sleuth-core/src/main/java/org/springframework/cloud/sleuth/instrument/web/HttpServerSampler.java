@@ -31,8 +31,7 @@ import org.springframework.beans.factory.annotation.Qualifier;
  * Annotate a client {@link brave.sampler.SamplerFunction} that should be injected to
  * {@link brave.http.HttpTracing.Builder#serverSampler(SamplerFunction)}.
  *
- * @author Marcin Grzejszczak
- * @since 2.0.0
+ * @since 2.2.0
  * @see Qualifier
  */
 @Target({ ElementType.FIELD, ElementType.METHOD, ElementType.PARAMETER, ElementType.TYPE,
@@ -40,12 +39,12 @@ import org.springframework.beans.factory.annotation.Qualifier;
 @Retention(RetentionPolicy.RUNTIME)
 @Inherited
 @Documented
-@Qualifier(ServerSampler.NAME)
-public @interface ServerSampler {
+@Qualifier(HttpServerSampler.NAME)
+public @interface HttpServerSampler {
 
 	/**
-	 * Default name for the Sleuth server sampler.
+	 * Default name for the Sleuth HTTP server sampler.
 	 */
-	String NAME = "sleuthServerSampler";
+	String NAME = "sleuthHttpServerSampler";
 
 }

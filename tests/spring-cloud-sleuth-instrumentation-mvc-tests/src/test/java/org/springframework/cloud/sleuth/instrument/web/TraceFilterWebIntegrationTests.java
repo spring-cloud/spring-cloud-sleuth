@@ -74,7 +74,7 @@ public class TraceFilterWebIntegrationTests {
 	ArrayListSpanReporter accumulator;
 
 	@Autowired
-	@ServerSampler
+	@HttpServerSampler
 	SamplerFunction<HttpRequest> sampler;
 
 	@Autowired
@@ -163,7 +163,7 @@ public class TraceFilterWebIntegrationTests {
 		}
 
 		// tag::custom_server_sampler[]
-		@Bean(name = ServerSampler.NAME)
+		@Bean(name = HttpServerSampler.NAME)
 		SamplerFunction<HttpRequest> myHttpSampler(SkipPatternProvider provider) {
 			Pattern pattern = provider.skipPattern();
 			return request -> {
