@@ -23,11 +23,12 @@
 |spring.sleuth.log.slf4j.enabled | true | Enable a {@link Slf4jScopeDecorator} that prints tracing information in the logs.
 |spring.sleuth.log.slf4j.whitelisted-mdc-keys |  | A list of keys to be put from baggage to MDC.
 |spring.sleuth.messaging.enabled | false | Should messaging be turned on.
-|spring.sleuth.messaging.jms.enabled | false | 
+|spring.sleuth.messaging.jms.enabled | true | Enable tracing of JMS.
 |spring.sleuth.messaging.jms.remote-service-name | jms | 
-|spring.sleuth.messaging.kafka.enabled | false | 
+|spring.sleuth.messaging.kafka.enabled | true | Enable tracing of Kafka.
+|spring.sleuth.messaging.kafka.mapper.enabled | true | Enable DefaultKafkaHeaderMapper tracing for Kafka.
 |spring.sleuth.messaging.kafka.remote-service-name | kafka | 
-|spring.sleuth.messaging.rabbit.enabled | false | 
+|spring.sleuth.messaging.rabbit.enabled | true | Enable tracing of RabbitMQ.
 |spring.sleuth.messaging.rabbit.remote-service-name | rabbitmq | 
 |spring.sleuth.opentracing.enabled | true | 
 |spring.sleuth.propagation-keys |  | List of fields that are referenced the same in-process as it is on the wire. For example, the name "x-vcap-request-id" would be set as-is including the prefix. <p> Note: {@code fieldName} will be implicitly lower-cased. @see brave.propagation.ExtraFieldPropagation.FactoryBuilder#addField(String)

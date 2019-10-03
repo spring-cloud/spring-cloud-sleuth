@@ -42,12 +42,13 @@ public class TraceAutoConfigurationCustomizersTests {
 
 	@Test
 	public void should_apply_customizers() {
-		this.contextRunner.withPropertyValues("spring.sleuth.baggage-keys=my-baggage").run((context) -> {
-			Customizers bean = context.getBean(Customizers.class);
+		this.contextRunner.withPropertyValues("spring.sleuth.baggage-keys=my-baggage")
+				.run((context) -> {
+					Customizers bean = context.getBean(Customizers.class);
 
-			shouldApplyCustomizations(bean);
-			shouldNotOverrideTheDefaults(context);
-		});
+					shouldApplyCustomizations(bean);
+					shouldNotOverrideTheDefaults(context);
+				});
 	}
 
 	@Test
