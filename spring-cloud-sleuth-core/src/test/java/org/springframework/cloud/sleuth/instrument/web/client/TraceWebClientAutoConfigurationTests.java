@@ -18,7 +18,10 @@ package org.springframework.cloud.sleuth.instrument.web.client;
 
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import brave.spring.web.TracingClientHttpRequestInterceptor;
 import org.junit.Test;
@@ -79,8 +82,10 @@ public class TraceWebClientAutoConfigurationTests {
 		int traceInterceptorIndex = -1;
 		int myInterceptorIndex = -1;
 		int mySecondInterceptorIndex = -1;
+		Map<Class, Integer> numberOfInstances = new HashMap<>();
 		for (int i = 0; i < interceptors.size(); i++) {
 			ClientHttpRequestInterceptor interceptor = interceptors.get(i);
+			incrementNumberOfInstances(numberOfInstances, interceptor);
 			if (interceptor instanceof TracingClientHttpRequestInterceptor
 					|| interceptor instanceof LazyTracingClientHttpRequestInterceptor) {
 				traceInterceptorIndex = i;
@@ -94,6 +99,19 @@ public class TraceWebClientAutoConfigurationTests {
 		}
 		then(traceInterceptorIndex).isGreaterThanOrEqualTo(0)
 				.isLessThan(myInterceptorIndex).isLessThan(mySecondInterceptorIndex);
+		then(numberOfInstances.values())
+				.as("Can't have duplicate entries for interceptors")
+				.containsOnlyElementsOf(Collections.singletonList(1));
+	}
+
+	private void incrementNumberOfInstances(Map<Class, Integer> numberOfInstances, ClientHttpRequestInterceptor interceptor) {
+		Integer no = numberOfInstances.get(interceptor.getClass());
+		if (no == null) {
+			numberOfInstances.put(interceptor.getClass(), 1);
+		}
+		else {
+			numberOfInstances.put(interceptor.getClass(), no + 1);
+		}
 	}
 
 	@Configuration
