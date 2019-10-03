@@ -237,8 +237,7 @@ class RestTemplateInterceptorInjector {
 
 	private boolean hasTraceInterceptor(RestTemplate restTemplate) {
 		for (ClientHttpRequestInterceptor interceptor : restTemplate.getInterceptors()) {
-			if (interceptor instanceof TracingClientHttpRequestInterceptor
-					|| interceptor instanceof LazyTracingClientHttpRequestInterceptor) {
+			if (interceptor instanceof TracingClientHttpRequestInterceptor || interceptor instanceof LazyTracingClientHttpRequestInterceptor) {
 				return true;
 			}
 		}
