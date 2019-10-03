@@ -160,6 +160,13 @@
 			</dependency>
 			<dependency>
 				<groupId>org.springframework.cloud</groupId>
+				<artifactId>spring-cloud-aws-dependencies</artifactId>
+				<version>${spring-cloud-aws.version}</version>
+				<type>pom</type>
+				<scope>import</scope>
+			</dependency>
+			<dependency>
+				<groupId>org.springframework.cloud</groupId>
 				<artifactId>spring-cloud-gateway-dependencies</artifactId>
 				<version>${spring-cloud-gateway.version}</version>
 				<type>pom</type>
@@ -250,8 +257,8 @@
 		</spring-cloud-openfeign.version>
 		<spring-security-boot-autoconfigure.version>2.1.7.RELEASE
 		</spring-security-boot-autoconfigure.version>
+		<spring-cloud-aws.version>2.2.0.BUILD-SNAPSHOT</spring-cloud-aws.version>
 		<disable.nohttp.checks>false</disable.nohttp.checks>
-
 		<okhttp.version>3.10.0</okhttp.version>
 		<mockwebserver.version>3.10.0</mockwebserver.version>
 		<guava.version>20.0</guava.version>

@@ -1381,6 +1381,13 @@ To block this feature, set `spring.sleuth.messaging.jms.enabled` to `false`.
 
 IMPORTANT: We don't support baggage propagation for JMS
 
+==== Spring Cloud AWS Messaging SQS
+
+We instrument `@SqsListener` which is provided by `org.springframework.cloud:spring-cloud-aws-messaging`
+so that tracing headers get extracted from the message and a trace gets put into the context.
+
+To block this feature, set `spring.sleuth.messaging.sqs.enabled` to `false`.
+
 === Zuul
 
 We instrument the Zuul Ribbon integration by enriching the Ribbon requests with tracing information.

@@ -22,7 +22,6 @@ import brave.propagation.Propagation;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.cloud.sleuth.autoconfig.TraceAutoConfiguration;
@@ -44,7 +43,8 @@ import org.springframework.messaging.support.MessageHeaderAccessor;
 @Configuration
 @ConditionalOnClass(GlobalChannelInterceptor.class)
 @ConditionalOnBean(Tracing.class)
-@AutoConfigureAfter({ TraceAutoConfiguration.class })
+@AutoConfigureAfter({ TraceAutoConfiguration.class,
+		TraceSpringMessagingAutoConfiguration.class })
 @OnMessagingEnabled
 @ConditionalOnProperty(value = "spring.sleuth.integration.enabled", matchIfMissing = true)
 @EnableConfigurationProperties(SleuthMessagingProperties.class)
@@ -65,18 +65,6 @@ public class TraceSpringIntegrationAutoConfiguration {
 			Propagation.Getter<MessageHeaderAccessor, String> traceMessagePropagationGetter) {
 		return new TracingChannelInterceptor(tracing, traceMessagePropagationSetter,
 				traceMessagePropagationGetter);
-	}
-
-	@Bean
-	@ConditionalOnMissingBean
-	Propagation.Setter<MessageHeaderAccessor, String> traceMessagePropagationSetter() {
-		return MessageHeaderPropagation.INSTANCE;
-	}
-
-	@Bean
-	@ConditionalOnMissingBean
-	Propagation.Getter<MessageHeaderAccessor, String> traceMessagePropagationGetter() {
-		return MessageHeaderPropagation.INSTANCE;
 	}
 
 }
