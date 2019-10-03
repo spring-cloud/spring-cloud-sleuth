@@ -32,6 +32,7 @@ import org.springframework.beans.factory.annotation.Qualifier;
  * @author Marcin Grzejszczak
  * @since 2.0.0
  * @see Qualifier
+ * @deprecated Since 2.2.0, please use {@link HttpServerSampler}
  */
 @Target({ ElementType.FIELD, ElementType.METHOD, ElementType.PARAMETER, ElementType.TYPE,
 		ElementType.ANNOTATION_TYPE })
@@ -39,6 +40,7 @@ import org.springframework.beans.factory.annotation.Qualifier;
 @Inherited
 @Documented
 @Qualifier(ServerSampler.NAME)
+@Deprecated
 public @interface ServerSampler {
 
 	/**
