@@ -219,7 +219,7 @@ The following example shows setting baggage on a span:
 
 [source,java]
 ----
-include::{github-raw}/spring-cloud-sleuth-core/src/test/java/org/springframework/cloud/sleuth/instrument/multiple/MultipleHopsIntegrationTests.java[tags=baggage,indent=0]
+include::{project-root}/spring-cloud-sleuth-core/src/test/java/org/springframework/cloud/sleuth/instrument/multiple/MultipleHopsIntegrationTests.java[tags=baggage,indent=0]
 ----
 
 ===== Baggage versus Span Tags
@@ -242,13 +242,13 @@ The following listing shows integration tests that use baggage:
 .The setup
 [source,yml]
 ----
-include::{github-raw}/spring-cloud-sleuth-core/src/test/resources/application-baggage.yml[indent=0]
+include::{project-root}/spring-cloud-sleuth-core/src/test/resources/application-baggage.yml[indent=0]
 ----
 
 .The code
 [source,java]
 ----
-include::{github-raw}/spring-cloud-sleuth-core/src/test/java/org/springframework/cloud/sleuth/instrument/multiple/MultipleHopsIntegrationTests.java[tags=baggage_tag,indent=0]
+include::{project-root}/spring-cloud-sleuth-core/src/test/java/org/springframework/cloud/sleuth/instrument/multiple/MultipleHopsIntegrationTests.java[tags=baggage_tag,indent=0]
 ----
 
 [[sleuth-adding-project]]
@@ -426,7 +426,7 @@ To do this you can use respectively `ZipkinAutoConfiguration.REPORTER_BEAN_NAME`
 
 [source,java]
 ----
-include::{github-raw}/spring-cloud-sleuth-zipkin/src/test/java/org/springframework/cloud/sleuth/zipkin2/ZipkinAutoConfigurationTests.java[tags=override_default_beans,indent=0]
+include::{project-root}/spring-cloud-sleuth-zipkin/src/test/java/org/springframework/cloud/sleuth/zipkin2/ZipkinAutoConfigurationTests.java[tags=override_default_beans,indent=0]
 ----
 
 == Additional Resources
