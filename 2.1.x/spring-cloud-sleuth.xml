@@ -1555,35 +1555,32 @@ public void getAnnotationForArgumentToString(@SpanTag("test") Long param) {
 </section>
 <section xml:id="_http">
 <title>HTTP</title>
-<simpara>If a customization of client / server parsing of the HTTP related spans is required,
-just register a bean of type <literal>brave.http.HttpClientParser</literal> or
+<simpara>If a customization of client / server parsing of the HTTP related spans is
+required,  just register a bean of type <literal>brave.http.HttpClientParser</literal> or
 <literal>brave.http.HttpServerParser</literal>. If client /server sampling is required, just
-register a bean of type <literal>brave.http.HttpSampler</literal> and name the bean
- <literal>sleuthClientSampler</literal> for client sampler and <literal>sleuthServerSampler</literal> for server sampler.
- For your convenience the <literal>@ClientSampler</literal> and <literal>@ServerSampler</literal>
- annotations can be used to inject the proper beans or to
- reference the bean names via their static String <literal>NAME</literal> fields.</simpara>
+register a bean of type <literal>brave.sampler.SamplerFunction&lt;HttpRequest&gt;</literal> and name
+the bean <literal>sleuthHttpClientSampler</literal> for client sampler and
+<literal>sleuthHttpServerSampler</literal> for server  sampler.</simpara>
+<simpara>For your convenience the <literal>@HttpClientSampler</literal> and <literal>@HttpServerSampler</literal>
+annotations can be used to inject the proper beans or to  reference the bean
+names via their static String <literal>NAME</literal> fields.</simpara>
 <simpara>Check out Brave&#8217;s code to see an example of how to make a path-based sampler
 <link xl:href="https://github.com/openzipkin/brave/tree/master/instrumentation/http#sampling-policy">https://github.com/openzipkin/brave/tree/master/instrumentation/http#sampling-policy</link></simpara>
 <simpara>If you want to completely rewrite the <literal>HttpTracing</literal> bean you can use the <literal>SkipPatternProvider</literal>
 interface to retrieve the URL <literal>Pattern</literal> for spans that should be not sampled. Below you can see
-an example of usage of <literal>SkipPatternProvider</literal> inside a server side, <literal>HttpSampler</literal>.</simpara>
+an example of usage of <literal>SkipPatternProvider</literal> inside a server side, <literal>Sampler&lt;HttpRequest&gt;</literal>.</simpara>
 <programlisting language="java" linenumbering="unnumbered">@Configuration
 class Config {
-  @Bean(name = ServerSampler.NAME)
-  HttpSampler myHttpSampler(SkipPatternProvider provider) {
+  @Bean(name = HttpServerSampler.NAME)
+  SamplerFunction&lt;HttpRequest&gt; myHttpSampler(SkipPatternProvider provider) {
   	Pattern pattern = provider.skipPattern();
-  	return new HttpSampler() {
-
-  		@Override
-  		public &lt;Req&gt; Boolean trySample(HttpAdapter&lt;Req, ?&gt; adapter, Req request) {
-  			String url = adapter.path(request);
-  			boolean shouldSkip = pattern.matcher(url).matches();
-  			if (shouldSkip) {
-  				return false;
-  			}
-  			return null;
+  	return request -&gt; {
+  		String url = request.path();
+  		boolean shouldSkip = pattern.matcher(url).matches();
+  		if (shouldSkip) {
+  			return false;
   		}
+  		return null;
   	};
   }
 }</programlisting>
@@ -1620,6 +1617,33 @@ class MyFilter extends GenericFilterBean {
 	}
 
 }</programlisting>
+</section>
+<section xml:id="_rpc">
+<title>RPC</title>
+<simpara>Sleuth automatically configures the <literal>RpcTracing</literal> bean which serves as a
+foundation for RPC instrumentation such as gRPC or Dubbo.</simpara>
+<simpara>If a customization of client / server sampling of the RPC traces is required,
+just register a bean of type <literal>brave.sampler.SamplerFunction&lt;RpcRequest&gt;</literal> and
+name the bean <literal>sleuthRpcClientSampler</literal> for client sampler and
+<literal>sleuthRpcServerSampler</literal> for server sampler.</simpara>
+<simpara>For your convenience the <literal>@RpcClientSampler</literal> and <literal>@RpcServerSampler</literal>
+annotations can  be used to inject the proper beans or to reference the bean
+names via their  static String <literal>NAME</literal> fields.</simpara>
+<simpara>Ex. Here&#8217;s a sampler that traces 100 "GetUserToken" server requests per second.
+This  doesn&#8217;t start new traces for requests to the health check service. Other
+requests will use the global sampling configuration.</simpara>
+<programlisting language="java" linenumbering="unnumbered">@Configuration
+class Config {
+  @Bean(name = RpcServerSampler.NAME)
+  SamplerFunction&lt;RpcRequest&gt; myRpcSampler() {
+  	Matcher&lt;RpcRequest&gt; userAuth = and(serviceEquals("users.UserService"),
+  			methodEquals("GetUserToken"));
+  	return RpcRuleSampler.newBuilder()
+  			.putRule(serviceEquals("grpc.health.v1.Health"), Sampler.NEVER_SAMPLE)
+  			.putRule(userAuth, RateLimitingSampler.create(100)).build();
+  }
+}</programlisting>
+<simpara>For more, see <link xl:href="https://github.com/openzipkin/brave/tree/master/instrumentation/rpc#sampling-policy">https://github.com/openzipkin/brave/tree/master/instrumentation/rpc#sampling-policy</link></simpara>
 </section>
 <section xml:id="_custom_service_name">
 <title>Custom service name</title>
@@ -1857,10 +1881,10 @@ If you want to reuse Sleuth&#8217;s default skip patterns and append your own, p
 <section xml:id="_dubbo_rpc_support">
 <title>Dubbo RPC support</title>
 <simpara>Via the integration with Brave, Spring Cloud Sleuth supports <link xl:href="https://dubbo.apache.org/">Dubbo</link>.
-It&#8217;s enough to add the <literal>brave-instrumentation-dubbo-rpc</literal> dependency:</simpara>
+It&#8217;s enough to add the <literal>brave-instrumentation-dubbo</literal> dependency:</simpara>
 <programlisting language="xml" linenumbering="unnumbered">&lt;dependency&gt;
     &lt;groupId&gt;io.zipkin.brave&lt;/groupId&gt;
-    &lt;artifactId&gt;brave-instrumentation-dubbo-rpc&lt;/artifactId&gt;
+    &lt;artifactId&gt;brave-instrumentation-dubbo&lt;/artifactId&gt;
 &lt;/dependency&gt;</programlisting>
 <simpara>You need to also set a <literal>dubbo.properties</literal> file with the following contents:</simpara>
 <programlisting language="properties" linenumbering="unnumbered">dubbo.provider.filter=tracing
