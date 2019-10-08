@@ -104,7 +104,8 @@ public class TraceWebClientAutoConfigurationTests {
 				.containsOnlyElementsOf(Collections.singletonList(1));
 	}
 
-	private void incrementNumberOfInstances(Map<Class, Integer> numberOfInstances, ClientHttpRequestInterceptor interceptor) {
+	private void incrementNumberOfInstances(Map<Class, Integer> numberOfInstances,
+			ClientHttpRequestInterceptor interceptor) {
 		Integer no = numberOfInstances.get(interceptor.getClass());
 		if (no == null) {
 			numberOfInstances.put(interceptor.getClass(), 1);

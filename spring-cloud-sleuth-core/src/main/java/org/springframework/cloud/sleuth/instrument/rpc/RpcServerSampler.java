@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.springframework.cloud.sleuth.instrument.web;
+package org.springframework.cloud.sleuth.instrument.rpc;
 
 import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;
@@ -23,29 +23,28 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
+import brave.sampler.SamplerFunction;
+
 import org.springframework.beans.factory.annotation.Qualifier;
 
 /**
- * Annotate a client {@link brave.http.HttpSampler} that hsould be injected to
- * {@link brave.http.HttpTracing}.
+ * Annotate a server {@link brave.sampler.SamplerFunction} that should be injected to
+ * {@link brave.rpc.RpcTracing.Builder#serverSampler(SamplerFunction)}.
  *
- * @author Marcin Grzejszczak
- * @since 2.0.0
+ * @since 2.2.0
  * @see Qualifier
- * @deprecated Since 2.2.0, please use {@link HttpClientSampler}
  */
 @Target({ ElementType.FIELD, ElementType.METHOD, ElementType.PARAMETER, ElementType.TYPE,
 		ElementType.ANNOTATION_TYPE })
 @Retention(RetentionPolicy.RUNTIME)
 @Inherited
 @Documented
-@Qualifier(ClientSampler.NAME)
-@Deprecated
-public @interface ClientSampler {
+@Qualifier(RpcServerSampler.NAME)
+public @interface RpcServerSampler {
 
 	/**
-	 * Default name for Sleuth client sampler.
+	 * Default name for RPC server sampler.
 	 */
-	String NAME = "sleuthClientSampler";
+	String NAME = "sleuthRpcServerSampler";
 
 }

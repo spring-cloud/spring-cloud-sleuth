@@ -21,12 +21,13 @@ import java.util.List;
 
 import brave.ErrorParser;
 import brave.Tracing;
-import brave.http.HttpAdapter;
 import brave.http.HttpClientParser;
+import brave.http.HttpRequest;
 import brave.http.HttpSampler;
 import brave.http.HttpServerParser;
 import brave.http.HttpTracing;
 import brave.http.HttpTracingCustomizer;
+import brave.sampler.SamplerFunction;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
@@ -63,22 +64,28 @@ public class TraceHttpAutoConfiguration {
 	// NOTE: stable bean name as might be used outside sleuth
 	HttpTracing httpTracing(Tracing tracing, SkipPatternProvider provider,
 			HttpClientParser clientParser, HttpServerParser serverParser,
-			@ClientSampler HttpSampler clientSampler,
-			@Nullable @ServerSampler HttpSampler serverSampler) {
-		HttpSampler combinedSampler = combineUserProvidedSamplerWithSkipPatternSampler(
-				serverSampler, provider);
+			@HttpClientSampler SamplerFunction<HttpRequest> httpClientSampler,
+			@Nullable @ServerSampler HttpSampler serverSampler,
+			@Nullable @HttpServerSampler SamplerFunction<HttpRequest> httpServerSampler) {
+		if (httpServerSampler == null) {
+			httpServerSampler = serverSampler;
+		}
+		SamplerFunction<HttpRequest> combinedSampler = combineUserProvidedSamplerWithSkipPatternSampler(
+				httpServerSampler, provider);
 		HttpTracing.Builder builder = HttpTracing.newBuilder(tracing)
 				.clientParser(clientParser).serverParser(serverParser)
-				.clientSampler(clientSampler).serverSampler(combinedSampler);
+				.clientSampler(httpClientSampler).serverSampler(combinedSampler);
 		for (HttpTracingCustomizer customizer : this.httpTracingCustomizers) {
 			customizer.customize(builder);
 		}
 		return builder.build();
 	}
 
-	private HttpSampler combineUserProvidedSamplerWithSkipPatternSampler(
-			HttpSampler serverSampler, SkipPatternProvider provider) {
-		SleuthHttpSampler skipPatternSampler = new SleuthHttpSampler(provider);
+	private SamplerFunction<HttpRequest> combineUserProvidedSamplerWithSkipPatternSampler(
+			@Nullable SamplerFunction<HttpRequest> serverSampler,
+			SkipPatternProvider provider) {
+		SkipPatternHttpServerSampler skipPatternSampler = new SkipPatternHttpServerSampler(
+				provider);
 		if (serverSampler == null) {
 			return skipPatternSampler;
 		}
@@ -118,9 +125,14 @@ public class TraceHttpAutoConfiguration {
 	}
 
 	@Bean
-	@ConditionalOnMissingBean(name = ClientSampler.NAME)
-	HttpSampler sleuthClientSampler(SleuthWebProperties sleuthWebProperties) {
-		return new PathMatchingHttpSampler(sleuthWebProperties);
+	@ConditionalOnMissingBean(name = HttpClientSampler.NAME)
+	SamplerFunction<HttpRequest> sleuthHttpClientSampler(
+			@Nullable @ClientSampler HttpSampler sleuthClientSampler,
+			SleuthWebProperties sleuthWebProperties) {
+		if (sleuthClientSampler != null) {
+			return sleuthClientSampler;
+		}
+		return new SkipPatternHttpClientSampler(sleuthWebProperties);
 	}
 
 }
@@ -130,25 +142,26 @@ public class TraceHttpAutoConfiguration {
  *
  * @author Adrian Cole
  */
-class CompositeHttpSampler extends HttpSampler {
+class CompositeHttpSampler implements SamplerFunction<HttpRequest> {
 
-	private final HttpSampler left;
+	final SamplerFunction<HttpRequest> left;
 
-	private final HttpSampler right;
+	final SamplerFunction<HttpRequest> right;
 
-	CompositeHttpSampler(HttpSampler left, HttpSampler right) {
+	CompositeHttpSampler(SamplerFunction<HttpRequest> left,
+			SamplerFunction<HttpRequest> right) {
 		this.left = left;
 		this.right = right;
 	}
 
 	@Override
-	public <Req> Boolean trySample(HttpAdapter<Req, ?> adapter, Req request) {
+	public Boolean trySample(HttpRequest request) {
 		// If either decision is false, return false
-		Boolean leftDecision = this.left.trySample(adapter, request);
+		Boolean leftDecision = this.left.trySample(request);
 		if (Boolean.FALSE.equals(leftDecision)) {
 			return false;
 		}
-		Boolean rightDecision = this.right.trySample(adapter, request);
+		Boolean rightDecision = this.right.trySample(request);
 		if (Boolean.FALSE.equals(rightDecision)) {
 			return false;
 		}
@@ -160,7 +173,7 @@ class CompositeHttpSampler extends HttpSampler {
 			return leftDecision;
 		}
 		// Neither are null and at least one is true
-		return leftDecision && rightDecision;
+		return rightDecision;
 	}
 
 }
@@ -170,17 +183,17 @@ class CompositeHttpSampler extends HttpSampler {
  *
  * @author Marcin Grzejszczak
  */
-class PathMatchingHttpSampler extends HttpSampler {
+class SkipPatternHttpClientSampler implements SamplerFunction<HttpRequest> {
 
 	private final SleuthWebProperties properties;
 
-	PathMatchingHttpSampler(SleuthWebProperties properties) {
+	SkipPatternHttpClientSampler(SleuthWebProperties properties) {
 		this.properties = properties;
 	}
 
 	@Override
-	public <Req> Boolean trySample(HttpAdapter<Req, ?> adapter, Req request) {
-		String path = adapter.path(request);
+	public Boolean trySample(HttpRequest request) {
+		String path = request.path();
 		if (path == null) {
 			return null;
 		}

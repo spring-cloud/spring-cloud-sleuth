@@ -19,15 +19,17 @@ package org.springframework.cloud.sleuth.instrument.grpc;
 import java.util.List;
 import java.util.Optional;
 
-import brave.Tracing;
 import brave.grpc.GrpcTracing;
+import brave.rpc.RpcTracing;
 import io.grpc.ServerInterceptor;
 import org.lognet.springboot.grpc.GRpcGlobalInterceptor;
 
+import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.cloud.sleuth.instrument.rpc.TraceRpcAutoConfiguration;
 import org.springframework.context.annotation.Bean;
 
 /**
@@ -41,12 +43,13 @@ import org.springframework.context.annotation.Bean;
  */
 @ConditionalOnClass({ GrpcTracing.class, GRpcGlobalInterceptor.class })
 @ConditionalOnProperty(value = "spring.sleuth.grpc.enabled", matchIfMissing = true)
-@ConditionalOnBean(Tracing.class)
+@ConditionalOnBean(RpcTracing.class)
+@AutoConfigureAfter(TraceRpcAutoConfiguration.class)
 public class TraceGrpcAutoConfiguration {
 
 	@Bean
-	public GrpcTracing grpcTracing(Tracing tracing) {
-		return GrpcTracing.create(tracing);
+	public GrpcTracing grpcTracing(RpcTracing rpcTracing) {
+		return GrpcTracing.create(rpcTracing);
 	}
 
 	// Register a global interceptor for both the server

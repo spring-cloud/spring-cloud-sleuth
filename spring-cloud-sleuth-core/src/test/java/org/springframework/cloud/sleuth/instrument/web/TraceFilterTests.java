@@ -75,7 +75,8 @@ public class TraceFilterTests {
 	HttpTracing httpTracing = HttpTracing.newBuilder(this.tracing)
 			.clientParser(new SleuthHttpClientParser(this.traceKeys))
 			.serverParser(new SleuthHttpServerParser(this.traceKeys, new ErrorParser()))
-			.serverSampler(new SleuthHttpSampler(() -> Pattern.compile(""))).build();
+			.serverSampler(new SkipPatternHttpServerSampler(() -> Pattern.compile("")))
+			.build();
 
 	Filter filter = TracingFilter.create(this.httpTracing);
 
@@ -124,7 +125,9 @@ public class TraceFilterTests {
 				.clientParser(new SleuthHttpClientParser(this.traceKeys))
 				.serverParser(
 						new SleuthHttpServerParser(this.traceKeys, new ErrorParser()))
-				.serverSampler(new SleuthHttpSampler(() -> Pattern.compile(""))).build();
+				.serverSampler(
+						new SkipPatternHttpServerSampler(() -> Pattern.compile("")))
+				.build();
 		return TracingFilter.create(httpTracing);
 	}
 
