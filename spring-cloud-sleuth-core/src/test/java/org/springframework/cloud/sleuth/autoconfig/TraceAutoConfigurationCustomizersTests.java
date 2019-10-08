@@ -20,12 +20,14 @@ import brave.TracingCustomizer;
 import brave.http.HttpTracingCustomizer;
 import brave.propagation.CurrentTraceContextCustomizer;
 import brave.propagation.ExtraFieldCustomizer;
+import brave.rpc.RpcTracingCustomizer;
 import brave.sampler.Sampler;
 import org.junit.Test;
 
 import org.springframework.boot.autoconfigure.AutoConfigurations;
 import org.springframework.boot.test.context.assertj.AssertableApplicationContext;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
+import org.springframework.cloud.sleuth.instrument.rpc.TraceRpcAutoConfiguration;
 import org.springframework.cloud.sleuth.instrument.web.TraceHttpAutoConfiguration;
 import org.springframework.cloud.sleuth.instrument.web.TraceWebAutoConfiguration;
 import org.springframework.context.annotation.Bean;
@@ -38,7 +40,8 @@ public class TraceAutoConfigurationCustomizersTests {
 	private final ApplicationContextRunner contextRunner = new ApplicationContextRunner()
 			.withPropertyValues("spring.sleuth.baggage-keys=my-baggage")
 			.withConfiguration(AutoConfigurations.of(TraceAutoConfiguration.class,
-					TraceWebAutoConfiguration.class, TraceHttpAutoConfiguration.class))
+					TraceWebAutoConfiguration.class, TraceHttpAutoConfiguration.class,
+					TraceRpcAutoConfiguration.class))
 			.withUserConfiguration(Customizers.class);
 
 	@Test
@@ -60,6 +63,7 @@ public class TraceAutoConfigurationCustomizersTests {
 		then(bean.contextCustomizerApplied).isTrue();
 		then(bean.extraFieldCustomizerApplied).isTrue();
 		then(bean.httpCustomizerApplied).isTrue();
+		then(bean.rpcCustomizerApplied).isTrue();
 	}
 
 	@Configuration
@@ -72,6 +76,8 @@ public class TraceAutoConfigurationCustomizersTests {
 		boolean extraFieldCustomizerApplied;
 
 		boolean httpCustomizerApplied;
+
+		boolean rpcCustomizerApplied;
 
 		@Bean
 		TracingCustomizer sleuthTracingCustomizer() {
@@ -91,6 +97,11 @@ public class TraceAutoConfigurationCustomizersTests {
 		@Bean
 		HttpTracingCustomizer sleuthHttpTracingCustomizer() {
 			return builder -> httpCustomizerApplied = true;
+		}
+
+		@Bean
+		RpcTracingCustomizer sleuthRpcTracingCustomizer() {
+			return builder -> rpcCustomizerApplied = true;
 		}
 
 		@Bean
