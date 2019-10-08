@@ -42,8 +42,7 @@ import org.springframework.lang.Nullable;
  * @since 2.2.0
  */
 @Configuration
-@ConditionalOnProperty(name = "spring.sleuth.rpc.enabled", havingValue = "true",
-		matchIfMissing = true)
+@ConditionalOnProperty(name = "spring.sleuth.rpc.enabled", havingValue = "true", matchIfMissing = true)
 @ConditionalOnBean(Tracing.class)
 @AutoConfigureAfter(TraceAutoConfiguration.class)
 public class TraceRpcAutoConfiguration {

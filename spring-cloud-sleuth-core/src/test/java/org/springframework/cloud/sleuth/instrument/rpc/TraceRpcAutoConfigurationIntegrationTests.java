@@ -39,8 +39,7 @@ import static brave.sampler.Matchers.and;
 import static org.assertj.core.api.BDDAssertions.then;
 
 @RunWith(SpringRunner.class)
-@SpringBootTest(classes = TraceRpcAutoConfigurationIntegrationTests.Config.class,
-		webEnvironment = SpringBootTest.WebEnvironment.NONE)
+@SpringBootTest(classes = TraceRpcAutoConfigurationIntegrationTests.Config.class, webEnvironment = SpringBootTest.WebEnvironment.NONE)
 public class TraceRpcAutoConfigurationIntegrationTests {
 
 	@Autowired
