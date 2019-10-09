@@ -255,6 +255,7 @@
 		<spring-cloud-netflix.version>2.2.0.BUILD-SNAPSHOT</spring-cloud-netflix.version>
 		<spring-cloud-openfeign.version>2.2.0.BUILD-SNAPSHOT
 		</spring-cloud-openfeign.version>
+		<brave.version>5.8.0</brave.version>
 		<spring-security-boot-autoconfigure.version>2.1.7.RELEASE
 		</spring-security-boot-autoconfigure.version>
 		<spring-cloud-aws.version>2.2.0.BUILD-SNAPSHOT</spring-cloud-aws.version>
