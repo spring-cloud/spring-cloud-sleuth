@@ -18,6 +18,7 @@ package org.springframework.cloud.sleuth.instrument.async;
 
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.cloud.sleuth.instrument.scheduling.SleuthSchedulingProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -29,8 +30,8 @@ import org.springframework.context.annotation.Configuration;
  * @since 2.1.0
  */
 @Configuration
-@EnableConfigurationProperties(SleuthAsyncProperties.class)
-@ConditionalOnProperty(value = "spring.sleuth.async.enabled", matchIfMissing = true)
+@ConditionalOnProperty(value = "spring.sleuth.scheduled.enabled", matchIfMissing = true)
+@EnableConfigurationProperties({SleuthAsyncProperties.class, SleuthSchedulingProperties.class})
 public class AsyncAutoConfiguration {
 
 	@Bean

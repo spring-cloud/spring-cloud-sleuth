@@ -32,23 +32,10 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 public class SleuthAsyncProperties {
 
 	/**
-	 * Enable tracing for {@link org.springframework.scheduling.annotation.Scheduled}.
-	 */
-	private boolean enabled = true;
-
-	/**
 	 * List of {@link java.util.concurrent.Executor} bean names that should be ignored and
 	 * not wrapped in a trace representation.
 	 */
 	private List<String> ignoredBeans = Collections.emptyList();
-
-	public boolean isEnabled() {
-		return this.enabled;
-	}
-
-	public void setEnabled(boolean enabled) {
-		this.enabled = enabled;
-	}
 
 	public List<String> getIgnoredBeans() {
 		return this.ignoredBeans;

@@ -39,7 +39,7 @@ import static org.assertj.core.api.BDDAssertions.then;
 		classes = { AsyncAutoConfiguration.class,
 				AsyncDisabledTests.ConfigureThreadPoolTaskScheduler.class },
 		webEnvironment = SpringBootTest.WebEnvironment.NONE,
-		properties = "spring.sleuth.async.enabled=false")
+		properties = "spring.sleuth.scheduled.enabled=false")
 public class AsyncDisabledTests {
 
 	@Autowired
@@ -48,7 +48,7 @@ public class AsyncDisabledTests {
 
 	@Test
 	public void should_not_wrap_scheduler() {
-		then(this.executor).isInstanceOf(ThreadPoolTaskScheduler.class);
+		then(this.executor).isNotInstanceOf(LazyTraceThreadPoolTaskScheduler.class);
 	}
 
 	@Configuration
