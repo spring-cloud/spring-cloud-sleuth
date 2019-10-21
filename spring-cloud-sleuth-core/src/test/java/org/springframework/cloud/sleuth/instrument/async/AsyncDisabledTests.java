@@ -16,8 +16,11 @@
 
 package org.springframework.cloud.sleuth.instrument.async;
 
+import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.Executor;
+import java.util.concurrent.LinkedBlockingQueue;
 
+import brave.propagation.CurrentTraceContext;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -35,20 +38,27 @@ import org.springframework.test.context.junit4.SpringRunner;
 import static org.assertj.core.api.BDDAssertions.then;
 
 @RunWith(SpringRunner.class)
-@SpringBootTest(
-		classes = { AsyncAutoConfiguration.class,
-				AsyncDisabledTests.ConfigureThreadPoolTaskScheduler.class },
+@SpringBootTest(classes = AsyncDisabledTests.ConfigureThreadPoolTaskScheduler.class,
 		webEnvironment = SpringBootTest.WebEnvironment.NONE,
 		properties = "spring.sleuth.scheduled.enabled=false")
 public class AsyncDisabledTests {
 
 	@Autowired
+	CurrentTraceContext currentTraceContext;
+
+	@Autowired
 	@Qualifier("traceSenderThreadPool")
 	Executor executor;
 
+	/**
+	 * We can't check the type of the executor because sleuth will proxy it. Instead, we
+	 * check for behaviour.
+	 */
 	@Test
-	public void should_not_wrap_scheduler() {
-		then(this.executor).isNotInstanceOf(LazyTraceThreadPoolTaskScheduler.class);
+	public void should_not_wrap_scheduler() throws InterruptedException {
+		BlockingQueue<Boolean> spans = new LinkedBlockingQueue<>();
+		this.executor.execute(() -> spans.add(this.currentTraceContext.get() != null));
+		then(spans.take()).isFalse();
 	}
 
 	@Configuration

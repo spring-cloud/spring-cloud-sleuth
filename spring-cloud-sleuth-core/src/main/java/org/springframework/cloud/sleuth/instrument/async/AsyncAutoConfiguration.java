@@ -31,7 +31,8 @@ import org.springframework.context.annotation.Configuration;
  */
 @Configuration
 @ConditionalOnProperty(value = "spring.sleuth.scheduled.enabled", matchIfMissing = true)
-@EnableConfigurationProperties({SleuthAsyncProperties.class, SleuthSchedulingProperties.class})
+@EnableConfigurationProperties({ SleuthAsyncProperties.class,
+		SleuthSchedulingProperties.class })
 public class AsyncAutoConfiguration {
 
 	@Bean
