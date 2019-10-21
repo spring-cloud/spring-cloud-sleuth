@@ -128,7 +128,8 @@ public class LazyTraceThreadPoolTaskSchedulerTests {
 		};
 		this.executor.execute(r);
 
-		BDDMockito.then(this.delegate).should().execute(r);
+		BDDMockito.then(this.delegate).should()
+				.execute(BDDMockito.any(TraceRunnable.class));
 	}
 
 	@Test
