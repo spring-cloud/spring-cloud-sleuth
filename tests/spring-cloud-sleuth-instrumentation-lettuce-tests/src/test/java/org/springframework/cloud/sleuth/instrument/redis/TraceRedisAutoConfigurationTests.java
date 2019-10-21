@@ -63,9 +63,18 @@ public class TraceRedisAutoConfigurationTests {
 		}
 
 		@Bean
+		TraceRedisProperties traceRedisProperties() {
+			TraceRedisProperties traceRedisProperties = new TraceRedisProperties();
+			traceRedisProperties.setEnabled(true);
+			traceRedisProperties.setRemoteServiceName("redis-foo");
+			return traceRedisProperties;
+		}
+
+		@Bean
 		TestTraceLettuceClientResourcesBeanPostProcessor testTraceLettuceClientResourcesBeanPostProcessor(
-				Tracing tracing) {
-			return new TestTraceLettuceClientResourcesBeanPostProcessor(tracing);
+				Tracing tracing, TraceRedisProperties traceRedisProperties) {
+			return new TestTraceLettuceClientResourcesBeanPostProcessor(tracing,
+					traceRedisProperties);
 		}
 
 	}
@@ -77,8 +86,9 @@ class TestTraceLettuceClientResourcesBeanPostProcessor
 
 	boolean tracingCalled = false;
 
-	TestTraceLettuceClientResourcesBeanPostProcessor(Tracing tracing) {
-		super(tracing);
+	TestTraceLettuceClientResourcesBeanPostProcessor(Tracing tracing,
+			TraceRedisProperties traceRedisProperties) {
+		super(tracing, traceRedisProperties);
 	}
 
 	@Override

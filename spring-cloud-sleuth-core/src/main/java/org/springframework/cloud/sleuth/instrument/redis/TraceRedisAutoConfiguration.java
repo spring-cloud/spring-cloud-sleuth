@@ -26,6 +26,8 @@ import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.config.BeanPostProcessor;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.cloud.sleuth.autoconfig.TraceAutoConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -38,9 +40,10 @@ import org.springframework.context.annotation.Configuration;
  * @since 2.2.0
  */
 @Configuration
-@OnRedisEnabled
+@ConditionalOnProperty(value = "spring.sleuth.redis.enabled", matchIfMissing = true)
 @ConditionalOnBean({ Tracing.class, ClientResources.class })
 @AutoConfigureAfter({ TraceAutoConfiguration.class })
+@EnableConfigurationProperties(TraceRedisProperties.class)
 public class TraceRedisAutoConfiguration {
 
 	@Configuration
@@ -48,8 +51,9 @@ public class TraceRedisAutoConfiguration {
 
 		@Bean
 		static TraceLettuceClientResourcesBeanPostProcessor traceLettuceClientResourcesBeanPostProcessor(
-				Tracing tracing) {
-			return new TraceLettuceClientResourcesBeanPostProcessor(tracing);
+				Tracing tracing, TraceRedisProperties traceRedisProperties) {
+			return new TraceLettuceClientResourcesBeanPostProcessor(tracing,
+					traceRedisProperties);
 		}
 
 	}
@@ -63,8 +67,12 @@ class TraceLettuceClientResourcesBeanPostProcessor implements BeanPostProcessor 
 
 	private final Tracing tracing;
 
-	TraceLettuceClientResourcesBeanPostProcessor(Tracing tracing) {
+	private final TraceRedisProperties traceRedisProperties;
+
+	TraceLettuceClientResourcesBeanPostProcessor(Tracing tracing,
+			TraceRedisProperties traceRedisProperties) {
 		this.tracing = tracing;
+		this.traceRedisProperties = traceRedisProperties;
 	}
 
 	@Override
@@ -83,7 +91,9 @@ class TraceLettuceClientResourcesBeanPostProcessor implements BeanPostProcessor 
 					log.debug(
 							"Lettuce ClientResources bean is auto-configured to enable tracing.");
 				}
-				return cr.mutate().tracing(BraveTracing.create(this.tracing)).build();
+				BraveTracing lettuceTracing = BraveTracing.builder().tracing(this.tracing)
+						.serviceName(traceRedisProperties.getRemoteServiceName()).build();
+				return cr.mutate().tracing(lettuceTracing).build();
 			}
 			if (log.isDebugEnabled()) {
 				log.debug(

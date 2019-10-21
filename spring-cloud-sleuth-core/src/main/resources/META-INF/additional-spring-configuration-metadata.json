@@ -49,12 +49,6 @@
       "defaultValue": true
     },
     {
-      "name": "spring.sleuth.redis.enabled",
-      "type": "java.lang.Boolean",
-      "description": "Enable span information propagation when using Redis.",
-      "defaultValue": true
-    },
-    {
       "name": "spring.sleuth.messaging.jms.enabled",
       "type": "java.lang.Boolean",
       "description": "Enable tracing of JMS.",
