@@ -362,9 +362,8 @@ final class TraceExchangeFilterFunction implements ExchangeFilterFunction {
 								"Non positive status code was returned from the call. Will close the span ["
 										+ this.span + "]");
 					}
-					throwable = new RestClientException("Status code of the response is ["
-							+ statusCode
-							+ "]");
+					throwable = new RestClientException(
+							"Status code of the response is [" + statusCode + "]");
 				}
 				handleReceive(this.span, this.ws, clientResponse, throwable);
 			}
