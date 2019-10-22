@@ -73,7 +73,8 @@ public class ExecutorBeanPostProcessorTests {
 	@Before
 	public void setup() {
 		this.sleuthAsyncProperties = new SleuthAsyncProperties();
-		Mockito.when(this.beanFactory.getBean(SleuthAsyncProperties.class)).thenReturn(this.sleuthAsyncProperties);
+		Mockito.when(this.beanFactory.getBean(SleuthAsyncProperties.class))
+				.thenReturn(this.sleuthAsyncProperties);
 	}
 
 	@After
@@ -83,7 +84,8 @@ public class ExecutorBeanPostProcessorTests {
 
 	@Test
 	public void should_create_a_cglib_proxy_by_default() throws Exception {
-		Object o = new ExecutorBeanPostProcessor(this.beanFactory).postProcessAfterInitialization(new Foo(), "foo");
+		Object o = new ExecutorBeanPostProcessor(this.beanFactory)
+				.postProcessAfterInitialization(new Foo(), "foo");
 
 		then(o).isInstanceOf(Foo.class);
 		then(AopUtils.isCglibProxy(o)).isTrue();
@@ -106,7 +108,8 @@ public class ExecutorBeanPostProcessorTests {
 			throws Exception {
 		ScheduledExecutorService service = Executors.newSingleThreadScheduledExecutor();
 
-		Object o = new ExecutorBeanPostProcessor(this.beanFactory).postProcessAfterInitialization(service, "foo");
+		Object o = new ExecutorBeanPostProcessor(this.beanFactory)
+				.postProcessAfterInitialization(service, "foo");
 
 		then(o).isInstanceOf(TraceableScheduledExecutorService.class);
 		service.shutdown();
@@ -172,7 +175,8 @@ public class ExecutorBeanPostProcessorTests {
 	}
 
 	@Test
-	public void should_fallback_to_default_implementation_when_exception_thrown() throws Exception {
+	public void should_fallback_to_default_implementation_when_exception_thrown()
+			throws Exception {
 		ScheduledExecutorService service = Executors.newSingleThreadScheduledExecutor();
 		ExecutorBeanPostProcessor bpp = new ExecutorBeanPostProcessor(this.beanFactory) {
 
@@ -190,7 +194,8 @@ public class ExecutorBeanPostProcessorTests {
 	}
 
 	@Test
-	public void should_create_a_cglib_proxy_by_default_for_ThreadPoolTaskExecutor() throws Exception {
+	public void should_create_a_cglib_proxy_by_default_for_ThreadPoolTaskExecutor()
+			throws Exception {
 		Object o = new ExecutorBeanPostProcessor(this.beanFactory)
 				.postProcessAfterInitialization(new FooThreadPoolTaskExecutor(), "foo");
 
@@ -204,7 +209,8 @@ public class ExecutorBeanPostProcessorTests {
 		ThreadPoolTaskExecutor taskExecutor = new ThreadPoolTaskExecutor();
 		ExecutorBeanPostProcessor bpp = new ExecutorBeanPostProcessor(this.beanFactory) {
 			@Override
-			Object createThreadPoolTaskExecutorProxy(Object bean, boolean cglibProxy, ThreadPoolTaskExecutor executor) {
+			Object createThreadPoolTaskExecutorProxy(Object bean, boolean cglibProxy,
+					ThreadPoolTaskExecutor executor) {
 				throw new AopConfigException("foo");
 			}
 		};
@@ -234,7 +240,8 @@ public class ExecutorBeanPostProcessorTests {
 		ExecutorService service = exceptionThrowingExecutorService();
 		ExecutorBeanPostProcessor bpp = new ExecutorBeanPostProcessor(this.beanFactory);
 
-		ExecutorService o = (ExecutorService) bpp.postProcessAfterInitialization(service, "foo");
+		ExecutorService o = (ExecutorService) bpp.postProcessAfterInitialization(service,
+				"foo");
 
 		thenThrownBy(() -> o.submit((Callable<Object>) () -> "hello")).hasMessage("foo")
 				.isInstanceOf(IllegalStateException.class);
@@ -268,7 +275,8 @@ public class ExecutorBeanPostProcessorTests {
 			}
 
 			@Override
-			public boolean awaitTermination(long timeout, TimeUnit unit) throws InterruptedException {
+			public boolean awaitTermination(long timeout, TimeUnit unit)
+					throws InterruptedException {
 				return false;
 			}
 
@@ -288,13 +296,14 @@ public class ExecutorBeanPostProcessorTests {
 			}
 
 			@Override
-			public <T> List<Future<T>> invokeAll(Collection<? extends Callable<T>> tasks) throws InterruptedException {
+			public <T> List<Future<T>> invokeAll(Collection<? extends Callable<T>> tasks)
+					throws InterruptedException {
 				return null;
 			}
 
 			@Override
-			public <T> List<Future<T>> invokeAll(Collection<? extends Callable<T>> tasks, long timeout, TimeUnit unit)
-					throws InterruptedException {
+			public <T> List<Future<T>> invokeAll(Collection<? extends Callable<T>> tasks,
+					long timeout, TimeUnit unit) throws InterruptedException {
 				return null;
 			}
 
@@ -305,7 +314,8 @@ public class ExecutorBeanPostProcessorTests {
 			}
 
 			@Override
-			public <T> T invokeAny(Collection<? extends Callable<T>> tasks, long timeout, TimeUnit unit)
+			public <T> T invokeAny(Collection<? extends Callable<T>> tasks, long timeout,
+					TimeUnit unit)
 					throws InterruptedException, ExecutionException, TimeoutException {
 				return null;
 			}
@@ -314,9 +324,11 @@ public class ExecutorBeanPostProcessorTests {
 
 	@Test
 	public void should_use_jdk_proxy_when_executor_has_final_methods() {
-		ExecutorBeanPostProcessor beanPostProcessor = new ExecutorBeanPostProcessor(this.beanFactory);
+		ExecutorBeanPostProcessor beanPostProcessor = new ExecutorBeanPostProcessor(
+				this.beanFactory);
 		Executor executor = Runnable::run;
-		Executor wrappedExecutor = (Executor) beanPostProcessor.postProcessAfterInitialization(executor, "executor");
+		Executor wrappedExecutor = (Executor) beanPostProcessor
+				.postProcessAfterInitialization(executor, "executor");
 
 		then(AopUtils.isJdkDynamicProxy(wrappedExecutor)).isTrue();
 		then(AopUtils.isCglibProxy(wrappedExecutor)).isFalse();
@@ -329,8 +341,10 @@ public class ExecutorBeanPostProcessorTests {
 	}
 
 	@Test
-	public void should_use_jdk_proxy_when_executor_service_has_final_methods() throws Exception {
-		ExecutorBeanPostProcessor beanPostProcessor = new ExecutorBeanPostProcessor(this.beanFactory);
+	public void should_use_jdk_proxy_when_executor_service_has_final_methods()
+			throws Exception {
+		ExecutorBeanPostProcessor beanPostProcessor = new ExecutorBeanPostProcessor(
+				this.beanFactory);
 		ExecutorService executorService = new DelegatingSecurityContextExecutorService(
 				Executors.newSingleThreadExecutor());
 		ExecutorService wrappedExecutor = (ExecutorService) beanPostProcessor
@@ -343,8 +357,10 @@ public class ExecutorBeanPostProcessorTests {
 	}
 
 	@Test
-	public void should_use_jdk_proxy_when_async_task_executor_has_final_methods() throws Exception {
-		ExecutorBeanPostProcessor beanPostProcessor = new ExecutorBeanPostProcessor(this.beanFactory);
+	public void should_use_jdk_proxy_when_async_task_executor_has_final_methods()
+			throws Exception {
+		ExecutorBeanPostProcessor beanPostProcessor = new ExecutorBeanPostProcessor(
+				this.beanFactory);
 
 		AsyncTaskExecutor wrappedExecutor = (AsyncTaskExecutor) beanPostProcessor
 				.postProcessAfterInitialization(new DirectTaskExecutor(), "taskExecutor");
@@ -356,11 +372,13 @@ public class ExecutorBeanPostProcessorTests {
 
 	@Test
 	public void should_fallback_to_sleuth_impl_when_thread_pool_task_executor_has_final_methods() {
-		ExecutorBeanPostProcessor postProcessor = new ExecutorBeanPostProcessor(this.beanFactory);
+		ExecutorBeanPostProcessor postProcessor = new ExecutorBeanPostProcessor(
+				this.beanFactory);
 		ThreadPoolTaskExecutor threadPoolTaskExecutor = new PoolTaskExecutor();
 
 		ThreadPoolTaskExecutor wrappedTaskExecutor = (ThreadPoolTaskExecutor) postProcessor
-				.postProcessAfterInitialization(threadPoolTaskExecutor, "threadPoolTaskExecutor");
+				.postProcessAfterInitialization(threadPoolTaskExecutor,
+						"threadPoolTaskExecutor");
 
 		then(wrappedTaskExecutor).isInstanceOf(LazyTraceThreadPoolTaskExecutor.class);
 		then(AopUtils.isCglibProxy(wrappedTaskExecutor)).isFalse();
@@ -370,26 +388,31 @@ public class ExecutorBeanPostProcessorTests {
 
 	@Test
 	public void proxy_is_not_needed() throws Exception {
-		this.sleuthAsyncProperties.setIgnoredBeans(Collections.singletonList("fooExecutor"));
+		this.sleuthAsyncProperties
+				.setIgnoredBeans(Collections.singletonList("fooExecutor"));
 
-		boolean isProxyNeeded = new ExecutorBeanPostProcessor(this.beanFactory).isProxyNeeded("fooExecutor");
+		boolean isProxyNeeded = new ExecutorBeanPostProcessor(this.beanFactory)
+				.isProxyNeeded("fooExecutor");
 
 		then(isProxyNeeded).isFalse();
 	}
 
 	@Test
 	public void proxy_is_needed() throws Exception {
-		boolean isProxyNeeded = new ExecutorBeanPostProcessor(this.beanFactory).isProxyNeeded("fooExecutor");
+		boolean isProxyNeeded = new ExecutorBeanPostProcessor(this.beanFactory)
+				.isProxyNeeded("fooExecutor");
 
 		then(isProxyNeeded).isTrue();
 	}
 
 	@Test
 	public void should_not_create_proxy() throws Exception {
-		this.sleuthAsyncProperties.setIgnoredBeans(Collections.singletonList("fooExecutor"));
+		this.sleuthAsyncProperties
+				.setIgnoredBeans(Collections.singletonList("fooExecutor"));
 
 		Object o = new ExecutorBeanPostProcessor(this.beanFactory)
-				.postProcessAfterInitialization(new ThreadPoolTaskExecutor(), "fooExecutor");
+				.postProcessAfterInitialization(new ThreadPoolTaskExecutor(),
+						"fooExecutor");
 
 		then(o).isInstanceOf(ThreadPoolTaskExecutor.class);
 		then(AopUtils.isCglibProxy(o)).isFalse();
@@ -398,7 +421,8 @@ public class ExecutorBeanPostProcessorTests {
 	@Test
 	public void should_throw_real_exception_when_using_proxy() throws Exception {
 		Object o = new ExecutorBeanPostProcessor(this.beanFactory)
-				.postProcessAfterInitialization(new RejectedExecutionExecutor(), "fooExecutor");
+				.postProcessAfterInitialization(new RejectedExecutionExecutor(),
+						"fooExecutor");
 
 		then(o).isInstanceOf(RejectedExecutionExecutor.class);
 		then(AopUtils.isCglibProxy(o)).isTrue();
@@ -412,22 +436,25 @@ public class ExecutorBeanPostProcessorTests {
 		LazyTraceThreadPoolTaskExecutor lazyTraceThreadPoolTaskExecutor = BDDMockito
 				.mock(LazyTraceThreadPoolTaskExecutor.class);
 		Object o = new ExecutorBeanPostProcessor(this.beanFactory)
-				.postProcessAfterInitialization(lazyTraceThreadPoolTaskExecutor, "executor");
+				.postProcessAfterInitialization(lazyTraceThreadPoolTaskExecutor,
+						"executor");
 		BDDAssertions.then(o).isSameAs(lazyTraceThreadPoolTaskExecutor);
 
-		TraceableExecutorService traceableExecutorService = BDDMockito.mock(TraceableExecutorService.class);
-		o = new ExecutorBeanPostProcessor(this.beanFactory).postProcessAfterInitialization(traceableExecutorService,
-				"executor");
+		TraceableExecutorService traceableExecutorService = BDDMockito
+				.mock(TraceableExecutorService.class);
+		o = new ExecutorBeanPostProcessor(this.beanFactory)
+				.postProcessAfterInitialization(traceableExecutorService, "executor");
 		BDDAssertions.then(o).isSameAs(traceableExecutorService);
 
-		LazyTraceAsyncTaskExecutor lazyTraceAsyncTaskExecutor = BDDMockito.mock(LazyTraceAsyncTaskExecutor.class);
-		o = new ExecutorBeanPostProcessor(this.beanFactory).postProcessAfterInitialization(lazyTraceAsyncTaskExecutor,
-				"executor");
+		LazyTraceAsyncTaskExecutor lazyTraceAsyncTaskExecutor = BDDMockito
+				.mock(LazyTraceAsyncTaskExecutor.class);
+		o = new ExecutorBeanPostProcessor(this.beanFactory)
+				.postProcessAfterInitialization(lazyTraceAsyncTaskExecutor, "executor");
 		BDDAssertions.then(o).isSameAs(lazyTraceAsyncTaskExecutor);
 
 		LazyTraceExecutor lazyTraceExecutor = BDDMockito.mock(LazyTraceExecutor.class);
-		o = new ExecutorBeanPostProcessor(this.beanFactory).postProcessAfterInitialization(lazyTraceExecutor,
-				"executor");
+		o = new ExecutorBeanPostProcessor(this.beanFactory)
+				.postProcessAfterInitialization(lazyTraceExecutor, "executor");
 		BDDAssertions.then(o).isSameAs(lazyTraceExecutor);
 
 	}

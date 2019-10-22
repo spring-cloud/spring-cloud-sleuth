@@ -55,8 +55,9 @@ final class TraceRequestHttpHeadersFilter extends AbstractHttpHeadersFilter {
 		TraceCarrier carrier = new TraceCarrier(exchange.getRequest(), input);
 		Span span = this.handler.handleSend(this.injector, carrier);
 		if (log.isDebugEnabled()) {
-			log.debug("Client span  " + span + " created for the request. New headers are "
-					+ carrier.filteredHeaders.toSingleValueMap());
+			log.debug(
+					"Client span  " + span + " created for the request. New headers are "
+							+ carrier.filteredHeaders.toSingleValueMap());
 		}
 		exchange.getAttributes().put(SPAN_ATTRIBUTE, span);
 		HttpHeaders headersWithInput = new HttpHeaders();
@@ -67,8 +68,7 @@ final class TraceRequestHttpHeadersFilter extends AbstractHttpHeadersFilter {
 
 	private void addHeadersWithInput(HttpHeaders filteredHeaders,
 			HttpHeaders headersWithInput) {
-		for (Map.Entry<String, List<String>> entry : builder.build().getHeaders()
-				.entrySet()) {
+		for (Map.Entry<String, List<String>> entry : filteredHeaders.entrySet()) {
 			String key = entry.getKey();
 			List<String> value = entry.getValue();
 			headersWithInput.put(key, value);
@@ -88,7 +88,8 @@ class TraceCarrier {
 
 	final HttpHeaders filteredHeaders;
 
-	TraceCarrier(@NonNull ServerHttpRequest originalRequest, @NonNull HttpHeaders filteredHeaders) {
+	TraceCarrier(@NonNull ServerHttpRequest originalRequest,
+			@NonNull HttpHeaders filteredHeaders) {
 		this.originalRequest = originalRequest;
 		this.filteredHeaders = filteredHeaders;
 	}
@@ -97,7 +98,8 @@ class TraceCarrier {
 
 final class TraceResponseHttpHeadersFilter extends AbstractHttpHeadersFilter {
 
-	private static final Log log = LogFactory.getLog(TraceResponseHttpHeadersFilter.class);
+	private static final Log log = LogFactory
+			.getLog(TraceResponseHttpHeadersFilter.class);
 
 	private TraceResponseHttpHeadersFilter(HttpTracing httpTracing) {
 		super(httpTracing);
@@ -161,7 +163,8 @@ abstract class AbstractHttpHeadersFilter implements HttpHeadersFilter {
 		this.httpTracing = httpTracing;
 	}
 
-	private static class ServerHttpAdapter extends brave.http.HttpClientAdapter<TraceCarrier, ServerHttpResponse> {
+	private static class ServerHttpAdapter
+			extends brave.http.HttpClientAdapter<TraceCarrier, ServerHttpResponse> {
 
 		@Override
 		public String method(TraceCarrier request) {
@@ -181,7 +184,8 @@ abstract class AbstractHttpHeadersFilter implements HttpHeadersFilter {
 
 		@Override
 		public Integer statusCode(ServerHttpResponse response) {
-			return response.getStatusCode() != null ? response.getStatusCode().value() : null;
+			return response.getStatusCode() != null ? response.getStatusCode().value()
+					: null;
 		}
 
 	}
