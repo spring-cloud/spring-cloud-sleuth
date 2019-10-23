@@ -18,6 +18,7 @@ package org.springframework.cloud.sleuth.zipkin2.sender;
 
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -49,6 +50,9 @@ import org.springframework.web.client.RestTemplate;
 @EnableConfigurationProperties(ZipkinSenderProperties.class)
 class ZipkinRestTemplateSenderConfiguration {
 
+	private static final Log log = LogFactory
+			.getLog(ZipkinRestTemplateSenderConfiguration.class);
+
 	@Autowired
 	ZipkinUrlExtractor extractor;
 
@@ -63,12 +67,60 @@ class ZipkinRestTemplateSenderConfiguration {
 
 	@Bean
 	ZipkinUrlExtractor zipkinUrlExtractor(final ZipkinLoadBalancer zipkinLoadBalancer) {
-		return new ZipkinUrlExtractor() {
-			@Override
-			public URI zipkinUrl(ZipkinProperties zipkinProperties) {
-				return zipkinLoadBalancer.instance();
+		return new CachingZipkinUrlExtractor(zipkinLoadBalancer);
+	}
+
+	static class CachingZipkinUrlExtractor implements ZipkinUrlExtractor {
+
+		final AtomicInteger zipkinPort = new AtomicInteger();
+
+		private final ZipkinLoadBalancer zipkinLoadBalancer;
+
+		CachingZipkinUrlExtractor(ZipkinLoadBalancer zipkinLoadBalancer) {
+			this.zipkinLoadBalancer = zipkinLoadBalancer;
+		}
+
+		@Override
+		public URI zipkinUrl(ZipkinProperties zipkinProperties) {
+			int cachedZipkinPort = zipkinPort(zipkinProperties);
+			if (cachedZipkinPort == -1) {
+				if (log.isDebugEnabled()) {
+					log.debug("The port in Zipkin's URL [" + zipkinProperties.getBaseUrl()
+							+ "] wasn't provided - that means that load balancing might take place");
+				}
+				return this.zipkinLoadBalancer.instance();
 			}
-		};
+			if (log.isDebugEnabled()) {
+				log.debug("The port in Zipkin's URL [" + zipkinProperties.getBaseUrl()
+						+ "] is provided - that means that load balancing will not take place");
+			}
+			return noOpZipkinLoadBalancer(zipkinProperties).instance();
+		}
+
+		NoOpZipkinLoadBalancer noOpZipkinLoadBalancer(ZipkinProperties zipkinProperties) {
+			return new NoOpZipkinLoadBalancer(zipkinProperties);
+		}
+
+		private int zipkinPort(ZipkinProperties zipkinProperties) {
+			int cachedZipkinPort = this.zipkinPort.get();
+			if (cachedZipkinPort != 0) {
+				return cachedZipkinPort;
+			}
+			return calculatePort(zipkinProperties);
+		}
+
+		int calculatePort(ZipkinProperties zipkinProperties) {
+			String baseUrl = zipkinProperties.getBaseUrl();
+			URI uri = createUri(baseUrl);
+			int zipkinPort = uri.getPort();
+			this.zipkinPort.set(zipkinPort);
+			return zipkinPort;
+		}
+
+		URI createUri(String baseUrl) {
+			return URI.create(baseUrl);
+		}
+
 	}
 
 	@Configuration

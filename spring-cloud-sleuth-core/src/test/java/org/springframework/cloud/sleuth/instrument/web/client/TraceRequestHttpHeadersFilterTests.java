@@ -54,7 +54,8 @@ public class TraceRequestHttpHeadersFilterTests {
 				.headers(httpHeaders).build();
 		MockServerWebExchange exchange = MockServerWebExchange.builder(request).build();
 
-		HttpHeaders filteredHeaders = filter.filter(requestHeaders(httpHeaders), exchange);
+		HttpHeaders filteredHeaders = filter.filter(requestHeaders(httpHeaders),
+				exchange);
 
 		BDDAssertions.then(filteredHeaders.get("X-B3-TraceId"))
 				.isNotEqualTo(httpHeaders.get("X-B3-TraceId"));
@@ -80,7 +81,8 @@ public class TraceRequestHttpHeadersFilterTests {
 				.headers(httpHeaders).build();
 		MockServerWebExchange exchange = MockServerWebExchange.builder(request).build();
 
-		HttpHeaders filteredHeaders = filter.filter(requestHeaders(httpHeaders), exchange);
+		HttpHeaders filteredHeaders = filter.filter(requestHeaders(httpHeaders),
+				exchange);
 
 		BDDAssertions.then(filteredHeaders.get("X-B3-TraceId")).isNotEmpty();
 		BDDAssertions.then(filteredHeaders.get("X-B3-SpanId")).isNotEmpty();

@@ -16,6 +16,9 @@
 
 package org.springframework.cloud.sleuth.zipkin2.sender;
 
+import java.net.URI;
+import java.util.concurrent.atomic.AtomicBoolean;
+
 import org.junit.Test;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -57,6 +60,51 @@ public class ZipkinRestTemplateSenderConfigurationTest {
 		assertThat(ctxt.getBean(ZipkinLoadBalancer.class))
 				.isInstanceOf(LoadBalancerClientZipkinLoadBalancer.class);
 		ctxt.close();
+	}
+
+	@Test
+	public void shouldReturnCachedPortValueIfPresent() {
+		final AtomicBoolean portCalculated = new AtomicBoolean();
+		ZipkinProperties zipkinProperties = new ZipkinProperties();
+		ZipkinRestTemplateSenderConfiguration.CachingZipkinUrlExtractor extractor = new ZipkinRestTemplateSenderConfiguration.CachingZipkinUrlExtractor(
+				new NoOpZipkinLoadBalancer(zipkinProperties)) {
+			@Override
+			int calculatePort(ZipkinProperties zipkinProperties) {
+				portCalculated.set(true);
+				return super.calculatePort(zipkinProperties);
+			}
+		};
+		extractor.zipkinPort.set(9411);
+
+		URI uri = extractor.zipkinUrl(zipkinProperties);
+
+		assertThat(uri.toString())
+				.isEqualTo(URI.create(zipkinProperties.getBaseUrl()).toString());
+		assertThat(portCalculated).isFalse();
+	}
+
+	@Test
+	public void shouldDelegateToLoadBalancingWhenNoPortPresent() {
+		ZipkinProperties zipkinProperties = new ZipkinProperties();
+		zipkinProperties.setBaseUrl("http://somehostnamewithnoport/endpoint");
+		ZipkinRestTemplateSenderConfiguration.CachingZipkinUrlExtractor extractor = new ZipkinRestTemplateSenderConfiguration.CachingZipkinUrlExtractor(
+				() -> URI.create("http://example.com"));
+
+		URI uri = extractor.zipkinUrl(zipkinProperties);
+
+		assertThat(uri.toString()).isEqualTo(URI.create("http://example.com").toString());
+	}
+
+	@Test
+	public void shouldDelegateToNonLoadBalancingWhenPortPresent() {
+		ZipkinProperties zipkinProperties = new ZipkinProperties();
+		ZipkinRestTemplateSenderConfiguration.CachingZipkinUrlExtractor extractor = new ZipkinRestTemplateSenderConfiguration.CachingZipkinUrlExtractor(
+				() -> URI.create("http://example.com"));
+
+		URI uri = extractor.zipkinUrl(zipkinProperties);
+
+		assertThat(uri.toString())
+				.isEqualTo(URI.create(zipkinProperties.getBaseUrl()).toString());
 	}
 
 	@Configuration
