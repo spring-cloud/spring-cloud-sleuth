@@ -184,7 +184,7 @@ class LazyTraceThreadPoolTaskScheduler extends ThreadPoolTaskScheduler {
 
 	@Override
 	public void execute(Runnable task) {
-		this.delegate.execute(task);
+		this.delegate.execute(new TraceRunnable(tracing(), spanNamer(), task));
 	}
 
 	@Override
