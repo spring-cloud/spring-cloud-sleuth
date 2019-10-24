@@ -36,7 +36,7 @@ import org.springframework.context.annotation.Configuration;
  * @author Marcin Grzejszczak
  * @since 2.0.0
  */
-@Configuration
+@Configuration(proxyBeanMethods = false)
 @ConditionalOnProperty(value = "spring.sleuth.opentracing.enabled", matchIfMissing = true)
 @ConditionalOnBean(Tracing.class)
 @ConditionalOnClass(Tracer.class)

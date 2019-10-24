@@ -40,7 +40,7 @@ import org.springframework.kafka.config.StreamsBuilderFactoryBean;
  *
  * @author Tim te Beek
  */
-@Configuration
+@Configuration(proxyBeanMethods = false)
 @ConditionalOnBean(Tracing.class)
 @AutoConfigureAfter({ TraceAutoConfiguration.class })
 @OnMessagingEnabled

@@ -68,7 +68,7 @@ import org.springframework.util.StringUtils;
  * @author Tim Ysewyn
  * @since 2.0.0
  */
-@Configuration
+@Configuration(proxyBeanMethods = false)
 @ConditionalOnProperty(value = "spring.sleuth.enabled", matchIfMissing = true)
 @EnableConfigurationProperties(SleuthProperties.class)
 public class TraceAutoConfiguration {
@@ -108,14 +108,18 @@ public class TraceAutoConfiguration {
 	@ConditionalOnMissingBean
 	// NOTE: stable bean name as might be used outside sleuth
 	Tracing tracing(@LocalServiceName String serviceName, Propagation.Factory factory,
-			CurrentTraceContext currentTraceContext, Sampler sampler, ErrorParser errorParser,
-			SleuthProperties sleuthProperties, @Nullable List<Reporter<zipkin2.Span>> spanReporters) {
-		Tracing.Builder builder = Tracing.newBuilder().sampler(sampler).errorParser(errorParser)
-				.localServiceName(StringUtils.isEmpty(serviceName) ? DEFAULT_SERVICE_NAME : serviceName)
+			CurrentTraceContext currentTraceContext, Sampler sampler,
+			ErrorParser errorParser, SleuthProperties sleuthProperties,
+			@Nullable List<Reporter<zipkin2.Span>> spanReporters) {
+		Tracing.Builder builder = Tracing.newBuilder().sampler(sampler)
+				.errorParser(errorParser)
+				.localServiceName(StringUtils.isEmpty(serviceName) ? DEFAULT_SERVICE_NAME
+						: serviceName)
 				.propagationFactory(factory).currentTraceContext(currentTraceContext)
 				.spanReporter(new CompositeReporter(this.spanAdjusters,
 						spanReporters != null ? spanReporters : Collections.emptyList()))
-				.traceId128Bit(sleuthProperties.isTraceId128()).supportsJoin(sleuthProperties.isSupportsJoin());
+				.traceId128Bit(sleuthProperties.isTraceId128())
+				.supportsJoin(sleuthProperties.isSupportsJoin());
 		for (FinishedSpanHandler finishedSpanHandlerFactory : this.finishedSpanHandlers) {
 			builder.addFinishedSpanHandler(finishedSpanHandlerFactory);
 		}
@@ -146,7 +150,8 @@ public class TraceAutoConfiguration {
 	@Bean
 	@ConditionalOnMissingBean
 	Propagation.Factory sleuthPropagation(SleuthProperties sleuthProperties) {
-		if (sleuthProperties.getBaggageKeys().isEmpty() && sleuthProperties.getPropagationKeys().isEmpty()
+		if (sleuthProperties.getBaggageKeys().isEmpty()
+				&& sleuthProperties.getPropagationKeys().isEmpty()
 				&& extraFieldCustomizers.isEmpty()) {
 			return B3Propagation.FACTORY;
 		}
@@ -155,7 +160,8 @@ public class TraceAutoConfiguration {
 			factoryBuilder = this.extraFieldPropagationFactoryBuilder;
 		}
 		else {
-			factoryBuilder = ExtraFieldPropagation.newFactoryBuilder(B3Propagation.FACTORY);
+			factoryBuilder = ExtraFieldPropagation
+					.newFactoryBuilder(B3Propagation.FACTORY);
 		}
 		if (!sleuthProperties.getBaggageKeys().isEmpty()) {
 			factoryBuilder = factoryBuilder
@@ -224,9 +230,11 @@ public class TraceAutoConfiguration {
 
 		private final Reporter<zipkin2.Span> spanReporter;
 
-		private CompositeReporter(List<SpanAdjuster> spanAdjusters, List<Reporter<Span>> spanReporters) {
+		private CompositeReporter(List<SpanAdjuster> spanAdjusters,
+				List<Reporter<Span>> spanReporters) {
 			this.spanAdjusters = spanAdjusters;
-			this.spanReporter = spanReporters.size() == 1 ? spanReporters.get(0) : new ListReporter(spanReporters);
+			this.spanReporter = spanReporters.size() == 1 ? spanReporters.get(0)
+					: new ListReporter(spanReporters);
 		}
 
 		@Override
@@ -240,8 +248,8 @@ public class TraceAutoConfiguration {
 
 		@Override
 		public String toString() {
-			return "CompositeReporter{" + "spanAdjusters=" + this.spanAdjusters + ", spanReporters=" + this.spanReporter
-					+ '}';
+			return "CompositeReporter{" + "spanAdjusters=" + this.spanAdjusters
+					+ ", spanReporters=" + this.spanReporter + '}';
 		}
 
 		private static final class ListReporter implements Reporter<zipkin2.Span> {
@@ -259,7 +267,8 @@ public class TraceAutoConfiguration {
 						spanReporter.report(span);
 					}
 					catch (Exception ex) {
-						log.warn("Exception occurred while trying to report the span " + span, ex);
+						log.warn("Exception occurred while trying to report the span "
+								+ span, ex);
 					}
 				}
 			}
@@ -273,7 +282,7 @@ public class TraceAutoConfiguration {
 
 	}
 
-	@Configuration
+	@Configuration(proxyBeanMethods = false)
 	@ConditionalOnMissingClass("io.micrometer.core.instrument.MeterRegistry")
 	static class TraceMetricsInMemoryConfiguration {
 
@@ -285,11 +294,11 @@ public class TraceAutoConfiguration {
 
 	}
 
-	@Configuration
+	@Configuration(proxyBeanMethods = false)
 	@ConditionalOnClass(MeterRegistry.class)
 	static class TraceMetricsMicrometerConfiguration {
 
-		@Configuration
+		@Configuration(proxyBeanMethods = false)
 		@ConditionalOnMissingBean(ReporterMetrics.class)
 		static class NoReporterMetricsBeanConfiguration {
 

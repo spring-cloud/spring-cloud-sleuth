@@ -46,7 +46,7 @@ import org.springframework.web.client.ResponseExtractor;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
-@Configuration
+@Configuration(proxyBeanMethods = false)
 @ConditionalOnMissingBean(name = ZipkinAutoConfiguration.SENDER_BEAN_NAME)
 @Conditional(ZipkinSenderCondition.class)
 @EnableConfigurationProperties(ZipkinSenderProperties.class)
@@ -125,7 +125,7 @@ class ZipkinRestTemplateSenderConfiguration {
 
 	}
 
-	@Configuration
+	@Configuration(proxyBeanMethods = false)
 	@ConditionalOnMissingClass("org.springframework.cloud.client.loadbalancer.LoadBalancerClient")
 	static class DefaultZipkinUrlExtractorConfiguration {
 
@@ -140,11 +140,11 @@ class ZipkinRestTemplateSenderConfiguration {
 
 	}
 
-	@Configuration
+	@Configuration(proxyBeanMethods = false)
 	@ConditionalOnClass(LoadBalancerClient.class)
 	static class DiscoveryClientZipkinUrlExtractorConfiguration {
 
-		@Configuration
+		@Configuration(proxyBeanMethods = false)
 		@ConditionalOnProperty(value = "spring.zipkin.discovery-client-enabled",
 				havingValue = "true", matchIfMissing = true)
 		static class ZipkinClientLoadBalancedConfiguration {
@@ -162,7 +162,7 @@ class ZipkinRestTemplateSenderConfiguration {
 
 		}
 
-		@Configuration
+		@Configuration(proxyBeanMethods = false)
 		@ConditionalOnProperty(value = "spring.zipkin.discovery-client-enabled",
 				havingValue = "false")
 		static class ZipkinClientNoOpConfiguration {

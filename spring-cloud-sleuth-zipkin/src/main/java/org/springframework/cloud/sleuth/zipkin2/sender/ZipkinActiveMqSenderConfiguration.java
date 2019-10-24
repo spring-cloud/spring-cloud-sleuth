@@ -32,7 +32,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Conditional;
 import org.springframework.context.annotation.Configuration;
 
-@Configuration
+@Configuration(proxyBeanMethods = false)
 @ConditionalOnClass(ActiveMQConnectionFactory.class)
 @ConditionalOnMissingBean(name = ZipkinAutoConfiguration.SENDER_BEAN_NAME)
 @Conditional(ZipkinSenderCondition.class)
@@ -40,7 +40,7 @@ import org.springframework.context.annotation.Configuration;
 @AutoConfigureAfter(ActiveMQAutoConfiguration.class)
 class ZipkinActiveMqSenderConfiguration {
 
-	@Configuration
+	@Configuration(proxyBeanMethods = false)
 	@ConditionalOnBean(ActiveMQConnectionFactory.class)
 	static class ZipkinActiveMqSenderBeanConfiguration {
 

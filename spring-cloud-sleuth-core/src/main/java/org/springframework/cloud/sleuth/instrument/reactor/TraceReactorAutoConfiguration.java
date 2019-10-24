@@ -49,7 +49,7 @@ import org.springframework.context.annotation.Configuration;
  * @author Marcin Grzejszczak
  * @since 2.0.0
  */
-@Configuration
+@Configuration(proxyBeanMethods = false)
 @ConditionalOnProperty(value = "spring.sleuth.reactor.enabled", matchIfMissing = true)
 @ConditionalOnClass(Mono.class)
 @AutoConfigureAfter(TraceWebFluxAutoConfiguration.class)
@@ -57,7 +57,7 @@ public class TraceReactorAutoConfiguration {
 
 	static final String SLEUTH_REACTOR_EXECUTOR_SERVICE_KEY = "sleuth";
 
-	@Configuration
+	@Configuration(proxyBeanMethods = false)
 	@ConditionalOnBean(Tracing.class)
 	static class TraceReactorConfiguration {
 

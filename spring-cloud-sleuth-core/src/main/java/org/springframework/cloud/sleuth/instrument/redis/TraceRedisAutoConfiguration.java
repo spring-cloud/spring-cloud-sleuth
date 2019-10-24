@@ -37,13 +37,13 @@ import org.springframework.context.annotation.Configuration;
  * @author Chao Chang
  * @since 2.2.0
  */
-@Configuration
+@Configuration(proxyBeanMethods = false)
 @OnRedisEnabled
 @ConditionalOnBean({ Tracing.class, ClientResources.class })
 @AutoConfigureAfter({ TraceAutoConfiguration.class })
 public class TraceRedisAutoConfiguration {
 
-	@Configuration
+	@Configuration(proxyBeanMethods = false)
 	static class LettuceConfig {
 
 		@Bean

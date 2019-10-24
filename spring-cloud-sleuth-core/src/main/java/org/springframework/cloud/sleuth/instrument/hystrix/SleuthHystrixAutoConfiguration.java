@@ -38,7 +38,7 @@ import org.springframework.context.annotation.Configuration;
  * @see SleuthHystrixConcurrencyStrategy
  * @since 1.0.0
  */
-@Configuration
+@Configuration(proxyBeanMethods = false)
 @AutoConfigureAfter(TraceAutoConfiguration.class)
 @ConditionalOnClass(HystrixCommand.class)
 @ConditionalOnBean(Tracing.class)

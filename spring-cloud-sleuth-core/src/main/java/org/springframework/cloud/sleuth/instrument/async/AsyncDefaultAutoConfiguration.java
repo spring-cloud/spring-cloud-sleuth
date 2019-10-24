@@ -53,7 +53,7 @@ import org.springframework.scheduling.annotation.AsyncConfigurerSupport;
  * @see LazyTraceExecutor
  * @see TraceAsyncAspect
  */
-@Configuration
+@Configuration(proxyBeanMethods = false)
 @EnableConfigurationProperties({ SleuthAsyncProperties.class,
 		SleuthSchedulingProperties.class })
 @ConditionalOnProperty(value = "spring.sleuth.async.enabled", matchIfMissing = true)
@@ -76,7 +76,7 @@ public class AsyncDefaultAutoConfiguration {
 	/**
 	 * Wrapper for the async executor.
 	 */
-	@Configuration
+	@Configuration(proxyBeanMethods = false)
 	@ConditionalOnMissingBean(AsyncConfigurer.class)
 	@ConditionalOnProperty(value = "spring.sleuth.async.configurer.enabled",
 			matchIfMissing = true)

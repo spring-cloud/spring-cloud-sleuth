@@ -33,7 +33,7 @@ import org.springframework.context.annotation.Configuration;
  * @author Marcin Grzejszczak
  * @since 2.0.0
  */
-@Configuration
+@Configuration(proxyBeanMethods = false)
 @ConditionalOnProperty(value = "spring.sleuth.web.enabled", matchIfMissing = true)
 @ConditionalOnWebApplication(type = ConditionalOnWebApplication.Type.REACTIVE)
 @ConditionalOnBean(Tracing.class)

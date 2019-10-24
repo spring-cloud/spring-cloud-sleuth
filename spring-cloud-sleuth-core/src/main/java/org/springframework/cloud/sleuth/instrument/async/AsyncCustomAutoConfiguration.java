@@ -36,7 +36,7 @@ import org.springframework.scheduling.annotation.AsyncConfigurer;
  * @author Dave Syer
  * @since 1.0.0
  */
-@Configuration
+@Configuration(proxyBeanMethods = false)
 @ConditionalOnBean(AsyncConfigurer.class)
 @AutoConfigureBefore(AsyncDefaultAutoConfiguration.class)
 @ConditionalOnProperty(value = "spring.sleuth.async.enabled", matchIfMissing = true)

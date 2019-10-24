@@ -33,7 +33,7 @@ import org.springframework.context.annotation.Configuration;
  * @author Marcin Grzejszczak
  * @since 2.1.0
  */
-@Configuration
+@Configuration(proxyBeanMethods = false)
 @ConditionalOnProperty(value = "spring.sleuth.enabled", matchIfMissing = true)
 @EnableConfigurationProperties(SamplerProperties.class)
 public class SamplerAutoConfiguration {
@@ -45,7 +45,7 @@ public class SamplerAutoConfiguration {
 		return new RateLimitingSampler(config);
 	}
 
-	@Configuration
+	@Configuration(proxyBeanMethods = false)
 	@ConditionalOnBean(
 			type = "org.springframework.cloud.context.scope.refresh.RefreshScope")
 	protected static class RefreshScopedSamplerConfiguration {
@@ -59,7 +59,7 @@ public class SamplerAutoConfiguration {
 
 	}
 
-	@Configuration
+	@Configuration(proxyBeanMethods = false)
 	@ConditionalOnMissingBean(
 			type = "org.springframework.cloud.context.scope.refresh.RefreshScope")
 	protected static class NonRefreshScopeSamplerConfiguration {

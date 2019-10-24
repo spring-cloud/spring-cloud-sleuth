@@ -25,7 +25,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.messaging.support.MessageHeaderAccessor;
 
-@Configuration
+@Configuration(proxyBeanMethods = false)
 @ConditionalOnClass(MessageHeaderAccessor.class)
 @OnMessagingEnabled
 @EnableConfigurationProperties(SleuthMessagingProperties.class)

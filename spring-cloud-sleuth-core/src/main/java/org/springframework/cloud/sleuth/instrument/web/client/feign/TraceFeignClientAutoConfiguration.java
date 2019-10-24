@@ -43,7 +43,7 @@ import org.springframework.context.annotation.Scope;
  * @author Marcin Grzejszczak
  * @since 1.0.0
  */
-@Configuration
+@Configuration(proxyBeanMethods = false)
 @ConditionalOnProperty(value = "spring.sleuth.feign.enabled", matchIfMissing = true)
 @ConditionalOnClass({ Client.class, FeignContext.class })
 @ConditionalOnBean(HttpTracing.class)
@@ -80,7 +80,7 @@ public class TraceFeignClientAutoConfiguration {
 		return new TraceFeignAspect(beanFactory);
 	}
 
-	@Configuration
+	@Configuration(proxyBeanMethods = false)
 	@ConditionalOnProperty(name = "spring.sleuth.feign.processor.enabled",
 			matchIfMissing = true)
 	protected static class FeignBeanPostProcessorConfiguration {
@@ -93,7 +93,7 @@ public class TraceFeignClientAutoConfiguration {
 
 	}
 
-	@Configuration
+	@Configuration(proxyBeanMethods = false)
 	@ConditionalOnClass(OkHttpClient.class)
 	protected static class OkHttpClientFeignBeanPostProcessorConfiguration {
 

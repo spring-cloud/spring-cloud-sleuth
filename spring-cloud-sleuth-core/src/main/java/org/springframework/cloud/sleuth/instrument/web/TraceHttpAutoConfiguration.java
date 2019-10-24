@@ -47,7 +47,7 @@ import org.springframework.lang.Nullable;
  * @author Marcin Grzejszczak
  * @since 2.0.0
  */
-@Configuration
+@Configuration(proxyBeanMethods = false)
 @ConditionalOnBean(TraceWebAutoConfiguration.class)
 @ConditionalOnProperty(name = "spring.sleuth.http.enabled", havingValue = "true",
 		matchIfMissing = true)

@@ -67,7 +67,7 @@ import org.springframework.web.client.RestTemplate;
  * @see ZipkinRestTemplateCustomizer
  * @see DefaultZipkinRestTemplateCustomizer
  */
-@Configuration
+@Configuration(proxyBeanMethods = false)
 @EnableConfigurationProperties(ZipkinProperties.class)
 @ConditionalOnProperty(value = { "spring.sleuth.enabled", "spring.zipkin.enabled" },
 		matchIfMissing = true)
@@ -142,7 +142,7 @@ public class ZipkinAutoConfiguration {
 		return new DefaultZipkinRestTemplateCustomizer(zipkinProperties);
 	}
 
-	@Configuration
+	@Configuration(proxyBeanMethods = false)
 	@ConditionalOnMissingBean(EndpointLocator.class)
 	@ConditionalOnProperty(value = "spring.zipkin.locator.discovery.enabled",
 			havingValue = "false", matchIfMissing = true)
@@ -168,7 +168,7 @@ public class ZipkinAutoConfiguration {
 
 	}
 
-	@Configuration
+	@Configuration(proxyBeanMethods = false)
 	@ConditionalOnClass(Registration.class)
 	@ConditionalOnMissingBean(EndpointLocator.class)
 	@ConditionalOnProperty(value = "spring.zipkin.locator.discovery.enabled",

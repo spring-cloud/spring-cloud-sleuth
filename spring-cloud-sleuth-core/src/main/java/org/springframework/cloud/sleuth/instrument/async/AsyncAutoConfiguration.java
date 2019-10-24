@@ -29,7 +29,7 @@ import org.springframework.context.annotation.Configuration;
  * @author Jesus Alonso
  * @since 2.1.0
  */
-@Configuration
+@Configuration(proxyBeanMethods = false)
 @ConditionalOnProperty(value = "spring.sleuth.scheduled.enabled", matchIfMissing = true)
 @EnableConfigurationProperties({ SleuthAsyncProperties.class,
 		SleuthSchedulingProperties.class })

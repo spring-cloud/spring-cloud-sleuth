@@ -53,7 +53,7 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
  * @author Spencer Gibb
  * @since 1.0.0
  */
-@Configuration
+@Configuration(proxyBeanMethods = false)
 @ConditionalOnProperty(value = "spring.sleuth.web.enabled", matchIfMissing = true)
 @ConditionalOnWebApplication(type = ConditionalOnWebApplication.Type.SERVLET)
 @ConditionalOnBean(HttpTracing.class)
@@ -108,7 +108,7 @@ public class TraceWebServletAutoConfiguration {
 	 * Nested config that configures Web MVC if it's present (without adding a runtime
 	 * dependency to it).
 	 */
-	@Configuration
+	@Configuration(proxyBeanMethods = false)
 	@ConditionalOnClass(WebMvcConfigurer.class)
 	@Import(TraceWebMvcConfigurer.class)
 	protected static class TraceWebMvcAutoConfiguration {
