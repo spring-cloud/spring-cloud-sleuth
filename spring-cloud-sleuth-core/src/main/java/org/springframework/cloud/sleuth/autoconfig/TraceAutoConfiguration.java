@@ -19,9 +19,6 @@ package org.springframework.cloud.sleuth.autoconfig;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicLong;
 
 import brave.CurrentSpanCustomizer;
 import brave.ErrorParser;
@@ -37,7 +34,6 @@ import brave.propagation.ExtraFieldPropagation;
 import brave.propagation.Propagation;
 import brave.propagation.ThreadLocalCurrentTraceContext;
 import brave.sampler.Sampler;
-import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.MeterRegistry;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -45,10 +41,13 @@ import zipkin2.Span;
 import zipkin2.reporter.InMemoryReporterMetrics;
 import zipkin2.reporter.Reporter;
 import zipkin2.reporter.ReporterMetrics;
+import zipkin2.reporter.metrics.micrometer.MicrometerReporterMetrics;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.cloud.sleuth.DefaultSpanNamer;
@@ -109,14 +108,18 @@ public class TraceAutoConfiguration {
 	@ConditionalOnMissingBean
 	// NOTE: stable bean name as might be used outside sleuth
 	Tracing tracing(@LocalServiceName String serviceName, Propagation.Factory factory,
-			CurrentTraceContext currentTraceContext, Sampler sampler, ErrorParser errorParser,
-			SleuthProperties sleuthProperties, @Nullable List<Reporter<zipkin2.Span>> spanReporters) {
-		Tracing.Builder builder = Tracing.newBuilder().sampler(sampler).errorParser(errorParser)
-				.localServiceName(StringUtils.isEmpty(serviceName) ? DEFAULT_SERVICE_NAME : serviceName)
+			CurrentTraceContext currentTraceContext, Sampler sampler,
+			ErrorParser errorParser, SleuthProperties sleuthProperties,
+			@Nullable List<Reporter<zipkin2.Span>> spanReporters) {
+		Tracing.Builder builder = Tracing.newBuilder().sampler(sampler)
+				.errorParser(errorParser)
+				.localServiceName(StringUtils.isEmpty(serviceName) ? DEFAULT_SERVICE_NAME
+						: serviceName)
 				.propagationFactory(factory).currentTraceContext(currentTraceContext)
 				.spanReporter(new CompositeReporter(this.spanAdjusters,
 						spanReporters != null ? spanReporters : Collections.emptyList()))
-				.traceId128Bit(sleuthProperties.isTraceId128()).supportsJoin(sleuthProperties.isSupportsJoin());
+				.traceId128Bit(sleuthProperties.isTraceId128())
+				.supportsJoin(sleuthProperties.isSupportsJoin());
 		for (FinishedSpanHandler finishedSpanHandlerFactory : this.finishedSpanHandlers) {
 			builder.addFinishedSpanHandler(finishedSpanHandlerFactory);
 		}
@@ -147,7 +150,8 @@ public class TraceAutoConfiguration {
 	@Bean
 	@ConditionalOnMissingBean
 	Propagation.Factory sleuthPropagation(SleuthProperties sleuthProperties) {
-		if (sleuthProperties.getBaggageKeys().isEmpty() && sleuthProperties.getPropagationKeys().isEmpty()
+		if (sleuthProperties.getBaggageKeys().isEmpty()
+				&& sleuthProperties.getPropagationKeys().isEmpty()
 				&& extraFieldCustomizers.isEmpty()) {
 			return B3Propagation.FACTORY;
 		}
@@ -156,7 +160,8 @@ public class TraceAutoConfiguration {
 			factoryBuilder = this.extraFieldPropagationFactoryBuilder;
 		}
 		else {
-			factoryBuilder = ExtraFieldPropagation.newFactoryBuilder(B3Propagation.FACTORY);
+			factoryBuilder = ExtraFieldPropagation
+					.newFactoryBuilder(B3Propagation.FACTORY);
 		}
 		if (!sleuthProperties.getBaggageKeys().isEmpty()) {
 			factoryBuilder = factoryBuilder
@@ -225,9 +230,11 @@ public class TraceAutoConfiguration {
 
 		private final Reporter<zipkin2.Span> spanReporter;
 
-		private CompositeReporter(List<SpanAdjuster> spanAdjusters, List<Reporter<Span>> spanReporters) {
+		private CompositeReporter(List<SpanAdjuster> spanAdjusters,
+				List<Reporter<Span>> spanReporters) {
 			this.spanAdjusters = spanAdjusters;
-			this.spanReporter = spanReporters.size() == 1 ? spanReporters.get(0) : new ListReporter(spanReporters);
+			this.spanReporter = spanReporters.size() == 1 ? spanReporters.get(0)
+					: new ListReporter(spanReporters);
 		}
 
 		@Override
@@ -241,8 +248,8 @@ public class TraceAutoConfiguration {
 
 		@Override
 		public String toString() {
-			return "CompositeReporter{" + "spanAdjusters=" + this.spanAdjusters + ", spanReporters=" + this.spanReporter
-					+ '}';
+			return "CompositeReporter{" + "spanAdjusters=" + this.spanAdjusters
+					+ ", spanReporters=" + this.spanReporter + '}';
 		}
 
 		private static final class ListReporter implements Reporter<zipkin2.Span> {
@@ -260,7 +267,8 @@ public class TraceAutoConfiguration {
 						spanReporter.report(span);
 					}
 					catch (Exception ex) {
-						log.warn("Exception occurred while trying to report the span " + span, ex);
+						log.warn("Exception occurred while trying to report the span "
+								+ span, ex);
 					}
 				}
 			}
@@ -275,7 +283,7 @@ public class TraceAutoConfiguration {
 	}
 
 	@Configuration
-	@ConditionalOnMissingBean(MeterRegistry.class)
+	@ConditionalOnMissingClass("io.micrometer.core.instrument.MeterRegistry")
 	static class TraceMetricsNoOpConfiguration {
 
 		@Bean
@@ -287,89 +295,23 @@ public class TraceAutoConfiguration {
 	}
 
 	@Configuration
-	@ConditionalOnBean(MeterRegistry.class)
-	static class TraceMicrometerMetricsConfiguration {
+	@ConditionalOnClass(MeterRegistry.class)
+	static class TraceMetricsMicrometerConfiguration {
 
-		@Bean
-		@ConditionalOnMissingBean
-		ReporterMetrics sleuthMicrometerReporterMetrics(MeterRegistry meterRegistry) {
-			return new MicrometerReporterMetrics(meterRegistry);
-		}
+		@Configuration
+		@ConditionalOnMissingBean(ReporterMetrics.class)
+		static class NoReporterMetricsConfiguration {
 
-		static final class MicrometerReporterMetrics implements ReporterMetrics {
-
-			private final Counter messages;
-
-			private final Counter messageBytes;
-
-			private final Counter spans;
-
-			private final Counter spanBytes;
-
-			private final Counter spansDropped;
-
-			private final AtomicLong spanPending;
-
-			private final AtomicLong spanBytesPending;
-
-			private final Map<Class<? extends Throwable>, Counter> messagesDropped = new ConcurrentHashMap<>();
-
-			private final MeterRegistry meterRegistry;
-
-			MicrometerReporterMetrics(MeterRegistry meterRegistry) {
-				this.messages = meterRegistry.counter("sleuth.messages");
-				this.messageBytes = meterRegistry.counter("sleuth.messageBytes");
-				this.spans = meterRegistry.counter("sleuth.spans");
-				this.spanBytes = meterRegistry.counter("sleuth.spanBytes");
-				this.spansDropped = meterRegistry.counter("sleuth.spansDropped");
-				this.spanPending = meterRegistry.gauge("sleuth.spanPending", new AtomicLong());
-				this.spanBytesPending = meterRegistry.gauge("sleuth.spanBytesPending", new AtomicLong());
-				this.meterRegistry = meterRegistry;
+			@Bean
+			@ConditionalOnBean(MeterRegistry.class)
+			ReporterMetrics sleuthMicrometerReporterMetrics(MeterRegistry meterRegistry) {
+				return MicrometerReporterMetrics.create(meterRegistry);
 			}
 
-			@Override
-			public void incrementMessages() {
-				this.messages.increment();
-			}
-
-			@Override
-			public void incrementMessagesDropped(Throwable cause) {
-				Counter counter = this.messagesDropped.get(cause.getClass());
-				if (counter == null) {
-					counter = this.meterRegistry.counter("sleuth.messagesDropped." + cause.getClass().getSimpleName());
-					this.messagesDropped.put(cause.getClass(), counter);
-				}
-				counter.increment();
-			}
-
-			@Override
-			public void incrementSpans(int quantity) {
-				this.spans.increment();
-			}
-
-			@Override
-			public void incrementSpanBytes(int quantity) {
-				this.spanBytes.increment(quantity);
-			}
-
-			@Override
-			public void incrementMessageBytes(int quantity) {
-				this.messageBytes.increment(quantity);
-			}
-
-			@Override
-			public void incrementSpansDropped(int quantity) {
-				this.spansDropped.increment(quantity);
-			}
-
-			@Override
-			public void updateQueuedSpans(int update) {
-				this.spanPending.set(update);
-			}
-
-			@Override
-			public void updateQueuedBytes(int update) {
-				this.spanBytesPending.set(update);
+			@Bean
+			@ConditionalOnMissingBean(MeterRegistry.class)
+			ReporterMetrics sleuthReporterMetrics() {
+				return new InMemoryReporterMetrics();
 			}
 
 		}

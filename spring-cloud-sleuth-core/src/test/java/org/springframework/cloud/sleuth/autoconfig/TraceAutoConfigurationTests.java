@@ -22,8 +22,10 @@ import org.assertj.core.api.BDDAssertions;
 import org.junit.Test;
 import zipkin2.reporter.InMemoryReporterMetrics;
 import zipkin2.reporter.ReporterMetrics;
+import zipkin2.reporter.metrics.micrometer.MicrometerReporterMetrics;
 
 import org.springframework.boot.autoconfigure.AutoConfigurations;
+import org.springframework.boot.test.context.FilteredClassLoader;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -35,12 +37,13 @@ public class TraceAutoConfigurationTests {
 
 	@Test
 	public void should_apply_micrometer_reporter_metrics_when_meter_registry_bean_present() {
-		this.contextRunner.withUserConfiguration(WithMeterRegistry.class).run((context) -> {
-			ReporterMetrics bean = context.getBean(ReporterMetrics.class);
+		this.contextRunner.withUserConfiguration(WithMeterRegistry.class)
+				.run((context) -> {
+					ReporterMetrics bean = context.getBean(ReporterMetrics.class);
 
-			BDDAssertions.then(bean).isInstanceOf(
-					TraceAutoConfiguration.TraceMicrometerMetricsConfiguration.MicrometerReporterMetrics.class);
-		});
+					BDDAssertions.then(bean)
+							.isInstanceOf(MicrometerReporterMetrics.class);
+				});
 	}
 
 	@Test
@@ -50,6 +53,16 @@ public class TraceAutoConfigurationTests {
 
 			BDDAssertions.then(bean).isInstanceOf(InMemoryReporterMetrics.class);
 		});
+	}
+
+	@Test
+	public void should_apply_in_memory_metrics_when_meter_registry_class_missing() {
+		this.contextRunner.withClassLoader(new FilteredClassLoader(MeterRegistry.class))
+				.run((context) -> {
+					ReporterMetrics bean = context.getBean(ReporterMetrics.class);
+
+					BDDAssertions.then(bean).isInstanceOf(InMemoryReporterMetrics.class);
+				});
 	}
 
 	@Configuration
