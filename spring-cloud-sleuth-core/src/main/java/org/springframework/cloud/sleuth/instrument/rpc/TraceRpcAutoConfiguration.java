@@ -41,7 +41,7 @@ import org.springframework.lang.Nullable;
  *
  * @since 2.2.0
  */
-@Configuration
+@Configuration(proxyBeanMethods = false)
 @ConditionalOnProperty(name = "spring.sleuth.rpc.enabled", havingValue = "true",
 		matchIfMissing = true)
 @ConditionalOnBean(Tracing.class)

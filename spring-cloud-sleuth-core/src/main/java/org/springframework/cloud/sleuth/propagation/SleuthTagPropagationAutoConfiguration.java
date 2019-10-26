@@ -30,12 +30,12 @@ import org.springframework.context.annotation.Configuration;
  * @author Taras Danylchuk
  * @since 2.1.0
  */
-@Configuration
+@Configuration(proxyBeanMethods = false)
 @ConditionalOnProperty(value = "spring.sleuth.enabled", matchIfMissing = true)
 @AutoConfigureBefore(TraceAutoConfiguration.class)
 public class SleuthTagPropagationAutoConfiguration {
 
-	@Configuration
+	@Configuration(proxyBeanMethods = false)
 	@ConditionalOnProperty(value = "spring.sleuth.propagation.tag.enabled",
 			matchIfMissing = true)
 	@EnableConfigurationProperties(SleuthTagPropagationProperties.class)

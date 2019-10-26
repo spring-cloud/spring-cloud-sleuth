@@ -31,7 +31,7 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
  * @author Marcin Grzejszczak
  * @since 1.0.3
  */
-@Configuration
+@Configuration(proxyBeanMethods = false)
 @Import(SpanCustomizingAsyncHandlerInterceptor.class)
 class TraceWebMvcConfigurer implements WebMvcConfigurer {
 

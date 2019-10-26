@@ -39,14 +39,14 @@ import org.springframework.context.annotation.Configuration;
  * @author Chao Chang
  * @since 2.2.0
  */
-@Configuration
+@Configuration(proxyBeanMethods = false)
 @ConditionalOnProperty(value = "spring.sleuth.redis.enabled", matchIfMissing = true)
 @ConditionalOnBean({ Tracing.class, ClientResources.class })
 @AutoConfigureAfter({ TraceAutoConfiguration.class })
 @EnableConfigurationProperties(TraceRedisProperties.class)
 public class TraceRedisAutoConfiguration {
 
-	@Configuration
+	@Configuration(proxyBeanMethods = false)
 	static class LettuceConfig {
 
 		@Bean

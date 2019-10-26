@@ -57,7 +57,7 @@ import org.springframework.util.Assert;
  * @see ZipkinAutoConfiguration
  * @deprecated left for backward compatibility
  */
-@Configuration
+@Configuration(proxyBeanMethods = false)
 @ConditionalOnProperty(value = { "spring.sleuth.enabled", "spring.zipkin.enabled" },
 		matchIfMissing = true)
 @AutoConfigureBefore(ZipkinAutoConfiguration.class)

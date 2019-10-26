@@ -34,15 +34,20 @@ import brave.propagation.ExtraFieldPropagation;
 import brave.propagation.Propagation;
 import brave.propagation.ThreadLocalCurrentTraceContext;
 import brave.sampler.Sampler;
+import io.micrometer.core.instrument.MeterRegistry;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import zipkin2.Span;
 import zipkin2.reporter.InMemoryReporterMetrics;
 import zipkin2.reporter.Reporter;
 import zipkin2.reporter.ReporterMetrics;
+import zipkin2.reporter.metrics.micrometer.MicrometerReporterMetrics;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.cloud.sleuth.DefaultSpanNamer;
@@ -63,7 +68,7 @@ import org.springframework.util.StringUtils;
  * @author Tim Ysewyn
  * @since 2.0.0
  */
-@Configuration
+@Configuration(proxyBeanMethods = false)
 @ConditionalOnProperty(value = "spring.sleuth.enabled", matchIfMissing = true)
 @EnableConfigurationProperties(SleuthProperties.class)
 public class TraceAutoConfiguration {
@@ -200,12 +205,6 @@ public class TraceAutoConfiguration {
 
 	@Bean
 	@ConditionalOnMissingBean
-	ReporterMetrics sleuthReporterMetrics() {
-		return new InMemoryReporterMetrics();
-	}
-
-	@Bean
-	@ConditionalOnMissingBean
 	Reporter<zipkin2.Span> noOpSpanReporter() {
 		return Reporter.NOOP;
 	}
@@ -277,6 +276,42 @@ public class TraceAutoConfiguration {
 			@Override
 			public String toString() {
 				return "ListReporter{" + "spanReporters=" + this.spanReporters + '}';
+			}
+
+		}
+
+	}
+
+	@Configuration(proxyBeanMethods = false)
+	@ConditionalOnMissingClass("io.micrometer.core.instrument.MeterRegistry")
+	static class TraceMetricsInMemoryConfiguration {
+
+		@Bean
+		@ConditionalOnMissingBean
+		ReporterMetrics sleuthReporterMetrics() {
+			return new InMemoryReporterMetrics();
+		}
+
+	}
+
+	@Configuration(proxyBeanMethods = false)
+	@ConditionalOnClass(MeterRegistry.class)
+	static class TraceMetricsMicrometerConfiguration {
+
+		@Configuration(proxyBeanMethods = false)
+		@ConditionalOnMissingBean(ReporterMetrics.class)
+		static class NoReporterMetricsBeanConfiguration {
+
+			@Bean
+			@ConditionalOnBean(MeterRegistry.class)
+			ReporterMetrics sleuthMicrometerReporterMetrics(MeterRegistry meterRegistry) {
+				return MicrometerReporterMetrics.create(meterRegistry);
+			}
+
+			@Bean
+			@ConditionalOnMissingBean(MeterRegistry.class)
+			ReporterMetrics sleuthReporterMetrics() {
+				return new InMemoryReporterMetrics();
 			}
 
 		}

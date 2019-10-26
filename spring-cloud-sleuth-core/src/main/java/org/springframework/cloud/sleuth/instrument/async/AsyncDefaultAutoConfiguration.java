@@ -32,7 +32,9 @@ import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.cloud.sleuth.SpanNamer;
+import org.springframework.cloud.sleuth.instrument.scheduling.SleuthSchedulingProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Role;
@@ -51,12 +53,16 @@ import org.springframework.scheduling.annotation.AsyncConfigurerSupport;
  * @see LazyTraceExecutor
  * @see TraceAsyncAspect
  */
-@Configuration
+@Configuration(proxyBeanMethods = false)
+@EnableConfigurationProperties({ SleuthAsyncProperties.class,
+		SleuthSchedulingProperties.class })
 @ConditionalOnProperty(value = "spring.sleuth.async.enabled", matchIfMissing = true)
 @ConditionalOnBean(Tracing.class)
 public class AsyncDefaultAutoConfiguration {
 
 	@Bean
+	@ConditionalOnProperty(value = "spring.sleuth.scheduled.enabled",
+			matchIfMissing = true)
 	public static ExecutorBeanPostProcessor executorBeanPostProcessor(
 			BeanFactory beanFactory) {
 		return new ExecutorBeanPostProcessor(beanFactory);
@@ -70,7 +76,7 @@ public class AsyncDefaultAutoConfiguration {
 	/**
 	 * Wrapper for the async executor.
 	 */
-	@Configuration
+	@Configuration(proxyBeanMethods = false)
 	@ConditionalOnMissingBean(AsyncConfigurer.class)
 	@ConditionalOnProperty(value = "spring.sleuth.async.configurer.enabled",
 			matchIfMissing = true)

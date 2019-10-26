@@ -38,7 +38,7 @@ import org.springframework.context.annotation.Configuration;
  * @author Marcin Grzejszczak
  * @since 2.0.0
  */
-@Configuration
+@Configuration(proxyBeanMethods = false)
 @ConditionalOnProperty(value = "spring.sleuth.enabled", matchIfMissing = true)
 @AutoConfigureBefore(TraceAutoConfiguration.class)
 public class SleuthLogAutoConfiguration {
@@ -46,7 +46,7 @@ public class SleuthLogAutoConfiguration {
 	/**
 	 * Configuration for Slfj4.
 	 */
-	@Configuration
+	@Configuration(proxyBeanMethods = false)
 	@ConditionalOnClass(MDC.class)
 	@EnableConfigurationProperties(SleuthSlf4jProperties.class)
 	protected static class Slf4jConfiguration {

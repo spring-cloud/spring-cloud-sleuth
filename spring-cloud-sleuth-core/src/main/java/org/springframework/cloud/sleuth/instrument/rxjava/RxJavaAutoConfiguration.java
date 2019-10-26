@@ -38,7 +38,7 @@ import org.springframework.context.annotation.Configuration;
  * @author Shivang Shah
  * @since 1.0.0
  */
-@Configuration
+@Configuration(proxyBeanMethods = false)
 @AutoConfigureAfter(TraceAutoConfiguration.class)
 @ConditionalOnBean(Tracing.class)
 @ConditionalOnClass(RxJavaSchedulersHook.class)

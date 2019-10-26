@@ -34,14 +34,14 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Conditional;
 import org.springframework.context.annotation.Configuration;
 
-@Configuration
+@Configuration(proxyBeanMethods = false)
 @ConditionalOnClass(ByteArraySerializer.class)
 @ConditionalOnMissingBean(name = ZipkinAutoConfiguration.SENDER_BEAN_NAME)
 @Conditional(ZipkinSenderCondition.class)
 @ConditionalOnProperty(value = "spring.zipkin.sender.type", havingValue = "kafka")
 class ZipkinKafkaSenderConfiguration {
 
-	@Configuration
+	@Configuration(proxyBeanMethods = false)
 	@EnableConfigurationProperties(KafkaProperties.class)
 	static class ZipkinKafkaSenderBeanConfiguration {
 

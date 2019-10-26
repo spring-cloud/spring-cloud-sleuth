@@ -53,7 +53,7 @@ import org.springframework.util.StringUtils;
  * @author Tim Ysewyn
  * @since 1.0.0
  */
-@Configuration
+@Configuration(proxyBeanMethods = false)
 @ConditionalOnProperty(value = "spring.sleuth.web.enabled", matchIfMissing = true)
 @ConditionalOnBean(Tracing.class)
 @AutoConfigureAfter(TraceAutoConfiguration.class)
@@ -80,7 +80,7 @@ public class TraceWebAutoConfiguration {
 		};
 	}
 
-	@Configuration
+	@Configuration(proxyBeanMethods = false)
 	@ConditionalOnClass(ManagementServerProperties.class)
 	@ConditionalOnProperty(value = "spring.sleuth.web.ignoreAutoConfiguredSkipPatterns",
 			havingValue = "false", matchIfMissing = true)
@@ -111,7 +111,7 @@ public class TraceWebAutoConfiguration {
 
 	}
 
-	@Configuration
+	@Configuration(proxyBeanMethods = false)
 	@ConditionalOnClass({ ServerProperties.class, EndpointsSupplier.class,
 			ExposableWebEndpoint.class })
 	@ConditionalOnBean(ServerProperties.class)
@@ -197,7 +197,7 @@ public class TraceWebAutoConfiguration {
 
 	}
 
-	@Configuration
+	@Configuration(proxyBeanMethods = false)
 	static class DefaultSkipPatternConfig {
 
 		private static String combinedPattern(String skipPattern,

@@ -81,7 +81,7 @@ import org.springframework.util.ReflectionUtils;
  * @author Marcin Grzejszczak
  * @since 2.0.0
  */
-@Configuration
+@Configuration(proxyBeanMethods = false)
 @ConditionalOnBean(Tracing.class)
 @AutoConfigureAfter({ TraceAutoConfiguration.class,
 		TraceSpringMessagingAutoConfiguration.class })
@@ -89,7 +89,7 @@ import org.springframework.util.ReflectionUtils;
 @EnableConfigurationProperties(SleuthMessagingProperties.class)
 public class TraceMessagingAutoConfiguration {
 
-	@Configuration
+	@Configuration(proxyBeanMethods = false)
 	@ConditionalOnProperty(value = "spring.sleuth.messaging.rabbit.enabled",
 			matchIfMissing = true)
 	@ConditionalOnClass(RabbitTemplate.class)
@@ -115,7 +115,7 @@ public class TraceMessagingAutoConfiguration {
 
 	}
 
-	@Configuration
+	@Configuration(proxyBeanMethods = false)
 	@ConditionalOnProperty(value = "spring.sleuth.messaging.kafka.enabled",
 			matchIfMissing = true)
 	@ConditionalOnClass(ProducerFactory.class)
@@ -154,7 +154,7 @@ public class TraceMessagingAutoConfiguration {
 
 	}
 
-	@Configuration
+	@Configuration(proxyBeanMethods = false)
 	@ConditionalOnProperty(value = "spring.sleuth.messaging.jms.enabled",
 			matchIfMissing = true)
 	@ConditionalOnClass(JmsListenerConfigurer.class)
@@ -199,7 +199,7 @@ public class TraceMessagingAutoConfiguration {
 
 	}
 
-	@Configuration
+	@Configuration(proxyBeanMethods = false)
 	@ConditionalOnProperty(value = "spring.sleuth.messaging.sqs.enabled",
 			matchIfMissing = true)
 	@ConditionalOnClass(QueueMessageHandler.class)

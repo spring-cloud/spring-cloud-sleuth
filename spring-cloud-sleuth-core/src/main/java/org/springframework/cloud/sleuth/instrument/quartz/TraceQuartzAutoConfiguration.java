@@ -19,7 +19,9 @@ package org.springframework.cloud.sleuth.instrument.quartz;
 import brave.Tracing;
 import org.quartz.Scheduler;
 
+import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.InitializingBean;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -35,7 +37,7 @@ import org.springframework.context.annotation.Configuration;
  * @author Branden Cash
  * @since 2.2.0
  */
-@Configuration
+@Configuration(proxyBeanMethods = false)
 @ConditionalOnBean({ Tracing.class, Scheduler.class })
 @AutoConfigureAfter({ TraceAutoConfiguration.class, QuartzAutoConfiguration.class })
 @ConditionalOnProperty(value = "spring.sleuth.quartz.enabled", matchIfMissing = true)
@@ -50,6 +52,9 @@ public class TraceQuartzAutoConfiguration implements InitializingBean {
 		this.tracing = tracing;
 	}
 
+	@Autowired
+	BeanFactory beanFactory;
+
 	@Bean
 	public TracingJobListener tracingJobListener() {
 		return new TracingJobListener(tracing);
@@ -57,8 +62,10 @@ public class TraceQuartzAutoConfiguration implements InitializingBean {
 
 	@Override
 	public void afterPropertiesSet() throws Exception {
-		scheduler.getListenerManager().addTriggerListener(tracingJobListener());
-		scheduler.getListenerManager().addJobListener(tracingJobListener());
+		TracingJobListener tracingJobListener = beanFactory
+				.getBean(TracingJobListener.class);
+		scheduler.getListenerManager().addTriggerListener(tracingJobListener);
+		scheduler.getListenerManager().addJobListener(tracingJobListener);
 	}
 
 }

@@ -16,7 +16,6 @@
 
 package org.springframework.cloud.sleuth.instrument.web.client.integration;
 
-import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -53,7 +52,6 @@ import org.awaitility.Awaitility;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.ClassRule;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -94,6 +92,7 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.reactive.function.client.UnknownHttpStatusCodeException;
 import org.springframework.web.reactive.function.client.WebClient;
 
 import static org.assertj.core.api.Assertions.fail;
@@ -379,45 +378,24 @@ public class WebClientTests {
 	}
 
 	@Test
-	@Ignore("Flakey on CI")
-	public void shouldReportTraceForCancelledRequestViaWebClient() {
-		Span span = this.tracer.nextSpan().name("foo").start();
-
-		try (Tracer.SpanInScope ws = this.tracer.withSpanInScope(span)) {
-			this.webClient.get().uri("http://localhost:" + this.port + "/noresponse")
-					.retrieve().bodyToMono(String.class).timeout(Duration.ofMillis(0))
-					.block();
-		}
-		catch (Exception e) {
-
-		}
-		finally {
-			span.finish();
-		}
-
-		Awaitility.await().untilAsserted(() -> {
-			System.out.println("Found spans " + this.reporter.getSpans());
-			final Optional<zipkin2.Span> clientSpan = this.reporter.getSpans().stream()
-					.filter(s -> s.kind() == zipkin2.Span.Kind.CLIENT).findFirst();
-			then(clientSpan).isPresent();
-			then(clientSpan.get().tags()).containsEntry("error", "CANCELLED");
-		});
-	}
-
-	@Test
 	@SuppressWarnings("unchecked")
-	public void shouldNotBreakWhenCustomStatusCodeIsSetViaWebClient() {
+	public void shouldWorkWhenCustomStatusCodeIsReturned() throws InterruptedException {
 		Span span = this.tracer.nextSpan().name("foo").start();
 
 		try (Tracer.SpanInScope ws = this.tracer.withSpanInScope(span)) {
-			this.webClient.get()
-					.uri("http://localhost:" + this.port + "/customstatuscode").exchange()
-					.block();
+			this.webClient.get().uri("http://localhost:" + this.port + "/issue1462")
+					.retrieve().bodyToMono(String.class).block();
+		}
+		catch (UnknownHttpStatusCodeException ex) {
+
 		}
 		finally {
 			span.finish();
 		}
+
 		then(this.tracer.currentSpan()).isNull();
+		then(this.reporter.getSpans()).isNotEmpty().extracting("kind.name")
+				.contains("CLIENT");
 	}
 
 	Object[] parametersForShouldAttachTraceIdWhenCallingAnotherService() {
@@ -569,6 +547,11 @@ public class WebClientTests {
 			return new FooController();
 		}
 
+		@Bean
+		WebClientController webClientController() {
+			return new WebClientController();
+		}
+
 		@LoadBalanced
 		@Bean
 		public RestTemplate restTemplate() {
@@ -677,7 +660,6 @@ public class WebClientTests {
 			then(traceId).isNotEmpty();
 			then(parentId).isNotEmpty();
 			then(spanId).isNotEmpty();
-			this.span = this.tracer.currentSpan();
 			return traceId;
 		}
 
@@ -705,6 +687,17 @@ public class WebClientTests {
 
 		public void clear() {
 			this.span = null;
+		}
+
+	}
+
+	@RestController
+	public static class WebClientController {
+
+		@RequestMapping(value = "/issue1462", method = RequestMethod.GET)
+		public ResponseEntity<String> issue1462() {
+			System.out.println("GOT IT");
+			return ResponseEntity.status(499).body("issue1462");
 		}
 
 	}

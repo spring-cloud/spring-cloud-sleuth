@@ -359,7 +359,7 @@ final class TraceExchangeFilterFunction implements ExchangeFilterFunction {
 
 			void terminateSpan(@Nullable ClientResponse clientResponse,
 					@Nullable Throwable throwable) {
-				if (clientResponse == null || clientResponse.statusCode() == null) {
+				if (clientResponse == null) {
 					if (log.isDebugEnabled()) {
 						log.debug("No response was returned. Will close the span ["
 								+ this.span + "]");
@@ -367,18 +367,16 @@ final class TraceExchangeFilterFunction implements ExchangeFilterFunction {
 					handleReceive(this.span, this.ws, clientResponse, throwable);
 					return;
 				}
-				boolean error = clientResponse.statusCode().is4xxClientError()
-						|| clientResponse.statusCode().is5xxServerError();
+				int statusCode = clientResponse.rawStatusCode();
+				boolean error = statusCode >= 400;
 				if (error) {
 					if (log.isDebugEnabled()) {
 						log.debug(
 								"Non positive status code was returned from the call. Will close the span ["
 										+ this.span + "]");
 					}
-					throwable = new RestClientException("Status code of the response is ["
-							+ clientResponse.statusCode().value()
-							+ "] and the reason is ["
-							+ clientResponse.statusCode().getReasonPhrase() + "]");
+					throwable = new RestClientException(
+							"Status code of the response is [" + statusCode + "]");
 				}
 				handleReceive(this.span, this.ws, clientResponse, throwable);
 			}

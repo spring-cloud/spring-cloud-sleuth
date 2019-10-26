@@ -45,7 +45,7 @@ import org.springframework.web.client.AsyncRestTemplate;
  * @author Marcin Grzejszczak
  * @since 1.0.0
  */
-@Configuration
+@Configuration(proxyBeanMethods = false)
 @SleuthWebClientEnabled
 @ConditionalOnProperty(value = "spring.sleuth.web.async.client.enabled",
 		matchIfMissing = true)
@@ -54,7 +54,7 @@ import org.springframework.web.client.AsyncRestTemplate;
 @AutoConfigureAfter(TraceWebServletAutoConfiguration.class)
 public class TraceWebAsyncClientAutoConfiguration {
 
-	@Configuration
+	@Configuration(proxyBeanMethods = false)
 	@ConditionalOnBean(AsyncRestTemplate.class)
 	static class AsyncRestTemplateConfig {
 
@@ -65,7 +65,7 @@ public class TraceWebAsyncClientAutoConfiguration {
 					.create(httpTracing);
 		}
 
-		@Configuration
+		@Configuration(proxyBeanMethods = false)
 		protected static class TraceInterceptorConfiguration {
 
 			@Autowired(required = false)

@@ -48,14 +48,14 @@ public class TraceRequestHttpHeadersFilterTests {
 		HttpHeadersFilter filter = TraceRequestHttpHeadersFilter.create(this.httpTracing);
 		HttpHeaders httpHeaders = new HttpHeaders();
 		httpHeaders.set("X-Hello", "World");
-		httpHeaders.set("X-Auth-User", "aaaa");
 		httpHeaders.set("X-B3-TraceId", "52f112af7472aff0");
 		httpHeaders.set("X-B3-SpanId", "53e6ab6fc5dfee58");
 		MockServerHttpRequest request = MockServerHttpRequest.post("foo/bar")
 				.headers(httpHeaders).build();
 		MockServerWebExchange exchange = MockServerWebExchange.builder(request).build();
 
-		HttpHeaders filteredHeaders = filter.filter(requestHeaders(), exchange);
+		HttpHeaders filteredHeaders = filter.filter(requestHeaders(httpHeaders),
+				exchange);
 
 		BDDAssertions.then(filteredHeaders.get("X-B3-TraceId"))
 				.isNotEqualTo(httpHeaders.get("X-B3-TraceId"));
@@ -81,7 +81,8 @@ public class TraceRequestHttpHeadersFilterTests {
 				.headers(httpHeaders).build();
 		MockServerWebExchange exchange = MockServerWebExchange.builder(request).build();
 
-		HttpHeaders filteredHeaders = filter.filter(requestHeaders(), exchange);
+		HttpHeaders filteredHeaders = filter.filter(requestHeaders(httpHeaders),
+				exchange);
 
 		BDDAssertions.then(filteredHeaders.get("X-B3-TraceId")).isNotEmpty();
 		BDDAssertions.then(filteredHeaders.get("X-B3-SpanId")).isNotEmpty();
@@ -95,17 +96,39 @@ public class TraceRequestHttpHeadersFilterTests {
 				.isNotNull();
 	}
 
-	// #1352
+	// #1469
 	@Test
-	public void should_set_tracing_headers_with_multiple_values() {
+	public void should_reuse_headers_only_from_input_since_exchange_may_contain_already_ignored_headers() {
 		HttpHeadersFilter filter = TraceRequestHttpHeadersFilter.create(this.httpTracing);
 		HttpHeaders httpHeaders = new HttpHeaders();
-		httpHeaders.addAll("X-Hello", Arrays.asList("World1", "World2"));
+		httpHeaders.set("X-Hello", "World");
 		MockServerHttpRequest request = MockServerHttpRequest.post("foo/bar")
 				.headers(httpHeaders).build();
 		MockServerWebExchange exchange = MockServerWebExchange.builder(request).build();
 
 		HttpHeaders filteredHeaders = filter.filter(requestHeaders(), exchange);
+
+		BDDAssertions.then(filteredHeaders.get("X-B3-TraceId")).isNotEmpty();
+		BDDAssertions.then(filteredHeaders.get("X-B3-SpanId")).isNotEmpty();
+		BDDAssertions.then(filteredHeaders.get("X-Hello")).isNullOrEmpty();
+		BDDAssertions
+				.then((Object) exchange
+						.getAttribute(TraceRequestHttpHeadersFilter.SPAN_ATTRIBUTE))
+				.isNotNull();
+	}
+
+	// #1352
+	@Test
+	public void should_set_tracing_headers_with_multiple_values() {
+		HttpHeadersFilter filter = TraceRequestHttpHeadersFilter.create(this.httpTracing);
+		HttpHeaders httpHeaders = new HttpHeaders();
+		httpHeaders.add("X-Hello-Request", "Request World");
+		httpHeaders.addAll("X-Hello", Arrays.asList("World1", "World2"));
+		MockServerHttpRequest request = MockServerHttpRequest.post("foo/bar")
+				.headers(httpHeaders).build();
+		MockServerWebExchange exchange = MockServerWebExchange.builder(request).build();
+
+		HttpHeaders filteredHeaders = filter.filter(httpHeaders, exchange);
 
 		BDDAssertions.then(filteredHeaders.get("X-B3-TraceId")).isNotEmpty();
 		BDDAssertions.then(filteredHeaders.get("X-B3-SpanId")).isNotEmpty();
@@ -121,6 +144,14 @@ public class TraceRequestHttpHeadersFilterTests {
 
 	private HttpHeaders requestHeaders() {
 		HttpHeaders headers = new HttpHeaders();
+		headers.add("X-Hello-Request", "Request World");
+		headers.add("X-Auth-User", "aaaa");
+		return headers;
+	}
+
+	private HttpHeaders requestHeaders(HttpHeaders originalHeaders) {
+		HttpHeaders headers = new HttpHeaders();
+		headers.putAll(originalHeaders);
 		headers.add("X-Hello-Request", "Request World");
 		headers.add("X-Auth-User", "aaaa");
 		return headers;

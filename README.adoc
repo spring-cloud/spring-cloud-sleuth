@@ -342,7 +342,9 @@ The following example shows setting baggage on a span:
 
 [source,java]
 ----
-Unresolved directive in intro.adoc - include::{project-root}/spring-cloud-sleuth-core/src/test/java/org/springframework/cloud/sleuth/instrument/multiple/MultipleHopsIntegrationTests.java[tags=baggage,indent=0]
+Span initialSpan = this.tracer.nextSpan().name("span").start();
+ExtraFieldPropagation.set(initialSpan.context(), "foo", "bar");
+ExtraFieldPropagation.set(initialSpan.context(), "UPPER_CASE", "someValue");
 ----
 
 ===== Baggage versus Span Tags
@@ -365,13 +367,22 @@ The following listing shows integration tests that use baggage:
 .The setup
 [source,yml]
 ----
-Unresolved directive in intro.adoc - include::{project-root}/spring-cloud-sleuth-core/src/test/resources/application-baggage.yml[indent=0]
+spring.sleuth:
+  baggage-keys:
+    - baz
+    - bizarrecase
+  propagation-keys:
+    - foo
+    - upper_case
 ----
 
 .The code
 [source,java]
 ----
-Unresolved directive in intro.adoc - include::{project-root}/spring-cloud-sleuth-core/src/test/java/org/springframework/cloud/sleuth/instrument/multiple/MultipleHopsIntegrationTests.java[tags=baggage_tag,indent=0]
+initialSpan.tag("foo",
+		ExtraFieldPropagation.get(initialSpan.context(), "foo"));
+initialSpan.tag("UPPER_CASE",
+		ExtraFieldPropagation.get(initialSpan.context(), "UPPER_CASE"));
 ----
 
 [[sleuth-adding-project]]
@@ -549,7 +560,53 @@ To do this you can use respectively `ZipkinAutoConfiguration.REPORTER_BEAN_NAME`
 
 [source,java]
 ----
-Unresolved directive in intro.adoc - include::{project-root}/spring-cloud-sleuth-zipkin/src/test/java/org/springframework/cloud/sleuth/zipkin2/ZipkinAutoConfigurationTests.java[tags=override_default_beans,indent=0]
+
+@Configuration
+protected static class MyConfig {
+
+	@Bean(ZipkinAutoConfiguration.REPORTER_BEAN_NAME)
+	Reporter<zipkin2.Span> myReporter() {
+		return AsyncReporter.create(mySender());
+	}
+
+	@Bean(ZipkinAutoConfiguration.SENDER_BEAN_NAME)
+	MySender mySender() {
+		return new MySender();
+	}
+
+	static class MySender extends Sender {
+
+		private boolean spanSent = false;
+
+		boolean isSpanSent() {
+			return this.spanSent;
+		}
+
+		@Override
+		public Encoding encoding() {
+			return Encoding.JSON;
+		}
+
+		@Override
+		public int messageMaxBytes() {
+			return Integer.MAX_VALUE;
+		}
+
+		@Override
+		public int messageSizeInBytes(List<byte[]> encodedSpans) {
+			return encoding().listSizeInBytes(encodedSpans);
+		}
+
+		@Override
+		public Call<Void> sendSpans(List<byte[]> encodedSpans) {
+			this.spanSent = true;
+			return Call.create(null);
+		}
+
+	}
+
+}
+
 ----
 
 == Additional Resources

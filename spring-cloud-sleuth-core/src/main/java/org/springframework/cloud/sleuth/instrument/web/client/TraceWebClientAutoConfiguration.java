@@ -62,14 +62,14 @@ import org.springframework.web.reactive.function.client.WebClient;
  * @author Marcin Grzejszczak
  * @since 1.0.0
  */
-@Configuration
+@Configuration(proxyBeanMethods = false)
 @SleuthWebClientEnabled
 @ConditionalOnBean(HttpTracing.class)
 @AutoConfigureAfter(TraceWebServletAutoConfiguration.class)
 @AutoConfigureBefore(HttpClientConfiguration.class)
 public class TraceWebClientAutoConfiguration {
 
-	@Configuration
+	@Configuration(proxyBeanMethods = false)
 	@ConditionalOnClass(RestTemplate.class)
 	static class RestTemplateConfig {
 
@@ -80,7 +80,7 @@ public class TraceWebClientAutoConfiguration {
 					.create(httpTracing);
 		}
 
-		@Configuration
+		@Configuration(proxyBeanMethods = false)
 		protected static class TraceInterceptorConfiguration {
 
 			@Autowired
@@ -103,7 +103,7 @@ public class TraceWebClientAutoConfiguration {
 
 	}
 
-	@Configuration
+	@Configuration(proxyBeanMethods = false)
 	@ConditionalOnClass(HttpClientBuilder.class)
 	static class HttpClientBuilderConfig {
 
@@ -115,7 +115,7 @@ public class TraceWebClientAutoConfiguration {
 
 	}
 
-	@Configuration
+	@Configuration(proxyBeanMethods = false)
 	@ConditionalOnClass(HttpAsyncClientBuilder.class)
 	static class HttpAsyncClientBuilderConfig {
 
@@ -127,7 +127,7 @@ public class TraceWebClientAutoConfiguration {
 
 	}
 
-	@Configuration
+	@Configuration(proxyBeanMethods = false)
 	@ConditionalOnClass(WebClient.class)
 	static class WebClientConfig {
 
@@ -139,7 +139,7 @@ public class TraceWebClientAutoConfiguration {
 
 	}
 
-	@Configuration
+	@Configuration(proxyBeanMethods = false)
 	@ConditionalOnClass(HttpHeadersFilter.class)
 	static class HttpHeadersFilterConfig {
 
@@ -155,7 +155,7 @@ public class TraceWebClientAutoConfiguration {
 
 	}
 
-	@Configuration
+	@Configuration(proxyBeanMethods = false)
 	@ConditionalOnClass(HttpClient.class)
 	static class NettyConfiguration {
 
@@ -167,7 +167,7 @@ public class TraceWebClientAutoConfiguration {
 
 	}
 
-	@Configuration
+	@Configuration(proxyBeanMethods = false)
 	@ConditionalOnClass({ UserInfoRestTemplateCustomizer.class,
 			OAuth2RestTemplate.class })
 	protected static class TraceOAuthConfiguration {

@@ -38,7 +38,7 @@ import org.springframework.web.socket.config.annotation.StompEndpointRegistry;
  * @since 1.0.0
  * @see AbstractWebSocketMessageBrokerConfigurer
  */
-@Configuration
+@Configuration(proxyBeanMethods = false)
 @ConditionalOnClass(DelegatingWebSocketMessageBrokerConfiguration.class)
 @ConditionalOnBean(Tracing.class)
 @ConditionalOnProperty(value = "spring.sleuth.integration.websockets.enabled",
