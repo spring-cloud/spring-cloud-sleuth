@@ -27,6 +27,7 @@ import reactor.core.scheduler.Schedulers;
 
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.BeanFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
 import org.springframework.beans.factory.support.BeanDefinitionRegistry;
 import org.springframework.beans.factory.support.BeanDefinitionRegistryPostProcessor;
@@ -35,11 +36,19 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.cloud.context.scope.refresh.RefreshScope;
+import org.springframework.cloud.context.scope.refresh.RefreshScopeRefreshedEvent;
 import org.springframework.cloud.sleuth.instrument.async.TraceableScheduledExecutorService;
 import org.springframework.cloud.sleuth.instrument.web.TraceWebFluxAutoConfiguration;
+import org.springframework.context.ApplicationEvent;
+import org.springframework.context.ApplicationListener;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.env.ConfigurableEnvironment;
+
+import static org.springframework.cloud.sleuth.instrument.reactor.TraceReactorAutoConfiguration.TraceReactorConfiguration.SLEUTH_TRACE_REACTOR_KEY;
 
 /**
  * {@link org.springframework.boot.autoconfigure.EnableAutoConfiguration
@@ -53,6 +62,7 @@ import org.springframework.context.annotation.Configuration;
 @ConditionalOnProperty(value = "spring.sleuth.reactor.enabled", matchIfMissing = true)
 @ConditionalOnClass(Mono.class)
 @AutoConfigureAfter(TraceWebFluxAutoConfiguration.class)
+@EnableConfigurationProperties(SleuthReactorProperties.class)
 public class TraceReactorAutoConfiguration {
 
 	static final String SLEUTH_REACTOR_EXECUTOR_SERVICE_KEY = "sleuth";
@@ -65,6 +75,26 @@ public class TraceReactorAutoConfiguration {
 				.getName();
 
 		private static final Log log = LogFactory.getLog(TraceReactorConfiguration.class);
+
+		@Autowired
+		BeanFactory beanFactory;
+
+		@PreDestroy
+		public void cleanupHooks() {
+			if (log.isTraceEnabled()) {
+				log.trace("Cleaning up hooks");
+			}
+			SleuthReactorProperties reactorProperties = this.beanFactory
+					.getBean(SleuthReactorProperties.class);
+			if (reactorProperties.isDecorateOnEach()) {
+				Hooks.resetOnEachOperator(SLEUTH_TRACE_REACTOR_KEY);
+			}
+			else {
+				Hooks.resetOnLastOperator(SLEUTH_TRACE_REACTOR_KEY);
+			}
+			Schedulers
+					.removeExecutorServiceDecorator(SLEUTH_REACTOR_EXECUTOR_SERVICE_KEY);
+		}
 
 		@Bean
 		// for tests
@@ -79,16 +109,54 @@ public class TraceReactorAutoConfiguration {
 			return new HookRegisteringBeanDefinitionRegistryPostProcessor(context);
 		}
 
-		@PreDestroy
-		public void cleanupHooks() {
-			if (log.isTraceEnabled()) {
-				log.trace("Cleaning up hooks");
+		@Configuration
+		@ConditionalOnClass(RefreshScope.class)
+		static class HooksRefresherConfiguration {
+
+			@Bean
+			HooksRefresher hooksRefresher(SleuthReactorProperties reactorProperties,
+					ConfigurableApplicationContext context) {
+				return new HooksRefresher(reactorProperties, context);
 			}
-			Hooks.resetOnEachOperator(SLEUTH_TRACE_REACTOR_KEY);
-			Schedulers
-					.removeExecutorServiceDecorator(SLEUTH_REACTOR_EXECUTOR_SERVICE_KEY);
+
 		}
 
+	}
+
+}
+
+class HooksRefresher implements ApplicationListener {
+
+	private static final Log log = LogFactory.getLog(HooksRefresher.class);
+
+	private final SleuthReactorProperties reactorProperties;
+
+	private final ConfigurableApplicationContext context;
+
+	HooksRefresher(SleuthReactorProperties reactorProperties,
+			ConfigurableApplicationContext context) {
+		this.reactorProperties = reactorProperties;
+		this.context = context;
+	}
+
+	@Override
+	public void onApplicationEvent(ApplicationEvent event) {
+		if (event instanceof RefreshScopeRefreshedEvent) {
+			if (log.isDebugEnabled()) {
+				log.debug(
+						"Context refreshed, will reset hooks and then re-register them");
+			}
+			Hooks.resetOnEachOperator(SLEUTH_TRACE_REACTOR_KEY);
+			Hooks.resetOnLastOperator(SLEUTH_TRACE_REACTOR_KEY);
+			if (this.reactorProperties.isDecorateOnEach()) {
+				Hooks.onEachOperator(SLEUTH_TRACE_REACTOR_KEY,
+						ReactorSleuth.scopePassingSpanOperator(this.context));
+			}
+			else {
+				Hooks.onLastOperator(SLEUTH_TRACE_REACTOR_KEY,
+						ReactorSleuth.scopePassingSpanOperator(this.context));
+			}
+		}
 	}
 
 }
@@ -115,9 +183,17 @@ class HookRegisteringBeanDefinitionRegistryPostProcessor
 	}
 
 	void setupHooks(BeanFactory beanFactory) {
-		Hooks.onEachOperator(
-				TraceReactorAutoConfiguration.TraceReactorConfiguration.SLEUTH_TRACE_REACTOR_KEY,
-				ReactorSleuth.scopePassingSpanOperator(this.context));
+		ConfigurableEnvironment environment = this.context.getEnvironment();
+		boolean decorateOnEach = environment.getProperty(
+				"spring.sleuth.reactor.decorate-on-each", Boolean.class, true);
+		if (decorateOnEach) {
+			Hooks.onEachOperator(SLEUTH_TRACE_REACTOR_KEY,
+					ReactorSleuth.scopePassingSpanOperator(this.context));
+		}
+		else {
+			Hooks.onLastOperator(SLEUTH_TRACE_REACTOR_KEY,
+					ReactorSleuth.scopePassingSpanOperator(this.context));
+		}
 		Schedulers.setExecutorServiceDecorator(
 				TraceReactorAutoConfiguration.SLEUTH_REACTOR_EXECUTOR_SERVICE_KEY,
 				(scheduler,
