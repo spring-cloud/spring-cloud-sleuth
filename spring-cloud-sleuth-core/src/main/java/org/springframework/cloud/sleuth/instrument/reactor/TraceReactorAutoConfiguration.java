@@ -41,7 +41,6 @@ import org.springframework.cloud.context.scope.refresh.RefreshScope;
 import org.springframework.cloud.context.scope.refresh.RefreshScopeRefreshedEvent;
 import org.springframework.cloud.sleuth.instrument.async.TraceableScheduledExecutorService;
 import org.springframework.cloud.sleuth.instrument.web.TraceWebFluxAutoConfiguration;
-import org.springframework.context.ApplicationEvent;
 import org.springframework.context.ApplicationListener;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.Bean;
@@ -125,7 +124,7 @@ public class TraceReactorAutoConfiguration {
 
 }
 
-class HooksRefresher implements ApplicationListener {
+class HooksRefresher implements ApplicationListener<RefreshScopeRefreshedEvent> {
 
 	private static final Log log = LogFactory.getLog(HooksRefresher.class);
 
@@ -140,22 +139,20 @@ class HooksRefresher implements ApplicationListener {
 	}
 
 	@Override
-	public void onApplicationEvent(ApplicationEvent event) {
-		if (event instanceof RefreshScopeRefreshedEvent) {
-			if (log.isDebugEnabled()) {
-				log.debug(
-						"Context refreshed, will reset hooks and then re-register them");
-			}
-			Hooks.resetOnEachOperator(SLEUTH_TRACE_REACTOR_KEY);
-			Hooks.resetOnLastOperator(SLEUTH_TRACE_REACTOR_KEY);
-			if (this.reactorProperties.isDecorateOnEach()) {
-				Hooks.onEachOperator(SLEUTH_TRACE_REACTOR_KEY,
-						ReactorSleuth.scopePassingSpanOperator(this.context));
-			}
-			else {
-				Hooks.onLastOperator(SLEUTH_TRACE_REACTOR_KEY,
-						ReactorSleuth.scopePassingSpanOperator(this.context));
-			}
+	public void onApplicationEvent(RefreshScopeRefreshedEvent event) {
+		if (log.isDebugEnabled()) {
+			log.debug(
+					"Context refreshed, will reset hooks and then re-register them");
+		}
+		Hooks.resetOnEachOperator(SLEUTH_TRACE_REACTOR_KEY);
+		Hooks.resetOnLastOperator(SLEUTH_TRACE_REACTOR_KEY);
+		if (this.reactorProperties.isDecorateOnEach()) {
+			Hooks.onEachOperator(SLEUTH_TRACE_REACTOR_KEY,
+					ReactorSleuth.scopePassingSpanOperator(this.context));
+		}
+		else {
+			Hooks.onLastOperator(SLEUTH_TRACE_REACTOR_KEY,
+					ReactorSleuth.scopePassingSpanOperator(this.context));
 		}
 	}
 
