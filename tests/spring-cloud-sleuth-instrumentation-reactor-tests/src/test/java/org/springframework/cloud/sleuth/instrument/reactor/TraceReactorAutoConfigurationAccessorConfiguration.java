@@ -18,8 +18,13 @@ package org.springframework.cloud.sleuth.instrument.reactor;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import reactor.core.publisher.Hooks;
+import reactor.core.scheduler.Schedulers;
 
 import org.springframework.context.ConfigurableApplicationContext;
+
+import static org.springframework.cloud.sleuth.instrument.reactor.TraceReactorAutoConfiguration.SLEUTH_REACTOR_EXECUTOR_SERVICE_KEY;
+import static org.springframework.cloud.sleuth.instrument.reactor.TraceReactorAutoConfiguration.TraceReactorConfiguration.SLEUTH_TRACE_REACTOR_KEY;
 
 /**
  * @author Marcin Grzejszczak
@@ -37,7 +42,10 @@ public final class TraceReactorAutoConfigurationAccessorConfiguration {
 		if (log.isTraceEnabled()) {
 			log.trace("Cleaning up hooks");
 		}
-		new TraceReactorAutoConfiguration.TraceReactorConfiguration().cleanupHooks();
+		Hooks.resetOnEachOperator(SLEUTH_TRACE_REACTOR_KEY);
+		Hooks.resetOnLastOperator(SLEUTH_TRACE_REACTOR_KEY);
+		Schedulers
+				.removeExecutorServiceDecorator(SLEUTH_REACTOR_EXECUTOR_SERVICE_KEY);
 	}
 
 	public static void setup(ConfigurableApplicationContext context) {
