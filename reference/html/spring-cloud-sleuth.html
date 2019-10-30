@@ -182,6 +182,7 @@ $(addBlockSwitches);
 <li><a href="#zuul">15.11. Zuul</a></li>
 <li><a href="#redis">15.12. Redis</a></li>
 <li><a href="#quartz">15.13. Quartz</a></li>
+<li><a href="#project-reactor">15.14. Project Reactor</a></li>
 </ul>
 </li>
 <li><a href="#configuration-properties">16. Configuration properties</a></li>
@@ -3578,6 +3579,12 @@ To disable Redis support, set the <code>spring.sleuth.redis.enabled</code> prope
 </div>
 <div class="paragraph">
 <p>To turn off this feature, set the <code>spring.sleuth.quartz.enabled</code> property to <code>false</code>.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="project-reactor"><a class="anchor" href="#project-reactor"></a><a class="link" href="#project-reactor">15.14. Project Reactor</a></h3>
+<div class="paragraph">
+<p>For projects depending on Project Reactor such as Spring Cloud Gateway, we suggest turning the <code>spring.sleuth.reactor.decorate-on-each</code> option to <code>false</code>. That way an increased performance gain should be observed in comparison to the standard instrumentation mechanism. What this option does is it will wrap decorate <code>onLast</code> operator instead of <code>onEach</code> which will result in creation of far fewer objects. The downside of this is that when Project Reactor will change threads, the trace propagation will continue without issues, however anything relying on the <code>ThreadLocal</code> such as e.g. MDC entries can be buggy.</p>
 </div>
 </div>
 </div>
