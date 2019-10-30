@@ -1413,6 +1413,10 @@ IMPORTANT: We don't support baggage propagation for JMS
 We instrument the Zuul Ribbon integration by enriching the Ribbon requests with tracing information.
 To disable Zuul support, set the `spring.sleuth.zuul.enabled` property to `false`.
 
+=== Project Reactor
+
+For projects depending on Project Reactor such as Spring Cloud Gateway, we suggest turning the `spring.sleuth.reactor.decorate-on-each` option to `false`. That way an increased performance gain should be observed in comparison to the standard instrumentation mechanism. What this option does is it will wrap decorate `onLast` operator instead of `onEach` which will result in creation of far fewer objects. The downside of this is that when Project Reactor will change threads, the trace propagation will continue without issues, however anything relying on the `ThreadLocal` such as e.g. MDC entries can be buggy.
+
 == Running examples
 
 You can see the running examples deployed in the https://run.pivotal.io/[Pivotal Web Services].
