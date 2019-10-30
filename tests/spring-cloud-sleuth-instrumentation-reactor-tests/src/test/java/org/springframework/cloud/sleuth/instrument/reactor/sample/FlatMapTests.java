@@ -38,7 +38,6 @@ import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.boot.test.rule.OutputCapture;
 import org.springframework.cloud.context.refresh.ContextRefresher;
-import org.springframework.cloud.sleuth.DisableWebFluxSecurity;
 import org.springframework.cloud.sleuth.instrument.reactor.Issue866Configuration;
 import org.springframework.cloud.sleuth.instrument.reactor.TraceReactorAutoConfigurationAccessorConfiguration;
 import org.springframework.cloud.sleuth.util.ArrayListSpanReporter;
