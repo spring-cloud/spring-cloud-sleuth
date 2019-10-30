@@ -24,7 +24,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * @author Marcin Grzejszczak
  * @since 2.0.2
  */
-@ConfigurationProperties("spring.sleuth.reactor.enabled")
+@ConfigurationProperties("spring.sleuth.reactor")
 public class SleuthReactorProperties {
 
 	/**
@@ -32,12 +32,28 @@ public class SleuthReactorProperties {
 	 */
 	private boolean enabled = true;
 
+	/**
+	 * When true decorates on each operator, will be less performing, but logging will
+	 * always contain the tracing entries in each operator. When false decorates on last
+	 * operator, will be more performing, but logging might not always contain the tracing
+	 * entries.
+	 */
+	private boolean decorateOnEach = true;
+
 	public boolean isEnabled() {
 		return this.enabled;
 	}
 
 	public void setEnabled(boolean enabled) {
 		this.enabled = enabled;
+	}
+
+	public boolean isDecorateOnEach() {
+		return this.decorateOnEach;
+	}
+
+	public void setDecorateOnEach(boolean decorateOnEach) {
+		this.decorateOnEach = decorateOnEach;
 	}
 
 }

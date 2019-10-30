@@ -37,6 +37,8 @@ import org.springframework.boot.WebApplicationType;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.boot.test.rule.OutputCapture;
+import org.springframework.cloud.context.refresh.ContextRefresher;
+import org.springframework.cloud.sleuth.DisableWebFluxSecurity;
 import org.springframework.cloud.sleuth.instrument.reactor.Issue866Configuration;
 import org.springframework.cloud.sleuth.instrument.reactor.TraceReactorAutoConfigurationAccessorConfiguration;
 import org.springframework.cloud.sleuth.util.ArrayListSpanReporter;
@@ -83,6 +85,35 @@ public class FlatMapTests {
 								"security.basic.enabled=false",
 								"management.security.enabled=false")
 						.run();
+		assertReactorTracing(context);
+	}
+
+	@Test
+	public void should_work_with_flat_maps_with_on_last_operator_instrumentation() {
+		// given
+		ConfigurableApplicationContext context = new SpringApplicationBuilder(
+				FlatMapTests.TestConfiguration.class, Issue866Configuration.class)
+						.web(WebApplicationType.REACTIVE)
+						.properties("server.port=0", "spring.jmx.enabled=false",
+								"spring.sleuth.reactor.decorate-on-each=false",
+								"spring.application.name=TraceWebFlux2Tests",
+								"security.basic.enabled=false",
+								"management.security.enabled=false")
+						.run();
+		assertReactorTracing(context);
+
+		try {
+			System.setProperty("spring.sleuth.reactor.decorate-on-each", "true");
+			// trigger context refreshed
+			context.getBean(ContextRefresher.class).refresh();
+			assertReactorTracing(context);
+		}
+		finally {
+			System.clearProperty("spring.sleuth.reactor.decorate-on-each");
+		}
+	}
+
+	private void assertReactorTracing(ConfigurableApplicationContext context) {
 		ArrayListSpanReporter accumulator = context.getBean(ArrayListSpanReporter.class);
 		int port = context.getBean(Environment.class).getProperty("local.server.port",
 				Integer.class);

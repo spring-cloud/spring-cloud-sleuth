@@ -1434,6 +1434,10 @@ We instrument quartz jobs by adding Job/Trigger listeners to the Quartz Schedule
 
 To turn off this feature, set the `spring.sleuth.quartz.enabled` property to `false`.
 
+=== Project Reactor
+
+For projects depending on Project Reactor such as Spring Cloud Gateway, we suggest turning the `spring.sleuth.reactor.decorate-on-each` option to `false`. That way an increased performance gain should be observed in comparison to the standard instrumentation mechanism. What this option does is it will wrap decorate `onLast` operator instead of `onEach` which will result in creation of far fewer objects. The downside of this is that when Project Reactor will change threads, the trace propagation will continue without issues, however anything relying on the `ThreadLocal` such as e.g. MDC entries can be buggy.
+
 == Configuration properties
 
 To see the list of all Sleuth related configuration properties please check link:appendix.html[the Appendix page].
