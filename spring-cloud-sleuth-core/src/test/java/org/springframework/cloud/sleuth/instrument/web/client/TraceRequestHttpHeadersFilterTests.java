@@ -57,8 +57,10 @@ public class TraceRequestHttpHeadersFilterTests {
 		HttpHeaders filteredHeaders = filter.filter(requestHeaders(httpHeaders),
 				exchange);
 
+		// we want to continue the trace
 		BDDAssertions.then(filteredHeaders.get("X-B3-TraceId"))
-				.isNotEqualTo(httpHeaders.get("X-B3-TraceId"));
+				.isEqualTo(httpHeaders.get("X-B3-TraceId"));
+		// but we want to have a new span id
 		BDDAssertions.then(filteredHeaders.get("X-B3-SpanId"))
 				.isNotEqualTo(httpHeaders.get("X-B3-SpanId"));
 		BDDAssertions.then(filteredHeaders.get("X-Hello"))

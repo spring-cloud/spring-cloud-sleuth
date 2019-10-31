@@ -22,6 +22,7 @@ import brave.http.HttpClientHandler;
 import brave.http.HttpTracing;
 import brave.propagation.Propagation;
 import brave.propagation.TraceContext;
+import brave.propagation.TraceContextOrSamplingFlags;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -47,10 +48,12 @@ final class TraceRequestHttpHeadersFilter extends AbstractHttpHeadersFilter {
 	@Override
 	public HttpHeaders filter(HttpHeaders input, ServerWebExchange exchange) {
 		if (log.isDebugEnabled()) {
-			log.debug("Will instrument the HTTP request headers");
+			log.debug("Will instrument the HTTP request headers ["
+					+ exchange.getRequest().getHeaders() + "]");
 		}
 		TraceCarrier carrier = new TraceCarrier(exchange.getRequest(), input);
-		Span span = this.handler.handleSend(this.injector, carrier);
+		Span currentSpan = currentSpan(carrier);
+		Span span = injectedSpan(carrier, currentSpan);
 		if (log.isDebugEnabled()) {
 			log.debug(
 					"Client span  " + span + " created for the request. New headers are "
@@ -61,6 +64,22 @@ final class TraceRequestHttpHeadersFilter extends AbstractHttpHeadersFilter {
 		headersWithInput.addAll(input);
 		carrier.filteredHeaders.forEach(headersWithInput::put);
 		return headersWithInput;
+	}
+
+	private Span currentSpan(TraceCarrier carrier) {
+		Span currentSpan = this.tracer.currentSpan();
+		if (currentSpan != null) {
+			return currentSpan;
+		}
+		TraceContextOrSamplingFlags contextOrFlags = this.extractor.extract(carrier);
+		return this.tracer.nextSpan(contextOrFlags);
+	}
+
+	private Span injectedSpan(TraceCarrier carrier, Span currentSpan) {
+		if (currentSpan == null) {
+			return this.handler.handleSend(this.injector, carrier);
+		}
+		return this.handler.handleSend(this.injector, carrier, currentSpan);
 	}
 
 	@Override
@@ -136,11 +155,25 @@ abstract class AbstractHttpHeadersFilter implements HttpHeadersFilter {
 		}
 	};
 
+	private static final Propagation.Getter<TraceCarrier, String> GETTER = new Propagation.Getter<TraceCarrier, String>() {
+		@Override
+		public String get(TraceCarrier carrier, String key) {
+			return carrier.filteredHeaders.getFirst(key);
+		}
+
+		@Override
+		public String toString() {
+			return "TraceCarrier::httpHeaders::getFirst";
+		}
+	};
+
 	final Tracer tracer;
 
 	final HttpClientHandler<TraceCarrier, ServerHttpResponse> handler;
 
 	final TraceContext.Injector<TraceCarrier> injector;
+
+	final TraceContext.Extractor<TraceCarrier> extractor;
 
 	final HttpTracing httpTracing;
 
@@ -148,6 +181,7 @@ abstract class AbstractHttpHeadersFilter implements HttpHeadersFilter {
 		this.tracer = httpTracing.tracing().tracer();
 		this.handler = HttpClientHandler.create(httpTracing, new ServerHttpAdapter());
 		this.injector = httpTracing.tracing().propagation().injector(SETTER);
+		this.extractor = httpTracing.tracing().propagation().extractor(GETTER);
 		this.httpTracing = httpTracing;
 	}
 
