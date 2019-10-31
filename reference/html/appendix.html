@@ -300,7 +300,12 @@ Also, you can define your own properties.
 <td class="tableblock halign-left valign-top"><p class="tableblock">A list of keys to be put from extra propagation fields to span tags.</p></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock">spring.sleuth.reactor.enabled.enabled</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">spring.sleuth.reactor.decorate-on-each</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">true</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">When true decorates on each operator, will be less performing, but logging will always contain the tracing entries in each operator. When false decorates on last operator, will be more performing, but logging might not always contain the tracing entries.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">spring.sleuth.reactor.enabled</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">true</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">When true enables instrumentation for reactor.</p></td>
 </tr>
