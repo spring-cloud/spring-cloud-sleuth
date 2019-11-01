@@ -18,8 +18,10 @@ package org.springframework.cloud.sleuth.autoconfig;
 
 import brave.TracingCustomizer;
 import brave.http.HttpTracingCustomizer;
+import brave.messaging.MessagingTracingCustomizer;
 import brave.propagation.CurrentTraceContextCustomizer;
 import brave.propagation.ExtraFieldCustomizer;
+import brave.propagation.Propagation;
 import brave.rpc.RpcTracingCustomizer;
 import brave.sampler.Sampler;
 import org.junit.Test;
@@ -27,11 +29,13 @@ import org.junit.Test;
 import org.springframework.boot.autoconfigure.AutoConfigurations;
 import org.springframework.boot.test.context.assertj.AssertableApplicationContext;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
+import org.springframework.cloud.sleuth.instrument.messaging.TraceMessagingAutoConfiguration;
 import org.springframework.cloud.sleuth.instrument.rpc.TraceRpcAutoConfiguration;
 import org.springframework.cloud.sleuth.instrument.web.TraceHttpAutoConfiguration;
 import org.springframework.cloud.sleuth.instrument.web.TraceWebAutoConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.messaging.support.MessageHeaderAccessor;
 
 import static org.assertj.core.api.BDDAssertions.then;
 
@@ -40,7 +44,9 @@ public class TraceAutoConfigurationCustomizersTests {
 	private final ApplicationContextRunner contextRunner = new ApplicationContextRunner()
 			.withConfiguration(AutoConfigurations.of(TraceAutoConfiguration.class,
 					TraceWebAutoConfiguration.class, TraceHttpAutoConfiguration.class,
-					TraceRpcAutoConfiguration.class))
+					TraceRpcAutoConfiguration.class,
+					FakeSpringMessagingAutoConfiguration.class,
+					TraceMessagingAutoConfiguration.class))
 			.withUserConfiguration(Customizers.class);
 
 	@Test
@@ -75,6 +81,17 @@ public class TraceAutoConfigurationCustomizersTests {
 		then(bean.rpcCustomizerApplied).isTrue();
 	}
 
+	// SQS has a dependency on the getter and this is better than exposing things public
+	@Configuration
+	static class FakeSpringMessagingAutoConfiguration {
+
+		@Bean
+		Propagation.Getter<MessageHeaderAccessor, String> traceMessagePropagationGetter() {
+			return (headers, key) -> null;
+		}
+
+	}
+
 	@Configuration
 	static class Customizers {
 
@@ -87,6 +104,8 @@ public class TraceAutoConfigurationCustomizersTests {
 		boolean httpCustomizerApplied;
 
 		boolean rpcCustomizerApplied;
+
+		boolean messagingCustomizerApplied;
 
 		@Bean
 		TracingCustomizer sleuthTracingCustomizer() {
@@ -106,6 +125,11 @@ public class TraceAutoConfigurationCustomizersTests {
 		@Bean
 		HttpTracingCustomizer sleuthHttpTracingCustomizer() {
 			return builder -> httpCustomizerApplied = true;
+		}
+
+		@Bean
+		MessagingTracingCustomizer sleuthMessagingCustomizer() {
+			return builder -> messagingCustomizerApplied = true;
 		}
 
 		@Bean

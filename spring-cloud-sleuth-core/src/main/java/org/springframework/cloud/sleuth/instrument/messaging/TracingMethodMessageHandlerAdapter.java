@@ -21,8 +21,10 @@ import java.util.function.BiConsumer;
 import brave.Span;
 import brave.Tracer;
 import brave.Tracing;
-import brave.propagation.Propagation;
-import brave.propagation.TraceContext;
+import brave.messaging.ConsumerRequest;
+import brave.messaging.MessagingTracing;
+import brave.propagation.Propagation.Getter;
+import brave.propagation.TraceContext.Extractor;
 import brave.propagation.TraceContextOrSamplingFlags;
 
 import org.springframework.messaging.Message;
@@ -30,6 +32,7 @@ import org.springframework.messaging.MessageHandler;
 import org.springframework.messaging.support.MessageHeaderAccessor;
 
 import static brave.Span.Kind.CONSUMER;
+import static org.springframework.cloud.sleuth.instrument.messaging.SqsQueueMessageHandler.LOGICAL_RESOURCE_ID;
 
 /**
  * Adds tracing extraction to an instance of
@@ -46,22 +49,26 @@ import static brave.Span.Kind.CONSUMER;
  */
 class TracingMethodMessageHandlerAdapter {
 
-	private Tracing tracing;
+	private final Tracing tracing;
 
-	private Tracer tracer;
+	private final Tracer tracer;
 
-	private TraceContext.Extractor<MessageHeaderAccessor> extractor;
+	private final Extractor<MessageConsumerRequest> extractor;
 
-	TracingMethodMessageHandlerAdapter(Tracing tracing,
-			Propagation.Getter<MessageHeaderAccessor, String> traceMessagePropagationGetter) {
-		this.tracing = tracing;
+	private final Getter<MessageHeaderAccessor, String> getter;
+
+	TracingMethodMessageHandlerAdapter(MessagingTracing messagingTracing,
+			Getter<MessageHeaderAccessor, String> getter) {
+		this.tracing = messagingTracing.tracing();
 		this.tracer = tracing.tracer();
-		this.extractor = tracing.propagation().extractor(traceMessagePropagationGetter);
+		this.extractor = tracing.propagation().extractor(MessageConsumerRequest.GETTER);
+		this.getter = getter;
 	}
 
 	void wrapMethodMessageHandler(Message<?> message, MessageHandler messageHandler,
 			BiConsumer<Span, Message<?>> messageSpanTagger) {
-		TraceContextOrSamplingFlags extracted = extractAndClearHeaders(message);
+		MessageConsumerRequest request = new MessageConsumerRequest(message, this.getter);
+		TraceContextOrSamplingFlags extracted = extractAndClearHeaders(request);
 
 		Span consumerSpan = tracer.nextSpan(extracted);
 		Span listenerSpan = tracer.newChild(consumerSpan.context());
@@ -95,15 +102,77 @@ class TracingMethodMessageHandlerAdapter {
 		}
 	}
 
-	private TraceContextOrSamplingFlags extractAndClearHeaders(Message<?> message) {
-		MessageHeaderAccessor headers = MessageHeaderAccessor.getMutableAccessor(message);
-		TraceContextOrSamplingFlags extracted = extractor.extract(headers);
+	private TraceContextOrSamplingFlags extractAndClearHeaders(
+			MessageConsumerRequest request) {
+		TraceContextOrSamplingFlags extracted = extractor.extract(request);
 
 		for (String propagationKey : tracing.propagation().keys()) {
-			headers.removeHeader(propagationKey);
+			request.removeHeader(propagationKey);
 		}
 
 		return extracted;
+	}
+
+}
+
+final class MessageConsumerRequest extends ConsumerRequest {
+
+	static final Getter<MessageConsumerRequest, String> GETTER = new Getter<MessageConsumerRequest, String>() {
+		@Override
+		public String get(MessageConsumerRequest request, String name) {
+			return request.getHeader(name);
+		}
+
+		@Override
+		public String toString() {
+			return "MessageConsumerRequest::getHeader";
+		}
+	};
+
+	final Message delegate;
+
+	final MessageHeaderAccessor mutableHeaders;
+
+	final Getter<MessageHeaderAccessor, String> getter;
+
+	MessageConsumerRequest(Message delegate,
+			Getter<MessageHeaderAccessor, String> getter) {
+		this.delegate = delegate;
+		this.mutableHeaders = MessageHeaderAccessor.getMutableAccessor(delegate);
+		this.getter = getter;
+	}
+
+	@Override
+	public Span.Kind spanKind() {
+		return Span.Kind.CONSUMER;
+	}
+
+	@Override
+	public Object unwrap() {
+		return this.delegate;
+	}
+
+	@Override
+	public String operation() {
+		return "receive";
+	}
+
+	@Override
+	public String channelKind() {
+		return "queue";
+	}
+
+	@Override
+	public String channelName() {
+		return this.delegate.getHeaders().get(LOGICAL_RESOURCE_ID).toString();
+	}
+
+	String getHeader(String name) {
+		return this.getter.get(this.mutableHeaders, name);
+	}
+
+	void removeHeader(String name) {
+		this.mutableHeaders.removeHeader(name);
 	}
 
 }

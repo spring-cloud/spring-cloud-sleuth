@@ -876,6 +876,34 @@ In the following example, we register the `TracingFilter` bean, add the `ZIPKIN-
 include::{project-root}/tests/spring-cloud-sleuth-instrumentation-mvc-tests/src/test/java/org/springframework/cloud/sleuth/instrument/web/TraceFilterIntegrationTests.java[tags=response_headers,indent=0]
 ----
 
+=== Messaging
+
+Sleuth automatically configures the `MessagingTracing` bean which serves as a
+foundation for Messaging instrumentation such as Kafka or JMS.
+
+If a customization of producer / consumer sampling of messaging traces is required,
+just register a bean of type `brave.sampler.SamplerFunction<MessagingRequest>` and
+name the bean `sleuthProducerSampler` for producer sampler and `sleuthConsumerSampler`
+for consumer sampler.
+
+For your convenience the `@ProducerSampler` and `@ConsumerSampler`
+annotations can  be used to inject the proper beans or to reference the bean
+names via their  static String `NAME` fields.
+
+Ex. Here's a sampler that traces 100 consumer requests per second, except for
+the "alerts" channel. Other requests will use a global rate provided by the
+`Tracing` component.
+
+[source,java]
+----
+@Configuration
+class Config {
+include::{project-root}/tests/spring-cloud-sleuth-instrumentation-messaging-tests/src/test/java/org/springframework/cloud/sleuth/instrument/messaging/TraceMessagingAutoConfigurationIntegrationTests.java[tags=custom_messaging_server_sampler,indent=2]
+}
+----
+
+For more, see https://github.com/openzipkin/brave/tree/master/instrumentation/messaging#sampling-policy
+
 === RPC
 
 Sleuth automatically configures the `RpcTracing` bean which serves as a

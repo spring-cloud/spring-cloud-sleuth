@@ -17,6 +17,7 @@
 package org.springframework.cloud.sleuth.instrument.messaging;
 
 import java.lang.reflect.Field;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
@@ -25,7 +26,11 @@ import brave.Tracer;
 import brave.Tracing;
 import brave.jms.JmsTracing;
 import brave.kafka.clients.KafkaTracing;
-import brave.propagation.Propagation;
+import brave.messaging.MessagingRequest;
+import brave.messaging.MessagingTracing;
+import brave.messaging.MessagingTracingCustomizer;
+import brave.propagation.Propagation.Getter;
+import brave.sampler.SamplerFunction;
 import brave.spring.rabbit.SpringRabbitTracing;
 import org.aopalliance.intercept.MethodInterceptor;
 import org.aopalliance.intercept.MethodInvocation;
@@ -44,6 +49,7 @@ import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.aop.framework.ProxyFactoryBean;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.BeanFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.beans.factory.config.BeanPostProcessor;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
@@ -67,6 +73,7 @@ import org.springframework.kafka.listener.MessageListener;
 import org.springframework.kafka.listener.MessageListenerContainer;
 import org.springframework.kafka.listener.adapter.MessagingMessageListenerAdapter;
 import org.springframework.kafka.support.DefaultKafkaHeaderMapper;
+import org.springframework.lang.Nullable;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessagingException;
 import org.springframework.messaging.converter.MessageConverter;
@@ -89,6 +96,29 @@ import org.springframework.util.ReflectionUtils;
 @EnableConfigurationProperties(SleuthMessagingProperties.class)
 public class TraceMessagingAutoConfiguration {
 
+	@Autowired(required = false)
+	List<MessagingTracingCustomizer> messagingTracingCustomizers = new ArrayList<>();
+
+	@Bean
+	@ConditionalOnMissingBean
+	// NOTE: stable bean name as might be used outside sleuth
+	MessagingTracing messagingTracing(Tracing tracing,
+			@Nullable @ProducerSampler SamplerFunction<MessagingRequest> producerSampler,
+			@Nullable @ConsumerSampler SamplerFunction<MessagingRequest> consumerSampler) {
+
+		MessagingTracing.Builder builder = MessagingTracing.newBuilder(tracing);
+		if (producerSampler != null) {
+			builder.producerSampler(producerSampler);
+		}
+		if (consumerSampler != null) {
+			builder.consumerSampler(consumerSampler);
+		}
+		for (MessagingTracingCustomizer customizer : this.messagingTracingCustomizers) {
+			customizer.customize(builder);
+		}
+		return builder.build();
+	}
+
 	@Configuration(proxyBeanMethods = false)
 	@ConditionalOnProperty(value = "spring.sleuth.messaging.rabbit.enabled",
 			matchIfMissing = true)
@@ -105,9 +135,9 @@ public class TraceMessagingAutoConfiguration {
 
 		@Bean
 		@ConditionalOnMissingBean
-		SpringRabbitTracing springRabbitTracing(Tracing tracing,
+		SpringRabbitTracing springRabbitTracing(MessagingTracing messagingTracing,
 				SleuthMessagingProperties properties) {
-			return SpringRabbitTracing.newBuilder(tracing)
+			return SpringRabbitTracing.newBuilder(messagingTracing)
 					.remoteServiceName(
 							properties.getMessaging().getRabbit().getRemoteServiceName())
 					.build();
@@ -123,8 +153,9 @@ public class TraceMessagingAutoConfiguration {
 
 		@Bean
 		@ConditionalOnMissingBean
-		KafkaTracing kafkaTracing(Tracing tracing, SleuthMessagingProperties properties) {
-			return KafkaTracing.newBuilder(tracing)
+		KafkaTracing kafkaTracing(MessagingTracing messagingTracing,
+				SleuthMessagingProperties properties) {
+			return KafkaTracing.newBuilder(messagingTracing)
 					.remoteServiceName(
 							properties.getMessaging().getKafka().getRemoteServiceName())
 					.build();
@@ -164,8 +195,9 @@ public class TraceMessagingAutoConfiguration {
 
 		@Bean
 		@ConditionalOnMissingBean
-		JmsTracing jmsTracing(Tracing tracing, SleuthMessagingProperties properties) {
-			return JmsTracing.newBuilder(tracing)
+		JmsTracing jmsTracing(MessagingTracing messagingTracing,
+				SleuthMessagingProperties properties) {
+			return JmsTracing.newBuilder(messagingTracing)
 					.remoteServiceName(
 							properties.getMessaging().getJms().getRemoteServiceName())
 					.build();
@@ -207,9 +239,9 @@ public class TraceMessagingAutoConfiguration {
 
 		@Bean
 		TracingMethodMessageHandlerAdapter tracingMethodMessageHandlerAdapter(
-				Tracing tracing,
-				Propagation.Getter<MessageHeaderAccessor, String> traceMessagePropagationGetter) {
-			return new TracingMethodMessageHandlerAdapter(tracing,
+				MessagingTracing messagingTracing,
+				Getter<MessageHeaderAccessor, String> traceMessagePropagationGetter) {
+			return new TracingMethodMessageHandlerAdapter(messagingTracing,
 					traceMessagePropagationGetter);
 		}
 
@@ -477,7 +509,7 @@ class SqsQueueMessageHandlerFactory extends QueueMessageHandlerFactory {
 class SqsQueueMessageHandler extends QueueMessageHandler {
 
 	// copied from QueueMessageHandler
-	private static final String LOGICAL_RESOURCE_ID = "LogicalResourceId";
+	static final String LOGICAL_RESOURCE_ID = "LogicalResourceId";
 
 	private TracingMethodMessageHandlerAdapter handlerAdapter;
 
