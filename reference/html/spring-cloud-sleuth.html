@@ -159,10 +159,11 @@ $(addBlockSwitches);
 <li><a href="#customizers">12.1. Customizers</a></li>
 <li><a href="#http">12.2. HTTP</a></li>
 <li><a href="#tracingfilter">12.3. <code>TracingFilter</code></a></li>
-<li><a href="#rpc">12.4. RPC</a></li>
-<li><a href="#custom-service-name">12.5. Custom service name</a></li>
-<li><a href="#customization-of-reported-spans">12.6. Customization of Reported Spans</a></li>
-<li><a href="#host-locator">12.7. Host Locator</a></li>
+<li><a href="#messaging">12.4. Messaging</a></li>
+<li><a href="#rpc">12.5. RPC</a></li>
+<li><a href="#custom-service-name">12.6. Custom service name</a></li>
+<li><a href="#customization-of-reported-spans">12.7. Customization of Reported Spans</a></li>
+<li><a href="#host-locator">12.8. Host Locator</a></li>
 </ul>
 </li>
 <li><a href="#sending-spans-to-zipkin">13. Sending Spans to Zipkin</a></li>
@@ -178,7 +179,7 @@ $(addBlockSwitches);
 <li><a href="#feign">15.7. Feign</a></li>
 <li><a href="#grpc">15.8. gRPC</a></li>
 <li><a href="#asynchronous-communication">15.9. Asynchronous Communication</a></li>
-<li><a href="#messaging">15.10. Messaging</a></li>
+<li><a href="#messaging-2">15.10. Messaging</a></li>
 <li><a href="#zuul">15.11. Zuul</a></li>
 <li><a href="#redis">15.12. Redis</a></li>
 <li><a href="#quartz">15.13. Quartz</a></li>
@@ -2600,7 +2601,41 @@ class MyFilter extends GenericFilterBean {
 </div>
 </div>
 <div class="sect2">
-<h3 id="rpc"><a class="anchor" href="#rpc"></a><a class="link" href="#rpc">12.4. RPC</a></h3>
+<h3 id="messaging"><a class="anchor" href="#messaging"></a><a class="link" href="#messaging">12.4. Messaging</a></h3>
+<div class="paragraph">
+<p>Sleuth automatically configures the <code>MessagingTracing</code> bean which serves as a
+foundation for Messaging instrumentation such as Kafka or JMS.</p>
+</div>
+<div class="paragraph">
+<p>If a customization of producer / consumer sampling of messaging traces is required,
+just register a bean of type <code>brave.sampler.SamplerFunction&lt;MessagingRequest&gt;</code> and
+name the bean <code>sleuthProducerSampler</code> for producer sampler and <code>sleuthConsumerSampler</code>
+for consumer sampler.</p>
+</div>
+<div class="paragraph">
+<p>For your convenience the <code>@ProducerSampler</code> and <code>@ConsumerSampler</code>
+annotations can  be used to inject the proper beans or to reference the bean
+names via their  static String <code>NAME</code> fields.</p>
+</div>
+<div class="paragraph">
+<p>Ex. Here&#8217;s a sampler that traces 100 consumer requests per second, except for
+the "alerts" channel. Other requests will use a global rate provided by the
+<code>Tracing</code> component.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">@Configuration
+class Config {
+Unresolved directive in spring-cloud-sleuth.adoc - include::/opt/jenkins/data/workspace/spring-cloud-sleuth-master-ci/tests/spring-cloud-sleuth-instrumentation-messaging-tests/src/test/java/org/springframework/cloud/sleuth/instrument/messaging/TraceMessagingAutoConfigurationIntegrationTests.java[tags=custom_messaging_server_sampler,indent=2]
+}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>For more, see <a href="https://github.com/openzipkin/brave/tree/master/instrumentation/messaging#sampling-policy" class="bare">github.com/openzipkin/brave/tree/master/instrumentation/messaging#sampling-policy</a></p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="rpc"><a class="anchor" href="#rpc"></a><a class="link" href="#rpc">12.5. RPC</a></h3>
 <div class="paragraph">
 <p>Sleuth automatically configures the <code>RpcTracing</code> bean which serves as a
 foundation for RPC instrumentation such as gRPC or Dubbo.</p>
@@ -2641,7 +2676,7 @@ class Config {
 </div>
 </div>
 <div class="sect2">
-<h3 id="custom-service-name"><a class="anchor" href="#custom-service-name"></a><a class="link" href="#custom-service-name">12.5. Custom service name</a></h3>
+<h3 id="custom-service-name"><a class="anchor" href="#custom-service-name"></a><a class="link" href="#custom-service-name">12.6. Custom service name</a></h3>
 <div class="paragraph">
 <p>By default, Sleuth assumes that, when you send a span to Zipkin, you want the span&#8217;s service name to be equal to the value of the <code>spring.application.name</code> property.
 That is not always the case, though.
@@ -2655,7 +2690,7 @@ To achieve that, you can pass the following property to your application to over
 </div>
 </div>
 <div class="sect2">
-<h3 id="customization-of-reported-spans"><a class="anchor" href="#customization-of-reported-spans"></a><a class="link" href="#customization-of-reported-spans">12.6. Customization of Reported Spans</a></h3>
+<h3 id="customization-of-reported-spans"><a class="anchor" href="#customization-of-reported-spans"></a><a class="link" href="#customization-of-reported-spans">12.7. Customization of Reported Spans</a></h3>
 <div class="paragraph">
 <p>Before reporting spans (for example, to Zipkin) you may want to modify that span in some way.
 You can do so by using the <code>FinishedSpanHandler</code> interface.</p>
@@ -2698,7 +2733,7 @@ FinishedSpanHandler handlerTwo() {
 </div>
 </div>
 <div class="sect2">
-<h3 id="host-locator"><a class="anchor" href="#host-locator"></a><a class="link" href="#host-locator">12.7. Host Locator</a></h3>
+<h3 id="host-locator"><a class="anchor" href="#host-locator"></a><a class="link" href="#host-locator">12.8. Host Locator</a></h3>
 <div class="admonitionblock important">
 <table>
 <tr>
@@ -3449,7 +3484,7 @@ to add the <code>@Role(BeanDefinition.ROLE_INFRASTRUCTURE)</code> on your
 </div>
 </div>
 <div class="sect2">
-<h3 id="messaging"><a class="anchor" href="#messaging"></a><a class="link" href="#messaging">15.10. Messaging</a></h3>
+<h3 id="messaging-2"><a class="anchor" href="#messaging-2"></a><a class="link" href="#messaging-2">15.10. Messaging</a></h3>
 <div class="paragraph">
 <p>Features from this section can be disabled by setting the <code>spring.sleuth.messaging.enabled</code> property with value equal to <code>false</code>.</p>
 </div>
