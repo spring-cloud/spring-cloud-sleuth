@@ -18,7 +18,11 @@ package org.springframework.cloud.sleuth.instrument.messaging;
 
 import brave.Tracer;
 import brave.kafka.clients.KafkaTracing;
+import brave.messaging.MessagingRequest;
+import brave.messaging.MessagingTracing;
 import brave.sampler.Sampler;
+import brave.sampler.SamplerFunction;
+import brave.sampler.SamplerFunctions;
 import brave.spring.rabbit.SpringRabbitTracing;
 import org.apache.kafka.clients.consumer.Consumer;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
@@ -32,8 +36,11 @@ import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.AutoConfigurations;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.context.runner.ApplicationContextRunner;
+import org.springframework.cloud.sleuth.autoconfig.TraceAutoConfiguration;
 import org.springframework.cloud.sleuth.util.ArrayListSpanReporter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -100,6 +107,55 @@ public class TraceMessagingAutoConfigurationTests {
 		then(this.mySleuthKafkaAspect.adapterWrapped).isTrue();
 
 		then(this.testSleuthKafkaHeaderMapperBeanPostProcessor.tracingCalled).isTrue();
+	}
+
+	@Test
+	public void defaultsToBraveProducerSampler() {
+		contextRunner().run((context) -> {
+			SamplerFunction<MessagingRequest> producerSampler = context
+					.getBean(MessagingTracing.class).producerSampler();
+
+			then(producerSampler).isSameAs(SamplerFunctions.deferDecision());
+		});
+	}
+
+	@Test
+	public void configuresUserProvidedProducerSampler() {
+		contextRunner().withUserConfiguration(ProducerSamplerConfig.class)
+				.run((context) -> {
+					SamplerFunction<MessagingRequest> producerSampler = context
+							.getBean(MessagingTracing.class).producerSampler();
+
+					then(producerSampler).isSameAs(ProducerSamplerConfig.INSTANCE);
+				});
+	}
+
+	@Test
+	public void defaultsToBraveConsumerSampler() {
+		contextRunner().run((context) -> {
+			SamplerFunction<MessagingRequest> consumerSampler = context
+					.getBean(MessagingTracing.class).consumerSampler();
+
+			then(consumerSampler).isSameAs(SamplerFunctions.deferDecision());
+		});
+	}
+
+	@Test
+	public void configuresUserProvidedConsumerSampler() {
+		contextRunner().withUserConfiguration(ConsumerSamplerConfig.class)
+				.run((context) -> {
+					SamplerFunction<MessagingRequest> consumerSampler = context
+							.getBean(MessagingTracing.class).consumerSampler();
+
+					then(consumerSampler).isSameAs(ConsumerSamplerConfig.INSTANCE);
+				});
+	}
+
+	private ApplicationContextRunner contextRunner(String... propertyValues) {
+		return new ApplicationContextRunner().withPropertyValues(propertyValues)
+				.withConfiguration(AutoConfigurations.of(TraceAutoConfiguration.class,
+						TraceMessagingAutoConfiguration.class,
+						TraceMessagingAutoConfiguration.class));
 	}
 
 	@Configuration
@@ -222,6 +278,30 @@ class TestSleuthKafkaHeaderMapperBeanPostProcessor
 	Object sleuthDefaultKafkaHeaderMapper(Object bean) {
 		this.tracingCalled = true;
 		return super.sleuthDefaultKafkaHeaderMapper(bean);
+	}
+
+}
+
+@Configuration
+class ProducerSamplerConfig {
+
+	static final SamplerFunction<MessagingRequest> INSTANCE = request -> null;
+
+	@Bean(ProducerSampler.NAME)
+	SamplerFunction<MessagingRequest> sleuthProducerSampler() {
+		return INSTANCE;
+	}
+
+}
+
+@Configuration
+class ConsumerSamplerConfig {
+
+	static final SamplerFunction<MessagingRequest> INSTANCE = request -> null;
+
+	@Bean(ConsumerSampler.NAME)
+	SamplerFunction<MessagingRequest> sleuthConsumerSampler() {
+		return INSTANCE;
 	}
 
 }
