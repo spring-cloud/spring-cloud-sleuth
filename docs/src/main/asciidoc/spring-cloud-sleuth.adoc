@@ -898,7 +898,7 @@ the "alerts" channel. Other requests will use a global rate provided by the
 ----
 @Configuration
 class Config {
-include::{project-root}/tests/spring-cloud-sleuth-instrumentation-messaging-tests/src/test/java/org/springframework/cloud/sleuth/instrument/messaging/TraceMessagingAutoConfigurationIntegrationTests.java[tags=custom_messaging_server_sampler,indent=2]
+include::{project-root}/spring-cloud-sleuth-core/src/test/java/org/springframework/cloud/sleuth/instrument/messaging/TraceMessagingAutoConfigurationIntegrationTests.java[tags=custom_messaging_server_sampler,indent=2]
 }
 ----
 
