@@ -16,6 +16,9 @@
 
 package org.springframework.cloud.sleuth.instrument.web.client;
 
+import java.util.List;
+import java.util.Map;
+
 import brave.Span;
 import brave.Tracer;
 import brave.http.HttpClientHandler;
@@ -62,7 +65,11 @@ final class TraceRequestHttpHeadersFilter extends AbstractHttpHeadersFilter {
 		exchange.getAttributes().put(SPAN_ATTRIBUTE, span);
 		HttpHeaders headersWithInput = new HttpHeaders();
 		headersWithInput.addAll(input);
-		carrier.filteredHeaders.forEach(headersWithInput::put);
+		addHeadersWithInput(carrier.filteredHeaders, headersWithInput);
+		if (headersWithInput.containsKey("b3") || headersWithInput.containsKey("B3")) {
+			headersWithInput.keySet().remove("b3");
+			headersWithInput.keySet().remove("B3");
+		}
 		return headersWithInput;
 	}
 
@@ -79,7 +86,18 @@ final class TraceRequestHttpHeadersFilter extends AbstractHttpHeadersFilter {
 		if (currentSpan == null) {
 			return this.handler.handleSend(this.injector, carrier);
 		}
-		return this.handler.handleSend(this.injector, carrier, currentSpan);
+		Span clientSpan = this.tracer
+				.nextSpan(TraceContextOrSamplingFlags.create(currentSpan.context()));
+		return this.handler.handleSend(this.injector, carrier, clientSpan);
+	}
+
+	private void addHeadersWithInput(HttpHeaders filteredHeaders,
+			HttpHeaders headersWithInput) {
+		for (Map.Entry<String, List<String>> entry : filteredHeaders.entrySet()) {
+			String key = entry.getKey();
+			List<String> value = entry.getValue();
+			headersWithInput.put(key, value);
+		}
 	}
 
 	@Override
