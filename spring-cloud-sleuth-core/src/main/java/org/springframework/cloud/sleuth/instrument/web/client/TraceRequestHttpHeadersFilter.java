@@ -66,6 +66,10 @@ final class TraceRequestHttpHeadersFilter extends AbstractHttpHeadersFilter {
 		HttpHeaders headersWithInput = new HttpHeaders();
 		headersWithInput.addAll(input);
 		addHeadersWithInput(carrier.filteredHeaders, headersWithInput);
+		if (headersWithInput.containsKey("b3") || headersWithInput.containsKey("B3")) {
+			headersWithInput.keySet().remove("b3");
+			headersWithInput.keySet().remove("B3");
+		}
 		return headersWithInput;
 	}
 
@@ -82,7 +86,9 @@ final class TraceRequestHttpHeadersFilter extends AbstractHttpHeadersFilter {
 		if (currentSpan == null) {
 			return this.handler.handleSend(this.injector, carrier);
 		}
-		return this.handler.handleSend(this.injector, carrier, currentSpan);
+		Span clientSpan = this.tracer
+				.nextSpan(TraceContextOrSamplingFlags.create(currentSpan.context()));
+		return this.handler.handleSend(this.injector, carrier, clientSpan);
 	}
 
 	private void addHeadersWithInput(HttpHeaders filteredHeaders,

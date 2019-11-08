@@ -75,6 +75,38 @@ public class TraceRequestHttpHeadersFilterTests {
 	}
 
 	@Test
+	public void should_override_span_tracing_headers_when_using_b3() {
+		HttpHeadersFilter filter = TraceRequestHttpHeadersFilter.create(this.httpTracing);
+		HttpHeaders httpHeaders = new HttpHeaders();
+		httpHeaders.set("X-Hello", "World");
+		httpHeaders.set("B3", "1111111111111111-1111111111111111");
+		MockServerHttpRequest request = MockServerHttpRequest.post("foo/bar")
+				.headers(httpHeaders).build();
+		MockServerWebExchange exchange = MockServerWebExchange.builder(request).build();
+
+		HttpHeaders filteredHeaders = filter.filter(requestHeaders(httpHeaders),
+				exchange);
+
+		// we want to continue the trace
+		BDDAssertions.then(filteredHeaders.get("X-B3-TraceId"))
+				.isEqualTo(Collections.singletonList("1111111111111111"));
+		// but we want to have a new span id
+		BDDAssertions.then(filteredHeaders.get("X-B3-SpanId"))
+				.isNotEqualTo(Collections.singletonList("1111111111111111"));
+		// we don't want to propagate b3
+		BDDAssertions.then(filteredHeaders.get("B3")).isNullOrEmpty();
+		BDDAssertions.then(filteredHeaders.get("X-Hello"))
+				.isEqualTo(Collections.singletonList("World"));
+		BDDAssertions.then(filteredHeaders.get("X-Hello-Request"))
+				.isEqualTo(Collections.singletonList("Request World"));
+		BDDAssertions.then(filteredHeaders.get("X-Auth-User")).hasSize(1);
+		BDDAssertions
+				.then((Object) exchange
+						.getAttribute(TraceRequestHttpHeadersFilter.SPAN_ATTRIBUTE))
+				.isNotNull();
+	}
+
+	@Test
 	public void should_set_tracing_headers() {
 		HttpHeadersFilter filter = TraceRequestHttpHeadersFilter.create(this.httpTracing);
 		HttpHeaders httpHeaders = new HttpHeaders();
