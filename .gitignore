@@ -22,3 +22,4 @@ _site/
 jmh-result.csv
 pom.xml.versionsBackup
 .sts4-cache
+_includes
