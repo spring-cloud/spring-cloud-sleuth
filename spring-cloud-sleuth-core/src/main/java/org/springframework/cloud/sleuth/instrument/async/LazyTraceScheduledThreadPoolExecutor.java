@@ -363,9 +363,7 @@ class LazyTraceScheduledThreadPoolExecutor extends ScheduledThreadPoolExecutor {
 	}
 
 	@Override
-	@Deprecated
 	public void finalize() {
-		super.finalize();
 	}
 
 	@Override
