@@ -42,6 +42,7 @@ public class LazyTraceScheduledThreadPoolExecutorTests {
 		new LazyTraceScheduledThreadPoolExecutor(10, beanFactory, executor).finalize();
 
 		BDDAssertions.then(wasCalled).isFalse();
+		BDDAssertions.then(executor.isShutdown()).isFalse();
 	}
 
 }
