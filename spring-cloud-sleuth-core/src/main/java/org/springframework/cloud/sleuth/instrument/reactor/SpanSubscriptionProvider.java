@@ -73,7 +73,17 @@ final class SpanSubscriptionProvider<T> implements Supplier<SpanSubscription<T>>
 
 	private Tracing tracing() {
 		if (this.tracing == null) {
-			this.tracing = this.beanFactory.getBean(Tracing.class);
+			try {
+				this.tracing = this.beanFactory.getBean(Tracing.class);
+			}
+			catch (Exception ex) {
+				if (log.isDebugEnabled()) {
+					log.debug(
+							"Exception occurred while trying to get the tracing bean. Will return a default instance",
+							ex);
+				}
+				return Tracing.newBuilder().build();
+			}
 		}
 		return this.tracing;
 	}
