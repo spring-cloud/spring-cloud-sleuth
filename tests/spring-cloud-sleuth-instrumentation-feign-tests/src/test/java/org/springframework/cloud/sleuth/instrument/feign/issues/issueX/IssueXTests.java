@@ -83,7 +83,7 @@ public class IssueXTests {
 		this.reporter.clear();
 	}
 
-	@Test // Failing
+	@Test // Passing
 	public void should_reuse_custom_feign_client() {
 		System.out.println("reuse test called");
 		String response = this.myNameRemote.get();
@@ -96,7 +96,7 @@ public class IssueXTests {
 		then(spans.get(0).tags().get("http.path")).isEqualTo("/");
 	}
 	
-	@Test // Failing
+	@Test // Passing
 	public void my_client_called() {
 		System.out.println("client called test");
 		this.myNameRemote.get();

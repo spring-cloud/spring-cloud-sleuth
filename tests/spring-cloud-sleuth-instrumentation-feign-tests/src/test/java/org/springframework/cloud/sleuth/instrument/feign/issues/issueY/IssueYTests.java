@@ -92,7 +92,7 @@ public class IssueYTests {
 		this.reporter.clear();
 	}
 
-	@Test // Failing
+	@Test // Passing
 	public void should_reuse_custom_feign_client() {
 		String response = this.myNameRemote.get();
 
@@ -113,7 +113,7 @@ public class IssueYTests {
 		then(this.myDelegateClient.wasCalled()).isTrue();
 	}
 	
-	@Test // Failing
+	@Test // Passing
 	public void span_captured() {
 		this.myNameRemote.get();
 		List<Span> spans = this.reporter.getSpans();
