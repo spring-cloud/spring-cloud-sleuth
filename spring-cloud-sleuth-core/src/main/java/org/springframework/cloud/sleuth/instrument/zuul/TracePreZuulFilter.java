@@ -83,30 +83,35 @@ public class TracePreZuulFilter extends ZuulFilter {
 		}
 		markRequestAsHandled(ctx);
 		Span newSpan = this.tracer.createSpan(span.getName(), span);
-		newSpan.tag(Span.SPAN_LOCAL_COMPONENT_TAG_NAME, ZUUL_COMPONENT);
-		this.spanInjector.inject(newSpan, new RequestContextTextMap(ctx));
-		this.httpTraceKeysInjector.addRequestTags(newSpan, URI.create(ctx.getRequest().getRequestURI()), ctx.getRequest().getMethod());
-		if (log.isDebugEnabled()) {
-			log.debug("New Zuul Span is " + newSpan + "");
-		}
-		if (log.isDebugEnabled()) {
-			log.debug("Setting attributes for TraceFilter to pick up later");
-		}
-		RequestContext.getCurrentContext().getRequest().setAttribute(TRACE_REQUEST_ATTR, this.tracer.getCurrentSpan());
-		RequestContext.getCurrentContext().getRequest().setAttribute(TRACE_CLOSE_SPAN_REQUEST_ATTR, true);
-		ZuulFilterResult result = super.runFilter();
-		if (log.isDebugEnabled()) {
-			log.debug("Result of Zuul filter is [" + result.getStatus() + "]");
-		}
-		if (ExecutionStatus.SUCCESS != result.getStatus()) {
+		try {
+			newSpan.tag(Span.SPAN_LOCAL_COMPONENT_TAG_NAME, ZUUL_COMPONENT);
+			this.spanInjector.inject(newSpan, new RequestContextTextMap(ctx));
+			this.httpTraceKeysInjector.addRequestTags(newSpan, URI.create(ctx.getRequest().getRequestURI()), ctx.getRequest().getMethod());
 			if (log.isDebugEnabled()) {
-				log.debug("The result of Zuul filter execution was not successful thus "
-						+ "will close the current span " + newSpan);
+				log.debug("New Zuul Span is " + newSpan + "");
 			}
-			this.errorParser.parseErrorTags(newSpan, result.getException());
+			if (log.isDebugEnabled()) {
+				log.debug("Setting attributes for TraceFilter to pick up later");
+			}
+			RequestContext.getCurrentContext().getRequest().setAttribute(TRACE_REQUEST_ATTR, this.tracer.getCurrentSpan());
+			RequestContext.getCurrentContext().getRequest().setAttribute(TRACE_CLOSE_SPAN_REQUEST_ATTR, true);
+			ZuulFilterResult result = super.runFilter();
+			if (log.isDebugEnabled()) {
+				log.debug("Result of Zuul filter is [" + result.getStatus() + "]");
+			}
+			if (ExecutionStatus.SUCCESS != result.getStatus()) {
+				if (log.isDebugEnabled()) {
+					log.debug("The result of Zuul filter execution was not successful thus "
+							+ "will close the current span " + newSpan);
+				}
+				this.errorParser.parseErrorTags(newSpan, result.getException());
+				this.tracer.close(newSpan);
+			}
+			return result;
+		} catch (Exception e) {
 			this.tracer.close(newSpan);
+			throw e;
 		}
-		return result;
 	}
 
 	// TraceFilter will not create the "fallback" span

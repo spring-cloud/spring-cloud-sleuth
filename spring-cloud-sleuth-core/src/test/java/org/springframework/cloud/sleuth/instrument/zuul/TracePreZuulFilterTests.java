@@ -16,15 +16,19 @@
 
 package org.springframework.cloud.sleuth.instrument.zuul;
 
+import java.net.URISyntaxException;
 import java.util.Random;
 import java.util.concurrent.atomic.AtomicReference;
 import javax.servlet.http.HttpServletRequest;
 
+import com.netflix.zuul.ZuulFilterResult;
 import com.netflix.zuul.context.RequestContext;
 import com.netflix.zuul.monitoring.MonitoringHelper;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
 import org.mockito.BDDMockito;
 import org.mockito.Mock;
@@ -46,12 +50,12 @@ import static org.springframework.cloud.sleuth.assertions.SleuthAssertions.then;
 
 /**
  * @author Dave Syer
- *
  */
 @RunWith(MockitoJUnitRunner.class)
 public class TracePreZuulFilterTests {
 
-	@Mock HttpServletRequest httpServletRequest;
+	@Mock
+	HttpServletRequest httpServletRequest;
 
 	private DefaultTracer tracer = new DefaultTracer(new AlwaysSampler(), new Random(),
 			new DefaultSpanNamer(), new NoOpSpanLogger(), new NoOpSpanReporter(), new TraceKeys());
@@ -121,6 +125,31 @@ public class TracePreZuulFilterTests {
 		then(span.get()).hasATag("http.method", "GET");
 		then(span.get()).hasATag("error", "foo");
 		then(this.tracer.getCurrentSpan()).isEqualTo(startedSpan);
+	}
+
+	@Test
+	public void shouldCloseSpaneWhenInjectSpanAndExceptionThrown() throws Exception {
+		BDDMockito.given(this.httpServletRequest.getRequestURI()).willReturn("https://foo.bar]]>><");
+		Span startedSpan = this.tracer.createSpan("http:start");
+		final AtomicReference<Span> span = new AtomicReference<>();
+		boolean exceptionThrown = false;
+		try {
+			new TracePreZuulFilter(this.tracer, new ZipkinHttpSpanInjector(),
+					new HttpTraceKeysInjector(this.tracer, new TraceKeys()), new ExceptionMessageErrorParser()) {
+				@Override
+				public ZuulFilterResult runFilter() {
+					span.set(TracePreZuulFilterTests.this.tracer.getCurrentSpan());
+					return super.runFilter();
+				}
+			}.runFilter();
+		} catch (Exception e) {
+			then(e).isInstanceOf(IllegalArgumentException.class);
+			then(startedSpan).isEqualTo(span.get());
+			then(span.get().tags()).isEmpty();
+			then(this.tracer.getCurrentSpan()).isEqualTo(startedSpan);
+			exceptionThrown = true;
+		}
+		then(exceptionThrown).isTrue();
 	}
 
 	@Test
