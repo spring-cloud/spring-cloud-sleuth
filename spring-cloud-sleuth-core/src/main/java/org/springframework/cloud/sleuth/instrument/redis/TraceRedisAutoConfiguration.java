@@ -92,6 +92,7 @@ class TraceLettuceClientResourcesBeanPostProcessor implements BeanPostProcessor 
 							"Lettuce ClientResources bean is auto-configured to enable tracing.");
 				}
 				BraveTracing lettuceTracing = BraveTracing.builder().tracing(this.tracing)
+						.excludeCommandArgsFromSpanTags()
 						.serviceName(traceRedisProperties.getRemoteServiceName()).build();
 				return cr.mutate().tracing(lettuceTracing).build();
 			}
