@@ -152,7 +152,9 @@ public class TraceAutoConfiguration {
 	Propagation.Factory sleuthPropagation(SleuthProperties sleuthProperties) {
 		if (sleuthProperties.getBaggageKeys().isEmpty()
 				&& sleuthProperties.getPropagationKeys().isEmpty()
-				&& extraFieldCustomizers.isEmpty()) {
+				&& extraFieldCustomizers.isEmpty()
+				&& this.extraFieldPropagationFactoryBuilder == null
+				&& sleuthProperties.getLocalKeys().isEmpty()) {
 			return B3Propagation.FACTORY;
 		}
 		ExtraFieldPropagation.FactoryBuilder factoryBuilder;
