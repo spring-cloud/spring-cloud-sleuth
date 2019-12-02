@@ -23,14 +23,15 @@ import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import org.assertj.core.api.BDDAssertions;
 import org.junit.Test;
+import zipkin2.reporter.InMemoryReporterMetrics;
+import zipkin2.reporter.ReporterMetrics;
+import zipkin2.reporter.metrics.micrometer.MicrometerReporterMetrics;
+
 import org.springframework.boot.autoconfigure.AutoConfigurations;
 import org.springframework.boot.test.context.FilteredClassLoader;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import zipkin2.reporter.InMemoryReporterMetrics;
-import zipkin2.reporter.ReporterMetrics;
-import zipkin2.reporter.metrics.micrometer.MicrometerReporterMetrics;
 
 public class TraceAutoConfigurationTests {
 
