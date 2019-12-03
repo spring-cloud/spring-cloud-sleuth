@@ -16,6 +16,9 @@
 
 package org.springframework.cloud.sleuth.autoconfig;
 
+import brave.propagation.B3Propagation;
+import brave.propagation.ExtraFieldPropagation;
+import brave.propagation.Propagation;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import org.assertj.core.api.BDDAssertions;
@@ -65,6 +68,31 @@ public class TraceAutoConfigurationTests {
 				});
 	}
 
+	@Test
+	public void should_use_B3Propagation_factory_if_no_have_any_config() {
+		this.contextRunner.run((context -> {
+			final Propagation.Factory bean = context.getBean(Propagation.Factory.class);
+			BDDAssertions.then(bean).isInstanceOf(Propagation.Factory.class);
+		}));
+	}
+
+	@Test
+	public void should_use_local_keys_from_properties() {
+		this.contextRunner.withUserConfiguration(WithLocalKeys.class).run((context -> {
+			final Propagation.Factory bean = context.getBean(Propagation.Factory.class);
+			BDDAssertions.then(bean).isInstanceOf(ExtraFieldPropagation.Factory.class);
+		}));
+	}
+
+	@Test
+	public void should_use_extraFieldPropagationFactoryBuilder_bean() {
+		this.contextRunner.withUserConfiguration(WithExtraFieldPropagationFactoryBuilderBean.class)
+				.run((context -> {
+					final Propagation.Factory bean = context.getBean(Propagation.Factory.class);
+					BDDAssertions.then(bean).isInstanceOf(ExtraFieldPropagation.Factory.class);
+				}));
+	}
+
 	@Configuration
 	static class WithMeterRegistry {
 
@@ -73,6 +101,27 @@ public class TraceAutoConfigurationTests {
 			return new SimpleMeterRegistry();
 		}
 
+	}
+
+	@Configuration
+	static class WithLocalKeys {
+
+		@Bean
+		SleuthProperties sleuthProperties() {
+			final SleuthProperties sleuthProperties = new SleuthProperties();
+			sleuthProperties.getLocalKeys().add("test-key");
+			return sleuthProperties;
+		}
+	}
+
+	@Configuration
+	static class WithExtraFieldPropagationFactoryBuilderBean {
+
+		@Bean
+		ExtraFieldPropagation.FactoryBuilder extraFieldPropagationFactoryBuilderBean() {
+			return ExtraFieldPropagation
+					.newFactoryBuilder(B3Propagation.FACTORY);
+		}
 	}
 
 }
