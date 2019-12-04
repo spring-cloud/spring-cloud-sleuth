@@ -86,10 +86,13 @@ public class TraceAutoConfigurationTests {
 
 	@Test
 	public void should_use_extraFieldPropagationFactoryBuilder_bean() {
-		this.contextRunner.withUserConfiguration(WithExtraFieldPropagationFactoryBuilderBean.class)
+		this.contextRunner
+				.withUserConfiguration(WithExtraFieldPropagationFactoryBuilderBean.class)
 				.run((context -> {
-					final Propagation.Factory bean = context.getBean(Propagation.Factory.class);
-					BDDAssertions.then(bean).isInstanceOf(ExtraFieldPropagation.Factory.class);
+					final Propagation.Factory bean = context
+							.getBean(Propagation.Factory.class);
+					BDDAssertions.then(bean)
+							.isInstanceOf(ExtraFieldPropagation.Factory.class);
 				}));
 	}
 
@@ -112,6 +115,7 @@ public class TraceAutoConfigurationTests {
 			sleuthProperties.getLocalKeys().add("test-key");
 			return sleuthProperties;
 		}
+
 	}
 
 	@Configuration
@@ -119,9 +123,9 @@ public class TraceAutoConfigurationTests {
 
 		@Bean
 		ExtraFieldPropagation.FactoryBuilder extraFieldPropagationFactoryBuilderBean() {
-			return ExtraFieldPropagation
-					.newFactoryBuilder(B3Propagation.FACTORY);
+			return ExtraFieldPropagation.newFactoryBuilder(B3Propagation.FACTORY);
 		}
+
 	}
 
 }
