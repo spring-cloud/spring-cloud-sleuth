@@ -16,6 +16,7 @@ org.springframework.cloud.sleuth.instrument.async.AsyncDefaultAutoConfiguration,
 org.springframework.cloud.sleuth.instrument.scheduling.TraceSchedulingAutoConfiguration,\
 org.springframework.cloud.sleuth.instrument.web.client.feign.TraceFeignClientAutoConfiguration,\
 org.springframework.cloud.sleuth.instrument.hystrix.SleuthHystrixAutoConfiguration,\
+org.springframework.cloud.sleuth.instrument.circuitbreaker.SleuthCircuitBreakerAutoConfiguration,\
 org.springframework.cloud.sleuth.instrument.rxjava.RxJavaAutoConfiguration,\
 org.springframework.cloud.sleuth.instrument.reactor.TraceReactorAutoConfiguration,\
 org.springframework.cloud.sleuth.instrument.web.TraceWebFluxAutoConfiguration,\

@@ -21,29 +21,36 @@ import java.util.concurrent.atomic.AtomicReference;
 import brave.ScopedSpan;
 import brave.Span;
 import brave.Tracer;
-import brave.Tracing;
-import brave.propagation.StrictScopeDecorator;
-import brave.propagation.ThreadLocalCurrentTraceContext;
 import brave.sampler.Sampler;
 import org.assertj.core.api.BDDAssertions;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.runner.RunWith;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.cloud.circuitbreaker.resilience4j.Resilience4JCircuitBreakerFactory;
+import org.springframework.cloud.client.circuitbreaker.CircuitBreakerFactory;
 import org.springframework.cloud.sleuth.util.ArrayListSpanReporter;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.test.context.junit4.SpringRunner;
 
 import static org.assertj.core.api.BDDAssertions.then;
 
-public class CircuitBreakerTests {
+@RunWith(SpringRunner.class)
+@SpringBootTest(classes = CircuitBreakerIntegrationTests.Config.class)
+public class CircuitBreakerIntegrationTests {
 
-	ArrayListSpanReporter reporter = new ArrayListSpanReporter();
+	@Autowired
+	ArrayListSpanReporter reporter;
 
-	Tracing tracing = Tracing.newBuilder()
-			.currentTraceContext(ThreadLocalCurrentTraceContext.newBuilder()
-					.addScopeDecorator(StrictScopeDecorator.create()).build())
-			.spanReporter(this.reporter).sampler(Sampler.ALWAYS_SAMPLE).build();
+	@Autowired
+	Tracer tracer;
 
-	Tracer tracer = this.tracing.tracer();
+	@Autowired
+	CircuitBreakerFactory factory;
 
 	@Before
 	public void setup() {
@@ -58,8 +65,7 @@ public class CircuitBreakerTests {
 		try {
 			scopedSpan = tracer.startScopedSpan("start");
 			// when
-			Span span = new Resilience4JCircuitBreakerFactory().create("name")
-					.run(new TraceSupplier<>(tracer, tracer::currentSpan));
+			Span span = this.factory.create("name").run(tracer::currentSpan);
 
 			then(span).isNotNull();
 			then(scopedSpan.context().traceIdString())
@@ -80,15 +86,13 @@ public class CircuitBreakerTests {
 		try {
 			scopedSpan = tracer.startScopedSpan("start");
 			// when
-			BDDAssertions.thenThrownBy(() -> new Resilience4JCircuitBreakerFactory()
-					.create("name").run(new TraceSupplier<>(tracer, () -> {
-						first.set(tracer.currentSpan());
-						throw new IllegalStateException("boom");
-					}), new TraceFunction<>(tracer, throwable -> {
-						second.set(tracer.currentSpan());
-						throw new IllegalStateException("boom2");
-					}))).isInstanceOf(IllegalStateException.class)
-					.hasMessageContaining("boom2");
+			BDDAssertions.thenThrownBy(() -> this.factory.create("name").run(() -> {
+				first.set(tracer.currentSpan());
+				throw new IllegalStateException("boom");
+			}, throwable -> {
+				second.set(tracer.currentSpan());
+				throw new IllegalStateException("boom2");
+			})).isInstanceOf(IllegalStateException.class).hasMessageContaining("boom2");
 
 			then(this.reporter.getSpans()).hasSize(2);
 			then(scopedSpan.context().traceIdString())
@@ -98,13 +102,38 @@ public class CircuitBreakerTests {
 			then(first.get().context().spanIdString())
 					.isNotEqualTo(second.get().context().spanIdString());
 
-			zipkin2.Span reportedSpan = this.reporter.getSpans().get(1);
-			then(reportedSpan.name()).contains("circuitbreakertests");
+			zipkin2.Span reportedSpan = this.reporter.getSpans().get(0);
+			then(reportedSpan.name()).contains("circuitbreakerintegrationtests");
+			then(reportedSpan.tags().get("error")).contains("boom");
+
+			reportedSpan = this.reporter.getSpans().get(1);
+			then(reportedSpan.name()).contains("circuitbreakerintegrationtests");
 			then(reportedSpan.tags().get("error")).contains("boom2");
 		}
 		finally {
 			scopedSpan.finish();
 		}
+	}
+
+	@Configuration
+	@EnableAutoConfiguration
+	static class Config {
+
+		@Bean
+		ArrayListSpanReporter arrayListSpanReporter() {
+			return new ArrayListSpanReporter();
+		}
+
+		@Bean
+		Resilience4JCircuitBreakerFactory resilience4JCircuitBreakerFactory() {
+			return new Resilience4JCircuitBreakerFactory();
+		}
+
+		@Bean
+		Sampler sampler() {
+			return Sampler.ALWAYS_SAMPLE;
+		}
+
 	}
 
 }
