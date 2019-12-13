@@ -172,18 +172,19 @@ $(addBlockSwitches);
 <ul class="sectlevel2">
 <li><a href="#opentracing">15.1. OpenTracing</a></li>
 <li><a href="#runnable-and-callable">15.2. Runnable and Callable</a></li>
-<li><a href="#hystrix">15.3. Hystrix</a></li>
-<li><a href="#rxjava">15.4. RxJava</a></li>
-<li><a href="#http-integration">15.5. HTTP integration</a></li>
-<li><a href="#http-client-integration">15.6. HTTP Client Integration</a></li>
-<li><a href="#feign">15.7. Feign</a></li>
-<li><a href="#grpc">15.8. gRPC</a></li>
-<li><a href="#asynchronous-communication">15.9. Asynchronous Communication</a></li>
-<li><a href="#messaging-2">15.10. Messaging</a></li>
-<li><a href="#zuul">15.11. Zuul</a></li>
-<li><a href="#redis">15.12. Redis</a></li>
-<li><a href="#quartz">15.13. Quartz</a></li>
-<li><a href="#project-reactor">15.14. Project Reactor</a></li>
+<li><a href="#spring-cloud-circuitbreaker">15.3. Spring Cloud CircuitBreaker</a></li>
+<li><a href="#hystrix">15.4. Hystrix</a></li>
+<li><a href="#rxjava">15.5. RxJava</a></li>
+<li><a href="#http-integration">15.6. HTTP integration</a></li>
+<li><a href="#http-client-integration">15.7. HTTP Client Integration</a></li>
+<li><a href="#feign">15.8. Feign</a></li>
+<li><a href="#grpc">15.9. gRPC</a></li>
+<li><a href="#asynchronous-communication">15.10. Asynchronous Communication</a></li>
+<li><a href="#messaging-2">15.11. Messaging</a></li>
+<li><a href="#zuul">15.12. Zuul</a></li>
+<li><a href="#redis">15.13. Redis</a></li>
+<li><a href="#quartz">15.14. Quartz</a></li>
+<li><a href="#project-reactor">15.15. Project Reactor</a></li>
 </ul>
 </li>
 <li><a href="#configuration-properties">16. Configuration properties</a></li>
@@ -2933,9 +2934,15 @@ Callable&lt;String&gt; traceCallableFromTracer = this.tracing.currentTraceContex
 </div>
 </div>
 <div class="sect2">
-<h3 id="hystrix"><a class="anchor" href="#hystrix"></a><a class="link" href="#hystrix">15.3. Hystrix</a></h3>
+<h3 id="spring-cloud-circuitbreaker"><a class="anchor" href="#spring-cloud-circuitbreaker"></a><a class="link" href="#spring-cloud-circuitbreaker">15.3. Spring Cloud CircuitBreaker</a></h3>
+<div class="paragraph">
+<p>If you have Spring Cloud CircuitBreaker on the classpath, we will wrap the passed command <code>Supplier</code> and the fallback <code>Function</code> in its trace representations. In order to disable this instrumentation set <code>spring.sleuth.circuitbreaker.enabled</code> to <code>false</code>.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="hystrix"><a class="anchor" href="#hystrix"></a><a class="link" href="#hystrix">15.4. Hystrix</a></h3>
 <div class="sect3">
-<h4 id="custom-concurrency-strategy"><a class="anchor" href="#custom-concurrency-strategy"></a><a class="link" href="#custom-concurrency-strategy">15.3.1. Custom Concurrency Strategy</a></h4>
+<h4 id="custom-concurrency-strategy"><a class="anchor" href="#custom-concurrency-strategy"></a><a class="link" href="#custom-concurrency-strategy">15.4.1. Custom Concurrency Strategy</a></h4>
 <div class="paragraph">
 <p>We register a custom <a href="https://github.com/Netflix/Hystrix/wiki/Plugins#concurrencystrategy"><code>HystrixConcurrencyStrategy</code></a> called <code>TraceCallable</code> that wraps all <code>Callable</code> instances in their Sleuth representative.
 The strategy either starts or continues a span, depending on whether tracing was already going on before the Hystrix command was called.
@@ -2944,7 +2951,7 @@ To disable the custom Hystrix Concurrency Strategy, set the <code>spring.sleuth.
 </div>
 </div>
 <div class="sect3">
-<h4 id="manual-command-setting"><a class="anchor" href="#manual-command-setting"></a><a class="link" href="#manual-command-setting">15.3.2. Manual Command setting</a></h4>
+<h4 id="manual-command-setting"><a class="anchor" href="#manual-command-setting"></a><a class="link" href="#manual-command-setting">15.4.2. Manual Command setting</a></h4>
 <div class="paragraph">
 <p>Assume that you have the following <code>HystrixCommand</code>:</p>
 </div>
@@ -2975,7 +2982,7 @@ To disable the custom Hystrix Concurrency Strategy, set the <code>spring.sleuth.
 </div>
 </div>
 <div class="sect2">
-<h3 id="rxjava"><a class="anchor" href="#rxjava"></a><a class="link" href="#rxjava">15.4. RxJava</a></h3>
+<h3 id="rxjava"><a class="anchor" href="#rxjava"></a><a class="link" href="#rxjava">15.5. RxJava</a></h3>
 <div class="paragraph">
 <p>We registering a custom <a href="https://github.com/ReactiveX/RxJava/wiki/Plugins#rxjavaschedulershook"><code>RxJavaSchedulersHook</code></a> that wraps all <code>Action0</code> instances in their Sleuth representative, which is called <code>TraceAction</code>.
 The hook either starts or continues a span, depending on whether tracing was already going on before the Action was scheduled.
@@ -3000,12 +3007,12 @@ the Reactor support.
 </div>
 </div>
 <div class="sect2">
-<h3 id="http-integration"><a class="anchor" href="#http-integration"></a><a class="link" href="#http-integration">15.5. HTTP integration</a></h3>
+<h3 id="http-integration"><a class="anchor" href="#http-integration"></a><a class="link" href="#http-integration">15.6. HTTP integration</a></h3>
 <div class="paragraph">
 <p>Features from this section can be disabled by setting the <code>spring.sleuth.web.enabled</code> property with value equal to <code>false</code>.</p>
 </div>
 <div class="sect3">
-<h4 id="http-filter"><a class="anchor" href="#http-filter"></a><a class="link" href="#http-filter">15.5.1. HTTP Filter</a></h4>
+<h4 id="http-filter"><a class="anchor" href="#http-filter"></a><a class="link" href="#http-filter">15.6.1. HTTP Filter</a></h4>
 <div class="paragraph">
 <p>Through the <code>TracingFilter</code>, all sampled incoming requests result in creation of a Span.
 That Span&#8217;s name is <code>http:</code> + the path to which the request was sent.
@@ -3029,7 +3036,7 @@ to <code>true</code>.</p>
 </div>
 </div>
 <div class="sect3">
-<h4 id="handlerinterceptor"><a class="anchor" href="#handlerinterceptor"></a><a class="link" href="#handlerinterceptor">15.5.2. HandlerInterceptor</a></h4>
+<h4 id="handlerinterceptor"><a class="anchor" href="#handlerinterceptor"></a><a class="link" href="#handlerinterceptor">15.6.2. HandlerInterceptor</a></h4>
 <div class="paragraph">
 <p>Since we want the span names to be precise, we use a <code>TraceHandlerInterceptor</code> that either wraps an existing <code>HandlerInterceptor</code> or is added directly to the list of existing <code>HandlerInterceptors</code>.
 The <code>TraceHandlerInterceptor</code> adds a special request attribute to the given <code>HttpServletRequest</code>.
@@ -3039,13 +3046,13 @@ In that case, please file an issue in Spring Cloud Sleuth.</p>
 </div>
 </div>
 <div class="sect3">
-<h4 id="async-servlet-support"><a class="anchor" href="#async-servlet-support"></a><a class="link" href="#async-servlet-support">15.5.3. Async Servlet support</a></h4>
+<h4 id="async-servlet-support"><a class="anchor" href="#async-servlet-support"></a><a class="link" href="#async-servlet-support">15.6.3. Async Servlet support</a></h4>
 <div class="paragraph">
 <p>If your controller returns a <code>Callable</code> or a <code>WebAsyncTask</code>, Spring Cloud Sleuth continues the existing span instead of creating a new one.</p>
 </div>
 </div>
 <div class="sect3">
-<h4 id="webflux-support"><a class="anchor" href="#webflux-support"></a><a class="link" href="#webflux-support">15.5.4. WebFlux support</a></h4>
+<h4 id="webflux-support"><a class="anchor" href="#webflux-support"></a><a class="link" href="#webflux-support">15.6.4. WebFlux support</a></h4>
 <div class="paragraph">
 <p>Through <code>TraceWebFilter</code>, all sampled incoming requests result in creation of a Span.
 That Span&#8217;s name is <code>http:</code> + the path to which the request was sent.
@@ -3060,7 +3067,7 @@ If you want to reuse Sleuth&#8217;s default skip patterns and append your own, p
 </div>
 </div>
 <div class="sect3">
-<h4 id="dubbo-rpc-support"><a class="anchor" href="#dubbo-rpc-support"></a><a class="link" href="#dubbo-rpc-support">15.5.5. Dubbo RPC support</a></h4>
+<h4 id="dubbo-rpc-support"><a class="anchor" href="#dubbo-rpc-support"></a><a class="link" href="#dubbo-rpc-support">15.6.5. Dubbo RPC support</a></h4>
 <div class="paragraph">
 <p>Via the integration with Brave, Spring Cloud Sleuth supports <a href="https://dubbo.apache.org/">Dubbo</a>.
 It&#8217;s enough to add the <code>brave-instrumentation-dubbo</code> dependency:</p>
@@ -3089,9 +3096,9 @@ An example of Spring Cloud Sleuth and Dubbo can be found <a href="https://github
 </div>
 </div>
 <div class="sect2">
-<h3 id="http-client-integration"><a class="anchor" href="#http-client-integration"></a><a class="link" href="#http-client-integration">15.6. HTTP Client Integration</a></h3>
+<h3 id="http-client-integration"><a class="anchor" href="#http-client-integration"></a><a class="link" href="#http-client-integration">15.7. HTTP Client Integration</a></h3>
 <div class="sect3">
-<h4 id="synchronous-rest-template"><a class="anchor" href="#synchronous-rest-template"></a><a class="link" href="#synchronous-rest-template">15.6.1. Synchronous Rest Template</a></h4>
+<h4 id="synchronous-rest-template"><a class="anchor" href="#synchronous-rest-template"></a><a class="link" href="#synchronous-rest-template">15.7.1. Synchronous Rest Template</a></h4>
 <div class="paragraph">
 <p>We inject a <code>RestTemplate</code> interceptor to ensure that all the tracing information is passed to the requests.
 Each time a call is made, a new Span is created.
@@ -3113,7 +3120,7 @@ If you create a <code>RestTemplate</code> instance with a <code>new</code> keywo
 </div>
 </div>
 <div class="sect3">
-<h4 id="asynchronous-rest-template"><a class="anchor" href="#asynchronous-rest-template"></a><a class="link" href="#asynchronous-rest-template">15.6.2. Asynchronous Rest Template</a></h4>
+<h4 id="asynchronous-rest-template"><a class="anchor" href="#asynchronous-rest-template"></a><a class="link" href="#asynchronous-rest-template">15.7.2. Asynchronous Rest Template</a></h4>
 <div class="admonitionblock important">
 <table>
 <tr>
@@ -3170,7 +3177,7 @@ static class Config {
 </div>
 </div>
 <div class="sect3">
-<h4 id="webclient"><a class="anchor" href="#webclient"></a><a class="link" href="#webclient">15.6.3. <code>WebClient</code></a></h4>
+<h4 id="webclient"><a class="anchor" href="#webclient"></a><a class="link" href="#webclient">15.7.3. <code>WebClient</code></a></h4>
 <div class="paragraph">
 <p>We inject a <code>ExchangeFilterFunction</code> implementation that creates a span and, through on-success and on-error callbacks, takes care of closing client-side spans.</p>
 </div>
@@ -3192,7 +3199,7 @@ If you create a <code>WebClient</code> instance with a <code>new</code> keyword,
 </div>
 </div>
 <div class="sect3">
-<h4 id="traverson"><a class="anchor" href="#traverson"></a><a class="link" href="#traverson">15.6.4. Traverson</a></h4>
+<h4 id="traverson"><a class="anchor" href="#traverson"></a><a class="link" href="#traverson">15.7.4. Traverson</a></h4>
 <div class="paragraph">
 <p>If you use the <a href="https://docs.spring.io/spring-hateoas/docs/current/reference/html/#client.traverson">Traverson</a> library, you can inject a <code>RestTemplate</code> as a bean into your Traverson object.
 Since <code>RestTemplate</code> is already intercepted, you get full support for tracing in your client. The following pseudo code
@@ -3209,7 +3216,7 @@ Traverson traverson = new Traverson(URI.create("https://some/address"),
 </div>
 </div>
 <div class="sect3">
-<h4 id="apache-httpclientbuilder-and-httpasyncclientbuilder"><a class="anchor" href="#apache-httpclientbuilder-and-httpasyncclientbuilder"></a><a class="link" href="#apache-httpclientbuilder-and-httpasyncclientbuilder">15.6.5. Apache <code>HttpClientBuilder</code> and <code>HttpAsyncClientBuilder</code></a></h4>
+<h4 id="apache-httpclientbuilder-and-httpasyncclientbuilder"><a class="anchor" href="#apache-httpclientbuilder-and-httpasyncclientbuilder"></a><a class="link" href="#apache-httpclientbuilder-and-httpasyncclientbuilder">15.7.5. Apache <code>HttpClientBuilder</code> and <code>HttpAsyncClientBuilder</code></a></h4>
 <div class="paragraph">
 <p>We instrument the <code>HttpClientBuilder</code> and <code>HttpAsyncClientBuilder</code> so that
 tracing context gets injected to the sent requests.</p>
@@ -3219,7 +3226,7 @@ tracing context gets injected to the sent requests.</p>
 </div>
 </div>
 <div class="sect3">
-<h4 id="netty-httpclient"><a class="anchor" href="#netty-httpclient"></a><a class="link" href="#netty-httpclient">15.6.6. Netty <code>HttpClient</code></a></h4>
+<h4 id="netty-httpclient"><a class="anchor" href="#netty-httpclient"></a><a class="link" href="#netty-httpclient">15.7.6. Netty <code>HttpClient</code></a></h4>
 <div class="paragraph">
 <p>We instrument the Netty&#8217;s <code>HttpClient</code>.</p>
 </div>
@@ -3241,7 +3248,7 @@ If you create a <code>HttpClient</code> instance with a <code>new</code> keyword
 </div>
 </div>
 <div class="sect3">
-<h4 id="userinforesttemplatecustomizer"><a class="anchor" href="#userinforesttemplatecustomizer"></a><a class="link" href="#userinforesttemplatecustomizer">15.6.7. <code>UserInfoRestTemplateCustomizer</code></a></h4>
+<h4 id="userinforesttemplatecustomizer"><a class="anchor" href="#userinforesttemplatecustomizer"></a><a class="link" href="#userinforesttemplatecustomizer">15.7.7. <code>UserInfoRestTemplateCustomizer</code></a></h4>
 <div class="paragraph">
 <p>We instrument the Spring Security&#8217;s <code>UserInfoRestTemplateCustomizer</code>.</p>
 </div>
@@ -3251,7 +3258,7 @@ If you create a <code>HttpClient</code> instance with a <code>new</code> keyword
 </div>
 </div>
 <div class="sect2">
-<h3 id="feign"><a class="anchor" href="#feign"></a><a class="link" href="#feign">15.7. Feign</a></h3>
+<h3 id="feign"><a class="anchor" href="#feign"></a><a class="link" href="#feign">15.8. Feign</a></h3>
 <div class="paragraph">
 <p>By default, Spring Cloud Sleuth provides integration with Feign through <code>TraceFeignClientAutoConfiguration</code>.
 You can disable it entirely by setting <code>spring.sleuth.feign.enabled</code> to <code>false</code>.
@@ -3265,12 +3272,12 @@ However, all the default instrumentation is still there.</p>
 </div>
 </div>
 <div class="sect2">
-<h3 id="grpc"><a class="anchor" href="#grpc"></a><a class="link" href="#grpc">15.8. gRPC</a></h3>
+<h3 id="grpc"><a class="anchor" href="#grpc"></a><a class="link" href="#grpc">15.9. gRPC</a></h3>
 <div class="paragraph">
 <p>Spring Cloud Sleuth provides instrumentation for <a href="https://grpc.io/">gRPC</a> through <code>TraceGrpcAutoConfiguration</code>. You can disable it entirely by setting <code>spring.sleuth.grpc.enabled</code> to <code>false</code>.</p>
 </div>
 <div class="sect3">
-<h4 id="variant-1"><a class="anchor" href="#variant-1"></a><a class="link" href="#variant-1">15.8.1. Variant 1</a></h4>
+<h4 id="variant-1"><a class="anchor" href="#variant-1"></a><a class="link" href="#variant-1">15.9.1. Variant 1</a></h4>
 <div class="sect4">
 <h5 id="dependencies"><a class="anchor" href="#dependencies"></a><a class="link" href="#dependencies">Dependencies</a></h5>
 <div class="admonitionblock important">
@@ -3339,16 +3346,16 @@ Spring Cloud Sleuth provides a <code>SpringAwareManagedChannelBuilder</code> tha
 </div>
 </div>
 <div class="sect3">
-<h4 id="variant-2"><a class="anchor" href="#variant-2"></a><a class="link" href="#variant-2">15.8.2. Variant 2</a></h4>
+<h4 id="variant-2"><a class="anchor" href="#variant-2"></a><a class="link" href="#variant-2">15.9.2. Variant 2</a></h4>
 <div class="paragraph">
 <p><a href="https://github.com/yidongnan/grpc-spring-boot-starter">Grpc Spring Boot Starter</a> automatically detects the presence of Spring Cloud Sleuth and brave&#8217;s instrumentation for gRPC and registers the necessary client and/or server tooling.</p>
 </div>
 </div>
 </div>
 <div class="sect2">
-<h3 id="asynchronous-communication"><a class="anchor" href="#asynchronous-communication"></a><a class="link" href="#asynchronous-communication">15.9. Asynchronous Communication</a></h3>
+<h3 id="asynchronous-communication"><a class="anchor" href="#asynchronous-communication"></a><a class="link" href="#asynchronous-communication">15.10. Asynchronous Communication</a></h3>
 <div class="sect3">
-<h4 id="async-annotated-methods"><a class="anchor" href="#async-annotated-methods"></a><a class="link" href="#async-annotated-methods">15.9.1. <code>@Async</code> Annotated methods</a></h4>
+<h4 id="async-annotated-methods"><a class="anchor" href="#async-annotated-methods"></a><a class="link" href="#async-annotated-methods">15.10.1. <code>@Async</code> Annotated methods</a></h4>
 <div class="paragraph">
 <p>In Spring Cloud Sleuth, we instrument async-related components so that the tracing information is passed between threads.
 You can disable this behavior by setting the value of <code>spring.sleuth.async.enabled</code> to <code>false</code>.</p>
@@ -3371,7 +3378,7 @@ You can disable this behavior by setting the value of <code>spring.sleuth.async.
 </div>
 </div>
 <div class="sect3">
-<h4 id="scheduled-annotated-methods"><a class="anchor" href="#scheduled-annotated-methods"></a><a class="link" href="#scheduled-annotated-methods">15.9.2. <code>@Scheduled</code> Annotated Methods</a></h4>
+<h4 id="scheduled-annotated-methods"><a class="anchor" href="#scheduled-annotated-methods"></a><a class="link" href="#scheduled-annotated-methods">15.10.2. <code>@Scheduled</code> Annotated Methods</a></h4>
 <div class="paragraph">
 <p>In Spring Cloud Sleuth, we instrument scheduled method execution so that the tracing information is passed between threads.
 You can disable this behavior by setting the value of <code>spring.sleuth.scheduled.enabled</code> to <code>false</code>.</p>
@@ -3396,7 +3403,7 @@ This behavior may be annoying. That&#8217;s why, by default, <code>spring.sleuth
 </div>
 </div>
 <div class="sect3">
-<h4 id="executor-executorservice-and-scheduledexecutorservice"><a class="anchor" href="#executor-executorservice-and-scheduledexecutorservice"></a><a class="link" href="#executor-executorservice-and-scheduledexecutorservice">15.9.3. Executor, ExecutorService, and ScheduledExecutorService</a></h4>
+<h4 id="executor-executorservice-and-scheduledexecutorservice"><a class="anchor" href="#executor-executorservice-and-scheduledexecutorservice"></a><a class="link" href="#executor-executorservice-and-scheduledexecutorservice">15.10.3. Executor, ExecutorService, and ScheduledExecutorService</a></h4>
 <div class="paragraph">
 <p>We provide <code>LazyTraceExecutor</code>, <code>TraceableExecutorService</code>, and <code>TraceableScheduledExecutorService</code>. Those implementations create spans each time a new task is submitted, invoked, or scheduled.</p>
 </div>
@@ -3483,12 +3490,12 @@ to add the <code>@Role(BeanDefinition.ROLE_INFRASTRUCTURE)</code> on your
 </div>
 </div>
 <div class="sect2">
-<h3 id="messaging-2"><a class="anchor" href="#messaging-2"></a><a class="link" href="#messaging-2">15.10. Messaging</a></h3>
+<h3 id="messaging-2"><a class="anchor" href="#messaging-2"></a><a class="link" href="#messaging-2">15.11. Messaging</a></h3>
 <div class="paragraph">
 <p>Features from this section can be disabled by setting the <code>spring.sleuth.messaging.enabled</code> property with value equal to <code>false</code>.</p>
 </div>
 <div class="sect3">
-<h4 id="spring-integration-and-spring-cloud-stream"><a class="anchor" href="#spring-integration-and-spring-cloud-stream"></a><a class="link" href="#spring-integration-and-spring-cloud-stream">15.10.1. Spring Integration and Spring Cloud Stream</a></h4>
+<h4 id="spring-integration-and-spring-cloud-stream"><a class="anchor" href="#spring-integration-and-spring-cloud-stream"></a><a class="link" href="#spring-integration-and-spring-cloud-stream">15.11.1. Spring Integration and Spring Cloud Stream</a></h4>
 <div class="paragraph">
 <p>Spring Cloud Sleuth integrates with <a href="https://projects.spring.io/spring-integration/">Spring Integration</a>.
 It creates spans for publish and subscribe events.
@@ -3527,7 +3534,7 @@ it&#8217;s enough for you to register beans of types:</p>
 </div>
 </div>
 <div class="sect3">
-<h4 id="spring-rabbitmq"><a class="anchor" href="#spring-rabbitmq"></a><a class="link" href="#spring-rabbitmq">15.10.2. Spring RabbitMq</a></h4>
+<h4 id="spring-rabbitmq"><a class="anchor" href="#spring-rabbitmq"></a><a class="link" href="#spring-rabbitmq">15.11.2. Spring RabbitMq</a></h4>
 <div class="paragraph">
 <p>We instrument the <code>RabbitTemplate</code> so that tracing headers get injected
 into the message.</p>
@@ -3537,7 +3544,7 @@ into the message.</p>
 </div>
 </div>
 <div class="sect3">
-<h4 id="spring-kafka"><a class="anchor" href="#spring-kafka"></a><a class="link" href="#spring-kafka">15.10.3. Spring Kafka</a></h4>
+<h4 id="spring-kafka"><a class="anchor" href="#spring-kafka"></a><a class="link" href="#spring-kafka">15.11.3. Spring Kafka</a></h4>
 <div class="paragraph">
 <p>We instrument the Spring Kafka&#8217;s <code>ProducerFactory</code> and <code>ConsumerFactory</code>
 so that tracing headers get injected into the created Spring Kafka&#8217;s
@@ -3548,7 +3555,7 @@ so that tracing headers get injected into the created Spring Kafka&#8217;s
 </div>
 </div>
 <div class="sect3">
-<h4 id="spring-kafka-streams"><a class="anchor" href="#spring-kafka-streams"></a><a class="link" href="#spring-kafka-streams">15.10.4. Spring Kafka Streams</a></h4>
+<h4 id="spring-kafka-streams"><a class="anchor" href="#spring-kafka-streams"></a><a class="link" href="#spring-kafka-streams">15.11.4. Spring Kafka Streams</a></h4>
 <div class="paragraph">
 <p>We instrument the <code>KafkaStreams</code> <code>KafkaClientSupplier</code> so that tracing headers
 get injected into the <code>Producer</code> and <code>Consumer`s. A `KafkaStreamsTracing</code> bean
@@ -3560,7 +3567,7 @@ allows for further instrumentation through additional <code>TransformerSupplier<
 </div>
 </div>
 <div class="sect3">
-<h4 id="spring-jms"><a class="anchor" href="#spring-jms"></a><a class="link" href="#spring-jms">15.10.5. Spring JMS</a></h4>
+<h4 id="spring-jms"><a class="anchor" href="#spring-jms"></a><a class="link" href="#spring-jms">15.11.5. Spring JMS</a></h4>
 <div class="paragraph">
 <p>We instrument the <code>JmsTemplate</code> so that tracing headers get injected
 into the message. We also support <code>@JmsListener</code> annotated methods on the consumer side.</p>
@@ -3582,7 +3589,7 @@ We don&#8217;t support baggage propagation for JMS
 </div>
 </div>
 <div class="sect3">
-<h4 id="spring-cloud-aws-messaging-sqs"><a class="anchor" href="#spring-cloud-aws-messaging-sqs"></a><a class="link" href="#spring-cloud-aws-messaging-sqs">15.10.6. Spring Cloud AWS Messaging SQS</a></h4>
+<h4 id="spring-cloud-aws-messaging-sqs"><a class="anchor" href="#spring-cloud-aws-messaging-sqs"></a><a class="link" href="#spring-cloud-aws-messaging-sqs">15.11.6. Spring Cloud AWS Messaging SQS</a></h4>
 <div class="paragraph">
 <p>We instrument <code>@SqsListener</code> which is provided by <code>org.springframework.cloud:spring-cloud-aws-messaging</code>
 so that tracing headers get extracted from the message and a trace gets put into the context.</p>
@@ -3593,21 +3600,21 @@ so that tracing headers get extracted from the message and a trace gets put into
 </div>
 </div>
 <div class="sect2">
-<h3 id="zuul"><a class="anchor" href="#zuul"></a><a class="link" href="#zuul">15.11. Zuul</a></h3>
+<h3 id="zuul"><a class="anchor" href="#zuul"></a><a class="link" href="#zuul">15.12. Zuul</a></h3>
 <div class="paragraph">
 <p>We instrument the Zuul Ribbon integration by enriching the Ribbon requests with tracing information.
 To disable Zuul support, set the <code>spring.sleuth.zuul.enabled</code> property to <code>false</code>.</p>
 </div>
 </div>
 <div class="sect2">
-<h3 id="redis"><a class="anchor" href="#redis"></a><a class="link" href="#redis">15.12. Redis</a></h3>
+<h3 id="redis"><a class="anchor" href="#redis"></a><a class="link" href="#redis">15.13. Redis</a></h3>
 <div class="paragraph">
 <p>We set <code>tracing</code> property to Lettcue <code>ClientResources</code> instance to enable Brave tracing built in Lettuce .
 To disable Redis support, set the <code>spring.sleuth.redis.enabled</code> property to <code>false</code>.</p>
 </div>
 </div>
 <div class="sect2">
-<h3 id="quartz"><a class="anchor" href="#quartz"></a><a class="link" href="#quartz">15.13. Quartz</a></h3>
+<h3 id="quartz"><a class="anchor" href="#quartz"></a><a class="link" href="#quartz">15.14. Quartz</a></h3>
 <div class="paragraph">
 <p>We instrument quartz jobs by adding Job/Trigger listeners to the Quartz Scheduler.</p>
 </div>
@@ -3616,7 +3623,7 @@ To disable Redis support, set the <code>spring.sleuth.redis.enabled</code> prope
 </div>
 </div>
 <div class="sect2">
-<h3 id="project-reactor"><a class="anchor" href="#project-reactor"></a><a class="link" href="#project-reactor">15.14. Project Reactor</a></h3>
+<h3 id="project-reactor"><a class="anchor" href="#project-reactor"></a><a class="link" href="#project-reactor">15.15. Project Reactor</a></h3>
 <div class="paragraph">
 <p>For projects depending on Project Reactor such as Spring Cloud Gateway, we suggest turning the <code>spring.sleuth.reactor.decorate-on-each</code> option to <code>false</code>. That way an increased performance gain should be observed in comparison to the standard instrumentation mechanism. What this option does is it will wrap decorate <code>onLast</code> operator instead of <code>onEach</code> which will result in creation of far fewer objects. The downside of this is that when Project Reactor will change threads, the trace propagation will continue without issues, however anything relying on the <code>ThreadLocal</code> such as e.g. MDC entries can be buggy.</p>
 </div>
