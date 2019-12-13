@@ -1083,6 +1083,11 @@ include::{project-root}/spring-cloud-sleuth-core/src/test/java/org/springframewo
 
 That way, you ensure that a new span is created and closed for each execution.
 
+=== Spring Cloud CircuitBreaker
+
+If you have Spring Cloud CircuitBreaker on the classpath, we will wrap the passed command `Supplier` and the fallback `Function` in its trace representations. In order to disable this instrumentation set `spring.sleuth.circuitbreaker.enabled` to `false`.
+
+
 === Hystrix
 
 ==== Custom Concurrency Strategy
