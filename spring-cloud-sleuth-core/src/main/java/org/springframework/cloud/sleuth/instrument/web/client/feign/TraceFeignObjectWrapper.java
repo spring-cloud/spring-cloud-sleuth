@@ -16,15 +16,15 @@
 
 package org.springframework.cloud.sleuth.instrument.web.client.feign;
 
+import feign.Client;
 import java.lang.reflect.Field;
 
+import org.springframework.aop.support.AopUtils;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.cloud.netflix.ribbon.SpringClientFactory;
 import org.springframework.cloud.openfeign.ribbon.CachingSpringLoadBalancerFactory;
 import org.springframework.cloud.openfeign.ribbon.LoadBalancerFeignClient;
 import org.springframework.util.ClassUtils;
-
-import feign.Client;
 
 /**
  * Class that wraps Feign related classes into their Trace representative.
@@ -59,34 +59,31 @@ final class TraceFeignObjectWrapper {
 		if (bean instanceof Client && !(bean instanceof TracingFeignClient)) {
 			if (ribbonPresent && bean instanceof LoadBalancerFeignClient
 					&& !(bean instanceof TraceLoadBalancerFeignClient)) {
-				if (bean.getClass().equals(LoadBalancerFeignClient.class)) {
+				if (AopUtils.getTargetClass(bean).equals(LoadBalancerFeignClient.class)) {
 					LoadBalancerFeignClient client = ((LoadBalancerFeignClient) bean);
 					return new TraceLoadBalancerFeignClient(
 							(Client) new TraceFeignObjectWrapper(this.beanFactory)
 									.wrap(client.getDelegate()),
 							factory(), (SpringClientFactory) clientFactory(),
 							this.beanFactory);
-				} else {
+				}
+				else {
 					LoadBalancerFeignClient client = ((LoadBalancerFeignClient) bean);
 					try {
 						Field delegate = LoadBalancerFeignClient.class.getDeclaredField("delegate");
 						delegate.setAccessible(true);
 						delegate.set(client, new TraceFeignObjectWrapper(this.beanFactory).wrap(client.getDelegate()));
-					} catch (NoSuchFieldException e) {
-						// can't do it?
-					} catch (SecurityException e) {
-						// can't do it?
-					} catch (IllegalArgumentException e) {
-						// can't do it?
-					} catch (IllegalAccessException e) {
-						// can't do it?
+					}
+					catch (NoSuchFieldException | IllegalArgumentException | IllegalAccessException | SecurityException e) {
+						// not sure the best option here
+						// to fallback to only wrapping the delegate (losing any extension functionality) 
+						// or something more catastrophic to make user aware of the problem
 					}
 					return new TraceLoadBalancerFeignClient(
 							client,
 							factory(), (SpringClientFactory) clientFactory(),
 							this.beanFactory);
 				}
-				
 			}
 			else if (ribbonPresent && bean instanceof TraceLoadBalancerFeignClient) {
 				return bean;

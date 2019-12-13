@@ -92,7 +92,7 @@ public class IssueYTests {
 		this.reporter.clear();
 	}
 
-	@Test // Passing
+	@Test
 	public void should_reuse_custom_feign_client() {
 		String response = this.myNameRemote.get();
 
@@ -106,14 +106,14 @@ public class IssueYTests {
 		then(spans.get(0).tags().get("http.path")).isEqualTo("/");
 	}
 	
-	@Test // Passing
+	@Test
 	public void my_client_called() {
 		this.myNameRemote.get();
 		then(this.myClient.wasCalled()).isTrue();
 		then(this.myDelegateClient.wasCalled()).isTrue();
 	}
 	
-	@Test // Passing
+	@Test
 	public void span_captured() {
 		this.myNameRemote.get();
 		List<Span> spans = this.reporter.getSpans();
