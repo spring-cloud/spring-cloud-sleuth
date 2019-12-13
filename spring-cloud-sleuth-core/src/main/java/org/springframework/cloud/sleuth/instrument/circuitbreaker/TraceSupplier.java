@@ -22,6 +22,12 @@ import java.util.function.Supplier;
 import brave.Span;
 import brave.Tracer;
 
+/**
+ * Trace representation of a {@link Supplier}.
+ *
+ * @param <T> type returned by the supplier
+ * @since 2.2.1
+ */
 public class TraceSupplier<T> implements Supplier<T> {
 
 	private final Tracer tracer;

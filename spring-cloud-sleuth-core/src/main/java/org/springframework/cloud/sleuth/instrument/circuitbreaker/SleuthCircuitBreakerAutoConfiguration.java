@@ -33,7 +33,6 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.cloud.client.circuitbreaker.CircuitBreaker;
 import org.springframework.cloud.sleuth.autoconfig.TraceAutoConfiguration;
-import org.springframework.cloud.sleuth.instrument.hystrix.SleuthHystrixConcurrencyStrategy;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -42,8 +41,7 @@ import org.springframework.context.annotation.Configuration;
  * Auto-configuration} that registers instrumentation for circuit breakers.
  *
  * @author Marcin Grzejszczak
- * @see SleuthHystrixConcurrencyStrategy
- * @since 1.0.0
+ * @since 2.2.1
  */
 @Configuration(proxyBeanMethods = false)
 @AutoConfigureAfter(TraceAutoConfiguration.class)

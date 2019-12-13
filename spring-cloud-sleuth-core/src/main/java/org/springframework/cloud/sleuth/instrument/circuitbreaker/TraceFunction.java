@@ -22,6 +22,12 @@ import java.util.function.Function;
 import brave.Span;
 import brave.Tracer;
 
+/**
+ * Trace representation of a {@link Function}.
+ *
+ * @param <T> type returned by the fallback
+ * @since 2.2.1
+ */
 public class TraceFunction<T> implements Function<Throwable, T> {
 
 	private final Tracer tracer;
