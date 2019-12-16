@@ -16,12 +16,23 @@
 
 package org.springframework.cloud.sleuth.instrument.feign.issues.issueY;
 
-import static org.assertj.core.api.BDDAssertions.then;
-
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.util.HashMap;
 import java.util.List;
+
+import brave.Tracing;
+import brave.sampler.Sampler;
+import feign.Client;
+import feign.Contract;
+import feign.Feign;
+import feign.Request;
+import feign.Response;
+import feign.Target.HardCodedTarget;
+import feign.codec.Decoder;
+import feign.codec.Encoder;
+import zipkin2.Span;
+import zipkin2.reporter.Reporter;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -44,18 +55,7 @@ import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 
-import brave.Tracing;
-import brave.sampler.Sampler;
-import feign.Client;
-import feign.Contract;
-import feign.Feign;
-import feign.Request;
-import feign.Response;
-import feign.Target.HardCodedTarget;
-import feign.codec.Decoder;
-import feign.codec.Encoder;
-import zipkin2.Span;
-import zipkin2.reporter.Reporter;
+import static org.assertj.core.api.BDDAssertions.then;
 
 @FeignClient(name = "foo", url = "https://non.existing.url")
 interface MyNameRemote {

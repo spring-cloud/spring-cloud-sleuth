@@ -16,8 +16,9 @@
 
 package org.springframework.cloud.sleuth.instrument.web.client.feign;
 
-import feign.Client;
 import java.lang.reflect.Field;
+
+import feign.Client;
 
 import org.springframework.aop.support.AopUtils;
 import org.springframework.beans.factory.BeanFactory;
