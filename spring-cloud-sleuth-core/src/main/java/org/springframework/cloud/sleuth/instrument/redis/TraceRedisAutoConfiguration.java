@@ -23,6 +23,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import org.springframework.beans.BeansException;
+import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.config.BeanPostProcessor;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
@@ -51,8 +52,8 @@ public class TraceRedisAutoConfiguration {
 
 		@Bean
 		static TraceLettuceClientResourcesBeanPostProcessor traceLettuceClientResourcesBeanPostProcessor(
-				Tracing tracing, TraceRedisProperties traceRedisProperties) {
-			return new TraceLettuceClientResourcesBeanPostProcessor(tracing,
+				BeanFactory beanFactory, TraceRedisProperties traceRedisProperties) {
+			return new TraceLettuceClientResourcesBeanPostProcessor(beanFactory,
 					traceRedisProperties);
 		}
 
@@ -65,13 +66,15 @@ class TraceLettuceClientResourcesBeanPostProcessor implements BeanPostProcessor 
 	private static final Log log = LogFactory
 			.getLog(TraceLettuceClientResourcesBeanPostProcessor.class);
 
-	private final Tracing tracing;
+	private final BeanFactory beanFactory;
 
 	private final TraceRedisProperties traceRedisProperties;
 
-	TraceLettuceClientResourcesBeanPostProcessor(Tracing tracing,
+	private Tracing tracing;
+
+	TraceLettuceClientResourcesBeanPostProcessor(BeanFactory beanFactory,
 			TraceRedisProperties traceRedisProperties) {
-		this.tracing = tracing;
+		this.beanFactory = beanFactory;
 		this.traceRedisProperties = traceRedisProperties;
 	}
 
@@ -91,7 +94,7 @@ class TraceLettuceClientResourcesBeanPostProcessor implements BeanPostProcessor 
 					log.debug(
 							"Lettuce ClientResources bean is auto-configured to enable tracing.");
 				}
-				BraveTracing lettuceTracing = BraveTracing.builder().tracing(this.tracing)
+				BraveTracing lettuceTracing = BraveTracing.builder().tracing(tracing())
 						.excludeCommandArgsFromSpanTags()
 						.serviceName(traceRedisProperties.getRemoteServiceName()).build();
 				return cr.mutate().tracing(lettuceTracing).build();
@@ -102,6 +105,13 @@ class TraceLettuceClientResourcesBeanPostProcessor implements BeanPostProcessor 
 			}
 		}
 		return bean;
+	}
+
+	private Tracing tracing() {
+		if (this.tracing == null) {
+			this.tracing = this.beanFactory.getBean(Tracing.class);
+		}
+		return this.tracing;
 	}
 
 }

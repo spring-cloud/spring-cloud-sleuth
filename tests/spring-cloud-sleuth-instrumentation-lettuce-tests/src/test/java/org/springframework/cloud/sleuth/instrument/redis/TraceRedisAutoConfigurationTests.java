@@ -16,12 +16,12 @@
 
 package org.springframework.cloud.sleuth.instrument.redis;
 
-import brave.Tracing;
 import io.lettuce.core.resource.ClientResources;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
 import org.springframework.beans.BeansException;
+import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -72,8 +72,8 @@ public class TraceRedisAutoConfigurationTests {
 
 		@Bean
 		TestTraceLettuceClientResourcesBeanPostProcessor testTraceLettuceClientResourcesBeanPostProcessor(
-				Tracing tracing, TraceRedisProperties traceRedisProperties) {
-			return new TestTraceLettuceClientResourcesBeanPostProcessor(tracing,
+				BeanFactory beanFactory, TraceRedisProperties traceRedisProperties) {
+			return new TestTraceLettuceClientResourcesBeanPostProcessor(beanFactory,
 					traceRedisProperties);
 		}
 
@@ -86,9 +86,9 @@ class TestTraceLettuceClientResourcesBeanPostProcessor
 
 	boolean tracingCalled = false;
 
-	TestTraceLettuceClientResourcesBeanPostProcessor(Tracing tracing,
+	TestTraceLettuceClientResourcesBeanPostProcessor(BeanFactory beanFactory,
 			TraceRedisProperties traceRedisProperties) {
-		super(tracing, traceRedisProperties);
+		super(beanFactory, traceRedisProperties);
 	}
 
 	@Override
