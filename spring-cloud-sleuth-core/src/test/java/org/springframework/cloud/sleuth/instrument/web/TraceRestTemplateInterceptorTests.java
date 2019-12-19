@@ -171,7 +171,7 @@ public class TraceRestTemplateInterceptorTests {
 			fail("should throw an exception");
 		}
 		catch (RuntimeException e) {
-			then(e).hasMessage("500 Internal Server Error");
+			then(e).hasMessageStartingWith("500 Internal Server Error");
 		}
 		finally {
 			span.finish();
