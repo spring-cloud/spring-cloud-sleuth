@@ -19,6 +19,8 @@ package org.springframework.cloud.sleuth.instrument.web.client.feign;
 import java.lang.reflect.Field;
 
 import feign.Client;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 import org.springframework.aop.support.AopUtils;
 import org.springframework.beans.factory.BeanFactory;
@@ -34,6 +36,8 @@ import org.springframework.util.ClassUtils;
  * @since 1.0.1
  */
 final class TraceFeignObjectWrapper {
+
+	private static final Log log = LogFactory.getLog(TraceFeignObjectWrapper.class);
 
 	private static final boolean ribbonPresent;
 
@@ -71,19 +75,20 @@ final class TraceFeignObjectWrapper {
 				else {
 					LoadBalancerFeignClient client = ((LoadBalancerFeignClient) bean);
 					try {
-						Field delegate = LoadBalancerFeignClient.class.getDeclaredField("delegate");
+						Field delegate = LoadBalancerFeignClient.class
+								.getDeclaredField("delegate");
 						delegate.setAccessible(true);
-						delegate.set(client, new TraceFeignObjectWrapper(this.beanFactory).wrap(client.getDelegate()));
+						delegate.set(client, new TraceFeignObjectWrapper(this.beanFactory)
+								.wrap(client.getDelegate()));
 					}
-					catch (NoSuchFieldException | IllegalArgumentException | IllegalAccessException | SecurityException e) {
-						// not sure the best option here
-						// to fallback to only wrapping the delegate (losing any extension functionality) 
-						// or something more catastrophic to make user aware of the problem
+					catch (NoSuchFieldException | IllegalArgumentException
+							| IllegalAccessException | SecurityException e) {
+						log.warn(
+								"Exception occurred while trying to access the delegate's field. Will fallback to default instrumentation mechanism, which means that the delegate might not be instrumented",
+								e);
 					}
-					return new TraceLoadBalancerFeignClient(
-							client,
-							factory(), (SpringClientFactory) clientFactory(),
-							this.beanFactory);
+					return new TraceLoadBalancerFeignClient(client, factory(),
+							(SpringClientFactory) clientFactory(), this.beanFactory);
 				}
 			}
 			else if (ribbonPresent && bean instanceof TraceLoadBalancerFeignClient) {
