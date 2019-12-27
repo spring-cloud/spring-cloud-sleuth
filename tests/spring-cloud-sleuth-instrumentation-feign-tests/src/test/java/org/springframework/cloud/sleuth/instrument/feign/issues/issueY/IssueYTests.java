@@ -31,12 +31,12 @@ import feign.Response;
 import feign.Target.HardCodedTarget;
 import feign.codec.Decoder;
 import feign.codec.Encoder;
-import zipkin2.Span;
-import zipkin2.reporter.Reporter;
-
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import zipkin2.Span;
+import zipkin2.reporter.Reporter;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -57,24 +57,15 @@ import org.springframework.web.bind.annotation.RequestMethod;
 
 import static org.assertj.core.api.BDDAssertions.then;
 
-@FeignClient(name = "foo", url = "https://non.existing.url")
-interface MyNameRemote {
-
-	@RequestMapping(value = "/", method = RequestMethod.GET)
-	String get();
-
-}
-
 @RunWith(SpringRunner.class)
-@SpringBootTest(classes = Application.class,
-		webEnvironment = SpringBootTest.WebEnvironment.NONE,
+@SpringBootTest(classes = Application.class, webEnvironment = SpringBootTest.WebEnvironment.NONE,
 		properties = { "feign.hystrix.enabled=false" })
 @DirtiesContext(classMode = ClassMode.AFTER_EACH_TEST_METHOD)
 public class IssueYTests {
 
 	@Autowired
 	MyClient myClient;
-	
+
 	@Autowired
 	MyDelegateClient myDelegateClient;
 
@@ -105,14 +96,14 @@ public class IssueYTests {
 		then(spans).hasSize(1);
 		then(spans.get(0).tags().get("http.path")).isEqualTo("/");
 	}
-	
+
 	@Test
 	public void my_client_called() {
 		this.myNameRemote.get();
 		then(this.myClient.wasCalled()).isTrue();
 		then(this.myDelegateClient.wasCalled()).isTrue();
 	}
-	
+
 	@Test
 	public void span_captured() {
 		this.myNameRemote.get();
@@ -133,21 +124,19 @@ class Application {
 	public Client myDelegateClient() {
 		return new MyDelegateClient();
 	}
-	
+
 	@Bean
-	public Client client(MyDelegateClient myDelegateClient, CachingSpringLoadBalancerFactory cachingFactory, SpringClientFactory clientFactory) {
+	public Client client(MyDelegateClient myDelegateClient, CachingSpringLoadBalancerFactory cachingFactory,
+			SpringClientFactory clientFactory) {
 		return new MyClient(myDelegateClient, cachingFactory, clientFactory);
 	}
 
 	@Bean
 	public MyNameRemote myNameRemote(Client client, Decoder decoder, Encoder encoder, Contract contract) {
-		return Feign.builder().client(client)
-				.encoder(encoder)
-				.decoder(decoder)
-				.contract(contract)
+		return Feign.builder().client(client).encoder(encoder).decoder(decoder).contract(contract)
 				.target(new HardCodedTarget<MyNameRemote>(MyNameRemote.class, "foo", "https://non.existing.url"));
 	}
-	
+
 	@Bean
 	public Sampler defaultSampler() {
 		return Sampler.ALWAYS_SAMPLE;
@@ -162,7 +151,7 @@ class Application {
 
 class MyClient extends LoadBalancerFeignClient {
 
-	public MyClient(Client delegate, CachingSpringLoadBalancerFactory lbClientFactory,
+	MyClient(Client delegate, CachingSpringLoadBalancerFactory lbClientFactory,
 			SpringClientFactory clientFactory) {
 		super(delegate, lbClientFactory, clientFactory);
 	}
@@ -182,18 +171,28 @@ class MyClient extends LoadBalancerFeignClient {
 }
 
 class MyDelegateClient implements Client {
+
 	boolean wasCalled;
 
 	@Override
 	public Response execute(Request request, Request.Options options) throws IOException {
 		this.wasCalled = true;
 		return Response.builder().body("foo", Charset.forName("UTF-8"))
-				.request(Request.create(Request.HttpMethod.POST, "/foo", new HashMap<>(),
-						Request.Body.empty()))
+				.request(Request.create(Request.HttpMethod.POST, "/foo", new HashMap<>(), Request.Body.empty()))
 				.headers(new HashMap<>()).status(200).build();
 	}
 
 	boolean wasCalled() {
 		return this.wasCalled;
 	}
+
+}
+
+
+@FeignClient(name = "foo", url = "https://non.existing.url")
+interface MyNameRemote {
+
+	@RequestMapping(value = "/", method = RequestMethod.GET)
+	String get();
+
 }

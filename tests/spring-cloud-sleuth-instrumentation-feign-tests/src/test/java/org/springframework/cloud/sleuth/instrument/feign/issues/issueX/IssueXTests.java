@@ -26,12 +26,12 @@ import brave.sampler.Sampler;
 import feign.Client;
 import feign.Request;
 import feign.Response;
-import zipkin2.Span;
-import zipkin2.reporter.Reporter;
-
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import zipkin2.Span;
+import zipkin2.reporter.Reporter;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -51,17 +51,8 @@ import org.springframework.web.bind.annotation.RequestMethod;
 
 import static org.assertj.core.api.BDDAssertions.then;
 
-@FeignClient(name = "foo", url = "https://non.existing.url")
-interface MyNameRemote {
-
-	@RequestMapping(value = "/", method = RequestMethod.GET)
-	String get();
-
-}
-
 @RunWith(SpringRunner.class)
-@SpringBootTest(classes = Application.class,
-		webEnvironment = SpringBootTest.WebEnvironment.NONE,
+@SpringBootTest(classes = Application.class, webEnvironment = SpringBootTest.WebEnvironment.NONE,
 		properties = { "feign.hystrix.enabled=false" })
 @DirtiesContext(classMode = ClassMode.AFTER_EACH_TEST_METHOD)
 public class IssueXTests {
@@ -94,13 +85,13 @@ public class IssueXTests {
 		then(spans).hasSize(1);
 		then(spans.get(0).tags().get("http.path")).isEqualTo("/");
 	}
-	
+
 	@Test
 	public void my_client_called() {
 		this.myNameRemote.get();
 		then(this.myClient.wasCalled()).isTrue();
 	}
-	
+
 	@Test
 	public void span_captured() {
 		this.myNameRemote.get();
@@ -156,18 +147,27 @@ class MyClient extends LoadBalancerFeignClient {
 }
 
 class MyDelegateClient implements Client {
+
 	boolean wasCalled;
 
 	@Override
 	public Response execute(Request request, Request.Options options) throws IOException {
 		this.wasCalled = true;
 		return Response.builder().body("foo", Charset.forName("UTF-8"))
-				.request(Request.create(Request.HttpMethod.POST, "/foo", new HashMap<>(),
-						Request.Body.empty()))
+				.request(Request.create(Request.HttpMethod.POST, "/foo", new HashMap<>(), Request.Body.empty()))
 				.headers(new HashMap<>()).status(200).build();
 	}
 
 	boolean wasCalled() {
 		return this.wasCalled;
 	}
+
+}
+
+@FeignClient(name = "foo", url = "https://non.existing.url")
+interface MyNameRemote {
+
+	@RequestMapping(value = "/", method = RequestMethod.GET)
+	String get();
+
 }
