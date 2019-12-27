@@ -127,7 +127,7 @@ class Application {
 
 class MyClient extends LoadBalancerFeignClient {
 
-	public MyClient(Client delegate, CachingSpringLoadBalancerFactory lbClientFactory,
+	MyClient(Client delegate, CachingSpringLoadBalancerFactory lbClientFactory,
 			SpringClientFactory clientFactory) {
 		super(delegate, lbClientFactory, clientFactory);
 	}
