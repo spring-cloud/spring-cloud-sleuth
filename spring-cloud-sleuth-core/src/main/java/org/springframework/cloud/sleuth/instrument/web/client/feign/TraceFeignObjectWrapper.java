@@ -16,8 +16,13 @@
 
 package org.springframework.cloud.sleuth.instrument.web.client.feign;
 
-import feign.Client;
+import java.lang.reflect.Field;
 
+import feign.Client;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
+import org.springframework.aop.support.AopUtils;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.cloud.netflix.ribbon.SpringClientFactory;
 import org.springframework.cloud.openfeign.ribbon.CachingSpringLoadBalancerFactory;
@@ -31,6 +36,8 @@ import org.springframework.util.ClassUtils;
  * @since 1.0.1
  */
 final class TraceFeignObjectWrapper {
+
+	private static final Log log = LogFactory.getLog(TraceFeignObjectWrapper.class);
 
 	private static final boolean ribbonPresent;
 
@@ -57,12 +64,32 @@ final class TraceFeignObjectWrapper {
 		if (bean instanceof Client && !(bean instanceof TracingFeignClient)) {
 			if (ribbonPresent && bean instanceof LoadBalancerFeignClient
 					&& !(bean instanceof TraceLoadBalancerFeignClient)) {
-				LoadBalancerFeignClient client = ((LoadBalancerFeignClient) bean);
-				return new TraceLoadBalancerFeignClient(
-						(Client) new TraceFeignObjectWrapper(this.beanFactory)
-								.wrap(client.getDelegate()),
-						factory(), (SpringClientFactory) clientFactory(),
-						this.beanFactory);
+				if (AopUtils.getTargetClass(bean).equals(LoadBalancerFeignClient.class)) {
+					LoadBalancerFeignClient client = ((LoadBalancerFeignClient) bean);
+					return new TraceLoadBalancerFeignClient(
+							(Client) new TraceFeignObjectWrapper(this.beanFactory)
+									.wrap(client.getDelegate()),
+							factory(), (SpringClientFactory) clientFactory(),
+							this.beanFactory);
+				}
+				else {
+					LoadBalancerFeignClient client = ((LoadBalancerFeignClient) bean);
+					try {
+						Field delegate = LoadBalancerFeignClient.class
+								.getDeclaredField("delegate");
+						delegate.setAccessible(true);
+						delegate.set(client, new TraceFeignObjectWrapper(this.beanFactory)
+								.wrap(client.getDelegate()));
+					}
+					catch (NoSuchFieldException | IllegalArgumentException
+							| IllegalAccessException | SecurityException e) {
+						log.warn(
+								"Exception occurred while trying to access the delegate's field. Will fallback to default instrumentation mechanism, which means that the delegate might not be instrumented",
+								e);
+					}
+					return new TraceLoadBalancerFeignClient(client, factory(),
+							(SpringClientFactory) clientFactory(), this.beanFactory);
+				}
 			}
 			else if (ribbonPresent && bean instanceof TraceLoadBalancerFeignClient) {
 				return bean;
