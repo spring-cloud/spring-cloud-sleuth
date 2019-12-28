@@ -52,7 +52,8 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import static org.assertj.core.api.BDDAssertions.then;
 
 @RunWith(SpringRunner.class)
-@SpringBootTest(classes = Application.class, webEnvironment = SpringBootTest.WebEnvironment.NONE,
+@SpringBootTest(classes = Application.class,
+		webEnvironment = SpringBootTest.WebEnvironment.NONE,
 		properties = { "feign.hystrix.enabled=false" })
 @DirtiesContext(classMode = ClassMode.AFTER_EACH_TEST_METHOD)
 public class IssueXTests {
@@ -109,7 +110,8 @@ public class IssueXTests {
 class Application {
 
 	@Bean
-	public Client client(CachingSpringLoadBalancerFactory cachingFactory, SpringClientFactory clientFactory) {
+	public Client client(CachingSpringLoadBalancerFactory cachingFactory,
+			SpringClientFactory clientFactory) {
 		return new MyClient(new MyDelegateClient(), cachingFactory, clientFactory);
 	}
 
@@ -154,7 +156,8 @@ class MyDelegateClient implements Client {
 	public Response execute(Request request, Request.Options options) throws IOException {
 		this.wasCalled = true;
 		return Response.builder().body("foo", Charset.forName("UTF-8"))
-				.request(Request.create(Request.HttpMethod.POST, "/foo", new HashMap<>(), Request.Body.empty()))
+				.request(Request.create(Request.HttpMethod.POST, "/foo", new HashMap<>(),
+						Request.Body.empty()))
 				.headers(new HashMap<>()).status(200).build();
 	}
 

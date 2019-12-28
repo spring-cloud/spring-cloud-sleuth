@@ -58,7 +58,8 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import static org.assertj.core.api.BDDAssertions.then;
 
 @RunWith(SpringRunner.class)
-@SpringBootTest(classes = Application.class, webEnvironment = SpringBootTest.WebEnvironment.NONE,
+@SpringBootTest(classes = Application.class,
+		webEnvironment = SpringBootTest.WebEnvironment.NONE,
 		properties = { "feign.hystrix.enabled=false" })
 @DirtiesContext(classMode = ClassMode.AFTER_EACH_TEST_METHOD)
 public class IssueYTests {
@@ -126,15 +127,18 @@ class Application {
 	}
 
 	@Bean
-	public Client client(MyDelegateClient myDelegateClient, CachingSpringLoadBalancerFactory cachingFactory,
+	public Client client(MyDelegateClient myDelegateClient,
+			CachingSpringLoadBalancerFactory cachingFactory,
 			SpringClientFactory clientFactory) {
 		return new MyClient(myDelegateClient, cachingFactory, clientFactory);
 	}
 
 	@Bean
-	public MyNameRemote myNameRemote(Client client, Decoder decoder, Encoder encoder, Contract contract) {
-		return Feign.builder().client(client).encoder(encoder).decoder(decoder).contract(contract)
-				.target(new HardCodedTarget<MyNameRemote>(MyNameRemote.class, "foo", "https://non.existing.url"));
+	public MyNameRemote myNameRemote(Client client, Decoder decoder, Encoder encoder,
+			Contract contract) {
+		return Feign.builder().client(client).encoder(encoder).decoder(decoder)
+				.contract(contract).target(new HardCodedTarget<MyNameRemote>(
+						MyNameRemote.class, "foo", "https://non.existing.url"));
 	}
 
 	@Bean
@@ -178,7 +182,8 @@ class MyDelegateClient implements Client {
 	public Response execute(Request request, Request.Options options) throws IOException {
 		this.wasCalled = true;
 		return Response.builder().body("foo", Charset.forName("UTF-8"))
-				.request(Request.create(Request.HttpMethod.POST, "/foo", new HashMap<>(), Request.Body.empty()))
+				.request(Request.create(Request.HttpMethod.POST, "/foo", new HashMap<>(),
+						Request.Body.empty()))
 				.headers(new HashMap<>()).status(200).build();
 	}
 
@@ -187,7 +192,6 @@ class MyDelegateClient implements Client {
 	}
 
 }
-
 
 @FeignClient(name = "foo", url = "https://non.existing.url")
 interface MyNameRemote {
