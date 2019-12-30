@@ -251,8 +251,6 @@ final class TraceExchangeFilterFunction implements ExchangeFilterFunction {
 
 			final Span span;
 
-			final Tracer.SpanInScope ws;
-
 			final HttpClientHandler<ClientRequest, ClientResponse> handler;
 
 			final Function<? super Publisher<DataBuffer>, ? extends Publisher<DataBuffer>> scopePassingTransformer;
@@ -278,8 +276,6 @@ final class TraceExchangeFilterFunction implements ExchangeFilterFunction {
 				}
 
 				this.context = context.put(CLIENT_SPAN_KEY, span);
-				this.ws = parent.tracer.withSpanInScope(span);
-
 			}
 
 			@Override
@@ -287,51 +283,68 @@ final class TraceExchangeFilterFunction implements ExchangeFilterFunction {
 				this.actual.onSubscribe(new Subscription() {
 					@Override
 					public void request(long n) {
-						subscription.request(n);
+						try (Tracer.SpanInScope ws = tracing.tracer()
+								.withSpanInScope(span)) {
+							if (log.isTraceEnabled()) {
+								log.trace("Request");
+							}
+							subscription.request(n);
+						}
 					}
 
 					@Override
 					public void cancel() {
-						terminateSpanOnCancel();
-						subscription.cancel();
+						try (Tracer.SpanInScope ws = tracing.tracer()
+								.withSpanInScope(span)) {
+							if (log.isTraceEnabled()) {
+								log.trace("Cancel");
+							}
+							terminateSpanOnCancel();
+							subscription.cancel();
+						}
 					}
 				});
 			}
 
 			@Override
 			public void onNext(ClientResponse response) {
-				this.done = true;
-				try {
-					// decorate response body
-					this.actual
-							.onNext(ClientResponse.from(response)
-									.body(response.bodyToFlux(DataBuffer.class)
-											.transform(this.scopePassingTransformer))
-									.build());
-				}
-				finally {
-					terminateSpan(response, null);
+				try (Tracer.SpanInScope ws = tracing.tracer().withSpanInScope(span)) {
+					this.done = true;
+					try {
+						// decorate response body
+						this.actual.onNext(ClientResponse.from(response)
+								.body(response.bodyToFlux(DataBuffer.class)
+										.transform(this.scopePassingTransformer))
+								.build());
+					}
+					finally {
+						terminateSpan(response, null);
+					}
 				}
 			}
 
 			@Override
 			public void onError(Throwable t) {
-				try {
-					this.actual.onError(t);
-				}
-				finally {
-					terminateSpan(null, t);
+				try (Tracer.SpanInScope ws = tracing.tracer().withSpanInScope(span)) {
+					try {
+						this.actual.onError(t);
+					}
+					finally {
+						terminateSpan(null, t);
+					}
 				}
 			}
 
 			@Override
 			public void onComplete() {
-				try {
-					this.actual.onComplete();
-				}
-				finally {
-					if (!this.done) {
-						terminateSpan(null, null);
+				try (Tracer.SpanInScope ws = tracing.tracer().withSpanInScope(span)) {
+					try {
+						this.actual.onComplete();
+					}
+					finally {
+						if (!this.done) {
+							terminateSpan(null, null);
+						}
 					}
 				}
 			}
@@ -341,10 +354,15 @@ final class TraceExchangeFilterFunction implements ExchangeFilterFunction {
 				return this.context;
 			}
 
-			void handleReceive(Span clientSpan, Tracer.SpanInScope ws,
-					ClientResponse clientResponse, Throwable throwable) {
+			void handleReceive(Span clientSpan, ClientResponse clientResponse,
+					Throwable throwable) {
+				if (log.isTraceEnabled()) {
+					log.trace("Handling receive");
+				}
 				this.handler.handleReceive(clientResponse, throwable, clientSpan);
-				ws.close();
+				if (log.isTraceEnabled()) {
+					log.trace("Closed scope");
+				}
 			}
 
 			void terminateSpanOnCancel() {
@@ -354,7 +372,7 @@ final class TraceExchangeFilterFunction implements ExchangeFilterFunction {
 				}
 
 				this.span.tag("error", CANCELLED_SUBSCRIPTION_ERROR);
-				handleReceive(this.span, this.ws, null, null);
+				handleReceive(this.span, null, null);
 			}
 
 			void terminateSpan(@Nullable ClientResponse clientResponse,
@@ -364,7 +382,7 @@ final class TraceExchangeFilterFunction implements ExchangeFilterFunction {
 						log.debug("No response was returned. Will close the span ["
 								+ this.span + "]");
 					}
-					handleReceive(this.span, this.ws, clientResponse, throwable);
+					handleReceive(this.span, clientResponse, throwable);
 					return;
 				}
 				int statusCode = clientResponse.rawStatusCode();
@@ -378,7 +396,7 @@ final class TraceExchangeFilterFunction implements ExchangeFilterFunction {
 					throwable = new RestClientException(
 							"Status code of the response is [" + statusCode + "]");
 				}
-				handleReceive(this.span, this.ws, clientResponse, throwable);
+				handleReceive(this.span, clientResponse, throwable);
 			}
 
 		}
