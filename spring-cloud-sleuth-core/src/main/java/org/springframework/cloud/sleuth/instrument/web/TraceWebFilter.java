@@ -16,6 +16,8 @@
 
 package org.springframework.cloud.sleuth.instrument.web;
 
+import java.util.concurrent.atomic.AtomicBoolean;
+
 import brave.Span;
 import brave.Tracer;
 import brave.http.HttpServerHandler;
@@ -136,15 +138,17 @@ public final class TraceWebFilter implements WebFilter, Ordered {
 
 	@Override
 	public Mono<Void> filter(ServerWebExchange exchange, WebFilterChain chain) {
-		if (tracer().currentSpan() != null) {
-			// clear any previous trace
-			tracer().withSpanInScope(null);
-		}
 		String uri = exchange.getRequest().getPath().pathWithinApplication().value();
 		if (log.isDebugEnabled()) {
 			log.debug("Received a request to uri [" + uri + "]");
 		}
-		return new MonoWebFilterTrace(chain.filter(exchange), exchange, this);
+		Mono<Void> source = chain.filter(exchange);
+		boolean tracePresent = tracer().currentSpan() != null;
+		if (tracePresent) {
+			// clear any previous trace
+			tracer().withSpanInScope(null);
+		}
+		return new MonoWebFilterTrace(source, exchange, tracePresent, this);
 	}
 
 	@Override
@@ -164,21 +168,34 @@ public final class TraceWebFilter implements WebFilter, Ordered {
 
 		final TraceContext.Extractor<HttpHeaders> extractor;
 
+		final AtomicBoolean initialSpanAlreadyRemoved = new AtomicBoolean();
+
+		final boolean initialTracePresent;
+
 		MonoWebFilterTrace(Mono<? extends Void> source, ServerWebExchange exchange,
-				TraceWebFilter parent) {
+				boolean initialTracePresent, TraceWebFilter parent) {
 			super(source);
 			this.tracer = parent.tracer();
 			this.extractor = parent.extractor();
 			this.handler = parent.handler();
 			this.exchange = exchange;
 			this.attrSpan = exchange.getAttribute(TRACE_REQUEST_ATTR);
+			this.initialTracePresent = initialTracePresent;
 		}
 
 		@Override
 		public void subscribe(CoreSubscriber<? super Void> subscriber) {
-			Context context = subscriber.currentContext();
+			Context context = contextWithoutInitialSpan(subscriber.currentContext());
 			this.source.subscribe(new WebFilterTraceSubscriber(subscriber, context,
 					findOrCreateSpan(context), this));
+		}
+
+		private Context contextWithoutInitialSpan(Context context) {
+			if (this.initialTracePresent && !this.initialSpanAlreadyRemoved.get()) {
+				context = context.delete(Span.class);
+				this.initialSpanAlreadyRemoved.set(true);
+			}
+			return context;
 		}
 
 		private Span findOrCreateSpan(Context c) {
