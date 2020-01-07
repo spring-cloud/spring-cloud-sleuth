@@ -278,17 +278,13 @@ public final class TraceWebFilter implements WebFilter, Ordered {
 			}
 
 			private void terminateSpan(@Nullable Throwable t) {
-				String httpRoute = null;
 				Object attribute = this.exchange
 						.getAttribute(HandlerMapping.BEST_MATCHING_HANDLER_ATTRIBUTE);
-				if (attribute instanceof HandlerMethod) {
-					HandlerMethod handlerMethod = (HandlerMethod) attribute;
-					addClassMethodTag(handlerMethod, this.span);
-					addClassNameTag(handlerMethod, this.span);
-					Object pattern = this.exchange
-							.getAttribute(HandlerMapping.BEST_MATCHING_PATTERN_ATTRIBUTE);
-					httpRoute = pattern != null ? pattern.toString() : "";
-				}
+				addClassMethodTag(attribute, this.span);
+				addClassNameTag(attribute, this.span);
+				Object pattern = this.exchange
+						.getAttribute(HandlerMapping.BEST_MATCHING_PATTERN_ATTRIBUTE);
+				String httpRoute = pattern != null ? pattern.toString() : "";
 				addResponseTagsForSpanWithoutParent(this.exchange,
 						this.exchange.getResponse(), this.span);
 				DecoratedServerHttpResponse delegate = new DecoratedServerHttpResponse(

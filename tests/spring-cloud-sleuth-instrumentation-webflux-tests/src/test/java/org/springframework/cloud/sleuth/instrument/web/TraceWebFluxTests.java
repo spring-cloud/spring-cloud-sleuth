@@ -44,6 +44,9 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.reactive.function.client.ClientResponse;
 import org.springframework.web.reactive.function.client.WebClient;
+import org.springframework.web.reactive.function.server.RouterFunction;
+import org.springframework.web.reactive.function.server.RouterFunctions;
+import org.springframework.web.reactive.function.server.ServerResponse;
 
 import static org.assertj.core.api.BDDAssertions.then;
 
@@ -70,10 +73,16 @@ public class TraceWebFluxTests {
 		clean(accumulator, controller2);
 
 		// when
-		ClientResponse response = whenRequestIsSent(port);
+		ClientResponse response = whenRequestIsSent(port, "/api/c2/10");
 		// then
 		thenSpanWasReportedWithTags(accumulator, response);
 		clean(accumulator, controller2);
+
+		// when
+		response = whenRequestIsSent(port, "/api/fn/20");
+		// then
+		thenFunctionalSpanWasReportedWithTags(accumulator, response);
+		accumulator.clear();
 
 		// when
 		ClientResponse nonSampledResponse = whenNonSampledRequestIsSent(port);
@@ -108,6 +117,19 @@ public class TraceWebFluxTests {
 				.containsEntry("mvc.controller.class", "Controller2");
 	}
 
+	private void thenFunctionalSpanWasReportedWithTags(ArrayListSpanReporter accumulator,
+			ClientResponse response) {
+		Awaitility.await()
+				.untilAsserted(() -> then(response.statusCode().value()).isEqualTo(200));
+		List<zipkin2.Span> spans = accumulator.getSpans().stream()
+				.filter(span -> "get /api/fn/{id}".equals(span.name()))
+				.collect(Collectors.toList());
+		then(spans).hasSize(1);
+		then(spans.get(0).name()).isEqualTo("get /api/fn/{id}");
+		then(spans.get(0).tags()).hasEntrySatisfying("mvc.controller.class",
+				value -> then(value).startsWith("TraceWebFluxTests$Config$$Lambda$"));
+	}
+
 	private void thenNoSpanWasReported(ArrayListSpanReporter accumulator,
 			ClientResponse response, Controller2 controller2) {
 		Awaitility.await().untilAsserted(() -> {
@@ -118,9 +140,9 @@ public class TraceWebFluxTests {
 		then(controller2.span.context().traceIdString()).isEqualTo(EXPECTED_TRACE_ID);
 	}
 
-	private ClientResponse whenRequestIsSent(int port) {
+	private ClientResponse whenRequestIsSent(int port, String path) {
 		Mono<ClientResponse> exchange = WebClient.create().get()
-				.uri("http://localhost:" + port + "/api/c2/10").exchange();
+				.uri("http://localhost:" + port + path).exchange();
 		return exchange.block();
 	}
 
@@ -170,6 +192,14 @@ public class TraceWebFluxTests {
 		@Bean
 		Controller2 controller2(Tracer tracer) {
 			return new Controller2(tracer);
+		}
+
+		@Bean
+		RouterFunction<ServerResponse> route() {
+			return RouterFunctions.route()
+					.GET("/api/fn/{id}", serverRequest -> ServerResponse.ok()
+							.bodyValue(serverRequest.pathVariable("id")))
+					.build();
 		}
 
 	}
