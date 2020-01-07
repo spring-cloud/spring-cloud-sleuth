@@ -30,6 +30,7 @@ import feign.Feign;
 import feign.FeignException;
 import feign.Request;
 import feign.RequestLine;
+import feign.RequestTemplate;
 import feign.Response;
 import okhttp3.mockwebserver.MockWebServer;
 import org.junit.After;
@@ -112,7 +113,7 @@ public class FeignRetriesTests {
 				return Response.builder().status(200).reason("OK")
 						.headers(new HashMap<>()).body("OK", Charset.defaultCharset())
 						.request(Request.create(Request.HttpMethod.POST, "/foo",
-								new HashMap<>(), Request.Body.empty()))
+								new HashMap<>(), Request.Body.empty(), new RequestTemplate()))
 						.build();
 			}
 		};
