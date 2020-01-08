@@ -80,7 +80,7 @@ public class FeignRetriesTests {
 	}
 
 	@Test
-	public void testRetriedWhenExceededNumberOfRetries() throws Exception {
+	public void testRetriedWhenExceededNumberOfRetries() {
 		Client client = (request, options) -> {
 			throw new IOException();
 		};
@@ -99,7 +99,7 @@ public class FeignRetriesTests {
 	}
 
 	@Test
-	public void testRetriedWhenRequestEventuallyIsSent() throws Exception {
+	public void testRetriedWhenRequestEventuallyIsSent() {
 		String url = "http://localhost:" + this.server.getPort();
 		final AtomicInteger atomicInteger = new AtomicInteger();
 		// Client to simulate a retry scenario
@@ -119,13 +119,9 @@ public class FeignRetriesTests {
 			}
 		};
 		TestInterface api = Feign.builder()
-				.client(new TracingFeignClient(this.httpTracing, new Client() {
-					@Override
-					public Response execute(Request request, Request.Options options)
-							throws IOException {
-						atomicInteger.incrementAndGet();
-						return client.execute(request, options);
-					}
+				.client(new TracingFeignClient(this.httpTracing, (request, options) -> {
+					atomicInteger.incrementAndGet();
+					return client.execute(request, options);
 				})).target(TestInterface.class, url);
 
 		then(api.decodedPost()).isEqualTo("OK");

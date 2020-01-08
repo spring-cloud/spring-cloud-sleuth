@@ -16,8 +16,7 @@
 
 package org.springframework.cloud.sleuth.instrument.feign.issues.issue502;
 
-import java.io.IOException;
-import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.List;
 
@@ -122,9 +121,9 @@ class MyClient implements Client {
 	boolean wasCalled;
 
 	@Override
-	public Response execute(Request request, Request.Options options) throws IOException {
+	public Response execute(Request request, Request.Options options) {
 		this.wasCalled = true;
-		return Response.builder().body("foo", Charset.forName("UTF-8"))
+		return Response.builder().body("foo", StandardCharsets.UTF_8)
 				.request(Request.create(Request.HttpMethod.POST, "/foo", new HashMap<>(),
 						Request.Body.empty(), new RequestTemplate()))
 				.headers(new HashMap<>()).status(200).build();
