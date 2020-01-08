@@ -27,6 +27,7 @@ import feign.Client;
 import feign.Contract;
 import feign.Feign;
 import feign.Request;
+import feign.RequestTemplate;
 import feign.Response;
 import feign.Target.HardCodedTarget;
 import feign.codec.Decoder;
@@ -183,7 +184,7 @@ class MyDelegateClient implements Client {
 		this.wasCalled = true;
 		return Response.builder().body("foo", Charset.forName("UTF-8"))
 				.request(Request.create(Request.HttpMethod.POST, "/foo", new HashMap<>(),
-						Request.Body.empty()))
+						Request.Body.empty(), new RequestTemplate()))
 				.headers(new HashMap<>()).status(200).build();
 	}
 

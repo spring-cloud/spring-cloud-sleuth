@@ -113,7 +113,8 @@ public class FeignRetriesTests {
 				return Response.builder().status(200).reason("OK")
 						.headers(new HashMap<>()).body("OK", Charset.defaultCharset())
 						.request(Request.create(Request.HttpMethod.POST, "/foo",
-								new HashMap<>(), Request.Body.empty(), new RequestTemplate()))
+								new HashMap<>(), Request.Body.empty(),
+								new RequestTemplate()))
 						.build();
 			}
 		};

@@ -25,6 +25,7 @@ import brave.Tracing;
 import brave.sampler.Sampler;
 import feign.Client;
 import feign.Request;
+import feign.RequestTemplate;
 import feign.Response;
 import org.junit.Before;
 import org.junit.Test;
@@ -125,7 +126,7 @@ class MyClient implements Client {
 		this.wasCalled = true;
 		return Response.builder().body("foo", Charset.forName("UTF-8"))
 				.request(Request.create(Request.HttpMethod.POST, "/foo", new HashMap<>(),
-						Request.Body.empty()))
+						Request.Body.empty(), new RequestTemplate()))
 				.headers(new HashMap<>()).status(200).build();
 	}
 
