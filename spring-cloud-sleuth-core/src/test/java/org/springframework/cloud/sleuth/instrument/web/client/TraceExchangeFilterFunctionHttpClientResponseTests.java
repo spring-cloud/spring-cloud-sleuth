@@ -22,16 +22,17 @@ import org.mockito.BDDMockito;
 
 import org.springframework.web.reactive.function.client.ClientResponse;
 
-public class TraceExchangeFilterFunctionHttpAdapterTests {
+public class TraceExchangeFilterFunctionHttpClientResponseTests {
 
 	@Test
 	public void should_return_0_when_invalid_status_code_is_returned() {
 		ClientResponse clientResponse = BDDMockito.mock(ClientResponse.class);
 		BDDMockito.given(clientResponse.rawStatusCode())
 				.willThrow(new IllegalStateException("Boom"));
-		TraceExchangeFilterFunction.HttpAdapter adapter = new TraceExchangeFilterFunction.HttpAdapter();
+		TraceExchangeFilterFunction.HttpClientResponse response = new TraceExchangeFilterFunction.HttpClientResponse(
+				clientResponse);
 
-		Integer statusCode = adapter.statusCodeAsInt(clientResponse);
+		Integer statusCode = response.statusCode();
 
 		BDDAssertions.then(statusCode).isZero();
 	}
@@ -40,9 +41,10 @@ public class TraceExchangeFilterFunctionHttpAdapterTests {
 	public void should_return_status_code_when_valid_status_code_is_returned() {
 		ClientResponse clientResponse = BDDMockito.mock(ClientResponse.class);
 		BDDMockito.given(clientResponse.rawStatusCode()).willReturn(200);
-		TraceExchangeFilterFunction.HttpAdapter adapter = new TraceExchangeFilterFunction.HttpAdapter();
+		TraceExchangeFilterFunction.HttpClientResponse response = new TraceExchangeFilterFunction.HttpClientResponse(
+				clientResponse);
 
-		Integer statusCode = adapter.statusCodeAsInt(clientResponse);
+		Integer statusCode = response.statusCode();
 
 		BDDAssertions.then(statusCode).isEqualTo(200);
 	}
