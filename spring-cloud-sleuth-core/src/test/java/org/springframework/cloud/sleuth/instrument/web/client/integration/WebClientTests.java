@@ -102,7 +102,8 @@ import static org.assertj.core.api.BDDAssertions.then;
 @SpringBootTest(classes = WebClientTests.TestConfiguration.class,
 		webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @TestPropertySource(properties = { "spring.sleuth.http.legacy.enabled=true",
-		"spring.application.name=fooservice", "feign.hystrix.enabled=false" })
+		"spring.application.name=fooservice", "feign.hystrix.enabled=false",
+		"spring.sleuth.web.client.skip-pattern=/skip.*" })
 @DirtiesContext
 public class WebClientTests {
 
@@ -396,6 +397,17 @@ public class WebClientTests {
 		then(this.tracer.currentSpan()).isNull();
 		then(this.reporter.getSpans()).isNotEmpty().extracting("kind.name")
 				.contains("CLIENT");
+	}
+
+	@Test
+	public void shouldRespectSkipPattern() {
+		this.webClient.get().uri("http://localhost:" + this.port + "/skip").retrieve()
+				.bodyToMono(String.class).block();
+		then(this.reporter.getSpans()).isEmpty();
+
+		this.webClient.get().uri("http://localhost:" + this.port + "/doNotSkip")
+				.retrieve().bodyToMono(String.class).block();
+		then(this.reporter.getSpans()).isNotEmpty();
 	}
 
 	Object[] parametersForShouldAttachTraceIdWhenCallingAnotherService() {
@@ -698,6 +710,11 @@ public class WebClientTests {
 		public ResponseEntity<String> issue1462() {
 			System.out.println("GOT IT");
 			return ResponseEntity.status(499).body("issue1462");
+		}
+
+		@RequestMapping(value = { "/skip", "/doNotSkip" }, method = RequestMethod.GET)
+		String skip() {
+			return "ok";
 		}
 
 	}

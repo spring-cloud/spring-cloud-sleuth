@@ -142,7 +142,7 @@ final class TraceExchangeFilterFunction implements ExchangeFilterFunction {
 
 	HttpTracing httpTracing;
 
-	HttpClientHandler<ClientRequest, ClientResponse> handler;
+	HttpClientHandler<brave.http.HttpClientRequest, brave.http.HttpClientResponse> handler;
 
 	TraceContext.Injector<ClientRequest.Builder> injector;
 
@@ -158,25 +158,23 @@ final class TraceExchangeFilterFunction implements ExchangeFilterFunction {
 
 	@Override
 	public Mono<ClientResponse> filter(ClientRequest request, ExchangeFunction next) {
-		ClientRequest.Builder builder = ClientRequest.from(request);
+		HttpClientRequest wrapper = new HttpClientRequest(request);
 		if (log.isDebugEnabled()) {
 			log.debug("Instrumenting WebClient call");
 		}
-		Span span = handler().handleSend(injector(), builder, request,
-				tracer().nextSpan());
+		Span span = handler().handleSend(wrapper);
 		if (log.isDebugEnabled()) {
 			log.debug("Handled send of " + span);
 		}
 
-		return new MonoWebClientTrace(next, builder.build(), this, span);
+		return new MonoWebClientTrace(next, wrapper.buildRequest(), this, span);
 	}
 
 	@SuppressWarnings("unchecked")
-	HttpClientHandler<ClientRequest, ClientResponse> handler() {
+	HttpClientHandler<brave.http.HttpClientRequest, brave.http.HttpClientResponse> handler() {
 		if (this.handler == null) {
-			this.handler = HttpClientHandler.create(
-					this.beanFactory.getBean(HttpTracing.class),
-					new TraceExchangeFilterFunction.HttpAdapter());
+			this.handler = HttpClientHandler
+					.create(this.beanFactory.getBean(HttpTracing.class));
 		}
 		return this.handler;
 	}
@@ -211,7 +209,7 @@ final class TraceExchangeFilterFunction implements ExchangeFilterFunction {
 
 		final Tracer tracer;
 
-		final HttpClientHandler<ClientRequest, ClientResponse> handler;
+		final HttpClientHandler<brave.http.HttpClientRequest, brave.http.HttpClientResponse> handler;
 
 		final TraceContext.Injector<ClientRequest.Builder> injector;
 
@@ -251,7 +249,7 @@ final class TraceExchangeFilterFunction implements ExchangeFilterFunction {
 
 			final Span span;
 
-			final HttpClientHandler<ClientRequest, ClientResponse> handler;
+			final HttpClientHandler<brave.http.HttpClientRequest, brave.http.HttpClientResponse> handler;
 
 			final Function<? super Publisher<DataBuffer>, ? extends Publisher<DataBuffer>> scopePassingTransformer;
 
@@ -359,7 +357,8 @@ final class TraceExchangeFilterFunction implements ExchangeFilterFunction {
 				if (log.isTraceEnabled()) {
 					log.trace("Handling receive");
 				}
-				this.handler.handleReceive(clientResponse, throwable, clientSpan);
+				this.handler.handleReceive(new HttpClientResponse(clientResponse),
+						throwable, clientSpan);
 				if (log.isTraceEnabled()) {
 					log.trace("Closed scope");
 				}
@@ -403,35 +402,70 @@ final class TraceExchangeFilterFunction implements ExchangeFilterFunction {
 
 	}
 
-	static final class HttpAdapter
-			extends brave.http.HttpClientAdapter<ClientRequest, ClientResponse> {
+	static final class HttpClientRequest extends brave.http.HttpClientRequest {
 
-		@Override
-		public String method(ClientRequest request) {
-			return request.method().name();
+		private final ClientRequest delegate;
+
+		private final ClientRequest.Builder builder;
+
+		HttpClientRequest(ClientRequest delegate) {
+			this.delegate = delegate;
+			this.builder = ClientRequest.from(delegate);
 		}
 
 		@Override
-		public String url(ClientRequest request) {
-			return request.url().toString();
+		public Object unwrap() {
+			return delegate;
 		}
 
 		@Override
-		public String requestHeader(ClientRequest request, String name) {
-			Object result = request.headers().getFirst(name);
-			return result != null ? result.toString() : null;
+		public String method() {
+			return delegate.method().name();
 		}
 
 		@Override
-		public Integer statusCode(ClientResponse response) {
-			int result = statusCodeAsInt(response);
-			return result != 0 ? result : null;
+		public String path() {
+			return delegate.url().getPath();
 		}
 
 		@Override
-		public int statusCodeAsInt(ClientResponse response) {
+		public String url() {
+			return delegate.url().toString();
+		}
+
+		@Override
+		public String header(String name) {
+			return delegate.headers().getFirst(name);
+		}
+
+		@Override
+		public void header(String name, String value) {
+			builder.header(name, value);
+		}
+
+		ClientRequest buildRequest() {
+			return builder.build();
+		}
+
+	}
+
+	static final class HttpClientResponse extends brave.http.HttpClientResponse {
+
+		private final ClientResponse delegate;
+
+		HttpClientResponse(ClientResponse delegate) {
+			this.delegate = delegate;
+		}
+
+		@Override
+		public Object unwrap() {
+			return delegate;
+		}
+
+		@Override
+		public int statusCode() {
 			try {
-				return response.rawStatusCode();
+				return delegate.rawStatusCode();
 			}
 			catch (Exception dontCare) {
 				return 0;
