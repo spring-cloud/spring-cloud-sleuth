@@ -76,9 +76,6 @@ public class TraceMessagingAutoConfigurationTests {
 	MySleuthKafkaAspect mySleuthKafkaAspect;
 
 	@Autowired
-	TestSleuthKafkaHeaderMapperBeanPostProcessor testSleuthKafkaHeaderMapperBeanPostProcessor;
-
-	@Autowired
 	ProducerFactory producerFactory;
 
 	@Autowired
@@ -105,8 +102,6 @@ public class TraceMessagingAutoConfigurationTests {
 		then(this.mySleuthKafkaAspect.consumerWrapped).isTrue();
 
 		then(this.mySleuthKafkaAspect.adapterWrapped).isTrue();
-
-		then(this.testSleuthKafkaHeaderMapperBeanPostProcessor.tracingCalled).isTrue();
 	}
 
 	@Test
@@ -189,11 +184,6 @@ public class TraceMessagingAutoConfigurationTests {
 			return new TestSleuthJmsBeanPostProcessor(beanFactory);
 		}
 
-		@Bean
-		TestSleuthKafkaHeaderMapperBeanPostProcessor testSleuthKafkaHeaderMapperBeanPostProcessor() {
-			return new TestSleuthKafkaHeaderMapperBeanPostProcessor();
-		}
-
 		@KafkaListener(topics = "backend", groupId = "foo")
 		public void onMessage(ConsumerRecord<?, ?> message) {
 			System.err.println(message);
@@ -265,19 +255,6 @@ class TestSleuthJmsBeanPostProcessor extends TracingConnectionFactoryBeanPostPro
 			throws BeansException {
 		this.tracingCalled = true;
 		return super.postProcessAfterInitialization(bean, beanName);
-	}
-
-}
-
-class TestSleuthKafkaHeaderMapperBeanPostProcessor
-		extends SleuthKafkaHeaderMapperBeanPostProcessor {
-
-	boolean tracingCalled = false;
-
-	@Override
-	Object sleuthDefaultKafkaHeaderMapper(Object bean) {
-		this.tracingCalled = true;
-		return super.sleuthDefaultKafkaHeaderMapper(bean);
 	}
 
 }
