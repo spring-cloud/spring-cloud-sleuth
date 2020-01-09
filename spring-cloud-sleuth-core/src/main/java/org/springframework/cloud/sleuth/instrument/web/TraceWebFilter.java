@@ -308,6 +308,9 @@ public final class TraceWebFilter implements WebFilter, Ordered {
 			}
 
 			private void addClassNameTag(Object handler, Span span) {
+				if (handler == null) {
+					return;
+				}
 				String className;
 				if (handler instanceof HandlerMethod) {
 					className = ((HandlerMethod) handler).getBeanType().getSimpleName();
