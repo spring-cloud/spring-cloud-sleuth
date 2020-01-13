@@ -75,23 +75,36 @@ final class TraceWebClientBeanPostProcessor implements BeanPostProcessor {
 			throws BeansException {
 		if (bean instanceof WebClient) {
 			WebClient webClient = (WebClient) bean;
-			return webClient.mutate()
-					.filters(addTraceExchangeFilterFunctionIfNotPresent()).build();
+			return wrapBuilder(webClient.mutate()).build();
 		}
 		else if (bean instanceof WebClient.Builder) {
 			WebClient.Builder webClientBuilder = (WebClient.Builder) bean;
-			return webClientBuilder.filters(addTraceExchangeFilterFunctionIfNotPresent());
+			return wrapBuilder(webClientBuilder);
 		}
 		return bean;
 	}
 
+	private WebClient.Builder wrapBuilder(WebClient.Builder webClientBuilder) {
+		return webClientBuilder.filters(addTraceExchangeFilterFunctionIfNotPresent());
+	}
+
 	private Consumer<List<ExchangeFilterFunction>> addTraceExchangeFilterFunctionIfNotPresent() {
 		return functions -> {
-			if (functions.stream()
-					.noneMatch(f -> f instanceof TraceExchangeFilterFunction)) {
+			boolean noneMatch = noneMatchTraceExchangeFunction(functions);
+			if (noneMatch) {
 				functions.add(new TraceExchangeFilterFunction(this.beanFactory));
 			}
 		};
+	}
+
+	private boolean noneMatchTraceExchangeFunction(
+			List<ExchangeFilterFunction> functions) {
+		for (ExchangeFilterFunction function : functions) {
+			if (function instanceof TraceExchangeFilterFunction) {
+				return false;
+			}
+		}
+		return true;
 	}
 
 }
@@ -129,7 +142,7 @@ final class TraceExchangeFilterFunction implements ExchangeFilterFunction {
 
 	HttpTracing httpTracing;
 
-	HttpClientHandler<ClientRequest, ClientResponse> handler;
+	HttpClientHandler<brave.http.HttpClientRequest, brave.http.HttpClientResponse> handler;
 
 	TraceContext.Injector<ClientRequest.Builder> injector;
 
@@ -145,25 +158,26 @@ final class TraceExchangeFilterFunction implements ExchangeFilterFunction {
 
 	@Override
 	public Mono<ClientResponse> filter(ClientRequest request, ExchangeFunction next) {
-		ClientRequest.Builder builder = ClientRequest.from(request);
+		HttpClientRequest wrapper = new HttpClientRequest(request);
 		if (log.isDebugEnabled()) {
 			log.debug("Instrumenting WebClient call");
 		}
-		Span span = handler().handleSend(injector(), builder, request,
-				tracer().nextSpan());
+		Span parentSpan = tracer().currentSpan();
+		Span span = handler().handleSend(wrapper);
 		if (log.isDebugEnabled()) {
 			log.debug("Handled send of " + span);
 		}
-
-		return new MonoWebClientTrace(next, builder.build(), this, span);
+		MonoWebClientTrace trace = new MonoWebClientTrace(next, wrapper.buildRequest(),
+				this, span);
+		tracer().withSpanInScope(parentSpan);
+		return trace;
 	}
 
 	@SuppressWarnings("unchecked")
-	HttpClientHandler<ClientRequest, ClientResponse> handler() {
+	HttpClientHandler<brave.http.HttpClientRequest, brave.http.HttpClientResponse> handler() {
 		if (this.handler == null) {
-			this.handler = HttpClientHandler.create(
-					this.beanFactory.getBean(HttpTracing.class),
-					new TraceExchangeFilterFunction.HttpAdapter());
+			this.handler = HttpClientHandler
+					.create(this.beanFactory.getBean(HttpTracing.class));
 		}
 		return this.handler;
 	}
@@ -198,7 +212,7 @@ final class TraceExchangeFilterFunction implements ExchangeFilterFunction {
 
 		final Tracer tracer;
 
-		final HttpClientHandler<ClientRequest, ClientResponse> handler;
+		final HttpClientHandler<brave.http.HttpClientRequest, brave.http.HttpClientResponse> handler;
 
 		final TraceContext.Injector<ClientRequest.Builder> injector;
 
@@ -238,9 +252,7 @@ final class TraceExchangeFilterFunction implements ExchangeFilterFunction {
 
 			final Span span;
 
-			final Tracer.SpanInScope ws;
-
-			final HttpClientHandler<ClientRequest, ClientResponse> handler;
+			final HttpClientHandler<brave.http.HttpClientRequest, brave.http.HttpClientResponse> handler;
 
 			final Function<? super Publisher<DataBuffer>, ? extends Publisher<DataBuffer>> scopePassingTransformer;
 
@@ -265,8 +277,6 @@ final class TraceExchangeFilterFunction implements ExchangeFilterFunction {
 				}
 
 				this.context = context.put(CLIENT_SPAN_KEY, span);
-				this.ws = parent.tracer.withSpanInScope(span);
-
 			}
 
 			@Override
@@ -274,51 +284,68 @@ final class TraceExchangeFilterFunction implements ExchangeFilterFunction {
 				this.actual.onSubscribe(new Subscription() {
 					@Override
 					public void request(long n) {
-						subscription.request(n);
+						try (Tracer.SpanInScope ws = tracing.tracer()
+								.withSpanInScope(span)) {
+							if (log.isTraceEnabled()) {
+								log.trace("Request");
+							}
+							subscription.request(n);
+						}
 					}
 
 					@Override
 					public void cancel() {
-						terminateSpanOnCancel();
-						subscription.cancel();
+						try (Tracer.SpanInScope ws = tracing.tracer()
+								.withSpanInScope(span)) {
+							if (log.isTraceEnabled()) {
+								log.trace("Cancel");
+							}
+							terminateSpanOnCancel();
+							subscription.cancel();
+						}
 					}
 				});
 			}
 
 			@Override
 			public void onNext(ClientResponse response) {
-				this.done = true;
-				try {
-					// decorate response body
-					this.actual
-							.onNext(ClientResponse.from(response)
-									.body(response.bodyToFlux(DataBuffer.class)
-											.transform(this.scopePassingTransformer))
-									.build());
-				}
-				finally {
-					terminateSpan(response, null);
+				try (Tracer.SpanInScope ws = tracing.tracer().withSpanInScope(span)) {
+					this.done = true;
+					try {
+						// decorate response body
+						this.actual.onNext(ClientResponse.from(response)
+								.body(response.bodyToFlux(DataBuffer.class)
+										.transform(this.scopePassingTransformer))
+								.build());
+					}
+					finally {
+						terminateSpan(response, null);
+					}
 				}
 			}
 
 			@Override
 			public void onError(Throwable t) {
-				try {
-					this.actual.onError(t);
-				}
-				finally {
-					terminateSpan(null, t);
+				try (Tracer.SpanInScope ws = tracing.tracer().withSpanInScope(span)) {
+					try {
+						this.actual.onError(t);
+					}
+					finally {
+						terminateSpan(null, t);
+					}
 				}
 			}
 
 			@Override
 			public void onComplete() {
-				try {
-					this.actual.onComplete();
-				}
-				finally {
-					if (!this.done) {
-						terminateSpan(null, null);
+				try (Tracer.SpanInScope ws = tracing.tracer().withSpanInScope(span)) {
+					try {
+						this.actual.onComplete();
+					}
+					finally {
+						if (!this.done) {
+							terminateSpan(null, null);
+						}
 					}
 				}
 			}
@@ -328,10 +355,16 @@ final class TraceExchangeFilterFunction implements ExchangeFilterFunction {
 				return this.context;
 			}
 
-			void handleReceive(Span clientSpan, Tracer.SpanInScope ws,
-					ClientResponse clientResponse, Throwable throwable) {
-				this.handler.handleReceive(clientResponse, throwable, clientSpan);
-				ws.close();
+			void handleReceive(Span clientSpan, ClientResponse clientResponse,
+					Throwable throwable) {
+				if (log.isTraceEnabled()) {
+					log.trace("Handling receive");
+				}
+				this.handler.handleReceive(new HttpClientResponse(clientResponse),
+						throwable, clientSpan);
+				if (log.isTraceEnabled()) {
+					log.trace("Closed scope");
+				}
 			}
 
 			void terminateSpanOnCancel() {
@@ -341,7 +374,7 @@ final class TraceExchangeFilterFunction implements ExchangeFilterFunction {
 				}
 
 				this.span.tag("error", CANCELLED_SUBSCRIPTION_ERROR);
-				handleReceive(this.span, this.ws, null, null);
+				handleReceive(this.span, null, null);
 			}
 
 			void terminateSpan(@Nullable ClientResponse clientResponse,
@@ -351,7 +384,7 @@ final class TraceExchangeFilterFunction implements ExchangeFilterFunction {
 						log.debug("No response was returned. Will close the span ["
 								+ this.span + "]");
 					}
-					handleReceive(this.span, this.ws, clientResponse, throwable);
+					handleReceive(this.span, clientResponse, throwable);
 					return;
 				}
 				int statusCode = clientResponse.rawStatusCode();
@@ -365,42 +398,77 @@ final class TraceExchangeFilterFunction implements ExchangeFilterFunction {
 					throwable = new RestClientException(
 							"Status code of the response is [" + statusCode + "]");
 				}
-				handleReceive(this.span, this.ws, clientResponse, throwable);
+				handleReceive(this.span, clientResponse, throwable);
 			}
 
 		}
 
 	}
 
-	static final class HttpAdapter
-			extends brave.http.HttpClientAdapter<ClientRequest, ClientResponse> {
+	static final class HttpClientRequest extends brave.http.HttpClientRequest {
 
-		@Override
-		public String method(ClientRequest request) {
-			return request.method().name();
+		private final ClientRequest delegate;
+
+		private final ClientRequest.Builder builder;
+
+		HttpClientRequest(ClientRequest delegate) {
+			this.delegate = delegate;
+			this.builder = ClientRequest.from(delegate);
 		}
 
 		@Override
-		public String url(ClientRequest request) {
-			return request.url().toString();
+		public Object unwrap() {
+			return this.delegate;
 		}
 
 		@Override
-		public String requestHeader(ClientRequest request, String name) {
-			Object result = request.headers().getFirst(name);
-			return result != null ? result.toString() : null;
+		public String method() {
+			return this.delegate.method().name();
 		}
 
 		@Override
-		public Integer statusCode(ClientResponse response) {
-			int result = statusCodeAsInt(response);
-			return result != 0 ? result : null;
+		public String path() {
+			return this.delegate.url().getPath();
 		}
 
 		@Override
-		public int statusCodeAsInt(ClientResponse response) {
+		public String url() {
+			return this.delegate.url().toString();
+		}
+
+		@Override
+		public String header(String name) {
+			return this.delegate.headers().getFirst(name);
+		}
+
+		@Override
+		public void header(String name, String value) {
+			this.builder.header(name, value);
+		}
+
+		ClientRequest buildRequest() {
+			return this.builder.build();
+		}
+
+	}
+
+	static final class HttpClientResponse extends brave.http.HttpClientResponse {
+
+		private final ClientResponse delegate;
+
+		HttpClientResponse(ClientResponse delegate) {
+			this.delegate = delegate;
+		}
+
+		@Override
+		public Object unwrap() {
+			return this.delegate;
+		}
+
+		@Override
+		public int statusCode() {
 			try {
-				return response.rawStatusCode();
+				return delegate.rawStatusCode();
 			}
 			catch (Exception dontCare) {
 				return 0;
