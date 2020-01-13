@@ -162,12 +162,15 @@ final class TraceExchangeFilterFunction implements ExchangeFilterFunction {
 		if (log.isDebugEnabled()) {
 			log.debug("Instrumenting WebClient call");
 		}
+		Span parentSpan = tracer().currentSpan();
 		Span span = handler().handleSend(wrapper);
 		if (log.isDebugEnabled()) {
 			log.debug("Handled send of " + span);
 		}
-
-		return new MonoWebClientTrace(next, wrapper.buildRequest(), this, span);
+		MonoWebClientTrace trace = new MonoWebClientTrace(next, wrapper.buildRequest(),
+				this, span);
+		tracer().withSpanInScope(parentSpan);
+		return trace;
 	}
 
 	@SuppressWarnings("unchecked")
