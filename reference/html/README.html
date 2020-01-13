@@ -477,10 +477,16 @@ An example from Kibana would resemble the following image:</p>
 <div class="listingblock">
 <div class="content">
 <pre class="highlightjs highlight"><code>filter {
-       # pattern matching logback pattern
-       grok {
-              match =&gt; { "message" =&gt; "%{TIMESTAMP_ISO8601:timestamp}\s+%{LOGLEVEL:severity}\s+\[%{DATA:service},%{DATA:trace},%{DATA:span},%{DATA:exportable}\]\s+%{DATA:pid}\s+---\s+\[%{DATA:thread}\]\s+%{DATA:class}\s+:\s+%{GREEDYDATA:rest}" }
-       }
+  # pattern matching logback pattern
+  grok {
+    match =&gt; { "message" =&gt; "%{TIMESTAMP_ISO8601:timestamp}\s+%{LOGLEVEL:severity}\s+\[%{DATA:service},%{DATA:trace},%{DATA:span},%{DATA:exportable}\]\s+%{DATA:pid}\s+---\s+\[%{DATA:thread}\]\s+%{DATA:class}\s+:\s+%{GREEDYDATA:rest}" }
+  }
+  date {
+    match =&gt; ["timestamp", "ISO8601"]
+  }
+  mutate {
+    remove_field =&gt; ["timestamp"]
+  }
 }</code></pre>
 </div>
 </div>
@@ -499,10 +505,16 @@ If you want to use Grok together with the logs from Cloud Foundry, you have to u
 <div class="listingblock">
 <div class="content">
 <pre class="highlightjs highlight"><code>filter {
-       # pattern matching logback pattern
-       grok {
-              match =&gt; { "message" =&gt; "(?m)OUT\s+%{TIMESTAMP_ISO8601:timestamp}\s+%{LOGLEVEL:severity}\s+\[%{DATA:service},%{DATA:trace},%{DATA:span},%{DATA:exportable}\]\s+%{DATA:pid}\s+---\s+\[%{DATA:thread}\]\s+%{DATA:class}\s+:\s+%{GREEDYDATA:rest}" }
-       }
+  # pattern matching logback pattern
+  grok {
+    match =&gt; { "message" =&gt; "(?m)OUT\s+%{TIMESTAMP_ISO8601:timestamp}\s+%{LOGLEVEL:severity}\s+\[%{DATA:service},%{DATA:trace},%{DATA:span},%{DATA:exportable}\]\s+%{DATA:pid}\s+---\s+\[%{DATA:thread}\]\s+%{DATA:class}\s+:\s+%{GREEDYDATA:rest}" }
+  }
+  date {
+    match =&gt; ["timestamp", "ISO8601"]
+  }
+  mutate {
+    remove_field =&gt; ["timestamp"]
+  }
 }</code></pre>
 </div>
 </div>
