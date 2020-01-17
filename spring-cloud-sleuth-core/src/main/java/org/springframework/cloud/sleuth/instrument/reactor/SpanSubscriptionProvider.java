@@ -18,8 +18,8 @@ package org.springframework.cloud.sleuth.instrument.reactor;
 
 import java.util.function.Supplier;
 
-import brave.Span;
-import brave.Tracing;
+import brave.propagation.CurrentTraceContext;
+import brave.propagation.TraceContext;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.reactivestreams.Subscriber;
@@ -45,7 +45,7 @@ final class SpanSubscriptionProvider<T> implements Supplier<SpanSubscription<T>>
 
 	final String name;
 
-	private volatile Tracing tracing;
+	private volatile CurrentTraceContext currentTraceContext;
 
 	SpanSubscriptionProvider(BeanFactory beanFactory, Subscriber<? super T> subscriber,
 			Context context, String name) {
@@ -61,31 +61,32 @@ final class SpanSubscriptionProvider<T> implements Supplier<SpanSubscription<T>>
 
 	@Override
 	public SpanSubscription<T> get() {
-		return newCoreSubscriber(tracing());
+		return newCoreSubscriber(currentTraceContext());
 	}
 
-	SpanSubscription<T> newCoreSubscriber(Tracing tracing) {
-		Span root = this.context.hasKey(Span.class) ? this.context.get(Span.class)
-				: tracing.tracer().currentSpan();
-		return new ScopePassingSpanSubscriber<>(this.subscriber, this.context, tracing,
-				root);
+	SpanSubscription<T> newCoreSubscriber(CurrentTraceContext currentTraceContext) {
+		TraceContext root = this.context.hasKey(TraceContext.class)
+				? this.context.get(TraceContext.class) : currentTraceContext.get();
+		return new ScopePassingSpanSubscriber<>(this.subscriber, this.context,
+				currentTraceContext, root);
 	}
 
-	private Tracing tracing() {
-		if (this.tracing == null) {
+	private CurrentTraceContext currentTraceContext() {
+		if (this.currentTraceContext == null) {
 			try {
-				this.tracing = this.beanFactory.getBean(Tracing.class);
+				this.currentTraceContext = this.beanFactory
+						.getBean(CurrentTraceContext.class);
 			}
 			catch (Exception ex) {
 				if (log.isDebugEnabled()) {
 					log.debug(
-							"Exception occurred while trying to get the tracing bean. Will return a default instance",
+							"Exception occurred while trying to get the currentTraceContext bean. Will return a default instance",
 							ex);
 				}
-				return Tracing.newBuilder().build();
+				return CurrentTraceContext.Default.create();
 			}
 		}
-		return this.tracing;
+		return this.currentTraceContext;
 	}
 
 }

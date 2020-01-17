@@ -268,8 +268,8 @@ final class TraceExchangeFilterFunction implements ExchangeFilterFunction {
 				this.tracing = parent.tracing;
 				this.scopePassingTransformer = parent.scopePassingTransformer;
 
-				if (!context.hasKey(Span.class)) {
-					context = context.put(Span.class, span);
+				if (!context.hasKey(TraceContext.class)) {
+					context = context.put(TraceContext.class, span.context());
 					if (log.isDebugEnabled()) {
 						log.debug("Reactor Context got injected with the client span "
 								+ span);

@@ -18,9 +18,8 @@ package org.springframework.cloud.sleuth.instrument.reactor;
 
 import javax.annotation.Nullable;
 
-import brave.Span;
-import brave.Tracing;
 import brave.propagation.CurrentTraceContext;
+import brave.propagation.CurrentTraceContext.Scope;
 import brave.propagation.TraceContext;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -46,44 +45,40 @@ final class ScopePassingSpanSubscriber<T> implements SpanSubscription<T>, Scanna
 
 	private final CurrentTraceContext currentTraceContext;
 
-	private final TraceContext traceContext;
+	private final TraceContext parent;
 
 	private Subscription s;
 
 	ScopePassingSpanSubscriber(Subscriber<? super T> subscriber, Context ctx,
-			Tracing tracing, @Nullable Span root) {
+			CurrentTraceContext currentTraceContext, @Nullable TraceContext parent) {
 		this.subscriber = subscriber;
-		this.currentTraceContext = tracing.currentTraceContext();
-
-		this.traceContext = root == null ? null : root.context();
-		this.context = ctx != null && root != null ? ctx.put(Span.class, root)
+		this.currentTraceContext = currentTraceContext;
+		this.parent = parent;
+		this.context = ctx != null && parent != null ? ctx.put(TraceContext.class, parent)
 				: ctx != null ? ctx : Context.empty();
 		if (log.isTraceEnabled()) {
-			log.trace("Root span [" + root + "], context [" + this.context + "]");
+			log.trace("Parent span [" + parent + "], context [" + this.context + "]");
 		}
 	}
 
 	@Override
 	public void onSubscribe(Subscription subscription) {
 		this.s = subscription;
-		try (CurrentTraceContext.Scope scope = this.currentTraceContext
-				.maybeScope(this.traceContext)) {
+		try (Scope scope = this.currentTraceContext.maybeScope(this.parent)) {
 			this.subscriber.onSubscribe(this);
 		}
 	}
 
 	@Override
 	public void request(long n) {
-		try (CurrentTraceContext.Scope scope = this.currentTraceContext
-				.maybeScope(this.traceContext)) {
+		try (Scope scope = this.currentTraceContext.maybeScope(this.parent)) {
 			this.s.request(n);
 		}
 	}
 
 	@Override
 	public void cancel() {
-		try (CurrentTraceContext.Scope scope = this.currentTraceContext
-				.maybeScope(this.traceContext)) {
+		try (Scope scope = this.currentTraceContext.maybeScope(this.parent)) {
 			this.s.cancel();
 		}
 
@@ -91,24 +86,21 @@ final class ScopePassingSpanSubscriber<T> implements SpanSubscription<T>, Scanna
 
 	@Override
 	public void onNext(T o) {
-		try (CurrentTraceContext.Scope scope = this.currentTraceContext
-				.maybeScope(this.traceContext)) {
+		try (Scope scope = this.currentTraceContext.maybeScope(this.parent)) {
 			this.subscriber.onNext(o);
 		}
 	}
 
 	@Override
 	public void onError(Throwable throwable) {
-		try (CurrentTraceContext.Scope scope = this.currentTraceContext
-				.maybeScope(this.traceContext)) {
+		try (Scope scope = this.currentTraceContext.maybeScope(this.parent)) {
 			this.subscriber.onError(throwable);
 		}
 	}
 
 	@Override
 	public void onComplete() {
-		try (CurrentTraceContext.Scope scope = this.currentTraceContext
-				.maybeScope(this.traceContext)) {
+		try (Scope scope = this.currentTraceContext.maybeScope(this.parent)) {
 			this.subscriber.onComplete();
 		}
 	}

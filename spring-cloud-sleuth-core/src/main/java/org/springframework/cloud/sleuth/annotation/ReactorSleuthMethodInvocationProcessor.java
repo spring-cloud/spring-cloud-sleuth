@@ -22,6 +22,8 @@ import brave.Span;
 import brave.Tracer;
 import brave.Tracing;
 import brave.propagation.CurrentTraceContext;
+import brave.propagation.CurrentTraceContext.Scope;
+import brave.propagation.TraceContext;
 import org.aopalliance.intercept.MethodInvocation;
 import org.reactivestreams.Publisher;
 import org.reactivestreams.Subscription;
@@ -144,14 +146,15 @@ class ReactorSleuthMethodInvocationProcessor
 			Span span;
 			Tracer tracer = this.processor.tracer();
 			if (this.span == null) {
-				span = tracer.nextSpan();
+				span = tracer.newTrace();
 				this.processor.newSpanParser().parse(this.invocation, this.newSpan, span);
 				span.start();
 			}
 			else {
 				span = this.span;
 			}
-			try (Tracer.SpanInScope ws = tracer.withSpanInScope(span)) {
+			try (Scope ws = this.processor.currentTraceContext()
+					.maybeScope(span.context())) {
 				this.source.subscribe(new SpanSubscriber(actual, this.processor,
 						this.invocation, this.span == null, span, this.log, this.hasLog));
 			}
@@ -197,7 +200,8 @@ class ReactorSleuthMethodInvocationProcessor
 			else {
 				span = this.span;
 			}
-			try (Tracer.SpanInScope ws = tracer.withSpanInScope(span)) {
+			try (Scope ws = this.processor.currentTraceContext()
+					.maybeScope(span.context())) {
 				this.source.subscribe(new SpanSubscriber(actual, this.processor,
 						this.invocation, this.span == null, span, this.log, this.hasLog));
 			}
@@ -238,23 +242,22 @@ class ReactorSleuthMethodInvocationProcessor
 			this.processor = processor;
 
 			this.currentTraceContext = processor.tracing().currentTraceContext();
-			this.context = actual.currentContext().put(Span.class, span);
+			this.context = actual.currentContext().put(TraceContext.class,
+					span.context());
 
 			processor.before(invocation, this.span, this.log, this.hasLog);
 		}
 
 		@Override
 		public void request(long n) {
-			try (CurrentTraceContext.Scope scope = this.currentTraceContext
-					.maybeScope(this.span.context())) {
+			try (Scope scope = this.currentTraceContext.maybeScope(this.span.context())) {
 				this.parent.request(n);
 			}
 		}
 
 		@Override
 		public void cancel() {
-			try (CurrentTraceContext.Scope scope = this.currentTraceContext
-					.maybeScope(this.span.context())) {
+			try (Scope scope = this.currentTraceContext.maybeScope(this.span.context())) {
 				this.parent.cancel();
 			}
 			finally {
@@ -270,24 +273,21 @@ class ReactorSleuthMethodInvocationProcessor
 		@Override
 		public void onSubscribe(Subscription subscription) {
 			this.parent = subscription;
-			try (CurrentTraceContext.Scope scope = this.currentTraceContext
-					.maybeScope(this.span.context())) {
+			try (Scope scope = this.currentTraceContext.maybeScope(this.span.context())) {
 				this.actual.onSubscribe(this);
 			}
 		}
 
 		@Override
 		public void onNext(Object o) {
-			try (CurrentTraceContext.Scope scope = this.currentTraceContext
-					.maybeScope(this.span.context())) {
+			try (Scope scope = this.currentTraceContext.maybeScope(this.span.context())) {
 				this.actual.onNext(o);
 			}
 		}
 
 		@Override
 		public void onError(Throwable error) {
-			try (CurrentTraceContext.Scope scope = this.currentTraceContext
-					.maybeScope(this.span.context())) {
+			try (Scope scope = this.currentTraceContext.maybeScope(this.span.context())) {
 				this.processor.onFailure(this.span, this.log, this.hasLog, error);
 				this.actual.onError(error);
 			}
@@ -298,8 +298,7 @@ class ReactorSleuthMethodInvocationProcessor
 
 		@Override
 		public void onComplete() {
-			try (CurrentTraceContext.Scope scope = this.currentTraceContext
-					.maybeScope(this.span.context())) {
+			try (Scope scope = this.currentTraceContext.maybeScope(this.span.context())) {
 				this.actual.onComplete();
 			}
 			finally {
