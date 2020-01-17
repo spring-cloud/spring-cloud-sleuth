@@ -25,6 +25,7 @@ import java.util.stream.Collectors;
 
 import brave.Span;
 import brave.Tracer;
+import brave.propagation.TraceContext;
 import brave.sampler.Sampler;
 import org.apache.commons.lang3.StringUtils;
 import org.awaitility.Awaitility;
@@ -75,8 +76,8 @@ public class SleuthSpanCreatorAspectFluxTests {
 	}
 
 	protected static Long id(Context context, Tracer tracer) {
-		if (context.hasKey(Span.class)) {
-			return context.get(Span.class).context().spanId();
+		if (context.hasKey(TraceContext.class)) {
+			return context.get(TraceContext.class).spanId();
 		}
 		return id(tracer);
 	}

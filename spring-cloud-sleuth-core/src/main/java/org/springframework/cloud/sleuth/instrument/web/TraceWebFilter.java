@@ -24,7 +24,6 @@ import brave.http.HttpServerHandler;
 import brave.http.HttpTracing;
 import brave.propagation.Propagation;
 import brave.propagation.TraceContext;
-import brave.propagation.TraceContextOrSamplingFlags;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.reactivestreams.Subscription;
@@ -146,7 +145,7 @@ public final class TraceWebFilter implements WebFilter, Ordered {
 		boolean tracePresent = tracer().currentSpan() != null;
 		if (tracePresent) {
 			// clear any previous trace
-			tracer().withSpanInScope(null);
+			tracer().withSpanInScope(null); // TODO: dangerous and also allocates stuff
 		}
 		return new MonoWebFilterTrace(source, exchange, tracePresent, this);
 	}
@@ -192,7 +191,7 @@ public final class TraceWebFilter implements WebFilter, Ordered {
 
 		private Context contextWithoutInitialSpan(Context context) {
 			if (this.initialTracePresent && !this.initialSpanAlreadyRemoved.get()) {
-				context = context.delete(Span.class);
+				context = context.delete(TraceContext.class);
 				this.initialSpanAlreadyRemoved.set(true);
 			}
 			return context;
@@ -200,11 +199,9 @@ public final class TraceWebFilter implements WebFilter, Ordered {
 
 		private Span findOrCreateSpan(Context c) {
 			Span span;
-			if (c.hasKey(Span.class)) {
-				Span parent = c.get(Span.class);
-				span = this.tracer
-						.nextSpan(TraceContextOrSamplingFlags.create(parent.context()))
-						.start();
+			if (c.hasKey(TraceContext.class)) {
+				TraceContext parent = c.get(TraceContext.class);
+				span = this.tracer.newChild(parent).start();
 				if (log.isDebugEnabled()) {
 					log.debug("Found span in reactor context" + span);
 				}
@@ -245,7 +242,7 @@ public final class TraceWebFilter implements WebFilter, Ordered {
 					Span span, MonoWebFilterTrace parent) {
 				this.actual = actual;
 				this.span = span;
-				this.context = context.put(Span.class, span);
+				this.context = context.put(TraceContext.class, span.context());
 				this.exchange = parent.exchange;
 				this.handler = parent.handler;
 			}

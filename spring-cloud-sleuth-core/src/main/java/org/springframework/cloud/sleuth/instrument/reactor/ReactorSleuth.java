@@ -21,8 +21,9 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.BooleanSupplier;
 import java.util.function.Function;
 
-import brave.Span;
 import brave.Tracing;
+import brave.propagation.CurrentTraceContext;
+import brave.propagation.TraceContext;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.reactivestreams.Publisher;
@@ -105,18 +106,21 @@ public abstract class ReactorSleuth {
 				scannable.name());
 	}
 
-	private static Map<BeanFactory, Tracing> CACHE = new ConcurrentHashMap<>();
+	private static Map<BeanFactory, CurrentTraceContext> CACHE = new ConcurrentHashMap<>();
 
 	static <T> CoreSubscriber<? super T> scopePassingSpanSubscription(
 			BeanFactory beanFactory, CoreSubscriber<? super T> sub) {
-		Tracing tracing = CACHE.computeIfAbsent(beanFactory,
-				beanFactory1 -> beanFactory1.getBean(Tracing.class));
+		CurrentTraceContext currentTraceContext = CACHE.computeIfAbsent(beanFactory,
+				beanFactory1 -> beanFactory1.getBean(CurrentTraceContext.class));
 		Context context = sub.currentContext();
 
-		Span root = context.hasKey(Span.class) ? context.get(Span.class)
-				: tracing.tracer().currentSpan();
-		if (root != null) {
-			return new ScopePassingSpanSubscriber<>(sub, context, tracing, root);
+		TraceContext parent = context.getOrDefault(TraceContext.class, null);
+		if (parent == null) {
+			parent = currentTraceContext.get();
+		}
+		if (parent != null) {
+			return new ScopePassingSpanSubscriber<>(sub, context, currentTraceContext,
+					parent);
 		}
 		else {
 			return sub; // no need to trace

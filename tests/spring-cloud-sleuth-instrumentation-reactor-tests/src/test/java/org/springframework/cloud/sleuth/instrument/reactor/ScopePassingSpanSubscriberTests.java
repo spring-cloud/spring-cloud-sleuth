@@ -16,9 +16,9 @@
 
 package org.springframework.cloud.sleuth.instrument.reactor;
 
-import brave.Span;
-import brave.Tracer;
-import brave.Tracing;
+import brave.propagation.CurrentTraceContext;
+import brave.propagation.CurrentTraceContext.Scope;
+import brave.propagation.TraceContext;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.BDDMockito;
@@ -37,12 +37,15 @@ import static org.assertj.core.api.BDDAssertions.then;
 @RunWith(MockitoJUnitRunner.class)
 public class ScopePassingSpanSubscriberTests {
 
-	Tracing tracing = Tracing.newBuilder().build();
+	CurrentTraceContext currentTraceContext = CurrentTraceContext.Default.create();
+
+	TraceContext context = TraceContext.newBuilder().traceId(1).spanId(1).sampled(true)
+			.build();
 
 	@Test
 	public void should_propagate_current_context() {
 		ScopePassingSpanSubscriber<?> subscriber = new ScopePassingSpanSubscriber<>(null,
-				Context.of("foo", "bar"), this.tracing, null);
+				Context.of("foo", "bar"), this.currentTraceContext, null);
 
 		then((String) subscriber.currentContext().get("foo")).isEqualTo("bar");
 	}
@@ -50,28 +53,27 @@ public class ScopePassingSpanSubscriberTests {
 	@Test
 	public void should_set_empty_context_when_context_is_null() {
 		ScopePassingSpanSubscriber<?> subscriber = new ScopePassingSpanSubscriber<>(null,
-				null, this.tracing, null);
+				null, this.currentTraceContext, null);
 
 		then(subscriber.currentContext().isEmpty()).isTrue();
 	}
 
 	@Test
 	public void should_put_current_span_to_context() {
-		Span span = this.tracing.tracer().nextSpan();
-		try (Tracer.SpanInScope ws = this.tracing.tracer()
-				.withSpanInScope(span.start())) {
+		try (Scope ws = this.currentTraceContext.newScope(context)) {
 			CoreSubscriber<?> subscriber = ReactorSleuth.scopePassingSpanSubscription(
 					beanFactory(), new BaseSubscriber<Object>() {
 					});
 
-			then(subscriber.currentContext().get(Span.class)).isEqualTo(span);
+			then(subscriber.currentContext().get(TraceContext.class)).isEqualTo(context);
 		}
 
 	}
 
 	private BeanFactory beanFactory() {
 		BeanFactory beanFactory = BDDMockito.mock(BeanFactory.class);
-		BDDMockito.given(beanFactory.getBean(Tracing.class)).willReturn(this.tracing);
+		BDDMockito.given(beanFactory.getBean(CurrentTraceContext.class))
+				.willReturn(this.currentTraceContext);
 		return beanFactory;
 	}
 

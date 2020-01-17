@@ -21,7 +21,9 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import brave.Span;
 import brave.Tracer;
 import brave.Tracing;
-import brave.propagation.TraceContextOrSamplingFlags;
+import brave.propagation.CurrentTraceContext;
+import brave.propagation.CurrentTraceContext.Scope;
+import brave.propagation.TraceContext;
 import org.reactivestreams.Subscriber;
 import org.reactivestreams.Subscription;
 import reactor.util.Logger;
@@ -44,7 +46,7 @@ final class SpanSubscriber<T> extends AtomicBoolean implements SpanSubscription<
 
 	private final Span span;
 
-	private final Span rootSpan;
+	private final TraceContext parent;
 
 	private final Subscriber<? super T> subscriber;
 
@@ -52,27 +54,32 @@ final class SpanSubscriber<T> extends AtomicBoolean implements SpanSubscription<
 
 	private final Tracer tracer;
 
+	private final CurrentTraceContext currentTraceContext;
+
 	private Subscription s;
 
 	SpanSubscriber(Subscriber<? super T> subscriber, Context ctx, Tracing tracing,
 			String name) {
 		this.subscriber = subscriber;
 		this.tracer = tracing.tracer();
-		Span root = ctx.getOrDefault(Span.class, this.tracer.currentSpan());
-		if (log.isTraceEnabled()) {
-			log.trace("Span from context [{}]", root);
+		this.currentTraceContext = tracing.currentTraceContext();
+		TraceContext parent = ctx.getOrDefault(TraceContext.class, null);
+		if (parent == null) {
+			parent = currentTraceContext.get();
 		}
-		this.rootSpan = root;
 		if (log.isTraceEnabled()) {
-			log.trace("Stored context root span [{}]", this.rootSpan);
+			log.trace("Span from context [{}]", parent);
 		}
-		this.span = root != null ? this.tracer
-				.nextSpan(TraceContextOrSamplingFlags.create(root.context())).name(name)
-				: this.tracer.nextSpan().name(name);
+		this.parent = parent;
+		if (log.isTraceEnabled()) {
+			log.trace("Stored context parent span [{}]", this.parent);
+		}
+		this.span = parent != null ? this.tracer.newChild(parent).name(name)
+				: this.tracer.newTrace().name(name);
 		if (log.isTraceEnabled()) {
 			log.trace("Created span [{}], with name [{}]", this.span, name);
 		}
-		this.context = ctx.put(Span.class, this.span);
+		this.context = ctx.put(TraceContext.class, this.span.context());
 	}
 
 	@Override
@@ -81,7 +88,7 @@ final class SpanSubscriber<T> extends AtomicBoolean implements SpanSubscription<
 			log.trace("On subscribe");
 		}
 		this.s = subscription;
-		try (Tracer.SpanInScope ws = this.tracer.withSpanInScope(this.span)) {
+		try (Scope ws = this.currentTraceContext.maybeScope(this.span.context())) {
 			if (log.isTraceEnabled()) {
 				log.trace("On subscribe - span continued");
 			}
@@ -94,7 +101,7 @@ final class SpanSubscriber<T> extends AtomicBoolean implements SpanSubscription<
 		if (log.isTraceEnabled()) {
 			log.trace("Request");
 		}
-		try (Tracer.SpanInScope ws = this.tracer.withSpanInScope(this.span)) {
+		try (Scope ws = this.currentTraceContext.maybeScope(this.span.context())) {
 			if (log.isTraceEnabled()) {
 				log.trace("Request - continued");
 			}
@@ -102,7 +109,7 @@ final class SpanSubscriber<T> extends AtomicBoolean implements SpanSubscription<
 			// no additional cleaning is required cause we operate on scopes
 			if (log.isTraceEnabled()) {
 				log.trace("Request after cleaning. Current span [{}]",
-						this.tracer.currentSpan());
+						this.currentTraceContext.get());
 			}
 		}
 	}
@@ -154,10 +161,10 @@ final class SpanSubscriber<T> extends AtomicBoolean implements SpanSubscription<
 			if (log.isTraceEnabled()) {
 				log.trace("Span closed");
 			}
-			if (this.rootSpan != null) {
-				this.rootSpan.finish();
+			if (this.parent != null) {
+				this.tracer.toSpan(parent).finish(); // TODO: why are we closing this?
 				if (log.isTraceEnabled()) {
-					log.trace("Closed root span");
+					log.trace("Closed parent span");
 				}
 			}
 		}

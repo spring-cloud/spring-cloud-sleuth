@@ -18,6 +18,7 @@ package org.springframework.cloud.sleuth.annotation;
 
 import brave.Span;
 import brave.Tracer;
+import brave.propagation.CurrentTraceContext;
 import org.aopalliance.intercept.MethodInvocation;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -46,6 +47,8 @@ abstract class AbstractSleuthMethodInvocationProcessor
 	private NewSpanParser newSpanParser;
 
 	private Tracer tracer;
+
+	private CurrentTraceContext currentTraceContext;
 
 	private SpanTagAnnotationHandler spanTagAnnotationHandler;
 
@@ -103,6 +106,14 @@ abstract class AbstractSleuthMethodInvocationProcessor
 			this.tracer = this.beanFactory.getBean(Tracer.class);
 		}
 		return this.tracer;
+	}
+
+	CurrentTraceContext currentTraceContext() {
+		if (this.currentTraceContext == null) {
+			this.currentTraceContext = this.beanFactory
+					.getBean(CurrentTraceContext.class);
+		}
+		return this.currentTraceContext;
 	}
 
 	NewSpanParser newSpanParser() {
