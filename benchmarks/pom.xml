@@ -33,7 +33,7 @@
 		<sonar.skip>true</sonar.skip>
 		<maven.compiler.target>1.8</maven.compiler.target>
 		<maven.compiler.source>1.8</maven.compiler.source>
-		<spring-boot.version>2.2.2.RELEASE</spring-boot.version>
+		<spring-boot.version>2.3.0.BUILD-SNAPSHOT</spring-boot.version>
 		<brave.version>5.8.0</brave.version>
 		<okhttp.version>3.11.0</okhttp.version>
 	</properties>
