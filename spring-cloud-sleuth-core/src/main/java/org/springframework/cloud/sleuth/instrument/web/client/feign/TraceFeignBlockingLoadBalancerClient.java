@@ -1,3 +1,19 @@
+/*
+ * Copyright 2013-2019 the original author or authors.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package org.springframework.cloud.sleuth.instrument.web.client.feign;
 
 import java.io.IOException;
@@ -18,17 +34,17 @@ import org.springframework.cloud.loadbalancer.blocking.client.BlockingLoadBalanc
 import org.springframework.cloud.openfeign.loadbalancer.FeignBlockingLoadBalancerClient;
 
 /**
- * A trace representation of {@link FeignBlockingLoadBalancerClient}.
- * Needed due to casts in {@link org.springframework.cloud.openfeign.FeignClientFactoryBean}.
- * Based on {@link TraceLoadBalancerFeignClient}.
+ * A trace representation of {@link FeignBlockingLoadBalancerClient}. Needed due to casts
+ * in {@link org.springframework.cloud.openfeign.FeignClientFactoryBean}. Based on
+ * {@link TraceLoadBalancerFeignClient}.
  *
  * @author Olga Maciaszek-Sharma
- *
  * @since 2.2.0
  * @see TraceLoadBalancerFeignClient
  * @see FeignBlockingLoadBalancerClient
  */
-public class TraceFeignBlockingLoadBalancerClient extends FeignBlockingLoadBalancerClient {
+public class TraceFeignBlockingLoadBalancerClient
+		extends FeignBlockingLoadBalancerClient {
 
 	private static final Log LOG = LogFactory
 			.getLog(TraceFeignBlockingLoadBalancerClient.class);
@@ -68,7 +84,7 @@ public class TraceFeignBlockingLoadBalancerClient extends FeignBlockingLoadBalan
 			if (e instanceof IOException || e.getCause() != null
 					&& e.getCause() instanceof ClientException
 					&& ((ClientException) e.getCause())
-					.getErrorType() == ClientException.ErrorType.GENERAL) {
+							.getErrorType() == ClientException.ErrorType.GENERAL) {
 				if (LOG.isDebugEnabled()) {
 					LOG.debug(
 							"General exception was thrown, so most likely the traced client wasn't called. Falling back to a manual span");
@@ -105,4 +121,5 @@ public class TraceFeignBlockingLoadBalancerClient extends FeignBlockingLoadBalan
 		}
 		return tracingFeignClient;
 	}
+
 }
