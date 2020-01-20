@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.springframework.cloud.sleuth.instrument.feign.issues.issueX;
+package org.springframework.cloud.sleuth.instrument.feign.issues.issue1125;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -57,7 +57,7 @@ import static org.assertj.core.api.BDDAssertions.then;
 		webEnvironment = SpringBootTest.WebEnvironment.NONE,
 		properties = { "feign.hystrix.enabled=false" })
 @DirtiesContext(classMode = ClassMode.AFTER_EACH_TEST_METHOD)
-public class IssueXTests {
+public class ManuallyCreatedLoadBalancerFeignClientTests {
 
 	@Autowired
 	MyClient myClient;

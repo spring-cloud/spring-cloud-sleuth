@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.springframework.cloud.sleuth.instrument.feign.issues.issueY;
+package org.springframework.cloud.sleuth.instrument.feign.issues.issue1125delegates;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -61,9 +61,9 @@ import static org.assertj.core.api.BDDAssertions.then;
 @RunWith(SpringRunner.class)
 @SpringBootTest(classes = Application.class,
 		webEnvironment = SpringBootTest.WebEnvironment.NONE,
-		properties = { "feign.hystrix.enabled=false" })
+		properties = {"feign.hystrix.enabled=false"})
 @DirtiesContext(classMode = ClassMode.AFTER_EACH_TEST_METHOD)
-public class IssueYTests {
+public class ManuallyCreatedDelegateLoadBalancerFeignClientTests {
 
 	@Autowired
 	MyClient myClient;
@@ -138,7 +138,7 @@ class Application {
 	public MyNameRemote myNameRemote(Client client, Decoder decoder, Encoder encoder,
 			Contract contract) {
 		return Feign.builder().client(client).encoder(encoder).decoder(decoder)
-				.contract(contract).target(new HardCodedTarget<MyNameRemote>(
+				.contract(contract).target(new HardCodedTarget<>(
 						MyNameRemote.class, "foo", "https://non.existing.url"));
 	}
 
