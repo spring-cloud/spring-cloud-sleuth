@@ -29,7 +29,6 @@ import org.springframework.boot.actuate.autoconfigure.endpoint.EndpointAutoConfi
 import org.springframework.boot.actuate.autoconfigure.endpoint.web.WebEndpointAutoConfiguration;
 import org.springframework.boot.actuate.autoconfigure.endpoint.web.WebEndpointProperties;
 import org.springframework.boot.actuate.autoconfigure.health.HealthEndpointAutoConfiguration;
-import org.springframework.boot.actuate.autoconfigure.health.HealthIndicatorAutoConfiguration;
 import org.springframework.boot.actuate.autoconfigure.info.InfoEndpointAutoConfiguration;
 import org.springframework.boot.actuate.autoconfigure.web.server.ManagementContextAutoConfiguration;
 import org.springframework.boot.actuate.autoconfigure.web.server.ManagementServerProperties;
@@ -56,7 +55,6 @@ public class SkipPatternProviderConfigTest {
 			.withConfiguration(AutoConfigurations.of(
 					DispatcherServletAutoConfiguration.class,
 					InfoEndpointAutoConfiguration.class,
-					HealthIndicatorAutoConfiguration.class,
 					HealthEndpointAutoConfiguration.class,
 					EndpointAutoConfiguration.class, WebEndpointAutoConfiguration.class,
 					TraceAutoConfiguration.class, TraceWebAutoConfiguration.class));
