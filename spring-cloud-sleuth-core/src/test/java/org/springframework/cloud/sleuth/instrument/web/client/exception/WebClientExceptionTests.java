@@ -40,7 +40,7 @@ import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.rule.OutputCapture;
+import org.springframework.boot.test.system.OutputCaptureRule;
 import org.springframework.cloud.client.loadbalancer.LoadBalanced;
 import org.springframework.cloud.netflix.ribbon.RibbonClient;
 import org.springframework.cloud.openfeign.EnableFeignClients;
@@ -75,7 +75,7 @@ public class WebClientExceptionTests {
 	public final SpringMethodRule springMethodRule = new SpringMethodRule();
 
 	@Rule
-	public final OutputCapture capture = new OutputCapture();
+	public final OutputCaptureRule capture = new OutputCaptureRule();
 
 	@Autowired
 	TestFeignInterfaceWithException testFeignInterfaceWithException;
