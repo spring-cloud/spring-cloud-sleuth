@@ -34,7 +34,6 @@ import javax.jms.XAConnectionFactory;
 import javax.resource.spi.ResourceAdapter;
 
 import brave.Tracing;
-import brave.internal.HexCodec;
 import brave.propagation.CurrentTraceContext;
 import brave.propagation.TraceContext;
 import org.apache.activemq.ra.ActiveMQActivationSpec;
@@ -43,7 +42,6 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.junit.Ignore;
 import org.junit.Test;
-import zipkin2.Annotation;
 import zipkin2.Span;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -317,8 +315,6 @@ public class JmsTracingConfigurationTest {
 @EnableAutoConfiguration(exclude = KafkaAutoConfiguration.class)
 class JmsTestTracingConfiguration {
 
-	static final String CONTEXT_LEAK = "context.leak";
-
 	/**
 	 * When testing servers or asynchronous clients, spans are reported on a worker
 	 * thread. In order to read them on the main thread, we use a concurrent queue. As
@@ -340,34 +336,14 @@ class JmsTestTracingConfiguration {
 		return () -> {
 			Span result = this.spans.poll(3, TimeUnit.SECONDS);
 			assertThat(result).withFailMessage("Span was not reported").isNotNull();
-			assertThat(result.annotations()).extracting(Annotation::value)
-					.doesNotContain(CONTEXT_LEAK);
 			return result;
 		};
 	}
 
 	@Bean
 	Tracing tracing(CurrentTraceContext currentTraceContext) {
-		return Tracing.newBuilder().spanReporter(s -> {
-			// make sure the context was cleared prior to finish.. no leaks!
-			TraceContext current = currentTraceContext.get();
-			boolean contextLeak = false;
-			if (current != null) {
-				// add annotation in addition to throwing, in case we are off the main
-				// thread
-				if (HexCodec.toLowerHex(current.spanId()).equals(s.id())) {
-					s = s.toBuilder().addAnnotation(s.timestampAsLong(), CONTEXT_LEAK)
-							.build();
-					contextLeak = true;
-				}
-			}
-			this.spans.add(s);
-			// throw so that we can see the path to the code that leaked the context
-			if (contextLeak) {
-				throw new AssertionError(
-						CONTEXT_LEAK + " on " + Thread.currentThread().getName());
-			}
-		}).currentTraceContext(currentTraceContext).build();
+		return Tracing.newBuilder().spanReporter(spans::add)
+				.currentTraceContext(currentTraceContext).build();
 	}
 
 }
