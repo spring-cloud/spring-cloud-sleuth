@@ -89,7 +89,7 @@ public class TracingFeignClientTests {
 		}
 
 		then(this.reporter.getSpans().get(0)).extracting("kind.ordinal")
-				.contains(Span.Kind.CLIENT.ordinal());
+				.isEqualTo(Span.Kind.CLIENT.ordinal());
 	}
 
 	@Test
@@ -113,7 +113,7 @@ public class TracingFeignClientTests {
 		}
 
 		then(this.reporter.getSpans().get(0)).extracting("kind.ordinal")
-				.contains(Span.Kind.CLIENT.ordinal());
+				.isEqualTo(Span.Kind.CLIENT.ordinal());
 		then(this.reporter.getSpans().get(0).tags()).containsEntry("error",
 				"exception has occurred");
 	}

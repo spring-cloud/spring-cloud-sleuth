@@ -14,7 +14,7 @@
   ~ See the License for the specific language governing permissions and
   ~ limitations under the License.
   -->
-<project xmlns:xsi="https://www.w3.org/2001/XMLSchema-instance"
+<project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 		 xmlns="http://maven.apache.org/POM/4.0.0"
 		 xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
@@ -27,15 +27,14 @@
 
 	<properties>
 		<main.basedir>${project.basedir}/..</main.basedir>
-		<jmh.version>1.16</jmh.version>
-		<maven-shade-plugin.version>2.4.3</maven-shade-plugin.version>
-		<maven-install-plugin.version>2.5.2</maven-install-plugin.version>
+		<jmh.version>1.22</jmh.version>
+		<maven-shade-plugin.version>3.2.1</maven-shade-plugin.version>
 		<sonar.skip>true</sonar.skip>
 		<maven.compiler.target>1.8</maven.compiler.target>
 		<maven.compiler.source>1.8</maven.compiler.source>
 		<spring-boot.version>2.3.0.BUILD-SNAPSHOT</spring-boot.version>
-		<brave.version>5.8.0</brave.version>
-		<okhttp.version>3.11.0</okhttp.version>
+		<brave.version>5.9.1</brave.version>
+		<okhttp.version>3.14.6</okhttp.version>
 	</properties>
 
 	<dependencyManagement>
@@ -92,7 +91,7 @@
 		<dependency>
 			<groupId>org.assertj</groupId>
 			<artifactId>assertj-core</artifactId>
-			<version>3.5.2</version>
+			<version>3.14.0</version>
 			<scope>compile</scope>
 		</dependency>
 		<dependency>
@@ -134,9 +133,8 @@
 	<build>
 		<plugins>
 			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-compiler-plugin</artifactId>
-				<version>3.1</version>
+				<version>3.8.1</version>
 				<configuration>
 					<source>${maven.compiler.source}</source>
 					<target>${maven.compiler.target}</target>
@@ -151,7 +149,6 @@
 			</plugin>
 			<plugin>
 				<artifactId>maven-install-plugin</artifactId>
-				<version>${maven-install-plugin.version}</version>
 				<configuration>
 					<skip>true</skip>
 				</configuration>
@@ -369,9 +366,8 @@
 						</executions>
 					</plugin>
 					<plugin>
-						<groupId>org.apache.maven.plugins</groupId>
 						<artifactId>maven-failsafe-plugin</artifactId>
-						<version>2.19.1</version>
+						<version>2.22.2</version>
 						<executions>
 							<execution>
 								<goals>
