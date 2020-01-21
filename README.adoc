@@ -888,7 +888,6 @@ Checkstyle rules are *disabled by default*. To add checkstyle to your project ju
                 <artifactId>spring-javaformat-maven-plugin</artifactId>
             </plugin>
             <plugin> <5>
-                <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-checkstyle-plugin</artifactId>
             </plugin>
         </plugins>
@@ -896,7 +895,6 @@ Checkstyle rules are *disabled by default*. To add checkstyle to your project ju
     <reporting>
         <plugins>
             <plugin> <5>
-                <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-checkstyle-plugin</artifactId>
             </plugin>
         </plugins>

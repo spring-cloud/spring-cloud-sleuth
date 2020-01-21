@@ -15,7 +15,7 @@
   ~ limitations under the License.
   -->
 
-<project xmlns:xsi="https://www.w3.org/2001/XMLSchema-instance"
+<project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 		 xmlns="http://maven.apache.org/POM/4.0.0"
 		 xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
@@ -31,7 +31,7 @@
 	<name>spring-cloud-sleuth-dependencies</name>
 	<description>Spring Cloud Sleuth Dependencies</description>
 	<properties>
-		<brave.version>5.9.0</brave.version>
+		<brave.version>5.9.1</brave.version>
 		<brave.opentracing.version>0.35.0</brave.opentracing.version>
 		<grpc.spring.boot.version>3.4.1</grpc.spring.boot.version>
 	</properties>
