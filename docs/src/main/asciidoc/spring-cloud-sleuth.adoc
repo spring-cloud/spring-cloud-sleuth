@@ -1009,8 +1009,8 @@ zipkinserver:
     ListOfServers: host1,host2
 ----
 
-If you have web, rabbit, or kafka together on the classpath, you might need to pick the means by which you would like to send spans to zipkin.
-To do so, set `web`, `rabbit`, or `kafka` to the `spring.zipkin.sender.type` property.
+If you have web, rabbit, activemq or kafka together on the classpath, you might need to pick the means by which you would like to send spans to zipkin.
+To do so, set `web`, `rabbit`, `activemq` or `kafka` to the `spring.zipkin.sender.type` property.
 The following example shows setting the sender type for `web`:
 
 [source,yaml]
