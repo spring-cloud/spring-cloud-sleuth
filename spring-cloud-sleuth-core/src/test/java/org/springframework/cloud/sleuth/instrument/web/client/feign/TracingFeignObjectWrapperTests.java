@@ -16,8 +16,6 @@
 
 package org.springframework.cloud.sleuth.instrument.web.client.feign;
 
-import brave.Tracing;
-import brave.http.HttpTracing;
 import feign.Client;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -26,19 +24,19 @@ import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 
 import org.springframework.beans.factory.BeanFactory;
+import org.springframework.cloud.loadbalancer.blocking.client.BlockingLoadBalancerClient;
+import org.springframework.cloud.openfeign.loadbalancer.FeignBlockingLoadBalancerClient;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.BDDAssertions.then;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 /**
  * @author Marcin Grzejszczak
  */
 @RunWith(MockitoJUnitRunner.class)
 public class TracingFeignObjectWrapperTests {
-
-	Tracing tracing = Tracing.newBuilder().build();
-
-	HttpTracing httpTracing = HttpTracing.create(this.tracing);
 
 	@Mock
 	BeanFactory beanFactory;
@@ -47,16 +45,57 @@ public class TracingFeignObjectWrapperTests {
 	TraceFeignObjectWrapper traceFeignObjectWrapper;
 
 	@Test
-	public void should_wrap_a_client_into_lazy_trace_client() throws Exception {
+	public void should_wrap_a_client_into_lazy_trace_client() {
 		then(this.traceFeignObjectWrapper.wrap(mock(Client.class)))
 				.isExactlyInstanceOf(LazyTracingFeignClient.class);
 	}
 
 	@Test
-	public void should_not_wrap_a_bean_that_is_not_feign_related() throws Exception {
+	public void should_not_wrap_a_bean_that_is_not_feign_related() {
 		String notFeignRelatedObject = "object";
 		then(this.traceFeignObjectWrapper.wrap(notFeignRelatedObject))
 				.isSameAs(notFeignRelatedObject);
+	}
+
+	// gh-1528
+	@Test
+	public void should_wrap_feign_loadbalancer_client() {
+		Client delegate = mock(Client.class);
+		BlockingLoadBalancerClient loadBalancerClient = mock(
+				BlockingLoadBalancerClient.class);
+		when(beanFactory.getBean(BlockingLoadBalancerClient.class))
+				.thenReturn(loadBalancerClient);
+
+		Object wrapped = traceFeignObjectWrapper
+				.wrap(new FeignBlockingLoadBalancerClient(delegate, loadBalancerClient));
+
+		assertThat(wrapped).isInstanceOf(TraceFeignBlockingLoadBalancerClient.class);
+	}
+
+	// gh-1528, gh-1125
+	@Test
+	public void should_wrap_subclass_of_feign_loadbalancer_client() {
+		Client delegate = mock(Client.class);
+		BlockingLoadBalancerClient loadBalancerClient = mock(
+				BlockingLoadBalancerClient.class);
+		when(beanFactory.getBean(BlockingLoadBalancerClient.class))
+				.thenReturn(loadBalancerClient);
+
+		Object wrapped = traceFeignObjectWrapper.wrap(
+				new TestFeignBlockingLoadBalancerClient(delegate, loadBalancerClient));
+
+		assertThat(wrapped).isInstanceOf(TraceFeignBlockingLoadBalancerClient.class);
+
+	}
+
+	static class TestFeignBlockingLoadBalancerClient
+			extends FeignBlockingLoadBalancerClient {
+
+		TestFeignBlockingLoadBalancerClient(Client delegate,
+				BlockingLoadBalancerClient loadBalancerClient) {
+			super(delegate, loadBalancerClient);
+		}
+
 	}
 
 }
