@@ -71,7 +71,7 @@ final class TraceFeignObjectWrapper {
 
 	private Object springClientFactory;
 
-	private BlockingLoadBalancerClient loadBalancerClient;
+	private Object loadBalancerClient;
 
 	TraceFeignObjectWrapper(BeanFactory beanFactory) {
 		this.beanFactory = beanFactory;
@@ -104,7 +104,7 @@ final class TraceFeignObjectWrapper {
 			return new TraceFeignBlockingLoadBalancerClient(
 					(Client) new TraceFeignObjectWrapper(this.beanFactory)
 							.wrap(client.getDelegate()),
-					loadBalancerClient(), this.beanFactory);
+					(BlockingLoadBalancerClient) loadBalancerClient(), this.beanFactory);
 		}
 		else {
 			FeignBlockingLoadBalancerClient client = ((FeignBlockingLoadBalancerClient) bean);
@@ -119,8 +119,8 @@ final class TraceFeignObjectWrapper {
 					| IllegalAccessException | SecurityException e) {
 				log.warn(EXCEPTION_WARNING, e);
 			}
-			return new TraceFeignBlockingLoadBalancerClient(client, loadBalancerClient(),
-					this.beanFactory);
+			return new TraceFeignBlockingLoadBalancerClient(client,
+					(BlockingLoadBalancerClient) loadBalancerClient(), this.beanFactory);
 		}
 	}
 
@@ -165,7 +165,7 @@ final class TraceFeignObjectWrapper {
 		return this.springClientFactory;
 	}
 
-	private BlockingLoadBalancerClient loadBalancerClient() {
+	private Object loadBalancerClient() {
 		if (loadBalancerClient == null) {
 			loadBalancerClient = beanFactory.getBean(BlockingLoadBalancerClient.class);
 		}
