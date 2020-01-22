@@ -23,8 +23,7 @@ import brave.Span;
 import brave.Tracer;
 import brave.http.HttpClientHandler;
 import brave.http.HttpTracing;
-import brave.propagation.Propagation;
-import brave.propagation.TraceContext;
+import brave.propagation.TraceContext.Extractor;
 import brave.propagation.TraceContextOrSamplingFlags;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -33,7 +32,6 @@ import org.springframework.cloud.gateway.filter.headers.HttpHeadersFilter;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.http.server.reactive.ServerHttpResponse;
-import org.springframework.lang.NonNull;
 import org.springframework.web.server.ServerWebExchange;
 
 final class TraceRequestHttpHeadersFilter extends AbstractHttpHeadersFilter {
@@ -54,18 +52,18 @@ final class TraceRequestHttpHeadersFilter extends AbstractHttpHeadersFilter {
 			log.debug("Will instrument the HTTP request headers ["
 					+ exchange.getRequest().getHeaders() + "]");
 		}
-		TraceCarrier carrier = new TraceCarrier(exchange.getRequest(), input);
-		Span currentSpan = currentSpan(carrier);
-		Span span = injectedSpan(carrier, currentSpan);
+		HttpClientRequest request = new HttpClientRequest(exchange.getRequest(), input);
+		Span currentSpan = currentSpan(request);
+		Span span = injectedSpan(request, currentSpan);
 		if (log.isDebugEnabled()) {
 			log.debug(
 					"Client span  " + span + " created for the request. New headers are "
-							+ carrier.filteredHeaders.toSingleValueMap());
+							+ request.filteredHeaders.toSingleValueMap());
 		}
 		exchange.getAttributes().put(SPAN_ATTRIBUTE, span);
 		HttpHeaders headersWithInput = new HttpHeaders();
 		headersWithInput.addAll(input);
-		addHeadersWithInput(carrier.filteredHeaders, headersWithInput);
+		addHeadersWithInput(request.filteredHeaders, headersWithInput);
 		if (headersWithInput.containsKey("b3") || headersWithInput.containsKey("B3")) {
 			headersWithInput.keySet().remove("b3");
 			headersWithInput.keySet().remove("B3");
@@ -73,22 +71,24 @@ final class TraceRequestHttpHeadersFilter extends AbstractHttpHeadersFilter {
 		return headersWithInput;
 	}
 
-	private Span currentSpan(TraceCarrier carrier) {
+	private Span currentSpan(HttpClientRequest request) {
 		Span currentSpan = this.tracer.currentSpan();
 		if (currentSpan != null) {
 			return currentSpan;
 		}
-		TraceContextOrSamplingFlags contextOrFlags = this.extractor.extract(carrier);
+		// Usually, an HTTP client would not attempt to resume a trace from headers, as a
+		// server would always place its span in scope. However, in commit 848442e,
+		// this behavior was added in support of gateway.
+		TraceContextOrSamplingFlags contextOrFlags = this.extractor.extract(request);
 		return this.tracer.nextSpan(contextOrFlags);
 	}
 
-	private Span injectedSpan(TraceCarrier carrier, Span currentSpan) {
+	private Span injectedSpan(HttpClientRequest request, Span currentSpan) {
 		if (currentSpan == null) {
-			return this.handler.handleSend(this.injector, carrier);
+			return this.handler.handleSend(request);
 		}
-		Span clientSpan = this.tracer
-				.nextSpan(TraceContextOrSamplingFlags.create(currentSpan.context()));
-		return this.handler.handleSend(this.injector, carrier, clientSpan);
+		Span clientSpan = this.tracer.newChild(currentSpan.context());
+		return this.handler.handleSend(request, clientSpan);
 	}
 
 	private void addHeadersWithInput(HttpHeaders filteredHeaders,
@@ -103,20 +103,6 @@ final class TraceRequestHttpHeadersFilter extends AbstractHttpHeadersFilter {
 	@Override
 	public boolean supports(Type type) {
 		return type.equals(Type.REQUEST);
-	}
-
-}
-
-class TraceCarrier {
-
-	final ServerHttpRequest originalRequest;
-
-	final HttpHeaders filteredHeaders;
-
-	TraceCarrier(@NonNull ServerHttpRequest originalRequest,
-			@NonNull HttpHeaders filteredHeaders) {
-		this.originalRequest = originalRequest;
-		this.filteredHeaders = filteredHeaders;
 	}
 
 }
@@ -143,7 +129,8 @@ final class TraceResponseHttpHeadersFilter extends AbstractHttpHeadersFilter {
 		if (log.isDebugEnabled()) {
 			log.debug("Will instrument the response");
 		}
-		this.handler.handleReceive(exchange.getResponse(), null, (Span) storedSpan);
+		HttpClientResponse response = new HttpClientResponse(exchange.getResponse());
+		this.handler.handleReceive(response, null, (Span) storedSpan);
 		if (log.isDebugEnabled()) {
 			log.debug("The response was handled for span " + storedSpan);
 		}
@@ -161,71 +148,82 @@ abstract class AbstractHttpHeadersFilter implements HttpHeadersFilter {
 
 	static final String SPAN_ATTRIBUTE = Span.class.getName();
 
-	private static final Propagation.Setter<TraceCarrier, String> SETTER = new Propagation.Setter<TraceCarrier, String>() {
-		@Override
-		public void put(TraceCarrier carrier, String key, String value) {
-			carrier.filteredHeaders.set(key, value);
-		}
-
-		@Override
-		public String toString() {
-			return "TraceCarrier::httpHeaders::set";
-		}
-	};
-
-	private static final Propagation.Getter<TraceCarrier, String> GETTER = new Propagation.Getter<TraceCarrier, String>() {
-		@Override
-		public String get(TraceCarrier carrier, String key) {
-			return carrier.filteredHeaders.getFirst(key);
-		}
-
-		@Override
-		public String toString() {
-			return "TraceCarrier::httpHeaders::getFirst";
-		}
-	};
-
 	final Tracer tracer;
 
-	final HttpClientHandler<TraceCarrier, ServerHttpResponse> handler;
-
-	final TraceContext.Injector<TraceCarrier> injector;
-
-	final TraceContext.Extractor<TraceCarrier> extractor;
+	final HttpClientHandler<brave.http.HttpClientRequest, brave.http.HttpClientResponse> handler;
 
 	final HttpTracing httpTracing;
 
+	final Extractor<HttpClientRequest> extractor;
+
 	AbstractHttpHeadersFilter(HttpTracing httpTracing) {
 		this.tracer = httpTracing.tracing().tracer();
-		this.handler = HttpClientHandler.create(httpTracing, new ServerHttpAdapter());
-		this.injector = httpTracing.tracing().propagation().injector(SETTER);
-		this.extractor = httpTracing.tracing().propagation().extractor(GETTER);
+		this.extractor = httpTracing.tracing().propagation()
+				.extractor(HttpClientRequest::header);
+		this.handler = HttpClientHandler.create(httpTracing);
 		this.httpTracing = httpTracing;
 	}
 
-	private static class ServerHttpAdapter
-			extends brave.http.HttpClientAdapter<TraceCarrier, ServerHttpResponse> {
+	static final class HttpClientRequest extends brave.http.HttpClientRequest {
 
-		@Override
-		public String method(TraceCarrier request) {
-			return request.originalRequest.getMethodValue();
+		final ServerHttpRequest delegate;
+
+		final HttpHeaders filteredHeaders;
+
+		HttpClientRequest(ServerHttpRequest delegate, HttpHeaders filteredHeaders) {
+			this.delegate = delegate;
+			this.filteredHeaders = filteredHeaders;
 		}
 
 		@Override
-		public String url(TraceCarrier request) {
-			return request.originalRequest.getURI().toString();
+		public Object unwrap() {
+			return delegate;
 		}
 
 		@Override
-		public String requestHeader(TraceCarrier request, String name) {
-			Object result = request.filteredHeaders.get(name);
-			return result != null ? result.toString() : "";
+		public String method() {
+			return delegate.getMethodValue();
 		}
 
 		@Override
-		public Integer statusCode(ServerHttpResponse response) {
-			return response.getStatusCode() != null ? response.getStatusCode().value()
-					: null;
+		public String path() {
+			return delegate.getURI().getPath();
+		}
+
+		@Override
+		public String url() {
+			return delegate.getURI().toString();
+		}
+
+		@Override
+		public String header(String name) {
+			return filteredHeaders.getFirst(name);
+		}
+
+		@Override
+		public void header(String name, String value) {
+			filteredHeaders.set(name, value);
+		}
+
+	}
+
+	static final class HttpClientResponse extends brave.http.HttpClientResponse {
+
+		final ServerHttpResponse delegate;
+
+		HttpClientResponse(ServerHttpResponse delegate) {
+			this.delegate = delegate;
+		}
+
+		@Override
+		public Object unwrap() {
+			return delegate;
+		}
+
+		@Override
+		public int statusCode() {
+			return delegate.getStatusCode() != null ? delegate.getStatusCode().value()
+					: 0;
 		}
 
 	}
