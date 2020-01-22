@@ -16,6 +16,7 @@
 
 package org.springframework.cloud.sleuth.instrument.web.client;
 
+import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
@@ -24,10 +25,7 @@ import brave.Span;
 import brave.Tracer;
 import brave.http.HttpClientHandler;
 import brave.http.HttpTracing;
-import brave.propagation.Propagation;
-import brave.propagation.TraceContext;
 import io.netty.bootstrap.Bootstrap;
-import io.netty.handler.codec.http.HttpHeaders;
 import reactor.core.publisher.Mono;
 import reactor.netty.Connection;
 import reactor.netty.http.client.HttpClient;
@@ -89,31 +87,13 @@ class HttpClientBeanPostProcessor implements BeanPostProcessor {
 	private static class TracingDoOnRequest
 			implements BiConsumer<HttpClientRequest, Connection> {
 
-		static final Propagation.Setter<HttpHeaders, String> SETTER = new Propagation.Setter<HttpHeaders, String>() {
-			@Override
-			public void put(HttpHeaders carrier, String key, String value) {
-				if (!carrier.contains(key)) {
-					carrier.add(key, value);
-				}
-			}
-
-			@Override
-			public String toString() {
-				return "HttpHeaders::add";
-			}
-		};
-
 		final BeanFactory beanFactory;
 
 		HttpTracing httpTracing;
 
-		Tracer tracer;
+		List<String> propagationKeys;
 
-		HttpClientHandler<HttpClientRequest, HttpClientResponse> handler;
-
-		TraceContext.Injector<HttpHeaders> injector;
-
-		Propagation<String> propagation;
+		HttpClientHandler<brave.http.HttpClientRequest, brave.http.HttpClientResponse> handler;
 
 		TracingDoOnRequest(BeanFactory beanFactory) {
 			this.beanFactory = beanFactory;
@@ -130,23 +110,16 @@ class HttpClientBeanPostProcessor implements BeanPostProcessor {
 			return this.httpTracing;
 		}
 
-		private Propagation<String> propagation() {
-			if (this.propagation == null) {
-				this.propagation = httpTracing().tracing().propagation();
+		private List<String> propagationKeys() {
+			if (this.propagationKeys == null) {
+				this.propagationKeys = httpTracing().tracing().propagation().keys();
 			}
-			return this.propagation;
+			return this.propagationKeys;
 		}
 
-		private TraceContext.Injector<HttpHeaders> injector() {
-			if (this.injector == null) {
-				this.injector = propagation().injector(SETTER);
-			}
-			return this.injector;
-		}
-
-		private HttpClientHandler<HttpClientRequest, HttpClientResponse> handler() {
+		private HttpClientHandler<brave.http.HttpClientRequest, brave.http.HttpClientResponse> handler() {
 			if (this.handler == null) {
-				this.handler = HttpClientHandler.create(httpTracing(), new HttpAdapter());
+				this.handler = HttpClientHandler.create(httpTracing());
 			}
 			return this.handler;
 		}
@@ -154,16 +127,18 @@ class HttpClientBeanPostProcessor implements BeanPostProcessor {
 		@Override
 		public void accept(HttpClientRequest req, Connection connection) {
 			// request already instrumented
-			for (String key : propagation().keys()) {
+			// TODO: consider another, cheaper way, like flagging a context
+			// property. If not, comment why.
+			for (String key : propagationKeys()) {
 				if (req.requestHeaders().contains(key)) {
 					return;
 				}
 			}
-			AtomicReference reference = req.currentContext()
-					.getOrDefault(AtomicReference.class, new AtomicReference());
-			Span span = handler().handleSend(injector(), req.requestHeaders(), req,
-					reference.get() == null ? handler().nextSpan(req)
-							: (Span) reference.get());
+			AtomicReference<Span> reference = req.currentContext()
+					.getOrDefault(AtomicReference.class, new AtomicReference<>());
+			WrappedHttpClientRequest request = new WrappedHttpClientRequest(req);
+			Span span = reference.get() == null ? handler().handleSend(request)
+					: handler().handleSend(request, reference.get());
 			reference.set(span);
 		}
 
@@ -229,7 +204,7 @@ class HttpClientBeanPostProcessor implements BeanPostProcessor {
 
 		HttpTracing httpTracing;
 
-		HttpClientHandler<HttpClientRequest, HttpClientResponse> handler;
+		HttpClientHandler<brave.http.HttpClientRequest, brave.http.HttpClientResponse> handler;
 
 		AbstractTracingDoOnHandler(BeanFactory beanFactory) {
 			this.beanFactory = beanFactory;
@@ -242,9 +217,9 @@ class HttpClientBeanPostProcessor implements BeanPostProcessor {
 			return this.httpTracing;
 		}
 
-		private HttpClientHandler<HttpClientRequest, HttpClientResponse> handler() {
+		private HttpClientHandler<brave.http.HttpClientRequest, brave.http.HttpClientResponse> handler() {
 			if (this.handler == null) {
-				this.handler = HttpClientHandler.create(httpTracing(), new HttpAdapter());
+				this.handler = HttpClientHandler.create(httpTracing());
 			}
 			return this.handler;
 		}
@@ -259,34 +234,68 @@ class HttpClientBeanPostProcessor implements BeanPostProcessor {
 			if (reference == null || reference.get() == null) {
 				return;
 			}
-			handler().handleReceive(httpClientResponse, throwable,
-					(Span) reference.get());
+			handler().handleReceive(new WrappedHttpClientResponse(httpClientResponse),
+					throwable, (Span) reference.get());
 		}
 
 	}
 
-	private static class HttpAdapter
-			extends brave.http.HttpClientAdapter<HttpClientRequest, HttpClientResponse> {
+	static final class WrappedHttpClientRequest extends brave.http.HttpClientRequest {
 
-		@Override
-		public String method(HttpClientRequest request) {
-			return request.method().name();
+		final HttpClientRequest delegate;
+
+		WrappedHttpClientRequest(HttpClientRequest delegate) {
+			this.delegate = delegate;
 		}
 
 		@Override
-		public String url(HttpClientRequest request) {
-			return request.uri();
+		public Object unwrap() {
+			return delegate;
 		}
 
 		@Override
-		public String requestHeader(HttpClientRequest request, String name) {
-			Object result = request.requestHeaders().get(name);
-			return result != null ? result.toString() : "";
+		public String method() {
+			return delegate.method().name();
 		}
 
 		@Override
-		public Integer statusCode(HttpClientResponse response) {
-			return response.status().code();
+		public String path() {
+			return delegate.path();
+		}
+
+		@Override
+		public String url() {
+			return delegate.uri();
+		}
+
+		@Override
+		public String header(String name) {
+			return delegate.requestHeaders().get(name);
+		}
+
+		@Override
+		public void header(String name, String value) {
+			delegate.header(name, value);
+		}
+
+	}
+
+	static final class WrappedHttpClientResponse extends brave.http.HttpClientResponse {
+
+		final HttpClientResponse delegate;
+
+		WrappedHttpClientResponse(HttpClientResponse delegate) {
+			this.delegate = delegate;
+		}
+
+		@Override
+		public Object unwrap() {
+			return delegate;
+		}
+
+		@Override
+		public int statusCode() {
+			return delegate.status().code();
 		}
 
 	}
