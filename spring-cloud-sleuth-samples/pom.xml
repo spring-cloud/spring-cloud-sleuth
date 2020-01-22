@@ -28,7 +28,7 @@
 	<parent>
 		<groupId>org.springframework.cloud</groupId>
 		<artifactId>spring-cloud-sleuth</artifactId>
-		<version>2.2.2.BUILD-SNAPSHOT</version>
+		<version>3.0.0.BUILD-SNAPSHOT</version>
 		<relativePath>..</relativePath>
 	</parent>
 
@@ -38,7 +38,6 @@
 		<module>spring-cloud-sleuth-sample-messaging</module>
 		<module>spring-cloud-sleuth-sample-websocket</module>
 		<module>spring-cloud-sleuth-sample-feign</module>
-		<module>spring-cloud-sleuth-sample-ribbon</module>
 		<module>spring-cloud-sleuth-sample-zipkin</module>
 	</modules>
 
