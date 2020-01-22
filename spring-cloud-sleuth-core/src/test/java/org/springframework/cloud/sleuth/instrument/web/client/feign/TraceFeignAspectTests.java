@@ -52,9 +52,6 @@ public class TraceFeignAspectTests {
 	@Mock
 	ProceedingJoinPoint pjp;
 
-	@Mock
-	TraceLoadBalancerFeignClient traceLoadBalancerFeignClient;
-
 	Tracing tracing = Tracing.newBuilder()
 			.currentTraceContext(ThreadLocalCurrentTraceContext.newBuilder()
 					.addScopeDecorator(StrictScopeDecorator.create()).build())
@@ -90,16 +87,6 @@ public class TraceFeignAspectTests {
 			throws Throwable {
 		given(this.pjp.getTarget())
 				.willReturn(new TracingFeignClient(this.httpTracing, this.client));
-
-		this.traceFeignAspect.feignClientWasCalled(this.pjp);
-
-		verify(this.pjp).proceed();
-	}
-
-	@Test
-	public void should_not_wrap_traced_load_balancer_feign_client_in_trace_representation()
-			throws Throwable {
-		given(this.pjp.getTarget()).willReturn(this.traceLoadBalancerFeignClient);
 
 		this.traceFeignAspect.feignClientWasCalled(this.pjp);
 

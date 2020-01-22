@@ -17,16 +17,12 @@
 package org.springframework.cloud.sleuth.instrument.web.client.exception;
 
 import java.io.IOException;
-import java.util.Collections;
 import java.util.Map;
 
 import brave.Span;
 import brave.Tracer;
 import brave.Tracing;
 import brave.sampler.Sampler;
-import com.netflix.loadbalancer.BaseLoadBalancer;
-import com.netflix.loadbalancer.ILoadBalancer;
-import com.netflix.loadbalancer.Server;
 import junitparams.JUnitParamsRunner;
 import junitparams.Parameters;
 import org.apache.commons.logging.Log;
@@ -42,12 +38,14 @@ import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.system.OutputCaptureRule;
 import org.springframework.cloud.client.loadbalancer.LoadBalanced;
-import org.springframework.cloud.netflix.ribbon.RibbonClient;
+import org.springframework.cloud.loadbalancer.annotation.LoadBalancerClient;
+import org.springframework.cloud.loadbalancer.core.ServiceInstanceListSupplier;
 import org.springframework.cloud.openfeign.EnableFeignClients;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.cloud.sleuth.util.ArrayListSpanReporter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.env.Environment;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.test.context.junit4.rules.SpringClassRule;
@@ -145,7 +143,7 @@ public class WebClientExceptionTests {
 	@Configuration
 	@EnableAutoConfiguration
 	@EnableFeignClients
-	@RibbonClient(value = "exceptionservice",
+	@LoadBalancerClient(value = "exceptionservice",
 			configuration = ExceptionServiceRibbonClientConfiguration.class)
 	public static class TestConfiguration {
 
@@ -174,11 +172,10 @@ public class WebClientExceptionTests {
 	public static class ExceptionServiceRibbonClientConfiguration {
 
 		@Bean
-		public ILoadBalancer exceptionServiceRibbonLoadBalancer() {
-			BaseLoadBalancer balancer = new BaseLoadBalancer();
-			balancer.setServersList(Collections
-					.singletonList(new Server("invalid.host.to.break.tests", 1234)));
-			return balancer;
+		public ServiceInstanceListSupplier serviceInstanceListSupplier(Environment env) {
+			return ServiceInstanceListSupplier.fixed(env)
+					.instance("invalid.host.to.break.tests", 1234, "exceptionservice")
+					.build();
 		}
 
 	}

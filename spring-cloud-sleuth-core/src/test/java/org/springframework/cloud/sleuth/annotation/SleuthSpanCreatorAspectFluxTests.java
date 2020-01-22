@@ -27,7 +27,7 @@ import brave.Span;
 import brave.Tracer;
 import brave.propagation.TraceContext;
 import brave.sampler.Sampler;
-import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang.StringUtils;
 import org.awaitility.Awaitility;
 import org.junit.Before;
 import org.junit.Test;

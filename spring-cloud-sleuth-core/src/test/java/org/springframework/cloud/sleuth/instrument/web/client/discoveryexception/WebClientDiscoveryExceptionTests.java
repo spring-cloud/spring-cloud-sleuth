@@ -34,8 +34,8 @@ import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
 import org.springframework.cloud.client.loadbalancer.LoadBalanced;
+import org.springframework.cloud.loadbalancer.annotation.LoadBalancerClient;
 import org.springframework.cloud.netflix.eureka.EurekaClientAutoConfiguration;
-import org.springframework.cloud.netflix.ribbon.RibbonClient;
 import org.springframework.cloud.openfeign.EnableFeignClients;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.cloud.sleuth.instrument.web.TraceWebServletAutoConfiguration;
@@ -134,7 +134,7 @@ public class WebClientDiscoveryExceptionTests {
 			TraceWebServletAutoConfiguration.class })
 	@EnableDiscoveryClient
 	@EnableFeignClients
-	@RibbonClient("exceptionservice")
+	@LoadBalancerClient("exceptionservice")
 	public static class TestConfiguration {
 
 		@LoadBalanced

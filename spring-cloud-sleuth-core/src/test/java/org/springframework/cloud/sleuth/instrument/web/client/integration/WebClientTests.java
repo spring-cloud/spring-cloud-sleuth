@@ -17,7 +17,6 @@
 package org.springframework.cloud.sleuth.instrument.web.client.integration;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -35,9 +34,6 @@ import brave.Tracing;
 import brave.propagation.SamplingFlags;
 import brave.propagation.TraceContextOrSamplingFlags;
 import brave.sampler.Sampler;
-import com.netflix.loadbalancer.BaseLoadBalancer;
-import com.netflix.loadbalancer.ILoadBalancer;
-import com.netflix.loadbalancer.Server;
 import junitparams.JUnitParamsRunner;
 import junitparams.Parameters;
 import org.apache.commons.logging.LogFactory;
@@ -73,13 +69,15 @@ import org.springframework.boot.web.servlet.error.ErrorAttributes;
 import org.springframework.cloud.client.loadbalancer.LoadBalanced;
 import org.springframework.cloud.gateway.config.GatewayAutoConfiguration;
 import org.springframework.cloud.gateway.config.GatewayClassPathWarningAutoConfiguration;
-import org.springframework.cloud.netflix.ribbon.RibbonClient;
+import org.springframework.cloud.loadbalancer.annotation.LoadBalancerClient;
+import org.springframework.cloud.loadbalancer.core.ServiceInstanceListSupplier;
 import org.springframework.cloud.openfeign.EnableFeignClients;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.cloud.sleuth.instrument.web.TraceWebServletAutoConfiguration;
 import org.springframework.cloud.sleuth.util.ArrayListSpanReporter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.env.Environment;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.annotation.DirtiesContext;
@@ -550,8 +548,8 @@ public class WebClientTests {
 			GatewayClassPathWarningAutoConfiguration.class,
 			GatewayAutoConfiguration.class })
 	@EnableFeignClients
-	@RibbonClient(value = "fooservice",
-			configuration = SimpleRibbonClientConfiguration.class)
+	@LoadBalancerClient(value = "fooservice",
+			configuration = SimpleLoadBalancerClientConfiguration.class)
 	public static class TestConfiguration {
 
 		@Bean
@@ -720,17 +718,15 @@ public class WebClientTests {
 	}
 
 	@Configuration
-	public static class SimpleRibbonClientConfiguration {
+	public static class SimpleLoadBalancerClientConfiguration {
 
 		@Value("${local.server.port}")
 		private int port = 0;
 
 		@Bean
-		public ILoadBalancer ribbonLoadBalancer() {
-			BaseLoadBalancer balancer = new BaseLoadBalancer();
-			balancer.setServersList(
-					Collections.singletonList(new Server("localhost", this.port)));
-			return balancer;
+		public ServiceInstanceListSupplier serviceInstanceListSupplier(Environment env) {
+			return ServiceInstanceListSupplier.fixed(env)
+					.instance(this.port, "fooservice").build();
 		}
 
 	}

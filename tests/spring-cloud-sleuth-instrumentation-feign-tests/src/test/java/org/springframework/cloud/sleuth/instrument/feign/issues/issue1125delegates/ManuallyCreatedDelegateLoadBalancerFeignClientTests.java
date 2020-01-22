@@ -16,7 +16,6 @@
 
 package org.springframework.cloud.sleuth.instrument.feign.issues.issue1125delegates;
 
-import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.List;
@@ -41,11 +40,8 @@ import zipkin2.reporter.Reporter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.cloud.netflix.ribbon.SpringClientFactory;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.cloud.openfeign.FeignClientsConfiguration;
-import org.springframework.cloud.openfeign.ribbon.CachingSpringLoadBalancerFactory;
-import org.springframework.cloud.openfeign.ribbon.LoadBalancerFeignClient;
 import org.springframework.cloud.sleuth.util.ArrayListSpanReporter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -64,9 +60,6 @@ import static org.assertj.core.api.BDDAssertions.then;
 		properties = { "feign.hystrix.enabled=false" })
 @DirtiesContext(classMode = ClassMode.AFTER_EACH_TEST_METHOD)
 public class ManuallyCreatedDelegateLoadBalancerFeignClientTests {
-
-	@Autowired
-	MyClient myClient;
 
 	@Autowired
 	MyDelegateClient myDelegateClient;
@@ -89,10 +82,10 @@ public class ManuallyCreatedDelegateLoadBalancerFeignClientTests {
 	public void should_reuse_custom_feign_client() {
 		String response = this.myNameRemote.get();
 
-		then(this.myClient.wasCalled()).isTrue();
+		// then(this.myClient.wasCalled()).isTrue();
 		then(this.myDelegateClient.wasCalled()).isTrue();
 		then(response).isEqualTo("foo");
-		System.out.println("this.myclient.wascalled: " + this.myClient.wasCalled());
+		// System.out.println("this.myclient.wascalled: " + this.myClient.wasCalled());
 		List<Span> spans = this.reporter.getSpans();
 		// retries
 		then(spans).hasSize(1);
@@ -102,7 +95,7 @@ public class ManuallyCreatedDelegateLoadBalancerFeignClientTests {
 	@Test
 	public void my_client_called() {
 		this.myNameRemote.get();
-		then(this.myClient.wasCalled()).isTrue();
+		// then(this.myClient.wasCalled()).isTrue();
 		then(this.myDelegateClient.wasCalled()).isTrue();
 	}
 
@@ -128,13 +121,6 @@ class Application {
 	}
 
 	@Bean
-	public Client client(MyDelegateClient myDelegateClient,
-			CachingSpringLoadBalancerFactory cachingFactory,
-			SpringClientFactory clientFactory) {
-		return new MyClient(myDelegateClient, cachingFactory, clientFactory);
-	}
-
-	@Bean
 	public MyNameRemote myNameRemote(Client client, Decoder decoder, Encoder encoder,
 			Contract contract) {
 		return Feign.builder().client(client).encoder(encoder).decoder(decoder)
@@ -150,27 +136,6 @@ class Application {
 	@Bean
 	public Reporter<Span> spanReporter() {
 		return new ArrayListSpanReporter();
-	}
-
-}
-
-class MyClient extends LoadBalancerFeignClient {
-
-	MyClient(Client delegate, CachingSpringLoadBalancerFactory lbClientFactory,
-			SpringClientFactory clientFactory) {
-		super(delegate, lbClientFactory, clientFactory);
-	}
-
-	boolean wasCalled;
-
-	@Override
-	public Response execute(Request request, Request.Options options) throws IOException {
-		this.wasCalled = true;
-		return getDelegate().execute(request, options);
-	}
-
-	boolean wasCalled() {
-		return this.wasCalled;
 	}
 
 }

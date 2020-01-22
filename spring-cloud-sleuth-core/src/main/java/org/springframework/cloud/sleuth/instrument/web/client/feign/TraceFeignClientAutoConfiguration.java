@@ -30,7 +30,6 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.cloud.openfeign.FeignAutoConfiguration;
 import org.springframework.cloud.openfeign.FeignContext;
-import org.springframework.cloud.sleuth.instrument.hystrix.SleuthHystrixAutoConfiguration;
 import org.springframework.cloud.sleuth.instrument.web.TraceHttpAutoConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -48,18 +47,8 @@ import org.springframework.context.annotation.Scope;
 @ConditionalOnClass({ Client.class, FeignContext.class })
 @ConditionalOnBean(HttpTracing.class)
 @AutoConfigureBefore(FeignAutoConfiguration.class)
-@AutoConfigureAfter({ SleuthHystrixAutoConfiguration.class,
-		TraceHttpAutoConfiguration.class })
+@AutoConfigureAfter({ TraceHttpAutoConfiguration.class })
 public class TraceFeignClientAutoConfiguration {
-
-	@Bean
-	@Scope("prototype")
-	@ConditionalOnClass(
-			name = { "com.netflix.hystrix.HystrixCommand", "feign.hystrix.HystrixFeign" })
-	@ConditionalOnProperty(name = "feign.hystrix.enabled", havingValue = "true")
-	Feign.Builder feignHystrixBuilder(BeanFactory beanFactory) {
-		return SleuthHystrixFeignBuilder.builder(beanFactory);
-	}
 
 	@Bean
 	@ConditionalOnMissingBean

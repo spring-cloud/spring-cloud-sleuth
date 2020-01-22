@@ -20,7 +20,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import brave.sampler.Sampler;
-import com.netflix.hystrix.contrib.javanica.annotation.HystrixCommand;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -115,11 +114,6 @@ class ParticipantsBean {
 
 	@Autowired
 	private ParticipantsClient participantsClient;
-
-	@HystrixCommand(fallbackMethod = "defaultParticipants")
-	public List<Object> getParticipants(String raceId) {
-		return this.participantsClient.getParticipants(raceId);
-	}
 
 	public List<Object> defaultParticipants(String raceId) {
 		return new ArrayList<>();
