@@ -17,6 +17,7 @@
 package org.springframework.cloud.sleuth.instrument.web.client.feign;
 
 import java.io.IOException;
+import java.net.URI;
 import java.nio.charset.Charset;
 import java.util.Collection;
 import java.util.Collections;
@@ -28,7 +29,6 @@ import brave.Tracer;
 import brave.http.HttpClientHandler;
 import brave.http.HttpTracing;
 import brave.propagation.Propagation;
-import brave.propagation.TraceContext;
 import feign.Client;
 import feign.Request;
 import feign.Response;
@@ -72,14 +72,11 @@ final class TracingFeignClient implements Client {
 
 	final Client delegate;
 
-	final HttpClientHandler<Request, Response> handler;
-
-	final TraceContext.Injector<Map<String, Collection<String>>> injector;
+	final HttpClientHandler<brave.http.HttpClientRequest, brave.http.HttpClientResponse> handler;
 
 	TracingFeignClient(HttpTracing httpTracing, Client delegate) {
 		this.tracer = httpTracing.tracing().tracer();
-		this.handler = HttpClientHandler.create(httpTracing, new HttpAdapter());
-		this.injector = httpTracing.tracing().propagation().injector(SETTER);
+		this.handler = HttpClientHandler.create(httpTracing);
 		this.delegate = delegate;
 	}
 
@@ -88,74 +85,131 @@ final class TracingFeignClient implements Client {
 	}
 
 	@Override
-	public Response execute(Request request, Request.Options options) throws IOException {
-		Map<String, Collection<String>> headers = new LinkedHashMap<>(request.headers());
-		Span span = handleSend(headers, request, null);
+	public Response execute(Request req, Request.Options options) throws IOException {
+		HttpClientRequest request = new HttpClientRequest(req);
+		Span span = this.handler.handleSend(request);
 		if (log.isDebugEnabled()) {
 			log.debug("Handled send of " + span);
 		}
-		Response response = null;
+		HttpClientResponse response = null;
 		Throwable error = null;
 		try (Tracer.SpanInScope ws = this.tracer.withSpanInScope(span)) {
-			response = this.delegate.execute(modifiedRequest(request, headers), options);
-			return response;
+			Response res = this.delegate.execute(request.build(), options);
+			if (res != null) { // possibly null on bad implementation or mocks
+				response = new HttpClientResponse(res);
+			}
+			return res;
 		}
 		catch (IOException | RuntimeException | Error e) {
 			error = e;
 			throw e;
 		}
 		finally {
-			handleReceive(span, response, error);
+			this.handler.handleReceive(response, error, span);
+
 			if (log.isDebugEnabled()) {
 				log.debug("Handled receive of " + span);
 			}
 		}
 	}
 
-	Span handleSend(Map<String, Collection<String>> headers, Request request,
-			Span clientSpan) {
-		if (clientSpan != null) {
-			return this.handler.handleSend(this.injector, headers, request, clientSpan);
-		}
-		return this.handler.handleSend(this.injector, headers, request);
+	void handleSendAndReceive(Span span, Request request, Response response,
+			Throwable error) {
+		this.handler.handleSend(new HttpClientRequest(request), span);
+		this.handler.handleReceive(
+				response != null ? new HttpClientResponse(response) : null, error, span);
 	}
 
-	void handleReceive(Span span, Response response, Throwable error) {
-		this.handler.handleReceive(response, error, span);
-	}
+	static final class HttpClientRequest extends brave.http.HttpClientRequest {
 
-	private Request modifiedRequest(Request request,
-			Map<String, Collection<String>> headers) {
-		String method = request.method();
-		String url = request.url();
-		byte[] body = request.body();
-		Charset charset = request.charset();
-		return Request.create(method, url, headers, body, charset);
-	}
+		final Request delegate;
 
-	static final class HttpAdapter
-			extends brave.http.HttpClientAdapter<Request, Response> {
+		Map<String, Collection<String>> headers;
 
-		@Override
-		public String method(Request request) {
-			return request.method();
+		HttpClientRequest(Request delegate) {
+			this.delegate = delegate;
 		}
 
 		@Override
-		public String url(Request request) {
-			return request.url();
+		public Object unwrap() {
+			return delegate;
 		}
 
 		@Override
-		public String requestHeader(Request request, String name) {
-			Collection<String> result = request.headers().get(name);
+		public String method() {
+			return delegate.method();
+		}
+
+		@Override
+		public String path() {
+			String url = url();
+			if (url == null) {
+				return null;
+			}
+			return URI.create(url).getPath();
+		}
+
+		@Override
+		public String url() {
+			return delegate.url();
+		}
+
+		@Override
+		public String header(String name) {
+			Collection<String> result = delegate.headers().get(name);
 			return result != null && result.iterator().hasNext()
 					? result.iterator().next() : null;
 		}
 
 		@Override
-		public Integer statusCode(Response response) {
-			return response.status();
+		public void header(String name, String value) {
+			if (headers == null) {
+				headers = new LinkedHashMap<>(delegate.headers());
+			}
+			if (!headers.containsKey(name)) {
+				headers.put(name, Collections.singletonList(value));
+				if (log.isTraceEnabled()) {
+					log.trace(
+							"Added key [" + name + "] and header value [" + value + "]");
+				}
+			}
+			else {
+				// TODO: this is incorrect to ignore as opposed to overwrite!
+				if (log.isTraceEnabled()) {
+					log.trace("Key [" + name + "] already there in the headers");
+				}
+			}
+		}
+
+		Request build() {
+			if (headers == null) {
+				return delegate;
+			}
+			String method = delegate.method();
+			String url = delegate.url();
+			byte[] body = delegate.body();
+			Charset charset = delegate.charset();
+			return Request.create(method, url, headers, body, charset);
+		}
+
+	}
+
+	static final class HttpClientResponse extends brave.http.HttpClientResponse {
+
+		final Response delegate;
+
+		HttpClientResponse(Response delegate) {
+			this.delegate = delegate;
+		}
+
+		@Override
+		public Object unwrap() {
+			return delegate;
+		}
+
+		@Override
+		public int statusCode() {
+			return delegate.status();
 		}
 
 	}

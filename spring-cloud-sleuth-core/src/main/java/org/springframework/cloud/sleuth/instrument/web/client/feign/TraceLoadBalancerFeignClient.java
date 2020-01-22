@@ -17,7 +17,6 @@
 package org.springframework.cloud.sleuth.instrument.web.client.feign;
 
 import java.io.IOException;
-import java.util.HashMap;
 
 import brave.Span;
 import brave.Tracer;
@@ -86,9 +85,8 @@ public class TraceLoadBalancerFeignClient extends LoadBalancerFeignClient {
 					log.debug(
 							"General exception was thrown, so most likely the traced client wasn't called. Falling back to a manual span");
 				}
-				fallbackSpan = tracingFeignClient().handleSend(
-						new HashMap<>(request.headers()), request, fallbackSpan);
-				tracingFeignClient().handleReceive(fallbackSpan, response, e);
+				tracingFeignClient().handleSendAndReceive(fallbackSpan, request, response,
+						e);
 			}
 			throw e;
 		}
