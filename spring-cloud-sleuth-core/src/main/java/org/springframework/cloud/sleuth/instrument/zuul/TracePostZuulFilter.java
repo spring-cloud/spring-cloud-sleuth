@@ -16,13 +16,13 @@
 
 package org.springframework.cloud.sleuth.instrument.zuul;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import brave.Span;
 import brave.Tracer;
 import brave.http.HttpServerHandler;
 import brave.http.HttpTracing;
-import brave.servlet.HttpServletAdapter;
 import com.netflix.zuul.ZuulFilter;
 import com.netflix.zuul.context.RequestContext;
 import org.apache.commons.logging.Log;
@@ -40,12 +40,12 @@ class TracePostZuulFilter extends ZuulFilter {
 
 	private static final Log log = LogFactory.getLog(TracePostZuulFilter.class);
 
-	private final HttpServerHandler handler;
+	final HttpServerHandler<brave.http.HttpServerRequest, brave.http.HttpServerResponse> handler;
 
-	private final Tracer tracer;
+	final Tracer tracer;
 
 	TracePostZuulFilter(HttpTracing httpTracing) {
-		this.handler = HttpServerHandler.create(httpTracing, new HttpServletAdapter());
+		this.handler = HttpServerHandler.create(httpTracing);
 		this.tracer = httpTracing.tracing().tracer();
 	}
 
@@ -69,10 +69,13 @@ class TracePostZuulFilter extends ZuulFilter {
 		if (log.isDebugEnabled()) {
 			log.debug("Marking current span as handled");
 		}
-		HttpServletResponse response = RequestContext.getCurrentContext().getResponse();
+		HttpServletRequest req = RequestContext.getCurrentContext().getRequest();
+		HttpServletResponse resp = RequestContext.getCurrentContext().getResponse();
+		HttpServerResponse request = resp != null ? new HttpServerResponse(req, resp)
+				: null;
 		Throwable exception = RequestContext.getCurrentContext().getThrowable();
 		Span currentSpan = this.tracer.currentSpan();
-		this.handler.handleSend(response, exception, currentSpan);
+		this.handler.handleSend(request, exception, currentSpan);
 		if (log.isDebugEnabled()) {
 			log.debug("Handled send of " + currentSpan);
 		}
@@ -87,6 +90,43 @@ class TracePostZuulFilter extends ZuulFilter {
 	@Override
 	public int filterOrder() {
 		return 0;
+	}
+
+	// copy/paste for now https://github.com/openzipkin/brave/issues/1064
+	static final class HttpServerResponse extends brave.http.HttpServerResponse {
+
+		final HttpServletResponse delegate;
+
+		final String method;
+
+		final String httpRoute;
+
+		HttpServerResponse(HttpServletRequest req, HttpServletResponse resp) {
+			this.delegate = resp;
+			this.method = req.getMethod();
+			this.httpRoute = (String) req.getAttribute("http.route");
+		}
+
+		@Override
+		public String method() {
+			return method;
+		}
+
+		@Override
+		public String route() {
+			return httpRoute;
+		}
+
+		@Override
+		public HttpServletResponse unwrap() {
+			return delegate;
+		}
+
+		@Override
+		public int statusCode() {
+			return delegate.getStatus();
+		}
+
 	}
 
 }
