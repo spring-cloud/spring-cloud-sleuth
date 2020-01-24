@@ -16,13 +16,15 @@
 
 package org.springframework.cloud.sleuth.instrument.web;
 
+import java.net.InetSocketAddress;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import brave.Span;
 import brave.Tracer;
 import brave.http.HttpServerHandler;
+import brave.http.HttpServerRequest;
+import brave.http.HttpServerResponse;
 import brave.http.HttpTracing;
-import brave.propagation.Propagation;
 import brave.propagation.TraceContext;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -35,10 +37,8 @@ import reactor.util.context.Context;
 
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.core.Ordered;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.http.server.reactive.ServerHttpResponse;
-import org.springframework.http.server.reactive.ServerHttpResponseDecorator;
 import org.springframework.web.method.HandlerMethod;
 import org.springframework.web.reactive.HandlerMapping;
 import org.springframework.web.server.ServerWebExchange;
@@ -65,18 +65,6 @@ public final class TraceWebFilter implements WebFilter, Ordered {
 			+ ".TRACE";
 	static final String MVC_CONTROLLER_CLASS_KEY = "mvc.controller.class";
 	static final String MVC_CONTROLLER_METHOD_KEY = "mvc.controller.method";
-	static final Propagation.Getter<HttpHeaders, String> GETTER = new Propagation.Getter<HttpHeaders, String>() {
-
-		@Override
-		public String get(HttpHeaders carrier, String key) {
-			return carrier.getFirst(key);
-		}
-
-		@Override
-		public String toString() {
-			return "HttpHeaders::getFirst";
-		}
-	};
 
 	private static final Log log = LogFactory.getLog(TraceWebFilter.class);
 
@@ -89,9 +77,7 @@ public final class TraceWebFilter implements WebFilter, Ordered {
 
 	Tracer tracer;
 
-	HttpServerHandler<ServerHttpRequest, ServerHttpResponse> handler;
-
-	TraceContext.Extractor<HttpHeaders> extractor;
+	HttpServerHandler<HttpServerRequest, HttpServerResponse> handler;
 
 	SleuthWebProperties webProperties;
 
@@ -104,11 +90,10 @@ public final class TraceWebFilter implements WebFilter, Ordered {
 	}
 
 	@SuppressWarnings("unchecked")
-	HttpServerHandler<ServerHttpRequest, ServerHttpResponse> handler() {
+	HttpServerHandler<HttpServerRequest, HttpServerResponse> handler() {
 		if (this.handler == null) {
-			this.handler = HttpServerHandler.create(
-					this.beanFactory.getBean(HttpTracing.class),
-					new TraceWebFilter.HttpAdapter());
+			this.handler = HttpServerHandler
+					.create(this.beanFactory.getBean(HttpTracing.class));
 		}
 		return this.handler;
 	}
@@ -118,14 +103,6 @@ public final class TraceWebFilter implements WebFilter, Ordered {
 			this.tracer = this.beanFactory.getBean(HttpTracing.class).tracing().tracer();
 		}
 		return this.tracer;
-	}
-
-	TraceContext.Extractor<HttpHeaders> extractor() {
-		if (this.extractor == null) {
-			this.extractor = this.beanFactory.getBean(HttpTracing.class).tracing()
-					.propagation().extractor(GETTER);
-		}
-		return this.extractor;
 	}
 
 	SleuthWebProperties sleuthWebProperties() {
@@ -163,9 +140,7 @@ public final class TraceWebFilter implements WebFilter, Ordered {
 
 		final Span attrSpan;
 
-		final HttpServerHandler<ServerHttpRequest, ServerHttpResponse> handler;
-
-		final TraceContext.Extractor<HttpHeaders> extractor;
+		final HttpServerHandler<HttpServerRequest, HttpServerResponse> handler;
 
 		final AtomicBoolean initialSpanAlreadyRemoved = new AtomicBoolean();
 
@@ -175,7 +150,6 @@ public final class TraceWebFilter implements WebFilter, Ordered {
 				boolean initialTracePresent, TraceWebFilter parent) {
 			super(source);
 			this.tracer = parent.tracer();
-			this.extractor = parent.extractor();
 			this.handler = parent.handler();
 			this.exchange = exchange;
 			this.attrSpan = exchange.getAttribute(TRACE_REQUEST_ATTR);
@@ -214,9 +188,8 @@ public final class TraceWebFilter implements WebFilter, Ordered {
 					}
 				}
 				else {
-					span = this.handler.handleReceive(this.extractor,
-							this.exchange.getRequest().getHeaders(),
-							this.exchange.getRequest());
+					span = this.handler.handleReceive(
+							new WrappedRequest(this.exchange.getRequest()));
 					if (log.isDebugEnabled()) {
 						log.debug("Handled receive of span " + span);
 					}
@@ -236,7 +209,7 @@ public final class TraceWebFilter implements WebFilter, Ordered {
 
 			final ServerWebExchange exchange;
 
-			final HttpServerHandler<ServerHttpRequest, ServerHttpResponse> handler;
+			final HttpServerHandler<HttpServerRequest, HttpServerResponse> handler;
 
 			WebFilterTraceSubscriber(CoreSubscriber<? super Void> actual, Context context,
 					Span span, MonoWebFilterTrace parent) {
@@ -284,10 +257,10 @@ public final class TraceWebFilter implements WebFilter, Ordered {
 				String httpRoute = pattern != null ? pattern.toString() : "";
 				addResponseTagsForSpanWithoutParent(this.exchange,
 						this.exchange.getResponse(), this.span);
-				DecoratedServerHttpResponse delegate = new DecoratedServerHttpResponse(
+				WrappedResponse response = new WrappedResponse(
 						this.exchange.getResponse(),
 						this.exchange.getRequest().getMethodValue(), httpRoute);
-				this.handler.handleSend(delegate, t, this.span);
+				this.handler.handleSend(response, t, this.span);
 				if (log.isDebugEnabled()) {
 					log.debug("Handled send of " + this.span);
 				}
@@ -339,60 +312,84 @@ public final class TraceWebFilter implements WebFilter, Ordered {
 
 	}
 
-	static final class DecoratedServerHttpResponse extends ServerHttpResponseDecorator {
+	static final class WrappedRequest extends HttpServerRequest {
+
+		final ServerHttpRequest delegate;
+
+		WrappedRequest(ServerHttpRequest delegate) {
+			this.delegate = delegate;
+		}
+
+		@Override
+		public ServerHttpRequest unwrap() {
+			return delegate;
+		}
+
+		@Override
+		public boolean parseClientIpAndPort(Span span) {
+			InetSocketAddress addr = delegate.getRemoteAddress();
+			if (addr == null) {
+				return false;
+			}
+			return span.remoteIpAndPort(addr.getAddress().getHostAddress(),
+					addr.getPort());
+		}
+
+		@Override
+		public String method() {
+			return delegate.getMethodValue();
+		}
+
+		@Override
+		public String path() {
+			return delegate.getPath().toString();
+		}
+
+		@Override
+		public String url() {
+			return delegate.getURI().toString();
+		}
+
+		@Override
+		public String header(String name) {
+			return delegate.getHeaders().getFirst(name);
+		}
+
+	}
+
+	static final class WrappedResponse extends HttpServerResponse {
+
+		final ServerHttpResponse delegate;
 
 		final String method;
 
 		final String httpRoute;
 
-		DecoratedServerHttpResponse(ServerHttpResponse delegate, String method,
-				String httpRoute) {
-			super(delegate);
+		WrappedResponse(ServerHttpResponse resp, String method, String httpRoute) {
+			this.delegate = resp;
 			this.method = method;
 			this.httpRoute = httpRoute;
 		}
 
-	}
-
-	static final class HttpAdapter
-			extends brave.http.HttpServerAdapter<ServerHttpRequest, ServerHttpResponse> {
-
 		@Override
-		public String method(ServerHttpRequest request) {
-			return request.getMethodValue();
+		public String method() {
+			return method;
 		}
 
 		@Override
-		public String url(ServerHttpRequest request) {
-			return request.getURI().toString();
+		public String route() {
+			return httpRoute;
 		}
 
 		@Override
-		public String requestHeader(ServerHttpRequest request, String name) {
-			Object result = request.getHeaders().getFirst(name);
-			return result != null ? result.toString() : null;
+		public ServerHttpResponse unwrap() {
+			return delegate;
 		}
 
 		@Override
-		public Integer statusCode(ServerHttpResponse response) {
-			return response.getStatusCode() != null ? response.getStatusCode().value()
-					: null;
-		}
-
-		@Override
-		public String methodFromResponse(ServerHttpResponse response) {
-			if (response instanceof DecoratedServerHttpResponse) {
-				return ((DecoratedServerHttpResponse) response).method;
-			}
-			return null;
-		}
-
-		@Override
-		public String route(ServerHttpResponse response) {
-			if (response instanceof DecoratedServerHttpResponse) {
-				return ((DecoratedServerHttpResponse) response).httpRoute;
-			}
-			return null;
+		public int statusCode() {
+			return delegate.getStatusCode() != null ? delegate.getStatusCode().value()
+					: 0;
 		}
 
 	}
