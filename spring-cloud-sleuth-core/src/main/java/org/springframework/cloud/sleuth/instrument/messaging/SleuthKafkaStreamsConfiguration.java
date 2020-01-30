@@ -60,12 +60,12 @@ public class SleuthKafkaStreamsConfiguration {
 	 */
 	@Bean
 	@ConditionalOnMissingBean
-	KafkaStreamsTracing kafkaStreamsTracing(Tracing tracing) {
+	static KafkaStreamsTracing kafkaStreamsTracing(Tracing tracing) {
 		return KafkaStreamsTracing.create(tracing);
 	}
 
 	@Bean
-	KafkaStreamsBuilderFactoryBeanPostProcessor kafkaStreamsBuilderFactoryBeanPostProcessor(
+	static KafkaStreamsBuilderFactoryBeanPostProcessor kafkaStreamsBuilderFactoryBeanPostProcessor(
 			KafkaStreamsTracing kafkaStreamsTracing) {
 		return new KafkaStreamsBuilderFactoryBeanPostProcessor(kafkaStreamsTracing);
 	}
