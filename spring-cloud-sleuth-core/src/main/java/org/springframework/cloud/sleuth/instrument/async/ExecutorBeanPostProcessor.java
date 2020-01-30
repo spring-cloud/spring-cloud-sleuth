@@ -21,6 +21,7 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Supplier;
@@ -80,6 +81,14 @@ class ExecutorBeanPostProcessor implements BeanPostProcessor {
 				log.info("Not instrumenting bean " + beanName);
 			}
 		}
+		else if (bean instanceof ScheduledExecutorService && !alreadyTraced) {
+			if (isProxyNeeded(beanName)) {
+				return wrapScheduledExecutorService(bean);
+			}
+			else {
+				log.info("Not instrumenting bean " + beanName);
+			}
+		}
 		else if (bean instanceof ExecutorService && !alreadyTraced) {
 			if (isProxyNeeded(beanName)) {
 				return wrapExecutorService(bean);
@@ -104,6 +113,7 @@ class ExecutorBeanPostProcessor implements BeanPostProcessor {
 
 	private boolean alreadyTraced(Object bean) {
 		return bean instanceof LazyTraceThreadPoolTaskExecutor
+				|| bean instanceof TraceableScheduledExecutorService
 				|| bean instanceof TraceableExecutorService
 				|| bean instanceof LazyTraceAsyncTaskExecutor
 				|| bean instanceof LazyTraceExecutor;
@@ -148,6 +158,14 @@ class ExecutorBeanPostProcessor implements BeanPostProcessor {
 		return createExecutorServiceProxy(bean, cglibProxy, executor);
 	}
 
+	private Object wrapScheduledExecutorService(Object bean) {
+		ScheduledExecutorService executor = (ScheduledExecutorService) bean;
+		boolean classFinal = Modifier.isFinal(bean.getClass().getModifiers());
+		boolean methodFinal = anyFinalMethods(executor, ExecutorService.class);
+		boolean cglibProxy = !classFinal && !methodFinal;
+		return createScheduledExecutorServiceProxy(bean, cglibProxy, executor);
+	}
+
 	private Object wrapAsyncTaskExecutor(Object bean) {
 		AsyncTaskExecutor executor = (AsyncTaskExecutor) bean;
 		boolean classFinal = Modifier.isFinal(bean.getClass().getModifiers());
@@ -186,6 +204,12 @@ class ExecutorBeanPostProcessor implements BeanPostProcessor {
 			ExecutorService executor) {
 		return getProxiedObject(bean, cglibProxy, executor,
 				() -> new TraceableExecutorService(this.beanFactory, executor));
+	}
+
+	Object createScheduledExecutorServiceProxy(Object bean, boolean cglibProxy,
+			ScheduledExecutorService executor) {
+		return getProxiedObject(bean, cglibProxy, executor,
+				() -> new TraceableScheduledExecutorService(this.beanFactory, executor));
 	}
 
 	Object createAsyncTaskExecutorProxy(Object bean, boolean cglibProxy,

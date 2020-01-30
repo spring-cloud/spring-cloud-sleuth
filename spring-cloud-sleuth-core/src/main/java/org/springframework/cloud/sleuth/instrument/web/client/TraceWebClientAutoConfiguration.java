@@ -160,7 +160,7 @@ public class TraceWebClientAutoConfiguration {
 	static class NettyConfiguration {
 
 		@Bean
-		public HttpClientBeanPostProcessor httpClientBeanPostProcessor(
+		static HttpClientBeanPostProcessor httpClientBeanPostProcessor(
 				BeanFactory beanFactory) {
 			return new HttpClientBeanPostProcessor(beanFactory);
 		}
@@ -173,14 +173,14 @@ public class TraceWebClientAutoConfiguration {
 	protected static class TraceOAuthConfiguration {
 
 		@Bean
-		UserInfoRestTemplateCustomizerBPP userInfoRestTemplateCustomizerBeanPostProcessor(
+		static UserInfoRestTemplateCustomizerBPP userInfoRestTemplateCustomizerBeanPostProcessor(
 				BeanFactory beanFactory) {
 			return new UserInfoRestTemplateCustomizerBPP(beanFactory);
 		}
 
 		@Bean
 		@ConditionalOnMissingBean
-		UserInfoRestTemplateCustomizer traceUserInfoRestTemplateCustomizer(
+		static UserInfoRestTemplateCustomizer traceUserInfoRestTemplateCustomizer(
 				BeanFactory beanFactory) {
 			return new TraceUserInfoRestTemplateCustomizer(beanFactory);
 		}
