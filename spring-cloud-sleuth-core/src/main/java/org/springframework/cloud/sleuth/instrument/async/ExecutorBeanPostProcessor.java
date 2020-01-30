@@ -73,6 +73,7 @@ class ExecutorBeanPostProcessor implements BeanPostProcessor {
 	public Object postProcessAfterInitialization(Object bean, String beanName)
 			throws BeansException {
 		if (bean instanceof LazyTraceThreadPoolTaskExecutor
+				|| bean instanceof TraceableScheduledExecutorService
 				|| bean instanceof TraceableExecutorService
 				|| bean instanceof LazyTraceAsyncTaskExecutor
 				|| bean instanceof LazyTraceExecutor) {
@@ -82,6 +83,14 @@ class ExecutorBeanPostProcessor implements BeanPostProcessor {
 		if (bean instanceof ThreadPoolTaskExecutor) {
 			if (isProxyNeeded(beanName)) {
 				return wrapThreadPoolTaskExecutor(bean);
+			}
+			else {
+				log.info("Not instrumenting bean " + beanName);
+			}
+		}
+		else if (bean instanceof ScheduledExecutorService) {
+			if (isProxyNeeded(beanName)) {
+				return wrapScheduledExecutorService(bean);
 			}
 			else {
 				log.info("Not instrumenting bean " + beanName);
@@ -148,6 +157,14 @@ class ExecutorBeanPostProcessor implements BeanPostProcessor {
 		return createExecutorServiceProxy(bean, cglibProxy, executor);
 	}
 
+	private Object wrapScheduledExecutorService(Object bean) {
+		ScheduledExecutorService executor = (ScheduledExecutorService) bean;
+		boolean classFinal = Modifier.isFinal(bean.getClass().getModifiers());
+		boolean methodFinal = anyFinalMethods(executor, ExecutorService.class);
+		boolean cglibProxy = !classFinal && !methodFinal;
+		return createScheduledExecutorServiceProxy(bean, cglibProxy, executor);
+	}
+
 	private Object wrapAsyncTaskExecutor(Object bean) {
 		AsyncTaskExecutor executor = (AsyncTaskExecutor) bean;
 		boolean classFinal = Modifier.isFinal(bean.getClass().getModifiers());
@@ -191,6 +208,12 @@ class ExecutorBeanPostProcessor implements BeanPostProcessor {
 
 			return new TraceableExecutorService(this.beanFactory, executor);
 		});
+	}
+
+	Object createScheduledExecutorServiceProxy(Object bean, boolean cglibProxy,
+			ScheduledExecutorService executor) {
+		return getProxiedObject(bean, cglibProxy, executor,
+				() -> new TraceableScheduledExecutorService(this.beanFactory, executor));
 	}
 
 	Object createAsyncTaskExecutorProxy(Object bean, boolean cglibProxy,
