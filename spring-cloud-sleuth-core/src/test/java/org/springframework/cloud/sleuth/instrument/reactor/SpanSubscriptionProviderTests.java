@@ -19,6 +19,7 @@ package org.springframework.cloud.sleuth.instrument.reactor;
 import org.assertj.core.api.BDDAssertions;
 import org.junit.Test;
 import org.mockito.BDDMockito;
+import reactor.core.CoreSubscriber;
 import reactor.util.context.Context;
 
 import org.springframework.beans.factory.BeanFactory;
@@ -27,13 +28,18 @@ public class SpanSubscriptionProviderTests {
 
 	@Test
 	public void should_return_default_tracing_instance_when_exception_thrown_upon_bean_retrieval() {
+		CoreSubscriber<String> subscriber = BDDMockito.mock(CoreSubscriber.class);
+		BDDMockito.when(subscriber.currentContext()).thenReturn(Context.empty());
+
 		BeanFactory beanFactory = BDDMockito.mock(BeanFactory.class);
+
 		BDDMockito.when(beanFactory.getBean(BDDMockito.any(Class.class)))
 				.thenThrow(new IllegalStateException());
-		SpanSubscriptionProvider provider = new SpanSubscriptionProvider(beanFactory,
-				null, Context.empty(), "example");
 
-		SpanSubscription spanSubscription = provider.get();
+		SpanSubscriptionProvider<String> provider = new SpanSubscriptionProvider<>(
+				beanFactory, subscriber);
+
+		SpanSubscription<String> spanSubscription = provider.get();
 
 		BDDAssertions.then(spanSubscription).isNotNull();
 	}

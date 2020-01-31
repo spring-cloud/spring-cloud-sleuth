@@ -16,7 +16,6 @@
 
 package org.springframework.cloud.sleuth.instrument.reactor;
 
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Supplier;
 
 import org.reactivestreams.Subscription;
@@ -29,7 +28,7 @@ import reactor.util.context.Context;
  * @author Marcin Grzejszczak
  * @since 2.0.0
  */
-final class LazySpanSubscriber<T> extends AtomicBoolean implements SpanSubscription<T> {
+final class LazySpanSubscriber<T> implements SpanSubscription<T> {
 
 	private final Supplier<SpanSubscription<T>> supplier;
 
