@@ -45,7 +45,7 @@ public class TraceableScheduledExecutorService extends TraceableExecutorService
 	@Override
 	public ScheduledFuture<?> schedule(Runnable command, long delay, TimeUnit unit) {
 		return getScheduledExecutorService().schedule(
-				ContextUtil.isContextInCreation(this.beanFactory) ? command
+				ContextUtil.isContextUnusable(this.beanFactory) ? command
 						: new TraceRunnable(tracing(), spanNamer(), command),
 				delay, unit);
 	}
@@ -54,7 +54,7 @@ public class TraceableScheduledExecutorService extends TraceableExecutorService
 	public <V> ScheduledFuture<V> schedule(Callable<V> callable, long delay,
 			TimeUnit unit) {
 		return getScheduledExecutorService().schedule(
-				ContextUtil.isContextInCreation(this.beanFactory) ? callable
+				ContextUtil.isContextUnusable(this.beanFactory) ? callable
 						: new TraceCallable<>(tracing(), spanNamer(), callable),
 				delay, unit);
 	}
@@ -63,7 +63,7 @@ public class TraceableScheduledExecutorService extends TraceableExecutorService
 	public ScheduledFuture<?> scheduleAtFixedRate(Runnable command, long initialDelay,
 			long period, TimeUnit unit) {
 		return getScheduledExecutorService().scheduleAtFixedRate(
-				ContextUtil.isContextInCreation(this.beanFactory) ? command
+				ContextUtil.isContextUnusable(this.beanFactory) ? command
 						: new TraceRunnable(tracing(), spanNamer(), command),
 				initialDelay, period, unit);
 	}
@@ -72,7 +72,7 @@ public class TraceableScheduledExecutorService extends TraceableExecutorService
 	public ScheduledFuture<?> scheduleWithFixedDelay(Runnable command, long initialDelay,
 			long delay, TimeUnit unit) {
 		return getScheduledExecutorService().scheduleWithFixedDelay(
-				ContextUtil.isContextInCreation(this.beanFactory) ? command
+				ContextUtil.isContextUnusable(this.beanFactory) ? command
 						: new TraceRunnable(tracing(), spanNamer(), command),
 				initialDelay, delay, unit);
 	}

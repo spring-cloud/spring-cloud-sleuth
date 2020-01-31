@@ -35,12 +35,14 @@ final class ContextUtil {
 
 	private static final Log log = LogFactory.getLog(ContextUtil.class);
 
-	static boolean isContextInCreation(BeanFactory beanFactory) {
-		boolean contextRefreshed = ContextRefreshedListener.getBean(beanFactory).get();
-		if (!contextRefreshed && log.isDebugEnabled()) {
-			log.debug("Context is not ready yet");
+	static boolean isContextUnusable(BeanFactory beanFactory) {
+		SleuthContextListener listener = SleuthContextListener.getBean(beanFactory);
+		boolean contextUnusable = listener.isUnusable();
+		if (contextUnusable && log.isDebugEnabled()) {
+			log.debug("Context [" + Integer.toHexString(beanFactory.hashCode())
+					+ "] is either not refreshed or is closed");
 		}
-		return !contextRefreshed;
+		return contextUnusable;
 	}
 
 }

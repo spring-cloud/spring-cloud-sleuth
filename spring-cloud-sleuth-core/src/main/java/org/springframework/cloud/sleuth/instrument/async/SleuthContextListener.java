@@ -27,48 +27,64 @@ import org.springframework.beans.factory.BeanFactory;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationEvent;
 import org.springframework.context.ConfigurableApplicationContext;
+import org.springframework.context.event.ApplicationContextEvent;
+import org.springframework.context.event.ContextClosedEvent;
 import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.context.event.SmartApplicationListener;
 
-class ContextRefreshedListener extends AtomicBoolean implements SmartApplicationListener {
+class SleuthContextListener implements SmartApplicationListener {
 
-	static final Map<BeanFactory, ContextRefreshedListener> CACHE = new ConcurrentHashMap<>();
+	static final Map<BeanFactory, SleuthContextListener> CACHE = new ConcurrentHashMap<>();
 
-	private static final Log log = LogFactory.getLog(ContextRefreshedListener.class);
+	private static final Log log = LogFactory.getLog(SleuthContextListener.class);
 
-	ContextRefreshedListener(boolean initialValue) {
-		super(initialValue);
+	final AtomicBoolean refreshed;
+
+	final AtomicBoolean closed;
+
+	SleuthContextListener() {
+		this.refreshed = new AtomicBoolean();
+		this.closed = new AtomicBoolean();
 	}
 
-	ContextRefreshedListener() {
-		this(false);
+	SleuthContextListener(AtomicBoolean refreshed, AtomicBoolean closed) {
+		this.refreshed = refreshed;
+		this.closed = closed;
 	}
 
-	static ContextRefreshedListener getBean(BeanFactory beanFactory) {
-		return CACHE.getOrDefault(beanFactory, new ContextRefreshedListener(false));
+	static SleuthContextListener getBean(BeanFactory beanFactory) {
+		return CACHE.getOrDefault(beanFactory, new SleuthContextListener());
 	}
 
 	@Override
 	public boolean supportsEventType(Class<? extends ApplicationEvent> eventType) {
-		return ContextRefreshedEvent.class.isAssignableFrom(eventType);
+		return ContextClosedEvent.class.isAssignableFrom(eventType)
+				|| ContextRefreshedEvent.class.isAssignableFrom(eventType);
 	}
 
 	@Override
 	public void onApplicationEvent(ApplicationEvent event) {
-		if (event instanceof ContextRefreshedEvent) {
+		if (event instanceof ContextRefreshedEvent
+				|| event instanceof ContextClosedEvent) {
 			if (log.isDebugEnabled()) {
-				log.debug("Context successfully refreshed");
+				log.debug("Context refreshed or closed [" + event + "]");
 			}
-			ContextRefreshedEvent contextRefreshedEvent = (ContextRefreshedEvent) event;
-			ApplicationContext context = contextRefreshedEvent.getApplicationContext();
+			ApplicationContextEvent contextEvent = (ApplicationContextEvent) event;
+			ApplicationContext context = contextEvent.getApplicationContext();
 			BeanFactory beanFactory = context;
 			if (context instanceof ConfigurableApplicationContext) {
 				beanFactory = ((ConfigurableApplicationContext) context).getBeanFactory();
 			}
-			ContextRefreshedListener listener = CACHE.getOrDefault(beanFactory, this);
-			listener.set(true);
+			SleuthContextListener listener = CACHE.getOrDefault(beanFactory, this);
+			listener.refreshed.compareAndSet(false,
+					event instanceof ContextRefreshedEvent);
+			listener.closed.compareAndSet(false, event instanceof ContextClosedEvent);
 			CACHE.put(beanFactory, listener);
 		}
+	}
+
+	boolean isUnusable() {
+		return !this.refreshed.get() || this.closed.get();
 	}
 
 }

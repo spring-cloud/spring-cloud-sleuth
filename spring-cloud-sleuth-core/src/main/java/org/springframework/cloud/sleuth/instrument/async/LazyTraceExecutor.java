@@ -52,7 +52,7 @@ public class LazyTraceExecutor implements Executor {
 
 	@Override
 	public void execute(Runnable command) {
-		if (ContextUtil.isContextInCreation(this.beanFactory)) {
+		if (ContextUtil.isContextUnusable(this.beanFactory)) {
 			this.delegate.execute(command);
 			return;
 		}

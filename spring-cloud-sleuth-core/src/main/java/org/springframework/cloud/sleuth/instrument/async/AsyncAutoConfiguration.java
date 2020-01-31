@@ -36,8 +36,8 @@ import org.springframework.context.annotation.Configuration;
 public class AsyncAutoConfiguration {
 
 	@Bean
-	ContextRefreshedListener traceContextRefreshedListener() {
-		return new ContextRefreshedListener(false);
+	SleuthContextListener traceContextClosedListener() {
+		return new SleuthContextListener();
 	}
 
 }
