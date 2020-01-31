@@ -22,10 +22,12 @@ import brave.propagation.CurrentTraceContext;
 import brave.propagation.TraceContext;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.reactivestreams.Subscriber;
+import reactor.core.CoreSubscriber;
 import reactor.util.context.Context;
 
 import org.springframework.beans.factory.BeanFactory;
+
+import static org.springframework.cloud.sleuth.instrument.reactor.ReactorSleuth.name;
 
 /**
  * Supplier to lazily start a {@link SpanSubscription}.
@@ -39,23 +41,20 @@ final class SpanSubscriptionProvider<T> implements Supplier<SpanSubscription<T>>
 
 	final BeanFactory beanFactory;
 
-	final Subscriber<? super T> subscriber;
+	final CoreSubscriber<? super T> subscriber;
 
 	final Context context;
 
-	final String name;
-
 	private volatile CurrentTraceContext currentTraceContext;
 
-	SpanSubscriptionProvider(BeanFactory beanFactory, Subscriber<? super T> subscriber,
-			Context context, String name) {
+	SpanSubscriptionProvider(BeanFactory beanFactory,
+			CoreSubscriber<? super T> subscriber) {
 		this.beanFactory = beanFactory;
 		this.subscriber = subscriber;
-		this.context = context;
-		this.name = name;
+		this.context = subscriber.currentContext();
 		if (log.isTraceEnabled()) {
 			log.trace("Spring context [" + beanFactory + "], Reactor context [" + context
-					+ "], name [" + name + "]");
+					+ "], name [" + name(subscriber) + "]");
 		}
 	}
 

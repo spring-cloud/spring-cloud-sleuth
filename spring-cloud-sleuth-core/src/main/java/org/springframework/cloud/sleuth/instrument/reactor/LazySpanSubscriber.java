@@ -29,6 +29,7 @@ import reactor.util.context.Context;
  * @author Marcin Grzejszczak
  * @since 2.0.0
  */
+// TODO: why are we extending AtomicBoolean and not actually using its methods?
 final class LazySpanSubscriber<T> extends AtomicBoolean implements SpanSubscription<T> {
 
 	private final Supplier<SpanSubscription<T>> supplier;

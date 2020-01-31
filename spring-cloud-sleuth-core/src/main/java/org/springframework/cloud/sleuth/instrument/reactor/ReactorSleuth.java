@@ -18,7 +18,6 @@ package org.springframework.cloud.sleuth.instrument.reactor;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.function.BooleanSupplier;
 import java.util.function.Function;
 
 import brave.Tracing;
@@ -67,24 +66,21 @@ public abstract class ReactorSleuth {
 			log.trace("Scope passing operator [" + beanFactory + "]");
 		}
 
-		// Adapt if lazy bean factory
-		BooleanSupplier isActive = beanFactory instanceof ConfigurableApplicationContext
-				? ((ConfigurableApplicationContext) beanFactory)::isActive : () -> true;
-
 		return Operators.liftPublisher((p, sub) -> {
-			// if Flux/Mono #just, #empty, #error
+			// While supply of scalar types may be deferred, we don't currently scope
+			// production of values in a trace context. This prevents excessive overhead
+			// when using constant results such as Flux/Mono #just, #empty, #error
 			if (p instanceof Fuseable.ScalarCallable) {
 				return sub;
 			}
-			Scannable scannable = Scannable.from(p);
-			// rest of the logic unchanged...
-			if (isActive.getAsBoolean()) {
+
+			if (beanFactory instanceof ConfigurableApplicationContext
+					&& ((ConfigurableApplicationContext) beanFactory).isActive()) {
 				if (log.isTraceEnabled()) {
 					log.trace("Spring Context [" + beanFactory
 							+ "] already refreshed. Creating a scope "
 							+ "passing span subscriber with Reactor Context " + "["
-							+ sub.currentContext() + "] and name [" + scannable.name()
-							+ "]");
+							+ sub.currentContext() + "] and name [" + name(sub) + "]");
 				}
 
 				return scopePassingSpanSubscription(beanFactory, sub);
@@ -92,18 +88,15 @@ public abstract class ReactorSleuth {
 			if (log.isTraceEnabled()) {
 				log.trace("Spring Context [" + beanFactory
 						+ "] is not yet refreshed, falling back to lazy span subscriber. Reactor Context is ["
-						+ sub.currentContext() + "] and name is [" + scannable.name()
-						+ "]");
+						+ sub.currentContext() + "] and name is [" + name(sub) + "]");
 			}
 			return new LazySpanSubscriber<>(
-					lazyScopePassingSpanSubscription(beanFactory, scannable, sub));
+					new SpanSubscriptionProvider<>(beanFactory, sub));
 		});
 	}
 
-	static <T> SpanSubscriptionProvider<T> lazyScopePassingSpanSubscription(
-			BeanFactory beanFactory, Scannable scannable, CoreSubscriber<? super T> sub) {
-		return new SpanSubscriptionProvider<>(beanFactory, sub, sub.currentContext(),
-				scannable.name());
+	static String name(CoreSubscriber<?> sub) {
+		return Scannable.from(sub).name();
 	}
 
 	private static Map<BeanFactory, CurrentTraceContext> CACHE = new ConcurrentHashMap<>();
