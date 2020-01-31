@@ -45,6 +45,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.env.ConfigurableEnvironment;
 
+import static org.springframework.cloud.sleuth.instrument.reactor.ReactorSleuth.scopePassingSpanOperator;
 import static org.springframework.cloud.sleuth.instrument.reactor.TraceReactorAutoConfiguration.TraceReactorConfiguration.SLEUTH_TRACE_REACTOR_KEY;
 
 /**
@@ -154,14 +155,14 @@ class HooksRefresher implements ApplicationListener<RefreshScopeRefreshedEvent> 
 				log.trace("Decorating onEach operator instrumentation");
 			}
 			Hooks.onEachOperator(SLEUTH_TRACE_REACTOR_KEY,
-					ReactorSleuth.scopePassingSpanOperator(this.context));
+					scopePassingSpanOperator(this.context));
 		}
 		else {
 			if (log.isTraceEnabled()) {
 				log.trace("Decorating onLast operator instrumentation");
 			}
 			Hooks.onLastOperator(SLEUTH_TRACE_REACTOR_KEY,
-					ReactorSleuth.scopePassingSpanOperator(this.context));
+					scopePassingSpanOperator(this.context));
 		}
 	}
 
@@ -198,14 +199,14 @@ class HookRegisteringBeanDefinitionRegistryPostProcessor
 				log.trace("Decorating onEach operator instrumentation");
 			}
 			Hooks.onEachOperator(SLEUTH_TRACE_REACTOR_KEY,
-					ReactorSleuth.scopePassingSpanOperator(springContext));
+					scopePassingSpanOperator(this.springContext));
 		}
 		else {
 			if (log.isTraceEnabled()) {
 				log.trace("Decorating onLast operator instrumentation");
 			}
 			Hooks.onLastOperator(SLEUTH_TRACE_REACTOR_KEY,
-					ReactorSleuth.scopePassingSpanOperator(springContext));
+					scopePassingSpanOperator(this.springContext));
 		}
 		Schedulers.setExecutorServiceDecorator(
 				TraceReactorAutoConfiguration.SLEUTH_REACTOR_EXECUTOR_SERVICE_KEY,

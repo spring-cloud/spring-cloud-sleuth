@@ -16,8 +16,6 @@
 
 package org.springframework.cloud.sleuth.instrument.reactor;
 
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 
 import brave.Tracing;
@@ -70,10 +68,14 @@ public abstract class ReactorSleuth {
 			log.trace("Scope passing operator [" + springContext + "]");
 		}
 
+		// keep a reference outside the lambda so that any caching will be visible to
+		// all publishers
+		LazyBean<CurrentTraceContext> lazyCurrentTraceContext = new LazyBean<>(
+				springContext, CurrentTraceContext.class);
+
 		return Operators.liftPublisher((p, sub) -> {
-			// While supply of scalar types may be deferred, we don't currently scope
-			// production of values in a trace context. This prevents excessive overhead
-			// when using constant results such as Flux/Mono #just, #empty, #error
+			// We don't scope scalar results as they happen in an instant. This prevents
+			// excessive overhead when using Flux/Mono #just, #empty, #error, etc.
 			if (p instanceof Fuseable.ScalarCallable) {
 				return sub;
 			}
@@ -88,13 +90,36 @@ public abstract class ReactorSleuth {
 				return sub;
 			}
 
+			Context context = sub.currentContext();
+
 			if (log.isTraceEnabled()) {
-				log.trace("Spring Context [" + springContext
-						+ "] Creating a scope passing span subscriber with Reactor Context "
-						+ "[" + sub.currentContext() + "] and name [" + name(sub) + "]");
+				log.trace("Spring context [" + springContext + "], Reactor context ["
+						+ context + "], name [" + name(sub) + "]");
 			}
 
-			return scopePassingSpanSubscription(springContext, sub);
+			// Try to get the current trace context bean, lenient when there are problems
+			CurrentTraceContext currentTraceContext = lazyCurrentTraceContext.get();
+			if (currentTraceContext == null) {
+				if (log.isTraceEnabled()) {
+					log.trace("Spring Context [" + springContext
+							+ "] did not return a CurrentTraceContext. Reactor Context is ["
+							+ sub.currentContext() + "] and name is [" + name(sub) + "]");
+				}
+				assert false; // should never happen, but don't break.
+				return sub;
+			}
+
+			TraceContext parent = traceContext(context, currentTraceContext);
+			if (parent == null) {
+				return sub; // no need to scope a null parent
+			}
+
+			if (log.isTraceEnabled()) {
+				log.trace("Creating a scope passing span subscriber with Reactor Context "
+						+ "[" + context + "] and name [" + name(sub) + "]");
+			}
+			return new ScopePassingSpanSubscriber<>(sub, context, currentTraceContext,
+					parent);
 		});
 	}
 
@@ -102,25 +127,14 @@ public abstract class ReactorSleuth {
 		return Scannable.from(sub).name();
 	}
 
-	private static Map<ConfigurableApplicationContext, CurrentTraceContext> CACHE = new ConcurrentHashMap<>();
-
-	static <T> CoreSubscriber<? super T> scopePassingSpanSubscription(
-			ConfigurableApplicationContext springContext, CoreSubscriber<? super T> sub) {
-		CurrentTraceContext currentTraceContext = CACHE.computeIfAbsent(springContext,
-				springContext1 -> springContext1.getBean(CurrentTraceContext.class));
-		Context context = sub.currentContext();
-
-		TraceContext parent = context.getOrDefault(TraceContext.class, null);
-		if (parent == null) {
-			parent = currentTraceContext.get();
+	/**
+	 * Like {@link CurrentTraceContext#get()}, except it first checks the reactor context.
+	 */
+	static TraceContext traceContext(Context context, CurrentTraceContext fallback) {
+		if (context.hasKey(TraceContext.class)) {
+			return context.get(TraceContext.class);
 		}
-		if (parent != null) {
-			return new ScopePassingSpanSubscriber<>(sub, context, currentTraceContext,
-					parent);
-		}
-		else {
-			return sub; // no need to trace
-		}
+		return fallback.get();
 	}
 
 }

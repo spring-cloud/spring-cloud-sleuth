@@ -109,7 +109,7 @@ final class SpanSubscriber<T> extends AtomicBoolean implements SpanSubscription<
 			// no additional cleaning is required cause we operate on scopes
 			if (log.isTraceEnabled()) {
 				log.trace("Request after cleaning. Current span [{}]",
-						this.currentTraceContext.get());
+						this.span.context());
 			}
 		}
 	}
