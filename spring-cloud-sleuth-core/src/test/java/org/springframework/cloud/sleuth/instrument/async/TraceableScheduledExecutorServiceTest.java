@@ -112,7 +112,7 @@ public class TraceableScheduledExecutorServiceTest {
 	@Test
 	public void should_not_schedule_a_trace_runnable_when_context_not_ready()
 			throws Exception {
-		ContextRefreshedListenerAccessor.set(this.beanFactory, false);
+		SleuthContextListenerAccessor.set(this.beanFactory, false);
 		this.traceableScheduledExecutorService.schedule(aRunnable(), 1L, TimeUnit.DAYS);
 
 		then(this.scheduledExecutorService).should(never()).schedule(
@@ -124,7 +124,7 @@ public class TraceableScheduledExecutorServiceTest {
 	@Test
 	public void should_not_schedule_a_trace_callable_when_context_not_ready()
 			throws Exception {
-		ContextRefreshedListenerAccessor.set(this.beanFactory, false);
+		SleuthContextListenerAccessor.set(this.beanFactory, false);
 		this.traceableScheduledExecutorService.schedule(aCallable(), 1L, TimeUnit.DAYS);
 
 		then(this.scheduledExecutorService).should(never()).schedule(
@@ -136,7 +136,7 @@ public class TraceableScheduledExecutorServiceTest {
 	@Test
 	public void should_not_schedule_at_fixed_rate_a_trace_runnable_when_context_not_ready()
 			throws Exception {
-		ContextRefreshedListenerAccessor.set(this.beanFactory, false);
+		SleuthContextListenerAccessor.set(this.beanFactory, false);
 		this.traceableScheduledExecutorService.scheduleAtFixedRate(aRunnable(), 1L, 1L,
 				TimeUnit.DAYS);
 
@@ -149,7 +149,7 @@ public class TraceableScheduledExecutorServiceTest {
 	@Test
 	public void should_not_schedule_with_fixed_delay_a_trace_runnable_when_context_not_ready()
 			throws Exception {
-		ContextRefreshedListenerAccessor.set(this.beanFactory, false);
+		SleuthContextListenerAccessor.set(this.beanFactory, false);
 		this.traceableScheduledExecutorService.scheduleWithFixedDelay(aRunnable(), 1L, 1L,
 				TimeUnit.DAYS);
 
@@ -181,7 +181,7 @@ public class TraceableScheduledExecutorServiceTest {
 				.willReturn(this.tracing);
 		BDDMockito.given(this.beanFactory.getBean(SpanNamer.class))
 				.willReturn(new DefaultSpanNamer());
-		ContextRefreshedListenerAccessor.set(this.beanFactory, true);
+		SleuthContextListenerAccessor.set(this.beanFactory, true);
 		return this.beanFactory;
 	}
 

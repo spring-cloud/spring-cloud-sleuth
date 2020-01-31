@@ -67,7 +67,7 @@ public class LazyTraceThreadPoolTaskSchedulerTests {
 				.willReturn(this.tracing);
 		BDDMockito.given(this.beanFactory.getBean(SpanNamer.class))
 				.willReturn(new DefaultSpanNamer());
-		ContextRefreshedListenerAccessor.set(this.beanFactory, true);
+		SleuthContextListenerAccessor.set(this.beanFactory, true);
 		return this.beanFactory;
 	}
 

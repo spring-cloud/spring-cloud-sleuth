@@ -63,7 +63,7 @@ public class TraceableExecutorService implements ExecutorService {
 
 	@Override
 	public void execute(Runnable command) {
-		this.delegate.execute(ContextUtil.isContextInCreation(this.beanFactory) ? command
+		this.delegate.execute(ContextUtil.isContextUnusable(this.beanFactory) ? command
 				: new TraceRunnable(tracing(), spanNamer(), command, this.spanName));
 	}
 
@@ -95,43 +95,42 @@ public class TraceableExecutorService implements ExecutorService {
 
 	@Override
 	public <T> Future<T> submit(Callable<T> task) {
-		return this.delegate.submit(ContextUtil.isContextInCreation(this.beanFactory)
-				? task
+		return this.delegate.submit(ContextUtil.isContextUnusable(this.beanFactory) ? task
 				: new TraceCallable<>(tracing(), spanNamer(), task, this.spanName));
 	}
 
 	@Override
 	public <T> Future<T> submit(Runnable task, T result) {
 		return this.delegate.submit(
-				ContextUtil.isContextInCreation(this.beanFactory) ? task
+				ContextUtil.isContextUnusable(this.beanFactory) ? task
 						: new TraceRunnable(tracing(), spanNamer(), task, this.spanName),
 				result);
 	}
 
 	@Override
 	public Future<?> submit(Runnable task) {
-		return this.delegate.submit(ContextUtil.isContextInCreation(this.beanFactory)
-				? task : new TraceRunnable(tracing(), spanNamer(), task, this.spanName));
+		return this.delegate.submit(ContextUtil.isContextUnusable(this.beanFactory) ? task
+				: new TraceRunnable(tracing(), spanNamer(), task, this.spanName));
 	}
 
 	@Override
 	public <T> List<Future<T>> invokeAll(Collection<? extends Callable<T>> tasks)
 			throws InterruptedException {
-		return this.delegate.invokeAll(ContextUtil.isContextInCreation(this.beanFactory)
+		return this.delegate.invokeAll(ContextUtil.isContextUnusable(this.beanFactory)
 				? tasks : wrapCallableCollection(tasks));
 	}
 
 	@Override
 	public <T> List<Future<T>> invokeAll(Collection<? extends Callable<T>> tasks,
 			long timeout, TimeUnit unit) throws InterruptedException {
-		return this.delegate.invokeAll(ContextUtil.isContextInCreation(this.beanFactory)
+		return this.delegate.invokeAll(ContextUtil.isContextUnusable(this.beanFactory)
 				? tasks : wrapCallableCollection(tasks), timeout, unit);
 	}
 
 	@Override
 	public <T> T invokeAny(Collection<? extends Callable<T>> tasks)
 			throws InterruptedException, ExecutionException {
-		return this.delegate.invokeAny(ContextUtil.isContextInCreation(this.beanFactory)
+		return this.delegate.invokeAny(ContextUtil.isContextUnusable(this.beanFactory)
 				? tasks : wrapCallableCollection(tasks));
 	}
 
@@ -139,7 +138,7 @@ public class TraceableExecutorService implements ExecutorService {
 	public <T> T invokeAny(Collection<? extends Callable<T>> tasks, long timeout,
 			TimeUnit unit)
 			throws InterruptedException, ExecutionException, TimeoutException {
-		return this.delegate.invokeAny(ContextUtil.isContextInCreation(this.beanFactory)
+		return this.delegate.invokeAny(ContextUtil.isContextUnusable(this.beanFactory)
 				? tasks : wrapCallableCollection(tasks), timeout, unit);
 	}
 

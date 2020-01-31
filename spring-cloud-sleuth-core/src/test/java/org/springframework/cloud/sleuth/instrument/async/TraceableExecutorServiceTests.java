@@ -232,7 +232,7 @@ public class TraceableExecutorServiceTests {
 				.willReturn(this.tracing);
 		BDDMockito.given(this.beanFactory.getBean(SpanNamer.class))
 				.willReturn(new DefaultSpanNamer());
-		ContextRefreshedListenerAccessor.set(this.beanFactory, refreshed);
+		SleuthContextListenerAccessor.set(this.beanFactory, refreshed);
 		return this.beanFactory;
 	}
 

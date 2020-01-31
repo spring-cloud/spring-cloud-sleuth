@@ -16,17 +16,19 @@
 
 package org.springframework.cloud.sleuth.instrument.async;
 
+import java.util.concurrent.atomic.AtomicBoolean;
+
 import org.springframework.beans.factory.BeanFactory;
 
-public final class ContextRefreshedListenerAccessor {
+public final class SleuthContextListenerAccessor {
 
-	private ContextRefreshedListenerAccessor() {
+	private SleuthContextListenerAccessor() {
 		throw new IllegalStateException("Can't instantiate a utility class");
 	}
 
 	public static void set(BeanFactory beanFactory, boolean refreshed) {
-		ContextRefreshedListener.CACHE.put(beanFactory,
-				new ContextRefreshedListener(refreshed));
+		SleuthContextListener.CACHE.put(beanFactory, new SleuthContextListener(
+				new AtomicBoolean(refreshed), new AtomicBoolean(false)));
 	}
 
 }
