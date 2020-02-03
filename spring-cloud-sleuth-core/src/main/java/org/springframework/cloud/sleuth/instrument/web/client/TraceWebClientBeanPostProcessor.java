@@ -38,9 +38,8 @@ import reactor.util.annotation.Nullable;
 import reactor.util.context.Context;
 
 import org.springframework.beans.BeansException;
-import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.config.BeanPostProcessor;
-import org.springframework.cloud.sleuth.instrument.reactor.ReactorSleuth;
+import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.core.io.buffer.DataBuffer;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.reactive.function.client.ClientRequest;
@@ -48,6 +47,8 @@ import org.springframework.web.reactive.function.client.ClientResponse;
 import org.springframework.web.reactive.function.client.ExchangeFilterFunction;
 import org.springframework.web.reactive.function.client.ExchangeFunction;
 import org.springframework.web.reactive.function.client.WebClient;
+
+import static org.springframework.cloud.sleuth.instrument.reactor.ReactorSleuth.scopePassingSpanOperator;
 
 /**
  * {@link BeanPostProcessor} to wrap a {@link WebClient} instance into its trace
@@ -58,10 +59,10 @@ import org.springframework.web.reactive.function.client.WebClient;
  */
 final class TraceWebClientBeanPostProcessor implements BeanPostProcessor {
 
-	private final BeanFactory beanFactory;
+	private final ConfigurableApplicationContext springContext;
 
-	TraceWebClientBeanPostProcessor(BeanFactory beanFactory) {
-		this.beanFactory = beanFactory;
+	TraceWebClientBeanPostProcessor(ConfigurableApplicationContext springContext) {
+		this.springContext = springContext;
 	}
 
 	@Override
@@ -92,7 +93,7 @@ final class TraceWebClientBeanPostProcessor implements BeanPostProcessor {
 		return functions -> {
 			boolean noneMatch = noneMatchTraceExchangeFunction(functions);
 			if (noneMatch) {
-				functions.add(new TraceExchangeFilterFunction(this.beanFactory));
+				functions.add(new TraceExchangeFilterFunction(this.springContext));
 			}
 		};
 	}
@@ -134,7 +135,7 @@ final class TraceExchangeFilterFunction implements ExchangeFilterFunction {
 
 	private static final String CANCELLED_SUBSCRIPTION_ERROR = "CANCELLED";
 
-	final BeanFactory beanFactory;
+	final ConfigurableApplicationContext springContext;
 
 	final Function<? super Publisher<DataBuffer>, ? extends Publisher<DataBuffer>> scopePassingTransformer;
 
@@ -146,14 +147,14 @@ final class TraceExchangeFilterFunction implements ExchangeFilterFunction {
 
 	TraceContext.Injector<ClientRequest.Builder> injector;
 
-	TraceExchangeFilterFunction(BeanFactory beanFactory) {
-		this.beanFactory = beanFactory;
-		this.scopePassingTransformer = ReactorSleuth
-				.scopePassingSpanOperator(beanFactory);
+	TraceExchangeFilterFunction(ConfigurableApplicationContext springContext) {
+		this.springContext = springContext;
+		this.scopePassingTransformer = scopePassingSpanOperator(springContext);
 	}
 
-	public static ExchangeFilterFunction create(BeanFactory beanFactory) {
-		return new TraceExchangeFilterFunction(beanFactory);
+	public static ExchangeFilterFunction create(
+			ConfigurableApplicationContext springContext) {
+		return new TraceExchangeFilterFunction(springContext);
 	}
 
 	@Override
@@ -177,7 +178,7 @@ final class TraceExchangeFilterFunction implements ExchangeFilterFunction {
 	HttpClientHandler<brave.http.HttpClientRequest, brave.http.HttpClientResponse> handler() {
 		if (this.handler == null) {
 			this.handler = HttpClientHandler
-					.create(this.beanFactory.getBean(HttpTracing.class));
+					.create(this.springContext.getBean(HttpTracing.class));
 		}
 		return this.handler;
 	}
@@ -191,14 +192,14 @@ final class TraceExchangeFilterFunction implements ExchangeFilterFunction {
 
 	HttpTracing httpTracing() {
 		if (this.httpTracing == null) {
-			this.httpTracing = this.beanFactory.getBean(HttpTracing.class);
+			this.httpTracing = this.springContext.getBean(HttpTracing.class);
 		}
 		return this.httpTracing;
 	}
 
 	TraceContext.Injector<ClientRequest.Builder> injector() {
 		if (this.injector == null) {
-			this.injector = this.beanFactory.getBean(HttpTracing.class).tracing()
+			this.injector = this.springContext.getBean(HttpTracing.class).tracing()
 					.propagation().injector(SETTER);
 		}
 		return this.injector;

@@ -16,31 +16,58 @@
 
 package org.springframework.cloud.sleuth.instrument.reactor;
 
+import java.util.Objects;
+import java.util.function.Function;
+
 import brave.propagation.CurrentTraceContext;
 import brave.propagation.CurrentTraceContext.Scope;
 import brave.propagation.TraceContext;
+import org.assertj.core.presentation.StandardRepresentation;
+import org.awaitility.Awaitility;
+import org.junit.After;
 import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.mockito.BDDMockito;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.reactivestreams.Publisher;
+import org.reactivestreams.Subscriber;
+import org.reactivestreams.Subscription;
 import reactor.core.CoreSubscriber;
 import reactor.core.publisher.BaseSubscriber;
+import reactor.core.publisher.Mono;
 import reactor.util.context.Context;
 
-import org.springframework.beans.factory.BeanFactory;
+import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.BDDAssertions.then;
+import static org.springframework.cloud.sleuth.instrument.reactor.ReactorSleuth.scopePassingSpanOperator;
 
 /**
  * @author Marcin Grzejszczak
  */
-@RunWith(MockitoJUnitRunner.class)
 public class ScopePassingSpanSubscriberTests {
 
-	CurrentTraceContext currentTraceContext = CurrentTraceContext.Default.create();
+	static {
+		// AssertJ will recognise QueueSubscription implements queue and try to invoke
+		// iterator. That's not allowed, and will cause an exception
+		// Fuseable$QueueSubscription.NOT_SUPPORTED_MESSAGE.
+		// This ensures AssertJ uses normal toString.
+		StandardRepresentation.registerFormatterForType(ScopePassingSpanSubscriber.class,
+				Objects::toString);
+	}
+
+	final CurrentTraceContext currentTraceContext = CurrentTraceContext.Default.create();
 
 	TraceContext context = TraceContext.newBuilder().traceId(1).spanId(1).sampled(true)
 			.build();
+
+	TraceContext context2 = TraceContext.newBuilder().traceId(1).spanId(2).sampled(true)
+			.build();
+
+	AnnotationConfigApplicationContext springContext = new AnnotationConfigApplicationContext();
+
+	@After
+	public void close() {
+		springContext.close();
+	}
 
 	@Test
 	public void should_propagate_current_context() {
@@ -53,28 +80,96 @@ public class ScopePassingSpanSubscriberTests {
 	@Test
 	public void should_set_empty_context_when_context_is_null() {
 		ScopePassingSpanSubscriber<?> subscriber = new ScopePassingSpanSubscriber<>(null,
-				null, this.currentTraceContext, null);
+				Context.empty(), this.currentTraceContext, null);
 
 		then(subscriber.currentContext().isEmpty()).isTrue();
 	}
 
 	@Test
 	public void should_put_current_span_to_context() {
-		try (Scope ws = this.currentTraceContext.newScope(context)) {
-			CoreSubscriber<?> subscriber = ReactorSleuth.scopePassingSpanSubscription(
-					beanFactory(), new BaseSubscriber<Object>() {
-					});
+		try (Scope ws = this.currentTraceContext.newScope(context2)) {
+			CoreSubscriber<?> subscriber = new ScopePassingSpanSubscriber<>(
+					new BaseSubscriber<Object>() {
+					}, Context.empty(), currentTraceContext, context);
 
 			then(subscriber.currentContext().get(TraceContext.class)).isEqualTo(context);
 		}
-
 	}
 
-	private BeanFactory beanFactory() {
-		BeanFactory beanFactory = BDDMockito.mock(BeanFactory.class);
-		BDDMockito.given(beanFactory.getBean(CurrentTraceContext.class))
-				.willReturn(this.currentTraceContext);
-		return beanFactory;
+	@Test
+	public void should_not_trace_scalar_flows() {
+		springContext.registerBean(CurrentTraceContext.class, () -> currentTraceContext);
+		springContext.refresh();
+
+		Function<? super Publisher<Integer>, ? extends Publisher<Integer>> transformer = scopePassingSpanOperator(
+				this.springContext);
+
+		try (Scope ws = this.currentTraceContext.newScope(context)) {
+			Subscriber<Object> assertNoSpanSubscriber = new CoreSubscriber<Object>() {
+				@Override
+				public void onSubscribe(Subscription s) {
+					s.request(Long.MAX_VALUE);
+					assertThat(s).isNotInstanceOf(ScopePassingSpanSubscriber.class);
+				}
+
+				@Override
+				public void onNext(Object o) {
+
+				}
+
+				@Override
+				public void onError(Throwable t) {
+
+				}
+
+				@Override
+				public void onComplete() {
+
+				}
+			};
+
+			Subscriber<Object> assertSpanSubscriber = new CoreSubscriber<Object>() {
+				@Override
+				public void onSubscribe(Subscription s) {
+					s.request(Long.MAX_VALUE);
+					assertThat(s).isInstanceOf(ScopePassingSpanSubscriber.class);
+				}
+
+				@Override
+				public void onNext(Object o) {
+
+				}
+
+				@Override
+				public void onError(Throwable t) {
+
+				}
+
+				@Override
+				public void onComplete() {
+
+				}
+			};
+			transformer.apply(Mono.just(1).hide()).subscribe(assertSpanSubscriber);
+
+			transformer.apply(Mono.just(1)).subscribe(assertNoSpanSubscriber);
+
+			transformer.apply(Mono.<Integer>error(new Exception()).hide())
+					.subscribe(assertSpanSubscriber);
+
+			transformer.apply(Mono.error(new Exception()))
+					.subscribe(assertNoSpanSubscriber);
+
+			transformer.apply(Mono.<Integer>empty().hide())
+					.subscribe(assertSpanSubscriber);
+
+			transformer.apply(Mono.empty()).subscribe(assertNoSpanSubscriber);
+
+		}
+
+		Awaitility.await().untilAsserted(() -> {
+			then(this.currentTraceContext.get()).isNull();
+		});
 	}
 
 }

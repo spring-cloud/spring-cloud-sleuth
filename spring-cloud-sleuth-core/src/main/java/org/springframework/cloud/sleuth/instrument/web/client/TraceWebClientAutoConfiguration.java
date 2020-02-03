@@ -43,6 +43,7 @@ import org.springframework.boot.web.client.RestTemplateCustomizer;
 import org.springframework.cloud.commons.httpclient.HttpClientConfiguration;
 import org.springframework.cloud.gateway.filter.headers.HttpHeadersFilter;
 import org.springframework.cloud.sleuth.instrument.web.TraceWebServletAutoConfiguration;
+import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
@@ -133,8 +134,8 @@ public class TraceWebClientAutoConfiguration {
 
 		@Bean
 		static TraceWebClientBeanPostProcessor traceWebClientBeanPostProcessor(
-				BeanFactory beanFactory) {
-			return new TraceWebClientBeanPostProcessor(beanFactory);
+				ConfigurableApplicationContext springContext) {
+			return new TraceWebClientBeanPostProcessor(springContext);
 		}
 
 	}
