@@ -25,8 +25,6 @@ import reactor.core.publisher.Hooks;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 
-import org.springframework.beans.BeansException;
-import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
 import org.springframework.beans.factory.support.BeanDefinitionRegistry;
@@ -76,14 +74,14 @@ public class TraceReactorAutoConfiguration {
 		private static final Log log = LogFactory.getLog(TraceReactorConfiguration.class);
 
 		@Autowired
-		BeanFactory beanFactory;
+		ConfigurableApplicationContext springContext;
 
 		@PreDestroy
 		public void cleanupHooks() {
 			if (log.isTraceEnabled()) {
 				log.trace("Cleaning up hooks");
 			}
-			SleuthReactorProperties reactorProperties = this.beanFactory
+			SleuthReactorProperties reactorProperties = this.springContext
 					.getBean(SleuthReactorProperties.class);
 			if (reactorProperties.isDecorateOnEach()) {
 				if (log.isTraceEnabled()) {
@@ -175,26 +173,24 @@ class HookRegisteringBeanDefinitionRegistryPostProcessor
 	private static final Log log = LogFactory
 			.getLog(HookRegisteringBeanDefinitionRegistryPostProcessor.class);
 
-	private final ConfigurableApplicationContext context;
+	final ConfigurableApplicationContext springContext;
 
 	HookRegisteringBeanDefinitionRegistryPostProcessor(
-			ConfigurableApplicationContext context) {
-		this.context = context;
+			ConfigurableApplicationContext springContext) {
+		this.springContext = springContext;
 	}
 
 	@Override
-	public void postProcessBeanDefinitionRegistry(BeanDefinitionRegistry registry)
-			throws BeansException {
+	public void postProcessBeanDefinitionRegistry(BeanDefinitionRegistry registry) {
 	}
 
 	@Override
-	public void postProcessBeanFactory(ConfigurableListableBeanFactory beanFactory)
-			throws BeansException {
-		setupHooks(beanFactory);
+	public void postProcessBeanFactory(ConfigurableListableBeanFactory beanFactory) {
+		setupHooks(this.springContext);
 	}
 
-	void setupHooks(BeanFactory beanFactory) {
-		ConfigurableEnvironment environment = this.context.getEnvironment();
+	void setupHooks(ConfigurableApplicationContext springContext) {
+		ConfigurableEnvironment environment = springContext.getEnvironment();
 		boolean decorateOnEach = environment.getProperty(
 				"spring.sleuth.reactor.decorate-on-each", Boolean.class, true);
 		if (decorateOnEach) {
@@ -202,20 +198,20 @@ class HookRegisteringBeanDefinitionRegistryPostProcessor
 				log.trace("Decorating onEach operator instrumentation");
 			}
 			Hooks.onEachOperator(SLEUTH_TRACE_REACTOR_KEY,
-					ReactorSleuth.scopePassingSpanOperator(this.context));
+					ReactorSleuth.scopePassingSpanOperator(springContext));
 		}
 		else {
 			if (log.isTraceEnabled()) {
 				log.trace("Decorating onLast operator instrumentation");
 			}
 			Hooks.onLastOperator(SLEUTH_TRACE_REACTOR_KEY,
-					ReactorSleuth.scopePassingSpanOperator(this.context));
+					ReactorSleuth.scopePassingSpanOperator(springContext));
 		}
 		Schedulers.setExecutorServiceDecorator(
 				TraceReactorAutoConfiguration.SLEUTH_REACTOR_EXECUTOR_SERVICE_KEY,
 				(scheduler,
 						scheduledExecutorService) -> new TraceableScheduledExecutorService(
-								beanFactory, scheduledExecutorService));
+								springContext, scheduledExecutorService));
 	}
 
 }

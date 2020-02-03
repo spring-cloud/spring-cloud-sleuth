@@ -120,4 +120,10 @@ final class ScopePassingSpanSubscriber<T> implements SpanSubscription<T>, Scanna
 		}
 	}
 
+	@Override
+	public String toString() {
+		return "ScopePassingSpanSubscriber{" + "subscriber=" + this.subscriber
+				+ ", parent=" + this.parent + "}";
+	}
+
 }

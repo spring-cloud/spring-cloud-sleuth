@@ -32,7 +32,6 @@ import reactor.core.Scannable;
 import reactor.core.publisher.Operators;
 import reactor.util.context.Context;
 
-import org.springframework.beans.factory.BeanFactory;
 import org.springframework.context.ConfigurableApplicationContext;
 
 /**
@@ -55,15 +54,20 @@ public abstract class ReactorSleuth {
 	 * {@link reactor.core.publisher.Hooks#onLastOperator(Function)} or
 	 * {@link reactor.core.publisher.Hooks#onLastOperator(Function)}. The Span operator
 	 * pointcut will pass the Scope of the Span without ever creating any new spans.
-	 * @param beanFactory - {@link BeanFactory}
+	 * @param springContext the Spring context.
 	 * @param <T> an arbitrary type that is left unchanged by the span operator
 	 * @return a new lazy span operator pointcut
 	 */
-	@SuppressWarnings("unchecked")
+	// Much of Boot assumes that the Spring context will be a
+	// ConfigurableApplicationContext, rooted in SpringApplication's
+	// requirement for it to be so. Previous versions of Reactor
+	// instrumentation injected both BeanFactory and also
+	// ConfigurableApplicationContext. This chooses the more narrow
+	// signature as it is simpler than explaining instanceof checks.
 	public static <T> Function<? super Publisher<T>, ? extends Publisher<T>> scopePassingSpanOperator(
-			BeanFactory beanFactory) {
+			ConfigurableApplicationContext springContext) {
 		if (log.isTraceEnabled()) {
-			log.trace("Scope passing operator [" + beanFactory + "]");
+			log.trace("Scope passing operator [" + springContext + "]");
 		}
 
 		return Operators.liftPublisher((p, sub) -> {
@@ -74,24 +78,23 @@ public abstract class ReactorSleuth {
 				return sub;
 			}
 
-			if (beanFactory instanceof ConfigurableApplicationContext
-					&& ((ConfigurableApplicationContext) beanFactory).isActive()) {
+			if (!springContext.isActive()) {
 				if (log.isTraceEnabled()) {
-					log.trace("Spring Context [" + beanFactory
-							+ "] already refreshed. Creating a scope "
-							+ "passing span subscriber with Reactor Context " + "["
-							+ sub.currentContext() + "] and name [" + name(sub) + "]");
+					log.trace("Spring Context [" + springContext
+							+ "] is not yet refreshed. This is unexpected. Reactor Context is ["
+							+ sub.currentContext() + "] and name is [" + name(sub) + "]");
 				}
+				assert false; // should never happen, but don't break.
+				return sub;
+			}
 
-				return scopePassingSpanSubscription(beanFactory, sub);
-			}
 			if (log.isTraceEnabled()) {
-				log.trace("Spring Context [" + beanFactory
-						+ "] is not yet refreshed, falling back to lazy span subscriber. Reactor Context is ["
-						+ sub.currentContext() + "] and name is [" + name(sub) + "]");
+				log.trace("Spring Context [" + springContext
+						+ "] Creating a scope passing span subscriber with Reactor Context "
+						+ "[" + sub.currentContext() + "] and name [" + name(sub) + "]");
 			}
-			return new LazySpanSubscriber<>(
-					new SpanSubscriptionProvider<>(beanFactory, sub));
+
+			return scopePassingSpanSubscription(springContext, sub);
 		});
 	}
 
@@ -99,12 +102,12 @@ public abstract class ReactorSleuth {
 		return Scannable.from(sub).name();
 	}
 
-	private static Map<BeanFactory, CurrentTraceContext> CACHE = new ConcurrentHashMap<>();
+	private static Map<ConfigurableApplicationContext, CurrentTraceContext> CACHE = new ConcurrentHashMap<>();
 
 	static <T> CoreSubscriber<? super T> scopePassingSpanSubscription(
-			BeanFactory beanFactory, CoreSubscriber<? super T> sub) {
-		CurrentTraceContext currentTraceContext = CACHE.computeIfAbsent(beanFactory,
-				beanFactory1 -> beanFactory1.getBean(CurrentTraceContext.class));
+			ConfigurableApplicationContext springContext, CoreSubscriber<? super T> sub) {
+		CurrentTraceContext currentTraceContext = CACHE.computeIfAbsent(springContext,
+				springContext1 -> springContext1.getBean(CurrentTraceContext.class));
 		Context context = sub.currentContext();
 
 		TraceContext parent = context.getOrDefault(TraceContext.class, null);
