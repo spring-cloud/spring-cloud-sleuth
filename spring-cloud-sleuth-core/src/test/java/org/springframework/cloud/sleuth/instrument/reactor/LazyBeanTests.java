@@ -16,26 +16,29 @@
 
 package org.springframework.cloud.sleuth.instrument.reactor;
 
-import org.assertj.core.api.BDDAssertions;
+import brave.propagation.CurrentTraceContext;
 import org.junit.Test;
-import org.mockito.BDDMockito;
-import reactor.util.context.Context;
 
-import org.springframework.beans.factory.BeanFactory;
+import org.springframework.context.ConfigurableApplicationContext;
 
-public class SpanSubscriptionProviderTests {
+import static org.assertj.core.api.BDDAssertions.then;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+
+public class LazyBeanTests {
 
 	@Test
-	public void should_return_default_tracing_instance_when_exception_thrown_upon_bean_retrieval() {
-		BeanFactory beanFactory = BDDMockito.mock(BeanFactory.class);
-		BDDMockito.when(beanFactory.getBean(BDDMockito.any(Class.class)))
+	public void should_return_null_when_exception_thrown_upon_bean_retrieval() {
+		ConfigurableApplicationContext springContext = mock(
+				ConfigurableApplicationContext.class);
+
+		when(springContext.getBean(CurrentTraceContext.class))
 				.thenThrow(new IllegalStateException());
-		SpanSubscriptionProvider provider = new SpanSubscriptionProvider(beanFactory,
-				null, Context.empty(), "example");
 
-		SpanSubscription spanSubscription = provider.get();
+		LazyBean<CurrentTraceContext> provider = new LazyBean<>(springContext,
+				CurrentTraceContext.class);
 
-		BDDAssertions.then(spanSubscription).isNotNull();
+		then(provider.get()).isNull();
 	}
 
 }

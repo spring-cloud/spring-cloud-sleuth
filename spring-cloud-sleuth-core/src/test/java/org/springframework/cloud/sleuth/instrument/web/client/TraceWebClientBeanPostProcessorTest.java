@@ -22,7 +22,7 @@ import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 
-import org.springframework.beans.factory.BeanFactory;
+import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.web.reactive.function.client.WebClient;
 
 /**
@@ -32,12 +32,12 @@ import org.springframework.web.reactive.function.client.WebClient;
 public class TraceWebClientBeanPostProcessorTest {
 
 	@Mock
-	BeanFactory beanFactory;
+	ConfigurableApplicationContext springContext;
 
 	@Test
 	public void should_add_filter_only_once_to_web_client() {
 		TraceWebClientBeanPostProcessor processor = new TraceWebClientBeanPostProcessor(
-				this.beanFactory);
+				this.springContext);
 		WebClient client = WebClient.create();
 
 		client = (WebClient) processor.postProcessAfterInitialization(client, "foo");
@@ -53,7 +53,7 @@ public class TraceWebClientBeanPostProcessorTest {
 	@Test
 	public void should_add_filter_only_once_to_web_client_via_builder() {
 		TraceWebClientBeanPostProcessor processor = new TraceWebClientBeanPostProcessor(
-				this.beanFactory);
+				this.springContext);
 		WebClient.Builder builder = WebClient.builder();
 
 		builder = (WebClient.Builder) processor.postProcessAfterInitialization(builder,

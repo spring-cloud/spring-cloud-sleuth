@@ -51,9 +51,7 @@ public final class TraceReactorAutoConfigurationAccessorConfiguration {
 		if (log.isTraceEnabled()) {
 			log.trace("Setting up hooks");
 		}
-		TraceReactorAutoConfiguration.TraceReactorConfiguration
-				.traceHookRegisteringBeanDefinitionRegistryPostProcessor(context)
-				.setupHooks(context);
+		HookRegisteringBeanDefinitionRegistryPostProcessor.setupHooks(context);
 	}
 
 }

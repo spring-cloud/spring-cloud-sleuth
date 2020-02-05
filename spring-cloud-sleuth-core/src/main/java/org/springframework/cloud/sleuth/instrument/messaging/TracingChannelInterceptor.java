@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2019 the original author or authors.
+ * Copyright 2013-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -59,8 +59,7 @@ import org.springframework.util.ClassUtils;
  *
  * @author Marcin Grzejszczak
  */
-public final class TracingChannelInterceptor extends ChannelInterceptorAdapter
-		implements ExecutorChannelInterceptor {
+public final class TracingChannelInterceptor extends ChannelInterceptorAdapter implements ExecutorChannelInterceptor {
 
 	/**
 	 * Name of the class in Spring Cloud Stream that is a direct channel.
@@ -109,25 +108,22 @@ public final class TracingChannelInterceptor extends ChannelInterceptorAdapter
 
 	@Autowired
 	TracingChannelInterceptor(Tracing tracing) {
-		this(tracing, MessageHeaderPropagation.INSTANCE,
-				MessageHeaderPropagation.INSTANCE);
+		this(tracing, MessageHeaderPropagation.INSTANCE, MessageHeaderPropagation.INSTANCE);
 	}
 
-	TracingChannelInterceptor(Tracing tracing,
-			Propagation.Setter<MessageHeaderAccessor, String> setter,
+	TracingChannelInterceptor(Tracing tracing, Propagation.Setter<MessageHeaderAccessor, String> setter,
 			Propagation.Getter<MessageHeaderAccessor, String> getter) {
 		this.tracing = tracing;
 		this.tracer = tracing.tracer();
 		this.threadLocalSpan = ThreadLocalSpan.create(this.tracer);
 		this.injector = tracing.propagation().injector(setter);
 		this.extractor = tracing.propagation().extractor(getter);
-		this.integrationObjectSupportPresent = ClassUtils.isPresent(
-				"org.springframework.integration.context.IntegrationObjectSupport", null);
-		this.hasDirectChannelClass = ClassUtils
-				.isPresent("org.springframework.integration.channel.DirectChannel", null);
-		this.directWithAttributesChannelClass = ClassUtils
-				.isPresent(STREAM_DIRECT_CHANNEL, null)
-						? ClassUtils.resolveClassName(STREAM_DIRECT_CHANNEL, null) : null;
+		this.integrationObjectSupportPresent = ClassUtils
+				.isPresent("org.springframework.integration.context.IntegrationObjectSupport", null);
+		this.hasDirectChannelClass = ClassUtils.isPresent("org.springframework.integration.channel.DirectChannel",
+				null);
+		this.directWithAttributesChannelClass = ClassUtils.isPresent(STREAM_DIRECT_CHANNEL, null)
+				? ClassUtils.resolveClassName(STREAM_DIRECT_CHANNEL, null) : null;
 	}
 
 	public static TracingChannelInterceptor create(Tracing tracing) {
@@ -170,12 +166,11 @@ public final class TracingChannelInterceptor extends ChannelInterceptorAdapter
 		MessageHeaderAccessor headers = mutableHeaderAccessor(retrievedMessage);
 		TraceContextOrSamplingFlags extracted = this.extractor.extract(headers);
 		Span span = this.threadLocalSpan.next(extracted);
-		MessageHeaderPropagation.removeAnyTraceHeaders(headers,
-				this.tracing.propagation().keys());
+		MessageHeaderPropagation.removeAnyTraceHeaders(headers, this.tracing.propagation().keys());
 		this.injector.inject(span.context(), headers);
 		if (!span.isNoop()) {
 			span.kind(Span.Kind.PRODUCER).name("send").start();
-			span.remoteServiceName(REMOTE_SERVICE_NAME);
+			span.remoteServiceName(toRemoteServiceName(headers));
 			addTags(message, span, channel);
 		}
 		if (log.isDebugEnabled()) {
@@ -188,24 +183,31 @@ public final class TracingChannelInterceptor extends ChannelInterceptorAdapter
 		return outputMessage;
 	}
 
-	private Message<?> outputMessage(Message<?> originalMessage,
-			Message<?> retrievedMessage, MessageHeaderAccessor additionalHeaders) {
-		MessageHeaderAccessor headers = MessageHeaderAccessor
-				.getMutableAccessor(originalMessage);
+	private String toRemoteServiceName(MessageHeaderAccessor headers) {
+		for (String key : headers.getMessageHeaders().keySet()) {
+			if (key.startsWith("kafka_")) {
+				return "kafka";
+			}
+			else if (key.startsWith("amqp_")) {
+				return "rabbitmq";
+			}
+		}
+		return REMOTE_SERVICE_NAME;
+	}
+
+	private Message<?> outputMessage(Message<?> originalMessage, Message<?> retrievedMessage,
+			MessageHeaderAccessor additionalHeaders) {
+		MessageHeaderAccessor headers = MessageHeaderAccessor.getMutableAccessor(originalMessage);
 		if (originalMessage instanceof ErrorMessage) {
 			ErrorMessage errorMessage = (ErrorMessage) originalMessage;
-			headers.copyHeaders(MessageHeaderPropagation.propagationHeaders(
-					additionalHeaders.getMessageHeaders(),
+			headers.copyHeaders(MessageHeaderPropagation.propagationHeaders(additionalHeaders.getMessageHeaders(),
 					this.tracing.propagation().keys()));
-			return new ErrorMessage(errorMessage.getPayload(),
-					isWebSockets(headers) ? headers.getMessageHeaders()
-							: new MessageHeaders(headers.getMessageHeaders()),
-					errorMessage.getOriginalMessage());
+			return new ErrorMessage(errorMessage.getPayload(), isWebSockets(headers) ? headers.getMessageHeaders()
+					: new MessageHeaders(headers.getMessageHeaders()), errorMessage.getOriginalMessage());
 		}
 		headers.copyHeaders(additionalHeaders.getMessageHeaders());
 		return new GenericMessage<>(retrievedMessage.getPayload(),
-				isWebSockets(headers) ? headers.getMessageHeaders()
-						: new MessageHeaders(headers.getMessageHeaders()));
+				isWebSockets(headers) ? headers.getMessageHeaders() : new MessageHeaders(headers.getMessageHeaders()));
 	}
 
 	private boolean isWebSockets(MessageHeaderAccessor headerAccessor) {
@@ -215,8 +217,7 @@ public final class TracingChannelInterceptor extends ChannelInterceptorAdapter
 
 	private boolean isDirectChannel(MessageChannel channel) {
 		Class<?> targetClass = AopUtils.getTargetClass(channel);
-		boolean directChannel = this.hasDirectChannelClass
-				&& DirectChannel.class.isAssignableFrom(targetClass);
+		boolean directChannel = this.hasDirectChannelClass && DirectChannel.class.isAssignableFrom(targetClass);
 		if (!directChannel) {
 			return false;
 		}
@@ -231,8 +232,7 @@ public final class TracingChannelInterceptor extends ChannelInterceptorAdapter
 	}
 
 	@Override
-	public void afterSendCompletion(Message<?> message, MessageChannel channel,
-			boolean sent, Exception ex) {
+	public void afterSendCompletion(Message<?> message, MessageChannel channel, boolean sent, Exception ex) {
 		if (emptyMessage(message)) {
 			return;
 		}
@@ -240,8 +240,7 @@ public final class TracingChannelInterceptor extends ChannelInterceptorAdapter
 			afterMessageHandled(message, channel, null, ex);
 		}
 		if (log.isDebugEnabled()) {
-			log.debug("Will finish the current span after completion "
-					+ this.tracer.currentSpan());
+			log.debug("Will finish the current span after completion " + this.tracer.currentSpan());
 		}
 		finishSpan(ex);
 	}
@@ -258,12 +257,11 @@ public final class TracingChannelInterceptor extends ChannelInterceptorAdapter
 		MessageHeaderAccessor headers = mutableHeaderAccessor(message);
 		TraceContextOrSamplingFlags extracted = this.extractor.extract(headers);
 		Span span = this.threadLocalSpan.next(extracted);
-		MessageHeaderPropagation.removeAnyTraceHeaders(headers,
-				this.tracing.propagation().keys());
+		MessageHeaderPropagation.removeAnyTraceHeaders(headers, this.tracing.propagation().keys());
 		this.injector.inject(span.context(), headers);
 		if (!span.isNoop()) {
 			span.kind(Span.Kind.CONSUMER).name("receive").start();
-			span.remoteServiceName(REMOTE_SERVICE_NAME);
+			span.remoteServiceName(toRemoteServiceName(headers));
 			addTags(message, span, channel);
 		}
 		if (log.isDebugEnabled()) {
@@ -272,21 +270,19 @@ public final class TracingChannelInterceptor extends ChannelInterceptorAdapter
 		headers.setImmutable();
 		if (message instanceof ErrorMessage) {
 			ErrorMessage errorMessage = (ErrorMessage) message;
-			return new ErrorMessage(errorMessage.getPayload(),
-					headers.getMessageHeaders(), errorMessage.getOriginalMessage());
+			return new ErrorMessage(errorMessage.getPayload(), headers.getMessageHeaders(),
+					errorMessage.getOriginalMessage());
 		}
 		return new GenericMessage<>(message.getPayload(), headers.getMessageHeaders());
 	}
 
 	@Override
-	public void afterReceiveCompletion(Message<?> message, MessageChannel channel,
-			Exception ex) {
+	public void afterReceiveCompletion(Message<?> message, MessageChannel channel, Exception ex) {
 		if (emptyMessage(message)) {
 			return;
 		}
 		if (log.isDebugEnabled()) {
-			log.debug("Will finish the current span after receive completion "
-					+ this.tracer.currentSpan());
+			log.debug("Will finish the current span after receive completion " + this.tracer.currentSpan());
 		}
 		finishSpan(ex);
 	}
@@ -296,8 +292,7 @@ public final class TracingChannelInterceptor extends ChannelInterceptorAdapter
 	 * context. It then creates a span for the handler, placing it in scope.
 	 */
 	@Override
-	public Message<?> beforeHandle(Message<?> message, MessageChannel channel,
-			MessageHandler handler) {
+	public Message<?> beforeHandle(Message<?> message, MessageChannel channel, MessageHandler handler) {
 		if (emptyMessage(message)) {
 			return message;
 		}
@@ -312,34 +307,28 @@ public final class TracingChannelInterceptor extends ChannelInterceptorAdapter
 			consumerSpan.finish();
 		}
 		// create and scope a span for the message processor
-		this.threadLocalSpan
-				.next(TraceContextOrSamplingFlags.create(consumerSpan.context()))
-				.name("handle").start();
+		this.threadLocalSpan.next(TraceContextOrSamplingFlags.create(consumerSpan.context())).name("handle").start();
 		// remove any trace headers, but don't re-inject as we are synchronously
 		// processing the
 		// message and can rely on scoping to access this span later.
-		MessageHeaderPropagation.removeAnyTraceHeaders(headers,
-				this.tracing.propagation().keys());
+		MessageHeaderPropagation.removeAnyTraceHeaders(headers, this.tracing.propagation().keys());
 		if (log.isDebugEnabled()) {
 			log.debug("Created a new span in before handle" + consumerSpan);
 		}
 		if (message instanceof ErrorMessage) {
-			return new ErrorMessage((Throwable) message.getPayload(),
-					headers.getMessageHeaders());
+			return new ErrorMessage((Throwable) message.getPayload(), headers.getMessageHeaders());
 		}
 		headers.setImmutable();
 		return new GenericMessage<>(message.getPayload(), headers.getMessageHeaders());
 	}
 
 	@Override
-	public void afterMessageHandled(Message<?> message, MessageChannel channel,
-			MessageHandler handler, Exception ex) {
+	public void afterMessageHandled(Message<?> message, MessageChannel channel, MessageHandler handler, Exception ex) {
 		if (emptyMessage(message)) {
 			return;
 		}
 		if (log.isDebugEnabled()) {
-			log.debug("Will finish the current span after message handled "
-					+ this.tracer.currentSpan());
+			log.debug("Will finish the current span after message handled " + this.tracer.currentSpan());
 		}
 		finishSpan(ex);
 	}

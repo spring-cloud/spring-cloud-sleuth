@@ -54,8 +54,7 @@ final class ScopePassingSpanSubscriber<T> implements SpanSubscription<T>, Scanna
 		this.subscriber = subscriber;
 		this.currentTraceContext = currentTraceContext;
 		this.parent = parent;
-		this.context = ctx != null && parent != null ? ctx.put(TraceContext.class, parent)
-				: ctx != null ? ctx : Context.empty();
+		this.context = parent != null ? ctx.put(TraceContext.class, parent) : ctx;
 		if (log.isTraceEnabled()) {
 			log.trace("Parent span [" + parent + "], context [" + this.context + "]");
 		}
@@ -81,7 +80,6 @@ final class ScopePassingSpanSubscriber<T> implements SpanSubscription<T>, Scanna
 		try (Scope scope = this.currentTraceContext.maybeScope(this.parent)) {
 			this.s.cancel();
 		}
-
 	}
 
 	@Override
@@ -118,6 +116,12 @@ final class ScopePassingSpanSubscriber<T> implements SpanSubscription<T>, Scanna
 		else {
 			return key == Attr.ACTUAL ? this.subscriber : null;
 		}
+	}
+
+	@Override
+	public String toString() {
+		return "ScopePassingSpanSubscriber{" + "subscriber=" + this.subscriber
+				+ ", parent=" + this.parent + "}";
 	}
 
 }
