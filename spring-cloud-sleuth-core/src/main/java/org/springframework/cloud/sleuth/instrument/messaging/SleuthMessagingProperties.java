@@ -57,9 +57,9 @@ public class SleuthMessagingProperties {
 		/**
 		 * An array of patterns against which channel names will be matched.
 		 * @see org.springframework.integration.config.GlobalChannelInterceptor#patterns()
-		 * Defaults to any channel name not matching the Hystrix Stream channel name.
+		 * Defaults to any channel name not matching the Hystrix Stream and functional Stream channel names.
 		 */
-		private String[] patterns = new String[] { "!hystrixStreamOutput*", "*" };
+		private String[] patterns = new String[] { "!hystrixStreamOutput*", "*", "!channel*"};
 
 		/**
 		 * Enable Spring Integration sleuth instrumentation.
