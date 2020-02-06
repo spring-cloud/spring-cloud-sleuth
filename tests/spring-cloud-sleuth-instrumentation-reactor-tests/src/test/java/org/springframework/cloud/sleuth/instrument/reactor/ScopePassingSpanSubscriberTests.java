@@ -21,9 +21,9 @@ import java.util.function.Function;
 
 import brave.propagation.CurrentTraceContext;
 import brave.propagation.CurrentTraceContext.Scope;
+import brave.propagation.StrictScopeDecorator;
 import brave.propagation.TraceContext;
 import org.assertj.core.presentation.StandardRepresentation;
-import org.awaitility.Awaitility;
 import org.junit.After;
 import org.junit.Test;
 import org.reactivestreams.Publisher;
@@ -54,13 +54,60 @@ public class ScopePassingSpanSubscriberTests {
 				Objects::toString);
 	}
 
-	final CurrentTraceContext currentTraceContext = CurrentTraceContext.Default.create();
+	final CurrentTraceContext currentTraceContext = CurrentTraceContext.Default
+			.newBuilder().addScopeDecorator(StrictScopeDecorator.create()).build();
 
 	TraceContext context = TraceContext.newBuilder().traceId(1).spanId(1).sampled(true)
 			.build();
 
 	TraceContext context2 = TraceContext.newBuilder().traceId(1).spanId(2).sampled(true)
 			.build();
+
+	Subscriber<Object> assertNotScopePassingSpanSubscriber = new CoreSubscriber<Object>() {
+		@Override
+		public void onSubscribe(Subscription s) {
+			s.request(Long.MAX_VALUE);
+			assertThat(s).isNotInstanceOf(ScopePassingSpanSubscriber.class);
+		}
+
+		@Override
+		public void onNext(Object o) {
+
+		}
+
+		@Override
+		public void onError(Throwable t) {
+
+		}
+
+		@Override
+		public void onComplete() {
+
+		}
+	};
+
+	Subscriber<Object> assertScopePassingSpanSubscriber = new CoreSubscriber<Object>() {
+		@Override
+		public void onSubscribe(Subscription s) {
+			s.request(Long.MAX_VALUE);
+			assertThat(s).isInstanceOf(ScopePassingSpanSubscriber.class);
+		}
+
+		@Override
+		public void onNext(Object o) {
+
+		}
+
+		@Override
+		public void onError(Throwable t) {
+
+		}
+
+		@Override
+		public void onComplete() {
+
+		}
+	};
 
 	AnnotationConfigApplicationContext springContext = new AnnotationConfigApplicationContext();
 
@@ -97,7 +144,7 @@ public class ScopePassingSpanSubscriberTests {
 	}
 
 	@Test
-	public void should_not_trace_scalar_flows() {
+	public void should_not_scope_scalar_subscribe() {
 		springContext.registerBean(CurrentTraceContext.class, () -> currentTraceContext);
 		springContext.refresh();
 
@@ -105,71 +152,38 @@ public class ScopePassingSpanSubscriberTests {
 				this.springContext);
 
 		try (Scope ws = this.currentTraceContext.newScope(context)) {
-			Subscriber<Object> assertNoSpanSubscriber = new CoreSubscriber<Object>() {
-				@Override
-				public void onSubscribe(Subscription s) {
-					s.request(Long.MAX_VALUE);
-					assertThat(s).isNotInstanceOf(ScopePassingSpanSubscriber.class);
-				}
 
-				@Override
-				public void onNext(Object o) {
-
-				}
-
-				@Override
-				public void onError(Throwable t) {
-
-				}
-
-				@Override
-				public void onComplete() {
-
-				}
-			};
-
-			Subscriber<Object> assertSpanSubscriber = new CoreSubscriber<Object>() {
-				@Override
-				public void onSubscribe(Subscription s) {
-					s.request(Long.MAX_VALUE);
-					assertThat(s).isInstanceOf(ScopePassingSpanSubscriber.class);
-				}
-
-				@Override
-				public void onNext(Object o) {
-
-				}
-
-				@Override
-				public void onError(Throwable t) {
-
-				}
-
-				@Override
-				public void onComplete() {
-
-				}
-			};
-			transformer.apply(Mono.just(1).hide()).subscribe(assertSpanSubscriber);
-
-			transformer.apply(Mono.just(1)).subscribe(assertNoSpanSubscriber);
-
-			transformer.apply(Mono.<Integer>error(new Exception()).hide())
-					.subscribe(assertSpanSubscriber);
+			transformer.apply(Mono.just(1))
+					.subscribe(assertNotScopePassingSpanSubscriber);
 
 			transformer.apply(Mono.error(new Exception()))
-					.subscribe(assertNoSpanSubscriber);
+					.subscribe(assertNotScopePassingSpanSubscriber);
 
-			transformer.apply(Mono.<Integer>empty().hide())
-					.subscribe(assertSpanSubscriber);
-
-			transformer.apply(Mono.empty()).subscribe(assertNoSpanSubscriber);
+			transformer.apply(Mono.empty())
+					.subscribe(assertNotScopePassingSpanSubscriber);
 
 		}
+	}
 
-		Awaitility.await().untilAsserted(() -> {
-			then(this.currentTraceContext.get()).isNull();
-		});
+	@Test
+	public void should_scope_scalar_hide_subscribe() {
+		springContext.registerBean(CurrentTraceContext.class, () -> currentTraceContext);
+		springContext.refresh();
+
+		Function<? super Publisher<Integer>, ? extends Publisher<Integer>> transformer = scopePassingSpanOperator(
+				this.springContext);
+
+		try (Scope ws = this.currentTraceContext.newScope(context)) {
+
+			transformer.apply(Mono.just(1).hide())
+					.subscribe(assertScopePassingSpanSubscriber);
+
+			transformer.apply(Mono.<Integer>error(new Exception()).hide())
+					.subscribe(assertScopePassingSpanSubscriber);
+
+			transformer.apply(Mono.<Integer>empty().hide())
+					.subscribe(assertScopePassingSpanSubscriber);
+		}
 	}
 
 }
