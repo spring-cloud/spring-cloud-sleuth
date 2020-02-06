@@ -162,8 +162,8 @@ public class TraceWebClientAutoConfiguration {
 
 		@Bean
 		static HttpClientBeanPostProcessor httpClientBeanPostProcessor(
-				BeanFactory beanFactory) {
-			return new HttpClientBeanPostProcessor(beanFactory);
+				ConfigurableApplicationContext springContext) {
+			return new HttpClientBeanPostProcessor(springContext);
 		}
 
 	}

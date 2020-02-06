@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.springframework.cloud.sleuth.instrument.reactor;
+package org.springframework.cloud.sleuth.internal;
 
 import brave.propagation.CurrentTraceContext;
 import org.junit.Test;

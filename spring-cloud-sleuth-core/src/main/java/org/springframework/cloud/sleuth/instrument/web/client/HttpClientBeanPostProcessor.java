@@ -33,26 +33,29 @@ import reactor.netty.http.client.HttpClientRequest;
 import reactor.netty.http.client.HttpClientResponse;
 
 import org.springframework.beans.BeansException;
-import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.config.BeanPostProcessor;
+import org.springframework.cloud.sleuth.internal.LazyBean;
+import org.springframework.context.ConfigurableApplicationContext;
 
 class HttpClientBeanPostProcessor implements BeanPostProcessor {
 
-	private final BeanFactory beanFactory;
+	final ConfigurableApplicationContext springContext;
 
-	HttpClientBeanPostProcessor(BeanFactory beanFactory) {
-		this.beanFactory = beanFactory;
+	HttpClientBeanPostProcessor(ConfigurableApplicationContext springContext) {
+		this.springContext = springContext;
 	}
 
 	@Override
 	public Object postProcessAfterInitialization(Object bean, String beanName)
 			throws BeansException {
+		LazyBean<HttpTracing> httpTracing = LazyBean.create(this.springContext,
+				HttpTracing.class);
 		if (bean instanceof HttpClient) {
-			return ((HttpClient) bean).mapConnect(new TracingMapConnect(this.beanFactory))
-					.doOnRequest(TracingDoOnRequest.create(this.beanFactory))
-					.doOnRequestError(TracingDoOnErrorRequest.create(this.beanFactory))
-					.doOnResponse(TracingDoOnResponse.create(this.beanFactory))
-					.doOnResponseError(TracingDoOnErrorResponse.create(this.beanFactory));
+			return ((HttpClient) bean).mapConnect(new TracingMapConnect(httpTracing))
+					.doOnRequest(TracingDoOnRequest.create(httpTracing))
+					.doOnRequestError(TracingDoOnErrorRequest.create(httpTracing))
+					.doOnResponse(TracingDoOnResponse.create(httpTracing))
+					.doOnResponseError(TracingDoOnErrorResponse.create(httpTracing));
 		}
 		return bean;
 	}
@@ -60,12 +63,12 @@ class HttpClientBeanPostProcessor implements BeanPostProcessor {
 	private static class TracingMapConnect implements
 			BiFunction<Mono<? extends Connection>, Bootstrap, Mono<? extends Connection>> {
 
-		private final BeanFactory beanFactory;
+		final LazyBean<HttpTracing> httpTracing;
 
-		private Tracer tracer;
+		Tracer tracer;
 
-		TracingMapConnect(BeanFactory beanFactory) {
-			this.beanFactory = beanFactory;
+		TracingMapConnect(LazyBean<HttpTracing> httpTracing) {
+			this.httpTracing = httpTracing;
 		}
 
 		@Override
@@ -77,7 +80,7 @@ class HttpClientBeanPostProcessor implements BeanPostProcessor {
 
 		private Tracer tracer() {
 			if (this.tracer == null) {
-				this.tracer = this.beanFactory.getBean(Tracer.class);
+				this.tracer = this.httpTracing.get().tracing().tracer();
 			}
 			return this.tracer;
 		}
@@ -87,39 +90,30 @@ class HttpClientBeanPostProcessor implements BeanPostProcessor {
 	private static class TracingDoOnRequest
 			implements BiConsumer<HttpClientRequest, Connection> {
 
-		final BeanFactory beanFactory;
-
-		HttpTracing httpTracing;
+		final LazyBean<HttpTracing> httpTracing;
 
 		List<String> propagationKeys;
 
 		HttpClientHandler<brave.http.HttpClientRequest, brave.http.HttpClientResponse> handler;
 
-		TracingDoOnRequest(BeanFactory beanFactory) {
-			this.beanFactory = beanFactory;
+		TracingDoOnRequest(LazyBean<HttpTracing> httpTracing) {
+			this.httpTracing = httpTracing;
 		}
 
-		static TracingDoOnRequest create(BeanFactory beanFactory) {
-			return new TracingDoOnRequest(beanFactory);
+		static TracingDoOnRequest create(LazyBean<HttpTracing> httpTracing) {
+			return new TracingDoOnRequest(httpTracing);
 		}
 
-		private HttpTracing httpTracing() {
-			if (this.httpTracing == null) {
-				this.httpTracing = this.beanFactory.getBean(HttpTracing.class);
-			}
-			return this.httpTracing;
-		}
-
-		private List<String> propagationKeys() {
+		List<String> propagationKeys() {
 			if (this.propagationKeys == null) {
-				this.propagationKeys = httpTracing().tracing().propagation().keys();
+				this.propagationKeys = httpTracing.get().tracing().propagation().keys();
 			}
 			return this.propagationKeys;
 		}
 
-		private HttpClientHandler<brave.http.HttpClientRequest, brave.http.HttpClientResponse> handler() {
+		HttpClientHandler<brave.http.HttpClientRequest, brave.http.HttpClientResponse> handler() {
 			if (this.handler == null) {
-				this.handler = HttpClientHandler.create(httpTracing());
+				this.handler = HttpClientHandler.create(httpTracing.get());
 			}
 			return this.handler;
 		}
@@ -147,12 +141,12 @@ class HttpClientBeanPostProcessor implements BeanPostProcessor {
 	private static class TracingDoOnResponse extends AbstractTracingDoOnHandler
 			implements BiConsumer<HttpClientResponse, Connection> {
 
-		TracingDoOnResponse(BeanFactory beanFactory) {
-			super(beanFactory);
+		TracingDoOnResponse(LazyBean<HttpTracing> httpTracing) {
+			super(httpTracing);
 		}
 
-		static TracingDoOnResponse create(BeanFactory beanFactory) {
-			return new TracingDoOnResponse(beanFactory);
+		static TracingDoOnResponse create(LazyBean<HttpTracing> httpTracing) {
+			return new TracingDoOnResponse(httpTracing);
 		}
 
 		@Override
@@ -165,12 +159,12 @@ class HttpClientBeanPostProcessor implements BeanPostProcessor {
 	private static class TracingDoOnErrorRequest extends AbstractTracingDoOnHandler
 			implements BiConsumer<HttpClientRequest, Throwable> {
 
-		TracingDoOnErrorRequest(BeanFactory beanFactory) {
-			super(beanFactory);
+		TracingDoOnErrorRequest(LazyBean<HttpTracing> httpTracing) {
+			super(httpTracing);
 		}
 
-		static TracingDoOnErrorRequest create(BeanFactory beanFactory) {
-			return new TracingDoOnErrorRequest(beanFactory);
+		static TracingDoOnErrorRequest create(LazyBean<HttpTracing> httpTracing) {
+			return new TracingDoOnErrorRequest(httpTracing);
 		}
 
 		@Override
@@ -183,12 +177,12 @@ class HttpClientBeanPostProcessor implements BeanPostProcessor {
 	private static class TracingDoOnErrorResponse extends AbstractTracingDoOnHandler
 			implements BiConsumer<HttpClientResponse, Throwable> {
 
-		TracingDoOnErrorResponse(BeanFactory beanFactory) {
-			super(beanFactory);
+		TracingDoOnErrorResponse(LazyBean<HttpTracing> httpTracing) {
+			super(httpTracing);
 		}
 
-		static TracingDoOnErrorResponse create(BeanFactory beanFactory) {
-			return new TracingDoOnErrorResponse(beanFactory);
+		static TracingDoOnErrorResponse create(LazyBean<HttpTracing> httpTracing) {
+			return new TracingDoOnErrorResponse(httpTracing);
 		}
 
 		@Override
@@ -200,26 +194,17 @@ class HttpClientBeanPostProcessor implements BeanPostProcessor {
 
 	private static abstract class AbstractTracingDoOnHandler {
 
-		final BeanFactory beanFactory;
-
-		HttpTracing httpTracing;
+		final LazyBean<HttpTracing> httpTracing;
 
 		HttpClientHandler<brave.http.HttpClientRequest, brave.http.HttpClientResponse> handler;
 
-		AbstractTracingDoOnHandler(BeanFactory beanFactory) {
-			this.beanFactory = beanFactory;
+		AbstractTracingDoOnHandler(LazyBean<HttpTracing> httpTracing) {
+			this.httpTracing = httpTracing;
 		}
 
-		private HttpTracing httpTracing() {
-			if (this.httpTracing == null) {
-				this.httpTracing = this.beanFactory.getBean(HttpTracing.class);
-			}
-			return this.httpTracing;
-		}
-
-		private HttpClientHandler<brave.http.HttpClientRequest, brave.http.HttpClientResponse> handler() {
+		HttpClientHandler<brave.http.HttpClientRequest, brave.http.HttpClientResponse> handler() {
 			if (this.handler == null) {
-				this.handler = HttpClientHandler.create(httpTracing());
+				this.handler = HttpClientHandler.create(httpTracing.get());
 			}
 			return this.handler;
 		}
