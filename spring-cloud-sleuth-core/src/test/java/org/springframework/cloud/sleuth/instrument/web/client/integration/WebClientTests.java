@@ -55,8 +55,6 @@ import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import reactor.netty.http.client.HttpClient;
-import reactor.netty.http.client.HttpClientResponse;
 import zipkin2.Annotation;
 import zipkin2.reporter.Reporter;
 
@@ -135,9 +133,6 @@ public class WebClientTests {
 
 	@Autowired
 	HttpClientBuilder httpClientBuilder; // #845
-
-	@Autowired
-	HttpClient nettyHttpClient;
 
 	@Autowired
 	HttpAsyncClientBuilder httpAsyncClientBuilder; // #845
@@ -276,30 +271,6 @@ public class WebClientTests {
 
 		then(this.tracer.currentSpan()).isNull();
 		then(this.reporter.getSpans()).isNotEmpty();
-	}
-
-	@Test
-	@SuppressWarnings("unchecked")
-	public void shouldAttachTraceIdWhenCallingAnotherServiceForNettyHttpClient()
-			throws Exception {
-		Span span = this.tracer.nextSpan().name("foo").start();
-
-		try (Tracer.SpanInScope ws = this.tracer.withSpanInScope(span)) {
-			HttpClientResponse response = this.nettyHttpClient.get()
-					.uri("http://localhost:" + this.port).response().block();
-
-			then(response).isNotNull();
-		}
-
-		Awaitility.await().untilAsserted(() -> {
-			then(this.tracer.currentSpan()).isNull();
-			System.out.println("Collected span " + this.reporter.getSpans());
-			then(this.reporter.getSpans()).isNotEmpty()
-					.extracting("traceId", String.class)
-					// we can have some bizarre spans popping up
-					.contains(span.context().traceIdString());
-			then(this.reporter.getSpans()).extracting("kind.name").contains("CLIENT");
-		});
 	}
 
 	@Test
@@ -599,11 +570,6 @@ public class WebClientTests {
 		@Bean
 		RestTemplateCustomizer myRestTemplateCustomizer() {
 			return new MyRestTemplateCustomizer();
-		}
-
-		@Bean
-		HttpClient reactorHttpClient() {
-			return HttpClient.create();
 		}
 
 	}

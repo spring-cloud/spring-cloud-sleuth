@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.springframework.cloud.sleuth.instrument.reactor;
+package org.springframework.cloud.sleuth.internal;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -25,8 +25,16 @@ import org.springframework.lang.Nullable;
 /**
  * Avoids calling the expensive {@link ConfigurableApplicationContext#getBean(Class)} many
  * times or throwing an exception.
+ *
+ * <p>
+ * Note: This is an internal class to sleuth and must not be used by external code.
  */
-final class LazyBean<T> {
+public final class LazyBean<T> {
+
+	public static <T> LazyBean<T> create(ConfigurableApplicationContext springContext,
+			Class<T> requiredType) {
+		return new LazyBean<>(springContext, requiredType);
+	}
 
 	// spring-jcl uses commons-logging, so do we.
 	private static final Log log = LogFactory.getLog(LazyBean.class);
@@ -47,7 +55,7 @@ final class LazyBean<T> {
 	 * @return the bean value or null if there was an exception getting it.
 	 */
 	@Nullable
-	T get() {
+	public T get() {
 		if (this.value != null) {
 			return this.value;
 		}
