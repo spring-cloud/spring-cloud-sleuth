@@ -40,6 +40,7 @@ import com.netflix.loadbalancer.ILoadBalancer;
 import com.netflix.loadbalancer.Server;
 import junitparams.JUnitParamsRunner;
 import junitparams.Parameters;
+import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpGet;
@@ -55,6 +56,8 @@ import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.reactivestreams.Subscription;
+import reactor.core.publisher.BaseSubscriber;
 import zipkin2.Annotation;
 import zipkin2.reporter.Reporter;
 
@@ -112,8 +115,7 @@ public class WebClientTests {
 	static final String SAMPLED_NAME = "X-B3-Sampled";
 	static final String PARENT_ID_NAME = "X-B3-ParentSpanId";
 
-	private static final org.apache.commons.logging.Log log = LogFactory
-			.getLog(WebClientTests.class);
+	private static final Log log = LogFactory.getLog(WebClientTests.class);
 
 	@Rule
 	public final SpringMethodRule springMethodRule = new SpringMethodRule();
@@ -351,7 +353,7 @@ public class WebClientTests {
 
 	@Test
 	@SuppressWarnings("unchecked")
-	public void shouldWorkWhenCustomStatusCodeIsReturned() throws InterruptedException {
+	public void shouldWorkWhenCustomStatusCodeIsReturned() {
 		Span span = this.tracer.nextSpan().name("foo").start();
 
 		try (Tracer.SpanInScope ws = this.tracer.withSpanInScope(span)) {
@@ -368,6 +370,21 @@ public class WebClientTests {
 		then(this.tracer.currentSpan()).isNull();
 		then(this.reporter.getSpans()).isNotEmpty().extracting("kind.name")
 				.contains("CLIENT");
+	}
+
+	@Test
+	public void shouldTagOnCancel() {
+		this.webClient.get().uri("http://localhost:" + this.port + "/doNotSkip")
+				.retrieve().bodyToMono(String.class)
+				.subscribe(new BaseSubscriber<String>() {
+					@Override
+					protected void hookOnSubscribe(Subscription subscription) {
+						cancel();
+					}
+				});
+
+		then(this.reporter.getSpans()).isNotEmpty();
+		then(this.reporter.getSpans().get(0).tags()).containsEntry("error", "CANCELLED");
 	}
 
 	@Test
