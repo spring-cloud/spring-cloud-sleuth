@@ -115,10 +115,19 @@ public abstract class ReactorSleuth {
 				return sub; // no need to scope a null parent
 			}
 
+			// Handle scenarios such as Mono.defer
+			if (sub instanceof ScopePassingSpanSubscriber) {
+				ScopePassingSpanSubscriber<?> scopePassing = (ScopePassingSpanSubscriber) sub;
+				if (scopePassing.parent.equals(parent)) {
+					return sub; // don't double-wrap
+				}
+			}
+
 			if (log.isTraceEnabled()) {
 				log.trace("Creating a scope passing span subscriber with Reactor Context "
 						+ "[" + context + "] and name [" + name(sub) + "]");
 			}
+
 			return new ScopePassingSpanSubscriber<>(sub, context, currentTraceContext,
 					parent);
 		});

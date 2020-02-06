@@ -166,6 +166,46 @@ public class ScopePassingSpanSubscriberTests {
 	}
 
 	@Test
+	public void should_not_double_wrap() {
+		springContext.registerBean(CurrentTraceContext.class, () -> currentTraceContext);
+		springContext.refresh();
+
+		Function<? super Publisher<Integer>, ? extends Publisher<Integer>> transformer = scopePassingSpanOperator(
+				this.springContext);
+
+		try (Scope ws = this.currentTraceContext.newScope(context)) {
+			Publisher<Integer> one = transformer.apply(Mono.just(1).hide());
+			Publisher<Integer> deferred = transformer
+					.apply(Mono.defer(() -> Mono.from(one)));
+
+			deferred.subscribe(new CoreSubscriber<Object>() {
+				@Override
+				public void onSubscribe(Subscription s) {
+					s.request(Long.MAX_VALUE);
+					assertThat(s).isInstanceOf(ScopePassingSpanSubscriber.class);
+					assertThat(((ScopePassingSpanSubscriber) s).subscriber)
+							.isNotInstanceOf(ScopePassingSpanSubscriber.class);
+				}
+
+				@Override
+				public void onNext(Object o) {
+
+				}
+
+				@Override
+				public void onError(Throwable t) {
+					throw new AssertionError(t);
+				}
+
+				@Override
+				public void onComplete() {
+
+				}
+			});
+		}
+	}
+
+	@Test
 	public void should_scope_scalar_hide_subscribe() {
 		springContext.registerBean(CurrentTraceContext.class, () -> currentTraceContext);
 		springContext.refresh();

@@ -37,17 +37,17 @@ import reactor.util.context.Context;
  */
 final class ScopePassingSpanSubscriber<T> implements SpanSubscription<T>, Scannable {
 
-	private static final Log log = LogFactory.getLog(ScopePassingSpanSubscriber.class);
+	static final Log log = LogFactory.getLog(ScopePassingSpanSubscriber.class);
 
-	private final Subscriber<? super T> subscriber;
+	final Subscriber<? super T> subscriber;
 
-	private final Context context;
+	final Context context;
 
-	private final CurrentTraceContext currentTraceContext;
+	final CurrentTraceContext currentTraceContext;
 
-	private final TraceContext parent;
+	final TraceContext parent;
 
-	private Subscription s;
+	Subscription s;
 
 	ScopePassingSpanSubscriber(Subscriber<? super T> subscriber, Context ctx,
 			CurrentTraceContext currentTraceContext, @Nullable TraceContext parent) {
