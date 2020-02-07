@@ -25,13 +25,16 @@ import brave.propagation.StrictScopeDecorator;
 import brave.propagation.TraceContext;
 import org.assertj.core.presentation.StandardRepresentation;
 import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 import org.reactivestreams.Publisher;
 import org.reactivestreams.Subscriber;
 import org.reactivestreams.Subscription;
 import reactor.core.CoreSubscriber;
 import reactor.core.publisher.BaseSubscriber;
+import reactor.core.publisher.Hooks;
 import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 import reactor.util.context.Context;
 
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
@@ -39,6 +42,8 @@ import org.springframework.context.annotation.AnnotationConfigApplicationContext
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.BDDAssertions.then;
 import static org.springframework.cloud.sleuth.instrument.reactor.ReactorSleuth.scopePassingSpanOperator;
+import static org.springframework.cloud.sleuth.instrument.reactor.TraceReactorAutoConfiguration.SLEUTH_REACTOR_EXECUTOR_SERVICE_KEY;
+import static org.springframework.cloud.sleuth.instrument.reactor.TraceReactorAutoConfiguration.TraceReactorConfiguration.SLEUTH_TRACE_REACTOR_KEY;
 
 /**
  * @author Marcin Grzejszczak
@@ -110,6 +115,15 @@ public class ScopePassingSpanSubscriberTests {
 	};
 
 	AnnotationConfigApplicationContext springContext = new AnnotationConfigApplicationContext();
+
+	@Before
+	public void resetHooks() {
+		// There's an assumption some other test is leaking hooks, so we clear them all to
+		// prevent should_not_scope_scalar_subscribe from being interfered with.
+		Hooks.resetOnEachOperator(SLEUTH_TRACE_REACTOR_KEY);
+		Hooks.resetOnLastOperator(SLEUTH_TRACE_REACTOR_KEY);
+		Schedulers.removeExecutorServiceDecorator(SLEUTH_REACTOR_EXECUTOR_SERVICE_KEY);
+	}
 
 	@After
 	public void close() {
