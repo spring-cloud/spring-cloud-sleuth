@@ -53,11 +53,15 @@ class HttpClientBeanPostProcessor implements BeanPostProcessor {
 		LazyBean<HttpTracing> httpTracing = LazyBean.create(this.springContext,
 				HttpTracing.class);
 		if (bean instanceof HttpClient) {
-			return ((HttpClient) bean).mapConnect(new TracingMapConnect(httpTracing))
-					.doOnRequest(new TracingDoOnRequest(httpTracing))
+			// This adds handlers to manage the span lifecycle. All require explicit
+			// propagation of the current span as a reactor context property.
+			// This done in mapConnect, added last so that it is setup first.
+			// https://projectreactor.io/docs/core/release/reference/#_simple_context_examples
+			return ((HttpClient) bean).doOnRequest(new TracingDoOnRequest(httpTracing))
 					.doOnRequestError(new TracingDoOnErrorRequest(httpTracing))
 					.doOnResponse(new TracingDoOnResponse(httpTracing))
-					.doOnResponseError(new TracingDoOnErrorResponse(httpTracing));
+					.doOnResponseError(new TracingDoOnErrorResponse(httpTracing))
+					.mapConnect(new TracingMapConnect(httpTracing));
 		}
 		return bean;
 	}
@@ -206,16 +210,16 @@ class HttpClientBeanPostProcessor implements BeanPostProcessor {
 			return this.handler;
 		}
 
-		void handle(Context context, @Nullable HttpClientResponse httpClientResponse,
+		void handle(Context context, @Nullable HttpClientResponse resp,
 				@Nullable Throwable error) {
 			AtomicReference<Span> ref = context.getOrDefault(AtomicReference.class, null);
 			Span span = ref != null ? ref.get() : null;
 			if (span == null) {
-				return; // Unexpected. We reached the handle method without a span to
-						// finish!
+				return; // Unexpected. In the handle method, without a span to finish!
 			}
-			handler().handleReceive(new WrappedHttpClientResponse(httpClientResponse),
-					error, span);
+			WrappedHttpClientResponse response = resp != null
+					? new WrappedHttpClientResponse(resp) : null;
+			handler().handleReceive(response, error, span);
 		}
 
 	}
