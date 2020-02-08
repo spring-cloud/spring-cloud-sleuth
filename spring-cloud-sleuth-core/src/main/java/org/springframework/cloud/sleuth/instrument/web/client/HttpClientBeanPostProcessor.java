@@ -31,11 +31,13 @@ import reactor.netty.Connection;
 import reactor.netty.http.client.HttpClient;
 import reactor.netty.http.client.HttpClientRequest;
 import reactor.netty.http.client.HttpClientResponse;
+import reactor.util.context.Context;
 
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.config.BeanPostProcessor;
 import org.springframework.cloud.sleuth.internal.LazyBean;
 import org.springframework.context.ConfigurableApplicationContext;
+import org.springframework.lang.Nullable;
 
 class HttpClientBeanPostProcessor implements BeanPostProcessor {
 
@@ -51,11 +53,15 @@ class HttpClientBeanPostProcessor implements BeanPostProcessor {
 		LazyBean<HttpTracing> httpTracing = LazyBean.create(this.springContext,
 				HttpTracing.class);
 		if (bean instanceof HttpClient) {
-			return ((HttpClient) bean).mapConnect(new TracingMapConnect(httpTracing))
-					.doOnRequest(TracingDoOnRequest.create(httpTracing))
-					.doOnRequestError(TracingDoOnErrorRequest.create(httpTracing))
-					.doOnResponse(TracingDoOnResponse.create(httpTracing))
-					.doOnResponseError(TracingDoOnErrorResponse.create(httpTracing));
+			// This adds handlers to manage the span lifecycle. All require explicit
+			// propagation of the current span as a reactor context property.
+			// This done in mapConnect, added last so that it is setup first.
+			// https://projectreactor.io/docs/core/release/reference/#_simple_context_examples
+			return ((HttpClient) bean).doOnRequest(new TracingDoOnRequest(httpTracing))
+					.doOnRequestError(new TracingDoOnErrorRequest(httpTracing))
+					.doOnResponse(new TracingDoOnResponse(httpTracing))
+					.doOnResponseError(new TracingDoOnErrorResponse(httpTracing))
+					.mapConnect(new TracingMapConnect(httpTracing));
 		}
 		return bean;
 	}
@@ -74,11 +80,12 @@ class HttpClientBeanPostProcessor implements BeanPostProcessor {
 		@Override
 		public Mono<? extends Connection> apply(Mono<? extends Connection> mono,
 				Bootstrap bootstrap) {
+			// This is read in this class and also inside ScopePassingSpanSubscriber
 			return mono.subscriberContext(context -> context.put(AtomicReference.class,
 					new AtomicReference<>(tracer().currentSpan())));
 		}
 
-		private Tracer tracer() {
+		Tracer tracer() {
 			if (this.tracer == null) {
 				this.tracer = this.httpTracing.get().tracing().tracer();
 			}
@@ -98,10 +105,6 @@ class HttpClientBeanPostProcessor implements BeanPostProcessor {
 
 		TracingDoOnRequest(LazyBean<HttpTracing> httpTracing) {
 			this.httpTracing = httpTracing;
-		}
-
-		static TracingDoOnRequest create(LazyBean<HttpTracing> httpTracing) {
-			return new TracingDoOnRequest(httpTracing);
 		}
 
 		List<String> propagationKeys() {
@@ -128,12 +131,21 @@ class HttpClientBeanPostProcessor implements BeanPostProcessor {
 					return;
 				}
 			}
-			AtomicReference<Span> reference = req.currentContext()
-					.getOrDefault(AtomicReference.class, new AtomicReference<>());
+
+			// Look for a parent propagated by TracingMapConnect
+			AtomicReference<Span> ref = req.currentContext()
+					.getOrDefault(AtomicReference.class, null);
+			Span parent = ref != null ? ref.get() : null;
+
+			// Start a new client span with the appropriate parent
 			WrappedHttpClientRequest request = new WrappedHttpClientRequest(req);
-			Span span = reference.get() == null ? handler().handleSend(request)
-					: handler().handleSend(request, reference.get());
-			reference.set(span);
+			Span clientSpan = parent != null ? handler().handleSend(request, parent)
+					: handler().handleSend(request);
+
+			// Swap the ref with the client span, so that other hooks can see it
+			if (ref != null) {
+				ref.set(clientSpan);
+			}
 		}
 
 	}
@@ -145,13 +157,9 @@ class HttpClientBeanPostProcessor implements BeanPostProcessor {
 			super(httpTracing);
 		}
 
-		static TracingDoOnResponse create(LazyBean<HttpTracing> httpTracing) {
-			return new TracingDoOnResponse(httpTracing);
-		}
-
 		@Override
-		public void accept(HttpClientResponse httpClientResponse, Connection connection) {
-			handle(httpClientResponse, null);
+		public void accept(HttpClientResponse response, Connection connection) {
+			handle(response.currentContext(), response, null);
 		}
 
 	}
@@ -163,13 +171,10 @@ class HttpClientBeanPostProcessor implements BeanPostProcessor {
 			super(httpTracing);
 		}
 
-		static TracingDoOnErrorRequest create(LazyBean<HttpTracing> httpTracing) {
-			return new TracingDoOnErrorRequest(httpTracing);
-		}
-
 		@Override
-		public void accept(HttpClientRequest request, Throwable throwable) {
-			handle(null, throwable);
+		public void accept(HttpClientRequest request, Throwable error) {
+			// TODO: the current context here does not have the AtomicReference<Span>
+			handle(request.currentContext(), null, error);
 		}
 
 	}
@@ -181,13 +186,9 @@ class HttpClientBeanPostProcessor implements BeanPostProcessor {
 			super(httpTracing);
 		}
 
-		static TracingDoOnErrorResponse create(LazyBean<HttpTracing> httpTracing) {
-			return new TracingDoOnErrorResponse(httpTracing);
-		}
-
 		@Override
-		public void accept(HttpClientResponse httpClientResponse, Throwable throwable) {
-			handle(httpClientResponse, throwable);
+		public void accept(HttpClientResponse response, Throwable error) {
+			handle(response.currentContext(), response, error);
 		}
 
 	}
@@ -209,18 +210,16 @@ class HttpClientBeanPostProcessor implements BeanPostProcessor {
 			return this.handler;
 		}
 
-		protected void handle(HttpClientResponse httpClientResponse,
-				Throwable throwable) {
-			if (httpClientResponse == null) {
-				return;
+		void handle(Context context, @Nullable HttpClientResponse resp,
+				@Nullable Throwable error) {
+			AtomicReference<Span> ref = context.getOrDefault(AtomicReference.class, null);
+			Span span = ref != null ? ref.get() : null;
+			if (span == null) {
+				return; // Unexpected. In the handle method, without a span to finish!
 			}
-			AtomicReference reference = httpClientResponse.currentContext()
-					.getOrDefault(AtomicReference.class, null);
-			if (reference == null || reference.get() == null) {
-				return;
-			}
-			handler().handleReceive(new WrappedHttpClientResponse(httpClientResponse),
-					throwable, (Span) reference.get());
+			WrappedHttpClientResponse response = resp != null
+					? new WrappedHttpClientResponse(resp) : null;
+			handler().handleReceive(response, error, span);
 		}
 
 	}

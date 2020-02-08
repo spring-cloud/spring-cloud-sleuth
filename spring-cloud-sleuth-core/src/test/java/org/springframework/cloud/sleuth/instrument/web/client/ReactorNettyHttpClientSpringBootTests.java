@@ -30,6 +30,7 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.netty.DisposableServer;
 import reactor.netty.http.client.HttpClient;
+import reactor.netty.http.client.PrematureCloseException;
 import reactor.netty.http.server.HttpServer;
 import zipkin2.Span;
 import zipkin2.reporter.Reporter;
@@ -43,6 +44,7 @@ import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.web.reactive.function.client.WebClient;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 /**
  * This tests {@link HttpClient} instrumentation performed by
@@ -91,6 +93,23 @@ public class ReactorNettyHttpClientSpringBootTests {
 
 		assertThat(b3SingleHeaderReadByServer)
 				.isEqualTo(clientSpan.traceId() + "-" + clientSpan.id() + "-1");
+	}
+
+	@Test
+	public void shouldTagOnRequestError() throws InterruptedException {
+		disposableServer = HttpServer.create().port(0).handle((req, resp) -> {
+			throw new RuntimeException("test");
+		}).bindNow();
+
+		Mono<String> request = httpClient.port(disposableServer.port()).get().uri("/")
+				.responseContent().aggregate().asString();
+
+		assertThatThrownBy(request::block)
+				.hasCauseInstanceOf(PrematureCloseException.class);
+
+		Span clientSpan = takeClientSpan();
+
+		assertThat(clientSpan.tags()).containsKey("error");
 	}
 
 	/** Call this to block until a span was reported */
