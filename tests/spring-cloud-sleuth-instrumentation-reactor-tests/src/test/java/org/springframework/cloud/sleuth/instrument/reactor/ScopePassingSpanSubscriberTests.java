@@ -50,17 +50,14 @@ public class ScopePassingSpanSubscriberTests {
 		// iterator. That's not allowed, and will cause an exception
 		// Fuseable$QueueSubscription.NOT_SUPPORTED_MESSAGE.
 		// This ensures AssertJ uses normal toString.
-		StandardRepresentation.registerFormatterForType(ScopePassingSpanSubscriber.class,
-				Objects::toString);
+		StandardRepresentation.registerFormatterForType(ScopePassingSpanSubscriber.class, Objects::toString);
 	}
 
 	final CurrentTraceContext currentTraceContext = CurrentTraceContext.Default.create();
 
-	TraceContext context = TraceContext.newBuilder().traceId(1).spanId(1).sampled(true)
-			.build();
+	TraceContext context = TraceContext.newBuilder().traceId(1).spanId(1).sampled(true).build();
 
-	TraceContext context2 = TraceContext.newBuilder().traceId(1).spanId(2).sampled(true)
-			.build();
+	TraceContext context2 = TraceContext.newBuilder().traceId(1).spanId(2).sampled(true).build();
 
 	AnnotationConfigApplicationContext springContext = new AnnotationConfigApplicationContext();
 
@@ -71,16 +68,16 @@ public class ScopePassingSpanSubscriberTests {
 
 	@Test
 	public void should_propagate_current_context() {
-		ScopePassingSpanSubscriber<?> subscriber = new ScopePassingSpanSubscriber<>(null,
-				Context.of("foo", "bar"), this.currentTraceContext, null);
+		ScopePassingSpanSubscriber<?> subscriber = new ScopePassingSpanSubscriber<>(null, Context.of("foo", "bar"),
+				this.currentTraceContext, null);
 
 		then((String) subscriber.currentContext().get("foo")).isEqualTo("bar");
 	}
 
 	@Test
 	public void should_set_empty_context_when_context_is_null() {
-		ScopePassingSpanSubscriber<?> subscriber = new ScopePassingSpanSubscriber<>(null,
-				Context.empty(), this.currentTraceContext, null);
+		ScopePassingSpanSubscriber<?> subscriber = new ScopePassingSpanSubscriber<>(null, Context.empty(),
+				this.currentTraceContext, null);
 
 		then(subscriber.currentContext().isEmpty()).isTrue();
 	}
@@ -88,9 +85,8 @@ public class ScopePassingSpanSubscriberTests {
 	@Test
 	public void should_put_current_span_to_context() {
 		try (Scope ws = this.currentTraceContext.newScope(context2)) {
-			CoreSubscriber<?> subscriber = new ScopePassingSpanSubscriber<>(
-					new BaseSubscriber<Object>() {
-					}, Context.empty(), currentTraceContext, context);
+			CoreSubscriber<?> subscriber = new ScopePassingSpanSubscriber<>(new BaseSubscriber<Object>() {
+			}, Context.empty(), currentTraceContext, context);
 
 			then(subscriber.currentContext().get(TraceContext.class)).isEqualTo(context);
 		}
@@ -101,73 +97,70 @@ public class ScopePassingSpanSubscriberTests {
 		springContext.registerBean(CurrentTraceContext.class, () -> currentTraceContext);
 		springContext.refresh();
 
-		Function<? super Publisher<Integer>, ? extends Publisher<Integer>> transformer = scopePassingSpanOperator(
-				this.springContext);
-
-		try (Scope ws = this.currentTraceContext.newScope(context)) {
-			Subscriber<Object> assertNoSpanSubscriber = new CoreSubscriber<Object>() {
-				@Override
-				public void onSubscribe(Subscription s) {
-					s.request(Long.MAX_VALUE);
-					assertThat(s).isNotInstanceOf(ScopePassingSpanSubscriber.class);
-				}
-
-				@Override
-				public void onNext(Object o) {
-
-				}
-
-				@Override
-				public void onError(Throwable t) {
-
-				}
-
-				@Override
-				public void onComplete() {
-
-				}
-			};
-
-			Subscriber<Object> assertSpanSubscriber = new CoreSubscriber<Object>() {
-				@Override
-				public void onSubscribe(Subscription s) {
-					s.request(Long.MAX_VALUE);
-					assertThat(s).isInstanceOf(ScopePassingSpanSubscriber.class);
-				}
-
-				@Override
-				public void onNext(Object o) {
-
-				}
-
-				@Override
-				public void onError(Throwable t) {
-
-				}
-
-				@Override
-				public void onComplete() {
-
-				}
-			};
-			transformer.apply(Mono.just(1).hide()).subscribe(assertSpanSubscriber);
-
-			transformer.apply(Mono.just(1)).subscribe(assertNoSpanSubscriber);
-
-			transformer.apply(Mono.<Integer>error(new Exception()).hide())
-					.subscribe(assertSpanSubscriber);
-
-			transformer.apply(Mono.error(new Exception()))
-					.subscribe(assertNoSpanSubscriber);
-
-			transformer.apply(Mono.<Integer>empty().hide())
-					.subscribe(assertSpanSubscriber);
-
-			transformer.apply(Mono.empty()).subscribe(assertNoSpanSubscriber);
-
-		}
-
 		Awaitility.await().untilAsserted(() -> {
+			Function<? super Publisher<Integer>, ? extends Publisher<Integer>> transformer = scopePassingSpanOperator(
+					this.springContext);
+
+			try (Scope ws = this.currentTraceContext.newScope(context)) {
+				Subscriber<Object> assertNoSpanSubscriber = new CoreSubscriber<Object>() {
+					@Override
+					public void onSubscribe(Subscription s) {
+						s.request(Long.MAX_VALUE);
+						assertThat(s).isNotInstanceOf(ScopePassingSpanSubscriber.class);
+					}
+
+					@Override
+					public void onNext(Object o) {
+
+					}
+
+					@Override
+					public void onError(Throwable t) {
+
+					}
+
+					@Override
+					public void onComplete() {
+
+					}
+				};
+
+				Subscriber<Object> assertSpanSubscriber = new CoreSubscriber<Object>() {
+					@Override
+					public void onSubscribe(Subscription s) {
+						s.request(Long.MAX_VALUE);
+						assertThat(s).isInstanceOf(ScopePassingSpanSubscriber.class);
+					}
+
+					@Override
+					public void onNext(Object o) {
+
+					}
+
+					@Override
+					public void onError(Throwable t) {
+
+					}
+
+					@Override
+					public void onComplete() {
+
+					}
+				};
+				transformer.apply(Mono.just(1).hide()).subscribe(assertSpanSubscriber);
+
+				transformer.apply(Mono.just(1)).subscribe(assertNoSpanSubscriber);
+
+				transformer.apply(Mono.<Integer>error(new Exception()).hide()).subscribe(assertSpanSubscriber);
+
+				transformer.apply(Mono.error(new Exception())).subscribe(assertNoSpanSubscriber);
+
+				transformer.apply(Mono.<Integer>empty().hide()).subscribe(assertSpanSubscriber);
+
+				transformer.apply(Mono.empty()).subscribe(assertNoSpanSubscriber);
+
+			}
+
 			then(this.currentTraceContext.get()).isNull();
 		});
 	}
