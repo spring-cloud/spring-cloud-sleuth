@@ -196,7 +196,7 @@ $(addBlockSwitches);
 <div id="preamble">
 <div class="sectionbody">
 <div class="paragraph">
-<p><strong>2.2.2.BUILD-SNAPSHOT</strong></p>
+<p><strong>3.0.0.BUILD-SNAPSHOT</strong></p>
 </div>
 </div>
 </div>
@@ -2969,12 +2969,7 @@ To disable the custom Hystrix Concurrency Strategy, set the <code>spring.sleuth.
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">HystrixCommand&lt;String&gt; hystrixCommand = new HystrixCommand&lt;String&gt;(setter) {
-    @Override
-    protected String run() throws Exception {
-        return someLogic();
-    }
-};</code></pre>
+<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">Unresolved directive in index.adoc - include::/opt/jenkins/data/workspace/spring-cloud-jdk11-spring-cloud-sleuth-master-ci/spring-cloud-sleuth-core/src/test/java/org/springframework/cloud/sleuth/instrument/hystrix/TraceCommandTests.java[tags=hystrix_command,indent=0]</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -2983,12 +2978,7 @@ To disable the custom Hystrix Concurrency Strategy, set the <code>spring.sleuth.
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">TraceCommand&lt;String&gt; traceCommand = new TraceCommand&lt;String&gt;(tracer, setter) {
-    @Override
-    public String doRun() throws Exception {
-        return someLogic();
-    }
-};</code></pre>
+<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">Unresolved directive in index.adoc - include::/opt/jenkins/data/workspace/spring-cloud-jdk11-spring-cloud-sleuth-master-ci/spring-cloud-sleuth-core/src/test/java/org/springframework/cloud/sleuth/instrument/hystrix/TraceCommandTests.java[tags=trace_hystrix_command,indent=0]</code></pre>
 </div>
 </div>
 </div>
