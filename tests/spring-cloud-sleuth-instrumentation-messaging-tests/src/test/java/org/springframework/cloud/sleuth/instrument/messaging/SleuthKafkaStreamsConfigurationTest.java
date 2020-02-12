@@ -18,8 +18,7 @@ package org.springframework.cloud.sleuth.instrument.messaging;
 
 import brave.Tracing;
 import org.apache.kafka.streams.KafkaClientSupplier;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Test;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
@@ -28,14 +27,12 @@ import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.kafka.config.StreamsBuilderFactoryBean;
-import org.springframework.test.context.junit4.SpringRunner;
 
 import static org.assertj.core.api.BDDAssertions.then;
 
 /**
  * @author Tim te Beek
  */
-@RunWith(SpringRunner.class)
 @SpringBootTest(classes = SleuthKafkaStreamsConfigurationTest.Config.class,
 		webEnvironment = WebEnvironment.NONE)
 public class SleuthKafkaStreamsConfigurationTest {

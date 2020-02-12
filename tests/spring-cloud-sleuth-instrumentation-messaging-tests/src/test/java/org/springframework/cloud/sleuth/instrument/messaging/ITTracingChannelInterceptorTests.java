@@ -28,10 +28,9 @@ import brave.Tracer;
 import brave.Tracing;
 import brave.propagation.StrictScopeDecorator;
 import brave.propagation.ThreadLocalCurrentTraceContext;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -47,7 +46,6 @@ import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageHandler;
 import org.springframework.messaging.support.MessageHeaderAccessor;
 import org.springframework.test.annotation.DirtiesContext;
-import org.springframework.test.context.junit4.SpringRunner;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
@@ -61,7 +59,6 @@ import static org.springframework.boot.test.context.SpringBootTest.WebEnvironmen
  */
 @SpringBootTest(classes = ITTracingChannelInterceptorTests.App.class,
 		webEnvironment = WebEnvironment.NONE)
-@RunWith(SpringRunner.class)
 @DirtiesContext
 public class ITTracingChannelInterceptorTests implements MessageHandler {
 
@@ -95,13 +92,13 @@ public class ITTracingChannelInterceptorTests implements MessageHandler {
 		}
 	}
 
-	@Before
+	@BeforeEach
 	public void init() {
 		this.directChannel.subscribe(this);
 		this.executorChannel.subscribe(this);
 	}
 
-	@After
+	@AfterEach
 	public void close() {
 		this.directChannel.unsubscribe(this);
 		this.executorChannel.unsubscribe(this);

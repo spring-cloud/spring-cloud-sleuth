@@ -29,7 +29,6 @@ import brave.propagation.StrictScopeDecorator;
 import brave.propagation.ThreadLocalCurrentTraceContext;
 import brave.sampler.Sampler;
 import brave.spring.web.TracingClientHttpRequestInterceptor;
-import org.apache.commons.lang3.StringUtils;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -200,7 +199,7 @@ public class TraceRestTemplateInterceptorTests {
 		then(spans).hasSize(2);
 		String spanName = spans.get(0).name();
 		then(spanName).isEqualTo("http:/cas~fs~%c3%a5%cb%86%e2%80%99");
-		then(StringUtils.isAsciiPrintable(spanName));
+		then(isAsciiPrintable(spanName));
 	}
 
 	@Test
@@ -223,7 +222,7 @@ public class TraceRestTemplateInterceptorTests {
 		then(spans).isNotEmpty();
 		String spanName = spans.get(0).name();
 		then(spanName).hasSize(50);
-		then(StringUtils.isAsciiPrintable(spanName));
+		then(isAsciiPrintable(spanName));
 	}
 
 	private String bigName() {
@@ -232,6 +231,23 @@ public class TraceRestTemplateInterceptorTests {
 			sb.append("a");
 		}
 		return sb.toString();
+	}
+
+	private static boolean isAsciiPrintable(String str) {
+		if (str == null) {
+			return false;
+		}
+		int sz = str.length();
+		for (int i = 0; i < sz; i++) {
+			if (!isAsciiPrintable(str.charAt(i))) {
+				return false;
+			}
+		}
+		return true;
+	}
+
+	private static boolean isAsciiPrintable(char ch) {
+		return ch >= 32 && ch < 127;
 	}
 
 	@RestController

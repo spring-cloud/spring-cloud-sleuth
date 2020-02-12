@@ -20,7 +20,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import brave.sampler.Sampler;
-import com.netflix.hystrix.contrib.javanica.annotation.HystrixCommand;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -28,7 +27,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
-import org.springframework.cloud.client.circuitbreaker.EnableCircuitBreaker;
 import org.springframework.cloud.openfeign.EnableFeignClients;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.context.ConfigurableApplicationContext;
@@ -67,7 +65,6 @@ public class Issue307Tests {
 @Import({ ParticipantsBean.class })
 @RestController
 @EnableFeignClients
-@EnableCircuitBreaker
 class SleuthSampleApplication {
 
 	private static final Logger LOG = LoggerFactory
@@ -115,11 +112,6 @@ class ParticipantsBean {
 
 	@Autowired
 	private ParticipantsClient participantsClient;
-
-	@HystrixCommand(fallbackMethod = "defaultParticipants")
-	public List<Object> getParticipants(String raceId) {
-		return this.participantsClient.getParticipants(raceId);
-	}
 
 	public List<Object> defaultParticipants(String raceId) {
 		return new ArrayList<>();

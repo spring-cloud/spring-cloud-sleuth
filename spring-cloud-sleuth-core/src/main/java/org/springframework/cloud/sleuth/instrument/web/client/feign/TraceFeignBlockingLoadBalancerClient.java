@@ -21,7 +21,6 @@ import java.io.IOException;
 import brave.Span;
 import brave.Tracer;
 import brave.http.HttpTracing;
-import com.netflix.client.ClientException;
 import feign.Client;
 import feign.Request;
 import feign.Response;
@@ -34,12 +33,10 @@ import org.springframework.cloud.openfeign.loadbalancer.FeignBlockingLoadBalance
 
 /**
  * A trace representation of {@link FeignBlockingLoadBalancerClient}. Needed due to casts
- * in {@link org.springframework.cloud.openfeign.FeignClientFactoryBean}. Based on
- * {@link TraceLoadBalancerFeignClient}.
+ * in {@link org.springframework.cloud.openfeign.FeignClientFactoryBean}.
  *
  * @author Olga Maciaszek-Sharma
  * @since 2.2.0
- * @see TraceLoadBalancerFeignClient
  * @see FeignBlockingLoadBalancerClient
  */
 public class TraceFeignBlockingLoadBalancerClient
@@ -80,10 +77,13 @@ public class TraceFeignBlockingLoadBalancerClient
 			if (LOG.isDebugEnabled()) {
 				LOG.debug("Exception thrown", e);
 			}
-			if (e instanceof IOException || e.getCause() != null
-					&& e.getCause() instanceof ClientException
-					&& ((ClientException) e.getCause())
-							.getErrorType() == ClientException.ErrorType.GENERAL) {
+			if (e instanceof IOException/*
+										 * || e.getCause() != null && e.getCause()
+										 * instanceof ClientException &&
+										 * ((ClientException) e.getCause())
+										 * .getErrorType() ==
+										 * ClientException.ErrorType.GENERAL
+										 */) {
 				if (LOG.isDebugEnabled()) {
 					LOG.debug(
 							"General exception was thrown, so most likely the traced client wasn't called. Falling back to a manual span");

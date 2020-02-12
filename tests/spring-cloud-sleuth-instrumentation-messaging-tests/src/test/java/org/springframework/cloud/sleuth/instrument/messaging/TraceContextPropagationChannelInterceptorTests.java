@@ -20,9 +20,8 @@ import brave.Span;
 import brave.Tracer;
 import brave.Tracing;
 import brave.sampler.Sampler;
-import org.junit.After;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -37,14 +36,12 @@ import org.springframework.integration.support.MessageBuilder;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.PollableChannel;
 import org.springframework.test.annotation.DirtiesContext;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * @author Spencer Gibb
  */
-@RunWith(SpringJUnit4ClassRunner.class)
 @SpringBootTest(classes = TraceContextPropagationChannelInterceptorTests.App.class)
 @DirtiesContext
 public class TraceContextPropagationChannelInterceptorTests {
@@ -59,7 +56,7 @@ public class TraceContextPropagationChannelInterceptorTests {
 	@Autowired
 	private ArrayListSpanReporter reporter;
 
-	@After
+	@AfterEach
 	public void close() {
 		this.reporter.clear();
 	}

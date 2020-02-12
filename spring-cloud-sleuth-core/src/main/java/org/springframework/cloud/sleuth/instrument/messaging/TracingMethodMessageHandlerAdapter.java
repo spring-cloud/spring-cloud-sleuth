@@ -32,15 +32,12 @@ import org.springframework.messaging.MessageHandler;
 import org.springframework.messaging.support.MessageHeaderAccessor;
 
 import static brave.Span.Kind.CONSUMER;
-import static org.springframework.cloud.sleuth.instrument.messaging.SqsQueueMessageHandler.LOGICAL_RESOURCE_ID;
 
 /**
  * Adds tracing extraction to an instance of
  * {@link org.springframework.messaging.handler.invocation.AbstractMethodMessageHandler}
  * in a reusable way. When sub-classing a provider specific class of that type you would
- * wrap the <pre>super.handleMessage(...)</pre> call with a call to this. See
- * {@link org.springframework.cloud.sleuth.instrument.messaging.SqsQueueMessageHandler}
- * for an example.
+ * wrap the <pre>super.handleMessage(...)</pre> call with a call to this.
  *
  * This implementation also allows for supplying a {@link java.util.function.BiConsumer}
  * instance that can be used to add queue specific tags and modifications to the span.
@@ -116,6 +113,8 @@ class TracingMethodMessageHandlerAdapter {
 }
 
 final class MessageConsumerRequest extends ConsumerRequest {
+
+	static final String LOGICAL_RESOURCE_ID = "LogicalResourceId";
 
 	static final Getter<MessageConsumerRequest, String> GETTER = new Getter<MessageConsumerRequest, String>() {
 		@Override

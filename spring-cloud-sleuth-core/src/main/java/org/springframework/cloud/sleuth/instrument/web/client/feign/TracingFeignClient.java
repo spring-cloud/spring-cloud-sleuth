@@ -35,6 +35,8 @@ import feign.Response;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import org.springframework.cloud.util.ProxyUtils;
+
 /**
  * Feign client wrapper.
  *
@@ -77,7 +79,9 @@ final class TracingFeignClient implements Client {
 	TracingFeignClient(HttpTracing httpTracing, Client delegate) {
 		this.tracer = httpTracing.tracing().tracer();
 		this.handler = HttpClientHandler.create(httpTracing);
-		this.delegate = delegate;
+		Client delegateTarget = ProxyUtils.getTargetObject(delegate);
+		this.delegate = delegateTarget instanceof TracingFeignClient
+				? ((TracingFeignClient) delegateTarget).delegate : delegateTarget;
 	}
 
 	static Client create(HttpTracing httpTracing, Client delegate) {

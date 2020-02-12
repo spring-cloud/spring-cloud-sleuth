@@ -18,7 +18,6 @@ package org.springframework.cloud.sleuth.instrument.messaging;
 
 import java.lang.reflect.Field;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 import brave.Span;
@@ -29,7 +28,6 @@ import brave.kafka.clients.KafkaTracing;
 import brave.messaging.MessagingRequest;
 import brave.messaging.MessagingTracing;
 import brave.messaging.MessagingTracingCustomizer;
-import brave.propagation.Propagation.Getter;
 import brave.sampler.SamplerFunction;
 import brave.spring.rabbit.SpringRabbitTracing;
 import org.aopalliance.intercept.MethodInterceptor;
@@ -58,8 +56,6 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
-import org.springframework.cloud.aws.messaging.config.QueueMessageHandlerFactory;
-import org.springframework.cloud.aws.messaging.listener.QueueMessageHandler;
 import org.springframework.cloud.sleuth.autoconfig.TraceAutoConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -73,11 +69,6 @@ import org.springframework.kafka.listener.MessageListener;
 import org.springframework.kafka.listener.MessageListenerContainer;
 import org.springframework.kafka.listener.adapter.MessagingMessageListenerAdapter;
 import org.springframework.lang.Nullable;
-import org.springframework.messaging.Message;
-import org.springframework.messaging.MessagingException;
-import org.springframework.messaging.converter.MessageConverter;
-import org.springframework.messaging.support.MessageHeaderAccessor;
-import org.springframework.util.CollectionUtils;
 import org.springframework.util.ReflectionUtils;
 
 /**
@@ -211,28 +202,6 @@ public class TraceMessagingAutoConfiguration {
 		@Bean
 		TracingJmsBeanPostProcessor tracingJmsBeanPostProcessor(BeanFactory beanFactory) {
 			return new TracingJmsBeanPostProcessor(beanFactory);
-		}
-
-	}
-
-	@Configuration(proxyBeanMethods = false)
-	@ConditionalOnProperty(value = "spring.sleuth.messaging.sqs.enabled",
-			matchIfMissing = true)
-	@ConditionalOnClass(QueueMessageHandler.class)
-	protected static class SleuthSqsConfiguration {
-
-		@Bean
-		TracingMethodMessageHandlerAdapter tracingMethodMessageHandlerAdapter(
-				MessagingTracing messagingTracing,
-				Getter<MessageHeaderAccessor, String> traceMessagePropagationGetter) {
-			return new TracingMethodMessageHandlerAdapter(messagingTracing,
-					traceMessagePropagationGetter);
-		}
-
-		@Bean
-		QueueMessageHandlerFactory sqsQueueMessageHandlerFactory(
-				TracingMethodMessageHandlerAdapter tracingMethodMessageHandlerAdapter) {
-			return new SqsQueueMessageHandlerFactory(tracingMethodMessageHandlerAdapter);
 		}
 
 	}
@@ -437,53 +406,6 @@ class TracingJmsBeanPostProcessor implements BeanPostProcessor {
 	private boolean typeMatches(Object bean) {
 		return bean instanceof JmsListenerEndpointRegistry
 				&& !(bean instanceof TracingJmsListenerEndpointRegistry);
-	}
-
-}
-
-class SqsQueueMessageHandlerFactory extends QueueMessageHandlerFactory {
-
-	private TracingMethodMessageHandlerAdapter handlerAdapter;
-
-	SqsQueueMessageHandlerFactory(TracingMethodMessageHandlerAdapter handlerAdapter) {
-		this.handlerAdapter = handlerAdapter;
-	}
-
-	@Override
-	public QueueMessageHandler createQueueMessageHandler() {
-		if (CollectionUtils.isEmpty(getMessageConverters())) {
-			return new SqsQueueMessageHandler(handlerAdapter, Collections.emptyList());
-		}
-		return new SqsQueueMessageHandler(handlerAdapter, getMessageConverters());
-	}
-
-}
-
-class SqsQueueMessageHandler extends QueueMessageHandler {
-
-	// copied from QueueMessageHandler
-	static final String LOGICAL_RESOURCE_ID = "LogicalResourceId";
-
-	private TracingMethodMessageHandlerAdapter handlerAdapter;
-
-	SqsQueueMessageHandler(TracingMethodMessageHandlerAdapter handlerAdapter,
-			List<MessageConverter> messageConverters) {
-		super(messageConverters);
-		this.handlerAdapter = handlerAdapter;
-	}
-
-	@Override
-	public void handleMessage(Message<?> message) throws MessagingException {
-		handlerAdapter.wrapMethodMessageHandler(message, super::handleMessage,
-				this::messageSpanTagger);
-	}
-
-	private void messageSpanTagger(Span span, Message<?> message) {
-		span.remoteServiceName("sqs");
-		if (message.getHeaders().get(LOGICAL_RESOURCE_ID) != null) {
-			span.tag("sqs.queue_url",
-					message.getHeaders().get(LOGICAL_RESOURCE_ID).toString());
-		}
 	}
 
 }

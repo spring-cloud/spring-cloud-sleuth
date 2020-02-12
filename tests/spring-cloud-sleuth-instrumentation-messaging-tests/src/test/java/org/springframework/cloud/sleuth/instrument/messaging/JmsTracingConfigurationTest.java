@@ -40,8 +40,7 @@ import org.apache.activemq.ra.ActiveMQActivationSpec;
 import org.apache.activemq.ra.ActiveMQResourceAdapter;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.junit.Ignore;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import zipkin2.Span;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -170,25 +169,6 @@ public class JmsTracingConfigurationTest {
 	}
 
 	@Test
-	@Ignore("flakey")
-	public void tracesListener_annotationMessageListener() {
-		this.contextRunner.withUserConfiguration(AnnotationJmsListenerConfiguration.class)
-				.run(ctx -> {
-					clearSpans(ctx);
-					ctx.getBean(JmsTemplate.class).convertAndSend("myQueue", "foo");
-
-					Callable<Span> takeSpan = ctx.getBean("takeSpan", Callable.class);
-					List<Span> trace = Arrays.asList(takeSpan.call(), takeSpan.call(),
-							takeSpan.call());
-
-					assertThat(trace).allSatisfy(s -> assertThat(s.traceId())
-							.isEqualTo(trace.get(0).traceId()));
-					assertThat(trace).isNotNull().extracting(Span::name)
-							.containsExactlyInAnyOrder("send", "receive", "on-message");
-				});
-	}
-
-	@Test
 	public void tracesListener_jcaMessageListener() {
 		this.contextRunner.withUserConfiguration(JcaJmsListenerConfiguration.class)
 				.run(ctx -> {
@@ -231,12 +211,12 @@ public class JmsTracingConfigurationTest {
 			SimpleJmsListenerEndpoint endpoint = new SimpleJmsListenerEndpoint();
 			endpoint.setId("myCustomEndpointId");
 			endpoint.setDestination("myQueue");
-			endpoint.setMessageListener(simpleMessageListener(this.current));
+			endpoint.setMessageListener(mySimpleMessageListener(this.current));
 			registrar.registerEndpoint(endpoint);
 		}
 
 		@Bean
-		MessageListener simpleMessageListener(CurrentTraceContext current) {
+		MessageListener mySimpleMessageListener(CurrentTraceContext current) {
 			return message -> {
 				log.info("Got message");
 				// Didn't restart the trace

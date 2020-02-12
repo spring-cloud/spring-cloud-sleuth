@@ -20,7 +20,7 @@ import java.util.stream.Collectors;
 
 import brave.Span;
 import brave.Tracer;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.cloud.sleuth.util.ArrayListSpanReporter;

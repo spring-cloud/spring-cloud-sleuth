@@ -17,6 +17,8 @@
 package org.springframework.cloud.sleuth.instrument.web.client.discoveryexception;
 
 import java.io.IOException;
+import java.net.URI;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -27,15 +29,18 @@ import org.assertj.core.api.Assertions;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import reactor.core.publisher.Flux;
 import zipkin2.reporter.Reporter;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.cloud.client.ServiceInstance;
 import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
 import org.springframework.cloud.client.loadbalancer.LoadBalanced;
+import org.springframework.cloud.loadbalancer.annotation.LoadBalancerClient;
+import org.springframework.cloud.loadbalancer.core.ServiceInstanceListSupplier;
 import org.springframework.cloud.netflix.eureka.EurekaClientAutoConfiguration;
-import org.springframework.cloud.netflix.ribbon.RibbonClient;
 import org.springframework.cloud.openfeign.EnableFeignClients;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.cloud.sleuth.instrument.web.TraceWebServletAutoConfiguration;
@@ -134,7 +139,7 @@ public class WebClientDiscoveryExceptionTests {
 			TraceWebServletAutoConfiguration.class })
 	@EnableDiscoveryClient
 	@EnableFeignClients
-	@RibbonClient("exceptionservice")
+	@LoadBalancerClient("exceptionservice")
 	public static class TestConfiguration {
 
 		@LoadBalanced
@@ -151,6 +156,51 @@ public class WebClientDiscoveryExceptionTests {
 		@Bean
 		Reporter<zipkin2.Span> mySpanReporter() {
 			return new ArrayListSpanReporter();
+		}
+
+		@Bean
+		ServiceInstanceListSupplier serviceInstanceListSupplier() {
+			return new ServiceInstanceListSupplier() {
+				@Override
+				public String getServiceId() {
+					return "exceptionservice";
+				}
+
+				@Override
+				public Flux<List<ServiceInstance>> get() {
+					return Flux.just(Collections.singletonList(new ServiceInstance() {
+						@Override
+						public String getServiceId() {
+							return "exceptionservice";
+						}
+
+						@Override
+						public String getHost() {
+							return "localhost";
+						}
+
+						@Override
+						public int getPort() {
+							return 1234;
+						}
+
+						@Override
+						public boolean isSecure() {
+							return false;
+						}
+
+						@Override
+						public URI getUri() {
+							return null;
+						}
+
+						@Override
+						public Map<String, String> getMetadata() {
+							return null;
+						}
+					}));
+				}
+			};
 		}
 
 	}
