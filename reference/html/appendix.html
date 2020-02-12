@@ -192,17 +192,7 @@ Also, you can define your own properties.
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock">spring.sleuth.http.legacy.enabled</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">false</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Enables the legacy Sleuth setup.</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock">spring.sleuth.hystrix.strategy.enabled</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">true</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Enable custom HystrixConcurrencyStrategy that wraps all Callable instances into their Sleuth representative - the TraceCallable.</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock">spring.sleuth.hystrix.strategy.passthrough</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">false</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">When enabled the tracing information is passed to the Hystrix execution threads but spans are not created for each execution.</p></td>
+<td class="tableblock halign-left valign-top"></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock">spring.sleuth.integration.enabled</p></td>
@@ -211,8 +201,8 @@ Also, you can define your own properties.
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock">spring.sleuth.integration.patterns</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">[!hystrixStreamOutput*, *]</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">An array of patterns against which channel names will be matched. @see org.springframework.integration.config.GlobalChannelInterceptor#patterns() Defaults to any channel name not matching the Hystrix Stream channel name.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">[!hystrixStreamOutput*, <strong>, !channel</strong>]</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">An array of patterns against which channel names will be matched. @see org.springframework.integration.config.GlobalChannelInterceptor#patterns() Defaults to any channel name not matching the Hystrix Stream and functional Stream channel names.</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock">spring.sleuth.integration.websockets.enabled</p></td>
