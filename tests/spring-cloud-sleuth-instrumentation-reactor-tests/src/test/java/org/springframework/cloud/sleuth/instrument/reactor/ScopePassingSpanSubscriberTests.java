@@ -138,6 +138,18 @@ public class ScopePassingSpanSubscriberTests {
 		then((String) subscriber.currentContext().get("foo")).isEqualTo("bar");
 	}
 
+	/**
+	 * This ensures when the desired context is in the reactor context we don't copy it.
+	 */
+	@Test
+	public void should_not_redundantly_copy_context() {
+		Context initial = Context.of(TraceContext.class, context);
+		ScopePassingSpanSubscriber<?> subscriber = new ScopePassingSpanSubscriber<>(null,
+				initial, this.currentTraceContext, context);
+
+		then(initial).isSameAs(subscriber.currentContext());
+	}
+
 	@Test
 	public void should_set_empty_context_when_context_is_null() {
 		ScopePassingSpanSubscriber<?> subscriber = new ScopePassingSpanSubscriber<>(null,
