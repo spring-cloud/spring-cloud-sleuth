@@ -95,8 +95,12 @@ final class TracingFeignClient implements Client {
 		Throwable error = null;
 		try (Tracer.SpanInScope ws = this.tracer.withSpanInScope(span)) {
 			Response res = this.delegate.execute(request.build(), options);
-			if (res != null) { // possibly null on bad implementation or mocks
+			if (res != null) {
 				response = new HttpClientResponse(res);
+			}
+			else { // possibly null on bad implementation or mocks
+				response = new HttpClientResponse(
+						Response.builder().request(req).build());
 			}
 			return res;
 		}
