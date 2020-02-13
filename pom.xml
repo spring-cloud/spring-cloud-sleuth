@@ -257,7 +257,7 @@
 		<spring-cloud-stream.version>Horsham.SR1</spring-cloud-stream.version>
 		<spring-cloud-netflix.version>2.2.2.BUILD-SNAPSHOT</spring-cloud-netflix.version>
 		<spring-cloud-openfeign.version>2.2.2.BUILD-SNAPSHOT</spring-cloud-openfeign.version>
-		<brave.version>5.9.3</brave.version>
+		<brave.version>5.9.5</brave.version>
 		<spring-security-boot-autoconfigure.version>2.1.7.RELEASE</spring-security-boot-autoconfigure.version>
 		<spring-cloud-aws.version>2.2.2.BUILD-SNAPSHOT</spring-cloud-aws.version>
 		<disable.nohttp.checks>false</disable.nohttp.checks>
