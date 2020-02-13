@@ -21,7 +21,10 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 
 import brave.propagation.B3SinglePropagation;
+import brave.propagation.CurrentTraceContext;
+import brave.propagation.CurrentTraceContext.Scope;
 import brave.propagation.Propagation;
+import brave.propagation.TraceContext;
 import brave.sampler.Sampler;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import org.junit.After;
@@ -70,6 +73,12 @@ public class ReactorNettyHttpClientSpringBootTests {
 	@Autowired
 	BlockingQueue<Span> spans;
 
+	@Autowired
+	CurrentTraceContext currentTraceContext;
+
+	TraceContext context = TraceContext.newBuilder().traceId(1).spanId(1).sampled(true)
+			.build();
+
 	@After
 	public void tearDown() {
 		if (disposableServer != null) {
@@ -94,6 +103,26 @@ public class ReactorNettyHttpClientSpringBootTests {
 				ep -> assertThat(ep.ipv4()).isNotNull(),
 				ep -> assertThat(ep.ipv6()).isNotNull());
 		assertThat(clientSpan.remoteEndpoint().portAsInt()).isNotZero();
+	}
+
+	@Test
+	public void shouldUseInvocationContext() throws Exception {
+		disposableServer = HttpServer.create().port(0)
+				// this reads the trace context header, b3, returning it in the response
+				.handle((in, out) -> out
+						.sendString(Flux.just(in.requestHeaders().get("b3"))))
+				.bindNow();
+
+		String b3SingleHeaderReadByServer;
+		try (Scope ws = currentTraceContext.newScope(context)) {
+			b3SingleHeaderReadByServer = httpClient.port(disposableServer.port()).get()
+					.uri("/").responseContent().aggregate().asString().block();
+		}
+
+		Span clientSpan = takeClientSpan();
+
+		assertThat(b3SingleHeaderReadByServer).isEqualTo(context.traceIdString() + "-"
+				+ clientSpan.id() + "-1-" + context.spanIdString());
 	}
 
 	@Test
