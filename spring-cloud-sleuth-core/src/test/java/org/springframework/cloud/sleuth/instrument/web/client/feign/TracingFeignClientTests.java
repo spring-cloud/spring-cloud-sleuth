@@ -17,8 +17,9 @@
 package org.springframework.cloud.sleuth.instrument.web.client.feign;
 
 import java.io.IOException;
-import java.nio.charset.Charset;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 
 import brave.Span;
 import brave.Tracer;
@@ -36,9 +37,7 @@ import org.mockito.BDDMockito;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 
-import org.springframework.beans.factory.BeanFactory;
 import org.springframework.cloud.sleuth.instrument.web.SleuthHttpParserAccessor;
-import org.springframework.cloud.sleuth.util.ArrayListSpanReporter;
 
 import static org.assertj.core.api.BDDAssertions.then;
 
@@ -48,15 +47,16 @@ import static org.assertj.core.api.BDDAssertions.then;
 @RunWith(MockitoJUnitRunner.class)
 public class TracingFeignClientTests {
 
-	ArrayListSpanReporter reporter = new ArrayListSpanReporter();
+	Request request = Request.create("GET", "https://foo", new HashMap<>(), null, null);
 
-	@Mock
-	BeanFactory beanFactory;
+	Request.Options options = new Request.Options();
+
+	List<zipkin2.Span> spans = new ArrayList<>();
 
 	Tracing tracing = Tracing.newBuilder()
 			.currentTraceContext(ThreadLocalCurrentTraceContext.newBuilder()
 					.addScopeDecorator(StrictScopeDecorator.create()).build())
-			.spanReporter(this.reporter).build();
+			.spanReporter(spans::add).build();
 
 	Tracer tracer = this.tracing.tracer();
 
@@ -78,18 +78,14 @@ public class TracingFeignClientTests {
 		Span span = this.tracer.nextSpan().name("foo");
 
 		try (Tracer.SpanInScope ws = this.tracer.withSpanInScope(span.start())) {
-			this.traceFeignClient
-					.execute(
-							Request.create("GET", "http://foo", new HashMap<>(),
-									"".getBytes(), Charset.defaultCharset()),
-							new Request.Options());
+			this.traceFeignClient.execute(this.request, this.options);
 		}
 		finally {
 			span.finish();
 		}
 
-		then(this.reporter.getSpans().get(0)).extracting("kind.ordinal")
-				.contains(Span.Kind.CLIENT.ordinal());
+		then(spans.get(0)).extracting("kind.ordinal")
+				.isEqualTo(Span.Kind.CLIENT.ordinal());
 	}
 
 	@Test
@@ -99,11 +95,7 @@ public class TracingFeignClientTests {
 				.willThrow(new RuntimeException("exception has occurred"));
 
 		try (Tracer.SpanInScope ws = this.tracer.withSpanInScope(span.start())) {
-			this.traceFeignClient
-					.execute(
-							Request.create("GET", "http://foo", new HashMap<>(),
-									"".getBytes(), Charset.defaultCharset()),
-							new Request.Options());
+			this.traceFeignClient.execute(this.request, this.options);
 			BDDAssertions.fail("Exception should have been thrown");
 		}
 		catch (Exception e) {
@@ -112,21 +104,17 @@ public class TracingFeignClientTests {
 			span.finish();
 		}
 
-		then(this.reporter.getSpans().get(0)).extracting("kind.ordinal")
-				.contains(Span.Kind.CLIENT.ordinal());
-		then(this.reporter.getSpans().get(0).tags()).containsEntry("error",
-				"exception has occurred");
+		then(this.spans.get(0)).extracting("kind.ordinal")
+				.isEqualTo(Span.Kind.CLIENT.ordinal());
+		then(this.spans.get(0).tags()).containsEntry("error", "exception has occurred");
 	}
 
 	@Test
 	public void should_shorten_the_span_name() throws IOException {
-		this.traceFeignClient
-				.execute(
-						Request.create("GET", "http://foo/" + bigName(), new HashMap<>(),
-								"".getBytes(), Charset.defaultCharset()),
-						new Request.Options());
+		this.traceFeignClient.execute(Request.create("GET", "https://foo/" + bigName(),
+				new HashMap<>(), null, null), this.options);
 
-		then(this.reporter.getSpans().get(0).name()).hasSize(50);
+		then(this.spans.get(0).name()).hasSize(50);
 	}
 
 	private String bigName() {
