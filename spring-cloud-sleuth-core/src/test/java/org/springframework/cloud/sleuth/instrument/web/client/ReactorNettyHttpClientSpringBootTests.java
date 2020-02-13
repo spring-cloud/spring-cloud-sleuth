@@ -23,6 +23,7 @@ import java.util.concurrent.TimeUnit;
 import brave.propagation.B3SinglePropagation;
 import brave.propagation.Propagation;
 import brave.sampler.Sampler;
+import io.netty.handler.codec.http.HttpResponseStatus;
 import org.junit.After;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -30,6 +31,7 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.netty.DisposableServer;
 import reactor.netty.http.client.HttpClient;
+import reactor.netty.http.client.HttpClientResponse;
 import reactor.netty.http.client.PrematureCloseException;
 import reactor.netty.http.server.HttpServer;
 import zipkin2.Span;
@@ -74,6 +76,24 @@ public class ReactorNettyHttpClientSpringBootTests {
 			disposableServer.disposeNow();
 		}
 		this.spans.clear();
+	}
+
+	@Test
+	public void shouldRecordRemoteEndpoint() throws Exception {
+		disposableServer = HttpServer.create().port(0)
+				.handle((in, out) -> out.sendString(Flux.just("foo"))).bindNow();
+
+		HttpClientResponse response = httpClient.port(disposableServer.port()).get()
+				.uri("/").response().block();
+
+		assertThat(response.status()).isEqualTo(HttpResponseStatus.OK);
+
+		Span clientSpan = takeClientSpan();
+
+		assertThat(clientSpan.remoteEndpoint()).satisfiesAnyOf(
+				ep -> assertThat(ep.ipv4()).isNotNull(),
+				ep -> assertThat(ep.ipv6()).isNotNull());
+		assertThat(clientSpan.remoteEndpoint().portAsInt()).isNotZero();
 	}
 
 	@Test

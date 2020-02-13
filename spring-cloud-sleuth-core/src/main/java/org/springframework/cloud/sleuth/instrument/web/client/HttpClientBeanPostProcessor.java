@@ -16,6 +16,7 @@
 
 package org.springframework.cloud.sleuth.instrument.web.client;
 
+import java.net.InetSocketAddress;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.BiConsumer;
@@ -141,11 +142,20 @@ class HttpClientBeanPostProcessor implements BeanPostProcessor {
 			WrappedHttpClientRequest request = new WrappedHttpClientRequest(req);
 			Span clientSpan = parent != null ? handler().handleSend(request, parent)
 					: handler().handleSend(request);
+			parseConnectionAddress(connection, clientSpan);
 
 			// Swap the ref with the client span, so that other hooks can see it
 			if (ref != null) {
 				ref.set(clientSpan);
 			}
+		}
+
+		static void parseConnectionAddress(Connection connection, Span span) {
+			if (span.isNoop()) {
+				return;
+			}
+			InetSocketAddress socketAddress = connection.address();
+			span.remoteIpAndPort(socketAddress.getHostString(), socketAddress.getPort());
 		}
 
 	}
@@ -244,12 +254,12 @@ class HttpClientBeanPostProcessor implements BeanPostProcessor {
 
 		@Override
 		public String path() {
-			return delegate.path();
+			return "/" + delegate.path(); // TODO: reactor/reactor-netty#999
 		}
 
 		@Override
 		public String url() {
-			return delegate.uri();
+			return delegate.resourceUrl();
 		}
 
 		@Override
@@ -270,6 +280,11 @@ class HttpClientBeanPostProcessor implements BeanPostProcessor {
 
 		WrappedHttpClientResponse(HttpClientResponse delegate) {
 			this.delegate = delegate;
+		}
+
+		@Override
+		public String method() {
+			return delegate.method().name();
 		}
 
 		@Override
