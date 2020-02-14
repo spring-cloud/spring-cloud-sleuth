@@ -17,15 +17,16 @@
 package org.springframework.cloud.sleuth.instrument.web.client;
 
 import java.net.InetSocketAddress;
-import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 
 import brave.Span;
-import brave.Tracer;
 import brave.http.HttpClientHandler;
 import brave.http.HttpTracing;
+import brave.propagation.CurrentTraceContext;
+import brave.propagation.CurrentTraceContext.Scope;
+import brave.propagation.TraceContext;
 import io.netty.bootstrap.Bootstrap;
 import reactor.core.publisher.Mono;
 import reactor.netty.Connection;
@@ -58,13 +59,19 @@ class HttpClientBeanPostProcessor implements BeanPostProcessor {
 			// propagation of the current span as a reactor context property.
 			// This done in mapConnect, added last so that it is setup first.
 			// https://projectreactor.io/docs/core/release/reference/#_simple_context_examples
-			return ((HttpClient) bean).doOnRequest(new TracingDoOnRequest(httpTracing))
-					.doOnRequestError(new TracingDoOnErrorRequest(httpTracing))
-					.doOnResponse(new TracingDoOnResponse(httpTracing))
+			return ((HttpClient) bean)
 					.doOnResponseError(new TracingDoOnErrorResponse(httpTracing))
+					.doOnResponse(new TracingDoOnResponse(httpTracing))
+					.doOnRequestError(new TracingDoOnErrorRequest(httpTracing))
+					.doOnRequest(new TracingDoOnRequest(httpTracing))
 					.mapConnect(new TracingMapConnect(httpTracing));
 		}
 		return bean;
+	}
+
+	/** current client span, cleared on completion. */
+	private static final class CurrentClientSpan extends AtomicReference<Span> {
+
 	}
 
 	private static class TracingMapConnect implements
@@ -72,7 +79,7 @@ class HttpClientBeanPostProcessor implements BeanPostProcessor {
 
 		final LazyBean<HttpTracing> httpTracing;
 
-		Tracer tracer;
+		CurrentTraceContext currentTraceContext;
 
 		TracingMapConnect(LazyBean<HttpTracing> httpTracing) {
 			this.httpTracing = httpTracing;
@@ -81,16 +88,22 @@ class HttpClientBeanPostProcessor implements BeanPostProcessor {
 		@Override
 		public Mono<? extends Connection> apply(Mono<? extends Connection> mono,
 				Bootstrap bootstrap) {
-			// This is read in this class and also inside ScopePassingSpanSubscriber
-			return mono.subscriberContext(context -> context.put(AtomicReference.class,
-					new AtomicReference<>(tracer().currentSpan())));
+			return mono.subscriberContext(context -> {
+				TraceContext invocationContext = currentTraceContext().get();
+				if (invocationContext != null) {
+					// Read in this processor and also in ScopePassingSpanSubscriber
+					context = context.put(TraceContext.class, invocationContext);
+				}
+				return context.put(CurrentClientSpan.class, new CurrentClientSpan());
+			});
 		}
 
-		Tracer tracer() {
-			if (this.tracer == null) {
-				this.tracer = this.httpTracing.get().tracing().tracer();
+		CurrentTraceContext currentTraceContext() {
+			if (this.currentTraceContext == null) {
+				this.currentTraceContext = this.httpTracing.get().tracing()
+						.currentTraceContext();
 			}
-			return this.tracer;
+			return this.currentTraceContext;
 		}
 
 	}
@@ -100,19 +113,10 @@ class HttpClientBeanPostProcessor implements BeanPostProcessor {
 
 		final LazyBean<HttpTracing> httpTracing;
 
-		List<String> propagationKeys;
-
 		HttpClientHandler<brave.http.HttpClientRequest, brave.http.HttpClientResponse> handler;
 
 		TracingDoOnRequest(LazyBean<HttpTracing> httpTracing) {
 			this.httpTracing = httpTracing;
-		}
-
-		List<String> propagationKeys() {
-			if (this.propagationKeys == null) {
-				this.propagationKeys = httpTracing.get().tracing().propagation().keys();
-			}
-			return this.propagationKeys;
 		}
 
 		HttpClientHandler<brave.http.HttpClientRequest, brave.http.HttpClientResponse> handler() {
@@ -122,30 +126,39 @@ class HttpClientBeanPostProcessor implements BeanPostProcessor {
 			return this.handler;
 		}
 
+		CurrentTraceContext currentTraceContext() {
+			return httpTracing.get().tracing().currentTraceContext();
+		}
+
 		@Override
 		public void accept(HttpClientRequest req, Connection connection) {
-			// request already instrumented
-			// TODO: consider another, cheaper way, like flagging a context
-			// property. If not, comment why.
-			for (String key : propagationKeys()) {
-				if (req.requestHeaders().contains(key)) {
-					return;
-				}
+			CurrentClientSpan ref = req.currentContext()
+					.getOrDefault(CurrentClientSpan.class, null);
+			if (ref == null) { // Somehow TracingMapConnect was not invoked.. skip out
+				return;
 			}
 
-			// Look for a parent propagated by TracingMapConnect
-			AtomicReference<Span> ref = req.currentContext()
-					.getOrDefault(AtomicReference.class, null);
-			Span parent = ref != null ? ref.get() : null;
+			// This might be re-entrant on auto-redirect or connection retry:
+			// See reactor/reactor-netty#1000 for follow-ups.
+			Span clientSpan = ref.getAndSet(null);
+			if (clientSpan != null) {
+				// Retry from a connect fail wouldn't have parsed the request, leading to
+				// an empty span with no data if we finished it. An auto-redirect would
+				// have parsed the request, but we have no idea which status code it
+				// finished with. Since we can't see the preceding request state, we
+				// abandon its span in favor of the next.
+				clientSpan.abandon();
+			}
 
 			// Start a new client span with the appropriate parent
+			TraceContext parent = req.currentContext().getOrDefault(TraceContext.class,
+					null);
 			WrappedHttpClientRequest request = new WrappedHttpClientRequest(req);
-			Span clientSpan = parent != null ? handler().handleSend(request, parent)
-					: handler().handleSend(request);
-			parseConnectionAddress(connection, clientSpan);
 
-			// Swap the ref with the client span, so that other hooks can see it
-			if (ref != null) {
+			// Simplify after openzipkin/brave#1082
+			try (Scope ws = currentTraceContext().maybeScope(parent)) {
+				clientSpan = handler().handleSend(request);
+				parseConnectionAddress(connection, clientSpan);
 				ref.set(clientSpan);
 			}
 		}
@@ -182,9 +195,8 @@ class HttpClientBeanPostProcessor implements BeanPostProcessor {
 		}
 
 		@Override
-		public void accept(HttpClientRequest request, Throwable error) {
-			// TODO: the current context here does not have the AtomicReference<Span>
-			handle(request.currentContext(), null, error);
+		public void accept(HttpClientRequest req, Throwable error) {
+			handle(req.currentContext(), null, error);
 		}
 
 	}
@@ -222,14 +234,18 @@ class HttpClientBeanPostProcessor implements BeanPostProcessor {
 
 		void handle(Context context, @Nullable HttpClientResponse resp,
 				@Nullable Throwable error) {
-			AtomicReference<Span> ref = context.getOrDefault(AtomicReference.class, null);
-			Span span = ref != null ? ref.get() : null;
-			if (span == null) {
+			CurrentClientSpan ref = context.getOrDefault(CurrentClientSpan.class, null);
+			if (ref == null) { // Somehow TracingMapConnect was not invoked.. skip out
+				return;
+			}
+
+			Span clientSpan = ref.getAndSet(null);
+			if (clientSpan == null) {
 				return; // Unexpected. In the handle method, without a span to finish!
 			}
 			WrappedHttpClientResponse response = resp != null
 					? new WrappedHttpClientResponse(resp) : null;
-			handler().handleReceive(response, error, span);
+			handler().handleReceive(response, error, clientSpan);
 		}
 
 	}
