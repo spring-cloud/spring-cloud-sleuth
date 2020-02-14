@@ -247,8 +247,7 @@ final class TraceExchangeFilterFunction implements ExchangeFilterFunction {
 				}
 
 				// TODO: check if in practice we need to do this at all, or if it is
-				// redundant
-				// to the onError hook of the subscriber.
+				// redundant to the onError hook of the subscriber.
 				@Override
 				public void cancel() {
 					try (Scope scope = currentTraceContext.maybeScope(parent)) {
@@ -297,8 +296,7 @@ final class TraceExchangeFilterFunction implements ExchangeFilterFunction {
 				this.actual.onComplete();
 			}
 			finally {
-				// TODO: research why we handled this state, as it is odd to have code
-				// for it
+				// TODO: onComplete should be after onNext. Why are we handling this?
 				if (!this.done) { // unknown state
 					if (log.isDebugEnabled()) {
 						log.debug("Reached OnComplete without finishing ["
