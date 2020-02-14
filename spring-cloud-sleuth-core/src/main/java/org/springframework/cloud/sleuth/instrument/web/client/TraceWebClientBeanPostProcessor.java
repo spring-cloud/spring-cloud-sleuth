@@ -246,8 +246,6 @@ final class TraceExchangeFilterFunction implements ExchangeFilterFunction {
 					}
 				}
 
-				// TODO: check if in practice we need to do this at all, or if it is
-				// redundant to the onError hook of the subscriber.
 				@Override
 				public void cancel() {
 					try (Scope scope = currentTraceContext.maybeScope(parent)) {
