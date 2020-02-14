@@ -16,18 +16,16 @@
 
 package org.springframework.cloud.sleuth.instrument.web.client;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.CancellationException;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
 import brave.Span;
-import brave.Tracer;
-import brave.Tracing;
 import brave.http.HttpClientHandler;
 import brave.http.HttpTracing;
-import brave.propagation.Propagation;
+import brave.propagation.CurrentTraceContext;
+import brave.propagation.CurrentTraceContext.Scope;
 import brave.propagation.TraceContext;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -38,11 +36,10 @@ import reactor.core.publisher.Mono;
 import reactor.util.annotation.Nullable;
 import reactor.util.context.Context;
 
-import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.config.BeanPostProcessor;
+import org.springframework.cloud.sleuth.internal.LazyBean;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.core.io.buffer.DataBuffer;
-import org.springframework.web.client.RestClientException;
 import org.springframework.web.reactive.function.client.ClientRequest;
 import org.springframework.web.reactive.function.client.ClientResponse;
 import org.springframework.web.reactive.function.client.ExchangeFilterFunction;
@@ -60,21 +57,19 @@ import static org.springframework.cloud.sleuth.instrument.reactor.ReactorSleuth.
  */
 final class TraceWebClientBeanPostProcessor implements BeanPostProcessor {
 
-	private final ConfigurableApplicationContext springContext;
+	final ConfigurableApplicationContext springContext;
 
 	TraceWebClientBeanPostProcessor(ConfigurableApplicationContext springContext) {
 		this.springContext = springContext;
 	}
 
 	@Override
-	public Object postProcessBeforeInitialization(Object bean, String beanName)
-			throws BeansException {
+	public Object postProcessBeforeInitialization(Object bean, String beanName) {
 		return bean;
 	}
 
 	@Override
-	public Object postProcessAfterInitialization(Object bean, String beanName)
-			throws BeansException {
+	public Object postProcessAfterInitialization(Object bean, String beanName) {
 		if (bean instanceof WebClient) {
 			WebClient webClient = (WebClient) bean;
 			return wrapBuilder(webClient.mutate()).build();
@@ -114,25 +109,6 @@ final class TraceWebClientBeanPostProcessor implements BeanPostProcessor {
 final class TraceExchangeFilterFunction implements ExchangeFilterFunction {
 
 	private static final Log log = LogFactory.getLog(TraceExchangeFilterFunction.class);
-	static final Propagation.Setter<ClientRequest.Builder, String> SETTER = new Propagation.Setter<ClientRequest.Builder, String>() {
-		@Override
-		public void put(ClientRequest.Builder carrier, String key, String value) {
-			carrier.headers(httpHeaders -> {
-				if (log.isTraceEnabled()) {
-					log.trace("Replacing [" + key + "] with value [" + value + "]");
-				}
-				httpHeaders.merge(key, Collections.singletonList(value),
-						(oldValue, newValue) -> newValue);
-			});
-		}
-
-		@Override
-		public String toString() {
-			return "ClientRequest.Builder::header";
-		}
-	};
-
-	static final String CLIENT_SPAN_KEY = "sleuth.webclient.clientSpan";
 
 	static final Exception CANCELLED_ERROR = new CancellationException("CANCELLED") {
 		@Override
@@ -141,20 +117,17 @@ final class TraceExchangeFilterFunction implements ExchangeFilterFunction {
 		}
 	};
 
-	final ConfigurableApplicationContext springContext;
+	final LazyBean<HttpTracing> httpTracing;
 
 	final Function<? super Publisher<DataBuffer>, ? extends Publisher<DataBuffer>> scopePassingTransformer;
 
-	Tracer tracer;
-
-	HttpTracing httpTracing;
-
+	// Lazy initialized fields
 	HttpClientHandler<brave.http.HttpClientRequest, brave.http.HttpClientResponse> handler;
 
-	TraceContext.Injector<ClientRequest.Builder> injector;
+	CurrentTraceContext currentTraceContext;
 
 	TraceExchangeFilterFunction(ConfigurableApplicationContext springContext) {
-		this.springContext = springContext;
+		this.httpTracing = LazyBean.create(springContext, HttpTracing.class);
 		this.scopePassingTransformer = scopePassingSpanOperator(springContext);
 	}
 
@@ -166,51 +139,27 @@ final class TraceExchangeFilterFunction implements ExchangeFilterFunction {
 	@Override
 	public Mono<ClientResponse> filter(ClientRequest request, ExchangeFunction next) {
 		HttpClientRequest wrapper = new HttpClientRequest(request);
+		TraceContext parent = currentTraceContext().get();
+		Span clientSpan = handler().handleSend(wrapper);
 		if (log.isDebugEnabled()) {
-			log.debug("Instrumenting WebClient call");
+			log.debug("HttpClientHandler::handleSend: " + clientSpan);
 		}
-		Span parentSpan = tracer().currentSpan();
-		Span span = handler().handleSend(wrapper);
-		if (log.isDebugEnabled()) {
-			log.debug("Handled send of " + span);
-		}
-		MonoWebClientTrace trace = new MonoWebClientTrace(next, wrapper.buildRequest(),
-				this, span);
-		// TODO: investigate why this commit leaks a scope:
-		// 8f5bcdabd7af23df443e771432eb85597f3b3076
-		tracer().withSpanInScope(parentSpan);
-		return trace;
+		return new MonoWebClientTrace(next, wrapper.buildRequest(), this, parent,
+				clientSpan);
 	}
 
-	@SuppressWarnings("unchecked")
+	CurrentTraceContext currentTraceContext() {
+		if (this.currentTraceContext == null) {
+			this.currentTraceContext = httpTracing.get().tracing().currentTraceContext();
+		}
+		return this.currentTraceContext;
+	}
+
 	HttpClientHandler<brave.http.HttpClientRequest, brave.http.HttpClientResponse> handler() {
 		if (this.handler == null) {
-			this.handler = HttpClientHandler
-					.create(this.springContext.getBean(HttpTracing.class));
+			this.handler = HttpClientHandler.create(this.httpTracing.get());
 		}
 		return this.handler;
-	}
-
-	Tracer tracer() {
-		if (this.tracer == null) {
-			this.tracer = httpTracing().tracing().tracer();
-		}
-		return this.tracer;
-	}
-
-	HttpTracing httpTracing() {
-		if (this.httpTracing == null) {
-			this.httpTracing = this.springContext.getBean(HttpTracing.class);
-		}
-		return this.httpTracing;
-	}
-
-	TraceContext.Injector<ClientRequest.Builder> injector() {
-		if (this.injector == null) {
-			this.injector = this.springContext.getBean(HttpTracing.class).tracing()
-					.propagation().injector(SETTER);
-		}
-		return this.injector;
 	}
 
 	private static final class MonoWebClientTrace extends Mono<ClientResponse> {
@@ -219,27 +168,26 @@ final class TraceExchangeFilterFunction implements ExchangeFilterFunction {
 
 		final ClientRequest request;
 
-		final Tracer tracer;
-
 		final HttpClientHandler<brave.http.HttpClientRequest, brave.http.HttpClientResponse> handler;
 
-		final TraceContext.Injector<ClientRequest.Builder> injector;
-
-		final Tracing tracing;
+		final CurrentTraceContext currentTraceContext;
 
 		final Function<? super Publisher<DataBuffer>, ? extends Publisher<DataBuffer>> scopePassingTransformer;
+
+		@Nullable
+		final TraceContext parent;
 
 		private final Span span;
 
 		MonoWebClientTrace(ExchangeFunction next, ClientRequest request,
-				TraceExchangeFilterFunction parent, Span span) {
+				TraceExchangeFilterFunction filterFunction, @Nullable TraceContext parent,
+				Span span) {
 			this.next = next;
 			this.request = request;
-			this.tracer = parent.tracer();
-			this.handler = parent.handler();
-			this.injector = parent.injector();
-			this.tracing = parent.httpTracing().tracing();
-			this.scopePassingTransformer = parent.scopePassingTransformer;
+			this.handler = filterFunction.handler();
+			this.currentTraceContext = filterFunction.currentTraceContext();
+			this.scopePassingTransformer = filterFunction.scopePassingTransformer;
+			this.parent = parent;
 			this.span = span;
 		}
 
@@ -248,177 +196,137 @@ final class TraceExchangeFilterFunction implements ExchangeFilterFunction {
 
 			Context context = subscriber.currentContext();
 
-			this.next.exchange(request).subscribe(
-					new WebClientTracerSubscriber(subscriber, context, span, this));
-		}
-
-		static final class WebClientTracerSubscriber
-				implements CoreSubscriber<ClientResponse> {
-
-			final CoreSubscriber<? super ClientResponse> actual;
-
-			final Context context;
-
-			final Span span;
-
-			final HttpClientHandler<brave.http.HttpClientRequest, brave.http.HttpClientResponse> handler;
-
-			final Function<? super Publisher<DataBuffer>, ? extends Publisher<DataBuffer>> scopePassingTransformer;
-
-			final Tracing tracing;
-
-			boolean done;
-
-			WebClientTracerSubscriber(CoreSubscriber<? super ClientResponse> actual,
-					Context context, Span span, MonoWebClientTrace parent) {
-				this.actual = actual;
-				this.span = span;
-				this.handler = parent.handler;
-				this.tracing = parent.tracing;
-				this.scopePassingTransformer = parent.scopePassingTransformer;
-
-				if (!context.hasKey(TraceContext.class)) {
-					context = context.put(TraceContext.class, span.context());
-					if (log.isDebugEnabled()) {
-						log.debug("Reactor Context got injected with the client span "
-								+ span);
-					}
-				}
-
-				this.context = context.put(CLIENT_SPAN_KEY, span);
-			}
-
-			@Override
-			public void onSubscribe(Subscription subscription) {
-				this.actual.onSubscribe(new Subscription() {
-					@Override
-					public void request(long n) {
-						try (Tracer.SpanInScope ws = tracing.tracer()
-								.withSpanInScope(span)) {
-							if (log.isTraceEnabled()) {
-								log.trace("Request");
-							}
-							subscription.request(n);
-						}
-					}
-
-					@Override
-					public void cancel() {
-						try (Tracer.SpanInScope ws = tracing.tracer()
-								.withSpanInScope(span)) {
-							if (log.isTraceEnabled()) {
-								log.trace("Cancel");
-							}
-							terminateSpanOnCancel();
-							subscription.cancel();
-						}
-					}
-				});
-			}
-
-			@Override
-			public void onNext(ClientResponse response) {
-				try (Tracer.SpanInScope ws = tracing.tracer().withSpanInScope(span)) {
-					this.done = true;
-					try {
-						// decorate response body
-						this.actual.onNext(ClientResponse.from(response)
-								.body(response.bodyToFlux(DataBuffer.class)
-										.transform(this.scopePassingTransformer))
-								.build());
-					}
-					finally {
-						terminateSpan(response, null);
-					}
-				}
-			}
-
-			@Override
-			public void onError(Throwable t) {
-				try (Tracer.SpanInScope ws = tracing.tracer().withSpanInScope(span)) {
-					try {
-						this.actual.onError(t);
-					}
-					finally {
-						terminateSpan(null, t);
-					}
-				}
-			}
-
-			@Override
-			public void onComplete() {
-				try (Tracer.SpanInScope ws = tracing.tracer().withSpanInScope(span)) {
-					try {
-						this.actual.onComplete();
-					}
-					finally {
-						if (!this.done) {
-							terminateSpan(null, null);
-						}
-					}
-				}
-			}
-
-			@Override
-			public Context currentContext() {
-				return this.context;
-			}
-
-			void handleReceive(Span clientSpan, @Nullable ClientResponse res,
-					@Nullable Throwable error) {
-				if (log.isTraceEnabled()) {
-					log.trace("Handling receive");
-				}
-				HttpClientResponse response = res != null ? new HttpClientResponse(res)
-						: null;
-				this.handler.handleReceive(response, error, clientSpan);
-				if (log.isTraceEnabled()) {
-					log.trace("Closed scope");
-				}
-			}
-
-			void terminateSpanOnCancel() {
-				if (log.isDebugEnabled()) {
-					log.debug("Subscription was cancelled. Will close the span ["
-							+ this.span + "]");
-				}
-
-				handleReceive(this.span, null, CANCELLED_ERROR);
-			}
-
-			void terminateSpan(@Nullable ClientResponse clientResponse,
-					@Nullable Throwable error) {
-				if (clientResponse == null) {
-					if (log.isDebugEnabled()) {
-						log.debug("No response was returned. Will close the span ["
-								+ this.span + "]");
-					}
-					handleReceive(this.span, null, error);
-					return;
-				}
-				int statusCode = clientResponse.rawStatusCode();
-				boolean isHttpError = statusCode >= 400;
-				if (isHttpError) {
-					if (log.isDebugEnabled()) {
-						log.debug(
-								"Non positive status code was returned from the call. Will close the span ["
-										+ this.span + "]");
-					}
-					error = new RestClientException(
-							"Status code of the response is [" + statusCode + "]");
-				}
-				handleReceive(this.span, clientResponse, error);
-			}
-
+			this.next.exchange(request).subscribe(new WebClientTracerSubscriber(
+					subscriber, context, parent, span, this));
 		}
 
 	}
 
-	static final class HttpClientRequest extends brave.http.HttpClientRequest {
+	private static final class WebClientTracerSubscriber
+			implements CoreSubscriber<ClientResponse> {
 
-		private final ClientRequest delegate;
+		final CoreSubscriber<? super ClientResponse> actual;
 
-		private final ClientRequest.Builder builder;
+		final Context context;
+
+		@Nullable
+		final TraceContext parent;
+
+		final Span clientSpan;
+
+		final HttpClientHandler<brave.http.HttpClientRequest, brave.http.HttpClientResponse> handler;
+
+		final Function<? super Publisher<DataBuffer>, ? extends Publisher<DataBuffer>> scopePassingTransformer;
+
+		final CurrentTraceContext currentTraceContext;
+
+		boolean done;
+
+		WebClientTracerSubscriber(CoreSubscriber<? super ClientResponse> actual,
+				Context ctx, @Nullable final TraceContext parent, Span clientSpan,
+				MonoWebClientTrace mono) {
+			this.actual = actual;
+			this.parent = parent;
+			this.clientSpan = clientSpan;
+			this.handler = mono.handler;
+			this.currentTraceContext = mono.currentTraceContext;
+			this.scopePassingTransformer = mono.scopePassingTransformer;
+			this.context = parent != null
+					&& !parent.equals(ctx.getOrDefault(TraceContext.class, null))
+							? ctx.put(TraceContext.class, parent) : ctx;
+		}
+
+		@Override
+		public void onSubscribe(Subscription subscription) {
+			this.actual.onSubscribe(new Subscription() {
+				@Override
+				public void request(long n) {
+					try (Scope scope = currentTraceContext.maybeScope(parent)) {
+						subscription.request(n);
+					}
+				}
+
+				// TODO: check if in practice we need to do this at all, or if it is
+				// redundant
+				// to the onError hook of the subscriber.
+				@Override
+				public void cancel() {
+					try (Scope scope = currentTraceContext.maybeScope(parent)) {
+						subscription.cancel();
+					}
+					finally {
+						if (log.isDebugEnabled()) {
+							log.debug("Subscription was cancelled. Will close the span ["
+									+ clientSpan + "]");
+						}
+						handleReceive(null, CANCELLED_ERROR);
+					}
+				}
+			});
+		}
+
+		@Override
+		public void onNext(ClientResponse response) {
+			try (Scope scope = currentTraceContext.maybeScope(parent)) {
+				this.done = true;
+				// decorate response body
+				this.actual
+						.onNext(ClientResponse.from(response)
+								.body(response.bodyToFlux(DataBuffer.class)
+										.transform(this.scopePassingTransformer))
+								.build());
+			}
+			finally {
+				handleReceive(response, null);
+			}
+		}
+
+		@Override
+		public void onError(Throwable t) {
+			try (Scope scope = currentTraceContext.maybeScope(parent)) {
+				this.actual.onError(t);
+			}
+			finally {
+				handleReceive(null, t);
+			}
+		}
+
+		@Override
+		public void onComplete() {
+			try (Scope scope = currentTraceContext.maybeScope(parent)) {
+				this.actual.onComplete();
+			}
+			finally {
+				// TODO: research why we handled this state, as it is odd to have code
+				// for it
+				if (!this.done) { // unknown state
+					if (log.isDebugEnabled()) {
+						log.debug("Reached OnComplete without finishing ["
+								+ this.clientSpan + "]");
+					}
+					this.clientSpan.abandon();
+				}
+			}
+		}
+
+		@Override
+		public Context currentContext() {
+			return this.context;
+		}
+
+		void handleReceive(@Nullable ClientResponse res, @Nullable Throwable error) {
+			HttpClientResponse response = res != null ? new HttpClientResponse(res)
+					: null;
+			this.handler.handleReceive(response, error, clientSpan);
+		}
+
+	}
+
+	private static final class HttpClientRequest extends brave.http.HttpClientRequest {
+
+		final ClientRequest delegate;
+
+		final ClientRequest.Builder builder;
 
 		HttpClientRequest(ClientRequest delegate) {
 			this.delegate = delegate;
@@ -463,7 +371,7 @@ final class TraceExchangeFilterFunction implements ExchangeFilterFunction {
 
 	static final class HttpClientResponse extends brave.http.HttpClientResponse {
 
-		private final ClientResponse delegate;
+		final ClientResponse delegate;
 
 		HttpClientResponse(ClientResponse delegate) {
 			this.delegate = delegate;
@@ -476,12 +384,8 @@ final class TraceExchangeFilterFunction implements ExchangeFilterFunction {
 
 		@Override
 		public int statusCode() {
-			try {
-				return delegate.rawStatusCode();
-			}
-			catch (Exception dontCare) {
-				return 0;
-			}
+			// unlike statusCode(), this doesn't throw
+			return Math.max(delegate.rawStatusCode(), 0);
 		}
 
 	}
