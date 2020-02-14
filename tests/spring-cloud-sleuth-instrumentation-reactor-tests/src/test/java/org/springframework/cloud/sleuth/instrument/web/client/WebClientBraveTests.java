@@ -23,6 +23,8 @@ import brave.http.HttpTracing;
 import brave.test.http.ITHttpAsyncClient;
 import io.netty.channel.ChannelOption;
 import io.netty.handler.timeout.ReadTimeoutHandler;
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.reactivestreams.Subscription;
@@ -34,6 +36,7 @@ import reactor.util.context.Context;
 import zipkin2.Callback;
 
 import org.springframework.beans.factory.config.BeanPostProcessor;
+import org.springframework.cloud.sleuth.instrument.reactor.ScopePassingSpanSubscriberTests;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -47,6 +50,12 @@ import org.springframework.web.reactive.function.client.WebClient;
  * happen when a 3rd party client like Jetty is in use.
  */
 public class WebClientBraveTests extends ITHttpAsyncClient<WebClient> {
+
+	@Before
+	@After
+	public void resetHooks() {
+		new ScopePassingSpanSubscriberTests().resetHooks();
+	}
 
 	/**
 	 * This uses Spring to instrument the {@link WebClient} using a
