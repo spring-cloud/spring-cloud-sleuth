@@ -65,32 +65,7 @@ import org.springframework.util.Assert;
 public class ZipkinBackwardsCompatibilityAutoConfiguration {
 
 	/**
-	 * Reporter that is depending on a {@link Sender} bean which is created in another
-	 * auto-configuration than {@link ZipkinAutoConfiguration}.
-	 * @param reporterMetrics metrics
-	 * @param zipkin zipkin properties
-	 * @param spanBytesEncoder encoder
-	 * @param beanFactory Spring's Bean Factory
-	 * @return span reporter
-	 * @deprecated left for backwards compatibility
-	 */
-	@Bean
-	@Conditional(BackwardsCompatibilityCondition.class)
-	@Deprecated
-	Reporter<Span> reporter(ReporterMetrics reporterMetrics, ZipkinProperties zipkin,
-			BytesEncoder<Span> spanBytesEncoder, DefaultListableBeanFactory beanFactory) {
-		List<String> beanNames = new ArrayList<>(
-				Arrays.asList(beanFactory.getBeanNamesForType(Sender.class)));
-		beanNames.remove(ZipkinAutoConfiguration.SENDER_BEAN_NAME);
-		Sender sender = (Sender) beanFactory.getBean(beanNames.get(0));
-		// historical constraint. Note: AsyncReporter supports memory bounds
-		return AsyncReporter.builder(sender).queuedMaxSpans(1000)
-				.messageTimeout(zipkin.getMessageTimeout(), TimeUnit.SECONDS)
-				.metrics(reporterMetrics).build(spanBytesEncoder);
-	}
-
-	/**
-	 * Only used for creating a reporter bean with the method above.
+	 * Only used for creating a reporter bean with the method below.
 	 * @param zipkinProperties zipkin properties
 	 * @return bytes encoder
 	 * @deprecated left for backwards compatibility
@@ -102,17 +77,48 @@ public class ZipkinBackwardsCompatibilityAutoConfiguration {
 		return zipkinProperties.getEncoder();
 	}
 
-	/**
-	 * Deprecated because this is moved to {@link TraceAutoConfiguration}. Left for
-	 * backwards compatibility reasons.
-	 * @return reporter metrics
-	 * @deprecated left for backwards compatibility
-	 */
-	@Bean
-	@ConditionalOnMissingBean
-	@Deprecated
-	ReporterMetrics zipkinReporterMetrics() {
-		return new InMemoryReporterMetrics();
+	@Configuration(proxyBeanMethods = false)
+	@Conditional(BackwardsCompatibilityCondition.class)
+	static class BackwardsCompatibilityConfiguration {
+
+		/**
+		 * Reporter that is depending on a {@link Sender} bean which is created in another
+		 * auto-configuration than {@link ZipkinAutoConfiguration}.
+		 * @param reporterMetrics metrics
+		 * @param zipkin zipkin properties
+		 * @param spanBytesEncoder encoder
+		 * @param beanFactory Spring's Bean Factory
+		 * @return span reporter
+		 * @deprecated left for backwards compatibility
+		 */
+		@Bean
+		@Deprecated
+		Reporter<Span> reporter(ReporterMetrics reporterMetrics, ZipkinProperties zipkin,
+				BytesEncoder<Span> spanBytesEncoder,
+				DefaultListableBeanFactory beanFactory) {
+			List<String> beanNames = new ArrayList<>(
+					Arrays.asList(beanFactory.getBeanNamesForType(Sender.class)));
+			beanNames.remove(ZipkinAutoConfiguration.SENDER_BEAN_NAME);
+			Sender sender = (Sender) beanFactory.getBean(beanNames.get(0));
+			// historical constraint. Note: AsyncReporter supports memory bounds
+			return AsyncReporter.builder(sender).queuedMaxSpans(1000)
+					.messageTimeout(zipkin.getMessageTimeout(), TimeUnit.SECONDS)
+					.metrics(reporterMetrics).build(spanBytesEncoder);
+		}
+
+		/**
+		 * Deprecated because this is moved to {@link TraceAutoConfiguration}. Left for
+		 * backwards compatibility reasons.
+		 * @return reporter metrics
+		 * @deprecated left for backwards compatibility
+		 */
+		@Bean
+		@ConditionalOnMissingBean
+		@Deprecated
+		ReporterMetrics zipkinReporterMetrics() {
+			return new InMemoryReporterMetrics();
+		}
+
 	}
 
 	/**

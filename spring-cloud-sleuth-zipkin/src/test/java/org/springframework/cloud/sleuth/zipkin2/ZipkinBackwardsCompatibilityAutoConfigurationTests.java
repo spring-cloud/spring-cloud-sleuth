@@ -18,6 +18,7 @@ package org.springframework.cloud.sleuth.zipkin2;
 
 import org.junit.Test;
 import zipkin2.codec.BytesEncoder;
+import zipkin2.reporter.InMemoryReporterMetrics;
 import zipkin2.reporter.Reporter;
 import zipkin2.reporter.ReporterMetrics;
 
@@ -43,7 +44,8 @@ public class ZipkinBackwardsCompatibilityAutoConfigurationTests {
 			assertThat(context.getBean(ZipkinProperties.class)).isNotNull();
 			assertThat(context.getBean(Reporter.class)).isNotNull();
 			assertThat(context.getBean(BytesEncoder.class)).isNotNull();
-			assertThat(context.getBean(ReporterMetrics.class)).isNotNull();
+			assertThat(context.getBean(ReporterMetrics.class))
+					.isInstanceOf(InMemoryReporterMetrics.class);
 		});
 	}
 
