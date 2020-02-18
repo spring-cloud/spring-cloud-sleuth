@@ -60,8 +60,7 @@ import static org.assertj.core.api.BDDAssertions.then;
  */
 @RunWith(SpringRunner.class)
 @SpringBootTest(classes = TraceFilterWebIntegrationTests.Config.class,
-		webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
-		properties = "spring.sleuth.http.legacy.enabled=true")
+		webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 public class TraceFilterWebIntegrationTests {
 
 	@Rule
@@ -99,8 +98,7 @@ public class TraceFilterWebIntegrationTests {
 		then(Tracing.current().tracer().currentSpan()).isNull();
 		then(this.accumulator.getSpans()).hasSize(1);
 		Span fromFirstTraceFilterFlow = this.accumulator.getSpans().get(0);
-		then(fromFirstTraceFilterFlow.tags()).containsEntry("http.status_code", "500")
-				.containsEntry("http.method", "GET")
+		then(fromFirstTraceFilterFlow.tags()).containsEntry("http.method", "GET")
 				.containsEntry("mvc.controller.class", "ExceptionThrowingController")
 				.containsEntry("error",
 						"Request processing failed; nested exception is java.lang.RuntimeException: Throwing exception");

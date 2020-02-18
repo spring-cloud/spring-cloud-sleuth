@@ -45,8 +45,7 @@ import static org.assertj.core.api.BDDAssertions.then;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest(
-		classes = { TraceAsyncIntegrationTests.TraceAsyncITestConfiguration.class },
-		properties = "spring.sleuth.http.legacy.enabled=true")
+		classes = { TraceAsyncIntegrationTests.TraceAsyncITestConfiguration.class })
 public class TraceAsyncIntegrationTests {
 
 	@Autowired

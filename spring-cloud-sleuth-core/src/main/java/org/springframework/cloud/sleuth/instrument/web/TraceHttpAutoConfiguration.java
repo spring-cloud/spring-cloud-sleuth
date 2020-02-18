@@ -23,7 +23,6 @@ import brave.ErrorParser;
 import brave.Tracing;
 import brave.http.HttpClientParser;
 import brave.http.HttpRequest;
-import brave.http.HttpSampler;
 import brave.http.HttpServerParser;
 import brave.http.HttpTracing;
 import brave.http.HttpTracingCustomizer;
@@ -34,7 +33,6 @@ import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.Ordered;
@@ -52,7 +50,6 @@ import org.springframework.lang.Nullable;
 @ConditionalOnProperty(name = "spring.sleuth.http.enabled", havingValue = "true",
 		matchIfMissing = true)
 @AutoConfigureAfter(TraceWebAutoConfiguration.class)
-@EnableConfigurationProperties({ TraceKeys.class, SleuthHttpLegacyProperties.class })
 public class TraceHttpAutoConfiguration {
 
 	static final int TRACING_FILTER_ORDER = Ordered.HIGHEST_PRECEDENCE + 5;
@@ -66,11 +63,7 @@ public class TraceHttpAutoConfiguration {
 	HttpTracing httpTracing(Tracing tracing, SkipPatternProvider provider,
 			HttpClientParser clientParser, HttpServerParser serverParser,
 			@HttpClientSampler SamplerFunction<HttpRequest> httpClientSampler,
-			@Nullable @ServerSampler HttpSampler serverSampler,
 			@Nullable @HttpServerSampler SamplerFunction<HttpRequest> httpServerSampler) {
-		if (httpServerSampler == null) {
-			httpServerSampler = serverSampler;
-		}
 		SamplerFunction<HttpRequest> combinedSampler = combineUserProvidedSamplerWithSkipPatternSampler(
 				httpServerSampler, provider);
 		HttpTracing.Builder builder = HttpTracing.newBuilder(tracing)
@@ -94,15 +87,6 @@ public class TraceHttpAutoConfiguration {
 	}
 
 	@Bean
-	@ConditionalOnProperty(name = "spring.sleuth.http.legacy.enabled",
-			havingValue = "true")
-	HttpClientParser sleuthHttpClientParser(TraceKeys traceKeys) {
-		return new SleuthHttpClientParser(traceKeys);
-	}
-
-	@Bean
-	@ConditionalOnProperty(name = "spring.sleuth.http.legacy.enabled",
-			havingValue = "false", matchIfMissing = true)
 	@ConditionalOnMissingBean
 	HttpClientParser httpClientParser(ErrorParser errorParser) {
 		return new HttpClientParser() {
@@ -114,16 +98,6 @@ public class TraceHttpAutoConfiguration {
 	}
 
 	@Bean
-	@ConditionalOnProperty(name = "spring.sleuth.http.legacy.enabled",
-			havingValue = "true")
-	HttpServerParser sleuthHttpServerParser(TraceKeys traceKeys,
-			ErrorParser errorParser) {
-		return new SleuthHttpServerParser(traceKeys, errorParser);
-	}
-
-	@Bean
-	@ConditionalOnProperty(name = "spring.sleuth.http.legacy.enabled",
-			havingValue = "false", matchIfMissing = true)
 	@ConditionalOnMissingBean
 	HttpServerParser defaultHttpServerParser() {
 		return new HttpServerParser();
@@ -132,11 +106,7 @@ public class TraceHttpAutoConfiguration {
 	@Bean
 	@ConditionalOnMissingBean(name = HttpClientSampler.NAME)
 	SamplerFunction<HttpRequest> sleuthHttpClientSampler(
-			@Nullable @ClientSampler HttpSampler sleuthClientSampler,
 			SleuthWebProperties sleuthWebProperties) {
-		if (sleuthClientSampler != null) {
-			return sleuthClientSampler;
-		}
 		return new SkipPatternHttpClientSampler(sleuthWebProperties);
 	}
 

@@ -44,8 +44,7 @@ import static org.assertj.core.api.BDDAssertions.then;
 		classes = SkipEndPointsIntegrationTestsWithContextPathWithBasePath.Config.class,
 		webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
 		properties = { "management.endpoints.web.exposure.include:*",
-				"server.servlet.context-path:/context-path",
-				"spring.sleuth.http.legacy.enabled:true" })
+				"server.servlet.context-path:/context-path" })
 public class SkipEndPointsIntegrationTestsWithContextPathWithBasePath {
 
 	@Autowired

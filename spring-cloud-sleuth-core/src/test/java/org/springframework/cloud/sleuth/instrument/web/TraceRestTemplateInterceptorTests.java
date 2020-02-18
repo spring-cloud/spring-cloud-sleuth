@@ -24,6 +24,7 @@ import java.util.Map;
 import brave.Span;
 import brave.Tracer;
 import brave.Tracing;
+import brave.http.HttpClientParser;
 import brave.http.HttpTracing;
 import brave.propagation.StrictScopeDecorator;
 import brave.propagation.ThreadLocalCurrentTraceContext;
@@ -62,8 +63,6 @@ public class TraceRestTemplateInterceptorTests {
 			.spanReporter(this.reporter).build();
 
 	Tracer tracer = this.tracing.tracer();
-
-	TraceKeys traceKeys = new TraceKeys();
 
 	private TestController testController = new TestController();
 
@@ -122,7 +121,7 @@ public class TraceRestTemplateInterceptorTests {
 	@Test
 	public void requestHeadersAddedWhenTracing() {
 		setInterceptors(HttpTracing.newBuilder(this.tracing)
-				.clientParser(new SleuthHttpClientParser(this.traceKeys)).build());
+				.clientParser(new HttpClientParser()).build());
 		Span span = this.tracer.nextSpan().name("new trace");
 
 		try (Tracer.SpanInScope ws = this.tracer.withSpanInScope(span.start())) {
@@ -134,8 +133,8 @@ public class TraceRestTemplateInterceptorTests {
 
 		List<zipkin2.Span> spans = this.reporter.getSpans();
 		then(spans).isNotEmpty();
-		then(spans.get(0).tags()).containsEntry("http.url", "/foo?a=b")
-				.containsEntry("http.path", "/foo").containsEntry("http.method", "GET");
+		then(spans.get(0).tags()).containsEntry("http.path", "/foo")
+				.containsEntry("http.method", "GET");
 	}
 
 	@Test
@@ -182,7 +181,7 @@ public class TraceRestTemplateInterceptorTests {
 	@Test
 	public void createdSpanNameHasOnlyPrintableAsciiCharactersForNonEncodedURIWithNonAsciiChars() {
 		setInterceptors(HttpTracing.newBuilder(this.tracing)
-				.clientParser(new SleuthHttpClientParser(this.traceKeys)).build());
+				.clientParser(new HttpClientParser()).build());
 		Span span = this.tracer.nextSpan().name("new trace");
 
 		try (Tracer.SpanInScope ws = this.tracer.withSpanInScope(span.start())) {
@@ -197,57 +196,6 @@ public class TraceRestTemplateInterceptorTests {
 
 		List<zipkin2.Span> spans = this.reporter.getSpans();
 		then(spans).hasSize(2);
-		String spanName = spans.get(0).name();
-		then(spanName).isEqualTo("http:/cas~fs~%c3%a5%cb%86%e2%80%99");
-		then(isAsciiPrintable(spanName));
-	}
-
-	@Test
-	public void willShortenTheNameOfTheSpan() {
-		setInterceptors(HttpTracing.newBuilder(this.tracing)
-				.clientParser(new SleuthHttpClientParser(this.traceKeys)).build());
-		Span span = this.tracer.nextSpan().name("new trace");
-
-		try (Tracer.SpanInScope ws = this.tracer.withSpanInScope(span.start())) {
-			this.template.getForEntity("/" + bigName(), Map.class).getBody();
-		}
-		catch (Exception e) {
-
-		}
-		finally {
-			span.finish();
-		}
-
-		List<zipkin2.Span> spans = this.reporter.getSpans();
-		then(spans).isNotEmpty();
-		String spanName = spans.get(0).name();
-		then(spanName).hasSize(50);
-		then(isAsciiPrintable(spanName));
-	}
-
-	private String bigName() {
-		StringBuilder sb = new StringBuilder();
-		for (int i = 0; i < 60; i++) {
-			sb.append("a");
-		}
-		return sb.toString();
-	}
-
-	private static boolean isAsciiPrintable(String str) {
-		if (str == null) {
-			return false;
-		}
-		int sz = str.length();
-		for (int i = 0; i < sz; i++) {
-			if (!isAsciiPrintable(str.charAt(i))) {
-				return false;
-			}
-		}
-		return true;
-	}
-
-	private static boolean isAsciiPrintable(char ch) {
-		return ch >= 32 && ch < 127;
 	}
 
 	@RestController

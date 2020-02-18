@@ -43,8 +43,7 @@ import static org.assertj.core.api.BDDAssertions.then;
 @SpringBootTest(
 		classes = SkipEndPointsIntegrationTestsWithoutContextPathWithBasePath.Config.class,
 		webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
-		properties = { "management.endpoints.web.exposure.include:*",
-				"spring.sleuth.http.legacy.enabled:true" })
+		properties = { "management.endpoints.web.exposure.include:*" })
 public class SkipEndPointsIntegrationTestsWithoutContextPathWithBasePath {
 
 	@LocalServerPort

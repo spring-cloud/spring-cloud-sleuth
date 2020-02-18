@@ -22,6 +22,7 @@ import java.util.HashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import brave.Tracing;
+import brave.http.HttpClientParser;
 import brave.http.HttpTracing;
 import brave.propagation.StrictScopeDecorator;
 import brave.propagation.ThreadLocalCurrentTraceContext;
@@ -44,7 +45,6 @@ import org.mockito.junit.MockitoJUnitRunner;
 import zipkin2.Span;
 
 import org.springframework.beans.factory.BeanFactory;
-import org.springframework.cloud.sleuth.instrument.web.SleuthHttpParserAccessor;
 import org.springframework.cloud.sleuth.util.ArrayListSpanReporter;
 
 import static org.assertj.core.api.Assertions.failBecauseExceptionWasNotThrown;
@@ -70,7 +70,7 @@ public class FeignRetriesTests {
 			.spanReporter(this.reporter).build();
 
 	HttpTracing httpTracing = HttpTracing.newBuilder(this.tracing)
-			.clientParser(SleuthHttpParserAccessor.getClient()).build();
+			.clientParser(new HttpClientParser()).build();
 
 	@Before
 	@After

@@ -52,7 +52,6 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.cloud.sleuth.DefaultSpanNamer;
 import org.springframework.cloud.sleuth.LocalServiceName;
-import org.springframework.cloud.sleuth.SpanAdjuster;
 import org.springframework.cloud.sleuth.SpanNamer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -84,9 +83,6 @@ public class TraceAutoConfiguration {
 	public static final String DEFAULT_SERVICE_NAME = "default";
 
 	@Autowired(required = false)
-	List<SpanAdjuster> spanAdjusters = new ArrayList<>();
-
-	@Autowired(required = false)
 	List<FinishedSpanHandler> finishedSpanHandlers = new ArrayList<>();
 
 	@Autowired(required = false)
@@ -116,7 +112,7 @@ public class TraceAutoConfiguration {
 				.localServiceName(StringUtils.isEmpty(serviceName) ? DEFAULT_SERVICE_NAME
 						: serviceName)
 				.propagationFactory(factory).currentTraceContext(currentTraceContext)
-				.spanReporter(new CompositeReporter(this.spanAdjusters,
+				.spanReporter(new CompositeReporter(
 						spanReporters != null ? spanReporters : Collections.emptyList()))
 				.traceId128Bit(sleuthProperties.isTraceId128())
 				.supportsJoin(sleuthProperties.isSupportsJoin());
@@ -228,30 +224,21 @@ public class TraceAutoConfiguration {
 
 		private static final Log log = LogFactory.getLog(CompositeReporter.class);
 
-		private final List<SpanAdjuster> spanAdjusters;
-
 		private final Reporter<zipkin2.Span> spanReporter;
 
-		private CompositeReporter(List<SpanAdjuster> spanAdjusters,
-				List<Reporter<Span>> spanReporters) {
-			this.spanAdjusters = spanAdjusters;
+		private CompositeReporter(List<Reporter<Span>> spanReporters) {
 			this.spanReporter = spanReporters.size() == 1 ? spanReporters.get(0)
 					: new ListReporter(spanReporters);
 		}
 
 		@Override
 		public void report(Span span) {
-			Span spanToAdjust = span;
-			for (SpanAdjuster spanAdjuster : this.spanAdjusters) {
-				spanToAdjust = spanAdjuster.adjust(spanToAdjust);
-			}
-			this.spanReporter.report(spanToAdjust);
+			this.spanReporter.report(span);
 		}
 
 		@Override
 		public String toString() {
-			return "CompositeReporter{" + "spanAdjusters=" + this.spanAdjusters
-					+ ", spanReporters=" + this.spanReporter + '}';
+			return "CompositeReporter{ spanReporters=" + this.spanReporter + '}';
 		}
 
 		private static final class ListReporter implements Reporter<zipkin2.Span> {

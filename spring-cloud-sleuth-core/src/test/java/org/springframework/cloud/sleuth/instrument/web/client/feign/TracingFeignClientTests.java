@@ -24,6 +24,7 @@ import java.util.List;
 import brave.Span;
 import brave.Tracer;
 import brave.Tracing;
+import brave.http.HttpClientParser;
 import brave.http.HttpTracing;
 import brave.propagation.StrictScopeDecorator;
 import brave.propagation.ThreadLocalCurrentTraceContext;
@@ -36,8 +37,6 @@ import org.junit.runner.RunWith;
 import org.mockito.BDDMockito;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
-
-import org.springframework.cloud.sleuth.instrument.web.SleuthHttpParserAccessor;
 
 import static org.assertj.core.api.BDDAssertions.then;
 
@@ -61,7 +60,7 @@ public class TracingFeignClientTests {
 	Tracer tracer = this.tracing.tracer();
 
 	HttpTracing httpTracing = HttpTracing.newBuilder(this.tracing)
-			.clientParser(SleuthHttpParserAccessor.getClient()).build();
+			.clientParser(new HttpClientParser()).build();
 
 	@Mock
 	Client client;
@@ -107,22 +106,6 @@ public class TracingFeignClientTests {
 		then(this.spans.get(0)).extracting("kind.ordinal")
 				.isEqualTo(Span.Kind.CLIENT.ordinal());
 		then(this.spans.get(0).tags()).containsEntry("error", "exception has occurred");
-	}
-
-	@Test
-	public void should_shorten_the_span_name() throws IOException {
-		this.traceFeignClient.execute(Request.create("GET", "https://foo/" + bigName(),
-				new HashMap<>(), null, null), this.options);
-
-		then(this.spans.get(0).name()).hasSize(50);
-	}
-
-	private String bigName() {
-		StringBuilder sb = new StringBuilder();
-		for (int i = 0; i < 60; i++) {
-			sb.append("a");
-		}
-		return sb.toString();
 	}
 
 }

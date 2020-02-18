@@ -61,8 +61,7 @@ import static org.springframework.boot.test.context.SpringBootTest.WebEnvironmen
 @RunWith(SpringJUnit4ClassRunner.class)
 @SpringBootTest(classes = { WebClientDiscoveryExceptionTests.TestConfiguration.class },
 		webEnvironment = RANDOM_PORT)
-@TestPropertySource(properties = { "spring.application.name=exceptionservice",
-		"spring.sleuth.http.legacy.enabled=true" })
+@TestPropertySource(properties = { "spring.application.name=exceptionservice" })
 @DirtiesContext
 public class WebClientDiscoveryExceptionTests {
 

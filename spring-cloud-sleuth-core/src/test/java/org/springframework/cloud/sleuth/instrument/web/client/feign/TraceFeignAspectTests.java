@@ -19,6 +19,7 @@ package org.springframework.cloud.sleuth.instrument.web.client.feign;
 import java.io.IOException;
 
 import brave.Tracing;
+import brave.http.HttpClientParser;
 import brave.http.HttpTracing;
 import brave.propagation.StrictScopeDecorator;
 import brave.propagation.ThreadLocalCurrentTraceContext;
@@ -31,7 +32,6 @@ import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 
 import org.springframework.beans.factory.BeanFactory;
-import org.springframework.cloud.sleuth.instrument.web.SleuthHttpParserAccessor;
 
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.never;
@@ -58,7 +58,7 @@ public class TraceFeignAspectTests {
 			.build();
 
 	HttpTracing httpTracing = HttpTracing.newBuilder(this.tracing)
-			.clientParser(SleuthHttpParserAccessor.getClient()).build();
+			.clientParser(new HttpClientParser()).build();
 
 	TraceFeignAspect traceFeignAspect;
 

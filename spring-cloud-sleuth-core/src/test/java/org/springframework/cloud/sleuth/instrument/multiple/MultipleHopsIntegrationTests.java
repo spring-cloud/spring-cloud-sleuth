@@ -54,8 +54,8 @@ import static org.awaitility.Awaitility.await;
 import static org.springframework.boot.test.context.SpringBootTest.WebEnvironment.RANDOM_PORT;
 
 @RunWith(SpringJUnit4ClassRunner.class)
-@TestPropertySource(properties = { "spring.application.name=multiplehopsintegrationtests",
-		"spring.sleuth.http.legacy.enabled=true" })
+@TestPropertySource(
+		properties = { "spring.application.name=multiplehopsintegrationtests" })
 @SpringBootTest(classes = MultipleHopsIntegrationTests.Config.class,
 		webEnvironment = RANDOM_PORT)
 @ActiveProfiles("baggage")
@@ -90,7 +90,7 @@ public class MultipleHopsIntegrationTests {
 			then(this.reporter.getSpans()).hasSize(14);
 		});
 		then(this.reporter.getSpans().stream().map(zipkin2.Span::name).collect(toList()))
-				.containsAll(asList("http:/greeting", "send"));
+				.containsAll(asList("get /greeting", "send"));
 		then(this.reporter.getSpans().stream().map(zipkin2.Span::kind)
 				// no server kind due to test constraints
 				.collect(toList()))

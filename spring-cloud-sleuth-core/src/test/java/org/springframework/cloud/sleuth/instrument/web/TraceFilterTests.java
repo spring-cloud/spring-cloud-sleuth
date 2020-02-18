@@ -21,10 +21,11 @@ import java.util.regex.Pattern;
 
 import javax.servlet.Filter;
 
-import brave.ErrorParser;
 import brave.Span;
 import brave.Tracer;
 import brave.Tracing;
+import brave.http.HttpClientParser;
+import brave.http.HttpServerParser;
 import brave.http.HttpTracing;
 import brave.propagation.StrictScopeDecorator;
 import brave.propagation.ThreadLocalCurrentTraceContext;
@@ -70,11 +71,8 @@ public class TraceFilterTests {
 
 	Tracer tracer = this.tracing.tracer();
 
-	TraceKeys traceKeys = new TraceKeys();
-
 	HttpTracing httpTracing = HttpTracing.newBuilder(this.tracing)
-			.clientParser(new SleuthHttpClientParser(this.traceKeys))
-			.serverParser(new SleuthHttpServerParser(this.traceKeys, new ErrorParser()))
+			.clientParser(new HttpClientParser()).serverParser(new HttpServerParser())
 			.serverSampler(new SkipPatternHttpServerSampler(() -> Pattern.compile("")))
 			.build();
 
@@ -122,9 +120,7 @@ public class TraceFilterTests {
 				.spanReporter(this.reporter).sampler(Sampler.NEVER_SAMPLE)
 				.supportsJoin(false).build();
 		HttpTracing httpTracing = HttpTracing.newBuilder(tracing)
-				.clientParser(new SleuthHttpClientParser(this.traceKeys))
-				.serverParser(
-						new SleuthHttpServerParser(this.traceKeys, new ErrorParser()))
+				.clientParser(new HttpClientParser()).serverParser(new HttpServerParser())
 				.serverSampler(
 						new SkipPatternHttpServerSampler(() -> Pattern.compile("")))
 				.build();
@@ -136,9 +132,7 @@ public class TraceFilterTests {
 		this.filter.doFilter(this.request, this.response, this.filterChain);
 
 		then(this.reporter.getSpans()).hasSize(1);
-		then(this.reporter.getSpans().get(0).tags())
-				.containsEntry("http.url", "http://localhost/?foo=bar")
-				.containsEntry("http.host", "localhost").containsEntry("http.path", "/")
+		then(this.reporter.getSpans().get(0).tags()).containsEntry("http.path", "/")
 				.containsEntry("http.method", HttpMethod.GET.toString());
 		// we don't check for status_code anymore cause Brave doesn't support it oob
 		// .containsEntry("http.status_code", "200")
@@ -168,9 +162,7 @@ public class TraceFilterTests {
 		then(Tracing.current().tracer().currentSpan()).isNull();
 		then(this.reporter.getSpans()).hasSize(1);
 		then(this.reporter.getSpans().get(0).id()).isEqualTo(PARENT_ID);
-		then(this.reporter.getSpans().get(0).tags())
-				.containsEntry("http.url", "http://localhost/?foo=bar")
-				.containsEntry("http.host", "localhost").containsEntry("http.path", "/")
+		then(this.reporter.getSpans().get(0).tags()).containsEntry("http.path", "/")
 				.containsEntry("http.method", HttpMethod.GET.toString());
 	}
 
@@ -253,37 +245,6 @@ public class TraceFilterTests {
 	}
 
 	@Test
-	public void addsAdditionalHeaders() throws Exception {
-		this.request = builder().header(SPAN_ID_NAME, PARENT_ID)
-				.header(TRACE_ID_NAME, SpanUtil.idToHex(20L))
-				.buildRequest(new MockServletContext());
-		this.traceKeys.getHttp().getHeaders().add("x-foo");
-		this.request.addHeader("X-Foo", "bar");
-
-		this.filter.doFilter(this.request, this.response, this.filterChain);
-
-		then(Tracing.current().tracer().currentSpan()).isNull();
-		then(this.reporter.getSpans()).hasSize(1);
-		then(this.reporter.getSpans().get(0).tags()).containsEntry("http.x-foo", "bar");
-	}
-
-	@Test
-	public void additionalMultiValuedHeader() throws Exception {
-		this.request = builder().header(SPAN_ID_NAME, PARENT_ID)
-				.header(TRACE_ID_NAME, SpanUtil.idToHex(20L))
-				.buildRequest(new MockServletContext());
-		this.traceKeys.getHttp().getHeaders().add("x-foo");
-		this.request.addHeader("X-Foo", "bar");
-		this.request.addHeader("X-Foo", "spam");
-		this.filter.doFilter(this.request, this.response, this.filterChain);
-
-		then(Tracing.current().tracer().currentSpan()).isNull();
-		then(this.reporter.getSpans()).hasSize(1);
-		// We no longer support multi value headers
-		then(this.reporter.getSpans().get(0).tags()).containsEntry("http.x-foo", "bar");
-	}
-
-	@Test
 	public void shouldAnnotateSpanWithErrorWhenExceptionIsThrown() throws Exception {
 		this.request = builder().header(SPAN_ID_NAME, PARENT_ID)
 				.header(TRACE_ID_NAME, SpanUtil.idToHex(20L))
@@ -305,7 +266,7 @@ public class TraceFilterTests {
 		}
 
 		then(Tracing.current().tracer().currentSpan()).isNull();
-		verifyParentSpanHttpTags(HttpStatus.INTERNAL_SERVER_ERROR);
+		verifyParentSpanHttpTags();
 		then(this.reporter.getSpans()).hasSize(1);
 		then(this.reporter.getSpans().get(0).tags()).containsEntry("error", "Planned");
 	}
@@ -438,9 +399,7 @@ public class TraceFilterTests {
 
 		then(Tracing.current().tracer().currentSpan()).isNull();
 		then(this.reporter.getSpans()).hasSize(1);
-		then(this.reporter.getSpans().get(0).tags())
-				.containsEntry("http.url", "http://localhost/?foo=bar")
-				.containsEntry("http.host", "localhost").containsEntry("http.path", "/")
+		then(this.reporter.getSpans().get(0).tags()).containsEntry("http.path", "/")
 				.containsEntry("http.method", HttpMethod.GET.toString());
 		// we don't check for status_code anymore cause Brave doesn't support it oob
 		// .containsEntry("http.status_code", "295")
@@ -455,41 +414,13 @@ public class TraceFilterTests {
 
 		then(Tracing.current().tracer().currentSpan()).isNull();
 		then(this.reporter.getSpans()).hasSize(1);
-		then(this.reporter.getSpans().get(0).name()).isEqualTo("http:/");
+		then(this.reporter.getSpans().get(0).name()).isEqualTo("get");
 	}
 
 	public void verifyParentSpanHttpTags() {
-		verifyParentSpanHttpTags(HttpStatus.OK);
-	}
-
-	/**
-	 * Shows the expansion of {@link import
-	 * org.springframework.cloud.sleuth.instrument.TraceKeys}.
-	 * @param status http status
-	 */
-	public void verifyParentSpanHttpTags(HttpStatus status) {
 		then(this.reporter.getSpans().size()).isGreaterThan(0);
-		then(this.reporter.getSpans().get(0).tags())
-				.containsEntry("http.url", "http://localhost/?foo=bar")
-				.containsEntry("http.host", "localhost").containsEntry("http.path", "/")
+		then(this.reporter.getSpans().get(0).tags()).containsEntry("http.path", "/")
 				.containsEntry("http.method", HttpMethod.GET.toString());
-		verifyCurrentSpanStatusCodeForAContinuedSpan(status);
-
-	}
-
-	private void verifyCurrentSpanStatusCodeForAContinuedSpan(HttpStatus status) {
-		// Status is only interesting in non-success case. Omitting it saves at least
-		// 20bytes per span.
-		if (status.is2xxSuccessful()) {
-			then(this.reporter.getSpans()).hasSize(1);
-			then(this.reporter.getSpans().get(0).tags())
-					.doesNotContainKey("http.status_code");
-		}
-		else {
-			then(this.reporter.getSpans()).hasSize(1);
-			then(this.reporter.getSpans().get(0).tags()).containsEntry("http.status_code",
-					"500");
-		}
 	}
 
 }

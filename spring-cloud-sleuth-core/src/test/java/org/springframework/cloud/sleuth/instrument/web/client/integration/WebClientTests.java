@@ -100,9 +100,8 @@ import static org.assertj.core.api.BDDAssertions.then;
 @RunWith(JUnitParamsRunner.class)
 @SpringBootTest(classes = WebClientTests.TestConfiguration.class,
 		webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-@TestPropertySource(properties = { "spring.sleuth.http.legacy.enabled=true",
-		"spring.application.name=fooservice", "feign.hystrix.enabled=false",
-		"spring.sleuth.web.client.skip-pattern=/skip.*" })
+@TestPropertySource(properties = { "spring.application.name=fooservice",
+		"feign.hystrix.enabled=false", "spring.sleuth.web.client.skip-pattern=/skip.*" })
 @DirtiesContext
 public class WebClientTests {
 
@@ -179,8 +178,7 @@ public class WebClientTests {
 			List<zipkin2.Span> spans = this.reporter.getSpans();
 			then(spans).isNotEmpty();
 			Optional<zipkin2.Span> noTraceSpan = new ArrayList<>(spans).stream()
-					.filter(span -> "http:/notrace".equals(span.name())
-							&& !span.tags().isEmpty()
+					.filter(span -> "get".equals(span.name()) && !span.tags().isEmpty()
 							&& span.tags().containsKey("http.path"))
 					.findFirst();
 			then(noTraceSpan.isPresent()).isTrue();
@@ -188,7 +186,7 @@ public class WebClientTests {
 					.containsEntry("http.method", "GET");
 			// TODO: matches cause there is an issue with Feign not providing the full URL
 			// at the interceptor level
-			then(noTraceSpan.get().tags().get("http.url")).matches(".*/notrace");
+			then(noTraceSpan.get().tags().get("http.path")).matches(".*/notrace");
 		});
 		then(this.tracer.currentSpan()).isNull();
 	}

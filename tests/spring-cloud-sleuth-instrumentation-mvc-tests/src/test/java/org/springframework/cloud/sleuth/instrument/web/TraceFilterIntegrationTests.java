@@ -69,8 +69,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @RunWith(SpringRunner.class)
-@SpringBootTest(classes = TraceFilterIntegrationTests.Config.class,
-		properties = "spring.sleuth.http.legacy.enabled=true")
+@SpringBootTest(classes = TraceFilterIntegrationTests.Config.class)
 public class TraceFilterIntegrationTests extends AbstractMvcIntegrationTest {
 
 	static final String TRACE_ID_NAME = "X-B3-TraceId";

@@ -166,7 +166,6 @@ Starting with version `2.0.0`, Spring Cloud Sleuth uses https://github.com/openz
 Consequently, Sleuth no longer takes care of storing the context but delegates that work to Brave.
 
 Due to the fact that Sleuth had different naming and tagging conventions than Brave, we decided to follow Brave's conventions from now on.
-However, if you want to use the legacy Sleuth approaches, you can set the `spring.sleuth.http.legacy.enabled` property to `true`.
 
 ==== Live examples
 

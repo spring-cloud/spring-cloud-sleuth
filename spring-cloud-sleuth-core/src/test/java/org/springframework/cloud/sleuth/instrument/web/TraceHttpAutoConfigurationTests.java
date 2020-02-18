@@ -16,9 +16,7 @@
 
 package org.springframework.cloud.sleuth.instrument.web;
 
-import brave.http.HttpAdapter;
 import brave.http.HttpRequest;
-import brave.http.HttpSampler;
 import brave.http.HttpTracing;
 import brave.sampler.SamplerFunction;
 import org.junit.Test;
@@ -46,31 +44,9 @@ public class TraceHttpAutoConfigurationTests {
 	}
 
 	@Test
-	public void configuresUserProvidedDeprecatedClientSampler() {
-		contextRunner().withUserConfiguration(DeprecatedClientSamplerConfig.class)
-				.run((context) -> {
-					SamplerFunction<HttpRequest> clientSampler = context
-							.getBean(HttpTracing.class).clientRequestSampler();
-
-					then(clientSampler).isSameAs(DeprecatedClientSamplerConfig.INSTANCE);
-				});
-	}
-
-	@Test
 	public void configuresUserProvidedHttpClientSampler() {
 		contextRunner().withUserConfiguration(HttpClientSamplerConfig.class)
 				.run((context) -> {
-					SamplerFunction<HttpRequest> clientSampler = context
-							.getBean(HttpTracing.class).clientRequestSampler();
-
-					then(clientSampler).isSameAs(HttpClientSamplerConfig.INSTANCE);
-				});
-	}
-
-	@Test
-	public void prefersUserProvidedHttpClientSampler() {
-		contextRunner().withUserConfiguration(DeprecatedClientSamplerConfig.class)
-				.withUserConfiguration(HttpClientSamplerConfig.class).run((context) -> {
 					SamplerFunction<HttpRequest> clientSampler = context
 							.getBean(HttpTracing.class).clientRequestSampler();
 
@@ -89,21 +65,8 @@ public class TraceHttpAutoConfigurationTests {
 	}
 
 	@Test
-	public void wrapsUserProvidedDeprecatedServerSampler() {
-		contextRunner().withUserConfiguration(DeprecatedServerSamplerConfig.class).run(
-				thenCompositeHttpServerSamplerOf(DeprecatedServerSamplerConfig.INSTANCE));
-	}
-
-	@Test
 	public void wrapsUserProvidedHttpServerSampler() {
 		contextRunner().withUserConfiguration(HttpServerSamplerConfig.class)
-				.run(thenCompositeHttpServerSamplerOf(HttpServerSamplerConfig.INSTANCE));
-	}
-
-	@Test
-	public void prefersUserProvidedUserProvidedHttpServerSampler() {
-		contextRunner().withUserConfiguration(HttpServerSamplerConfig.class)
-				.withUserConfiguration(DeprecatedServerSamplerConfig.class)
 				.run(thenCompositeHttpServerSamplerOf(HttpServerSamplerConfig.INSTANCE));
 	}
 
@@ -144,46 +107,12 @@ class HttpClientSamplerConfig {
 }
 
 @Configuration
-class DeprecatedClientSamplerConfig {
-
-	static final HttpSampler INSTANCE = new HttpSampler() {
-		@Override
-		public <Req> Boolean trySample(HttpAdapter<Req, ?> httpAdapter, Req req) {
-			return null;
-		}
-	};
-
-	@Bean(ClientSampler.NAME)
-	HttpSampler sleuthClientSampler() {
-		return INSTANCE;
-	}
-
-}
-
-@Configuration
 class HttpServerSamplerConfig {
 
 	static final SamplerFunction<HttpRequest> INSTANCE = request -> null;
 
 	@Bean(HttpServerSampler.NAME)
 	SamplerFunction<HttpRequest> sleuthHttpServerSampler() {
-		return INSTANCE;
-	}
-
-}
-
-@Configuration
-class DeprecatedServerSamplerConfig {
-
-	static final HttpSampler INSTANCE = new HttpSampler() {
-		@Override
-		public <Req> Boolean trySample(HttpAdapter<Req, ?> httpAdapter, Req req) {
-			return null;
-		}
-	};
-
-	@Bean(ServerSampler.NAME)
-	HttpSampler sleuthServerSampler() {
 		return INSTANCE;
 	}
 

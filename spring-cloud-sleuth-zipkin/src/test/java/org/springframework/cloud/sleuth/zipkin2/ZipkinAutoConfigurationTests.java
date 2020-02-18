@@ -84,7 +84,7 @@ public class ZipkinAutoConfigurationTests {
 				this.server.url("/").toString());
 		this.context.register(ZipkinAutoConfiguration.class,
 				PropertyPlaceholderAutoConfiguration.class, TraceAutoConfiguration.class,
-				Config.class, ZipkinBackwardsCompatibilityAutoConfiguration.class);
+				Config.class);
 		this.context.refresh();
 		Span span = this.context.getBean(Tracing.class).tracer().nextSpan().name("foo")
 				.tag("foo", "bar").start();
@@ -114,7 +114,7 @@ public class ZipkinAutoConfigurationTests {
 		environment().setProperty("spring.zipkin.encoder", "JSON_V1");
 		this.context.register(ZipkinAutoConfiguration.class,
 				PropertyPlaceholderAutoConfiguration.class, TraceAutoConfiguration.class,
-				Config.class, ZipkinBackwardsCompatibilityAutoConfiguration.class);
+				Config.class);
 		this.context.refresh();
 		Span span = this.context.getBean(Tracing.class).tracer().nextSpan().name("foo")
 				.tag("foo", "bar").start();
@@ -138,8 +138,7 @@ public class ZipkinAutoConfigurationTests {
 		environment().setProperty("spring.zipkin.sender.type", "rabbit");
 		this.context.register(PropertyPlaceholderAutoConfiguration.class,
 				RabbitAutoConfiguration.class, ZipkinAutoConfiguration.class,
-				TraceAutoConfiguration.class,
-				ZipkinBackwardsCompatibilityAutoConfiguration.class);
+				TraceAutoConfiguration.class);
 		this.context.refresh();
 
 		then(this.context.getBean(Sender.class)).isInstanceOf(RabbitMQSender.class);
@@ -154,8 +153,7 @@ public class ZipkinAutoConfigurationTests {
 		environment().setProperty("spring.zipkin.sender.type", "kafka");
 		this.context.register(PropertyPlaceholderAutoConfiguration.class,
 				KafkaAutoConfiguration.class, ZipkinAutoConfiguration.class,
-				TraceAutoConfiguration.class,
-				ZipkinBackwardsCompatibilityAutoConfiguration.class);
+				TraceAutoConfiguration.class);
 		this.context.refresh();
 
 		then(this.context.getBean(Sender.class)).isInstanceOf(KafkaSender.class);
@@ -172,8 +170,7 @@ public class ZipkinAutoConfigurationTests {
 		environment().setProperty("spring.zipkin.sender.type", "activemq");
 		this.context.register(PropertyPlaceholderAutoConfiguration.class,
 				ActiveMQAutoConfiguration.class, ZipkinAutoConfiguration.class,
-				TraceAutoConfiguration.class,
-				ZipkinBackwardsCompatibilityAutoConfiguration.class);
+				TraceAutoConfiguration.class);
 		this.context.refresh();
 
 		then(this.context.getBean(Sender.class)).isInstanceOf(ActiveMQSender.class);
@@ -187,8 +184,7 @@ public class ZipkinAutoConfigurationTests {
 		environment().setProperty("spring.zipkin.sender.type", "web");
 		this.context.register(PropertyPlaceholderAutoConfiguration.class,
 				RabbitAutoConfiguration.class, KafkaAutoConfiguration.class,
-				ZipkinAutoConfiguration.class, TraceAutoConfiguration.class,
-				ZipkinBackwardsCompatibilityAutoConfiguration.class);
+				ZipkinAutoConfiguration.class, TraceAutoConfiguration.class);
 		this.context.refresh();
 
 		then(this.context.getBean(Sender.class).getClass().getName())
@@ -203,8 +199,7 @@ public class ZipkinAutoConfigurationTests {
 		environment().setProperty("spring.zipkin.sender.type", "WEB");
 		this.context.register(PropertyPlaceholderAutoConfiguration.class,
 				RabbitAutoConfiguration.class, KafkaAutoConfiguration.class,
-				ZipkinAutoConfiguration.class, TraceAutoConfiguration.class,
-				ZipkinBackwardsCompatibilityAutoConfiguration.class);
+				ZipkinAutoConfiguration.class, TraceAutoConfiguration.class);
 		this.context.refresh();
 
 		then(this.context.getBean(Sender.class).getClass().getName())
@@ -219,8 +214,7 @@ public class ZipkinAutoConfigurationTests {
 		environment().setProperty("spring.zipkin.sender.type", "rabbit");
 		this.context.register(PropertyPlaceholderAutoConfiguration.class,
 				RabbitAutoConfiguration.class, KafkaAutoConfiguration.class,
-				ZipkinAutoConfiguration.class, TraceAutoConfiguration.class,
-				ZipkinBackwardsCompatibilityAutoConfiguration.class);
+				ZipkinAutoConfiguration.class, TraceAutoConfiguration.class);
 		this.context.refresh();
 
 		then(this.context.getBean(Sender.class)).isInstanceOf(RabbitMQSender.class);
@@ -235,8 +229,7 @@ public class ZipkinAutoConfigurationTests {
 				this.server.url("/").toString());
 		this.context.register(ZipkinAutoConfiguration.class,
 				PropertyPlaceholderAutoConfiguration.class, TraceAutoConfiguration.class,
-				Config.class, MultipleReportersConfig.class,
-				ZipkinBackwardsCompatibilityAutoConfiguration.class);
+				Config.class, MultipleReportersConfig.class);
 		this.context.refresh();
 
 		then(this.context.getBeansOfType(Sender.class)).hasSize(2);
@@ -267,32 +260,11 @@ public class ZipkinAutoConfigurationTests {
 	}
 
 	@Test
-	public void supportsMultipleReportersWithBackwardsCompatibilty() throws Exception {
-		this.context = new AnnotationConfigApplicationContext();
-		environment().setProperty("spring.zipkin.base-url",
-				this.server.url("/").toString());
-		this.context.register(BackwardsCompatibilityConfig.class,
-				ZipkinBackwardsCompatibilityAutoConfiguration.class,
-				ZipkinAutoConfiguration.class, PropertyPlaceholderAutoConfiguration.class,
-				TraceAutoConfiguration.class, Config.class);
-		this.context.refresh();
-
-		then(this.context.getBeansOfType(Sender.class)).hasSize(2);
-		then(this.context.getBeansOfType(Sender.class))
-				.containsKeys(ZipkinAutoConfiguration.SENDER_BEAN_NAME, "rabbitSender");
-
-		then(this.context.getBeansOfType(Reporter.class)).hasSize(2);
-		then(this.context.getBeansOfType(Reporter.class))
-				.containsKeys(ZipkinAutoConfiguration.REPORTER_BEAN_NAME, "reporter");
-	}
-
-	@Test
 	public void shouldOverrideDefaultBeans() {
 		this.context = new AnnotationConfigApplicationContext();
 		this.context.register(ZipkinAutoConfiguration.class,
 				PropertyPlaceholderAutoConfiguration.class, TraceAutoConfiguration.class,
-				Config.class, MyConfig.class,
-				ZipkinBackwardsCompatibilityAutoConfiguration.class);
+				Config.class, MyConfig.class);
 		this.context.refresh();
 
 		then(this.context.getBeansOfType(Sender.class)).hasSize(1);
@@ -394,16 +366,6 @@ public class ZipkinAutoConfigurationTests {
 				return Call.create(null);
 			}
 
-		}
-
-	}
-
-	@Configuration
-	protected static class BackwardsCompatibilityConfig {
-
-		@Bean
-		Sender rabbitSender() {
-			return RabbitMQSender.create("localhost");
 		}
 
 	}
