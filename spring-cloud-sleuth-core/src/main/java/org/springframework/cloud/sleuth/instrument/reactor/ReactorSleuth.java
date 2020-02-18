@@ -30,6 +30,7 @@ import reactor.core.Scannable;
 import reactor.core.publisher.Operators;
 import reactor.util.context.Context;
 
+import org.springframework.cloud.sleuth.internal.LazyBean;
 import org.springframework.context.ConfigurableApplicationContext;
 
 /**
@@ -70,8 +71,8 @@ public abstract class ReactorSleuth {
 
 		// keep a reference outside the lambda so that any caching will be visible to
 		// all publishers
-		LazyBean<CurrentTraceContext> lazyCurrentTraceContext = new LazyBean<>(
-				springContext, CurrentTraceContext.class);
+		LazyBean<CurrentTraceContext> lazyCurrentTraceContext = LazyBean
+				.create(springContext, CurrentTraceContext.class);
 
 		return Operators.liftPublisher((p, sub) -> {
 			// We don't scope scalar results as they happen in an instant. This prevents

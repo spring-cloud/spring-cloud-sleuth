@@ -18,6 +18,7 @@ package org.springframework.cloud.sleuth.instrument.web.client;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.CancellationException;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
@@ -131,9 +132,14 @@ final class TraceExchangeFilterFunction implements ExchangeFilterFunction {
 		}
 	};
 
-	private static final String CLIENT_SPAN_KEY = "sleuth.webclient.clientSpan";
+	static final String CLIENT_SPAN_KEY = "sleuth.webclient.clientSpan";
 
-	private static final String CANCELLED_SUBSCRIPTION_ERROR = "CANCELLED";
+	static final Exception CANCELLED_ERROR = new CancellationException("CANCELLED") {
+		@Override
+		public Throwable fillInStackTrace() {
+			return this; // stack trace doesn't add value here
+		}
+	};
 
 	final ConfigurableApplicationContext springContext;
 
@@ -170,6 +176,8 @@ final class TraceExchangeFilterFunction implements ExchangeFilterFunction {
 		}
 		MonoWebClientTrace trace = new MonoWebClientTrace(next, wrapper.buildRequest(),
 				this, span);
+		// TODO: investigate why this commit leaks a scope:
+		// 8f5bcdabd7af23df443e771432eb85597f3b3076
 		tracer().withSpanInScope(parentSpan);
 		return trace;
 	}
@@ -356,13 +364,14 @@ final class TraceExchangeFilterFunction implements ExchangeFilterFunction {
 				return this.context;
 			}
 
-			void handleReceive(Span clientSpan, ClientResponse clientResponse,
-					Throwable throwable) {
+			void handleReceive(Span clientSpan, @Nullable ClientResponse res,
+					@Nullable Throwable error) {
 				if (log.isTraceEnabled()) {
 					log.trace("Handling receive");
 				}
-				this.handler.handleReceive(new HttpClientResponse(clientResponse),
-						throwable, clientSpan);
+				HttpClientResponse response = res != null ? new HttpClientResponse(res)
+						: null;
+				this.handler.handleReceive(response, error, clientSpan);
 				if (log.isTraceEnabled()) {
 					log.trace("Closed scope");
 				}
@@ -374,32 +383,31 @@ final class TraceExchangeFilterFunction implements ExchangeFilterFunction {
 							+ this.span + "]");
 				}
 
-				this.span.tag("error", CANCELLED_SUBSCRIPTION_ERROR);
-				handleReceive(this.span, null, null);
+				handleReceive(this.span, null, CANCELLED_ERROR);
 			}
 
 			void terminateSpan(@Nullable ClientResponse clientResponse,
-					@Nullable Throwable throwable) {
+					@Nullable Throwable error) {
 				if (clientResponse == null) {
 					if (log.isDebugEnabled()) {
 						log.debug("No response was returned. Will close the span ["
 								+ this.span + "]");
 					}
-					handleReceive(this.span, clientResponse, throwable);
+					handleReceive(this.span, null, error);
 					return;
 				}
 				int statusCode = clientResponse.rawStatusCode();
-				boolean error = statusCode >= 400;
-				if (error) {
+				boolean isHttpError = statusCode >= 400;
+				if (isHttpError) {
 					if (log.isDebugEnabled()) {
 						log.debug(
 								"Non positive status code was returned from the call. Will close the span ["
 										+ this.span + "]");
 					}
-					throwable = new RestClientException(
+					error = new RestClientException(
 							"Status code of the response is [" + statusCode + "]");
 				}
-				handleReceive(this.span, clientResponse, throwable);
+				handleReceive(this.span, clientResponse, error);
 			}
 
 		}
