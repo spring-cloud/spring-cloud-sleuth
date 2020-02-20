@@ -306,6 +306,7 @@ Consider the following example of a Logback configuration file (named https://gi
 						"span": "%X{X-B3-SpanId:-}",
 						"parent": "%X{X-B3-ParentSpanId:-}",
 						"exportable": "%X{X-Span-Export:-}",
+						"baggage": "%X{key:-}",
 						"pid": "${PID:-}",
 						"thread": "%thread",
 						"class": "%logger{40}",
