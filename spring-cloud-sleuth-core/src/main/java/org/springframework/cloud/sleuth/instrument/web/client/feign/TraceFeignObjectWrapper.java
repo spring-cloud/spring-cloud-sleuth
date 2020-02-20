@@ -24,7 +24,7 @@ import org.apache.commons.logging.LogFactory;
 
 import org.springframework.aop.support.AopUtils;
 import org.springframework.beans.factory.BeanFactory;
-import org.springframework.cloud.loadbalancer.blocking.client.BlockingLoadBalancerClient;
+import org.springframework.cloud.client.loadbalancer.LoadBalancerClient;
 import org.springframework.cloud.openfeign.loadbalancer.FeignBlockingLoadBalancerClient;
 import org.springframework.cloud.util.ProxyUtils;
 import org.springframework.util.ClassUtils;
@@ -80,7 +80,7 @@ final class TraceFeignObjectWrapper {
 			return new TraceFeignBlockingLoadBalancerClient(
 					(Client) new TraceFeignObjectWrapper(this.beanFactory)
 							.wrap(client.getDelegate()),
-					(BlockingLoadBalancerClient) loadBalancerClient(), this.beanFactory);
+					(LoadBalancerClient) loadBalancerClient(), this.beanFactory);
 		}
 		else {
 			FeignBlockingLoadBalancerClient client = ProxyUtils.getTargetObject(bean);
@@ -96,13 +96,13 @@ final class TraceFeignObjectWrapper {
 				log.warn(EXCEPTION_WARNING, e);
 			}
 			return new TraceFeignBlockingLoadBalancerClient(client,
-					(BlockingLoadBalancerClient) loadBalancerClient(), this.beanFactory);
+					(LoadBalancerClient) loadBalancerClient(), this.beanFactory);
 		}
 	}
 
 	private Object loadBalancerClient() {
 		if (loadBalancerClient == null) {
-			loadBalancerClient = beanFactory.getBean(BlockingLoadBalancerClient.class);
+			loadBalancerClient = beanFactory.getBean(LoadBalancerClient.class);
 		}
 		return loadBalancerClient;
 	}

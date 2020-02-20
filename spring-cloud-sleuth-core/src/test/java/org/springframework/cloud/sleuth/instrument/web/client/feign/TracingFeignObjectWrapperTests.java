@@ -24,6 +24,7 @@ import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 
 import org.springframework.beans.factory.BeanFactory;
+import org.springframework.cloud.client.loadbalancer.LoadBalancerClient;
 import org.springframework.cloud.loadbalancer.blocking.client.BlockingLoadBalancerClient;
 import org.springframework.cloud.openfeign.loadbalancer.FeignBlockingLoadBalancerClient;
 
@@ -63,7 +64,7 @@ public class TracingFeignObjectWrapperTests {
 		Client delegate = mock(Client.class);
 		BlockingLoadBalancerClient loadBalancerClient = mock(
 				BlockingLoadBalancerClient.class);
-		when(beanFactory.getBean(BlockingLoadBalancerClient.class))
+		when(beanFactory.getBean(LoadBalancerClient.class))
 				.thenReturn(loadBalancerClient);
 
 		Object wrapped = traceFeignObjectWrapper
@@ -78,7 +79,7 @@ public class TracingFeignObjectWrapperTests {
 		Client delegate = mock(Client.class);
 		BlockingLoadBalancerClient loadBalancerClient = mock(
 				BlockingLoadBalancerClient.class);
-		when(beanFactory.getBean(BlockingLoadBalancerClient.class))
+		when(beanFactory.getBean(LoadBalancerClient.class))
 				.thenReturn(loadBalancerClient);
 
 		Object wrapped = traceFeignObjectWrapper.wrap(
