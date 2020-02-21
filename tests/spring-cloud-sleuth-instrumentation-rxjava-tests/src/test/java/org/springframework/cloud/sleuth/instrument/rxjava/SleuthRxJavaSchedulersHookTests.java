@@ -30,9 +30,9 @@ import brave.Tracer;
 import brave.Tracing;
 import brave.propagation.StrictScopeDecorator;
 import brave.propagation.ThreadLocalCurrentTraceContext;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import rx.functions.Action0;
 import rx.plugins.RxJavaErrorHandler;
 import rx.plugins.RxJavaObservableExecutionHook;
@@ -61,14 +61,14 @@ public class SleuthRxJavaSchedulersHookTests {
 
 	Tracer tracer = this.tracing.tracer();
 
-	@After
+	@AfterEach
 	public void clean() {
 		this.tracing.close();
 		this.reporter.clear();
 	}
 
-	@Before
-	@After
+	@BeforeEach
+	@AfterEach
 	public void setup() {
 		RxJavaPlugins.getInstance().reset();
 		caller = new StringBuilder();

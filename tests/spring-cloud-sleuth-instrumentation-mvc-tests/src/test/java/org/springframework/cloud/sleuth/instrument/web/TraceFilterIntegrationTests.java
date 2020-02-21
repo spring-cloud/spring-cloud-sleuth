@@ -34,10 +34,9 @@ import brave.sampler.Sampler;
 import brave.servlet.TracingFilter;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.slf4j.MDC;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -53,7 +52,6 @@ import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
-import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.setup.DefaultMockMvcBuilder;
@@ -68,7 +66,6 @@ import static org.assertj.core.api.BDDAssertions.then;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.asyncDispatch;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@RunWith(SpringRunner.class)
 @SpringBootTest(classes = TraceFilterIntegrationTests.Config.class)
 public class TraceFilterIntegrationTests extends AbstractMvcIntegrationTest {
 
@@ -92,8 +89,8 @@ public class TraceFilterIntegrationTests extends AbstractMvcIntegrationTest {
 	@Autowired
 	Tracer tracer;
 
-	@Before
-	@After
+	@BeforeEach
+	@AfterEach
 	public void clearSpans() {
 		this.reporter.clear();
 	}

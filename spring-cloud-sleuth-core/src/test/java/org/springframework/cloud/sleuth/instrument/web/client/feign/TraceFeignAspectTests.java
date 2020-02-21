@@ -25,11 +25,11 @@ import brave.propagation.StrictScopeDecorator;
 import brave.propagation.ThreadLocalCurrentTraceContext;
 import feign.Client;
 import org.aspectj.lang.ProceedingJoinPoint;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import org.springframework.beans.factory.BeanFactory;
 
@@ -40,7 +40,7 @@ import static org.mockito.Mockito.verify;
 /**
  * @author Marcin Grzejszczak
  */
-@RunWith(MockitoJUnitRunner.class)
+@ExtendWith(MockitoExtension.class)
 public class TraceFeignAspectTests {
 
 	@Mock
@@ -62,7 +62,7 @@ public class TraceFeignAspectTests {
 
 	TraceFeignAspect traceFeignAspect;
 
-	@Before
+	@BeforeEach
 	public void setup() {
 		this.traceFeignAspect = new TraceFeignAspect(this.beanFactory) {
 			@Override

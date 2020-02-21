@@ -17,7 +17,7 @@
 package org.springframework.cloud.sleuth.instrument.web.client;
 
 import org.assertj.core.api.BDDAssertions;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.mockito.BDDMockito;
 
 import org.springframework.web.reactive.function.client.ClientResponse;

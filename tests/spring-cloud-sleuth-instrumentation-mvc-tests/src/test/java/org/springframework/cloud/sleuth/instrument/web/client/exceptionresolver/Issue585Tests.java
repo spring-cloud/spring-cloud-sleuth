@@ -24,8 +24,7 @@ import brave.Span;
 import brave.Tracing;
 import brave.sampler.Sampler;
 import com.fasterxml.jackson.annotation.JsonInclude;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -38,7 +37,6 @@ import org.springframework.cloud.sleuth.util.ArrayListSpanReporter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -49,7 +47,6 @@ import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExcep
 
 import static org.assertj.core.api.BDDAssertions.then;
 
-@RunWith(SpringRunner.class)
 @SpringBootTest(classes = TestConfig.class,
 		webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 public class Issue585Tests {

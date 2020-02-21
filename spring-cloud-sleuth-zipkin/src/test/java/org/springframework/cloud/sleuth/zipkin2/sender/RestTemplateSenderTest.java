@@ -16,13 +16,14 @@
 
 package org.springframework.cloud.sleuth.zipkin2.sender;
 
+import java.io.IOException;
 import java.util.stream.Stream;
 
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
 import okhttp3.mockwebserver.RecordedRequest;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
 import zipkin2.Call;
 import zipkin2.Endpoint;
 import zipkin2.Span;
@@ -46,8 +47,12 @@ public class RestTemplateSenderTest {
 			.timestamp(1472470996250000L).duration(100000L).putTag("http.method", "GET")
 			.putTag("http.path", "/backend").build();
 
-	@Rule
 	public MockWebServer server = new MockWebServer();
+
+	@AfterEach
+	void clean() throws IOException {
+		server.close();
+	}
 
 	String endpoint = this.server.url("/api/v2/spans").toString();
 

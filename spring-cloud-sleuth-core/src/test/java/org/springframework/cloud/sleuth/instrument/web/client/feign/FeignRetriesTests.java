@@ -34,14 +34,13 @@ import feign.RequestLine;
 import feign.RequestTemplate;
 import feign.Response;
 import okhttp3.mockwebserver.MockWebServer;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.BDDMockito;
 import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
 import zipkin2.Span;
 
 import org.springframework.beans.factory.BeanFactory;
@@ -53,13 +52,22 @@ import static org.assertj.core.api.BDDAssertions.then;
 /**
  * @author Marcin Grzejszczak
  */
-@RunWith(MockitoJUnitRunner.class)
+@ExtendWith(MockitoExtension.class)
 public class FeignRetriesTests {
 
-	@Rule
 	public final MockWebServer server = new MockWebServer();
 
-	@Mock
+	@BeforeEach
+	void before() throws IOException {
+		this.server.start();
+	}
+
+	@AfterEach
+	void after() throws IOException {
+		this.server.close();
+	}
+
+	@Mock(lenient = true)
 	BeanFactory beanFactory;
 
 	ArrayListSpanReporter reporter = new ArrayListSpanReporter();
@@ -72,8 +80,8 @@ public class FeignRetriesTests {
 	HttpTracing httpTracing = HttpTracing.newBuilder(this.tracing)
 			.clientParser(new HttpClientParser()).build();
 
-	@Before
-	@After
+	@BeforeEach
+	@AfterEach
 	public void setup() {
 		BDDMockito.given(this.beanFactory.getBean(HttpTracing.class))
 				.willReturn(this.httpTracing);

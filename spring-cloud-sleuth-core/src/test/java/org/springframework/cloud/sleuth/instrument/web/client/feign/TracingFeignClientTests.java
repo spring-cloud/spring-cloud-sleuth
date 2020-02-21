@@ -31,19 +31,19 @@ import brave.propagation.ThreadLocalCurrentTraceContext;
 import feign.Client;
 import feign.Request;
 import org.assertj.core.api.BDDAssertions;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.BDDMockito;
 import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import static org.assertj.core.api.BDDAssertions.then;
 
 /**
  * @author Marcin Grzejszczak
  */
-@RunWith(MockitoJUnitRunner.class)
+@ExtendWith(MockitoExtension.class)
 public class TracingFeignClientTests {
 
 	Request request = Request.create("GET", "https://foo", new HashMap<>(), null, null);
@@ -67,7 +67,7 @@ public class TracingFeignClientTests {
 
 	Client traceFeignClient;
 
-	@Before
+	@BeforeEach
 	public void setup() {
 		this.traceFeignClient = TracingFeignClient.create(this.httpTracing, this.client);
 	}

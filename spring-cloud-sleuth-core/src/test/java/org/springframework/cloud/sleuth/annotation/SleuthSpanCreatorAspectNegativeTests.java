@@ -19,9 +19,8 @@ package org.springframework.cloud.sleuth.annotation;
 import java.util.List;
 
 import brave.sampler.Sampler;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import zipkin2.Span;
 import zipkin2.reporter.Reporter;
 
@@ -31,11 +30,9 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.cloud.sleuth.util.ArrayListSpanReporter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.test.context.junit4.SpringRunner;
 
 import static org.assertj.core.api.BDDAssertions.then;
 
-@RunWith(SpringRunner.class)
 @SpringBootTest(classes = SleuthSpanCreatorAspectNegativeTests.TestConfiguration.class)
 public class SleuthSpanCreatorAspectNegativeTests {
 
@@ -48,7 +45,7 @@ public class SleuthSpanCreatorAspectNegativeTests {
 	@Autowired
 	ArrayListSpanReporter reporter;
 
-	@Before
+	@BeforeEach
 	public void setup() {
 		this.reporter.clear();
 	}

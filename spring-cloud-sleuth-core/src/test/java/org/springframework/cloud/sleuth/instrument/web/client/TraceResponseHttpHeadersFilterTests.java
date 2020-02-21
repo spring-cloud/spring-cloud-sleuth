@@ -21,7 +21,7 @@ import brave.http.HttpTracing;
 import brave.propagation.StrictScopeDecorator;
 import brave.propagation.ThreadLocalCurrentTraceContext;
 import org.assertj.core.api.BDDAssertions;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import org.springframework.cloud.gateway.filter.headers.HttpHeadersFilter;
 import org.springframework.cloud.sleuth.util.ArrayListSpanReporter;

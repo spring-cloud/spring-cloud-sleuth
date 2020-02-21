@@ -31,8 +31,8 @@ import brave.propagation.StrictScopeDecorator;
 import brave.propagation.ThreadLocalCurrentTraceContext;
 import brave.sampler.Sampler;
 import org.assertj.core.api.BDDAssertions;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import org.springframework.cloud.sleuth.DefaultSpanNamer;
 import org.springframework.cloud.sleuth.SpanName;
@@ -62,7 +62,7 @@ public class SpringCloudSleuthDocTests {
 
 	Tracer tracer = this.tracing.tracer();
 
-	@Before
+	@BeforeEach
 	public void setup() {
 		this.reporter.clear();
 	}

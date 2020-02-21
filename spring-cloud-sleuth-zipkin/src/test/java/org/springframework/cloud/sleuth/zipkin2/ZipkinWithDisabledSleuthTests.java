@@ -16,15 +16,12 @@
 
 package org.springframework.cloud.sleuth.zipkin2;
 
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Test;
 
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
-@RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration(classes = ZipkinWithDisabledSleuthTests.Config.class)
 @TestPropertySource(properties = "spring.sleuth.enabled=false")
 public class ZipkinWithDisabledSleuthTests {

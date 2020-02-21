@@ -18,16 +18,16 @@ package org.springframework.cloud.sleuth.instrument.web;
 
 import brave.http.HttpRequest;
 import brave.sampler.SamplerFunction;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import static org.assertj.core.api.BDDAssertions.then;
 import static org.mockito.BDDMockito.given;
 
-@RunWith(MockitoJUnitRunner.class)
+@ExtendWith(MockitoExtension.class)
 public class CompositeHttpSamplerTests {
 
 	@Mock
@@ -41,7 +41,7 @@ public class CompositeHttpSamplerTests {
 
 	SamplerFunction<HttpRequest> sampler;
 
-	@Before
+	@BeforeEach
 	public void init() {
 		this.sampler = new CompositeHttpSampler(this.left, this.right);
 	}

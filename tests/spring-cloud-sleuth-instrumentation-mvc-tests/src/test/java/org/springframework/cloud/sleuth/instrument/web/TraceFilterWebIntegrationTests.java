@@ -27,24 +27,23 @@ import brave.http.HttpRequest;
 import brave.sampler.Sampler;
 import brave.sampler.SamplerFunction;
 import org.assertj.core.api.BDDAssertions;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import zipkin2.Span;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.system.OutputCaptureRule;
+import org.springframework.boot.test.system.CapturedOutput;
+import org.springframework.boot.test.system.OutputCaptureExtension;
 import org.springframework.cloud.sleuth.util.ArrayListSpanReporter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.env.Environment;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.client.ClientHttpResponse;
-import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
@@ -58,13 +57,10 @@ import static org.assertj.core.api.BDDAssertions.then;
 /**
  * @author Marcin Grzejszczak
  */
-@RunWith(SpringRunner.class)
 @SpringBootTest(classes = TraceFilterWebIntegrationTests.Config.class,
 		webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@ExtendWith(OutputCaptureExtension.class)
 public class TraceFilterWebIntegrationTests {
-
-	@Rule
-	public OutputCaptureRule capture = new OutputCaptureRule();
 
 	@Autowired
 	Tracing tracer;
@@ -79,14 +75,14 @@ public class TraceFilterWebIntegrationTests {
 	@Autowired
 	Environment environment;
 
-	@Before
-	@After
+	@BeforeEach
+	@AfterEach
 	public void cleanup() {
 		this.accumulator.clear();
 	}
 
 	@Test
-	public void should_not_create_a_span_for_error_controller() {
+	public void should_not_create_a_span_for_error_controller(CapturedOutput capture) {
 		try {
 			new RestTemplate().getForObject("http://localhost:" + port() + "/",
 					String.class);
@@ -104,7 +100,7 @@ public class TraceFilterWebIntegrationTests {
 						"Request processing failed; nested exception is java.lang.RuntimeException: Throwing exception");
 		// issue#714
 		String hex = fromFirstTraceFilterFlow.traceId();
-		String[] split = this.capture.toString().split("\n");
+		String[] split = capture.toString().split("\n");
 		List<String> list = Arrays.stream(split)
 				.filter(s -> s.contains("Uncaught exception thrown"))
 				.filter(s -> s.contains(hex + "," + hex + ",true]"))

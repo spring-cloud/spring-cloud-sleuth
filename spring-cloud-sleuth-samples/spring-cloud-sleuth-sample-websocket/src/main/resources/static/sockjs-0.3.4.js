@@ -752,7 +752,6 @@ SockJS = (function () {
             on_unload[ref]();
             delete on_unload[ref];
         }
-        ;
     };
 
     var unload_triggered = function () {
@@ -821,7 +820,6 @@ SockJS = (function () {
                 }
             } catch (x) {
             }
-            ;
         };
 
         iframe.src = iframe_url;
@@ -881,7 +879,6 @@ SockJS = (function () {
                 }
             } catch (x) {
             }
-            ;
         };
 
         doc.open();
@@ -928,14 +925,12 @@ SockJS = (function () {
             that.xhr = new XMLHttpRequest();
         } catch (x) {
         }
-        ;
 
         if (!that.xhr) {
             try {
                 that.xhr = new _window.ActiveXObject('Microsoft.XMLHTTP');
             } catch (x) {
             }
-            ;
         }
         if (_window.ActiveXObject || _window.XDomainRequest) {
             // IE8 caches even POSTs
@@ -955,7 +950,6 @@ SockJS = (function () {
             that._cleanup();
             return;
         }
-        ;
 
         if (!opts || !opts.no_credentials) {
             // Mozilla docs says https://developer.mozilla.org/en/XMLHttpRequest :
@@ -980,7 +974,6 @@ SockJS = (function () {
                             var text = x.responseText;
                         } catch (x) {
                         }
-                        ;
                         // IE returns 1223 for 204: https://bugs.jquery.com/ticket/1450
                         if (status === 1223) status = 204;
 
@@ -1017,7 +1010,6 @@ SockJS = (function () {
                 that.xhr.abort();
             } catch (x) {
             }
-            ;
         }
         that.unload_ref = that.xhr = null;
     };
@@ -1099,7 +1091,6 @@ SockJS = (function () {
                 that.xdr.abort();
             } catch (x) {
             }
-            ;
         }
         that.unload_ref = that.xdr = null;
     };
@@ -2241,7 +2232,6 @@ SockJS = (function () {
                 // IE 7
                 return new InfoReceiverFake();
         }
-        ;
     };
 
 

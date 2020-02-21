@@ -320,11 +320,6 @@
 			<scope>test</scope>
 		</dependency>
 		<dependency>
-			<groupId>pl.pragmatists</groupId>
-			<artifactId>JUnitParams</artifactId>
-			<scope>test</scope>
-		</dependency>
-		<dependency>
 			<groupId>org.springframework.cloud</groupId>
 			<artifactId>spring-cloud-starter-netflix-eureka-client</artifactId>
 			<scope>test</scope>

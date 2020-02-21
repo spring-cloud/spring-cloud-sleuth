@@ -31,8 +31,7 @@ import javax.servlet.ServletResponse;
 import brave.Span;
 import brave.Tracing;
 import brave.sampler.Sampler;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Test;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -44,7 +43,6 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.env.Environment;
 import org.springframework.http.client.ClientHttpResponse;
-import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.web.client.DefaultResponseErrorHandler;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.filter.GenericFilterBean;
@@ -54,7 +52,6 @@ import static org.assertj.core.api.BDDAssertions.then;
 /**
  * @author Marcin Grzejszczak
  */
-@RunWith(SpringRunner.class)
 @SpringBootTest(classes = { TraceFilterWebIntegrationMultipleFiltersTests.Config.class },
 		webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 public class TraceFilterWebIntegrationMultipleFiltersTests {

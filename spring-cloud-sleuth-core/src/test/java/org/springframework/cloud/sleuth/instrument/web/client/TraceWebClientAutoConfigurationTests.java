@@ -24,8 +24,7 @@ import java.util.List;
 import java.util.Map;
 
 import brave.spring.web.TracingClientHttpRequestInterceptor;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Test;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -39,7 +38,6 @@ import org.springframework.http.HttpRequest;
 import org.springframework.http.client.ClientHttpRequestExecution;
 import org.springframework.http.client.ClientHttpRequestInterceptor;
 import org.springframework.http.client.ClientHttpResponse;
-import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.web.client.RestTemplate;
 
 import static org.assertj.core.api.BDDAssertions.then;
@@ -47,7 +45,6 @@ import static org.assertj.core.api.BDDAssertions.then;
 /**
  * @author Marcin Grzejszczak
  */
-@RunWith(SpringRunner.class)
 @SpringBootTest(classes = TraceWebClientAutoConfigurationTests.Config.class)
 public class TraceWebClientAutoConfigurationTests {
 

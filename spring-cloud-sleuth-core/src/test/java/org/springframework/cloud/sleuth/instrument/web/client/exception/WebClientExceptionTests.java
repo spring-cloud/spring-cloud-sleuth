@@ -18,25 +18,21 @@ package org.springframework.cloud.sleuth.instrument.web.client.exception;
 
 import java.io.IOException;
 import java.util.Map;
+import java.util.stream.Stream;
 
 import brave.Span;
 import brave.Tracer;
 import brave.Tracing;
 import brave.sampler.Sampler;
-import junitparams.JUnitParamsRunner;
-import junitparams.Parameters;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.junit.Before;
-import org.junit.ClassRule;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.system.OutputCaptureRule;
 import org.springframework.cloud.client.loadbalancer.LoadBalanced;
 import org.springframework.cloud.loadbalancer.annotation.LoadBalancerClient;
 import org.springframework.cloud.loadbalancer.core.ServiceInstanceListSupplier;
@@ -48,8 +44,6 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.core.env.Environment;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.client.SimpleClientHttpRequestFactory;
-import org.springframework.test.context.junit4.rules.SpringClassRule;
-import org.springframework.test.context.junit4.rules.SpringMethodRule;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.client.RestTemplate;
@@ -57,23 +51,13 @@ import org.springframework.web.client.RestTemplate;
 import static org.assertj.core.api.Assertions.fail;
 import static org.assertj.core.api.BDDAssertions.then;
 
-@RunWith(JUnitParamsRunner.class)
 @SpringBootTest(classes = { WebClientExceptionTests.TestConfiguration.class },
 		properties = { "ribbon.ConnectTimeout=30000",
 				"spring.application.name=exceptionservice" },
 		webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 public class WebClientExceptionTests {
 
-	@ClassRule
-	public static final SpringClassRule SCR = new SpringClassRule();
-
 	private static final Log log = LogFactory.getLog(WebClientExceptionTests.class);
-
-	@Rule
-	public final SpringMethodRule springMethodRule = new SpringMethodRule();
-
-	@Rule
-	public final OutputCaptureRule capture = new OutputCaptureRule();
 
 	@Autowired
 	TestFeignInterfaceWithException testFeignInterfaceWithException;
@@ -88,14 +72,14 @@ public class WebClientExceptionTests {
 	@Autowired
 	ArrayListSpanReporter reporter;
 
-	@Before
+	@BeforeEach
 	public void open() {
 		this.reporter.clear();
 	}
 
 	// issue #198
-	@Test
-	@Parameters
+	@ParameterizedTest
+	@MethodSource("parametersForShouldCloseSpanUponException")
 	public void shouldCloseSpanUponException(ResponseEntityProvider provider)
 			throws IOException {
 		Span span = this.tracer.tracer().nextSpan().name("new trace").start();
@@ -117,12 +101,12 @@ public class WebClientExceptionTests {
 		then(this.reporter.getSpans().get(0).tags()).containsKey("error");
 	}
 
-	Object[] parametersForShouldCloseSpanUponException() {
-		return new Object[] {
+	static Stream<Object> parametersForShouldCloseSpanUponException() {
+		return Stream.of(
 				(ResponseEntityProvider) (tests) -> tests.testFeignInterfaceWithException
 						.shouldFailToConnect(),
 				(ResponseEntityProvider) (tests) -> tests.template
-						.getForEntity("https://exceptionservice/", Map.class) };
+						.getForEntity("https://exceptionservice/", Map.class));
 	}
 
 	@FeignClient("exceptionservice")

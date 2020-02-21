@@ -16,6 +16,7 @@
 
 package integration;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -29,10 +30,9 @@ import integration.ZipkinTests.WaitUntilZipkinIsUpConfig;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
 import okhttp3.mockwebserver.RecordedRequest;
-import org.junit.BeforeClass;
-import org.junit.ClassRule;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 import sample.SampleZipkinApplication;
 import tools.AbstractIntegrationTest;
 import tools.SpanUtil;
@@ -47,20 +47,22 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
 import org.springframework.test.context.TestPropertySource;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.BDDAssertions.then;
 
-@RunWith(SpringJUnit4ClassRunner.class)
 @SpringBootTest(
 		classes = { WaitUntilZipkinIsUpConfig.class, SampleZipkinApplication.class },
 		webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT)
 @TestPropertySource(properties = { "sample.zipkin.enabled=true" })
 public class ZipkinTests extends AbstractIntegrationTest {
 
-	@ClassRule
 	public static final MockWebServer zipkin = new MockWebServer();
+
+	@AfterAll
+	static void clean() throws IOException {
+		zipkin.close();
+	}
 
 	private static final String APP_NAME = "testsleuthzipkin";
 
@@ -72,8 +74,9 @@ public class ZipkinTests extends AbstractIntegrationTest {
 
 	private String sampleAppUrl = "http://localhost:" + this.port;
 
-	@BeforeClass
-	public static void setup() {
+	@BeforeAll
+	public static void setup() throws IOException {
+		zipkin.start();
 		// enqueues a request for async reporter health check
 		zipkin.enqueue(new MockResponse());
 	}

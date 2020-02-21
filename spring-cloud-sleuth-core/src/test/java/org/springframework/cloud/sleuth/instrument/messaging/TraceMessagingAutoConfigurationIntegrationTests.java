@@ -22,8 +22,7 @@ import brave.sampler.Matchers;
 import brave.sampler.RateLimitingSampler;
 import brave.sampler.Sampler;
 import brave.sampler.SamplerFunction;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Test;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
@@ -31,12 +30,10 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.cloud.sleuth.util.ArrayListSpanReporter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.test.context.junit4.SpringRunner;
 
 import static brave.messaging.MessagingRequestMatchers.channelNameEquals;
 import static org.assertj.core.api.BDDAssertions.then;
 
-@RunWith(SpringRunner.class)
 @SpringBootTest(classes = TraceMessagingAutoConfigurationIntegrationTests.Config.class,
 		webEnvironment = SpringBootTest.WebEnvironment.NONE)
 public class TraceMessagingAutoConfigurationIntegrationTests {

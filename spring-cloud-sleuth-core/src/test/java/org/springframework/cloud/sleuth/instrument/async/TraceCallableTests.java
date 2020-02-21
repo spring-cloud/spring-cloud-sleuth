@@ -25,10 +25,10 @@ import brave.Tracer;
 import brave.Tracing;
 import brave.propagation.StrictScopeDecorator;
 import brave.propagation.ThreadLocalCurrentTraceContext;
-import org.junit.After;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import org.springframework.cloud.sleuth.DefaultSpanNamer;
 import org.springframework.cloud.sleuth.SpanName;
@@ -36,7 +36,7 @@ import org.springframework.cloud.sleuth.util.ArrayListSpanReporter;
 
 import static org.assertj.core.api.BDDAssertions.then;
 
-@RunWith(MockitoJUnitRunner.class)
+@ExtendWith(MockitoExtension.class)
 public class TraceCallableTests {
 
 	ExecutorService executor = Executors.newSingleThreadExecutor();
@@ -50,7 +50,7 @@ public class TraceCallableTests {
 
 	Tracer tracer = this.tracing.tracer();
 
-	@After
+	@AfterEach
 	public void clean() {
 		this.tracing.close();
 		this.reporter.clear();

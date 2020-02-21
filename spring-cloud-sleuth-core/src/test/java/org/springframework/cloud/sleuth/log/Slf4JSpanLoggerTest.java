@@ -20,24 +20,21 @@ import brave.Span;
 import brave.Tracer;
 import brave.propagation.CurrentTraceContext.Scope;
 import brave.propagation.ExtraFieldPropagation;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.slf4j.MDC;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringBootConfiguration;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.junit4.SpringRunner;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * @author Marcin Grzejszczak
  */
-@RunWith(SpringRunner.class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.NONE, properties = {
 		"spring.sleuth.baggage-keys=my-baggage",
 		"spring.sleuth.propagation-keys=my-propagation",
@@ -55,8 +52,8 @@ public class Slf4JSpanLoggerTest {
 
 	Span span;
 
-	@Before
-	@After
+	@BeforeEach
+	@AfterEach
 	public void setup() {
 		MDC.clear();
 		this.span = this.tracer.nextSpan().name("span").start();

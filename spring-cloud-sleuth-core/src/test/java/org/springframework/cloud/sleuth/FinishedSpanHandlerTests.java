@@ -23,8 +23,7 @@ import brave.handler.MutableSpan;
 import brave.propagation.TraceContext;
 import brave.sampler.Sampler;
 import org.assertj.core.api.BDDAssertions;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Test;
 import zipkin2.reporter.Reporter;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -34,14 +33,12 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.cloud.sleuth.util.ArrayListSpanReporter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.test.context.junit4.SpringRunner;
 
 import static org.springframework.boot.test.context.SpringBootTest.WebEnvironment.NONE;
 
 /**
  * @author Marcin Grzejszczak
  */
-@RunWith(SpringRunner.class)
 @SpringBootTest(
 		classes = FinishedSpanHandlerTests.FinishedSpanHandlerAspectTestsConfig.class,
 		webEnvironment = NONE)

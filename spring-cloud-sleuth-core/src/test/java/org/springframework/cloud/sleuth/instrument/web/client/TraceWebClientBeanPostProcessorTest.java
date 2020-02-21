@@ -17,10 +17,10 @@
 package org.springframework.cloud.sleuth.instrument.web.client;
 
 import org.assertj.core.api.BDDAssertions;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.web.reactive.function.client.WebClient;
@@ -28,7 +28,7 @@ import org.springframework.web.reactive.function.client.WebClient;
 /**
  * @author Marcin Grzejszczak
  */
-@RunWith(MockitoJUnitRunner.class)
+@ExtendWith(MockitoExtension.class)
 public class TraceWebClientBeanPostProcessorTest {
 
 	@Mock

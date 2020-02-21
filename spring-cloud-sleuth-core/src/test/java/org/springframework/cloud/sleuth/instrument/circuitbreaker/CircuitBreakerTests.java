@@ -26,8 +26,8 @@ import brave.propagation.StrictScopeDecorator;
 import brave.propagation.ThreadLocalCurrentTraceContext;
 import brave.sampler.Sampler;
 import org.assertj.core.api.BDDAssertions;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import org.springframework.cloud.circuitbreaker.resilience4j.Resilience4JCircuitBreakerFactory;
 import org.springframework.cloud.sleuth.util.ArrayListSpanReporter;
@@ -45,7 +45,7 @@ public class CircuitBreakerTests {
 
 	Tracer tracer = this.tracing.tracer();
 
-	@Before
+	@BeforeEach
 	public void setup() {
 		this.reporter.clear();
 	}

@@ -27,9 +27,8 @@ import brave.propagation.Propagation;
 import brave.propagation.TraceContext;
 import brave.sampler.Sampler;
 import io.netty.handler.codec.http.HttpResponseStatus;
-import org.junit.After;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.netty.DisposableServer;
@@ -45,7 +44,6 @@ import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.web.reactive.function.client.WebClient;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -62,7 +60,6 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
  */
 @SpringBootTest(classes = ReactorNettyHttpClientSpringBootTests.TestConfiguration.class,
 		webEnvironment = SpringBootTest.WebEnvironment.NONE)
-@RunWith(SpringRunner.class)
 public class ReactorNettyHttpClientSpringBootTests {
 
 	DisposableServer disposableServer;
@@ -79,7 +76,7 @@ public class ReactorNettyHttpClientSpringBootTests {
 	TraceContext context = TraceContext.newBuilder().traceId(1).spanId(1).sampled(true)
 			.build();
 
-	@After
+	@AfterEach
 	public void tearDown() {
 		if (disposableServer != null) {
 			disposableServer.disposeNow();

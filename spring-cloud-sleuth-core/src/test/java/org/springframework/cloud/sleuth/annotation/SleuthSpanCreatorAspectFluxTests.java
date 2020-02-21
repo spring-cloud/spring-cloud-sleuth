@@ -29,9 +29,8 @@ import brave.propagation.TraceContext;
 import brave.sampler.Sampler;
 import org.apache.commons.lang.StringUtils;
 import org.awaitility.Awaitility;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.util.context.Context;
@@ -44,14 +43,13 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.cloud.sleuth.util.ArrayListSpanReporter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import static org.assertj.core.api.BDDAssertions.then;
 import static org.springframework.cloud.sleuth.annotation.SleuthSpanCreatorAspectFluxTests.TestBean.TEST_STRING1;
 import static org.springframework.cloud.sleuth.annotation.SleuthSpanCreatorAspectFluxTests.TestBean.TEST_STRING2;
 
 @SpringBootTest(classes = SleuthSpanCreatorAspectFluxTests.TestConfiguration.class)
-@RunWith(SpringJUnit4ClassRunner.class)
+
 public class SleuthSpanCreatorAspectFluxTests {
 
 	@Autowired
@@ -82,7 +80,7 @@ public class SleuthSpanCreatorAspectFluxTests {
 		return id(tracer);
 	}
 
-	@Before
+	@BeforeEach
 	public void setup() {
 		this.reporter.clear();
 		this.testBean.reset();

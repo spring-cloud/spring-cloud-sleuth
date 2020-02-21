@@ -29,9 +29,8 @@ import brave.Span;
 import brave.Tracer;
 import brave.sampler.Sampler;
 import org.awaitility.Awaitility;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import reactor.core.publisher.Mono;
 import zipkin2.Annotation;
 import zipkin2.reporter.Reporter;
@@ -43,7 +42,6 @@ import org.springframework.cloud.sleuth.util.ArrayListSpanReporter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.test.annotation.DirtiesContext;
-import org.springframework.test.context.junit4.SpringRunner;
 
 import static org.assertj.core.api.BDDAssertions.then;
 import static org.springframework.cloud.sleuth.annotation.SleuthSpanCreatorAspectMonoTests.TestBean.TEST_STRING;
@@ -51,7 +49,6 @@ import static org.springframework.test.annotation.DirtiesContext.MethodMode.BEFO
 import static reactor.core.publisher.Mono.just;
 
 @SpringBootTest(classes = SleuthSpanCreatorAspectMonoTests.TestConfiguration.class)
-@RunWith(SpringRunner.class)
 @DirtiesContext(methodMode = BEFORE_METHOD)
 @NotThreadSafe
 public class SleuthSpanCreatorAspectMonoTests {
@@ -75,7 +72,7 @@ public class SleuthSpanCreatorAspectMonoTests {
 		return tracer.currentSpan().context().spanIdString();
 	}
 
-	@Before
+	@BeforeEach
 	public void setup() {
 		this.reporter.clear();
 	}

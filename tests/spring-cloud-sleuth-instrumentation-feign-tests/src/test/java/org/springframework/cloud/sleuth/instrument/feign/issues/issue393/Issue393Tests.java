@@ -22,9 +22,8 @@ import java.util.stream.Collectors;
 import brave.Tracing;
 import brave.sampler.Sampler;
 import feign.okhttp.OkHttpClient;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import zipkin2.Span;
 import zipkin2.reporter.Reporter;
 
@@ -40,7 +39,6 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.TestPropertySource;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -60,7 +58,7 @@ interface MyNameRemote {
 /**
  * @author Marcin Grzejszczak
  */
-@RunWith(SpringJUnit4ClassRunner.class)
+
 @SpringBootTest(classes = Application.class,
 		webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT)
 @TestPropertySource(properties = { "spring.application.name=demo-feign-uri",
@@ -75,7 +73,7 @@ public class Issue393Tests {
 	@Autowired
 	Tracing tracer;
 
-	@Before
+	@BeforeEach
 	public void open() {
 		this.reporter.clear();
 	}

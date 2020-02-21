@@ -25,9 +25,8 @@ import brave.Span;
 import brave.Tracer;
 import brave.propagation.ExtraFieldPropagation;
 import brave.sampler.Sampler;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -43,7 +42,6 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.RequestEntity;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.TestPropertySource;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.web.client.RestTemplate;
 
 import static java.util.Arrays.asList;
@@ -53,7 +51,6 @@ import static org.assertj.core.api.BDDAssertions.then;
 import static org.awaitility.Awaitility.await;
 import static org.springframework.boot.test.context.SpringBootTest.WebEnvironment.RANDOM_PORT;
 
-@RunWith(SpringJUnit4ClassRunner.class)
 @TestPropertySource(
 		properties = { "spring.application.name=multiplehopsintegrationtests" })
 @SpringBootTest(classes = MultipleHopsIntegrationTests.Config.class,
@@ -76,7 +73,7 @@ public class MultipleHopsIntegrationTests {
 	@Autowired
 	DemoApplication application;
 
-	@Before
+	@BeforeEach
 	public void setup() {
 		this.reporter.clear();
 	}

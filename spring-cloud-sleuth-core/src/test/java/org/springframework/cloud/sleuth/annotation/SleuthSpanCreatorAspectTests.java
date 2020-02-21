@@ -22,9 +22,8 @@ import java.util.stream.Collectors;
 import brave.Span;
 import brave.Tracer;
 import brave.sampler.Sampler;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import zipkin2.Annotation;
 import zipkin2.reporter.Reporter;
 
@@ -35,13 +34,12 @@ import org.springframework.cloud.sleuth.util.ArrayListSpanReporter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.test.annotation.DirtiesContext;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import static org.assertj.core.api.BDDAssertions.then;
 import static org.springframework.test.annotation.DirtiesContext.MethodMode.BEFORE_METHOD;
 
 @SpringBootTest(classes = SleuthSpanCreatorAspectTests.TestConfiguration.class)
-@RunWith(SpringJUnit4ClassRunner.class)
+
 @DirtiesContext(methodMode = BEFORE_METHOD)
 public class SleuthSpanCreatorAspectTests {
 
@@ -54,7 +52,7 @@ public class SleuthSpanCreatorAspectTests {
 	@Autowired
 	ArrayListSpanReporter reporter;
 
-	@Before
+	@BeforeEach
 	public void setup() {
 		this.reporter.clear();
 	}

@@ -24,14 +24,14 @@ import java.util.function.Predicate;
 import brave.Tracing;
 import brave.propagation.StrictScopeDecorator;
 import brave.propagation.ThreadLocalCurrentTraceContext;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentMatcher;
 import org.mockito.BDDMockito;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.cloud.sleuth.DefaultSpanNamer;
@@ -45,7 +45,7 @@ import static org.mockito.Mockito.never;
 /**
  * @author Marcin Grzejszczak
  */
-@RunWith(MockitoJUnitRunner.class)
+@ExtendWith(MockitoExtension.class)
 public class TraceableScheduledExecutorServiceTest {
 
 	Tracing tracing = Tracing.newBuilder()
@@ -53,7 +53,7 @@ public class TraceableScheduledExecutorServiceTest {
 					.addScopeDecorator(StrictScopeDecorator.create()).build())
 			.build();
 
-	@Mock
+	@Mock(lenient = true)
 	BeanFactory beanFactory;
 
 	@Mock
@@ -62,7 +62,7 @@ public class TraceableScheduledExecutorServiceTest {
 	@InjectMocks
 	TraceableScheduledExecutorService traceableScheduledExecutorService;
 
-	@Before
+	@BeforeEach
 	public void setup() {
 		beanFactory();
 	}

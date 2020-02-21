@@ -24,8 +24,7 @@ import brave.propagation.CurrentTraceContext.Scope;
 import brave.propagation.TraceContext;
 import brave.sampler.Sampler;
 import org.awaitility.Awaitility;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Test;
 import org.reactivestreams.Publisher;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -36,7 +35,6 @@ import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.test.context.junit4.SpringRunner;
 
 import static org.assertj.core.api.BDDAssertions.then;
 
@@ -44,7 +42,6 @@ import static org.assertj.core.api.BDDAssertions.then;
  * Like {@link ScopePassingSpanSubscriberTests}, except this tests wiring with spring boot
  * config.
  */
-@RunWith(SpringRunner.class)
 @SpringBootTest(classes = ScopePassingSpanSubscriberSpringBootTests.Config.class,
 		webEnvironment = SpringBootTest.WebEnvironment.NONE)
 public class ScopePassingSpanSubscriberSpringBootTests {
