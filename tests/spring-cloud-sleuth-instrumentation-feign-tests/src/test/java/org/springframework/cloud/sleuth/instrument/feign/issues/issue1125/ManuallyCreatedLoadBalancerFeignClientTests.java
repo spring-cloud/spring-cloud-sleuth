@@ -36,7 +36,7 @@ import zipkin2.reporter.Reporter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.cloud.loadbalancer.blocking.client.BlockingLoadBalancerClient;
+import org.springframework.cloud.client.loadbalancer.LoadBalancerClient;
 import org.springframework.cloud.openfeign.EnableFeignClients;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.cloud.openfeign.loadbalancer.FeignBlockingLoadBalancerClient;
@@ -110,7 +110,7 @@ public class ManuallyCreatedLoadBalancerFeignClientTests {
 class Application {
 
 	@Bean
-	public Client client(BlockingLoadBalancerClient blockingLoadBalancerClient) {
+	public Client client(LoadBalancerClient blockingLoadBalancerClient) {
 		return new MyBlockingClient(new MyDelegateClient(), blockingLoadBalancerClient);
 	}
 
@@ -128,7 +128,7 @@ class Application {
 
 class MyBlockingClient extends FeignBlockingLoadBalancerClient {
 
-	MyBlockingClient(Client delegate, BlockingLoadBalancerClient loadBalancerClient) {
+	MyBlockingClient(Client delegate, LoadBalancerClient loadBalancerClient) {
 		super(delegate, loadBalancerClient);
 	}
 
