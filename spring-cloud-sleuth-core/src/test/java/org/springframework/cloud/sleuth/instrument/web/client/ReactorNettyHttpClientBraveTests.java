@@ -23,12 +23,16 @@ import brave.http.HttpTracing;
 import brave.test.http.ITHttpAsyncClient;
 import io.netty.channel.ChannelOption;
 import io.netty.handler.timeout.ReadTimeoutHandler;
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.reactivestreams.Subscription;
 import reactor.core.CoreSubscriber;
+import reactor.core.publisher.Hooks;
 import reactor.core.publisher.Mono;
 import reactor.core.publisher.Operators;
+import reactor.core.scheduler.Schedulers;
 import reactor.netty.ByteBufFlux;
 import reactor.netty.http.client.HttpClient;
 import reactor.netty.http.client.HttpClientResponse;
@@ -43,6 +47,15 @@ import org.springframework.context.annotation.AnnotationConfigApplicationContext
  * present.
  */
 public class ReactorNettyHttpClientBraveTests extends ITHttpAsyncClient<HttpClient> {
+	@Before
+	@After
+	public void resetHooks() {
+		// There's an assumption some other test is leaking hooks, so we clear them all to
+		// prevent should_not_scope_scalar_subscribe from being interfered with.
+		Hooks.resetOnEachOperator();
+		Hooks.resetOnLastOperator();
+		Schedulers.removeExecutorServiceDecorator("sleuth");
+	}
 
 	/**
 	 * This uses Spring to instrument the {@link HttpClient} using a
