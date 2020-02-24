@@ -336,6 +336,11 @@
 			<scope>test</scope>
 		</dependency>
 		<dependency>
+			<groupId>io.zipkin.brave</groupId>
+			<artifactId>brave-instrumentation-http-tests</artifactId>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
 			<groupId>com.netflix.archaius</groupId>
 			<artifactId>archaius-core</artifactId>
 			<scope>test</scope>
