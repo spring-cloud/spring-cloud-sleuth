@@ -182,6 +182,7 @@ class HttpClientBeanPostProcessor implements BeanPostProcessor {
 
 		@Override
 		public void accept(HttpClientResponse response, Connection connection) {
+			// TODO: is there a way to read the request at response time?
 			handle(response.currentContext(), response, null);
 		}
 
