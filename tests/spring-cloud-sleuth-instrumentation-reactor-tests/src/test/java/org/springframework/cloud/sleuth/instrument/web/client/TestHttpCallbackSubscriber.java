@@ -17,6 +17,7 @@
 package org.springframework.cloud.sleuth.instrument.web.client;
 
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Function;
 
 import org.reactivestreams.Subscription;
 import reactor.core.CoreSubscriber;
@@ -34,17 +35,22 @@ import zipkin2.Callback;
  * The implementation forwards signals to the supplied {@link Callback}, enforcing
  * assumptions about a non-empty, {@link Mono} subscription.
  */
-final class TestCallbackSubscriber<T> implements CoreSubscriber<T> {
+final class TestHttpCallbackSubscriber<T> implements CoreSubscriber<T> {
 
-	static <T> void subscribe(Mono<T> mono, Callback<Void> callback) {
-		mono.subscribe(new TestCallbackSubscriber<>(callback));
+	static <T> void subscribe(Mono<T> mono, Function<T, Integer> statusCodeFunction,
+			Callback<Integer> callback) {
+		mono.subscribe(new TestHttpCallbackSubscriber<>(statusCodeFunction, callback));
 	}
 
-	final Callback<Void> callback;
+	final Function<T, Integer> statusCodeFunction;
+
+	final Callback<Integer> callback;
 
 	final AtomicReference<Subscription> ref = new AtomicReference<>();
 
-	private TestCallbackSubscriber(Callback<Void> callback) {
+	private TestHttpCallbackSubscriber(Function<T, Integer> statusCodeFunction,
+			Callback<Integer> callback) {
+		this.statusCodeFunction = statusCodeFunction;
 		this.callback = callback;
 	}
 
@@ -63,7 +69,7 @@ final class TestCallbackSubscriber<T> implements CoreSubscriber<T> {
 	@Override
 	public void onNext(T t) {
 		if (ref.getAndSet(null) != null) {
-			callback.onSuccess(null /* because Void */);
+			callback.onSuccess(statusCodeFunction.apply(t));
 		}
 		else {
 			// This is a Mono, which doesn't signal onNext() twice. If we reach here,

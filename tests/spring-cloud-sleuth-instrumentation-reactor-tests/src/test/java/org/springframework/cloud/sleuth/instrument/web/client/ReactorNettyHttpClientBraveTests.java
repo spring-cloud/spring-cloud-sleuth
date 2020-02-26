@@ -84,12 +84,6 @@ public class ReactorNettyHttpClientBraveTests
 	}
 
 	@Test
-	@Ignore("TODO: False negative due to NPE reading context: remove after Brave 5.10")
-	@Override
-	public void asyncRootSpan() {
-	}
-
-	@Test
 	@Ignore("TODO: reactor/reactor-netty#1000")
 	@Override
 	public void redirect() {
@@ -99,6 +93,13 @@ public class ReactorNettyHttpClientBraveTests
 	@Ignore("TODO: reactor/reactor-netty#1000")
 	@Override
 	public void supportsPortableCustomization() {
+	}
+
+	@Test
+	@Ignore("TODO: reactor/reactor-netty#1000")
+	@Override
+	@Deprecated
+	public void supportsDeprecatedPortableCustomization() {
 	}
 
 	@Test
@@ -119,6 +120,12 @@ public class ReactorNettyHttpClientBraveTests
 	public void httpPathTagExcludesQueryParams() {
 	}
 
+	@Test
+	@Ignore("HttpClient has no function to retrieve the wire request from the response")
+	@Override
+	public void readsRequestAtResponseTime() {
+	}
+
 	@Override
 	protected void post(AnnotationConfigApplicationContext context,
 			String pathIncludingQuery, String body) {
@@ -129,11 +136,11 @@ public class ReactorNettyHttpClientBraveTests
 
 	@Override
 	protected void getAsync(AnnotationConfigApplicationContext context, String path,
-			Callback<Void> callback) {
+			Callback<Integer> callback) {
 		Mono<HttpClientResponse> request = context.getBean(HttpClient.class).get()
 				.uri(path).response();
 
-		TestCallbackSubscriber.subscribe(request, callback);
+		TestHttpCallbackSubscriber.subscribe(request, r -> r.status().code(), callback);
 	}
 
 }
