@@ -127,7 +127,7 @@ public class ReactorNettyHttpClientBraveTests
 		Mono<HttpClientResponse> request = context.getBean(HttpClient.class).get()
 				.uri(path).response();
 
-		request.subscribe(new TestCallbackSubscriber<>(callback));
+		TestCallbackSubscriber.subscribe(request, callback);
 	}
 
 }

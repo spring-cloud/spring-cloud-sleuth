@@ -78,7 +78,7 @@ public class WebClientBraveTests
 			Callback<Void> callback) {
 		Mono<ClientResponse> request = client(context).get().uri(path).exchange();
 
-		request.subscribe(new TestCallbackSubscriber<>(callback));
+		TestCallbackSubscriber.subscribe(request, callback);
 	}
 
 	@Test
