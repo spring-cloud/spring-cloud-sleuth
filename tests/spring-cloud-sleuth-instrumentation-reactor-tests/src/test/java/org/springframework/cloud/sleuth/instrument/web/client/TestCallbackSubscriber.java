@@ -26,9 +26,13 @@ import reactor.util.context.Context;
 import zipkin2.Callback;
 
 /**
- * {@link #subscribe} is made for reactor-netty and WebFlux client requests. It forwards
- * signals to the supplied {@link Callback}, enforcing assumptions about a non-empty,
- * {@link Mono} subscription.
+ * {@link #subscribe} is made for reactor-netty and WebFlux client requests used in tests.
+ * This does more assertions than normal, to ensure instrumentation isn't redundantly
+ * signalling, or missing signals.
+ *
+ * <p>
+ * The implementation forwards signals to the supplied {@link Callback}, enforcing
+ * assumptions about a non-empty, {@link Mono} subscription.
  */
 final class TestCallbackSubscriber<T> implements CoreSubscriber<T> {
 
@@ -51,7 +55,7 @@ final class TestCallbackSubscriber<T> implements CoreSubscriber<T> {
 		}
 		else {
 			// We don't intentionally call subscribe() multiple times in our tests. If we
-			// reach here, possibly the instrumentation is redundantly subscribing.
+			// reach here, possibly instrumentation is redundantly subscribing.
 			callback.onError(new AssertionError("onSubscribe() called twice!"));
 		}
 	}
@@ -63,7 +67,7 @@ final class TestCallbackSubscriber<T> implements CoreSubscriber<T> {
 		}
 		else {
 			// This is a Mono, which doesn't signal onNext() twice. If we reach here,
-			// possibly the instrumentation is signaling twice.
+			// possibly instrumentation is signaling twice.
 			callback.onError(new AssertionError("onNext() called twice!"));
 		}
 	}
@@ -73,14 +77,19 @@ final class TestCallbackSubscriber<T> implements CoreSubscriber<T> {
 		if (ref.getAndSet(null) != null) {
 			callback.onError(t);
 		}
+		else {
+			// We don't expect onError() to signal twice. If we reach here, possibly
+			// instrumentation is signaling twice or onSuccess() threw an exception.
+			callback.onError(new AssertionError("onError() called twice: " + t, t));
+		}
 	}
 
 	@Override
 	public void onComplete() {
 		if (ref.getAndSet(null) != null) {
 			// Tests make a non-empty Mono subscription, which should not signal
-			// onComplete() before onNext(). If we reach here, possibly the
-			// instrumentation is not signaling onNext() when it should.
+			// onComplete() before onNext(). If we reach here, possibly instrumentation
+			// is not signaling onNext() when it should.
 			callback.onError(new AssertionError("onComplete() called before onNext!"));
 		}
 	}

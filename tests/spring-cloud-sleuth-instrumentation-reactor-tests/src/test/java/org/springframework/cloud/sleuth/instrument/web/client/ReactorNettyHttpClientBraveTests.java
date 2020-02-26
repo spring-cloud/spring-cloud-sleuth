@@ -78,9 +78,15 @@ public class ReactorNettyHttpClientBraveTests
 	}
 
 	@Test
-	@Ignore("TODO: consider integrating TracingMapConnect with ScopePassingSpanSubscriber")
+	@Ignore("TODO: NPE reading context: consider integrating TracingMapConnect with ScopePassingSpanSubscriber")
 	@Override
 	public void callbackContextIsFromInvocationTime() {
+	}
+
+	@Test
+	@Ignore("TODO: False negative due to NPE reading context: remove after Brave 5.10")
+	@Override
+	public void asyncRootSpan() {
 	}
 
 	@Test
