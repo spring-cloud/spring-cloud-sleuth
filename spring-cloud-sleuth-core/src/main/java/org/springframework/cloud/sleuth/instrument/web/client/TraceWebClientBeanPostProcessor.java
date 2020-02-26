@@ -220,6 +220,7 @@ final class TraceExchangeFilterFunction implements ExchangeFilterFunction {
 
 		final CurrentTraceContext currentTraceContext;
 
+		// TODO: this isn't implemented correctly. error and success could both be called
 		boolean done;
 
 		WebClientTracerSubscriber(CoreSubscriber<? super ClientResponse> actual,
@@ -251,7 +252,8 @@ final class TraceExchangeFilterFunction implements ExchangeFilterFunction {
 					try (Scope scope = currentTraceContext.maybeScope(parent)) {
 						subscription.cancel();
 					}
-					finally {
+					finally { // TODO: this is probably incorrect as cancel happens
+								// routinely in unary subscription.
 						if (log.isDebugEnabled()) {
 							log.debug("Subscription was cancelled. Will close the span ["
 									+ clientSpan + "]");
@@ -274,6 +276,7 @@ final class TraceExchangeFilterFunction implements ExchangeFilterFunction {
 								.build());
 			}
 			finally {
+				// TODO: is there a way to read the request at response time?
 				handleReceive(response, null);
 			}
 		}
