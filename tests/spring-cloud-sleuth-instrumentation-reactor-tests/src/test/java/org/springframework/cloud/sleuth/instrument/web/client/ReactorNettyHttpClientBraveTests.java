@@ -17,7 +17,6 @@
 package org.springframework.cloud.sleuth.instrument.web.client;
 
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicReference;
 
 import brave.http.HttpTracing;
 import brave.test.http.ITHttpAsyncClient;
@@ -25,14 +24,10 @@ import io.netty.channel.ChannelOption;
 import io.netty.handler.timeout.ReadTimeoutHandler;
 import org.junit.Ignore;
 import org.junit.Test;
-import org.reactivestreams.Subscription;
-import reactor.core.CoreSubscriber;
 import reactor.core.publisher.Mono;
-import reactor.core.publisher.Operators;
 import reactor.netty.ByteBufFlux;
 import reactor.netty.http.client.HttpClient;
 import reactor.netty.http.client.HttpClientResponse;
-import reactor.util.context.Context;
 import zipkin2.Callback;
 
 import org.springframework.beans.factory.config.BeanPostProcessor;
@@ -132,50 +127,7 @@ public class ReactorNettyHttpClientBraveTests
 		Mono<HttpClientResponse> request = context.getBean(HttpClient.class).get()
 				.uri(path).response();
 
-		request.subscribe(new CoreSubscriber<HttpClientResponse>() {
-
-			final AtomicReference<Subscription> ref = new AtomicReference<>();
-
-			@Override
-			public void onSubscribe(Subscription s) {
-				if (Operators.validate(ref.getAndSet(s), s)) {
-					s.request(Long.MAX_VALUE);
-				}
-				else {
-					s.cancel();
-				}
-			}
-
-			@Override
-			public void onNext(HttpClientResponse clientResponse) {
-				if (ref.getAndSet(null) != null) {
-					callback.onSuccess(null);
-				}
-				else {
-					Operators.onNextDropped(clientResponse, currentContext());
-				}
-			}
-
-			@Override
-			public void onError(Throwable t) {
-				if (ref.getAndSet(null) != null) {
-					callback.onError(t);
-				}
-			}
-
-			@Override
-			public void onComplete() {
-				if (ref.getAndSet(null) != null) {
-					callback.onError(
-							new RuntimeException("onComplete() called before onNext!"));
-				}
-			}
-
-			@Override
-			public Context currentContext() {
-				return Context.empty();
-			}
-		});
+		request.subscribe(new TestCallbackSubscriber<>(callback));
 	}
 
 }

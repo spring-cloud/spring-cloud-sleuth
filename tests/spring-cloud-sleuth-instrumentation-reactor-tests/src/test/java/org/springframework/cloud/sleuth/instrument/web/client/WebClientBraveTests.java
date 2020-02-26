@@ -16,18 +16,12 @@
 
 package org.springframework.cloud.sleuth.instrument.web.client;
 
-import java.util.concurrent.atomic.AtomicReference;
-
 import brave.http.HttpTracing;
 import brave.test.http.ITHttpAsyncClient;
 import org.junit.Ignore;
 import org.junit.Test;
-import org.reactivestreams.Subscription;
-import reactor.core.CoreSubscriber;
 import reactor.core.publisher.Mono;
-import reactor.core.publisher.Operators;
 import reactor.netty.http.client.HttpClient;
-import reactor.util.context.Context;
 import zipkin2.Callback;
 
 import org.springframework.beans.factory.config.BeanPostProcessor;
@@ -84,50 +78,7 @@ public class WebClientBraveTests
 			Callback<Void> callback) {
 		Mono<ClientResponse> request = client(context).get().uri(path).exchange();
 
-		request.subscribe(new CoreSubscriber<ClientResponse>() {
-
-			final AtomicReference<Subscription> ref = new AtomicReference<>();
-
-			@Override
-			public void onSubscribe(Subscription s) {
-				if (Operators.validate(ref.getAndSet(s), s)) {
-					s.request(Long.MAX_VALUE);
-				}
-				else {
-					s.cancel();
-				}
-			}
-
-			@Override
-			public void onNext(ClientResponse clientResponse) {
-				if (ref.getAndSet(null) != null) {
-					callback.onSuccess(null);
-				}
-				else {
-					Operators.onNextDropped(clientResponse, currentContext());
-				}
-			}
-
-			@Override
-			public void onError(Throwable t) {
-				if (ref.getAndSet(null) != null) {
-					callback.onError(t);
-				}
-			}
-
-			@Override
-			public void onComplete() {
-				if (ref.getAndSet(null) != null) {
-					callback.onError(
-							new RuntimeException("onComplete() called before onNext!"));
-				}
-			}
-
-			@Override
-			public Context currentContext() {
-				return Context.empty();
-			}
-		});
+		request.subscribe(new TestCallbackSubscriber<>(callback));
 	}
 
 	@Test
