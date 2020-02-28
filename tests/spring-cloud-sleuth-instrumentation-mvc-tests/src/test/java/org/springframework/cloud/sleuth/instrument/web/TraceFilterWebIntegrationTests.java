@@ -86,8 +86,8 @@ public class TraceFilterWebIntegrationTests {
 
 	@Test
 	public void should_tag_url() {
-		new RestTemplate().getForObject(
-				"http://localhost:" + port() + "/good", String.class);
+		new RestTemplate().getForObject("http://localhost:" + port() + "/good",
+				String.class);
 
 		then(Tracing.current().tracer().currentSpan()).isNull();
 		then(this.accumulator.getSpans()).hasSize(1);
@@ -175,8 +175,8 @@ public class TraceFilterWebIntegrationTests {
 			return Sampler.ALWAYS_SAMPLE;
 		}
 
-		// tag::custom_server_parser[]
-		@Bean(HttpServerRequestParser.NAME)
+		// tag::custom_parser[]
+		@Bean(name = { HttpClientRequestParser.NAME, HttpServerRequestParser.NAME })
 		HttpRequestParser sleuthHttpServerRequestParser() {
 			return (req, context, span) -> {
 				HttpRequestParser.DEFAULT.parse(req, context, span);
@@ -186,7 +186,7 @@ public class TraceFilterWebIntegrationTests {
 				}
 			};
 		}
-		// end::custom_server_parser[]
+		// end::custom_parser[]
 
 		// tag::custom_server_sampler[]
 		@Bean(name = HttpServerSampler.NAME)

@@ -401,12 +401,12 @@ class HttpParserConfig {
 	static final HttpResponseParser RESPONSE_PARSER = (r, c, s) -> {
 	};
 
-	@Bean(name = { HttpServerRequestParser.NAME, HttpClientRequestParser.NAME })
+	@Bean(name = { HttpClientRequestParser.NAME, HttpServerRequestParser.NAME })
 	HttpRequestParser sleuthHttpServerRequestParser() {
 		return REQUEST_PARSER;
 	}
 
-	@Bean(name = { HttpServerResponseParser.NAME, HttpClientResponseParser.NAME })
+	@Bean(name = { HttpClientResponseParser.NAME, HttpServerResponseParser.NAME })
 	HttpResponseParser sleuthHttpServerResponseParser() {
 		return RESPONSE_PARSER;
 	}

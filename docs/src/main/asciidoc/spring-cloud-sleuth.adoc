@@ -860,7 +860,7 @@ Here's an example adding the HTTP url in addition to defaults:
 ----
 @Configuration
 class Config {
-include::{project-root}/tests/spring-cloud-sleuth-instrumentation-mvc-tests/src/test/java/org/springframework/cloud/sleuth/instrument/web/TraceFilterWebIntegrationTests.java[tags=custom_server_parser,indent=2]
+include::{project-root}/tests/spring-cloud-sleuth-instrumentation-mvc-tests/src/test/java/org/springframework/cloud/sleuth/instrument/web/TraceFilterWebIntegrationTests.java[tags=custom_parser,indent=2]
 }
 ----
 
