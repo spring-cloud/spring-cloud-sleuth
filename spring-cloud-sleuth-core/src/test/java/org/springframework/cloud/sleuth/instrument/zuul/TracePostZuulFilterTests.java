@@ -21,7 +21,6 @@ import java.util.List;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import brave.ErrorParser;
 import brave.Span;
 import brave.Tracer;
 import brave.Tracing;
@@ -39,7 +38,6 @@ import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 
 import org.springframework.cloud.netflix.zuul.metrics.EmptyTracerFactory;
-import org.springframework.cloud.sleuth.instrument.web.SleuthHttpParserAccessor;
 import org.springframework.cloud.sleuth.util.ArrayListSpanReporter;
 
 import static org.assertj.core.api.BDDAssertions.then;
@@ -64,9 +62,7 @@ public class TracePostZuulFilterTests {
 					.addScopeDecorator(StrictScopeDecorator.create()).build())
 			.spanReporter(this.reporter).build();
 
-	HttpTracing httpTracing = HttpTracing.newBuilder(this.tracing)
-			.clientParser(SleuthHttpParserAccessor.getClient())
-			.serverParser(SleuthHttpParserAccessor.getServer(new ErrorParser())).build();
+	HttpTracing httpTracing = HttpTracing.newBuilder(this.tracing).build();
 
 	RequestContext requestContext = new RequestContext();
 

@@ -19,12 +19,11 @@ package org.springframework.cloud.sleuth.instrument.web;
 import java.util.ArrayList;
 import java.util.List;
 
-import brave.ErrorParser;
 import brave.Tracing;
-import brave.http.HttpClientParser;
 import brave.http.HttpRequest;
+import brave.http.HttpRequestParser;
+import brave.http.HttpResponseParser;
 import brave.http.HttpSampler;
-import brave.http.HttpServerParser;
 import brave.http.HttpTracing;
 import brave.http.HttpTracingCustomizer;
 import brave.sampler.SamplerFunction;
@@ -64,7 +63,12 @@ public class TraceHttpAutoConfiguration {
 	@ConditionalOnMissingBean
 	// NOTE: stable bean name as might be used outside sleuth
 	HttpTracing httpTracing(Tracing tracing, SkipPatternProvider provider,
-			HttpClientParser clientParser, HttpServerParser serverParser,
+			@Nullable @HttpClientRequestParser HttpRequestParser httpClientRequestParser,
+			@Nullable @HttpClientResponseParser HttpResponseParser httpClientResponseParser,
+			@Nullable brave.http.HttpClientParser clientParser,
+			@Nullable @HttpServerRequestParser HttpRequestParser httpServerRequestParser,
+			@Nullable @HttpServerResponseParser HttpResponseParser httpServerResponseParser,
+			@Nullable brave.http.HttpServerParser serverParser,
 			@HttpClientSampler SamplerFunction<HttpRequest> httpClientSampler,
 			@Nullable @ServerSampler HttpSampler serverSampler,
 			@Nullable @HttpServerSampler SamplerFunction<HttpRequest> httpServerSampler) {
@@ -74,8 +78,32 @@ public class TraceHttpAutoConfiguration {
 		SamplerFunction<HttpRequest> combinedSampler = combineUserProvidedSamplerWithSkipPatternSampler(
 				httpServerSampler, provider);
 		HttpTracing.Builder builder = HttpTracing.newBuilder(tracing)
-				.clientParser(clientParser).serverParser(serverParser)
 				.clientSampler(httpClientSampler).serverSampler(combinedSampler);
+
+		if (clientParser != null) { // look for deprecated type first
+			builder.clientParser(clientParser);
+		}
+		else {
+			if (httpClientRequestParser != null) {
+				builder.clientRequestParser(httpClientRequestParser);
+			}
+			if (httpClientResponseParser != null) {
+				builder.clientResponseParser(httpClientResponseParser);
+			}
+		}
+
+		if (serverParser != null) { // look for deprecated type first
+			builder.serverParser(serverParser);
+		}
+		else {
+			if (httpServerRequestParser != null) {
+				builder.serverRequestParser(httpServerRequestParser);
+			}
+			if (httpServerResponseParser != null) {
+				builder.serverResponseParser(httpServerResponseParser);
+			}
+		}
+
 		for (HttpTracingCustomizer customizer : this.httpTracingCustomizers) {
 			customizer.customize(builder);
 		}
@@ -94,39 +122,27 @@ public class TraceHttpAutoConfiguration {
 	}
 
 	@Bean
+	@ConditionalOnMissingBean(name = HttpClientRequestParser.NAME)
 	@ConditionalOnProperty(name = "spring.sleuth.http.legacy.enabled",
 			havingValue = "true")
-	HttpClientParser sleuthHttpClientParser(TraceKeys traceKeys) {
+	HttpRequestParser sleuthHttpClientRequestParser(TraceKeys traceKeys) {
 		return new SleuthHttpClientParser(traceKeys);
 	}
 
 	@Bean
-	@ConditionalOnProperty(name = "spring.sleuth.http.legacy.enabled",
-			havingValue = "false", matchIfMissing = true)
-	@ConditionalOnMissingBean
-	HttpClientParser httpClientParser(ErrorParser errorParser) {
-		return new HttpClientParser() {
-			@Override
-			protected ErrorParser errorParser() {
-				return errorParser;
-			}
-		};
-	}
-
-	@Bean
+	@ConditionalOnMissingBean(name = HttpServerRequestParser.NAME)
 	@ConditionalOnProperty(name = "spring.sleuth.http.legacy.enabled",
 			havingValue = "true")
-	HttpServerParser sleuthHttpServerParser(TraceKeys traceKeys,
-			ErrorParser errorParser) {
-		return new SleuthHttpServerParser(traceKeys, errorParser);
+	HttpRequestParser sleuthHttpServerRequestParser(TraceKeys traceKeys) {
+		return new SleuthHttpServerParser(traceKeys);
 	}
 
 	@Bean
+	@ConditionalOnMissingBean(name = HttpServerResponseParser.NAME)
 	@ConditionalOnProperty(name = "spring.sleuth.http.legacy.enabled",
-			havingValue = "false", matchIfMissing = true)
-	@ConditionalOnMissingBean
-	HttpServerParser defaultHttpServerParser() {
-		return new HttpServerParser();
+			havingValue = "true")
+	HttpResponseParser sleuthHttpServerResponseParser(TraceKeys traceKeys) {
+		return new SleuthHttpServerParser(traceKeys);
 	}
 
 	@Bean

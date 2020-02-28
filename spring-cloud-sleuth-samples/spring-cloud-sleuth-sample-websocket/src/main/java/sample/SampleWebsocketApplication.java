@@ -19,13 +19,13 @@ package sample;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.messaging.simp.config.MessageBrokerRegistry;
-import org.springframework.web.socket.config.annotation.AbstractWebSocketMessageBrokerConfigurer;
 import org.springframework.web.socket.config.annotation.EnableWebSocketMessageBroker;
 import org.springframework.web.socket.config.annotation.StompEndpointRegistry;
+import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerConfigurer;
 
 @SpringBootApplication
 @EnableWebSocketMessageBroker
-public class SampleWebsocketApplication extends AbstractWebSocketMessageBrokerConfigurer {
+public class SampleWebsocketApplication implements WebSocketMessageBrokerConfigurer {
 
 	public static void main(String[] args) {
 		SpringApplication.run(SampleWebsocketApplication.class, args);

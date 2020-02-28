@@ -123,7 +123,7 @@ public class TraceRestTemplateInterceptorTests {
 	@Test
 	public void requestHeadersAddedWhenTracing() {
 		setInterceptors(HttpTracing.newBuilder(this.tracing)
-				.clientParser(new SleuthHttpClientParser(this.traceKeys)).build());
+				.clientRequestParser(new SleuthHttpClientParser(this.traceKeys)).build());
 		Span span = this.tracer.nextSpan().name("new trace");
 
 		try (Tracer.SpanInScope ws = this.tracer.withSpanInScope(span.start())) {
@@ -183,7 +183,7 @@ public class TraceRestTemplateInterceptorTests {
 	@Test
 	public void createdSpanNameHasOnlyPrintableAsciiCharactersForNonEncodedURIWithNonAsciiChars() {
 		setInterceptors(HttpTracing.newBuilder(this.tracing)
-				.clientParser(new SleuthHttpClientParser(this.traceKeys)).build());
+				.clientRequestParser(new SleuthHttpClientParser(this.traceKeys)).build());
 		Span span = this.tracer.nextSpan().name("new trace");
 
 		try (Tracer.SpanInScope ws = this.tracer.withSpanInScope(span.start())) {
@@ -206,7 +206,7 @@ public class TraceRestTemplateInterceptorTests {
 	@Test
 	public void willShortenTheNameOfTheSpan() {
 		setInterceptors(HttpTracing.newBuilder(this.tracing)
-				.clientParser(new SleuthHttpClientParser(this.traceKeys)).build());
+				.clientRequestParser(new SleuthHttpClientParser(this.traceKeys)).build());
 		Span span = this.tracer.nextSpan().name("new trace");
 
 		try (Tracer.SpanInScope ws = this.tracer.withSpanInScope(span.start())) {

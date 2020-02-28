@@ -18,70 +18,45 @@ package org.springframework.cloud.sleuth.instrument.web;
 
 import javax.servlet.http.HttpServletResponse;
 
-import brave.ErrorParser;
 import brave.SpanCustomizer;
-import brave.http.HttpAdapter;
-import brave.http.HttpClientParser;
-import brave.http.HttpServerParser;
+import brave.http.HttpRequestParser;
+import brave.http.HttpResponse;
+import brave.http.HttpResponseParser;
+import brave.propagation.TraceContext;
 
 /**
- * An {@link HttpClientParser} that behaves like Sleuth in versions 1.x.
+ * An {@link HttpRequestParser} and {@link HttpResponseParser} for servers that behaves
+ * like Sleuth in versions 1.x.
  *
  * @author Marcin Grzejszczak
  * @since 2.0.0
  */
-class SleuthHttpServerParser extends HttpServerParser {
+class SleuthHttpServerParser extends SleuthHttpClientParser
+		implements HttpResponseParser {
 
 	private static final String STATUS_CODE_KEY = "http.status_code";
 
-	private final SleuthHttpClientParser clientParser;
-
-	private final ErrorParser errorParser;
-
-	SleuthHttpServerParser(TraceKeys traceKeys, ErrorParser errorParser) {
-		this.clientParser = new SleuthHttpClientParser(traceKeys);
-		this.errorParser = errorParser;
+	SleuthHttpServerParser(TraceKeys traceKeys) {
+		super(traceKeys);
 	}
 
 	@Override
-	protected ErrorParser errorParser() {
-		return this.errorParser;
-	}
-
-	@Override
-	protected <Req> String spanName(HttpAdapter<Req, ?> adapter, Req req) {
-		return this.clientParser.spanName(adapter, req);
-	}
-
-	@Override
-	public <Req> void request(HttpAdapter<Req, ?> adapter, Req req,
-			SpanCustomizer customizer) {
-		this.clientParser.request(adapter, req, customizer);
-	}
-
-	@Override
-	public <Resp> void response(HttpAdapter<?, Resp> adapter, Resp res, Throwable error,
-			SpanCustomizer customizer) {
-		if (res == null) {
-			error(null, error, customizer);
-			return;
+	public void parse(HttpResponse response, TraceContext context, SpanCustomizer span) {
+		int httpStatus = response.statusCode();
+		if (httpStatus == 0) {
+			return; // already parsed the error
 		}
-		Integer httpStatus = adapter.statusCode(res);
-		if (httpStatus == null) {
-			error(httpStatus, error, customizer);
-			return;
-		}
-		if (httpStatus == HttpServletResponse.SC_OK && error != null) {
+
+		if (httpStatus == HttpServletResponse.SC_OK && response.error() == null) {
 			// Filter chain threw exception but the response status may not have been set
 			// yet, so we have to guess.
-			customizer.tag(STATUS_CODE_KEY,
+			span.tag(STATUS_CODE_KEY,
 					String.valueOf(HttpServletResponse.SC_INTERNAL_SERVER_ERROR));
 		}
 		// only tag valid http statuses
 		else if (httpStatus >= 100 && (httpStatus < 200) || (httpStatus > 399)) {
-			customizer.tag(STATUS_CODE_KEY, String.valueOf(httpStatus));
+			span.tag(STATUS_CODE_KEY, String.valueOf(httpStatus));
 		}
-		error(httpStatus, error, customizer);
 	}
 
 }
