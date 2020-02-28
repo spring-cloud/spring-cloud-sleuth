@@ -80,10 +80,7 @@ public class TraceHttpAutoConfiguration {
 		HttpTracing.Builder builder = HttpTracing.newBuilder(tracing)
 				.clientSampler(httpClientSampler).serverSampler(combinedSampler);
 
-		if (clientParser != null) { // look for deprecated type first
-			builder.clientParser(clientParser);
-		}
-		else {
+		if (httpClientRequestParser != null || httpClientResponseParser != null) {
 			if (httpClientRequestParser != null) {
 				builder.clientRequestParser(httpClientRequestParser);
 			}
@@ -91,11 +88,11 @@ public class TraceHttpAutoConfiguration {
 				builder.clientResponseParser(httpClientResponseParser);
 			}
 		}
-
-		if (serverParser != null) { // look for deprecated type first
-			builder.serverParser(serverParser);
+		else if (clientParser != null) { // consider deprecated last
+			builder.clientParser(clientParser);
 		}
-		else {
+
+		if (httpServerRequestParser != null || httpServerResponseParser != null) {
 			if (httpServerRequestParser != null) {
 				builder.serverRequestParser(httpServerRequestParser);
 			}
@@ -103,10 +100,14 @@ public class TraceHttpAutoConfiguration {
 				builder.serverResponseParser(httpServerResponseParser);
 			}
 		}
+		else if (serverParser != null) { // consider deprecated last
+			builder.serverParser(serverParser);
+		}
 
 		for (HttpTracingCustomizer customizer : this.httpTracingCustomizers) {
 			customizer.customize(builder);
 		}
+
 		return builder.build();
 	}
 

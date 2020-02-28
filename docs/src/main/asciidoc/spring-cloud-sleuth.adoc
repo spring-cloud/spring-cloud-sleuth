@@ -838,12 +838,38 @@ Sleuth will search for beans of those types and automatically apply customizatio
 
 === HTTP
 
-If a customization of client / server parsing of the HTTP related spans is
-required,  just register a bean of type `brave.http.HttpClientParser` or
-`brave.http.HttpServerParser`. If client /server sampling is required, just
-register a bean of type `brave.sampler.SamplerFunction<HttpRequest>` and name
-the bean `sleuthHttpClientSampler` for client sampler and
-`sleuthHttpServerSampler` for server  sampler.
+==== Data Policy
+
+The default span data policy for HTTP requests is described in Brave:
+https://github.com/openzipkin/brave/tree/master/instrumentation/http#span-data-policy
+
+To add different data to the span, you need to register a bean of type
+`brave.http.HttpRequestParser` or `brave.http.HttpResponseParser` based on when
+the data is collected.
+
+The bean names correspond to the request or response side, and whether it is
+a client or server. For example, `sleuthHttpClientRequestParser` changes what
+is collected before a client request is sent to the server.
+
+For your convenience `@HttpClientRequestParser`, `@HttpClientResponseParser`
+and corresponding server annotations can be used to inject the proper beans
+or to  reference the bean names via their static String `NAME` fields.
+
+Here's an example adding the HTTP url in addition to defaults:
+[source,java]
+----
+@Configuration
+class Config {
+include::{project-root}/tests/spring-cloud-sleuth-instrumentation-mvc-tests/src/test/java/org/springframework/cloud/sleuth/instrument/web/TraceFilterWebIntegrationTests.java[tags=custom_server_parser,indent=2]
+}
+----
+
+==== Sampling
+
+If client /server sampling is required, just  register a bean of type
+`brave.sampler.SamplerFunction<HttpRequest>` and name  the bean
+`sleuthHttpClientSampler` for client sampler and `sleuthHttpServerSampler`
+for server  sampler.
 
 For your convenience the `@HttpClientSampler` and `@HttpServerSampler`
 annotations can be used to inject the proper beans or to  reference the bean

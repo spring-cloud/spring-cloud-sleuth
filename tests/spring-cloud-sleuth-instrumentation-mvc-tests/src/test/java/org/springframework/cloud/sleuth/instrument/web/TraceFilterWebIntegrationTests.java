@@ -24,6 +24,7 @@ import java.util.stream.Collectors;
 
 import brave.Tracing;
 import brave.http.HttpRequest;
+import brave.http.HttpRequestParser;
 import brave.sampler.Sampler;
 import brave.sampler.SamplerFunction;
 import org.assertj.core.api.BDDAssertions;
@@ -68,9 +69,6 @@ public class TraceFilterWebIntegrationTests {
 	public OutputCaptureRule capture = new OutputCaptureRule();
 
 	@Autowired
-	Tracing tracer;
-
-	@Autowired
 	ArrayListSpanReporter accumulator;
 
 	@Autowired
@@ -84,6 +82,16 @@ public class TraceFilterWebIntegrationTests {
 	@After
 	public void cleanup() {
 		this.accumulator.clear();
+	}
+
+	@Test
+	public void should_tag_url() {
+		new RestTemplate().getForObject(
+				"http://localhost:" + port() + "/good", String.class);
+
+		then(Tracing.current().tracer().currentSpan()).isNull();
+		then(this.accumulator.getSpans()).hasSize(1);
+		then(this.accumulator.getSpans().get(0).tags()).containsKey("http.url");
 	}
 
 	@Test
@@ -148,7 +156,12 @@ public class TraceFilterWebIntegrationTests {
 	public static class Config {
 
 		@Bean
-		ExceptionThrowingController controller() {
+		GoodController goodController() {
+			return new GoodController();
+		}
+
+		@Bean
+		ExceptionThrowingController badController() {
 			return new ExceptionThrowingController();
 		}
 
@@ -161,6 +174,19 @@ public class TraceFilterWebIntegrationTests {
 		Sampler alwaysSampler() {
 			return Sampler.ALWAYS_SAMPLE;
 		}
+
+		// tag::custom_server_parser[]
+		@Bean(HttpServerRequestParser.NAME)
+		HttpRequestParser sleuthHttpServerRequestParser() {
+			return (req, context, span) -> {
+				HttpRequestParser.DEFAULT.parse(req, context, span);
+				String url = req.url();
+				if (url != null) {
+					span.tag("http.url", url);
+				}
+			};
+		}
+		// end::custom_server_parser[]
 
 		// tag::custom_server_sampler[]
 		@Bean(name = HttpServerSampler.NAME)
@@ -186,6 +212,16 @@ public class TraceFilterWebIntegrationTests {
 				}
 			});
 			return restTemplate;
+		}
+
+	}
+
+	@RestController
+	public static class GoodController {
+
+		@RequestMapping("/good")
+		public String beGood() {
+			return "good";
 		}
 
 	}
