@@ -25,7 +25,6 @@ import brave.Span;
 import brave.http.HttpClientHandler;
 import brave.http.HttpTracing;
 import brave.propagation.CurrentTraceContext;
-import brave.propagation.CurrentTraceContext.Scope;
 import brave.propagation.TraceContext;
 import io.netty.bootstrap.Bootstrap;
 import reactor.core.publisher.Mono;
@@ -155,12 +154,9 @@ class HttpClientBeanPostProcessor implements BeanPostProcessor {
 					null);
 			WrappedHttpClientRequest request = new WrappedHttpClientRequest(req);
 
-			// Simplify after openzipkin/brave#1082
-			try (Scope ws = currentTraceContext().maybeScope(parent)) {
-				clientSpan = handler().handleSend(request);
-				parseConnectionAddress(connection, clientSpan);
-				ref.set(clientSpan);
-			}
+			clientSpan = handler().handleSendWithParent(request, parent);
+			parseConnectionAddress(connection, clientSpan);
+			ref.set(clientSpan);
 		}
 
 		static void parseConnectionAddress(Connection connection, Span span) {
