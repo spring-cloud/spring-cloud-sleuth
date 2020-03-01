@@ -138,14 +138,7 @@ final class TraceExchangeFilterFunction implements ExchangeFilterFunction {
 
 	@Override
 	public Mono<ClientResponse> filter(ClientRequest request, ExchangeFunction next) {
-		HttpClientRequest wrapper = new HttpClientRequest(request);
-		TraceContext parent = currentTraceContext().get();
-		Span clientSpan = handler().handleSend(wrapper);
-		if (log.isDebugEnabled()) {
-			log.debug("HttpClientHandler::handleSend: " + clientSpan);
-		}
-		return new MonoWebClientTrace(next, wrapper.buildRequest(), this, parent,
-				clientSpan);
+		return new MonoWebClientTrace(next, request, this, currentTraceContext.get());
 	}
 
 	CurrentTraceContext currentTraceContext() {
@@ -177,18 +170,15 @@ final class TraceExchangeFilterFunction implements ExchangeFilterFunction {
 		@Nullable
 		final TraceContext parent;
 
-		private final Span span;
-
 		MonoWebClientTrace(ExchangeFunction next, ClientRequest request,
-				TraceExchangeFilterFunction filterFunction, @Nullable TraceContext parent,
-				Span span) {
+				TraceExchangeFilterFunction filterFunction,
+				@Nullable TraceContext parent) {
 			this.next = next;
 			this.request = request;
 			this.handler = filterFunction.handler();
 			this.currentTraceContext = filterFunction.currentTraceContext();
 			this.scopePassingTransformer = filterFunction.scopePassingTransformer;
 			this.parent = parent;
-			this.span = span;
 		}
 
 		@Override
@@ -196,8 +186,14 @@ final class TraceExchangeFilterFunction implements ExchangeFilterFunction {
 
 			Context context = subscriber.currentContext();
 
-			this.next.exchange(request).subscribe(new WebClientTracerSubscriber(
-					subscriber, context, parent, span, this));
+			HttpClientRequest wrapper = new HttpClientRequest(request);
+			Span span = handler.handleSendWithParent(wrapper, parent);
+			if (log.isDebugEnabled()) {
+				log.debug("HttpClientHandler::handleSend: " + span);
+			}
+
+			this.next.exchange(wrapper.buildRequest()).subscribe(
+					new WebClientTracerSubscriber(subscriber, context, span, this));
 		}
 
 	}
@@ -224,10 +220,9 @@ final class TraceExchangeFilterFunction implements ExchangeFilterFunction {
 		boolean done;
 
 		WebClientTracerSubscriber(CoreSubscriber<? super ClientResponse> actual,
-				Context ctx, @Nullable final TraceContext parent, Span clientSpan,
-				MonoWebClientTrace mono) {
+				Context ctx, Span clientSpan, MonoWebClientTrace mono) {
 			this.actual = actual;
-			this.parent = parent;
+			this.parent = mono.parent;
 			this.clientSpan = clientSpan;
 			this.handler = mono.handler;
 			this.currentTraceContext = mono.currentTraceContext;
