@@ -138,7 +138,7 @@ final class TraceExchangeFilterFunction implements ExchangeFilterFunction {
 
 	@Override
 	public Mono<ClientResponse> filter(ClientRequest request, ExchangeFunction next) {
-		return new MonoWebClientTrace(next, request, this, currentTraceContext.get());
+		return new MonoWebClientTrace(next, request, this);
 	}
 
 	CurrentTraceContext currentTraceContext() {
@@ -171,14 +171,13 @@ final class TraceExchangeFilterFunction implements ExchangeFilterFunction {
 		final TraceContext parent;
 
 		MonoWebClientTrace(ExchangeFunction next, ClientRequest request,
-				TraceExchangeFilterFunction filterFunction,
-				@Nullable TraceContext parent) {
+				TraceExchangeFilterFunction filterFunction) {
 			this.next = next;
 			this.request = request;
 			this.handler = filterFunction.handler();
 			this.currentTraceContext = filterFunction.currentTraceContext();
 			this.scopePassingTransformer = filterFunction.scopePassingTransformer;
-			this.parent = parent;
+			this.parent = currentTraceContext.get();
 		}
 
 		@Override
