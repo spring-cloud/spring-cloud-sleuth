@@ -23,6 +23,8 @@ import java.util.function.Function;
 
 import brave.Span;
 import brave.http.HttpClientHandler;
+import brave.http.HttpClientRequest;
+import brave.http.HttpClientResponse;
 import brave.http.HttpTracing;
 import brave.propagation.CurrentTraceContext;
 import brave.propagation.CurrentTraceContext.Scope;
@@ -122,7 +124,7 @@ final class TraceExchangeFilterFunction implements ExchangeFilterFunction {
 	final Function<? super Publisher<DataBuffer>, ? extends Publisher<DataBuffer>> scopePassingTransformer;
 
 	// Lazy initialized fields
-	HttpClientHandler<brave.http.HttpClientRequest, brave.http.HttpClientResponse> handler;
+	HttpClientHandler<HttpClientRequest, HttpClientResponse> handler;
 
 	CurrentTraceContext currentTraceContext;
 
@@ -148,7 +150,7 @@ final class TraceExchangeFilterFunction implements ExchangeFilterFunction {
 		return this.currentTraceContext;
 	}
 
-	HttpClientHandler<brave.http.HttpClientRequest, brave.http.HttpClientResponse> handler() {
+	HttpClientHandler<HttpClientRequest, HttpClientResponse> handler() {
 		if (this.handler == null) {
 			this.handler = HttpClientHandler.create(this.httpTracing.get());
 		}
@@ -161,7 +163,7 @@ final class TraceExchangeFilterFunction implements ExchangeFilterFunction {
 
 		final ClientRequest request;
 
-		final HttpClientHandler<brave.http.HttpClientRequest, brave.http.HttpClientResponse> handler;
+		final HttpClientHandler<HttpClientRequest, HttpClientResponse> handler;
 
 		final CurrentTraceContext currentTraceContext;
 
@@ -185,7 +187,7 @@ final class TraceExchangeFilterFunction implements ExchangeFilterFunction {
 
 			Context context = subscriber.currentContext();
 
-			HttpClientRequest wrapper = new HttpClientRequest(request);
+			ClientRequestWrapper wrapper = new ClientRequestWrapper(request);
 			Span span = handler.handleSendWithParent(wrapper, parent);
 			if (log.isDebugEnabled()) {
 				log.debug("HttpClientHandler::handleSend: " + span);
@@ -209,7 +211,7 @@ final class TraceExchangeFilterFunction implements ExchangeFilterFunction {
 
 		final Span clientSpan;
 
-		final HttpClientHandler<brave.http.HttpClientRequest, brave.http.HttpClientResponse> handler;
+		final HttpClientHandler<HttpClientRequest, HttpClientResponse> handler;
 
 		final Function<? super Publisher<DataBuffer>, ? extends Publisher<DataBuffer>> scopePassingTransformer;
 
@@ -308,20 +310,20 @@ final class TraceExchangeFilterFunction implements ExchangeFilterFunction {
 		}
 
 		void handleReceive(@Nullable ClientResponse res, @Nullable Throwable error) {
-			HttpClientResponse response = res != null ? new HttpClientResponse(res)
+			ClientResponseWrapper response = res != null ? new ClientResponseWrapper(res)
 					: null;
 			this.handler.handleReceive(response, error, clientSpan);
 		}
 
 	}
 
-	private static final class HttpClientRequest extends brave.http.HttpClientRequest {
+	private static final class ClientRequestWrapper extends HttpClientRequest {
 
 		final ClientRequest delegate;
 
 		final ClientRequest.Builder builder;
 
-		HttpClientRequest(ClientRequest delegate) {
+		ClientRequestWrapper(ClientRequest delegate) {
 			this.delegate = delegate;
 			this.builder = ClientRequest.from(delegate);
 		}
@@ -362,11 +364,11 @@ final class TraceExchangeFilterFunction implements ExchangeFilterFunction {
 
 	}
 
-	static final class HttpClientResponse extends brave.http.HttpClientResponse {
+	static final class ClientResponseWrapper extends HttpClientResponse {
 
 		final ClientResponse delegate;
 
-		HttpClientResponse(ClientResponse delegate) {
+		ClientResponseWrapper(ClientResponse delegate) {
 			this.delegate = delegate;
 		}
 
