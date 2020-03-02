@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2019 the original author or authors.
+ * Copyright 2013-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -29,6 +29,7 @@ import org.springframework.cloud.netflix.ribbon.SpringClientFactory;
 import org.springframework.cloud.openfeign.loadbalancer.FeignBlockingLoadBalancerClient;
 import org.springframework.cloud.openfeign.ribbon.CachingSpringLoadBalancerFactory;
 import org.springframework.cloud.openfeign.ribbon.LoadBalancerFeignClient;
+import org.springframework.cloud.util.ProxyUtils;
 import org.springframework.util.ClassUtils;
 
 /**
@@ -100,7 +101,7 @@ final class TraceFeignObjectWrapper {
 
 	private Object instrumentedFeignLoadBalancerClient(Object bean) {
 		if (AopUtils.getTargetClass(bean).equals(FeignBlockingLoadBalancerClient.class)) {
-			FeignBlockingLoadBalancerClient client = ((FeignBlockingLoadBalancerClient) bean);
+			FeignBlockingLoadBalancerClient client = ProxyUtils.getTargetObject(bean);
 			return new TraceFeignBlockingLoadBalancerClient(
 					(Client) new TraceFeignObjectWrapper(this.beanFactory)
 							.wrap(client.getDelegate()),
