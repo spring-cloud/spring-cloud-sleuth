@@ -44,7 +44,6 @@ import org.mockito.junit.MockitoJUnitRunner;
 import zipkin2.Span;
 
 import org.springframework.beans.factory.BeanFactory;
-import org.springframework.cloud.sleuth.instrument.web.SleuthHttpParserAccessor;
 import org.springframework.cloud.sleuth.util.ArrayListSpanReporter;
 
 import static org.assertj.core.api.Assertions.failBecauseExceptionWasNotThrown;
@@ -69,8 +68,7 @@ public class FeignRetriesTests {
 					.addScopeDecorator(StrictScopeDecorator.create()).build())
 			.spanReporter(this.reporter).build();
 
-	HttpTracing httpTracing = HttpTracing.newBuilder(this.tracing)
-			.clientParser(SleuthHttpParserAccessor.getClient()).build();
+	HttpTracing httpTracing = HttpTracing.newBuilder(this.tracing).build();
 
 	@Before
 	@After

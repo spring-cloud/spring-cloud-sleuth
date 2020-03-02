@@ -17,8 +17,12 @@
 package org.springframework.cloud.sleuth.instrument.web;
 
 import brave.http.HttpAdapter;
+import brave.http.HttpClientParser;
 import brave.http.HttpRequest;
+import brave.http.HttpRequestParser;
+import brave.http.HttpResponseParser;
 import brave.http.HttpSampler;
+import brave.http.HttpServerParser;
 import brave.http.HttpTracing;
 import brave.sampler.SamplerFunction;
 import org.junit.Test;
@@ -122,6 +126,142 @@ public class TraceHttpAutoConfigurationTests {
 		};
 	}
 
+	@Test
+	public void defaultHttpClientParser() {
+		contextRunner().run((context) -> {
+			HttpRequestParser clientRequestParser = context.getBean(HttpTracing.class)
+					.clientRequestParser();
+			HttpResponseParser clientResponseParser = context.getBean(HttpTracing.class)
+					.clientResponseParser();
+
+			then(clientRequestParser).isInstanceOf(HttpRequestParser.Default.class);
+			then(clientResponseParser).isInstanceOf(HttpResponseParser.Default.class);
+		});
+	}
+
+	@Test
+	public void configuresUserProvidedDeprecatedClientParser() {
+		contextRunner().withUserConfiguration(DeprecatedHttpClientParserConfig.class)
+				.run((context) -> {
+					HttpClientParser clientParser = context.getBean(HttpTracing.class)
+							.clientParser();
+
+					then(clientParser)
+							.isSameAs(DeprecatedHttpClientParserConfig.INSTANCE);
+				});
+	}
+
+	@Test
+	public void configuresUserProvidedHttpClientParser() {
+		contextRunner().withUserConfiguration(HttpClientParserConfig.class)
+				.run((context) -> {
+					HttpRequestParser clientRequestParser = context
+							.getBean(HttpTracing.class).clientRequestParser();
+					HttpResponseParser clientResponseParser = context
+							.getBean(HttpTracing.class).clientResponseParser();
+
+					then(clientRequestParser)
+							.isSameAs(HttpClientParserConfig.REQUEST_PARSER);
+					then(clientResponseParser)
+							.isSameAs(HttpClientParserConfig.RESPONSE_PARSER);
+				});
+	}
+
+	@Test
+	public void prefersUserProvidedHttpClientParser() {
+		contextRunner().withUserConfiguration(DeprecatedHttpClientParserConfig.class)
+				.withUserConfiguration(HttpClientParserConfig.class).run((context) -> {
+					HttpRequestParser clientRequestParser = context
+							.getBean(HttpTracing.class).clientRequestParser();
+					HttpResponseParser clientResponseParser = context
+							.getBean(HttpTracing.class).clientResponseParser();
+
+					then(clientRequestParser)
+							.isSameAs(HttpClientParserConfig.REQUEST_PARSER);
+					then(clientResponseParser)
+							.isSameAs(HttpClientParserConfig.RESPONSE_PARSER);
+				});
+	}
+
+	@Test
+	public void defaultHttpServerParser() {
+		contextRunner().run((context) -> {
+			HttpRequestParser serverRequestParser = context.getBean(HttpTracing.class)
+					.serverRequestParser();
+			HttpResponseParser serverResponseParser = context.getBean(HttpTracing.class)
+					.serverResponseParser();
+
+			then(serverRequestParser).isInstanceOf(HttpRequestParser.Default.class);
+			then(serverResponseParser).isInstanceOf(HttpResponseParser.Default.class);
+		});
+	}
+
+	@Test
+	public void configuresUserProvidedDeprecatedServerParser() {
+		contextRunner().withUserConfiguration(DeprecatedHttpServerParserConfig.class)
+				.run((context) -> {
+					HttpServerParser serverParser = context.getBean(HttpTracing.class)
+							.serverParser();
+
+					then(serverParser)
+							.isSameAs(DeprecatedHttpServerParserConfig.INSTANCE);
+				});
+	}
+
+	@Test
+	public void configuresUserProvidedHttpServerParser() {
+		contextRunner().withUserConfiguration(HttpServerParserConfig.class)
+				.run((context) -> {
+					HttpRequestParser serverRequestParser = context
+							.getBean(HttpTracing.class).serverRequestParser();
+					HttpResponseParser serverResponseParser = context
+							.getBean(HttpTracing.class).serverResponseParser();
+
+					then(serverRequestParser)
+							.isSameAs(HttpServerParserConfig.REQUEST_PARSER);
+					then(serverResponseParser)
+							.isSameAs(HttpServerParserConfig.RESPONSE_PARSER);
+				});
+	}
+
+	@Test
+	public void prefersUserProvidedHttpServerParser() {
+		contextRunner().withUserConfiguration(DeprecatedHttpServerParserConfig.class)
+				.withUserConfiguration(HttpServerParserConfig.class).run((context) -> {
+					HttpRequestParser serverRequestParser = context
+							.getBean(HttpTracing.class).serverRequestParser();
+					HttpResponseParser serverResponseParser = context
+							.getBean(HttpTracing.class).serverResponseParser();
+
+					then(serverRequestParser)
+							.isSameAs(HttpServerParserConfig.REQUEST_PARSER);
+					then(serverResponseParser)
+							.isSameAs(HttpServerParserConfig.RESPONSE_PARSER);
+				});
+	}
+
+	/**
+	 * Shows bean aliases work to configure the same instance for both client and server
+	 */
+	@Test
+	public void configuresUserProvidedHttpClientAndServerParser() {
+		contextRunner().withUserConfiguration(HttpParserConfig.class).run((context) -> {
+			HttpRequestParser serverRequestParser = context.getBean(HttpTracing.class)
+					.serverRequestParser();
+			HttpResponseParser serverResponseParser = context.getBean(HttpTracing.class)
+					.serverResponseParser();
+			HttpRequestParser clientRequestParser = context.getBean(HttpTracing.class)
+					.clientRequestParser();
+			HttpResponseParser clientResponseParser = context.getBean(HttpTracing.class)
+					.clientResponseParser();
+
+			then(clientRequestParser).isSameAs(HttpParserConfig.REQUEST_PARSER);
+			then(clientResponseParser).isSameAs(HttpParserConfig.RESPONSE_PARSER);
+			then(serverRequestParser).isSameAs(HttpParserConfig.REQUEST_PARSER);
+			then(serverResponseParser).isSameAs(HttpParserConfig.RESPONSE_PARSER);
+		});
+	}
+
 	private ApplicationContextRunner contextRunner(String... propertyValues) {
 		return new ApplicationContextRunner().withPropertyValues(propertyValues)
 				.withConfiguration(AutoConfigurations.of(TraceAutoConfiguration.class,
@@ -185,6 +325,90 @@ class DeprecatedServerSamplerConfig {
 	@Bean(ServerSampler.NAME)
 	HttpSampler sleuthServerSampler() {
 		return INSTANCE;
+	}
+
+}
+
+@Configuration
+class HttpClientParserConfig {
+
+	static final HttpRequestParser REQUEST_PARSER = (r, c, s) -> {
+	};
+	static final HttpResponseParser RESPONSE_PARSER = (r, c, s) -> {
+	};
+
+	@Bean(HttpClientRequestParser.NAME)
+	HttpRequestParser sleuthHttpClientRequestParser() {
+		return REQUEST_PARSER;
+	}
+
+	@Bean(HttpClientResponseParser.NAME)
+	HttpResponseParser sleuthHttpClientResponseParser() {
+		return RESPONSE_PARSER;
+	}
+
+}
+
+@Configuration
+class DeprecatedHttpClientParserConfig {
+
+	static final HttpClientParser INSTANCE = new HttpClientParser();
+
+	@Bean
+	HttpClientParser clientParser() {
+		return INSTANCE;
+	}
+
+}
+
+@Configuration
+class HttpServerParserConfig {
+
+	static final HttpRequestParser REQUEST_PARSER = (r, c, s) -> {
+	};
+	static final HttpResponseParser RESPONSE_PARSER = (r, c, s) -> {
+	};
+
+	@Bean(HttpServerRequestParser.NAME)
+	HttpRequestParser sleuthHttpServerRequestParser() {
+		return REQUEST_PARSER;
+	}
+
+	@Bean(HttpServerResponseParser.NAME)
+	HttpResponseParser sleuthHttpServerResponseParser() {
+		return RESPONSE_PARSER;
+	}
+
+}
+
+@Configuration
+class DeprecatedHttpServerParserConfig {
+
+	static final HttpServerParser INSTANCE = new HttpServerParser();
+
+	@Bean
+	HttpServerParser serverParser() {
+		return INSTANCE;
+	}
+
+}
+
+@Configuration
+class HttpParserConfig {
+
+	static final HttpRequestParser REQUEST_PARSER = (r, c, s) -> {
+	};
+	static final HttpResponseParser RESPONSE_PARSER = (r, c, s) -> {
+	};
+
+	@Bean(name = { HttpClientRequestParser.NAME, HttpServerRequestParser.NAME })
+	HttpRequestParser sleuthHttpServerRequestParser() {
+		return REQUEST_PARSER;
+	}
+
+	@Bean(name = { HttpClientResponseParser.NAME, HttpServerResponseParser.NAME })
+	HttpResponseParser sleuthHttpServerResponseParser() {
+		return RESPONSE_PARSER;
 	}
 
 }

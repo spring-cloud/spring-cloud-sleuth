@@ -19,18 +19,19 @@ package org.springframework.cloud.sleuth.instrument.web;
 import java.net.URI;
 
 import brave.SpanCustomizer;
-import brave.http.HttpAdapter;
-import brave.http.HttpClientParser;
+import brave.http.HttpRequest;
+import brave.http.HttpRequestParser;
+import brave.propagation.TraceContext;
 
 import org.springframework.cloud.sleuth.util.SpanNameUtil;
 
 /**
- * An {@link HttpClientParser} that behaves like Sleuth in versions 1.x.
+ * An {@link HttpRequestParser} for clients that behaves like Sleuth in versions 1.x.
  *
  * @author Marcin Grzejszczak
  * @since 2.0.0
  */
-class SleuthHttpClientParser extends HttpClientParser {
+class SleuthHttpClientParser implements HttpRequestParser {
 
 	private static final String HOST_KEY = "http.host";
 
@@ -47,22 +48,20 @@ class SleuthHttpClientParser extends HttpClientParser {
 	}
 
 	@Override
-	protected <Req> String spanName(HttpAdapter<Req, ?> adapter, Req req) {
-		return getName(URI.create(adapter.url(req)));
-	}
+	public void parse(HttpRequest request, TraceContext context, SpanCustomizer span) {
+		HttpRequestParser.DEFAULT.parse(request, context, span);
 
-	@Override
-	public <Req> void request(HttpAdapter<Req, ?> adapter, Req req,
-			SpanCustomizer customizer) {
-		super.request(adapter, req, customizer);
-		String url = adapter.url(req);
-		URI uri = URI.create(url);
-		addRequestTags(customizer, url, uri.getHost(), uri.getPath(),
-				adapter.method(req));
+		String url = request.url();
+		if (url != null) {
+			URI uri = URI.create(url);
+			span.name(getName(uri));
+			addRequestTags(span, url, uri.getHost(), uri.getPath(), request.method());
+		}
+
 		for (String header : this.traceKeys.getHttp().getHeaders()) {
-			String headerValue = adapter.requestHeader(req, header);
+			String headerValue = request.header(header);
 			if (headerValue != null) {
-				customizer.tag(key(header), headerValue);
+				span.tag(key(header), headerValue);
 			}
 		}
 	}
@@ -81,14 +80,14 @@ class SleuthHttpClientParser extends HttpClientParser {
 		return uri.getScheme() == null ? "http" : uri.getScheme();
 	}
 
-	private void addRequestTags(SpanCustomizer customizer, String url, String host,
-			String path, String method) {
-		customizer.tag(URL_KEY, url);
+	private void addRequestTags(SpanCustomizer span, String url, String host, String path,
+			String method) {
+		span.tag(URL_KEY, url);
 		if (host != null) {
-			customizer.tag(HOST_KEY, host);
+			span.tag(HOST_KEY, host);
 		}
-		customizer.tag(PATH_KEY, path);
-		customizer.tag(METHOD_KEY, method);
+		span.tag(PATH_KEY, path);
+		span.tag(METHOD_KEY, method);
 	}
 
 }

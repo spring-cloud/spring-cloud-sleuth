@@ -31,7 +31,6 @@ import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 
 import org.springframework.beans.factory.BeanFactory;
-import org.springframework.cloud.sleuth.instrument.web.SleuthHttpParserAccessor;
 
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.never;
@@ -60,8 +59,7 @@ public class TraceFeignAspectTests {
 					.addScopeDecorator(StrictScopeDecorator.create()).build())
 			.build();
 
-	HttpTracing httpTracing = HttpTracing.newBuilder(this.tracing)
-			.clientParser(SleuthHttpParserAccessor.getClient()).build();
+	HttpTracing httpTracing = HttpTracing.newBuilder(this.tracing).build();
 
 	TraceFeignAspect traceFeignAspect;
 
