@@ -2529,13 +2529,55 @@ public void getAnnotationForArgumentToString(@SpanTag("test") Long param) {
 </div>
 <div class="sect2">
 <h3 id="http"><a class="anchor" href="#http"></a><a class="link" href="#http">12.2. HTTP</a></h3>
+<div class="sect3">
+<h4 id="data-policy"><a class="anchor" href="#data-policy"></a><a class="link" href="#data-policy">12.2.1. Data Policy</a></h4>
 <div class="paragraph">
-<p>If a customization of client / server parsing of the HTTP related spans is
-required,  just register a bean of type <code>brave.http.HttpClientParser</code> or
-<code>brave.http.HttpServerParser</code>. If client /server sampling is required, just
-register a bean of type <code>brave.sampler.SamplerFunction&lt;HttpRequest&gt;</code> and name
-the bean <code>sleuthHttpClientSampler</code> for client sampler and
-<code>sleuthHttpServerSampler</code> for server  sampler.</p>
+<p>The default span data policy for HTTP requests is described in Brave:
+<a href="https://github.com/openzipkin/brave/tree/master/instrumentation/http#span-data-policy" class="bare">github.com/openzipkin/brave/tree/master/instrumentation/http#span-data-policy</a></p>
+</div>
+<div class="paragraph">
+<p>To add different data to the span, you need to register a bean of type
+<code>brave.http.HttpRequestParser</code> or <code>brave.http.HttpResponseParser</code> based on when
+the data is collected.</p>
+</div>
+<div class="paragraph">
+<p>The bean names correspond to the request or response side, and whether it is
+a client or server. For example, <code>sleuthHttpClientRequestParser</code> changes what
+is collected before a client request is sent to the server.</p>
+</div>
+<div class="paragraph">
+<p>For your convenience <code>@HttpClientRequestParser</code>, <code>@HttpClientResponseParser</code>
+and corresponding server annotations can be used to inject the proper beans
+or to  reference the bean names via their static String <code>NAME</code> fields.</p>
+</div>
+<div class="paragraph">
+<p>Here&#8217;s an example adding the HTTP url in addition to defaults:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">@Configuration
+class Config {
+  @Bean(name = { HttpClientRequestParser.NAME, HttpServerRequestParser.NAME })
+  HttpRequestParser sleuthHttpServerRequestParser() {
+      return (req, context, span) -&gt; {
+          HttpRequestParser.DEFAULT.parse(req, context, span);
+          String url = req.url();
+          if (url != null) {
+              span.tag("http.url", url);
+          }
+      };
+  }
+}</code></pre>
+</div>
+</div>
+</div>
+<div class="sect3">
+<h4 id="sampling-2"><a class="anchor" href="#sampling-2"></a><a class="link" href="#sampling-2">12.2.2. Sampling</a></h4>
+<div class="paragraph">
+<p>If client /server sampling is required, just  register a bean of type
+<code>brave.sampler.SamplerFunction&lt;HttpRequest&gt;</code> and name  the bean
+<code>sleuthHttpClientSampler</code> for client sampler and <code>sleuthHttpServerSampler</code>
+for server  sampler.</p>
 </div>
 <div class="paragraph">
 <p>For your convenience the <code>@HttpClientSampler</code> and <code>@HttpServerSampler</code>
@@ -2568,6 +2610,7 @@ class Config {
       };
   }
 }</code></pre>
+</div>
 </div>
 </div>
 </div>
