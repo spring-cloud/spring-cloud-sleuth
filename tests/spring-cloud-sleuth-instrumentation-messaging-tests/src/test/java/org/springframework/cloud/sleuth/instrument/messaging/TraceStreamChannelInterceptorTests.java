@@ -24,17 +24,17 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
+import org.springframework.boot.autoconfigure.ImportAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.cloud.sleuth.instrument.util.SpanUtil;
 import org.springframework.cloud.sleuth.util.ArrayListSpanReporter;
+import org.springframework.cloud.stream.binder.test.OutputDestination;
+import org.springframework.cloud.stream.binder.test.TestChannelBinderConfiguration;
+import org.springframework.cloud.stream.function.StreamBridge;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.integration.channel.QueueChannel;
-import org.springframework.integration.support.MessageBuilder;
 import org.springframework.messaging.Message;
-import org.springframework.messaging.PollableChannel;
 import org.springframework.test.annotation.DirtiesContext;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -42,16 +42,19 @@ import static org.assertj.core.api.Assertions.assertThat;
 /**
  * @author Spencer Gibb
  */
-@SpringBootTest(classes = TraceContextPropagationChannelInterceptorTests.App.class)
+@SpringBootTest(classes = TraceStreamChannelInterceptorTests.App.class,
+		properties = "spring.cloud.stream.source=testSupplier")
 @DirtiesContext
-public class TraceContextPropagationChannelInterceptorTests {
+public class TraceStreamChannelInterceptorTests {
 
 	@Autowired
-	@Qualifier("channel")
-	private PollableChannel channel;
+	private OutputDestination channel;
 
 	@Autowired
 	private Tracing tracing;
+
+	@Autowired
+	private StreamBridge streamBridge;
 
 	@Autowired
 	private ArrayListSpanReporter reporter;
@@ -62,12 +65,12 @@ public class TraceContextPropagationChannelInterceptorTests {
 	}
 
 	@Test
-	public void testSpanPropagation() {
+	public void testSpanPropagationViaBridge() {
 		Span span = this.tracing.tracer().nextSpan().name("http:testSendMessage").start();
 		String expectedSpanId = SpanUtil.idToHex(span.context().spanId());
 
 		try (Tracer.SpanInScope ws = this.tracing.tracer().withSpanInScope(span)) {
-			this.channel.send(MessageBuilder.withPayload("hi").build());
+			this.streamBridge.send("testSupplier-out-0", "hi");
 		}
 		finally {
 			span.finish();
@@ -91,18 +94,16 @@ public class TraceContextPropagationChannelInterceptorTests {
 
 		String parentId = message.getHeaders().get(TraceMessageHeaders.PARENT_ID_NAME,
 				String.class);
+		// [0] - producer
+		// [1] - http:testsendmessage
 		assertThat(parentId).as("parentId was not equal to parent's id")
-				.isEqualTo(this.reporter.getSpans().get(0).id());
+				.isEqualTo(this.reporter.getSpans().get(1).id());
 	}
 
 	@Configuration
 	@EnableAutoConfiguration
+	@ImportAutoConfiguration(TestChannelBinderConfiguration.class)
 	static class App {
-
-		@Bean
-		public QueueChannel channel() {
-			return new QueueChannel();
-		}
 
 		@Bean
 		Sampler testSampler() {

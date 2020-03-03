@@ -152,7 +152,7 @@ class HttpClientBeanPostProcessor implements BeanPostProcessor {
 			// Start a new client span with the appropriate parent
 			TraceContext parent = req.currentContext().getOrDefault(TraceContext.class,
 					null);
-			WrappedHttpClientRequest request = new WrappedHttpClientRequest(req);
+			HttpClientRequestWrapper request = new HttpClientRequestWrapper(req);
 
 			clientSpan = handler().handleSendWithParent(request, parent);
 			parseConnectionAddress(connection, clientSpan);
@@ -240,18 +240,18 @@ class HttpClientBeanPostProcessor implements BeanPostProcessor {
 			if (clientSpan == null) {
 				return; // Unexpected. In the handle method, without a span to finish!
 			}
-			WrappedHttpClientResponse response = resp != null
-					? new WrappedHttpClientResponse(resp) : null;
+			HttpClientResponseWrapper response = resp != null
+					? new HttpClientResponseWrapper(resp) : null;
 			handler().handleReceive(response, error, clientSpan);
 		}
 
 	}
 
-	static final class WrappedHttpClientRequest extends brave.http.HttpClientRequest {
+	static final class HttpClientRequestWrapper extends brave.http.HttpClientRequest {
 
 		final HttpClientRequest delegate;
 
-		WrappedHttpClientRequest(HttpClientRequest delegate) {
+		HttpClientRequestWrapper(HttpClientRequest delegate) {
 			this.delegate = delegate;
 		}
 
@@ -287,11 +287,11 @@ class HttpClientBeanPostProcessor implements BeanPostProcessor {
 
 	}
 
-	static final class WrappedHttpClientResponse extends brave.http.HttpClientResponse {
+	static final class HttpClientResponseWrapper extends brave.http.HttpClientResponse {
 
 		final HttpClientResponse delegate;
 
-		WrappedHttpClientResponse(HttpClientResponse delegate) {
+		HttpClientResponseWrapper(HttpClientResponse delegate) {
 			this.delegate = delegate;
 		}
 

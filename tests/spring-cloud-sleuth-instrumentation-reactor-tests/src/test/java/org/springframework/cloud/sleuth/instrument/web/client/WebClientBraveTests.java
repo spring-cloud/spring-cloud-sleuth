@@ -28,6 +28,7 @@ import org.springframework.beans.factory.config.BeanPostProcessor;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.client.reactive.ClientHttpConnector;
 import org.springframework.http.client.reactive.ReactorClientHttpConnector;
 import org.springframework.web.reactive.function.BodyInserters;
 import org.springframework.web.reactive.function.client.ClientResponse;
@@ -118,9 +119,13 @@ public class WebClientBraveTests
 		}
 
 		@Bean
-		WebClient.Builder webClientBuilder(HttpClient httpClient) {
-			return WebClient.builder()
-					.clientConnector(new ReactorClientHttpConnector(httpClient));
+		ClientHttpConnector clientHttpConnector(HttpClient httpClient) {
+			return new ReactorClientHttpConnector(httpClient);
+		}
+
+		@Bean
+		WebClient.Builder webClientBuilder(ClientHttpConnector clientHttpConnector) {
+			return WebClient.builder().clientConnector(clientHttpConnector);
 		}
 
 	}

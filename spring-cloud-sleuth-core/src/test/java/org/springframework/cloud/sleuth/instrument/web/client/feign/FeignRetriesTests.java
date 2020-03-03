@@ -22,7 +22,6 @@ import java.util.HashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import brave.Tracing;
-import brave.http.HttpClientParser;
 import brave.http.HttpTracing;
 import brave.propagation.StrictScopeDecorator;
 import brave.propagation.ThreadLocalCurrentTraceContext;
@@ -69,8 +68,7 @@ public class FeignRetriesTests {
 					.addScopeDecorator(StrictScopeDecorator.create()).build())
 			.spanReporter(this.reporter).build();
 
-	HttpTracing httpTracing = HttpTracing.newBuilder(this.tracing)
-			.clientParser(new HttpClientParser()).build();
+	HttpTracing httpTracing = HttpTracing.newBuilder(this.tracing).build();
 
 	@Before
 	@After

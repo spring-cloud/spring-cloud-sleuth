@@ -24,7 +24,6 @@ import java.util.List;
 import brave.Span;
 import brave.Tracer;
 import brave.Tracing;
-import brave.http.HttpClientParser;
 import brave.http.HttpTracing;
 import brave.propagation.StrictScopeDecorator;
 import brave.propagation.ThreadLocalCurrentTraceContext;
@@ -59,8 +58,7 @@ public class TracingFeignClientTests {
 
 	Tracer tracer = this.tracing.tracer();
 
-	HttpTracing httpTracing = HttpTracing.newBuilder(this.tracing)
-			.clientParser(new HttpClientParser()).build();
+	HttpTracing httpTracing = HttpTracing.newBuilder(this.tracing).build();
 
 	@Mock
 	Client client;

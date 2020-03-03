@@ -19,7 +19,6 @@ package org.springframework.cloud.sleuth.instrument.web.client.feign;
 import java.io.IOException;
 
 import brave.Tracing;
-import brave.http.HttpClientParser;
 import brave.http.HttpTracing;
 import brave.propagation.StrictScopeDecorator;
 import brave.propagation.ThreadLocalCurrentTraceContext;
@@ -57,8 +56,7 @@ public class TraceFeignAspectTests {
 					.addScopeDecorator(StrictScopeDecorator.create()).build())
 			.build();
 
-	HttpTracing httpTracing = HttpTracing.newBuilder(this.tracing)
-			.clientParser(new HttpClientParser()).build();
+	HttpTracing httpTracing = HttpTracing.newBuilder(this.tracing).build();
 
 	TraceFeignAspect traceFeignAspect;
 

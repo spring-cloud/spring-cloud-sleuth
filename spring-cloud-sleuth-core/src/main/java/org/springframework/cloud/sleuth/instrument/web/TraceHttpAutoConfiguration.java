@@ -19,11 +19,10 @@ package org.springframework.cloud.sleuth.instrument.web;
 import java.util.ArrayList;
 import java.util.List;
 
-import brave.ErrorParser;
 import brave.Tracing;
-import brave.http.HttpClientParser;
 import brave.http.HttpRequest;
-import brave.http.HttpServerParser;
+import brave.http.HttpRequestParser;
+import brave.http.HttpResponseParser;
 import brave.http.HttpTracing;
 import brave.http.HttpTracingCustomizer;
 import brave.sampler.SamplerFunction;
@@ -61,17 +60,47 @@ public class TraceHttpAutoConfiguration {
 	@ConditionalOnMissingBean
 	// NOTE: stable bean name as might be used outside sleuth
 	HttpTracing httpTracing(Tracing tracing, SkipPatternProvider provider,
-			HttpClientParser clientParser, HttpServerParser serverParser,
+			@Nullable @HttpClientRequestParser HttpRequestParser httpClientRequestParser,
+			@Nullable @HttpClientResponseParser HttpResponseParser httpClientResponseParser,
+			@Nullable brave.http.HttpClientParser clientParser,
+			@Nullable @HttpServerRequestParser HttpRequestParser httpServerRequestParser,
+			@Nullable @HttpServerResponseParser HttpResponseParser httpServerResponseParser,
+			@Nullable brave.http.HttpServerParser serverParser,
 			@HttpClientSampler SamplerFunction<HttpRequest> httpClientSampler,
 			@Nullable @HttpServerSampler SamplerFunction<HttpRequest> httpServerSampler) {
 		SamplerFunction<HttpRequest> combinedSampler = combineUserProvidedSamplerWithSkipPatternSampler(
 				httpServerSampler, provider);
 		HttpTracing.Builder builder = HttpTracing.newBuilder(tracing)
-				.clientParser(clientParser).serverParser(serverParser)
 				.clientSampler(httpClientSampler).serverSampler(combinedSampler);
+
+		if (httpClientRequestParser != null || httpClientResponseParser != null) {
+			if (httpClientRequestParser != null) {
+				builder.clientRequestParser(httpClientRequestParser);
+			}
+			if (httpClientResponseParser != null) {
+				builder.clientResponseParser(httpClientResponseParser);
+			}
+		}
+		else if (clientParser != null) { // consider deprecated last
+			builder.clientParser(clientParser);
+		}
+
+		if (httpServerRequestParser != null || httpServerResponseParser != null) {
+			if (httpServerRequestParser != null) {
+				builder.serverRequestParser(httpServerRequestParser);
+			}
+			if (httpServerResponseParser != null) {
+				builder.serverResponseParser(httpServerResponseParser);
+			}
+		}
+		else if (serverParser != null) { // consider deprecated last
+			builder.serverParser(serverParser);
+		}
+
 		for (HttpTracingCustomizer customizer : this.httpTracingCustomizers) {
 			customizer.customize(builder);
 		}
+
 		return builder.build();
 	}
 
@@ -84,23 +113,6 @@ public class TraceHttpAutoConfiguration {
 			return skipPatternSampler;
 		}
 		return new CompositeHttpSampler(skipPatternSampler, serverSampler);
-	}
-
-	@Bean
-	@ConditionalOnMissingBean
-	HttpClientParser httpClientParser(ErrorParser errorParser) {
-		return new HttpClientParser() {
-			@Override
-			protected ErrorParser errorParser() {
-				return errorParser;
-			}
-		};
-	}
-
-	@Bean
-	@ConditionalOnMissingBean
-	HttpServerParser defaultHttpServerParser() {
-		return new HttpServerParser();
 	}
 
 	@Bean

@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2019 the original author or authors.
+ * Copyright 2013-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -76,7 +76,7 @@ final class TraceFeignObjectWrapper {
 
 	private Object instrumentedFeignLoadBalancerClient(Object bean) {
 		if (AopUtils.getTargetClass(bean).equals(FeignBlockingLoadBalancerClient.class)) {
-			FeignBlockingLoadBalancerClient client = ((FeignBlockingLoadBalancerClient) bean);
+			FeignBlockingLoadBalancerClient client = ProxyUtils.getTargetObject(bean);
 			return new TraceFeignBlockingLoadBalancerClient(
 					(Client) new TraceFeignObjectWrapper(this.beanFactory)
 							.wrap(client.getDelegate()),

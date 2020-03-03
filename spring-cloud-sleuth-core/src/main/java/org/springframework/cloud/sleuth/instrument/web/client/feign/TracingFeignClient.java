@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2019 the original author or authors.
+ * Copyright 2013-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,10 +25,12 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 import brave.Span;
-import brave.Tracer;
 import brave.http.HttpClientHandler;
+import brave.http.HttpClientRequest;
+import brave.http.HttpClientResponse;
 import brave.http.HttpTracing;
-import brave.propagation.Propagation;
+import brave.propagation.CurrentTraceContext;
+import brave.propagation.CurrentTraceContext.Scope;
 import feign.Client;
 import feign.Request;
 import feign.Response;
@@ -36,6 +38,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import org.springframework.cloud.util.ProxyUtils;
+import org.springframework.lang.Nullable;
 
 /**
  * Feign client wrapper.
@@ -47,37 +50,14 @@ final class TracingFeignClient implements Client {
 
 	private static final Log log = LogFactory.getLog(TracingFeignClient.class);
 
-	static final Propagation.Setter<Map<String, Collection<String>>, String> SETTER = new Propagation.Setter<Map<String, Collection<String>>, String>() {
-		@Override
-		public void put(Map<String, Collection<String>> carrier, String key,
-				String value) {
-			if (!carrier.containsKey(key)) {
-				carrier.put(key, Collections.singletonList(value));
-				if (log.isTraceEnabled()) {
-					log.trace("Added key [" + key + "] and header value [" + value + "]");
-				}
-			}
-			else {
-				if (log.isTraceEnabled()) {
-					log.trace("Key [" + key + "] already there in the headers");
-				}
-			}
-		}
-
-		@Override
-		public String toString() {
-			return "Map::set";
-		}
-	};
-
-	final Tracer tracer;
+	final CurrentTraceContext currentTraceContext;
 
 	final Client delegate;
 
-	final HttpClientHandler<brave.http.HttpClientRequest, brave.http.HttpClientResponse> handler;
+	final HttpClientHandler<HttpClientRequest, HttpClientResponse> handler;
 
 	TracingFeignClient(HttpTracing httpTracing, Client delegate) {
-		this.tracer = httpTracing.tracing().tracer();
+		this.currentTraceContext = httpTracing.tracing().currentTraceContext();
 		this.handler = HttpClientHandler.create(httpTracing);
 		Client delegateTarget = ProxyUtils.getTargetObject(delegate);
 		this.delegate = delegateTarget instanceof TracingFeignClient
@@ -90,29 +70,27 @@ final class TracingFeignClient implements Client {
 
 	@Override
 	public Response execute(Request req, Request.Options options) throws IOException {
-		HttpClientRequest request = new HttpClientRequest(req);
+		RequestWrapper request = new RequestWrapper(req);
 		Span span = this.handler.handleSend(request);
 		if (log.isDebugEnabled()) {
 			log.debug("Handled send of " + span);
 		}
-		HttpClientResponse response = null;
+		Response res = null;
 		Throwable error = null;
-		try (Tracer.SpanInScope ws = this.tracer.withSpanInScope(span)) {
-			Response res = this.delegate.execute(request.build(), options);
-			if (res != null) {
-				response = new HttpClientResponse(res);
-			}
-			else { // possibly null on bad implementation or mocks
-				response = new HttpClientResponse(
-						Response.builder().request(req).build());
+		try (Scope ws = this.currentTraceContext.newScope(span.context())) {
+			res = this.delegate.execute(request.build(), options);
+			if (res == null) { // possibly null on bad implementation or mocks
+				res = Response.builder().request(req).build();
 			}
 			return res;
 		}
-		catch (IOException | RuntimeException | Error e) {
+		catch (Throwable e) {
 			error = e;
 			throw e;
 		}
 		finally {
+			ResponseWrapper response = res != null
+					? new ResponseWrapper(request, res, error) : null;
 			this.handler.handleReceive(response, error, span);
 
 			if (log.isDebugEnabled()) {
@@ -121,20 +99,22 @@ final class TracingFeignClient implements Client {
 		}
 	}
 
-	void handleSendAndReceive(Span span, Request request, Response response,
-			Throwable error) {
-		this.handler.handleSend(new HttpClientRequest(request), span);
-		this.handler.handleReceive(
-				response != null ? new HttpClientResponse(response) : null, error, span);
+	void handleSendAndReceive(Span span, Request req, @Nullable Response res,
+			@Nullable Throwable error) {
+		RequestWrapper request = new RequestWrapper(req);
+		this.handler.handleSend(request, span);
+		ResponseWrapper response = res != null ? new ResponseWrapper(request, res, error)
+				: null;
+		this.handler.handleReceive(response, error, span);
 	}
 
-	static final class HttpClientRequest extends brave.http.HttpClientRequest {
+	static final class RequestWrapper extends HttpClientRequest {
 
 		final Request delegate;
 
 		Map<String, Collection<String>> headers;
 
-		HttpClientRequest(Request delegate) {
+		RequestWrapper(Request delegate) {
 			this.delegate = delegate;
 		}
 
@@ -202,22 +182,41 @@ final class TracingFeignClient implements Client {
 
 	}
 
-	static final class HttpClientResponse extends brave.http.HttpClientResponse {
+	static final class ResponseWrapper extends HttpClientResponse {
 
-		final Response delegate;
+		final RequestWrapper request;
 
-		HttpClientResponse(Response delegate) {
-			this.delegate = delegate;
+		final Response response;
+
+		@Nullable
+		final Throwable error;
+
+		ResponseWrapper(RequestWrapper request, Response response,
+				@Nullable Throwable error) {
+			this.request = request;
+			this.response = response;
+			this.error = error;
 		}
 
 		@Override
 		public Object unwrap() {
-			return delegate;
+			return response;
+		}
+
+		@Override
+		public RequestWrapper request() {
+			return request;
+		}
+
+		@Override
+		@Nullable
+		public Throwable error() {
+			return error;
 		}
 
 		@Override
 		public int statusCode() {
-			return delegate.status();
+			return response.status();
 		}
 
 	}

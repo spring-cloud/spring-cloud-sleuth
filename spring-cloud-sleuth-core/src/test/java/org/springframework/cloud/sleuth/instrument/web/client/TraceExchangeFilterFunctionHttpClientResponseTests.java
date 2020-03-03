@@ -20,7 +20,7 @@ import org.assertj.core.api.BDDAssertions;
 import org.junit.Test;
 import org.mockito.BDDMockito;
 
-import org.springframework.cloud.sleuth.instrument.web.client.TraceExchangeFilterFunction.HttpClientResponse;
+import org.springframework.cloud.sleuth.instrument.web.client.TraceExchangeFilterFunction.ClientResponseWrapper;
 import org.springframework.web.reactive.function.client.ClientResponse;
 
 public class TraceExchangeFilterFunctionHttpClientResponseTests {
@@ -29,7 +29,7 @@ public class TraceExchangeFilterFunctionHttpClientResponseTests {
 	public void should_return_0_when_invalid_status_code_is_returned() {
 		ClientResponse clientResponse = BDDMockito.mock(ClientResponse.class);
 		BDDMockito.given(clientResponse.rawStatusCode()).willReturn(-1);
-		HttpClientResponse response = new HttpClientResponse(clientResponse);
+		ClientResponseWrapper response = new ClientResponseWrapper(clientResponse);
 
 		Integer statusCode = response.statusCode();
 
@@ -40,7 +40,7 @@ public class TraceExchangeFilterFunctionHttpClientResponseTests {
 	public void should_return_status_code_when_valid_status_code_is_returned() {
 		ClientResponse clientResponse = BDDMockito.mock(ClientResponse.class);
 		BDDMockito.given(clientResponse.rawStatusCode()).willReturn(200);
-		HttpClientResponse response = new HttpClientResponse(clientResponse);
+		ClientResponseWrapper response = new ClientResponseWrapper(clientResponse);
 
 		Integer statusCode = response.statusCode();
 
