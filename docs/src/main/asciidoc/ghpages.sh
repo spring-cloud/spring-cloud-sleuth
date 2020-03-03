@@ -291,26 +291,26 @@ case ${key} in
     -v|--version)
     VERSION="$2"
     shift # past argument
-
+    ;;
     -d|--destination)
     DESTINATION="$2"
     shift # past argument
-
+    ;;
     -b|--build)
     BUILD="yes"
-
+    ;;
     -c|--clone)
     CLONE="yes"
-
+    ;;
     -h|--help)
     print_usage
     exit 0
-
+    ;;
     *)
     echo "Invalid option: [$1]"
     print_usage
     exit 1
-
+    ;;
 esac
 shift # past argument or value
 done
