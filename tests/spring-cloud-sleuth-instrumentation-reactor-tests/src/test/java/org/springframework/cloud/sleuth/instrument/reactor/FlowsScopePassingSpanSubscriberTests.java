@@ -24,9 +24,9 @@ import brave.propagation.CurrentTraceContext.Scope;
 import brave.propagation.TraceContext;
 import org.assertj.core.presentation.StandardRepresentation;
 import org.awaitility.Awaitility;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.reactivestreams.Publisher;
 import org.reactivestreams.Subscriber;
 import org.reactivestreams.Subscription;
@@ -63,14 +63,14 @@ public class FlowsScopePassingSpanSubscriberTests {
 
 	AnnotationConfigApplicationContext springContext = new AnnotationConfigApplicationContext();
 
-	@Before
+	@BeforeEach
 	public void setup() {
 		Hooks.resetOnEachOperator(SLEUTH_TRACE_REACTOR_KEY);
 		Hooks.resetOnLastOperator(SLEUTH_TRACE_REACTOR_KEY);
 		Schedulers.resetOnScheduleHooks();
 	}
 
-	@After
+	@AfterEach
 	public void close() {
 		springContext.close();
 	}

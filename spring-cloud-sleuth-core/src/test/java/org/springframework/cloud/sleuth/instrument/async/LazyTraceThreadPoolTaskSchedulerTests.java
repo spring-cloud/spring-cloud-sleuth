@@ -26,12 +26,12 @@ import java.util.concurrent.ThreadFactory;
 import brave.Tracing;
 import brave.propagation.StrictScopeDecorator;
 import brave.propagation.ThreadLocalCurrentTraceContext;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.BDDMockito;
 import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.cloud.sleuth.DefaultSpanNamer;
@@ -40,7 +40,7 @@ import org.springframework.scheduling.Trigger;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 import org.springframework.util.ErrorHandler;
 
-@RunWith(MockitoJUnitRunner.class)
+@ExtendWith(MockitoExtension.class)
 public class LazyTraceThreadPoolTaskSchedulerTests {
 
 	Tracing tracing = Tracing.newBuilder()
@@ -48,7 +48,7 @@ public class LazyTraceThreadPoolTaskSchedulerTests {
 					.addScopeDecorator(StrictScopeDecorator.create()).build())
 			.build();
 
-	@Mock
+	@Mock(lenient = true)
 	BeanFactory beanFactory;
 
 	@Mock
@@ -56,7 +56,7 @@ public class LazyTraceThreadPoolTaskSchedulerTests {
 
 	LazyTraceThreadPoolTaskScheduler executor;
 
-	@Before
+	@BeforeEach
 	public void setup() {
 		this.executor = new LazyTraceThreadPoolTaskScheduler(beanFactory(),
 				this.delegate);

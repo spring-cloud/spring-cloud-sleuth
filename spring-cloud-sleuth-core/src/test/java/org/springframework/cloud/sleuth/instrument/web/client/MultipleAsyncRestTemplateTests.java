@@ -28,9 +28,8 @@ import brave.sampler.Sampler;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.awaitility.Awaitility;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -55,7 +54,6 @@ import org.springframework.scheduling.annotation.AsyncConfigurerSupport;
 import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.test.annotation.DirtiesContext;
-import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.AsyncRestTemplate;
@@ -65,7 +63,6 @@ import static org.assertj.core.api.BDDAssertions.then;
 /**
  * @author Marcin Grzejszczak
  */
-@RunWith(SpringRunner.class)
 @SpringBootTest(
 		classes = { MultipleAsyncRestTemplateTests.Config.class,
 				MultipleAsyncRestTemplateTests.CustomExecutorConfig.class,
@@ -92,7 +89,7 @@ public class MultipleAsyncRestTemplateTests {
 	@LocalServerPort
 	int port;
 
-	@Before
+	@BeforeEach
 	public void setup() {
 		this.wrappedExecutor = this.executor.getAsyncExecutor();
 	}

@@ -25,8 +25,8 @@ import java.util.Map;
 import brave.Tracing;
 import brave.propagation.StrictScopeDecorator;
 import brave.propagation.ThreadLocalCurrentTraceContext;
-import org.junit.After;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
 import zipkin2.Span;
 
 import org.springframework.amqp.support.AmqpHeaders;
@@ -424,7 +424,7 @@ public class TracingChannelInterceptorTest {
 		return new ExecutorSideOnly();
 	}
 
-	@After
+	@AfterEach
 	public void close() {
 		assertThat(Tracing.current().currentTraceContext().get()).isNull();
 		Tracing.current().close();

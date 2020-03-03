@@ -16,20 +16,17 @@
 
 package org.springframework.cloud.sleuth.instrument.web.view;
 
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Test;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.cloud.sleuth.util.ArrayListSpanReporter;
 import org.springframework.core.env.Environment;
 import org.springframework.test.context.TestPropertySource;
-import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.web.client.RestTemplate;
 
 import static org.assertj.core.api.BDDAssertions.then;
 
-@RunWith(SpringRunner.class)
 @SpringBootTest(classes = Issue469.class,
 		webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @TestPropertySource(properties = { "spring.mvc.view.prefix=/WEB-INF/jsp/",

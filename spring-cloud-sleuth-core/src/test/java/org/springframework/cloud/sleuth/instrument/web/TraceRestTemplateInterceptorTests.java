@@ -30,9 +30,9 @@ import brave.propagation.StrictScopeDecorator;
 import brave.propagation.ThreadLocalCurrentTraceContext;
 import brave.sampler.Sampler;
 import brave.spring.web.TracingClientHttpRequestInterceptor;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import org.springframework.cloud.sleuth.util.ArrayListSpanReporter;
 import org.springframework.cloud.sleuth.util.SpanUtil;
@@ -72,7 +72,7 @@ public class TraceRestTemplateInterceptorTests {
 	private RestTemplate template = new RestTemplate(
 			new MockMvcClientHttpRequestFactory(this.mockMvc));
 
-	@Before
+	@BeforeEach
 	public void setup() {
 		setInterceptors(HttpTracing.create(this.tracing));
 	}
@@ -82,7 +82,7 @@ public class TraceRestTemplateInterceptorTests {
 				TracingClientHttpRequestInterceptor.create(httpTracing)));
 	}
 
-	@After
+	@AfterEach
 	public void clean() {
 		Tracing.current().close();
 	}

@@ -25,10 +25,9 @@ import brave.Tracing;
 import brave.sampler.Sampler;
 import brave.spring.web.TracingAsyncClientHttpRequestInterceptor;
 import org.awaitility.Awaitility;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import zipkin2.Span;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -41,7 +40,6 @@ import org.springframework.context.annotation.Import;
 import org.springframework.core.env.Environment;
 import org.springframework.http.MediaType;
 import org.springframework.test.annotation.DirtiesContext;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
@@ -63,7 +61,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.request;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@RunWith(SpringJUnit4ClassRunner.class)
 @SpringBootTest(classes = RestTemplateTraceAspectIntegrationTests.Config.class,
 		webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
 		properties = "spring.sleuth.web.client.skipPattern=/issue.*")
@@ -87,15 +84,15 @@ public class RestTemplateTraceAspectIntegrationTests {
 
 	private MockMvc mockMvc;
 
-	@Before
+	@BeforeEach
 	public void init() {
 		this.mockMvc = MockMvcBuilders.webAppContextSetup(this.context).build();
 		this.controller.reset();
 		this.reporter.clear();
 	}
 
-	@Before
-	@After
+	@BeforeEach
+	@AfterEach
 	public void verify() {
 		then(this.tracer.tracer().currentSpan()).isNull();
 	}

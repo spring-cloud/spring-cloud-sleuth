@@ -30,9 +30,8 @@ import brave.sampler.Sampler;
 import io.opentracing.Scope;
 import io.opentracing.propagation.Format;
 import io.opentracing.propagation.TextMapAdapter;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import zipkin2.Annotation;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -41,7 +40,6 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.cloud.sleuth.util.ArrayListSpanReporter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.test.context.junit4.SpringRunner;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.data.MapEntry.entry;
@@ -56,7 +54,6 @@ import static org.springframework.boot.test.context.SpringBootTest.WebEnvironmen
  *
  * @author Marcin Grzejszczak
  */
-@RunWith(SpringRunner.class)
 @SpringBootTest(webEnvironment = NONE,
 		properties = "spring.sleuth.baggage-keys=country-code,user-id")
 public class BraveTracerTest {
@@ -271,7 +268,7 @@ public class BraveTracerTest {
 		assertThat(this.spans.getSpans().get(0).tags()).isEmpty();
 	}
 
-	@Before
+	@BeforeEach
 	public void clear() {
 		this.spans.clear();
 	}

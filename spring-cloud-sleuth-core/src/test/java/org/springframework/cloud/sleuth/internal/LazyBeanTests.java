@@ -17,7 +17,7 @@
 package org.springframework.cloud.sleuth.internal;
 
 import brave.propagation.CurrentTraceContext;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import org.springframework.context.ConfigurableApplicationContext;
 

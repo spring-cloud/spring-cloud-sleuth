@@ -19,7 +19,7 @@ package org.springframework.cloud.sleuth.zipkin2.sender;
 import java.net.URI;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;

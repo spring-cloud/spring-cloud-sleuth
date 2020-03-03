@@ -23,10 +23,9 @@ import brave.Span;
 import brave.Tracer;
 import brave.sampler.Sampler;
 import org.awaitility.Awaitility;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
@@ -38,12 +37,10 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.core.task.SimpleAsyncTaskExecutor;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.EnableAsync;
-import org.springframework.test.context.junit4.SpringRunner;
 
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.BDDAssertions.then;
 
-@RunWith(SpringRunner.class)
 @SpringBootTest(
 		classes = { TraceAsyncIntegrationTests.TraceAsyncITestConfiguration.class })
 public class TraceAsyncIntegrationTests {
@@ -57,7 +54,7 @@ public class TraceAsyncIntegrationTests {
 	@Autowired
 	ArrayListSpanReporter reporter;
 
-	@Before
+	@BeforeEach
 	public void cleanup() {
 		this.reporter.clear();
 		this.classPerformingAsyncLogic.clear();
@@ -166,7 +163,7 @@ public class TraceAsyncIntegrationTests {
 		});
 	}
 
-	@After
+	@AfterEach
 	public void cleanTrace() {
 		this.reporter.clear();
 	}

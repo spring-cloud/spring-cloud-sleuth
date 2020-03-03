@@ -31,8 +31,7 @@ import brave.sampler.Sampler;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.awaitility.Awaitility;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Test;
 
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -50,7 +49,6 @@ import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 import org.springframework.stereotype.Component;
-import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.RestTemplate;
@@ -60,7 +58,6 @@ import static org.assertj.core.api.BDDAssertions.then;
 /**
  * @author Marcin Grzejszczak
  */
-@RunWith(SpringRunner.class)
 @SpringBootTest(classes = { AppConfig.class, Application.class },
 		webEnvironment = WebEnvironment.RANDOM_PORT,
 		properties = { "ribbon.eureka.enabled=false", "feign.hystrix.enabled=false" })

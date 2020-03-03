@@ -23,10 +23,10 @@ import java.util.stream.Collectors;
 import brave.Tracer;
 import brave.sampler.Sampler;
 import org.awaitility.Awaitility;
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import reactor.core.publisher.Flux;
@@ -36,7 +36,8 @@ import zipkin2.Span;
 import org.springframework.boot.WebApplicationType;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.builder.SpringApplicationBuilder;
-import org.springframework.boot.test.system.OutputCaptureRule;
+import org.springframework.boot.test.system.CapturedOutput;
+import org.springframework.boot.test.system.OutputCaptureExtension;
 import org.springframework.cloud.context.refresh.ContextRefresher;
 import org.springframework.cloud.sleuth.instrument.reactor.Issue866Configuration;
 import org.springframework.cloud.sleuth.instrument.reactor.TraceReactorAutoConfigurationAccessorConfiguration;
@@ -55,26 +56,24 @@ import static org.springframework.web.reactive.function.server.RequestPredicates
 import static org.springframework.web.reactive.function.server.RouterFunctions.route;
 
 // https://github.com/spring-cloud/spring-cloud-sleuth/issues/850
+@ExtendWith(OutputCaptureExtension.class)
 public class FlatMapTests {
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(FlatMapTests.class);
 
-	@Rule
-	public OutputCaptureRule capture = new OutputCaptureRule();
-
-	@BeforeClass
+	@BeforeAll
 	public static void setup() {
 		TraceReactorAutoConfigurationAccessorConfiguration.close();
 		Issue866Configuration.hook = null;
 	}
 
-	@AfterClass
+	@AfterAll
 	public static void cleanup() {
 		Issue866Configuration.hook = null;
 	}
 
 	@Test
-	public void should_work_with_flat_maps() {
+	public void should_work_with_flat_maps(CapturedOutput capture) {
 		// given
 		ConfigurableApplicationContext context = new SpringApplicationBuilder(
 				FlatMapTests.TestConfiguration.class, Issue866Configuration.class)
@@ -84,11 +83,12 @@ public class FlatMapTests {
 								"security.basic.enabled=false",
 								"management.security.enabled=false")
 						.run();
-		assertReactorTracing(context);
+		assertReactorTracing(context, capture);
 	}
 
 	@Test
-	public void should_work_with_flat_maps_with_on_last_operator_instrumentation() {
+	public void should_work_with_flat_maps_with_on_last_operator_instrumentation(
+			CapturedOutput capture) {
 		// given
 		ConfigurableApplicationContext context = new SpringApplicationBuilder(
 				FlatMapTests.TestConfiguration.class, Issue866Configuration.class)
@@ -99,20 +99,21 @@ public class FlatMapTests {
 								"security.basic.enabled=false",
 								"management.security.enabled=false")
 						.run();
-		assertReactorTracing(context);
+		assertReactorTracing(context, capture);
 
 		try {
 			System.setProperty("spring.sleuth.reactor.decorate-on-each", "true");
 			// trigger context refreshed
 			context.getBean(ContextRefresher.class).refresh();
-			assertReactorTracing(context);
+			assertReactorTracing(context, capture);
 		}
 		finally {
 			System.clearProperty("spring.sleuth.reactor.decorate-on-each");
 		}
 	}
 
-	private void assertReactorTracing(ConfigurableApplicationContext context) {
+	private void assertReactorTracing(ConfigurableApplicationContext context,
+			CapturedOutput capture) {
 		ArrayListSpanReporter accumulator = context.getBean(ArrayListSpanReporter.class);
 		int port = context.getBean(Environment.class).getProperty("local.server.port",
 				Integer.class);
@@ -144,7 +145,7 @@ public class FlatMapTests {
 			thenSpanInFooHasSameTraceId(secondTraceId, config);
 			LOGGER.info("Span in Foo has same trace id");
 			// and
-			List<String> requestUri = Arrays.stream(this.capture.toString().split("\n"))
+			List<String> requestUri = Arrays.stream(capture.toString().split("\n"))
 					.filter(s -> s.contains("Received a request to uri"))
 					.map(s -> s.split(",")[1]).collect(Collectors.toList());
 			LOGGER.info(

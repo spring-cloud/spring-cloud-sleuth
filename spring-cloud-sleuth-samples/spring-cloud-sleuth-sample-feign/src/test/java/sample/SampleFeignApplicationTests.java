@@ -19,24 +19,20 @@ package sample;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.assertj.core.api.BDDAssertions;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.system.OutputCaptureRule;
+import org.springframework.boot.test.system.CapturedOutput;
+import org.springframework.boot.test.system.OutputCaptureExtension;
 import org.springframework.test.context.TestPropertySource;
-import org.springframework.test.context.junit4.SpringRunner;
 
-@RunWith(SpringRunner.class)
 @SpringBootTest(classes = SampleFeignApplication.class)
 @TestPropertySource(properties = "sample.zipkin.enabled=false")
+@ExtendWith(OutputCaptureExtension.class)
 public class SampleFeignApplicationTests {
 
 	private static final Log log = LogFactory.getLog(SampleFeignApplicationTests.class);
-
-	@Rule
-	public OutputCaptureRule outputCapture = new OutputCaptureRule();
 
 	@Test
 	public void contextLoads() {
@@ -44,10 +40,11 @@ public class SampleFeignApplicationTests {
 
 	// https://github.com/spring-cloud/spring-cloud-sleuth/issues/1396
 	@Test
-	public void should_not_pass_dash_as_default_service_name() {
+	public void should_not_pass_dash_as_default_service_name(
+			CapturedOutput outputCapture) {
 		log.info("HELLO");
 
-		BDDAssertions.then(this.outputCapture.toString()).doesNotContain("INFO [-,,,]");
+		BDDAssertions.then(outputCapture.toString()).doesNotContain("INFO [-,,,]");
 	}
 
 }

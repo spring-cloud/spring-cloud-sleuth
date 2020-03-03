@@ -16,6 +16,7 @@
 
 package org.springframework.cloud.sleuth.zipkin2;
 
+import java.io.IOException;
 import java.util.List;
 
 import brave.Span;
@@ -27,10 +28,9 @@ import brave.sampler.Sampler;
 import okhttp3.mockwebserver.MockWebServer;
 import okhttp3.mockwebserver.RecordedRequest;
 import org.awaitility.Awaitility;
-import org.junit.After;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import zipkin2.Call;
 import zipkin2.codec.Encoding;
 import zipkin2.reporter.AsyncReporter;
@@ -60,17 +60,23 @@ import static org.assertj.core.api.BDDAssertions.then;
  */
 public class ZipkinAutoConfigurationTests {
 
-	@Rule
-	public ExpectedException thrown = ExpectedException.none();
-
-	@Rule
 	public MockWebServer server = new MockWebServer();
+
+	@BeforeEach
+	void setup() throws IOException {
+		server.start();
+	}
+
+	@AfterEach
+	void clean() throws IOException {
+		server.close();
+	}
 
 	MockEnvironment environment = new MockEnvironment();
 
 	AnnotationConfigApplicationContext context;
 
-	@After
+	@AfterEach
 	public void close() {
 		if (this.context != null) {
 			this.context.close();

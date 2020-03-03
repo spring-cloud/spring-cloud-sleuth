@@ -25,9 +25,9 @@ import brave.Tracing;
 import brave.sampler.Sampler;
 import okhttp3.mockwebserver.MockWebServer;
 import org.awaitility.Awaitility;
-import org.junit.ClassRule;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
@@ -37,11 +37,9 @@ import org.springframework.cloud.client.loadbalancer.LoadBalancerClient;
 import org.springframework.cloud.client.loadbalancer.LoadBalancerRequest;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.test.context.junit4.SpringRunner;
 
 import static org.assertj.core.api.BDDAssertions.then;
 
-@RunWith(SpringRunner.class)
 @SpringBootTest(classes = ZipkinDiscoveryClientTests.Config.class, properties = {
 		"spring.zipkin.baseUrl=https://zipkin/", "spring.zipkin.sender.type=web" // override
 																					// default
@@ -55,8 +53,17 @@ import static org.assertj.core.api.BDDAssertions.then;
 })
 public class ZipkinDiscoveryClientTests {
 
-	@ClassRule
 	public static MockWebServer ZIPKIN_RULE = new MockWebServer();
+
+	@BeforeAll
+	static void setup() throws IOException {
+		ZIPKIN_RULE.start();
+	}
+
+	@AfterAll
+	static void clean() throws IOException {
+		ZIPKIN_RULE.close();
+	}
 
 	@Autowired
 	Tracing tracing;

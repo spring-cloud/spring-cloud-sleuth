@@ -23,9 +23,8 @@ import brave.Span;
 import brave.Tracer;
 import brave.sampler.Sampler;
 import org.assertj.core.api.BDDAssertions;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
@@ -35,11 +34,9 @@ import org.springframework.cloud.client.circuitbreaker.CircuitBreakerFactory;
 import org.springframework.cloud.sleuth.util.ArrayListSpanReporter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.test.context.junit4.SpringRunner;
 
 import static org.assertj.core.api.BDDAssertions.then;
 
-@RunWith(SpringRunner.class)
 @SpringBootTest(classes = CircuitBreakerIntegrationTests.Config.class)
 public class CircuitBreakerIntegrationTests {
 
@@ -52,7 +49,7 @@ public class CircuitBreakerIntegrationTests {
 	@Autowired
 	CircuitBreakerFactory factory;
 
-	@Before
+	@BeforeEach
 	public void setup() {
 		this.reporter.clear();
 	}

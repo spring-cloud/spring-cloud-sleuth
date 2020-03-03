@@ -26,9 +26,8 @@ import brave.Span;
 import brave.Tracer;
 import brave.sampler.Sampler;
 import org.assertj.core.api.Assertions;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import reactor.core.publisher.Flux;
 import zipkin2.reporter.Reporter;
 
@@ -50,7 +49,6 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.TestPropertySource;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.client.RestTemplate;
@@ -58,7 +56,6 @@ import org.springframework.web.client.RestTemplate;
 import static org.assertj.core.api.BDDAssertions.then;
 import static org.springframework.boot.test.context.SpringBootTest.WebEnvironment.RANDOM_PORT;
 
-@RunWith(SpringJUnit4ClassRunner.class)
 @SpringBootTest(classes = { WebClientDiscoveryExceptionTests.TestConfiguration.class },
 		webEnvironment = RANDOM_PORT)
 @TestPropertySource(properties = { "spring.application.name=exceptionservice" })
@@ -78,7 +75,7 @@ public class WebClientDiscoveryExceptionTests {
 	@Autowired
 	ArrayListSpanReporter reporter;
 
-	@Before
+	@BeforeEach
 	public void close() {
 		this.reporter.clear();
 	}

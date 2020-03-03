@@ -31,10 +31,9 @@ import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
 import okhttp3.mockwebserver.SocketPolicy;
 import org.assertj.core.api.BDDAssertions;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import org.springframework.cloud.sleuth.util.ArrayListSpanReporter;
 import org.springframework.http.client.ClientHttpRequestFactory;
@@ -49,8 +48,17 @@ import static org.assertj.core.api.Assertions.fail;
  */
 public class TraceRestTemplateInterceptorIntegrationTests {
 
-	@Rule
 	public final MockWebServer mockWebServer = new MockWebServer();
+
+	@BeforeEach
+	void before() throws IOException {
+		mockWebServer.start();
+	}
+
+	@AfterEach
+	void after() throws IOException {
+		mockWebServer.close();
+	}
 
 	ArrayListSpanReporter reporter = new ArrayListSpanReporter();
 
@@ -63,14 +71,14 @@ public class TraceRestTemplateInterceptorIntegrationTests {
 
 	private RestTemplate template = new RestTemplate(clientHttpRequestFactory());
 
-	@Before
+	@BeforeEach
 	public void setup() {
 		this.template.setInterceptors(Arrays
 				.<ClientHttpRequestInterceptor>asList(TracingClientHttpRequestInterceptor
 						.create(HttpTracing.create(this.tracing))));
 	}
 
-	@After
+	@AfterEach
 	public void clean() {
 		Tracing.current().close();
 	}

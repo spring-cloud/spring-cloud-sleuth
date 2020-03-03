@@ -21,7 +21,7 @@ import java.net.URI;
 import java.net.UnknownHostException;
 import java.util.Map;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
 import org.springframework.boot.SpringApplication;

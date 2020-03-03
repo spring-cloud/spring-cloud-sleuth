@@ -22,9 +22,8 @@ import java.util.concurrent.ExecutionException;
 import brave.Tracing;
 import brave.sampler.Sampler;
 import feign.Logger;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import zipkin2.Span;
 import zipkin2.reporter.Reporter;
 
@@ -40,7 +39,6 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpStatus;
 import org.springframework.test.context.TestPropertySource;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
@@ -61,7 +59,7 @@ interface MyFeignClient {
 /**
  * @author Marcin Grzejszczak
  */
-@RunWith(SpringJUnit4ClassRunner.class)
+
 @SpringBootTest(classes = Application.class,
 		webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT)
 @TestPropertySource(properties = { "ribbon.eureka.enabled=false",
@@ -76,7 +74,7 @@ public class Issue350Tests {
 	@Autowired
 	ArrayListSpanReporter reporter;
 
-	@Before
+	@BeforeEach
 	public void setup() {
 		this.reporter.clear();
 	}

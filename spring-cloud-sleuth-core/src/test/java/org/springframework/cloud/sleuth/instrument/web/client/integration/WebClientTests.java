@@ -25,6 +25,7 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -34,8 +35,6 @@ import brave.Tracing;
 import brave.propagation.SamplingFlags;
 import brave.propagation.TraceContextOrSamplingFlags;
 import brave.sampler.Sampler;
-import junitparams.JUnitParamsRunner;
-import junitparams.Parameters;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.http.HttpResponse;
@@ -46,12 +45,11 @@ import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.impl.nio.client.CloseableHttpAsyncClient;
 import org.apache.http.impl.nio.client.HttpAsyncClientBuilder;
 import org.awaitility.Awaitility;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.ClassRule;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.reactivestreams.Subscription;
 import reactor.core.publisher.BaseSubscriber;
 import zipkin2.Annotation;
@@ -83,8 +81,6 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.TestPropertySource;
-import org.springframework.test.context.junit4.rules.SpringClassRule;
-import org.springframework.test.context.junit4.rules.SpringMethodRule;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -97,7 +93,6 @@ import org.springframework.web.reactive.function.client.WebClient;
 import static org.assertj.core.api.Assertions.fail;
 import static org.assertj.core.api.BDDAssertions.then;
 
-@RunWith(JUnitParamsRunner.class)
 @SpringBootTest(classes = WebClientTests.TestConfiguration.class,
 		webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @TestPropertySource(properties = { "spring.application.name=fooservice",
@@ -105,17 +100,12 @@ import static org.assertj.core.api.BDDAssertions.then;
 @DirtiesContext
 public class WebClientTests {
 
-	@ClassRule
-	public static final SpringClassRule SCR = new SpringClassRule();
 	static final String TRACE_ID_NAME = "X-B3-TraceId";
 	static final String SPAN_ID_NAME = "X-B3-SpanId";
 	static final String SAMPLED_NAME = "X-B3-Sampled";
 	static final String PARENT_ID_NAME = "X-B3-ParentSpanId";
 
 	private static final Log log = LogFactory.getLog(WebClientTests.class);
-
-	@Rule
-	public final SpringMethodRule springMethodRule = new SpringMethodRule();
 
 	@Autowired
 	TestFeignInterface testFeignInterface;
@@ -157,16 +147,16 @@ public class WebClientTests {
 	@Autowired
 	MyRestTemplateCustomizer customizer;
 
-	@After
-	@Before
+	@AfterEach
+	@BeforeEach
 	public void close() {
 		this.reporter.clear();
 		this.testErrorController.clear();
 		this.fooController.clear();
 	}
 
-	@Test
-	@Parameters
+	@ParameterizedTest
+	@MethodSource("parametersForShouldCreateANewSpanWithClientSideTagsWhenNoPreviousTracingWasPresent")
 	@SuppressWarnings("unchecked")
 	public void shouldCreateANewSpanWithClientSideTagsWhenNoPreviousTracingWasPresent(
 			ResponseEntityProvider provider) {
@@ -191,8 +181,8 @@ public class WebClientTests {
 		then(this.tracer.currentSpan()).isNull();
 	}
 
-	Object[] parametersForShouldCreateANewSpanWithClientSideTagsWhenNoPreviousTracingWasPresent() {
-		return new Object[] {
+	static Stream parametersForShouldCreateANewSpanWithClientSideTagsWhenNoPreviousTracingWasPresent() {
+		return Stream.of(
 				(ResponseEntityProvider) (tests) -> tests.testFeignInterface.getNoTrace(),
 				(ResponseEntityProvider) (tests) -> tests.testFeignInterface.getNoTrace(),
 				(ResponseEntityProvider) (tests) -> tests.testFeignInterface.getNoTrace(),
@@ -216,11 +206,11 @@ public class WebClientTests {
 				(ResponseEntityProvider) (tests) -> tests.template
 						.getForEntity("http://fooservice/notrace", String.class),
 				(ResponseEntityProvider) (tests) -> tests.template
-						.getForEntity("http://fooservice/notrace", String.class) };
+						.getForEntity("http://fooservice/notrace", String.class));
 	}
 
-	@Test
-	@Parameters
+	@ParameterizedTest
+	@MethodSource("parametersForShouldPropagateNotSamplingHeader")
 	@SuppressWarnings("unchecked")
 	public void shouldPropagateNotSamplingHeader(ResponseEntityProvider provider) {
 		Span span = this.tracer
@@ -241,15 +231,15 @@ public class WebClientTests {
 		then(this.tracer.currentSpan()).isNull();
 	}
 
-	Object[] parametersForShouldPropagateNotSamplingHeader() throws Exception {
-		return new Object[] {
+	static Stream parametersForShouldPropagateNotSamplingHeader() throws Exception {
+		return Stream.of(
 				(ResponseEntityProvider) (tests) -> tests.testFeignInterface.headers(),
 				(ResponseEntityProvider) (tests) -> tests.template
-						.getForEntity("http://fooservice/", Map.class) };
+						.getForEntity("http://fooservice/", Map.class));
 	}
 
-	@Test
-	@Parameters
+	@ParameterizedTest
+	@MethodSource("parametersForShouldAttachTraceIdWhenCallingAnotherService")
 	@SuppressWarnings("unchecked")
 	public void shouldAttachTraceIdWhenCallingAnotherService(
 			ResponseEntityProvider provider) {
@@ -394,15 +384,15 @@ public class WebClientTests {
 		then(this.reporter.getSpans()).isNotEmpty();
 	}
 
-	Object[] parametersForShouldAttachTraceIdWhenCallingAnotherService() {
-		return new Object[] {
+	static Stream parametersForShouldAttachTraceIdWhenCallingAnotherService() {
+		return Stream.of(
 				(ResponseEntityProvider) (tests) -> tests.testFeignInterface.headers(),
 				(ResponseEntityProvider) (tests) -> tests.template
-						.getForEntity("http://fooservice/traceid", String.class) };
+						.getForEntity("http://fooservice/traceid", String.class));
 	}
 
-	@Test
-	@Parameters
+	@ParameterizedTest
+	@MethodSource("parametersForShouldAttachTraceIdWhenUsingFeignClientWithoutResponseBody")
 	public void shouldAttachTraceIdWhenUsingFeignClientWithoutResponseBody(
 			ResponseEntityProvider provider) {
 		Span span = this.tracer.nextSpan().name("foo").start();
@@ -418,12 +408,12 @@ public class WebClientTests {
 		then(this.reporter.getSpans()).isNotEmpty();
 	}
 
-	Object[] parametersForShouldAttachTraceIdWhenUsingFeignClientWithoutResponseBody() {
-		return new Object[] {
+	static Stream parametersForShouldAttachTraceIdWhenUsingFeignClientWithoutResponseBody() {
+		return Stream.of(
 				(ResponseEntityProvider) (tests) -> tests.testFeignInterface
 						.noResponseBody(),
 				(ResponseEntityProvider) (tests) -> tests.template
-						.getForEntity("http://fooservice/noresponse", String.class) };
+						.getForEntity("http://fooservice/noresponse", String.class));
 	}
 
 	@Test

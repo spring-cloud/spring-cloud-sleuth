@@ -35,15 +35,15 @@ import brave.Tracing;
 import brave.propagation.StrictScopeDecorator;
 import brave.propagation.ThreadLocalCurrentTraceContext;
 import org.assertj.core.api.BDDAssertions;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentMatcher;
 import org.mockito.BDDMockito;
 import org.mockito.Mock;
 import org.mockito.Mockito;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.cloud.sleuth.DefaultSpanNamer;
@@ -53,12 +53,12 @@ import org.springframework.cloud.sleuth.util.ArrayListSpanReporter;
 import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.BDDAssertions.then;
 
-@RunWith(MockitoJUnitRunner.class)
+@ExtendWith(MockitoExtension.class)
 public class TraceableExecutorServiceTests {
 
 	private static int TOTAL_THREADS = 10;
 
-	@Mock
+	@Mock(lenient = true)
 	BeanFactory beanFactory;
 
 	ExecutorService executorService = Executors.newFixedThreadPool(3);
@@ -76,7 +76,7 @@ public class TraceableExecutorServiceTests {
 
 	SpanVerifyingRunnable spanVerifyingRunnable = new SpanVerifyingRunnable();
 
-	@Before
+	@BeforeEach
 	public void setup() {
 		this.traceManagerableExecutorService = new TraceableExecutorService(
 				beanFactory(true), this.executorService);
@@ -84,7 +84,7 @@ public class TraceableExecutorServiceTests {
 		this.spanVerifyingRunnable.clear();
 	}
 
-	@After
+	@AfterEach
 	public void tearDown() throws Exception {
 		this.traceManagerableExecutorService.shutdown();
 		this.executorService.shutdown();

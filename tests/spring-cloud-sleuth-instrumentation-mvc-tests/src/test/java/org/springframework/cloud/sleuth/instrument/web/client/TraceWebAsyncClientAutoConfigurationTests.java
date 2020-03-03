@@ -25,9 +25,8 @@ import brave.Tracing;
 import brave.sampler.Sampler;
 import org.assertj.core.api.BDDAssertions;
 import org.awaitility.Awaitility;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import zipkin2.Span;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -39,7 +38,6 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.env.Environment;
 import org.springframework.http.ResponseEntity;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.util.concurrent.ListenableFuture;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -51,7 +49,7 @@ import static org.springframework.boot.test.context.SpringBootTest.WebEnvironmen
 /**
  * @author Marcin Grzejszczak
  */
-@RunWith(SpringJUnit4ClassRunner.class)
+
 @SpringBootTest(
 		classes = { TraceWebAsyncClientAutoConfigurationTests.TestConfiguration.class },
 		webEnvironment = RANDOM_PORT)
@@ -69,7 +67,7 @@ public class TraceWebAsyncClientAutoConfigurationTests {
 	@Autowired
 	Tracing tracer;
 
-	@Before
+	@BeforeEach
 	public void setup() {
 		this.accumulator.clear();
 	}

@@ -24,9 +24,8 @@ import brave.Tracing;
 import brave.sampler.Sampler;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import zipkin2.reporter.Reporter;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -38,13 +37,11 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.test.annotation.DirtiesContext;
-import org.springframework.test.context.junit4.SpringRunner;
 
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.BDDAssertions.then;
 import static org.awaitility.Awaitility.await;
 
-@RunWith(SpringRunner.class)
 @SpringBootTest(classes = { ScheduledTestConfiguration.class })
 @DirtiesContext
 public class TracingOnScheduledTests {
@@ -61,7 +58,7 @@ public class TracingOnScheduledTests {
 	@Autowired
 	ArrayListSpanReporter reporter;
 
-	@Before
+	@BeforeEach
 	public void setup() {
 		this.beanWithScheduledMethod.clear();
 		this.beanWithScheduledMethodToBeIgnored.clear();

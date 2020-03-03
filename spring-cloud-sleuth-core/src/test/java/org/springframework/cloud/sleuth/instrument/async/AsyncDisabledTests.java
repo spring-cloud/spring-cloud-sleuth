@@ -21,8 +21,7 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.LinkedBlockingQueue;
 
 import brave.propagation.CurrentTraceContext;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Test;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -33,11 +32,9 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
-import org.springframework.test.context.junit4.SpringRunner;
 
 import static org.assertj.core.api.BDDAssertions.then;
 
-@RunWith(SpringRunner.class)
 @SpringBootTest(classes = AsyncDisabledTests.ConfigureThreadPoolTaskScheduler.class,
 		webEnvironment = SpringBootTest.WebEnvironment.NONE,
 		properties = "spring.sleuth.scheduled.enabled=false")

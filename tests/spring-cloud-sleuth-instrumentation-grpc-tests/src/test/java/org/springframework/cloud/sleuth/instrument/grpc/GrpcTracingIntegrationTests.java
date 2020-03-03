@@ -24,10 +24,9 @@ import io.grpc.ClientInterceptor;
 import io.grpc.ManagedChannel;
 import io.grpc.ServerBuilder;
 import io.grpc.stub.StreamObserver;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.lognet.springboot.grpc.GRpcServerBuilderConfigurer;
 import org.lognet.springboot.grpc.GRpcService;
 import org.slf4j.Logger;
@@ -48,7 +47,6 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.annotation.DirtiesContext;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -62,7 +60,7 @@ import static org.assertj.core.api.Assertions.assertThat;
  *
  * @author Tyler Van Gorder
  */
-@RunWith(SpringJUnit4ClassRunner.class)
+
 @SpringBootTest(classes = GrpcTracingIntegrationTests.TestConfiguration.class,
 		webEnvironment = SpringBootTest.WebEnvironment.NONE,
 		properties = { "grpc.enabled=false", "grpc.inProcessServerName=testServer" })
@@ -75,12 +73,12 @@ public class GrpcTracingIntegrationTests {
 	@Autowired
 	ArrayListSpanReporter reporter;
 
-	@Before
+	@BeforeEach
 	public void beforeTest() {
 		this.reporter.clear();
 	}
 
-	@After
+	@AfterEach
 	public void afterTest() {
 		this.reporter.clear();
 	}

@@ -19,7 +19,7 @@ package org.springframework.cloud.sleuth.instrument.async.issues.issue1212;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.slf4j.LoggerFactory;
 
 import org.springframework.aop.interceptor.AsyncExecutionAspectSupport;

@@ -22,7 +22,7 @@ import brave.propagation.Propagation;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import org.assertj.core.api.BDDAssertions;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import zipkin2.reporter.InMemoryReporterMetrics;
 import zipkin2.reporter.ReporterMetrics;
 import zipkin2.reporter.metrics.micrometer.MicrometerReporterMetrics;

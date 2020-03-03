@@ -19,7 +19,7 @@ package org.springframework.cloud.sleuth.sampler;
 import java.util.Random;
 
 import brave.sampler.Sampler;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.BDDAssertions.then;

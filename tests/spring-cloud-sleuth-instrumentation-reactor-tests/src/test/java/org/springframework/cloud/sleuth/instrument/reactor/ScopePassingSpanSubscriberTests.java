@@ -22,8 +22,8 @@ import brave.propagation.CurrentTraceContext;
 import brave.propagation.CurrentTraceContext.Scope;
 import brave.propagation.TraceContext;
 import org.assertj.core.presentation.StandardRepresentation;
-import org.junit.After;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
 import reactor.core.CoreSubscriber;
 import reactor.core.publisher.BaseSubscriber;
 import reactor.util.context.Context;
@@ -56,7 +56,7 @@ public class ScopePassingSpanSubscriberTests {
 
 	AnnotationConfigApplicationContext springContext = new AnnotationConfigApplicationContext();
 
-	@After
+	@AfterEach
 	public void close() {
 		springContext.close();
 	}

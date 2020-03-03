@@ -18,8 +18,7 @@ package org.springframework.cloud.sleuth.instrument.web.client;
 
 import javax.annotation.PostConstruct;
 
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Test;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
@@ -28,13 +27,11 @@ import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.client.ClientHttpRequestInterceptor;
-import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.web.client.RestTemplate;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest(classes = GH846Tests.App.class, webEnvironment = WebEnvironment.NONE)
-@RunWith(SpringRunner.class)
 public class GH846Tests {
 
 	@Autowired

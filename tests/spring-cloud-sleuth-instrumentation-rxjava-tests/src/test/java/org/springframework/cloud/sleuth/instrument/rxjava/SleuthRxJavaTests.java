@@ -19,11 +19,10 @@ package org.springframework.cloud.sleuth.instrument.rxjava;
 import brave.Span;
 import brave.Tracer;
 import brave.sampler.Sampler;
-import org.junit.AfterClass;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import rx.Observable;
 import rx.functions.Action0;
 import rx.plugins.RxJavaPlugins;
@@ -36,13 +35,11 @@ import org.springframework.cloud.sleuth.util.ArrayListSpanReporter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.test.annotation.DirtiesContext;
-import org.springframework.test.context.junit4.SpringRunner;
 
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.BDDAssertions.then;
 import static org.awaitility.Awaitility.await;
 
-@RunWith(SpringRunner.class)
 @SpringBootTest(classes = { SleuthRxJavaTests.TestConfig.class })
 @DirtiesContext
 public class SleuthRxJavaTests {
@@ -55,13 +52,13 @@ public class SleuthRxJavaTests {
 
 	StringBuffer caller = new StringBuffer();
 
-	@BeforeClass
-	@AfterClass
+	@BeforeAll
+	@AfterAll
 	public static void cleanUp() {
 		RxJavaPlugins.getInstance().reset();
 	}
 
-	@Before
+	@BeforeEach
 	public void clean() {
 		this.reporter.clear();
 	}

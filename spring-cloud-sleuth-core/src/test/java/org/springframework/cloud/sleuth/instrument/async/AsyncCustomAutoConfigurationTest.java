@@ -16,7 +16,7 @@
 
 package org.springframework.cloud.sleuth.instrument.async;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import org.springframework.scheduling.annotation.AsyncConfigurer;
 

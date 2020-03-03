@@ -16,7 +16,7 @@
 
 package org.springframework.cloud.sleuth.instrument.web;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import org.springframework.beans.factory.NoSuchBeanDefinitionException;
 import org.springframework.boot.SpringApplication;

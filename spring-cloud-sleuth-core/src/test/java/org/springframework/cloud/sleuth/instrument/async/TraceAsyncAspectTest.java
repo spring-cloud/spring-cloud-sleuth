@@ -22,8 +22,8 @@ import brave.propagation.ThreadLocalCurrentTraceContext;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.reflect.MethodSignature;
 import org.assertj.core.api.BDDAssertions;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.mockito.BDDMockito;
 import org.mockito.Mockito;
 
@@ -44,7 +44,7 @@ public class TraceAsyncAspectTest {
 
 	ProceedingJoinPoint point = Mockito.mock(ProceedingJoinPoint.class);
 
-	@Before
+	@BeforeEach
 	public void setup() throws NoSuchMethodException {
 		MethodSignature signature = Mockito.mock(MethodSignature.class);
 		BDDMockito.given(signature.getName()).willReturn("fooBar");

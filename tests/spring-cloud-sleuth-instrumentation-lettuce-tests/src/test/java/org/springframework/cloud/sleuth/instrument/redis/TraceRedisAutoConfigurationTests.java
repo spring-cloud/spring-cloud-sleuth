@@ -17,8 +17,7 @@
 package org.springframework.cloud.sleuth.instrument.redis;
 
 import io.lettuce.core.resource.ClientResources;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Test;
 
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.BeanFactory;
@@ -27,14 +26,12 @@ import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.test.context.junit4.SpringRunner;
 
 import static org.assertj.core.api.BDDAssertions.then;
 
 /**
  * @author Chao Chang
  */
-@RunWith(SpringRunner.class)
 @SpringBootTest(classes = TraceRedisAutoConfigurationTests.Config.class,
 		webEnvironment = SpringBootTest.WebEnvironment.NONE)
 public class TraceRedisAutoConfigurationTests {

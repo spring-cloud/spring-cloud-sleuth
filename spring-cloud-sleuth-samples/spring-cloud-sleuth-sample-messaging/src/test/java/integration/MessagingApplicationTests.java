@@ -23,9 +23,8 @@ import java.util.stream.Collectors;
 
 import brave.sampler.Sampler;
 import integration.MessagingApplicationTests.IntegrationSpanCollectorConfig;
-import org.junit.After;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
 import sample.SampleMessagingApplication;
 import tools.AbstractIntegrationTest;
 import tools.SpanUtil;
@@ -38,12 +37,10 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.TestPropertySource;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.BDDAssertions.then;
 
-@RunWith(SpringJUnit4ClassRunner.class)
 @SpringBootTest(
 		classes = { IntegrationSpanCollectorConfig.class,
 				SampleMessagingApplication.class },
@@ -59,7 +56,7 @@ public class MessagingApplicationTests extends AbstractIntegrationTest {
 	@Autowired
 	IntegrationTestZipkinSpanReporter integrationTestSpanCollector;
 
-	@After
+	@AfterEach
 	public void cleanup() {
 		this.integrationTestSpanCollector.hashedSpans.clear();
 	}

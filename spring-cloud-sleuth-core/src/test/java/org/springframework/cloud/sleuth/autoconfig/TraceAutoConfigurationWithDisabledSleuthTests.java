@@ -22,34 +22,30 @@ import brave.Tracing;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.assertj.core.api.BDDAssertions;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 
 import org.springframework.beans.factory.FactoryBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.system.OutputCaptureRule;
+import org.springframework.boot.test.system.CapturedOutput;
+import org.springframework.boot.test.system.OutputCaptureExtension;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
-@RunWith(SpringJUnit4ClassRunner.class)
 @SpringBootTest(classes = TraceAutoConfigurationWithDisabledSleuthTests.Config.class,
 		properties = "spring.sleuth.enabled=false",
 		webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @ActiveProfiles("disabled")
 @DirtiesContext
+@ExtendWith(OutputCaptureExtension.class)
 public class TraceAutoConfigurationWithDisabledSleuthTests {
 
 	private static final Log log = LogFactory
 			.getLog(TraceAutoConfigurationWithDisabledSleuthTests.class);
-
-	@Rule
-	public OutputCaptureRule capture = new OutputCaptureRule();
 
 	@Autowired(required = false)
 	Tracing tracing;
@@ -60,10 +56,10 @@ public class TraceAutoConfigurationWithDisabledSleuthTests {
 	}
 
 	@Test
-	public void shouldNotContainAnyTracingInfoInTheLogs() {
+	public void shouldNotContainAnyTracingInfoInTheLogs(CapturedOutput capture) {
 		log.info("hello");
 
-		BDDAssertions.then(this.capture.toString()).doesNotContain("[foo");
+		BDDAssertions.then(capture.toString()).doesNotContain("[foo");
 	}
 
 	@EnableAutoConfiguration

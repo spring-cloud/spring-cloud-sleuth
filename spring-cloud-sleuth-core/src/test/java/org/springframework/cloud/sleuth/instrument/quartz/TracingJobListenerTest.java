@@ -27,9 +27,9 @@ import brave.Tracing;
 import brave.propagation.Propagation.Setter;
 import brave.propagation.StrictScopeDecorator;
 import brave.propagation.ThreadLocalCurrentTraceContext;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.quartz.Job;
 import org.quartz.JobDataMap;
 import org.quartz.JobExecutionContext;
@@ -76,7 +76,7 @@ public class TracingJobListenerTest {
 
 	private Queue<Span> spans = new ArrayDeque<>();
 
-	@Before
+	@BeforeEach
 	public void setUp() throws Exception {
 		tracing = Tracing.newBuilder().spanReporter(spans::add)
 				.currentTraceContext(ThreadLocalCurrentTraceContext.newBuilder()
@@ -101,7 +101,7 @@ public class TracingJobListenerTest {
 		scheduler.start();
 	}
 
-	@After
+	@AfterEach
 	public void tearDown() throws Exception {
 		scheduler.shutdown(true);
 	}

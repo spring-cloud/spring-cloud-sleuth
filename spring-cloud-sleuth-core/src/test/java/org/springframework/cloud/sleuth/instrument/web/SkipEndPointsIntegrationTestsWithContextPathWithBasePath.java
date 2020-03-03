@@ -18,10 +18,9 @@ package org.springframework.cloud.sleuth.instrument.web;
 
 import brave.Tracer;
 import brave.sampler.Sampler;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
@@ -32,14 +31,12 @@ import org.springframework.cloud.sleuth.DisableSecurity;
 import org.springframework.cloud.sleuth.util.ArrayListSpanReporter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.RestTemplate;
 
 import static org.assertj.core.api.BDDAssertions.then;
 
-@RunWith(SpringRunner.class)
 @SpringBootTest(
 		classes = SkipEndPointsIntegrationTestsWithContextPathWithBasePath.Config.class,
 		webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
@@ -56,8 +53,8 @@ public class SkipEndPointsIntegrationTestsWithContextPathWithBasePath {
 	@LocalServerPort
 	int port;
 
-	@Before
-	@After
+	@BeforeEach
+	@AfterEach
 	public void clearSpans() {
 		this.accumulator.clear();
 	}

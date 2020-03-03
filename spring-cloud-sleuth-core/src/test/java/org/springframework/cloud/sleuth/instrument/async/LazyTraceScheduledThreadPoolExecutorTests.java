@@ -20,7 +20,7 @@ import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.assertj.core.api.BDDAssertions;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.mockito.BDDMockito;
 
 import org.springframework.beans.factory.BeanFactory;
