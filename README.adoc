@@ -307,7 +307,6 @@ Consider the following example of a Logback configuration file (named https://gi
 						"span": "%X{X-B3-SpanId:-}",
 						"parent": "%X{X-B3-ParentSpanId:-}",
 						"exportable": "%X{X-Span-Export:-}",
-						"baggage": "%X{key:-}",
 						"pid": "${PID:-}",
 						"thread": "%thread",
 						"class": "%logger{40}",
@@ -889,7 +888,6 @@ Checkstyle rules are *disabled by default*. To add checkstyle to your project ju
                 <artifactId>spring-javaformat-maven-plugin</artifactId>
             </plugin>
             <plugin> <5>
-                <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-checkstyle-plugin</artifactId>
             </plugin>
         </plugins>
@@ -897,7 +895,6 @@ Checkstyle rules are *disabled by default*. To add checkstyle to your project ju
     <reporting>
         <plugins>
             <plugin> <5>
-                <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-checkstyle-plugin</artifactId>
             </plugin>
         </plugins>
