@@ -25,11 +25,6 @@ import reactor.netty.http.client.HttpClient;
 import org.springframework.beans.factory.config.BeanPostProcessor;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 
-/**
- * This runs Brave's integration tests, ensuring common instrumentation bugs aren't
- * present.
- */
-// Function of spring context so that shutdown hooks happen!
 public class ReactorNettyHttpClientBraveTests extends ITSpringConfiguredReactorClient {
 
 	/**
