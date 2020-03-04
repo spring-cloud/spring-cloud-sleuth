@@ -12,11 +12,11 @@
 |spring.sleuth.feign.processor.enabled | true | Enable post processor that wraps Feign Context in its tracing representations.
 |spring.sleuth.grpc.enabled | true | Enable span information propagation when using GRPC.
 |spring.sleuth.http.enabled | true | 
-|spring.sleuth.http.legacy.enabled | false | Enables the legacy Sleuth setup.
+|spring.sleuth.http.legacy.enabled | false | 
 |spring.sleuth.hystrix.strategy.enabled | true | Enable custom HystrixConcurrencyStrategy that wraps all Callable instances into their Sleuth representative - the TraceCallable.
 |spring.sleuth.hystrix.strategy.passthrough | false | When enabled the tracing information is passed to the Hystrix execution threads but spans are not created for each execution.
 |spring.sleuth.integration.enabled | true | Enable Spring Integration sleuth instrumentation.
-|spring.sleuth.integration.patterns | [!hystrixStreamOutput*, *] | An array of patterns against which channel names will be matched. @see org.springframework.integration.config.GlobalChannelInterceptor#patterns() Defaults to any channel name not matching the Hystrix Stream channel name.
+|spring.sleuth.integration.patterns | [!hystrixStreamOutput*, *, !channel*] | An array of patterns against which channel names will be matched. @see org.springframework.integration.config.GlobalChannelInterceptor#patterns() Defaults to any channel name not matching the Hystrix Stream and functional Stream channel names.
 |spring.sleuth.integration.websockets.enabled | true | Enable tracing for WebSockets.
 |spring.sleuth.keys.http.headers |  | Additional headers that should be added as tags if they exist. If the header value is multi-valued, the tag value will be a comma-separated, single-quoted list.
 |spring.sleuth.keys.http.prefix | http. | Prefix for header names if they are added as tags.
