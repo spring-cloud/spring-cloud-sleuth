@@ -16,19 +16,11 @@
 
 package org.springframework.cloud.sleuth.instrument.web.client;
 
-import java.util.concurrent.TimeUnit;
-
-import brave.http.HttpTracing;
-import brave.test.http.ITHttpAsyncClient;
-import io.netty.channel.ChannelOption;
-import io.netty.handler.timeout.ReadTimeoutHandler;
 import org.junit.Ignore;
 import org.junit.Test;
 import reactor.core.publisher.Mono;
 import reactor.netty.ByteBufFlux;
 import reactor.netty.http.client.HttpClient;
-import reactor.netty.http.client.HttpClientResponse;
-import zipkin2.Callback;
 
 import org.springframework.beans.factory.config.BeanPostProcessor;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
@@ -38,43 +30,14 @@ import org.springframework.context.annotation.AnnotationConfigApplicationContext
  * present.
  */
 // Function of spring context so that shutdown hooks happen!
-public class ReactorNettyHttpClientBraveTests
-		extends ITHttpAsyncClient<AnnotationConfigApplicationContext> {
+public class ReactorNettyHttpClientBraveTests extends ITSpringConfiguredReactorClient {
 
 	/**
 	 * This uses Spring to instrument the {@link HttpClient} using a
 	 * {@link BeanPostProcessor}.
 	 */
-	@Override
-	protected AnnotationConfigApplicationContext newClient(int port) {
-		AnnotationConfigApplicationContext result = new AnnotationConfigApplicationContext();
-		result.registerBean(HttpTracing.class, () -> httpTracing);
-		result.registerBean(HttpClient.class,
-				() -> testHttpClient().baseUrl("http://127.0.0.1:" + port));
-		result.register(HttpClientBeanPostProcessor.class);
-		result.refresh();
-		return result;
-	}
-
-	static HttpClient testHttpClient() {
-		return HttpClient.create()
-				.tcpConfiguration(tcpClient -> tcpClient
-						.option(ChannelOption.CONNECT_TIMEOUT_MILLIS, 1000)
-						.doOnConnected(conn -> conn
-								.addHandler(new ReadTimeoutHandler(1, TimeUnit.SECONDS))))
-				.followRedirect(true);
-	}
-
-	@Override
-	protected void closeClient(AnnotationConfigApplicationContext context) {
-		context.close(); // ensures shutdown hooks fire
-	}
-
-	@Override
-	protected void get(AnnotationConfigApplicationContext context,
-			String pathIncludingQuery) {
-		context.getBean(HttpClient.class).get().uri(pathIncludingQuery).response()
-				.block();
+	public ReactorNettyHttpClientBraveTests() {
+		super(HttpClientBeanPostProcessor.class);
 	}
 
 	@Test
@@ -127,20 +90,18 @@ public class ReactorNettyHttpClientBraveTests
 	}
 
 	@Override
-	protected void post(AnnotationConfigApplicationContext context,
+	Mono<Integer> postMono(AnnotationConfigApplicationContext context,
 			String pathIncludingQuery, String body) {
-		context.getBean(HttpClient.class).post()
+		return context.getBean(HttpClient.class).post()
 				.send(ByteBufFlux.fromString(Mono.just(body))).uri(pathIncludingQuery)
-				.response().block();
+				.response().map(r -> r.status().code());
 	}
 
 	@Override
-	protected void getAsync(AnnotationConfigApplicationContext context, String path,
-			Callback<Integer> callback) {
-		Mono<HttpClientResponse> request = context.getBean(HttpClient.class).get()
-				.uri(path).response();
-
-		TestHttpCallbackSubscriber.subscribe(request, r -> r.status().code(), callback);
+	Mono<Integer> getMono(AnnotationConfigApplicationContext context,
+			String pathIncludingQuery) {
+		return context.getBean(HttpClient.class).get().uri(pathIncludingQuery).response()
+				.map(r -> r.status().code());
 	}
 
 }

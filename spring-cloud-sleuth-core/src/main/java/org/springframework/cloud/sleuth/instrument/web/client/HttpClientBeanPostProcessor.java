@@ -125,10 +125,6 @@ class HttpClientBeanPostProcessor implements BeanPostProcessor {
 			return this.handler;
 		}
 
-		CurrentTraceContext currentTraceContext() {
-			return httpTracing.get().tracing().currentTraceContext();
-		}
-
 		@Override
 		public void accept(HttpClientRequest req, Connection connection) {
 			CurrentClientSpan ref = req.currentContext()
