@@ -17,14 +17,15 @@
 package org.springframework.cloud.sleuth.instrument.web.client;
 
 import java.net.InetSocketAddress;
+import java.util.concurrent.CancellationException;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
+import java.util.function.Supplier;
 
 import brave.Span;
 import brave.http.HttpClientHandler;
 import brave.http.HttpTracing;
-import brave.propagation.CurrentTraceContext;
 import brave.propagation.TraceContext;
 import io.netty.bootstrap.Bootstrap;
 import reactor.core.publisher.Mono;
@@ -63,46 +64,58 @@ class HttpClientBeanPostProcessor implements BeanPostProcessor {
 					.doOnResponse(new TracingDoOnResponse(httpTracing))
 					.doOnRequestError(new TracingDoOnErrorRequest(httpTracing))
 					.doOnRequest(new TracingDoOnRequest(httpTracing))
-					.mapConnect(new TracingMapConnect(httpTracing));
+					.mapConnect(new TracingMapConnect(() -> {
+						HttpTracing ref = httpTracing.get();
+						return ref != null ? ref.tracing().currentTraceContext().get()
+								: null;
+					}));
 		}
 		return bean;
 	}
 
-	/** current client span, cleared on completion. */
-	private static final class CurrentClientSpan extends AtomicReference<Span> {
+	/** The current client span, cleared on completion for any reason. */
+	static final class PendingSpan extends AtomicReference<Span> {
 
 	}
 
-	private static class TracingMapConnect implements
+	static class TracingMapConnect implements
 			BiFunction<Mono<? extends Connection>, Bootstrap, Mono<? extends Connection>> {
 
-		final LazyBean<HttpTracing> httpTracing;
+		static final Exception CANCELLED_ERROR = new CancellationException("CANCELLED") {
+			@Override
+			public Throwable fillInStackTrace() {
+				return this; // stack trace doesn't add value here
+			}
+		};
 
-		CurrentTraceContext currentTraceContext;
+		final Supplier<TraceContext> currentTraceContext;
 
-		TracingMapConnect(LazyBean<HttpTracing> httpTracing) {
-			this.httpTracing = httpTracing;
+		TracingMapConnect(Supplier<TraceContext> currentTraceContext) {
+			this.currentTraceContext = currentTraceContext;
 		}
 
 		@Override
 		public Mono<? extends Connection> apply(Mono<? extends Connection> mono,
 				Bootstrap bootstrap) {
+			// This function is invoked once per-request. We keep a reference to the
+			// pending client span here, so that only one signal completes the span.
+			PendingSpan pendingSpan = new PendingSpan();
 			return mono.subscriberContext(context -> {
-				TraceContext invocationContext = currentTraceContext().get();
+				TraceContext invocationContext = currentTraceContext.get();
 				if (invocationContext != null) {
 					// Read in this processor and also in ScopePassingSpanSubscriber
 					context = context.put(TraceContext.class, invocationContext);
 				}
-				return context.put(CurrentClientSpan.class, new CurrentClientSpan());
+				return context.put(PendingSpan.class, pendingSpan);
+			}).doOnCancel(() -> {
+				// Check to see if Subscription.cancel() happened before another signal,
+				// like onComplete() completed the span (clearing the reference).
+				Span span = pendingSpan.getAndSet(null);
+				if (span != null) {
+					span.error(CANCELLED_ERROR);
+					span.finish();
+				}
 			});
-		}
-
-		CurrentTraceContext currentTraceContext() {
-			if (this.currentTraceContext == null) {
-				this.currentTraceContext = this.httpTracing.get().tracing()
-						.currentTraceContext();
-			}
-			return this.currentTraceContext;
 		}
 
 	}
@@ -125,28 +138,24 @@ class HttpClientBeanPostProcessor implements BeanPostProcessor {
 			return this.handler;
 		}
 
-		CurrentTraceContext currentTraceContext() {
-			return httpTracing.get().tracing().currentTraceContext();
-		}
-
 		@Override
 		public void accept(HttpClientRequest req, Connection connection) {
-			CurrentClientSpan ref = req.currentContext()
-					.getOrDefault(CurrentClientSpan.class, null);
-			if (ref == null) { // Somehow TracingMapConnect was not invoked.. skip out
-				return;
+			PendingSpan pendingSpan = req.currentContext().getOrDefault(PendingSpan.class,
+					null);
+			if (pendingSpan == null) {
+				return; // Somehow TracingMapConnect was not invoked.. skip out
 			}
 
 			// This might be re-entrant on auto-redirect or connection retry:
 			// See reactor/reactor-netty#1000 for follow-ups.
-			Span clientSpan = ref.getAndSet(null);
-			if (clientSpan != null) {
+			Span span = pendingSpan.getAndSet(null);
+			if (span != null) {
 				// Retry from a connect fail wouldn't have parsed the request, leading to
 				// an empty span with no data if we finished it. An auto-redirect would
 				// have parsed the request, but we have no idea which status code it
 				// finished with. Since we can't see the preceding request state, we
 				// abandon its span in favor of the next.
-				clientSpan.abandon();
+				span.abandon();
 			}
 
 			// Start a new client span with the appropriate parent
@@ -154,9 +163,9 @@ class HttpClientBeanPostProcessor implements BeanPostProcessor {
 					null);
 			HttpClientRequestWrapper request = new HttpClientRequestWrapper(req);
 
-			clientSpan = handler().handleSendWithParent(request, parent);
-			parseConnectionAddress(connection, clientSpan);
-			ref.set(clientSpan);
+			span = handler().handleSendWithParent(request, parent);
+			parseConnectionAddress(connection, span);
+			pendingSpan.set(span);
 		}
 
 		static void parseConnectionAddress(Connection connection, Span span) {
@@ -231,18 +240,18 @@ class HttpClientBeanPostProcessor implements BeanPostProcessor {
 
 		void handle(Context context, @Nullable HttpClientResponse resp,
 				@Nullable Throwable error) {
-			CurrentClientSpan ref = context.getOrDefault(CurrentClientSpan.class, null);
-			if (ref == null) { // Somehow TracingMapConnect was not invoked.. skip out
-				return;
+			PendingSpan pendingSpan = context.getOrDefault(PendingSpan.class, null);
+			if (pendingSpan == null) {
+				return; // Somehow TracingMapConnect was not invoked.. skip out
 			}
 
-			Span clientSpan = ref.getAndSet(null);
-			if (clientSpan == null) {
+			Span span = pendingSpan.getAndSet(null);
+			if (span == null) {
 				return; // Unexpected. In the handle method, without a span to finish!
 			}
 			HttpClientResponseWrapper response = resp != null
 					? new HttpClientResponseWrapper(resp) : null;
-			handler().handleReceive(response, error, clientSpan);
+			handler().handleReceive(response, error, span);
 		}
 
 	}
