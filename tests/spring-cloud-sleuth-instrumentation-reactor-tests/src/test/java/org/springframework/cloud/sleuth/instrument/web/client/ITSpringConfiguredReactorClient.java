@@ -119,7 +119,8 @@ abstract class ITSpringConfiguredReactorClient
 		CountDownLatch latch = new CountDownLatch(1);
 
 		BaseSubscriber<Integer> subscriber = new BaseSubscriber<Integer>() {
-			@Override protected void hookOnSubscribe(Subscription subscription) {
+			@Override
+			protected void hookOnSubscribe(Subscription subscription) {
 				subscription.cancel();
 				latch.countDown();
 			}
