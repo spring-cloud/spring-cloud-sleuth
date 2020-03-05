@@ -28,24 +28,23 @@ import brave.http.HttpRequestParser;
 import brave.sampler.Sampler;
 import brave.sampler.SamplerFunction;
 import org.assertj.core.api.BDDAssertions;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import zipkin2.Span;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.system.OutputCaptureRule;
-import org.springframework.cloud.sleuth.util.ArrayListSpanReporter;
+import org.springframework.boot.test.system.CapturedOutput;
+import org.springframework.boot.test.system.OutputCaptureExtension;
+import org.springframework.cloud.sleuth.util.BlockingQueueSpanReporter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.env.Environment;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.client.ClientHttpResponse;
-import org.springframework.test.context.junit4.SpringRunner;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
@@ -59,17 +58,13 @@ import static org.assertj.core.api.BDDAssertions.then;
 /**
  * @author Marcin Grzejszczak
  */
-@RunWith(SpringRunner.class)
+@ExtendWith({SpringExtension.class, OutputCaptureExtension.class})
 @SpringBootTest(classes = TraceFilterWebIntegrationTests.Config.class,
 		webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
 		properties = "spring.sleuth.http.legacy.enabled=true")
 public class TraceFilterWebIntegrationTests {
-
-	@Rule
-	public OutputCaptureRule capture = new OutputCaptureRule();
-
 	@Autowired
-	ArrayListSpanReporter accumulator;
+	BlockingQueueSpanReporter reporter;
 
 	@Autowired
 	@HttpServerSampler
@@ -78,10 +73,9 @@ public class TraceFilterWebIntegrationTests {
 	@Autowired
 	Environment environment;
 
-	@Before
-	@After
+	@AfterEach
 	public void cleanup() {
-		this.accumulator.clear();
+		this.reporter.assertEmpty();
 	}
 
 	@Test
@@ -90,12 +84,11 @@ public class TraceFilterWebIntegrationTests {
 				String.class);
 
 		then(Tracing.current().tracer().currentSpan()).isNull();
-		then(this.accumulator.getSpans()).hasSize(1);
-		then(this.accumulator.getSpans().get(0).tags()).containsKey("http.url");
+		then(this.reporter.takeSpan().tags()).containsKey("http.url");
 	}
 
 	@Test
-	public void should_not_create_a_span_for_error_controller() {
+	public void should_not_create_a_span_for_error_controller(CapturedOutput capture) {
 		try {
 			new RestTemplate().getForObject("http://localhost:" + port() + "/",
 					String.class);
@@ -105,16 +98,14 @@ public class TraceFilterWebIntegrationTests {
 		}
 
 		then(Tracing.current().tracer().currentSpan()).isNull();
-		then(this.accumulator.getSpans()).hasSize(1);
-		Span fromFirstTraceFilterFlow = this.accumulator.getSpans().get(0);
-		then(fromFirstTraceFilterFlow.tags()).containsEntry("http.status_code", "500")
-				.containsEntry("http.method", "GET")
+		Span fromFirstTraceFilterFlow = this.reporter.takeSpan();
+		then(fromFirstTraceFilterFlow.tags()).containsEntry("http.method", "GET")
 				.containsEntry("mvc.controller.class", "ExceptionThrowingController")
 				.containsEntry("error",
 						"Request processing failed; nested exception is java.lang.RuntimeException: Throwing exception");
 		// issue#714
 		String hex = fromFirstTraceFilterFlow.traceId();
-		String[] split = this.capture.toString().split("\n");
+		String[] split = capture.toString().split("\n");
 		List<String> list = Arrays.stream(split)
 				.filter(s -> s.contains("Uncaught exception thrown"))
 				.filter(s -> s.contains(hex + "," + hex + ",true]"))
@@ -133,13 +124,10 @@ public class TraceFilterWebIntegrationTests {
 		}
 
 		then(Tracing.current().tracer().currentSpan()).isNull();
-		then(this.accumulator.getSpans()).hasSize(1);
-		then(this.accumulator.getSpans().get(0).kind().ordinal())
-				.isEqualTo(Span.Kind.SERVER.ordinal());
-		then(this.accumulator.getSpans().get(0).tags()).containsEntry("http.status_code",
-				"400");
-		then(this.accumulator.getSpans().get(0).tags()).containsEntry("http.path",
-				"/test_bad_request");
+		Span span = this.reporter.takeSpan();
+		then(span.kind().ordinal()).isEqualTo(Span.Kind.SERVER.ordinal());
+		then(span.tags()).containsEntry("http.status_code", "400");
+		then(span.tags()).containsEntry("http.path", "/test_bad_request");
 	}
 
 	@Test
@@ -166,8 +154,8 @@ public class TraceFilterWebIntegrationTests {
 		}
 
 		@Bean
-		ArrayListSpanReporter reporter() {
-			return new ArrayListSpanReporter();
+		BlockingQueueSpanReporter reporter() {
+			return new BlockingQueueSpanReporter();
 		}
 
 		@Bean
