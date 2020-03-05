@@ -358,8 +358,12 @@ public class WebClientTests {
 				.contains("CLIENT");
 	}
 
+	/**
+	 * Cancel before {@link Subscription#request(long)} means a network request was never
+	 * sent
+	 */
 	@Test
-	public void shouldTagOnCancel() {
+	public void shouldNotTagOnCancel() {
 		this.webClient.get().uri("http://localhost:" + this.port + "/doNotSkip")
 				.retrieve().bodyToMono(String.class)
 				.subscribe(new BaseSubscriber<String>() {
@@ -369,8 +373,7 @@ public class WebClientTests {
 					}
 				});
 
-		then(this.reporter.getSpans()).isNotEmpty();
-		then(this.reporter.getSpans().get(0).tags()).containsEntry("error", "CANCELLED");
+		then(this.reporter.getSpans()).isEmpty();
 	}
 
 	@Test

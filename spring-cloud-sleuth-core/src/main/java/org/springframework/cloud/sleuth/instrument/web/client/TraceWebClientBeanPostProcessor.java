@@ -18,6 +18,8 @@ package org.springframework.cloud.sleuth.instrument.web.client;
 
 import java.util.List;
 import java.util.concurrent.CancellationException;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
@@ -112,13 +114,6 @@ final class TraceExchangeFilterFunction implements ExchangeFilterFunction {
 
 	private static final Log log = LogFactory.getLog(TraceExchangeFilterFunction.class);
 
-	static final Exception CANCELLED_ERROR = new CancellationException("CANCELLED") {
-		@Override
-		public Throwable fillInStackTrace() {
-			return this; // stack trace doesn't add value here
-		}
-	};
-
 	final LazyBean<HttpTracing> httpTracing;
 
 	final Function<? super Publisher<DataBuffer>, ? extends Publisher<DataBuffer>> scopePassingTransformer;
@@ -193,13 +188,16 @@ final class TraceExchangeFilterFunction implements ExchangeFilterFunction {
 				log.debug("HttpClientHandler::handleSend: " + span);
 			}
 
+			// NOTE: We are starting the client span for the request here, but it could be
+			// canceled prior to actually being invoked. TraceWebClientSubscription will
+			// abandon this span, if cancel() happens before request().
 			this.next.exchange(wrapper.buildRequest()).subscribe(
-					new WebClientTracerSubscriber(subscriber, context, span, this));
+					new TraceWebClientSubscriber(subscriber, context, span, this));
 		}
 
 	}
 
-	private static final class WebClientTracerSubscriber
+	static final class TraceWebClientSubscriber extends AtomicReference<Span>
 			implements CoreSubscriber<ClientResponse> {
 
 		final CoreSubscriber<? super ClientResponse> actual;
@@ -209,61 +207,33 @@ final class TraceExchangeFilterFunction implements ExchangeFilterFunction {
 		@Nullable
 		final TraceContext parent;
 
-		final Span clientSpan;
-
 		final HttpClientHandler<HttpClientRequest, HttpClientResponse> handler;
 
 		final Function<? super Publisher<DataBuffer>, ? extends Publisher<DataBuffer>> scopePassingTransformer;
 
 		final CurrentTraceContext currentTraceContext;
 
-		// TODO: this isn't implemented correctly. error and success could both be called
-		boolean done;
-
-		WebClientTracerSubscriber(CoreSubscriber<? super ClientResponse> actual,
+		TraceWebClientSubscriber(CoreSubscriber<? super ClientResponse> actual,
 				Context ctx, Span clientSpan, MonoWebClientTrace mono) {
 			this.actual = actual;
 			this.parent = mono.parent;
-			this.clientSpan = clientSpan;
 			this.handler = mono.handler;
 			this.currentTraceContext = mono.currentTraceContext;
 			this.scopePassingTransformer = mono.scopePassingTransformer;
 			this.context = parent != null
 					&& !parent.equals(ctx.getOrDefault(TraceContext.class, null))
 							? ctx.put(TraceContext.class, parent) : ctx;
+			set(clientSpan);
 		}
 
 		@Override
 		public void onSubscribe(Subscription subscription) {
-			this.actual.onSubscribe(new Subscription() {
-				@Override
-				public void request(long n) {
-					try (Scope scope = currentTraceContext.maybeScope(parent)) {
-						subscription.request(n);
-					}
-				}
-
-				@Override
-				public void cancel() {
-					try (Scope scope = currentTraceContext.maybeScope(parent)) {
-						subscription.cancel();
-					}
-					finally { // TODO: this is probably incorrect as cancel happens
-								// routinely in unary subscription.
-						if (log.isDebugEnabled()) {
-							log.debug("Subscription was cancelled. Will close the span ["
-									+ clientSpan + "]");
-						}
-						handleReceive(null, CANCELLED_ERROR);
-					}
-				}
-			});
+			this.actual.onSubscribe(new TraceWebClientSubscription(subscription, this));
 		}
 
 		@Override
 		public void onNext(ClientResponse response) {
 			try (Scope scope = currentTraceContext.maybeScope(parent)) {
-				this.done = true;
 				// decorate response body
 				this.actual
 						.onNext(ClientResponse.from(response)
@@ -272,8 +242,12 @@ final class TraceExchangeFilterFunction implements ExchangeFilterFunction {
 								.build());
 			}
 			finally {
-				// TODO: is there a way to read the request at response time?
-				handleReceive(response, null);
+				Span span = getAndSet(null);
+				if (span != null) {
+					// TODO: is there a way to read the request at response time?
+					this.handler.handleReceive(new ClientResponseWrapper(response), null,
+							span);
+				}
 			}
 		}
 
@@ -283,7 +257,11 @@ final class TraceExchangeFilterFunction implements ExchangeFilterFunction {
 				this.actual.onError(t);
 			}
 			finally {
-				handleReceive(null, t);
+				Span span = getAndSet(null);
+				if (span != null) {
+					span.error(t);
+					span.finish();
+				}
 			}
 		}
 
@@ -293,13 +271,14 @@ final class TraceExchangeFilterFunction implements ExchangeFilterFunction {
 				this.actual.onComplete();
 			}
 			finally {
-				// TODO: onComplete should be after onNext. Why are we handling this?
-				if (!this.done) { // unknown state
+				Span span = getAndSet(null);
+				if (span != null) {
+					// TODO: backfill empty test:
+					// https://github.com/spring-cloud/spring-cloud-sleuth/issues/1570
 					if (log.isDebugEnabled()) {
-						log.debug("Reached OnComplete without finishing ["
-								+ this.clientSpan + "]");
+						log.debug("Reached OnComplete without finishing [" + span + "]");
 					}
-					this.clientSpan.abandon();
+					span.abandon();
 				}
 			}
 		}
@@ -309,10 +288,57 @@ final class TraceExchangeFilterFunction implements ExchangeFilterFunction {
 			return this.context;
 		}
 
-		void handleReceive(@Nullable ClientResponse res, @Nullable Throwable error) {
-			ClientResponseWrapper response = res != null ? new ClientResponseWrapper(res)
-					: null;
-			this.handler.handleReceive(response, error, clientSpan);
+	}
+
+	static class TraceWebClientSubscription extends AtomicBoolean
+			implements Subscription {
+
+		static final Exception CANCELLED_ERROR = new CancellationException("CANCELLED") {
+			@Override
+			public Throwable fillInStackTrace() {
+				return this; // stack trace doesn't add value here
+			}
+		};
+
+		final AtomicReference<Span> pendingSpan;
+
+		final Subscription delegate;
+
+		TraceWebClientSubscription(Subscription delegate,
+				AtomicReference<Span> pendingSpan) {
+			this.delegate = delegate;
+			this.pendingSpan = pendingSpan;
+		}
+
+		@Override
+		public void request(long n) {
+			if (compareAndSet(false, true)) {
+				delegate.request(n); // Not scoping to save overhead
+			}
+		}
+
+		@Override
+		public void cancel() {
+			delegate.cancel(); // Not scoping to save overhead
+
+			// Check to see if Subscription.cancel() happened after request(),
+			// but before another signal (like onComplete) completed the span.
+			Span span = pendingSpan.getAndSet(null);
+			if (span != null) {
+				if (log.isDebugEnabled()) {
+					log.debug(
+							"Subscription was cancelled. TraceWebClientBeanPostProcessor Will close the span ["
+									+ span + "]");
+				}
+
+				if (!get()) { // Subscription.request() not called: Abandon the span.
+					span.abandon();
+				}
+				else { // Request was canceled in-flight
+					span.error(CANCELLED_ERROR);
+					span.finish();
+				}
+			}
 		}
 
 	}
