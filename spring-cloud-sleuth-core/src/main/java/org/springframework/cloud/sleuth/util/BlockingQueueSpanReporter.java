@@ -29,7 +29,10 @@ public class BlockingQueueSpanReporter implements Reporter<Span> {
 
 	private final LinkedBlockingQueue<Span> spans = new LinkedBlockingQueue<>();
 
-	/** Blocks until a span is reported or throws an {@link AssertionError}. */
+	/**
+	 * Blocks until a span is reported or throws an {@link AssertionError}.
+	 * @return the first span not yet taken.
+	 */
 	public Span takeSpan() {
 		Span result = takeSpan(3_000);
 		if (result == null) {
@@ -52,7 +55,7 @@ public class BlockingQueueSpanReporter implements Reporter<Span> {
 	public void assertEmpty() {
 		if (takeSpan(100) != null) {
 			throw new AssertionError(
-					"Span remaining in queue. Check for redundant reporting");
+					"Span remaining in queue. Check for redundant reporting!");
 		}
 	}
 
