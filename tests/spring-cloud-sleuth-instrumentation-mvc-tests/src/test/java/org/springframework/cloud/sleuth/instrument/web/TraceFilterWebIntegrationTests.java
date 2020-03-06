@@ -58,11 +58,12 @@ import static org.assertj.core.api.BDDAssertions.then;
 /**
  * @author Marcin Grzejszczak
  */
-@ExtendWith({SpringExtension.class, OutputCaptureExtension.class})
+@ExtendWith({ SpringExtension.class, OutputCaptureExtension.class })
 @SpringBootTest(classes = TraceFilterWebIntegrationTests.Config.class,
 		webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
 		properties = "spring.sleuth.http.legacy.enabled=true")
 public class TraceFilterWebIntegrationTests {
+
 	@Autowired
 	BlockingQueueSpanReporter reporter;
 

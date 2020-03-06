@@ -18,10 +18,10 @@ package org.springframework.cloud.sleuth.instrument.web.client;
 
 import brave.propagation.TraceContext;
 import io.netty.bootstrap.Bootstrap;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
 import reactor.core.publisher.Mono;
 import reactor.netty.Connection;
 
@@ -30,7 +30,7 @@ import org.springframework.cloud.sleuth.instrument.web.client.HttpClientBeanPost
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-@RunWith(MockitoJUnitRunner.class)
+@ExtendWith(MockitoExtension.class)
 public class HttpClientBeanPostProcessorTest {
 
 	@Mock
@@ -43,7 +43,7 @@ public class HttpClientBeanPostProcessorTest {
 			.sampled(true).build();
 
 	@Test
-	public void mapConnect_should_setup_reactor_context_currentTraceContext() {
+	void mapConnect_should_setup_reactor_context_currentTraceContext() {
 		TracingMapConnect tracingMapConnect = new TracingMapConnect(() -> traceContext);
 
 		Mono<Connection> original = Mono.just(connection).handle((t, ctx) -> {
@@ -57,7 +57,7 @@ public class HttpClientBeanPostProcessorTest {
 	}
 
 	@Test
-	public void mapConnect_should_setup_reactor_context_no_currentTraceContext() {
+	void mapConnect_should_setup_reactor_context_no_currentTraceContext() {
 		TracingMapConnect tracingMapConnect = new TracingMapConnect(() -> null);
 
 		Mono<Connection> original = Mono.just(connection).handle((t, ctx) -> {
