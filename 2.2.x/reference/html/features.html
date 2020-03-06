@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<!--[if IE]><meta http-equiv="X-UA-Compatible" content="IE=edge"><![endif]-->
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="generator" content="Asciidoctor 1.5.8">
+<title>Features</title>
+<link rel="stylesheet" href="css/spring.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+
+<style>
+.hidden {
+	display: none;
+}
+
+.switch {
+	border-width: 1px 1px 0 1px;
+	border-style: solid;
+	border-color: #7a2518;
+	display: inline-block;
+}
+
+.switch--item {
+	padding: 10px;
+	background-color: #ffffff;
+	color: #7a2518;
+	display: inline-block;
+	cursor: pointer;
+}
+
+.switch--item:not(:first-child) {
+	border-width: 0 0 0 1px;
+	border-style: solid;
+	border-color: #7a2518;
+}
+
+.switch--item.selected {
+	background-color: #7a2519;
+	color: #ffffff;
+}
+</style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/zepto/1.2.0/zepto.min.js"></script>
+<script type="text/javascript">
+function addBlockSwitches() {
+	$('.primary').each(function() {
+		primary = $(this);
+		createSwitchItem(primary, createBlockSwitch(primary)).item.addClass("selected");
+		primary.children('.title').remove();
+	});
+	$('.secondary').each(function(idx, node) {
+		secondary = $(node);
+		primary = findPrimary(secondary);
+		switchItem = createSwitchItem(secondary, primary.children('.switch'));
+		switchItem.content.addClass('hidden');
+		findPrimary(secondary).append(switchItem.content);
+		secondary.remove();
+	});
+}
+
+function createBlockSwitch(primary) {
+	blockSwitch = $('<div class="switch"></div>');
+	primary.prepend(blockSwitch);
+	return blockSwitch;
+}
+
+function findPrimary(secondary) {
+	candidate = secondary.prev();
+	while (!candidate.is('.primary')) {
+		candidate = candidate.prev();
+	}
+	return candidate;
+}
+
+function createSwitchItem(block, blockSwitch) {
+	blockName = block.children('.title').text();
+	content = block.children('.content').first().append(block.next('.colist'));
+	item = $('<div class="switch--item">' + blockName + '</div>');
+	item.on('click', '', content, function(e) {
+		$(this).addClass('selected');
+		$(this).siblings().removeClass('selected');
+		e.data.siblings('.content').addClass('hidden');
+		e.data.removeClass('hidden');
+	});
+	blockSwitch.append(item);
+	return {'item': item, 'content': content};
+}
+
+$(addBlockSwitches);
+</script>
+
+</head>
+<body class="book toc2 toc-left">
+<div id="header">
+<div id="toc" class="toc2">
+<div id="toctitle">Table of Contents</div>
+<ul class="sectlevel1">
+<li><a href="#features">1. Features</a></li>
+</ul>
+</div>
+</div>
+<div id="content">
+<div class="sect1">
+<h2 id="features"><a class="anchor" href="#features"></a><a class="link" href="#features">1. Features</a></h2>
+<div class="sectionbody">
+<div class="ulist">
+<ul>
+<li>
+<p>Adds trace and span IDs to the Slf4J MDC, so you can extract all the logs from a given trace or span in a log aggregator, as shown in the following example logs:</p>
+<div class="listingblock">
+<div class="content">
+<pre>2016-02-02 15:30:57.902  INFO [bar,6bfd228dc00d216b,6bfd228dc00d216b,false] 23030 --- [nio-8081-exec-3] ...
+2016-02-02 15:30:58.372 ERROR [bar,6bfd228dc00d216b,6bfd228dc00d216b,false] 23030 --- [nio-8081-exec-3] ...
+2016-02-02 15:31:01.936  INFO [bar,46ab0d418373cbc9,46ab0d418373cbc9,false] 23030 --- [nio-8081-exec-4] ...</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Notice the <code>[appname,traceId,spanId,exportable]</code> entries from the MDC:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><strong><code>spanId</code></strong>: The ID of a specific operation that took place.</p>
+</li>
+<li>
+<p><strong><code>appname</code></strong>: The name of the application that logged the span.</p>
+</li>
+<li>
+<p><strong><code>traceId</code></strong>: The ID of the latency graph that contains the span.</p>
+</li>
+<li>
+<p><strong><code>exportable</code></strong>: Whether the log should be exported to Zipkin.
+When would you like the span not to be exportable?
+When you want to wrap some operation in a Span and have it written to the logs only.</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<p>Provides an abstraction over common distributed tracing data models: traces, spans (forming a DAG), annotations, and key-value annotations.
+Spring Cloud Sleuth is loosely based on HTrace but is compatible with Zipkin (Dapper).</p>
+</li>
+<li>
+<p>Sleuth records timing information to aid in latency analysis.
+By using sleuth, you can pinpoint causes of latency in your applications.</p>
+</li>
+<li>
+<p>Sleuth is written to not log too much and to not cause your production application to crash.
+To that end, Sleuth:</p>
+<div class="ulist">
+<ul>
+<li>
+<p>Propagates structural data about your call graph in-band and the rest out-of-band.</p>
+</li>
+<li>
+<p>Includes opinionated instrumentation of layers such as HTTP.</p>
+</li>
+<li>
+<p>Includes a sampling policy to manage volume.</p>
+</li>
+<li>
+<p>Can report to a Zipkin system for query and visualization.</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<p>Instruments common ingress and egress points from Spring applications (servlet filter, async endpoints, rest template, scheduled actions, message channels, Zuul filters, and Feign client).</p>
+</li>
+<li>
+<p>Sleuth includes default logic to join a trace across HTTP or messaging boundaries.
+For example, HTTP propagation works over Zipkin-compatible request headers.</p>
+</li>
+<li>
+<p>Sleuth can propagate context (also known as baggage) between processes.
+Consequently, if you set  a baggage element on a Span, it is sent downstream to other processes over either HTTP or messaging.</p>
+</li>
+<li>
+<p>Provides a way to create or continue spans and add tags and logs through annotations.</p>
+</li>
+<li>
+<p>If <code>spring-cloud-sleuth-zipkin</code> is on the classpath, the app generates and collects Zipkin-compatible traces.
+By default, it sends them over HTTP to a Zipkin server on localhost (port 9411).
+You can configure the location of the service by setting <code>spring.zipkin.baseUrl</code>.</p>
+<div class="ulist">
+<ul>
+<li>
+<p>If you depend on <code>spring-rabbit</code>, your app sends traces to a RabbitMQ broker instead of HTTP.</p>
+</li>
+<li>
+<p>If you depend on <code>spring-kafka</code>, and set <code>spring.zipkin.sender.type: kafka</code>, your app sends traces to a Kafka broker instead of HTTP.</p>
+</li>
+</ul>
+</div>
+</li>
+</ul>
+</div>
+<div class="admonitionblock caution">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-caution" title="Caution"></i>
+</td>
+<td class="content">
+<code>spring-cloud-sleuth-stream</code> is deprecated and should no longer be used.
+</td>
+</tr>
+</table>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>Spring Cloud Sleuth is <a href="https://opentracing.io/">OpenTracing</a> compatible.</p>
+</li>
+</ul>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+The SLF4J MDC is always set and logback users immediately see the trace and span IDs in logs per the example
+shown earlier.
+Other logging systems have to configure their own formatter to get the same result.
+The default is as follows:
+<code>logging.pattern.level</code> set to <code>%5p [${spring.zipkin.service.name:${spring.application.name:-}},%X{X-B3-TraceId:-},%X{X-B3-SpanId:-},%X{X-Span-Export:-}]</code>
+(this is a Spring Boot feature for logback users).
+If you do not use SLF4J, this pattern is NOT automatically applied.
+</td>
+</tr>
+</table>
+</div>
+</div>
+</div>
+</div>
+<script type="text/javascript" src="js/tocbot/tocbot.min.js"></script>
+<script type="text/javascript" src="js/toc.js"></script>
+<link rel="stylesheet" href="js/highlight/styles/atom-one-dark-reasonable.min.css">
+<script src="js/highlight/highlight.min.js"></script>
+<script>hljs.initHighlighting()</script>
+</body>
+</html>
