@@ -36,6 +36,11 @@ public class SleuthSlf4jProperties {
 	private boolean enabled = true;
 
 	/**
+	 * Set to true to disable adding the X-B3 keys to MDC.
+	 */
+	private boolean disableLegacyKeys = false;
+
+	/**
 	 * A list of keys to be put from baggage to MDC.
 	 */
 	private List<String> whitelistedMdcKeys = new ArrayList<>();
@@ -54,6 +59,18 @@ public class SleuthSlf4jProperties {
 
 	public void setWhitelistedMdcKeys(List<String> whitelistedMdcKeys) {
 		this.whitelistedMdcKeys = whitelistedMdcKeys;
+	}
+
+	boolean shouldIncludeLegacyKeys() {
+		return !disableLegacyKeys;
+	}
+
+	boolean isDisableLegacyKeys() {
+		return disableLegacyKeys;
+	}
+
+	void setDisableLegacyKeys(boolean disableLegacyKeys) {
+		this.disableLegacyKeys = disableLegacyKeys;
 	}
 
 }
