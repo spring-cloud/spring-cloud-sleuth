@@ -132,6 +132,13 @@
 
 	<dependencyManagement>
 		<dependencies>
+			<!-- force latest reactor-netty -->
+			<dependency>
+				<groupId>io.projectreactor.netty</groupId>
+				<artifactId>reactor-netty</artifactId>
+				<version>0.9.6.RELEASE</version>
+				<optional>true</optional>
+			</dependency>
 			<dependency>
 				<groupId>org.springframework.cloud</groupId>
 				<artifactId>spring-cloud-sleuth-dependencies</artifactId>
@@ -257,7 +264,7 @@
 		<spring-cloud-stream.version>Horsham.SR3</spring-cloud-stream.version>
 		<spring-cloud-netflix.version>2.2.3.BUILD-SNAPSHOT</spring-cloud-netflix.version>
 		<spring-cloud-openfeign.version>2.2.3.BUILD-SNAPSHOT</spring-cloud-openfeign.version>
-		<brave.version>5.10.1</brave.version>
+		<brave.version>5.10.2</brave.version>
 		<spring-security-boot-autoconfigure.version>2.1.7.RELEASE</spring-security-boot-autoconfigure.version>
 		<spring-cloud-aws.version>2.2.1.RELEASE</spring-cloud-aws.version>
 		<disable.nohttp.checks>false</disable.nohttp.checks>

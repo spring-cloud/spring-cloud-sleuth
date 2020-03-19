@@ -16,16 +16,49 @@
 
 package org.springframework.cloud.sleuth.instrument.web.client;
 
-import org.junit.Ignore;
-import org.junit.Test;
+import org.junit.After;
+import org.reactivestreams.Subscriber;
 import reactor.core.publisher.Mono;
 import reactor.netty.ByteBufFlux;
 import reactor.netty.http.client.HttpClient;
 
 import org.springframework.beans.factory.config.BeanPostProcessor;
+import org.springframework.cloud.sleuth.instrument.reactor.TraceReactorAutoConfiguration;
+import org.springframework.cloud.sleuth.instrument.reactor.TraceReactorAutoConfigurationAccessorConfiguration;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
+import org.springframework.web.reactive.function.client.WebClient;
 
+/**
+ * This tests the reactor {@link HttpClient} in isolation of {@link WebClient} as it could
+ * be used directly.
+ */
 public class ReactorNettyHttpClientBraveTests extends ITSpringConfiguredReactorClient {
+
+	/**
+	 * This borrows hooks from {@link TraceReactorAutoConfiguration} to ensure that the
+	 * invocation trace context is set in scope for hooks like {@link Subscriber#onNext}.
+	 *
+	 * <p>
+	 * We do this implicitly until
+	 * <a href="https://github.com/reactor/reactor-netty/issues/1036">issue 1036</a>.
+	 * Until then, there's no known way to directly instrument the
+	 * {@code Mono<Connection>} created in
+	 * {@code reactor.netty.http.client.MonoConnect$MonoHttpConnect} with
+	 * {@code ScopePassingSpanSubscriber}. While this looks like cheating the test, Sleuth
+	 * will always setup these hooks anyway unless "spring.sleuth.reactor.enabled=false".
+	 */
+	@Override
+	protected AnnotationConfigApplicationContext newClient(int port) {
+		TraceReactorAutoConfigurationAccessorConfiguration.close();
+		AnnotationConfigApplicationContext context = super.newClient(port);
+		TraceReactorAutoConfigurationAccessorConfiguration.setup(context);
+		return context;
+	}
+
+	@After
+	public void cleanupHooks() {
+		TraceReactorAutoConfigurationAccessorConfiguration.close();
+	}
 
 	/**
 	 * This uses Spring to instrument the {@link HttpClient} using a
@@ -33,55 +66,6 @@ public class ReactorNettyHttpClientBraveTests extends ITSpringConfiguredReactorC
 	 */
 	public ReactorNettyHttpClientBraveTests() {
 		super(HttpClientBeanPostProcessor.class);
-	}
-
-	@Test
-	@Ignore("TODO: NPE reading context: consider integrating TracingMapConnect with ScopePassingSpanSubscriber")
-	@Override
-	public void callbackContextIsFromInvocationTime() {
-	}
-
-	@Test
-	@Ignore("TODO: reactor/reactor-netty#1000")
-	@Override
-	public void redirect() {
-	}
-
-	@Test
-	@Ignore("TODO: reactor/reactor-netty#1000")
-	@Override
-	public void supportsPortableCustomization() {
-	}
-
-	@Test
-	@Ignore("TODO: reactor/reactor-netty#1000")
-	@Override
-	@Deprecated
-	public void supportsDeprecatedPortableCustomization() {
-	}
-
-	@Test
-	@Ignore("TODO: reactor/reactor-netty#1000")
-	@Override
-	public void post() {
-	}
-
-	@Test
-	@Ignore("TODO: reactor/reactor-netty#1000")
-	@Override
-	public void customSampler() {
-	}
-
-	@Test
-	@Ignore("TODO: reactor/reactor-netty#1000")
-	@Override
-	public void httpPathTagExcludesQueryParams() {
-	}
-
-	@Test
-	@Ignore("HttpClient has no function to retrieve the wire request from the response")
-	@Override
-	public void readsRequestAtResponseTime() {
 	}
 
 	@Override
