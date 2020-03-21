@@ -48,13 +48,16 @@ public class WebFluxBraveTests extends ITHttpServer {
 	@Override
 	protected void init() {
 		stop();
+
+		// Not sure if there's a way to programmatically add a bean to SpringApplicationBuilder
 		parent = new AnnotationConfigApplicationContext();
 		parent.registerBean(HttpTracing.class, () -> httpTracing);
 		parent.refresh();
+
 		context = new SpringApplicationBuilder(Config.class).parent(parent)
 				.web(WebApplicationType.REACTIVE).properties("server.port=0").run();
-		port = context.getBean(Environment.class).getProperty("local.server.port",
-				Integer.class);
+		port = context.getBean(Environment.class)
+				.getProperty("local.server.port", Integer.class);
 	}
 
 	@Override
@@ -74,6 +77,7 @@ public class WebFluxBraveTests extends ITHttpServer {
 
 	@Configuration
 	@Import(WebFluxController.class)
+	// TODO: become more specific, like which autoconfiguration are needed
 	@EnableAutoConfiguration(exclude = TraceWebClientAutoConfiguration.class)
 	static class Config {
 
