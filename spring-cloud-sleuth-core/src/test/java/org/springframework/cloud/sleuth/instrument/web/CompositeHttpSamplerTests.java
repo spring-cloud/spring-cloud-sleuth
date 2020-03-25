@@ -16,73 +16,88 @@
 
 package org.springframework.cloud.sleuth.instrument.web;
 
+import java.util.stream.Stream;
+
 import brave.http.HttpRequest;
 import brave.sampler.SamplerFunction;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import static org.assertj.core.api.BDDAssertions.then;
-import static org.mockito.BDDMockito.given;
 
 @ExtendWith(MockitoExtension.class)
 public class CompositeHttpSamplerTests {
 
 	@Mock
-	SamplerFunction<HttpRequest> left;
-
-	@Mock
-	SamplerFunction<HttpRequest> right;
-
-	@Mock
 	HttpRequest request;
-
-	SamplerFunction<HttpRequest> sampler;
-
-	@BeforeEach
-	public void init() {
-		this.sampler = new CompositeHttpSampler(this.left, this.right);
-	}
 
 	@Test
 	public void should_return_null_on_both_null() {
-		given(this.left.trySample(this.request)).willReturn(null);
-		given(this.right.trySample(this.request)).willReturn(null);
-
-		then(this.sampler.trySample(this.request)).isNull();
+		then(new CompositeHttpSampler(new NullSampler(), new NullSampler()).trySample(this.request)).isNull();
 	}
 
-	@Test
-	public void should_return_false_on_any_false() {
-		given(this.left.trySample(this.request)).willReturn(false);
-		given(this.right.trySample(this.request)).willReturn(null);
+	@ParameterizedTest
+	@MethodSource("falseArgs")
+	void should_return_false_on_any_false(SamplerFunction<HttpRequest> left, SamplerFunction<HttpRequest> right) {
+		then(new CompositeHttpSampler(left, right).trySample(this.request)).isFalse();
+	}
 
-		then(this.sampler.trySample(this.request)).isFalse();
-
-		given(this.left.trySample(this.request)).willReturn(null);
-		given(this.right.trySample(this.request)).willReturn(false);
-
-		then(this.sampler.trySample(this.request)).isFalse();
-
-		given(this.left.trySample(this.request)).willReturn(false);
-		given(this.right.trySample(this.request)).willReturn(true);
-
-		then(this.sampler.trySample(this.request)).isFalse();
-
-		given(this.left.trySample(this.request)).willReturn(true);
-		given(this.right.trySample(this.request)).willReturn(false);
-
-		then(this.sampler.trySample(this.request)).isFalse();
+	private static Stream<Arguments> falseArgs() {
+		return Stream.of(Arguments.of(new NullSampler(), new FalseSampler()),
+				Arguments.of(new FalseSampler(), new TrueSampler()),
+				Arguments.of(new TrueSampler(), new FalseSampler()));
 	}
 
 	@Test
 	public void should_return_true_on_both_true() {
-		given(this.left.trySample(this.request)).willReturn(true);
-		given(this.right.trySample(this.request)).willReturn(true);
+		then(new CompositeHttpSampler(new TrueSampler(), new TrueSampler()).trySample(this.request)).isTrue();
+	}
 
-		then(this.sampler.trySample(this.request)).isTrue();
+}
+
+class TrueSampler implements SamplerFunction<HttpRequest> {
+
+	@Override
+	public Boolean trySample(HttpRequest arg) {
+		return true;
+	}
+
+	@Override
+	public String toString() {
+		return "True";
+	}
+
+}
+
+class FalseSampler implements SamplerFunction<HttpRequest> {
+
+	@Override
+	public Boolean trySample(HttpRequest arg) {
+		return false;
+	}
+
+	@Override
+	public String toString() {
+		return "False";
+	}
+
+}
+
+class NullSampler implements SamplerFunction<HttpRequest> {
+
+	@Override
+	public Boolean trySample(HttpRequest arg) {
+		return null;
+	}
+
+	@Override
+	public String toString() {
+		return "Null";
 	}
 
 }
