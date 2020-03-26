@@ -85,7 +85,6 @@ final class Slf4jScopeDecorator implements CurrentTraceContext.ScopeDecorator {
 			MDC.put("spanId", spanId);
 			String sampled = String.valueOf(currentSpan.sampled());
 			MDC.put("spanExportable", sampled);
-
 			log("Starting scope for span: {}", currentSpan);
 			if (currentSpan.parentId() != null) {
 				if (log.isTraceEnabled()) {
