@@ -78,7 +78,6 @@ final class Slf4jScopeDecorator implements CurrentTraceContext.ScopeDecorator {
 		if (currentSpan != null) {
 			String traceIdString = currentSpan.traceIdString();
 			MDC.put("traceId", traceIdString);
-
 			String parentId = currentSpan.parentId() != null
 					? HexCodec.toLowerHex(currentSpan.parentId()) : null;
 			replace("parentId", parentId);
@@ -108,7 +107,6 @@ final class Slf4jScopeDecorator implements CurrentTraceContext.ScopeDecorator {
 			MDC.remove("parentId");
 			MDC.remove("spanId");
 			MDC.remove("spanExportable");
-
 			for (String s : whitelistedBaggageKeys()) {
 				MDC.remove(s);
 			}
