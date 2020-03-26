@@ -29,7 +29,6 @@ import brave.sampler.Sampler;
 import brave.sampler.SamplerFunction;
 import org.assertj.core.api.BDDAssertions;
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import zipkin2.Span;
@@ -39,7 +38,7 @@ import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.system.CapturedOutput;
 import org.springframework.boot.test.system.OutputCaptureExtension;
-import org.springframework.cloud.sleuth.util.ArrayListSpanReporter;
+import org.springframework.cloud.sleuth.util.BlockingQueueSpanReporter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.env.Environment;
@@ -64,10 +63,7 @@ import static org.assertj.core.api.BDDAssertions.then;
 public class TraceFilterWebIntegrationTests {
 
 	@Autowired
-	Tracing tracer;
-
-	@Autowired
-	ArrayListSpanReporter accumulator;
+	BlockingQueueSpanReporter reporter;
 
 	@Autowired
 	@HttpServerSampler
@@ -76,10 +72,9 @@ public class TraceFilterWebIntegrationTests {
 	@Autowired
 	Environment environment;
 
-	@BeforeEach
 	@AfterEach
 	public void cleanup() {
-		this.accumulator.clear();
+		this.reporter.assertEmpty();
 	}
 
 	@Test
@@ -88,8 +83,7 @@ public class TraceFilterWebIntegrationTests {
 				String.class);
 
 		then(Tracing.current().tracer().currentSpan()).isNull();
-		then(this.accumulator.getSpans()).hasSize(1);
-		then(this.accumulator.getSpans().get(0).tags()).containsKey("http.url");
+		then(this.reporter.takeSpan().tags()).containsKey("http.url");
 	}
 
 	@Test
@@ -103,8 +97,7 @@ public class TraceFilterWebIntegrationTests {
 		}
 
 		then(Tracing.current().tracer().currentSpan()).isNull();
-		then(this.accumulator.getSpans()).hasSize(1);
-		Span fromFirstTraceFilterFlow = this.accumulator.getSpans().get(0);
+		Span fromFirstTraceFilterFlow = this.reporter.takeSpan();
 		then(fromFirstTraceFilterFlow.tags()).containsEntry("http.method", "GET")
 				.containsEntry("mvc.controller.class", "ExceptionThrowingController")
 				.containsEntry("error",
@@ -130,13 +123,10 @@ public class TraceFilterWebIntegrationTests {
 		}
 
 		then(Tracing.current().tracer().currentSpan()).isNull();
-		then(this.accumulator.getSpans()).hasSize(1);
-		then(this.accumulator.getSpans().get(0).kind().ordinal())
-				.isEqualTo(Span.Kind.SERVER.ordinal());
-		then(this.accumulator.getSpans().get(0).tags()).containsEntry("http.status_code",
-				"400");
-		then(this.accumulator.getSpans().get(0).tags()).containsEntry("http.path",
-				"/test_bad_request");
+		Span span = this.reporter.takeSpan();
+		then(span.kind().ordinal()).isEqualTo(Span.Kind.SERVER.ordinal());
+		then(span.tags()).containsEntry("http.status_code", "400");
+		then(span.tags()).containsEntry("http.path", "/test_bad_request");
 	}
 
 	@Test
@@ -163,8 +153,8 @@ public class TraceFilterWebIntegrationTests {
 		}
 
 		@Bean
-		ArrayListSpanReporter reporter() {
-			return new ArrayListSpanReporter();
+		BlockingQueueSpanReporter reporter() {
+			return new BlockingQueueSpanReporter();
 		}
 
 		@Bean

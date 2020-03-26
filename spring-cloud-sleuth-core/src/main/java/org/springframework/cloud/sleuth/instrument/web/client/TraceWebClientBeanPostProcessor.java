@@ -18,7 +18,6 @@ package org.springframework.cloud.sleuth.instrument.web.client;
 
 import java.util.List;
 import java.util.concurrent.CancellationException;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -290,8 +289,7 @@ final class TraceExchangeFilterFunction implements ExchangeFilterFunction {
 
 	}
 
-	static class TraceWebClientSubscription extends AtomicBoolean
-			implements Subscription {
+	static class TraceWebClientSubscription implements Subscription {
 
 		static final Exception CANCELLED_ERROR = new CancellationException("CANCELLED") {
 			@Override
@@ -304,6 +302,8 @@ final class TraceExchangeFilterFunction implements ExchangeFilterFunction {
 
 		final Subscription delegate;
 
+		volatile boolean requested;
+
 		TraceWebClientSubscription(Subscription delegate,
 				AtomicReference<Span> pendingSpan) {
 			this.delegate = delegate;
@@ -312,9 +312,8 @@ final class TraceExchangeFilterFunction implements ExchangeFilterFunction {
 
 		@Override
 		public void request(long n) {
-			if (compareAndSet(false, true)) {
-				delegate.request(n); // Not scoping to save overhead
-			}
+			requested = true;
+			delegate.request(n); // Not scoping to save overhead
 		}
 
 		@Override
@@ -331,7 +330,7 @@ final class TraceExchangeFilterFunction implements ExchangeFilterFunction {
 									+ span + "]");
 				}
 
-				if (!get()) { // Subscription.request() not called: Abandon the span.
+				if (!requested) { // Abandon the span.
 					span.abandon();
 				}
 				else { // Request was canceled in-flight

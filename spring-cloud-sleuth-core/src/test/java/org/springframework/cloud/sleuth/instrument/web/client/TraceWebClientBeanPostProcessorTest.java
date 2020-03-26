@@ -49,7 +49,7 @@ public class TraceWebClientBeanPostProcessorTest {
 	Span span;
 
 	@Test
-	public void should_add_filter_only_once_to_web_client() {
+	void should_add_filter_only_once_to_web_client() {
 		TraceWebClientBeanPostProcessor processor = new TraceWebClientBeanPostProcessor(
 				this.springContext);
 		WebClient client = WebClient.create();
@@ -65,7 +65,7 @@ public class TraceWebClientBeanPostProcessorTest {
 	}
 
 	@Test
-	public void should_add_filter_only_once_to_web_client_via_builder() {
+	void should_add_filter_only_once_to_web_client_via_builder() {
 		TraceWebClientBeanPostProcessor processor = new TraceWebClientBeanPostProcessor(
 				this.springContext);
 		WebClient.Builder builder = WebClient.builder();
@@ -83,7 +83,7 @@ public class TraceWebClientBeanPostProcessorTest {
 	}
 
 	@Test
-	public void should_close_span_on_cancel() {
+	void should_close_span_on_cancel() {
 		TraceWebClientSubscription traceSubscription = new TraceWebClientSubscription(
 				subscription, new AtomicReference<>(span));
 
@@ -98,7 +98,7 @@ public class TraceWebClientBeanPostProcessorTest {
 	}
 
 	@Test
-	public void should_not_crash_on_cancel_when_span_clear() {
+	void should_not_crash_on_cancel_when_span_clear() {
 		TraceWebClientSubscription traceSubscription = new TraceWebClientSubscription(
 				subscription, new AtomicReference<>());
 
