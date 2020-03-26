@@ -47,7 +47,7 @@ class SleuthHttpServerParser extends SleuthHttpClientParser
 			return; // already parsed the error
 		}
 
-		if (httpStatus == HttpServletResponse.SC_OK && response.error() == null) {
+		if (httpStatus == HttpServletResponse.SC_OK && response.error() != null) {
 			// Filter chain threw exception but the response status may not have been set
 			// yet, so we have to guess.
 			span.tag(STATUS_CODE_KEY,
