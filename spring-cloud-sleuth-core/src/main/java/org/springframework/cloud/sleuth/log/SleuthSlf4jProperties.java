@@ -61,10 +61,6 @@ public class SleuthSlf4jProperties {
 		this.whitelistedMdcKeys = whitelistedMdcKeys;
 	}
 
-	boolean shouldIncludeLegacyKeys() {
-		return !disableLegacyKeys;
-	}
-
 	boolean isDisableLegacyKeys() {
 		return disableLegacyKeys;
 	}

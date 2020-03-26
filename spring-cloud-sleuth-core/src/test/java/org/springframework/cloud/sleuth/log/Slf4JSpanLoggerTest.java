@@ -64,13 +64,10 @@ public class Slf4JSpanLoggerTest {
 		Scope scope = this.slf4jScopeDecorator.decorateScope(this.span.context(), () -> {
 		});
 
-		assertThat(MDC.get("X-B3-TraceId"))
-				.isEqualTo(this.span.context().traceIdString());
 		assertThat(MDC.get("traceId")).isEqualTo(this.span.context().traceIdString());
 
 		scope.close();
 
-		assertThat(MDC.get("X-B3-TraceId")).isNullOrEmpty();
 		assertThat(MDC.get("traceId")).isNullOrEmpty();
 	}
 
@@ -137,18 +134,15 @@ public class Slf4JSpanLoggerTest {
 
 	@Test
 	public void should_remove_entries_from_mdc_from_null_span() throws Exception {
-		MDC.put("X-B3-TraceId", "A");
 		MDC.put("traceId", "A");
 
 		Scope scope = this.slf4jScopeDecorator.decorateScope(null, () -> {
 		});
 
-		assertThat(MDC.get("X-B3-TraceId")).isNullOrEmpty();
 		assertThat(MDC.get("traceId")).isNullOrEmpty();
 
 		scope.close();
 
-		assertThat(MDC.get("X-B3-TraceId")).isEqualTo("A");
 		assertThat(MDC.get("traceId")).isEqualTo("A");
 	}
 

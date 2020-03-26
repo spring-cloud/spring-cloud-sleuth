@@ -45,15 +45,6 @@ import org.springframework.util.StringUtils;
  */
 final class Slf4jScopeDecorator implements CurrentTraceContext.ScopeDecorator {
 
-	// Backward compatibility for all logging patterns
-	private static final String LEGACY_EXPORTABLE_NAME = "X-Span-Export";
-
-	private static final String LEGACY_PARENT_ID_NAME = "X-B3-ParentSpanId";
-
-	private static final String LEGACY_TRACE_ID_NAME = "X-B3-TraceId";
-
-	private static final String LEGACY_SPAN_ID_NAME = "X-B3-SpanId";
-
 	private static final Logger log = LoggerFactory.getLogger(Slf4jScopeDecorator.class);
 
 	private final SleuthProperties sleuthProperties;
@@ -82,10 +73,6 @@ final class Slf4jScopeDecorator implements CurrentTraceContext.ScopeDecorator {
 		final String previousParentId = MDC.get("parentId");
 		final String previousSpanId = MDC.get("spanId");
 		final String spanExportable = MDC.get("spanExportable");
-		final String legacyPreviousTraceId = MDC.get(LEGACY_TRACE_ID_NAME);
-		final String legacyPreviousParentId = MDC.get(LEGACY_PARENT_ID_NAME);
-		final String legacyPreviousSpanId = MDC.get(LEGACY_SPAN_ID_NAME);
-		final String legacySpanExportable = MDC.get(LEGACY_EXPORTABLE_NAME);
 		final List<AbstractMap.SimpleEntry<String, String>> previousMdc = previousMdc();
 
 		if (currentSpan != null) {
@@ -99,12 +86,6 @@ final class Slf4jScopeDecorator implements CurrentTraceContext.ScopeDecorator {
 			MDC.put("spanId", spanId);
 			String sampled = String.valueOf(currentSpan.sampled());
 			MDC.put("spanExportable", sampled);
-			if (sleuthSlf4jProperties.shouldIncludeLegacyKeys()) {
-				MDC.put(LEGACY_TRACE_ID_NAME, traceIdString);
-				replace(LEGACY_PARENT_ID_NAME, parentId);
-				MDC.put(LEGACY_EXPORTABLE_NAME, sampled);
-				MDC.put(LEGACY_SPAN_ID_NAME, spanId);
-			}
 
 			log("Starting scope for span: {}", currentSpan);
 			if (currentSpan.parentId() != null) {
@@ -128,12 +109,6 @@ final class Slf4jScopeDecorator implements CurrentTraceContext.ScopeDecorator {
 			MDC.remove("spanId");
 			MDC.remove("spanExportable");
 
-			if (sleuthSlf4jProperties.shouldIncludeLegacyKeys()) {
-				MDC.remove(LEGACY_TRACE_ID_NAME);
-				MDC.remove(LEGACY_PARENT_ID_NAME);
-				MDC.remove(LEGACY_SPAN_ID_NAME);
-				MDC.remove(LEGACY_EXPORTABLE_NAME);
-			}
 			for (String s : whitelistedBaggageKeys()) {
 				MDC.remove(s);
 			}
@@ -161,12 +136,6 @@ final class Slf4jScopeDecorator implements CurrentTraceContext.ScopeDecorator {
 				replace("parentId", previousParentId);
 				replace("spanId", previousSpanId);
 				replace("spanExportable", spanExportable);
-				if (sleuthSlf4jProperties.shouldIncludeLegacyKeys()) {
-					replace(LEGACY_TRACE_ID_NAME, legacyPreviousTraceId);
-					replace(LEGACY_PARENT_ID_NAME, legacyPreviousParentId);
-					replace(LEGACY_SPAN_ID_NAME, legacyPreviousSpanId);
-					replace(LEGACY_EXPORTABLE_NAME, legacySpanExportable);
-				}
 				for (AbstractMap.SimpleEntry<String, String> entry : previousMdc) {
 					replace(entry.getKey(), entry.getValue());
 				}
