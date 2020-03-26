@@ -59,9 +59,13 @@ class HttpClientBeanPostProcessor implements BeanPostProcessor {
 			// propagation of the current span as a reactor context property.
 			// This done in mapConnect, added last so that it is setup first.
 			// https://projectreactor.io/docs/core/release/reference/#_simple_context_examples
+
+			// In our case, we treat a normal response no differently than one in
+			// preparation of a redirect follow-up.
+			TracingDoOnResponse doOnResponse = new TracingDoOnResponse(httpTracing);
 			return ((HttpClient) bean)
 					.doOnResponseError(new TracingDoOnErrorResponse(httpTracing))
-					.doOnResponse(new TracingDoOnResponse(httpTracing))
+					.doOnRedirect(doOnResponse).doOnResponse(doOnResponse)
 					.doOnRequestError(new TracingDoOnErrorRequest(httpTracing))
 					.doOnRequest(new TracingDoOnRequest(httpTracing))
 					.mapConnect(new TracingMapConnect(() -> {
@@ -146,16 +150,13 @@ class HttpClientBeanPostProcessor implements BeanPostProcessor {
 				return; // Somehow TracingMapConnect was not invoked.. skip out
 			}
 
-			// This might be re-entrant on auto-redirect or connection retry:
-			// See reactor/reactor-netty#1000 for follow-ups.
+			// All completion hooks clear this reference. If somehow this has a span upon
+			// re-entry, the state model in reactor-netty has changed and we need to
+			// update this code!
 			Span span = pendingSpan.getAndSet(null);
 			if (span != null) {
-				// Retry from a connect fail wouldn't have parsed the request, leading to
-				// an empty span with no data if we finished it. An auto-redirect would
-				// have parsed the request, but we have no idea which status code it
-				// finished with. Since we can't see the preceding request state, we
-				// abandon its span in favor of the next.
-				span.abandon();
+				assert false : "span exists when it shouldn't!";
+				span.abandon(); // abandon instead of break
 			}
 
 			// Start a new client span with the appropriate parent
@@ -187,7 +188,6 @@ class HttpClientBeanPostProcessor implements BeanPostProcessor {
 
 		@Override
 		public void accept(HttpClientResponse response, Connection connection) {
-			// TODO: is there a way to read the request at response time?
 			handle(response.currentContext(), response, null);
 		}
 
@@ -276,7 +276,7 @@ class HttpClientBeanPostProcessor implements BeanPostProcessor {
 
 		@Override
 		public String path() {
-			return "/" + delegate.path(); // TODO: reactor/reactor-netty#999
+			return delegate.fullPath();
 		}
 
 		@Override
@@ -300,18 +300,28 @@ class HttpClientBeanPostProcessor implements BeanPostProcessor {
 
 		final HttpClientResponse delegate;
 
+		HttpClientRequestWrapper request;
+
 		HttpClientResponseWrapper(HttpClientResponse delegate) {
 			this.delegate = delegate;
 		}
 
 		@Override
-		public String method() {
-			return delegate.method().name();
+		public Object unwrap() {
+			return delegate;
 		}
 
 		@Override
-		public Object unwrap() {
-			return delegate;
+		public HttpClientRequestWrapper request() {
+			if (request == null) {
+				if (delegate instanceof HttpClientRequest) {
+					request = new HttpClientRequestWrapper((HttpClientRequest) delegate);
+				}
+				else {
+					assert false : "We expect the response to be the same reference as the request";
+				}
+			}
+			return request;
 		}
 
 		@Override

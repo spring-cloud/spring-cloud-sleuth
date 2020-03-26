@@ -67,7 +67,7 @@ public class WebClientBraveTests extends ITSpringConfiguredReactorClient {
 	}
 
 	@Test
-	@Ignore("TODO: reactor/reactor-netty#1000")
+	@Ignore("WebClient is blind to the implementation of redirects")
 	@Override
 	public void redirect() {
 	}
