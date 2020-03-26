@@ -77,7 +77,7 @@ abstract class ITSpringConfiguredReactorClient
 				.tcpConfiguration(tcpClient -> tcpClient
 						.option(ChannelOption.CONNECT_TIMEOUT_MILLIS, 1000)
 						.doOnConnected(conn -> conn
-								.addHandler(new ReadTimeoutHandler(1, TimeUnit.SECONDS))))
+								.addHandler(new ReadTimeoutHandler(3, TimeUnit.SECONDS))))
 				.disableRetry(true).followRedirect(true);
 	}
 
