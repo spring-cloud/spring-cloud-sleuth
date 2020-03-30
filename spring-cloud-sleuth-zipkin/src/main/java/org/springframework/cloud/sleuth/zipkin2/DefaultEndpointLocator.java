@@ -32,13 +32,10 @@ import org.springframework.core.env.Environment;
 import org.springframework.util.StringUtils;
 
 /**
- * {@link EndpointLocator} implementation that.
- *
- * <ul>
- * <li><b>serviceName</b> - from {@link ServerProperties} or {@link Registration}</li>
- * <li><b>ip</b> - from {@link ServerProperties}</li>
- * <li><b>port</b> - from lazily assigned port or {@link ServerProperties}</li>
- * </ul>
+ * {@link EndpointLocator} implementation that. <b>serviceName</b> - from
+ * {@link ServerProperties} or {@link Registration} <b>ip</b> - from
+ * {@link ServerProperties} <b>port</b> - from lazily assigned port or
+ * {@link ServerProperties}
  *
  * You can override the name using {@link ZipkinProperties.Service#setName(String)}
  *

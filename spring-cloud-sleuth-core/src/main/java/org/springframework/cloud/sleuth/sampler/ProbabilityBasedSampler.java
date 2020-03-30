@@ -26,15 +26,14 @@ import org.springframework.util.Assert;
 
 /**
  * This sampler is appropriate for low-traffic instrumentation (ex servers that each
- * receive <100K requests), or those who do not provision random trace ids. It not
- * appropriate for collectors as the sampling decision isn't idempotent (consistent based
- * on trace id).
+ * receive less than 100K requests), or those who do not provision random trace ids. It
+ * not appropriate for collectors as the sampling decision isn't idempotent (consistent
+ * based on trace id).
  *
  * <h3>Implementation</h3>
  *
  * <p>
- * Taken from <a href= "https://github.com/openzipkin/zipkin-java/blob/traceid-sampler/
- * zipkin/src/main/java/zipkin/CountingTraceIdSampler.java">Zipkin project</a>
+ * Taken from CountingTraceIdSampler class from Zipkin project.
  * </p>
  *
  * <p>

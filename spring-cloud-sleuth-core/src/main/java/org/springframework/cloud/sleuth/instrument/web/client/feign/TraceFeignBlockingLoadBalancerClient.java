@@ -32,8 +32,7 @@ import org.springframework.cloud.client.loadbalancer.LoadBalancerClient;
 import org.springframework.cloud.openfeign.loadbalancer.FeignBlockingLoadBalancerClient;
 
 /**
- * A trace representation of {@link FeignBlockingLoadBalancerClient}. Needed due to casts
- * in {@link org.springframework.cloud.openfeign.FeignClientFactoryBean}.
+ * A trace representation of {@link FeignBlockingLoadBalancerClient}.
  *
  * @author Olga Maciaszek-Sharma
  * @since 2.2.0

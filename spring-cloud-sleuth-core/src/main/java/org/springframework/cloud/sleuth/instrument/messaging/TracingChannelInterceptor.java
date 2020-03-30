@@ -50,12 +50,10 @@ import org.springframework.util.ClassUtils;
  * native headers. It also extracts or creates a {@link Span.Kind#CONSUMER} span for each
  * message received. This span is injected onto each message so it becomes the parent when
  * a handler later calls {@link MessageHandler#handleMessage(Message)}, or a another
- * processing library calls {@link #nextSpan(Message)}.
- * <p>
- * <p>
- * This implementation uses {@link ThreadLocalSpan} to propagate context between
- * callbacks. This is an alternative to {@code ThreadStatePropagationChannelInterceptor}
- * which is less sensitive to message manipulation by other interceptors.
+ * processing library calls {@link #nextSpan(Message)}. This implementation uses
+ * {@link ThreadLocalSpan} to propagate context between callbacks. This is an alternative
+ * to {@code ThreadStatePropagationChannelInterceptor} which is less sensitive to message
+ * manipulation by other interceptors.
  *
  * @author Marcin Grzejszczak
  */

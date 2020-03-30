@@ -23,21 +23,15 @@ import org.springframework.core.annotation.AnnotationUtils;
 /**
  * Default implementation of SpanNamer that tries to get the span name as follows:
  *
- * <li>
- * <ul>
- * from the @SpanName annotation on the class if one is present.
- * </ul>
- * <ul>
- * from the @SpanName annotation on the method if passed object is of a {@link Method}.
+ * * from the @SpanName annotation on the class if one is present.
+ *
+ * * from the @SpanName annotation on the method if passed object is of a {@link Method}.
  * type
- * </ul>
- * <ul>
- * from the toString() of the delegate if it's not the default {@link Object#toString()}.
- * </ul>
- * <ul>
- * the default provided value.
- * </ul>
- * </li>
+ *
+ * * from the toString() of the delegate if it's not the default
+ * {@link Object#toString()}.
+ *
+ * * the default provided value.
  *
  * @author Marcin Grzejszczak
  * @since 1.0.0

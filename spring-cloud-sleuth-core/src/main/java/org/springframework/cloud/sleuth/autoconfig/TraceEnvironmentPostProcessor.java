@@ -27,10 +27,8 @@ import org.springframework.core.env.MutablePropertySources;
 import org.springframework.core.env.PropertySource;
 
 /**
- * Adds default properties for the application:
- * <ul>
- * <li>logging pattern level that prints trace information (e.g. trace ids)</li>
- * </ul>
+ * Adds default properties for the application: logging pattern level that prints trace
+ * information (e.g. trace ids).
  *
  * @author Dave Syer
  * @author Marcin Grzejszczak

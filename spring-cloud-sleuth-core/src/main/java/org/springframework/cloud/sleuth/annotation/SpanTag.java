@@ -28,12 +28,9 @@ import org.springframework.core.annotation.AliasFor;
  * There are 3 different ways to add tags to a span. All of them are controlled by the
  * annotation values. Precedence is:
  *
- * <ul>
- * <li>try with the {@link TagValueResolver} bean</li>
- * <li>if the value of the bean wasn't set, try to evaluate a SPEL expression</li>
- * <li>if there’s no SPEL expression just return a {@code toString()} value of the
- * parameter</li>
- * </ul>
+ * try with the {@link TagValueResolver} bean if the value of the bean wasn't set, try to
+ * evaluate a SPEL expression if there’s no SPEL expression just return a
+ * {@code toString()} value of the parameter
  *
  * @author Christian Schwerdtfeger
  * @since 1.2.0
