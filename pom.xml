@@ -252,6 +252,10 @@
 		<javax.resource-api.version>1.7.1</javax.resource-api.version>
 		<cglib-nodep.version>3.3.0</cglib-nodep.version>
 		<objenesis.version>3.0.1</objenesis.version>
+
+		<!-- Until we switch it to true in sc-build -->
+		<javadoc.failOnError>true</javadoc.failOnError>
+		<javadoc.failOnWarning>true</javadoc.failOnWarning>
 	</properties>
 
 	<profiles>
