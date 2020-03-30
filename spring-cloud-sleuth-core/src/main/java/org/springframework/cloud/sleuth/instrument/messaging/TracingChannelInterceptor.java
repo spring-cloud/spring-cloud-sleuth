@@ -134,11 +134,8 @@ public final class TracingChannelInterceptor extends ChannelInterceptorAdapter
 
 	/**
 	 * Use this to create a span for processing the given message. Note: the result has no
-	 * name and is not started.
-	 * <p>
-	 * <p>
-	 * This creates a child from identifiers extracted from the message headers, or a new
-	 * span if one couldn't be extracted.
+	 * name and is not started. This creates a child from identifiers extracted from the
+	 * message headers, or a new span if one couldn't be extracted.
 	 * @param message message to use for span creation
 	 * @return span to be created
 	 */

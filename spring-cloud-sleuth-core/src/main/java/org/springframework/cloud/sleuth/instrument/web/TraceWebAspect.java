@@ -32,19 +32,14 @@ import org.springframework.cloud.sleuth.instrument.async.TraceCallable;
 import org.springframework.web.context.request.async.WebAsyncTask;
 
 /**
- * Aspect that adds tracing to
- * <p>
- * </p>
- * {@code RestController} annotated classes with public {@link Callable} methods
- * {@link org.springframework.stereotype.Controller} annotated classes with public
- * {@link Callable} methods {@link org.springframework.stereotype.Controller} or
- * {@code RestController} annotated classes with public {@link WebAsyncTask} methods
- * <p>
- * </p>
+ * Aspect that adds tracing. {@code RestController} annotated classes with public
+ * {@link Callable} methods {@link org.springframework.stereotype.Controller} annotated
+ * classes with public {@link Callable} methods
+ * {@link org.springframework.stereotype.Controller} or {@code RestController} annotated
+ * classes with public {@link WebAsyncTask} methods.
+ *
  * For controllers an around aspect is created that wraps the {@link Callable#call()}
- * method execution in {@link TraceCallable}
- * <p>
- * </p>
+ * method execution in {@link TraceCallable}.
  *
  * This aspect will continue a span created by the TracingFilter. It will not create a new
  * span - since the one in TracingFilter will wait until processing has been finished
