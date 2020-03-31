@@ -23,6 +23,7 @@ import brave.handler.MutableSpan;
 import brave.propagation.TraceContext;
 import brave.sampler.Sampler;
 import org.assertj.core.api.BDDAssertions;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import zipkin2.reporter.Reporter;
 
@@ -39,9 +40,7 @@ import static org.springframework.boot.test.context.SpringBootTest.WebEnvironmen
 /**
  * @author Marcin Grzejszczak
  */
-@SpringBootTest(
-		classes = FinishedSpanHandlerTests.FinishedSpanHandlerAspectTestsConfig.class,
-		webEnvironment = NONE)
+@SpringBootTest(classes = FinishedSpanHandlerTests.FinishedSpanHandlerAspectTestsConfig.class, webEnvironment = NONE)
 public class FinishedSpanHandlerTests {
 
 	@Autowired
@@ -49,6 +48,11 @@ public class FinishedSpanHandlerTests {
 
 	@Autowired
 	Tracer tracer;
+
+	@BeforeEach
+	public void setup() {
+		this.reporter.clear();
+	}
 
 	@Test
 	public void should_adjust_span_twice_before_reporting() {
