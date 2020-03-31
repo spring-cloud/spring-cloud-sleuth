@@ -33,6 +33,7 @@ import org.springframework.web.reactive.function.client.WebClient;
  * This tests the reactor {@link HttpClient} in isolation of {@link WebClient} as it could
  * be used directly.
  */
+@Ignore("TODO: Fix me")
 public class ReactorNettyHttpClientBraveTests extends ITSpringConfiguredReactorClient {
 
 	/**
@@ -67,18 +68,6 @@ public class ReactorNettyHttpClientBraveTests extends ITSpringConfiguredReactorC
 	 */
 	public ReactorNettyHttpClientBraveTests() {
 		super(HttpClientBeanPostProcessor.class);
-	}
-
-	@Ignore("TODO: Fix me")
-	@Override
-	public void callbackContextIsFromInvocationTime() throws Exception {
-
-	}
-
-	@Ignore("TODO: Fix me")
-	@Override
-	public void finishedSpanHandlerSeesException() throws Exception {
-
 	}
 
 	@Override
