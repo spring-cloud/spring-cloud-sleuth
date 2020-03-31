@@ -21,6 +21,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
 import brave.http.HttpTracing;
+import brave.propagation.CurrentTraceContext;
 import brave.test.http.ITHttpAsyncClient;
 import io.netty.channel.ChannelOption;
 import io.netty.handler.timeout.ReadTimeoutHandler;
@@ -59,17 +60,20 @@ abstract class ITSpringConfiguredReactorClient
 
 	/**
 	 * @param componentClasses configure instrumentation given {@linkplain URI baseUrl},
-	 * {@link HttpClient} and {@link HttpTracing} bindings exist.
+	 * {@link HttpClient}, {@link HttpTracing} and {@link CurrentTraceContext} bindings
+	 * exist.
 	 */
 	ITSpringConfiguredReactorClient(Class<?>... componentClasses) {
 		this.componentClasses = componentClasses;
 	}
 
 	@Override
-	final protected AnnotationConfigApplicationContext newClient(int port) {
+	protected AnnotationConfigApplicationContext newClient(int port) {
 		AnnotationConfigApplicationContext result = new AnnotationConfigApplicationContext();
 		URI baseUrl = URI.create("http://127.0.0.1:" + server.getPort());
 		result.registerBean(HttpTracing.class, () -> httpTracing);
+		result.registerBean(CurrentTraceContext.class,
+				() -> httpTracing.tracing().currentTraceContext());
 		result.registerBean(HttpClient.class, () -> testHttpClient(baseUrl));
 		result.registerBean(URI.class, () -> baseUrl);
 		result.register(componentClasses);
@@ -82,8 +86,8 @@ abstract class ITSpringConfiguredReactorClient
 				.tcpConfiguration(tcpClient -> tcpClient
 						.option(ChannelOption.CONNECT_TIMEOUT_MILLIS, 1000)
 						.doOnConnected(conn -> conn
-								.addHandler(new ReadTimeoutHandler(1, TimeUnit.SECONDS))))
-				.followRedirect(true);
+								.addHandler(new ReadTimeoutHandler(3, TimeUnit.SECONDS))))
+				.disableRetry(true).followRedirect(true);
 	}
 
 	@Override
@@ -164,7 +168,8 @@ abstract class ITSpringConfiguredReactorClient
 		latch.await();
 
 		assertThat(server.getRequestCount()).isOne();
-		assertThat(takeSpan().tags()).containsKey("error");
+
+		takeClientSpanWithError("CANCELLED");
 	}
 
 }
