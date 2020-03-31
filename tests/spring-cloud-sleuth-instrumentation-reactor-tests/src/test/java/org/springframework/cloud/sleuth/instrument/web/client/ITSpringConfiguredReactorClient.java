@@ -28,8 +28,8 @@ import io.netty.handler.timeout.ReadTimeoutHandler;
 import okhttp3.mockwebserver.Dispatcher;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.RecordedRequest;
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 import org.reactivestreams.Subscription;
 import reactor.core.publisher.BaseSubscriber;
@@ -50,9 +50,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 abstract class ITSpringConfiguredReactorClient
 		extends ITHttpAsyncClient<AnnotationConfigApplicationContext> {
 
-	@BeforeClass
-	@AfterClass
-	public static void clear() {
+	@Before
+	@After
+	public void clear() {
 		TraceReactorAutoConfigurationAccessorConfiguration.close();
 	}
 
