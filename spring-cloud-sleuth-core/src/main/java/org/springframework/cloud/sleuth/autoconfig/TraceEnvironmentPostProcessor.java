@@ -47,7 +47,7 @@ public class TraceEnvironmentPostProcessor implements EnvironmentPostProcessor {
 		if (Boolean
 				.parseBoolean(environment.getProperty("spring.sleuth.enabled", "true"))) {
 			map.put("logging.pattern.level", "%5p [${spring.zipkin.service.name:"
-					+ "${spring.application.name:}},%X{X-B3-TraceId:-},%X{X-B3-SpanId:-},%X{X-Span-Export:-}]");
+					+ "${spring.application.name:}},%X{traceId:-},%X{spanId:-},%X{spanExportable:-}]");
 		}
 		addOrReplace(environment.getPropertySources(), map);
 	}

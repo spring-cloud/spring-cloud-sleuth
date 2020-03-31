@@ -218,7 +218,7 @@ public class TraceWebFluxTests {
 		@GetMapping("/api/c2/{id}")
 		public Flux<String> successful(@PathVariable Long id) {
 			// #786
-			then(MDC.get("X-B3-TraceId")).isNotEmpty();
+			then(MDC.get("traceId")).isNotEmpty();
 			this.span = this.tracer.currentSpan();
 			return Flux.just(id.toString());
 		}

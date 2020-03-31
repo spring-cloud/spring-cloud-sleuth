@@ -27,6 +27,8 @@ import brave.http.HttpRequest;
 import brave.http.HttpRequestParser;
 import brave.sampler.Sampler;
 import brave.sampler.SamplerFunction;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.assertj.core.api.BDDAssertions;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
@@ -38,6 +40,7 @@ import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.system.CapturedOutput;
 import org.springframework.boot.test.system.OutputCaptureExtension;
+import org.springframework.cloud.sleuth.instrument.web.client.TraceWebClientAutoConfiguration;
 import org.springframework.cloud.sleuth.util.BlockingQueueSpanReporter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -104,6 +107,11 @@ public class TraceFilterWebIntegrationTests {
 						"Request processing failed; nested exception is java.lang.RuntimeException: Throwing exception");
 		// issue#714
 		String hex = fromFirstTraceFilterFlow.traceId();
+		thenLogsForExceptionLoggingFilterContainTracingInformation(capture, hex);
+	}
+
+	private void thenLogsForExceptionLoggingFilterContainTracingInformation(
+			CapturedOutput capture, String hex) {
 		String[] split = capture.toString().split("\n");
 		List<String> list = Arrays.stream(split)
 				.filter(s -> s.contains("Uncaught exception thrown"))
@@ -138,7 +146,7 @@ public class TraceFilterWebIntegrationTests {
 		return this.environment.getProperty("local.server.port", Integer.class);
 	}
 
-	@EnableAutoConfiguration
+	@EnableAutoConfiguration(exclude = TraceWebClientAutoConfiguration.class)
 	@Configuration
 	public static class Config {
 
@@ -206,8 +214,11 @@ public class TraceFilterWebIntegrationTests {
 	@RestController
 	public static class GoodController {
 
+		private static final Log log = LogFactory.getLog(GoodController.class);
+
 		@RequestMapping("/good")
 		public String beGood() {
+			log.info("Good!");
 			return "good";
 		}
 
@@ -216,13 +227,18 @@ public class TraceFilterWebIntegrationTests {
 	@RestController
 	public static class ExceptionThrowingController {
 
+		private static final Log log = LogFactory
+				.getLog(ExceptionThrowingController.class);
+
 		@RequestMapping("/")
 		public void throwException() {
+			log.info("Throws exception");
 			throw new RuntimeException("Throwing exception");
 		}
 
 		@RequestMapping(path = "/test_bad_request", method = RequestMethod.GET)
 		public ResponseEntity<?> processFail() {
+			log.info("Test bad request");
 			return ResponseEntity.badRequest().build();
 		}
 

@@ -342,7 +342,7 @@ public class TraceFilterIntegrationTests extends AbstractMvcIntegrationTest {
 
 			@RequestMapping("/ping")
 			public String ping() {
-				logger.info("ping");
+				log.info("ping");
 				span = this.tracer.currentSpan();
 				return "ping";
 			}
@@ -354,7 +354,7 @@ public class TraceFilterIntegrationTests extends AbstractMvcIntegrationTest {
 
 			@RequestMapping("/deferred")
 			public DeferredResult<String> deferredMethod() {
-				logger.info("deferred");
+				log.info("deferred");
 				span = this.tracer.currentSpan();
 				span.tag("tag", "value");
 				DeferredResult<String> result = new DeferredResult<>();
@@ -364,7 +364,7 @@ public class TraceFilterIntegrationTests extends AbstractMvcIntegrationTest {
 
 			@RequestMapping("/future")
 			public CompletableFuture<String> future() {
-				logger.info("future");
+				log.info("future");
 				return CompletableFuture.completedFuture("ping");
 			}
 

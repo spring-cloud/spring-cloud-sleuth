@@ -22,7 +22,9 @@ import java.util.HashMap;
 import java.util.List;
 
 import brave.Tracing;
+import brave.http.HttpRequest;
 import brave.sampler.Sampler;
+import brave.sampler.SamplerFunction;
 import feign.Client;
 import feign.Request;
 import feign.RequestTemplate;
@@ -39,6 +41,7 @@ import org.springframework.cloud.client.loadbalancer.LoadBalancerClient;
 import org.springframework.cloud.openfeign.EnableFeignClients;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.cloud.openfeign.loadbalancer.FeignBlockingLoadBalancerClient;
+import org.springframework.cloud.sleuth.instrument.web.HttpClientSampler;
 import org.springframework.cloud.sleuth.util.ArrayListSpanReporter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -50,8 +53,7 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import static org.assertj.core.api.BDDAssertions.then;
 
 @SpringBootTest(classes = Application.class,
-		webEnvironment = SpringBootTest.WebEnvironment.NONE,
-		properties = { "feign.hystrix.enabled=false" })
+		webEnvironment = SpringBootTest.WebEnvironment.NONE)
 @DirtiesContext(classMode = ClassMode.AFTER_EACH_TEST_METHOD)
 public class ManuallyCreatedLoadBalancerFeignClientTests {
 
@@ -81,7 +83,7 @@ public class ManuallyCreatedLoadBalancerFeignClientTests {
 		List<Span> spans = this.reporter.getSpans();
 		// retries
 		then(spans).hasSize(1);
-		then(spans.get(0).tags().get("http.path")).isEqualTo("/");
+		then(spans.get(0).tags().get("http.path")).isEqualTo("");
 	}
 
 	@Test
@@ -96,7 +98,7 @@ public class ManuallyCreatedLoadBalancerFeignClientTests {
 		List<Span> spans = this.reporter.getSpans();
 		// retries
 		then(spans).hasSize(1);
-		then(spans.get(0).tags().get("http.path")).isEqualTo("/");
+		then(spans.get(0).tags().get("http.path")).isEqualTo("");
 	}
 
 }
@@ -119,6 +121,12 @@ class Application {
 	@Bean
 	public Reporter<Span> spanReporter() {
 		return new ArrayListSpanReporter();
+	}
+
+	@Bean(name = HttpClientSampler.NAME)
+	@HttpClientSampler
+	public SamplerFunction<HttpRequest> clientHttpSampler() {
+		return arg -> true;
 	}
 
 }

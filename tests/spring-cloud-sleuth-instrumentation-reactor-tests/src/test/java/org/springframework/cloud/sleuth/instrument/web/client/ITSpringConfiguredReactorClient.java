@@ -28,12 +28,15 @@ import okhttp3.mockwebserver.Dispatcher;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.RecordedRequest;
 import org.junit.Test;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
 import org.reactivestreams.Subscription;
 import reactor.core.publisher.BaseSubscriber;
 import reactor.core.publisher.Mono;
 import reactor.netty.http.client.HttpClient;
 import zipkin2.Callback;
 
+import org.springframework.cloud.sleuth.instrument.reactor.TraceReactorAutoConfigurationAccessorConfiguration;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -45,6 +48,12 @@ import static org.assertj.core.api.Assertions.assertThat;
 // Function of spring context so that shutdown hooks happen!
 abstract class ITSpringConfiguredReactorClient
 		extends ITHttpAsyncClient<AnnotationConfigApplicationContext> {
+
+	@BeforeAll
+	@AfterAll
+	public static void clear() {
+		TraceReactorAutoConfigurationAccessorConfiguration.close();
+	}
 
 	final Class<?>[] componentClasses;
 

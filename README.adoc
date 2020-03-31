@@ -700,13 +700,16 @@ NOTE: The SLF4J MDC is always set and logback users immediately see the trace an
 shown earlier.
 Other logging systems have to configure their own formatter to get the same result.
 The default is as follows:
-`logging.pattern.level` set to `%5p [${spring.zipkin.service.name:${spring.application.name:-}},%X{X-B3-TraceId:-},%X{X-B3-SpanId:-},%X{X-Span-Export:-}]`
+`logging.pattern.level` set to `%5p [${spring.zipkin.service.name:${spring.application.name:-}},%X{traceId:-},%X{spanId:-},%X{spanExportable:-}]`
 (this is a Spring Boot feature for logback users).
 If you do not use SLF4J, this pattern is NOT automatically applied.
 
+IMPORTANT: Starting with version 3.0.0, the logging pattern has changed.
+We've converted the MDC entries from B3 to non B3 keys (e.g. `X-B3-TraceId` to `traceId`).
+
 == Building
 
-:jdkversion: 1.7
+:jdkversion: 1.8
 
 === Basic Compile and Test
 

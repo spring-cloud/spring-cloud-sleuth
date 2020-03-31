@@ -21,7 +21,9 @@ import java.util.HashMap;
 import java.util.List;
 
 import brave.Tracing;
+import brave.http.HttpRequest;
 import brave.sampler.Sampler;
+import brave.sampler.SamplerFunction;
 import feign.Client;
 import feign.Request;
 import feign.RequestTemplate;
@@ -36,6 +38,7 @@ import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.cloud.openfeign.EnableFeignClients;
 import org.springframework.cloud.openfeign.FeignClient;
+import org.springframework.cloud.sleuth.instrument.web.HttpClientSampler;
 import org.springframework.cloud.sleuth.util.ArrayListSpanReporter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -56,8 +59,7 @@ interface MyNameRemote {
  * @author Marcin Grzejszczak
  */
 @SpringBootTest(classes = Application.class,
-		webEnvironment = SpringBootTest.WebEnvironment.NONE,
-		properties = { "feign.hystrix.enabled=false" })
+		webEnvironment = SpringBootTest.WebEnvironment.NONE)
 public class Issue502Tests {
 
 	@Autowired
@@ -86,7 +88,7 @@ public class Issue502Tests {
 		List<Span> spans = this.reporter.getSpans();
 		// retries
 		then(spans).hasSize(1);
-		then(spans.get(0).tags().get("http.path")).isEqualTo("/");
+		then(spans.get(0).tags().get("http.path")).isEqualTo("");
 	}
 
 }
@@ -109,6 +111,12 @@ class Application {
 	@Bean
 	public Reporter<Span> spanReporter() {
 		return new ArrayListSpanReporter();
+	}
+
+	@Bean(name = HttpClientSampler.NAME)
+	@HttpClientSampler
+	public SamplerFunction<HttpRequest> clientHttpSampler() {
+		return arg -> true;
 	}
 
 }
