@@ -27,9 +27,9 @@ import io.netty.handler.timeout.ReadTimeoutHandler;
 import okhttp3.mockwebserver.Dispatcher;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.RecordedRequest;
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
 import org.junit.Test;
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.BeforeAll;
 import org.reactivestreams.Subscription;
 import reactor.core.publisher.BaseSubscriber;
 import reactor.core.publisher.Mono;
@@ -49,8 +49,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 abstract class ITSpringConfiguredReactorClient
 		extends ITHttpAsyncClient<AnnotationConfigApplicationContext> {
 
-	@BeforeAll
-	@AfterAll
+	@BeforeClass
+	@AfterClass
 	public static void clear() {
 		TraceReactorAutoConfigurationAccessorConfiguration.close();
 	}
