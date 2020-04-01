@@ -40,7 +40,9 @@ import static org.springframework.boot.test.context.SpringBootTest.WebEnvironmen
 /**
  * @author Marcin Grzejszczak
  */
-@SpringBootTest(classes = FinishedSpanHandlerTests.FinishedSpanHandlerAspectTestsConfig.class, webEnvironment = NONE)
+@SpringBootTest(
+		classes = FinishedSpanHandlerTests.FinishedSpanHandlerAspectTestsConfig.class,
+		webEnvironment = NONE)
 public class FinishedSpanHandlerTests {
 
 	@Autowired
