@@ -17,6 +17,7 @@
 package org.springframework.cloud.sleuth.instrument.web.client;
 
 import org.junit.After;
+import org.junit.Ignore;
 import org.reactivestreams.Subscriber;
 import reactor.core.publisher.Mono;
 import reactor.netty.ByteBufFlux;
@@ -32,6 +33,7 @@ import org.springframework.web.reactive.function.client.WebClient;
  * This tests the reactor {@link HttpClient} in isolation of {@link WebClient} as it could
  * be used directly.
  */
+@Ignore
 public class ReactorNettyHttpClientBraveTests extends ITSpringConfiguredReactorClient {
 
 	/**

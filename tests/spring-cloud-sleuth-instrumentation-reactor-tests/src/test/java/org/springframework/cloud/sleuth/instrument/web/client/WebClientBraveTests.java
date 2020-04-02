@@ -40,6 +40,7 @@ import org.springframework.web.reactive.function.client.WebClient;
  * default in Spring Boot due to static instantiation in
  * {@link org.springframework.boot.autoconfigure.web.reactive.function.client.ClientHttpConnectorConfiguration}.
  */
+@Ignore
 public class WebClientBraveTests extends ITSpringConfiguredReactorClient {
 
 	/**
