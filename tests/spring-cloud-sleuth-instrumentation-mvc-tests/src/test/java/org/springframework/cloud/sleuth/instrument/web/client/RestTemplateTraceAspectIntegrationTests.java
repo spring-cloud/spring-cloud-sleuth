@@ -22,6 +22,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
 
 import brave.Tracing;
+import brave.propagation.CurrentTraceContext;
 import brave.sampler.Sampler;
 import brave.spring.web.TracingAsyncClientHttpRequestInterceptor;
 import org.awaitility.Awaitility;
@@ -75,6 +76,9 @@ public class RestTemplateTraceAspectIntegrationTests {
 
 	@Autowired
 	AspectTestingController controller;
+
+	@Autowired
+	CurrentTraceContext currentTraceContext;
 
 	@Autowired
 	Tracing tracer;
@@ -142,7 +146,7 @@ public class RestTemplateTraceAspectIntegrationTests {
 			throws Exception {
 		whenARequestIsSentToASyncEndpointThatShouldBeFilteredOut();
 
-		then(Tracing.current().tracer().currentSpan()).isNull();
+		then(this.currentTraceContext.get()).isNull();
 		then(this.reporter.getSpans()).isEmpty();
 	}
 

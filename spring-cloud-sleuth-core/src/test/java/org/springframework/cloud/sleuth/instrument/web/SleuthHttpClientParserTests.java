@@ -24,6 +24,7 @@ import java.util.Map;
 import brave.SpanCustomizer;
 import brave.http.HttpClientRequest;
 import brave.http.HttpRequest;
+import brave.propagation.TraceContext;
 import org.junit.Test;
 
 import static org.assertj.core.api.BDDAssertions.then;
@@ -38,6 +39,8 @@ import static org.mockito.Mockito.when;
 @Deprecated
 public class SleuthHttpClientParserTests {
 
+	private TraceContext context = TraceContext.newBuilder().traceId(1).spanId(2).build();
+
 	private TraceKeys traceKeys = new TraceKeys();
 
 	private TestSpan span = new TestSpan();
@@ -50,7 +53,7 @@ public class SleuthHttpClientParserTests {
 		when(request.method()).thenReturn("GET");
 		when(request.url()).thenReturn("https://foo/" + bigName());
 
-		parser.parse(request, null, span);
+		parser.parse(request, context, span);
 
 		then(this.span.name).hasSize(50);
 	}
@@ -70,7 +73,7 @@ public class SleuthHttpClientParserTests {
 		when(request.url()).thenReturn("http://localhost/?foo=bar");
 		when(request.header("host")).thenReturn("localhost");
 
-		parser.parse(request, null, span);
+		parser.parse(request, context, span);
 
 		then(this.span.tags).containsEntry("http.url", "http://localhost/?foo=bar")
 				.containsEntry("http.host", "localhost").containsEntry("http.path", "/")
@@ -84,7 +87,7 @@ public class SleuthHttpClientParserTests {
 		HttpRequest request = mock(HttpRequest.class);
 		when(request.header("x-foo")).thenReturn("bar");
 
-		parser.parse(request, null, span);
+		parser.parse(request, context, span);
 
 		then(this.span.tags).containsEntry("http.x-foo", "bar");
 	}
@@ -131,7 +134,7 @@ public class SleuthHttpClientParserTests {
 			@Override
 			public void header(String name, String value) {
 			}
-		}, null, this.span);
+		}, context, this.span);
 
 		then(this.span.tags).containsEntry("http.user-agent", "Test")
 				.containsEntry("http.accept", "'text/plain','text/xml'")

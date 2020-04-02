@@ -22,8 +22,7 @@ import java.util.concurrent.TimeUnit;
 
 import brave.Tracing;
 import brave.propagation.CurrentTraceContext;
-import brave.propagation.StrictScopeDecorator;
-import brave.propagation.ThreadLocalCurrentTraceContext;
+import brave.propagation.StrictCurrentTraceContext;
 import brave.propagation.TraceContext;
 import com.netflix.hystrix.HystrixThreadPoolKey;
 import com.netflix.hystrix.HystrixThreadPoolProperties;
@@ -54,9 +53,9 @@ public class SleuthHystrixConcurrencyStrategyTest {
 
 	ArrayListSpanReporter reporter = new ArrayListSpanReporter();
 
-	Tracing tracing = Tracing.newBuilder()
-			.currentTraceContext(ThreadLocalCurrentTraceContext.newBuilder()
-					.addScopeDecorator(StrictScopeDecorator.create()).build())
+	StrictCurrentTraceContext currentTraceContext = StrictCurrentTraceContext.create();
+
+	Tracing tracing = Tracing.newBuilder().currentTraceContext(this.currentTraceContext)
 			.spanReporter(this.reporter).build();
 
 	@Before
@@ -64,6 +63,7 @@ public class SleuthHystrixConcurrencyStrategyTest {
 	public void setup() {
 		HystrixPlugins.reset();
 		this.reporter.clear();
+		this.currentTraceContext.close();
 	}
 
 	@Test

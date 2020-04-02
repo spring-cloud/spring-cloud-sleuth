@@ -19,6 +19,7 @@ package org.springframework.cloud.sleuth.instrument.web.client;
 import java.net.URI;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
+import java.util.function.BiConsumer;
 
 import brave.http.HttpTracing;
 import brave.propagation.CurrentTraceContext;
@@ -33,7 +34,7 @@ import org.reactivestreams.Subscription;
 import reactor.core.publisher.BaseSubscriber;
 import reactor.core.publisher.Mono;
 import reactor.netty.http.client.HttpClient;
-import zipkin2.Callback;
+import zipkin2.Span;
 
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 
@@ -99,8 +100,8 @@ abstract class ITSpringConfiguredReactorClient
 	}
 
 	@Override
-	final protected void getAsync(AnnotationConfigApplicationContext context, String path,
-			Callback<Integer> callback) {
+	final protected void get(AnnotationConfigApplicationContext context, String path,
+			BiConsumer<Integer, Throwable> callback) {
 		TestHttpCallbackSubscriber.subscribe(getMono(context, path), callback);
 	}
 
@@ -160,7 +161,7 @@ abstract class ITSpringConfiguredReactorClient
 
 		assertThat(server.getRequestCount()).isOne();
 
-		takeClientSpanWithError("CANCELLED");
+		reporter.takeRemoteSpanWithError(Span.Kind.CLIENT, "CANCELLED");
 	}
 
 }
