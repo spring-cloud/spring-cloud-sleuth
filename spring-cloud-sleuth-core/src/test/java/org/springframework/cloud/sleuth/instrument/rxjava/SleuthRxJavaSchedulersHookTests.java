@@ -28,8 +28,7 @@ import java.util.concurrent.ThreadFactory;
 
 import brave.Tracer;
 import brave.Tracing;
-import brave.propagation.StrictScopeDecorator;
-import brave.propagation.ThreadLocalCurrentTraceContext;
+import brave.propagation.StrictCurrentTraceContext;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -52,11 +51,11 @@ public class SleuthRxJavaSchedulersHookTests {
 
 	List<String> threadsToIgnore = new ArrayList<>();
 
+	StrictCurrentTraceContext currentTraceContext = StrictCurrentTraceContext.create();
+
 	ArrayListSpanReporter reporter = new ArrayListSpanReporter();
 
-	Tracing tracing = Tracing.newBuilder()
-			.currentTraceContext(ThreadLocalCurrentTraceContext.newBuilder()
-					.addScopeDecorator(StrictScopeDecorator.create()).build())
+	Tracing tracing = Tracing.newBuilder().currentTraceContext(this.currentTraceContext)
 			.spanReporter(this.reporter).build();
 
 	Tracer tracer = this.tracing.tracer();
@@ -65,6 +64,7 @@ public class SleuthRxJavaSchedulersHookTests {
 	public void clean() {
 		this.tracing.close();
 		this.reporter.clear();
+		this.currentTraceContext.close();
 	}
 
 	@Before

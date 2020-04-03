@@ -26,8 +26,7 @@ import brave.Span;
 import brave.Tracer;
 import brave.Tracing;
 import brave.http.HttpTracing;
-import brave.propagation.StrictScopeDecorator;
-import brave.propagation.ThreadLocalCurrentTraceContext;
+import brave.propagation.StrictCurrentTraceContext;
 import com.netflix.zuul.context.RequestContext;
 import com.netflix.zuul.monitoring.TracerFactory;
 import org.junit.After;
@@ -57,11 +56,11 @@ public class TracePostZuulFilterTests {
 	@Mock
 	HttpServletResponse httpServletResponse;
 
+	StrictCurrentTraceContext currentTraceContext = StrictCurrentTraceContext.create();
+
 	ArrayListSpanReporter reporter = new ArrayListSpanReporter();
 
-	Tracing tracing = Tracing.newBuilder()
-			.currentTraceContext(ThreadLocalCurrentTraceContext.newBuilder()
-					.addScopeDecorator(StrictScopeDecorator.create()).build())
+	Tracing tracing = Tracing.newBuilder().currentTraceContext(this.currentTraceContext)
 			.spanReporter(this.reporter).build();
 
 	HttpTracing httpTracing = HttpTracing.newBuilder(this.tracing)
@@ -75,7 +74,8 @@ public class TracePostZuulFilterTests {
 	@After
 	public void clean() {
 		RequestContext.getCurrentContext().unset();
-		this.httpTracing.tracing().close();
+		this.tracing.close();
+		this.currentTraceContext.close();
 		RequestContext.testSetCurrentContext(null);
 	}
 

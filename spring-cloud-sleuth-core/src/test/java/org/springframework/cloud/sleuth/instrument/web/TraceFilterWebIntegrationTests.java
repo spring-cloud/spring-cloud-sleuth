@@ -22,8 +22,8 @@ import java.util.List;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-import brave.Tracing;
 import brave.http.HttpRequest;
+import brave.propagation.CurrentTraceContext;
 import brave.sampler.Sampler;
 import brave.sampler.SamplerFunction;
 import org.assertj.core.api.BDDAssertions;
@@ -66,10 +66,10 @@ public class TraceFilterWebIntegrationTests {
 	public OutputCapture capture = new OutputCapture();
 
 	@Autowired
-	Tracing tracer;
+	ArrayListSpanReporter accumulator;
 
 	@Autowired
-	ArrayListSpanReporter accumulator;
+	CurrentTraceContext currentTraceContext;
 
 	@Autowired
 	@HttpServerSampler
@@ -94,7 +94,7 @@ public class TraceFilterWebIntegrationTests {
 		catch (Exception e) {
 		}
 
-		then(Tracing.current().tracer().currentSpan()).isNull();
+		then(this.currentTraceContext.get()).isNull();
 		then(this.accumulator.getSpans()).hasSize(1);
 		Span fromFirstTraceFilterFlow = this.accumulator.getSpans().get(0);
 		then(fromFirstTraceFilterFlow.tags()).containsEntry("http.status_code", "500")
@@ -122,7 +122,7 @@ public class TraceFilterWebIntegrationTests {
 		catch (HttpClientErrorException e) {
 		}
 
-		then(Tracing.current().tracer().currentSpan()).isNull();
+		then(this.currentTraceContext.get()).isNull();
 		then(this.accumulator.getSpans()).hasSize(1);
 		then(this.accumulator.getSpans().get(0).kind().ordinal())
 				.isEqualTo(Span.Kind.SERVER.ordinal());

@@ -21,9 +21,9 @@ import java.util.Collections;
 
 import brave.Tracing;
 import brave.http.HttpTracing;
-import brave.propagation.StrictScopeDecorator;
-import brave.propagation.ThreadLocalCurrentTraceContext;
+import brave.propagation.StrictCurrentTraceContext;
 import org.assertj.core.api.BDDAssertions;
+import org.junit.After;
 import org.junit.Test;
 
 import org.springframework.cloud.gateway.filter.headers.HttpHeadersFilter;
@@ -34,14 +34,20 @@ import org.springframework.mock.web.server.MockServerWebExchange;
 
 public class TraceRequestHttpHeadersFilterTests {
 
+	StrictCurrentTraceContext currentTraceContext = StrictCurrentTraceContext.create();
+
 	ArrayListSpanReporter reporter = new ArrayListSpanReporter();
 
-	Tracing tracing = Tracing.newBuilder()
-			.currentTraceContext(ThreadLocalCurrentTraceContext.newBuilder()
-					.addScopeDecorator(StrictScopeDecorator.create()).build())
+	Tracing tracing = Tracing.newBuilder().currentTraceContext(this.currentTraceContext)
 			.spanReporter(this.reporter).build();
 
 	HttpTracing httpTracing = HttpTracing.newBuilder(this.tracing).build();
+
+	@After
+	public void close() {
+		this.tracing.close();
+		this.currentTraceContext.close();
+	}
 
 	@Test
 	public void should_override_span_tracing_headers() {

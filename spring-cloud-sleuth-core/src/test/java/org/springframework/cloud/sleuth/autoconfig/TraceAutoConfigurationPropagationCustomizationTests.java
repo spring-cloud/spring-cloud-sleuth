@@ -49,7 +49,7 @@ public class TraceAutoConfigurationPropagationCustomizationTests {
 		this.contextRunner.withPropertyValues("spring.sleuth.baggage-keys=my-baggage")
 				.run((context) -> {
 					BDDAssertions.then(context.getBean(Propagation.Factory.class))
-							.hasFieldOrPropertyWithValue("delegate",
+							.hasFieldOrPropertyWithValue("delegate.delegate",
 									B3Propagation.FACTORY);
 				});
 	}
@@ -81,7 +81,7 @@ public class TraceAutoConfigurationPropagationCustomizationTests {
 				.withUserConfiguration(CustomPropagationFactoryBuilderConfig.class)
 				.run((context) -> {
 					BDDAssertions.then(context.getBean(Propagation.Factory.class))
-							.hasFieldOrPropertyWithValue("delegate",
+							.hasFieldOrPropertyWithValue("delegate.delegate",
 									B3SinglePropagation.FACTORY);
 				});
 	}

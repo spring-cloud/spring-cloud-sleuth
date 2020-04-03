@@ -16,14 +16,12 @@
 
 package org.springframework.cloud.sleuth.instrument.web.client.feign;
 
-import java.io.IOException;
-
 import brave.Tracing;
 import brave.http.HttpTracing;
-import brave.propagation.StrictScopeDecorator;
-import brave.propagation.ThreadLocalCurrentTraceContext;
+import brave.propagation.StrictCurrentTraceContext;
 import feign.Client;
 import org.aspectj.lang.ProceedingJoinPoint;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -55,9 +53,9 @@ public class TraceFeignAspectTests {
 	@Mock
 	TraceLoadBalancerFeignClient traceLoadBalancerFeignClient;
 
-	Tracing tracing = Tracing.newBuilder()
-			.currentTraceContext(ThreadLocalCurrentTraceContext.newBuilder()
-					.addScopeDecorator(StrictScopeDecorator.create()).build())
+	StrictCurrentTraceContext currentTraceContext = StrictCurrentTraceContext.create();
+
+	Tracing tracing = Tracing.newBuilder().currentTraceContext(currentTraceContext)
 			.build();
 
 	HttpTracing httpTracing = HttpTracing.newBuilder(this.tracing)
@@ -69,11 +67,16 @@ public class TraceFeignAspectTests {
 	public void setup() {
 		this.traceFeignAspect = new TraceFeignAspect(this.beanFactory) {
 			@Override
-			Object executeTraceFeignClient(Object bean, ProceedingJoinPoint pjp)
-					throws IOException {
+			Object executeTraceFeignClient(Object bean, ProceedingJoinPoint pjp) {
 				return null;
 			}
 		};
+	}
+
+	@After
+	public void close() {
+		this.tracing.close();
+		this.currentTraceContext.close();
 	}
 
 	@Test

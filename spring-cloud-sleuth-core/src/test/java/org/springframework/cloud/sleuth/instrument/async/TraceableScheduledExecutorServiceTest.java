@@ -22,8 +22,8 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.Predicate;
 
 import brave.Tracing;
-import brave.propagation.StrictScopeDecorator;
-import brave.propagation.ThreadLocalCurrentTraceContext;
+import brave.propagation.StrictCurrentTraceContext;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -48,9 +48,9 @@ import static org.mockito.Mockito.never;
 @RunWith(MockitoJUnitRunner.class)
 public class TraceableScheduledExecutorServiceTest {
 
-	Tracing tracing = Tracing.newBuilder()
-			.currentTraceContext(ThreadLocalCurrentTraceContext.newBuilder()
-					.addScopeDecorator(StrictScopeDecorator.create()).build())
+	StrictCurrentTraceContext currentTraceContext = StrictCurrentTraceContext.create();
+
+	Tracing tracing = Tracing.newBuilder().currentTraceContext(this.currentTraceContext)
 			.build();
 
 	@Mock
@@ -65,6 +65,12 @@ public class TraceableScheduledExecutorServiceTest {
 	@Before
 	public void setup() {
 		beanFactory();
+	}
+
+	@After
+	public void close() {
+		this.tracing.close();
+		this.currentTraceContext.close();
 	}
 
 	@Test

@@ -23,6 +23,7 @@ import java.util.Map;
 
 import brave.SpanCustomizer;
 import brave.http.HttpClientAdapter;
+import brave.propagation.TraceContext;
 import org.junit.Test;
 
 import static org.assertj.core.api.BDDAssertions.then;
@@ -33,6 +34,8 @@ import static org.assertj.core.api.BDDAssertions.then;
  * @author Sven Zethelius
  */
 public class SleuthHttpClientParserTests {
+
+	private TraceContext context = TraceContext.newBuilder().traceId(1).spanId(2).build();
 
 	private TraceKeys traceKeys = new TraceKeys();
 
@@ -73,7 +76,7 @@ public class SleuthHttpClientParserTests {
 			public Integer statusCode(Object response) {
 				return 200;
 			}
-		}, null, this.customizer);
+		}, context, this.customizer);
 
 		then(this.customizer.tags).containsEntry("http.user-agent", "Test")
 				.containsEntry("http.accept", "'text/plain','text/xml'")

@@ -26,8 +26,7 @@ import brave.Span;
 import brave.Tracer;
 import brave.Tracing;
 import brave.http.HttpTracing;
-import brave.propagation.StrictScopeDecorator;
-import brave.propagation.ThreadLocalCurrentTraceContext;
+import brave.propagation.StrictCurrentTraceContext;
 import brave.sampler.Sampler;
 import brave.servlet.TracingFilter;
 import org.junit.After;
@@ -61,11 +60,11 @@ public class TraceFilterTests {
 	static final String SAMPLED_ID_NAME = "X-B3-Sampled";
 	static final String SPAN_FLAGS = "X-B3-Flags";
 
+	StrictCurrentTraceContext currentTraceContext = StrictCurrentTraceContext.create();
+
 	ArrayListSpanReporter reporter = new ArrayListSpanReporter();
 
-	Tracing tracing = Tracing.newBuilder()
-			.currentTraceContext(ThreadLocalCurrentTraceContext.newBuilder()
-					.addScopeDecorator(StrictScopeDecorator.create()).build())
+	Tracing tracing = Tracing.newBuilder().currentTraceContext(this.currentTraceContext)
 			.spanReporter(this.reporter).build();
 
 	Tracer tracer = this.tracing.tracer();
@@ -101,7 +100,8 @@ public class TraceFilterTests {
 
 	@After
 	public void cleanup() {
-		Tracing.current().close();
+		this.tracing.close();
+		this.currentTraceContext.close();
 	}
 
 	@Test
@@ -111,14 +111,13 @@ public class TraceFilterTests {
 
 		neverSampleFilter().doFilter(this.request, this.response, this.filterChain);
 
-		then(Tracing.current().tracer().currentSpan()).isNull();
+		then(this.currentTraceContext.get()).isNull();
 		then(this.reporter.getSpans()).isEmpty();
 	}
 
 	private Filter neverSampleFilter() {
-		Tracing tracing = Tracing.newBuilder()
-				.currentTraceContext(ThreadLocalCurrentTraceContext.newBuilder()
-						.addScopeDecorator(StrictScopeDecorator.create()).build())
+		this.tracing.close();
+		this.tracing = Tracing.newBuilder().currentTraceContext(this.currentTraceContext)
 				.spanReporter(this.reporter).sampler(Sampler.NEVER_SAMPLE)
 				.supportsJoin(false).build();
 		HttpTracing httpTracing = HttpTracing.newBuilder(tracing)
@@ -150,7 +149,7 @@ public class TraceFilterTests {
 		this.response.setStatus(0);
 		this.filter.doFilter(this.request, this.response, this.filterChain);
 
-		then(Tracing.current().tracer().currentSpan()).isNull();
+		then(this.currentTraceContext.get()).isNull();
 		then(this.reporter.getSpans()).hasSize(1);
 		then(this.reporter.getSpans().get(0).tags())
 				.doesNotContainKey("http.status_code");
@@ -165,7 +164,7 @@ public class TraceFilterTests {
 
 		this.filter.doFilter(this.request, this.response, this.filterChain);
 
-		then(Tracing.current().tracer().currentSpan()).isNull();
+		then(this.currentTraceContext.get()).isNull();
 		then(this.reporter.getSpans()).hasSize(1);
 		then(this.reporter.getSpans().get(0).id()).isEqualTo(PARENT_ID);
 		then(this.reporter.getSpans().get(0).tags())
@@ -187,7 +186,7 @@ public class TraceFilterTests {
 			span.set(this.tracing.tracer().currentSpan());
 		});
 
-		then(Tracing.current().tracer().currentSpan()).isNull();
+		then(this.currentTraceContext.get()).isNull();
 		then(span.get().context().traceIdString()).isEqualTo(SpanUtil.idToHex(2L));
 	}
 
@@ -197,7 +196,7 @@ public class TraceFilterTests {
 
 		this.filter.doFilter(this.request, this.response, this.filterChain);
 
-		then(Tracing.current().tracer().currentSpan()).isNull();
+		then(this.currentTraceContext.get()).isNull();
 	}
 
 	@Test
@@ -207,7 +206,7 @@ public class TraceFilterTests {
 
 		this.filter.doFilter(this.request, this.response, this.filterChain);
 
-		then(Tracing.current().tracer().currentSpan()).isNull();
+		then(this.currentTraceContext.get()).isNull();
 		then(this.reporter.getSpans()).hasSize(1);
 	}
 
@@ -217,7 +216,7 @@ public class TraceFilterTests {
 		Span span = this.tracer.nextSpan().name("http:foo");
 		this.response.setStatus(404);
 
-		then(Tracing.current().tracer().currentSpan()).isNull();
+		then(this.currentTraceContext.get()).isNull();
 		this.filter.doFilter(this.request, this.response, this.filterChain);
 	}
 
@@ -229,15 +228,14 @@ public class TraceFilterTests {
 
 		this.filter.doFilter(this.request, this.response, this.filterChain);
 
-		then(Tracing.current().tracer().currentSpan()).isNull();
+		then(this.currentTraceContext.get()).isNull();
 		verifyParentSpanHttpTags();
 	}
 
 	@Test
 	public void createsChildFromHeadersWhenJoinUnsupported() throws Exception {
-		Tracing tracing = Tracing.newBuilder()
-				.currentTraceContext(ThreadLocalCurrentTraceContext.newBuilder()
-						.addScopeDecorator(StrictScopeDecorator.create()).build())
+		this.tracing.close();
+		this.tracing = Tracing.newBuilder().currentTraceContext(this.currentTraceContext)
 				.spanReporter(this.reporter).supportsJoin(false).build();
 		HttpTracing httpTracing = HttpTracing.create(tracing);
 		this.request = builder().header(SPAN_ID_NAME, PARENT_ID)
@@ -247,7 +245,7 @@ public class TraceFilterTests {
 		TracingFilter.create(httpTracing).doFilter(this.request, this.response,
 				this.filterChain);
 
-		then(Tracing.current().tracer().currentSpan()).isNull();
+		then(this.currentTraceContext.get()).isNull();
 		then(this.reporter.getSpans()).hasSize(1);
 		then(this.reporter.getSpans().get(0).parentId()).isEqualTo(PARENT_ID);
 	}
@@ -262,7 +260,7 @@ public class TraceFilterTests {
 
 		this.filter.doFilter(this.request, this.response, this.filterChain);
 
-		then(Tracing.current().tracer().currentSpan()).isNull();
+		then(this.currentTraceContext.get()).isNull();
 		then(this.reporter.getSpans()).hasSize(1);
 		then(this.reporter.getSpans().get(0).tags()).containsEntry("http.x-foo", "bar");
 	}
@@ -277,7 +275,7 @@ public class TraceFilterTests {
 		this.request.addHeader("X-Foo", "spam");
 		this.filter.doFilter(this.request, this.response, this.filterChain);
 
-		then(Tracing.current().tracer().currentSpan()).isNull();
+		then(this.currentTraceContext.get()).isNull();
 		then(this.reporter.getSpans()).hasSize(1);
 		// We no longer support multi value headers
 		then(this.reporter.getSpans().get(0).tags()).containsEntry("http.x-foo", "bar");
@@ -304,7 +302,7 @@ public class TraceFilterTests {
 			assertThat(e.getMessage()).isEqualTo("Planned");
 		}
 
-		then(Tracing.current().tracer().currentSpan()).isNull();
+		then(this.currentTraceContext.get()).isNull();
 		verifyParentSpanHttpTags(HttpStatus.INTERNAL_SERVER_ERROR);
 		then(this.reporter.getSpans()).hasSize(1);
 		then(this.reporter.getSpans().get(0).tags()).containsEntry("error", "Planned");
@@ -318,7 +316,7 @@ public class TraceFilterTests {
 
 		this.response.setStatus(404);
 
-		then(Tracing.current().tracer().currentSpan()).isNull();
+		then(this.currentTraceContext.get()).isNull();
 		this.filter.doFilter(this.request, this.response, this.filterChain);
 	}
 
@@ -331,7 +329,7 @@ public class TraceFilterTests {
 
 		this.filter.doFilter(this.request, this.response, this.filterChain);
 
-		then(Tracing.current().tracer().currentSpan()).isNull();
+		then(this.currentTraceContext.get()).isNull();
 		then(this.reporter.getSpans()).hasSize(1);
 	}
 
@@ -344,7 +342,7 @@ public class TraceFilterTests {
 
 		this.filter.doFilter(this.request, this.response, this.filterChain);
 
-		then(Tracing.current().tracer().currentSpan()).isNull();
+		then(this.currentTraceContext.get()).isNull();
 		then(this.reporter.getSpans()).hasSize(1);
 	}
 
@@ -356,7 +354,7 @@ public class TraceFilterTests {
 
 		this.filter.doFilter(this.request, this.response, this.filterChain);
 
-		then(Tracing.current().tracer().currentSpan()).isNull();
+		then(this.currentTraceContext.get()).isNull();
 		then(this.reporter.getSpans()).isNotEmpty();
 		then(this.response.getStatus()).isEqualTo(HttpStatus.OK.value());
 	}
@@ -370,7 +368,7 @@ public class TraceFilterTests {
 
 		this.filter.doFilter(this.request, this.response, this.filterChain);
 
-		then(Tracing.current().tracer().currentSpan()).isNull();
+		then(this.currentTraceContext.get()).isNull();
 		then(this.reporter.getSpans()).isNotEmpty();
 		then(this.response.getStatus()).isEqualTo(HttpStatus.OK.value());
 	}
@@ -383,7 +381,7 @@ public class TraceFilterTests {
 
 		neverSampleFilter().doFilter(this.request, this.response, this.filterChain);
 
-		then(Tracing.current().tracer().currentSpan()).isNull();
+		then(this.currentTraceContext.get()).isNull();
 		then(this.reporter.getSpans()).isNotEmpty();
 	}
 
@@ -395,7 +393,7 @@ public class TraceFilterTests {
 
 		this.filter.doFilter(this.request, this.response, this.filterChain);
 
-		then(Tracing.current().tracer().currentSpan()).isNull();
+		then(this.currentTraceContext.get()).isNull();
 		then(this.reporter.getSpans()).isNotEmpty();
 	}
 
@@ -408,7 +406,7 @@ public class TraceFilterTests {
 
 		neverSampleFilter().doFilter(this.request, this.response, this.filterChain);
 
-		then(Tracing.current().tracer().currentSpan()).isNull();
+		then(this.currentTraceContext.get()).isNull();
 		// It is ok to go without a trace ID, if sampling or debug is set
 		then(this.reporter.getSpans()).hasSize(1).extracting("id")
 				.isNotEqualTo(SpanUtil.idToHex(10L));
@@ -423,7 +421,7 @@ public class TraceFilterTests {
 
 		neverSampleFilter().doFilter(this.request, this.response, this.filterChain);
 
-		then(Tracing.current().tracer().currentSpan()).isNull();
+		then(this.currentTraceContext.get()).isNull();
 		then(this.reporter.getSpans()).isEmpty();
 	}
 
@@ -436,7 +434,7 @@ public class TraceFilterTests {
 
 		this.filter.doFilter(this.request, this.response, this.filterChain);
 
-		then(Tracing.current().tracer().currentSpan()).isNull();
+		then(this.currentTraceContext.get()).isNull();
 		then(this.reporter.getSpans()).hasSize(1);
 		then(this.reporter.getSpans().get(0).tags())
 				.containsEntry("http.url", "http://localhost/?foo=bar")
@@ -453,7 +451,7 @@ public class TraceFilterTests {
 
 		neverSampleFilter().doFilter(this.request, this.response, this.filterChain);
 
-		then(Tracing.current().tracer().currentSpan()).isNull();
+		then(this.currentTraceContext.get()).isNull();
 		then(this.reporter.getSpans()).hasSize(1);
 		then(this.reporter.getSpans().get(0).name()).isEqualTo("http:/");
 	}

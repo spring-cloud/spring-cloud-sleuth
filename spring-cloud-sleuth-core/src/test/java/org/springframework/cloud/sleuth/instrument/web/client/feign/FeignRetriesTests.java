@@ -23,8 +23,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import brave.Tracing;
 import brave.http.HttpTracing;
-import brave.propagation.StrictScopeDecorator;
-import brave.propagation.ThreadLocalCurrentTraceContext;
+import brave.propagation.StrictCurrentTraceContext;
 import feign.Client;
 import feign.Feign;
 import feign.FeignException;
@@ -61,11 +60,11 @@ public class FeignRetriesTests {
 	@Mock
 	BeanFactory beanFactory;
 
+	StrictCurrentTraceContext currentTraceContext = StrictCurrentTraceContext.create();
+
 	ArrayListSpanReporter reporter = new ArrayListSpanReporter();
 
-	Tracing tracing = Tracing.newBuilder()
-			.currentTraceContext(ThreadLocalCurrentTraceContext.newBuilder()
-					.addScopeDecorator(StrictScopeDecorator.create()).build())
+	Tracing tracing = Tracing.newBuilder().currentTraceContext(this.currentTraceContext)
 			.spanReporter(this.reporter).build();
 
 	HttpTracing httpTracing = HttpTracing.newBuilder(this.tracing)
@@ -76,6 +75,12 @@ public class FeignRetriesTests {
 	public void setup() {
 		BDDMockito.given(this.beanFactory.getBean(HttpTracing.class))
 				.willReturn(this.httpTracing);
+	}
+
+	@After
+	public void close() {
+		this.tracing.close();
+		this.currentTraceContext.close();
 	}
 
 	@Test

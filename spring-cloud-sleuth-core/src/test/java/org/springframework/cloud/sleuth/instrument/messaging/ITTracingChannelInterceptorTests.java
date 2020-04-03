@@ -26,8 +26,7 @@ import javax.annotation.PreDestroy;
 import brave.Span;
 import brave.Tracer;
 import brave.Tracing;
-import brave.propagation.StrictScopeDecorator;
-import brave.propagation.ThreadLocalCurrentTraceContext;
+import brave.propagation.StrictCurrentTraceContext;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -154,10 +153,13 @@ public class ITTracingChannelInterceptorTests implements MessageHandler {
 		}
 
 		@Bean
+		StrictCurrentTraceContext currentTraceContext() {
+			return StrictCurrentTraceContext.create();
+		}
+
+		@Bean
 		Tracing tracing() {
-			return Tracing.newBuilder()
-					.currentTraceContext(ThreadLocalCurrentTraceContext.newBuilder()
-							.addScopeDecorator(StrictScopeDecorator.create()).build())
+			return Tracing.newBuilder().currentTraceContext(currentTraceContext())
 					.spanReporter(spans()::add).build();
 		}
 

@@ -32,6 +32,7 @@ import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import brave.Tracing;
+import brave.propagation.StrictCurrentTraceContext;
 import org.aopalliance.aop.Advice;
 import org.assertj.core.api.BDDAssertions;
 import org.junit.After;
@@ -65,7 +66,10 @@ public class ExecutorBeanPostProcessorTests {
 	@Mock
 	BeanFactory beanFactory;
 
-	Tracing tracing = Tracing.newBuilder().build();
+	StrictCurrentTraceContext currentTraceContext = StrictCurrentTraceContext.create();
+
+	Tracing tracing = Tracing.newBuilder().currentTraceContext(this.currentTraceContext)
+			.build();
 
 	private SleuthAsyncProperties sleuthAsyncProperties;
 
@@ -79,6 +83,7 @@ public class ExecutorBeanPostProcessorTests {
 	@After
 	public void clear() {
 		this.tracing.close();
+		this.currentTraceContext.close();
 	}
 
 	@Test

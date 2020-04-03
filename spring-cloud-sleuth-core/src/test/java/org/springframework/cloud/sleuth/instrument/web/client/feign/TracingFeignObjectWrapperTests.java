@@ -16,16 +16,11 @@
 
 package org.springframework.cloud.sleuth.instrument.web.client.feign;
 
-import brave.Tracing;
-import brave.http.HttpTracing;
 import feign.Client;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
-import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
-
-import org.springframework.beans.factory.BeanFactory;
 
 import static org.assertj.core.api.BDDAssertions.then;
 import static org.mockito.Mockito.mock;
@@ -35,13 +30,6 @@ import static org.mockito.Mockito.mock;
  */
 @RunWith(MockitoJUnitRunner.class)
 public class TracingFeignObjectWrapperTests {
-
-	Tracing tracing = Tracing.newBuilder().build();
-
-	HttpTracing httpTracing = HttpTracing.create(this.tracing);
-
-	@Mock
-	BeanFactory beanFactory;
 
 	@InjectMocks
 	TraceFeignObjectWrapper traceFeignObjectWrapper;
