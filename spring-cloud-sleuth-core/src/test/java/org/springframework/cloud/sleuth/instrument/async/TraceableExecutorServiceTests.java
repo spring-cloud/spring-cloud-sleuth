@@ -29,11 +29,10 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 import brave.ScopedSpan;
-import brave.Span;
 import brave.Tracer;
 import brave.Tracing;
-import brave.propagation.StrictScopeDecorator;
-import brave.propagation.ThreadLocalCurrentTraceContext;
+import brave.propagation.StrictCurrentTraceContext;
+import brave.propagation.TraceContext;
 import org.assertj.core.api.BDDAssertions;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -65,11 +64,11 @@ public class TraceableExecutorServiceTests {
 
 	ExecutorService traceManagerableExecutorService;
 
+	StrictCurrentTraceContext currentTraceContext = StrictCurrentTraceContext.create();
+
 	ArrayListSpanReporter reporter = new ArrayListSpanReporter();
 
-	Tracing tracing = Tracing.newBuilder()
-			.currentTraceContext(ThreadLocalCurrentTraceContext.newBuilder()
-					.addScopeDecorator(StrictScopeDecorator.create()).build())
+	Tracing tracing = Tracing.newBuilder().currentTraceContext(this.currentTraceContext)
 			.spanReporter(this.reporter).build();
 
 	Tracer tracer = this.tracing.tracer();
@@ -85,12 +84,11 @@ public class TraceableExecutorServiceTests {
 	}
 
 	@AfterEach
-	public void tearDown() throws Exception {
+	public void tearDown() {
 		this.traceManagerableExecutorService.shutdown();
 		this.executorService.shutdown();
-		if (Tracing.current() != null) {
-			Tracing.current().close();
-		}
+		this.tracing.close();
+		this.currentTraceContext.close();
 	}
 
 	@Test
@@ -244,9 +242,9 @@ public class TraceableExecutorServiceTests {
 
 		@Override
 		public void run() {
-			Span span = Tracing.currentTracer().currentSpan();
-			this.traceIds.add(span.context().traceId());
-			this.spanIds.add(span.context().spanId());
+			TraceContext context = currentTraceContext.get();
+			this.traceIds.add(context.traceId());
+			this.spanIds.add(context.spanId());
 		}
 
 		void clear() {

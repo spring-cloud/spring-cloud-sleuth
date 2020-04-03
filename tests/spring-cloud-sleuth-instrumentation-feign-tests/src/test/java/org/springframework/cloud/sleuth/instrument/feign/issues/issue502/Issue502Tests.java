@@ -20,7 +20,6 @@ import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.List;
 
-import brave.Tracing;
 import brave.http.HttpRequest;
 import brave.sampler.Sampler;
 import brave.sampler.SamplerFunction;
@@ -70,9 +69,6 @@ public class Issue502Tests {
 
 	@Autowired
 	ArrayListSpanReporter reporter;
-
-	@Autowired
-	Tracing tracer;
 
 	@BeforeEach
 	public void open() {

@@ -27,10 +27,10 @@ import java.util.concurrent.Future;
 import brave.Span;
 import brave.Tracer;
 import brave.Tracing;
-import brave.propagation.StrictScopeDecorator;
-import brave.propagation.ThreadLocalCurrentTraceContext;
+import brave.propagation.StrictCurrentTraceContext;
 import brave.sampler.Sampler;
 import org.assertj.core.api.BDDAssertions;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -55,9 +55,9 @@ public class SpringCloudSleuthDocTests {
 
 	ArrayListSpanReporter reporter = new ArrayListSpanReporter();
 
-	Tracing tracing = Tracing.newBuilder()
-			.currentTraceContext(ThreadLocalCurrentTraceContext.newBuilder()
-					.addScopeDecorator(StrictScopeDecorator.create()).build())
+	StrictCurrentTraceContext currentTraceContext = StrictCurrentTraceContext.create();
+
+	Tracing tracing = Tracing.newBuilder().currentTraceContext(this.currentTraceContext)
 			.sampler(Sampler.ALWAYS_SAMPLE).spanReporter(this.reporter).build();
 
 	Tracer tracer = this.tracing.tracer();
@@ -65,6 +65,12 @@ public class SpringCloudSleuthDocTests {
 	@BeforeEach
 	public void setup() {
 		this.reporter.clear();
+	}
+
+	@AfterEach
+	public void close() {
+		this.tracing.close();
+		this.currentTraceContext.close();
 	}
 
 	@Test

@@ -22,9 +22,9 @@ import java.util.List;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-import brave.Tracing;
 import brave.http.HttpRequest;
 import brave.http.HttpRequestParser;
+import brave.propagation.CurrentTraceContext;
 import brave.sampler.Sampler;
 import brave.sampler.SamplerFunction;
 import org.apache.commons.logging.Log;
@@ -66,6 +66,9 @@ import static org.assertj.core.api.BDDAssertions.then;
 public class TraceFilterWebIntegrationTests {
 
 	@Autowired
+	CurrentTraceContext currentTraceContext;
+
+	@Autowired
 	BlockingQueueSpanReporter reporter;
 
 	@Autowired
@@ -85,7 +88,7 @@ public class TraceFilterWebIntegrationTests {
 		new RestTemplate().getForObject("http://localhost:" + port() + "/good",
 				String.class);
 
-		then(Tracing.current().tracer().currentSpan()).isNull();
+		then(this.currentTraceContext.get()).isNull();
 		then(this.reporter.takeSpan().tags()).containsKey("http.url");
 	}
 
@@ -99,7 +102,7 @@ public class TraceFilterWebIntegrationTests {
 		catch (Exception e) {
 		}
 
-		then(Tracing.current().tracer().currentSpan()).isNull();
+		then(this.currentTraceContext.get()).isNull();
 		Span fromFirstTraceFilterFlow = this.reporter.takeSpan();
 		then(fromFirstTraceFilterFlow.tags()).containsEntry("http.method", "GET")
 				.containsEntry("mvc.controller.class", "ExceptionThrowingController")
@@ -130,7 +133,7 @@ public class TraceFilterWebIntegrationTests {
 		catch (HttpClientErrorException e) {
 		}
 
-		then(Tracing.current().tracer().currentSpan()).isNull();
+		then(this.currentTraceContext.get()).isNull();
 		Span span = this.reporter.takeSpan();
 		then(span.kind().ordinal()).isEqualTo(Span.Kind.SERVER.ordinal());
 		then(span.tags()).containsEntry("http.status_code", "400");

@@ -18,8 +18,8 @@ package org.springframework.cloud.sleuth.instrument.reactor;
 
 import java.util.Objects;
 
-import brave.propagation.CurrentTraceContext;
 import brave.propagation.CurrentTraceContext.Scope;
+import brave.propagation.StrictCurrentTraceContext;
 import brave.propagation.TraceContext;
 import org.assertj.core.presentation.StandardRepresentation;
 import org.junit.jupiter.api.AfterEach;
@@ -46,7 +46,7 @@ public class ScopePassingSpanSubscriberTests {
 				Objects::toString);
 	}
 
-	final CurrentTraceContext currentTraceContext = CurrentTraceContext.Default.create();
+	StrictCurrentTraceContext currentTraceContext = StrictCurrentTraceContext.create();
 
 	TraceContext context = TraceContext.newBuilder().traceId(1).spanId(1).sampled(true)
 			.build();
@@ -59,6 +59,7 @@ public class ScopePassingSpanSubscriberTests {
 	@AfterEach
 	public void close() {
 		springContext.close();
+		currentTraceContext.close();
 	}
 
 	@Test

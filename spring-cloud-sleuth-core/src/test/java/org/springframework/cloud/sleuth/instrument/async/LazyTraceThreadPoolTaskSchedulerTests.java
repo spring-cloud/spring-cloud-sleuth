@@ -24,8 +24,8 @@ import java.util.concurrent.RejectedExecutionHandler;
 import java.util.concurrent.ThreadFactory;
 
 import brave.Tracing;
-import brave.propagation.StrictScopeDecorator;
-import brave.propagation.ThreadLocalCurrentTraceContext;
+import brave.propagation.StrictCurrentTraceContext;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -43,9 +43,9 @@ import org.springframework.util.ErrorHandler;
 @ExtendWith(MockitoExtension.class)
 public class LazyTraceThreadPoolTaskSchedulerTests {
 
-	Tracing tracing = Tracing.newBuilder()
-			.currentTraceContext(ThreadLocalCurrentTraceContext.newBuilder()
-					.addScopeDecorator(StrictScopeDecorator.create()).build())
+	StrictCurrentTraceContext currentTraceContext = StrictCurrentTraceContext.create();
+
+	Tracing tracing = Tracing.newBuilder().currentTraceContext(currentTraceContext)
 			.build();
 
 	@Mock(lenient = true)
@@ -60,6 +60,13 @@ public class LazyTraceThreadPoolTaskSchedulerTests {
 	public void setup() {
 		this.executor = new LazyTraceThreadPoolTaskScheduler(beanFactory(),
 				this.delegate);
+	}
+
+	@AfterEach
+	public void close() {
+		this.executor.shutdown();
+		this.tracing.close();
+		this.currentTraceContext.close();
 	}
 
 	BeanFactory beanFactory() {

@@ -22,8 +22,8 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.Predicate;
 
 import brave.Tracing;
-import brave.propagation.StrictScopeDecorator;
-import brave.propagation.ThreadLocalCurrentTraceContext;
+import brave.propagation.StrictCurrentTraceContext;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -48,9 +48,9 @@ import static org.mockito.Mockito.never;
 @ExtendWith(MockitoExtension.class)
 public class TraceableScheduledExecutorServiceTest {
 
-	Tracing tracing = Tracing.newBuilder()
-			.currentTraceContext(ThreadLocalCurrentTraceContext.newBuilder()
-					.addScopeDecorator(StrictScopeDecorator.create()).build())
+	StrictCurrentTraceContext currentTraceContext = StrictCurrentTraceContext.create();
+
+	Tracing tracing = Tracing.newBuilder().currentTraceContext(this.currentTraceContext)
 			.build();
 
 	@Mock(lenient = true)
@@ -65,6 +65,12 @@ public class TraceableScheduledExecutorServiceTest {
 	@BeforeEach
 	public void setup() {
 		beanFactory();
+	}
+
+	@AfterEach
+	public void close() {
+		this.tracing.close();
+		this.currentTraceContext.close();
 	}
 
 	@Test

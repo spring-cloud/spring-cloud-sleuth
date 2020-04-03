@@ -16,13 +16,19 @@
 
 package org.springframework.cloud.sleuth.instrument.web.client;
 
+import java.util.function.BiConsumer;
+
 import brave.propagation.TraceContext;
 import io.netty.bootstrap.Bootstrap;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import reactor.core.publisher.Hooks;
 import reactor.core.publisher.Mono;
+import reactor.core.publisher.SynchronousSink;
+import reactor.core.scheduler.Schedulers;
 import reactor.netty.Connection;
 
 import org.springframework.cloud.sleuth.instrument.web.client.HttpClientBeanPostProcessor.PendingSpan;
@@ -42,15 +48,27 @@ public class HttpClientBeanPostProcessorTest {
 	TraceContext traceContext = TraceContext.newBuilder().traceId(1).spanId(2)
 			.sampled(true).build();
 
+	@BeforeEach
+	public void setup() {
+		Hooks.resetOnEachOperator();
+		Hooks.resetOnLastOperator();
+		Schedulers.resetOnScheduleHooks();
+	}
+
 	@Test
 	void mapConnect_should_setup_reactor_context_currentTraceContext() {
 		TracingMapConnect tracingMapConnect = new TracingMapConnect(() -> traceContext);
 
-		Mono<Connection> original = Mono.just(connection).handle((t, ctx) -> {
-			assertThat(ctx.currentContext().get(TraceContext.class))
-					.isSameAs(traceContext);
-			assertThat(ctx.currentContext().get(PendingSpan.class)).isNotNull();
-		});
+		Mono<Connection> original = Mono.just(connection)
+				.handle(new BiConsumer<Connection, SynchronousSink<Connection>>() {
+					@Override
+					public void accept(Connection t, SynchronousSink<Connection> ctx) {
+						assertThat(ctx.currentContext().get(TraceContext.class))
+								.isSameAs(traceContext);
+						assertThat(ctx.currentContext().get(PendingSpan.class))
+								.isNotNull();
+					}
+				});
 
 		// Wrap and run the assertions
 		tracingMapConnect.apply(original, bootstrap).log().subscribe();
@@ -60,10 +78,16 @@ public class HttpClientBeanPostProcessorTest {
 	void mapConnect_should_setup_reactor_context_no_currentTraceContext() {
 		TracingMapConnect tracingMapConnect = new TracingMapConnect(() -> null);
 
-		Mono<Connection> original = Mono.just(connection).handle((t, ctx) -> {
-			assertThat(ctx.currentContext().getOrEmpty(TraceContext.class)).isEmpty();
-			assertThat(ctx.currentContext().get(PendingSpan.class)).isNotNull();
-		});
+		Mono<Connection> original = Mono.just(connection)
+				.handle(new BiConsumer<Connection, SynchronousSink<Connection>>() {
+					@Override
+					public void accept(Connection t, SynchronousSink<Connection> ctx) {
+						assertThat(ctx.currentContext().getOrEmpty(TraceContext.class))
+								.isEmpty();
+						assertThat(ctx.currentContext().get(PendingSpan.class))
+								.isNotNull();
+					}
+				});
 
 		// Wrap and run the assertions
 		tracingMapConnect.apply(original, bootstrap).log().subscribe();

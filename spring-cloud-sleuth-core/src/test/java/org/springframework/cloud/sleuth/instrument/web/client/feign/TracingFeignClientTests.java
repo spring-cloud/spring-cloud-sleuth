@@ -25,11 +25,11 @@ import brave.Span;
 import brave.Tracer;
 import brave.Tracing;
 import brave.http.HttpTracing;
-import brave.propagation.StrictScopeDecorator;
-import brave.propagation.ThreadLocalCurrentTraceContext;
+import brave.propagation.StrictCurrentTraceContext;
 import feign.Client;
 import feign.Request;
 import org.assertj.core.api.BDDAssertions;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -49,11 +49,11 @@ public class TracingFeignClientTests {
 
 	Request.Options options = new Request.Options();
 
+	StrictCurrentTraceContext currentTraceContext = StrictCurrentTraceContext.create();
+
 	List<zipkin2.Span> spans = new ArrayList<>();
 
-	Tracing tracing = Tracing.newBuilder()
-			.currentTraceContext(ThreadLocalCurrentTraceContext.newBuilder()
-					.addScopeDecorator(StrictScopeDecorator.create()).build())
+	Tracing tracing = Tracing.newBuilder().currentTraceContext(currentTraceContext)
 			.spanReporter(spans::add).build();
 
 	Tracer tracer = this.tracing.tracer();
@@ -68,6 +68,12 @@ public class TracingFeignClientTests {
 	@BeforeEach
 	public void setup() {
 		this.traceFeignClient = TracingFeignClient.create(this.httpTracing, this.client);
+	}
+
+	@AfterEach
+	public void close() {
+		this.tracing.close();
+		this.currentTraceContext.close();
 	}
 
 	@Test

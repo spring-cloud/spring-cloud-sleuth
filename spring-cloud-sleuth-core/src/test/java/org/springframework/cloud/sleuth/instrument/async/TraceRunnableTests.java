@@ -23,8 +23,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import brave.Span;
 import brave.Tracer;
 import brave.Tracing;
-import brave.propagation.StrictScopeDecorator;
-import brave.propagation.ThreadLocalCurrentTraceContext;
+import brave.propagation.StrictCurrentTraceContext;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -41,20 +40,21 @@ public class TraceRunnableTests {
 
 	ExecutorService executor = Executors.newSingleThreadExecutor();
 
+	StrictCurrentTraceContext currentTraceContext = StrictCurrentTraceContext.create();
+
 	ArrayListSpanReporter reporter = new ArrayListSpanReporter();
 
-	Tracing tracing = Tracing.newBuilder()
-			.currentTraceContext(ThreadLocalCurrentTraceContext.newBuilder()
-					.addScopeDecorator(StrictScopeDecorator.create()).build())
+	Tracing tracing = Tracing.newBuilder().currentTraceContext(this.currentTraceContext)
 			.spanReporter(this.reporter).build();
 
 	Tracer tracer = this.tracing.tracer();
 
 	@AfterEach
 	public void clean() {
+		this.executor.shutdown();
 		this.tracing.close();
 		this.reporter.clear();
-		this.executor.shutdown();
+		this.currentTraceContext.close();
 	}
 
 	@Test

@@ -26,8 +26,7 @@ import brave.Tracer;
 import brave.Tracing;
 import brave.http.HttpClientParser;
 import brave.http.HttpTracing;
-import brave.propagation.StrictScopeDecorator;
-import brave.propagation.ThreadLocalCurrentTraceContext;
+import brave.propagation.StrictCurrentTraceContext;
 import brave.sampler.Sampler;
 import brave.spring.web.TracingClientHttpRequestInterceptor;
 import org.junit.jupiter.api.AfterEach;
@@ -55,11 +54,11 @@ import static org.assertj.core.api.BDDAssertions.then;
  */
 public class TraceRestTemplateInterceptorTests {
 
+	StrictCurrentTraceContext currentTraceContext = StrictCurrentTraceContext.create();
+
 	ArrayListSpanReporter reporter = new ArrayListSpanReporter();
 
-	Tracing tracing = Tracing.newBuilder()
-			.currentTraceContext(ThreadLocalCurrentTraceContext.newBuilder()
-					.addScopeDecorator(StrictScopeDecorator.create()).build())
+	Tracing tracing = Tracing.newBuilder().currentTraceContext(this.currentTraceContext)
 			.spanReporter(this.reporter).build();
 
 	Tracer tracer = this.tracing.tracer();
@@ -84,7 +83,8 @@ public class TraceRestTemplateInterceptorTests {
 
 	@AfterEach
 	public void clean() {
-		Tracing.current().close();
+		this.tracing.close();
+		this.currentTraceContext.close();
 	}
 
 	@Test
@@ -139,9 +139,8 @@ public class TraceRestTemplateInterceptorTests {
 
 	@Test
 	public void notSampledHeaderAddedWhenNotExportable() {
-		Tracing tracing = Tracing.newBuilder()
-				.currentTraceContext(ThreadLocalCurrentTraceContext.newBuilder()
-						.addScopeDecorator(StrictScopeDecorator.create()).build())
+		this.tracing.close();
+		this.tracing = Tracing.newBuilder().currentTraceContext(this.currentTraceContext)
 				.spanReporter(this.reporter).sampler(Sampler.NEVER_SAMPLE).build();
 		this.template.setInterceptors(Arrays.<ClientHttpRequestInterceptor>asList(
 				TracingClientHttpRequestInterceptor.create(HttpTracing.create(tracing))));

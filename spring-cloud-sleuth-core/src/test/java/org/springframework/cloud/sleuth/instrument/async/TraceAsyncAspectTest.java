@@ -17,11 +17,11 @@
 package org.springframework.cloud.sleuth.instrument.async;
 
 import brave.Tracing;
-import brave.propagation.StrictScopeDecorator;
-import brave.propagation.ThreadLocalCurrentTraceContext;
+import brave.propagation.StrictCurrentTraceContext;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.reflect.MethodSignature;
 import org.assertj.core.api.BDDAssertions;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.BDDMockito;
@@ -35,11 +35,11 @@ import org.springframework.cloud.sleuth.util.ArrayListSpanReporter;
  */
 public class TraceAsyncAspectTest {
 
+	StrictCurrentTraceContext currentTraceContext = StrictCurrentTraceContext.create();
+
 	ArrayListSpanReporter reporter = new ArrayListSpanReporter();
 
-	Tracing tracing = Tracing.newBuilder()
-			.currentTraceContext(ThreadLocalCurrentTraceContext.newBuilder()
-					.addScopeDecorator(StrictScopeDecorator.create()).build())
+	Tracing tracing = Tracing.newBuilder().currentTraceContext(this.currentTraceContext)
 			.spanReporter(this.reporter).build();
 
 	ProceedingJoinPoint point = Mockito.mock(ProceedingJoinPoint.class);
@@ -52,6 +52,12 @@ public class TraceAsyncAspectTest {
 				.willReturn(TraceAsyncAspectTest.class.getMethod("setup"));
 		BDDMockito.given(this.point.getSignature()).willReturn(signature);
 		BDDMockito.given(this.point.getTarget()).willReturn("");
+	}
+
+	@AfterEach
+	public void close() {
+		this.tracing.close();
+		this.currentTraceContext.close();
 	}
 
 	// Issue#926

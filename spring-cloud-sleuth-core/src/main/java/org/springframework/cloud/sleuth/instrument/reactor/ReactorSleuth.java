@@ -16,22 +16,20 @@
 
 package org.springframework.cloud.sleuth.instrument.reactor;
 
-import java.util.function.Function;
-
 import brave.Tracing;
 import brave.propagation.CurrentTraceContext;
 import brave.propagation.TraceContext;
+import java.util.function.Function;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.reactivestreams.Publisher;
+import org.springframework.cloud.sleuth.internal.LazyBean;
+import org.springframework.context.ConfigurableApplicationContext;
 import reactor.core.CoreSubscriber;
 import reactor.core.Fuseable;
 import reactor.core.Scannable;
 import reactor.core.publisher.Operators;
 import reactor.util.context.Context;
-
-import org.springframework.cloud.sleuth.internal.LazyBean;
-import org.springframework.context.ConfigurableApplicationContext;
 
 /**
  * Reactive Span pointcuts factories.
@@ -82,12 +80,15 @@ public abstract class ReactorSleuth {
 			}
 
 			if (!springContext.isActive()) {
-				if (log.isTraceEnabled()) {
-					log.trace("Spring Context [" + springContext
+				boolean assertOn = false;
+				assert assertOn = true; // gives a message in unit tests even if trace disabled!
+				if (log.isTraceEnabled() || assertOn) {
+					String message = "Spring Context [" + springContext
 							+ "] is not yet refreshed. This is unexpected. Reactor Context is ["
-							+ sub.currentContext() + "] and name is [" + name(sub) + "]");
+							+ sub.currentContext() + "] and name is [" + name(sub) + "]";
+					log.trace(message);
+					assert false : message; // should never happen, but don't break.
 				}
-				assert false; // should never happen, but don't break.
 				return sub;
 			}
 
@@ -101,12 +102,15 @@ public abstract class ReactorSleuth {
 			// Try to get the current trace context bean, lenient when there are problems
 			CurrentTraceContext currentTraceContext = lazyCurrentTraceContext.get();
 			if (currentTraceContext == null) {
-				if (log.isTraceEnabled()) {
-					log.trace("Spring Context [" + springContext
+				boolean assertOn = false;
+				assert assertOn = true; // gives a message in unit tests even if trace disabled!
+				if (log.isTraceEnabled() || assertOn) {
+					String message = "Spring Context [" + springContext
 							+ "] did not return a CurrentTraceContext. Reactor Context is ["
-							+ sub.currentContext() + "] and name is [" + name(sub) + "]");
+							+ sub.currentContext() + "] and name is [" + name(sub) + "]";
+					log.trace(message);
+					assert false : message; // should never happen, but don't break.
 				}
-				assert false; // should never happen, but don't break.
 				return sub;
 			}
 

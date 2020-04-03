@@ -25,8 +25,7 @@ import java.util.concurrent.CompletableFuture;
 import brave.Tracer.SpanInScope;
 import brave.Tracing;
 import brave.propagation.Propagation.Setter;
-import brave.propagation.StrictScopeDecorator;
-import brave.propagation.ThreadLocalCurrentTraceContext;
+import brave.propagation.StrictCurrentTraceContext;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -68,21 +67,20 @@ public class TracingJobListenerTest {
 
 	private TracingJobListener listener;
 
-	private Tracing tracing;
-
 	private Scheduler scheduler;
 
 	private CompletableFuture completableJob;
 
+	private StrictCurrentTraceContext currentTraceContext = StrictCurrentTraceContext
+			.create();
+
 	private Queue<Span> spans = new ArrayDeque<>();
+
+	private Tracing tracing = Tracing.newBuilder().spanReporter(spans::add)
+			.currentTraceContext(currentTraceContext).build();
 
 	@BeforeEach
 	public void setUp() throws Exception {
-		tracing = Tracing.newBuilder().spanReporter(spans::add)
-				.currentTraceContext(ThreadLocalCurrentTraceContext.newBuilder()
-						.addScopeDecorator(StrictScopeDecorator.create()).build())
-				.build();
-
 		listener = new TracingJobListener(tracing);
 		completableJob = new CompleteableTriggerListener();
 
@@ -103,7 +101,9 @@ public class TracingJobListenerTest {
 
 	@AfterEach
 	public void tearDown() throws Exception {
-		scheduler.shutdown(true);
+		this.scheduler.shutdown(true);
+		this.tracing.close();
+		this.currentTraceContext.close();
 	}
 
 	@Test
