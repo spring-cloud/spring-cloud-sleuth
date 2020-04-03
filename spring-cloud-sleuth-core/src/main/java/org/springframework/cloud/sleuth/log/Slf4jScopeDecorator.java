@@ -22,6 +22,7 @@ import java.util.TreeSet;
 
 import brave.baggage.BaggageField;
 import brave.baggage.BaggageFields;
+import brave.baggage.CorrelationField;
 import brave.baggage.CorrelationScopeDecorator;
 import brave.context.slf4j.MDCScopeDecorator;
 import brave.propagation.CurrentTraceContext.Scope;
@@ -45,10 +46,16 @@ final class Slf4jScopeDecorator implements ScopeDecorator {
 
 	// Backward compatibility for all logging patterns
 	private static final ScopeDecorator LEGACY_IDS = MDCScopeDecorator.newBuilder()
-			.clear().addField(BaggageFields.TRACE_ID, "X-B3-TraceId")
-			.addField(BaggageFields.PARENT_ID, "X-B3-ParentSpanId")
-			.addField(BaggageFields.SPAN_ID, "X-B3-SpanId")
-			.addField(BaggageFields.SAMPLED, "X-Span-Export").build();
+			.clear()
+			.addField(CorrelationField.newBuilder(BaggageFields.TRACE_ID)
+					.name("X-B3-TraceId").build())
+			.addField(CorrelationField.newBuilder(BaggageFields.PARENT_ID)
+					.name("X-B3-ParentSpanId").build())
+			.addField(CorrelationField.newBuilder(BaggageFields.SPAN_ID)
+					.name("X-B3-SpanId").build())
+			.addField(CorrelationField.newBuilder(BaggageFields.SAMPLED)
+					.name("X-Span-Export").build())
+			.build();
 
 	private final ScopeDecorator delegate;
 
@@ -56,25 +63,28 @@ final class Slf4jScopeDecorator implements ScopeDecorator {
 			SleuthSlf4jProperties sleuthSlf4jProperties) {
 
 		CorrelationScopeDecorator.Builder builder = MDCScopeDecorator.newBuilder().clear()
-				.addField(BaggageFields.TRACE_ID).addField(BaggageFields.PARENT_ID)
-				.addField(BaggageFields.SPAN_ID)
-				.addField(BaggageFields.SAMPLED, "spanExportable");
+				.addField(CorrelationField.create(BaggageFields.TRACE_ID))
+				.addField(CorrelationField.create(BaggageFields.PARENT_ID))
+				.addField(CorrelationField.create(BaggageFields.SPAN_ID))
+				.addField(CorrelationField.newBuilder(BaggageFields.SAMPLED)
+						.name("spanExportable").build());
 
 		Set<String> whitelist = new TreeSet<>(String.CASE_INSENSITIVE_ORDER);
 		whitelist.addAll(sleuthSlf4jProperties.getWhitelistedMdcKeys());
 
+		// Note: we are adding all the keys as-is because correlation context doesn't
+		// prefix, only ExtraFieldPropagation does
 		Set<String> retained = new LinkedHashSet<>();
 		retained.addAll(sleuthProperties.getBaggageKeys());
 		retained.addAll(sleuthProperties.getLocalKeys());
 		retained.addAll(sleuthProperties.getPropagationKeys());
+		retained.retainAll(whitelist);
 
+		// For backwards compatibility set all fields dirty, so that any changes made by
+		// MDC directly are reverted.
 		for (String name : retained) {
-			if (whitelist.contains(name)) {
-				// Until we move off ExtraFieldPropagation onto BaggagePropagation,
-				// manually create the fields...
-				builder.addField(BaggageField.create(name));
-				builder.addDirtyName(name);
-			}
+			builder.addField(CorrelationField.newBuilder(BaggageField.create(name))
+					.dirty().build());
 		}
 
 		this.delegate = builder.build();
