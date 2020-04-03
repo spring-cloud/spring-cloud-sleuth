@@ -18,8 +18,10 @@ package org.springframework.cloud.sleuth.log;
 
 import brave.Span;
 import brave.Tracer;
+import brave.baggage.CorrelationField;
 import brave.propagation.CurrentTraceContext.Scope;
 import brave.propagation.ExtraFieldPropagation;
+import org.assertj.core.api.InstanceOfAssertFactories;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -40,7 +42,7 @@ import static org.assertj.core.api.Assertions.assertThat;
  */
 @RunWith(SpringRunner.class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.NONE, properties = {
-		"spring.sleuth.baggage-keys=my-baggage",
+		"spring.sleuth.baggage-keys=my-baggage,my-baggage-two",
 		"spring.sleuth.propagation-keys=my-propagation",
 		"spring.sleuth.log.slf4j.whitelisted-mdc-keys=my-baggage,my-propagation" })
 @SpringBootConfiguration
@@ -146,6 +148,56 @@ public class Slf4JSpanLoggerTest {
 		scope.close();
 
 		assertThat(MDC.get("traceId")).isEqualTo("A");
+	}
+
+	// #1416
+	@Test
+	public void should_clear_any_mdc_entries_when_their_keys_are_whitelisted()
+			throws Exception {
+
+		Scope scope = this.slf4jScopeDecorator.decorateScope(this.span.context(), () -> {
+		});
+
+		MDC.put("my-baggage", "A");
+		MDC.put("my-propagation", "B");
+
+		assertThat(MDC.get("my-baggage")).isEqualTo("A");
+		assertThat(MDC.get("my-propagation")).isEqualTo("B");
+
+		scope.close();
+
+		assertThat(MDC.get("my-baggage")).isNullOrEmpty();
+		assertThat(MDC.get("my-propagation")).isNullOrEmpty();
+	}
+
+	@Test
+	public void should_only_include_whitelist() {
+		assertThat(this.slf4jScopeDecorator).extracting("delegate.fields")
+				.asInstanceOf(InstanceOfAssertFactories.array(CorrelationField[].class))
+				// my-baggage-two is baggage not in the whitelist
+				.extracting(CorrelationField::name).containsExactly("traceId", "parentId",
+						"spanId", "spanExportable", "my-baggage", "my-propagation");
+	}
+
+	@Test
+	public void should_pick_previous_mdc_entries_when_their_keys_are_whitelisted() {
+
+		MDC.put("my-baggage", "A1");
+		MDC.put("my-propagation", "B1");
+
+		Scope scope = this.slf4jScopeDecorator.decorateScope(this.span.context(), () -> {
+		});
+
+		MDC.put("my-baggage", "A2");
+		MDC.put("my-propagation", "B2");
+
+		assertThat(MDC.get("my-baggage")).isEqualTo("A2");
+		assertThat(MDC.get("my-propagation")).isEqualTo("B2");
+
+		scope.close();
+
+		assertThat(MDC.get("my-baggage")).isEqualTo("A1");
+		assertThat(MDC.get("my-propagation")).isEqualTo("B1");
 	}
 
 }
