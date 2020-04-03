@@ -43,6 +43,7 @@ import org.springframework.cloud.sleuth.autoconfig.SleuthProperties;
  * @since 2.1.0
  */
 final class Slf4jScopeDecorator implements ScopeDecorator {
+
 	// Backward compatibility for all logging patterns
 	private static final ScopeDecorator LEGACY_IDS = MDCScopeDecorator.newBuilder()
 			.clear()

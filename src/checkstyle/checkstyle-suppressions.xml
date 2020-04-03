@@ -4,6 +4,7 @@
 	"https://www.puppycrawl.com/dtds/suppressions_1_1.dtd">
 <suppressions>
 	<suppress files=".*/test/.*" checks="JavadocVariable"/>
+        <suppress files=".*ReactorSleuth\.java" checks="InnerAssignment"/>
 	<suppress files=".*FinishedSpanHandlerTests.*" checks="LineLengthCheck"/>
 	<suppress files=".*GrpcTracingIntegrationTests.*" checks="LineLengthCheck"/>
 	<suppress files=".*IgnoreAutoConfiguredSkipPatternsIntegrationTests.*" checks="LineLengthCheck"/>
