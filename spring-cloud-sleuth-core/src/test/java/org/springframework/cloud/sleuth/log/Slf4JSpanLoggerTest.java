@@ -18,8 +18,10 @@ package org.springframework.cloud.sleuth.log;
 
 import brave.Span;
 import brave.Tracer;
+import brave.baggage.CorrelationField;
 import brave.propagation.CurrentTraceContext.Scope;
 import brave.propagation.ExtraFieldPropagation;
+import org.assertj.core.api.InstanceOfAssertFactories;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -37,7 +39,8 @@ import static org.assertj.core.api.Assertions.assertThat;
  * @author Marcin Grzejszczak
  */
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.NONE, properties = {
-		"spring.sleuth.baggage-keys=my-baggage",
+		"spring.sleuth.baggage-keys=my-baggage,my-baggage-two", // my-baggage-two isn't in
+																// whitelist
 		"spring.sleuth.propagation-keys=my-propagation",
 		"spring.sleuth.local-keys=my-local",
 		"spring.sleuth.log.slf4j.whitelisted-mdc-keys=my-baggage,my-propagation,my-local" })
@@ -170,8 +173,16 @@ public class Slf4JSpanLoggerTest {
 	}
 
 	@Test
-	public void should_pick_previous_mdc_entries_when_their_keys_are_whitelisted()
-			throws Exception {
+	public void should_only_include_whitelist() {
+		assertThat(this.slf4jScopeDecorator).extracting("delegate.fields")
+				.asInstanceOf(InstanceOfAssertFactories.array(CorrelationField[].class))
+				.extracting(CorrelationField::name).containsExactly("traceId", "parentId",
+						"spanId", "spanExportable", "my-baggage", "my-local",
+						"my-propagation"); // not my-baggage-two!
+	}
+
+	@Test
+	public void should_pick_previous_mdc_entries_when_their_keys_are_whitelisted() {
 
 		MDC.put("my-baggage", "A1");
 		MDC.put("my-propagation", "B1");
