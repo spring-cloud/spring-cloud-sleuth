@@ -32,6 +32,7 @@ import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
 
+import static brave.propagation.CurrentTraceContext.Scope.NOOP;
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
@@ -66,13 +67,10 @@ public class Slf4JSpanLoggerTest {
 		Scope scope = this.slf4jScopeDecorator.decorateScope(this.span.context(), () -> {
 		});
 
-		assertThat(MDC.get("X-B3-TraceId"))
-				.isEqualTo(this.span.context().traceIdString());
 		assertThat(MDC.get("traceId")).isEqualTo(this.span.context().traceIdString());
 
 		scope.close();
 
-		assertThat(MDC.get("X-B3-TraceId")).isNullOrEmpty();
 		assertThat(MDC.get("traceId")).isNullOrEmpty();
 	}
 
@@ -98,35 +96,55 @@ public class Slf4JSpanLoggerTest {
 		ExtraFieldPropagation.set(this.span.context(), "my-baggage", "my-value");
 		ExtraFieldPropagation.set(this.span.context(), "my-propagation",
 				"my-propagation-value");
-		this.slf4jScopeDecorator.decorateScope(this.span.context(), () -> {
-		});
+
+		try (Scope scope1 = this.slf4jScopeDecorator.decorateScope(this.span.context(),
+				NOOP)) {
+			assertThat(MDC.get("my-baggage")).isEqualTo("my-value");
+			assertThat(MDC.get("my-propagation")).isEqualTo("my-propagation-value");
+
+			try (Scope scope2 = this.slf4jScopeDecorator.decorateScope(null, NOOP)) {
+				assertThat(MDC.get("my-baggage")).isNullOrEmpty();
+				assertThat(MDC.get("my-propagation")).isNullOrEmpty();
+			}
+		}
+	}
+
+	@Test
+	public void should_remove_entries_from_mdc_for_null_span_and_mdc_fields_set_directly()
+			throws Exception {
+		MDC.put("my-baggage", "my-value");
+		MDC.put("my-propagation", "my-propagation-value");
+
+		// the span is holding no baggage so it clears the preceding values
+		try (Scope scope = this.slf4jScopeDecorator.decorateScope(this.span.context(),
+				NOOP)) {
+			assertThat(MDC.get("my-baggage")).isNullOrEmpty();
+			assertThat(MDC.get("my-propagation")).isNullOrEmpty();
+		}
 
 		assertThat(MDC.get("my-baggage")).isEqualTo("my-value");
 		assertThat(MDC.get("my-propagation")).isEqualTo("my-propagation-value");
 
-		Scope scope = this.slf4jScopeDecorator.decorateScope(null, () -> {
-		});
+		try (Scope scope = this.slf4jScopeDecorator.decorateScope(null, NOOP)) {
+			assertThat(MDC.get("my-baggage")).isNullOrEmpty();
+			assertThat(MDC.get("my-propagation")).isNullOrEmpty();
+		}
 
-		scope.close();
-
-		assertThat(MDC.get("my-baggage")).isNullOrEmpty();
-		assertThat(MDC.get("my-propagation")).isNullOrEmpty();
+		assertThat(MDC.get("my-baggage")).isEqualTo("my-value");
+		assertThat(MDC.get("my-propagation")).isEqualTo("my-propagation-value");
 	}
 
 	@Test
 	public void should_remove_entries_from_mdc_from_null_span() throws Exception {
-		MDC.put("X-B3-TraceId", "A");
 		MDC.put("traceId", "A");
 
 		Scope scope = this.slf4jScopeDecorator.decorateScope(null, () -> {
 		});
 
-		assertThat(MDC.get("X-B3-TraceId")).isNullOrEmpty();
 		assertThat(MDC.get("traceId")).isNullOrEmpty();
 
 		scope.close();
 
-		assertThat(MDC.get("X-B3-TraceId")).isEqualTo("A");
 		assertThat(MDC.get("traceId")).isEqualTo("A");
 	}
 
