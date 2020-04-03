@@ -22,6 +22,7 @@ import javax.servlet.http.HttpServletRequest;
 
 import brave.Span;
 import brave.Tracing;
+import brave.propagation.CurrentTraceContext;
 import brave.sampler.Sampler;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import org.junit.Test;
@@ -57,6 +58,9 @@ public class Issue585Tests {
 	TestRestTemplate testRestTemplate = new TestRestTemplate();
 
 	@Autowired
+	CurrentTraceContext currentTraceContext;
+
+	@Autowired
 	ArrayListSpanReporter reporter;
 
 	@LocalServerPort
@@ -68,7 +72,7 @@ public class Issue585Tests {
 				"http://localhost:" + this.port + "/sleuthtest?greeting=foo",
 				String.class);
 
-		then(Tracing.current().tracer().currentSpan()).isNull();
+		then(this.currentTraceContext.get()).isNull();
 		then(entity.getStatusCode().value()).isEqualTo(500);
 		then(this.reporter.getSpans().get(0).tags()).containsEntry("custom", "tag")
 				.containsKeys("error");

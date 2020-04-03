@@ -23,8 +23,7 @@ import java.util.concurrent.Executors;
 import brave.Span;
 import brave.Tracer;
 import brave.Tracing;
-import brave.propagation.StrictScopeDecorator;
-import brave.propagation.ThreadLocalCurrentTraceContext;
+import brave.propagation.StrictCurrentTraceContext;
 import org.junit.After;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -41,20 +40,21 @@ public class TraceCallableTests {
 
 	ExecutorService executor = Executors.newSingleThreadExecutor();
 
+	StrictCurrentTraceContext currentTraceContext = StrictCurrentTraceContext.create();
+
 	ArrayListSpanReporter reporter = new ArrayListSpanReporter();
 
-	Tracing tracing = Tracing.newBuilder()
-			.currentTraceContext(ThreadLocalCurrentTraceContext.newBuilder()
-					.addScopeDecorator(StrictScopeDecorator.create()).build())
+	Tracing tracing = Tracing.newBuilder().currentTraceContext(this.currentTraceContext)
 			.spanReporter(this.reporter).build();
 
 	Tracer tracer = this.tracing.tracer();
 
 	@After
 	public void clean() {
+		this.executor.shutdown();
 		this.tracing.close();
 		this.reporter.clear();
-		this.executor.shutdown();
+		this.currentTraceContext.close();
 	}
 
 	@Test

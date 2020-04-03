@@ -21,7 +21,6 @@ import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.List;
 
-import brave.Tracing;
 import brave.sampler.Sampler;
 import feign.Client;
 import feign.Request;
@@ -67,9 +66,6 @@ public class ManuallyCreatedLoadBalancerFeignClientTests {
 
 	@Autowired
 	ArrayListSpanReporter reporter;
-
-	@Autowired
-	Tracing tracer;
 
 	@Before
 	public void open() {

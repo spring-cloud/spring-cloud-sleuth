@@ -23,8 +23,7 @@ import java.util.List;
 import java.util.Map;
 
 import brave.Tracing;
-import brave.propagation.StrictScopeDecorator;
-import brave.propagation.ThreadLocalCurrentTraceContext;
+import brave.propagation.StrictCurrentTraceContext;
 import org.junit.After;
 import org.junit.Test;
 import zipkin2.Span;
@@ -51,12 +50,14 @@ import static org.springframework.messaging.support.NativeMessageHeaderAccessor.
 
 public class TracingChannelInterceptorTest {
 
+	StrictCurrentTraceContext currentTraceContext = StrictCurrentTraceContext.create();
+
 	List<Span> spans = new ArrayList<>();
 
-	ChannelInterceptor interceptor = TracingChannelInterceptor.create(Tracing.newBuilder()
-			.currentTraceContext(ThreadLocalCurrentTraceContext.newBuilder()
-					.addScopeDecorator(StrictScopeDecorator.create()).build())
-			.spanReporter(this.spans::add).build());
+	Tracing tracing = Tracing.newBuilder().currentTraceContext(this.currentTraceContext)
+			.spanReporter(this.spans::add).build();
+
+	ChannelInterceptor interceptor = TracingChannelInterceptor.create(tracing);
 
 	QueueChannel channel = new QueueChannel();
 
@@ -70,6 +71,12 @@ public class TracingChannelInterceptorTest {
 			TracingChannelInterceptorTest.this.message = msg;
 		}
 	};
+
+	@After
+	public void close() {
+		this.tracing.close();
+		this.currentTraceContext.close();
+	}
 
 	@Test
 	public void pollingReceive_emptyQueue() {
@@ -422,12 +429,6 @@ public class TracingChannelInterceptorTest {
 
 		}
 		return new ExecutorSideOnly();
-	}
-
-	@After
-	public void close() {
-		assertThat(Tracing.current().currentTraceContext().get()).isNull();
-		Tracing.current().close();
 	}
 
 }

@@ -17,6 +17,7 @@
 package org.springframework.cloud.sleuth.instrument.web.client;
 
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.BiConsumer;
 
 import org.reactivestreams.Subscription;
 import reactor.core.CoreSubscriber;
@@ -36,15 +37,15 @@ import zipkin2.Callback;
  */
 final class TestHttpCallbackSubscriber implements CoreSubscriber<Integer> {
 
-	static void subscribe(Mono<Integer> mono, Callback<Integer> callback) {
+	static void subscribe(Mono<Integer> mono, BiConsumer<Integer, Throwable> callback) {
 		mono.subscribe(new TestHttpCallbackSubscriber(callback));
 	}
 
-	final Callback<Integer> callback;
+	final BiConsumer<Integer, Throwable> callback;
 
 	final AtomicReference<Subscription> ref = new AtomicReference<>();
 
-	private TestHttpCallbackSubscriber(Callback<Integer> callback) {
+	private TestHttpCallbackSubscriber(BiConsumer<Integer, Throwable> callback) {
 		this.callback = callback;
 	}
 
@@ -56,31 +57,31 @@ final class TestHttpCallbackSubscriber implements CoreSubscriber<Integer> {
 		else {
 			// We don't intentionally call subscribe() multiple times in our tests. If we
 			// reach here, possibly instrumentation is redundantly subscribing.
-			callback.onError(new AssertionError("onSubscribe() called twice!"));
+			callback.accept(null, new AssertionError("onSubscribe() called twice!"));
 		}
 	}
 
 	@Override
 	public void onNext(Integer t) {
 		if (ref.getAndSet(null) != null) {
-			callback.onSuccess(t);
+			callback.accept(t, null);
 		}
 		else {
 			// This is a Mono, which doesn't signal onNext() twice. If we reach here,
 			// possibly instrumentation is signaling twice.
-			callback.onError(new AssertionError("onNext() called twice!"));
+			callback.accept(null, new AssertionError("onNext() called twice!"));
 		}
 	}
 
 	@Override
 	public void onError(Throwable t) {
 		if (ref.getAndSet(null) != null) {
-			callback.onError(t);
+			callback.accept(null, t);
 		}
 		else {
 			// We don't expect onError() to signal twice. If we reach here, possibly
 			// instrumentation is signaling twice or onSuccess() threw an exception.
-			callback.onError(new AssertionError("onError() called twice: " + t, t));
+			callback.accept(null, new AssertionError("onError() called twice: " + t, t));
 		}
 	}
 
@@ -90,7 +91,8 @@ final class TestHttpCallbackSubscriber implements CoreSubscriber<Integer> {
 			// Tests make a non-empty Mono subscription, which should not signal
 			// onComplete() before onNext(). If we reach here, possibly instrumentation
 			// is not signaling onNext() when it should.
-			callback.onError(new AssertionError("onComplete() called before onNext!"));
+			callback.accept(null,
+					new AssertionError("onComplete() called before onNext!"));
 		}
 	}
 

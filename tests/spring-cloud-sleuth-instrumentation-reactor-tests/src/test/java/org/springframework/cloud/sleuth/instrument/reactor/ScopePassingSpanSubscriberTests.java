@@ -21,7 +21,7 @@ import java.util.function.Function;
 
 import brave.propagation.CurrentTraceContext;
 import brave.propagation.CurrentTraceContext.Scope;
-import brave.propagation.StrictScopeDecorator;
+import brave.propagation.StrictCurrentTraceContext;
 import brave.propagation.TraceContext;
 import org.assertj.core.presentation.StandardRepresentation;
 import org.junit.After;
@@ -59,8 +59,7 @@ public class ScopePassingSpanSubscriberTests {
 				Objects::toString);
 	}
 
-	final CurrentTraceContext currentTraceContext = CurrentTraceContext.Default
-			.newBuilder().addScopeDecorator(StrictScopeDecorator.create()).build();
+	StrictCurrentTraceContext currentTraceContext = StrictCurrentTraceContext.create();
 
 	TraceContext context = TraceContext.newBuilder().traceId(1).spanId(1).sampled(true)
 			.build();
@@ -128,6 +127,7 @@ public class ScopePassingSpanSubscriberTests {
 	@After
 	public void close() {
 		springContext.close();
+		currentTraceContext.close();
 	}
 
 	@Test

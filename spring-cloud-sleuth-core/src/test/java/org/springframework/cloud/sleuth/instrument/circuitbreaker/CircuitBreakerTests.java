@@ -22,10 +22,10 @@ import brave.ScopedSpan;
 import brave.Span;
 import brave.Tracer;
 import brave.Tracing;
-import brave.propagation.StrictScopeDecorator;
-import brave.propagation.ThreadLocalCurrentTraceContext;
+import brave.propagation.StrictCurrentTraceContext;
 import brave.sampler.Sampler;
 import org.assertj.core.api.BDDAssertions;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -36,11 +36,11 @@ import static org.assertj.core.api.BDDAssertions.then;
 
 public class CircuitBreakerTests {
 
+	StrictCurrentTraceContext currentTraceContext = StrictCurrentTraceContext.create();
+
 	ArrayListSpanReporter reporter = new ArrayListSpanReporter();
 
-	Tracing tracing = Tracing.newBuilder()
-			.currentTraceContext(ThreadLocalCurrentTraceContext.newBuilder()
-					.addScopeDecorator(StrictScopeDecorator.create()).build())
+	Tracing tracing = Tracing.newBuilder().currentTraceContext(this.currentTraceContext)
 			.spanReporter(this.reporter).sampler(Sampler.ALWAYS_SAMPLE).build();
 
 	Tracer tracer = this.tracing.tracer();
@@ -48,6 +48,12 @@ public class CircuitBreakerTests {
 	@Before
 	public void setup() {
 		this.reporter.clear();
+	}
+
+	@After
+	public void close() {
+		this.tracing.close();
+		this.currentTraceContext.close();
 	}
 
 	@Test
