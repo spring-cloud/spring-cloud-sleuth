@@ -31,8 +31,8 @@
 	<name>spring-cloud-sleuth-dependencies</name>
 	<description>Spring Cloud Sleuth Dependencies</description>
 	<properties>
-		<brave.version>5.10.3-SNAPSHOT</brave.version>
-		<brave.opentracing.version>0.35.2-SNAPSHOT</brave.opentracing.version>
+		<brave.version>5.11.0</brave.version>
+		<brave.opentracing.version>0.36.0</brave.opentracing.version>
 		<grpc.spring.boot.version>3.4.1</grpc.spring.boot.version>
 	</properties>
 	<dependencyManagement>
