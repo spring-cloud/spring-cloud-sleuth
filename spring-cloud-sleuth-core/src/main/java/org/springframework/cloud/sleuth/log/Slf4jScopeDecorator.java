@@ -81,8 +81,7 @@ final class Slf4jScopeDecorator implements ScopeDecorator {
 		retained.retainAll(whitelist);
 
 		// For backwards compatibility set all fields dirty, so that any changes made by
-		// MDC
-		// directly are reverted.
+		// MDC directly are reverted.
 		for (String name : retained) {
 			builder.addField(CorrelationField.newBuilder(BaggageField.create(name))
 					.dirty().build());

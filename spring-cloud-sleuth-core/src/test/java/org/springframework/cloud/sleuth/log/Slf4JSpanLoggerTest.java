@@ -39,8 +39,7 @@ import static org.assertj.core.api.Assertions.assertThat;
  * @author Marcin Grzejszczak
  */
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.NONE, properties = {
-		"spring.sleuth.baggage-keys=my-baggage,my-baggage-two", // my-baggage-two isn't in
-																// whitelist
+		"spring.sleuth.baggage-keys=my-baggage,my-baggage-two",
 		"spring.sleuth.propagation-keys=my-propagation",
 		"spring.sleuth.local-keys=my-local",
 		"spring.sleuth.log.slf4j.whitelisted-mdc-keys=my-baggage,my-propagation,my-local" })
@@ -178,7 +177,7 @@ public class Slf4JSpanLoggerTest {
 				.asInstanceOf(InstanceOfAssertFactories.array(CorrelationField[].class))
 				.extracting(CorrelationField::name).containsExactly("traceId", "parentId",
 						"spanId", "spanExportable", "my-baggage", "my-local",
-						"my-propagation"); // not my-baggage-two!
+						"my-propagation"); // my-baggage-two is baggage not in the whitelist
 	}
 
 	@Test
