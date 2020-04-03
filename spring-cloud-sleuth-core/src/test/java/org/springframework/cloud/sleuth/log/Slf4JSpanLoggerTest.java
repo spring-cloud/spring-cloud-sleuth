@@ -20,24 +20,22 @@ import brave.Span;
 import brave.Tracer;
 import brave.propagation.CurrentTraceContext.Scope;
 import brave.propagation.ExtraFieldPropagation;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.slf4j.MDC;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringBootConfiguration;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.junit4.SpringRunner;
 
+import static brave.propagation.CurrentTraceContext.Scope.NOOP;
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * @author Marcin Grzejszczak
  */
-@RunWith(SpringRunner.class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.NONE, properties = {
 		"spring.sleuth.baggage-keys=my-baggage",
 		"spring.sleuth.propagation-keys=my-propagation",
@@ -55,8 +53,8 @@ public class Slf4JSpanLoggerTest {
 
 	Span span;
 
-	@Before
-	@After
+	@BeforeEach
+	@AfterEach
 	public void setup() {
 		MDC.clear();
 		this.span = this.tracer.nextSpan().name("span").start();
@@ -67,13 +65,10 @@ public class Slf4JSpanLoggerTest {
 		Scope scope = this.slf4jScopeDecorator.decorateScope(this.span.context(), () -> {
 		});
 
-		assertThat(MDC.get("X-B3-TraceId"))
-				.isEqualTo(this.span.context().traceIdString());
 		assertThat(MDC.get("traceId")).isEqualTo(this.span.context().traceIdString());
 
 		scope.close();
 
-		assertThat(MDC.get("X-B3-TraceId")).isNullOrEmpty();
 		assertThat(MDC.get("traceId")).isNullOrEmpty();
 	}
 
@@ -102,19 +97,17 @@ public class Slf4JSpanLoggerTest {
 		ExtraFieldPropagation.set(this.span.context(), "my-baggage", "my-value");
 		ExtraFieldPropagation.set(this.span.context(), "my-propagation",
 				"my-propagation-value");
-		this.slf4jScopeDecorator.decorateScope(this.span.context(), () -> {
-		});
 
-		assertThat(MDC.get("my-baggage")).isEqualTo("my-value");
-		assertThat(MDC.get("my-propagation")).isEqualTo("my-propagation-value");
+		try (Scope scope1 = this.slf4jScopeDecorator.decorateScope(this.span.context(),
+				NOOP)) {
+			assertThat(MDC.get("my-baggage")).isEqualTo("my-value");
+			assertThat(MDC.get("my-propagation")).isEqualTo("my-propagation-value");
 
-		Scope scope = this.slf4jScopeDecorator.decorateScope(null, () -> {
-		});
-
-		scope.close();
-
-		assertThat(MDC.get("my-baggage")).isNullOrEmpty();
-		assertThat(MDC.get("my-propagation")).isNullOrEmpty();
+			try (Scope scope2 = this.slf4jScopeDecorator.decorateScope(null, NOOP)) {
+				assertThat(MDC.get("my-baggage")).isNullOrEmpty();
+				assertThat(MDC.get("my-propagation")).isNullOrEmpty();
+			}
+		}
 	}
 
 	@Test
@@ -123,35 +116,36 @@ public class Slf4JSpanLoggerTest {
 		MDC.put("my-baggage", "my-value");
 		MDC.put("my-propagation", "my-propagation-value");
 
-		this.slf4jScopeDecorator.decorateScope(this.span.context(), () -> {
-		});
+		// the span is holding no baggage so it clears the preceding values
+		try (Scope scope = this.slf4jScopeDecorator.decorateScope(this.span.context(),
+				NOOP)) {
+			assertThat(MDC.get("my-baggage")).isNullOrEmpty();
+			assertThat(MDC.get("my-propagation")).isNullOrEmpty();
+		}
 
 		assertThat(MDC.get("my-baggage")).isEqualTo("my-value");
 		assertThat(MDC.get("my-propagation")).isEqualTo("my-propagation-value");
 
-		Scope scope = this.slf4jScopeDecorator.decorateScope(null, () -> {
-		});
+		try (Scope scope = this.slf4jScopeDecorator.decorateScope(null, NOOP)) {
+			assertThat(MDC.get("my-baggage")).isNullOrEmpty();
+			assertThat(MDC.get("my-propagation")).isNullOrEmpty();
+		}
 
-		scope.close();
-
-		assertThat(MDC.get("my-baggage")).isNullOrEmpty();
-		assertThat(MDC.get("my-propagation")).isNullOrEmpty();
+		assertThat(MDC.get("my-baggage")).isEqualTo("my-value");
+		assertThat(MDC.get("my-propagation")).isEqualTo("my-propagation-value");
 	}
 
 	@Test
 	public void should_remove_entries_from_mdc_from_null_span() throws Exception {
-		MDC.put("X-B3-TraceId", "A");
 		MDC.put("traceId", "A");
 
 		Scope scope = this.slf4jScopeDecorator.decorateScope(null, () -> {
 		});
 
-		assertThat(MDC.get("X-B3-TraceId")).isNullOrEmpty();
 		assertThat(MDC.get("traceId")).isNullOrEmpty();
 
 		scope.close();
 
-		assertThat(MDC.get("X-B3-TraceId")).isEqualTo("A");
 		assertThat(MDC.get("traceId")).isEqualTo("A");
 	}
 
