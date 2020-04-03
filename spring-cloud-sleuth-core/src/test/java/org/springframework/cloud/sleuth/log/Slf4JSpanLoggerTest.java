@@ -18,8 +18,10 @@ package org.springframework.cloud.sleuth.log;
 
 import brave.Span;
 import brave.Tracer;
+import brave.baggage.CorrelationField;
 import brave.propagation.CurrentTraceContext.Scope;
 import brave.propagation.ExtraFieldPropagation;
+import org.assertj.core.api.InstanceOfAssertFactories;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -30,13 +32,14 @@ import org.springframework.boot.SpringBootConfiguration;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
 
+import static brave.propagation.CurrentTraceContext.Scope.NOOP;
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * @author Marcin Grzejszczak
  */
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.NONE, properties = {
-		"spring.sleuth.baggage-keys=my-baggage",
+		"spring.sleuth.baggage-keys=my-baggage,my-baggage-two",
 		"spring.sleuth.propagation-keys=my-propagation",
 		"spring.sleuth.local-keys=my-local",
 		"spring.sleuth.log.slf4j.whitelisted-mdc-keys=my-baggage,my-propagation,my-local" })
@@ -96,19 +99,17 @@ public class Slf4JSpanLoggerTest {
 		ExtraFieldPropagation.set(this.span.context(), "my-baggage", "my-value");
 		ExtraFieldPropagation.set(this.span.context(), "my-propagation",
 				"my-propagation-value");
-		this.slf4jScopeDecorator.decorateScope(this.span.context(), () -> {
-		});
 
-		assertThat(MDC.get("my-baggage")).isEqualTo("my-value");
-		assertThat(MDC.get("my-propagation")).isEqualTo("my-propagation-value");
+		try (Scope scope1 = this.slf4jScopeDecorator.decorateScope(this.span.context(),
+				NOOP)) {
+			assertThat(MDC.get("my-baggage")).isEqualTo("my-value");
+			assertThat(MDC.get("my-propagation")).isEqualTo("my-propagation-value");
 
-		Scope scope = this.slf4jScopeDecorator.decorateScope(null, () -> {
-		});
-
-		scope.close();
-
-		assertThat(MDC.get("my-baggage")).isNullOrEmpty();
-		assertThat(MDC.get("my-propagation")).isNullOrEmpty();
+			try (Scope scope2 = this.slf4jScopeDecorator.decorateScope(null, NOOP)) {
+				assertThat(MDC.get("my-baggage")).isNullOrEmpty();
+				assertThat(MDC.get("my-propagation")).isNullOrEmpty();
+			}
+		}
 	}
 
 	@Test
@@ -117,19 +118,23 @@ public class Slf4JSpanLoggerTest {
 		MDC.put("my-baggage", "my-value");
 		MDC.put("my-propagation", "my-propagation-value");
 
-		this.slf4jScopeDecorator.decorateScope(this.span.context(), () -> {
-		});
+		// the span is holding no baggage so it clears the preceding values
+		try (Scope scope = this.slf4jScopeDecorator.decorateScope(this.span.context(),
+				NOOP)) {
+			assertThat(MDC.get("my-baggage")).isNullOrEmpty();
+			assertThat(MDC.get("my-propagation")).isNullOrEmpty();
+		}
 
 		assertThat(MDC.get("my-baggage")).isEqualTo("my-value");
 		assertThat(MDC.get("my-propagation")).isEqualTo("my-propagation-value");
 
-		Scope scope = this.slf4jScopeDecorator.decorateScope(null, () -> {
-		});
+		try (Scope scope = this.slf4jScopeDecorator.decorateScope(null, NOOP)) {
+			assertThat(MDC.get("my-baggage")).isNullOrEmpty();
+			assertThat(MDC.get("my-propagation")).isNullOrEmpty();
+		}
 
-		scope.close();
-
-		assertThat(MDC.get("my-baggage")).isNullOrEmpty();
-		assertThat(MDC.get("my-propagation")).isNullOrEmpty();
+		assertThat(MDC.get("my-baggage")).isEqualTo("my-value");
+		assertThat(MDC.get("my-propagation")).isEqualTo("my-propagation-value");
 	}
 
 	@Test
@@ -167,8 +172,16 @@ public class Slf4JSpanLoggerTest {
 	}
 
 	@Test
-	public void should_pick_previous_mdc_entries_when_their_keys_are_whitelisted()
-			throws Exception {
+	public void should_only_include_whitelist() {
+		assertThat(this.slf4jScopeDecorator).extracting("delegate.fields")
+				.asInstanceOf(InstanceOfAssertFactories.array(CorrelationField[].class))
+				.extracting(CorrelationField::name).containsExactly("traceId", "parentId",
+						"spanId", "spanExportable", "my-baggage", "my-local",
+						"my-propagation"); // my-baggage-two is baggage not in the whitelist
+	}
+
+	@Test
+	public void should_pick_previous_mdc_entries_when_their_keys_are_whitelisted() {
 
 		MDC.put("my-baggage", "A1");
 		MDC.put("my-propagation", "B1");
