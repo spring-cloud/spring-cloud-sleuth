@@ -53,8 +53,9 @@ import static org.assertj.core.api.BDDAssertions.then;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest(classes = Application.class,
-		webEnvironment = SpringBootTest.WebEnvironment.NONE, properties = {
-				"feign.hystrix.enabled=false", "ribbon.listOfServers=non.existing.url" })
+		webEnvironment = SpringBootTest.WebEnvironment.NONE,
+		properties = { "feign.hystrix.enabled=false",
+				"foo.ribbon.listOfServers=non.existing.url" })
 @DirtiesContext(classMode = ClassMode.AFTER_EACH_TEST_METHOD)
 public class ManuallyCreatedLoadBalancerFeignClientTests {
 
@@ -160,7 +161,7 @@ class MyDelegateClient implements Client {
 
 }
 
-@FeignClient(name = "foo", url = "http://fooloadbalancer")
+@FeignClient(name = "foo", url = "http://foo")
 interface MyNameRemote {
 
 	@RequestMapping(value = "/", method = RequestMethod.GET)
