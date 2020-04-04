@@ -18,12 +18,17 @@ package org.springframework.cloud.sleuth.instrument.multiple;
 
 import java.net.URI;
 import java.util.Collections;
+import java.util.List;
 import java.util.Objects;
-import java.util.stream.Collectors;
 
 import brave.Span;
+import brave.Tags;
 import brave.Tracer;
-import brave.propagation.ExtraFieldPropagation;
+import brave.Tracer.SpanInScope;
+import brave.Tracing;
+import brave.baggage.BaggageField;
+import brave.baggage.BaggagePropagationConfig;
+import brave.baggage.BaggagePropagationConfig.SingleBaggageField;
 import brave.sampler.Sampler;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -40,23 +45,23 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.RequestEntity;
-import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.TestPropertySource;
 import org.springframework.web.client.RestTemplate;
 
 import static java.util.Arrays.asList;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static java.util.stream.Collectors.toList;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.BDDAssertions.then;
 import static org.awaitility.Awaitility.await;
 import static org.springframework.boot.test.context.SpringBootTest.WebEnvironment.RANDOM_PORT;
 
-@TestPropertySource(
-		properties = { "spring.application.name=multiplehopsintegrationtests" })
 @SpringBootTest(classes = MultipleHopsIntegrationTests.Config.class,
-		webEnvironment = RANDOM_PORT)
-@ActiveProfiles("baggage")
+		webEnvironment = RANDOM_PORT, properties = { "spring.sleuth.baggage-keys=baz",
+				"spring.sleuth.propagation-keys=foo" })
 public class MultipleHopsIntegrationTests {
+
+	@Autowired
+	Tracing tracing;
 
 	@Autowired
 	Tracer tracer;
@@ -79,7 +84,7 @@ public class MultipleHopsIntegrationTests {
 	}
 
 	@Test
-	public void should_prepare_spans_for_export() throws Exception {
+	public void should_prepare_spans_for_export() {
 		this.restTemplate.getForObject(
 				"http://localhost:" + this.config.port + "/greeting", String.class);
 
@@ -98,38 +103,28 @@ public class MultipleHopsIntegrationTests {
 						.containsAll(asList("words", "counts", "greetings"));
 	}
 
-	// issue #237 - baggage
 	@Test
-	// Notes:
-	// * path-prefix header propagation can't reliably support mixed case, due to http/2
-	// downcasing
-	// * Since not all tokenizers are case insensitive, mixed case can break correlation
-	// * Brave's ExtraFieldPropagation downcases due to the above
-	// * This code should probably test the side-effect on http headers
-	// * the assumption all correlation fields (baggage) are saved to a span is an
-	// interesting one
-	// * should all correlation fields (baggage) be added to the MDC context?
-	// * Until below, a configuration item of a correlation field whitelist is needed
-	// * https://github.com/openzipkin/brave/pull/577
-	// * probably needed anyway as an empty whitelist is a nice way to disable the feature
-	public void should_propagate_the_baggage() throws Exception {
+	public void should_propagate_the_baggage() {
+		// TODO: make a DemoBaggage type instead of saying to use the api directly
+		BaggageField foo = BaggageField.create("foo");
+		BaggageField bar = BaggageField.create("bar");
+		BaggageField baz = BaggageField.create("baz");
+
 		// tag::baggage[]
 		Span initialSpan = this.tracer.nextSpan().name("span").start();
-		ExtraFieldPropagation.set(initialSpan.context(), "foo", "bar");
-		ExtraFieldPropagation.set(initialSpan.context(), "UPPER_CASE", "someValue");
+		foo.updateValue(initialSpan.context(), "1");
+		bar.updateValue(initialSpan.context(), "2");
 		// end::baggage[]
 
-		try (Tracer.SpanInScope ws = this.tracer.withSpanInScope(initialSpan)) {
+		try (SpanInScope ws = this.tracer.withSpanInScope(initialSpan)) {
 			// tag::baggage_tag[]
-			initialSpan.tag("foo",
-					ExtraFieldPropagation.get(initialSpan.context(), "foo"));
-			initialSpan.tag("UPPER_CASE",
-					ExtraFieldPropagation.get(initialSpan.context(), "UPPER_CASE"));
+			Tags.BAGGAGE_FIELD.tag(foo, initialSpan);
+			Tags.BAGGAGE_FIELD.tag(bar, initialSpan);
 			// end::baggage_tag[]
 
+			// set baz in a header not with the api explicitly
 			HttpHeaders headers = new HttpHeaders();
-			headers.put("baggage-baz", Collections.singletonList("baz"));
-			headers.put("baggage-bizarreCASE", Collections.singletonList("value"));
+			headers.put("baggage-baz", Collections.singletonList("3"));
 			RequestEntity requestEntity = new RequestEntity(headers, HttpMethod.GET,
 					URI.create("http://localhost:" + this.config.port + "/greeting"));
 			this.restTemplate.exchange(requestEntity, String.class);
@@ -137,29 +132,29 @@ public class MultipleHopsIntegrationTests {
 		finally {
 			initialSpan.finish();
 		}
+
 		await().atMost(5, SECONDS).untilAsserted(() -> {
 			then(this.reporter.getSpans()).isNotEmpty();
 		});
 
-		then(this.application.allSpans()).as("All have foo")
-				.allMatch(span -> "bar".equals(baggage(span, "foo")));
-		then(this.application.allSpans()).as("All have UPPER_CASE")
-				.allMatch(span -> "someValue".equals(baggage(span, "UPPER_CASE")));
-		then(this.application.allSpans().stream()
-				.filter(span -> "baz".equals(baggage(span, "baz")))
-				.collect(Collectors.toList())).as("Someone has baz").isNotEmpty();
-		then(this.reporter.getSpans().stream()
-				.filter(span -> span.tags().containsKey("foo")
-						&& span.tags().containsKey("UPPER_CASE"))
-				.collect(Collectors.toList())).as("Someone has foo and UPPER_CASE tags")
-						.isNotEmpty();
-		then(this.application.allSpans().stream()
-				.filter(span -> "value".equals(baggage(span, "bizarreCASE")))
-				.collect(Collectors.toList())).isNotEmpty();
-	}
+		List<zipkin2.Span> withBagTags = this.reporter.getSpans().stream()
+				.filter(s -> s.tags().containsKey(foo.name())).collect(toList());
 
-	private String baggage(Span span, String name) {
-		return ExtraFieldPropagation.get(span.context(), name);
+		// set with tag api
+		then(withBagTags).as("only initialSpan was bag tagged").hasSize(1);
+		assertThat(withBagTags.get(0).tags()).containsEntry("foo", "1")
+				.containsEntry("bar", "2");
+
+		// set with baggage api
+		then(this.application.allSpans()).as("All have foo")
+				.allMatch(span -> "1".equals(foo.getValue(span.context())));
+		then(this.application.allSpans()).as("All have bar")
+				.allMatch(span -> "2".equals(bar.getValue(span.context())));
+
+		// baz is not tagged in the initial span, only downstream!
+		then(this.application.allSpans()).as("All downstream have baz")
+				.filteredOn(span -> !span.equals(initialSpan))
+				.allMatch(span -> "3".equals(baz.getValue(span.context())));
 	}
 
 	@Configuration
@@ -172,6 +167,11 @@ public class MultipleHopsIntegrationTests {
 		@Override
 		public void onApplicationEvent(ServletWebServerInitializedEvent event) {
 			this.port = event.getSource().getPort();
+		}
+
+		@Bean
+		BaggagePropagationConfig notInProperties() {
+			return SingleBaggageField.remote(BaggageField.create("bar"));
 		}
 
 		@Bean

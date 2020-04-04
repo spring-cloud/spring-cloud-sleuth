@@ -19,6 +19,8 @@ package org.springframework.cloud.sleuth.log;
 import java.util.ArrayList;
 import java.util.List;
 
+import brave.context.slf4j.MDCScopeDecorator;
+
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 /**
@@ -31,7 +33,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 public class SleuthSlf4jProperties {
 
 	/**
-	 * Enable a {@link Slf4jScopeDecorator} that prints tracing information in the logs.
+	 * Enable a {@link MDCScopeDecorator} that prints tracing information in the logs.
 	 */
 	private boolean enabled = true;
 
