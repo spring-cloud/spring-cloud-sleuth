@@ -620,8 +620,6 @@ Sometimes, you do not want to create a new span but you want to continue one. An
 situation might be as follows:
 
 * *AOP*: If there was already a span created before an aspect was reached, you might not want to create a new span.
-* *Hystrix*: Executing a Hystrix command is most likely a logical part of the current processing.
-It is in fact merely a technical implementation detail that you would not necessarily want to reflect in tracing as a separate being.
 
 To continue a span, you can use `brave.Tracer`, as shown in the following example:
 
@@ -1352,8 +1350,6 @@ If you annotate your method with `@Scheduled`, we automatically create a new spa
 * The span is tagged with the method's class name and method name.
 
 If you want to skip span creation for some `@Scheduled` annotated classes, you can set the `spring.sleuth.scheduled.skipPattern` with a regular expression that matches the fully qualified name of the `@Scheduled` annotated class.
-If you use `spring-cloud-sleuth-stream` and `spring-cloud-netflix-hystrix-stream` together, a span is created for each Hystrix metrics and sent to Zipkin.
-This behavior may be annoying. That's why, by default, `spring.sleuth.scheduled.skipPattern=org.springframework.cloud.netflix.hystrix.stream.HystrixStreamTask`.
 
 ==== Executor, ExecutorService, and ScheduledExecutorService
 
@@ -1449,11 +1445,6 @@ We instrument `@SqsListener` which is provided by `org.springframework.cloud:spr
 so that tracing headers get extracted from the message and a trace gets put into the context.
 
 To block this feature, set `spring.sleuth.messaging.sqs.enabled` to `false`.
-
-=== Zuul
-
-We instrument the Zuul Ribbon integration by enriching the Ribbon requests with tracing information.
-To disable Zuul support, set the `spring.sleuth.zuul.enabled` property to `false`.
 
 === Redis
 

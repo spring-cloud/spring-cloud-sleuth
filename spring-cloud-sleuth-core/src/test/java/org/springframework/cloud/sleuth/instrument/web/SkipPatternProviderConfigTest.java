@@ -60,6 +60,13 @@ public class SkipPatternProviderConfigTest {
 					TraceAutoConfiguration.class, TraceWebAutoConfiguration.class));
 
 	@Test
+	public void should_return_null_when_cleared() throws Exception {
+		contextRunner.withPropertyValues("spring.sleuth.web.skip-pattern")
+				.run(context -> then(context.getBean("sleuthSkipPatternProvider"))
+						.hasToString("null"));
+	}
+
+	@Test
 	public void should_pick_skip_pattern_from_sleuth_properties() throws Exception {
 		contextRunner.withPropertyValues("spring.sleuth.web.skip-pattern=foo.*|bar.*")
 				.run(context -> {

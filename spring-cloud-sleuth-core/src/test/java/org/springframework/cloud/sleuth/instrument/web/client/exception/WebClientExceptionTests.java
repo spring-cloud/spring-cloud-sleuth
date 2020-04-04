@@ -52,8 +52,7 @@ import static org.assertj.core.api.Assertions.fail;
 import static org.assertj.core.api.BDDAssertions.then;
 
 @SpringBootTest(classes = { WebClientExceptionTests.TestConfiguration.class },
-		properties = { "ribbon.ConnectTimeout=30000",
-				"spring.application.name=exceptionservice" },
+		properties = { "spring.application.name=exceptionservice" },
 		webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 public class WebClientExceptionTests {
 
@@ -128,7 +127,7 @@ public class WebClientExceptionTests {
 	@EnableAutoConfiguration
 	@EnableFeignClients
 	@LoadBalancerClient(value = "exceptionservice",
-			configuration = ExceptionServiceRibbonClientConfiguration.class)
+			configuration = ExceptionServiceLoadBalancerClientConfiguration.class)
 	public static class TestConfiguration {
 
 		@LoadBalanced
@@ -153,7 +152,7 @@ public class WebClientExceptionTests {
 	}
 
 	@Configuration
-	public static class ExceptionServiceRibbonClientConfiguration {
+	public static class ExceptionServiceLoadBalancerClientConfiguration {
 
 		@Bean
 		public ServiceInstanceListSupplier serviceInstanceListSupplier(Environment env) {

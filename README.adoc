@@ -676,7 +676,7 @@ To that end, Sleuth:
 ** Includes a sampling policy to manage volume.
 ** Can report to a Zipkin system for query and visualization.
 
-* Instruments common ingress and egress points from Spring applications (servlet filter, async endpoints, rest template, scheduled actions, message channels, Zuul filters, and Feign client).
+* Instruments common ingress and egress points from Spring applications (servlet filter, async endpoints, rest template, scheduled actions, message channels, and Feign client).
 
 * Sleuth includes default logic to join a trace across HTTP or messaging boundaries.
 For example, HTTP propagation works over Zipkin-compatible request headers.

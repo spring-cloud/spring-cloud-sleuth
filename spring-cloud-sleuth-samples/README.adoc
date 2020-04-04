@@ -10,10 +10,6 @@ There are a few samples with slightly different features. You can run all of the
 
 * `spring-cloud-sleuth-sample-messaging`: a Spring Integration application with two HTTP endpoints ("/" and "/xform")
 
-* `spring-cloud-sleuth-sample-ribbon`: two endpoints ("/" and "/call") that make calls to the "zipkin" sample via Ribbon. Also has `@EnableZUulProxy" so if the other samples are running they are proxied at "/messaging", "/zipkin", "/vanilla" (see "/routes" for a list).
-
-The Ribbon sample makes an interesting demo or playground for learning about zipkin. In the screenshot below you can see a trace with 3 spans - it starts in the "testSleuthRibbon" app and crosses to "testSleuthMessaging" for the next 2 spans.
-
 === Running samples with Zipkin
 
 1. Optionally run the https://github.com/openzipkin/zipkin[Zipkin] Server, e.g. via docker compose (there's a `docker-compose.yml` in https://github.com/spring-cloud/spring-cloud-sleuth-samples/spring-cloud-sleuth-sample-zipkin[Spring Cloud Sleuth], or in https://github.com/openzipkin/docker-zipkin[Docker Zipkin]
@@ -25,5 +21,5 @@ NOTE: You can see the zipkin spans without the UI (in logs) if you run the sampl
 
 image::{github-raw}/docs/src/main/asciidoc/images/zipkin-trace-screenshot.png[Sample Zipkin Screenshot]
 
-> The fact that the first trace in says "testSleuthMessaging" seems to be a bug in the UI (it has some annotations from that service, but it originates in the "testSleuthRibbon" service).
+> The fact that the first trace in says "testSleuthMessaging" seems to be a bug in the UI (it has some annotations from that service, but it originates in the "testSleuthMessaging" service).
 

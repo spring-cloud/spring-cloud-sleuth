@@ -166,7 +166,7 @@ class MyDelegateClient implements Client {
 
 }
 
-@FeignClient(name = "foo", url = "https://non.existing.url")
+@FeignClient(name = "foo", url = "http://foo")
 interface MyNameRemote {
 
 	@RequestMapping(value = "/", method = RequestMethod.GET)

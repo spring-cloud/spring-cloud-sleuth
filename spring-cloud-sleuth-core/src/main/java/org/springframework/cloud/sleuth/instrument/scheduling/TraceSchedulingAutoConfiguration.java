@@ -51,8 +51,10 @@ public class TraceSchedulingAutoConfiguration {
 	@ConditionalOnClass(name = "org.aspectj.lang.ProceedingJoinPoint")
 	public TraceSchedulingAspect traceSchedulingAspect(Tracer tracer,
 			SleuthSchedulingProperties sleuthSchedulingProperties) {
-		return new TraceSchedulingAspect(tracer,
-				Pattern.compile(sleuthSchedulingProperties.getSkipPattern()));
+		String skipPatternString = sleuthSchedulingProperties.getSkipPattern();
+		Pattern skipPattern = skipPatternString != null
+				? Pattern.compile(skipPatternString) : null;
+		return new TraceSchedulingAspect(tracer, skipPattern);
 	}
 
 }

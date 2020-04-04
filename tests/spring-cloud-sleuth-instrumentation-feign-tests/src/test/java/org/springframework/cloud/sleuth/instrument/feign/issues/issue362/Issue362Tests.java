@@ -76,8 +76,7 @@ interface MyFeignClient {
 
 @SpringBootTest(classes = Application.class,
 		webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT)
-@TestPropertySource(properties = { "ribbon.eureka.enabled=false",
-		"feign.hystrix.enabled=false", "server.port=9998" })
+@TestPropertySource(properties = { "server.port=9998" })
 public class Issue362Tests {
 
 	RestTemplate template = new RestTemplate();

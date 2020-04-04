@@ -22,6 +22,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.StringJoiner;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import brave.Tracing;
 
@@ -66,18 +67,26 @@ public class TraceWebAutoConfiguration {
 	@Bean
 	@ConditionalOnMissingBean
 	SkipPatternProvider sleuthSkipPatternProvider() {
-		return () -> {
-			StringJoiner joiner = new StringJoiner("|");
-			for (SingleSkipPattern pattern : this.patterns) {
-				Optional<Pattern> skipPattern = pattern.skipPattern();
-				if (skipPattern.isPresent()) {
-					Pattern pattern1 = skipPattern.get();
-					String s = pattern1.pattern();
-					joiner.add(s);
-				}
-			}
-			return Pattern.compile(joiner.toString());
-		};
+		if (this.patterns == null) {
+			return null;
+		}
+		List<Pattern> presentPatterns = this.patterns.stream()
+				.map(SingleSkipPattern::skipPattern).filter(Optional::isPresent)
+				.map(Optional::get).collect(Collectors.toList());
+		if (presentPatterns.isEmpty()) {
+			return null;
+		}
+		if (presentPatterns.size() == 1) {
+			Pattern pattern = presentPatterns.get(0);
+			return () -> pattern;
+		}
+		StringJoiner joiner = new StringJoiner("|");
+		for (Pattern pattern : presentPatterns) {
+			String s = pattern.pattern();
+			joiner.add(s);
+		}
+		Pattern pattern = Pattern.compile(joiner.toString());
+		return () -> pattern;
 	}
 
 	@Configuration(proxyBeanMethods = false)
@@ -200,24 +209,25 @@ public class TraceWebAutoConfiguration {
 	@Configuration(proxyBeanMethods = false)
 	static class DefaultSkipPatternConfig {
 
-		private static String combinedPattern(String skipPattern,
-				String additionalSkipPattern) {
-			String pattern = skipPattern;
-			if (!StringUtils.hasText(skipPattern)) {
-				pattern = SleuthWebProperties.DEFAULT_SKIP_PATTERN;
-			}
-			if (StringUtils.hasText(additionalSkipPattern)) {
-				return pattern + "|" + additionalSkipPattern;
-			}
-			return pattern;
-		}
-
 		@Bean
 		SingleSkipPattern defaultSkipPatternBean(
 				SleuthWebProperties sleuthWebProperties) {
-			return () -> Optional.of(
-					Pattern.compile(combinedPattern(sleuthWebProperties.getSkipPattern(),
-							sleuthWebProperties.getAdditionalSkipPattern())));
+			Pattern pattern = combinePatterns(sleuthWebProperties.getSkipPattern(),
+					sleuthWebProperties.getAdditionalSkipPattern());
+			return () -> Optional.ofNullable(pattern);
+		}
+
+		private static Pattern combinePatterns(String left, String right) {
+			if (left == null && right == null) {
+				return null;
+			}
+			else if (left == null) {
+				return Pattern.compile(right);
+			}
+			else if (right == null) {
+				return Pattern.compile(left);
+			}
+			return Pattern.compile(left + "|" + right);
 		}
 
 	}

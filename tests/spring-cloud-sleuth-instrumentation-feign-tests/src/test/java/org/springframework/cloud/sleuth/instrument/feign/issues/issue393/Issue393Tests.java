@@ -61,8 +61,8 @@ interface MyNameRemote {
 
 @SpringBootTest(classes = Application.class,
 		webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT)
-@TestPropertySource(properties = { "spring.application.name=demo-feign-uri",
-		"server.port=9978", "eureka.client.enabled=true", "ribbon.eureka.enabled=true" })
+@TestPropertySource(
+		properties = { "spring.application.name=demo-feign-uri", "server.port=9978" })
 public class Issue393Tests {
 
 	RestTemplate template = new RestTemplate();

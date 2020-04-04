@@ -37,12 +37,6 @@
       "defaultValue": true
     },
     {
-      "name": "spring.sleuth.zuul.enabled",
-      "type": "java.lang.Boolean",
-      "description": "Enable span information propagation when using Zuul.",
-      "defaultValue": true
-    },
-    {
       "name": "spring.sleuth.grpc.enabled",
       "type": "java.lang.Boolean",
       "description": "Enable span information propagation when using GRPC.",

@@ -21,6 +21,7 @@ import brave.http.HttpRequestParser;
 import brave.http.HttpResponseParser;
 import brave.http.HttpTracing;
 import brave.sampler.SamplerFunction;
+import brave.sampler.SamplerFunctions;
 import org.junit.jupiter.api.Test;
 
 import org.springframework.boot.autoconfigure.AutoConfigurations;
@@ -36,13 +37,25 @@ import static org.assertj.core.api.BDDAssertions.then;
 public class TraceHttpAutoConfigurationTests {
 
 	@Test
-	public void defaultsToSkipPatternHttpClientSampler() {
+	public void defaultsClientSamplerToDefer() {
 		contextRunner().run((context) -> {
 			SamplerFunction<HttpRequest> clientSampler = context
 					.getBean(HttpTracing.class).clientRequestSampler();
 
-			then(clientSampler).isInstanceOf(SkipPatternHttpClientSampler.class);
+			then(clientSampler).isSameAs(SamplerFunctions.deferDecision());
 		});
+	}
+
+	@Test
+	public void configuresClientSkipPattern() throws Exception {
+		contextRunner()
+				.withPropertyValues("spring.sleuth.web.client.skip-pattern=foo.*|bar.*")
+				.run((context) -> {
+					SamplerFunction<HttpRequest> clientSampler = context
+							.getBean(HttpTracing.class).clientRequestSampler();
+
+					then(clientSampler).isInstanceOf(SkipPatternHttpClientSampler.class);
+				});
 	}
 
 	@Test
@@ -57,13 +70,24 @@ public class TraceHttpAutoConfigurationTests {
 	}
 
 	@Test
-	public void defaultsToSkipPatternHttpServerSampler() {
+	public void defaultsServerSamplerToSkipPattern() {
 		contextRunner().run((context) -> {
 			SamplerFunction<HttpRequest> serverSampler = context
 					.getBean(HttpTracing.class).serverRequestSampler();
 
 			then(serverSampler).isInstanceOf(SkipPatternHttpServerSampler.class);
 		});
+	}
+
+	@Test
+	public void defaultsServerSamplerToDeferWhenSkipPatternCleared() {
+		contextRunner().withPropertyValues("spring.sleuth.web.skip-pattern")
+				.run((context) -> {
+					SamplerFunction<HttpRequest> clientSampler = context
+							.getBean(HttpTracing.class).serverRequestSampler();
+
+					then(clientSampler).isSameAs(SamplerFunctions.deferDecision());
+				});
 	}
 
 	@Test

@@ -53,8 +53,6 @@ public class TraceFeignClientAutoConfiguration {
 	@Bean
 	@ConditionalOnMissingBean
 	@Scope("prototype")
-	@ConditionalOnProperty(name = "feign.hystrix.enabled", havingValue = "false",
-			matchIfMissing = true)
 	Feign.Builder feignBuilder(BeanFactory beanFactory) {
 		return SleuthFeignBuilder.builder(beanFactory);
 	}

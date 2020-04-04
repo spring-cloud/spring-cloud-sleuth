@@ -95,8 +95,6 @@ public class WebClientDiscoveryExceptionTests {
 			span.finish();
 		}
 
-		// hystrix commands should finish at this point
-		Thread.sleep(200);
 		List<zipkin2.Span> spans = this.reporter.getSpans();
 		then(spans.stream().filter(span1 -> span1.kind() == zipkin2.Span.Kind.CLIENT)
 				.findFirst().get().tags()).containsKey("error");

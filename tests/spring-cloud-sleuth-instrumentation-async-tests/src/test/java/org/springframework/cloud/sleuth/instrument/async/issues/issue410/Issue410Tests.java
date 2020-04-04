@@ -59,8 +59,7 @@ import static org.assertj.core.api.BDDAssertions.then;
  * @author Marcin Grzejszczak
  */
 @SpringBootTest(classes = { AppConfig.class, Application.class },
-		webEnvironment = WebEnvironment.RANDOM_PORT,
-		properties = { "ribbon.eureka.enabled=false", "feign.hystrix.enabled=false" })
+		webEnvironment = WebEnvironment.RANDOM_PORT)
 public class Issue410Tests {
 
 	private static final Log log = LogFactory
