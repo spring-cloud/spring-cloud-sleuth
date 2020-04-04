@@ -177,7 +177,7 @@ public class Slf4JSpanLoggerTest {
 				.asInstanceOf(InstanceOfAssertFactories.array(CorrelationField[].class))
 				.extracting(CorrelationField::name).containsExactly("traceId", "parentId",
 						"spanId", "spanExportable", "my-baggage", "my-local",
-						"my-propagation"); // my-baggage-two is baggage not in the whitelist
+						"my-propagation"); // my-baggage-two is not in the whitelist
 	}
 
 	@Test

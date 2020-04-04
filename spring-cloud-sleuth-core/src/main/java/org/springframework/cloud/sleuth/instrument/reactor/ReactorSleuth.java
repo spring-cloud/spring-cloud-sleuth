@@ -82,12 +82,15 @@ public abstract class ReactorSleuth {
 			}
 
 			if (!springContext.isActive()) {
-				if (log.isTraceEnabled()) {
-					log.trace("Spring Context [" + springContext
+				boolean assertOn = false;
+				assert assertOn = true; // gives a message in unit test failures
+				if (log.isTraceEnabled() || assertOn) {
+					String message = "Spring Context [" + springContext
 							+ "] is not yet refreshed. This is unexpected. Reactor Context is ["
-							+ sub.currentContext() + "] and name is [" + name(sub) + "]");
+							+ sub.currentContext() + "] and name is [" + name(sub) + "]";
+					log.trace(message);
+					assert false : message; // should never happen, but don't break.
 				}
-				assert false; // should never happen, but don't break.
 				return sub;
 			}
 
@@ -101,12 +104,15 @@ public abstract class ReactorSleuth {
 			// Try to get the current trace context bean, lenient when there are problems
 			CurrentTraceContext currentTraceContext = lazyCurrentTraceContext.get();
 			if (currentTraceContext == null) {
-				if (log.isTraceEnabled()) {
-					log.trace("Spring Context [" + springContext
+				boolean assertOn = false;
+				assert assertOn = true; // gives a message in unit test failures
+				if (log.isTraceEnabled() || assertOn) {
+					String message = "Spring Context [" + springContext
 							+ "] did not return a CurrentTraceContext. Reactor Context is ["
-							+ sub.currentContext() + "] and name is [" + name(sub) + "]");
+							+ sub.currentContext() + "] and name is [" + name(sub) + "]";
+					log.trace(message);
+					assert false : message; // should never happen, but don't break.
 				}
-				assert false; // should never happen, but don't break.
 				return sub;
 			}
 
