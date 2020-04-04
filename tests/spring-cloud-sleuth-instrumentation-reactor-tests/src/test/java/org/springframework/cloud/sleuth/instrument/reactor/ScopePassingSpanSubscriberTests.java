@@ -17,20 +17,33 @@
 package org.springframework.cloud.sleuth.instrument.reactor;
 
 import java.util.Objects;
+import java.util.function.Function;
 
+import brave.propagation.CurrentTraceContext;
 import brave.propagation.CurrentTraceContext.Scope;
 import brave.propagation.StrictCurrentTraceContext;
 import brave.propagation.TraceContext;
 import org.assertj.core.presentation.StandardRepresentation;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.Test;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
+import org.reactivestreams.Publisher;
+import org.reactivestreams.Subscriber;
+import org.reactivestreams.Subscription;
 import reactor.core.CoreSubscriber;
 import reactor.core.publisher.BaseSubscriber;
+import reactor.core.publisher.Hooks;
+import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 import reactor.util.context.Context;
 
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.BDDAssertions.then;
+import static org.springframework.cloud.sleuth.instrument.reactor.ReactorSleuth.scopePassingSpanOperator;
+import static org.springframework.cloud.sleuth.instrument.reactor.TraceReactorAutoConfiguration.SLEUTH_REACTOR_EXECUTOR_SERVICE_KEY;
+import static org.springframework.cloud.sleuth.instrument.reactor.TraceReactorAutoConfiguration.TraceReactorConfiguration.SLEUTH_TRACE_REACTOR_KEY;
 
 /**
  * @author Marcin Grzejszczak
@@ -54,9 +67,64 @@ public class ScopePassingSpanSubscriberTests {
 	TraceContext context2 = TraceContext.newBuilder().traceId(1).spanId(2).sampled(true)
 			.build();
 
+	Subscriber<Object> assertNotScopePassingSpanSubscriber = new CoreSubscriber<Object>() {
+		@Override
+		public void onSubscribe(Subscription s) {
+			s.request(Long.MAX_VALUE);
+			assertThat(s).isNotInstanceOf(ScopePassingSpanSubscriber.class);
+		}
+
+		@Override
+		public void onNext(Object o) {
+
+		}
+
+		@Override
+		public void onError(Throwable t) {
+
+		}
+
+		@Override
+		public void onComplete() {
+
+		}
+	};
+
+	Subscriber<Object> assertScopePassingSpanSubscriber = new CoreSubscriber<Object>() {
+		@Override
+		public void onSubscribe(Subscription s) {
+			s.request(Long.MAX_VALUE);
+			assertThat(s).isInstanceOf(ScopePassingSpanSubscriber.class);
+		}
+
+		@Override
+		public void onNext(Object o) {
+
+		}
+
+		@Override
+		public void onError(Throwable t) {
+
+		}
+
+		@Override
+		public void onComplete() {
+
+		}
+	};
+
 	AnnotationConfigApplicationContext springContext = new AnnotationConfigApplicationContext();
 
-	@AfterEach
+	@Before
+	public void resetHooks() {
+		// There's an assumption some other test is leaking hooks, so we clear them all to
+		// prevent should_not_scope_scalar_subscribe from being interfered with.
+		Hooks.resetOnEachOperator(SLEUTH_TRACE_REACTOR_KEY);
+		Hooks.resetOnLastOperator(SLEUTH_TRACE_REACTOR_KEY);
+		Schedulers.removeExecutorServiceDecorator(SLEUTH_REACTOR_EXECUTOR_SERVICE_KEY);
+	}
+
+	@After
 	public void close() {
 		springContext.close();
 		currentTraceContext.close();
@@ -68,6 +136,18 @@ public class ScopePassingSpanSubscriberTests {
 				Context.of("foo", "bar"), this.currentTraceContext, null);
 
 		then((String) subscriber.currentContext().get("foo")).isEqualTo("bar");
+	}
+
+	/**
+	 * This ensures when the desired context is in the reactor context we don't copy it.
+	 */
+	@Test
+	public void should_not_redundantly_copy_context() {
+		Context initial = Context.of(TraceContext.class, context);
+		ScopePassingSpanSubscriber<?> subscriber = new ScopePassingSpanSubscriber<>(null,
+				initial, this.currentTraceContext, context);
+
+		then(initial).isSameAs(subscriber.currentContext());
 	}
 
 	@Test
@@ -86,6 +166,49 @@ public class ScopePassingSpanSubscriberTests {
 					}, Context.empty(), currentTraceContext, context);
 
 			then(subscriber.currentContext().get(TraceContext.class)).isEqualTo(context);
+		}
+	}
+
+	@Test
+	public void should_not_scope_scalar_subscribe() {
+		springContext.registerBean(CurrentTraceContext.class, () -> currentTraceContext);
+		springContext.refresh();
+
+		Function<? super Publisher<Integer>, ? extends Publisher<Integer>> transformer = scopePassingSpanOperator(
+				this.springContext);
+
+		try (Scope ws = this.currentTraceContext.newScope(context)) {
+
+			transformer.apply(Mono.just(1))
+					.subscribe(assertNotScopePassingSpanSubscriber);
+
+			transformer.apply(Mono.error(new Exception()))
+					.subscribe(assertNotScopePassingSpanSubscriber);
+
+			transformer.apply(Mono.empty())
+					.subscribe(assertNotScopePassingSpanSubscriber);
+
+		}
+	}
+
+	@Test
+	public void should_scope_scalar_hide_subscribe() {
+		springContext.registerBean(CurrentTraceContext.class, () -> currentTraceContext);
+		springContext.refresh();
+
+		Function<? super Publisher<Integer>, ? extends Publisher<Integer>> transformer = scopePassingSpanOperator(
+				this.springContext);
+
+		try (Scope ws = this.currentTraceContext.newScope(context)) {
+
+			transformer.apply(Mono.just(1).hide())
+					.subscribe(assertScopePassingSpanSubscriber);
+
+			transformer.apply(Mono.<Integer>error(new Exception()).hide())
+					.subscribe(assertScopePassingSpanSubscriber);
+
+			transformer.apply(Mono.<Integer>empty().hide())
+					.subscribe(assertScopePassingSpanSubscriber);
 		}
 	}
 
