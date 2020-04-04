@@ -335,7 +335,7 @@ Running the preceding method with a value of `15` leads to setting a tag with a 
 
 == Customizations
 
-The core `Tracer` type is generally
+The `Tracer` object is fully managed by sleuth, so you rarely need to affect it. That said,
 Sleuth supports a number of `Customizer` types, that allow you to configure
 anything not already done by Sleuth with auto-configuration or properties.
 
