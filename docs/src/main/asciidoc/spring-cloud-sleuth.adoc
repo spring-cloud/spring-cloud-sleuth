@@ -25,7 +25,7 @@ It configures everything you need to get started with tracing. Sleuth
 configures where trace data (spans) are reported to, how many traces to keep
 (sampling), if remote fields (baggage) and which libraries are traced.
 Sleuth also adds annotation based tracing features and some instrumentation not
-available otherwise, such as for Reactor.
+available otherwise, such as Reactor.
 
 === Brave Basics
 
