@@ -144,7 +144,7 @@ $(globalSwitch);
 <p>Provides an abstraction over common distributed tracing data models: traces, spans (forming a DAG), annotations, key-value annotations. Loosely based on HTrace, but Zipkin (Dapper) compatible.</p>
 </li>
 <li>
-<p>Instruments common ingress and egress points from Spring applications (servlet filter, rest template, scheduled actions, message channels, zuul filters, feign client).</p>
+<p>Instruments common ingress and egress points from Spring applications (servlet filter, rest template, scheduled actions, message channels, feign client).</p>
 </li>
 <li>
 <p>If <code>spring-cloud-sleuth-zipkin</code> is available then the app will generate and collect Zipkin-compatible traces via HTTP. By default it sends them to a Zipkin collector service on localhost (port 9411). Configure the location of the service using <code>spring.zipkin.baseUrl</code>.</p>
