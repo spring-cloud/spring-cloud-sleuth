@@ -53,9 +53,7 @@ class TraceFeignAspect {
 			log.debug("Executing feign client via TraceFeignAspect");
 		}
 		if (bean != wrappedBean) {
-			// NOTE: in master(3813cf9dd47f98db0e075412abbffbd9d6742974),
-			// this is executeTraceFeignClient(wrappedBean, pjp)
-			return executeTraceFeignClient(bean, pjp);
+			return executeTraceFeignClient(wrappedBean, pjp);
 		}
 		return pjp.proceed();
 	}

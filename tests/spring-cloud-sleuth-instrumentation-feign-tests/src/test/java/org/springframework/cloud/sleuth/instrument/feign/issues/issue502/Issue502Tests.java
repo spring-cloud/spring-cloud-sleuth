@@ -45,7 +45,7 @@ import org.springframework.web.bind.annotation.RequestMethod;
 
 import static org.assertj.core.api.BDDAssertions.then;
 
-@FeignClient(name = "foo", url = "https://non.existing.url")
+@FeignClient(name = "foo", url = "http://foo")
 interface MyNameRemote {
 
 	@RequestMapping(value = "/", method = RequestMethod.GET)
@@ -85,7 +85,7 @@ public class Issue502Tests {
 		List<Span> spans = this.reporter.getSpans();
 		// retries
 		then(spans).hasSize(1);
-		then(spans.get(0).tags().get("http.path")).isEqualTo("/");
+		then(spans.get(0).tags().get("http.path")).isEqualTo("");
 	}
 
 }

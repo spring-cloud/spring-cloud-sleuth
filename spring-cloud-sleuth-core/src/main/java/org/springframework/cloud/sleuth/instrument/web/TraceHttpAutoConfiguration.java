@@ -18,6 +18,7 @@ package org.springframework.cloud.sleuth.instrument.web;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Pattern;
 
 import brave.Tracing;
 import brave.http.HttpRequest;
@@ -27,6 +28,7 @@ import brave.http.HttpSampler;
 import brave.http.HttpTracing;
 import brave.http.HttpTracingCustomizer;
 import brave.sampler.SamplerFunction;
+import brave.sampler.SamplerFunctions;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
@@ -62,7 +64,7 @@ public class TraceHttpAutoConfiguration {
 	@Bean
 	@ConditionalOnMissingBean
 	// NOTE: stable bean name as might be used outside sleuth
-	HttpTracing httpTracing(Tracing tracing, SkipPatternProvider provider,
+	HttpTracing httpTracing(Tracing tracing, @Nullable SkipPatternProvider provider,
 			@Nullable @HttpClientRequestParser HttpRequestParser httpClientRequestParser,
 			@Nullable @HttpClientResponseParser HttpResponseParser httpClientResponseParser,
 			@Nullable brave.http.HttpClientParser clientParser,
@@ -113,11 +115,17 @@ public class TraceHttpAutoConfiguration {
 
 	private SamplerFunction<HttpRequest> combineUserProvidedSamplerWithSkipPatternSampler(
 			@Nullable SamplerFunction<HttpRequest> serverSampler,
-			SkipPatternProvider provider) {
-		SkipPatternHttpServerSampler skipPatternSampler = new SkipPatternHttpServerSampler(
-				provider);
-		if (serverSampler == null) {
+			@Nullable SkipPatternProvider provider) {
+		SamplerFunction<HttpRequest> skipPatternSampler = provider != null
+				? new SkipPatternHttpServerSampler(provider) : null;
+		if (serverSampler == null && skipPatternSampler == null) {
+			return SamplerFunctions.deferDecision();
+		}
+		else if (serverSampler == null) {
 			return skipPatternSampler;
+		}
+		else if (skipPatternSampler == null) {
+			return serverSampler;
 		}
 		return new CompositeHttpSampler(skipPatternSampler, serverSampler);
 	}
@@ -154,7 +162,13 @@ public class TraceHttpAutoConfiguration {
 		if (sleuthClientSampler != null) {
 			return sleuthClientSampler;
 		}
-		return new SkipPatternHttpClientSampler(sleuthWebProperties);
+
+		String skipPattern = sleuthWebProperties.getClient().getSkipPattern();
+		if (skipPattern == null) {
+			return SamplerFunctions.deferDecision();
+		}
+
+		return new SkipPatternHttpClientSampler(Pattern.compile(skipPattern));
 	}
 
 }
@@ -164,7 +178,7 @@ public class TraceHttpAutoConfiguration {
  *
  * @author Adrian Cole
  */
-class CompositeHttpSampler implements SamplerFunction<HttpRequest> {
+final class CompositeHttpSampler implements SamplerFunction<HttpRequest> {
 
 	final SamplerFunction<HttpRequest> left;
 
@@ -205,21 +219,32 @@ class CompositeHttpSampler implements SamplerFunction<HttpRequest> {
  *
  * @author Marcin Grzejszczak
  */
-class SkipPatternHttpClientSampler implements SamplerFunction<HttpRequest> {
+final class SkipPatternHttpServerSampler extends SkipPatternSampler {
 
-	private final SleuthWebProperties properties;
+	private final SkipPatternProvider provider;
 
-	SkipPatternHttpClientSampler(SleuthWebProperties properties) {
-		this.properties = properties;
+	SkipPatternHttpServerSampler(SkipPatternProvider provider) {
+		this.provider = provider;
 	}
 
 	@Override
-	public Boolean trySample(HttpRequest request) {
-		String path = request.path();
-		if (path == null) {
-			return null;
-		}
-		return path.matches(this.properties.getClient().getSkipPattern()) ? false : null;
+	Pattern getPattern() {
+		return this.provider.skipPattern();
+	}
+
+}
+
+final class SkipPatternHttpClientSampler extends SkipPatternSampler {
+
+	private final Pattern skipPattern;
+
+	SkipPatternHttpClientSampler(Pattern skipPattern) {
+		this.skipPattern = skipPattern;
+	}
+
+	@Override
+	Pattern getPattern() {
+		return skipPattern;
 	}
 
 }

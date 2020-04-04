@@ -21,7 +21,6 @@ import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.List;
 
-import brave.Tracing;
 import brave.sampler.Sampler;
 import feign.Client;
 import feign.Contract;
@@ -77,9 +76,6 @@ public class ManuallyCreatedDelegateLoadBalancerFeignClientTests {
 	@Autowired
 	ArrayListSpanReporter reporter;
 
-	@Autowired
-	Tracing tracer;
-
 	@Before
 	public void open() {
 		this.reporter.clear();
@@ -92,7 +88,6 @@ public class ManuallyCreatedDelegateLoadBalancerFeignClientTests {
 		then(this.myClient.wasCalled()).isTrue();
 		then(this.myDelegateClient.wasCalled()).isTrue();
 		then(response).isEqualTo("foo");
-		System.out.println("this.myclient.wascalled: " + this.myClient.wasCalled());
 		List<Span> spans = this.reporter.getSpans();
 		// retries
 		then(spans).hasSize(1);
@@ -138,8 +133,8 @@ class Application {
 	public MyNameRemote myNameRemote(Client client, Decoder decoder, Encoder encoder,
 			Contract contract) {
 		return Feign.builder().client(client).encoder(encoder).decoder(decoder)
-				.contract(contract).target(new HardCodedTarget<>(MyNameRemote.class,
-						"foo", "https://non.existing.url"));
+				.contract(contract)
+				.target(new HardCodedTarget<>(MyNameRemote.class, "foo", "http://foo"));
 	}
 
 	@Bean
@@ -194,7 +189,7 @@ class MyDelegateClient implements Client {
 
 }
 
-@FeignClient(name = "foo", url = "https://non.existing.url")
+@FeignClient(name = "foo", url = "http://foo")
 interface MyNameRemote {
 
 	@RequestMapping(value = "/", method = RequestMethod.GET)
