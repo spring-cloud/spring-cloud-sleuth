@@ -262,7 +262,7 @@
 
 		<!-- Until we switch it to true in sc-build -->
 		<javadoc.failOnError>true</javadoc.failOnError>
-		<javadoc.failOnWarnings>true</javadoc.failOnWarnings>
+		<javadoc.failOnWarnings>false</javadoc.failOnWarnings>
 	</properties>
 
 	<profiles>
