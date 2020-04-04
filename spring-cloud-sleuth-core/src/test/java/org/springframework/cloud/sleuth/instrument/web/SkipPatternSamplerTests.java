@@ -31,26 +31,58 @@ import static org.assertj.core.api.BDDAssertions.then;
  * @author Marcin Grzejszczak
  */
 @RunWith(MockitoJUnitRunner.class)
-public class SkipPatternHttpServerSamplerTests {
+public class SkipPatternSamplerTests {
 
 	@Mock
 	HttpRequest request;
 
 	@Test
 	public void should_delegate_sampling_decision_if_pattern_is_not_matched() {
-		SkipPatternProvider provider = () -> Pattern.compile("foo");
 		BDDMockito.given(this.request.path()).willReturn("url");
-		SkipPatternHttpServerSampler sampler = new SkipPatternHttpServerSampler(provider);
+		SkipPatternSampler sampler = new SkipPatternSampler() {
+			@Override
+			Pattern getPattern() {
+				return Pattern.compile("foo");
+			}
+		};
 
 		then(sampler.trySample(this.request)).isNull();
 	}
 
 	@Test
 	public void should_not_sample_if_pattern_is_matched() {
-		SkipPatternProvider provider = () -> Pattern.compile(".*");
 		BDDMockito.given(this.request.path()).willReturn("url");
-		SkipPatternHttpServerSampler sampler = new SkipPatternHttpServerSampler(provider);
+		SkipPatternSampler sampler = new SkipPatternSampler() {
+			@Override
+			Pattern getPattern() {
+				return Pattern.compile(".*");
+			}
+		};
 
+		then(sampler.trySample(this.request)).isFalse();
+	}
+
+	@Test
+	public void should_not_get_pattern_twice() {
+		BDDMockito.given(this.request.path()).willReturn("url");
+		SkipPatternSampler sampler = new SkipPatternSampler() {
+			boolean provisioned;
+
+			@Override
+			Pattern getPattern() {
+				if (provisioned) {
+					throw new AssertionError("called twice!");
+				}
+				try {
+					return Pattern.compile(".*");
+				}
+				finally {
+					provisioned = true;
+				}
+			}
+		};
+
+		then(sampler.trySample(this.request)).isFalse();
 		then(sampler.trySample(this.request)).isFalse();
 	}
 

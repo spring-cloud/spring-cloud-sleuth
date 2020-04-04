@@ -44,7 +44,10 @@ class TraceFeignContext extends FeignContext {
 	@SuppressWarnings("unchecked")
 	public <T> T getInstance(String name, Class<T> type) {
 		T object = this.delegate.getInstance(name, type);
-		return (T) this.traceFeignObjectWrapper.wrap(object);
+		if (object != null) {
+			return (T) this.traceFeignObjectWrapper.wrap(object);
+		}
+		return null;
 	}
 
 	@Override

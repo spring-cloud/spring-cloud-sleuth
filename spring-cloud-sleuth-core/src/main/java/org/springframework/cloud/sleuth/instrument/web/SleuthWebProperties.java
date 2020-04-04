@@ -96,7 +96,7 @@ public class SleuthWebProperties {
 	}
 
 	public void setSkipPattern(String skipPattern) {
-		this.skipPattern = skipPattern;
+		this.skipPattern = emptyToNull(skipPattern);
 	}
 
 	public String getAdditionalSkipPattern() {
@@ -104,7 +104,7 @@ public class SleuthWebProperties {
 	}
 
 	public void setAdditionalSkipPattern(String additionalSkipPattern) {
-		this.additionalSkipPattern = additionalSkipPattern;
+		this.additionalSkipPattern = emptyToNull(additionalSkipPattern);
 	}
 
 	public int getFilterOrder() {
@@ -149,6 +149,13 @@ public class SleuthWebProperties {
 		this.client = client;
 	}
 
+	static String emptyToNull(String skipPattern) {
+		if (skipPattern != null && skipPattern.isEmpty()) {
+			skipPattern = null; // otherwise this would skip paths named ""!
+		}
+		return skipPattern;
+	}
+
 	/**
 	 * Web client properties.
 	 *
@@ -159,7 +166,7 @@ public class SleuthWebProperties {
 		/**
 		 * Pattern for URLs that should be skipped in client side tracing.
 		 */
-		private String skipPattern = "";
+		private String skipPattern;
 
 		/**
 		 * Enable interceptor injecting into
@@ -180,7 +187,7 @@ public class SleuthWebProperties {
 		}
 
 		public void setSkipPattern(String skipPattern) {
-			this.skipPattern = skipPattern;
+			this.skipPattern = emptyToNull(skipPattern);
 		}
 
 	}

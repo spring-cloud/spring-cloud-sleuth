@@ -27,18 +27,12 @@ import brave.sampler.SamplerFunction;
  * @author Marcin Grzejszczak
  * @since 2.0.0
  */
-class SkipPatternHttpServerSampler implements SamplerFunction<HttpRequest> {
-
-	private final SkipPatternProvider provider;
+abstract class SkipPatternSampler implements SamplerFunction<HttpRequest> {
 
 	private Pattern pattern;
 
-	SkipPatternHttpServerSampler(SkipPatternProvider provider) {
-		this.provider = provider;
-	}
-
 	@Override
-	public Boolean trySample(HttpRequest request) {
+	public final Boolean trySample(HttpRequest request) {
 		String url = request.path();
 		boolean shouldSkip = pattern().matcher(url).matches();
 		if (shouldSkip) {
@@ -47,9 +41,11 @@ class SkipPatternHttpServerSampler implements SamplerFunction<HttpRequest> {
 		return null;
 	}
 
+	abstract Pattern getPattern();
+
 	private Pattern pattern() {
 		if (this.pattern == null) {
-			this.pattern = this.provider.skipPattern();
+			this.pattern = getPattern();
 		}
 		return this.pattern;
 	}
