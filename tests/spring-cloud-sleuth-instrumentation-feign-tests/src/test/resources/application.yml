@@ -2,6 +2,12 @@ hystrix.command.default.execution.isolation.thread.timeoutInMilliseconds: 5000
 ribbon:
   ConnectTimeout: 3000
   ReadTimeout: 5000
+  eager-load:
+    enabled: true
+    clients: foo
+foo:
+  ribbon:
+    listOfServers: non.existing.url
 
 exceptionService.ribbon:
   MaxAutoRetries: 3

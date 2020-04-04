@@ -60,8 +60,7 @@ import static org.assertj.core.api.BDDAssertions.then;
 @RunWith(SpringRunner.class)
 @SpringBootTest(classes = Application.class,
 		webEnvironment = SpringBootTest.WebEnvironment.NONE,
-		properties = { "feign.hystrix.enabled=false",
-				"foo.ribbon.listOfServers=non.existing.url" })
+		properties = { "feign.hystrix.enabled=false" })
 @DirtiesContext(classMode = ClassMode.AFTER_EACH_TEST_METHOD)
 public class ManuallyCreatedDelegateLoadBalancerFeignClientTests {
 
