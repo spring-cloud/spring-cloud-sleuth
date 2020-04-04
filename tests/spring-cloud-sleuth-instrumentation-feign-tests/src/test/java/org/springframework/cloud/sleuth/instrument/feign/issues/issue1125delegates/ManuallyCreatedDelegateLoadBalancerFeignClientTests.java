@@ -21,7 +21,6 @@ import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.List;
 
-import brave.Tracing;
 import brave.sampler.Sampler;
 import feign.Client;
 import feign.Contract;
@@ -60,8 +59,8 @@ import static org.assertj.core.api.BDDAssertions.then;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest(classes = Application.class,
-		webEnvironment = SpringBootTest.WebEnvironment.NONE,
-		properties = { "feign.hystrix.enabled=false" })
+		webEnvironment = SpringBootTest.WebEnvironment.NONE, properties = {
+				"feign.hystrix.enabled=false", "ribbon.listOfServers=non.existing.url" })
 @DirtiesContext(classMode = ClassMode.AFTER_EACH_TEST_METHOD)
 public class ManuallyCreatedDelegateLoadBalancerFeignClientTests {
 
@@ -77,9 +76,6 @@ public class ManuallyCreatedDelegateLoadBalancerFeignClientTests {
 	@Autowired
 	ArrayListSpanReporter reporter;
 
-	@Autowired
-	Tracing tracer;
-
 	@Before
 	public void open() {
 		this.reporter.clear();
@@ -92,7 +88,6 @@ public class ManuallyCreatedDelegateLoadBalancerFeignClientTests {
 		then(this.myClient.wasCalled()).isTrue();
 		then(this.myDelegateClient.wasCalled()).isTrue();
 		then(response).isEqualTo("foo");
-		System.out.println("this.myclient.wascalled: " + this.myClient.wasCalled());
 		List<Span> spans = this.reporter.getSpans();
 		// retries
 		then(spans).hasSize(1);
@@ -194,7 +189,7 @@ class MyDelegateClient implements Client {
 
 }
 
-@FeignClient(name = "foo", url = "https://non.existing.url")
+@FeignClient(name = "foo", url = "http://fooloadbalancer")
 interface MyNameRemote {
 
 	@RequestMapping(value = "/", method = RequestMethod.GET)
