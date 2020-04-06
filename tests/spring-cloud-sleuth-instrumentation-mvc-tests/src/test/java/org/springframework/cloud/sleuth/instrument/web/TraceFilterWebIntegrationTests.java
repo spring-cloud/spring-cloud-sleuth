@@ -30,8 +30,8 @@ import brave.sampler.SamplerFunction;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.assertj.core.api.BDDAssertions;
-import org.junit.Ignore;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import zipkin2.Span;
@@ -94,7 +94,7 @@ public class TraceFilterWebIntegrationTests {
 	}
 
 	@Test
-	@Ignore("TODO: is this log format drift?")
+	@Disabled("TODO: is this log format drift?")
 	public void should_not_create_a_span_for_error_controller(CapturedOutput capture) {
 		try {
 			new RestTemplate().getForObject("http://localhost:" + port() + "/",
