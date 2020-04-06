@@ -25,6 +25,8 @@ import brave.baggage.BaggagePropagationConfig;
 import brave.baggage.BaggagePropagationConfig.SingleBaggageField;
 import brave.baggage.CorrelationScopeConfig;
 import brave.baggage.CorrelationScopeConfig.SingleCorrelationField;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 import org.springframework.beans.factory.config.BeanFactoryPostProcessor;
 import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
@@ -40,6 +42,8 @@ import org.springframework.core.env.Environment;
 @Configuration(proxyBeanMethods = false)
 @ConditionalOnProperty(value = "spring.sleuth.enabled", matchIfMissing = true)
 public class PropertyBasedBaggageConfiguration implements BeanFactoryPostProcessor {
+
+	static final Log logger = LogFactory.getLog(PropertyBasedBaggageConfiguration.class);
 
 	@Override
 	public void postProcessBeanFactory(ConfigurableListableBeanFactory beanFactory) {
@@ -70,11 +74,15 @@ public class PropertyBasedBaggageConfiguration implements BeanFactoryPostProcess
 			baggageConfigs.add(SingleBaggageField.remote(BaggageField.create(key)));
 		}
 
-		for (String key : collectKeysOfType(env, "baggage")) {
-			baggageConfigs.add(SingleBaggageField.newBuilder(BaggageField.create(key))
-					.addKeyName("baggage-" + key) // for HTTP
-					.addKeyName("baggage_" + key) // for messaging
-					.build());
+		if (!collectKeysOfType(env, "propagation").isEmpty()) {
+			logger.warn(
+					"Property 'spring.sleuth.propagation-keys' has been renamed to 'spring.sleuth.remote-keys'.");
+		}
+
+		if (!collectKeysOfType(env, "baggage").isEmpty()) {
+			logger.warn("Property 'spring.sleuth.baggage-keys' is no longer read.\n"
+					+ "To change header names define a @Bean of type "
+					+ SingleBaggageField.class.getName());
 		}
 		return baggageConfigs;
 	}

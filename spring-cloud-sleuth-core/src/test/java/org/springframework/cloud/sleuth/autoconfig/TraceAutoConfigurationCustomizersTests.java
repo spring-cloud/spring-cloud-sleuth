@@ -51,7 +51,7 @@ public class TraceAutoConfigurationCustomizersTests {
 
 	@Test
 	public void should_apply_customizers() {
-		this.contextRunner.withPropertyValues("spring.sleuth.baggage-keys=my-baggage")
+		this.contextRunner.withPropertyValues("spring.sleuth.remote-keys=country-code")
 				.run((context) -> {
 					Customizers bean = context.getBean(Customizers.class);
 

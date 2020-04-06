@@ -55,10 +55,13 @@ import static org.awaitility.Awaitility.await;
 import static org.springframework.boot.test.context.SpringBootTest.WebEnvironment.RANDOM_PORT;
 
 @SpringBootTest(classes = MultipleHopsIntegrationTests.Config.class,
-		webEnvironment = RANDOM_PORT, properties = { "spring.sleuth.baggage-keys=baz",
-				"spring.sleuth.remote-keys=country-code" })
+		webEnvironment = RANDOM_PORT,
+		properties = { "spring.sleuth.remote-keys=x-vcap-request-id,country-code",
+				"spring.sleuth.local-keys=bp" })
 public class MultipleHopsIntegrationTests {
 
+	static final BaggageField REQUEST_ID = BaggageField.create("x-vcap-request-id");
+	static final BaggageField BUSINESS_PROCESS = BaggageField.create("bp");
 	static final BaggageField COUNTRY_CODE = BaggageField.create("country-code");
 
 	@Autowired
@@ -103,25 +106,21 @@ public class MultipleHopsIntegrationTests {
 
 	@Test
 	public void should_propagate_the_baggage() {
-		// TODO: make a DemoBaggage type instead of saying to use the api directly
-		BaggageField bar = BaggageField.create("bar");
-		BaggageField baz = BaggageField.create("baz");
-
 		// tag::baggage[]
 		Span initialSpan = this.tracer.nextSpan().name("span").start();
+		BUSINESS_PROCESS.updateValue(initialSpan.context(), "ALM");
 		COUNTRY_CODE.updateValue(initialSpan.context(), "FO");
-		bar.updateValue(initialSpan.context(), "2");
 		// end::baggage[]
 
 		try (SpanInScope ws = this.tracer.withSpanInScope(initialSpan)) {
 			// tag::baggage_tag[]
-			Tags.BAGGAGE_FIELD.tag(COUNTRY_CODE, initialSpan);
-			Tags.BAGGAGE_FIELD.tag(bar, initialSpan);
+			Tags.BAGGAGE_FIELD.tag(BUSINESS_PROCESS, initialSpan);
 			// end::baggage_tag[]
 
-			// set baz in a header not with the api explicitly
+			// set request ID in a header not with the api explicitly
 			HttpHeaders headers = new HttpHeaders();
-			headers.put("baggage-baz", Collections.singletonList("3"));
+			headers.put(REQUEST_ID.name(),
+					Collections.singletonList("f4308d05-2228-4468-80f6-92a8377ba193"));
 			RequestEntity requestEntity = new RequestEntity(headers, HttpMethod.GET,
 					URI.create("http://localhost:" + this.config.port + "/greeting"));
 			this.restTemplate.exchange(requestEntity, String.class);
@@ -135,23 +134,23 @@ public class MultipleHopsIntegrationTests {
 		});
 
 		List<zipkin2.Span> withBagTags = this.reporter.getSpans().stream()
-				.filter(s -> s.tags().containsKey(COUNTRY_CODE.name())).collect(toList());
+				.filter(s -> s.tags().containsKey(BUSINESS_PROCESS.name()))
+				.collect(toList());
 
 		// set with tag api
 		then(withBagTags).as("only initialSpan was bag tagged").hasSize(1);
-		assertThat(withBagTags.get(0).tags()).containsEntry("country-code", "FO")
-				.containsEntry("bar", "2");
+		assertThat(withBagTags.get(0).tags()).containsEntry(BUSINESS_PROCESS.name(),
+				"ALM");
 
 		// set with baggage api
-		then(this.application.allSpans()).as("All have country-code")
-				.allMatch(span -> "FO".equals(COUNTRY_CODE.getValue(span.context())));
-		then(this.application.allSpans()).as("All have bar")
-				.allMatch(span -> "2".equals(bar.getValue(span.context())));
+		then(this.application.allSpans()).as("All have request ID")
+				.allMatch(span -> "f4308d05-2228-4468-80f6-92a8377ba193"
+						.equals(REQUEST_ID.getValue(span.context())));
 
 		// baz is not tagged in the initial span, only downstream!
-		then(this.application.allSpans()).as("All downstream have baz")
+		then(this.application.allSpans()).as("All downstream have country-code")
 				.filteredOn(span -> !span.equals(initialSpan))
-				.allMatch(span -> "3".equals(baz.getValue(span.context())));
+				.allMatch(span -> "FO".equals(COUNTRY_CODE.getValue(span.context())));
 	}
 
 	@Configuration

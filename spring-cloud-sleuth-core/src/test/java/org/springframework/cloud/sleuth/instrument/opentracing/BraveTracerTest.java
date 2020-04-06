@@ -55,7 +55,7 @@ import static org.springframework.boot.test.context.SpringBootTest.WebEnvironmen
  * @author Marcin Grzejszczak
  */
 @SpringBootTest(webEnvironment = NONE,
-		properties = "spring.sleuth.baggage-keys=country-code,country-code")
+		properties = "spring.sleuth.remote-keys=country-code")
 public class BraveTracerTest {
 
 	@Autowired
@@ -100,7 +100,7 @@ public class BraveTracerTest {
 		map.put("X-B3-TraceId", "0000000000000001");
 		map.put("X-B3-SpanId", "0000000000000002");
 		map.put("X-B3-Sampled", "1");
-		map.put("baggage-country-code", "FO");
+		map.put("country-code", "FO");
 
 		BraveSpanContext openTracingContext = this.opentracing
 				.extract(Format.Builtin.HTTP_HEADERS, new TextMapAdapter(map));
@@ -147,7 +147,7 @@ public class BraveTracerTest {
 		TextMapAdapter carrier = new TextMapAdapter(map);
 		this.opentracing.inject(span.context(), Format.Builtin.HTTP_HEADERS, carrier);
 
-		assertThat(map).containsEntry("baggage-country-code", "FO");
+		assertThat(map).containsEntry("country-code", "FO");
 	}
 
 	void checkSpanReportedToZipkin() {

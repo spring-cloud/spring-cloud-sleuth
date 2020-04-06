@@ -5,7 +5,6 @@
 |spring.sleuth.async.configurer.enabled | true | Enable default AsyncConfigurer.
 |spring.sleuth.async.enabled | true | Enable instrumenting async related components so that the tracing information is passed between threads.
 |spring.sleuth.async.ignored-beans |  | List of {@link java.util.concurrent.Executor} bean names that should be ignored and not wrapped in a trace representation.
-|spring.sleuth.baggage-keys |  | List of baggage key names that should be propagated out of process. These keys will be prefixed with `baggage` before the actual key. This property is set in order to be backward compatible with previous Sleuth versions. @see brave.propagation.ExtraFieldPropagation.FactoryBuilder#addPrefixedFields(String, java.util.Collection)
 |spring.sleuth.circuitbreaker.enabled | true | Enable Spring Cloud CircuitBreaker instrumentation.
 |spring.sleuth.enabled | true | 
 |spring.sleuth.feign.enabled | true | Enable span information propagation when using Feign.
