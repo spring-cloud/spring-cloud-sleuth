@@ -22,7 +22,7 @@ import java.util.TreeSet;
 
 import brave.baggage.BaggageField;
 import brave.baggage.BaggageFields;
-import brave.baggage.CorrelationField;
+import brave.baggage.CorrelationScopeConfig.SingleCorrelationField;
 import brave.baggage.CorrelationScopeDecorator;
 import brave.context.slf4j.MDCScopeDecorator;
 import brave.propagation.CurrentTraceContext.Scope;
@@ -47,13 +47,13 @@ final class Slf4jScopeDecorator implements ScopeDecorator {
 	// Backward compatibility for all logging patterns
 	private static final ScopeDecorator LEGACY_IDS = MDCScopeDecorator.newBuilder()
 			.clear()
-			.addField(CorrelationField.newBuilder(BaggageFields.TRACE_ID)
+			.add(SingleCorrelationField.newBuilder(BaggageFields.TRACE_ID)
 					.name("X-B3-TraceId").build())
-			.addField(CorrelationField.newBuilder(BaggageFields.PARENT_ID)
+			.add(SingleCorrelationField.newBuilder(BaggageFields.PARENT_ID)
 					.name("X-B3-ParentSpanId").build())
-			.addField(CorrelationField.newBuilder(BaggageFields.SPAN_ID)
+			.add(SingleCorrelationField.newBuilder(BaggageFields.SPAN_ID)
 					.name("X-B3-SpanId").build())
-			.addField(CorrelationField.newBuilder(BaggageFields.SAMPLED)
+			.add(SingleCorrelationField.newBuilder(BaggageFields.SAMPLED)
 					.name("X-Span-Export").build())
 			.build();
 
@@ -62,10 +62,10 @@ final class Slf4jScopeDecorator implements ScopeDecorator {
 	Slf4jScopeDecorator(SleuthProperties sleuthProperties,
 			SleuthSlf4jProperties sleuthSlf4jProperties) {
 		CorrelationScopeDecorator.Builder builder = MDCScopeDecorator.newBuilder().clear()
-				.addField(CorrelationField.create(BaggageFields.TRACE_ID))
-				.addField(CorrelationField.create(BaggageFields.PARENT_ID))
-				.addField(CorrelationField.create(BaggageFields.SPAN_ID))
-				.addField(CorrelationField.newBuilder(BaggageFields.SAMPLED)
+				.add(SingleCorrelationField.create(BaggageFields.TRACE_ID))
+				.add(SingleCorrelationField.create(BaggageFields.PARENT_ID))
+				.add(SingleCorrelationField.create(BaggageFields.SPAN_ID))
+				.add(SingleCorrelationField.newBuilder(BaggageFields.SAMPLED)
 						.name("spanExportable").build());
 
 		Set<String> whitelist = new TreeSet<>(String.CASE_INSENSITIVE_ORDER);
@@ -81,7 +81,7 @@ final class Slf4jScopeDecorator implements ScopeDecorator {
 		// For backwards compatibility set all fields dirty, so that any changes made by
 		// MDC directly are reverted.
 		for (String name : retained) {
-			builder.addField(CorrelationField.newBuilder(BaggageField.create(name))
+			builder.add(SingleCorrelationField.newBuilder(BaggageField.create(name))
 					.dirty().build());
 		}
 
