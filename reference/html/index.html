@@ -129,7 +129,7 @@ $(globalSwitch);
 </li>
 <li><a href="#additional-resources">2. Additional Resources</a></li>
 <li><a href="#features">3. Features</a></li>
-<li><a href="#introduction-to-brave">4. Introduction to Brave</a>
+<li><a href="#introduction-2">4. Introduction</a>
 <ul class="sectlevel2">
 <li><a href="#brave-basics">4.1. Brave Basics</a></li>
 </ul>
@@ -727,7 +727,7 @@ The span must be in scope.
 <div class="listingblock">
 <div class="title">The setup</div>
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-yml hljs" data-lang="yml">Unresolved directive in intro.adoc - include::/opt/jenkins/data/workspace/spring-cloud-jdk11-spring-cloud-sleuth-master-ci/spring-cloud-sleuth-core/src/test/resources/application-baggage.yml[indent=0]</code></pre>
+<pre class="highlightjs highlight"><code class="language-yml hljs" data-lang="yml">Unresolved directive in intro.adoc - include::/opt/jenkins/data/workspace/spring-cloud-sleuth-master-ci/spring-cloud-sleuth-core/src/test/resources/application-baggage.yml[indent=0]</code></pre>
 </div>
 </div>
 <div class="listingblock">
@@ -1226,22 +1226,45 @@ We&#8217;ve converted the MDC entries from B3 to non B3 keys (e.g. <code>X-B3-Tr
 </div>
 </div>
 <div class="sect1">
-<h2 id="introduction-to-brave"><a class="anchor" href="#introduction-to-brave"></a><a class="link" href="#introduction-to-brave">4. Introduction to Brave</a></h2>
+<h2 id="introduction-2"><a class="anchor" href="#introduction-2"></a><a class="link" href="#introduction-2">4. Introduction</a></h2>
 <div class="sectionbody">
+<div class="paragraph">
+<p>Spring Cloud Sleuth is a layer over <a href="https://github.com/openzipkin/brave">Brave</a>.</p>
+</div>
 <div class="paragraph">
 <p>Brave is a distributed tracing instrumentation library. Brave typically
 intercepts production requests to gather timing data, correlate and propagate
-trace contexts. While typically trace data is sent to Zipkin server,
-third-party plugins are available to send to alternate services such as Amazon
-X-Ray.</p>
+trace contexts.</p>
 </div>
 <div class="paragraph">
-<p>Spring Cloud Sleuth is a layer over <a href="https://github.com/openzipkin/brave">Brave</a>.
-It configures everything you need to get started with tracing. Sleuth
+<p>Trace data, also called spans, are typically reported to <a href="https://zipkin.io">Zipkin</a>.
+Zipkin is an Open Source tracing system, which includes a UI and various
+collectors, such as HTTP and messaging.</p>
+</div>
+<div class="paragraph">
+<p>Many Open Source and commercial products accept <a href="https://zipkin.io/zipkin-api/#/default/post_spans">Zipkin format</a>.
+Some options are documented <a href="https://zipkin.io/pages/extensions_choices.html">here</a>,
+but many are not. If you cannot use Zipkin and your product isn&#8217;t listed, clarify
+with your support representative and have them update that page. In many cases,
+products already support Zipkin format, they just don&#8217;t document it.</p>
+</div>
+<div class="paragraph">
+<p>Traces connect from service to service using header propagation. The default
+format is <a href="https://github.com/openzipkin/b3-propagation">B3</a>. Similar to data
+formats, you can configure alternate header formats also, provided trace and
+span IDs are compatible with B3. Most notably, this means the trace ID and span
+IDs are lower-case hex, not UUIDs. Besides trace identifiers, other properties
+(Baggage) can also be passed along with the request. Remote Baggage must be
+predefined, but is flexible otherwise.</p>
+</div>
+<div class="paragraph">
+<p>Sleuth configures everything you need to get started with tracing. Sleuth
 configures where trace data (spans) are reported to, how many traces to keep
 (sampling), if remote fields (baggage) and which libraries are traced.
 Sleuth also adds annotation based tracing features and some instrumentation not
-available otherwise, such as Reactor.</p>
+available otherwise, such as Reactor. If cannot find the configuration you are
+looking for in the documentation, ask <a href="https://gitter.im/spring-cloud/spring-cloud-sleuth">Gitter</a>
+before assuming something cannot be done.</p>
 </div>
 <div class="sect2">
 <h3 id="brave-basics"><a class="anchor" href="#brave-basics"></a><a class="link" href="#brave-basics">4.1. Brave Basics</a></h3>
