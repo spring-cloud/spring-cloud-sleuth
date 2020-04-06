@@ -383,18 +383,20 @@ spring.sleuth:
   baggage-keys:
     - baz
     - bizarrecase
-  propagation-keys:
-    - foo
-    - upper_case
+  local-keys:
+    - bp
+  remote-keys:
+    - country-code
+    - x-vcap-request-id
 ----
 
 .The code
 [source,java]
 ----
-initialSpan.tag("foo",
-		ExtraFieldPropagation.get(initialSpan.context(), "foo"));
-initialSpan.tag("UPPER_CASE",
-		ExtraFieldPropagation.get(initialSpan.context(), "UPPER_CASE"));
+static final BaggageField COUNTRY_CODE = BaggageField.create("country-code");
+
+COUNTRY_CODE.updateValue(span.context(), "FO");
+Tags.BAGGAGE_FIELD.tag(COUNTRY_CODE, span);
 ----
 
 [[sleuth-adding-project]]

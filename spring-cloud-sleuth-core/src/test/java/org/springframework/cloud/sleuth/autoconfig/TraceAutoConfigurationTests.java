@@ -92,31 +92,31 @@ public class TraceAutoConfigurationTests {
 				.run((context -> {
 					final Baggage bean = context.getBean(Baggage.class);
 					BDDAssertions.then(bean.fields).containsOnly(
-							BaggageField.create("userId"),
-							BaggageField.create("userName"));
+							BaggageField.create("country-code"),
+							BaggageField.create("x-vcap-request-id"));
 				}));
 	}
 
 	@Test
 	public void should_use_local_keys_from_properties() {
-		this.contextRunner.withPropertyValues("spring.sleuth.local-keys=test-key")
+		this.contextRunner.withPropertyValues("spring.sleuth.local-keys=bp")
 				.withUserConfiguration(Baggage.class).run((context -> {
 					final Baggage bean = context.getBean(Baggage.class);
 					BDDAssertions.then(bean.fields)
-							.containsExactly(BaggageField.create("test-key"));
+							.containsExactly(BaggageField.create("bp"));
 				}));
 	}
 
 	@Test
 	public void should_combine_baggage_beans_and_properties() {
-		this.contextRunner.withPropertyValues("spring.sleuth.local-keys=test-key")
+		this.contextRunner.withPropertyValues("spring.sleuth.local-keys=bp")
 				.withUserConfiguration(WithBaggageBeans.class, Baggage.class)
 				.run((context -> {
 					final Baggage bean = context.getBean(Baggage.class);
 					BDDAssertions.then(bean.fields).containsOnly(
-							BaggageField.create("userId"),
-							BaggageField.create("userName"),
-							BaggageField.create("test-key"));
+							BaggageField.create("country-code"),
+							BaggageField.create("x-vcap-request-id"),
+							BaggageField.create("bp"));
 				}));
 	}
 
@@ -151,13 +151,13 @@ public class TraceAutoConfigurationTests {
 	static class WithBaggageBeans {
 
 		@Bean
-		BaggagePropagationConfig userId() {
-			return SingleBaggageField.remote(BaggageField.create("userId"));
+		BaggagePropagationConfig countryCode() {
+			return SingleBaggageField.remote(BaggageField.create("country-code"));
 		}
 
 		@Bean
-		BaggagePropagationConfig userName() {
-			return SingleBaggageField.remote(BaggageField.create("userName"));
+		BaggagePropagationConfig requestId() {
+			return SingleBaggageField.remote(BaggageField.create("x-vcap-request-id"));
 		}
 
 	}

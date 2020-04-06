@@ -16,7 +16,7 @@
 |spring.sleuth.integration.enabled | true | Enable Spring Integration sleuth instrumentation.
 |spring.sleuth.integration.patterns | [!hystrixStreamOutput*, *, !channel*] | An array of patterns against which channel names will be matched. @see org.springframework.integration.config.GlobalChannelInterceptor#patterns() Defaults to any channel name not matching the Hystrix Stream and functional Stream channel names.
 |spring.sleuth.integration.websockets.enabled | true | Enable tracing for WebSockets.
-|spring.sleuth.local-keys |  | Same as {@link #propagationKeys} except that this field is not propagated to remote services. @see brave.propagation.ExtraFieldPropagation.FactoryBuilder#addRedactedField(String)
+|spring.sleuth.local-keys |  | Same as {@link #remoteKeys} except that this field is not propagated to remote services. @see brave.baggage.BaggagePropagationConfig.SingleBaggageField#local(BaggageField)
 |spring.sleuth.log.slf4j.enabled | true | Enable a {@link Slf4jScopeDecorator} that prints tracing information in the logs.
 |spring.sleuth.log.slf4j.whitelisted-mdc-keys |  | A list of keys to be put from baggage to MDC.
 |spring.sleuth.messaging.enabled | false | Should messaging be turned on.

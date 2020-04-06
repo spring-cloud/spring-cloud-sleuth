@@ -42,13 +42,14 @@ import static org.assertj.core.api.Assertions.assertThat;
  */
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.NONE, properties = {
 		"spring.sleuth.baggage-keys=my-baggage,my-baggage-two",
-		"spring.sleuth.remote-keys=country-code", "spring.sleuth.local-keys=my-local",
-		"spring.sleuth.log.slf4j.whitelisted-mdc-keys=my-baggage,country-code,my-local" })
+		"spring.sleuth.remote-keys=country-code", "spring.sleuth.local-keys=bp",
+		"spring.sleuth.log.slf4j.whitelisted-mdc-keys=my-baggage,country-code,bp" })
 @SpringBootConfiguration
 @EnableAutoConfiguration
 public class Slf4JSpanLoggerTest {
 
 	static final BaggageField COUNTRY_CODE = BaggageField.create("country-code");
+	static final BaggageField BUSINESS_PROCESS = BaggageField.create("bp");
 
 	@Autowired
 	Tracer tracer;
@@ -81,19 +82,19 @@ public class Slf4JSpanLoggerTest {
 	public void should_set_entries_to_mdc_from_span_with_baggage() throws Exception {
 		ExtraFieldPropagation.set(this.span.context(), "my-baggage", "my-value");
 		COUNTRY_CODE.updateValue(this.span.context(), "FO");
-		ExtraFieldPropagation.set(this.span.context(), "my-local", "my-local-value");
+		BUSINESS_PROCESS.updateValue(this.span.context(), "ALM");
 		Scope scope = this.slf4jScopeDecorator.decorateScope(this.span.context(), () -> {
 		});
 
 		assertThat(MDC.get("my-baggage")).isEqualTo("my-value");
 		assertThat(MDC.get(COUNTRY_CODE.name())).isEqualTo("FO");
-		assertThat(MDC.get("my-local")).isEqualTo("my-local-value");
+		assertThat(MDC.get(BUSINESS_PROCESS.name())).isEqualTo("ALM");
 
 		scope.close();
 
 		assertThat(MDC.get("my-baggage")).isNullOrEmpty();
-		assertThat(MDC.get(COUNTRY_CODE.name())).isNullOrEmpty();
-		assertThat(MDC.get("my-local")).isNullOrEmpty();
+		assertThat(MDC.get(COUNTRY_CODE.name())).isNull();
+		assertThat(MDC.get(BUSINESS_PROCESS.name())).isNull();
 	}
 
 	@Test
@@ -178,7 +179,7 @@ public class Slf4JSpanLoggerTest {
 				.asInstanceOf(
 						InstanceOfAssertFactories.array(SingleCorrelationField[].class))
 				.extracting(SingleCorrelationField::name).containsOnly("traceId",
-						"parentId", "spanId", "spanExportable", "my-baggage", "my-local",
+						"parentId", "spanId", "spanExportable", "my-baggage", "bp",
 						COUNTRY_CODE.name()); // my-baggage-two is not in the whitelist
 	}
 
