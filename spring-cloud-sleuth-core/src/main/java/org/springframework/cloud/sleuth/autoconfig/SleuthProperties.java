@@ -19,8 +19,8 @@ package org.springframework.cloud.sleuth.autoconfig;
 import java.util.ArrayList;
 import java.util.List;
 
-import brave.baggage.BaggagePropagationConfig;
 import brave.baggage.BaggageField;
+import brave.baggage.BaggagePropagationConfig;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 

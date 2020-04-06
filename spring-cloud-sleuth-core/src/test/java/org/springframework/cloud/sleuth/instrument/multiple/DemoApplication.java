@@ -52,7 +52,7 @@ interface Sender {
 @RestController
 @MessageEndpoint
 @IntegrationComponentScan
-public class DemoApplication {z
+public class DemoApplication {
 
 	private static final Log log = LogFactory.getLog(DemoApplication.class);
 
