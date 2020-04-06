@@ -17,10 +17,10 @@
 package org.springframework.cloud.sleuth.autoconfig;
 
 import brave.TracingCustomizer;
+import brave.baggage.BaggagePropagationCustomizer;
 import brave.http.HttpTracingCustomizer;
 import brave.messaging.MessagingTracingCustomizer;
 import brave.propagation.CurrentTraceContextCustomizer;
-import brave.propagation.ExtraFieldCustomizer;
 import brave.propagation.Propagation;
 import brave.rpc.RpcTracingCustomizer;
 import brave.sampler.Sampler;
@@ -61,7 +61,7 @@ public class TraceAutoConfigurationCustomizersTests {
 	}
 
 	@Test
-	public void should_apply_extra_field_customizer_when_no_extra_properties_are_defined() {
+	public void should_apply_baggage_customizer_when_no_baggage_properties_are_defined() {
 		this.contextRunner.run((context) -> {
 			Customizers bean = context.getBean(Customizers.class);
 
@@ -76,7 +76,7 @@ public class TraceAutoConfigurationCustomizersTests {
 	private void shouldApplyCustomizations(Customizers bean) {
 		then(bean.tracingCustomizerApplied).isTrue();
 		then(bean.contextCustomizerApplied).isTrue();
-		then(bean.extraFieldCustomizerApplied).isTrue();
+		then(bean.baggagePropagationCustomizerApplied).isTrue();
 		then(bean.httpCustomizerApplied).isTrue();
 		then(bean.rpcCustomizerApplied).isTrue();
 	}
@@ -99,7 +99,7 @@ public class TraceAutoConfigurationCustomizersTests {
 
 		boolean contextCustomizerApplied;
 
-		boolean extraFieldCustomizerApplied;
+		boolean baggagePropagationCustomizerApplied;
 
 		boolean httpCustomizerApplied;
 
@@ -118,8 +118,8 @@ public class TraceAutoConfigurationCustomizersTests {
 		}
 
 		@Bean
-		ExtraFieldCustomizer sleuthExtraFieldCustomizer() {
-			return builder -> extraFieldCustomizerApplied = true;
+		BaggagePropagationCustomizer sleuthBaggagePropagationCustomizer() {
+			return builder -> baggagePropagationCustomizerApplied = true;
 		}
 
 		@Bean

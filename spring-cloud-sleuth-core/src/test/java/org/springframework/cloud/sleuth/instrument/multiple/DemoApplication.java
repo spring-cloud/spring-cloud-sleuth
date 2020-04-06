@@ -20,7 +20,9 @@ import java.util.Arrays;
 import java.util.List;
 
 import brave.Span;
+import brave.Tags;
 import brave.Tracer;
+import brave.baggage.BaggageField;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -73,6 +75,11 @@ public class DemoApplication {
 			@RequestHeader HttpHeaders headers) {
 		this.sender.send(message);
 		this.httpSpan = this.tracer.currentSpan();
+
+		// tag what was propagated
+		BaggageField baz = BaggageField.getByName(httpSpan.context(), "baz");
+		Tags.BAGGAGE_FIELD.tag(baz, httpSpan);
+
 		return new Greeting(message);
 	}
 

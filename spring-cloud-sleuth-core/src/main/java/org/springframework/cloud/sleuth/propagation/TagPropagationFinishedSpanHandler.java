@@ -16,51 +16,38 @@
 
 package org.springframework.cloud.sleuth.propagation;
 
-import java.util.AbstractMap;
-import java.util.Arrays;
-import java.util.List;
+import java.util.LinkedHashSet;
+import java.util.Set;
+import java.util.TreeSet;
 
+import brave.Tags;
+import brave.baggage.BaggageField;
 import brave.handler.FinishedSpanHandler;
 import brave.handler.MutableSpan;
-import brave.propagation.ExtraFieldPropagation;
 import brave.propagation.TraceContext;
 
-import org.springframework.cloud.sleuth.autoconfig.SleuthProperties;
-
-import static java.util.Objects.nonNull;
-
 /**
- * Finish span handler which adds extra propagation fields to span tags, so spans could be
- * looked up by its baggage.
+ * Finish span handler which adds baggage to span tags, so spans could be looked up by a
+ * baggage name.
  *
  * @author Taras Danylchuk
  * @since 2.1.0
  */
 public class TagPropagationFinishedSpanHandler extends FinishedSpanHandler {
 
-	private final SleuthProperties sleuthProperties;
+	private final Set<BaggageField> baggageToTag = new LinkedHashSet<>();
 
-	private final SleuthTagPropagationProperties tagPropagationProperties;
-
-	public TagPropagationFinishedSpanHandler(SleuthProperties sleuthProperties,
+	public TagPropagationFinishedSpanHandler(
 			SleuthTagPropagationProperties tagPropagationProperties) {
-		this.sleuthProperties = sleuthProperties;
-		this.tagPropagationProperties = tagPropagationProperties;
+		Set<String> keys = new TreeSet<>(String.CASE_INSENSITIVE_ORDER);
+		keys.addAll(tagPropagationProperties.getWhitelistedKeys());
+		keys.forEach(key -> baggageToTag.add(BaggageField.create(key)));
 	}
 
 	@Override
 	public boolean handle(TraceContext context, MutableSpan span) {
-		for (List<String> strings : Arrays.asList(this.sleuthProperties.getBaggageKeys(),
-				this.sleuthProperties.getPropagationKeys())) {
-			for (String key : strings) {
-				if (this.tagPropagationProperties.getWhitelistedKeys().contains(key)) {
-					AbstractMap.SimpleEntry<String, String> entry = new AbstractMap.SimpleEntry<>(
-							key, ExtraFieldPropagation.get(context, key));
-					if (nonNull(entry.getValue())) {
-						span.tag(entry.getKey(), entry.getValue());
-					}
-				}
-			}
+		for (BaggageField field : baggageToTag) {
+			Tags.BAGGAGE_FIELD.tag(field, context, span);
 		}
 		return true;
 	}

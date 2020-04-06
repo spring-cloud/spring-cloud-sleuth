@@ -16,22 +16,28 @@
 
 package org.springframework.cloud.sleuth.log;
 
-import brave.propagation.CurrentTraceContext;
+import java.util.List;
+
+import brave.baggage.CorrelationScopeConfig;
+import brave.baggage.CorrelationScopeDecorator;
+import brave.context.slf4j.MDCScopeDecorator;
+import brave.propagation.CurrentTraceContext.ScopeDecorator;
 import org.slf4j.MDC;
 
+import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.AutoConfigureBefore;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
-import org.springframework.cloud.sleuth.autoconfig.SleuthProperties;
+import org.springframework.cloud.sleuth.autoconfig.PropertyBasedBaggageConfiguration;
 import org.springframework.cloud.sleuth.autoconfig.TraceAutoConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 /**
  * {@link org.springframework.boot.autoconfigure.EnableAutoConfiguration
- * Auto-configuration} adds a {@link Slf4jScopeDecorator} that prints tracing information
- * in the logs.
+ * Auto-configuration} adds a {@link CorrelationScopeDecorator} that prints tracing
+ * information in the logs.
  * <p>
  *
  * @author Spencer Gibb
@@ -41,6 +47,7 @@ import org.springframework.context.annotation.Configuration;
 @Configuration(proxyBeanMethods = false)
 @ConditionalOnProperty(value = "spring.sleuth.enabled", matchIfMissing = true)
 @AutoConfigureBefore(TraceAutoConfiguration.class)
+@AutoConfigureAfter(PropertyBasedBaggageConfiguration.class)
 public class SleuthLogAutoConfiguration {
 
 	/**
@@ -54,10 +61,12 @@ public class SleuthLogAutoConfiguration {
 		@Bean
 		@ConditionalOnProperty(value = "spring.sleuth.log.slf4j.enabled",
 				matchIfMissing = true)
-		static CurrentTraceContext.ScopeDecorator slf4jSpanDecorator(
-				SleuthProperties sleuthProperties,
-				SleuthSlf4jProperties sleuthSlf4jProperties) {
-			return new Slf4jScopeDecorator(sleuthProperties, sleuthSlf4jProperties);
+		ScopeDecorator correlationScopeDecorator(
+				List<CorrelationScopeConfig> correlationScopeConfigs) {
+			CorrelationScopeDecorator.Builder builder = MDCScopeDecorator.newBuilder();
+			builder.clear();
+			correlationScopeConfigs.forEach(builder::add);
+			return builder.build();
 		}
 
 	}

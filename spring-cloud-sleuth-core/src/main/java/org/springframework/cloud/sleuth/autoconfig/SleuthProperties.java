@@ -19,6 +19,9 @@ package org.springframework.cloud.sleuth.autoconfig;
 import java.util.ArrayList;
 import java.util.List;
 
+import brave.baggage.BaggageField;
+import brave.baggage.BaggagePropagationConfig;
+
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 /**
@@ -46,8 +49,7 @@ public class SleuthProperties {
 	 * be prefixed with `baggage` before the actual key. This property is set in order to
 	 * be backward compatible with previous Sleuth versions.
 	 *
-	 * @see brave.propagation.ExtraFieldPropagation.FactoryBuilder#addPrefixedFields(String,
-	 * java.util.Collection)
+	 * @see BaggagePropagationConfig.SingleBaggageField.Builder#addKeyName(String)
 	 */
 	private List<String> baggageKeys = new ArrayList<>();
 
@@ -58,7 +60,7 @@ public class SleuthProperties {
 	 * <p>
 	 * Note: {@code fieldName} will be implicitly lower-cased.
 	 *
-	 * @see brave.propagation.ExtraFieldPropagation.FactoryBuilder#addField(String)
+	 * @see BaggagePropagationConfig.SingleBaggageField#remote(BaggageField)
 	 */
 	private List<String> propagationKeys = new ArrayList<>();
 
@@ -66,7 +68,7 @@ public class SleuthProperties {
 	 * Same as {@link #propagationKeys} except that this field is not propagated to remote
 	 * services.
 	 *
-	 * @see brave.propagation.ExtraFieldPropagation.FactoryBuilder#addRedactedField(String)
+	 * @see BaggagePropagationConfig.SingleBaggageField#local(BaggageField)
 	 */
 	private List<String> localKeys = new ArrayList<>();
 

@@ -18,8 +18,9 @@ package org.springframework.cloud.sleuth.log;
 
 import brave.Span;
 import brave.Tracer;
-import brave.baggage.CorrelationField;
+import brave.baggage.CorrelationScopeConfig.SingleCorrelationField;
 import brave.propagation.CurrentTraceContext.Scope;
+import brave.propagation.CurrentTraceContext.ScopeDecorator;
 import brave.propagation.ExtraFieldPropagation;
 import org.assertj.core.api.InstanceOfAssertFactories;
 import org.junit.jupiter.api.AfterEach;
@@ -51,7 +52,7 @@ public class Slf4JSpanLoggerTest {
 	Tracer tracer;
 
 	@Autowired
-	Slf4jScopeDecorator slf4jScopeDecorator;
+	ScopeDecorator slf4jScopeDecorator;
 
 	Span span;
 
@@ -173,10 +174,11 @@ public class Slf4JSpanLoggerTest {
 
 	@Test
 	public void should_only_include_whitelist() {
-		assertThat(this.slf4jScopeDecorator).extracting("delegate.fields")
-				.asInstanceOf(InstanceOfAssertFactories.array(CorrelationField[].class))
-				.extracting(CorrelationField::name).containsExactly("traceId", "parentId",
-						"spanId", "spanExportable", "my-baggage", "my-local",
+		assertThat(this.slf4jScopeDecorator).extracting("fields")
+				.asInstanceOf(
+						InstanceOfAssertFactories.array(SingleCorrelationField[].class))
+				.extracting(SingleCorrelationField::name).containsOnly("traceId",
+						"parentId", "spanId", "spanExportable", "my-baggage", "my-local",
 						"my-propagation"); // my-baggage-two is not in the whitelist
 	}
 
