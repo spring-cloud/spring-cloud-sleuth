@@ -12,298 +12,40 @@ include::intro.adoc[]
 
 include::features.adoc[]
 
-=== Introduction to Brave
+== Introduction to Brave
 
-IMPORTANT: Starting with version `2.0.0`, Spring Cloud Sleuth uses
-https://github.com/openzipkin/brave[Brave] as the tracing library.
-For your convenience, we embed part of the Brave's docs here.
+Brave is a distributed tracing instrumentation library. Brave typically
+intercepts production requests to gather timing data, correlate and propagate
+trace contexts. While typically trace data is sent to Zipkin server,
+third-party plugins are available to send to alternate services such as Amazon
+X-Ray.
 
-IMPORTANT: In the vast majority of cases you need to just use the `Tracer`
-or `SpanCustomizer` beans from Brave that Sleuth provides. The documentation below contains
-a high overview of what Brave is and how it works.
+Spring Cloud Sleuth is a layer over https://github.com/openzipkin/brave[Brave].
+It configures everything you need to get started with tracing. Sleuth
+configures where trace data (spans) are reported to, how many traces to keep
+(sampling), if remote fields (baggage) and which libraries are traced.
+Sleuth also adds annotation based tracing features and some instrumentation not
+available otherwise, such as Reactor.
 
-// TODO: We should link, not include. We have no idea when that content will change and so no way to keep our copy current. I also have no idea what I should edit, because I don't know what is ours and what is Brave's.
+=== Brave Basics
 
-Brave is a library used to capture and report latency information about distributed operations to Zipkin.
-Most users do not use Brave directly. They use libraries or frameworks rather than employ Brave on their behalf.
+Most instrumentation work is done for you by default. Sleuth provides beans to
+allow you to change what's traced, and it even provides annotations to avoid
+using tracing libraries! All of this is explained later in this document.
 
-This module includes a tracer that creates and joins spans that model the latency of potentially distributed work.
-It also includes libraries to propagate the trace context over network boundaries (for example, with HTTP headers).
+That said, you might want to know more about how things work underneath. Here
+are some pointers.
 
-==== Tracing
+Here are the most core types you might use:
+* `SpanCustomizer` - to change the span currently in progress
+* `Tracer` - to get a start new spans ad-hoc
 
-Most importantly, you need a `brave.Tracer`, configured to https://github.com/openzipkin/zipkin-reporter-java[report to Zipkin].
-
-The following example setup sends trace data (spans) to Zipkin over HTTP (as opposed to Kafka):
-
-```java
-
-class MyClass {
-
-    private final Tracer tracer;
-
-    // Tracer will be autowired
-    MyClass(Tracer tracer) {
-        this.tracer = tracer;
-    }
-
-    void doSth() {
-        Span span = tracer.newTrace().name("encode").start();
-        // ...
-    }
-}
-```
-
-IMPORTANT: If your span contains a name longer than 50 chars, then that name is truncated to 50 chars.
-Your names have to be explicit and concrete.
-Big names lead to latency issues and sometimes even thrown exceptions.
-
-The tracer creates and joins spans that model the latency of potentially distributed work.
-It can employ sampling to reduce overhead during the process, to reduce the amount of data sent to Zipkin, or both.
-
-Spans returned by a tracer report data to Zipkin when finished or do nothing if unsampled.
-After starting a span, you can annotate events of interest or add tags containing details or lookup keys.
-
-Spans have a context that includes trace identifiers that place the span at the correct spot in the tree representing the distributed operation.
-
-==== Local Tracing
-
-When tracing code that never leaves your process, run it inside a scoped span.
-
-```java
-@Autowired Tracer tracer;
-
-// Start a new trace or a span within an existing trace representing an operation
-ScopedSpan span = tracer.startScopedSpan("encode");
-try {
-  // The span is in "scope" meaning downstream code such as loggers can see trace IDs
-  return encoder.encode();
-} catch (RuntimeException | Error e) {
-  span.error(e); // Unless you handle exceptions, you might not know the operation failed!
-  throw e;
-} finally {
-  span.finish(); // always finish the span
-}
-```
-
-When you need more features, or finer control, use the `Span` type:
-```java
-@Autowired Tracer tracer;
-
-// Start a new trace or a span within an existing trace representing an operation
-Span span = tracer.nextSpan().name("encode").start();
-// Put the span in "scope" so that downstream code such as loggers can see trace IDs
-try (SpanInScope ws = tracer.withSpanInScope(span)) {
-  return encoder.encode();
-} catch (RuntimeException | Error e) {
-  span.error(e); // Unless you handle exceptions, you might not know the operation failed!
-  throw e;
-} finally {
-  span.finish(); // note the scope is independent of the span. Always finish a span.
-}
-```
-
-Both of the above examples report the exact same span on finish!
-
-In the above example, the span will be either a new root span or the
-next child in an existing trace.
-
-
-==== Customizing Spans
-
-Once you have a span, you can add tags to it.
-The tags can be used as lookup keys or details.
-For example, you might add a tag with your runtime version, as shown in the following example:
-
-```java
-span.tag("clnt/finagle.version", "6.36.0");
-```
-
-When exposing the ability to customize spans to third parties, prefer `brave.SpanCustomizer` as opposed to `brave.Span`.
-The former is simpler to understand and test and does not tempt users with span lifecycle hooks.
-
-```java
-interface MyTraceCallback {
-  void request(Request request, SpanCustomizer customizer);
-}
-```
-
-Since `brave.Span` implements `brave.SpanCustomizer`, you can pass it to users, as shown in the following example:
-
-```java
-for (MyTraceCallback callback : userCallbacks) {
-  callback.request(request, span);
-}
-```
-
-==== Implicitly Looking up the Current Span
-
-Sometimes, you do not know if a trace is in progress or not, and you do not want users to do null checks.
-`brave.CurrentSpanCustomizer` handles this problem by adding data to any span that's in progress or drops, as shown in the following example:
-
-Ex.
-```java
-// The user code can then inject this without a chance of it being null.
-@Autowired SpanCustomizer span;
-
-void userCode() {
-  span.annotate("tx.started");
-  ...
-}
-```
-
-==== RPC tracing
-
-TIP: Check for https://github.com/openzipkin/brave/tree/master/instrumentation[instrumentation written here] and https://zipkin.io/pages/existing_instrumentations.html[Zipkin's list] before rolling your own RPC instrumentation.
-
-RPC tracing is often done automatically by interceptors. Behind the scenes, they add tags and events that relate to their role in an RPC operation.
-
-The following example shows how to add a client span:
-
-```java
-@Autowired Tracing tracing;
-@Autowired Tracer tracer;
-
-// before you send a request, add metadata that describes the operation
-span = tracer.nextSpan().name(service + "/" + method).kind(CLIENT);
-span.tag("myrpc.version", "1.0.0");
-span.remoteServiceName("backend");
-span.remoteIpAndPort("172.3.4.1", 8108);
-
-// Add the trace context to the request, so it can be propagated in-band
-tracing.propagation().injector(Request::addHeader)
-                     .inject(span.context(), request);
-
-// when the request is scheduled, start the span
-span.start();
-
-// if there is an error, tag the span
-span.tag("error", error.getCode());
-// or if there is an exception
-span.error(exception);
-
-// when the response is complete, finish the span
-span.finish();
-```
-
-===== One-Way tracing
-
-Sometimes, you need to model an asynchronous operation where there is a
-request but no response. In normal RPC tracing, you use `span.finish()`
-to indicate that the response was received. In one-way tracing, you use
-`span.flush()` instead, as you do not expect a response.
-
-The following example shows how a client might model a one-way operation:
-```java
-@Autowired Tracing tracing;
-@Autowired Tracer tracer;
-
-// start a new span representing a client request
-oneWaySend = tracer.nextSpan().name(service + "/" + method).kind(CLIENT);
-
-// Add the trace context to the request, so it can be propagated in-band
-tracing.propagation().injector(Request::addHeader)
-                     .inject(oneWaySend.context(), request);
-
-// fire off the request asynchronously, totally dropping any response
-request.execute();
-
-// start the client side and flush instead of finish
-oneWaySend.start().flush();
-```
-
-The following example shows how a server might handle a one-way operation:
-```java
-@Autowired Tracing tracing;
-@Autowired Tracer tracer;
-
-// pull the context out of the incoming request
-extractor = tracing.propagation().extractor(Request::getHeader);
-
-// convert that context to a span which you can name and add tags to
-oneWayReceive = nextSpan(tracer, extractor.extract(request))
-    .name("process-request")
-    .kind(SERVER)
-    ... add tags etc.
-
-// start the server side and flush instead of finish
-oneWayReceive.start().flush();
-
-// you should not modify this span anymore as it is complete. However,
-// you can create children to represent follow-up work.
-next = tracer.newSpan(oneWayReceive.context()).name("step2").start();
-```
+Here are the most relevant links from the OpenZipkin Brave project:
+* [Brave's core library](https://github.com/openzipkin/brave/tree/master/brave)
+* [Baggage (propagated fields)](https://github.com/openzipkin/brave/tree/master/brave#baggage)
+* [HTTP tracing](https://github.com/openzipkin/brave/tree/master/instrumentation/http)
 
 == Sampling
-
-Sampling may be employed to reduce the data collected and reported out of process.
-When a span is not sampled, it adds no overhead (a noop).
-
-Sampling is an up-front decision, meaning that the decision to report data is made at the first operation in a trace and that decision is propagated downstream.
-
-By default, a global sampler applies a single rate to all traced operations.
-`Tracer.Builder.sampler` controls this setting, and it defaults to tracing every request.
-
-=== Declarative sampling
-
-Some applications need to sample based on the type or annotations of a java method.
-
-Most users use a framework interceptor to automate this sort of policy.
-The following example shows how that might work internally:
-
-```java
-@Autowired Tracer tracer;
-
-// derives a sample rate from an annotation on a java method
-DeclarativeSampler<Traced> sampler = DeclarativeSampler.create(Traced::sampleRate);
-
-@Around("@annotation(traced)")
-public Object traceThing(ProceedingJoinPoint pjp, Traced traced) throws Throwable {
-  // When there is no trace in progress, this decides using an annotation
-  Sampler decideUsingAnnotation = declarativeSampler.toSampler(traced);
-  Tracer tracer = tracer.withSampler(decideUsingAnnotation);
-
-  // This code looks the same as if there was no declarative override
-  ScopedSpan span = tracer.startScopedSpan(spanName(pjp));
-  try {
-    return pjp.proceed();
-  } catch (RuntimeException | Error e) {
-    span.error(e);
-    throw e;
-  } finally {
-    span.finish();
-  }
-}
-```
-
-=== Custom sampling
-
-Depending on what the operation is, you may want to apply different policies.
-For example, you might not want to trace requests to static resources such as images, or you might want to trace all requests to a new api.
-
-Most users use a framework interceptor to automate this sort of policy.
-The following example shows how that might work internally:
-
-```java
-@Autowired Tracer tracer;
-@Autowired Sampler fallback;
-
-Span nextSpan(final Request input) {
-  Sampler requestBased = Sampler() {
-    @Override public boolean isSampled(long traceId) {
-      if (input.url().startsWith("/experimental")) {
-        return true;
-      } else if (input.url().startsWith("/static")) {
-        return false;
-      }
-      return fallback.isSampled(traceId);
-    }
-  };
-  return tracer.withSampler(requestBased).nextSpan();
-}
-```
-
-=== Sampling in Spring Cloud Sleuth
 
 By default Spring Cloud Sleuth sets all spans to non-exportable.
 That means that traces appear in logs but not in any remote store.
@@ -320,126 +62,12 @@ A sampler can be installed by creating a bean definition, as shown in the follow
 include::{project-root}/spring-cloud-sleuth-core/src/test/java/org/springframework/cloud/sleuth/documentation/SpringCloudSleuthDocTests.java[tags=always_sampler,indent=0]
 ----
 
-TIP: You can set the HTTP header `X-B3-Flags` to `1`, or, when doing messaging, you can set the `spanFlags` header to `1`.
+TIP: You can set the HTTP header `b3` to `1`, or, when doing messaging, you can set the `spanFlags` header to `1`.
 Doing so forces the current span to be exportable regardless of the sampling decision.
 
 In order to use the rate-limited sampler set the `spring.sleuth.sampler.rate` property to choose an amount of traces to accept on a per-second interval. The minimum number is 0 and the max is 2,147,483,647 (max int).
 
-== Propagation
-
-Propagation is needed to ensure activities originating from the same root are collected together in the same trace.
-The most common propagation approach is to copy a trace context from a client by sending an RPC request to a server receiving it.
-
-For example, when a downstream HTTP call is made, its trace context is encoded as request headers and sent along with it, as shown in the following image:
-
-```
-   Client Span                                                Server Span
-┌──────────────────┐                                       ┌──────────────────┐
-│                  │                                       │                  │
-│   TraceContext   │           Http Request Headers        │   TraceContext   │
-│ ┌──────────────┐ │          ┌───────────────────┐        │ ┌──────────────┐ │
-│ │ TraceId      │ │          │ X─B3─TraceId      │        │ │ TraceId      │ │
-│ │              │ │          │                   │        │ │              │ │
-│ │ ParentSpanId │ │ Extract  │ X─B3─ParentSpanId │ Inject │ │ ParentSpanId │ │
-│ │              ├─┼─────────>│                   ├────────┼>│              │ │
-│ │ SpanId       │ │          │ X─B3─SpanId       │        │ │ SpanId       │ │
-│ │              │ │          │                   │        │ │              │ │
-│ │ Sampled      │ │          │ X─B3─Sampled      │        │ │ Sampled      │ │
-│ └──────────────┘ │          └───────────────────┘        │ └──────────────┘ │
-│                  │                                       │                  │
-└──────────────────┘                                       └──────────────────┘
-```
-
-The names above are from https://github.com/openzipkin/b3-propagation[B3 Propagation], which is built-in to Brave and has implementations in many languages and frameworks.
-
-Most users use a framework interceptor to automate propagation.
-The next two examples show how that might work for a client and a server.
-
-The following example shows how client-side propagation might work:
-
-```java
-@Autowired Tracing tracing;
-
-// configure a function that injects a trace context into a request
-injector = tracing.propagation().injector(Request.Builder::addHeader);
-
-// before a request is sent, add the current span's context to it
-injector.inject(span.context(), request);
-```
-
-The following example shows how server-side propagation might work:
-
-```java
-@Autowired Tracing tracing;
-@Autowired Tracer tracer;
-
-// configure a function that extracts the trace context from a request
-extractor = tracing.propagation().extractor(Request::getHeader);
-
-// when a server receives a request, it joins or starts a new trace
-span = tracer.nextSpan(extractor.extract(request));
-```
-
-=== Propagating extra fields
-
-Sometimes you need to propagate extra fields, such as a request ID or an alternate trace context.
-For example, if you are in a Cloud Foundry environment, you might want to pass the request ID, as shown in the following example:
-
-```java
-// when you initialize the builder, define the extra field you want to propagate
-Tracing.newBuilder().propagationFactory(
-  ExtraFieldPropagation.newFactory(B3Propagation.FACTORY, "x-vcap-request-id")
-);
-
-// later, you can tag that request ID or use it in log correlation
-requestId = ExtraFieldPropagation.get("x-vcap-request-id");
-```
-
-You may also need to propagate a trace context that you are not using.
-For example, you may be in an Amazon Web Services environment but not be reporting data to X-Ray.
-To ensure X-Ray can co-exist correctly, pass-through its tracing header, as shown in the following example:
-
-```java
-tracingBuilder.propagationFactory(
-  ExtraFieldPropagation.newFactory(B3Propagation.FACTORY, "x-amzn-trace-id")
-);
-```
-
-TIP: In Spring Cloud Sleuth all elements of the tracing builder `Tracing.newBuilder()`
-are defined as beans. So if you want to pass a custom `PropagationFactory`, it's enough
-for you to create a bean of that type and we will set it in the `Tracing` bean.
-
-[[prefixed-fields]]
-==== Prefixed fields
-
-If they follow a common pattern, you can also prefix fields.
-The following example shows how to propagate `x-vcap-request-id` the field as-is but send the `country-code` and `user-id` fields on the wire as `x-baggage-country-code` and `x-baggage-user-id`, respectively:
-
-```java
-Tracing.newBuilder().propagationFactory(
-  ExtraFieldPropagation.newFactoryBuilder(B3Propagation.FACTORY)
-                       .addField("x-vcap-request-id")
-                       .addPrefixedFields("x-baggage-", Arrays.asList("country-code", "user-id"))
-                       .build()
-);
-```
-
-Later, you can call the following code to affect the country code of the current trace context:
-
-```java
-ExtraFieldPropagation.set("x-country-code", "FO");
-String countryCode = ExtraFieldPropagation.get("x-country-code");
-```
-
-Alternatively, if you have a reference to a trace context, you can use it explicitly, as shown in the following example:
-
-```java
-ExtraFieldPropagation.set(span.context(), "x-country-code", "FO");
-String countryCode = ExtraFieldPropagation.get(span.context(), "x-country-code");
-```
-
-IMPORTANT: A difference from previous versions of Sleuth is that, with Brave, you must pass the list of baggage keys.
-There are the following properties to achieve this.
+== Baggage
 With the `spring.sleuth.baggage-keys`, you set keys that get prefixed with `baggage-` for HTTP calls and `baggage_` for messaging.
 You can also use the `spring.sleuth.propagation-keys` property to pass a list of prefixed keys that are propagated to remote services without any prefix.
 You can also use the `spring.sleuth.local-keys` property to pass a list keys that will be propagated locally but will not be propagated over the wire.
@@ -453,123 +81,6 @@ IMPORTANT: Remember that adding entries to MDC can drastically decrease the perf
 
 If you want to add the baggage entries as tags, to make it possible to search for spans via the baggage entries, you can set the value of
 `spring.sleuth.propagation.tag.whitelisted-keys` with a list of whitelisted baggage keys. To disable the feature you have to pass the `spring.sleuth.propagation.tag.enabled=false` property.
-
-==== Extracting a Propagated Context
-
-The `TraceContext.Extractor<C>` reads trace identifiers and sampling status from an incoming request or message.
-The carrier is usually a request object or headers.
-
-This utility is used in standard instrumentation (such as `HttpServerHandler`) but can also be used for custom RPC or messaging code.
-
-`TraceContextOrSamplingFlags` is usually used only with `Tracer.nextSpan(extracted)`, unless you are
-sharing span IDs between a client and a server.
-
-==== Sharing span IDs between Client and Server
-
-A normal instrumentation pattern is to create a span representing the server side of an RPC.
-`Extractor.extract` might return a complete trace context when applied to an incoming client request.
-`Tracer.joinSpan` attempts to continue this trace, using the same span ID if supported or creating a child span
-if not. When the span ID is shared, the reported data includes a flag saying so.
-
-The following image shows an example of B3 propagation:
-
-```
-                              ┌───────────────────┐      ┌───────────────────┐
- Incoming Headers             │   TraceContext    │      │   TraceContext    │
-┌───────────────────┐(extract)│ ┌───────────────┐ │(join)│ ┌───────────────┐ │
-│ X─B3-TraceId      │─────────┼─┼> TraceId      │ │──────┼─┼> TraceId      │ │
-│                   │         │ │               │ │      │ │               │ │
-│ X─B3-ParentSpanId │─────────┼─┼> ParentSpanId │ │──────┼─┼> ParentSpanId │ │
-│                   │         │ │               │ │      │ │               │ │
-│ X─B3-SpanId       │─────────┼─┼> SpanId       │ │──────┼─┼> SpanId       │ │
-└───────────────────┘         │ │               │ │      │ │               │ │
-                              │ │               │ │      │ │  Shared: true │ │
-                              │ └───────────────┘ │      │ └───────────────┘ │
-                              └───────────────────┘      └───────────────────┘
-```
-
-Some propagation systems forward only the parent span ID, detected when `Propagation.Factory.supportsJoin() == false`.
-In this case, a new span ID is always provisioned, and the incoming context determines the parent ID.
-
-The following image shows an example of AWS propagation:
-```
-                              ┌───────────────────┐      ┌───────────────────┐
- x-amzn-trace-id              │   TraceContext    │      │   TraceContext    │
-┌───────────────────┐(extract)│ ┌───────────────┐ │(join)│ ┌───────────────┐ │
-│ Root              │─────────┼─┼> TraceId      │ │──────┼─┼> TraceId      │ │
-│                   │         │ │               │ │      │ │               │ │
-│ Parent            │─────────┼─┼> SpanId       │ │──────┼─┼> ParentSpanId │ │
-└───────────────────┘         │ └───────────────┘ │      │ │               │ │
-                              └───────────────────┘      │ │  SpanId: New  │ │
-                                                         │ └───────────────┘ │
-                                                         └───────────────────┘
-```
-
-Note: Some span reporters do not support sharing span IDs.
-For example, if you set `Tracing.Builder.spanReporter(amazonXrayOrGoogleStackdrive)`, you should disable join by setting `Tracing.Builder.supportsJoin(false)`.
-Doing so forces a new child span on `Tracer.joinSpan()`.
-
-==== Implementing Propagation
-
-`TraceContext.Extractor<C>` is implemented by a `Propagation.Factory` plugin.
-Internally, this code creates the union type, `TraceContextOrSamplingFlags`, with one of the following:
-* `TraceContext` if trace and span IDs were present.
-* `TraceIdContext` if a trace ID was present but span IDs were not present.
-* `SamplingFlags` if no identifiers were present.
-
-Some `Propagation` implementations carry extra data from the point of extraction (for example, reading incoming headers) to injection (for example, writing outgoing headers).
-For example, it might carry a request ID.
-When implementations have extra data, they handle it as follows:
-* If a `TraceContext` were extracted, add the extra data as `TraceContext.extra()`.
-* Otherwise, add it as `TraceContextOrSamplingFlags.extra()`, which `Tracer.nextSpan` handles.
-
-== Current Tracing Component
-
-Brave supports a "`current tracing component`" concept, which should only be used when you have no other way to get a reference.
-This was made for JDBC connections, as they often initialize prior to the tracing component.
-
-The most recent tracing component instantiated is available through `Tracing.current()`.
-You can also use `Tracing.currentTracer()` to get only the tracer.
-If you use either of these methods, do not cache the result.
-Instead, look them up each time you need them.
-
-== Current Span
-
-Brave supports a "`current span`" concept which represents the in-flight operation.
-You can use `Tracer.currentSpan()` to add custom tags to a span and `Tracer.nextSpan()` to create a child of whatever is in-flight.
-
-IMPORTANT: In Sleuth, you can autowire the `Tracer` bean to retrieve the current span via
-`tracer.currentSpan()` method. To retrieve the current context just call
-`tracer.currentSpan().context()`. To get the current trace id as String
-you can use the `traceIdString()` method like this: `tracer.currentSpan().context().traceIdString()`.
-
-=== Setting a span in scope manually
-
-When writing new instrumentation, it is important to place a span you created in scope as the current span.
-Not only does doing so let users access it with `Tracer.currentSpan()`, but it also allows customizations such as SLF4J MDC to see the current trace IDs.
-
-`Tracer.withSpanInScope(Span)` facilitates this and is most conveniently employed by using the try-with-resources idiom.
-Whenever external code might be invoked (such as proceeding an interceptor or otherwise), place the span in scope, as shown in the following example:
-
-```java
-@Autowired Tracer tracer;
-
-try (SpanInScope ws = tracer.withSpanInScope(span)) {
-  return inboundRequest.invoke();
-} finally { // note the scope is independent of the span
-  span.finish();
-}
-```
-
-In edge cases, you may need to clear the current span temporarily (for example, launching a task that should not be associated with the current request). To do tso, pass null to `withSpanInScope`, as shown in the following example:
-
-```java
-@Autowired Tracer tracer;
-
-try (SpanInScope cleared = tracer.withSpanInScope(null)) {
-  startBackgroundThread();
-}
-```
 
 == Instrumentation
 
@@ -824,15 +335,19 @@ Running the preceding method with a value of `15` leads to setting a tag with a 
 
 == Customizations
 
-=== Customizers
+The `Tracer` object is fully managed by sleuth, so you rarely need to affect it. That said,
+Sleuth supports a number of `Customizer` types, that allow you to configure
+anything not already done by Sleuth with auto-configuration or properties.
 
-With Brave 5.7 you have various options of providing customizers for your project. Brave ships with
+If you define one of the following as a `Bean`, Sleuth will invoke it to
+customize behaviour:
 
-* `TracingCustomizer` - allows configuration plugins to collaborate on building an instance of `Tracing`.
-* `CurrentTraceContextCustomizer` - allows configuration plugins to collaborate on building an instance of `CurrentTraceContext`.
-* `ExtraFieldCustomizer` - allows configuration plugins to collaborate on building an instance of `ExtraFieldPropagation.Factory`.
-
-Sleuth will search for beans of those types and automatically apply customizations.
+* RpcTracingCustomizer - for RPC tagging and sampling policy
+* HttpTracingCustomizer - for HTTP tagging and sampling policy
+* MessagingTracingCustomizer - for messaging tagging and sampling policy
+* CurrentTraceContextCustomizer - to integrate decorators such as correlation.
+* BaggagePropagationCustomizer - for propagating baggage fields in process and over headers
+* CorrelationScopeDecoratorCustomizer - for scope decorations such as MDC (logging) field correlation
 
 === HTTP
 
