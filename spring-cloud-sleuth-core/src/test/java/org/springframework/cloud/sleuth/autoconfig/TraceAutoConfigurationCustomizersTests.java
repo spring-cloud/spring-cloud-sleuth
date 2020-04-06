@@ -29,6 +29,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.boot.autoconfigure.AutoConfigurations;
 import org.springframework.boot.test.context.assertj.AssertableApplicationContext;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
+import org.springframework.cloud.sleuth.baggage.TraceBaggageAutoConfiguration;
 import org.springframework.cloud.sleuth.instrument.messaging.TraceMessagingAutoConfiguration;
 import org.springframework.cloud.sleuth.instrument.rpc.TraceRpcAutoConfiguration;
 import org.springframework.cloud.sleuth.instrument.web.TraceHttpAutoConfiguration;
@@ -43,15 +44,16 @@ public class TraceAutoConfigurationCustomizersTests {
 
 	private final ApplicationContextRunner contextRunner = new ApplicationContextRunner()
 			.withConfiguration(AutoConfigurations.of(TraceAutoConfiguration.class,
-					TraceWebAutoConfiguration.class, TraceHttpAutoConfiguration.class,
-					TraceRpcAutoConfiguration.class,
+					TraceBaggageAutoConfiguration.class, TraceWebAutoConfiguration.class,
+					TraceHttpAutoConfiguration.class, TraceRpcAutoConfiguration.class,
 					FakeSpringMessagingAutoConfiguration.class,
 					TraceMessagingAutoConfiguration.class))
 			.withUserConfiguration(Customizers.class);
 
 	@Test
 	public void should_apply_customizers() {
-		this.contextRunner.withPropertyValues("spring.sleuth.remote-keys=country-code")
+		this.contextRunner
+				.withPropertyValues("spring.sleuth.baggage.remote-fields=country-code")
 				.run((context) -> {
 					Customizers bean = context.getBean(Customizers.class);
 

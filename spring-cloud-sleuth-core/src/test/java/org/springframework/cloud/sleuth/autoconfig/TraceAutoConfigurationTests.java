@@ -21,8 +21,8 @@ import java.util.List;
 import brave.Tracing;
 import brave.baggage.BaggageField;
 import brave.baggage.BaggagePropagation;
-import brave.baggage.BaggagePropagationConfig;
 import brave.baggage.BaggagePropagationConfig.SingleBaggageField;
+import brave.baggage.BaggagePropagationCustomizer;
 import brave.propagation.B3SinglePropagation;
 import brave.propagation.Propagation;
 import brave.propagation.TraceContextOrSamplingFlags;
@@ -38,15 +38,15 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.AutoConfigurations;
 import org.springframework.boot.test.context.FilteredClassLoader;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
+import org.springframework.cloud.sleuth.baggage.TraceBaggageAutoConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 public class TraceAutoConfigurationTests {
 
 	private final ApplicationContextRunner contextRunner = new ApplicationContextRunner()
-			.withConfiguration(
-					AutoConfigurations.of(PropertyBasedBaggageConfiguration.class,
-							TraceAutoConfiguration.class));
+			.withConfiguration(AutoConfigurations.of(TraceAutoConfiguration.class,
+					TraceBaggageAutoConfiguration.class));
 
 	@Test
 	public void should_apply_micrometer_reporter_metrics_when_meter_registry_bean_present() {
@@ -99,7 +99,7 @@ public class TraceAutoConfigurationTests {
 
 	@Test
 	public void should_use_local_keys_from_properties() {
-		this.contextRunner.withPropertyValues("spring.sleuth.local-keys=bp")
+		this.contextRunner.withPropertyValues("spring.sleuth.baggage.local-fields=bp")
 				.withUserConfiguration(Baggage.class).run((context -> {
 					final Baggage bean = context.getBean(Baggage.class);
 					BDDAssertions.then(bean.fields)
@@ -109,7 +109,7 @@ public class TraceAutoConfigurationTests {
 
 	@Test
 	public void should_combine_baggage_beans_and_properties() {
-		this.contextRunner.withPropertyValues("spring.sleuth.local-keys=bp")
+		this.contextRunner.withPropertyValues("spring.sleuth.baggage.local-fields=bp")
 				.withUserConfiguration(WithBaggageBeans.class, Baggage.class)
 				.run((context -> {
 					final Baggage bean = context.getBean(Baggage.class);
@@ -151,13 +151,15 @@ public class TraceAutoConfigurationTests {
 	static class WithBaggageBeans {
 
 		@Bean
-		BaggagePropagationConfig countryCode() {
-			return SingleBaggageField.remote(BaggageField.create("country-code"));
+		BaggagePropagationCustomizer countryCode() {
+			return fb -> fb
+					.add(SingleBaggageField.remote(BaggageField.create("country-code")));
 		}
 
 		@Bean
-		BaggagePropagationConfig requestId() {
-			return SingleBaggageField.remote(BaggageField.create("x-vcap-request-id"));
+		BaggagePropagationCustomizer requestId() {
+			return fb -> fb.add(
+					SingleBaggageField.remote(BaggageField.create("x-vcap-request-id")));
 		}
 
 	}

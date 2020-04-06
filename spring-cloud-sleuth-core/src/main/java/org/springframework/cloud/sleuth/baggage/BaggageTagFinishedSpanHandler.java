@@ -14,11 +14,7 @@
  * limitations under the License.
  */
 
-package org.springframework.cloud.sleuth.propagation;
-
-import java.util.LinkedHashSet;
-import java.util.Set;
-import java.util.TreeSet;
+package org.springframework.cloud.sleuth.baggage;
 
 import brave.Tags;
 import brave.baggage.BaggageField;
@@ -33,20 +29,17 @@ import brave.propagation.TraceContext;
  * @author Taras Danylchuk
  * @since 2.1.0
  */
-public class TagPropagationFinishedSpanHandler extends FinishedSpanHandler {
+class BaggageTagFinishedSpanHandler extends FinishedSpanHandler {
 
-	private final Set<BaggageField> baggageToTag = new LinkedHashSet<>();
+	final BaggageField[] fieldsToTag;
 
-	public TagPropagationFinishedSpanHandler(
-			SleuthTagPropagationProperties tagPropagationProperties) {
-		Set<String> keys = new TreeSet<>(String.CASE_INSENSITIVE_ORDER);
-		keys.addAll(tagPropagationProperties.getWhitelistedKeys());
-		keys.forEach(key -> baggageToTag.add(BaggageField.create(key)));
+	BaggageTagFinishedSpanHandler(BaggageField[] fieldsToTag) {
+		this.fieldsToTag = fieldsToTag;
 	}
 
 	@Override
 	public boolean handle(TraceContext context, MutableSpan span) {
-		for (BaggageField field : baggageToTag) {
+		for (BaggageField field : fieldsToTag) {
 			Tags.BAGGAGE_FIELD.tag(field, context, span);
 		}
 		return true;

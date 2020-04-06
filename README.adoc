@@ -302,11 +302,9 @@ Consider the following example of a Logback configuration file (named https://gi
 						{
 						"severity": "%level",
 						"service": "${springAppName:-}",
-						"trace": "%X{X-B3-TraceId:-}",
-						"span": "%X{X-B3-SpanId:-}",
-						"parent": "%X{X-B3-ParentSpanId:-}",
-						"exportable": "%X{X-Span-Export:-}",
-						"baggage": "%X{key:-}",
+						"trace": "%X{traceId:-}",
+						"span": "%X{spanId:-}",
+						"baggage": "%X{fieldName:-}",
 						"pid": "${PID:-}",
 						"thread": "%thread",
 						"class": "%logger{40}",
@@ -380,9 +378,9 @@ The following listing shows integration tests that use baggage:
 [source,yml]
 ----
 spring.sleuth:
-  local-keys:
+  local-fields:
     - bp
-  remote-keys:
+  remote-fields:
     - country-code
     - x-vcap-request-id
 ----
@@ -653,14 +651,11 @@ You can check different setups of Sleuth and Brave https://github.com/openzipkin
 2016-02-02 15:31:01.936  INFO [bar,46ab0d418373cbc9,46ab0d418373cbc9,false] 23030 --- [nio-8081-exec-4] ...
 ----
 +
-Notice the `[appname,traceId,spanId,exportable]` entries from the MDC:
+Notice the `[appname,traceId,spanId]` entries from the MDC:
 
 ** *`spanId`*: The ID of a specific operation that took place.
 ** *`appname`*: The name of the application that logged the span.
 ** *`traceId`*: The ID of the latency graph that contains the span.
-** *`exportable`*: Whether the log should be exported to Zipkin.
-When would you like the span not to be exportable?
-When you want to wrap some operation in a Span and have it written to the logs only.
 
 * Provides an abstraction over common distributed tracing data models: traces, spans (forming a DAG), annotations, and key-value annotations.
 Spring Cloud Sleuth is loosely based on HTrace but is compatible with Zipkin (Dapper).
@@ -699,7 +694,7 @@ NOTE: The SLF4J MDC is always set and logback users immediately see the trace an
 shown earlier.
 Other logging systems have to configure their own formatter to get the same result.
 The default is as follows:
-`logging.pattern.level` set to `%5p [${spring.zipkin.service.name:${spring.application.name:-}},%X{traceId:-},%X{spanId:-},%X{spanExportable:-}]`
+`logging.pattern.level` set to `%5p [${spring.zipkin.service.name:${spring.application.name:-}},%X{traceId:-},%X{spanId:-}]`
 (this is a Spring Boot feature for logback users).
 If you do not use SLF4J, this pattern is NOT automatically applied.
 
