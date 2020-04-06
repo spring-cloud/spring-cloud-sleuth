@@ -380,9 +380,6 @@ The following listing shows integration tests that use baggage:
 [source,yml]
 ----
 spring.sleuth:
-  baggage-keys:
-    - baz
-    - bizarrecase
   local-keys:
     - bp
   remote-keys:

@@ -87,10 +87,15 @@ Doing so forces the current span to be exportable regardless of the sampling dec
 In order to use the rate-limited sampler set the `spring.sleuth.sampler.rate` property to choose an amount of traces to accept on a per-second interval. The minimum number is 0 and the max is 2,147,483,647 (max int).
 
 == Baggage
-With the `spring.sleuth.baggage-keys`, you set keys that get prefixed with `baggage-` for HTTP calls and `baggage_` for messaging.
-You can also use the `spring.sleuth.remote-keys` property to pass a list of prefixed keys that are propagated to remote services without any prefix.
-You can also use the `spring.sleuth.local-keys` property to pass a list keys that will be propagated locally but will not be propagated over the wire.
-Notice that there's no `x-` in front of the header keys.
+Baggage are fields that are propagated with the trace, optionally out of process. You can use
+properties to define fields that have no special configuration such as name mapping:
+
+ * `spring.sleuth.remote-keys` is a list of header names to accept and propagate to remote services.
+ * `spring.sleuth.local-keys` is a list of names to propagate locally
+
+No prefixing applies with these keys. What you set is literally what is used.
+
+A name set in either of these properties will result in a `BaggageField` of the same name.
 
 In order to automatically set the baggage values to Slf4j's MDC, you have to set
 the `spring.sleuth.log.slf4j.whitelisted-mdc-keys` property with a list of whitelisted
@@ -101,6 +106,13 @@ IMPORTANT: Remember that adding entries to MDC can drastically decrease the perf
 
 If you want to add the baggage entries as tags, to make it possible to search for spans via the baggage entries, you can set the value of
 `spring.sleuth.propagation.tag.whitelisted-keys` with a list of whitelisted baggage keys. To disable the feature you have to pass the `spring.sleuth.propagation.tag.enabled=false` property.
+
+=== Java configuration
+
+If you need to do anything more advanced than above, do not define properties and instead use a
+`@Bean` config for the baggage fields you use.
+ * `SingleBaggageField` controls header names for one `BaggageField`.
+ * `SingleCorrelationField` controls the MDC name of one `BaggageField`, and whether updates flush.
 
 == Instrumentation
 

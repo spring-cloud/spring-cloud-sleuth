@@ -45,13 +45,12 @@ public class SleuthProperties {
 	private boolean supportsJoin = true;
 
 	/**
-	 * List of baggage key names that should be propagated out of process. These keys will
-	 * be prefixed with `baggage` before the actual key. This property is set in order to
-	 * be backward compatible with previous Sleuth versions.
+	 * Same as {@link #remoteKeys} except that this field is not propagated to remote
+	 * services.
 	 *
-	 * @see BaggagePropagationConfig.SingleBaggageField.Builder#addKeyName(String)
+	 * @see BaggagePropagationConfig.SingleBaggageField#local(BaggageField)
 	 */
-	private List<String> baggageKeys = new ArrayList<>();
+	private List<String> localKeys = new ArrayList<>();
 
 	/**
 	 * List of fields that are referenced the same in-process as it is on the wire. For
@@ -61,16 +60,9 @@ public class SleuthProperties {
 	 * Note: {@code fieldName} will be implicitly lower-cased.
 	 *
 	 * @see BaggagePropagationConfig.SingleBaggageField#remote(BaggageField)
+	 * @see BaggagePropagationConfig.SingleBaggageField.Builder#addKeyName(String)
 	 */
-	private List<String> propagationKeys = new ArrayList<>();
-
-	/**
-	 * Same as {@link #propagationKeys} except that this field is not propagated to remote
-	 * services.
-	 *
-	 * @see BaggagePropagationConfig.SingleBaggageField#local(BaggageField)
-	 */
-	private List<String> localKeys = new ArrayList<>();
+	private List<String> remoteKeys = new ArrayList<>();
 
 	public boolean isEnabled() {
 		return this.enabled;
@@ -96,28 +88,20 @@ public class SleuthProperties {
 		this.supportsJoin = supportsJoin;
 	}
 
-	public List<String> getBaggageKeys() {
-		return this.baggageKeys;
-	}
-
-	public void setBaggageKeys(List<String> baggageKeys) {
-		this.baggageKeys = baggageKeys;
-	}
-
-	public List<String> getPropagationKeys() {
-		return this.propagationKeys;
-	}
-
-	public void setPropagationKeys(List<String> propagationKeys) {
-		this.propagationKeys = propagationKeys;
-	}
-
 	public List<String> getLocalKeys() {
 		return this.localKeys;
 	}
 
 	public void setLocalKeys(List<String> localKeys) {
 		this.localKeys = localKeys;
+	}
+
+	public List<String> getRemoteKeys() {
+		return this.remoteKeys;
+	}
+
+	public void setRemoteKeys(List<String> remoteKeys) {
+		this.remoteKeys = remoteKeys;
 	}
 
 }

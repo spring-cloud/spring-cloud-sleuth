@@ -48,7 +48,7 @@ public class TraceAutoConfigurationPropagationCustomizationTests {
 
 	@Test
 	public void allowsCustomization() {
-		this.contextRunner.withPropertyValues("spring.sleuth.baggage-keys=my-baggage")
+		this.contextRunner.withPropertyValues("spring.sleuth.remote-keys=country-code")
 				.run((context) -> {
 					BDDAssertions.then(context.getBean(Propagation.Factory.class))
 							.hasFieldOrPropertyWithValue("delegate",
@@ -79,7 +79,7 @@ public class TraceAutoConfigurationPropagationCustomizationTests {
 
 	@Test
 	public void allowsCustomizationOfBuilder() {
-		this.contextRunner.withPropertyValues("spring.sleuth.baggage-keys=my-baggage")
+		this.contextRunner.withPropertyValues("spring.sleuth.remote-keys=country-code")
 				.withUserConfiguration(CustomPropagationFactoryBuilderConfig.class)
 				.run((context) -> BDDAssertions
 						.then(context.getBean(Propagation.Factory.class))
