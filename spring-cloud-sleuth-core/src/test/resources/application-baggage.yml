@@ -1,0 +1,8 @@
+spring:
+  sleuth:
+    baggage:
+      remoteFields:
+        - country-code
+        - x-vcap-request-id
+      tagFields:
+        - country-code

@@ -118,7 +118,7 @@ public class TraceFilterWebIntegrationTests {
 		String[] split = capture.toString().split("\n");
 		List<String> list = Arrays.stream(split)
 				.filter(s -> s.contains("Uncaught exception thrown"))
-				.filter(s -> s.contains(hex + "," + hex + ",true]"))
+				.filter(s -> s.contains(hex + "," + hex + "]"))
 				.collect(Collectors.toList());
 		then(list).isNotEmpty();
 	}

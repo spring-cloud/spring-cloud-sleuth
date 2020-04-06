@@ -56,8 +56,9 @@ import static org.springframework.boot.test.context.SpringBootTest.WebEnvironmen
 
 @SpringBootTest(classes = MultipleHopsIntegrationTests.Config.class,
 		webEnvironment = RANDOM_PORT,
-		properties = { "spring.sleuth.remote-keys=x-vcap-request-id,country-code",
-				"spring.sleuth.local-keys=bp" })
+		properties = {
+				"spring.sleuth.baggage.remote-fields=x-vcap-request-id,country-code",
+				"spring.sleuth.baggage.local-fields=bp" })
 public class MultipleHopsIntegrationTests {
 
 	static final BaggageField REQUEST_ID = BaggageField.create("x-vcap-request-id");

@@ -25,11 +25,7 @@ import brave.ErrorParser;
 import brave.Tracer;
 import brave.Tracing;
 import brave.TracingCustomizer;
-import brave.baggage.BaggagePropagation;
-import brave.baggage.BaggagePropagationConfig;
-import brave.baggage.BaggagePropagationCustomizer;
 import brave.handler.FinishedSpanHandler;
-import brave.propagation.B3Propagation;
 import brave.propagation.CurrentTraceContext;
 import brave.propagation.CurrentTraceContext.ScopeDecorator;
 import brave.propagation.CurrentTraceContextCustomizer;
@@ -56,6 +52,7 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.cloud.sleuth.DefaultSpanNamer;
 import org.springframework.cloud.sleuth.LocalServiceName;
 import org.springframework.cloud.sleuth.SpanNamer;
+import org.springframework.cloud.sleuth.baggage.TraceBaggageAutoConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.lang.Nullable;
@@ -73,7 +70,7 @@ import org.springframework.util.StringUtils;
 @Configuration(proxyBeanMethods = false)
 @ConditionalOnProperty(value = "spring.sleuth.enabled", matchIfMissing = true)
 @EnableConfigurationProperties(SleuthProperties.class)
-@AutoConfigureAfter(PropertyBasedBaggageConfiguration.class)
+@AutoConfigureAfter(TraceBaggageAutoConfiguration.class)
 public class TraceAutoConfiguration {
 
 	/**
@@ -93,13 +90,7 @@ public class TraceAutoConfiguration {
 	List<CurrentTraceContext.ScopeDecorator> scopeDecorators = new ArrayList<>();
 
 	@Autowired(required = false)
-	List<BaggagePropagationCustomizer> baggagePropagationCustomizers = new ArrayList<>();
-
-	@Autowired(required = false)
 	List<TracingCustomizer> tracingCustomizers = new ArrayList<>();
-
-	@Autowired(required = false)
-	List<CurrentTraceContextCustomizer> currentTraceContextCustomizers = new ArrayList<>();
 
 	@Bean
 	@ConditionalOnMissingBean
@@ -144,28 +135,8 @@ public class TraceAutoConfiguration {
 		return new DefaultSpanNamer();
 	}
 
-	/**
-	 * To override the underlying context format, override this bean and set the delegate
-	 * to what you need. {@link BaggagePropagation.FactoryBuilder} will unwrap itself if
-	 * no fields are configured.
-	 */
-	@Bean
-	@ConditionalOnMissingBean
-	BaggagePropagation.FactoryBuilder baggagePropagationFactoryBuilder() {
-		return BaggagePropagation.newFactoryBuilder(B3Propagation.FACTORY);
-	}
-
-	@Bean
-	@ConditionalOnMissingBean
-	Propagation.Factory sleuthPropagation(
-			BaggagePropagation.FactoryBuilder factoryBuilder,
-			List<BaggagePropagationConfig> baggageConfig) {
-		baggageConfig.forEach(factoryBuilder::add);
-		for (BaggagePropagationCustomizer customizer : this.baggagePropagationCustomizers) {
-			customizer.customize(factoryBuilder);
-		}
-		return factoryBuilder.build();
-	}
+	@Autowired(required = false)
+	List<CurrentTraceContextCustomizer> currentTraceContextCustomizers = new ArrayList<>();
 
 	@Bean
 	CurrentTraceContext sleuthCurrentTraceContext(CurrentTraceContext.Builder builder) {

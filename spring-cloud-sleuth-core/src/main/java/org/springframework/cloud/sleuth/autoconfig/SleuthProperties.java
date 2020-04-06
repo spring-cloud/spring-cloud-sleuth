@@ -16,12 +16,6 @@
 
 package org.springframework.cloud.sleuth.autoconfig;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import brave.baggage.BaggageField;
-import brave.baggage.BaggagePropagationConfig;
-
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 /**
@@ -43,26 +37,6 @@ public class SleuthProperties {
 	 * server.
 	 */
 	private boolean supportsJoin = true;
-
-	/**
-	 * Same as {@link #remoteKeys} except that this field is not propagated to remote
-	 * services.
-	 *
-	 * @see BaggagePropagationConfig.SingleBaggageField#local(BaggageField)
-	 */
-	private List<String> localKeys = new ArrayList<>();
-
-	/**
-	 * List of fields that are referenced the same in-process as it is on the wire. For
-	 * example, the name "x-vcap-request-id" would be set as-is including the prefix.
-	 *
-	 * <p>
-	 * Note: {@code fieldName} will be implicitly lower-cased.
-	 *
-	 * @see BaggagePropagationConfig.SingleBaggageField#remote(BaggageField)
-	 * @see BaggagePropagationConfig.SingleBaggageField.Builder#addKeyName(String)
-	 */
-	private List<String> remoteKeys = new ArrayList<>();
 
 	public boolean isEnabled() {
 		return this.enabled;
@@ -86,22 +60,6 @@ public class SleuthProperties {
 
 	public void setSupportsJoin(boolean supportsJoin) {
 		this.supportsJoin = supportsJoin;
-	}
-
-	public List<String> getLocalKeys() {
-		return this.localKeys;
-	}
-
-	public void setLocalKeys(List<String> localKeys) {
-		this.localKeys = localKeys;
-	}
-
-	public List<String> getRemoteKeys() {
-		return this.remoteKeys;
-	}
-
-	public void setRemoteKeys(List<String> remoteKeys) {
-		this.remoteKeys = remoteKeys;
 	}
 
 }

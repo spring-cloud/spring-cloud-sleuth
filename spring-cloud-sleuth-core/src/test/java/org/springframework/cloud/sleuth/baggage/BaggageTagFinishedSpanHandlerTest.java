@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.springframework.cloud.sleuth.propagation;
+package org.springframework.cloud.sleuth.baggage;
 
 import java.util.List;
 import java.util.Map;
@@ -29,6 +29,7 @@ import org.junit.jupiter.api.Test;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.cloud.sleuth.util.ArrayListSpanReporter;
 import org.springframework.context.annotation.Bean;
@@ -40,10 +41,9 @@ import static org.assertj.core.api.Assertions.assertThat;
  * @author Taras Danylchuk
  */
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.NONE,
-		properties = { "spring.sleuth.remote-keys=country-code,x-vcap-request-id",
-				"spring.sleuth.propagation.tag.whitelisted-keys=country-code" },
-		classes = TagPropagationFinishedSpanHandlerTest.TestConfiguration.class)
-public class TagPropagationFinishedSpanHandlerTest {
+		properties = { "spring.profiles.active=baggage" }, // intentionally test yaml
+		classes = BaggageTagFinishedSpanHandlerTest.TestConfiguration.class)
+public class BaggageTagFinishedSpanHandlerTest {
 
 	static final BaggageField COUNTRY_CODE = BaggageField.create("country-code");
 	static final BaggageField REQUEST_ID = BaggageField.create("x-vcap-request-id");
@@ -72,16 +72,18 @@ public class TagPropagationFinishedSpanHandlerTest {
 		List<zipkin2.Span> spans = this.arrayListSpanReporter.getSpans();
 		assertThat(spans).hasSize(1);
 		Map<String, String> tags = spans.get(0).tags();
-		assertThat(tags).hasSize(1); // REQUEST_ID is not in the whitelist
+		assertThat(tags).hasSize(1); // REQUEST_ID is not in the tag-fields
 		assertThat(tags).containsEntry(COUNTRY_CODE.name(), "FO");
 	}
 
 	@Configuration
 	@EnableAutoConfiguration
+	@EnableConfigurationProperties(SleuthBaggageProperties.class)
 	public static class TestConfiguration {
 
 		@Bean
-		public ArrayListSpanReporter arrayListSpanReporter() {
+		public ArrayListSpanReporter arrayListSpanReporter(
+				SleuthBaggageProperties properties) {
 			return new ArrayListSpanReporter();
 		}
 

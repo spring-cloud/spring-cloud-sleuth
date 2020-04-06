@@ -29,6 +29,7 @@ import org.springframework.boot.test.context.assertj.AssertableApplicationContex
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
 import org.springframework.boot.test.context.runner.ContextConsumer;
 import org.springframework.cloud.sleuth.autoconfig.TraceAutoConfiguration;
+import org.springframework.cloud.sleuth.baggage.TraceBaggageAutoConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -194,6 +195,7 @@ public class TraceHttpAutoConfigurationTests {
 	private ApplicationContextRunner contextRunner(String... propertyValues) {
 		return new ApplicationContextRunner().withPropertyValues(propertyValues)
 				.withConfiguration(AutoConfigurations.of(TraceAutoConfiguration.class,
+						TraceBaggageAutoConfiguration.class,
 						TraceHttpAutoConfiguration.class,
 						TraceWebAutoConfiguration.class));
 	}

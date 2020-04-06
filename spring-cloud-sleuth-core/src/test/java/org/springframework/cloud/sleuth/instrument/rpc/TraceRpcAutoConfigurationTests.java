@@ -25,6 +25,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.boot.autoconfigure.AutoConfigurations;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
 import org.springframework.cloud.sleuth.autoconfig.TraceAutoConfiguration;
+import org.springframework.cloud.sleuth.baggage.TraceBaggageAutoConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -77,6 +78,7 @@ public class TraceRpcAutoConfigurationTests {
 	private ApplicationContextRunner contextRunner(String... propertyValues) {
 		return new ApplicationContextRunner().withPropertyValues(propertyValues)
 				.withConfiguration(AutoConfigurations.of(TraceAutoConfiguration.class,
+						TraceBaggageAutoConfiguration.class,
 						TraceRpcAutoConfiguration.class,
 						TraceRpcAutoConfiguration.class));
 	}

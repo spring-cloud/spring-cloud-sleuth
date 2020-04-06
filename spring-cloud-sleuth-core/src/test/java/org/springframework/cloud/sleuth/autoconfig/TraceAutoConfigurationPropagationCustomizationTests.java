@@ -25,6 +25,7 @@ import org.junit.jupiter.api.Test;
 
 import org.springframework.boot.autoconfigure.AutoConfigurations;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
+import org.springframework.cloud.sleuth.baggage.TraceBaggageAutoConfiguration;
 import org.springframework.cloud.sleuth.instrument.web.TraceHttpAutoConfiguration;
 import org.springframework.cloud.sleuth.instrument.web.TraceWebAutoConfiguration;
 import org.springframework.context.annotation.Bean;
@@ -34,9 +35,8 @@ import org.springframework.context.support.GenericApplicationContext;
 public class TraceAutoConfigurationPropagationCustomizationTests {
 
 	private final ApplicationContextRunner contextRunner = new ApplicationContextRunner()
-			.withConfiguration(
-					AutoConfigurations.of(PropertyBasedBaggageConfiguration.class,
-							TraceAutoConfiguration.class));
+			.withConfiguration(AutoConfigurations.of(TraceAutoConfiguration.class,
+					TraceBaggageAutoConfiguration.class));
 
 	@Test
 	public void stillCreatesDefault() {
@@ -48,7 +48,8 @@ public class TraceAutoConfigurationPropagationCustomizationTests {
 
 	@Test
 	public void allowsCustomization() {
-		this.contextRunner.withPropertyValues("spring.sleuth.remote-keys=country-code")
+		this.contextRunner
+				.withPropertyValues("spring.sleuth.baggage.remote-fields=country-code")
 				.run((context) -> {
 					BDDAssertions.then(context.getBean(Propagation.Factory.class))
 							.hasFieldOrPropertyWithValue("delegate",
@@ -79,7 +80,8 @@ public class TraceAutoConfigurationPropagationCustomizationTests {
 
 	@Test
 	public void allowsCustomizationOfBuilder() {
-		this.contextRunner.withPropertyValues("spring.sleuth.remote-keys=country-code")
+		this.contextRunner
+				.withPropertyValues("spring.sleuth.baggage.remote-fields=country-code")
 				.withUserConfiguration(CustomPropagationFactoryBuilderConfig.class)
 				.run((context) -> BDDAssertions
 						.then(context.getBean(Propagation.Factory.class))

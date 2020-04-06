@@ -5,6 +5,11 @@
 |spring.sleuth.async.configurer.enabled | true | Enable default AsyncConfigurer.
 |spring.sleuth.async.enabled | true | Enable instrumenting async related components so that the tracing information is passed between threads.
 |spring.sleuth.async.ignored-beans |  | List of {@link java.util.concurrent.Executor} bean names that should be ignored and not wrapped in a trace representation.
+|spring.sleuth.baggage.correlation-enabled | true | Enable a {@link Slf4jScopeDecorator} that prints tracing information in the logs.
+|spring.sleuth.baggage.correlation-fields |  | A list of keys to be put from baggage to MDC.
+|spring.sleuth.baggage.local-fields |  | Same as {@link #remoteKeys} except that this field is not propagated to remote services. @see brave.baggage.BaggagePropagationConfig.SingleBaggageField#local(BaggageField)
+|spring.sleuth.baggage.remote-fields |  | List of fields that are referenced the same in-process as it is on the wire. For example, the name "x-vcap-request-id" would be set as-is including the prefix. <p> Note: {@code fieldName} will be implicitly lower-cased. @see brave.baggage.BaggagePropagationConfig.SingleBaggageField#remote(BaggageField)
+|spring.sleuth.baggage.tag-fields |  | A list of baggage field names which are tagged when a span finishes.
 |spring.sleuth.circuitbreaker.enabled | true | Enable Spring Cloud CircuitBreaker instrumentation.
 |spring.sleuth.enabled | true | 
 |spring.sleuth.feign.enabled | true | Enable span information propagation when using Feign.
@@ -15,9 +20,6 @@
 |spring.sleuth.integration.enabled | true | Enable Spring Integration sleuth instrumentation.
 |spring.sleuth.integration.patterns | [!hystrixStreamOutput*, *, !channel*] | An array of patterns against which channel names will be matched. @see org.springframework.integration.config.GlobalChannelInterceptor#patterns() Defaults to any channel name not matching the Hystrix Stream and functional Stream channel names.
 |spring.sleuth.integration.websockets.enabled | true | Enable tracing for WebSockets.
-|spring.sleuth.local-keys |  | Same as {@link #remoteKeys} except that this field is not propagated to remote services. @see brave.baggage.BaggagePropagationConfig.SingleBaggageField#local(BaggageField)
-|spring.sleuth.log.slf4j.enabled | true | Enable a {@link Slf4jScopeDecorator} that prints tracing information in the logs.
-|spring.sleuth.log.slf4j.whitelisted-mdc-keys |  | A list of keys to be put from baggage to MDC.
 |spring.sleuth.messaging.enabled | false | Should messaging be turned on.
 |spring.sleuth.messaging.jms.enabled | true | Enable tracing of JMS.
 |spring.sleuth.messaging.jms.remote-service-name | jms | 
@@ -27,9 +29,6 @@
 |spring.sleuth.messaging.rabbit.enabled | true | Enable tracing of RabbitMQ.
 |spring.sleuth.messaging.rabbit.remote-service-name | rabbitmq | 
 |spring.sleuth.opentracing.enabled | true | 
-|spring.sleuth.remote-keys |  | List of fields that are referenced the same in-process as it is on the wire. For example, the name "x-vcap-request-id" would be set as-is including the prefix. <p> Note: {@code fieldName} will be implicitly lower-cased. @see brave.baggage.BaggagePropagationConfig.SingleBaggageField#remote(BaggageField)
-|spring.sleuth.propagation.tag.enabled | true | Enables a {@link TagPropagationFinishedSpanHandler} that adds extra propagated fields to span tags.
-|spring.sleuth.propagation.tag.whitelisted-keys |  | A list of keys to be put from extra propagation fields to span tags.
 |spring.sleuth.reactor.decorate-on-each | true | When true decorates on each operator, will be less performing, but logging will always contain the tracing entries in each operator. When false decorates on last operator, will be more performing, but logging might not always contain the tracing entries.
 |spring.sleuth.reactor.enabled | true | When true enables instrumentation for reactor.
 |spring.sleuth.redis.enabled | true | Enable span information propagation when using Redis.

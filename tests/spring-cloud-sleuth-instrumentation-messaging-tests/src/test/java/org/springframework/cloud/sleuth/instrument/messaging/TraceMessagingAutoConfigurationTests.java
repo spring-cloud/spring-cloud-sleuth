@@ -40,6 +40,7 @@ import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
 import org.springframework.cloud.sleuth.autoconfig.TraceAutoConfiguration;
+import org.springframework.cloud.sleuth.baggage.TraceBaggageAutoConfiguration;
 import org.springframework.cloud.sleuth.util.ArrayListSpanReporter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -146,6 +147,7 @@ public class TraceMessagingAutoConfigurationTests {
 	private ApplicationContextRunner contextRunner(String... propertyValues) {
 		return new ApplicationContextRunner().withPropertyValues(propertyValues)
 				.withConfiguration(AutoConfigurations.of(TraceAutoConfiguration.class,
+						TraceBaggageAutoConfiguration.class,
 						TraceMessagingAutoConfiguration.class,
 						TraceMessagingAutoConfiguration.class));
 	}
