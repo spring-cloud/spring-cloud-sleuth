@@ -25,7 +25,6 @@ import brave.Span;
 import brave.Tags;
 import brave.Tracer;
 import brave.Tracer.SpanInScope;
-import brave.Tracing;
 import brave.baggage.BaggageField;
 import brave.baggage.BaggagePropagationConfig;
 import brave.baggage.BaggagePropagationConfig.SingleBaggageField;
@@ -57,11 +56,10 @@ import static org.springframework.boot.test.context.SpringBootTest.WebEnvironmen
 
 @SpringBootTest(classes = MultipleHopsIntegrationTests.Config.class,
 		webEnvironment = RANDOM_PORT, properties = { "spring.sleuth.baggage-keys=baz",
-				"spring.sleuth.propagation-keys=foo" })
+				"spring.sleuth.remote-keys=country-code" })
 public class MultipleHopsIntegrationTests {
 
-	@Autowired
-	Tracing tracing;
+	static final BaggageField COUNTRY_CODE = BaggageField.create("country-code");
 
 	@Autowired
 	Tracer tracer;
@@ -106,19 +104,18 @@ public class MultipleHopsIntegrationTests {
 	@Test
 	public void should_propagate_the_baggage() {
 		// TODO: make a DemoBaggage type instead of saying to use the api directly
-		BaggageField foo = BaggageField.create("foo");
 		BaggageField bar = BaggageField.create("bar");
 		BaggageField baz = BaggageField.create("baz");
 
 		// tag::baggage[]
 		Span initialSpan = this.tracer.nextSpan().name("span").start();
-		foo.updateValue(initialSpan.context(), "1");
+		COUNTRY_CODE.updateValue(initialSpan.context(), "FO");
 		bar.updateValue(initialSpan.context(), "2");
 		// end::baggage[]
 
 		try (SpanInScope ws = this.tracer.withSpanInScope(initialSpan)) {
 			// tag::baggage_tag[]
-			Tags.BAGGAGE_FIELD.tag(foo, initialSpan);
+			Tags.BAGGAGE_FIELD.tag(COUNTRY_CODE, initialSpan);
 			Tags.BAGGAGE_FIELD.tag(bar, initialSpan);
 			// end::baggage_tag[]
 
@@ -138,16 +135,16 @@ public class MultipleHopsIntegrationTests {
 		});
 
 		List<zipkin2.Span> withBagTags = this.reporter.getSpans().stream()
-				.filter(s -> s.tags().containsKey(foo.name())).collect(toList());
+				.filter(s -> s.tags().containsKey(COUNTRY_CODE.name())).collect(toList());
 
 		// set with tag api
 		then(withBagTags).as("only initialSpan was bag tagged").hasSize(1);
-		assertThat(withBagTags.get(0).tags()).containsEntry("foo", "1")
+		assertThat(withBagTags.get(0).tags()).containsEntry("country-code", "FO")
 				.containsEntry("bar", "2");
 
 		// set with baggage api
-		then(this.application.allSpans()).as("All have foo")
-				.allMatch(span -> "1".equals(foo.getValue(span.context())));
+		then(this.application.allSpans()).as("All have country-code")
+				.allMatch(span -> "FO".equals(COUNTRY_CODE.getValue(span.context())));
 		then(this.application.allSpans()).as("All have bar")
 				.allMatch(span -> "2".equals(bar.getValue(span.context())));
 

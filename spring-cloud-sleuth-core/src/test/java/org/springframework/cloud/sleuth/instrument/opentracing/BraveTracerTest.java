@@ -55,7 +55,7 @@ import static org.springframework.boot.test.context.SpringBootTest.WebEnvironmen
  * @author Marcin Grzejszczak
  */
 @SpringBootTest(webEnvironment = NONE,
-		properties = "spring.sleuth.baggage-keys=country-code,user-id")
+		properties = "spring.sleuth.baggage-keys=country-code,country-code")
 public class BraveTracerTest {
 
 	@Autowired

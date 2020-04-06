@@ -66,7 +66,7 @@ public class PropertyBasedBaggageConfiguration implements BeanFactoryPostProcess
 			baggageConfigs.add(SingleBaggageField.local(BaggageField.create(key)));
 		}
 
-		for (String key : collectKeysOfType(env, "propagation")) {
+		for (String key : collectKeysOfType(env, "remote")) {
 			baggageConfigs.add(SingleBaggageField.remote(BaggageField.create(key)));
 		}
 

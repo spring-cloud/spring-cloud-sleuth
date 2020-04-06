@@ -18,6 +18,7 @@ package org.springframework.cloud.sleuth.log;
 
 import brave.Span;
 import brave.Tracer;
+import brave.baggage.BaggageField;
 import brave.baggage.CorrelationScopeConfig.SingleCorrelationField;
 import brave.propagation.CurrentTraceContext.Scope;
 import brave.propagation.CurrentTraceContext.ScopeDecorator;
@@ -41,12 +42,14 @@ import static org.assertj.core.api.Assertions.assertThat;
  */
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.NONE, properties = {
 		"spring.sleuth.baggage-keys=my-baggage,my-baggage-two",
-		"spring.sleuth.propagation-keys=my-propagation",
-		"spring.sleuth.local-keys=my-local",
-		"spring.sleuth.log.slf4j.whitelisted-mdc-keys=my-baggage,my-propagation,my-local" })
+		"spring.sleuth.remote-keys=country-code", "spring.sleuth.local-keys=bp",
+		"spring.sleuth.log.slf4j.whitelisted-mdc-keys=my-baggage,country-code,bp" })
 @SpringBootConfiguration
 @EnableAutoConfiguration
 public class Slf4JSpanLoggerTest {
+
+	static final BaggageField COUNTRY_CODE = BaggageField.create("country-code");
+	static final BaggageField BUSINESS_PROCESS = BaggageField.create("bp");
 
 	@Autowired
 	Tracer tracer;
@@ -78,37 +81,35 @@ public class Slf4JSpanLoggerTest {
 	@Test
 	public void should_set_entries_to_mdc_from_span_with_baggage() throws Exception {
 		ExtraFieldPropagation.set(this.span.context(), "my-baggage", "my-value");
-		ExtraFieldPropagation.set(this.span.context(), "my-propagation",
-				"my-propagation-value");
-		ExtraFieldPropagation.set(this.span.context(), "my-local", "my-local-value");
+		COUNTRY_CODE.updateValue(this.span.context(), "FO");
+		BUSINESS_PROCESS.updateValue(this.span.context(), "ALM");
 		Scope scope = this.slf4jScopeDecorator.decorateScope(this.span.context(), () -> {
 		});
 
 		assertThat(MDC.get("my-baggage")).isEqualTo("my-value");
-		assertThat(MDC.get("my-propagation")).isEqualTo("my-propagation-value");
-		assertThat(MDC.get("my-local")).isEqualTo("my-local-value");
+		assertThat(MDC.get(COUNTRY_CODE.name())).isEqualTo("FO");
+		assertThat(MDC.get(BUSINESS_PROCESS.name())).isEqualTo("ALM");
 
 		scope.close();
 
 		assertThat(MDC.get("my-baggage")).isNullOrEmpty();
-		assertThat(MDC.get("my-propagation")).isNullOrEmpty();
-		assertThat(MDC.get("my-local")).isNullOrEmpty();
+		assertThat(MDC.get(COUNTRY_CODE.name())).isNull();
+		assertThat(MDC.get(BUSINESS_PROCESS.name())).isNull();
 	}
 
 	@Test
 	public void should_remove_entries_from_mdc_for_null_span() throws Exception {
 		ExtraFieldPropagation.set(this.span.context(), "my-baggage", "my-value");
-		ExtraFieldPropagation.set(this.span.context(), "my-propagation",
-				"my-propagation-value");
+		COUNTRY_CODE.updateValue(this.span.context(), "FO");
 
 		try (Scope scope1 = this.slf4jScopeDecorator.decorateScope(this.span.context(),
 				NOOP)) {
 			assertThat(MDC.get("my-baggage")).isEqualTo("my-value");
-			assertThat(MDC.get("my-propagation")).isEqualTo("my-propagation-value");
+			assertThat(MDC.get(COUNTRY_CODE.name())).isEqualTo("FO");
 
 			try (Scope scope2 = this.slf4jScopeDecorator.decorateScope(null, NOOP)) {
 				assertThat(MDC.get("my-baggage")).isNullOrEmpty();
-				assertThat(MDC.get("my-propagation")).isNullOrEmpty();
+				assertThat(MDC.get(COUNTRY_CODE.name())).isNullOrEmpty();
 			}
 		}
 	}
@@ -117,25 +118,25 @@ public class Slf4JSpanLoggerTest {
 	public void should_remove_entries_from_mdc_for_null_span_and_mdc_fields_set_directly()
 			throws Exception {
 		MDC.put("my-baggage", "my-value");
-		MDC.put("my-propagation", "my-propagation-value");
+		MDC.put(COUNTRY_CODE.name(), "FO");
 
 		// the span is holding no baggage so it clears the preceding values
 		try (Scope scope = this.slf4jScopeDecorator.decorateScope(this.span.context(),
 				NOOP)) {
 			assertThat(MDC.get("my-baggage")).isNullOrEmpty();
-			assertThat(MDC.get("my-propagation")).isNullOrEmpty();
+			assertThat(MDC.get(COUNTRY_CODE.name())).isNullOrEmpty();
 		}
 
 		assertThat(MDC.get("my-baggage")).isEqualTo("my-value");
-		assertThat(MDC.get("my-propagation")).isEqualTo("my-propagation-value");
+		assertThat(MDC.get(COUNTRY_CODE.name())).isEqualTo("FO");
 
 		try (Scope scope = this.slf4jScopeDecorator.decorateScope(null, NOOP)) {
 			assertThat(MDC.get("my-baggage")).isNullOrEmpty();
-			assertThat(MDC.get("my-propagation")).isNullOrEmpty();
+			assertThat(MDC.get(COUNTRY_CODE.name())).isNullOrEmpty();
 		}
 
 		assertThat(MDC.get("my-baggage")).isEqualTo("my-value");
-		assertThat(MDC.get("my-propagation")).isEqualTo("my-propagation-value");
+		assertThat(MDC.get(COUNTRY_CODE.name())).isEqualTo("FO");
 	}
 
 	@Test
@@ -161,15 +162,15 @@ public class Slf4JSpanLoggerTest {
 		});
 
 		MDC.put("my-baggage", "A");
-		MDC.put("my-propagation", "B");
+		MDC.put(COUNTRY_CODE.name(), "FO");
 
 		assertThat(MDC.get("my-baggage")).isEqualTo("A");
-		assertThat(MDC.get("my-propagation")).isEqualTo("B");
+		assertThat(MDC.get(COUNTRY_CODE.name())).isEqualTo("FO");
 
 		scope.close();
 
 		assertThat(MDC.get("my-baggage")).isNullOrEmpty();
-		assertThat(MDC.get("my-propagation")).isNullOrEmpty();
+		assertThat(MDC.get(COUNTRY_CODE.name())).isNullOrEmpty();
 	}
 
 	@Test
@@ -178,29 +179,29 @@ public class Slf4JSpanLoggerTest {
 				.asInstanceOf(
 						InstanceOfAssertFactories.array(SingleCorrelationField[].class))
 				.extracting(SingleCorrelationField::name).containsOnly("traceId",
-						"parentId", "spanId", "spanExportable", "my-baggage", "my-local",
-						"my-propagation"); // my-baggage-two is not in the whitelist
+						"parentId", "spanId", "spanExportable", "my-baggage", "bp",
+						COUNTRY_CODE.name()); // my-baggage-two is not in the whitelist
 	}
 
 	@Test
 	public void should_pick_previous_mdc_entries_when_their_keys_are_whitelisted() {
 
 		MDC.put("my-baggage", "A1");
-		MDC.put("my-propagation", "B1");
+		MDC.put(COUNTRY_CODE.name(), "FO");
 
 		Scope scope = this.slf4jScopeDecorator.decorateScope(this.span.context(), () -> {
 		});
 
 		MDC.put("my-baggage", "A2");
-		MDC.put("my-propagation", "B2");
+		MDC.put(COUNTRY_CODE.name(), "BV");
 
 		assertThat(MDC.get("my-baggage")).isEqualTo("A2");
-		assertThat(MDC.get("my-propagation")).isEqualTo("B2");
+		assertThat(MDC.get(COUNTRY_CODE.name())).isEqualTo("BV");
 
 		scope.close();
 
 		assertThat(MDC.get("my-baggage")).isEqualTo("A1");
-		assertThat(MDC.get("my-propagation")).isEqualTo("B1");
+		assertThat(MDC.get(COUNTRY_CODE.name())).isEqualTo("FO");
 	}
 
 }
