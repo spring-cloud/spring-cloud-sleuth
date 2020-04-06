@@ -174,11 +174,6 @@ Also, you can define your own properties.
 <td class="tableblock halign-left valign-top"><p class="tableblock">List of {@link java.util.concurrent.Executor} bean names that should be ignored and not wrapped in a trace representation.</p></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock">spring.sleuth.baggage-keys</p></td>
-<td class="tableblock halign-left valign-top"></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">List of baggage key names that should be propagated out of process. These keys will be prefixed with <code>baggage</code> before the actual key. This property is set in order to be backward compatible with previous Sleuth versions. @see brave.propagation.ExtraFieldPropagation.FactoryBuilder#addPrefixedFields(String, java.util.Collection)</p></td>
-</tr>
-<tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock">spring.sleuth.circuitbreaker.enabled</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">true</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Enable Spring Cloud CircuitBreaker instrumentation.</p></td>
