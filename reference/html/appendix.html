@@ -231,7 +231,7 @@ Also, you can define your own properties.
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock">spring.sleuth.local-keys</p></td>
 <td class="tableblock halign-left valign-top"></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Same as {@link #propagationKeys} except that this field is not propagated to remote services. @see brave.propagation.ExtraFieldPropagation.FactoryBuilder#addRedactedField(String)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Same as {@link #remoteKeys} except that this field is not propagated to remote services. @see brave.baggage.BaggagePropagationConfig.SingleBaggageField#local(BaggageField)</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock">spring.sleuth.log.slf4j.enabled</p></td>
@@ -289,9 +289,9 @@ Also, you can define your own properties.
 <td class="tableblock halign-left valign-top"></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock">spring.sleuth.propagation-keys</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">spring.sleuth.remote-keys</p></td>
 <td class="tableblock halign-left valign-top"></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">List of fields that are referenced the same in-process as it is on the wire. For example, the name "x-vcap-request-id" would be set as-is including the prefix. &lt;p&gt; Note: {@code fieldName} will be implicitly lower-cased. @see brave.propagation.ExtraFieldPropagation.FactoryBuilder#addField(String)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">List of fields that are referenced the same in-process as it is on the wire. For example, the name "x-vcap-request-id" would be set as-is including the prefix. &lt;p&gt; Note: {@code fieldName} will be implicitly lower-cased. @see brave.baggage.BaggagePropagationConfig.SingleBaggageField#remote(BaggageField)</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock">spring.sleuth.propagation.tag.enabled</p></td>

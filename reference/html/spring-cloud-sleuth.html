@@ -679,7 +679,7 @@ In extreme cases, too much baggage can crash the application, due to exceeding t
 <div class="listingblock">
 <div class="content">
 <pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">Span initialSpan = this.tracer.nextSpan().name("span").start();
-foo.updateValue(initialSpan.context(), "1");
+COUNTRY_CODE.updateValue(initialSpan.context(), "FO");
 bar.updateValue(initialSpan.context(), "2");</code></pre>
 </div>
 </div>
@@ -727,13 +727,13 @@ The span must be in scope.
 <div class="listingblock">
 <div class="title">The setup</div>
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-yml hljs" data-lang="yml">Unresolved directive in intro.adoc - include::/opt/jenkins/data/workspace/spring-cloud-jdk11-spring-cloud-sleuth-master-ci/spring-cloud-sleuth-core/src/test/resources/application-baggage.yml[indent=0]</code></pre>
+<pre class="highlightjs highlight"><code class="language-yml hljs" data-lang="yml">Unresolved directive in intro.adoc - include::/opt/jenkins/data/workspace/spring-cloud-sleuth-master-ci/spring-cloud-sleuth-core/src/test/resources/application-baggage.yml[indent=0]</code></pre>
 </div>
 </div>
 <div class="listingblock">
 <div class="title">The code</div>
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">Tags.BAGGAGE_FIELD.tag(foo, initialSpan);
+<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">Tags.BAGGAGE_FIELD.tag(COUNTRY_CODE, initialSpan);
 Tags.BAGGAGE_FIELD.tag(bar, initialSpan);</code></pre>
 </div>
 </div>
@@ -1347,14 +1347,15 @@ Doing so forces the current span to be exportable regardless of the sampling dec
 <div class="sectionbody">
 <div class="paragraph">
 <p>With the <code>spring.sleuth.baggage-keys</code>, you set keys that get prefixed with <code>baggage-</code> for HTTP calls and <code>baggage_</code> for messaging.
-You can also use the <code>spring.sleuth.propagation-keys</code> property to pass a list of prefixed keys that are propagated to remote services without any prefix.
+You can also use the <code>spring.sleuth.remote-keys</code> property to pass a list of prefixed keys that are propagated to remote services without any prefix.
 You can also use the <code>spring.sleuth.local-keys</code> property to pass a list keys that will be propagated locally but will not be propagated over the wire.
 Notice that there&#8217;s no <code>x-</code> in front of the header keys.</p>
 </div>
 <div class="paragraph">
 <p>In order to automatically set the baggage values to Slf4j&#8217;s MDC, you have to set
 the <code>spring.sleuth.log.slf4j.whitelisted-mdc-keys</code> property with a list of whitelisted
-baggage and propagation keys. E.g. <code>spring.sleuth.log.slf4j.whitelisted-mdc-keys=foo</code> will set the value of the <code>foo</code> baggage into MDC.</p>
+local or remote keys. E.g. <code>spring.sleuth.log.slf4j.whitelisted-mdc-keys=country-code</code> will set the
+value of the <code>country-code</code> baggage into MDC.</p>
 </div>
 <div class="admonitionblock important">
 <table>
