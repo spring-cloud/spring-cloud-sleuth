@@ -30,13 +30,13 @@ but many are not. If you cannot use Zipkin and your product isn't listed, clarif
 with your support representative and have them update that page. In many cases,
 products already support Zipkin format, they just don't document it.
 
-Traces connect from host to host using header propagation. The default format is
-https://github.com/openzipkin/b3-propagation[B3]. Similar to data formats, you
-can configure alternate header formats also, provided trace and span IDs are
-compatible with B3. Most notably, this means the trace ID and span IDs are
-lower-case hex, not UUIDs. Besides trace identifiers, other properties (Baggage)
-can also be passed along with the request. Remote Baggage must be pre-defined,
-but is flexible otherwise.
+Traces connect from service to service using header propagation. The default
+format is https://github.com/openzipkin/b3-propagation[B3]. Similar to data
+formats, you can configure alternate header formats also, provided trace and
+span IDs are compatible with B3. Most notably, this means the trace ID and span
+IDs are lower-case hex, not UUIDs. Besides trace identifiers, other properties
+(Baggage) can also be passed along with the request. Remote Baggage must be
+predefined, but is flexible otherwise.
 
 Sleuth configures everything you need to get started with tracing. Sleuth
 configures where trace data (spans) are reported to, how many traces to keep
