@@ -94,7 +94,6 @@ public class TraceFilterWebIntegrationTests {
 	}
 
 	@Test
-	@Disabled("TODO: is this log format drift?")
 	public void should_not_create_a_span_for_error_controller(CapturedOutput capture) {
 		try {
 			new RestTemplate().getForObject("http://localhost:" + port() + "/",
@@ -120,7 +119,7 @@ public class TraceFilterWebIntegrationTests {
 		String[] split = capture.toString().split("\n");
 		List<String> list = Arrays.stream(split)
 				.filter(s -> s.contains("Uncaught exception thrown"))
-				.filter(s -> s.contains(hex + "," + hex + ",true]"))
+				.filter(s -> s.contains(hex + "," + hex + "]"))
 				.collect(Collectors.toList());
 		then(list).isNotEmpty();
 	}
