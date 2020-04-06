@@ -42,12 +42,13 @@ import static org.assertj.core.api.Assertions.assertThat;
  */
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.NONE, properties = {
 		"spring.sleuth.baggage-keys=my-baggage",
-		"spring.sleuth.remote-keys=country-code,others-propagation",
+		"spring.sleuth.remote-keys=country-code,x-vcap-request-id",
 		"spring.sleuth.propagation.tag.whitelisted-keys=my-baggage,country-code" },
 		classes = TagPropagationFinishedSpanHandlerTest.TestConfiguration.class)
 public class TagPropagationFinishedSpanHandlerTest {
 
 	static final BaggageField COUNTRY_CODE = BaggageField.create("country-code");
+	static final BaggageField REQUEST_ID = BaggageField.create("x-vcap-request-id");
 
 	private static final String BAGGAGE_KEY = "my-baggage";
 
@@ -68,7 +69,7 @@ public class TagPropagationFinishedSpanHandlerTest {
 		TraceContext context = this.span.context();
 		ExtraFieldPropagation.set(context, BAGGAGE_KEY, BAGGAGE_VALUE);
 		COUNTRY_CODE.updateValue(context, "FO");
-		ExtraFieldPropagation.set(context, "others-propagation", "some value");
+		REQUEST_ID.updateValue(context, "f4308d05-2228-4468-80f6-92a8377ba193");
 	}
 
 	@Test
@@ -78,7 +79,7 @@ public class TagPropagationFinishedSpanHandlerTest {
 		List<zipkin2.Span> spans = this.arrayListSpanReporter.getSpans();
 		assertThat(spans).hasSize(1);
 		Map<String, String> tags = spans.get(0).tags();
-		assertThat(tags).hasSize(2);
+		assertThat(tags).hasSize(2); // REQUEST_ID is not in the whitelist
 		assertThat(tags).containsEntry(BAGGAGE_KEY, BAGGAGE_VALUE);
 		assertThat(tags).containsEntry(COUNTRY_CODE.name(), "FO");
 	}
