@@ -731,7 +731,14 @@ The span must be in scope.
 <div class="listingblock">
 <div class="title">The setup</div>
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-yml hljs" data-lang="yml">Unresolved directive in intro.adoc - include::/opt/jenkins/data/workspace/spring-cloud-sleuth-master-ci/spring-cloud-sleuth-core/src/test/resources/application-baggage.yml[indent=0]</code></pre>
+<pre class="highlightjs highlight"><code class="language-yml hljs" data-lang="yml">spring:
+  sleuth:
+    baggage:
+      remoteFields:
+        - country-code
+        - x-vcap-request-id
+      tagFields:
+        - country-code</code></pre>
 </div>
 </div>
 <div class="listingblock">
@@ -1090,13 +1097,13 @@ Sleuth and Zipkin <a href="https://content.pivotal.io/springone-platform-2017/di
 <p>Adds trace and span IDs to the Slf4J MDC, so you can extract all the logs from a given trace or span in a log aggregator, as shown in the following example logs:</p>
 <div class="listingblock">
 <div class="content">
-<pre>2016-02-02 15:30:57.902  INFO [bar,6bfd228dc00d216b,6bfd228dc00d216b,false] 23030 --- [nio-8081-exec-3] ...
-2016-02-02 15:30:58.372 ERROR [bar,6bfd228dc00d216b,6bfd228dc00d216b,false] 23030 --- [nio-8081-exec-3] ...
-2016-02-02 15:31:01.936  INFO [bar,46ab0d418373cbc9,46ab0d418373cbc9,false] 23030 --- [nio-8081-exec-4] ...</pre>
+<pre>2016-02-02 15:30:57.902  INFO [bar,6bfd228dc00d216b,6bfd228dc00d216b] 23030 --- [nio-8081-exec-3] ...
+2016-02-02 15:30:58.372 ERROR [bar,6bfd228dc00d216b,6bfd228dc00d216b] 23030 --- [nio-8081-exec-3] ...
+2016-02-02 15:31:01.936  INFO [bar,46ab0d418373cbc9,46ab0d418373cbc9] 23030 --- [nio-8081-exec-4] ...</pre>
 </div>
 </div>
 <div class="paragraph">
-<p>Notice the <code>[appname,traceId,spanId,exportable]</code> entries from the MDC:</p>
+<p>Notice the <code>[appname,traceId,spanId]</code> entries from the MDC:</p>
 </div>
 <div class="ulist">
 <ul>
@@ -1108,11 +1115,6 @@ Sleuth and Zipkin <a href="https://content.pivotal.io/springone-platform-2017/di
 </li>
 <li>
 <p><strong><code>traceId</code></strong>: The ID of the latency graph that contains the span.</p>
-</li>
-<li>
-<p><strong><code>exportable</code></strong>: Whether the log should be exported to Zipkin.
-When would you like the span not to be exportable?
-When you want to wrap some operation in a Span and have it written to the logs only.</p>
 </li>
 </ul>
 </div>
@@ -1206,7 +1208,7 @@ The SLF4J MDC is always set and logback users immediately see the trace and span
 shown earlier.
 Other logging systems have to configure their own formatter to get the same result.
 The default is as follows:
-<code>logging.pattern.level</code> set to <code>%5p [${spring.zipkin.service.name:${spring.application.name:-}},%X{traceId:-},%X{spanId:-},%X{spanExportable:-}]</code>
+<code>logging.pattern.level</code> set to <code>%5p [${spring.zipkin.service.name:${spring.application.name:-}},%X{traceId:-},%X{spanId:-}]</code>
 (this is a Spring Boot feature for logback users).
 If you do not use SLF4J, this pattern is NOT automatically applied.
 </td>
@@ -1355,10 +1357,10 @@ properties to define fields that have no special configuration such as name mapp
 <div class="ulist">
 <ul>
 <li>
-<p><code>spring.sleuth.remote-keys</code> is a list of header names to accept and propagate to remote services.</p>
+<p><code>spring.sleuth.remote-fields</code> is a list of header names to accept and propagate to remote services.</p>
 </li>
 <li>
-<p><code>spring.sleuth.local-keys</code> is a list of names to propagate locally</p>
+<p><code>spring.sleuth.local-fields</code> is a list of names to propagate locally</p>
 </li>
 </ul>
 </div>
@@ -1370,8 +1372,8 @@ properties to define fields that have no special configuration such as name mapp
 </div>
 <div class="paragraph">
 <p>In order to automatically set the baggage values to Slf4j&#8217;s MDC, you have to set
-the <code>spring.sleuth.log.slf4j.whitelisted-mdc-keys</code> property with a list of whitelisted
-local or remote keys. E.g. <code>spring.sleuth.log.slf4j.whitelisted-mdc-keys=country-code</code> will set the
+the <code>spring.sleuth.baggage.correlation-fields</code> property with a list of whitelisted
+local or remote keys. E.g. <code>spring.sleuth.baggage.correlation-fields=country-code</code> will set the
 value of the <code>country-code</code> baggage into MDC.</p>
 </div>
 <div class="admonitionblock important">
@@ -1388,15 +1390,17 @@ Remember that adding entries to MDC can drastically decrease the performance of 
 </div>
 <div class="paragraph">
 <p>If you want to add the baggage entries as tags, to make it possible to search for spans via the baggage entries, you can set the value of
-<code>spring.sleuth.propagation.tag.whitelisted-keys</code> with a list of whitelisted baggage keys. To disable the feature you have to pass the <code>spring.sleuth.propagation.tag.enabled=false</code> property.</p>
+<code>spring.sleuth.baggage.tag-fields</code> with a list of whitelisted baggage keys. To disable the feature you have to pass the <code>spring.sleuth.propagation.tag.enabled=false</code> property.</p>
 </div>
 <div class="sect2">
 <h3 id="java-configuration"><a class="anchor" href="#java-configuration"></a><a class="link" href="#java-configuration">6.1. Java configuration</a></h3>
 <div class="paragraph">
 <p>If you need to do anything more advanced than above, do not define properties and instead use a
 <code>@Bean</code> config for the baggage fields you use.
- * <code>SingleBaggageField</code> controls header names for one <code>BaggageField</code>.
- * <code>SingleCorrelationField</code> controls the MDC name of one <code>BaggageField</code>, and whether updates flush.</p>
+ * <code>BaggagePropagationCustomizer</code> sets up baggage fields
+   * Add a <code>SingleBaggageField</code> to control header names for a <code>BaggageField</code>.
+ * <code>CorrelationScopeCustomizer</code> sets up MDC fields
+   * Add a <code>SingleCorrelationField</code> to change the MDC name of a <code>BaggageField</code> or if updates flush.</p>
 </div>
 </div>
 </div>

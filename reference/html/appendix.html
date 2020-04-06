@@ -174,6 +174,31 @@ Also, you can define your own properties.
 <td class="tableblock halign-left valign-top"><p class="tableblock">List of {@link java.util.concurrent.Executor} bean names that should be ignored and not wrapped in a trace representation.</p></td>
 </tr>
 <tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">spring.sleuth.baggage.correlation-enabled</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">true</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Enable a {@link Slf4jScopeDecorator} that prints tracing information in the logs.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">spring.sleuth.baggage.correlation-fields</p></td>
+<td class="tableblock halign-left valign-top"></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">A list of keys to be put from baggage to MDC.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">spring.sleuth.baggage.local-fields</p></td>
+<td class="tableblock halign-left valign-top"></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Same as {@link #remoteKeys} except that this field is not propagated to remote services. @see brave.baggage.BaggagePropagationConfig.SingleBaggageField#local(BaggageField)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">spring.sleuth.baggage.remote-fields</p></td>
+<td class="tableblock halign-left valign-top"></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">List of fields that are referenced the same in-process as it is on the wire. For example, the name "x-vcap-request-id" would be set as-is including the prefix. &lt;p&gt; Note: {@code fieldName} will be implicitly lower-cased. @see brave.baggage.BaggagePropagationConfig.SingleBaggageField#remote(BaggageField)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">spring.sleuth.baggage.tag-fields</p></td>
+<td class="tableblock halign-left valign-top"></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">A list of baggage field names which are tagged when a span finishes.</p></td>
+</tr>
+<tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock">spring.sleuth.circuitbreaker.enabled</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">true</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Enable Spring Cloud CircuitBreaker instrumentation.</p></td>
@@ -224,21 +249,6 @@ Also, you can define your own properties.
 <td class="tableblock halign-left valign-top"><p class="tableblock">Enable tracing for WebSockets.</p></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock">spring.sleuth.local-keys</p></td>
-<td class="tableblock halign-left valign-top"></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Same as {@link #remoteKeys} except that this field is not propagated to remote services. @see brave.baggage.BaggagePropagationConfig.SingleBaggageField#local(BaggageField)</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock">spring.sleuth.log.slf4j.enabled</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">true</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Enable a {@link Slf4jScopeDecorator} that prints tracing information in the logs.</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock">spring.sleuth.log.slf4j.whitelisted-mdc-keys</p></td>
-<td class="tableblock halign-left valign-top"></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">A list of keys to be put from baggage to MDC.</p></td>
-</tr>
-<tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock">spring.sleuth.messaging.enabled</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">false</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Should messaging be turned on.</p></td>
@@ -282,21 +292,6 @@ Also, you can define your own properties.
 <td class="tableblock halign-left valign-top"><p class="tableblock">spring.sleuth.opentracing.enabled</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">true</p></td>
 <td class="tableblock halign-left valign-top"></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock">spring.sleuth.remote-keys</p></td>
-<td class="tableblock halign-left valign-top"></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">List of fields that are referenced the same in-process as it is on the wire. For example, the name "x-vcap-request-id" would be set as-is including the prefix. &lt;p&gt; Note: {@code fieldName} will be implicitly lower-cased. @see brave.baggage.BaggagePropagationConfig.SingleBaggageField#remote(BaggageField)</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock">spring.sleuth.propagation.tag.enabled</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">true</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Enables a {@link TagPropagationFinishedSpanHandler} that adds extra propagated fields to span tags.</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock">spring.sleuth.propagation.tag.whitelisted-keys</p></td>
-<td class="tableblock halign-left valign-top"></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">A list of keys to be put from extra propagation fields to span tags.</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock">spring.sleuth.reactor.decorate-on-each</p></td>
