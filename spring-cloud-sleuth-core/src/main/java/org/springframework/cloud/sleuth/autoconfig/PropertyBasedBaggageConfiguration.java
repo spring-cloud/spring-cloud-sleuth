@@ -74,15 +74,28 @@ public class PropertyBasedBaggageConfiguration implements BeanFactoryPostProcess
 			baggageConfigs.add(SingleBaggageField.remote(BaggageField.create(key)));
 		}
 
-		if (!collectKeysOfType(env, "propagation").isEmpty()) {
+		Set<String> propagationKeys = collectKeysOfType(env, "propagation");
+		if (!propagationKeys.isEmpty()) {
 			logger.warn(
-					"Property 'spring.sleuth.propagation-keys' has been renamed to 'spring.sleuth.remote-keys'.");
+					"'spring.sleuth.propagation-keys' has been renamed to 'spring.sleuth.remote-keys' and will be removed in a future release.");
+			for (String key : propagationKeys) {
+				baggageConfigs.add(SingleBaggageField.remote(BaggageField.create(key)));
+			}
 		}
 
-		if (!collectKeysOfType(env, "baggage").isEmpty()) {
-			logger.warn("Property 'spring.sleuth.baggage-keys' is no longer read.\n"
-					+ "To change header names define a @Bean of type "
-					+ SingleBaggageField.class.getName());
+		Set<String> baggageKeys = collectKeysOfType(env, "baggage");
+		if (!baggageKeys.isEmpty()) {
+			logger.warn(
+					"'spring.sleuth.baggage-keys' will be removed in a future release.\n"
+							+ "To change header names define a @Bean of type "
+							+ SingleBaggageField.class.getName());
+
+			for (String key : baggageKeys) {
+				baggageConfigs.add(SingleBaggageField.newBuilder(BaggageField.create(key))
+						.addKeyName("baggage-" + key) // for HTTP
+						.addKeyName("baggage_" + key) // for messaging
+						.build());
+			}
 		}
 		return baggageConfigs;
 	}
