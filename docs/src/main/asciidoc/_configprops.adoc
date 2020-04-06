@@ -28,7 +28,7 @@
 |spring.sleuth.messaging.rabbit.enabled | true | Enable tracing of RabbitMQ.
 |spring.sleuth.messaging.rabbit.remote-service-name | rabbitmq | 
 |spring.sleuth.opentracing.enabled | true | 
-|spring.sleuth.propagation-keys |  | List of fields that are referenced the same in-process as it is on the wire. For example, the name "x-vcap-request-id" would be set as-is including the prefix. <p> Note: {@code fieldName} will be implicitly lower-cased. @see brave.propagation.ExtraFieldPropagation.FactoryBuilder#addField(String)
+|spring.sleuth.remote-keys |  | List of fields that are referenced the same in-process as it is on the wire. For example, the name "x-vcap-request-id" would be set as-is including the prefix. <p> Note: {@code fieldName} will be implicitly lower-cased. @see brave.baggage.BaggagePropagationConfig.SingleBaggageField#remote(BaggageField)
 |spring.sleuth.propagation.tag.enabled | true | Enables a {@link TagPropagationFinishedSpanHandler} that adds extra propagated fields to span tags.
 |spring.sleuth.propagation.tag.whitelisted-keys |  | A list of keys to be put from extra propagation fields to span tags.
 |spring.sleuth.reactor.decorate-on-each | true | When true decorates on each operator, will be less performing, but logging will always contain the tracing entries in each operator. When false decorates on last operator, will be more performing, but logging might not always contain the tracing entries.

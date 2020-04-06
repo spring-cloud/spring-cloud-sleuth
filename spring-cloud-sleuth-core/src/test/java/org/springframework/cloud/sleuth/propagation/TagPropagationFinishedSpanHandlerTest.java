@@ -21,6 +21,7 @@ import java.util.Map;
 
 import brave.ScopedSpan;
 import brave.Tracer;
+import brave.baggage.BaggageField;
 import brave.propagation.ExtraFieldPropagation;
 import brave.propagation.TraceContext;
 import brave.sampler.Sampler;
@@ -41,18 +42,16 @@ import static org.assertj.core.api.Assertions.assertThat;
  */
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.NONE, properties = {
 		"spring.sleuth.baggage-keys=my-baggage",
-		"spring.sleuth.propagation-keys=my-propagation,others-propagation",
-		"spring.sleuth.propagation.tag.whitelisted-keys=my-baggage,my-propagation" },
+		"spring.sleuth.remote-keys=country-code,others-propagation",
+		"spring.sleuth.propagation.tag.whitelisted-keys=my-baggage,country-code" },
 		classes = TagPropagationFinishedSpanHandlerTest.TestConfiguration.class)
 public class TagPropagationFinishedSpanHandlerTest {
+
+	static final BaggageField COUNTRY_CODE = BaggageField.create("country-code");
 
 	private static final String BAGGAGE_KEY = "my-baggage";
 
 	private static final String BAGGAGE_VALUE = "332323";
-
-	private static final String PROPAGATION_KEY = "my-propagation";
-
-	private static final String PROPAGATION_VALUE = "332323";
 
 	@Autowired
 	private Tracer tracer;
@@ -68,7 +67,7 @@ public class TagPropagationFinishedSpanHandlerTest {
 		this.span = this.tracer.startScopedSpan("my-scoped-span");
 		TraceContext context = this.span.context();
 		ExtraFieldPropagation.set(context, BAGGAGE_KEY, BAGGAGE_VALUE);
-		ExtraFieldPropagation.set(context, PROPAGATION_KEY, PROPAGATION_VALUE);
+		COUNTRY_CODE.updateValue(context, "FO");
 		ExtraFieldPropagation.set(context, "others-propagation", "some value");
 	}
 
@@ -81,7 +80,7 @@ public class TagPropagationFinishedSpanHandlerTest {
 		Map<String, String> tags = spans.get(0).tags();
 		assertThat(tags).hasSize(2);
 		assertThat(tags).containsEntry(BAGGAGE_KEY, BAGGAGE_VALUE);
-		assertThat(tags).containsEntry(PROPAGATION_KEY, PROPAGATION_VALUE);
+		assertThat(tags).containsEntry(COUNTRY_CODE.name(), "FO");
 	}
 
 	@Configuration
