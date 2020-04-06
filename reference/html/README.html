@@ -705,8 +705,8 @@ In extreme cases, too much baggage can crash the application, due to exceeding t
 <div class="listingblock">
 <div class="content">
 <pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">Span initialSpan = this.tracer.nextSpan().name("span").start();
-ExtraFieldPropagation.set(initialSpan.context(), "foo", "bar");
-ExtraFieldPropagation.set(initialSpan.context(), "UPPER_CASE", "someValue");</code></pre>
+foo.updateValue(initialSpan.context(), "1");
+bar.updateValue(initialSpan.context(), "2");</code></pre>
 </div>
 </div>
 <div class="sect4">
@@ -753,22 +753,14 @@ The span must be in scope.
 <div class="listingblock">
 <div class="title">The setup</div>
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-yml hljs" data-lang="yml">spring.sleuth:
-  baggage-keys:
-    - baz
-    - bizarrecase
-  propagation-keys:
-    - foo
-    - upper_case</code></pre>
+<pre class="highlightjs highlight"><code class="language-yml hljs" data-lang="yml">Unresolved directive in intro.adoc - include::/opt/jenkins/data/workspace/spring-cloud-sleuth-master-ci/spring-cloud-sleuth-core/src/test/resources/application-baggage.yml[indent=0]</code></pre>
 </div>
 </div>
 <div class="listingblock">
 <div class="title">The code</div>
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">initialSpan.tag("foo",
-		ExtraFieldPropagation.get(initialSpan.context(), "foo"));
-initialSpan.tag("UPPER_CASE",
-		ExtraFieldPropagation.get(initialSpan.context(), "UPPER_CASE"));</code></pre>
+<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">Tags.BAGGAGE_FIELD.tag(foo, initialSpan);
+Tags.BAGGAGE_FIELD.tag(bar, initialSpan);</code></pre>
 </div>
 </div>
 </div>
