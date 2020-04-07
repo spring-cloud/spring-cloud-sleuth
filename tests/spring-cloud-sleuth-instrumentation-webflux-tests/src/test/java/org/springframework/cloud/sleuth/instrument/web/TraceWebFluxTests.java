@@ -155,8 +155,7 @@ public class TraceWebFluxTests {
 	private ClientResponse whenNonSampledRequestIsSent(int port) {
 		Mono<ClientResponse> exchange = WebClient.create().get()
 				.uri("http://localhost:" + port + "/api/c2/10")
-				.header("X-B3-SpanId", EXPECTED_TRACE_ID)
-				.header("X-B3-TraceId", EXPECTED_TRACE_ID).header("X-B3-Sampled", "0")
+				.header("b3", EXPECTED_TRACE_ID + "-" + EXPECTED_TRACE_ID + "-0")
 				.exchange();
 		return exchange.block();
 	}

@@ -132,13 +132,6 @@
 
 	<dependencyManagement>
 		<dependencies>
-			<!-- force latest reactor-netty -->
-			<dependency>
-				<groupId>io.projectreactor.netty</groupId>
-				<artifactId>reactor-netty</artifactId>
-				<version>0.9.6.RELEASE</version>
-				<optional>true</optional>
-			</dependency>
 			<dependency>
 				<groupId>org.springframework.cloud</groupId>
 				<artifactId>spring-cloud-sleuth-dependencies</artifactId>

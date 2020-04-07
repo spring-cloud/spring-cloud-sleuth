@@ -52,9 +52,6 @@ public class GH1102Tests {
 	@Autowired
 	TestRetry testRetry;
 
-	@Autowired
-	ArrayListSpanReporter reporter;
-
 	@LocalServerPort
 	int port;
 
@@ -73,6 +70,7 @@ public class GH1102Tests {
 			foo.finish();
 		}
 
+		// Default inject format for client spans is B3 multi
 		BDDAssertions.then(this.testRetry.getHttpHeaders().get("x-b3-traceid"))
 				.hasSize(1);
 	}

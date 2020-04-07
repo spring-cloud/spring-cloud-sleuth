@@ -23,7 +23,9 @@ package org.springframework.cloud.sleuth.instrument.messaging;
  *
  * @author Marcin Grzejszczak
  * @since 1.0.4
+ * @deprecated Since 3.0 these headers should not be used anymore as "b3" is sent instead
  */
+@Deprecated
 public final class TraceMessageHeaders {
 
 	/**

@@ -19,8 +19,11 @@ package org.springframework.cloud.sleuth.instrument.messaging;
 import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import brave.propagation.Propagation;
 import org.apache.commons.logging.Log;
@@ -45,25 +48,19 @@ enum MessageHeaderPropagation
 
 	private static final Log log = LogFactory.getLog(MessageHeaderPropagation.class);
 
+	private static final Set<String> DEPRECATED_HEADERS = new LinkedHashSet<>();
+
 	private static final Map<String, String> LEGACY_HEADER_MAPPING = new HashMap<>();
 
-	private static final String TRACE_ID_NAME = "X-B3-TraceId";
-
-	private static final String SPAN_ID_NAME = "X-B3-SpanId";
-
-	private static final String PARENT_SPAN_ID_NAME = "X-B3-ParentSpanId";
-
-	private static final String SAMPLED_NAME = "X-B3-Sampled";
-
-	private static final String FLAGS_NAME = "X-B3-Flags";
-
 	static {
-		LEGACY_HEADER_MAPPING.put(TRACE_ID_NAME, TraceMessageHeaders.TRACE_ID_NAME);
-		LEGACY_HEADER_MAPPING.put(SPAN_ID_NAME, TraceMessageHeaders.SPAN_ID_NAME);
-		LEGACY_HEADER_MAPPING.put(PARENT_SPAN_ID_NAME,
+		LEGACY_HEADER_MAPPING.put("X-B3-TraceId", TraceMessageHeaders.TRACE_ID_NAME);
+		LEGACY_HEADER_MAPPING.put("X-B3-SpanId", TraceMessageHeaders.SPAN_ID_NAME);
+		LEGACY_HEADER_MAPPING.put("X-B3-ParentSpanId",
 				TraceMessageHeaders.PARENT_ID_NAME);
-		LEGACY_HEADER_MAPPING.put(SAMPLED_NAME, TraceMessageHeaders.SAMPLED_NAME);
-		LEGACY_HEADER_MAPPING.put(FLAGS_NAME, TraceMessageHeaders.SPAN_FLAGS_NAME);
+		LEGACY_HEADER_MAPPING.put("X-B3-Sampled", TraceMessageHeaders.SAMPLED_NAME);
+		LEGACY_HEADER_MAPPING.put("X-B3-Flags", TraceMessageHeaders.SPAN_FLAGS_NAME);
+		DEPRECATED_HEADERS.addAll(LEGACY_HEADER_MAPPING.keySet());
+		DEPRECATED_HEADERS.addAll(LEGACY_HEADER_MAPPING.values());
 	}
 
 	static Map<String, ?> propagationHeaders(Map<String, ?> headers,
@@ -119,8 +116,15 @@ enum MessageHeaderPropagation
 		return nativeAccessor;
 	}
 
+	static final AtomicBoolean LOGGED_PUT_DEPRECATED_HEADER = new AtomicBoolean();
+
 	@Override
 	public void put(MessageHeaderAccessor accessor, String key, String value) {
+		if (DEPRECATED_HEADERS.contains(key)
+				&& LOGGED_PUT_DEPRECATED_HEADER.compareAndSet(false, true)) {
+			log.warn("Please update your code so that it uses the 'b3' header "
+					+ "instead of " + key);
+		}
 		try {
 			doPut(accessor, key, value);
 		}
@@ -129,10 +133,6 @@ enum MessageHeaderPropagation
 				log.debug("An exception happened when we tried to retrieve the [" + key
 						+ "] from message", ex);
 			}
-		}
-		String legacyKey = LEGACY_HEADER_MAPPING.get(key);
-		if (legacyKey != null) {
-			doPut(accessor, legacyKey, value);
 		}
 	}
 
@@ -188,7 +188,14 @@ enum MessageHeaderPropagation
 		return null;
 	}
 
+	static final AtomicBoolean LOGGED_GET_DEPRECATED_HEADER = new AtomicBoolean();
+
 	private String doGet(MessageHeaderAccessor accessor, String key) {
+		if (DEPRECATED_HEADERS.contains(key)
+				&& LOGGED_GET_DEPRECATED_HEADER.compareAndSet(false, true)) {
+			log.warn("Please update your code so that it uses the 'b3' header "
+					+ "instead of " + key);
+		}
 		if (accessor instanceof NativeMessageHeaderAccessor) {
 			NativeMessageHeaderAccessor nativeAccessor = (NativeMessageHeaderAccessor) accessor;
 			String result = nativeAccessor.getFirstNativeHeader(key);

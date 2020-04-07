@@ -40,40 +40,38 @@ public abstract class PropagationSetterTest<C, K> {
 
 	@Test
 	public void set() throws Exception {
-		K key = keyFactory().create("X-B3-TraceId");
-		setter().put(carrier(), key, "48485a3953bb6124");
+		K key = keyFactory().create("b3");
+		setter().put(carrier(), key, "1");
 
-		assertThat(read(carrier(), key)).containsExactly("48485a3953bb6124");
+		assertThat(read(carrier(), key)).containsExactly("1");
 	}
 
 	@Test
 	public void set128() throws Exception {
-		K key = keyFactory().create("X-B3-TraceId");
-		setter().put(carrier(), key, "463ac35c9f6413ad48485a3953bb6124");
+		K key = keyFactory().create("b3");
+		setter().put(carrier(), key, "1");
 
-		assertThat(read(carrier(), key))
-				.containsExactly("463ac35c9f6413ad48485a3953bb6124");
+		assertThat(read(carrier(), key)).containsExactly("1");
 	}
 
 	@Test
 	public void setTwoKeys() throws Exception {
-		K key1 = keyFactory().create("X-B3-TraceId");
-		K key2 = keyFactory().create("X-B3-SpanId");
-		setter().put(carrier(), key1, "463ac35c9f6413ad48485a3953bb6124");
-		setter().put(carrier(), key2, "48485a3953bb6124");
+		K key1 = keyFactory().create("b3");
+		K key2 = keyFactory().create("baggage");
+		setter().put(carrier(), key1, "1");
+		setter().put(carrier(), key2, "country-code=FO");
 
-		assertThat(read(carrier(), key1))
-				.containsExactly("463ac35c9f6413ad48485a3953bb6124");
-		assertThat(read(carrier(), key2)).containsExactly("48485a3953bb6124");
+		assertThat(read(carrier(), key1)).containsExactly("1");
+		assertThat(read(carrier(), key2)).containsExactly("country-code=FO");
 	}
 
 	@Test
 	public void reset() throws Exception {
-		K key = keyFactory().create("X-B3-TraceId");
-		setter().put(carrier(), key, "48485a3953bb6124");
-		setter().put(carrier(), key, "463ac35c9f6413ad");
+		K key = keyFactory().create("b3");
+		setter().put(carrier(), key, "0");
+		setter().put(carrier(), key, "1");
 
-		assertThat(read(carrier(), key)).containsExactly("463ac35c9f6413ad");
+		assertThat(read(carrier(), key)).containsExactly("1");
 	}
 
 }

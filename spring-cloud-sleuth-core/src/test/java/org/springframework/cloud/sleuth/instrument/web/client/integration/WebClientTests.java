@@ -32,6 +32,9 @@ import javax.servlet.http.HttpServletRequest;
 import brave.Span;
 import brave.Tracer;
 import brave.Tracing;
+import brave.baggage.BaggagePropagation;
+import brave.propagation.B3Propagation;
+import brave.propagation.B3SingleFormat;
 import brave.propagation.SamplingFlags;
 import brave.propagation.TraceContextOrSamplingFlags;
 import brave.sampler.Sampler;
@@ -90,6 +93,8 @@ import org.springframework.web.client.RestTemplate;
 import org.springframework.web.reactive.function.client.UnknownHttpStatusCodeException;
 import org.springframework.web.reactive.function.client.WebClient;
 
+import static brave.Span.Kind.CLIENT;
+import static brave.propagation.B3Propagation.Format.SINGLE_NO_PARENT;
 import static org.assertj.core.api.Assertions.fail;
 import static org.assertj.core.api.BDDAssertions.then;
 
@@ -99,11 +104,6 @@ import static org.assertj.core.api.BDDAssertions.then;
 		"spring.sleuth.web.client.skip-pattern=/skip.*" })
 @DirtiesContext
 public class WebClientTests {
-
-	static final String TRACE_ID_NAME = "X-B3-TraceId";
-	static final String SPAN_ID_NAME = "X-B3-SpanId";
-	static final String SAMPLED_NAME = "X-B3-Sampled";
-	static final String PARENT_ID_NAME = "X-B3-ParentSpanId";
 
 	private static final Log log = LogFactory.getLog(WebClientTests.class);
 
@@ -163,8 +163,7 @@ public class WebClientTests {
 		ResponseEntity<String> response = provider.get(this);
 
 		Awaitility.await().atMost(2, TimeUnit.SECONDS).untilAsserted(() -> {
-			then(getHeader(response, TRACE_ID_NAME)).isNull();
-			then(getHeader(response, SPAN_ID_NAME)).isNull();
+			then(getHeader(response, "b3")).isNull();
 			List<zipkin2.Span> spans = this.reporter.getSpans();
 			then(spans).isNotEmpty();
 			Optional<zipkin2.Span> noTraceSpan = new ArrayList<>(spans).stream()
@@ -220,8 +219,7 @@ public class WebClientTests {
 		try (Tracer.SpanInScope ws = this.tracer.withSpanInScope(span)) {
 			ResponseEntity<Map<String, String>> response = provider.get(this);
 
-			then(response.getBody().get(TRACE_ID_NAME.toLowerCase())).isNotNull();
-			then(response.getBody().get(SAMPLED_NAME.toLowerCase())).isEqualTo("0");
+			then(response.getBody().get("b3")).isNotNull().endsWith("-0"); // not sampled
 		}
 		finally {
 			span.finish();
@@ -250,8 +248,7 @@ public class WebClientTests {
 
 			// https://github.com/spring-cloud/spring-cloud-sleuth/issues/327
 			// we don't want to respond with any tracing data
-			then(getHeader(response, SAMPLED_NAME)).isNull();
-			then(getHeader(response, TRACE_ID_NAME)).isNull();
+			then(getHeader(response, "b3")).isNull();
 		}
 		finally {
 			span.finish();
@@ -480,7 +477,7 @@ public class WebClientTests {
 		AtomicReference<String> traceId = new AtomicReference<>();
 		try (Tracer.SpanInScope ws = this.tracer.withSpanInScope(span)) {
 			this.webClientBuilder.filter((request, exchange) -> {
-				traceId.set(request.headers().getFirst("X-B3-SpanId"));
+				traceId.set(request.headers().getFirst("b3"));
 
 				return exchange.exchange(request);
 			}).build().get().uri("http://localhost:" + this.port + "/traceid").retrieve()
@@ -530,6 +527,13 @@ public class WebClientTests {
 	@LoadBalancerClient(value = "fooservice",
 			configuration = SimpleLoadBalancerClientConfiguration.class)
 	public static class TestConfiguration {
+
+		@Bean
+		BaggagePropagation.FactoryBuilder baggagePropagationFactoryBuilder() {
+			// Use b3 single format as it is less verbose
+			return BaggagePropagation.newFactoryBuilder(B3Propagation.newFactoryBuilder()
+					.injectFormat(CLIENT, SINGLE_NO_PARENT).build());
+		}
 
 		@Bean
 		FooController fooController() {
@@ -625,26 +629,21 @@ public class WebClientTests {
 	@RestController
 	public static class FooController {
 
-		@Autowired
-		Tracer tracer;
-
 		Span span;
 
 		@RequestMapping(value = "/notrace", method = RequestMethod.GET)
 		public String notrace(
-				@RequestHeader(name = TRACE_ID_NAME, required = false) String traceId) {
-			then(traceId).isNotNull();
+				@RequestHeader(name = "b3", required = false) String b3Single) {
+			then(b3Single).isNotNull();
 			return "OK";
 		}
 
 		@RequestMapping(value = "/traceid", method = RequestMethod.GET)
-		public String traceId(@RequestHeader(TRACE_ID_NAME) String traceId,
-				@RequestHeader(SPAN_ID_NAME) String spanId,
-				@RequestHeader(PARENT_ID_NAME) String parentId) {
-			then(traceId).isNotEmpty();
-			then(parentId).isNotEmpty();
-			then(spanId).isNotEmpty();
-			return traceId;
+		public String traceId(@RequestHeader("b3") String b3Single) {
+			TraceContextOrSamplingFlags traceContext = B3SingleFormat
+					.parseB3SingleFormat(b3Single);
+			then(traceContext.context()).isNotNull();
+			return b3Single;
 		}
 
 		@RequestMapping("/")
@@ -657,12 +656,10 @@ public class WebClientTests {
 		}
 
 		@RequestMapping("/noresponse")
-		public void noResponse(@RequestHeader(TRACE_ID_NAME) String traceId,
-				@RequestHeader(SPAN_ID_NAME) String spanId,
-				@RequestHeader(PARENT_ID_NAME) String parentId) {
-			then(traceId).isNotEmpty();
-			then(parentId).isNotEmpty();
-			then(spanId).isNotEmpty();
+		public void noResponse(@RequestHeader("b3") String b3Single) {
+			TraceContextOrSamplingFlags traceContext = B3SingleFormat
+					.parseB3SingleFormat(b3Single);
+			then(traceContext.context()).isNotNull();
 		}
 
 		public Span getSpan() {

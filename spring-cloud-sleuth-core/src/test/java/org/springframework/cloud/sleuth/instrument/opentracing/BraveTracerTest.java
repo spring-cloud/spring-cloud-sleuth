@@ -41,6 +41,7 @@ import org.springframework.cloud.sleuth.util.ArrayListSpanReporter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+import static java.util.Collections.singletonMap;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.data.MapEntry.entry;
 import static org.springframework.boot.test.context.SpringBootTest.WebEnvironment.NONE;
@@ -82,10 +83,8 @@ public class BraveTracerTest {
 
 	@Test
 	public void extractTraceContext() {
-		Map<String, String> map = new LinkedHashMap<>();
-		map.put("X-B3-TraceId", "0000000000000001");
-		map.put("X-B3-SpanId", "0000000000000002");
-		map.put("X-B3-Sampled", "1");
+		Map<String, String> map = singletonMap("b3",
+				"0000000000000001-0000000000000002-1");
 
 		BraveSpanContext openTracingContext = this.opentracing
 				.extract(Format.Builtin.HTTP_HEADERS, new TextMapAdapter(map));
@@ -97,9 +96,7 @@ public class BraveTracerTest {
 	@Test
 	public void extractBaggage() {
 		Map<String, String> map = new LinkedHashMap<>();
-		map.put("X-B3-TraceId", "0000000000000001");
-		map.put("X-B3-SpanId", "0000000000000002");
-		map.put("X-B3-Sampled", "1");
+		map.put("b3", "0000000000000001-0000000000000002-1");
 		map.put("country-code", "FO");
 
 		BraveSpanContext openTracingContext = this.opentracing
@@ -111,10 +108,8 @@ public class BraveTracerTest {
 
 	@Test
 	public void extractTraceContextTextMap() {
-		Map<String, String> map = new LinkedHashMap<>();
-		map.put("X-B3-TraceId", "0000000000000001");
-		map.put("X-B3-SpanId", "0000000000000002");
-		map.put("X-B3-Sampled", "1");
+		Map<String, String> map = singletonMap("b3",
+				"0000000000000001-0000000000000002-1");
 
 		BraveSpanContext openTracingContext = this.opentracing
 				.extract(Format.Builtin.TEXT_MAP, new TextMapAdapter(map));
@@ -126,9 +121,7 @@ public class BraveTracerTest {
 	@Test
 	public void extractTraceContextCaseInsensitive() {
 		Map<String, String> map = new LinkedHashMap<>();
-		map.put("X-B3-TraceId", "0000000000000001");
-		map.put("x-b3-spanid", "0000000000000002");
-		map.put("x-b3-SaMpLeD", "1");
+		map.put("B3", "0000000000000001-0000000000000002-1");
 		map.put("other", "1");
 
 		BraveSpanContext openTracingContext = this.opentracing

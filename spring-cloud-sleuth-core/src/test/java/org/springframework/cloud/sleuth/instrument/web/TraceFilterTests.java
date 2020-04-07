@@ -36,7 +36,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import org.springframework.cloud.sleuth.util.ArrayListSpanReporter;
-import org.springframework.cloud.sleuth.util.SpanUtil;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -54,13 +53,6 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
  * @author Spencer Gibb
  */
 public class TraceFilterTests {
-
-	static final String PARENT_ID = SpanUtil.idToHex(10L);
-	static final String TRACE_ID_NAME = "X-B3-TraceId";
-	static final String SPAN_ID_NAME = "X-B3-SpanId";
-	static final String PARENT_SPAN_ID_NAME = "X-B3-ParentSpanId";
-	static final String SAMPLED_ID_NAME = "X-B3-Sampled";
-	static final String SPAN_FLAGS = "X-B3-Flags";
 
 	ArrayListSpanReporter reporter = new ArrayListSpanReporter();
 
@@ -152,16 +144,15 @@ public class TraceFilterTests {
 
 	@Test
 	public void startsNewTraceWithParentIdInHeaders() throws Exception {
-		this.request = builder().header(SPAN_ID_NAME, PARENT_ID)
-				.header(TRACE_ID_NAME, SpanUtil.idToHex(2L))
-				.header(PARENT_SPAN_ID_NAME, SpanUtil.idToHex(3L))
+		this.request = builder()
+				.header("b3", "0000000000000002-0000000000000003-1-000000000000000a")
 				.buildRequest(new MockServletContext());
 
 		this.filter.doFilter(this.request, this.response, this.filterChain);
 
 		then(Tracing.current().tracer().currentSpan()).isNull();
 		then(this.reporter.getSpans()).hasSize(1);
-		then(this.reporter.getSpans().get(0).id()).isEqualTo(PARENT_ID);
+		then(this.reporter.getSpans().get(0).id()).isEqualTo("0000000000000003");
 		then(this.reporter.getSpans().get(0).tags()).containsEntry("http.path", "/")
 				.containsEntry("http.method", HttpMethod.GET.toString());
 	}
@@ -169,10 +160,8 @@ public class TraceFilterTests {
 	@Test
 	public void continuesATraceWhenSpanNotSampled() throws Exception {
 		AtomicReference<Span> span = new AtomicReference<>();
-		this.request = builder().header(SPAN_ID_NAME, PARENT_ID)
-				.header(TRACE_ID_NAME, SpanUtil.idToHex(2L))
-				.header(PARENT_SPAN_ID_NAME, SpanUtil.idToHex(3L))
-				.header(SAMPLED_ID_NAME, 0).buildRequest(new MockServletContext());
+		this.request = builder().header("b3", "0000000000000014-000000000000000a-0")
+				.buildRequest(new MockServletContext());
 
 		this.filter.doFilter(this.request, this.response, (req, resp) -> {
 			this.filterChain.doFilter(req, resp);
@@ -180,7 +169,7 @@ public class TraceFilterTests {
 		});
 
 		then(Tracing.current().tracer().currentSpan()).isNull();
-		then(span.get().context().traceIdString()).isEqualTo(SpanUtil.idToHex(2L));
+		then(span.get().context().traceIdString()).isEqualTo("0000000000000014");
 	}
 
 	@Test
@@ -215,8 +204,7 @@ public class TraceFilterTests {
 
 	@Test
 	public void continuesSpanFromHeaders() throws Exception {
-		this.request = builder().header(SPAN_ID_NAME, PARENT_ID)
-				.header(TRACE_ID_NAME, SpanUtil.idToHex(20L))
+		this.request = builder().header("b3", "0000000000000014-000000000000000a")
 				.buildRequest(new MockServletContext());
 
 		this.filter.doFilter(this.request, this.response, this.filterChain);
@@ -232,8 +220,7 @@ public class TraceFilterTests {
 						.addScopeDecorator(StrictScopeDecorator.create()).build())
 				.spanReporter(this.reporter).supportsJoin(false).build();
 		HttpTracing httpTracing = HttpTracing.create(tracing);
-		this.request = builder().header(SPAN_ID_NAME, PARENT_ID)
-				.header(TRACE_ID_NAME, SpanUtil.idToHex(20L))
+		this.request = builder().header("b3", "0000000000000014-000000000000000a")
 				.buildRequest(new MockServletContext());
 
 		TracingFilter.create(httpTracing).doFilter(this.request, this.response,
@@ -241,13 +228,12 @@ public class TraceFilterTests {
 
 		then(Tracing.current().tracer().currentSpan()).isNull();
 		then(this.reporter.getSpans()).hasSize(1);
-		then(this.reporter.getSpans().get(0).parentId()).isEqualTo(PARENT_ID);
+		then(this.reporter.getSpans().get(0).parentId()).isEqualTo("000000000000000a");
 	}
 
 	@Test
 	public void shouldAnnotateSpanWithErrorWhenExceptionIsThrown() throws Exception {
-		this.request = builder().header(SPAN_ID_NAME, PARENT_ID)
-				.header(TRACE_ID_NAME, SpanUtil.idToHex(20L))
+		this.request = builder().header("b3", "0000000000000014-000000000000000a")
 				.buildRequest(new MockServletContext());
 
 		this.filterChain = new MockFilterChain() {
@@ -273,8 +259,7 @@ public class TraceFilterTests {
 
 	@Test
 	public void detachesSpanWhenResponseStatusIsNot2xx() throws Exception {
-		this.request = builder().header(SPAN_ID_NAME, PARENT_ID)
-				.header(TRACE_ID_NAME, SpanUtil.idToHex(20L))
+		this.request = builder().header("b3", "14-a")
 				.buildRequest(new MockServletContext());
 
 		this.response.setStatus(404);
@@ -285,8 +270,7 @@ public class TraceFilterTests {
 
 	@Test
 	public void closesSpanWhenResponseStatusIs2xx() throws Exception {
-		this.request = builder().header(SPAN_ID_NAME, PARENT_ID)
-				.header(TRACE_ID_NAME, SpanUtil.idToHex(20L))
+		this.request = builder().header("b3", "0000000000000014-000000000000000a")
 				.buildRequest(new MockServletContext());
 		this.response.setStatus(200);
 
@@ -298,8 +282,7 @@ public class TraceFilterTests {
 
 	@Test
 	public void closesSpanWhenResponseStatusIs3xx() throws Exception {
-		this.request = builder().header(SPAN_ID_NAME, PARENT_ID)
-				.header(TRACE_ID_NAME, SpanUtil.idToHex(20L))
+		this.request = builder().header("b3", "0000000000000014-000000000000000a")
 				.buildRequest(new MockServletContext());
 		this.response.setStatus(302);
 
@@ -311,8 +294,7 @@ public class TraceFilterTests {
 
 	@Test
 	public void returns400IfSpanIsMalformedAndCreatesANewSpan() throws Exception {
-		this.request = builder().header(SPAN_ID_NAME, "asd")
-				.header(TRACE_ID_NAME, SpanUtil.idToHex(20L))
+		this.request = builder().header("b3", "asd")
 				.buildRequest(new MockServletContext());
 
 		this.filter.doFilter(this.request, this.response, this.filterChain);
@@ -324,9 +306,7 @@ public class TraceFilterTests {
 
 	@Test
 	public void returns200IfSpanParentIsMalformedAndCreatesANewSpan() throws Exception {
-		this.request = builder().header(SPAN_ID_NAME, PARENT_ID)
-				.header(PARENT_SPAN_ID_NAME, "-")
-				.header(TRACE_ID_NAME, SpanUtil.idToHex(20L))
+		this.request = builder().header("b3", "asd")
 				.buildRequest(new MockServletContext());
 
 		this.filter.doFilter(this.request, this.response, this.filterChain);
@@ -337,49 +317,19 @@ public class TraceFilterTests {
 	}
 
 	@Test
-	public void samplesASpanRegardlessOfTheSamplerWhenXB3FlagsIsPresentAndSetTo1()
-			throws Exception {
-		this.request = builder().header(SPAN_FLAGS, 1)
-				.buildRequest(new MockServletContext());
+	public void samplesASpanRegardlessOfTheSamplerWhenDebugIsPresent() throws Exception {
+		this.request = builder().header("b3", "d").buildRequest(new MockServletContext());
 
 		neverSampleFilter().doFilter(this.request, this.response, this.filterChain);
 
 		then(Tracing.current().tracer().currentSpan()).isNull();
 		then(this.reporter.getSpans()).isNotEmpty();
-	}
-
-	@Test
-	public void doesNotOverrideTheSampledFlagWhenXB3FlagIsSetToOtherValueThan1()
-			throws Exception {
-		this.request = builder().header(SPAN_FLAGS, 0)
-				.buildRequest(new MockServletContext());
-
-		this.filter.doFilter(this.request, this.response, this.filterChain);
-
-		then(Tracing.current().tracer().currentSpan()).isNull();
-		then(this.reporter.getSpans()).isNotEmpty();
-	}
-
-	@SuppressWarnings("Duplicates")
-	@Test
-	public void samplesWhenDebugFlagIsSetTo1AndOnlySpanIdIsSet() throws Exception {
-		this.request = builder().header(SPAN_FLAGS, 1)
-				.header(SPAN_ID_NAME, SpanUtil.idToHex(10L))
-				.buildRequest(new MockServletContext());
-
-		neverSampleFilter().doFilter(this.request, this.response, this.filterChain);
-
-		then(Tracing.current().tracer().currentSpan()).isNull();
-		// It is ok to go without a trace ID, if sampling or debug is set
-		then(this.reporter.getSpans()).hasSize(1).extracting("id")
-				.isNotEqualTo(SpanUtil.idToHex(10L));
 	}
 
 	@SuppressWarnings("Duplicates")
 	@Test
 	public void usesSamplingMechanismWhenIncomingTraceIsMalformed() throws Exception {
-		this.request = builder().header(SPAN_FLAGS, 1)
-				.header(TRACE_ID_NAME, SpanUtil.idToHex(10L))
+		this.request = builder().header("b3", "asd")
 				.buildRequest(new MockServletContext());
 
 		neverSampleFilter().doFilter(this.request, this.response, this.filterChain);
@@ -407,8 +357,7 @@ public class TraceFilterTests {
 
 	@Test
 	public void samplesASpanDebugFlagWithInterceptor() throws Exception {
-		this.request = builder().header(SPAN_FLAGS, 1)
-				.buildRequest(new MockServletContext());
+		this.request = builder().header("b3", "d").buildRequest(new MockServletContext());
 
 		neverSampleFilter().doFilter(this.request, this.response, this.filterChain);
 
