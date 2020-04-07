@@ -72,11 +72,16 @@ public class TraceBaggageAutoConfiguration {
 	 * To override the underlying context format, override this bean and set the delegate
 	 * to what you need. {@link BaggagePropagation.FactoryBuilder} will unwrap itself if
 	 * no fields are configured.
+	 *
+	 * <p>
+	 * This will use {@link B3Propagation.Format#SINGLE_NO_PARENT} for non-remote spans,
+	 * such as for messaging. Note: it will still parse incoming multi-header spans.
 	 */
 	@Bean
 	@ConditionalOnMissingBean
 	BaggagePropagation.FactoryBuilder baggagePropagationFactoryBuilder() {
-		return BaggagePropagation.newFactoryBuilder(B3Propagation.FACTORY);
+		return BaggagePropagation.newFactoryBuilder(B3Propagation.newFactoryBuilder()
+				.injectFormat(B3Propagation.Format.SINGLE_NO_PARENT).build());
 	}
 
 	@Bean

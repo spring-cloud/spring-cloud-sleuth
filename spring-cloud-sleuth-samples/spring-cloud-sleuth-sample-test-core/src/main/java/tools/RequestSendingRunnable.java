@@ -30,6 +30,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.RestTemplate;
 
 import static org.assertj.core.api.BDDAssertions.then;
+import static tools.SpanUtil.idToHex;
 
 /**
  * Runnable that will send a request via the provide rest template to the given url. It
@@ -38,9 +39,6 @@ import static org.assertj.core.api.BDDAssertions.then;
  * @author Marcin Grzejszczak
  */
 public class RequestSendingRunnable implements Runnable {
-
-	static final String TRACE_ID_NAME = "X-B3-TraceId";
-	static final String SPAN_ID_NAME = "X-B3-SpanId";
 
 	private static final Log log = LogFactory.getLog(RequestSendingRunnable.class);
 
@@ -75,8 +73,7 @@ public class RequestSendingRunnable implements Runnable {
 
 	private RequestEntity<Void> requestWithTraceId() {
 		HttpHeaders headers = new HttpHeaders();
-		headers.add(TRACE_ID_NAME, SpanUtil.idToHex(this.traceId));
-		headers.add(SPAN_ID_NAME, SpanUtil.idToHex(this.spanId));
+		headers.add("b3", idToHex(this.traceId) + "-" + idToHex(this.spanId));
 		URI uri = URI.create(this.url);
 		RequestEntity<Void> requestEntity = new RequestEntity<>(headers, HttpMethod.GET,
 				uri);

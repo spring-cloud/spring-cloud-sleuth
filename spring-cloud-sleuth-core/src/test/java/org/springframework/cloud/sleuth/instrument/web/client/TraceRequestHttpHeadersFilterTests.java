@@ -32,6 +32,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.mock.http.server.reactive.MockServerHttpRequest;
 import org.springframework.mock.web.server.MockServerWebExchange;
 
+// This test uses B3 multi format as it is the default for client propagation
 public class TraceRequestHttpHeadersFilterTests {
 
 	StrictCurrentTraceContext currentTraceContext = StrictCurrentTraceContext.create();

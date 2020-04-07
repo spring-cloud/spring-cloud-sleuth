@@ -100,10 +100,10 @@ public class ITTracingChannelInterceptorTests implements MessageHandler {
 	// formerly known as TraceChannelInterceptorTest.executableSpanCreation
 	@Test
 	public void propagatesNoopSpan() {
-		this.directChannel.send(
-				MessageBuilder.withPayload("hi").setHeader("X-B3-Sampled", "0").build());
+		this.directChannel
+				.send(MessageBuilder.withPayload("hi").setHeader("b3", "0").build());
 
-		assertThat(this.message.getHeaders()).containsEntry("X-B3-Sampled", "0");
+		assertThat(this.message.getHeaders()).containsEntry("b3", "0");
 
 		assertThat(this.currentSpan.isNoop()).isTrue();
 	}

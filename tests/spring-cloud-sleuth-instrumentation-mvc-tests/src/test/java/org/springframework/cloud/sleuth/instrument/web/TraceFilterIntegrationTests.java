@@ -69,12 +69,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest(classes = TraceFilterIntegrationTests.Config.class)
 public class TraceFilterIntegrationTests extends AbstractMvcIntegrationTest {
 
-	static final String TRACE_ID_NAME = "X-B3-TraceId";
-	static final String SPAN_ID_NAME = "X-B3-SpanId";
-	static final String SAMPLED_NAME = "X-B3-Sampled";
-
-	private static Log logger = LogFactory.getLog(TraceFilterIntegrationTests.class);
-
 	private static Span span;
 
 	@Autowired
@@ -244,72 +238,69 @@ public class TraceFilterIntegrationTests extends AbstractMvcIntegrationTest {
 	}
 
 	private MvcResult whenSentPingWithTraceId(Long passedTraceId) throws Exception {
-		return sendPingWithTraceId(TRACE_ID_NAME, passedTraceId);
+		return sendPingWithTraceId(passedTraceId);
 	}
 
 	private MvcResult whenSentInfoWithTraceId(Long passedTraceId) throws Exception {
-		return sendRequestWithTraceId("/additionalContextPath/info", TRACE_ID_NAME,
-				passedTraceId);
+		return sendRequestWithTraceId("/additionalContextPath/info", passedTraceId);
 	}
 
 	private MvcResult whenSentFutureWithTraceId(Long passedTraceId) throws Exception {
-		return sendRequestWithTraceId("/future", TRACE_ID_NAME, passedTraceId);
+		return sendRequestWithTraceId("/future", passedTraceId);
 	}
 
 	private MvcResult whenSentDeferredWithTraceId(Long passedTraceId) throws Exception {
-		return sendDeferredWithTraceId(TRACE_ID_NAME, passedTraceId);
+		return sendDeferredWithTraceId(passedTraceId);
 	}
 
 	private MvcResult whenSentToNonExistentEndpointWithTraceId(Long passedTraceId)
 			throws Exception {
-		return sendRequestWithTraceId("/exception/nonExistent", TRACE_ID_NAME,
-				passedTraceId, HttpStatus.NOT_FOUND);
+		return sendRequestWithTraceId("/exception/nonExistent", passedTraceId,
+				HttpStatus.NOT_FOUND);
 	}
 
 	private MvcResult whenSentToExceptionThrowingEndpoint(Long passedTraceId)
 			throws Exception {
-		return sendRequestWithTraceId("/throwsException", TRACE_ID_NAME, passedTraceId,
+		return sendRequestWithTraceId("/throwsException", passedTraceId,
 				HttpStatus.INTERNAL_SERVER_ERROR);
 	}
 
-	private MvcResult sendPingWithTraceId(String headerName, Long traceId)
-			throws Exception {
-		return sendRequestWithTraceId("/ping", headerName, traceId);
+	private MvcResult sendPingWithTraceId(Long traceId) throws Exception {
+		return sendRequestWithTraceId("/ping", traceId);
 	}
 
-	private MvcResult sendDeferredWithTraceId(String headerName, Long traceId)
-			throws Exception {
-		return sendRequestWithTraceId("/deferred", headerName, traceId);
+	private MvcResult sendDeferredWithTraceId(Long traceId) throws Exception {
+		return sendRequestWithTraceId("/deferred", traceId);
 	}
 
-	private MvcResult sendRequestWithTraceId(String path, String headerName, Long traceId)
-			throws Exception {
+	private MvcResult sendRequestWithTraceId(String path, Long traceId) throws Exception {
 		return this.mockMvc
 				.perform(MockMvcRequestBuilders.get(path).accept(MediaType.TEXT_PLAIN)
-						.header(headerName, SpanUtil.idToHex(traceId))
-						.header(SPAN_ID_NAME, SpanUtil.idToHex(new Random().nextLong())))
+						.header("b3",
+								SpanUtil.idToHex(traceId) + "-"
+										+ SpanUtil.idToHex(new Random().nextLong())))
 				.andReturn();
 	}
 
 	private MvcResult whenSentRequestWithTraceIdAndNoSpanId(Long traceId)
 			throws Exception {
-		return this.mockMvc
-				.perform(MockMvcRequestBuilders.get("/ping").accept(MediaType.TEXT_PLAIN)
-						.header(TRACE_ID_NAME, SpanUtil.idToHex(traceId)))
+		return this.mockMvc.perform(MockMvcRequestBuilders.get("/ping")
+				.accept(MediaType.TEXT_PLAIN).header("b3", SpanUtil.idToHex(traceId)))
 				.andReturn();
 	}
 
-	private MvcResult sendRequestWithTraceId(String path, String headerName, Long traceId,
-			HttpStatus status) throws Exception {
+	private MvcResult sendRequestWithTraceId(String path, Long traceId, HttpStatus status)
+			throws Exception {
 		return this.mockMvc
 				.perform(MockMvcRequestBuilders.get(path).accept(MediaType.TEXT_PLAIN)
-						.header(headerName, SpanUtil.idToHex(traceId))
-						.header(SPAN_ID_NAME, SpanUtil.idToHex(new Random().nextLong())))
+						.header("b3",
+								SpanUtil.idToHex(traceId) + "-"
+										+ SpanUtil.idToHex(new Random().nextLong())))
 				.andExpect(status().is(status.value())).andReturn();
 	}
 
 	private boolean notSampledHeaderIsPresent(MvcResult mvcResult) {
-		return "0".equals(mvcResult.getResponse().getHeader(SAMPLED_NAME));
+		return "0".equals(mvcResult.getResponse().getHeader("b3"));
 	}
 
 	@EnableAutoConfiguration

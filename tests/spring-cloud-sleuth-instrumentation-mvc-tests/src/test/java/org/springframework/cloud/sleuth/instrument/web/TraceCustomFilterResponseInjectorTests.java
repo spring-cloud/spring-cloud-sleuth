@@ -28,14 +28,15 @@ import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletResponse;
 
 import brave.Span;
+import brave.baggage.BaggagePropagation;
 import brave.http.HttpTracing;
+import brave.propagation.B3Propagation;
 import org.junit.jupiter.api.Test;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.web.servlet.context.ServletWebServerInitializedEvent;
-import org.springframework.cloud.sleuth.util.SpanUtil;
 import org.springframework.context.ApplicationListener;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -49,6 +50,9 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.filter.GenericFilterBean;
 
+import static brave.Span.Kind.CLIENT;
+import static brave.propagation.B3Propagation.Format.SINGLE_NO_PARENT;
+import static brave.propagation.B3SingleFormat.writeB3SingleFormat;
 import static org.assertj.core.api.BDDAssertions.then;
 import static org.springframework.boot.test.context.SpringBootTest.WebEnvironment.RANDOM_PORT;
 
@@ -56,9 +60,6 @@ import static org.springframework.boot.test.context.SpringBootTest.WebEnvironmen
 		webEnvironment = RANDOM_PORT)
 @DirtiesContext
 public class TraceCustomFilterResponseInjectorTests {
-
-	static final String TRACE_ID_NAME = "X-B3-TraceId";
-	static final String SPAN_ID_NAME = "X-B3-SpanId";
 
 	@Autowired
 	RestTemplate restTemplate;
@@ -80,7 +81,7 @@ public class TraceCustomFilterResponseInjectorTests {
 		ResponseEntity<Map> responseEntity = this.restTemplate.exchange(requestEntity,
 				Map.class);
 
-		then(responseEntity.getHeaders()).containsKeys(TRACE_ID_NAME, SPAN_ID_NAME)
+		then(responseEntity.getHeaders()).containsKey("b3")
 				.as("Trace headers must be present in response headers");
 	}
 
@@ -89,6 +90,13 @@ public class TraceCustomFilterResponseInjectorTests {
 	static class Config implements ApplicationListener<ServletWebServerInitializedEvent> {
 
 		int port;
+
+		@Bean
+		BaggagePropagation.FactoryBuilder baggagePropagationFactoryBuilder() {
+			// Use b3 single format as it is less verbose
+			return BaggagePropagation.newFactoryBuilder(B3Propagation.newFactoryBuilder()
+					.injectFormat(CLIENT, SINGLE_NO_PARENT).build());
+		}
 
 		// tag::configuration[]
 		@Bean
@@ -129,9 +137,7 @@ public class TraceCustomFilterResponseInjectorTests {
 				FilterChain filterChain) throws IOException, ServletException {
 			HttpServletResponse response = (HttpServletResponse) servletResponse;
 			Span currentSpan = this.httpTracing.tracing().tracer().currentSpan();
-			response.addHeader("X-B3-TraceId", currentSpan.context().traceIdString());
-			response.addHeader("X-B3-SpanId",
-					SpanUtil.idToHex(currentSpan.context().spanId()));
+			response.addHeader("b3", writeB3SingleFormat(currentSpan.context()));
 			filterChain.doFilter(request, response);
 		}
 

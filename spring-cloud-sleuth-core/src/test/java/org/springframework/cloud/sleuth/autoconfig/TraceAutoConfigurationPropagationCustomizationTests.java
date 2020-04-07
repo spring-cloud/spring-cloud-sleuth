@@ -16,6 +16,7 @@
 
 package org.springframework.cloud.sleuth.autoconfig;
 
+import brave.Tracing;
 import brave.baggage.BaggagePropagation;
 import brave.propagation.B3Propagation;
 import brave.propagation.B3SinglePropagation;
@@ -41,8 +42,8 @@ public class TraceAutoConfigurationPropagationCustomizationTests {
 	@Test
 	public void stillCreatesDefault() {
 		this.contextRunner.run((context) -> {
-			BDDAssertions.then(context.getBean(Propagation.Factory.class))
-					.isEqualTo(B3Propagation.FACTORY);
+			BDDAssertions.then(context.getBean(Tracing.class).propagation())
+					.isInstanceOf(B3Propagation.class);
 		});
 	}
 
@@ -52,8 +53,7 @@ public class TraceAutoConfigurationPropagationCustomizationTests {
 				.withPropertyValues("spring.sleuth.baggage.remote-fields=country-code")
 				.run((context) -> {
 					BDDAssertions.then(context.getBean(Propagation.Factory.class))
-							.hasFieldOrPropertyWithValue("delegate",
-									B3Propagation.FACTORY);
+							.extracting("delegate").isNotNull();
 				});
 	}
 
@@ -61,8 +61,8 @@ public class TraceAutoConfigurationPropagationCustomizationTests {
 	public void defaultValueUsedWhenApplicationNameNotSet() {
 		this.contextRunner.withPropertyValues("spring.application.name=")
 				.run((context) -> {
-					BDDAssertions.then(context.getBean(Propagation.Factory.class))
-							.isEqualTo(B3Propagation.FACTORY);
+					BDDAssertions.then(context.getBean(Tracing.class).propagation())
+							.isInstanceOf(B3Propagation.class);
 				});
 	}
 

@@ -93,6 +93,7 @@ public class TraceRestTemplateInterceptorTests {
 		Map<String, String> headers = this.template.getForEntity("/", Map.class)
 				.getBody();
 
+		// Default inject format for client spans is B3 multi
 		then(headers.get("X-B3-TraceId")).isNotNull();
 		then(headers.get("X-B3-SpanId")).isNotNull();
 	}
@@ -109,6 +110,7 @@ public class TraceRestTemplateInterceptorTests {
 			span.finish();
 		}
 
+		// Default inject format for client spans is B3 multi
 		then(headers.get("X-B3-TraceId"))
 				.isEqualTo(SpanUtil.idToHex(span.context().traceId()));
 		then(headers.get("X-B3-SpanId"))
@@ -205,7 +207,8 @@ public class TraceRestTemplateInterceptorTests {
 		@RequestMapping("/")
 		public Map<String, String> home(@RequestHeader HttpHeaders headers) {
 			this.span = TraceRestTemplateInterceptorTests.this.tracer.currentSpan();
-			Map<String, String> map = new HashMap<String, String>();
+			Map<String, String> map = new HashMap<>();
+			// Default inject format for client spans is B3 multi
 			addHeaders(map, headers, "X-B3-SpanId", "X-B3-TraceId", "X-B3-ParentSpanId");
 			return map;
 		}

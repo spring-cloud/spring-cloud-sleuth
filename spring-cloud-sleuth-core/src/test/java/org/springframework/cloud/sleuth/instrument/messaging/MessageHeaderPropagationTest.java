@@ -56,26 +56,26 @@ public class MessageHeaderPropagationTest
 	@Test
 	public void testGetByteArrayValue() {
 		MessageHeaderAccessor carrier = carrier();
-		carrier.setHeader("X-B3-TraceId", "48485a3953bb6124".getBytes());
-		carrier.setHeader("X-B3-TraceId", "48485a3953bb6124000000".getBytes());
-		String value = MessageHeaderPropagation.INSTANCE.get(carrier, "X-B3-TraceId");
-		assertThat(value).isEqualTo("48485a3953bb6124000000");
+		carrier.setHeader("b3", "48485a3953bb6124-1234".getBytes());
+		carrier.setHeader("b3", "48485a3953bb6124000000-1234".getBytes());
+		String value = MessageHeaderPropagation.INSTANCE.get(carrier, "b3");
+		assertThat(value).isEqualTo("48485a3953bb6124000000-1234");
 	}
 
 	@Test
 	public void testGetStringValue() {
 		MessageHeaderAccessor carrier = carrier();
-		carrier.setHeader("X-B3-TraceId", "48485a3953bb6124");
-		carrier.setHeader("X-B3-TraceId", "48485a3953bb61240000000");
-		String value = MessageHeaderPropagation.INSTANCE.get(carrier, "X-B3-TraceId");
-		assertThat(value).isEqualTo("48485a3953bb61240000000");
+		carrier.setHeader("B3", "48485a3953bb6124-1234");
+		carrier.setHeader("B3", "48485a3953bb61240000000-1234");
+		String value = MessageHeaderPropagation.INSTANCE.get(carrier, "B3");
+		assertThat(value).isEqualTo("48485a3953bb61240000000-1234");
 	}
 
 	@Test
 	public void testGetNullValue() {
 		MessageHeaderAccessor carrier = carrier();
-		carrier.setHeader("X-B3-TraceId", "48485a3953bb6124");
-		carrier.setHeader("X-B3-TraceId", "48485a3953bb61240000000");
+		carrier.setHeader("B3", "48485a3953bb6124-1234");
+		carrier.setHeader("B3", "48485a3953bb61240000000-1234");
 		String value = MessageHeaderPropagation.INSTANCE.get(carrier, "non existent key");
 		assertThat(value).isNull();
 	}
@@ -85,7 +85,7 @@ public class MessageHeaderPropagationTest
 		MessageHeaderAccessor carrier = carrier();
 		carrier.setHeader(NativeMessageHeaderAccessor.NATIVE_HEADERS,
 				"{spanTraceId=[123], spanId=[456], spanSampled=[0]}");
-		MessageHeaderPropagation.INSTANCE.get(carrier, "X-B3-SpanId");
+		MessageHeaderPropagation.INSTANCE.get(carrier, "b3");
 	}
 
 	@Test
@@ -94,7 +94,7 @@ public class MessageHeaderPropagationTest
 		carrier.setHeader(NativeMessageHeaderAccessor.NATIVE_HEADERS,
 				"{spanTraceId=[123], spanId=[456], spanSampled=[0]}");
 		MessageHeaderPropagation.removeAnyTraceHeaders(carrier,
-				Collections.singletonList("X-B3-SpanId"));
+				Collections.singletonList("b3"));
 	}
 
 	@Test
@@ -102,7 +102,7 @@ public class MessageHeaderPropagationTest
 		MessageHeaderAccessor carrier = carrier();
 		carrier.setHeader(NativeMessageHeaderAccessor.NATIVE_HEADERS,
 				"{spanTraceId=[123], spanId=[456], spanSampled=[0]}");
-		MessageHeaderPropagation.INSTANCE.put(carrier, "X-B3-SpanId", "1234");
+		MessageHeaderPropagation.INSTANCE.put(carrier, "b3", "1234");
 	}
 
 }
