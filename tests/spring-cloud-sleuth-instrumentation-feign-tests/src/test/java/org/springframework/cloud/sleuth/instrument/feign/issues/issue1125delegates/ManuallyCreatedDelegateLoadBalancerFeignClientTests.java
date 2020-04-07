@@ -65,13 +65,13 @@ import static org.assertj.core.api.BDDAssertions.then;
 public class ManuallyCreatedDelegateLoadBalancerFeignClientTests {
 
 	@Autowired
-	MyClient myClient;
+	MyLoadBalancerClient myLoadBalancerClient;
 
 	@Autowired
 	MyDelegateClient myDelegateClient;
 
 	@Autowired
-	MyNameRemote myNameRemote;
+	AnnotatedFeignClient annotatedFeignClient;
 
 	@Autowired
 	ArrayListSpanReporter reporter;
@@ -83,31 +83,31 @@ public class ManuallyCreatedDelegateLoadBalancerFeignClientTests {
 
 	@Test
 	public void should_reuse_custom_feign_client() {
-		String response = this.myNameRemote.get();
+		String response = this.annotatedFeignClient.get();
 
-		then(this.myClient.wasCalled()).isTrue();
+		then(this.myLoadBalancerClient.wasCalled()).isTrue();
 		then(this.myDelegateClient.wasCalled()).isTrue();
 		then(response).isEqualTo("foo");
 		List<Span> spans = this.reporter.getSpans();
 		// retries
 		then(spans).hasSize(1);
-		then(spans.get(0).tags().get("http.path")).isEqualTo("/");
+		then(spans.get(0).tags().get("http.path")).isEqualTo("/test");
 	}
 
 	@Test
 	public void my_client_called() {
-		this.myNameRemote.get();
-		then(this.myClient.wasCalled()).isTrue();
+		this.annotatedFeignClient.get();
+		then(this.myLoadBalancerClient.wasCalled()).isTrue();
 		then(this.myDelegateClient.wasCalled()).isTrue();
 	}
 
 	@Test
 	public void span_captured() {
-		this.myNameRemote.get();
+		this.annotatedFeignClient.get();
 		List<Span> spans = this.reporter.getSpans();
 		// retries
 		then(spans).hasSize(1);
-		then(spans.get(0).tags().get("http.path")).isEqualTo("/");
+		then(spans.get(0).tags().get("http.path")).isEqualTo("/test");
 	}
 
 }
@@ -126,15 +126,15 @@ class Application {
 	public Client client(MyDelegateClient myDelegateClient,
 			CachingSpringLoadBalancerFactory cachingFactory,
 			SpringClientFactory clientFactory) {
-		return new MyClient(myDelegateClient, cachingFactory, clientFactory);
+		return new MyLoadBalancerClient(myDelegateClient, cachingFactory, clientFactory);
 	}
 
 	@Bean
-	public MyNameRemote myNameRemote(Client client, Decoder decoder, Encoder encoder,
+	public AnnotatedFeignClient myNameRemote(Client client, Decoder decoder, Encoder encoder,
 			Contract contract) {
 		return Feign.builder().client(client).encoder(encoder).decoder(decoder)
 				.contract(contract)
-				.target(new HardCodedTarget<>(MyNameRemote.class, "foo", "http://foo"));
+				.target(new HardCodedTarget<>(AnnotatedFeignClient.class, "foo", "http://foo"));
 	}
 
 	@Bean
@@ -149,9 +149,9 @@ class Application {
 
 }
 
-class MyClient extends LoadBalancerFeignClient {
+class MyLoadBalancerClient extends LoadBalancerFeignClient {
 
-	MyClient(Client delegate, CachingSpringLoadBalancerFactory lbClientFactory,
+	MyLoadBalancerClient(Client delegate, CachingSpringLoadBalancerFactory lbClientFactory,
 			SpringClientFactory clientFactory) {
 		super(delegate, lbClientFactory, clientFactory);
 	}
@@ -190,9 +190,9 @@ class MyDelegateClient implements Client {
 }
 
 @FeignClient(name = "foo", url = "http://foo")
-interface MyNameRemote {
+interface AnnotatedFeignClient {
 
-	@RequestMapping(value = "/", method = RequestMethod.GET)
+	@RequestMapping(value = "/test", method = RequestMethod.GET)
 	String get();
 
 }

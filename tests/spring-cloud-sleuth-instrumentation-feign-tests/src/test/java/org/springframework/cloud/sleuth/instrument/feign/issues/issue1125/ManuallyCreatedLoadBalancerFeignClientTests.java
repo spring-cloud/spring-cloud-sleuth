@@ -59,10 +59,10 @@ import static org.assertj.core.api.BDDAssertions.then;
 public class ManuallyCreatedLoadBalancerFeignClientTests {
 
 	@Autowired
-	MyClient myClient;
+	MyLoadBalancerClient myLoadBalancerClient;
 
 	@Autowired
-	MyNameRemote myNameRemote;
+	AnnotatedFeignClient annotatedFeignClient;
 
 	@Autowired
 	ArrayListSpanReporter reporter;
@@ -74,29 +74,29 @@ public class ManuallyCreatedLoadBalancerFeignClientTests {
 
 	@Test
 	public void should_reuse_custom_feign_client() {
-		String response = this.myNameRemote.get();
+		String response = this.annotatedFeignClient.get();
 
-		then(this.myClient.wasCalled()).isTrue();
+		then(this.myLoadBalancerClient.wasCalled()).isTrue();
 		then(response).isEqualTo("foo");
 		List<Span> spans = this.reporter.getSpans();
 		// retries
 		then(spans).hasSize(1);
-		then(spans.get(0).tags().get("http.path")).isEqualTo("/");
+		then(spans.get(0).tags().get("http.path")).isEqualTo("/test");
 	}
 
 	@Test
 	public void my_client_called() {
-		this.myNameRemote.get();
-		then(this.myClient.wasCalled()).isTrue();
+		this.annotatedFeignClient.get();
+		then(this.myLoadBalancerClient.wasCalled()).isTrue();
 	}
 
 	@Test
 	public void span_captured() {
-		this.myNameRemote.get();
+		this.annotatedFeignClient.get();
 		List<Span> spans = this.reporter.getSpans();
 		// retries
 		then(spans).hasSize(1);
-		then(spans.get(0).tags().get("http.path")).isEqualTo("/");
+		then(spans.get(0).tags().get("http.path")).isEqualTo("/test");
 	}
 
 }
@@ -109,7 +109,8 @@ class Application {
 	@Bean
 	public Client client(CachingSpringLoadBalancerFactory cachingFactory,
 			SpringClientFactory clientFactory) {
-		return new MyClient(new MyDelegateClient(), cachingFactory, clientFactory);
+		return new MyLoadBalancerClient(new MyDelegateClient(), cachingFactory,
+				clientFactory);
 	}
 
 	@Bean
@@ -124,9 +125,10 @@ class Application {
 
 }
 
-class MyClient extends LoadBalancerFeignClient {
+class MyLoadBalancerClient extends LoadBalancerFeignClient {
 
-	MyClient(Client delegate, CachingSpringLoadBalancerFactory lbClientFactory,
+	MyLoadBalancerClient(Client delegate,
+			CachingSpringLoadBalancerFactory lbClientFactory,
 			SpringClientFactory clientFactory) {
 		super(delegate, lbClientFactory, clientFactory);
 	}
@@ -161,9 +163,9 @@ class MyDelegateClient implements Client {
 }
 
 @FeignClient(name = "foo", url = "http://foo")
-interface MyNameRemote {
+interface AnnotatedFeignClient {
 
-	@RequestMapping(value = "/", method = RequestMethod.GET)
+	@RequestMapping(value = "/test", method = RequestMethod.GET)
 	String get();
 
 }
