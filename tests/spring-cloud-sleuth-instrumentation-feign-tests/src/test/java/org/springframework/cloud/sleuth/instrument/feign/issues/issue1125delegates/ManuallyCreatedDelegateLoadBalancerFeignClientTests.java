@@ -130,7 +130,7 @@ class Application {
 	}
 
 	@Bean
-	public AnnotatedFeignClient myNameRemote(Client client, Decoder decoder, Encoder encoder,
+	public AnnotatedFeignClient annotatedFeignClient(Client client, Decoder decoder, Encoder encoder,
 			Contract contract) {
 		return Feign.builder().client(client).encoder(encoder).decoder(decoder)
 				.contract(contract)
