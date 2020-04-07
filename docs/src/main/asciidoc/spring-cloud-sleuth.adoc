@@ -66,7 +66,7 @@ Here are the most relevant links from the OpenZipkin Brave project:
 
 == Sampling
 
-By default Spring Cloud Sleuth sets all spans to non-exportable.
+By default Spring Cloud Sleuth doesn't sample spans.
 That means that traces appear in logs but not in any remote store.
 For testing the default is often enough, and it probably is all you need if you use only the logs (for example, with an ELK aggregator).
 If you export span data to Zipkin, there is also an `Sampler.ALWAYS_SAMPLE` setting that exports everything, `RateLimitingSampler` setting that samples X transactions per second (defaults to `1000`) or `ProbabilityBasedSampler` setting that samples a fixed fraction of spans.
@@ -82,7 +82,7 @@ include::{project-root}/spring-cloud-sleuth-core/src/test/java/org/springframewo
 ----
 
 TIP: You can set the HTTP header `b3` to `1`, or, when doing messaging, you can set the `spanFlags` header to `1`.
-Doing so forces the current span to be exportable regardless of the sampling decision.
+Doing so forces the current request to be sampled regardless of configuration.
 
 In order to use the rate-limited sampler set the `spring.sleuth.sampler.rate` property to choose an amount of traces to accept on a per-second interval. The minimum number is 0 and the max is 2,147,483,647 (max int).
 

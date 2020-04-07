@@ -5,11 +5,11 @@
 |spring.sleuth.async.configurer.enabled | true | Enable default AsyncConfigurer.
 |spring.sleuth.async.enabled | true | Enable instrumenting async related components so that the tracing information is passed between threads.
 |spring.sleuth.async.ignored-beans |  | List of {@link java.util.concurrent.Executor} bean names that should be ignored and not wrapped in a trace representation.
-|spring.sleuth.baggage.correlation-enabled | true | Enable a {@link Slf4jScopeDecorator} that prints tracing information in the logs.
-|spring.sleuth.baggage.correlation-fields |  | A list of keys to be put from baggage to MDC.
-|spring.sleuth.baggage.local-fields |  | Same as {@link #remoteKeys} except that this field is not propagated to remote services. @see brave.baggage.BaggagePropagationConfig.SingleBaggageField#local(BaggageField)
-|spring.sleuth.baggage.remote-fields |  | List of fields that are referenced the same in-process as it is on the wire. For example, the name "x-vcap-request-id" would be set as-is including the prefix. <p> Note: {@code fieldName} will be implicitly lower-cased. @see brave.baggage.BaggagePropagationConfig.SingleBaggageField#remote(BaggageField)
-|spring.sleuth.baggage.tag-fields |  | A list of baggage field names which are tagged when a span finishes.
+|spring.sleuth.baggage.correlation-enabled | true | Adds a {@link CorrelationScopeDecorator} to put baggage values into the correlation context.
+|spring.sleuth.baggage.correlation-fields |  | A list of {@link BaggageField#name() fields} to add to correlation (MDC) context. @see CorrelationScopeConfig.SingleCorrelationField#create(BaggageField)
+|spring.sleuth.baggage.local-fields |  | Same as {@link #remoteFields} except that this field is not propagated to remote services. @see BaggagePropagationConfig.SingleBaggageField#local(BaggageField)
+|spring.sleuth.baggage.remote-fields |  | List of fields that are referenced the same in-process as it is on the wire. For example, the field "x-vcap-request-id" would be set as-is including the prefix. @see BaggagePropagationConfig.SingleBaggageField#remote(BaggageField) @see BaggagePropagationConfig.SingleBaggageField.Builder#addKeyName(String)
+|spring.sleuth.baggage.tag-fields |  | A list of {@link BaggageField#name() fields} to tag into the span. @see Tags#BAGGAGE_FIELD
 |spring.sleuth.circuitbreaker.enabled | true | Enable Spring Cloud CircuitBreaker instrumentation.
 |spring.sleuth.enabled | true | 
 |spring.sleuth.feign.enabled | true | Enable span information propagation when using Feign.

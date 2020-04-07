@@ -138,7 +138,7 @@ public class TraceRestTemplateInterceptorTests {
 	}
 
 	@Test
-	public void notSampledHeaderAddedWhenNotExportable() {
+	public void notSampledHeaderAddedWhenNotSampled() {
 		this.tracing.close();
 		this.tracing = Tracing.newBuilder().currentTraceContext(this.currentTraceContext)
 				.spanReporter(this.reporter).sampler(Sampler.NEVER_SAMPLE).build();
