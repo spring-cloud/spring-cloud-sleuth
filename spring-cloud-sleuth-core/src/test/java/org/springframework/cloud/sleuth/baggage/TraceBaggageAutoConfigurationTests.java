@@ -17,10 +17,16 @@
 package org.springframework.cloud.sleuth.baggage;
 
 import java.util.List;
+import java.util.Set;
 
 import brave.baggage.BaggageField;
+import brave.baggage.BaggageFields;
 import brave.baggage.BaggagePropagationConfig.SingleBaggageField;
 import brave.baggage.BaggagePropagationCustomizer;
+import brave.baggage.CorrelationScopeConfig;
+import brave.baggage.CorrelationScopeConfig.SingleCorrelationField;
+import brave.baggage.CorrelationScopeCustomizer;
+import brave.baggage.CorrelationScopeDecorator;
 import brave.handler.FinishedSpanHandler;
 import brave.propagation.Propagation;
 import org.assertj.core.api.AbstractListAssert;
@@ -38,6 +44,7 @@ import org.springframework.context.annotation.Configuration;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.tuple;
+import static org.assertj.core.api.InstanceOfAssertFactories.array;
 
 public class TraceBaggageAutoConfigurationTests {
 
@@ -102,7 +109,7 @@ public class TraceBaggageAutoConfigurationTests {
 	}
 
 	@Test
-	public void catCreateDeprecatedBaggageFieldsWithJavaConfig() {
+	public void canCreateDeprecatedBaggageFieldsWithJavaConfig() {
 		this.contextRunner.withUserConfiguration(CustomBaggageConfiguration.class)
 				.run((context) -> assertThatBaggageFieldNameToKeyNames(context)
 						.containsOnly(tuple("country-code", new String[] {
@@ -130,8 +137,7 @@ public class TraceBaggageAutoConfigurationTests {
 			AssertableApplicationContext context) {
 		return assertThat(context.getBean(FinishedSpanHandler.class))
 				.isInstanceOf(BaggageTagFinishedSpanHandler.class)
-				.extracting("fieldsToTag")
-				.asInstanceOf(InstanceOfAssertFactories.array(BaggageField[].class))
+				.extracting("fieldsToTag").asInstanceOf(array(BaggageField[].class))
 				.extracting(BaggageField::name);
 	}
 
@@ -142,6 +148,70 @@ public class TraceBaggageAutoConfigurationTests {
 					assertThat(context.getBean(FinishedSpanHandler.class))
 							.isSameAs(FinishedSpanHandler.NOOP);
 				});
+	}
+
+	@Test
+	public void canAddOldCorrelationFieldsForLogScraping() {
+		this.contextRunner
+				.withUserConfiguration(
+						OldCorrelationFieldsForLogScrapingConfiguration.class)
+				.run((context) -> assertThat(
+						context.getBean(CorrelationScopeDecorator.class))
+								.extracting("fields")
+								.asInstanceOf(array(SingleCorrelationField[].class))
+								.extracting(SingleCorrelationField::name)
+								.containsExactly("traceId", "spanId", "parentId",
+										"spanExportable"));
+	}
+
+	@Test
+	public void canMakeAllCorrelationFieldsDirty() {
+		this.contextRunner
+				.withPropertyValues(
+						"spring.sleuth.baggage.correlation-fields=country-code")
+				.withUserConfiguration(DirtyCorrelationFieldConfiguration.class)
+				.run((context) -> assertThat(
+						context.getBean(CorrelationScopeDecorator.class))
+								.extracting("fields")
+								.asInstanceOf(array(SingleCorrelationField[].class))
+								.filteredOn(c -> !c.readOnly())
+								.extracting(SingleCorrelationField::dirty)
+								.containsExactly(true));
+	}
+
+	@Configuration
+	static class DirtyCorrelationFieldConfiguration {
+
+		@Bean
+		CorrelationScopeCustomizer makeCorrelationFieldsDirty() {
+			return b -> {
+				Set<CorrelationScopeConfig> configs = b.configs();
+				b.clear();
+
+				for (CorrelationScopeConfig config : configs) {
+					if (config instanceof SingleCorrelationField) {
+						SingleCorrelationField field = (SingleCorrelationField) config;
+						if (!field.readOnly()) {
+							config = field.toBuilder().dirty().build();
+						}
+					}
+					b.add(config);
+				}
+			};
+		}
+
+	}
+
+	@Configuration
+	static class OldCorrelationFieldsForLogScrapingConfiguration {
+
+		@Bean
+		CorrelationScopeCustomizer addParentAndSpanExportable() {
+			return b -> b.add(SingleCorrelationField.create(BaggageFields.PARENT_ID))
+					.add(SingleCorrelationField.newBuilder(BaggageFields.SAMPLED)
+							.name("spanExportable").build());
+		}
+
 	}
 
 	@Configuration
