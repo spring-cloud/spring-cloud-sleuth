@@ -176,27 +176,27 @@ Also, you can define your own properties.
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock">spring.sleuth.baggage.correlation-enabled</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">true</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Enable a {@link Slf4jScopeDecorator} that prints tracing information in the logs.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Adds a {@link CorrelationScopeDecorator} to put baggage values into the correlation context.</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock">spring.sleuth.baggage.correlation-fields</p></td>
 <td class="tableblock halign-left valign-top"></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">A list of keys to be put from baggage to MDC.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">A list of {@link BaggageField#name() fields} to add to correlation (MDC) context. @see CorrelationScopeConfig.SingleCorrelationField#create(BaggageField)</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock">spring.sleuth.baggage.local-fields</p></td>
 <td class="tableblock halign-left valign-top"></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Same as {@link #remoteKeys} except that this field is not propagated to remote services. @see brave.baggage.BaggagePropagationConfig.SingleBaggageField#local(BaggageField)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Same as {@link #remoteFields} except that this field is not propagated to remote services. @see BaggagePropagationConfig.SingleBaggageField#local(BaggageField)</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock">spring.sleuth.baggage.remote-fields</p></td>
 <td class="tableblock halign-left valign-top"></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">List of fields that are referenced the same in-process as it is on the wire. For example, the name "x-vcap-request-id" would be set as-is including the prefix. &lt;p&gt; Note: {@code fieldName} will be implicitly lower-cased. @see brave.baggage.BaggagePropagationConfig.SingleBaggageField#remote(BaggageField)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">List of fields that are referenced the same in-process as it is on the wire. For example, the field "x-vcap-request-id" would be set as-is including the prefix. @see BaggagePropagationConfig.SingleBaggageField#remote(BaggageField) @see BaggagePropagationConfig.SingleBaggageField.Builder#addKeyName(String)</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock">spring.sleuth.baggage.tag-fields</p></td>
 <td class="tableblock halign-left valign-top"></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">A list of baggage field names which are tagged when a span finishes.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">A list of {@link BaggageField#name() fields} to tag into the span. @see Tags#BAGGAGE_FIELD</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock">spring.sleuth.circuitbreaker.enabled</p></td>

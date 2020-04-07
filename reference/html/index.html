@@ -475,7 +475,7 @@ An example from Kibana would resemble the following image:</p>
 <pre class="highlightjs highlight"><code>filter {
   # pattern matching logback pattern
   grok {
-    match =&gt; { "message" =&gt; "%{TIMESTAMP_ISO8601:timestamp}\s+%{LOGLEVEL:severity}\s+\[%{DATA:service},%{DATA:trace},%{DATA:span},%{DATA:exportable}\]\s+%{DATA:pid}\s+---\s+\[%{DATA:thread}\]\s+%{DATA:class}\s+:\s+%{GREEDYDATA:rest}" }
+    match =&gt; { "message" =&gt; "%{TIMESTAMP_ISO8601:timestamp}\s+%{LOGLEVEL:severity}\s+\[%{DATA:service},%{DATA:trace},%{DATA:span}\]\s+%{DATA:pid}\s+---\s+\[%{DATA:thread}\]\s+%{DATA:class}\s+:\s+%{GREEDYDATA:rest}" }
   }
   date {
     match =&gt; ["timestamp", "ISO8601"]
@@ -503,7 +503,7 @@ If you want to use Grok together with the logs from Cloud Foundry, you have to u
 <pre class="highlightjs highlight"><code>filter {
   # pattern matching logback pattern
   grok {
-    match =&gt; { "message" =&gt; "(?m)OUT\s+%{TIMESTAMP_ISO8601:timestamp}\s+%{LOGLEVEL:severity}\s+\[%{DATA:service},%{DATA:trace},%{DATA:span},%{DATA:exportable}\]\s+%{DATA:pid}\s+---\s+\[%{DATA:thread}\]\s+%{DATA:class}\s+:\s+%{GREEDYDATA:rest}" }
+    match =&gt; { "message" =&gt; "(?m)OUT\s+%{TIMESTAMP_ISO8601:timestamp}\s+%{LOGLEVEL:severity}\s+\[%{DATA:service},%{DATA:trace},%{DATA:span}\]\s+%{DATA:pid}\s+---\s+\[%{DATA:thread}\]\s+%{DATA:class}\s+:\s+%{GREEDYDATA:rest}" }
   }
   date {
     match =&gt; ["timestamp", "ISO8601"]
@@ -1300,7 +1300,7 @@ are some pointers.</p>
 <h2 id="sampling"><a class="anchor" href="#sampling"></a><a class="link" href="#sampling">5. Sampling</a></h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>By default Spring Cloud Sleuth sets all spans to non-exportable.
+<p>By default Spring Cloud Sleuth doesn&#8217;t sample spans.
 That means that traces appear in logs but not in any remote store.
 For testing the default is often enough, and it probably is all you need if you use only the logs (for example, with an ELK aggregator).
 If you export span data to Zipkin, there is also an <code>Sampler.ALWAYS_SAMPLE</code> setting that exports everything, <code>RateLimitingSampler</code> setting that samples X transactions per second (defaults to <code>1000</code>) or <code>ProbabilityBasedSampler</code> setting that samples a fixed fraction of spans.</p>
@@ -1337,7 +1337,7 @@ public Sampler defaultSampler() {
 </td>
 <td class="content">
 You can set the HTTP header <code>b3</code> to <code>1</code>, or, when doing messaging, you can set the <code>spanFlags</code> header to <code>1</code>.
-Doing so forces the current span to be exportable regardless of the sampling decision.
+Doing so forces the current request to be sampled regardless of configuration.
 </td>
 </tr>
 </table>
