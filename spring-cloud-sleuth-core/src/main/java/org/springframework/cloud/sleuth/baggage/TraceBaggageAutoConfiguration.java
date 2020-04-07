@@ -26,6 +26,7 @@ import brave.baggage.BaggagePropagation;
 import brave.baggage.BaggagePropagationConfig.SingleBaggageField;
 import brave.baggage.BaggagePropagationCustomizer;
 import brave.baggage.CorrelationScopeConfig.SingleCorrelationField;
+import brave.baggage.CorrelationScopeCustomizer;
 import brave.baggage.CorrelationScopeDecorator;
 import brave.context.slf4j.MDCScopeDecorator;
 import brave.handler.FinishedSpanHandler;
@@ -67,6 +68,9 @@ public class TraceBaggageAutoConfiguration {
 
 	@Autowired(required = false)
 	List<BaggagePropagationCustomizer> baggagePropagationCustomizers = new ArrayList<>();
+
+	@Autowired(required = false)
+	List<CorrelationScopeCustomizer> correlationScopeCustomizers = new ArrayList<>();
 
 	/**
 	 * To override the underlying context format, override this bean and set the delegate
@@ -183,10 +187,16 @@ public class TraceBaggageAutoConfiguration {
 				"spring.sleuth.baggage.correlation-fields",
 				sleuthBaggageProperties.getCorrelationFields());
 
+		// Add fields from properties
 		CorrelationScopeDecorator.Builder builder = MDCScopeDecorator.newBuilder();
 		for (String field : correlationFields) {
 			builder.add(SingleCorrelationField.newBuilder(BaggageField.create(field))
 					.build());
+		}
+
+		// handle user overrides
+		for (CorrelationScopeCustomizer customizer : this.correlationScopeCustomizers) {
+			customizer.customize(builder);
 		}
 		return builder.build();
 	}
