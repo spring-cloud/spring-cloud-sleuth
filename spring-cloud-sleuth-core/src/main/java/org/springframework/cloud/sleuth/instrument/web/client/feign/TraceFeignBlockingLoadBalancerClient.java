@@ -66,7 +66,12 @@ public class TraceFeignBlockingLoadBalancerClient
 		Response response = null;
 		Span fallbackSpan = tracer().nextSpan().start();
 		try {
-			response = super.execute(request, options);
+			if (delegateIsALoadBalancer()) {
+				response = getDelegate().execute(request, options);
+			}
+			else {
+				response = super.execute(request, options);
+			}
 			if (LOG.isDebugEnabled()) {
 				LOG.debug("After receive");
 			}
@@ -95,6 +100,10 @@ public class TraceFeignBlockingLoadBalancerClient
 		finally {
 			fallbackSpan.abandon();
 		}
+	}
+
+	private boolean delegateIsALoadBalancer() {
+		return getDelegate() instanceof FeignBlockingLoadBalancerClient;
 	}
 
 	private Tracer tracer() {
