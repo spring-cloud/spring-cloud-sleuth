@@ -30,6 +30,7 @@ import org.apache.commons.logging.LogFactory;
 
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.cloud.netflix.ribbon.SpringClientFactory;
+import org.springframework.cloud.openfeign.loadbalancer.FeignBlockingLoadBalancerClient;
 import org.springframework.cloud.openfeign.ribbon.CachingSpringLoadBalancerFactory;
 import org.springframework.cloud.openfeign.ribbon.LoadBalancerFeignClient;
 
@@ -67,7 +68,12 @@ public class TraceLoadBalancerFeignClient extends LoadBalancerFeignClient {
 		Response response = null;
 		Span fallbackSpan = tracer().nextSpan().start();
 		try {
-			response = super.execute(request, options);
+			if (delegateIsALoadBalancer()) {
+				response = getDelegate().execute(request, options);
+			}
+			else {
+				response = super.execute(request, options);
+			}
 			if (log.isDebugEnabled()) {
 				log.debug("After receive");
 			}
@@ -93,6 +99,11 @@ public class TraceLoadBalancerFeignClient extends LoadBalancerFeignClient {
 		finally {
 			fallbackSpan.abandon();
 		}
+	}
+
+	private boolean delegateIsALoadBalancer() {
+		return getDelegate() instanceof LoadBalancerFeignClient
+				|| getDelegate() instanceof FeignBlockingLoadBalancerClient;
 	}
 
 	private Tracer tracer() {
