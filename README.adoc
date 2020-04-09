@@ -18,7 +18,7 @@ image::https://badges.gitter.im/spring-cloud/spring-cloud-sleuth.svg[Gitter, lin
 == Spring Cloud Sleuth
 
 Spring Cloud Sleuth provides Spring Boot auto-configuration for distributed
-tracing. Underneath, Spring Cloud Sleuth is a layer over a Tracer library named
+tracing. Underneath, Spring Cloud Sleuth is a layer over a tracer library named
 https://github.com/openzipkin/brave[Brave].
 
 Sleuth configures everything you need to get started. This includes where trace
@@ -49,7 +49,7 @@ public class DemoController {
 ----
 
 If you add that handler to a controller, you can see the calls to `home()`
-being traced in the logs as well in Zipkin, if configured.
+being traced in the logs as well in https://zipkin.io/[Zipkin], if configured.
 
 NOTE: Instead of logging the request in the handler explicitly, you
 could set `logging.level.org.springframework.web.servlet.DispatcherServlet=DEBUG`.
@@ -112,7 +112,7 @@ same way regardless of if the error came from a common instrumented library,
 such as `RestTemplate`, or your own code annotated with `@NewSpan` or similar.
 
 Below, we'll use the word Zipkin to describe the tracing system, and include
-Zipkin screenshots. However, most services accepting Zipkin's format[https://zipkin.io/zipkin-api/#/default/post_spans],
+Zipkin screenshots. However, most services accepting https://zipkin.io/zipkin-api/#/default/post_spans[Zipkin format]
 have similar base features. Sleuth can also be configured to send data in other
 formats, something detailed later.
 
@@ -200,17 +200,16 @@ To do so, you have to do the following (for readability, we pass the dependencie
 
 *Logback Setup*
 
-Consider the following example of a Logback configuration file (named https://github.com/spring-cloud-samples/sleuth-documentation-apps/blob/master/service1/src/main/resources/logback-spring.xml[logback-spring.xml]).
+Consider the following example of a Logback configuration file (logback-spring.xml).
 
 [source,xml]
 -----
 <?xml version="1.0" encoding="UTF-8"?>
 <configuration>
 	<include resource="org/springframework/boot/logging/logback/defaults.xml"/>
-	​
 	<springProperty scope="context" name="springAppName" source="spring.application.name"/>
 	<!-- Example for logging into the build folder of your project -->
-	<property name="LOG_FILE" value="${BUILD_FOLDER:-build}/${springAppName}"/>​
+	<property name="LOG_FILE" value="${BUILD_FOLDER:-build}/${springAppName}"/>
 
 	<!-- You can override this to have a custom pattern -->
 	<property name="CONSOLE_LOG_PATTERN"
@@ -228,7 +227,7 @@ Consider the following example of a Logback configuration file (named https://gi
 		</encoder>
 	</appender>
 
-	<!-- Appender to log to file -->​
+	<!-- Appender to log to file -->
 	<appender name="flatfile" class="ch.qos.logback.core.rolling.RollingFileAppender">
 		<file>${LOG_FILE}</file>
 		<rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
@@ -240,7 +239,6 @@ Consider the following example of a Logback configuration file (named https://gi
 			<charset>utf8</charset>
 		</encoder>
 	</appender>
-	​
 	<!-- Appender to log to file in a JSON format -->
 	<appender name="logstash" class="ch.qos.logback.core.rolling.RollingFileAppender">
 		<file>${LOG_FILE}.json</file>
@@ -256,13 +254,11 @@ Consider the following example of a Logback configuration file (named https://gi
 				<pattern>
 					<pattern>
 						{
+						"timestamp": "@timestamp",
 						"severity": "%level",
 						"service": "${springAppName:-}",
-						"trace": "%X{X-B3-TraceId:-}",
-						"span": "%X{X-B3-SpanId:-}",
-						"parent": "%X{X-B3-ParentSpanId:-}",
-						"exportable": "%X{X-Span-Export:-}",
-						"baggage": "%X{key:-}",
+						"trace": "%X{traceId:-}",
+						"span": "%X{spanId:-}",
 						"pid": "${PID:-}",
 						"thread": "%thread",
 						"class": "%logger{40}",
@@ -273,7 +269,6 @@ Consider the following example of a Logback configuration file (named https://gi
 			</providers>
 		</encoder>
 	</appender>
-	​
 	<root level="INFO">
 		<appender-ref ref="console"/>
 		<!-- uncomment this to have also JSON logs -->

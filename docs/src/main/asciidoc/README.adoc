@@ -12,7 +12,7 @@ image::https://badges.gitter.im/spring-cloud/spring-cloud-sleuth.svg[Gitter, lin
 == Spring Cloud Sleuth
 
 Spring Cloud Sleuth provides Spring Boot auto-configuration for distributed
-tracing. Underneath, Spring Cloud Sleuth is a layer over a Tracer library named
+tracing. Underneath, Spring Cloud Sleuth is a layer over a tracer library named
 https://github.com/openzipkin/brave[Brave].
 
 Sleuth configures everything you need to get started. This includes where trace
@@ -43,7 +43,7 @@ public class DemoController {
 ----
 
 If you add that handler to a controller, you can see the calls to `home()`
-being traced in the logs as well in Zipkin, if configured.
+being traced in the logs as well in https://zipkin.io/[Zipkin], if configured.
 
 NOTE: Instead of logging the request in the handler explicitly, you
 could set `logging.level.org.springframework.web.servlet.DispatcherServlet=DEBUG`.

@@ -9,7 +9,7 @@ same way regardless of if the error came from a common instrumented library,
 such as `RestTemplate`, or your own code annotated with `@NewSpan` or similar.
 
 Below, we'll use the word Zipkin to describe the tracing system, and include
-Zipkin screenshots. However, most services accepting Zipkin's format[https://zipkin.io/zipkin-api/#/default/post_spans],
+Zipkin screenshots. However, most services accepting https://zipkin.io/zipkin-api/#/default/post_spans[Zipkin format]
 have similar base features. Sleuth can also be configured to send data in other
 formats, something detailed later.
 
@@ -97,11 +97,11 @@ To do so, you have to do the following (for readability, we pass the dependencie
 
 *Logback Setup*
 
-Consider the following example of a Logback configuration file (named https://raw.githubusercontent.com/spring-cloud/spring-cloud-sleuth/{branch}/docs/src/main/asciidoc/logback-spring.xml[logback-spring.xml]).
+Consider the following example of a Logback configuration file (logback-spring.xml).
 
 [source,xml]
 -----
-include::https://raw.githubusercontent.com/spring-cloud/spring-cloud-sleuth/{branch}/docs/src/main/asciidoc/logback-spring.xml[]
+include::{project-root}/docs/src/main/asciidoc/logback-spring.xml[]
 -----
 
 That Logback configuration file:
