@@ -429,17 +429,16 @@ To do so, you have to do the following (for readability, we pass the dependencie
 <p><strong>Logback Setup</strong></p>
 </div>
 <div class="paragraph">
-<p>Consider the following example of a Logback configuration file (named <a href="https://github.com/spring-cloud-samples/sleuth-documentation-apps/blob/master/service1/src/main/resources/logback-spring.xml">logback-spring.xml</a>).</p>
+<p>Consider the following example of a Logback configuration file (named <a href="https://raw.githubusercontent.com/spring-cloud/spring-cloud-sleuth/master/docs/src/main/asciidoc/logback-spring.xml">logback-spring.xml</a>).</p>
 </div>
 <div class="listingblock">
 <div class="content">
 <pre class="highlightjs highlight"><code class="language-xml hljs" data-lang="xml">&lt;?xml version="1.0" encoding="UTF-8"?&gt;
 &lt;configuration&gt;
     &lt;include resource="org/springframework/boot/logging/logback/defaults.xml"/&gt;
-    ​
     &lt;springProperty scope="context" name="springAppName" source="spring.application.name"/&gt;
     &lt;!-- Example for logging into the build folder of your project --&gt;
-    &lt;property name="LOG_FILE" value="${BUILD_FOLDER:-build}/${springAppName}"/&gt;​
+    &lt;property name="LOG_FILE" value="${BUILD_FOLDER:-build}/${springAppName}"/&gt;
 
     &lt;!-- You can override this to have a custom pattern --&gt;
     &lt;property name="CONSOLE_LOG_PATTERN"
@@ -457,7 +456,7 @@ To do so, you have to do the following (for readability, we pass the dependencie
         &lt;/encoder&gt;
     &lt;/appender&gt;
 
-    &lt;!-- Appender to log to file --&gt;​
+    &lt;!-- Appender to log to file --&gt;
     &lt;appender name="flatfile" class="ch.qos.logback.core.rolling.RollingFileAppender"&gt;
         &lt;file&gt;${LOG_FILE}&lt;/file&gt;
         &lt;rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy"&gt;
@@ -469,7 +468,6 @@ To do so, you have to do the following (for readability, we pass the dependencie
             &lt;charset&gt;utf8&lt;/charset&gt;
         &lt;/encoder&gt;
     &lt;/appender&gt;
-    ​
     &lt;!-- Appender to log to file in a JSON format --&gt;
     &lt;appender name="logstash" class="ch.qos.logback.core.rolling.RollingFileAppender"&gt;
         &lt;file&gt;${LOG_FILE}.json&lt;/file&gt;
@@ -485,13 +483,11 @@ To do so, you have to do the following (for readability, we pass the dependencie
                 &lt;pattern&gt;
                     &lt;pattern&gt;
                         {
+                        "timestamp": "@timestamp",
                         "severity": "%level",
                         "service": "${springAppName:-}",
-                        "trace": "%X{X-B3-TraceId:-}",
-                        "span": "%X{X-B3-SpanId:-}",
-                        "parent": "%X{X-B3-ParentSpanId:-}",
-                        "exportable": "%X{X-Span-Export:-}",
-                        "baggage": "%X{key:-}",
+                        "trace": "%X{traceId:-}",
+                        "span": "%X{spanId:-}",
                         "pid": "${PID:-}",
                         "thread": "%thread",
                         "class": "%logger{40}",
@@ -502,7 +498,6 @@ To do so, you have to do the following (for readability, we pass the dependencie
             &lt;/providers&gt;
         &lt;/encoder&gt;
     &lt;/appender&gt;
-    ​
     &lt;root level="INFO"&gt;
         &lt;appender-ref ref="console"/&gt;
         &lt;!-- uncomment this to have also JSON logs --&gt;
