@@ -15,33 +15,15 @@ image::https://circleci.com/gh/spring-cloud/spring-cloud-sleuth.svg?style=svg["C
 image::https://codecov.io/gh/spring-cloud/spring-cloud-sleuth/branch/{github-tag}/graph/badge.svg["codecov", link="https://codecov.io/gh/spring-cloud/spring-cloud-sleuth"]
 image::https://badges.gitter.im/spring-cloud/spring-cloud-sleuth.svg[Gitter, link="https://gitter.im/spring-cloud/spring-cloud-sleuth?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge"]
 
-:branch: master
+== Spring Cloud Sleuth
 
-== Overview
 Spring Cloud Sleuth provides Spring Boot auto-configuration for distributed
-tracing.
+tracing. Underneath, Spring Cloud Sleuth is a layer over a Tracer library named
+https://github.com/openzipkin/brave[Brave].
 
 Sleuth configures everything you need to get started. This includes where trace
 data (spans) are reported to, how many traces to keep (sampling), if remote
 fields (baggage) are sent, and which libraries are traced.
-
-We maintain an https://github.com/openzipkin/sleuth-webmvc-example[example app] where two Spring Boot services collaborate on an
-HTTP request. Sleuth configures these apps, so that timing of these requests are
-recorded into https://zipkin.io[Zipkin], a distributed tracing system. Tracing
-UIs visualize latency, such as time in one service vs waiting for other
-services.
-
-Here's an example of what it looks like.
-image::https://raw.githubusercontent.com/spring-cloud/spring-cloud-sleuth/{branch}/docs/src/main/asciidoc/images/zipkin-trace.png[Zipkin Traces]
-
-The https://github.com/openzipkin/sleuth-webmvc-example[source repository] of this
-example includes demonstrations ofmany things, including WebFlux and messaging.
-Most features require only a property or dependency change to work. These
-snippets showcase the value of Spring Cloud Sleuth: Through auto-configuration,
-Sleuth make getting started with distributed tracing easy!
-
-To keep things simple, the same example is used throughout documentation using
-basic HTTP communication.
 
 === Quick Start
 
@@ -74,6 +56,36 @@ could set `logging.level.org.springframework.web.servlet.DispatcherServlet=DEBUG
 
 NOTE: Set `spring.application.name=myService` (for instance) to see the service
 name as well as the trace and span IDs.
+
+:branch: master
+
+== Overview
+Spring Cloud Sleuth provides Spring Boot auto-configuration for distributed
+tracing. Underneath, Spring Cloud Sleuth is a layer over a Tracer library named
+https://github.com/openzipkin/brave[Brave].
+
+Sleuth configures everything you need to get started. This includes where trace
+data (spans) are reported to, how many traces to keep (sampling), if remote
+fields (baggage) are sent, and which libraries are traced.
+
+We maintain an https://github.com/openzipkin/sleuth-webmvc-example[example app] where two Spring Boot services collaborate on an
+HTTP request. Sleuth configures these apps, so that timing of these requests are
+recorded into https://zipkin.io[Zipkin], a distributed tracing system. Tracing
+UIs visualize latency, such as time in one service vs waiting for other
+services.
+
+Here's an example of what it looks like:
+
+image::https://raw.githubusercontent.com/spring-cloud/spring-cloud-sleuth/{branch}/docs/src/main/asciidoc/images/zipkin-trace.png[Zipkin Traces]
+
+The https://github.com/openzipkin/sleuth-webmvc-example[source repository] of this
+example includes demonstrations ofmany things, including WebFlux and messaging.
+Most features require only a property or dependency change to work. These
+snippets showcase the value of Spring Cloud Sleuth: Through auto-configuration,
+Sleuth make getting started with distributed tracing easy!
+
+To keep things simple, the same example is used throughout documentation using
+basic HTTP communication.
 
 :branch: master
 
@@ -112,10 +124,12 @@ the caller to fail or not.
 Zipkin reduces time in triage by contextualizing errors and delays.
 
 Requests colored red in the search screen failed:
+
 image::https://raw.githubusercontent.com/spring-cloud/spring-cloud-sleuth/{branch}/docs/src/main/asciidoc/images/zipkin-error-traces.png[Error Traces]
 
 If you then click on one of the traces, you can understand if the failure
 happened before the request hit another service or not:
+
 image::https://raw.githubusercontent.com/spring-cloud/spring-cloud-sleuth/{branch}/docs/src/main/asciidoc/images/zipkin-error-trace-screenshot.png[Error Traces Info propagation]
 
 For example, the above error happened in the "backend" service, and caused the
@@ -130,6 +144,7 @@ use to troubleshoot your services.
 Once you find any log with an error, you can look for the trace ID in the
 message. Paste that into Zipkin to visualize the entire trace, regardless of
 how many services the first request ended up hitting.
+
 [source]
 backend.log:  2020-04-09 17:45:40.516 ERROR [backend,5e8eeec48b08e26882aba313eb08f0a4,dcc1df555b5777b3,true] 97203 --- [nio-9000-exec-1] o.s.c.s.i.web.ExceptionLoggingFilter     : Uncaught exception thrown
 frontend.log:2020-04-09 17:45:40.574 ERROR [frontend,5e8eeec48b08e26882aba313eb08f0a4,82aba313eb08f0a4,true] 97192 --- [nio-8081-exec-2] o.s.c.s.i.web.ExceptionLoggingFilter     : Uncaught exception thrown

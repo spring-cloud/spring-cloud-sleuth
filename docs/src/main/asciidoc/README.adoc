@@ -9,7 +9,15 @@ image::https://circleci.com/gh/spring-cloud/spring-cloud-sleuth.svg?style=svg["C
 image::https://codecov.io/gh/spring-cloud/spring-cloud-sleuth/branch/{github-tag}/graph/badge.svg["codecov", link="https://codecov.io/gh/spring-cloud/spring-cloud-sleuth"]
 image::https://badges.gitter.im/spring-cloud/spring-cloud-sleuth.svg[Gitter, link="https://gitter.im/spring-cloud/spring-cloud-sleuth?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge"]
 
-include::overview.adoc[]
+== Spring Cloud Sleuth
+
+Spring Cloud Sleuth provides Spring Boot auto-configuration for distributed
+tracing. Underneath, Spring Cloud Sleuth is a layer over a Tracer library named
+https://github.com/openzipkin/brave[Brave].
+
+Sleuth configures everything you need to get started. This includes where trace
+data (spans) are reported to, how many traces to keep (sampling), if remote
+fields (baggage) are sent, and which libraries are traced.
 
 === Quick Start
 
@@ -42,6 +50,8 @@ could set `logging.level.org.springframework.web.servlet.DispatcherServlet=DEBUG
 
 NOTE: Set `spring.application.name=myService` (for instance) to see the service
 name as well as the trace and span IDs.
+
+include::overview.adoc[]
 
 include::features.adoc[]
 

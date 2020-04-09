@@ -21,10 +21,12 @@ the caller to fail or not.
 Zipkin reduces time in triage by contextualizing errors and delays.
 
 Requests colored red in the search screen failed:
+
 image::https://raw.githubusercontent.com/spring-cloud/spring-cloud-sleuth/{branch}/docs/src/main/asciidoc/images/zipkin-error-traces.png[Error Traces]
 
 If you then click on one of the traces, you can understand if the failure
 happened before the request hit another service or not:
+
 image::https://raw.githubusercontent.com/spring-cloud/spring-cloud-sleuth/{branch}/docs/src/main/asciidoc/images/zipkin-error-trace-screenshot.png[Error Traces Info propagation]
 
 For example, the above error happened in the "backend" service, and caused the
@@ -39,6 +41,7 @@ use to troubleshoot your services.
 Once you find any log with an error, you can look for the trace ID in the
 message. Paste that into Zipkin to visualize the entire trace, regardless of
 how many services the first request ended up hitting.
+
 [source]
 backend.log:  2020-04-09 17:45:40.516 ERROR [backend,5e8eeec48b08e26882aba313eb08f0a4,dcc1df555b5777b3,true] 97203 --- [nio-9000-exec-1] o.s.c.s.i.web.ExceptionLoggingFilter     : Uncaught exception thrown
 frontend.log:2020-04-09 17:45:40.574 ERROR [frontend,5e8eeec48b08e26882aba313eb08f0a4,82aba313eb08f0a4,true] 97192 --- [nio-8081-exec-2] o.s.c.s.i.web.ExceptionLoggingFilter     : Uncaught exception thrown
