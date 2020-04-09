@@ -31,7 +31,7 @@ https://www.w3.org/2001/XMLSchema-instance ">
 	<parent>
 		<groupId>org.springframework.cloud</groupId>
 		<artifactId>spring-cloud-sleuth-tests</artifactId>
-		<version>3.0.0.BUILD-SNAPSHOT</version>
+		<version>3.0.0.M1</version>
 		<relativePath>..</relativePath>
 	</parent>
 
