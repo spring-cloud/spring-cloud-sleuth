@@ -113,118 +113,271 @@ $(globalSwitch);
 <div id="header">
 <div id="toc" class="toc2">
 <div id="toctitle">Table of Contents</div>
-<ul class="sectlevel1">
-<li><a href="#features">1. Features</a></li>
+<ul class="sectlevel2">
+<li><a href="#features">1. Features</a>
+<ul class="sectlevel3">
+<li><a href="#contextualizing-errors">1.1. Contextualizing errors</a></li>
+<li><a href="#log-correlation">1.2. Log correlation</a>
+<ul class="sectlevel4">
+<li><a href="#json-logback-with-logstash">JSON Logback with Logstash</a></li>
+</ul>
+</li>
+<li><a href="#service-dependency-graph">1.3. Service Dependency Graph</a></li>
+<li><a href="#request-scoped-properties-baggage">1.4. Request scoped properties (Baggage)</a>
+<ul class="sectlevel4">
+<li><a href="#baggage-versus-tags">Baggage versus Tags</a></li>
+</ul>
+</li>
+</ul>
+</li>
 </ul>
 </div>
 </div>
 <div id="content">
-<div class="sect1">
-<h2 id="features"><a class="anchor" href="#features"></a><a class="link" href="#features">1. Features</a></h2>
-<div class="sectionbody">
-<div class="ulist">
-<ul>
-<li>
-<p>Adds trace and span IDs to the Slf4J MDC, so you can extract all the logs from a given trace or span in a log aggregator, as shown in the following example logs:</p>
-<div class="listingblock">
+<div class="sect2">
+<h3 id="features"><a class="anchor" href="#features"></a><a class="link" href="#features">1. Features</a></h3>
+<div class="paragraph">
+<p>Sleuth sets up instrumentation not only to track timing, but also to catch
+errors so that they can be analyzed or correlated with logs. This works the
+same way regardless of if the error came from a common instrumented library,
+such as <code>RestTemplate</code>, or your own code annotated with <code>@NewSpan</code> or similar.</p>
+</div>
+<div class="paragraph">
+<p>Below, we&#8217;ll use the word Zipkin to describe the tracing system, and include
+Zipkin screenshots. However, most services accepting Zipkin&#8217;s format[<a href="https://zipkin.io/zipkin-api/#/default/post_spans" class="bare">zipkin.io/zipkin-api/#/default/post_spans</a>],
+have similar base features. Sleuth can also be configured to send data in other
+formats, something detailed later.</p>
+</div>
+<div class="sect3">
+<h4 id="contextualizing-errors"><a class="anchor" href="#contextualizing-errors"></a><a class="link" href="#contextualizing-errors">1.1. Contextualizing errors</a></h4>
+<div class="paragraph">
+<p>Without distributed tracing, it can be difficult to understand the impact of a
+an exception. For example, it can be hard to know if a specific request caused
+the caller to fail or not.</p>
+</div>
+<div class="paragraph">
+<p>Zipkin reduces time in triage by contextualizing errors and delays.</p>
+</div>
+<div class="paragraph">
+<p>Requests colored red in the search screen failed:</p>
+</div>
+<div class="imageblock">
 <div class="content">
-<pre>2016-02-02 15:30:57.902  INFO [bar,6bfd228dc00d216b,6bfd228dc00d216b] 23030 --- [nio-8081-exec-3] ...
-2016-02-02 15:30:58.372 ERROR [bar,6bfd228dc00d216b,6bfd228dc00d216b] 23030 --- [nio-8081-exec-3] ...
-2016-02-02 15:31:01.936  INFO [bar,46ab0d418373cbc9,46ab0d418373cbc9] 23030 --- [nio-8081-exec-4] ...</pre>
+<img src="https://raw.githubusercontent.com/spring-cloud/spring-cloud-sleuth/master/docs/src/main/asciidoc/images/zipkin-error-traces.png" alt="Error Traces">
 </div>
 </div>
 <div class="paragraph">
-<p>Notice the <code>[appname,traceId,spanId]</code> entries from the MDC:</p>
+<p>If you then click on one of the traces, you can understand if the failure
+happened before the request hit another service or not:</p>
 </div>
-<div class="ulist">
-<ul>
-<li>
-<p><strong><code>spanId</code></strong>: The ID of a specific operation that took place.</p>
-</li>
-<li>
-<p><strong><code>appname</code></strong>: The name of the application that logged the span.</p>
-</li>
-<li>
-<p><strong><code>traceId</code></strong>: The ID of the latency graph that contains the span.</p>
-</li>
-</ul>
+<div class="imageblock">
+<div class="content">
+<img src="https://raw.githubusercontent.com/spring-cloud/spring-cloud-sleuth/master/docs/src/main/asciidoc/images/zipkin-error-trace-screenshot.png" alt="Error Traces Info propagation">
 </div>
-</li>
-<li>
-<p>Provides an abstraction over common distributed tracing data models: traces, spans (forming a DAG), annotations, and key-value annotations.
-Spring Cloud Sleuth is loosely based on HTrace but is compatible with Zipkin (Dapper).</p>
-</li>
-<li>
-<p>Sleuth records timing information to aid in latency analysis.
-By using sleuth, you can pinpoint causes of latency in your applications.</p>
-</li>
-<li>
-<p>Sleuth is written to not log too much and to not cause your production application to crash.
-To that end, Sleuth:</p>
-<div class="ulist">
-<ul>
-<li>
-<p>Propagates structural data about your call graph in-band and the rest out-of-band.</p>
-</li>
-<li>
-<p>Includes opinionated instrumentation of layers such as HTTP.</p>
-</li>
-<li>
-<p>Includes a sampling policy to manage volume.</p>
-</li>
-<li>
-<p>Can report to a Zipkin system for query and visualization.</p>
-</li>
-</ul>
 </div>
-</li>
-<li>
-<p>Instruments common ingress and egress points from Spring applications (servlet filter, async endpoints, rest template, scheduled actions, message channels, and Feign client).</p>
-</li>
-<li>
-<p>Sleuth includes default logic to join a trace across HTTP or messaging boundaries.
-For example, HTTP propagation works over Zipkin-compatible request headers.</p>
-</li>
-<li>
-<p>Sleuth can propagate context (also known as baggage) between processes.
-Consequently, if you set  a baggage element on a Span, it is sent downstream to other processes over either HTTP or messaging.</p>
-</li>
-<li>
-<p>Provides a way to create or continue spans and add tags and logs through annotations.</p>
-</li>
-<li>
-<p>If <code>spring-cloud-sleuth-zipkin</code> is on the classpath, the app generates and collects Zipkin-compatible traces.
-By default, it sends them over HTTP to a Zipkin server on localhost (port 9411).
-You can configure the location of the service by setting <code>spring.zipkin.baseUrl</code>.</p>
-<div class="ulist">
-<ul>
-<li>
-<p>If you depend on <code>spring-rabbit</code>, your app sends traces to a RabbitMQ broker instead of HTTP.</p>
-</li>
-<li>
-<p>If you depend on <code>spring-kafka</code>, and set <code>spring.zipkin.sender.type: kafka</code>, your app sends traces to a Kafka broker instead of HTTP.</p>
-</li>
-</ul>
+<div class="paragraph">
+<p>For example, the above error happened in the "backend" service, and caused the
+"frontend" service to fail.</p>
 </div>
-</li>
-</ul>
 </div>
-<div class="admonitionblock caution">
+<div class="sect3">
+<h4 id="log-correlation"><a class="anchor" href="#log-correlation"></a><a class="link" href="#log-correlation">1.2. Log correlation</a></h4>
+<div class="paragraph">
+<p>Sleuth configures the logging context with variables including the service name
+(<code>%{spring.zipkin.service.name}</code>) and the trace ID (<code>%{traceId}</code>). These help
+you connect logs with distributed traces and allow you choice in what tools you
+use to troubleshoot your services.</p>
+</div>
+<div class="paragraph">
+<p>Once you find any log with an error, you can look for the trace ID in the
+message. Paste that into Zipkin to visualize the entire trace, regardless of
+how many services the first request ended up hitting.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code>backend.log:  2020-04-09 17:45:40.516 ERROR [backend,5e8eeec48b08e26882aba313eb08f0a4,dcc1df555b5777b3,true] 97203 --- [nio-9000-exec-1] o.s.c.s.i.web.ExceptionLoggingFilter     : Uncaught exception thrown
+frontend.log:2020-04-09 17:45:40.574 ERROR [frontend,5e8eeec48b08e26882aba313eb08f0a4,82aba313eb08f0a4,true] 97192 --- [nio-8081-exec-2] o.s.c.s.i.web.ExceptionLoggingFilter     : Uncaught exception thrown</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Above, you&#8217;ll notice the trace ID is <code>5e8eeec48b08e26882aba313eb08f0a4</code>, for
+example. This log configuration was automatically setup by Sleuth.</p>
+</div>
+<div class="paragraph">
+<p>If you use a log aggregating tool (such as <a href="https://www.elastic.co/products/kibana">Kibana</a>, <a href="https://www.splunk.com/">Splunk</a>, and others), you can order the events that took place.
+An example from Kibana would resemble the following image:</p>
+</div>
+<div class="imageblock">
+<div class="content">
+<img src="https://raw.githubusercontent.com/spring-cloud/spring-cloud-sleuth/master/docs/src/main/asciidoc/images/kibana.png" alt="Log correlation with Kibana">
+</div>
+</div>
+<div class="paragraph">
+<p>If you want to use <a href="https://www.elastic.co/guide/en/logstash/current/index.html">Logstash</a>, the following listing shows the Grok pattern for Logstash:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code>filter {
+  # pattern matching logback pattern
+  grok {
+    match =&gt; { "message" =&gt; "%{TIMESTAMP_ISO8601:timestamp}\s+%{LOGLEVEL:severity}\s+\[%{DATA:service},%{DATA:trace},%{DATA:span}\]\s+%{DATA:pid}\s+---\s+\[%{DATA:thread}\]\s+%{DATA:class}\s+:\s+%{GREEDYDATA:rest}" }
+  }
+  date {
+    match =&gt; ["timestamp", "ISO8601"]
+  }
+  mutate {
+    remove_field =&gt; ["timestamp"]
+  }
+}</code></pre>
+</div>
+</div>
+<div class="admonitionblock note">
 <table>
 <tr>
 <td class="icon">
-<i class="fa icon-caution" title="Caution"></i>
+<i class="fa icon-note" title="Note"></i>
 </td>
 <td class="content">
-<code>spring-cloud-sleuth-stream</code> is deprecated and should no longer be used.
+If you want to use Grok together with the logs from Cloud Foundry, you have to use the following pattern:
 </td>
 </tr>
 </table>
 </div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code>filter {
+  # pattern matching logback pattern
+  grok {
+    match =&gt; { "message" =&gt; "(?m)OUT\s+%{TIMESTAMP_ISO8601:timestamp}\s+%{LOGLEVEL:severity}\s+\[%{DATA:service},%{DATA:trace},%{DATA:span}\]\s+%{DATA:pid}\s+---\s+\[%{DATA:thread}\]\s+%{DATA:class}\s+:\s+%{GREEDYDATA:rest}" }
+  }
+  date {
+    match =&gt; ["timestamp", "ISO8601"]
+  }
+  mutate {
+    remove_field =&gt; ["timestamp"]
+  }
+}</code></pre>
+</div>
+</div>
+<div class="sect4">
+<h5 id="json-logback-with-logstash"><a class="anchor" href="#json-logback-with-logstash"></a><a class="link" href="#json-logback-with-logstash">JSON Logback with Logstash</a></h5>
+<div class="paragraph">
+<p>Often, you do not want to store your logs in a text file but in a JSON file that Logstash can immediately pick.
+To do so, you have to do the following (for readability, we pass the dependencies in the <code>groupId:artifactId:version</code> notation).</p>
+</div>
+<div class="paragraph">
+<p><strong>Dependencies Setup</strong></p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>Ensure that Logback is on the classpath (<code>ch.qos.logback:logback-core</code>).</p>
+</li>
+<li>
+<p>Add Logstash Logback encode. For example, to use version <code>4.6</code>, add <code>net.logstash.logback:logstash-logback-encoder:4.6</code>.</p>
+</li>
+</ol>
+</div>
+<div class="paragraph">
+<p><strong>Logback Setup</strong></p>
+</div>
+<div class="paragraph">
+<p>Consider the following example of a Logback configuration file (named <a href="https://github.com/spring-cloud-samples/sleuth-documentation-apps/blob/master/service1/src/main/resources/logback-spring.xml">logback-spring.xml</a>).</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-xml hljs" data-lang="xml">&lt;?xml version="1.0" encoding="UTF-8"?&gt;
+&lt;configuration&gt;
+    &lt;include resource="org/springframework/boot/logging/logback/defaults.xml"/&gt;
+    ​
+    &lt;springProperty scope="context" name="springAppName" source="spring.application.name"/&gt;
+    &lt;!-- Example for logging into the build folder of your project --&gt;
+    &lt;property name="LOG_FILE" value="${BUILD_FOLDER:-build}/${springAppName}"/&gt;​
+
+    &lt;!-- You can override this to have a custom pattern --&gt;
+    &lt;property name="CONSOLE_LOG_PATTERN"
+              value="%clr(%d{yyyy-MM-dd HH:mm:ss.SSS}){faint} %clr(${LOG_LEVEL_PATTERN:-%5p}) %clr(${PID:- }){magenta} %clr(---){faint} %clr([%15.15t]){faint} %clr(%-40.40logger{39}){cyan} %clr(:){faint} %m%n${LOG_EXCEPTION_CONVERSION_WORD:-%wEx}"/&gt;
+
+    &lt;!-- Appender to log to console --&gt;
+    &lt;appender name="console" class="ch.qos.logback.core.ConsoleAppender"&gt;
+        &lt;filter class="ch.qos.logback.classic.filter.ThresholdFilter"&gt;
+            &lt;!-- Minimum logging level to be presented in the console logs--&gt;
+            &lt;level&gt;DEBUG&lt;/level&gt;
+        &lt;/filter&gt;
+        &lt;encoder&gt;
+            &lt;pattern&gt;${CONSOLE_LOG_PATTERN}&lt;/pattern&gt;
+            &lt;charset&gt;utf8&lt;/charset&gt;
+        &lt;/encoder&gt;
+    &lt;/appender&gt;
+
+    &lt;!-- Appender to log to file --&gt;​
+    &lt;appender name="flatfile" class="ch.qos.logback.core.rolling.RollingFileAppender"&gt;
+        &lt;file&gt;${LOG_FILE}&lt;/file&gt;
+        &lt;rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy"&gt;
+            &lt;fileNamePattern&gt;${LOG_FILE}.%d{yyyy-MM-dd}.gz&lt;/fileNamePattern&gt;
+            &lt;maxHistory&gt;7&lt;/maxHistory&gt;
+        &lt;/rollingPolicy&gt;
+        &lt;encoder&gt;
+            &lt;pattern&gt;${CONSOLE_LOG_PATTERN}&lt;/pattern&gt;
+            &lt;charset&gt;utf8&lt;/charset&gt;
+        &lt;/encoder&gt;
+    &lt;/appender&gt;
+    ​
+    &lt;!-- Appender to log to file in a JSON format --&gt;
+    &lt;appender name="logstash" class="ch.qos.logback.core.rolling.RollingFileAppender"&gt;
+        &lt;file&gt;${LOG_FILE}.json&lt;/file&gt;
+        &lt;rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy"&gt;
+            &lt;fileNamePattern&gt;${LOG_FILE}.json.%d{yyyy-MM-dd}.gz&lt;/fileNamePattern&gt;
+            &lt;maxHistory&gt;7&lt;/maxHistory&gt;
+        &lt;/rollingPolicy&gt;
+        &lt;encoder class="net.logstash.logback.encoder.LoggingEventCompositeJsonEncoder"&gt;
+            &lt;providers&gt;
+                &lt;timestamp&gt;
+                    &lt;timeZone&gt;UTC&lt;/timeZone&gt;
+                &lt;/timestamp&gt;
+                &lt;pattern&gt;
+                    &lt;pattern&gt;
+                        {
+                        "severity": "%level",
+                        "service": "${springAppName:-}",
+                        "trace": "%X{X-B3-TraceId:-}",
+                        "span": "%X{X-B3-SpanId:-}",
+                        "parent": "%X{X-B3-ParentSpanId:-}",
+                        "exportable": "%X{X-Span-Export:-}",
+                        "baggage": "%X{key:-}",
+                        "pid": "${PID:-}",
+                        "thread": "%thread",
+                        "class": "%logger{40}",
+                        "rest": "%message"
+                        }
+                    &lt;/pattern&gt;
+                &lt;/pattern&gt;
+            &lt;/providers&gt;
+        &lt;/encoder&gt;
+    &lt;/appender&gt;
+    ​
+    &lt;root level="INFO"&gt;
+        &lt;appender-ref ref="console"/&gt;
+        &lt;!-- uncomment this to have also JSON logs --&gt;
+        &lt;!--&lt;appender-ref ref="logstash"/&gt;--&gt;
+        &lt;!--&lt;appender-ref ref="flatfile"/&gt;--&gt;
+    &lt;/root&gt;
+&lt;/configuration&gt;</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>That Logback configuration file:</p>
+</div>
 <div class="ulist">
 <ul>
 <li>
-<p>Spring Cloud Sleuth is <a href="https://opentracing.io/">OpenTracing</a> compatible.</p>
+<p>Logs information from the application in a JSON format to a <code>build/${spring.application.name}.json</code> file.</p>
+</li>
+<li>
+<p>Has commented out two additional appenders: console and standard log file.</p>
+</li>
+<li>
+<p>Has the same logging pattern as the one presented in the previous section.</p>
 </li>
 </ul>
 </div>
@@ -235,16 +388,57 @@ You can configure the location of the service by setting <code>spring.zipkin.bas
 <i class="fa icon-note" title="Note"></i>
 </td>
 <td class="content">
-The SLF4J MDC is always set and logback users immediately see the trace and span IDs in logs per the example
-shown earlier.
-Other logging systems have to configure their own formatter to get the same result.
-The default is as follows:
-<code>logging.pattern.level</code> set to <code>%5p [${spring.zipkin.service.name:${spring.application.name:-}},%X{traceId:-},%X{spanId:-}]</code>
-(this is a Spring Boot feature for logback users).
-If you do not use SLF4J, this pattern is NOT automatically applied.
+If you use a custom <code>logback-spring.xml</code>, you must pass the <code>spring.application.name</code> in the  <code>bootstrap</code> rather than the <code>application</code> property file.
+Otherwise, your custom logback file does not properly read the property.
 </td>
 </tr>
 </table>
+</div>
+</div>
+</div>
+<div class="sect3">
+<h4 id="service-dependency-graph"><a class="anchor" href="#service-dependency-graph"></a><a class="link" href="#service-dependency-graph">1.3. Service Dependency Graph</a></h4>
+<div class="paragraph">
+<p>When you consider distributed tracing tracks requests, it makes sense that
+trace data can paint a picture of your architecture.</p>
+</div>
+<div class="paragraph">
+<p>Zipkin includes a tool to build service dependency diagrams from traces,
+including the count of calls and how many errors exist.</p>
+</div>
+<div class="paragraph">
+<p>The example application will make a simple diagram like this, but your real
+environment diagram may be more complex.
+image::https://raw.githubusercontent.com/spring-cloud/spring-cloud-sleuth/master/docs/src/main/asciidoc/images/zipkin-depedendencies.png[Zipkin Dependencies]</p>
+</div>
+<div class="paragraph">
+<p><strong>Note</strong>: Production environments will generate a lot of data. You will likely
+need to run a separate service to aggregate the dependency graph. You can learn
+more <a href="https://github.com/openzipkin/zipkin-dependencies/">here</a>.</p>
+</div>
+</div>
+<div class="sect3">
+<h4 id="request-scoped-properties-baggage"><a class="anchor" href="#request-scoped-properties-baggage"></a><a class="link" href="#request-scoped-properties-baggage">1.4. Request scoped properties (Baggage)</a></h4>
+<div class="paragraph">
+<p>Distributed tracing works by propagating fields inside and across services that
+connect the trace together: traceId and spanId notably. The context that holds
+these fields can optionally push other fields that need to be consistent
+regardless of many services are touched. The simple name for these extra fields
+is "Baggage".</p>
+</div>
+<div class="paragraph">
+<p>Sleuth allows you to define which baggage are permitted to exist in the trace
+context, including what header names are used.</p>
+</div>
+<div class="paragraph">
+<p>The following example shows setting baggage values:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">Span initialSpan = this.tracer.nextSpan().name("span").start();
+BUSINESS_PROCESS.updateValue(initialSpan.context(), "ALM");
+COUNTRY_CODE.updateValue(initialSpan.context(), "FO");</code></pre>
+</div>
 </div>
 <div class="admonitionblock important">
 <table>
@@ -253,11 +447,38 @@ If you do not use SLF4J, this pattern is NOT automatically applied.
 <i class="fa icon-important" title="Important"></i>
 </td>
 <td class="content">
-Starting with version 3.0.0, the logging pattern has changed.
-We&#8217;ve converted the MDC entries from B3 to non B3 keys (e.g. <code>X-B3-TraceId</code> to <code>traceId</code>).
+There is currently no limitation of the count or size of baggage
+items. Keep in mind that too many can decrease system throughput or increase
+RPC latency. In extreme cases, too much baggage can crash the application, due
+to exceeding transport-level message or header capacity.
 </td>
 </tr>
 </table>
+</div>
+<div class="sect4">
+<h5 id="baggage-versus-tags"><a class="anchor" href="#baggage-versus-tags"></a><a class="link" href="#baggage-versus-tags">Baggage versus Tags</a></h5>
+<div class="paragraph">
+<p>Like trace IDs, Baggage is attached to messages or requests, usually as
+headers. Tags are key value pairs sent in a Span to Zipkin. Baggage values are
+not added spans by default, which means you can&#8217;t search based on Baggage
+unless  you opt-in.</p>
+</div>
+<div class="paragraph">
+<p>To make baggage also tags, use the property <code>spring.sleuth.baggage.tag-fields</code>
+like so:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-yml hljs" data-lang="yml">spring:
+  sleuth:
+    baggage:
+      remoteFields:
+        - country-code
+        - x-vcap-request-id
+      tagFields:
+        - country-code</code></pre>
+</div>
+</div>
 </div>
 </div>
 </div>
