@@ -97,11 +97,11 @@ To do so, you have to do the following (for readability, we pass the dependencie
 
 *Logback Setup*
 
-Consider the following example of a Logback configuration file (named https://github.com/spring-cloud-samples/sleuth-documentation-apps/blob/master/service1/src/main/resources/logback-spring.xml[logback-spring.xml]).
+Consider the following example of a Logback configuration file (named https://raw.githubusercontent.com/spring-cloud/spring-cloud-sleuth/{branch}/docs/src/main/asciidoc/logback-spring.xml[logback-spring.xml]).
 
 [source,xml]
 -----
-include::https://raw.githubusercontent.com/spring-cloud-samples/sleuth-documentation-apps/master/service1/src/main/resources/logback-spring.xml[]
+include::https://raw.githubusercontent.com/spring-cloud/spring-cloud-sleuth/{branch}/docs/src/main/asciidoc/logback-spring.xml[]
 -----
 
 That Logback configuration file:
