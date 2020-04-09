@@ -1,0 +1,27 @@
+:branch: master
+
+== Overview
+Spring Cloud Sleuth provides Spring Boot auto-configuration for distributed
+tracing.
+
+Sleuth configures everything you need to get started. This includes where trace
+data (spans) are reported to, how many traces to keep (sampling), if remote
+fields (baggage) are sent, and which libraries are traced.
+
+We maintain an https://github.com/openzipkin/sleuth-webmvc-example[example app] where two Spring Boot services collaborate on an
+HTTP request. Sleuth configures these apps, so that timing of these requests are
+recorded into https://zipkin.io[Zipkin], a distributed tracing system. Tracing
+UIs visualize latency, such as time in one service vs waiting for other
+services.
+
+Here's an example of what it looks like.
+image::https://raw.githubusercontent.com/spring-cloud/spring-cloud-sleuth/{branch}/docs/src/main/asciidoc/images/zipkin-trace.png[Zipkin Traces]
+
+The https://github.com/openzipkin/sleuth-webmvc-example[source repository] of this
+example includes demonstrations ofmany things, including WebFlux and messaging.
+Most features require only a property or dependency change to work. These
+snippets showcase the value of Spring Cloud Sleuth: Through auto-configuration,
+Sleuth make getting started with distributed tracing easy!
+
+To keep things simple, the same example is used throughout documentation using
+basic HTTP communication.

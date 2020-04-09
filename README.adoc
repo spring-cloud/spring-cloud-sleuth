@@ -15,13 +15,39 @@ image::https://circleci.com/gh/spring-cloud/spring-cloud-sleuth.svg?style=svg["C
 image::https://codecov.io/gh/spring-cloud/spring-cloud-sleuth/branch/{github-tag}/graph/badge.svg["codecov", link="https://codecov.io/gh/spring-cloud/spring-cloud-sleuth"]
 image::https://badges.gitter.im/spring-cloud/spring-cloud-sleuth.svg[Gitter, link="https://gitter.im/spring-cloud/spring-cloud-sleuth?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge"]
 
-== Spring Cloud Sleuth
+:branch: master
 
-Spring Cloud Sleuth is a distributed tracing tool for Spring Cloud. It borrows from https://research.google.com/pubs/pub36356.html[Dapper], https://github.com/openzipkin/zipkin[Zipkin], and https://htrace.incubator.apache.org/[HTrace].
+== Overview
+Spring Cloud Sleuth provides Spring Boot auto-configuration for distributed
+tracing.
+
+Sleuth configures everything you need to get started. This includes where trace
+data (spans) are reported to, how many traces to keep (sampling), if remote
+fields (baggage) are sent, and which libraries are traced.
+
+We maintain an https://github.com/openzipkin/sleuth-webmvc-example[example app] where two Spring Boot services collaborate on an
+HTTP request. Sleuth configures these apps, so that timing of these requests are
+recorded into https://zipkin.io[Zipkin], a distributed tracing system. Tracing
+UIs visualize latency, such as time in one service vs waiting for other
+services.
+
+Here's an example of what it looks like.
+image::https://raw.githubusercontent.com/spring-cloud/spring-cloud-sleuth/{branch}/docs/src/main/asciidoc/images/zipkin-trace.png[Zipkin Traces]
+
+The https://github.com/openzipkin/sleuth-webmvc-example[source repository] of this
+example includes demonstrations ofmany things, including WebFlux and messaging.
+Most features require only a property or dependency change to work. These
+snippets showcase the value of Spring Cloud Sleuth: Through auto-configuration,
+Sleuth make getting started with distributed tracing easy!
+
+To keep things simple, the same example is used throughout documentation using
+basic HTTP communication.
 
 === Quick Start
 
-Add sleuth to the classpath of a Spring Boot application (see "`<<sleuth-adding-project>>`" for Maven and Gradle examples), and you can see the correlation data being collected in logs, as long as you are logging requests.
+Add sleuth to the classpath of a Spring Boot application
+(see "`<<sleuth-adding-project>>`" for Maven and Gradle examples), and you will
+see trace IDs in logs.
 
 For example, consider the following HTTP handler:
 
@@ -30,6 +56,7 @@ For example, consider the following HTTP handler:
 @RestController
 public class DemoController {
   private static Logger log = LoggerFactory.getLogger(DemoController.class);
+
   @RequestMapping("/")
   public String home() {
     log.info("Handling home");
@@ -39,162 +66,76 @@ public class DemoController {
 }
 ----
 
-If you add that handler to a controller, you can see the calls to `home()` being traced in the logs and in Zipkin, if Zipkin is configured.
+If you add that handler to a controller, you can see the calls to `home()`
+being traced in the logs as well in Zipkin, if configured.
 
 NOTE: Instead of logging the request in the handler explicitly, you
 could set `logging.level.org.springframework.web.servlet.DispatcherServlet=DEBUG`.
 
-NOTE: Set `spring.application.name=myService` (for instance) to see the service name as well as the trace and span IDs.
+NOTE: Set `spring.application.name=myService` (for instance) to see the service
+name as well as the trace and span IDs.
 
 :branch: master
 
-== Introduction
+:doctype: book
+:idprefix:
+:idseparator: -
+:toc: left
+:toclevels: 4
+:tabsize: 4
+:numbered:
+:sectanchors:
+:sectnums:
+:icons: font
+:hide-uri-scheme:
+:docinfo: shared,private
 
-Spring Cloud Sleuth implements a distributed tracing solution for https://cloud.spring.io[Spring Cloud].
+:sc-ext: java
+:project-full-name: Spring Cloud Sleuth
 
-=== Terminology
+=== Features
+Sleuth sets up instrumentation not only to track timing, but also to catch
+errors so that they can be analyzed or correlated with logs. This works the
+same way regardless of if the error came from a common instrumented library,
+such as `RestTemplate`, or your own code annotated with `@NewSpan` or similar.
 
-Spring Cloud Sleuth borrows https://research.google.com/pubs/pub36356.html[Dapper's] terminology.
+Below, we'll use the word Zipkin to describe the tracing system, and include
+Zipkin screenshots. However, most services accepting Zipkin's format[https://zipkin.io/zipkin-api/#/default/post_spans],
+have similar base features. Sleuth can also be configured to send data in other
+formats, something detailed later.
 
-*Span*: The basic unit of work. For example, sending an RPC is a new span, as is sending a response to an RPC.
-Spans are identified by a unique 64-bit ID for the span and another 64-bit ID for the trace the span is a part of.
-Spans also have other data, such as descriptions, timestamped events, key-value annotations (tags), the ID of the span that caused them, and process IDs (normally IP addresses).
+==== Contextualizing errors
+Without distributed tracing, it can be difficult to understand the impact of a
+an exception. For example, it can be hard to know if a specific request caused
+the caller to fail or not.
 
-Spans can be started and stopped, and they keep track of their timing information.
-Once you create a span, you must stop it at some point in the future.
+Zipkin reduces time in triage by contextualizing errors and delays.
 
-TIP: The initial span that starts a trace is called a `root span`. The value of the ID
-of that span is equal to the trace ID.
-
-*Trace:* A set of spans forming a tree-like structure.
-For example, if you run a distributed big-data store, a trace might be formed by a `PUT` request.
-
-*Annotation:*  Used to record the existence of an event in time. With
-https://github.com/openzipkin/brave[Brave] instrumentation, we no longer need to set special events
-for https://zipkin.io/[Zipkin] to understand who the client and server are, where
-the request started, and where it ended. For learning purposes,
-however, we mark these events to highlight what kind
-of an action took place.
-
-* *cs*: Client Sent. The client has made a request. This annotation indicates the start of the span.
-* *sr*: Server Received: The server side got the request and started processing it.
-Subtracting the `cs` timestamp from this timestamp reveals the network latency.
-* *ss*: Server Sent. Annotated upon completion of request processing (when the response got sent back to the client).
-Subtracting the `sr` timestamp from this timestamp reveals the time needed by the server side to process the request.
-* *cr*: Client Received. Signifies the end of the span.
-The client has successfully received the response from the server side.
-Subtracting the `cs` timestamp from this timestamp reveals the whole time needed by the client to receive the response from the server.
-
-The following image shows how *Span* and *Trace* look in a system, together with the Zipkin annotations:
-
-image::https://raw.githubusercontent.com/spring-cloud/spring-cloud-sleuth/{branch}/docs/src/main/asciidoc/images/trace-id.png[Trace Info propagation]
-
-Each color of a note signifies a span (there are seven spans - from *A* to *G*).
-Consider the following note:
-
-[source]
-Trace Id = X
-Span Id = D
-Client Sent
-
-This note indicates that the current span has *Trace Id* set to *X* and *Span Id* set to *D*.
-Also, the `Client Sent` event took place.
-
-The following image shows how parent-child relationships of spans look:
-
-image::https://raw.githubusercontent.com/spring-cloud/spring-cloud-sleuth/{branch}/docs/src/main/asciidoc/images/parents.png[Parent child relationship]
-
-=== Purpose
-
-The following sections refer to the example shown in the preceding image.
-
-==== Distributed Tracing with Zipkin
-
-This example has seven spans.
-If you go to traces in Zipkin, you can see this number in the second trace, as shown in the following image:
-
-image::https://raw.githubusercontent.com/spring-cloud/spring-cloud-sleuth/{branch}/docs/src/main/asciidoc/images/zipkin-traces.png[Traces]
-
-However, if you pick a particular trace, you can see four spans, as shown in the following image:
-
-image::https://raw.githubusercontent.com/spring-cloud/spring-cloud-sleuth/{branch}/docs/src/main/asciidoc/images/zipkin-ui.png[Traces Info propagation]
-
-NOTE: When you pick a particular trace, you see merged spans.
-That means that, if there were two spans sent to Zipkin with Server Received and Server Sent or Client Received and Client Sent annotations, they are presented as a single span.
-
-Why is there a difference between the seven and four spans in this case?
-
-* One span comes from the `http:/start` span. It has the Server Received (`sr`) and Server Sent (`ss`) annotations.
-* Two spans come from the RPC call from `service1` to `service2` to the `http:/foo` endpoint.
-The Client Sent (`cs`) and Client Received (`cr`) events took place on the `service1` side.
-Server Received (`sr`) and Server Sent (`ss`) events took place on the `service2` side.
-These two spans form one logical span related to an RPC call.
-* Two spans come from the RPC call from `service2` to `service3` to the `http:/bar` endpoint.
-The Client Sent (`cs`) and Client Received (`cr`) events took place on the `service2` side.
-The Server Received (`sr`) and Server Sent (`ss`) events took place on the `service3` side.
-These two spans form one logical span related to an RPC call.
-* Two spans come from the RPC call from `service2` to `service4` to the `http:/baz` endpoint.
-The Client Sent (`cs`) and Client Received (`cr`) events took place on the `service2` side.
-Server Received (`sr`) and Server Sent (`ss`) events took place on the `service4` side.
-These two spans form one logical span related to an RPC call.
-
-So, if we count the physical spans, we have one from `http:/start`, two from `service1` calling `service2`, two from `service2`
-calling `service3`, and two from `service2` calling `service4`. In sum, we have a total of seven spans.
-
-Logically, we see the information of four total Spans because we have one span related to the incoming request
-to `service1` and three spans related to RPC calls.
-
-==== Visualizing errors
-
-Zipkin lets you visualize errors in your trace.
-When an exception was thrown and was not caught, we set proper tags on the span, which Zipkin can then properly colorize.
-You could see in the list of traces one trace that is red. That appears because an exception was thrown.
-
-If you click that trace, you see a similar picture, as follows:
-
+Requests colored red in the search screen failed:
 image::https://raw.githubusercontent.com/spring-cloud/spring-cloud-sleuth/{branch}/docs/src/main/asciidoc/images/zipkin-error-traces.png[Error Traces]
 
-If you then click on one of the spans, you see the following
-
+If you then click on one of the traces, you can understand if the failure
+happened before the request hit another service or not:
 image::https://raw.githubusercontent.com/spring-cloud/spring-cloud-sleuth/{branch}/docs/src/main/asciidoc/images/zipkin-error-trace-screenshot.png[Error Traces Info propagation]
 
-The span shows the reason for the error and the whole stack trace related to it.
-
-==== Distributed Tracing with Brave
-
-Starting with version `2.0.0`, Spring Cloud Sleuth uses https://github.com/openzipkin/brave[Brave] as the tracing library.
-Consequently, Sleuth no longer takes care of storing the context but delegates that work to Brave.
-
-Due to the fact that Sleuth had different naming and tagging conventions than Brave, we decided to follow Brave's conventions from now on.
-
-==== Live examples
-
-.Click the Pivotal Web Services icon to see it live!
-[caption="Click the Pivotal Web Services icon to see it live!"]
-image::https://raw.githubusercontent.com/spring-cloud/spring-cloud-sleuth/{branch}/docs/src/main/asciidoc/images/pws.png["Zipkin deployed on Pivotal Web Services", link="https://docssleuth-zipkin-server.cfapps.io/", width=150, height=74]
-https://docssleuth-zipkin-server.cfapps.io/[Click here to see it live!]
-
-The dependency graph in Zipkin should resemble the following image:
-
-image::https://raw.githubusercontent.com/spring-cloud/spring-cloud-sleuth/{branch}/docs/src/main/asciidoc/images/dependencies.png[Dependencies]
-
-.Click the Pivotal Web Services icon to see it live!
-[caption="Click the Pivotal Web Services icon to see it live!"]
-image::https://raw.githubusercontent.com/spring-cloud/spring-cloud-sleuth/{branch}/docs/src/main/asciidoc/images/pws.png["Zipkin deployed on Pivotal Web Services", link="https://docssleuth-zipkin-server.cfapps.io/dependency", width=150, height=74]
-https://docssleuth-zipkin-server.cfapps.io/dependency[Click here to see it live!]
+For example, the above error happened in the "backend" service, and caused the
+"frontend" service to fail.
 
 ==== Log correlation
+Sleuth configures the logging context with variables including the service name
+(`%{spring.zipkin.service.name}`) and the trace ID (`%{traceId}`). These help
+you connect logs with distributed traces and allow you choice in what tools you
+use to troubleshoot your services.
 
-When using grep to read the logs of those four applications by scanning for a trace ID equal to (for example) `2485ec27856c56f4`, you get output resembling the following:
-
+Once you find any log with an error, you can look for the trace ID in the
+message. Paste that into Zipkin to visualize the entire trace, regardless of
+how many services the first request ended up hitting.
 [source]
-service1.log:2016-02-26 11:15:47.561  INFO [service1,2485ec27856c56f4,2485ec27856c56f4,true] 68058 --- [nio-8081-exec-1] i.s.c.sleuth.docs.service1.Application   : Hello from service1. Calling service2
-service2.log:2016-02-26 11:15:47.710  INFO [service2,2485ec27856c56f4,9aa10ee6fbde75fa,true] 68059 --- [nio-8082-exec-1] i.s.c.sleuth.docs.service2.Application   : Hello from service2. Calling service3 and then service4
-service3.log:2016-02-26 11:15:47.895  INFO [service3,2485ec27856c56f4,1210be13194bfe5,true] 68060 --- [nio-8083-exec-1] i.s.c.sleuth.docs.service3.Application   : Hello from service3
-service2.log:2016-02-26 11:15:47.924  INFO [service2,2485ec27856c56f4,9aa10ee6fbde75fa,true] 68059 --- [nio-8082-exec-1] i.s.c.sleuth.docs.service2.Application   : Got response from service3 [Hello from service3]
-service4.log:2016-02-26 11:15:48.134  INFO [service4,2485ec27856c56f4,1b1845262ffba49d,true] 68061 --- [nio-8084-exec-1] i.s.c.sleuth.docs.service4.Application   : Hello from service4
-service2.log:2016-02-26 11:15:48.156  INFO [service2,2485ec27856c56f4,9aa10ee6fbde75fa,true] 68059 --- [nio-8082-exec-1] i.s.c.sleuth.docs.service2.Application   : Got response from service4 [Hello from service4]
-service1.log:2016-02-26 11:15:48.182  INFO [service1,2485ec27856c56f4,2485ec27856c56f4,true] 68058 --- [nio-8081-exec-1] i.s.c.sleuth.docs.service1.Application   : Got response from service2 [Hello from service2, response from service3 [Hello from service3] and from service4 [Hello from service4]]
+backend.log:  2020-04-09 17:45:40.516 ERROR [backend,5e8eeec48b08e26882aba313eb08f0a4,dcc1df555b5777b3,true] 97203 --- [nio-9000-exec-1] o.s.c.s.i.web.ExceptionLoggingFilter     : Uncaught exception thrown
+frontend.log:2020-04-09 17:45:40.574 ERROR [frontend,5e8eeec48b08e26882aba313eb08f0a4,82aba313eb08f0a4,true] 97192 --- [nio-8081-exec-2] o.s.c.s.i.web.ExceptionLoggingFilter     : Uncaught exception thrown
+
+Above, you'll notice the trace ID is `5e8eeec48b08e26882aba313eb08f0a4`, for
+example. This log configuration was automatically setup by Sleuth.
 
 If you use a log aggregating tool (such as https://www.elastic.co/products/kibana[Kibana], https://www.splunk.com/[Splunk], and others), you can order the events that took place.
 An example from Kibana would resemble the following image:
@@ -336,21 +277,32 @@ That Logback configuration file:
 NOTE: If you use a custom `logback-spring.xml`, you must pass the `spring.application.name` in the  `bootstrap` rather than the `application` property file.
 Otherwise, your custom logback file does not properly read the property.
 
-==== Propagating Span Context
+==== Service Dependency Graph
+When you consider distributed tracing tracks requests, it makes sense that
+trace data can paint a picture of your architecture.
 
-The span context is the state that must get propagated to any child spans across process boundaries.
-Part of the Span Context is the Baggage. The trace and span IDs are a required part of the span context.
-Baggage is an optional part.
+Zipkin includes a tool to build service dependency diagrams from traces,
+including the count of calls and how many errors exist.
 
-Baggage is a set of key:value pairs stored in the span context.
-Baggage travels together with the trace and is attached to every span.
-Spring Cloud Sleuth understands that a header is baggage-related if the HTTP header is prefixed with `baggage-` and, for messaging, it starts with `baggage_`.
+The example application will make a simple diagram like this, but your real
+environment diagram may be more complex.
+image::https://raw.githubusercontent.com/spring-cloud/spring-cloud-sleuth/{branch}/docs/src/main/asciidoc/images/zipkin-depedendencies.png[Zipkin Dependencies]
 
-IMPORTANT: There is currently no limitation of the count or size of baggage items.
-However, keep in mind that too many can decrease system throughput or increase RPC latency.
-In extreme cases, too much baggage can crash the application, due to exceeding transport-level message or header capacity.
+*Note*: Production environments will generate a lot of data. You will likely
+need to run a separate service to aggregate the dependency graph. You can learn
+more https://github.com/openzipkin/zipkin-dependencies/[here].
 
-The following example shows setting baggage on a span:
+==== Request scoped properties (Baggage)
+Distributed tracing works by propagating fields inside and across services that
+connect the trace together: traceId and spanId notably. The context that holds
+these fields can optionally push other fields that need to be consistent
+regardless of many services are touched. The simple name for these extra fields
+is "Baggage".
+
+Sleuth allows you to define which baggage are permitted to exist in the trace
+context, including what header names are used.
+
+The following example shows setting baggage values:
 
 [source,java]
 ----
@@ -359,24 +311,21 @@ BUSINESS_PROCESS.updateValue(initialSpan.context(), "ALM");
 COUNTRY_CODE.updateValue(initialSpan.context(), "FO");
 ----
 
-===== Baggage versus Span Tags
+IMPORTANT: There is currently no limitation of the count or size of baggage
+items. Keep in mind that too many can decrease system throughput or increase
+RPC latency. In extreme cases, too much baggage can crash the application, due
+to exceeding transport-level message or header capacity.
 
-Baggage travels with the trace (every child span contains the baggage of its parent).
-Zipkin has no knowledge of baggage and does not receive that information.
 
-IMPORTANT: Starting from Sleuth 2.0.0 you have to pass the baggage key names explicitly
-in your project configuration. Read more about that setup <<prefixed-fields,here>>
+===== Baggage versus Tags
 
-Tags are attached to a specific span. In other words, they are presented only for that particular span.
-However, you can search by tag to find the trace, assuming a span having the searched tag value exists.
+Like trace IDs, Baggage is attached to messages or requests, usually as
+headers. Tags are key value pairs sent in a Span to Zipkin. Baggage values are
+not added spans by default, which means you can't search based on Baggage
+unless  you opt-in.
 
-If you want to be able to lookup a span based on baggage, you should add a corresponding entry as a tag in the root span.
-
-IMPORTANT: The span must be in scope.
-
-The following listing shows integration tests that use baggage:
-
-.The setup
+To make baggage also tags, use the property `spring.sleuth.baggage.tag-fields`
+like so:
 [source,yml]
 ----
 spring:
@@ -389,11 +338,7 @@ spring:
         - country-code
 ----
 
-.The code
-[source,java]
-----
-Tags.BAGGAGE_FIELD.tag(BUSINESS_PROCESS, initialSpan);
-----
+:branch: master
 
 [[sleuth-adding-project]]
 === Adding Sleuth to the Project
@@ -401,53 +346,6 @@ Tags.BAGGAGE_FIELD.tag(BUSINESS_PROCESS, initialSpan);
 This section addresses how to add Sleuth to your project with either Maven or Gradle.
 
 IMPORTANT: To ensure that your application name is properly displayed in Zipkin, set the `spring.application.name` property in `bootstrap.yml`.
-
-==== Only Sleuth (log correlation)
-
-If you want to use only Spring Cloud Sleuth without the Zipkin integration, add the `spring-cloud-starter-sleuth` module to your project.
-
-The following example shows how to add Sleuth with Maven:
-
-[source,xml,indent=0,subs="verbatim,attributes",role="primary"]
-.Maven
-----
-    <dependencyManagement> <1>
-          <dependencies>
-              <dependency>
-                  <groupId>org.springframework.cloud</groupId>
-                  <artifactId>spring-cloud-dependencies</artifactId>
-                  <version>${release.train.version}</version>
-                  <type>pom</type>
-                  <scope>import</scope>
-              </dependency>
-          </dependencies>
-    </dependencyManagement>
-
-    <dependency> <2>
-        <groupId>org.springframework.cloud</groupId>
-        <artifactId>spring-cloud-starter-sleuth</artifactId>
-    </dependency>
-----
-<1> We recommend that you add the dependency management through the Spring BOM so that you need not manage versions yourself.
-<2> Add the dependency to `spring-cloud-starter-sleuth`.
-
-The following example shows how to add Sleuth with Gradle:
-
-[source,groovy,indent=0,subs="verbatim,attributes",role="secondary"]
-.Gradle
-----
-dependencyManagement { <1>
-    imports {
-        mavenBom "org.springframework.cloud:spring-cloud-dependencies:${releaseTrainVersion}"
-    }
-}
-
-dependencies { <2>
-    compile "org.springframework.cloud:spring-cloud-starter-sleuth"
-}
-----
-<1> We recommend that you add the dependency management through the Spring BOM so that you need not manage versions yourself.
-<2> Add the dependency to `spring-cloud-starter-sleuth`.
 
 ==== Sleuth with Zipkin via HTTP
 
@@ -561,7 +459,7 @@ dependencies {
 <2> Add the dependency to `spring-cloud-starter-zipkin`. That way, all nested dependencies get downloaded.
 <3> To automatically configure RabbitMQ, add the `spring-rabbit` dependency.
 
-=== Overriding the auto-configuration of Zipkin
+==== Overriding the auto-configuration of Zipkin
 
 Spring Cloud Sleuth supports sending traces to multiple tracing systems as of version 2.1.0.
 In order to get this to work, every tracing system needs to have a `Reporter<Span>` and `Sender`.
@@ -619,88 +517,52 @@ protected static class MyConfig {
 
 ----
 
-== Additional Resources
+==== Only Sleuth (log correlation)
 
-You can watch a video of https://twitter.com/reshmi9k[Reshmi Krishna] and https://twitter.com/mgrzejszczak[Marcin Grzejszczak] talking about Spring Cloud
-Sleuth and Zipkin https://content.pivotal.io/springone-platform-2017/distributed-tracing-latency-analysis-for-your-microservices-grzejszczak-krishna[by clicking here].
+If you want to use only Spring Cloud Sleuth without the Zipkin integration, add the `spring-cloud-starter-sleuth` module to your project.
 
-You can check different setups of Sleuth and Brave https://github.com/openzipkin/sleuth-webmvc-example[in the openzipkin/sleuth-webmvc-example repository].
+The following example shows how to add Sleuth with Maven:
 
-:doctype: book
-:idprefix:
-:idseparator: -
-:toc: left
-:toclevels: 4
-:tabsize: 4
-:numbered:
-:sectanchors:
-:sectnums:
-:icons: font
-:hide-uri-scheme:
-:docinfo: shared,private
-
-:sc-ext: java
-:project-full-name: Spring Cloud Sleuth
-
-== Features
-
-* Adds trace and span IDs to the Slf4J MDC, so you can extract all the logs from a given trace or span in a log aggregator, as shown in the following example logs:
-+
+[source,xml,indent=0,subs="verbatim,attributes",role="primary"]
+.Maven
 ----
-2016-02-02 15:30:57.902  INFO [bar,6bfd228dc00d216b,6bfd228dc00d216b] 23030 --- [nio-8081-exec-3] ...
-2016-02-02 15:30:58.372 ERROR [bar,6bfd228dc00d216b,6bfd228dc00d216b] 23030 --- [nio-8081-exec-3] ...
-2016-02-02 15:31:01.936  INFO [bar,46ab0d418373cbc9,46ab0d418373cbc9] 23030 --- [nio-8081-exec-4] ...
+    <dependencyManagement> <1>
+          <dependencies>
+              <dependency>
+                  <groupId>org.springframework.cloud</groupId>
+                  <artifactId>spring-cloud-dependencies</artifactId>
+                  <version>${release.train.version}</version>
+                  <type>pom</type>
+                  <scope>import</scope>
+              </dependency>
+          </dependencies>
+    </dependencyManagement>
+
+    <dependency> <2>
+        <groupId>org.springframework.cloud</groupId>
+        <artifactId>spring-cloud-starter-sleuth</artifactId>
+    </dependency>
 ----
-+
-Notice the `[appname,traceId,spanId]` entries from the MDC:
+<1> We recommend that you add the dependency management through the Spring BOM so that you need not manage versions yourself.
+<2> Add the dependency to `spring-cloud-starter-sleuth`.
 
-** *`spanId`*: The ID of a specific operation that took place.
-** *`appname`*: The name of the application that logged the span.
-** *`traceId`*: The ID of the latency graph that contains the span.
+The following example shows how to add Sleuth with Gradle:
 
-* Provides an abstraction over common distributed tracing data models: traces, spans (forming a DAG), annotations, and key-value annotations.
-Spring Cloud Sleuth is loosely based on HTrace but is compatible with Zipkin (Dapper).
+[source,groovy,indent=0,subs="verbatim,attributes",role="secondary"]
+.Gradle
+----
+dependencyManagement { <1>
+    imports {
+        mavenBom "org.springframework.cloud:spring-cloud-dependencies:${releaseTrainVersion}"
+    }
+}
 
-* Sleuth records timing information to aid in latency analysis.
-By using sleuth, you can pinpoint causes of latency in your applications.
-
-* Sleuth is written to not log too much and to not cause your production application to crash.
-To that end, Sleuth:
-** Propagates structural data about your call graph in-band and the rest out-of-band.
-** Includes opinionated instrumentation of layers such as HTTP.
-** Includes a sampling policy to manage volume.
-** Can report to a Zipkin system for query and visualization.
-
-* Instruments common ingress and egress points from Spring applications (servlet filter, async endpoints, rest template, scheduled actions, message channels, and Feign client).
-
-* Sleuth includes default logic to join a trace across HTTP or messaging boundaries.
-For example, HTTP propagation works over Zipkin-compatible request headers.
-
-* Sleuth can propagate context (also known as baggage) between processes.
-Consequently, if you set  a baggage element on a Span, it is sent downstream to other processes over either HTTP or messaging.
-
-* Provides a way to create or continue spans and add tags and logs through annotations.
-
-* If `spring-cloud-sleuth-zipkin` is on the classpath, the app generates and collects Zipkin-compatible traces.
-By default, it sends them over HTTP to a Zipkin server on localhost (port 9411).
-You can configure the location of the service by setting `spring.zipkin.baseUrl`.
-** If you depend on `spring-rabbit`, your app sends traces to a RabbitMQ broker instead of HTTP.
-** If you depend on `spring-kafka`, and set `spring.zipkin.sender.type: kafka`, your app sends traces to a Kafka broker instead of HTTP.
-
-CAUTION: `spring-cloud-sleuth-stream` is deprecated and should no longer be used.
-
-* Spring Cloud Sleuth is https://opentracing.io/[OpenTracing] compatible.
-
-NOTE: The SLF4J MDC is always set and logback users immediately see the trace and span IDs in logs per the example
-shown earlier.
-Other logging systems have to configure their own formatter to get the same result.
-The default is as follows:
-`logging.pattern.level` set to `%5p [${spring.zipkin.service.name:${spring.application.name:-}},%X{traceId:-},%X{spanId:-}]`
-(this is a Spring Boot feature for logback users).
-If you do not use SLF4J, this pattern is NOT automatically applied.
-
-IMPORTANT: Starting with version 3.0.0, the logging pattern has changed.
-We've converted the MDC entries from B3 to non B3 keys (e.g. `X-B3-TraceId` to `traceId`).
+dependencies { <2>
+    compile "org.springframework.cloud:spring-cloud-starter-sleuth"
+}
+----
+<1> We recommend that you add the dependency management through the Spring BOM so that you need not manage versions yourself.
+<2> Add the dependency to `spring-cloud-starter-sleuth`.
 
 == Building
 

@@ -9,13 +9,13 @@ image::https://circleci.com/gh/spring-cloud/spring-cloud-sleuth.svg?style=svg["C
 image::https://codecov.io/gh/spring-cloud/spring-cloud-sleuth/branch/{github-tag}/graph/badge.svg["codecov", link="https://codecov.io/gh/spring-cloud/spring-cloud-sleuth"]
 image::https://badges.gitter.im/spring-cloud/spring-cloud-sleuth.svg[Gitter, link="https://gitter.im/spring-cloud/spring-cloud-sleuth?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge"]
 
-== Spring Cloud Sleuth
-
-Spring Cloud Sleuth is a distributed tracing tool for Spring Cloud. It borrows from https://research.google.com/pubs/pub36356.html[Dapper], https://github.com/openzipkin/zipkin[Zipkin], and https://htrace.incubator.apache.org/[HTrace].
+include::overview.adoc[]
 
 === Quick Start
 
-Add sleuth to the classpath of a Spring Boot application (see "`<<sleuth-adding-project>>`" for Maven and Gradle examples), and you can see the correlation data being collected in logs, as long as you are logging requests.
+Add sleuth to the classpath of a Spring Boot application
+(see "`<<sleuth-adding-project>>`" for Maven and Gradle examples), and you will
+see trace IDs in logs.
 
 For example, consider the following HTTP handler:
 
@@ -24,6 +24,7 @@ For example, consider the following HTTP handler:
 @RestController
 public class DemoController {
   private static Logger log = LoggerFactory.getLogger(DemoController.class);
+
   @RequestMapping("/")
   public String home() {
     log.info("Handling home");
@@ -33,16 +34,18 @@ public class DemoController {
 }
 ----
 
-If you add that handler to a controller, you can see the calls to `home()` being traced in the logs and in Zipkin, if Zipkin is configured.
+If you add that handler to a controller, you can see the calls to `home()`
+being traced in the logs as well in Zipkin, if configured.
 
 NOTE: Instead of logging the request in the handler explicitly, you
 could set `logging.level.org.springframework.web.servlet.DispatcherServlet=DEBUG`.
 
-NOTE: Set `spring.application.name=myService` (for instance) to see the service name as well as the trace and span IDs.
-
-include::intro.adoc[]
+NOTE: Set `spring.application.name=myService` (for instance) to see the service
+name as well as the trace and span IDs.
 
 include::features.adoc[]
+
+include::setup.adoc[]
 
 == Building
 

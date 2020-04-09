@@ -8,11 +8,13 @@ include::_attributes.adoc[]
 
 :doctype: book
 
-include::intro.adoc[]
+include::overview.adoc[]
 
 include::features.adoc[]
 
-== Introduction
+include::setup.adoc[]
+
+== How Sleuth works
 
 Spring Cloud Sleuth is a layer over https://github.com/openzipkin/brave[Brave].
 
@@ -40,7 +42,7 @@ predefined, but is flexible otherwise.
 
 Sleuth configures everything you need to get started with tracing. Sleuth
 configures where trace data (spans) are reported to, how many traces to keep
-(sampling), if remote fields (baggage) and which libraries are traced.
+(sampling), if remote fields (baggage) are sent, and which libraries are traced.
 Sleuth also adds annotation based tracing features and some instrumentation not
 available otherwise, such as Reactor. If cannot find the configuration you are
 looking for in the documentation, ask https://gitter.im/spring-cloud/spring-cloud-sleuth[Gitter]
