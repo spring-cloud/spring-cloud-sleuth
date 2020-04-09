@@ -5,7 +5,7 @@
 <!--[if IE]><meta http-equiv="X-UA-Compatible" content="IE=edge"><![endif]-->
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="generator" content="Asciidoctor 1.5.8">
-<title>Adding Sleuth to the Project</title>
+<title>Adding Sleuth to your Project</title>
 <link rel="stylesheet" href="css/spring.css">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
 
@@ -113,14 +113,22 @@ $(globalSwitch);
 <div id="header">
 <div id="toc" class="toc2">
 <div id="toctitle">Table of Contents</div>
+<ul class="sectlevel1">
+<li><a href="#sleuth-adding-project">Adding Sleuth to your Project</a>
 <ul class="sectlevel2">
-<li><a href="#sleuth-adding-project">Adding Sleuth to the Project</a></li>
+<li><a href="#_sleuth_with_zipkin_via_http">Sleuth with Zipkin via HTTP</a></li>
+<li><a href="#_sleuth_with_zipkin_over_rabbitmq_or_kafka">Sleuth with Zipkin over RabbitMQ or Kafka</a></li>
+<li><a href="#_overriding_the_auto_configuration_of_zipkin">Overriding the auto-configuration of Zipkin</a></li>
+<li><a href="#_only_sleuth_log_correlation">Only Sleuth (log correlation)</a></li>
+</ul>
+</li>
 </ul>
 </div>
 </div>
 <div id="content">
-<div class="sect2">
-<h3 id="sleuth-adding-project"><a class="link" href="#sleuth-adding-project">Adding Sleuth to the Project</a></h3>
+<div class="sect1">
+<h2 id="sleuth-adding-project"><a class="link" href="#sleuth-adding-project">Adding Sleuth to your Project</a></h2>
+<div class="sectionbody">
 <div class="paragraph">
 <p>This section addresses how to add Sleuth to your project with either Maven or Gradle.</p>
 </div>
@@ -136,8 +144,8 @@ To ensure that your application name is properly displayed in Zipkin, set the <c
 </tr>
 </table>
 </div>
-<div class="sect3">
-<h4 id="_sleuth_with_zipkin_via_http"><a class="link" href="#_sleuth_with_zipkin_via_http">Sleuth with Zipkin via HTTP</a></h4>
+<div class="sect2">
+<h3 id="_sleuth_with_zipkin_via_http"><a class="link" href="#_sleuth_with_zipkin_via_http">Sleuth with Zipkin via HTTP</a></h3>
 <div class="paragraph">
 <p>If you want both Sleuth and Zipkin, add the <code>spring-cloud-starter-zipkin</code> dependency.</p>
 </div>
@@ -207,8 +215,8 @@ dependencies { <i class="conum" data-value="2"></i><b>(2)</b>
 </table>
 </div>
 </div>
-<div class="sect3">
-<h4 id="_sleuth_with_zipkin_over_rabbitmq_or_kafka"><a class="link" href="#_sleuth_with_zipkin_over_rabbitmq_or_kafka">Sleuth with Zipkin over RabbitMQ or Kafka</a></h4>
+<div class="sect2">
+<h3 id="_sleuth_with_zipkin_over_rabbitmq_or_kafka"><a class="link" href="#_sleuth_with_zipkin_over_rabbitmq_or_kafka">Sleuth with Zipkin over RabbitMQ or Kafka</a></h3>
 <div class="paragraph">
 <p>If you want to use RabbitMQ or Kafka instead of HTTP, add the <code>spring-rabbit</code> or <code>spring-kafka</code> dependency.
 The default destination name is <code>zipkin</code>.</p>
@@ -313,8 +321,8 @@ dependencies {
 </table>
 </div>
 </div>
-<div class="sect3">
-<h4 id="_overriding_the_auto_configuration_of_zipkin"><a class="link" href="#_overriding_the_auto_configuration_of_zipkin">Overriding the auto-configuration of Zipkin</a></h4>
+<div class="sect2">
+<h3 id="_overriding_the_auto_configuration_of_zipkin"><a class="link" href="#_overriding_the_auto_configuration_of_zipkin">Overriding the auto-configuration of Zipkin</a></h3>
 <div class="paragraph">
 <p>Spring Cloud Sleuth supports sending traces to multiple tracing systems as of version 2.1.0.
 In order to get this to work, every tracing system needs to have a <code>Reporter&lt;Span&gt;</code> and <code>Sender</code>.
@@ -371,8 +379,8 @@ protected static class MyConfig {
 </div>
 </div>
 </div>
-<div class="sect3">
-<h4 id="_only_sleuth_log_correlation"><a class="link" href="#_only_sleuth_log_correlation">Only Sleuth (log correlation)</a></h4>
+<div class="sect2">
+<h3 id="_only_sleuth_log_correlation"><a class="link" href="#_only_sleuth_log_correlation">Only Sleuth (log correlation)</a></h3>
 <div class="paragraph">
 <p>If you want to use only Spring Cloud Sleuth without the Zipkin integration, add the <code>spring-cloud-starter-sleuth</code> module to your project.</p>
 </div>
@@ -440,6 +448,7 @@ dependencies { <i class="conum" data-value="2"></i><b>(2)</b>
 <td>Add the dependency to <code>spring-cloud-starter-sleuth</code>.</td>
 </tr>
 </table>
+</div>
 </div>
 </div>
 </div>
