@@ -2,7 +2,7 @@
 
 include::_attributes.adoc[]
 
-=== Features
+== Features
 Sleuth sets up instrumentation not only to track timing, but also to catch
 errors so that they can be analyzed or correlated with logs. This works the
 same way regardless of if the error came from a common instrumented library,
@@ -13,7 +13,7 @@ Zipkin screenshots. However, most services accepting Zipkin's format[https://zip
 have similar base features. Sleuth can also be configured to send data in other
 formats, something detailed later.
 
-==== Contextualizing errors
+=== Contextualizing errors
 Without distributed tracing, it can be difficult to understand the impact of a
 an exception. For example, it can be hard to know if a specific request caused
 the caller to fail or not.
@@ -32,7 +32,7 @@ image::https://raw.githubusercontent.com/spring-cloud/spring-cloud-sleuth/{branc
 For example, the above error happened in the "backend" service, and caused the
 "frontend" service to fail.
 
-==== Log correlation
+=== Log correlation
 Sleuth configures the logging context with variables including the service name
 (`%{spring.zipkin.service.name}`) and the trace ID (`%{traceId}`). These help
 you connect logs with distributed traces and allow you choice in what tools you
@@ -85,7 +85,7 @@ filter {
   }
 }
 
-===== JSON Logback with Logstash
+==== JSON Logback with Logstash
 
 Often, you do not want to store your logs in a text file but in a JSON file that Logstash can immediately pick.
 To do so, you have to do the following (for readability, we pass the dependencies in the `groupId:artifactId:version` notation).
@@ -113,7 +113,7 @@ That Logback configuration file:
 NOTE: If you use a custom `logback-spring.xml`, you must pass the `spring.application.name` in the  `bootstrap` rather than the `application` property file.
 Otherwise, your custom logback file does not properly read the property.
 
-==== Service Dependency Graph
+=== Service Dependency Graph
 When you consider distributed tracing tracks requests, it makes sense that
 trace data can paint a picture of your architecture.
 
@@ -128,7 +128,7 @@ image::https://raw.githubusercontent.com/spring-cloud/spring-cloud-sleuth/{branc
 need to run a separate service to aggregate the dependency graph. You can learn
 more https://github.com/openzipkin/zipkin-dependencies/[here].
 
-==== Request scoped properties (Baggage)
+=== Request scoped properties (Baggage)
 Distributed tracing works by propagating fields inside and across services that
 connect the trace together: traceId and spanId notably. The context that holds
 these fields can optionally push other fields that need to be consistent
@@ -151,7 +151,7 @@ RPC latency. In extreme cases, too much baggage can crash the application, due
 to exceeding transport-level message or header capacity.
 
 
-===== Baggage versus Tags
+==== Baggage versus Tags
 
 Like trace IDs, Baggage is attached to messages or requests, usually as
 headers. Tags are key value pairs sent in a Span to Zipkin. Baggage values are
