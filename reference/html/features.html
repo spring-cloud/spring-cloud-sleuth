@@ -113,19 +113,19 @@ $(globalSwitch);
 <div id="header">
 <div id="toc" class="toc2">
 <div id="toctitle">Table of Contents</div>
-<ul class="sectlevel2">
+<ul class="sectlevel1">
 <li><a href="#features">1. Features</a>
-<ul class="sectlevel3">
+<ul class="sectlevel2">
 <li><a href="#contextualizing-errors">1.1. Contextualizing errors</a></li>
 <li><a href="#log-correlation">1.2. Log correlation</a>
-<ul class="sectlevel4">
-<li><a href="#json-logback-with-logstash">JSON Logback with Logstash</a></li>
+<ul class="sectlevel3">
+<li><a href="#json-logback-with-logstash">1.2.1. JSON Logback with Logstash</a></li>
 </ul>
 </li>
 <li><a href="#service-dependency-graph">1.3. Service Dependency Graph</a></li>
 <li><a href="#request-scoped-properties-baggage">1.4. Request scoped properties (Baggage)</a>
-<ul class="sectlevel4">
-<li><a href="#baggage-versus-tags">Baggage versus Tags</a></li>
+<ul class="sectlevel3">
+<li><a href="#baggage-versus-tags">1.4.1. Baggage versus Tags</a></li>
 </ul>
 </li>
 </ul>
@@ -134,8 +134,9 @@ $(globalSwitch);
 </div>
 </div>
 <div id="content">
-<div class="sect2">
-<h3 id="features"><a class="anchor" href="#features"></a><a class="link" href="#features">1. Features</a></h3>
+<div class="sect1">
+<h2 id="features"><a class="anchor" href="#features"></a><a class="link" href="#features">1. Features</a></h2>
+<div class="sectionbody">
 <div class="paragraph">
 <p>Sleuth sets up instrumentation not only to track timing, but also to catch
 errors so that they can be analyzed or correlated with logs. This works the
@@ -148,8 +149,8 @@ Zipkin screenshots. However, most services accepting Zipkin&#8217;s format[<a hr
 have similar base features. Sleuth can also be configured to send data in other
 formats, something detailed later.</p>
 </div>
-<div class="sect3">
-<h4 id="contextualizing-errors"><a class="anchor" href="#contextualizing-errors"></a><a class="link" href="#contextualizing-errors">1.1. Contextualizing errors</a></h4>
+<div class="sect2">
+<h3 id="contextualizing-errors"><a class="anchor" href="#contextualizing-errors"></a><a class="link" href="#contextualizing-errors">1.1. Contextualizing errors</a></h3>
 <div class="paragraph">
 <p>Without distributed tracing, it can be difficult to understand the impact of a
 an exception. For example, it can be hard to know if a specific request caused
@@ -180,8 +181,8 @@ happened before the request hit another service or not:</p>
 "frontend" service to fail.</p>
 </div>
 </div>
-<div class="sect3">
-<h4 id="log-correlation"><a class="anchor" href="#log-correlation"></a><a class="link" href="#log-correlation">1.2. Log correlation</a></h4>
+<div class="sect2">
+<h3 id="log-correlation"><a class="anchor" href="#log-correlation"></a><a class="link" href="#log-correlation">1.2. Log correlation</a></h3>
 <div class="paragraph">
 <p>Sleuth configures the logging context with variables including the service name
 (<code>%{spring.zipkin.service.name}</code>) and the trace ID (<code>%{traceId}</code>). These help
@@ -259,8 +260,8 @@ If you want to use Grok together with the logs from Cloud Foundry, you have to u
 }</code></pre>
 </div>
 </div>
-<div class="sect4">
-<h5 id="json-logback-with-logstash"><a class="anchor" href="#json-logback-with-logstash"></a><a class="link" href="#json-logback-with-logstash">JSON Logback with Logstash</a></h5>
+<div class="sect3">
+<h4 id="json-logback-with-logstash"><a class="anchor" href="#json-logback-with-logstash"></a><a class="link" href="#json-logback-with-logstash">1.2.1. JSON Logback with Logstash</a></h4>
 <div class="paragraph">
 <p>Often, you do not want to store your logs in a text file but in a JSON file that Logstash can immediately pick.
 To do so, you have to do the following (for readability, we pass the dependencies in the <code>groupId:artifactId:version</code> notation).</p>
@@ -396,8 +397,8 @@ Otherwise, your custom logback file does not properly read the property.
 </div>
 </div>
 </div>
-<div class="sect3">
-<h4 id="service-dependency-graph"><a class="anchor" href="#service-dependency-graph"></a><a class="link" href="#service-dependency-graph">1.3. Service Dependency Graph</a></h4>
+<div class="sect2">
+<h3 id="service-dependency-graph"><a class="anchor" href="#service-dependency-graph"></a><a class="link" href="#service-dependency-graph">1.3. Service Dependency Graph</a></h3>
 <div class="paragraph">
 <p>When you consider distributed tracing tracks requests, it makes sense that
 trace data can paint a picture of your architecture.</p>
@@ -417,8 +418,8 @@ need to run a separate service to aggregate the dependency graph. You can learn
 more <a href="https://github.com/openzipkin/zipkin-dependencies/">here</a>.</p>
 </div>
 </div>
-<div class="sect3">
-<h4 id="request-scoped-properties-baggage"><a class="anchor" href="#request-scoped-properties-baggage"></a><a class="link" href="#request-scoped-properties-baggage">1.4. Request scoped properties (Baggage)</a></h4>
+<div class="sect2">
+<h3 id="request-scoped-properties-baggage"><a class="anchor" href="#request-scoped-properties-baggage"></a><a class="link" href="#request-scoped-properties-baggage">1.4. Request scoped properties (Baggage)</a></h3>
 <div class="paragraph">
 <p>Distributed tracing works by propagating fields inside and across services that
 connect the trace together: traceId and spanId notably. The context that holds
@@ -455,8 +456,8 @@ to exceeding transport-level message or header capacity.
 </tr>
 </table>
 </div>
-<div class="sect4">
-<h5 id="baggage-versus-tags"><a class="anchor" href="#baggage-versus-tags"></a><a class="link" href="#baggage-versus-tags">Baggage versus Tags</a></h5>
+<div class="sect3">
+<h4 id="baggage-versus-tags"><a class="anchor" href="#baggage-versus-tags"></a><a class="link" href="#baggage-versus-tags">1.4.1. Baggage versus Tags</a></h4>
 <div class="paragraph">
 <p>Like trace IDs, Baggage is attached to messages or requests, usually as
 headers. Tags are key value pairs sent in a Span to Zipkin. Baggage values are
@@ -477,6 +478,7 @@ like so:</p>
         - x-vcap-request-id
       tagFields:
         - country-code</code></pre>
+</div>
 </div>
 </div>
 </div>

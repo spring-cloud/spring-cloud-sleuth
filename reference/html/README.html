@@ -119,26 +119,30 @@ $(globalSwitch);
 <li><a href="#_quick_start">Quick Start</a></li>
 </ul>
 </li>
-<li><a href="#_overview">Overview</a>
+<li><a href="#_overview">Overview</a></li>
+<li><a href="#features">1. Features</a>
 <ul class="sectlevel2">
-<li><a href="#features">.1. Features</a></li>
-<li><a href="#sleuth-adding-project">.2. Adding Sleuth to the Project</a></li>
+<li><a href="#contextualizing-errors">1.1. Contextualizing errors</a></li>
+<li><a href="#log-correlation">1.2. Log correlation</a></li>
+<li><a href="#service-dependency-graph">1.3. Service Dependency Graph</a></li>
+<li><a href="#request-scoped-properties-baggage">1.4. Request scoped properties (Baggage)</a></li>
+<li><a href="#sleuth-adding-project">1.5. Adding Sleuth to the Project</a></li>
 </ul>
 </li>
-<li><a href="#building">1. Building</a>
+<li><a href="#building">2. Building</a>
 <ul class="sectlevel2">
-<li><a href="#basic-compile-and-test">1.1. Basic Compile and Test</a></li>
-<li><a href="#documentation">1.2. Documentation</a></li>
-<li><a href="#working-with-the-code">1.3. Working with the code</a></li>
+<li><a href="#basic-compile-and-test">2.1. Basic Compile and Test</a></li>
+<li><a href="#documentation">2.2. Documentation</a></li>
+<li><a href="#working-with-the-code">2.3. Working with the code</a></li>
 </ul>
 </li>
-<li><a href="#contributing">2. Contributing</a>
+<li><a href="#contributing">3. Contributing</a>
 <ul class="sectlevel2">
-<li><a href="#sign-the-contributor-license-agreement">2.1. Sign the Contributor License Agreement</a></li>
-<li><a href="#code-of-conduct">2.2. Code of Conduct</a></li>
-<li><a href="#code-conventions-and-housekeeping">2.3. Code Conventions and Housekeeping</a></li>
-<li><a href="#checkstyle">2.4. Checkstyle</a></li>
-<li><a href="#ide-setup">2.5. IDE setup</a></li>
+<li><a href="#sign-the-contributor-license-agreement">3.1. Sign the Contributor License Agreement</a></li>
+<li><a href="#code-of-conduct">3.2. Code of Conduct</a></li>
+<li><a href="#code-conventions-and-housekeeping">3.3. Code Conventions and Housekeeping</a></li>
+<li><a href="#checkstyle">3.4. Checkstyle</a></li>
+<li><a href="#ide-setup">3.5. IDE setup</a></li>
 </ul>
 </li>
 </ul>
@@ -274,8 +278,11 @@ Sleuth make getting started with distributed tracing easy!</p>
 <p>To keep things simple, the same example is used throughout documentation using
 basic HTTP communication.</p>
 </div>
-<div class="sect2">
-<h3 id="features"><a class="anchor" href="#features"></a><a class="link" href="#features">.1. Features</a></h3>
+</div>
+</div>
+<div class="sect1">
+<h2 id="features"><a class="anchor" href="#features"></a><a class="link" href="#features">1. Features</a></h2>
+<div class="sectionbody">
 <div class="paragraph">
 <p>Sleuth sets up instrumentation not only to track timing, but also to catch
 errors so that they can be analyzed or correlated with logs. This works the
@@ -288,8 +295,8 @@ Zipkin screenshots. However, most services accepting Zipkin&#8217;s format[<a hr
 have similar base features. Sleuth can also be configured to send data in other
 formats, something detailed later.</p>
 </div>
-<div class="sect3">
-<h4 id="contextualizing-errors"><a class="anchor" href="#contextualizing-errors"></a><a class="link" href="#contextualizing-errors">.1.1. Contextualizing errors</a></h4>
+<div class="sect2">
+<h3 id="contextualizing-errors"><a class="anchor" href="#contextualizing-errors"></a><a class="link" href="#contextualizing-errors">1.1. Contextualizing errors</a></h3>
 <div class="paragraph">
 <p>Without distributed tracing, it can be difficult to understand the impact of a
 an exception. For example, it can be hard to know if a specific request caused
@@ -320,8 +327,8 @@ happened before the request hit another service or not:</p>
 "frontend" service to fail.</p>
 </div>
 </div>
-<div class="sect3">
-<h4 id="log-correlation"><a class="anchor" href="#log-correlation"></a><a class="link" href="#log-correlation">.1.2. Log correlation</a></h4>
+<div class="sect2">
+<h3 id="log-correlation"><a class="anchor" href="#log-correlation"></a><a class="link" href="#log-correlation">1.2. Log correlation</a></h3>
 <div class="paragraph">
 <p>Sleuth configures the logging context with variables including the service name
 (<code>%{spring.zipkin.service.name}</code>) and the trace ID (<code>%{traceId}</code>). These help
@@ -399,8 +406,8 @@ If you want to use Grok together with the logs from Cloud Foundry, you have to u
 }</code></pre>
 </div>
 </div>
-<div class="sect4">
-<h5 id="json-logback-with-logstash"><a class="anchor" href="#json-logback-with-logstash"></a><a class="link" href="#json-logback-with-logstash">JSON Logback with Logstash</a></h5>
+<div class="sect3">
+<h4 id="json-logback-with-logstash"><a class="anchor" href="#json-logback-with-logstash"></a><a class="link" href="#json-logback-with-logstash">1.2.1. JSON Logback with Logstash</a></h4>
 <div class="paragraph">
 <p>Often, you do not want to store your logs in a text file but in a JSON file that Logstash can immediately pick.
 To do so, you have to do the following (for readability, we pass the dependencies in the <code>groupId:artifactId:version</code> notation).</p>
@@ -536,8 +543,8 @@ Otherwise, your custom logback file does not properly read the property.
 </div>
 </div>
 </div>
-<div class="sect3">
-<h4 id="service-dependency-graph"><a class="anchor" href="#service-dependency-graph"></a><a class="link" href="#service-dependency-graph">.1.3. Service Dependency Graph</a></h4>
+<div class="sect2">
+<h3 id="service-dependency-graph"><a class="anchor" href="#service-dependency-graph"></a><a class="link" href="#service-dependency-graph">1.3. Service Dependency Graph</a></h3>
 <div class="paragraph">
 <p>When you consider distributed tracing tracks requests, it makes sense that
 trace data can paint a picture of your architecture.</p>
@@ -557,8 +564,8 @@ need to run a separate service to aggregate the dependency graph. You can learn
 more <a href="https://github.com/openzipkin/zipkin-dependencies/">here</a>.</p>
 </div>
 </div>
-<div class="sect3">
-<h4 id="request-scoped-properties-baggage"><a class="anchor" href="#request-scoped-properties-baggage"></a><a class="link" href="#request-scoped-properties-baggage">.1.4. Request scoped properties (Baggage)</a></h4>
+<div class="sect2">
+<h3 id="request-scoped-properties-baggage"><a class="anchor" href="#request-scoped-properties-baggage"></a><a class="link" href="#request-scoped-properties-baggage">1.4. Request scoped properties (Baggage)</a></h3>
 <div class="paragraph">
 <p>Distributed tracing works by propagating fields inside and across services that
 connect the trace together: traceId and spanId notably. The context that holds
@@ -595,8 +602,8 @@ to exceeding transport-level message or header capacity.
 </tr>
 </table>
 </div>
-<div class="sect4">
-<h5 id="baggage-versus-tags"><a class="anchor" href="#baggage-versus-tags"></a><a class="link" href="#baggage-versus-tags">Baggage versus Tags</a></h5>
+<div class="sect3">
+<h4 id="baggage-versus-tags"><a class="anchor" href="#baggage-versus-tags"></a><a class="link" href="#baggage-versus-tags">1.4.1. Baggage versus Tags</a></h4>
 <div class="paragraph">
 <p>Like trace IDs, Baggage is attached to messages or requests, usually as
 headers. Tags are key value pairs sent in a Span to Zipkin. Baggage values are
@@ -621,9 +628,8 @@ like so:</p>
 </div>
 </div>
 </div>
-</div>
 <div class="sect2">
-<h3 id="sleuth-adding-project"><a class="anchor" href="#sleuth-adding-project"></a><a class="link" href="#sleuth-adding-project">.2. Adding Sleuth to the Project</a></h3>
+<h3 id="sleuth-adding-project"><a class="anchor" href="#sleuth-adding-project"></a><a class="link" href="#sleuth-adding-project">1.5. Adding Sleuth to the Project</a></h3>
 <div class="paragraph">
 <p>This section addresses how to add Sleuth to your project with either Maven or Gradle.</p>
 </div>
@@ -640,7 +646,7 @@ To ensure that your application name is properly displayed in Zipkin, set the <c
 </table>
 </div>
 <div class="sect3">
-<h4 id="sleuth-with-zipkin-via-http"><a class="anchor" href="#sleuth-with-zipkin-via-http"></a><a class="link" href="#sleuth-with-zipkin-via-http">.2.1. Sleuth with Zipkin via HTTP</a></h4>
+<h4 id="sleuth-with-zipkin-via-http"><a class="anchor" href="#sleuth-with-zipkin-via-http"></a><a class="link" href="#sleuth-with-zipkin-via-http">1.5.1. Sleuth with Zipkin via HTTP</a></h4>
 <div class="paragraph">
 <p>If you want both Sleuth and Zipkin, add the <code>spring-cloud-starter-zipkin</code> dependency.</p>
 </div>
@@ -711,7 +717,7 @@ dependencies { <i class="conum" data-value="2"></i><b>(2)</b>
 </div>
 </div>
 <div class="sect3">
-<h4 id="sleuth-with-zipkin-over-rabbitmq-or-kafka"><a class="anchor" href="#sleuth-with-zipkin-over-rabbitmq-or-kafka"></a><a class="link" href="#sleuth-with-zipkin-over-rabbitmq-or-kafka">.2.2. Sleuth with Zipkin over RabbitMQ or Kafka</a></h4>
+<h4 id="sleuth-with-zipkin-over-rabbitmq-or-kafka"><a class="anchor" href="#sleuth-with-zipkin-over-rabbitmq-or-kafka"></a><a class="link" href="#sleuth-with-zipkin-over-rabbitmq-or-kafka">1.5.2. Sleuth with Zipkin over RabbitMQ or Kafka</a></h4>
 <div class="paragraph">
 <p>If you want to use RabbitMQ or Kafka instead of HTTP, add the <code>spring-rabbit</code> or <code>spring-kafka</code> dependency.
 The default destination name is <code>zipkin</code>.</p>
@@ -817,7 +823,7 @@ dependencies {
 </div>
 </div>
 <div class="sect3">
-<h4 id="overriding-the-auto-configuration-of-zipkin"><a class="anchor" href="#overriding-the-auto-configuration-of-zipkin"></a><a class="link" href="#overriding-the-auto-configuration-of-zipkin">.2.3. Overriding the auto-configuration of Zipkin</a></h4>
+<h4 id="overriding-the-auto-configuration-of-zipkin"><a class="anchor" href="#overriding-the-auto-configuration-of-zipkin"></a><a class="link" href="#overriding-the-auto-configuration-of-zipkin">1.5.3. Overriding the auto-configuration of Zipkin</a></h4>
 <div class="paragraph">
 <p>Spring Cloud Sleuth supports sending traces to multiple tracing systems as of version 2.1.0.
 In order to get this to work, every tracing system needs to have a <code>Reporter&lt;Span&gt;</code> and <code>Sender</code>.
@@ -875,7 +881,7 @@ protected static class MyConfig {
 </div>
 </div>
 <div class="sect3">
-<h4 id="only-sleuth-log-correlation"><a class="anchor" href="#only-sleuth-log-correlation"></a><a class="link" href="#only-sleuth-log-correlation">.2.4. Only Sleuth (log correlation)</a></h4>
+<h4 id="only-sleuth-log-correlation"><a class="anchor" href="#only-sleuth-log-correlation"></a><a class="link" href="#only-sleuth-log-correlation">1.5.4. Only Sleuth (log correlation)</a></h4>
 <div class="paragraph">
 <p>If you want to use only Spring Cloud Sleuth without the Zipkin integration, add the <code>spring-cloud-starter-sleuth</code> module to your project.</p>
 </div>
@@ -949,10 +955,10 @@ dependencies { <i class="conum" data-value="2"></i><b>(2)</b>
 </div>
 </div>
 <div class="sect1">
-<h2 id="building"><a class="anchor" href="#building"></a><a class="link" href="#building">1. Building</a></h2>
+<h2 id="building"><a class="anchor" href="#building"></a><a class="link" href="#building">2. Building</a></h2>
 <div class="sectionbody">
 <div class="sect2">
-<h3 id="basic-compile-and-test"><a class="anchor" href="#basic-compile-and-test"></a><a class="link" href="#basic-compile-and-test">1.1. Basic Compile and Test</a></h3>
+<h3 id="basic-compile-and-test"><a class="anchor" href="#basic-compile-and-test"></a><a class="link" href="#basic-compile-and-test">2.1. Basic Compile and Test</a></h3>
 <div class="paragraph">
 <p>To build the source you will need to install JDK 1.7.</p>
 </div>
@@ -1030,7 +1036,7 @@ If all else fails, build with the command from <code>.travis.yml</code> (usually
 </div>
 </div>
 <div class="sect2">
-<h3 id="documentation"><a class="anchor" href="#documentation"></a><a class="link" href="#documentation">1.2. Documentation</a></h3>
+<h3 id="documentation"><a class="anchor" href="#documentation"></a><a class="link" href="#documentation">2.2. Documentation</a></h3>
 <div class="paragraph">
 <p>The spring-cloud-build module has a "docs" profile, and if you switch
 that on it will try to build asciidoc sources from
@@ -1043,7 +1049,7 @@ a modified file in the correct place. Just commit it and push the change.</p>
 </div>
 </div>
 <div class="sect2">
-<h3 id="working-with-the-code"><a class="anchor" href="#working-with-the-code"></a><a class="link" href="#working-with-the-code">1.3. Working with the code</a></h3>
+<h3 id="working-with-the-code"><a class="anchor" href="#working-with-the-code"></a><a class="link" href="#working-with-the-code">2.3. Working with the code</a></h3>
 <div class="paragraph">
 <p>If you don&#8217;t have an IDE preference we would recommend that you use
 <a href="https://www.springsource.com/developer/sts">Spring Tools Suite</a> or
@@ -1052,7 +1058,7 @@ a modified file in the correct place. Just commit it and push the change.</p>
 should also work without issue as long as they use Maven 3.3.3 or better.</p>
 </div>
 <div class="sect3">
-<h4 id="importing-into-eclipse-with-m2eclipse"><a class="anchor" href="#importing-into-eclipse-with-m2eclipse"></a><a class="link" href="#importing-into-eclipse-with-m2eclipse">1.3.1. Importing into eclipse with m2eclipse</a></h4>
+<h4 id="importing-into-eclipse-with-m2eclipse"><a class="anchor" href="#importing-into-eclipse-with-m2eclipse"></a><a class="link" href="#importing-into-eclipse-with-m2eclipse">2.3.1. Importing into eclipse with m2eclipse</a></h4>
 <div class="paragraph">
 <p>We recommend the <a href="https://eclipse.org/m2e/">m2eclipse</a> eclipse plugin when working with
 eclipse. If you don&#8217;t already have m2eclipse installed it is available from the "eclipse
@@ -1079,7 +1085,7 @@ pom into your <code>settings.xml</code>.
 </div>
 </div>
 <div class="sect3">
-<h4 id="importing-into-eclipse-without-m2eclipse"><a class="anchor" href="#importing-into-eclipse-without-m2eclipse"></a><a class="link" href="#importing-into-eclipse-without-m2eclipse">1.3.2. Importing into eclipse without m2eclipse</a></h4>
+<h4 id="importing-into-eclipse-without-m2eclipse"><a class="anchor" href="#importing-into-eclipse-without-m2eclipse"></a><a class="link" href="#importing-into-eclipse-without-m2eclipse">2.3.2. Importing into eclipse without m2eclipse</a></h4>
 <div class="paragraph">
 <p>If you prefer not to use m2eclipse you can generate eclipse project metadata using the
 following command:</p>
@@ -1113,7 +1119,7 @@ so, your app breaks during the Maven build.
 </div>
 </div>
 <div class="sect1">
-<h2 id="contributing"><a class="anchor" href="#contributing"></a><a class="link" href="#contributing">2. Contributing</a></h2>
+<h2 id="contributing"><a class="anchor" href="#contributing"></a><a class="link" href="#contributing">3. Contributing</a></h2>
 <div class="sectionbody">
 <div class="paragraph">
 <p>Spring Cloud is released under the non-restrictive Apache 2.0 license,
@@ -1123,7 +1129,7 @@ to contribute even something trivial please do not hesitate, but
 follow the guidelines below.</p>
 </div>
 <div class="sect2">
-<h3 id="sign-the-contributor-license-agreement"><a class="anchor" href="#sign-the-contributor-license-agreement"></a><a class="link" href="#sign-the-contributor-license-agreement">2.1. Sign the Contributor License Agreement</a></h3>
+<h3 id="sign-the-contributor-license-agreement"><a class="anchor" href="#sign-the-contributor-license-agreement"></a><a class="link" href="#sign-the-contributor-license-agreement">3.1. Sign the Contributor License Agreement</a></h3>
 <div class="paragraph">
 <p>Before we accept a non-trivial patch or pull request we will need you to sign the
 <a href="https://cla.pivotal.io/sign/spring">Contributor License Agreement</a>.
@@ -1134,7 +1140,7 @@ given the ability to merge pull requests.</p>
 </div>
 </div>
 <div class="sect2">
-<h3 id="code-of-conduct"><a class="anchor" href="#code-of-conduct"></a><a class="link" href="#code-of-conduct">2.2. Code of Conduct</a></h3>
+<h3 id="code-of-conduct"><a class="anchor" href="#code-of-conduct"></a><a class="link" href="#code-of-conduct">3.2. Code of Conduct</a></h3>
 <div class="paragraph">
 <p>This project adheres to the Contributor Covenant <a href="https://github.com/spring-cloud/spring-cloud-build/blob/master/docs/src/main/asciidoc/code-of-conduct.adoc">code of
 conduct</a>. By participating, you  are expected to uphold this code. Please report
@@ -1142,7 +1148,7 @@ unacceptable behavior to <a href="mailto:spring-code-of-conduct@pivotal.io">spri
 </div>
 </div>
 <div class="sect2">
-<h3 id="code-conventions-and-housekeeping"><a class="anchor" href="#code-conventions-and-housekeeping"></a><a class="link" href="#code-conventions-and-housekeeping">2.3. Code Conventions and Housekeeping</a></h3>
+<h3 id="code-conventions-and-housekeeping"><a class="anchor" href="#code-conventions-and-housekeeping"></a><a class="link" href="#code-conventions-and-housekeeping">3.3. Code Conventions and Housekeeping</a></h3>
 <div class="paragraph">
 <p>None of these is essential for a pull request, but they will all help.  They can also be
 added after the original pull request but before a merge.</p>
@@ -1190,7 +1196,7 @@ message (where XXXX is the issue number).</p>
 </div>
 </div>
 <div class="sect2">
-<h3 id="checkstyle"><a class="anchor" href="#checkstyle"></a><a class="link" href="#checkstyle">2.4. Checkstyle</a></h3>
+<h3 id="checkstyle"><a class="anchor" href="#checkstyle"></a><a class="link" href="#checkstyle">3.4. Checkstyle</a></h3>
 <div class="paragraph">
 <p>Spring Cloud Build comes with a set of checkstyle rules. You can find them in the <code>spring-cloud-build-tools</code> module. The most notable files under the module are:</p>
 </div>
@@ -1223,7 +1229,7 @@ message (where XXXX is the issue number).</p>
 </table>
 </div>
 <div class="sect3">
-<h4 id="checkstyle-configuration"><a class="anchor" href="#checkstyle-configuration"></a><a class="link" href="#checkstyle-configuration">2.4.1. Checkstyle configuration</a></h4>
+<h4 id="checkstyle-configuration"><a class="anchor" href="#checkstyle-configuration"></a><a class="link" href="#checkstyle-configuration">3.4.1. Checkstyle configuration</a></h4>
 <div class="paragraph">
 <p>Checkstyle rules are <strong>disabled by default</strong>. To add checkstyle to your project just define the following properties and plugins.</p>
 </div>
@@ -1313,9 +1319,9 @@ $ touch .springformat</code></pre>
 </div>
 </div>
 <div class="sect2">
-<h3 id="ide-setup"><a class="anchor" href="#ide-setup"></a><a class="link" href="#ide-setup">2.5. IDE setup</a></h3>
+<h3 id="ide-setup"><a class="anchor" href="#ide-setup"></a><a class="link" href="#ide-setup">3.5. IDE setup</a></h3>
 <div class="sect3">
-<h4 id="intellij-idea"><a class="anchor" href="#intellij-idea"></a><a class="link" href="#intellij-idea">2.5.1. Intellij IDEA</a></h4>
+<h4 id="intellij-idea"><a class="anchor" href="#intellij-idea"></a><a class="link" href="#intellij-idea">3.5.1. Intellij IDEA</a></h4>
 <div class="paragraph">
 <p>In order to setup Intellij you should import our coding conventions, inspection profiles and set up the checkstyle plugin.
 The following files can be found in the <a href="https://github.com/spring-cloud/spring-cloud-build/tree/master/spring-cloud-build-tools">Spring Cloud Build</a> project.</p>

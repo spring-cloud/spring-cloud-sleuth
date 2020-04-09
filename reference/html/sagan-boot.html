@@ -190,7 +190,9 @@ public class Application {
 </div>
 </div>
 <div class="paragraph">
-<p>Run this app and then hit the home page. You will see traceId and spanId populated in the logs. If this app calls out to another one (e.g. with <code>RestTemplate</code>) it will send the trace data in headers and if the receiver is another Sleuth app you will see the trace continue there.</p>
+<p>Run this app and then hit the home page. You will see traceId and spanId populated in the logs.
+If this app calls out to another one (e.g. with <code>RestTemplate</code>) it will send the trace data in
+headers and if the receiver is another Sleuth app you will see the trace continue there.</p>
 </div>
 <div class="ulist">
 <ul>
@@ -198,7 +200,7 @@ public class Application {
 <p>Instead of logging the request in the handler explicitly, you could set <code>logging.level.org.springframework.web.servlet.DispatcherServlet=DEBUG</code></p>
 </li>
 <li>
-<p>If you use Zipkin (up till 2.1.x), configure the probability of spans exported by setting <code>spring.sleuth.sampler.probability</code> (default: 0.1, which is 10 percent). Otherwise, you might think that Sleuth is not working because it omits some spans. Starting from 2.2.0, Sleuth will default to rate limited sampler. That means that it will sample up to 1000 transactions per second.</p>
+<p>Sleuth defaults to a rate limited sampler. That means that it will sample up to 1000 transactions per second.</p>
 </li>
 <li>
 <p>Set <code>spring.application.name=bar</code> (for instance) to see the service name as well as the trace and span ids.</p>

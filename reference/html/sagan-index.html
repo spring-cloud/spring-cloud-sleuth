@@ -122,7 +122,8 @@ $(globalSwitch);
 <div id="preamble">
 <div class="sectionbody">
 <div class="paragraph">
-<p>Spring Cloud Sleuth implements a distributed tracing solution for Spring Cloud, borrowing heavily from <a href="https://research.google.com/pubs/pub36356.html">Dapper</a>, <a href="https://github.com/openzipkin/zipkin">Zipkin</a> and HTrace. For most users Sleuth should be invisible, and all your interactions with external systems should be instrumented automatically. You can capture data simply in logs, or by sending it to a remote collector service.</p>
+<p>Spring Cloud Sleuth provides Spring Boot auto-configuration for distributed
+tracing.</p>
 </div>
 </div>
 </div>
@@ -130,10 +131,12 @@ $(globalSwitch);
 <h2 id="_features"><a class="link" href="#_features">Features</a></h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>A Span is the basic unit of work. For example, sending an RPC is a new span, as is sending a response to an RPC. Span’s are identified by a unique 64-bit ID for the span and another 64-bit ID for the trace the span is a part of. Spans also have other data, such as descriptions, key-value annotations, the ID of the span that caused them, and process ID’s (normally IP address). Spans are started and stopped, and they keep track of their timing information. Once you create a span, you must stop it at some point in the future. A set of spans forming a tree-like structure called a Trace. For example, if you are running a distributed big-data store, a trace might be formed by a put request.</p>
+<p>Sleuth configures everything you need to get started. This includes where trace
+data (spans) are reported to, how many traces to keep (sampling), if remote
+fields (baggage) are sent, and which libraries are traced.</p>
 </div>
 <div class="paragraph">
-<p>Spring Cloud Sleuth features:</p>
+<p>Specifically, Spring Cloud Sleuth&#8230;&#8203;</p>
 </div>
 <div class="ulist">
 <ul>
@@ -141,13 +144,10 @@ $(globalSwitch);
 <p>Adds trace and span ids to the Slf4J MDC, so you can extract all the logs from a given trace or span in a log aggregator.</p>
 </li>
 <li>
-<p>Provides an abstraction over common distributed tracing data models: traces, spans (forming a DAG), annotations, key-value annotations. Loosely based on HTrace, but Zipkin (Dapper) compatible.</p>
-</li>
-<li>
 <p>Instruments common ingress and egress points from Spring applications (servlet filter, rest template, scheduled actions, message channels, feign client).</p>
 </li>
 <li>
-<p>If <code>spring-cloud-sleuth-zipkin</code> is available then the app will generate and collect Zipkin-compatible traces via HTTP. By default it sends them to a Zipkin collector service on localhost (port 9411). Configure the location of the service using <code>spring.zipkin.baseUrl</code>.</p>
+<p>If <code>spring-cloud-sleuth-zipkin</code> is available then the app will generate and report <a href="https://zipkin.io">Zipkin</a>-compatible traces via HTTP. By default it sends them to a Zipkin collector service on localhost (port 9411). Configure the location of the service using <code>spring.zipkin.baseUrl</code>.</p>
 </li>
 </ul>
 </div>
