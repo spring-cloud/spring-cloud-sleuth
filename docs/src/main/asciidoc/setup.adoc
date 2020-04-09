@@ -1,13 +1,13 @@
 :branch: master
 
 [[sleuth-adding-project]]
-=== Adding Sleuth to the Project
+== Adding Sleuth to your Project
 
 This section addresses how to add Sleuth to your project with either Maven or Gradle.
 
 IMPORTANT: To ensure that your application name is properly displayed in Zipkin, set the `spring.application.name` property in `bootstrap.yml`.
 
-==== Sleuth with Zipkin via HTTP
+=== Sleuth with Zipkin via HTTP
 
 If you want both Sleuth and Zipkin, add the `spring-cloud-starter-zipkin` dependency.
 
@@ -54,7 +54,7 @@ dependencies { <2>
 <1> We recommend that you add the dependency management through the Spring BOM so that you need not manage versions yourself.
 <2> Add the dependency to `spring-cloud-starter-zipkin`.
 
-==== Sleuth with Zipkin over RabbitMQ or Kafka
+=== Sleuth with Zipkin over RabbitMQ or Kafka
 
 If you want to use RabbitMQ or Kafka instead of HTTP, add the `spring-rabbit` or `spring-kafka` dependency.
 The default destination name is `zipkin`.
@@ -119,7 +119,7 @@ dependencies {
 <2> Add the dependency to `spring-cloud-starter-zipkin`. That way, all nested dependencies get downloaded.
 <3> To automatically configure RabbitMQ, add the `spring-rabbit` dependency.
 
-==== Overriding the auto-configuration of Zipkin
+=== Overriding the auto-configuration of Zipkin
 
 Spring Cloud Sleuth supports sending traces to multiple tracing systems as of version 2.1.0.
 In order to get this to work, every tracing system needs to have a `Reporter<Span>` and `Sender`.
@@ -131,7 +131,7 @@ To do this you can use respectively `ZipkinAutoConfiguration.REPORTER_BEAN_NAME`
 include::{project-root}/spring-cloud-sleuth-zipkin/src/test/java/org/springframework/cloud/sleuth/zipkin2/ZipkinAutoConfigurationTests.java[tags=override_default_beans,indent=0]
 ----
 
-==== Only Sleuth (log correlation)
+=== Only Sleuth (log correlation)
 
 If you want to use only Spring Cloud Sleuth without the Zipkin integration, add the `spring-cloud-starter-sleuth` module to your project.
 
