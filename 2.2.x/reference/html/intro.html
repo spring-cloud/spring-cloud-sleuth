@@ -499,10 +499,8 @@ To do so, you have to do the following (for readability, we pass the dependencie
 						{
 						"severity": "%level",
 						"service": "${springAppName:-}",
-						"trace": "%X{X-B3-TraceId:-}",
-						"span": "%X{X-B3-SpanId:-}",
-						"parent": "%X{X-B3-ParentSpanId:-}",
-						"exportable": "%X{X-Span-Export:-}",
+						"trace": "%X{traceId:-}",
+						"span": "%X{spanId:-}",
 						"baggage": "%X{key:-}",
 						"pid": "${PID:-}",
 						"thread": "%thread",
