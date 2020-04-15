@@ -181,26 +181,29 @@ $(globalSwitch);
 </ul>
 </li>
 <li><a href="#sending-spans-to-zipkin">12. Sending Spans to Zipkin</a></li>
-<li><a href="#zipkin-stream-span-consumer">13. Zipkin Stream Span Consumer</a></li>
-<li><a href="#integrations">14. Integrations</a>
+<li><a href="#integrations">13. Integrations</a>
 <ul class="sectlevel2">
-<li><a href="#opentracing">14.1. OpenTracing</a></li>
-<li><a href="#runnable-and-callable">14.2. Runnable and Callable</a></li>
-<li><a href="#spring-cloud-circuitbreaker">14.3. Spring Cloud CircuitBreaker</a></li>
-<li><a href="#rxjava">14.4. RxJava</a></li>
-<li><a href="#http-integration">14.5. HTTP integration</a></li>
-<li><a href="#http-client-integration">14.6. HTTP Client Integration</a></li>
-<li><a href="#feign">14.7. Feign</a></li>
-<li><a href="#grpc">14.8. gRPC</a></li>
-<li><a href="#asynchronous-communication">14.9. Asynchronous Communication</a></li>
-<li><a href="#messaging-2">14.10. Messaging</a></li>
-<li><a href="#redis">14.11. Redis</a></li>
-<li><a href="#quartz">14.12. Quartz</a></li>
-<li><a href="#project-reactor">14.13. Project Reactor</a></li>
+<li><a href="#opentracing">13.1. OpenTracing</a></li>
+<li><a href="#runnable-and-callable">13.2. Runnable and Callable</a></li>
+<li><a href="#spring-cloud-circuitbreaker">13.3. Spring Cloud CircuitBreaker</a></li>
+<li><a href="#rxjava">13.4. RxJava</a></li>
+<li><a href="#http-integration">13.5. HTTP integration</a></li>
+<li><a href="#http-client-integration">13.6. HTTP Client Integration</a></li>
+<li><a href="#feign">13.7. Feign</a></li>
+<li><a href="#grpc">13.8. gRPC</a></li>
+<li><a href="#asynchronous-communication">13.9. Asynchronous Communication</a></li>
+<li><a href="#messaging-2">13.10. Messaging</a></li>
+<li><a href="#redis">13.11. Redis</a></li>
+<li><a href="#quartz">13.12. Quartz</a></li>
+<li><a href="#project-reactor">13.13. Project Reactor</a></li>
+</ul>
+</li>
+<li><a href="#log-integration">14. Log integration</a>
+<ul class="sectlevel2">
+<li><a href="#json-logback-with-logstash">14.1. JSON Logback with Logstash</a></li>
 </ul>
 </li>
 <li><a href="#configuration-properties">15. Configuration properties</a></li>
-<li><a href="#running-examples">16. Running examples</a></li>
 </ul>
 </div>
 </div>
@@ -322,193 +325,6 @@ frontend.log:2020-04-09 17:45:40.574 ERROR [frontend,5e8eeec48b08e26882aba313eb0
 <div class="paragraph">
 <p>Above, you&#8217;ll notice the trace ID is <code>5e8eeec48b08e26882aba313eb08f0a4</code>, for
 example. This log configuration was automatically setup by Sleuth.</p>
-</div>
-<div class="paragraph">
-<p>If you use a log aggregating tool (such as <a href="https://www.elastic.co/products/kibana">Kibana</a>, <a href="https://www.splunk.com/">Splunk</a>, and others), you can order the events that took place.
-An example from Kibana would resemble the following image:</p>
-</div>
-<div class="imageblock">
-<div class="content">
-<img src="https://raw.githubusercontent.com/spring-cloud/spring-cloud-sleuth/master/docs/src/main/asciidoc/images/kibana.png" alt="Log correlation with Kibana">
-</div>
-</div>
-<div class="paragraph">
-<p>If you want to use <a href="https://www.elastic.co/guide/en/logstash/current/index.html">Logstash</a>, the following listing shows the Grok pattern for Logstash:</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="highlightjs highlight"><code>filter {
-  # pattern matching logback pattern
-  grok {
-    match =&gt; { "message" =&gt; "%{TIMESTAMP_ISO8601:timestamp}\s+%{LOGLEVEL:severity}\s+\[%{DATA:service},%{DATA:trace},%{DATA:span}\]\s+%{DATA:pid}\s+---\s+\[%{DATA:thread}\]\s+%{DATA:class}\s+:\s+%{GREEDYDATA:rest}" }
-  }
-  date {
-    match =&gt; ["timestamp", "ISO8601"]
-  }
-  mutate {
-    remove_field =&gt; ["timestamp"]
-  }
-}</code></pre>
-</div>
-</div>
-<div class="admonitionblock note">
-<table>
-<tr>
-<td class="icon">
-<i class="fa icon-note" title="Note"></i>
-</td>
-<td class="content">
-If you want to use Grok together with the logs from Cloud Foundry, you have to use the following pattern:
-</td>
-</tr>
-</table>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="highlightjs highlight"><code>filter {
-  # pattern matching logback pattern
-  grok {
-    match =&gt; { "message" =&gt; "(?m)OUT\s+%{TIMESTAMP_ISO8601:timestamp}\s+%{LOGLEVEL:severity}\s+\[%{DATA:service},%{DATA:trace},%{DATA:span}\]\s+%{DATA:pid}\s+---\s+\[%{DATA:thread}\]\s+%{DATA:class}\s+:\s+%{GREEDYDATA:rest}" }
-  }
-  date {
-    match =&gt; ["timestamp", "ISO8601"]
-  }
-  mutate {
-    remove_field =&gt; ["timestamp"]
-  }
-}</code></pre>
-</div>
-</div>
-<div class="sect3">
-<h4 id="json-logback-with-logstash"><a class="anchor" href="#json-logback-with-logstash"></a><a class="link" href="#json-logback-with-logstash">2.2.1. JSON Logback with Logstash</a></h4>
-<div class="paragraph">
-<p>Often, you do not want to store your logs in a text file but in a JSON file that Logstash can immediately pick.
-To do so, you have to do the following (for readability, we pass the dependencies in the <code>groupId:artifactId:version</code> notation).</p>
-</div>
-<div class="paragraph">
-<p><strong>Dependencies Setup</strong></p>
-</div>
-<div class="olist arabic">
-<ol class="arabic">
-<li>
-<p>Ensure that Logback is on the classpath (<code>ch.qos.logback:logback-core</code>).</p>
-</li>
-<li>
-<p>Add Logstash Logback encode. For example, to use version <code>4.6</code>, add <code>net.logstash.logback:logstash-logback-encoder:4.6</code>.</p>
-</li>
-</ol>
-</div>
-<div class="paragraph">
-<p><strong>Logback Setup</strong></p>
-</div>
-<div class="paragraph">
-<p>Consider the following example of a Logback configuration file (logback-spring.xml).</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="highlightjs highlight"><code class="language-xml hljs" data-lang="xml">&lt;?xml version="1.0" encoding="UTF-8"?&gt;
-&lt;configuration&gt;
-    &lt;include resource="org/springframework/boot/logging/logback/defaults.xml"/&gt;
-    &lt;springProperty scope="context" name="springAppName" source="spring.application.name"/&gt;
-    &lt;!-- Example for logging into the build folder of your project --&gt;
-    &lt;property name="LOG_FILE" value="${BUILD_FOLDER:-build}/${springAppName}"/&gt;
-
-    &lt;!-- You can override this to have a custom pattern --&gt;
-    &lt;property name="CONSOLE_LOG_PATTERN"
-              value="%clr(%d{yyyy-MM-dd HH:mm:ss.SSS}){faint} %clr(${LOG_LEVEL_PATTERN:-%5p}) %clr(${PID:- }){magenta} %clr(---){faint} %clr([%15.15t]){faint} %clr(%-40.40logger{39}){cyan} %clr(:){faint} %m%n${LOG_EXCEPTION_CONVERSION_WORD:-%wEx}"/&gt;
-
-    &lt;!-- Appender to log to console --&gt;
-    &lt;appender name="console" class="ch.qos.logback.core.ConsoleAppender"&gt;
-        &lt;filter class="ch.qos.logback.classic.filter.ThresholdFilter"&gt;
-            &lt;!-- Minimum logging level to be presented in the console logs--&gt;
-            &lt;level&gt;DEBUG&lt;/level&gt;
-        &lt;/filter&gt;
-        &lt;encoder&gt;
-            &lt;pattern&gt;${CONSOLE_LOG_PATTERN}&lt;/pattern&gt;
-            &lt;charset&gt;utf8&lt;/charset&gt;
-        &lt;/encoder&gt;
-    &lt;/appender&gt;
-
-    &lt;!-- Appender to log to file --&gt;
-    &lt;appender name="flatfile" class="ch.qos.logback.core.rolling.RollingFileAppender"&gt;
-        &lt;file&gt;${LOG_FILE}&lt;/file&gt;
-        &lt;rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy"&gt;
-            &lt;fileNamePattern&gt;${LOG_FILE}.%d{yyyy-MM-dd}.gz&lt;/fileNamePattern&gt;
-            &lt;maxHistory&gt;7&lt;/maxHistory&gt;
-        &lt;/rollingPolicy&gt;
-        &lt;encoder&gt;
-            &lt;pattern&gt;${CONSOLE_LOG_PATTERN}&lt;/pattern&gt;
-            &lt;charset&gt;utf8&lt;/charset&gt;
-        &lt;/encoder&gt;
-    &lt;/appender&gt;
-    &lt;!-- Appender to log to file in a JSON format --&gt;
-    &lt;appender name="logstash" class="ch.qos.logback.core.rolling.RollingFileAppender"&gt;
-        &lt;file&gt;${LOG_FILE}.json&lt;/file&gt;
-        &lt;rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy"&gt;
-            &lt;fileNamePattern&gt;${LOG_FILE}.json.%d{yyyy-MM-dd}.gz&lt;/fileNamePattern&gt;
-            &lt;maxHistory&gt;7&lt;/maxHistory&gt;
-        &lt;/rollingPolicy&gt;
-        &lt;encoder class="net.logstash.logback.encoder.LoggingEventCompositeJsonEncoder"&gt;
-            &lt;providers&gt;
-                &lt;timestamp&gt;
-                    &lt;timeZone&gt;UTC&lt;/timeZone&gt;
-                &lt;/timestamp&gt;
-                &lt;pattern&gt;
-                    &lt;pattern&gt;
-                        {
-                        "timestamp": "@timestamp",
-                        "severity": "%level",
-                        "service": "${springAppName:-}",
-                        "trace": "%X{traceId:-}",
-                        "span": "%X{spanId:-}",
-                        "pid": "${PID:-}",
-                        "thread": "%thread",
-                        "class": "%logger{40}",
-                        "rest": "%message"
-                        }
-                    &lt;/pattern&gt;
-                &lt;/pattern&gt;
-            &lt;/providers&gt;
-        &lt;/encoder&gt;
-    &lt;/appender&gt;
-    &lt;root level="INFO"&gt;
-        &lt;appender-ref ref="console"/&gt;
-        &lt;!-- uncomment this to have also JSON logs --&gt;
-        &lt;!--&lt;appender-ref ref="logstash"/&gt;--&gt;
-        &lt;!--&lt;appender-ref ref="flatfile"/&gt;--&gt;
-    &lt;/root&gt;
-&lt;/configuration&gt;</code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>That Logback configuration file:</p>
-</div>
-<div class="ulist">
-<ul>
-<li>
-<p>Logs information from the application in a JSON format to a <code>build/${spring.application.name}.json</code> file.</p>
-</li>
-<li>
-<p>Has commented out two additional appenders: console and standard log file.</p>
-</li>
-<li>
-<p>Has the same logging pattern as the one presented in the previous section.</p>
-</li>
-</ul>
-</div>
-<div class="admonitionblock note">
-<table>
-<tr>
-<td class="icon">
-<i class="fa icon-note" title="Note"></i>
-</td>
-<td class="content">
-If you use a custom <code>logback-spring.xml</code>, you must pass the <code>spring.application.name</code> in the  <code>bootstrap</code> rather than the <code>application</code> property file.
-Otherwise, your custom logback file does not properly read the property.
-</td>
-</tr>
-</table>
-</div>
 </div>
 </div>
 <div class="sect2">
@@ -2011,32 +1827,10 @@ object, you will have to create a bean of <code>zipkin2.reporter.Sender</code> t
 </div>
 </div>
 <div class="sect1">
-<h2 id="zipkin-stream-span-consumer"><a class="anchor" href="#zipkin-stream-span-consumer"></a><a class="link" href="#zipkin-stream-span-consumer">13. Zipkin Stream Span Consumer</a></h2>
-<div class="sectionbody">
-<div class="admonitionblock important">
-<table>
-<tr>
-<td class="icon">
-<i class="fa icon-important" title="Important"></i>
-</td>
-<td class="content">
-We recommend using Zipkin&#8217;s native support for message-based span sending.
-Starting from the Edgware release, the Zipkin Stream server is deprecated.
-In the Finchley release, it got removed.
-</td>
-</tr>
-</table>
-</div>
-<div class="paragraph">
-<p>If for some reason you need to create the deprecated Stream Zipkin server, see the <a href="https://cloud.spring.io/spring-cloud-static/Dalston.SR4/multi/multi__span_data_as_messages.html#_zipkin_consumer">Dalston Documentation</a>.</p>
-</div>
-</div>
-</div>
-<div class="sect1">
-<h2 id="integrations"><a class="anchor" href="#integrations"></a><a class="link" href="#integrations">14. Integrations</a></h2>
+<h2 id="integrations"><a class="anchor" href="#integrations"></a><a class="link" href="#integrations">13. Integrations</a></h2>
 <div class="sectionbody">
 <div class="sect2">
-<h3 id="opentracing"><a class="anchor" href="#opentracing"></a><a class="link" href="#opentracing">14.1. OpenTracing</a></h3>
+<h3 id="opentracing"><a class="anchor" href="#opentracing"></a><a class="link" href="#opentracing">13.1. OpenTracing</a></h3>
 <div class="paragraph">
 <p>Spring Cloud Sleuth is compatible with <a href="https://opentracing.io/">OpenTracing</a>.
 If you have OpenTracing on the classpath, we automatically register the OpenTracing <code>Tracer</code> bean.
@@ -2044,7 +1838,7 @@ If you wish to disable this, set <code>spring.sleuth.opentracing.enabled</code> 
 </div>
 </div>
 <div class="sect2">
-<h3 id="runnable-and-callable"><a class="anchor" href="#runnable-and-callable"></a><a class="link" href="#runnable-and-callable">14.2. Runnable and Callable</a></h3>
+<h3 id="runnable-and-callable"><a class="anchor" href="#runnable-and-callable"></a><a class="link" href="#runnable-and-callable">13.2. Runnable and Callable</a></h3>
 <div class="paragraph">
 <p>If you wrap your logic in <code>Runnable</code> or <code>Callable</code>, you can wrap those classes in their Sleuth representative, as shown in the following example for <code>Runnable</code>:</p>
 </div>
@@ -2100,13 +1894,13 @@ Callable&lt;String&gt; traceCallableFromTracer = this.tracing.currentTraceContex
 </div>
 </div>
 <div class="sect2">
-<h3 id="spring-cloud-circuitbreaker"><a class="anchor" href="#spring-cloud-circuitbreaker"></a><a class="link" href="#spring-cloud-circuitbreaker">14.3. Spring Cloud CircuitBreaker</a></h3>
+<h3 id="spring-cloud-circuitbreaker"><a class="anchor" href="#spring-cloud-circuitbreaker"></a><a class="link" href="#spring-cloud-circuitbreaker">13.3. Spring Cloud CircuitBreaker</a></h3>
 <div class="paragraph">
 <p>If you have Spring Cloud CircuitBreaker on the classpath, we will wrap the passed command <code>Supplier</code> and the fallback <code>Function</code> in its trace representations. In order to disable this instrumentation set <code>spring.sleuth.circuitbreaker.enabled</code> to <code>false</code>.</p>
 </div>
 </div>
 <div class="sect2">
-<h3 id="rxjava"><a class="anchor" href="#rxjava"></a><a class="link" href="#rxjava">14.4. RxJava</a></h3>
+<h3 id="rxjava"><a class="anchor" href="#rxjava"></a><a class="link" href="#rxjava">13.4. RxJava</a></h3>
 <div class="paragraph">
 <p>We registering a custom <a href="https://github.com/ReactiveX/RxJava/wiki/Plugins#rxjavaschedulershook"><code>RxJavaSchedulersHook</code></a> that wraps all <code>Action0</code> instances in their Sleuth representative, which is called <code>TraceAction</code>.
 The hook either starts or continues a span, depending on whether tracing was already going on before the Action was scheduled.
@@ -2131,12 +1925,12 @@ the Reactor support.
 </div>
 </div>
 <div class="sect2">
-<h3 id="http-integration"><a class="anchor" href="#http-integration"></a><a class="link" href="#http-integration">14.5. HTTP integration</a></h3>
+<h3 id="http-integration"><a class="anchor" href="#http-integration"></a><a class="link" href="#http-integration">13.5. HTTP integration</a></h3>
 <div class="paragraph">
 <p>Features from this section can be disabled by setting the <code>spring.sleuth.web.enabled</code> property with value equal to <code>false</code>.</p>
 </div>
 <div class="sect3">
-<h4 id="http-filter"><a class="anchor" href="#http-filter"></a><a class="link" href="#http-filter">14.5.1. HTTP Filter</a></h4>
+<h4 id="http-filter"><a class="anchor" href="#http-filter"></a><a class="link" href="#http-filter">13.5.1. HTTP Filter</a></h4>
 <div class="paragraph">
 <p>Through the <code>TracingFilter</code>, all sampled incoming requests result in creation of a Span.
 That Span&#8217;s name is <code>http:</code> + the path to which the request was sent.
@@ -2160,7 +1954,7 @@ to <code>true</code>.</p>
 </div>
 </div>
 <div class="sect3">
-<h4 id="handlerinterceptor"><a class="anchor" href="#handlerinterceptor"></a><a class="link" href="#handlerinterceptor">14.5.2. HandlerInterceptor</a></h4>
+<h4 id="handlerinterceptor"><a class="anchor" href="#handlerinterceptor"></a><a class="link" href="#handlerinterceptor">13.5.2. HandlerInterceptor</a></h4>
 <div class="paragraph">
 <p>Since we want the span names to be precise, we use a <code>TraceHandlerInterceptor</code> that either wraps an existing <code>HandlerInterceptor</code> or is added directly to the list of existing <code>HandlerInterceptors</code>.
 The <code>TraceHandlerInterceptor</code> adds a special request attribute to the given <code>HttpServletRequest</code>.
@@ -2170,13 +1964,13 @@ In that case, please file an issue in Spring Cloud Sleuth.</p>
 </div>
 </div>
 <div class="sect3">
-<h4 id="async-servlet-support"><a class="anchor" href="#async-servlet-support"></a><a class="link" href="#async-servlet-support">14.5.3. Async Servlet support</a></h4>
+<h4 id="async-servlet-support"><a class="anchor" href="#async-servlet-support"></a><a class="link" href="#async-servlet-support">13.5.3. Async Servlet support</a></h4>
 <div class="paragraph">
 <p>If your controller returns a <code>Callable</code> or a <code>WebAsyncTask</code>, Spring Cloud Sleuth continues the existing span instead of creating a new one.</p>
 </div>
 </div>
 <div class="sect3">
-<h4 id="webflux-support"><a class="anchor" href="#webflux-support"></a><a class="link" href="#webflux-support">14.5.4. WebFlux support</a></h4>
+<h4 id="webflux-support"><a class="anchor" href="#webflux-support"></a><a class="link" href="#webflux-support">13.5.4. WebFlux support</a></h4>
 <div class="paragraph">
 <p>Through <code>TraceWebFilter</code>, all sampled incoming requests result in creation of a Span.
 That Span&#8217;s name is <code>http:</code> + the path to which the request was sent.
@@ -2191,7 +1985,7 @@ If you want to reuse Sleuth&#8217;s default skip patterns and append your own, p
 </div>
 </div>
 <div class="sect3">
-<h4 id="dubbo-rpc-support"><a class="anchor" href="#dubbo-rpc-support"></a><a class="link" href="#dubbo-rpc-support">14.5.5. Dubbo RPC support</a></h4>
+<h4 id="dubbo-rpc-support"><a class="anchor" href="#dubbo-rpc-support"></a><a class="link" href="#dubbo-rpc-support">13.5.5. Dubbo RPC support</a></h4>
 <div class="paragraph">
 <p>Via the integration with Brave, Spring Cloud Sleuth supports <a href="https://dubbo.apache.org/">Dubbo</a>.
 It&#8217;s enough to add the <code>brave-instrumentation-dubbo</code> dependency:</p>
@@ -2220,9 +2014,9 @@ An example of Spring Cloud Sleuth and Dubbo can be found <a href="https://github
 </div>
 </div>
 <div class="sect2">
-<h3 id="http-client-integration"><a class="anchor" href="#http-client-integration"></a><a class="link" href="#http-client-integration">14.6. HTTP Client Integration</a></h3>
+<h3 id="http-client-integration"><a class="anchor" href="#http-client-integration"></a><a class="link" href="#http-client-integration">13.6. HTTP Client Integration</a></h3>
 <div class="sect3">
-<h4 id="synchronous-rest-template"><a class="anchor" href="#synchronous-rest-template"></a><a class="link" href="#synchronous-rest-template">14.6.1. Synchronous Rest Template</a></h4>
+<h4 id="synchronous-rest-template"><a class="anchor" href="#synchronous-rest-template"></a><a class="link" href="#synchronous-rest-template">13.6.1. Synchronous Rest Template</a></h4>
 <div class="paragraph">
 <p>We inject a <code>RestTemplate</code> interceptor to ensure that all the tracing information is passed to the requests.
 Each time a call is made, a new Span is created.
@@ -2244,7 +2038,7 @@ If you create a <code>RestTemplate</code> instance with a <code>new</code> keywo
 </div>
 </div>
 <div class="sect3">
-<h4 id="asynchronous-rest-template"><a class="anchor" href="#asynchronous-rest-template"></a><a class="link" href="#asynchronous-rest-template">14.6.2. Asynchronous Rest Template</a></h4>
+<h4 id="asynchronous-rest-template"><a class="anchor" href="#asynchronous-rest-template"></a><a class="link" href="#asynchronous-rest-template">13.6.2. Asynchronous Rest Template</a></h4>
 <div class="admonitionblock important">
 <table>
 <tr>
@@ -2301,7 +2095,7 @@ static class Config {
 </div>
 </div>
 <div class="sect3">
-<h4 id="webclient"><a class="anchor" href="#webclient"></a><a class="link" href="#webclient">14.6.3. <code>WebClient</code></a></h4>
+<h4 id="webclient"><a class="anchor" href="#webclient"></a><a class="link" href="#webclient">13.6.3. <code>WebClient</code></a></h4>
 <div class="paragraph">
 <p>We inject a <code>ExchangeFilterFunction</code> implementation that creates a span and, through on-success and on-error callbacks, takes care of closing client-side spans.</p>
 </div>
@@ -2323,7 +2117,7 @@ If you create a <code>WebClient</code> instance with a <code>new</code> keyword,
 </div>
 </div>
 <div class="sect3">
-<h4 id="traverson"><a class="anchor" href="#traverson"></a><a class="link" href="#traverson">14.6.4. Traverson</a></h4>
+<h4 id="traverson"><a class="anchor" href="#traverson"></a><a class="link" href="#traverson">13.6.4. Traverson</a></h4>
 <div class="paragraph">
 <p>If you use the <a href="https://docs.spring.io/spring-hateoas/docs/current/reference/html/#client.traverson">Traverson</a> library, you can inject a <code>RestTemplate</code> as a bean into your Traverson object.
 Since <code>RestTemplate</code> is already intercepted, you get full support for tracing in your client. The following pseudo code
@@ -2340,7 +2134,7 @@ Traverson traverson = new Traverson(URI.create("https://some/address"),
 </div>
 </div>
 <div class="sect3">
-<h4 id="apache-httpclientbuilder-and-httpasyncclientbuilder"><a class="anchor" href="#apache-httpclientbuilder-and-httpasyncclientbuilder"></a><a class="link" href="#apache-httpclientbuilder-and-httpasyncclientbuilder">14.6.5. Apache <code>HttpClientBuilder</code> and <code>HttpAsyncClientBuilder</code></a></h4>
+<h4 id="apache-httpclientbuilder-and-httpasyncclientbuilder"><a class="anchor" href="#apache-httpclientbuilder-and-httpasyncclientbuilder"></a><a class="link" href="#apache-httpclientbuilder-and-httpasyncclientbuilder">13.6.5. Apache <code>HttpClientBuilder</code> and <code>HttpAsyncClientBuilder</code></a></h4>
 <div class="paragraph">
 <p>We instrument the <code>HttpClientBuilder</code> and <code>HttpAsyncClientBuilder</code> so that
 tracing context gets injected to the sent requests.</p>
@@ -2350,7 +2144,7 @@ tracing context gets injected to the sent requests.</p>
 </div>
 </div>
 <div class="sect3">
-<h4 id="netty-httpclient"><a class="anchor" href="#netty-httpclient"></a><a class="link" href="#netty-httpclient">14.6.6. Netty <code>HttpClient</code></a></h4>
+<h4 id="netty-httpclient"><a class="anchor" href="#netty-httpclient"></a><a class="link" href="#netty-httpclient">13.6.6. Netty <code>HttpClient</code></a></h4>
 <div class="paragraph">
 <p>We instrument the Netty&#8217;s <code>HttpClient</code>.</p>
 </div>
@@ -2372,7 +2166,7 @@ If you create a <code>HttpClient</code> instance with a <code>new</code> keyword
 </div>
 </div>
 <div class="sect3">
-<h4 id="userinforesttemplatecustomizer"><a class="anchor" href="#userinforesttemplatecustomizer"></a><a class="link" href="#userinforesttemplatecustomizer">14.6.7. <code>UserInfoRestTemplateCustomizer</code></a></h4>
+<h4 id="userinforesttemplatecustomizer"><a class="anchor" href="#userinforesttemplatecustomizer"></a><a class="link" href="#userinforesttemplatecustomizer">13.6.7. <code>UserInfoRestTemplateCustomizer</code></a></h4>
 <div class="paragraph">
 <p>We instrument the Spring Security&#8217;s <code>UserInfoRestTemplateCustomizer</code>.</p>
 </div>
@@ -2382,7 +2176,7 @@ If you create a <code>HttpClient</code> instance with a <code>new</code> keyword
 </div>
 </div>
 <div class="sect2">
-<h3 id="feign"><a class="anchor" href="#feign"></a><a class="link" href="#feign">14.7. Feign</a></h3>
+<h3 id="feign"><a class="anchor" href="#feign"></a><a class="link" href="#feign">13.7. Feign</a></h3>
 <div class="paragraph">
 <p>By default, Spring Cloud Sleuth provides integration with Feign through <code>TraceFeignClientAutoConfiguration</code>.
 You can disable it entirely by setting <code>spring.sleuth.feign.enabled</code> to <code>false</code>.
@@ -2396,12 +2190,12 @@ However, all the default instrumentation is still there.</p>
 </div>
 </div>
 <div class="sect2">
-<h3 id="grpc"><a class="anchor" href="#grpc"></a><a class="link" href="#grpc">14.8. gRPC</a></h3>
+<h3 id="grpc"><a class="anchor" href="#grpc"></a><a class="link" href="#grpc">13.8. gRPC</a></h3>
 <div class="paragraph">
 <p>Spring Cloud Sleuth provides instrumentation for <a href="https://grpc.io/">gRPC</a> through <code>TraceGrpcAutoConfiguration</code>. You can disable it entirely by setting <code>spring.sleuth.grpc.enabled</code> to <code>false</code>.</p>
 </div>
 <div class="sect3">
-<h4 id="variant-1"><a class="anchor" href="#variant-1"></a><a class="link" href="#variant-1">14.8.1. Variant 1</a></h4>
+<h4 id="variant-1"><a class="anchor" href="#variant-1"></a><a class="link" href="#variant-1">13.8.1. Variant 1</a></h4>
 <div class="sect4">
 <h5 id="dependencies"><a class="anchor" href="#dependencies"></a><a class="link" href="#dependencies">Dependencies</a></h5>
 <div class="admonitionblock important">
@@ -2470,16 +2264,16 @@ Spring Cloud Sleuth provides a <code>SpringAwareManagedChannelBuilder</code> tha
 </div>
 </div>
 <div class="sect3">
-<h4 id="variant-2"><a class="anchor" href="#variant-2"></a><a class="link" href="#variant-2">14.8.2. Variant 2</a></h4>
+<h4 id="variant-2"><a class="anchor" href="#variant-2"></a><a class="link" href="#variant-2">13.8.2. Variant 2</a></h4>
 <div class="paragraph">
 <p><a href="https://github.com/yidongnan/grpc-spring-boot-starter">Grpc Spring Boot Starter</a> automatically detects the presence of Spring Cloud Sleuth and brave&#8217;s instrumentation for gRPC and registers the necessary client and/or server tooling.</p>
 </div>
 </div>
 </div>
 <div class="sect2">
-<h3 id="asynchronous-communication"><a class="anchor" href="#asynchronous-communication"></a><a class="link" href="#asynchronous-communication">14.9. Asynchronous Communication</a></h3>
+<h3 id="asynchronous-communication"><a class="anchor" href="#asynchronous-communication"></a><a class="link" href="#asynchronous-communication">13.9. Asynchronous Communication</a></h3>
 <div class="sect3">
-<h4 id="async-annotated-methods"><a class="anchor" href="#async-annotated-methods"></a><a class="link" href="#async-annotated-methods">14.9.1. <code>@Async</code> Annotated methods</a></h4>
+<h4 id="async-annotated-methods"><a class="anchor" href="#async-annotated-methods"></a><a class="link" href="#async-annotated-methods">13.9.1. <code>@Async</code> Annotated methods</a></h4>
 <div class="paragraph">
 <p>In Spring Cloud Sleuth, we instrument async-related components so that the tracing information is passed between threads.
 You can disable this behavior by setting the value of <code>spring.sleuth.async.enabled</code> to <code>false</code>.</p>
@@ -2502,7 +2296,7 @@ You can disable this behavior by setting the value of <code>spring.sleuth.async.
 </div>
 </div>
 <div class="sect3">
-<h4 id="scheduled-annotated-methods"><a class="anchor" href="#scheduled-annotated-methods"></a><a class="link" href="#scheduled-annotated-methods">14.9.2. <code>@Scheduled</code> Annotated Methods</a></h4>
+<h4 id="scheduled-annotated-methods"><a class="anchor" href="#scheduled-annotated-methods"></a><a class="link" href="#scheduled-annotated-methods">13.9.2. <code>@Scheduled</code> Annotated Methods</a></h4>
 <div class="paragraph">
 <p>In Spring Cloud Sleuth, we instrument scheduled method execution so that the tracing information is passed between threads.
 You can disable this behavior by setting the value of <code>spring.sleuth.scheduled.enabled</code> to <code>false</code>.</p>
@@ -2525,7 +2319,7 @@ You can disable this behavior by setting the value of <code>spring.sleuth.schedu
 </div>
 </div>
 <div class="sect3">
-<h4 id="executor-executorservice-and-scheduledexecutorservice"><a class="anchor" href="#executor-executorservice-and-scheduledexecutorservice"></a><a class="link" href="#executor-executorservice-and-scheduledexecutorservice">14.9.3. Executor, ExecutorService, and ScheduledExecutorService</a></h4>
+<h4 id="executor-executorservice-and-scheduledexecutorservice"><a class="anchor" href="#executor-executorservice-and-scheduledexecutorservice"></a><a class="link" href="#executor-executorservice-and-scheduledexecutorservice">13.9.3. Executor, ExecutorService, and ScheduledExecutorService</a></h4>
 <div class="paragraph">
 <p>We provide <code>LazyTraceExecutor</code>, <code>TraceableExecutorService</code>, and <code>TraceableScheduledExecutorService</code>. Those implementations create spans each time a new task is submitted, invoked, or scheduled.</p>
 </div>
@@ -2612,12 +2406,12 @@ to add the <code>@Role(BeanDefinition.ROLE_INFRASTRUCTURE)</code> on your
 </div>
 </div>
 <div class="sect2">
-<h3 id="messaging-2"><a class="anchor" href="#messaging-2"></a><a class="link" href="#messaging-2">14.10. Messaging</a></h3>
+<h3 id="messaging-2"><a class="anchor" href="#messaging-2"></a><a class="link" href="#messaging-2">13.10. Messaging</a></h3>
 <div class="paragraph">
 <p>Features from this section can be disabled by setting the <code>spring.sleuth.messaging.enabled</code> property with value equal to <code>false</code>.</p>
 </div>
 <div class="sect3">
-<h4 id="spring-integration-and-spring-cloud-stream"><a class="anchor" href="#spring-integration-and-spring-cloud-stream"></a><a class="link" href="#spring-integration-and-spring-cloud-stream">14.10.1. Spring Integration and Spring Cloud Stream</a></h4>
+<h4 id="spring-integration-and-spring-cloud-stream"><a class="anchor" href="#spring-integration-and-spring-cloud-stream"></a><a class="link" href="#spring-integration-and-spring-cloud-stream">13.10.1. Spring Integration and Spring Cloud Stream</a></h4>
 <div class="paragraph">
 <p>Spring Cloud Sleuth integrates with <a href="https://projects.spring.io/spring-integration/">Spring Integration</a>.
 It creates spans for publish and subscribe events.
@@ -2656,7 +2450,7 @@ it&#8217;s enough for you to register beans of types:</p>
 </div>
 </div>
 <div class="sect3">
-<h4 id="spring-rabbitmq"><a class="anchor" href="#spring-rabbitmq"></a><a class="link" href="#spring-rabbitmq">14.10.2. Spring RabbitMq</a></h4>
+<h4 id="spring-rabbitmq"><a class="anchor" href="#spring-rabbitmq"></a><a class="link" href="#spring-rabbitmq">13.10.2. Spring RabbitMq</a></h4>
 <div class="paragraph">
 <p>We instrument the <code>RabbitTemplate</code> so that tracing headers get injected
 into the message.</p>
@@ -2666,7 +2460,7 @@ into the message.</p>
 </div>
 </div>
 <div class="sect3">
-<h4 id="spring-kafka"><a class="anchor" href="#spring-kafka"></a><a class="link" href="#spring-kafka">14.10.3. Spring Kafka</a></h4>
+<h4 id="spring-kafka"><a class="anchor" href="#spring-kafka"></a><a class="link" href="#spring-kafka">13.10.3. Spring Kafka</a></h4>
 <div class="paragraph">
 <p>We instrument the Spring Kafka&#8217;s <code>ProducerFactory</code> and <code>ConsumerFactory</code>
 so that tracing headers get injected into the created Spring Kafka&#8217;s
@@ -2677,7 +2471,7 @@ so that tracing headers get injected into the created Spring Kafka&#8217;s
 </div>
 </div>
 <div class="sect3">
-<h4 id="spring-kafka-streams"><a class="anchor" href="#spring-kafka-streams"></a><a class="link" href="#spring-kafka-streams">14.10.4. Spring Kafka Streams</a></h4>
+<h4 id="spring-kafka-streams"><a class="anchor" href="#spring-kafka-streams"></a><a class="link" href="#spring-kafka-streams">13.10.4. Spring Kafka Streams</a></h4>
 <div class="paragraph">
 <p>We instrument the <code>KafkaStreams</code> <code>KafkaClientSupplier</code> so that tracing headers
 get injected into the <code>Producer</code> and <code>Consumer`s. A `KafkaStreamsTracing</code> bean
@@ -2689,7 +2483,7 @@ allows for further instrumentation through additional <code>TransformerSupplier<
 </div>
 </div>
 <div class="sect3">
-<h4 id="spring-jms"><a class="anchor" href="#spring-jms"></a><a class="link" href="#spring-jms">14.10.5. Spring JMS</a></h4>
+<h4 id="spring-jms"><a class="anchor" href="#spring-jms"></a><a class="link" href="#spring-jms">13.10.5. Spring JMS</a></h4>
 <div class="paragraph">
 <p>We instrument the <code>JmsTemplate</code> so that tracing headers get injected
 into the message. We also support <code>@JmsListener</code> annotated methods on the consumer side.</p>
@@ -2711,7 +2505,7 @@ We don&#8217;t support baggage propagation for JMS
 </div>
 </div>
 <div class="sect3">
-<h4 id="spring-cloud-aws-messaging-sqs"><a class="anchor" href="#spring-cloud-aws-messaging-sqs"></a><a class="link" href="#spring-cloud-aws-messaging-sqs">14.10.6. Spring Cloud AWS Messaging SQS</a></h4>
+<h4 id="spring-cloud-aws-messaging-sqs"><a class="anchor" href="#spring-cloud-aws-messaging-sqs"></a><a class="link" href="#spring-cloud-aws-messaging-sqs">13.10.6. Spring Cloud AWS Messaging SQS</a></h4>
 <div class="paragraph">
 <p>We instrument <code>@SqsListener</code> which is provided by <code>org.springframework.cloud:spring-cloud-aws-messaging</code>
 so that tracing headers get extracted from the message and a trace gets put into the context.</p>
@@ -2722,14 +2516,14 @@ so that tracing headers get extracted from the message and a trace gets put into
 </div>
 </div>
 <div class="sect2">
-<h3 id="redis"><a class="anchor" href="#redis"></a><a class="link" href="#redis">14.11. Redis</a></h3>
+<h3 id="redis"><a class="anchor" href="#redis"></a><a class="link" href="#redis">13.11. Redis</a></h3>
 <div class="paragraph">
 <p>We set <code>tracing</code> property to Lettcue <code>ClientResources</code> instance to enable Brave tracing built in Lettuce .
 To disable Redis support, set the <code>spring.sleuth.redis.enabled</code> property to <code>false</code>.</p>
 </div>
 </div>
 <div class="sect2">
-<h3 id="quartz"><a class="anchor" href="#quartz"></a><a class="link" href="#quartz">14.12. Quartz</a></h3>
+<h3 id="quartz"><a class="anchor" href="#quartz"></a><a class="link" href="#quartz">13.12. Quartz</a></h3>
 <div class="paragraph">
 <p>We instrument quartz jobs by adding Job/Trigger listeners to the Quartz Scheduler.</p>
 </div>
@@ -2738,9 +2532,207 @@ To disable Redis support, set the <code>spring.sleuth.redis.enabled</code> prope
 </div>
 </div>
 <div class="sect2">
-<h3 id="project-reactor"><a class="anchor" href="#project-reactor"></a><a class="link" href="#project-reactor">14.13. Project Reactor</a></h3>
+<h3 id="project-reactor"><a class="anchor" href="#project-reactor"></a><a class="link" href="#project-reactor">13.13. Project Reactor</a></h3>
 <div class="paragraph">
 <p>For projects depending on Project Reactor such as Spring Cloud Gateway, we suggest turning the <code>spring.sleuth.reactor.decorate-on-each</code> option to <code>false</code>. That way an increased performance gain should be observed in comparison to the standard instrumentation mechanism. What this option does is it will wrap decorate <code>onLast</code> operator instead of <code>onEach</code> which will result in creation of far fewer objects. The downside of this is that when Project Reactor will change threads, the trace propagation will continue without issues, however anything relying on the <code>ThreadLocal</code> such as e.g. MDC entries can be buggy.</p>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="log-integration"><a class="anchor" href="#log-integration"></a><a class="link" href="#log-integration">14. Log integration</a></h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Sleuth configures the logging context with variables including the service name
+(<code>%{spring.zipkin.service.name}</code>) and the trace ID (<code>%{traceId}</code>). These help
+you connect logs with distributed traces and allow you choice in what tools you
+use to troubleshoot your services.</p>
+</div>
+<div class="paragraph">
+<p>If you use a log aggregating tool (such as <a href="https://www.elastic.co/products/kibana">Kibana</a>, <a href="https://www.splunk.com/">Splunk</a>, and others), you can order the events that took place.
+An example from Kibana would resemble the following image:</p>
+</div>
+<div class="imageblock">
+<div class="content">
+<img src="https://raw.githubusercontent.com/spring-cloud/spring-cloud-sleuth/master/docs/src/main/asciidoc/images/kibana.png" alt="Log correlation with Kibana">
+</div>
+</div>
+<div class="paragraph">
+<p>If you want to use <a href="https://www.elastic.co/guide/en/logstash/current/index.html">Logstash</a>, the following listing shows the Grok pattern for Logstash:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code>filter {
+  # pattern matching logback pattern
+  grok {
+    match =&gt; { "message" =&gt; "%{TIMESTAMP_ISO8601:timestamp}\s+%{LOGLEVEL:severity}\s+\[%{DATA:service},%{DATA:trace},%{DATA:span}\]\s+%{DATA:pid}\s+---\s+\[%{DATA:thread}\]\s+%{DATA:class}\s+:\s+%{GREEDYDATA:rest}" }
+  }
+  date {
+    match =&gt; ["timestamp", "ISO8601"]
+  }
+  mutate {
+    remove_field =&gt; ["timestamp"]
+  }
+}</code></pre>
+</div>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+If you want to use Grok together with the logs from Cloud Foundry, you have to use the following pattern:
+</td>
+</tr>
+</table>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code>filter {
+  # pattern matching logback pattern
+  grok {
+    match =&gt; { "message" =&gt; "(?m)OUT\s+%{TIMESTAMP_ISO8601:timestamp}\s+%{LOGLEVEL:severity}\s+\[%{DATA:service},%{DATA:trace},%{DATA:span}\]\s+%{DATA:pid}\s+---\s+\[%{DATA:thread}\]\s+%{DATA:class}\s+:\s+%{GREEDYDATA:rest}" }
+  }
+  date {
+    match =&gt; ["timestamp", "ISO8601"]
+  }
+  mutate {
+    remove_field =&gt; ["timestamp"]
+  }
+}</code></pre>
+</div>
+</div>
+<div class="sect2">
+<h3 id="json-logback-with-logstash"><a class="anchor" href="#json-logback-with-logstash"></a><a class="link" href="#json-logback-with-logstash">14.1. JSON Logback with Logstash</a></h3>
+<div class="paragraph">
+<p>Often, you do not want to store your logs in a text file but in a JSON file that Logstash can immediately pick.
+To do so, you have to do the following (for readability, we pass the dependencies in the <code>groupId:artifactId:version</code> notation).</p>
+</div>
+<div class="paragraph">
+<p><strong>Dependencies Setup</strong></p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>Ensure that Logback is on the classpath (<code>ch.qos.logback:logback-core</code>).</p>
+</li>
+<li>
+<p>Add Logstash Logback encode. For example, to use version <code>4.6</code>, add <code>net.logstash.logback:logstash-logback-encoder:4.6</code>.</p>
+</li>
+</ol>
+</div>
+<div class="paragraph">
+<p><strong>Logback Setup</strong></p>
+</div>
+<div class="paragraph">
+<p>Consider the following example of a Logback configuration file (logback-spring.xml).</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-xml hljs" data-lang="xml">&lt;?xml version="1.0" encoding="UTF-8"?&gt;
+&lt;configuration&gt;
+    &lt;include resource="org/springframework/boot/logging/logback/defaults.xml"/&gt;
+    &lt;springProperty scope="context" name="springAppName" source="spring.application.name"/&gt;
+    &lt;!-- Example for logging into the build folder of your project --&gt;
+    &lt;property name="LOG_FILE" value="${BUILD_FOLDER:-build}/${springAppName}"/&gt;
+
+    &lt;!-- You can override this to have a custom pattern --&gt;
+    &lt;property name="CONSOLE_LOG_PATTERN"
+              value="%clr(%d{yyyy-MM-dd HH:mm:ss.SSS}){faint} %clr(${LOG_LEVEL_PATTERN:-%5p}) %clr(${PID:- }){magenta} %clr(---){faint} %clr([%15.15t]){faint} %clr(%-40.40logger{39}){cyan} %clr(:){faint} %m%n${LOG_EXCEPTION_CONVERSION_WORD:-%wEx}"/&gt;
+
+    &lt;!-- Appender to log to console --&gt;
+    &lt;appender name="console" class="ch.qos.logback.core.ConsoleAppender"&gt;
+        &lt;filter class="ch.qos.logback.classic.filter.ThresholdFilter"&gt;
+            &lt;!-- Minimum logging level to be presented in the console logs--&gt;
+            &lt;level&gt;DEBUG&lt;/level&gt;
+        &lt;/filter&gt;
+        &lt;encoder&gt;
+            &lt;pattern&gt;${CONSOLE_LOG_PATTERN}&lt;/pattern&gt;
+            &lt;charset&gt;utf8&lt;/charset&gt;
+        &lt;/encoder&gt;
+    &lt;/appender&gt;
+
+    &lt;!-- Appender to log to file --&gt;
+    &lt;appender name="flatfile" class="ch.qos.logback.core.rolling.RollingFileAppender"&gt;
+        &lt;file&gt;${LOG_FILE}&lt;/file&gt;
+        &lt;rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy"&gt;
+            &lt;fileNamePattern&gt;${LOG_FILE}.%d{yyyy-MM-dd}.gz&lt;/fileNamePattern&gt;
+            &lt;maxHistory&gt;7&lt;/maxHistory&gt;
+        &lt;/rollingPolicy&gt;
+        &lt;encoder&gt;
+            &lt;pattern&gt;${CONSOLE_LOG_PATTERN}&lt;/pattern&gt;
+            &lt;charset&gt;utf8&lt;/charset&gt;
+        &lt;/encoder&gt;
+    &lt;/appender&gt;
+    &lt;!-- Appender to log to file in a JSON format --&gt;
+    &lt;appender name="logstash" class="ch.qos.logback.core.rolling.RollingFileAppender"&gt;
+        &lt;file&gt;${LOG_FILE}.json&lt;/file&gt;
+        &lt;rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy"&gt;
+            &lt;fileNamePattern&gt;${LOG_FILE}.json.%d{yyyy-MM-dd}.gz&lt;/fileNamePattern&gt;
+            &lt;maxHistory&gt;7&lt;/maxHistory&gt;
+        &lt;/rollingPolicy&gt;
+        &lt;encoder class="net.logstash.logback.encoder.LoggingEventCompositeJsonEncoder"&gt;
+            &lt;providers&gt;
+                &lt;timestamp&gt;
+                    &lt;timeZone&gt;UTC&lt;/timeZone&gt;
+                &lt;/timestamp&gt;
+                &lt;pattern&gt;
+                    &lt;pattern&gt;
+                        {
+                        "timestamp": "@timestamp",
+                        "severity": "%level",
+                        "service": "${springAppName:-}",
+                        "trace": "%X{traceId:-}",
+                        "span": "%X{spanId:-}",
+                        "pid": "${PID:-}",
+                        "thread": "%thread",
+                        "class": "%logger{40}",
+                        "rest": "%message"
+                        }
+                    &lt;/pattern&gt;
+                &lt;/pattern&gt;
+            &lt;/providers&gt;
+        &lt;/encoder&gt;
+    &lt;/appender&gt;
+    &lt;root level="INFO"&gt;
+        &lt;appender-ref ref="console"/&gt;
+        &lt;!-- uncomment this to have also JSON logs --&gt;
+        &lt;!--&lt;appender-ref ref="logstash"/&gt;--&gt;
+        &lt;!--&lt;appender-ref ref="flatfile"/&gt;--&gt;
+    &lt;/root&gt;
+&lt;/configuration&gt;</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>That Logback configuration file:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>Logs information from the application in a JSON format to a <code>build/${spring.application.name}.json</code> file.</p>
+</li>
+<li>
+<p>Has commented out two additional appenders: console and standard log file.</p>
+</li>
+<li>
+<p>Has the same logging pattern as the one presented in the previous section.</p>
+</li>
+</ul>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+If you use a custom <code>logback-spring.xml</code>, you must pass the <code>spring.application.name</code> in the  <code>bootstrap</code> rather than the <code>application</code> property file.
+Otherwise, your custom logback file does not properly read the property.
+</td>
+</tr>
+</table>
 </div>
 </div>
 </div>
@@ -2750,28 +2742,6 @@ To disable Redis support, set the <code>spring.sleuth.redis.enabled</code> prope
 <div class="sectionbody">
 <div class="paragraph">
 <p>To see the list of all Sleuth related configuration properties please check <a href="appendix.html">the Appendix page</a>.</p>
-</div>
-</div>
-</div>
-<div class="sect1">
-<h2 id="running-examples"><a class="anchor" href="#running-examples"></a><a class="link" href="#running-examples">16. Running examples</a></h2>
-<div class="sectionbody">
-<div class="paragraph">
-<p>You can see the running examples deployed in the <a href="https://run.pivotal.io/">Pivotal Web Services</a>.
-Check them out at the following links:</p>
-</div>
-<div class="ulist">
-<ul>
-<li>
-<p><a href="https://docssleuth-zipkin-server.cfapps.io/">Zipkin for apps presented in the samples to the top</a>. First make
-a request to <a href="https://docssleuth-service1.cfapps.io/start">Service 1</a> and then check out the trace in Zipkin.</p>
-</li>
-<li>
-<p><a href="https://docsbrewing-zipkin-server.cfapps.io/">Zipkin for Brewery on PWS</a>, its <a href="https://github.com/spring-cloud-samples/brewery">Github Code</a>.
-Ensure that you&#8217;ve picked the lookback period of 7 days. If there are no traces, go to <a href="https://docsbrewing-presenting.cfapps.io/">Presenting application</a>
-and order some beers. Then check Zipkin for traces.</p>
-</li>
-</ul>
 </div>
 </div>
 </div>
