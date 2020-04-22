@@ -130,11 +130,11 @@ class Application {
 	}
 
 	@Bean
-	public AnnotatedFeignClient annotatedFeignClient(Client client, Decoder decoder, Encoder encoder,
-			Contract contract) {
+	public AnnotatedFeignClient annotatedFeignClient(Client client, Decoder decoder,
+			Encoder encoder, Contract contract) {
 		return Feign.builder().client(client).encoder(encoder).decoder(decoder)
-				.contract(contract)
-				.target(new HardCodedTarget<>(AnnotatedFeignClient.class, "foo", "http://foo"));
+				.contract(contract).target(new HardCodedTarget<>(
+						AnnotatedFeignClient.class, "foo", "http://foo"));
 	}
 
 	@Bean
@@ -151,7 +151,8 @@ class Application {
 
 class MyLoadBalancerClient extends LoadBalancerFeignClient {
 
-	MyLoadBalancerClient(Client delegate, CachingSpringLoadBalancerFactory lbClientFactory,
+	MyLoadBalancerClient(Client delegate,
+			CachingSpringLoadBalancerFactory lbClientFactory,
 			SpringClientFactory clientFactory) {
 		super(delegate, lbClientFactory, clientFactory);
 	}

@@ -54,8 +54,10 @@ import org.springframework.cloud.sleuth.DefaultSpanNamer;
 import org.springframework.cloud.sleuth.LocalServiceName;
 import org.springframework.cloud.sleuth.SpanAdjuster;
 import org.springframework.cloud.sleuth.SpanNamer;
+import org.springframework.cloud.sleuth.sampler.SamplerAutoConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Import;
 import org.springframework.lang.Nullable;
 import org.springframework.util.StringUtils;
 
@@ -71,6 +73,7 @@ import org.springframework.util.StringUtils;
 @Configuration(proxyBeanMethods = false)
 @ConditionalOnProperty(value = "spring.sleuth.enabled", matchIfMissing = true)
 @EnableConfigurationProperties(SleuthProperties.class)
+@Import(SamplerAutoConfiguration.class)
 public class TraceAutoConfiguration {
 
 	/**
@@ -133,12 +136,6 @@ public class TraceAutoConfiguration {
 	@ConditionalOnMissingBean
 	Tracer tracer(Tracing tracing) {
 		return tracing.tracer();
-	}
-
-	@Bean
-	@ConditionalOnMissingBean
-	Sampler sleuthTraceSampler() {
-		return Sampler.NEVER_SAMPLE;
 	}
 
 	@Bean

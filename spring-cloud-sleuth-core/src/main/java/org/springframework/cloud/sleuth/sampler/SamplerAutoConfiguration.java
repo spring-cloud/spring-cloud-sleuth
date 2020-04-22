@@ -20,23 +20,29 @@ import brave.sampler.Sampler;
 
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.cloud.context.config.annotation.RefreshScope;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 /**
- * {@link org.springframework.boot.autoconfigure.EnableAutoConfiguration
- * Auto-configuration} to setup sampling for Spring Cloud Sleuth.
+ * {@linkplain Configuration configuration} for {@link Sampler}.
  *
  * @author Marcin Grzejszczak
  * @since 2.1.0
  */
 @Configuration(proxyBeanMethods = false)
-@ConditionalOnProperty(value = "spring.sleuth.enabled", matchIfMissing = true)
 @EnableConfigurationProperties(SamplerProperties.class)
+// This is not auto-configuration, but it was in the past. Leaving the name as
+// SamplerAutoConfiguration because those not using Zipkin formerly had to
+// import this directly. A less precise name is better than rev-locking code.
 public class SamplerAutoConfiguration {
+
+	@Bean
+	@ConditionalOnMissingBean
+	Sampler sleuthTraceSampler() {
+		return Sampler.NEVER_SAMPLE;
+	}
 
 	static Sampler samplerFromProps(SamplerProperties config) {
 		if (config.getProbability() != null) {
