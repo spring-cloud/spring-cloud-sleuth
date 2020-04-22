@@ -43,7 +43,6 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.cloud.client.serviceregistry.Registration;
 import org.springframework.cloud.commons.util.InetUtils;
 import org.springframework.cloud.sleuth.autoconfig.TraceAutoConfiguration;
-import org.springframework.cloud.sleuth.sampler.SamplerAutoConfiguration;
 import org.springframework.cloud.sleuth.zipkin2.sender.ZipkinSenderConfigurationImportSelector;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -53,8 +52,7 @@ import org.springframework.web.client.RestTemplate;
 
 /**
  * {@link org.springframework.boot.autoconfigure.EnableAutoConfiguration
- * Auto-configuration} enables reporting to Zipkin via HTTP. Has a default sampler set
- * from the {@link SamplerAutoConfiguration}
+ * Auto-configuration} enables reporting to Zipkin via HTTP.
  *
  * The {@link ZipkinRestTemplateCustomizer} allows you to customize the
  * {@link RestTemplate} that is used to send Spans to Zipkin. Its default implementation -
@@ -63,7 +61,6 @@ import org.springframework.web.client.RestTemplate;
  * @author Spencer Gibb
  * @author Tim Ysewyn
  * @since 1.0.0
- * @see SamplerAutoConfiguration
  * @see ZipkinRestTemplateCustomizer
  * @see DefaultZipkinRestTemplateCustomizer
  */
@@ -74,7 +71,7 @@ import org.springframework.web.client.RestTemplate;
 @AutoConfigureBefore(TraceAutoConfiguration.class)
 @AutoConfigureAfter(
 		name = "org.springframework.cloud.autoconfigure.RefreshAutoConfiguration")
-@Import({ ZipkinSenderConfigurationImportSelector.class, SamplerAutoConfiguration.class })
+@Import(ZipkinSenderConfigurationImportSelector.class)
 public class ZipkinAutoConfiguration {
 
 	private static final Log log = LogFactory.getLog(ZipkinAutoConfiguration.class);

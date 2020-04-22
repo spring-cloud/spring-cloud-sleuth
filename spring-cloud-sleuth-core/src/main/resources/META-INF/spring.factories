@@ -1,7 +1,6 @@
 # Auto Configuration
 org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
 org.springframework.cloud.sleuth.annotation.SleuthAnnotationAutoConfiguration,\
-org.springframework.cloud.sleuth.sampler.SamplerAutoConfiguration,\
 org.springframework.cloud.sleuth.baggage.TraceBaggageAutoConfiguration,\
 org.springframework.cloud.sleuth.autoconfig.TraceAutoConfiguration,\
 org.springframework.cloud.sleuth.instrument.web.TraceHttpAutoConfiguration,\
