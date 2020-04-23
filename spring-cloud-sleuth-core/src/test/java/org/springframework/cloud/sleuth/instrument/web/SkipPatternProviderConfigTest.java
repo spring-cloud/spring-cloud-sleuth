@@ -41,7 +41,6 @@ import org.springframework.boot.context.annotation.UserConfigurations;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.boot.test.context.runner.WebApplicationContextRunner;
 import org.springframework.cloud.sleuth.autoconfig.TraceAutoConfiguration;
-import org.springframework.cloud.sleuth.baggage.TraceBaggageAutoConfiguration;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Configuration;
 
@@ -58,8 +57,7 @@ public class SkipPatternProviderConfigTest {
 					InfoEndpointAutoConfiguration.class,
 					HealthEndpointAutoConfiguration.class,
 					EndpointAutoConfiguration.class, WebEndpointAutoConfiguration.class,
-					TraceBaggageAutoConfiguration.class, TraceAutoConfiguration.class,
-					TraceWebAutoConfiguration.class));
+					TraceAutoConfiguration.class, TraceWebAutoConfiguration.class));
 
 	@Test
 	public void should_return_null_when_cleared() throws Exception {

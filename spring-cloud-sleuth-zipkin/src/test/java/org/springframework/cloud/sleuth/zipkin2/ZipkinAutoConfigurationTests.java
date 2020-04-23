@@ -46,7 +46,6 @@ import org.springframework.boot.autoconfigure.jms.activemq.ActiveMQAutoConfigura
 import org.springframework.boot.autoconfigure.kafka.KafkaAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.cloud.sleuth.autoconfig.TraceAutoConfiguration;
-import org.springframework.cloud.sleuth.baggage.TraceBaggageAutoConfiguration;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -91,7 +90,7 @@ public class ZipkinAutoConfigurationTests {
 				this.server.url("/").toString());
 		this.context.register(ZipkinAutoConfiguration.class,
 				PropertyPlaceholderAutoConfiguration.class, TraceAutoConfiguration.class,
-				TraceBaggageAutoConfiguration.class, Config.class);
+				Config.class);
 		this.context.refresh();
 		Span span = this.context.getBean(Tracing.class).tracer().nextSpan().name("foo")
 				.tag("foo", "bar").start();
@@ -121,7 +120,7 @@ public class ZipkinAutoConfigurationTests {
 		environment().setProperty("spring.zipkin.encoder", "JSON_V1");
 		this.context.register(ZipkinAutoConfiguration.class,
 				PropertyPlaceholderAutoConfiguration.class, TraceAutoConfiguration.class,
-				TraceBaggageAutoConfiguration.class, Config.class);
+				Config.class);
 		this.context.refresh();
 		Span span = this.context.getBean(Tracing.class).tracer().nextSpan().name("foo")
 				.tag("foo", "bar").start();
@@ -145,7 +144,7 @@ public class ZipkinAutoConfigurationTests {
 		environment().setProperty("spring.zipkin.sender.type", "rabbit");
 		this.context.register(PropertyPlaceholderAutoConfiguration.class,
 				RabbitAutoConfiguration.class, ZipkinAutoConfiguration.class,
-				TraceBaggageAutoConfiguration.class, TraceAutoConfiguration.class);
+				TraceAutoConfiguration.class);
 		this.context.refresh();
 
 		then(this.context.getBean(Sender.class)).isInstanceOf(RabbitMQSender.class);
@@ -160,7 +159,7 @@ public class ZipkinAutoConfigurationTests {
 		environment().setProperty("spring.zipkin.sender.type", "kafka");
 		this.context.register(PropertyPlaceholderAutoConfiguration.class,
 				KafkaAutoConfiguration.class, ZipkinAutoConfiguration.class,
-				TraceBaggageAutoConfiguration.class, TraceAutoConfiguration.class);
+				TraceAutoConfiguration.class);
 		this.context.refresh();
 
 		then(this.context.getBean(Sender.class)).isInstanceOf(KafkaSender.class);
@@ -177,7 +176,7 @@ public class ZipkinAutoConfigurationTests {
 		environment().setProperty("spring.zipkin.sender.type", "activemq");
 		this.context.register(PropertyPlaceholderAutoConfiguration.class,
 				ActiveMQAutoConfiguration.class, ZipkinAutoConfiguration.class,
-				TraceBaggageAutoConfiguration.class, TraceAutoConfiguration.class);
+				TraceAutoConfiguration.class);
 		this.context.refresh();
 
 		then(this.context.getBean(Sender.class)).isInstanceOf(ActiveMQSender.class);
@@ -191,8 +190,7 @@ public class ZipkinAutoConfigurationTests {
 		environment().setProperty("spring.zipkin.sender.type", "web");
 		this.context.register(PropertyPlaceholderAutoConfiguration.class,
 				RabbitAutoConfiguration.class, KafkaAutoConfiguration.class,
-				ZipkinAutoConfiguration.class, TraceBaggageAutoConfiguration.class,
-				TraceAutoConfiguration.class);
+				ZipkinAutoConfiguration.class, TraceAutoConfiguration.class);
 		this.context.refresh();
 
 		then(this.context.getBean(Sender.class).getClass().getName())
@@ -207,8 +205,7 @@ public class ZipkinAutoConfigurationTests {
 		environment().setProperty("spring.zipkin.sender.type", "WEB");
 		this.context.register(PropertyPlaceholderAutoConfiguration.class,
 				RabbitAutoConfiguration.class, KafkaAutoConfiguration.class,
-				ZipkinAutoConfiguration.class, TraceBaggageAutoConfiguration.class,
-				TraceAutoConfiguration.class);
+				ZipkinAutoConfiguration.class, TraceAutoConfiguration.class);
 		this.context.refresh();
 
 		then(this.context.getBean(Sender.class).getClass().getName())
@@ -223,8 +220,7 @@ public class ZipkinAutoConfigurationTests {
 		environment().setProperty("spring.zipkin.sender.type", "rabbit");
 		this.context.register(PropertyPlaceholderAutoConfiguration.class,
 				RabbitAutoConfiguration.class, KafkaAutoConfiguration.class,
-				ZipkinAutoConfiguration.class, TraceBaggageAutoConfiguration.class,
-				TraceAutoConfiguration.class);
+				ZipkinAutoConfiguration.class, TraceAutoConfiguration.class);
 		this.context.refresh();
 
 		then(this.context.getBean(Sender.class)).isInstanceOf(RabbitMQSender.class);
@@ -239,8 +235,7 @@ public class ZipkinAutoConfigurationTests {
 				this.server.url("/").toString());
 		this.context.register(ZipkinAutoConfiguration.class,
 				PropertyPlaceholderAutoConfiguration.class, TraceAutoConfiguration.class,
-				TraceBaggageAutoConfiguration.class, Config.class,
-				MultipleReportersConfig.class);
+				Config.class, MultipleReportersConfig.class);
 		this.context.refresh();
 
 		then(this.context.getBeansOfType(Sender.class)).hasSize(2);
@@ -275,7 +270,7 @@ public class ZipkinAutoConfigurationTests {
 		this.context = new AnnotationConfigApplicationContext();
 		this.context.register(ZipkinAutoConfiguration.class,
 				PropertyPlaceholderAutoConfiguration.class, TraceAutoConfiguration.class,
-				TraceBaggageAutoConfiguration.class, Config.class, MyConfig.class);
+				Config.class, MyConfig.class);
 		this.context.refresh();
 
 		then(this.context.getBeansOfType(Sender.class)).hasSize(1);

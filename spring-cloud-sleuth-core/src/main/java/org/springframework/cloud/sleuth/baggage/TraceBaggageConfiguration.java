@@ -38,20 +38,20 @@ import org.apache.commons.logging.LogFactory;
 import org.slf4j.MDC;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.autoconfigure.AutoConfigureBefore;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.boot.autoconfigure.condition.AnyNestedCondition;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
-import org.springframework.cloud.sleuth.autoconfig.TraceAutoConfiguration;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Conditional;
 import org.springframework.context.annotation.Configuration;
 
 /**
- * {@link org.springframework.boot.autoconfigure.EnableAutoConfiguration
- * Auto-configuration} for {@link BaggagePropagation}.
+ * {@link Configuration} for {@link BaggagePropagation}.
  * <p>
  *
  * @author Spencer Gibb
@@ -59,12 +59,43 @@ import org.springframework.context.annotation.Configuration;
  * @since 2.0.0
  */
 @Configuration(proxyBeanMethods = false)
-@ConditionalOnProperty(value = "spring.sleuth.enabled", matchIfMissing = true)
-@AutoConfigureBefore(TraceAutoConfiguration.class)
 @EnableConfigurationProperties(SleuthBaggageProperties.class)
-public class TraceBaggageAutoConfiguration {
+public class TraceBaggageConfiguration {
 
-	static final Log logger = LogFactory.getLog(TraceBaggageAutoConfiguration.class);
+	static final Log logger = LogFactory.getLog(TraceBaggageConfiguration.class);
+
+	static final String LOCAL_KEYS = "spring.sleuth.local-keys";
+	static final String BAGGAGE_KEYS = "spring.sleuth.baggage-keys";
+	static final String PROPAGATION_KEYS = "spring.sleuth.propagation-keys";
+	static final String WHITELISTED_KEYS = "spring.sleuth.propagation.tag.whitelisted-keys";
+	static final String WHITELISTED_MDC_KEYS = "spring.sleuth.log.slf4j.whitelisted-mdc-keys";
+
+	// These List<String> beans allow us to get deprecated property values, regardless of
+	// if they were comma or yaml encoded. This keeps them out of SleuthBaggageProperties
+
+	@Bean(BAGGAGE_KEYS)
+	@ConfigurationProperties(BAGGAGE_KEYS)
+	List<String> baggageKeys() {
+		return new ArrayList<>();
+	}
+
+	@Bean(LOCAL_KEYS)
+	@ConfigurationProperties(LOCAL_KEYS)
+	List<String> localKeys() {
+		return new ArrayList<>();
+	}
+
+	@Bean(PROPAGATION_KEYS)
+	@ConfigurationProperties(PROPAGATION_KEYS)
+	List<String> propagationKeys() {
+		return new ArrayList<>();
+	}
+
+	@Bean(WHITELISTED_MDC_KEYS)
+	@ConfigurationProperties(WHITELISTED_MDC_KEYS)
+	List<String> whiteListedMDCKeys() {
+		return new ArrayList<>();
+	}
 
 	@Autowired(required = false)
 	List<BaggagePropagationCustomizer> baggagePropagationCustomizers = new ArrayList<>();
@@ -92,35 +123,31 @@ public class TraceBaggageAutoConfiguration {
 	@ConditionalOnMissingBean
 	Propagation.Factory sleuthPropagation(
 			BaggagePropagation.FactoryBuilder factoryBuilder,
-			@Value("${spring.sleuth.baggage-keys:}") String baggageKeys,
-			@Value("${spring.sleuth.local-keys:}") String localKeys,
-			@Value("${spring.sleuth.propagation-keys:}") String propagationKeys,
+			@Qualifier(BAGGAGE_KEYS) List<String> baggageKeys,
+			@Qualifier(LOCAL_KEYS) List<String> localKeys,
+			@Qualifier(PROPAGATION_KEYS) List<String> propagationKeys,
 			SleuthBaggageProperties sleuthBaggageProperties) {
 
-		Set<String> localFields = redirectOldPropertyToNew("spring.sleuth.local-keys",
-				collectFieldsFromProperty(localKeys),
+		Set<String> localFields = redirectOldPropertyToNew(LOCAL_KEYS, localKeys,
 				"spring.sleuth.baggage.local-fields",
 				sleuthBaggageProperties.getLocalFields());
 		for (String fieldName : localFields) {
 			factoryBuilder.add(SingleBaggageField.local(BaggageField.create(fieldName)));
 		}
 
-		Set<String> remoteFields = redirectOldPropertyToNew(
-				"spring.sleuth.propagation-keys",
-				collectFieldsFromProperty(propagationKeys),
-				"spring.sleuth.baggage.remote-fields",
+		Set<String> remoteFields = redirectOldPropertyToNew(PROPAGATION_KEYS,
+				propagationKeys, "spring.sleuth.baggage.remote-fields",
 				sleuthBaggageProperties.getRemoteFields());
 		for (String fieldName : remoteFields) {
 			factoryBuilder.add(SingleBaggageField.remote(BaggageField.create(fieldName)));
 		}
 
 		if (!baggageKeys.isEmpty()) {
-			logger.warn(
-					"'spring.sleuth.baggage-keys' will be removed in a future release.\n"
-							+ "To change header names define a @Bean of type "
-							+ SingleBaggageField.class.getName());
+			logger.warn("'" + BAGGAGE_KEYS + "' will be removed in a future release.\n"
+					+ "To change header names define a @Bean of type "
+					+ SingleBaggageField.class.getName());
 
-			for (String key : collectFieldsFromProperty(baggageKeys)) {
+			for (String key : baggageKeys) {
 				factoryBuilder.add(SingleBaggageField.newBuilder(BaggageField.create(key))
 						.addKeyName("baggage-" + key) // for HTTP
 						.addKeyName("baggage_" + key) // for messaging
@@ -134,26 +161,7 @@ public class TraceBaggageAutoConfiguration {
 		return factoryBuilder.build();
 	}
 
-	@Bean
-	FinishedSpanHandler baggageTagFinishedSpanHandler(
-			@Value("${spring.sleuth.propagation.tag.whitelisted-keys:}") String whitelistedKeys,
-			SleuthBaggageProperties sleuthBaggageProperties) {
-
-		Set<String> tagFields = redirectOldPropertyToNew(
-				"spring.sleuth.propagation.tag.whitelisted-keys",
-				collectFieldsFromProperty(whitelistedKeys),
-				"spring.sleuth.baggage.tag-fields",
-				sleuthBaggageProperties.getTagFields());
-
-		if (tagFields.isEmpty()) {
-			return FinishedSpanHandler.NOOP; // Brave ignores these
-		}
-
-		return new BaggageTagFinishedSpanHandler(tagFields.stream()
-				.map(BaggageField::create).toArray(BaggageField[]::new));
-	}
-
-	static Set<String> redirectOldPropertyToNew(String oldProperty, Set<String> oldValue,
+	static Set<String> redirectOldPropertyToNew(String oldProperty, List<String> oldValue,
 			String newProperty, List<String> newValue) {
 		Set<String> result = new TreeSet<>(String.CASE_INSENSITIVE_ORDER);
 		result.addAll(newValue);
@@ -178,13 +186,11 @@ public class TraceBaggageAutoConfiguration {
 	@ConditionalOnProperty(value = "spring.sleuth.baggage.correlation-enabled",
 			matchIfMissing = true)
 	ScopeDecorator correlationScopeDecorator(
-			@Value("${spring.sleuth.log.slf4j.whitelisted-mdc-keys:}") String whitelistedKeys,
+			@Qualifier(WHITELISTED_MDC_KEYS) List<String> whiteListedMDCKeys,
 			SleuthBaggageProperties sleuthBaggageProperties) {
 
-		Set<String> correlationFields = redirectOldPropertyToNew(
-				"spring.sleuth.log.slf4j.whitelisted-mdc-keys",
-				collectFieldsFromProperty(whitelistedKeys),
-				"spring.sleuth.baggage.correlation-fields",
+		Set<String> correlationFields = redirectOldPropertyToNew(WHITELISTED_MDC_KEYS,
+				whiteListedMDCKeys, "spring.sleuth.baggage.correlation-fields",
 				sleuthBaggageProperties.getCorrelationFields());
 
 		// Add fields from properties
@@ -201,19 +207,74 @@ public class TraceBaggageAutoConfiguration {
 		return builder.build();
 	}
 
-	static Set<String> collectFieldsFromProperty(String value) {
-		Set<String> result = new TreeSet<>(String.CASE_INSENSITIVE_ORDER);
-		for (String fieldName : value.split(",")) {
-			if (fieldName == null) {
-				continue;
-			}
-			fieldName = fieldName.trim();
-			if (fieldName.isEmpty()) {
-				continue;
-			}
-			result.add(fieldName);
+	/**
+	 * This has to be conditional as it creates a bean of type
+	 * {@link FinishedSpanHandler}.
+	 *
+	 * <p>
+	 * {@link FinishedSpanHandler} beans, even if {@link FinishedSpanHandler#NOOP}, can
+	 * trigger {@code org.springframework.cloud.sleuth.sampler.SamplerCondition}
+	 */
+	@Configuration
+	@Conditional(BaggageTagFinishedSpanHandlerCondition.class)
+	@EnableConfigurationProperties(SleuthBaggageProperties.class)
+	static class BaggageTagFinishedSpanHandlerConfiguration {
+
+		@Bean(WHITELISTED_KEYS)
+		@ConfigurationProperties(WHITELISTED_KEYS)
+		List<String> whiteListedKeys() {
+			return new ArrayList<>();
 		}
-		return result;
+
+		@Bean
+		FinishedSpanHandler baggageTagFinishedSpanHandler(
+				@Qualifier(WHITELISTED_KEYS) List<String> whiteListedKeys,
+				SleuthBaggageProperties sleuthBaggageProperties) {
+
+			Set<String> tagFields = redirectOldPropertyToNew(WHITELISTED_KEYS,
+					whiteListedKeys, "spring.sleuth.baggage.tag-fields",
+					sleuthBaggageProperties.getTagFields());
+
+			if (tagFields.isEmpty()) {
+				return FinishedSpanHandler.NOOP; // Brave ignores these
+			}
+
+			return new BaggageTagFinishedSpanHandler(tagFields.stream()
+					.map(BaggageField::create).toArray(BaggageField[]::new));
+		}
+
+	}
+
+	/**
+	 * We need a special condition as it users could use either comma or yaml encoding,
+	 * possibly with a deprecated prefix.
+	 */
+	static class BaggageTagFinishedSpanHandlerCondition extends AnyNestedCondition {
+
+		BaggageTagFinishedSpanHandlerCondition() {
+			super(ConfigurationPhase.PARSE_CONFIGURATION);
+		}
+
+		@ConditionalOnProperty("spring.sleuth.baggage.tag-fields")
+		static class TagFieldsProperty {
+
+		}
+
+		@ConditionalOnProperty("spring.sleuth.baggage.tag-fields[0]")
+		static class TagFieldsYamlListProperty {
+
+		}
+
+		@ConditionalOnProperty(WHITELISTED_KEYS)
+		static class WhitelistedKeysProperty {
+
+		}
+
+		@ConditionalOnProperty(WHITELISTED_KEYS + "[0]")
+		static class WhitelistedKeysYamlListProperty {
+
+		}
+
 	}
 
 }

@@ -21,7 +21,6 @@ import org.junit.jupiter.api.Test;
 import org.springframework.boot.autoconfigure.AutoConfigurations;
 import org.springframework.boot.test.context.runner.WebApplicationContextRunner;
 import org.springframework.cloud.sleuth.autoconfig.TraceAutoConfiguration;
-import org.springframework.cloud.sleuth.baggage.TraceBaggageAutoConfiguration;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -34,8 +33,7 @@ public class TraceWebServletAutoConfigurationTests {
 
 	private final WebApplicationContextRunner contextRunner = new WebApplicationContextRunner()
 			.withConfiguration(AutoConfigurations.of(TraceAutoConfiguration.class,
-					TraceBaggageAutoConfiguration.class, TraceHttpAutoConfiguration.class,
-					TraceWebAutoConfiguration.class,
+					TraceHttpAutoConfiguration.class, TraceWebAutoConfiguration.class,
 					TraceWebServletAutoConfiguration.class));
 
 	@Test

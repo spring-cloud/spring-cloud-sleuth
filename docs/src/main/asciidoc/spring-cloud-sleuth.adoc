@@ -68,15 +68,15 @@ Here are the most relevant links from the OpenZipkin Brave project:
 
 == Sampling
 
-By default Spring Cloud Sleuth doesn't sample spans.
-That means that traces appear in logs but not in any remote store.
-For testing the default is often enough, and it probably is all you need if you use only the logs (for example, with an ELK aggregator).
-If you export span data to Zipkin, there is also an `Sampler.ALWAYS_SAMPLE` setting that exports everything, `RateLimitingSampler` setting that samples X transactions per second (defaults to `1000`) or `ProbabilityBasedSampler` setting that samples a fixed fraction of spans.
+Sampling only applies to tracing backends, such as Zipkin. Trace IDs appear in logs regardless of
+sample rate. Sampling is a way to prevent overloading the system, by consistently tracing some, but
+not all requests.
 
-NOTE: The `RateLimitingSampler` is the default if you use `spring-cloud-sleuth-zipkin`.
-You can configure the rate limit by setting `spring.sleuth.sampler.rate`.
+The default rate of 10 traces per second is controlled by the `spring.sleuth.sampler.rate`
+property and applies when we know Sleuth is used for reasons besides logging. Use a rate above 100
+traces per second with extreme caution as it can overload your tracing system.
 
-A sampler can be installed by creating a bean definition, as shown in the following example:
+The sampler can be set by Java Config also, as shown in the following example:
 
 [source,java]
 ----
@@ -85,8 +85,6 @@ include::{project-root}/spring-cloud-sleuth-core/src/test/java/org/springframewo
 
 TIP: You can set the HTTP header `b3` to `1`, or, when doing messaging, you can set the `spanFlags` header to `1`.
 Doing so forces the current request to be sampled regardless of configuration.
-
-In order to use the rate-limited sampler set the `spring.sleuth.sampler.rate` property to choose an amount of traces to accept on a per-second interval. The minimum number is 0 and the max is 2,147,483,647 (max int).
 
 == Baggage
 Baggage are fields that are propagated with the trace, optionally out of process. You can use

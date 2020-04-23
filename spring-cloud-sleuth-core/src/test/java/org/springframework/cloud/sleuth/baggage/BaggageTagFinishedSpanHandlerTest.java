@@ -23,26 +23,27 @@ import brave.ScopedSpan;
 import brave.Tracer;
 import brave.baggage.BaggageField;
 import brave.propagation.TraceContext;
-import brave.sampler.Sampler;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
-import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.cloud.sleuth.util.ArrayListSpanReporter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.test.context.ActiveProfiles;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * @author Taras Danylchuk
  */
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.NONE,
-		properties = { "spring.profiles.active=baggage" }, // intentionally test yaml
-		classes = BaggageTagFinishedSpanHandlerTest.TestConfiguration.class)
+@SpringBootTest(
+		// WebEnvironment.NONE will not read a Yaml profile
+		webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
+		classes = BaggageTagFinishedSpanHandlerTest.Config.class)
+@ActiveProfiles("baggage") // application-baggage.yml
 public class BaggageTagFinishedSpanHandlerTest {
 
 	static final BaggageField COUNTRY_CODE = BaggageField.create("country-code");
@@ -76,20 +77,13 @@ public class BaggageTagFinishedSpanHandlerTest {
 		assertThat(tags).containsEntry(COUNTRY_CODE.name(), "FO");
 	}
 
-	@Configuration
 	@EnableAutoConfiguration
-	@EnableConfigurationProperties(SleuthBaggageProperties.class)
-	public static class TestConfiguration {
+	@Configuration
+	static class Config {
 
 		@Bean
-		public ArrayListSpanReporter arrayListSpanReporter(
-				SleuthBaggageProperties properties) {
+		ArrayListSpanReporter spanReporter() {
 			return new ArrayListSpanReporter();
-		}
-
-		@Bean
-		public Sampler alwaysSampler() {
-			return Sampler.ALWAYS_SAMPLE;
 		}
 
 	}

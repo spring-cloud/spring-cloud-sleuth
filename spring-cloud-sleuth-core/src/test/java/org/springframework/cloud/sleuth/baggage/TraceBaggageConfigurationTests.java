@@ -46,13 +46,12 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.tuple;
 import static org.assertj.core.api.InstanceOfAssertFactories.array;
 
-public class TraceBaggageAutoConfigurationTests {
+public class TraceBaggageConfigurationTests {
 
 	static final String[] EMPTY_ARRAY = {};
 
 	private final ApplicationContextRunner contextRunner = new ApplicationContextRunner()
-			.withConfiguration(
-					AutoConfigurations.of(TraceBaggageAutoConfiguration.class));
+			.withConfiguration(AutoConfigurations.of(TraceBaggageConfiguration.class));
 
 	@Test
 	public void shouldCreateLocalFields() {
@@ -126,9 +125,28 @@ public class TraceBaggageAutoConfigurationTests {
 	}
 
 	@Test
+	public void shouldCreateTagHandler_yaml() {
+		this.contextRunner
+				.withPropertyValues(
+						"spring.sleuth.baggage.tag-fields[0]=x-vcap-request-id",
+						"spring.sleuth.baggage.tag-fields[1]=country-code")
+				.run((context) -> assertThatFieldNamesToTag(context)
+						.containsOnly("x-vcap-request-id", "country-code"));
+	}
+
+	@Test
 	public void shouldCreateTagHandler_oldProperty() {
 		this.contextRunner.withPropertyValues(
 				"spring.sleuth.propagation.tag.whitelisted-keys=x-vcap-request-id,country-code")
+				.run((context) -> assertThatFieldNamesToTag(context)
+						.containsOnly("x-vcap-request-id", "country-code"));
+	}
+
+	@Test
+	public void shouldCreateTagHandler_oldProperty_yaml() {
+		this.contextRunner.withPropertyValues(
+				"spring.sleuth.propagation.tag.whitelisted-keys[0]=x-vcap-request-id",
+				"spring.sleuth.propagation.tag.whitelisted-keys[1]=country-code")
 				.run((context) -> assertThatFieldNamesToTag(context)
 						.containsOnly("x-vcap-request-id", "country-code"));
 	}

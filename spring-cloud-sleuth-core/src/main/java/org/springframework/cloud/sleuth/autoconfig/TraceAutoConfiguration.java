@@ -42,7 +42,6 @@ import zipkin2.reporter.ReporterMetrics;
 import zipkin2.reporter.metrics.micrometer.MicrometerReporterMetrics;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -52,7 +51,7 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.cloud.sleuth.DefaultSpanNamer;
 import org.springframework.cloud.sleuth.LocalServiceName;
 import org.springframework.cloud.sleuth.SpanNamer;
-import org.springframework.cloud.sleuth.baggage.TraceBaggageAutoConfiguration;
+import org.springframework.cloud.sleuth.baggage.TraceBaggageConfiguration;
 import org.springframework.cloud.sleuth.sampler.SamplerAutoConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -72,8 +71,7 @@ import org.springframework.util.StringUtils;
 @Configuration(proxyBeanMethods = false)
 @ConditionalOnProperty(value = "spring.sleuth.enabled", matchIfMissing = true)
 @EnableConfigurationProperties(SleuthProperties.class)
-@AutoConfigureAfter(TraceBaggageAutoConfiguration.class)
-@Import(SamplerAutoConfiguration.class)
+@Import({ TraceBaggageConfiguration.class, SamplerAutoConfiguration.class })
 public class TraceAutoConfiguration {
 
 	/**

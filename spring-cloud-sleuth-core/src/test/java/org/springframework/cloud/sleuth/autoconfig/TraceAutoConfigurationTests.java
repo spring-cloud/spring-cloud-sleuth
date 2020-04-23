@@ -26,11 +26,14 @@ import brave.baggage.BaggagePropagationCustomizer;
 import brave.propagation.B3SinglePropagation;
 import brave.propagation.Propagation;
 import brave.propagation.TraceContextOrSamplingFlags;
+import brave.sampler.RateLimitingSampler;
+import brave.sampler.Sampler;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import org.assertj.core.api.BDDAssertions;
 import org.junit.jupiter.api.Test;
 import zipkin2.reporter.InMemoryReporterMetrics;
+import zipkin2.reporter.Reporter;
 import zipkin2.reporter.ReporterMetrics;
 import zipkin2.reporter.metrics.micrometer.MicrometerReporterMetrics;
 
@@ -38,18 +41,16 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.AutoConfigurations;
 import org.springframework.boot.test.context.FilteredClassLoader;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
-import org.springframework.cloud.sleuth.baggage.TraceBaggageAutoConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 public class TraceAutoConfigurationTests {
 
 	private final ApplicationContextRunner contextRunner = new ApplicationContextRunner()
-			.withConfiguration(AutoConfigurations.of(TraceAutoConfiguration.class,
-					TraceBaggageAutoConfiguration.class));
+			.withConfiguration(AutoConfigurations.of(TraceAutoConfiguration.class));
 
 	@Test
-	public void should_apply_micrometer_reporter_metrics_when_meter_registry_bean_present() {
+	void should_apply_micrometer_reporter_metrics_when_meter_registry_bean_present() {
 		this.contextRunner.withUserConfiguration(WithMeterRegistry.class)
 				.run((context) -> {
 					ReporterMetrics bean = context.getBean(ReporterMetrics.class);
@@ -60,7 +61,7 @@ public class TraceAutoConfigurationTests {
 	}
 
 	@Test
-	public void should_apply_in_memory_metrics_when_meter_registry_bean_missing() {
+	void should_apply_in_memory_metrics_when_meter_registry_bean_missing() {
 		this.contextRunner.run((context) -> {
 			ReporterMetrics bean = context.getBean(ReporterMetrics.class);
 
@@ -69,7 +70,7 @@ public class TraceAutoConfigurationTests {
 	}
 
 	@Test
-	public void should_apply_in_memory_metrics_when_meter_registry_class_missing() {
+	void should_apply_in_memory_metrics_when_meter_registry_class_missing() {
 		this.contextRunner.withClassLoader(new FilteredClassLoader(MeterRegistry.class))
 				.run((context) -> {
 					ReporterMetrics bean = context.getBean(ReporterMetrics.class);
@@ -78,8 +79,48 @@ public class TraceAutoConfigurationTests {
 				});
 	}
 
+	/**
+	 * Duplicates
+	 * {@link org.springframework.cloud.sleuth.sampler.SamplerAutoConfigurationTests}
+	 * intentionally, to ensure configuration condition bugs do not exist.
+	 */
 	@Test
-	public void should_use_B3Propagation_factory_if_no_have_any_config() {
+	void should_use_NEVER_SAMPLER_when_only_logging() {
+		this.contextRunner.run((context -> {
+			final Sampler bean = context.getBean(Sampler.class);
+			BDDAssertions.then(bean).isSameAs(Sampler.NEVER_SAMPLE);
+		}));
+	}
+
+	/**
+	 * Duplicates
+	 * {@link org.springframework.cloud.sleuth.sampler.SamplerAutoConfigurationTests}
+	 * intentionally, to ensure configuration condition bugs do not exist.
+	 */
+	@Test
+	void should_use_RateLimitedSampler_when_reporting() {
+		this.contextRunner.withUserConfiguration(WithReporter.class).run((context -> {
+			final Sampler bean = context.getBean(Sampler.class);
+			BDDAssertions.then(bean).isInstanceOf(RateLimitingSampler.class);
+		}));
+	}
+
+	/**
+	 * Duplicates
+	 * {@link org.springframework.cloud.sleuth.sampler.SamplerAutoConfigurationTests}
+	 * intentionally, to ensure configuration condition bugs do not exist.
+	 */
+	@Test
+	void should_override_sampler() {
+		this.contextRunner.withUserConfiguration(WithReporter.class, WithSampler.class)
+				.run((context -> {
+					final Sampler bean = context.getBean(Sampler.class);
+					BDDAssertions.then(bean).isSameAs(Sampler.ALWAYS_SAMPLE);
+				}));
+	}
+
+	@Test
+	void should_use_B3Propagation_factory_by_default() {
 		this.contextRunner.run((context -> {
 			final Propagation.Factory bean = context.getBean(Propagation.Factory.class);
 			BDDAssertions.then(bean).isInstanceOf(Propagation.Factory.class);
@@ -87,7 +128,7 @@ public class TraceAutoConfigurationTests {
 	}
 
 	@Test
-	public void should_use_baggageBean() {
+	void should_use_baggageBean() {
 		this.contextRunner.withUserConfiguration(WithBaggageBeans.class, Baggage.class)
 				.run((context -> {
 					final Baggage bean = context.getBean(Baggage.class);
@@ -98,7 +139,7 @@ public class TraceAutoConfigurationTests {
 	}
 
 	@Test
-	public void should_use_local_keys_from_properties() {
+	void should_use_local_keys_from_properties() {
 		this.contextRunner.withPropertyValues("spring.sleuth.baggage.local-fields=bp")
 				.withUserConfiguration(Baggage.class).run((context -> {
 					final Baggage bean = context.getBean(Baggage.class);
@@ -108,7 +149,7 @@ public class TraceAutoConfigurationTests {
 	}
 
 	@Test
-	public void should_combine_baggage_beans_and_properties() {
+	void should_combine_baggage_beans_and_properties() {
 		this.contextRunner.withPropertyValues("spring.sleuth.baggage.local-fields=bp")
 				.withUserConfiguration(WithBaggageBeans.class, Baggage.class)
 				.run((context -> {
@@ -121,7 +162,7 @@ public class TraceAutoConfigurationTests {
 	}
 
 	@Test
-	public void should_use_baggagePropagationFactoryBuilder_bean() {
+	void should_use_baggagePropagationFactoryBuilder_bean() {
 		// BaggagePropagation.FactoryBuilder unwraps itself if there are no baggage fields
 		// defined
 		this.contextRunner
@@ -166,6 +207,36 @@ public class TraceAutoConfigurationTests {
 
 	@Configuration
 	static class WithMeterRegistry {
+
+		@Bean
+		MeterRegistry meterRegistry() {
+			return new SimpleMeterRegistry();
+		}
+
+	}
+
+	@Configuration
+	static class WithReporter {
+
+		@Bean
+		Reporter<zipkin2.Span> spanReporter() {
+			return zipkin2.Span::toString;
+		}
+
+	}
+
+	@Configuration
+	static class WithSampler {
+
+		@Bean
+		Sampler alwaysSampler() {
+			return Sampler.ALWAYS_SAMPLE;
+		}
+
+	}
+
+	@Configuration
+	static class WithLocalKeys {
 
 		@Bean
 		MeterRegistry meterRegistry() {

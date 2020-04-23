@@ -26,7 +26,6 @@ import org.junit.jupiter.api.Test;
 
 import org.springframework.boot.autoconfigure.AutoConfigurations;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
-import org.springframework.cloud.sleuth.baggage.TraceBaggageAutoConfiguration;
 import org.springframework.cloud.sleuth.instrument.web.TraceHttpAutoConfiguration;
 import org.springframework.cloud.sleuth.instrument.web.TraceWebAutoConfiguration;
 import org.springframework.context.annotation.Bean;
@@ -36,8 +35,7 @@ import org.springframework.context.support.GenericApplicationContext;
 public class TraceAutoConfigurationPropagationCustomizationTests {
 
 	private final ApplicationContextRunner contextRunner = new ApplicationContextRunner()
-			.withConfiguration(AutoConfigurations.of(TraceAutoConfiguration.class,
-					TraceBaggageAutoConfiguration.class));
+			.withConfiguration(AutoConfigurations.of(TraceAutoConfiguration.class));
 
 	@Test
 	public void stillCreatesDefault() {
