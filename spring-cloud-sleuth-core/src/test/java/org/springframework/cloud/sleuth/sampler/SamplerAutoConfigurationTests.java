@@ -16,44 +16,170 @@
 
 package org.springframework.cloud.sleuth.sampler;
 
+import brave.Tracing;
+import brave.TracingCustomizer;
+import brave.handler.FinishedSpanHandler;
+import brave.handler.MutableSpan;
+import brave.propagation.TraceContext;
+import brave.sampler.RateLimitingSampler;
 import brave.sampler.Sampler;
 import org.assertj.core.api.BDDAssertions;
 import org.junit.Test;
+import zipkin2.Span;
+import zipkin2.reporter.Reporter;
+
+import org.springframework.boot.autoconfigure.AutoConfigurations;
+import org.springframework.boot.test.context.runner.ApplicationContextRunner;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
 
 /**
  * @author Marcin Grzejszczak
  * @since
  */
+// TODO: missing spring cloud context tests
 public class SamplerAutoConfigurationTests {
 
+	private final ApplicationContextRunner contextRunner = new ApplicationContextRunner()
+			.withConfiguration(AutoConfigurations.of(SamplerAutoConfiguration.class));
+
 	@Test
-	public void should_use_probability_sampler_when_property_set() {
-		SamplerProperties properties = new SamplerProperties();
-		properties.setProbability(10f);
-
-		Sampler sampler = SamplerAutoConfiguration.samplerFromProps(properties);
-
-		BDDAssertions.then(sampler).isInstanceOf(ProbabilityBasedSampler.class);
+	public void should_use_NEVER_SAMPLER_when_only_logging() {
+		this.contextRunner.run((context -> {
+			final Sampler bean = context.getBean(Sampler.class);
+			BDDAssertions.then(bean).isSameAs(Sampler.NEVER_SAMPLE);
+		}));
 	}
 
 	@Test
-	public void should_use_rate_limiting_sampler_when_probability_not_set() {
+	public void should_use_RateLimitedSampler_withFinishedSpanHandler() {
+		this.contextRunner.withUserConfiguration(WithFinishedSpanHandler.class)
+				.run((context -> {
+					final Sampler bean = context.getBean(Sampler.class);
+					BDDAssertions.then(bean).isInstanceOf(RateLimitingSampler.class);
+				}));
+	}
+
+	@Test
+	public void should_use_RateLimitedSampler_withReporter() {
+		this.contextRunner.withUserConfiguration(WithReporter.class).run((context -> {
+			final Sampler bean = context.getBean(Sampler.class);
+			BDDAssertions.then(bean).isInstanceOf(RateLimitingSampler.class);
+		}));
+	}
+
+	@Test
+	public void should_use_RateLimitedSampler_withTracingCustomizer() {
+		this.contextRunner.withUserConfiguration(WithTracingCustomizer.class)
+				.run((context -> {
+					final Sampler bean = context.getBean(Sampler.class);
+					BDDAssertions.then(bean).isInstanceOf(RateLimitingSampler.class);
+				}));
+	}
+
+	@Test
+	public void should_override_sampler() {
+		this.contextRunner.withUserConfiguration(WithReporter.class, WithSampler.class)
+				.run((context -> {
+					final Sampler bean = context.getBean(Sampler.class);
+					BDDAssertions.then(bean).isSameAs(Sampler.ALWAYS_SAMPLE);
+				}));
+	}
+
+	@Test
+	public void samplerFromProps_probability() {
+		SamplerProperties properties = new SamplerProperties();
+		properties.setProbability(0.01f);
+
+		Sampler sampler = SamplerAutoConfiguration.samplerFromProps(properties);
+
+		BDDAssertions.then(sampler).isInstanceOf(brave.sampler.CountingSampler.class);
+	}
+
+	@Test
+	public void samplerFromProps_rateLimit() {
 		SamplerProperties properties = new SamplerProperties();
 
 		Sampler sampler = SamplerAutoConfiguration.samplerFromProps(properties);
 
-		BDDAssertions.then(sampler).isInstanceOf(RateLimitingSampler.class);
+		BDDAssertions.then(sampler).isInstanceOf(brave.sampler.RateLimitingSampler.class);
 	}
 
 	@Test
-	public void should_use_probability_sampler_when_both_rate_and_probability_is_set() {
+	public void samplerFromProps_rateLimitZero() {
 		SamplerProperties properties = new SamplerProperties();
-		properties.setProbability(10f);
+		properties.setRate(0);
+
+		Sampler sampler = SamplerAutoConfiguration.samplerFromProps(properties);
+
+		BDDAssertions.then(sampler).isSameAs(Sampler.NEVER_SAMPLE);
+	}
+
+	@Test
+	public void samplerFromProps_prefersProbability() {
+		SamplerProperties properties = new SamplerProperties();
+		properties.setProbability(0.01f);
 		properties.setRate(20);
 
 		Sampler sampler = SamplerAutoConfiguration.samplerFromProps(properties);
 
-		BDDAssertions.then(sampler).isInstanceOf(ProbabilityBasedSampler.class);
+		BDDAssertions.then(sampler).isInstanceOf(brave.sampler.CountingSampler.class);
+	}
+
+	@Test
+	public void samplerFromProps_prefersZeroProbability() {
+		SamplerProperties properties = new SamplerProperties();
+		properties.setProbability(0.0f);
+		properties.setRate(20);
+
+		Sampler sampler = SamplerAutoConfiguration.samplerFromProps(properties);
+
+		BDDAssertions.then(sampler).isSameAs(Sampler.NEVER_SAMPLE);
+	}
+
+	@Configuration
+	static class WithFinishedSpanHandler {
+
+		@Bean
+		FinishedSpanHandler finishedSpanHandler() {
+			return new FinishedSpanHandler() {
+				@Override
+				public boolean handle(TraceContext context, MutableSpan span) {
+					return true;
+				}
+			};
+		}
+
+	}
+
+	@Configuration
+	static class WithReporter {
+
+		@Bean
+		Reporter<Span> spanReporter() {
+			return zipkin2.Span::toString;
+		}
+
+	}
+
+	@Configuration
+	static class WithSampler {
+
+		@Bean
+		Sampler alwaysSampler() {
+			return Sampler.ALWAYS_SAMPLE;
+		}
+
+	}
+
+	@Configuration
+	static class WithTracingCustomizer {
+
+		@Bean
+		TracingCustomizer tracingCustomizer() {
+			return Tracing.Builder::toString;
+		}
+
 	}
 
 }
