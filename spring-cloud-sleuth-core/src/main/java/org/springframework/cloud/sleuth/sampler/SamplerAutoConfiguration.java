@@ -23,12 +23,14 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.cloud.context.config.annotation.RefreshScope;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Conditional;
 import org.springframework.context.annotation.Configuration;
 
 /**
  * {@linkplain Configuration configuration} for {@link Sampler}.
  *
  * @author Marcin Grzejszczak
+ * @see SamplerCondition
  * @since 2.1.0
  */
 @Configuration
@@ -44,14 +46,17 @@ public class SamplerAutoConfiguration {
 		return Sampler.NEVER_SAMPLE;
 	}
 
+	// NOTE: Brave's default samplers return Sampler.NEVER_SAMPLE if the config implies
+	// that
 	static Sampler samplerFromProps(SamplerProperties config) {
 		if (config.getRate() != null) {
-			return new RateLimitingSampler(config);
+			return brave.sampler.RateLimitingSampler.create(config.getRate());
 		}
-		return new ProbabilityBasedSampler(config);
+		return brave.sampler.CountingSampler.create(config.getProbability());
 	}
 
 	@Configuration
+	@Conditional(SamplerCondition.class)
 	@ConditionalOnBean(type = "org.springframework.cloud.context.scope.refresh.RefreshScope")
 	protected static class RefreshScopedSamplerConfiguration {
 
@@ -59,12 +64,18 @@ public class SamplerAutoConfiguration {
 		@RefreshScope
 		@ConditionalOnMissingBean
 		public Sampler defaultTraceSampler(SamplerProperties config) {
-			return samplerFromProps(config);
+			// TODO: Rewrite: refresh should replace the sampler, not change its state
+			// internally
+			if (config.getRate() != null) {
+				return new RateLimitingSampler(config);
+			}
+			return new ProbabilityBasedSampler(config);
 		}
 
 	}
 
 	@Configuration
+	@Conditional(SamplerCondition.class)
 	@ConditionalOnMissingBean(type = "org.springframework.cloud.context.scope.refresh.RefreshScope")
 	protected static class NonRefreshScopeSamplerConfiguration {
 

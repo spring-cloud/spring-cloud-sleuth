@@ -312,16 +312,15 @@ Span nextSpan(final Request input) {
 
 === Sampling in Spring Cloud Sleuth
 
-By default Spring Cloud Sleuth sets all spans to non-exportable.
-That means that traces appear in logs but not in any remote store.
-For testing the default is often enough, and it probably is all you need if you use only the logs (for example, with an ELK aggregator).
-If you export span data to Zipkin, there is also an `Sampler.ALWAYS_SAMPLE` setting that exports everything and a `ProbabilityBasedSampler` setting that samples a fixed fraction of spans.
+Sampling only applies to tracing backends, such as Zipkin. Trace IDs appear in logs regardless of
+sample rate. Sampling is a way to prevent overloading the system, by consistently tracing some, but
+not all requests.
 
-NOTE: The `ProbabilityBasedSampler` is the default if you use `spring-cloud-sleuth-zipkin`.
-You can configure the exports by setting `spring.sleuth.sampler.probability`.
-The passed value needs to be a double from `0.0` to `1.0`.
+The default to sample 10% of traces is controlled by the `spring.sleuth.sampler.probability`
+property and applies when we know Sleuth is used for reasons besides logging. The passed
+value needs to be a float from `0.0` to `1.0`.
 
-A sampler can be installed by creating a bean definition, as shown in the following example:
+The sampler can be set by Java Config also, as shown in the following example:
 
 [source,java]
 ----
@@ -329,9 +328,7 @@ include::../../../../spring-cloud-sleuth-core/src/test/java/org/springframework/
 ----
 
 TIP: You can set the HTTP header `X-B3-Flags` to `1`, or, when doing messaging, you can set the `spanFlags` header to `1`.
-Doing so forces the current span to be exportable regardless of the sampling decision.
-
-In order to use the rate-limited sampler set the `spring.sleuth.sampler.rate` property to choose an amount of traces to accept on a per-second interval. The minimum number is 0 and the max is 2,147,483,647 (max int).
+Doing so forces the corresponding trace to be sampled regardless of the sampling configuration.
 
 == Propagation
 
