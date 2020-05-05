@@ -23,7 +23,7 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.kafka.streams.KafkaStreams;
 
 import org.springframework.beans.BeansException;
-import org.springframework.beans.factory.BeanFactory;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.config.BeanPostProcessor;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
@@ -67,8 +67,8 @@ public class SleuthKafkaStreamsConfiguration {
 
 	@Bean
 	static KafkaStreamsBuilderFactoryBeanPostProcessor kafkaStreamsBuilderFactoryBeanPostProcessor(
-			BeanFactory beanFactory) {
-		return new KafkaStreamsBuilderFactoryBeanPostProcessor(beanFactory);
+			ObjectProvider<KafkaStreamsTracing> objectProvider) {
+		return new KafkaStreamsBuilderFactoryBeanPostProcessor(objectProvider);
 	}
 
 }
@@ -87,23 +87,21 @@ class KafkaStreamsBuilderFactoryBeanPostProcessor implements BeanPostProcessor {
 	private static final Log log = LogFactory
 			.getLog(KafkaStreamsBuilderFactoryBeanPostProcessor.class);
 
-	private final BeanFactory beanFactory;
+	private final ObjectProvider<KafkaStreamsTracing> objectProvider;
 
-	KafkaStreamsBuilderFactoryBeanPostProcessor(BeanFactory beanFactory) {
-		this.beanFactory = beanFactory;
+	KafkaStreamsBuilderFactoryBeanPostProcessor(ObjectProvider<KafkaStreamsTracing> objectProvider) {
+		this.objectProvider = objectProvider;
 	}
 
 	@Override
 	public Object postProcessAfterInitialization(Object bean, String beanName)
 			throws BeansException {
 		if (bean instanceof StreamsBuilderFactoryBean) {
-			StreamsBuilderFactoryBean sbfb = (StreamsBuilderFactoryBean) bean;
+			KafkaStreamsTracing kafkaStreamsTracing = this.objectProvider.getIfAvailable();
+			((StreamsBuilderFactoryBean) bean).setClientSupplier(kafkaStreamsTracing.kafkaClientSupplier());
 			if (log.isDebugEnabled()) {
-				log.debug(
-						"StreamsBuilderFactoryBean bean is auto-configured to enable tracing.");
+				log.debug("StreamsBuilderFactoryBean bean is auto-configured to enable tracing.");
 			}
-			sbfb.setClientSupplier(this.beanFactory.getBean(KafkaStreamsTracing.class)
-					.kafkaClientSupplier());
 		}
 		return bean;
 	}
