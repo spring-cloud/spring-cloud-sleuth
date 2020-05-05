@@ -23,6 +23,7 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.kafka.streams.KafkaStreams;
 
 import org.springframework.beans.BeansException;
+import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.config.BeanPostProcessor;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
@@ -66,8 +67,8 @@ public class SleuthKafkaStreamsConfiguration {
 
 	@Bean
 	static KafkaStreamsBuilderFactoryBeanPostProcessor kafkaStreamsBuilderFactoryBeanPostProcessor(
-			KafkaStreamsTracing kafkaStreamsTracing) {
-		return new KafkaStreamsBuilderFactoryBeanPostProcessor(kafkaStreamsTracing);
+			BeanFactory beanFactory) {
+		return new KafkaStreamsBuilderFactoryBeanPostProcessor(beanFactory);
 	}
 
 }
@@ -86,10 +87,10 @@ class KafkaStreamsBuilderFactoryBeanPostProcessor implements BeanPostProcessor {
 	private static final Log log = LogFactory
 			.getLog(KafkaStreamsBuilderFactoryBeanPostProcessor.class);
 
-	private final KafkaStreamsTracing kafkaStreamsTracing;
+	private final BeanFactory beanFactory;
 
-	KafkaStreamsBuilderFactoryBeanPostProcessor(KafkaStreamsTracing kafkaStreamsTracing) {
-		this.kafkaStreamsTracing = kafkaStreamsTracing;
+	KafkaStreamsBuilderFactoryBeanPostProcessor(BeanFactory beanFactory) {
+		this.beanFactory = beanFactory;
 	}
 
 	@Override
@@ -101,7 +102,8 @@ class KafkaStreamsBuilderFactoryBeanPostProcessor implements BeanPostProcessor {
 				log.debug(
 						"StreamsBuilderFactoryBean bean is auto-configured to enable tracing.");
 			}
-			sbfb.setClientSupplier(kafkaStreamsTracing.kafkaClientSupplier());
+			sbfb.setClientSupplier(this.beanFactory.getBean(KafkaStreamsTracing.class)
+					.kafkaClientSupplier());
 		}
 		return bean;
 	}
