@@ -52,7 +52,8 @@ public class TracingFeignClientTests {
 
 	RequestTemplate requestTemplate = new RequestTemplate();
 
-	Request request = Request.create(Request.HttpMethod.GET, "https://foo", new HashMap<>(), null, null, requestTemplate);
+	Request request = Request.create(Request.HttpMethod.GET, "https://foo",
+			new HashMap<>(), null, null, requestTemplate);
 
 	Request.Options options = new Request.Options();
 
@@ -121,13 +122,15 @@ public class TracingFeignClientTests {
 
 	@Test
 	public void keep_requestTemplate() throws IOException {
-		BDDMockito.given(this.client.execute(BDDMockito.any(), BDDMockito.any())).willAnswer(new Answer() {
-			public Object answer(InvocationOnMock invocation) {
-				Object[] args = invocation.getArguments();
-				Assert.assertEquals(((Request) args[0]).requestTemplate(), requestTemplate);
-				return null;
-			}
-		});
+		BDDMockito.given(this.client.execute(BDDMockito.any(), BDDMockito.any()))
+				.willAnswer(new Answer() {
+					public Object answer(InvocationOnMock invocation) {
+						Object[] args = invocation.getArguments();
+						Assert.assertEquals(((Request) args[0]).requestTemplate(),
+								requestTemplate);
+						return null;
+					}
+				});
 		this.traceFeignClient.execute(this.request, this.options);
 	}
 
