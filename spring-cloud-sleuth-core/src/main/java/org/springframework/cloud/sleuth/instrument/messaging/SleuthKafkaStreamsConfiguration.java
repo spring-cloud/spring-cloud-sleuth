@@ -45,8 +45,7 @@ import org.springframework.kafka.config.StreamsBuilderFactoryBean;
 @ConditionalOnBean(Tracing.class)
 @AutoConfigureAfter({ TraceAutoConfiguration.class })
 @OnMessagingEnabled
-@ConditionalOnProperty(value = "spring.sleuth.messaging.kafka.streams.enabled",
-		matchIfMissing = true)
+@ConditionalOnProperty(value = "spring.sleuth.messaging.kafka.streams.enabled", matchIfMissing = true)
 @ConditionalOnClass(KafkaStreams.class)
 public class SleuthKafkaStreamsConfiguration {
 
@@ -56,6 +55,7 @@ public class SleuthKafkaStreamsConfiguration {
 	/**
 	 * Expose {@link KafkaStreamsTracing} as bean to allow for filter/map/peek/transform
 	 * operations.
+	 *
 	 * @param tracing Brave Tracing instance from TraceAutoConfiguration
 	 * @return instance for use in further manual instrumentation
 	 */
@@ -65,6 +65,13 @@ public class SleuthKafkaStreamsConfiguration {
 		return KafkaStreamsTracing.create(tracing);
 	}
 
+	/**
+	 * Call {@link StreamsBuilderFactoryBean#setClientSupplier(org.apache.kafka.streams.KafkaClientSupplier)} with
+	 * Brave's TracingKafkaClientSupplier.
+	 *
+	 * @param objectProvider provides KafkaStreamsTracing; prevents eager initialization
+	 * @return
+	 */
 	@Bean
 	static KafkaStreamsBuilderFactoryBeanPostProcessor kafkaStreamsBuilderFactoryBeanPostProcessor(
 			ObjectProvider<KafkaStreamsTracing> objectProvider) {
@@ -84,8 +91,7 @@ public class SleuthKafkaStreamsConfiguration {
  */
 class KafkaStreamsBuilderFactoryBeanPostProcessor implements BeanPostProcessor {
 
-	private static final Log log = LogFactory
-			.getLog(KafkaStreamsBuilderFactoryBeanPostProcessor.class);
+	private static final Log log = LogFactory.getLog(KafkaStreamsBuilderFactoryBeanPostProcessor.class);
 
 	private final ObjectProvider<KafkaStreamsTracing> objectProvider;
 
@@ -94,9 +100,9 @@ class KafkaStreamsBuilderFactoryBeanPostProcessor implements BeanPostProcessor {
 	}
 
 	@Override
-	public Object postProcessAfterInitialization(Object bean, String beanName)
-			throws BeansException {
+	public Object postProcessAfterInitialization(Object bean, String beanName) throws BeansException {
 		if (bean instanceof StreamsBuilderFactoryBean) {
+			// KafkaStreamsTracing is created in SleuthKafkaStreamsConfiguration above, so should not be null here
 			KafkaStreamsTracing kafkaStreamsTracing = this.objectProvider.getIfAvailable();
 			((StreamsBuilderFactoryBean) bean).setClientSupplier(kafkaStreamsTracing.kafkaClientSupplier());
 			if (log.isDebugEnabled()) {

@@ -70,7 +70,7 @@ class SleuthKafkaStreamsConfigurationIntegrationTests {
 	}
 
 	@Test
-	void testKafkaStreamsBuilderFactoryBeanPostProcessor() {
+	void should_set_KafkaClientSupplier_on_StreamsBuilderFactoryBean() {
 		this.contextRunner
 				.run(context -> verify(streamsBuilderFactoryBean).setClientSupplier(any(KafkaClientSupplier.class)));
 	}
