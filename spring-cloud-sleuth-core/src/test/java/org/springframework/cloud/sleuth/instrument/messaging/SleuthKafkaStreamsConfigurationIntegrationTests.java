@@ -46,60 +46,60 @@ import static org.mockito.Mockito.verify;
 class SleuthKafkaStreamsConfigurationIntegrationTests {
 
 	private final ApplicationContextRunner contextRunner = new ApplicationContextRunner()
-			.withConfiguration(AutoConfigurations.of(
-					TraceAutoConfiguration.class,
+			.withConfiguration(AutoConfigurations.of(TraceAutoConfiguration.class,
 					SleuthKafkaStreamsConfiguration.class))
 			.withUserConfiguration(UserConfig.class);
 
 	@Test
 	void should_create_KafkaStreamsTracing() {
-		this.contextRunner
-				.run(context -> assertThat(context).hasSingleBean(KafkaStreamsTracing.class));
+		this.contextRunner.run(
+				context -> assertThat(context).hasSingleBean(KafkaStreamsTracing.class));
 	}
 
 	@Test
 	void should_not_create_KafkaStreamsTracing_when_KafkaStreams_not_present() {
-		this.contextRunner
-				.withClassLoader(new FilteredClassLoader(KafkaStreams.class))
-				.run(context -> assertThat(context).doesNotHaveBean(KafkaStreamsTracing.class));
+		this.contextRunner.withClassLoader(new FilteredClassLoader(KafkaStreams.class))
+				.run(context -> assertThat(context)
+						.doesNotHaveBean(KafkaStreamsTracing.class));
 	}
 
 	@Test
 	void should_not_create_KafkaStreamsTracing_when_kafkastreams_disabled() {
 		this.contextRunner
 				.withPropertyValues("spring.sleuth.messaging.kafka.streams.enabled=false")
-				.run(context -> assertThat(context).doesNotHaveBean(KafkaStreamsTracing.class));
+				.run(context -> assertThat(context)
+						.doesNotHaveBean(KafkaStreamsTracing.class));
 	}
 
 	@Test
 	void should_not_create_KafkaStreamsTracing_when_messaging_disabled() {
-		this.contextRunner
-				.withPropertyValues("spring.sleuth.messaging.enabled=false")
-				.run(context -> assertThat(context).doesNotHaveBean(KafkaStreamsTracing.class));
+		this.contextRunner.withPropertyValues("spring.sleuth.messaging.enabled=false")
+				.run(context -> assertThat(context)
+						.doesNotHaveBean(KafkaStreamsTracing.class));
 	}
 
 	@Test
 	void should_set_KafkaClientSupplier_on_StreamsBuilderFactoryBean() {
-		this.contextRunner
-				.run(context -> verify(UserConfig.streamsBuilderFactoryBean)
-						.setClientSupplier(any(KafkaClientSupplier.class)));
+		this.contextRunner.run(context -> verify(UserConfig.streamsBuilderFactoryBean)
+				.setClientSupplier(any(KafkaClientSupplier.class)));
 	}
 
 	@Test
 	void should_not_complain_about_eager_initialization() {
-		this.contextRunner
-				.withUserConfiguration(EagerInitializationConfig.class)
+		this.contextRunner.withUserConfiguration(EagerInitializationConfig.class)
 				.run(context -> verify(UserConfig.streamsBuilderFactoryBean)
 						.setClientSupplier(any(KafkaClientSupplier.class)));
 	}
 
 	@AfterEach
 	void afterEach(CapturedOutput output) {
-		assertThat(output).doesNotContain("is not eligible for getting processed by all BeanPostProcessors");
+		assertThat(output).doesNotContain(
+				"is not eligible for getting processed by all BeanPostProcessors");
 	}
 
 	@Configuration
 	static class UserConfig {
+
 		static StreamsBuilderFactoryBean streamsBuilderFactoryBean;
 
 		@Bean
@@ -107,25 +107,31 @@ class SleuthKafkaStreamsConfigurationIntegrationTests {
 			streamsBuilderFactoryBean = mock(StreamsBuilderFactoryBean.class);
 			return UserConfig.streamsBuilderFactoryBean;
 		}
+
 	}
 
 	@Configuration
 	static class EagerInitializationConfig {
+
 		@Bean
 		EagerInitializationComponent eagerInitializationComponent() {
 			return new EagerInitializationComponent();
 		}
+
 	}
 
 	static class EagerInitializationComponent {
 
 		@Autowired
 		private Tracing tracing;
+
 		private KafkaStreamsTracing kafkaStreamsTracing;
 
 		@PostConstruct
 		void init() {
 			kafkaStreamsTracing = KafkaStreamsTracing.create(tracing);
 		}
+
 	}
+
 }
