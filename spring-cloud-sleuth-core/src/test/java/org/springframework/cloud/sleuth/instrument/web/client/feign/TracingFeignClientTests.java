@@ -28,24 +28,31 @@ import brave.http.HttpTracing;
 import brave.propagation.StrictCurrentTraceContext;
 import feign.Client;
 import feign.Request;
+import feign.RequestTemplate;
 import org.assertj.core.api.BDDAssertions;
+import org.junit.Assert;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.BDDMockito;
 import org.mockito.Mock;
+import org.mockito.invocation.InvocationOnMock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.stubbing.Answer;
 
 import static org.assertj.core.api.BDDAssertions.then;
 
 /**
  * @author Marcin Grzejszczak
+ * @author Hash.Jang
  */
 @ExtendWith(MockitoExtension.class)
 public class TracingFeignClientTests {
 
-	Request request = Request.create("GET", "https://foo", new HashMap<>(), null, null);
+	RequestTemplate requestTemplate = new RequestTemplate();
+
+	Request request = Request.create(Request.HttpMethod.GET, "https://foo", new HashMap<>(), null, null, requestTemplate);
 
 	Request.Options options = new Request.Options();
 
@@ -110,6 +117,18 @@ public class TracingFeignClientTests {
 		then(this.spans.get(0)).extracting("kind.ordinal")
 				.isEqualTo(Span.Kind.CLIENT.ordinal());
 		then(this.spans.get(0).tags()).containsEntry("error", "exception has occurred");
+	}
+
+	@Test
+	public void keep_requestTemplate() throws IOException {
+		BDDMockito.given(this.client.execute(BDDMockito.any(), BDDMockito.any())).willAnswer(new Answer() {
+			public Object answer(InvocationOnMock invocation) {
+				Object[] args = invocation.getArguments();
+				Assert.assertEquals(((Request) args[0]).requestTemplate(), requestTemplate);
+				return null;
+			}
+		});
+		this.traceFeignClient.execute(this.request, this.options);
 	}
 
 }
