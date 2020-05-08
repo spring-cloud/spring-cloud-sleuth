@@ -71,6 +71,12 @@
       "type": "java.lang.Boolean",
       "description": "Enable DefaultKafkaHeaderMapper tracing for Kafka.",
       "defaultValue": true
+    },
+    {
+      "name": "spring.sleuth.rpc.enabled",
+      "type": "java.lang.Boolean",
+      "description": "Enable tracing of RPC.",
+      "defaultValue": true
     }
   ]
 }
