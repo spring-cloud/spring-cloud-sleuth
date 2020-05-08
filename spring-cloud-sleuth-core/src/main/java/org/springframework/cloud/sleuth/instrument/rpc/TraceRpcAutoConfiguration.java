@@ -28,6 +28,7 @@ import brave.sampler.SamplerFunction;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.cloud.sleuth.autoconfig.TraceAutoConfiguration;
@@ -45,6 +46,7 @@ import org.springframework.lang.Nullable;
 @ConditionalOnProperty(name = "spring.sleuth.rpc.enabled", havingValue = "true",
 		matchIfMissing = true)
 @ConditionalOnBean(Tracing.class)
+@ConditionalOnClass(RpcTracing.class)
 @AutoConfigureAfter(TraceAutoConfiguration.class)
 public class TraceRpcAutoConfiguration {
 
