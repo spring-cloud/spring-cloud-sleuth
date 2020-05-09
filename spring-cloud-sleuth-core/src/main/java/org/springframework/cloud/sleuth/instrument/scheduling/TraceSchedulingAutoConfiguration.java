@@ -40,7 +40,6 @@ import org.springframework.context.annotation.EnableAspectJAutoProxy;
  * @see TraceSchedulingAspect
  */
 @Configuration(proxyBeanMethods = false)
-@EnableAspectJAutoProxy
 @ConditionalOnClass(name = "org.aspectj.lang.ProceedingJoinPoint")
 @ConditionalOnProperty(value = "spring.sleuth.scheduled.enabled", matchIfMissing = true)
 @ConditionalOnBean(Tracing.class)
