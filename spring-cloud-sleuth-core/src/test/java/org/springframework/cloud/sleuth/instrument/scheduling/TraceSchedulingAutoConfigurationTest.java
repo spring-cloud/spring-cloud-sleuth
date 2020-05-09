@@ -38,8 +38,7 @@ class TraceSchedulingAutoConfigurationTest {
 	void shoud_create_TraceSchedulingAspect() {
 		this.contextRunner
 				.run(context -> assertThat(context)
-						.hasSingleBean(TraceSchedulingAspect.class)
-						.hasSingleBean(AnnotationAwareAspectJAutoProxyCreator.class));
+						.hasSingleBean(TraceSchedulingAspect.class));
 	}
 
 	@Test
