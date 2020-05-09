@@ -33,6 +33,7 @@
 |spring.sleuth.reactor.enabled | true | When true enables instrumentation for reactor.
 |spring.sleuth.redis.enabled | true | Enable span information propagation when using Redis.
 |spring.sleuth.redis.remote-service-name | redis | Service name for the remote Redis endpoint.
+|spring.sleuth.rpc.enabled | true | Enable tracing of RPC.
 |spring.sleuth.rxjava.schedulers.hook.enabled | true | Enable support for RxJava via RxJavaSchedulersHook.
 |spring.sleuth.rxjava.schedulers.ignoredthreads | [HystrixMetricPoller, ^RxComputation.*$] | Thread names for which spans will not be sampled.
 |spring.sleuth.sampler.probability |  | Probability of requests that should be sampled. E.g. 1.0 - 100% requests should be sampled. The precision is whole-numbers only (i.e. there's no support for 0.1% of the traces).
