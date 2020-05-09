@@ -46,8 +46,7 @@ class TraceSchedulingAutoConfigurationTest {
 		this.contextRunner
 				.withClassLoader(new FilteredClassLoader(ProceedingJoinPoint.class))
 				.run(context -> assertThat(context)
-						.doesNotHaveBean(TraceSchedulingAspect.class)
-						.doesNotHaveBean(AnnotationAwareAspectJAutoProxyCreator.class));
+						.hasSingleBean(TraceSchedulingAspect.class));
 	}
 
 }
