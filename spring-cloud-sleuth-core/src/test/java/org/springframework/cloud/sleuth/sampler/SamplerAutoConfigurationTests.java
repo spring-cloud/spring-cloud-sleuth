@@ -18,8 +18,8 @@ package org.springframework.cloud.sleuth.sampler;
 
 import brave.Tracing;
 import brave.TracingCustomizer;
-import brave.handler.FinishedSpanHandler;
 import brave.handler.MutableSpan;
+import brave.handler.SpanHandler;
 import brave.propagation.TraceContext;
 import brave.sampler.RateLimitingSampler;
 import brave.sampler.Sampler;
@@ -52,12 +52,11 @@ public class SamplerAutoConfigurationTests {
 	}
 
 	@Test
-	public void should_use_RateLimitedSampler_withFinishedSpanHandler() {
-		this.contextRunner.withUserConfiguration(WithFinishedSpanHandler.class)
-				.run((context -> {
-					final Sampler bean = context.getBean(Sampler.class);
-					BDDAssertions.then(bean).isInstanceOf(RateLimitingSampler.class);
-				}));
+	public void should_use_RateLimitedSampler_withSpanHandler() {
+		this.contextRunner.withUserConfiguration(WithSpanHandler.class).run((context -> {
+			final Sampler bean = context.getBean(Sampler.class);
+			BDDAssertions.then(bean).isInstanceOf(RateLimitingSampler.class);
+		}));
 	}
 
 	@Test
@@ -138,13 +137,13 @@ public class SamplerAutoConfigurationTests {
 	}
 
 	@Configuration
-	static class WithFinishedSpanHandler {
+	static class WithSpanHandler {
 
 		@Bean
-		FinishedSpanHandler finishedSpanHandler() {
-			return new FinishedSpanHandler() {
+		SpanHandler spanHandler() {
+			return new SpanHandler() {
 				@Override
-				public boolean handle(TraceContext context, MutableSpan span) {
+				public boolean end(TraceContext context, MutableSpan span, Cause cause) {
 					return true;
 				}
 			};

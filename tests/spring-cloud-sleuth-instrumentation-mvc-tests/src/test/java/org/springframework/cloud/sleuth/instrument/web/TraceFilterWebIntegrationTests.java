@@ -23,8 +23,8 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import brave.Span.Kind;
-import brave.handler.FinishedSpanHandler;
 import brave.handler.MutableSpan;
+import brave.handler.SpanHandler;
 import brave.http.HttpRequest;
 import brave.http.HttpRequestParser;
 import brave.propagation.CurrentTraceContext;
@@ -174,11 +174,10 @@ public class TraceFilterWebIntegrationTests {
 		}
 
 		@Bean
-		FinishedSpanHandler uncaughtExceptionThrown(
-				CurrentTraceContext currentTraceContext) {
-			return new FinishedSpanHandler() {
+		SpanHandler uncaughtExceptionThrown(CurrentTraceContext currentTraceContext) {
+			return new SpanHandler() {
 				@Override
-				public boolean handle(TraceContext context, MutableSpan span) {
+				public boolean end(TraceContext context, MutableSpan span, Cause cause) {
 					if (span.kind() != Kind.SERVER || span.error() == null
 							|| !log.isErrorEnabled()) {
 						return true; // don't add overhead as we only log server errors

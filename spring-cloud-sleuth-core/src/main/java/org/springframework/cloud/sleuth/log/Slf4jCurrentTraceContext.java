@@ -16,8 +16,8 @@
 
 package org.springframework.cloud.sleuth.log;
 
-import brave.internal.HexCodec;
 import brave.internal.Nullable;
+import brave.internal.codec.HexCodec;
 import brave.propagation.CurrentTraceContext;
 import brave.propagation.TraceContext;
 import org.slf4j.Logger;

@@ -5,7 +5,7 @@
 <suppressions>
 	<suppress files=".*/test/.*" checks="JavadocVariable"/>
 	<suppress files=".*ReactorSleuth\.java" checks="InnerAssignment"/>
-	<suppress files=".*FinishedSpanHandlerTests.*" checks="LineLengthCheck"/>
+	<suppress files=".*SpanHandlerTests.*" checks="LineLengthCheck"/>
 	<suppress files=".*GrpcTracingIntegrationTests.*" checks="LineLengthCheck"/>
 	<suppress files=".*IgnoreAutoConfiguredSkipPatternsIntegrationTests.*" checks="LineLengthCheck"/>
 	<suppress files=".*RestTemplateTraceAspectIntegrationTests.*" checks="LineLengthCheck"/>
@@ -16,7 +16,7 @@
 	<suppress files=".*SleuthNewSpanParserAnnotationDisableTests.*" checks="LineLengthCheck"/>
 	<suppress files=".*SpanAdjusterTests.*" checks="LineLengthCheck"/>
 	<suppress files=".*SpringDataInstrumentationTests.*" checks="LineLengthCheck"/>
-	<suppress files=".*TagPropagationFinishedSpanHandlerTest.*" checks="LineLengthCheck"/>
+	<suppress files=".*TagPropagationSpanHandlerTest.*" checks="LineLengthCheck"/>
 	<suppress files=".*TraceAsyncIntegrationTests.*" checks="LineLengthCheck"/>
 	<suppress files=".*TraceAutoConfigurationWithDisabledSleuthTests.*" checks="LineLengthCheck"/>
 	<suppress files=".*TraceFilterIntegrationTests.*" checks="LineLengthCheck"/>

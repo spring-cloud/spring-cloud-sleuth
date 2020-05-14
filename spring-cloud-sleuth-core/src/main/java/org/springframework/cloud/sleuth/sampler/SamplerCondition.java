@@ -17,7 +17,7 @@
 package org.springframework.cloud.sleuth.sampler;
 
 import brave.TracingCustomizer;
-import brave.handler.FinishedSpanHandler;
+import brave.handler.SpanHandler;
 import brave.sampler.Sampler;
 
 import org.springframework.boot.autoconfigure.condition.AnyNestedCondition;
@@ -48,7 +48,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
  * <ul>
  * <li>{@code zipkin2.reporter.Reporter} - what's used by Zipkin or others like
  * Stackdriver</li>
- * <li>{@link FinishedSpanHandler} - only accepts sampled data</li>
+ * <li>{@link SpanHandler} - only accepts sampled data</li>
  * <li>{@link TracingCustomizer} - can configure one of the above</li>
  * </ul>
  *
@@ -69,8 +69,8 @@ final class SamplerCondition extends AnyNestedCondition {
 
 	}
 
-	@ConditionalOnBean(FinishedSpanHandler.class)
-	static final class FinishedSpanHandlerAvailable {
+	@ConditionalOnBean(SpanHandler.class)
+	static final class SpanHandlerAvailable {
 
 	}
 

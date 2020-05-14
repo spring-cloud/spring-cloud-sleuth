@@ -18,8 +18,8 @@ package org.springframework.cloud.sleuth;
 
 import brave.Span;
 import brave.Tracer;
-import brave.handler.FinishedSpanHandler;
 import brave.handler.MutableSpan;
+import brave.handler.SpanHandler;
 import brave.propagation.TraceContext;
 import brave.sampler.Sampler;
 import org.assertj.core.api.BDDAssertions;
@@ -42,10 +42,9 @@ import static org.springframework.boot.test.context.SpringBootTest.WebEnvironmen
  * @author Marcin Grzejszczak
  */
 @RunWith(SpringRunner.class)
-@SpringBootTest(
-		classes = FinishedSpanHandlerTests.FinishedSpanHandlerAspectTestsConfig.class,
+@SpringBootTest(classes = SpanHandlerTests.SpanHandlerAspectTestsConfig.class,
 		webEnvironment = NONE)
-public class FinishedSpanHandlerTests {
+public class SpanHandlerTests {
 
 	@Autowired
 	ArrayListSpanReporter reporter;
@@ -65,7 +64,7 @@ public class FinishedSpanHandlerTests {
 
 	@Configuration
 	@EnableAutoConfiguration(exclude = IntegrationAutoConfiguration.class)
-	static class FinishedSpanHandlerAspectTestsConfig {
+	static class SpanHandlerAspectTestsConfig {
 
 		@Bean
 		Sampler sampler() {
@@ -77,12 +76,13 @@ public class FinishedSpanHandlerTests {
 			return new ArrayListSpanReporter();
 		}
 
-		// tag::finishedSpanHandler[]
+		// tag::spanHandler[]
 		@Bean
-		FinishedSpanHandler handlerOne() {
-			return new FinishedSpanHandler() {
+		SpanHandler handlerOne() {
+			return new SpanHandler() {
 				@Override
-				public boolean handle(TraceContext traceContext, MutableSpan span) {
+				public boolean end(TraceContext traceContext, MutableSpan span,
+						Cause cause) {
 					span.name("foo");
 					return true; // keep this span
 				}
@@ -90,16 +90,17 @@ public class FinishedSpanHandlerTests {
 		}
 
 		@Bean
-		FinishedSpanHandler handlerTwo() {
-			return new FinishedSpanHandler() {
+		SpanHandler handlerTwo() {
+			return new SpanHandler() {
 				@Override
-				public boolean handle(TraceContext traceContext, MutableSpan span) {
+				public boolean end(TraceContext traceContext, MutableSpan span,
+						Cause cause) {
 					span.name(span.name() + " bar");
 					return true; // keep this span
 				}
 			};
 		}
-		// end::finishedSpanHandler[]
+		// end::spanHandler[]
 
 	}
 
