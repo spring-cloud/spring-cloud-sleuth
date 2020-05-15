@@ -61,7 +61,8 @@ import static org.assertj.core.api.BDDAssertions.then;
 @ExtendWith({ SpringExtension.class, OutputCaptureExtension.class })
 @SpringBootTest(classes = TraceFilterWebIntegrationTests.Config.class,
 		webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
-		properties = "spring.sleuth.http.legacy.enabled=true")
+		properties = { "spring.sleuth.http.legacy.enabled=true",
+				"spring.sleuth.web.exception-logging-filter-enabled=true" })
 public class TraceFilterWebIntegrationTests {
 
 	@Autowired
@@ -92,7 +93,8 @@ public class TraceFilterWebIntegrationTests {
 	}
 
 	@Test
-	public void should_not_create_a_span_for_error_controller(CapturedOutput capture) {
+	public void exception_logging_filter_logs_synchronous_exceptions(
+			CapturedOutput capture) {
 		try {
 			new RestTemplate().getForObject("http://localhost:" + port() + "/",
 					String.class);
@@ -107,7 +109,7 @@ public class TraceFilterWebIntegrationTests {
 				.containsEntry("mvc.controller.class", "ExceptionThrowingController")
 				.containsEntry("error",
 						"Request processing failed; nested exception is java.lang.RuntimeException: Throwing exception");
-		// issue#714
+		// Trace IDs in logs: issue#714
 		String hex = fromFirstTraceFilterFlow.traceId();
 		String[] split = capture.toString().split("\n");
 		List<String> list = Arrays.stream(split)

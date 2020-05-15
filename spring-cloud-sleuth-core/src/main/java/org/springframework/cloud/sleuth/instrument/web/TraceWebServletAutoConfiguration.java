@@ -83,10 +83,8 @@ public class TraceWebServletAutoConfiguration {
 		return filterRegistrationBean;
 	}
 
-	// TODO: Rename to exception-logging-filter for 3.0
 	@Bean
-	@ConditionalOnProperty(value = "spring.sleuth.web.exception-logging-filter-enabled",
-			matchIfMissing = true)
+	@ConditionalOnProperty("spring.sleuth.web.exception-logging-filter-enabled")
 	public FilterRegistrationBean exceptionThrowingFilter(
 			SleuthWebProperties webProperties) {
 		FilterRegistrationBean filterRegistrationBean = new FilterRegistrationBean(
