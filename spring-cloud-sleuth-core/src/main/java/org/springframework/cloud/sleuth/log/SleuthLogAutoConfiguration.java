@@ -19,12 +19,10 @@ package org.springframework.cloud.sleuth.log;
 import brave.propagation.CurrentTraceContext;
 import org.slf4j.MDC;
 
-import org.springframework.boot.autoconfigure.AutoConfigureBefore;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.cloud.sleuth.autoconfig.SleuthProperties;
-import org.springframework.cloud.sleuth.autoconfig.TraceAutoConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -36,12 +34,14 @@ import org.springframework.context.annotation.Configuration;
  * @author Spencer Gibb
  * @author Marcin Grzejszczak
  * @since 2.0.0
+ * @deprecated Do not use this type directly as it was removed in 3.x
  */
 @Configuration(proxyBeanMethods = false)
 @ConditionalOnProperty(value = "spring.sleuth.enabled", matchIfMissing = true)
 // This is not auto-configuration, but it was in the past. Leaving the name as
 // SleuthLogAutoConfiguration because some may have imported this directly.
 // A less precise name is better than rev-locking code.
+@Deprecated
 public class SleuthLogAutoConfiguration {
 
 	/**
@@ -50,8 +50,7 @@ public class SleuthLogAutoConfiguration {
 	@Configuration(proxyBeanMethods = false)
 	@ConditionalOnClass(MDC.class)
 	@EnableConfigurationProperties(SleuthSlf4jProperties.class)
-	@AutoConfigureBefore(TraceAutoConfiguration.class)
-	protected static class Slf4jConfiguration {
+	public static class Slf4jConfiguration {
 
 		@Bean
 		@ConditionalOnProperty(value = "spring.sleuth.log.slf4j.enabled",
