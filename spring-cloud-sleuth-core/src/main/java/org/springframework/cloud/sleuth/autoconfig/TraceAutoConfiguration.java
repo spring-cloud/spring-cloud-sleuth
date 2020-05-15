@@ -54,6 +54,7 @@ import org.springframework.cloud.sleuth.DefaultSpanNamer;
 import org.springframework.cloud.sleuth.LocalServiceName;
 import org.springframework.cloud.sleuth.SpanAdjuster;
 import org.springframework.cloud.sleuth.SpanNamer;
+import org.springframework.cloud.sleuth.log.SleuthLogAutoConfiguration;
 import org.springframework.cloud.sleuth.sampler.SamplerAutoConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -73,7 +74,7 @@ import org.springframework.util.StringUtils;
 @Configuration(proxyBeanMethods = false)
 @ConditionalOnProperty(value = "spring.sleuth.enabled", matchIfMissing = true)
 @EnableConfigurationProperties(SleuthProperties.class)
-@Import(SamplerAutoConfiguration.class)
+@Import({ SleuthLogAutoConfiguration.class, SamplerAutoConfiguration.class })
 public class TraceAutoConfiguration {
 
 	/**
@@ -93,16 +94,10 @@ public class TraceAutoConfiguration {
 	List<FinishedSpanHandler> finishedSpanHandlers = new ArrayList<>();
 
 	@Autowired(required = false)
-	List<CurrentTraceContext.ScopeDecorator> scopeDecorators = new ArrayList<>();
-
-	@Autowired(required = false)
 	ExtraFieldPropagation.FactoryBuilder extraFieldPropagationFactoryBuilder;
 
 	@Autowired(required = false)
 	List<TracingCustomizer> tracingCustomizers = new ArrayList<>();
-
-	@Autowired(required = false)
-	List<CurrentTraceContextCustomizer> currentTraceContextCustomizers = new ArrayList<>();
 
 	@Autowired(required = false)
 	List<ExtraFieldCustomizer> extraFieldCustomizers = new ArrayList<>();
@@ -186,11 +181,20 @@ public class TraceAutoConfiguration {
 	}
 
 	@Bean
-	CurrentTraceContext sleuthCurrentTraceContext(CurrentTraceContext.Builder builder) {
-		for (CurrentTraceContext.ScopeDecorator scopeDecorator : this.scopeDecorators) {
+	CurrentTraceContext sleuthCurrentTraceContext(CurrentTraceContext.Builder builder,
+			@Nullable List<CurrentTraceContext.ScopeDecorator> scopeDecorators,
+			@Nullable List<CurrentTraceContextCustomizer> currentTraceContextCustomizers) {
+		if (scopeDecorators == null) {
+			scopeDecorators = Collections.emptyList();
+		}
+		if (currentTraceContextCustomizers == null) {
+			currentTraceContextCustomizers = Collections.emptyList();
+		}
+
+		for (CurrentTraceContext.ScopeDecorator scopeDecorator : scopeDecorators) {
 			builder.addScopeDecorator(scopeDecorator);
 		}
-		for (CurrentTraceContextCustomizer customizer : this.currentTraceContextCustomizers) {
+		for (CurrentTraceContextCustomizer customizer : currentTraceContextCustomizers) {
 			customizer.customize(builder);
 		}
 		return builder.build();

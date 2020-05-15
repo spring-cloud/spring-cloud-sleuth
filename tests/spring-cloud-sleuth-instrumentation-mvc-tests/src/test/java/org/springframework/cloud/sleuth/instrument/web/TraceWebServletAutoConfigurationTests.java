@@ -37,9 +37,9 @@ public class TraceWebServletAutoConfigurationTests {
 					TraceWebServletAutoConfiguration.class));
 
 	@Test
-	public void shouldCreateExceptionLoggingFilterBeanByDefault() {
+	public void shouldNotCreateExceptionLoggingFilterBeanByDefault() {
 		this.contextRunner.run((context) -> {
-			assertThat(context).hasBean(EXCEPTION_LOGGING_FILTER_BEAN_NAME);
+			assertThat(context).doesNotHaveBean(EXCEPTION_LOGGING_FILTER_BEAN_NAME);
 		});
 	}
 

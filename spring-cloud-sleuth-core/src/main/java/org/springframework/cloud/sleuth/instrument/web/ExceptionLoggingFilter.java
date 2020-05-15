@@ -29,11 +29,9 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 /**
- * Filter running after {@link brave.servlet.TracingFilter} that logs uncaught exceptions.
- *
- * @author Marcin Grzejszczak
- * @since 2.0.0
+ * @deprecated Since 2.2.3 this is disabled by default and will be removed in 3.0
  */
+@Deprecated
 class ExceptionLoggingFilter implements Filter {
 
 	private static final Log log = LogFactory.getLog(ExceptionLoggingFilter.class);
