@@ -22,15 +22,22 @@ import java.util.List;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+import brave.Span.Kind;
+import brave.handler.FinishedSpanHandler;
+import brave.handler.MutableSpan;
 import brave.http.HttpRequest;
 import brave.http.HttpRequestParser;
 import brave.propagation.CurrentTraceContext;
+import brave.propagation.CurrentTraceContext.Scope;
+import brave.propagation.TraceContext;
 import brave.sampler.Sampler;
 import brave.sampler.SamplerFunction;
 import org.assertj.core.api.BDDAssertions;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import zipkin2.Span;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -61,9 +68,11 @@ import static org.assertj.core.api.BDDAssertions.then;
 @ExtendWith({ SpringExtension.class, OutputCaptureExtension.class })
 @SpringBootTest(classes = TraceFilterWebIntegrationTests.Config.class,
 		webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
-		properties = { "spring.sleuth.http.legacy.enabled=true",
-				"spring.sleuth.web.exception-logging-filter-enabled=true" })
+		properties = "spring.sleuth.http.legacy.enabled=true")
 public class TraceFilterWebIntegrationTests {
+
+	private static final Logger log = LoggerFactory
+			.getLogger(TraceFilterWebIntegrationTests.class);
 
 	@Autowired
 	CurrentTraceContext currentTraceContext;
@@ -93,7 +102,7 @@ public class TraceFilterWebIntegrationTests {
 	}
 
 	@Test
-	public void exception_logging_filter_logs_synchronous_exceptions(
+	public void exception_logging_span_handler_logs_synchronous_exceptions(
 			CapturedOutput capture) {
 		try {
 			new RestTemplate().getForObject("http://localhost:" + port() + "/",
@@ -162,6 +171,32 @@ public class TraceFilterWebIntegrationTests {
 		@Bean
 		BlockingQueueSpanReporter reporter() {
 			return new BlockingQueueSpanReporter();
+		}
+
+		@Bean
+		FinishedSpanHandler uncaughtExceptionThrown(
+				CurrentTraceContext currentTraceContext) {
+			return new FinishedSpanHandler() {
+				@Override
+				public boolean handle(TraceContext context, MutableSpan span) {
+					if (span.kind() != Kind.SERVER || span.error() == null
+							|| !log.isErrorEnabled()) {
+						return true; // don't add overhead as we only log server errors
+					}
+
+					// In TracingFilter, the exception is raised in scope. This is is more
+					// explicit to ensure it works in other tech such as WebFlux.
+					try (Scope scope = currentTraceContext.maybeScope(context)) {
+						log.error("Uncaught exception thrown", span.error());
+					}
+					return true;
+				}
+
+				@Override
+				public String toString() {
+					return "UncaughtExceptionThrown";
+				}
+			};
 		}
 
 		@Bean

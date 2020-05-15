@@ -29,9 +29,8 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 /**
- * {@link org.springframework.boot.autoconfigure.EnableAutoConfiguration
- * Auto-configuration} adds a {@link Slf4jScopeDecorator} that prints tracing information
- * in the logs.
+ * {@link Configuration} that adds a {@link Slf4jScopeDecorator} that prints tracing
+ * information in the logs.
  * <p>
  *
  * @author Spencer Gibb
@@ -40,7 +39,9 @@ import org.springframework.context.annotation.Configuration;
  */
 @Configuration(proxyBeanMethods = false)
 @ConditionalOnProperty(value = "spring.sleuth.enabled", matchIfMissing = true)
-@AutoConfigureBefore(TraceAutoConfiguration.class)
+// This is not auto-configuration, but it was in the past. Leaving the name as
+// SleuthLogAutoConfiguration because some may have imported this directly.
+// A less precise name is better than rev-locking code.
 public class SleuthLogAutoConfiguration {
 
 	/**
@@ -49,6 +50,7 @@ public class SleuthLogAutoConfiguration {
 	@Configuration(proxyBeanMethods = false)
 	@ConditionalOnClass(MDC.class)
 	@EnableConfigurationProperties(SleuthSlf4jProperties.class)
+	@AutoConfigureBefore(TraceAutoConfiguration.class)
 	protected static class Slf4jConfiguration {
 
 		@Bean
