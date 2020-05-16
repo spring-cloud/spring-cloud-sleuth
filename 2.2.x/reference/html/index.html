@@ -2735,23 +2735,24 @@ To achieve that, you can pass the following property to your application to over
 <h3 id="customization-of-reported-spans"><a class="anchor" href="#customization-of-reported-spans"></a><a class="link" href="#customization-of-reported-spans">12.7. Customization of Reported Spans</a></h3>
 <div class="paragraph">
 <p>Before reporting spans (for example, to Zipkin) you may want to modify that span in some way.
-You can do so by using the <code>FinishedSpanHandler</code> interface.</p>
+You can do so by implementing a <code>SpanHandler</code>.</p>
 </div>
 <div class="paragraph">
 <p>In Sleuth, we generate spans with a fixed name.
 Some users want to modify the name depending on values of tags.
-You can implement the <code>FinishedSpanHandler</code> interface to alter that name.</p>
+You can implement the <code>SpanHandler</code> interface to alter that name.</p>
 </div>
 <div class="paragraph">
-<p>The following example shows how to register two beans that implement <code>FinishedSpanHandler</code>:</p>
+<p>The following example shows how to register two beans that implement <code>SpanHandler</code>:</p>
 </div>
 <div class="listingblock">
 <div class="content">
 <pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">@Bean
-FinishedSpanHandler handlerOne() {
-    return new FinishedSpanHandler() {
+SpanHandler handlerOne() {
+    return new SpanHandler() {
         @Override
-        public boolean handle(TraceContext traceContext, MutableSpan span) {
+        public boolean end(TraceContext traceContext, MutableSpan span,
+                Cause cause) {
             span.name("foo");
             return true; // keep this span
         }
@@ -2759,10 +2760,11 @@ FinishedSpanHandler handlerOne() {
 }
 
 @Bean
-FinishedSpanHandler handlerTwo() {
-    return new FinishedSpanHandler() {
+SpanHandler handlerTwo() {
+    return new SpanHandler() {
         @Override
-        public boolean handle(TraceContext traceContext, MutableSpan span) {
+        public boolean end(TraceContext traceContext, MutableSpan span,
+                Cause cause) {
             span.name(span.name() + " bar");
             return true; // keep this span
         }
