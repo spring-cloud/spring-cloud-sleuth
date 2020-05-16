@@ -23,10 +23,8 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  *
  * @author Marcin Grzejszczak
  * @since 2.2.1
- * @deprecated This type should have never been public and will be hidden or removed in
- * 3.0
  */
-@Deprecated
+// TODO: Hide in 3.x, if it isn't already deleted
 @ConfigurationProperties("spring.sleuth.circuitbreaker")
 public class SleuthCircuitBreakerProperties {
 

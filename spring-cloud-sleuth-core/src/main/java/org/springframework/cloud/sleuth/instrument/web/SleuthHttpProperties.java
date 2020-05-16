@@ -25,6 +25,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * @since 2.0.0
  */
 @ConfigurationProperties("spring.sleuth.http")
+// TODO: Hide in 3.x, if it isn't already deleted
 public class SleuthHttpProperties {
 
 	private boolean enabled = true;
