@@ -42,7 +42,7 @@ import org.springframework.boot.autoconfigure.security.oauth2.resource.UserInfoR
 import org.springframework.boot.web.client.RestTemplateCustomizer;
 import org.springframework.cloud.commons.httpclient.HttpClientConfiguration;
 import org.springframework.cloud.gateway.filter.headers.HttpHeadersFilter;
-import org.springframework.cloud.sleuth.instrument.web.TraceWebServletAutoConfiguration;
+import org.springframework.cloud.sleuth.instrument.web.TraceHttpAutoConfiguration;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -69,7 +69,7 @@ import org.springframework.web.reactive.function.client.WebClient;
 @Configuration(proxyBeanMethods = false)
 @SleuthWebClientEnabled
 @ConditionalOnBean(HttpTracing.class)
-@AutoConfigureAfter(TraceWebServletAutoConfiguration.class)
+@AutoConfigureAfter(TraceHttpAutoConfiguration.class)
 @AutoConfigureBefore(HttpClientConfiguration.class)
 public class TraceWebClientAutoConfiguration {
 

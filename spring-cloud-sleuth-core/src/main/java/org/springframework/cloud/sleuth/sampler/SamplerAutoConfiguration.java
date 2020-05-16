@@ -33,10 +33,7 @@ import org.springframework.context.annotation.Configuration;
  * @author Marcin Grzejszczak
  * @see SamplerCondition
  * @since 2.1.0
- * @deprecated This type should have never been public and will be hidden or removed in
- * 3.0
  */
-@Deprecated
 @Configuration(proxyBeanMethods = false)
 @EnableConfigurationProperties(SamplerProperties.class)
 // This is not auto-configuration, but it was in the past. Leaving the name as
