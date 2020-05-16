@@ -36,7 +36,10 @@ import org.springframework.util.ReflectionUtils;
  * @author Marcin Grzejszczak
  * @since 1.0.0
  * @see Tracer
+ * @deprecated This type should have never been public and will be hidden or removed in
+ * 3.0
  */
+@Deprecated
 @Aspect
 public class TraceAsyncAspect {
 

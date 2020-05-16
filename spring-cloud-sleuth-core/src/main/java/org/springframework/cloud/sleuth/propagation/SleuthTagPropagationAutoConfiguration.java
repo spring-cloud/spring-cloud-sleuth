@@ -29,7 +29,10 @@ import org.springframework.context.annotation.Configuration;
 /**
  * @author Taras Danylchuk
  * @since 2.1.0
+ * @deprecated This type should have never been public and will be hidden or removed in
+ * 3.0
  */
+@Deprecated
 @Configuration(proxyBeanMethods = false)
 @ConditionalOnProperty(value = "spring.sleuth.enabled", matchIfMissing = true)
 @AutoConfigureBefore(TraceAutoConfiguration.class)

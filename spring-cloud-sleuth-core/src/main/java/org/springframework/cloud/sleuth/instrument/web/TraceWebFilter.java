@@ -51,7 +51,10 @@ import org.springframework.web.server.WebFilterChain;
  *
  * @author Marcin Grzejszczak
  * @since 2.0.0
+ * @deprecated This type should have never been public and will be hidden or removed in
+ * 3.0
  */
+@Deprecated
 public final class TraceWebFilter implements WebFilter, Ordered {
 
 	/**

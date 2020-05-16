@@ -27,7 +27,10 @@ import brave.Tracer;
  *
  * @param <T> type returned by the supplier
  * @since 2.2.1
+ * @deprecated This type should have never been public and will be hidden or removed in
+ * 3.0
  */
+@Deprecated
 public class TraceSupplier<T> implements Supplier<T> {
 
 	private final Tracer tracer;

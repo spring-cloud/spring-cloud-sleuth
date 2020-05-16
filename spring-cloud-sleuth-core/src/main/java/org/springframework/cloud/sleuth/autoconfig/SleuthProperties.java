@@ -26,7 +26,10 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  *
  * @author Marcin Grzejszczak
  * @since 1.0.11
+ * @deprecated This type should have never been public and will be hidden or removed in
+ * 3.0
  */
+@Deprecated
 @ConfigurationProperties("spring.sleuth")
 public class SleuthProperties {
 

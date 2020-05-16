@@ -26,7 +26,10 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  *
  * @author Arthur Gavlyukovskiy
  * @since 1.0.12
+ * @deprecated This type should have never been public and will be hidden or removed in
+ * 3.0
  */
+@Deprecated
 @ConfigurationProperties("spring.sleuth.log.slf4j")
 public class SleuthSlf4jProperties {
 

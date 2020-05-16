@@ -47,7 +47,10 @@ import org.springframework.lang.Nullable;
  *
  * @author Marcin Grzejszczak
  * @since 2.0.0
+ * @deprecated This type should have never been public and will be hidden or removed in
+ * 3.0
  */
+@Deprecated
 @Configuration(proxyBeanMethods = false)
 @ConditionalOnBean(TraceWebAutoConfiguration.class)
 @ConditionalOnProperty(name = "spring.sleuth.http.enabled", havingValue = "true",

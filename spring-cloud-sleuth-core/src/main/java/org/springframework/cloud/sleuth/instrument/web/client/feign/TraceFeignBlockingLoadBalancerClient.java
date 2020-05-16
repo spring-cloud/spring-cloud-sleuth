@@ -41,7 +41,10 @@ import org.springframework.cloud.openfeign.loadbalancer.FeignBlockingLoadBalance
  * @since 2.2.0
  * @see TraceLoadBalancerFeignClient
  * @see FeignBlockingLoadBalancerClient
+ * @deprecated This type should have never been public and will be hidden or removed in
+ * 3.0
  */
+@Deprecated
 public class TraceFeignBlockingLoadBalancerClient
 		extends FeignBlockingLoadBalancerClient {
 

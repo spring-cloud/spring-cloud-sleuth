@@ -40,7 +40,10 @@ import org.springframework.cloud.openfeign.ribbon.LoadBalancerFeignClient;
  *
  * @author Marcin Grzejszczak
  * @since 1.0.7
+ * @deprecated This type should have never been public and will be hidden or removed in
+ * 3.0
  */
+@Deprecated
 public class TraceLoadBalancerFeignClient extends LoadBalancerFeignClient {
 
 	private static final Log log = LogFactory.getLog(TraceLoadBalancerFeignClient.class);

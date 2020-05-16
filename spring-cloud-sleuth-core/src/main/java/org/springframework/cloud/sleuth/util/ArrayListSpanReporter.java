@@ -27,7 +27,9 @@ import zipkin2.reporter.Reporter;
  *
  * @author Marcin Grzejszczak
  * @since 2.0.0
+ * @deprecated This type will be removed in 3.0. Use io.zipkin.brave:brave-tests instead
  */
+@Deprecated
 public class ArrayListSpanReporter implements Reporter<Span> {
 
 	private final List<Span> spans = new ArrayList<>();

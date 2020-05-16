@@ -16,6 +16,8 @@
 
 package org.springframework.cloud.sleuth.instrument.messaging;
 
+import brave.propagation.B3Propagation;
+
 /**
  * Contains trace related messaging headers. The deprecated headers contained `-` which
  * for example in the JMS specs is invalid. That's why the public constants in this class
@@ -23,7 +25,9 @@ package org.springframework.cloud.sleuth.instrument.messaging;
  *
  * @author Marcin Grzejszczak
  * @since 1.0.4
+ * @deprecated These names are obviated by {@link B3Propagation.Format#SINGLE}.
  */
+@Deprecated
 public final class TraceMessageHeaders {
 
 	/**

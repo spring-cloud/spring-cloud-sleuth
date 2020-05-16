@@ -37,7 +37,10 @@ import org.springframework.context.annotation.Configuration;
  * @author Marcin Grzejszczak
  * @see SleuthHystrixConcurrencyStrategy
  * @since 1.0.0
+ * @deprecated This type should have never been public and will be hidden or removed in
+ * 3.0
  */
+@Deprecated
 @Configuration(proxyBeanMethods = false)
 @AutoConfigureAfter(TraceAutoConfiguration.class)
 @ConditionalOnClass(HystrixCommand.class)
