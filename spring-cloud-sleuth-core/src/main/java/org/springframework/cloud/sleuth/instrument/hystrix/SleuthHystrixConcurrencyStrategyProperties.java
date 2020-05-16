@@ -22,10 +22,8 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * Sleuth Hystrix settings.
  *
  * @author Daniel Albuquerque
- * @deprecated This type should have never been public and will be hidden or removed in
- * 3.0
  */
-@Deprecated
+// TODO: Hide in 3.x, if it isn't already deleted
 @ConfigurationProperties("spring.sleuth.hystrix.strategy")
 public class SleuthHystrixConcurrencyStrategyProperties {
 

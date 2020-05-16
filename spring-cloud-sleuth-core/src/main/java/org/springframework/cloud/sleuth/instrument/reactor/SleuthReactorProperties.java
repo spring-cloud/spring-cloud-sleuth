@@ -23,11 +23,9 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  *
  * @author Marcin Grzejszczak
  * @since 2.0.2
- * @deprecated This type should have never been public and will be hidden or removed in
- * 3.0
  */
-@Deprecated
 @ConfigurationProperties("spring.sleuth.reactor")
+// TODO: Hide in 3.x, if it isn't already deleted
 public class SleuthReactorProperties {
 
 	/**
