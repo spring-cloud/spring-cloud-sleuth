@@ -25,6 +25,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * @since 1.2.0
  */
 @ConfigurationProperties("spring.sleuth.annotation")
+// TODO: Hide in 3.x, if it isn't already deleted
 public class SleuthAnnotationProperties {
 
 	private boolean enabled = true;

@@ -22,11 +22,9 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * Sleuth Redis properties.
  *
  * @author Daniel Albuquerque
- * @deprecated This type should have never been public and will be hidden or removed in
- * 3.0
  */
-@Deprecated
 @ConfigurationProperties("spring.sleuth.redis")
+// TODO: Hide in 3.x, if it isn't already deleted
 public class TraceRedisProperties {
 
 	/**

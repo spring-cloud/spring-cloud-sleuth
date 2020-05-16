@@ -25,6 +25,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * @since 1.3.1
  */
 @ConfigurationProperties("spring.zipkin.sender")
+// TODO: Hide in 3.x, if it isn't already deleted
 public class ZipkinSenderProperties {
 
 	/**
