@@ -106,10 +106,6 @@
 			<scope>compile</scope>
 		</dependency>
 		<dependency>
-			<groupId>io.zipkin.zipkin2</groupId>
-			<artifactId>zipkin</artifactId>
-		</dependency>
-		<dependency>
 			<groupId>io.projectreactor</groupId>
 			<artifactId>reactor-core</artifactId>
 		</dependency>

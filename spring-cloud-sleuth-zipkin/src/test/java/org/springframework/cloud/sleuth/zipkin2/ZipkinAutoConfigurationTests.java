@@ -20,8 +20,8 @@ import java.util.List;
 
 import brave.Span;
 import brave.Tracing;
-import brave.handler.FinishedSpanHandler;
 import brave.handler.MutableSpan;
+import brave.handler.SpanHandler;
 import brave.propagation.TraceContext;
 import brave.sampler.Sampler;
 import okhttp3.mockwebserver.MockWebServer;
@@ -299,10 +299,11 @@ public class ZipkinAutoConfigurationTests {
 	protected static class HandlerHanldersConfig {
 
 		@Bean
-		FinishedSpanHandler handlerOne() {
-			return new FinishedSpanHandler() {
+		SpanHandler handlerOne() {
+			return new SpanHandler() {
 				@Override
-				public boolean handle(TraceContext traceContext, MutableSpan span) {
+				public boolean end(TraceContext traceContext, MutableSpan span,
+						Cause cause) {
 					span.name("foo");
 					return true; // keep this span
 				}
@@ -310,10 +311,11 @@ public class ZipkinAutoConfigurationTests {
 		}
 
 		@Bean
-		FinishedSpanHandler handlerTwo() {
-			return new FinishedSpanHandler() {
+		SpanHandler handlerTwo() {
+			return new SpanHandler() {
 				@Override
-				public boolean handle(TraceContext traceContext, MutableSpan span) {
+				public boolean end(TraceContext traceContext, MutableSpan span,
+						Cause cause) {
 					span.name(span.name() + " bar");
 					return true; // keep this span
 				}

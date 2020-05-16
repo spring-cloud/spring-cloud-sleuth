@@ -16,7 +16,7 @@
 
 package org.springframework.cloud.sleuth.propagation;
 
-import brave.handler.FinishedSpanHandler;
+import brave.handler.SpanHandler;
 
 import org.springframework.boot.autoconfigure.AutoConfigureBefore;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -41,8 +41,7 @@ public class SleuthTagPropagationAutoConfiguration {
 	protected static class TagPropagationConfiguration {
 
 		@Bean
-		public FinishedSpanHandler sleuthFinishedSpanHandler(
-				SleuthProperties sleuthProperties,
+		static SpanHandler tagPropagationSpanHandler(SleuthProperties sleuthProperties,
 				SleuthTagPropagationProperties tagPropagationProperties) {
 			return new TagPropagationFinishedSpanHandler(sleuthProperties,
 					tagPropagationProperties);
