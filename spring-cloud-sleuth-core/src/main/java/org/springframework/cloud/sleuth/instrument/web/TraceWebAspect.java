@@ -51,7 +51,10 @@ import org.springframework.web.context.request.async.WebAsyncTask;
  * @since 1.0.0
  * @see org.springframework.stereotype.Controller
  * @see org.springframework.web.client.RestOperations
+ * @deprecated This type should have never been public and will be hidden or removed in
+ * 3.0
  */
+@Deprecated
 @SuppressWarnings("ArgNamesWarningsInspection")
 @Aspect
 public class TraceWebAspect {

@@ -18,11 +18,12 @@ package org.springframework.cloud.sleuth.zipkin2;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.concurrent.TimeoutException;
 
 import brave.Span;
 import brave.Tracing;
-import brave.handler.FinishedSpanHandler;
 import brave.handler.MutableSpan;
+import brave.handler.SpanHandler;
 import brave.propagation.TraceContext;
 import brave.sampler.Sampler;
 import okhttp3.mockwebserver.MockWebServer;
@@ -32,6 +33,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import zipkin2.Call;
+import zipkin2.CheckResult;
 import zipkin2.codec.Encoding;
 import zipkin2.reporter.AsyncReporter;
 import zipkin2.reporter.Reporter;
@@ -51,7 +53,10 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.mock.env.MockEnvironment;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.BDDAssertions.then;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 /**
  * Not using {@linkplain SpringBootTest} as we need to change properties per test.
@@ -293,6 +298,77 @@ public class ZipkinAutoConfigurationTests {
 		Awaitility.await().untilAsserted(() -> then(sender.isSpanSent()).isTrue());
 	}
 
+	@Test
+	public void checkResult_onTime() {
+		Sender sender = mock(Sender.class);
+		when(sender.check()).thenReturn(CheckResult.OK);
+
+		assertThat(ZipkinAutoConfiguration.checkResult(sender, 200).ok()).isTrue();
+	}
+
+	@Test
+	public void checkResult_onTime_notOk() {
+		Sender sender = mock(Sender.class);
+		RuntimeException exception = new RuntimeException("dead");
+		when(sender.check()).thenReturn(CheckResult.failed(exception));
+
+		assertThat(ZipkinAutoConfiguration.checkResult(sender, 200).error())
+				.isSameAs(exception);
+	}
+
+	/** Bug in {@link Sender} as it shouldn't throw */
+	@Test
+	public void checkResult_thrown() {
+		Sender sender = mock(Sender.class);
+		RuntimeException exception = new RuntimeException("dead");
+		when(sender.check()).thenThrow(exception);
+
+		assertThat(ZipkinAutoConfiguration.checkResult(sender, 200).error())
+				.isSameAs(exception);
+	}
+
+	@Test
+	public void checkResult_slow() {
+		assertThat(ZipkinAutoConfiguration.checkResult(new Sender() {
+			@Override
+			public CheckResult check() {
+				try {
+					Thread.sleep(500L);
+				}
+				catch (InterruptedException e) {
+					throw new AssertionError(e);
+				}
+				return CheckResult.OK;
+			}
+
+			@Override
+			public Encoding encoding() {
+				return Encoding.JSON;
+			}
+
+			@Override
+			public int messageMaxBytes() {
+				return 0;
+			}
+
+			@Override
+			public int messageSizeInBytes(List<byte[]> list) {
+				return 0;
+			}
+
+			@Override
+			public Call<Void> sendSpans(List<byte[]> list) {
+				return Call.create(null);
+			}
+
+			@Override
+			public String toString() {
+				return "FakeSender{}";
+			}
+		}, 200).error()).isInstanceOf(TimeoutException.class)
+				.hasMessage("FakeSender{} check() timed out after 200ms");
+	}
+
 	@Configuration
 	protected static class Config {
 
@@ -307,10 +383,11 @@ public class ZipkinAutoConfigurationTests {
 	protected static class HandlerHanldersConfig {
 
 		@Bean
-		FinishedSpanHandler handlerOne() {
-			return new FinishedSpanHandler() {
+		SpanHandler handlerOne() {
+			return new SpanHandler() {
 				@Override
-				public boolean handle(TraceContext traceContext, MutableSpan span) {
+				public boolean end(TraceContext traceContext, MutableSpan span,
+						Cause cause) {
 					span.name("foo");
 					return true; // keep this span
 				}
@@ -318,10 +395,11 @@ public class ZipkinAutoConfigurationTests {
 		}
 
 		@Bean
-		FinishedSpanHandler handlerTwo() {
-			return new FinishedSpanHandler() {
+		SpanHandler handlerTwo() {
+			return new SpanHandler() {
 				@Override
-				public boolean handle(TraceContext traceContext, MutableSpan span) {
+				public boolean end(TraceContext traceContext, MutableSpan span,
+						Cause cause) {
 					span.name(span.name() + " bar");
 					return true; // keep this span
 				}

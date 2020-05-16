@@ -24,7 +24,9 @@ import feign.Retryer;
  * Feign. For the 1.0.x stream we add it here.
  *
  * @author Ryan Baxter
+ * @deprecated This type will be removed in 3.0
  */
+@Deprecated
 public class NeverRetry implements Retryer {
 
 	/**

@@ -41,7 +41,10 @@ import org.springframework.lang.Nullable;
  * @author Spencer Gibb
  * @since 1.0.0
  * @see Tracing
+ * @deprecated This type should have never been public and will be hidden or removed in
+ * 3.0
  */
+@Deprecated
 @Aspect
 public class TraceSchedulingAspect {
 

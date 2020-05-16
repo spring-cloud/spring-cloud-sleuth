@@ -41,7 +41,10 @@ import org.springframework.context.annotation.Scope;
  *
  * @author Marcin Grzejszczak
  * @since 1.0.0
+ * @deprecated This type should have never been public and will be hidden or removed in
+ * 3.0
  */
+@Deprecated
 @Configuration(proxyBeanMethods = false)
 @ConditionalOnProperty(value = "spring.sleuth.feign.enabled", matchIfMissing = true)
 @ConditionalOnClass({ Client.class, FeignContext.class })

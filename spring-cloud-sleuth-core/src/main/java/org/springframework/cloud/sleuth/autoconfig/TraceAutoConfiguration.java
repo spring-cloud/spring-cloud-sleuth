@@ -25,9 +25,8 @@ import brave.ErrorParser;
 import brave.Tracer;
 import brave.Tracing;
 import brave.TracingCustomizer;
-import brave.handler.FinishedSpanHandler;
+import brave.handler.SpanHandler;
 import brave.propagation.CurrentTraceContext;
-import brave.propagation.CurrentTraceContext.ScopeDecorator;
 import brave.propagation.CurrentTraceContextCustomizer;
 import brave.propagation.Propagation;
 import brave.propagation.ThreadLocalCurrentTraceContext;
@@ -67,7 +66,10 @@ import org.springframework.util.StringUtils;
  * @author Marcin Grzejszczak
  * @author Tim Ysewyn
  * @since 2.0.0
+ * @deprecated This type should have never been public and will be hidden or removed in
+ * 3.0
  */
+@Deprecated
 @Configuration(proxyBeanMethods = false)
 @ConditionalOnProperty(value = "spring.sleuth.enabled", matchIfMissing = true)
 @EnableConfigurationProperties(SleuthProperties.class)
@@ -85,10 +87,7 @@ public class TraceAutoConfiguration {
 	public static final String DEFAULT_SERVICE_NAME = "default";
 
 	@Autowired(required = false)
-	List<FinishedSpanHandler> finishedSpanHandlers = new ArrayList<>();
-
-	@Autowired(required = false)
-	List<CurrentTraceContext.ScopeDecorator> scopeDecorators = new ArrayList<>();
+	List<SpanHandler> spanHandlers = new ArrayList<>();
 
 	@Autowired(required = false)
 	List<TracingCustomizer> tracingCustomizers = new ArrayList<>();
@@ -109,8 +108,8 @@ public class TraceAutoConfiguration {
 						spanReporters != null ? spanReporters : Collections.emptyList()))
 				.traceId128Bit(sleuthProperties.isTraceId128())
 				.supportsJoin(sleuthProperties.isSupportsJoin());
-		for (FinishedSpanHandler finishedSpanHandlerFactory : this.finishedSpanHandlers) {
-			builder.addFinishedSpanHandler(finishedSpanHandlerFactory);
+		for (SpanHandler spanHandlerFactory : this.spanHandlers) {
+			builder.addSpanHandler(spanHandlerFactory);
 		}
 		for (TracingCustomizer customizer : this.tracingCustomizers) {
 			customizer.customize(builder);
@@ -134,11 +133,20 @@ public class TraceAutoConfiguration {
 	List<CurrentTraceContextCustomizer> currentTraceContextCustomizers = new ArrayList<>();
 
 	@Bean
-	CurrentTraceContext sleuthCurrentTraceContext(CurrentTraceContext.Builder builder) {
-		for (ScopeDecorator scopeDecorator : this.scopeDecorators) {
+	CurrentTraceContext sleuthCurrentTraceContext(CurrentTraceContext.Builder builder,
+			@Nullable List<CurrentTraceContext.ScopeDecorator> scopeDecorators,
+			@Nullable List<CurrentTraceContextCustomizer> currentTraceContextCustomizers) {
+		if (scopeDecorators == null) {
+			scopeDecorators = Collections.emptyList();
+		}
+		if (currentTraceContextCustomizers == null) {
+			currentTraceContextCustomizers = Collections.emptyList();
+		}
+
+		for (CurrentTraceContext.ScopeDecorator scopeDecorator : scopeDecorators) {
 			builder.addScopeDecorator(scopeDecorator);
 		}
-		for (CurrentTraceContextCustomizer customizer : this.currentTraceContextCustomizers) {
+		for (CurrentTraceContextCustomizer customizer : currentTraceContextCustomizers) {
 			customizer.customize(builder);
 		}
 		return builder.build();

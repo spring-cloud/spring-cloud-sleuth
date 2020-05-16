@@ -32,7 +32,10 @@ import org.springframework.context.annotation.Configuration;
  *
  * @author Marcin Grzejszczak
  * @since 2.0.0
+ * @deprecated This type should have never been public and will be hidden or removed in
+ * 3.0
  */
+@Deprecated
 @Configuration(proxyBeanMethods = false)
 @ConditionalOnProperty(value = "spring.sleuth.web.enabled", matchIfMissing = true)
 @ConditionalOnWebApplication(type = ConditionalOnWebApplication.Type.REACTIVE)

@@ -16,11 +16,8 @@
 
 package org.springframework.cloud.sleuth.zipkin2;
 
-import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -63,7 +60,10 @@ import org.springframework.web.client.RestTemplate;
  * @since 1.0.0
  * @see ZipkinRestTemplateCustomizer
  * @see DefaultZipkinRestTemplateCustomizer
+ * @deprecated This type should have never been public and will be hidden or removed in
+ * 3.0
  */
+@Deprecated
 @Configuration(proxyBeanMethods = false)
 @EnableConfigurationProperties(ZipkinProperties.class)
 @ConditionalOnProperty(value = { "spring.sleuth.enabled", "spring.zipkin.enabled" },
@@ -92,43 +92,56 @@ public class ZipkinAutoConfiguration {
 	@ConditionalOnMissingBean(name = REPORTER_BEAN_NAME)
 	public Reporter<Span> reporter(ReporterMetrics reporterMetrics,
 			ZipkinProperties zipkin, @Qualifier(SENDER_BEAN_NAME) Sender sender) {
+		CheckResult checkResult = checkResult(sender, 1_000L);
+		logCheckResult(sender, checkResult);
+
 		// historical constraint. Note: AsyncReporter supports memory bounds
 		AsyncReporter<Span> asyncReporter = AsyncReporter.builder(sender)
 				.queuedMaxSpans(1000)
 				.messageTimeout(zipkin.getMessageTimeout(), TimeUnit.SECONDS)
 				.metrics(reporterMetrics).build(zipkin.getEncoder());
-		CheckResult checkResult = checkResult(asyncReporter);
-		logCheckResult(asyncReporter, checkResult);
+
 		return asyncReporter;
 	}
 
-	private void logCheckResult(AsyncReporter asyncReporter, CheckResult checkResult) {
+	private void logCheckResult(Sender sender, CheckResult checkResult) {
 		if (log.isDebugEnabled() && checkResult != null && checkResult.ok()) {
-			log.debug("Check result of the [" + asyncReporter.toString() + "] is ["
-					+ checkResult + "]");
+			log.debug("Check result of the [" + sender.toString() + "] is [" + checkResult
+					+ "]");
 		}
 		else if (checkResult != null && !checkResult.ok()) {
-			log.warn("Check result of the [" + asyncReporter.toString()
-					+ "] contains an error [" + checkResult + "]");
+			log.warn("Check result of the [" + sender.toString() + "] contains an error ["
+					+ checkResult + "]");
 		}
 	}
 
-	private CheckResult checkResult(AsyncReporter<Span> asyncReporter) {
-		ExecutorService executor = Executors.newSingleThreadExecutor();
-		Callable<CheckResult> task = asyncReporter::check;
-		Future<CheckResult> future = executor.submit(task);
+	/** Limits {@link Sender#check()} to {@code deadlineMillis}. */
+	static CheckResult checkResult(Sender sender, long deadlineMillis) {
+		CheckResult[] outcome = new CheckResult[1];
+		Thread thread = new Thread(sender + " check()") {
+			@Override
+			public void run() {
+				try {
+					outcome[0] = sender.check();
+				}
+				catch (Throwable e) {
+					outcome[0] = CheckResult.failed(e);
+				}
+			}
+		};
+		thread.start();
 		try {
-			return future.get(1, TimeUnit.SECONDS);
+			thread.join(deadlineMillis);
+			if (outcome[0] != null) {
+				return outcome[0];
+			}
+			thread.interrupt();
+			return CheckResult.failed(new TimeoutException(
+					thread.getName() + " timed out after " + deadlineMillis + "ms"));
 		}
-		catch (Exception ex) {
-			log.warn(
-					"An exception took place when trying to retrieve the check result. Will return null.",
-					ex);
-			return null;
-		}
-		finally {
-			future.cancel(true);
-			executor.shutdown();
+		catch (InterruptedException e) {
+			Thread.currentThread().interrupt();
+			return CheckResult.failed(e);
 		}
 	}
 

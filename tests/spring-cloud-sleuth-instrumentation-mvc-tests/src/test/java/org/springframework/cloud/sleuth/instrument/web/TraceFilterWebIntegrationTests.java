@@ -22,9 +22,14 @@ import java.util.List;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+import brave.Span.Kind;
+import brave.handler.MutableSpan;
+import brave.handler.SpanHandler;
 import brave.http.HttpRequest;
 import brave.http.HttpRequestParser;
 import brave.propagation.CurrentTraceContext;
+import brave.propagation.CurrentTraceContext.Scope;
+import brave.propagation.TraceContext;
 import brave.sampler.Sampler;
 import brave.sampler.SamplerFunction;
 import org.apache.commons.logging.Log;
@@ -33,6 +38,8 @@ import org.assertj.core.api.BDDAssertions;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import zipkin2.Span;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -65,6 +72,9 @@ import static org.assertj.core.api.BDDAssertions.then;
 @ExtendWith(OutputCaptureExtension.class)
 public class TraceFilterWebIntegrationTests {
 
+	private static final Logger log = LoggerFactory
+			.getLogger(TraceFilterWebIntegrationTests.class);
+
 	@Autowired
 	CurrentTraceContext currentTraceContext;
 
@@ -93,7 +103,8 @@ public class TraceFilterWebIntegrationTests {
 	}
 
 	@Test
-	public void should_not_create_a_span_for_error_controller(CapturedOutput capture) {
+	public void exception_logging_span_handler_logs_synchronous_exceptions(
+			CapturedOutput capture) {
 		try {
 			new RestTemplate().getForObject("http://localhost:" + port() + "/",
 					String.class);
@@ -108,7 +119,7 @@ public class TraceFilterWebIntegrationTests {
 				.containsEntry("mvc.controller.class", "ExceptionThrowingController")
 				.containsEntry("error",
 						"Request processing failed; nested exception is java.lang.RuntimeException: Throwing exception");
-		// issue#714
+		// Trace IDs in logs: issue#714
 		String hex = fromFirstTraceFilterFlow.traceId();
 		thenLogsForExceptionLoggingFilterContainTracingInformation(capture, hex);
 	}
@@ -166,6 +177,31 @@ public class TraceFilterWebIntegrationTests {
 		@Bean
 		BlockingQueueSpanReporter reporter() {
 			return new BlockingQueueSpanReporter();
+		}
+
+		@Bean
+		SpanHandler uncaughtExceptionThrown(CurrentTraceContext currentTraceContext) {
+			return new SpanHandler() {
+				@Override
+				public boolean end(TraceContext context, MutableSpan span, Cause cause) {
+					if (span.kind() != Kind.SERVER || span.error() == null
+							|| !log.isErrorEnabled()) {
+						return true; // don't add overhead as we only log server errors
+					}
+
+					// In TracingFilter, the exception is raised in scope. This is is more
+					// explicit to ensure it works in other tech such as WebFlux.
+					try (Scope scope = currentTraceContext.maybeScope(context)) {
+						log.error("Uncaught exception thrown", span.error());
+					}
+					return true;
+				}
+
+				@Override
+				public String toString() {
+					return "UncaughtExceptionThrown";
+				}
+			};
 		}
 
 		@Bean

@@ -36,7 +36,10 @@ import org.springframework.core.annotation.AnnotationUtils;
  * @author Marcin Grzejszczak
  * @since 1.0.0
  * @see SpanName
+ * @deprecated This type should have never been public and will be hidden or removed in
+ * 3.0
  */
+@Deprecated
 public class DefaultSpanNamer implements SpanNamer {
 
 	private static boolean isDefaultToString(Object delegate, String spanName) {

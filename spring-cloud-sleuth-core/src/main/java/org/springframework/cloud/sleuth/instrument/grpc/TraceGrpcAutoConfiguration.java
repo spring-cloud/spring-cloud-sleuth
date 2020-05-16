@@ -40,7 +40,10 @@ import org.springframework.context.annotation.Bean;
  * brave-instrumentation-grpc are on the classpath.
  *
  * @author Tyler Van Gorder
+ * @deprecated This type should have never been public and will be hidden or removed in
+ * 3.0
  */
+@Deprecated
 @ConditionalOnClass({ GrpcTracing.class, GRpcGlobalInterceptor.class })
 @ConditionalOnProperty(value = "spring.sleuth.grpc.enabled", matchIfMissing = true)
 @ConditionalOnBean(RpcTracing.class)

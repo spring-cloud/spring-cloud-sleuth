@@ -35,7 +35,10 @@ import org.springframework.scheduling.annotation.AsyncConfigurer;
  *
  * @author Dave Syer
  * @since 1.0.0
+ * @deprecated This type should have never been public and will be hidden or removed in
+ * 3.0
  */
+@Deprecated
 @Configuration(proxyBeanMethods = false)
 @ConditionalOnBean(AsyncConfigurer.class)
 @AutoConfigureBefore(AsyncDefaultAutoConfiguration.class)

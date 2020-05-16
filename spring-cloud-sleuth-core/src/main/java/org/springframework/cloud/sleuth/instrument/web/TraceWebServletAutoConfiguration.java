@@ -52,7 +52,10 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
  * @author Marcin Grzejszczak
  * @author Spencer Gibb
  * @since 1.0.0
+ * @deprecated This type should have never been public and will be hidden or removed in
+ * 3.0
  */
+@Deprecated
 @Configuration(proxyBeanMethods = false)
 @ConditionalOnProperty(value = "spring.sleuth.web.enabled", matchIfMissing = true)
 @ConditionalOnWebApplication(type = ConditionalOnWebApplication.Type.SERVLET)
@@ -83,10 +86,8 @@ public class TraceWebServletAutoConfiguration {
 		return filterRegistrationBean;
 	}
 
-	// TODO: Rename to exception-logging-filter for 3.0
 	@Bean
-	@ConditionalOnProperty(value = "spring.sleuth.web.exception-logging-filter-enabled",
-			matchIfMissing = true)
+	@ConditionalOnProperty("spring.sleuth.web.exception-logging-filter-enabled")
 	public FilterRegistrationBean exceptionThrowingFilter(
 			SleuthWebProperties webProperties) {
 		FilterRegistrationBean filterRegistrationBean = new FilterRegistrationBean(

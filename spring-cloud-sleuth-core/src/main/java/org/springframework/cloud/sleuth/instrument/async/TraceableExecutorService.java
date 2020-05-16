@@ -36,7 +36,10 @@ import org.springframework.cloud.sleuth.SpanNamer;
  *
  * @author Gaurav Rai Mazra
  * @since 1.0.0
+ * @deprecated This type should have never been public and will be hidden or removed in
+ * 3.0
  */
+@Deprecated
 public class TraceableExecutorService implements ExecutorService {
 
 	final ExecutorService delegate;

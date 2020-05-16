@@ -41,7 +41,10 @@ import org.springframework.lang.Nullable;
  * Auto-configuration} related to RPC based communication.
  *
  * @since 2.2.0
+ * @deprecated This type should have never been public and will be hidden or removed in
+ * 3.0
  */
+@Deprecated
 @Configuration(proxyBeanMethods = false)
 @ConditionalOnProperty(name = "spring.sleuth.rpc.enabled", havingValue = "true",
 		matchIfMissing = true)

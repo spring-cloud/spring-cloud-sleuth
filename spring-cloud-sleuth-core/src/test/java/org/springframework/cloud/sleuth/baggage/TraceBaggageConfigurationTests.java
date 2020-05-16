@@ -70,9 +70,8 @@ public class TraceBaggageConfigurationTests {
 	static ListAssert<Tuple> assertThatBaggageFieldNameToKeyNames(
 			AssertableApplicationContext context) {
 		return assertThat(context.getBean(Propagation.Factory.class))
-				.extracting("handlersWithKeyNames")
-				.asInstanceOf(InstanceOfAssertFactories.ARRAY)
-				.extracting("handler.field.name", "keyNames")
+				.extracting("configs").asInstanceOf(InstanceOfAssertFactories.ARRAY)
+				.extracting("field.name", "keyNames.toArray")
 				.asInstanceOf(InstanceOfAssertFactories.list(Tuple.class));
 	}
 

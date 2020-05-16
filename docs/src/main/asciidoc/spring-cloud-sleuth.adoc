@@ -520,17 +520,17 @@ spring.zipkin.service.name: myService
 === Customization of Reported Spans
 
 Before reporting spans (for example, to Zipkin) you may want to modify that span in some way.
-You can do so by using the `FinishedSpanHandler` interface.
+You can do so by implementing a `SpanHandler`.
 
 In Sleuth, we generate spans with a fixed name.
 Some users want to modify the name depending on values of tags.
-You can implement the `FinishedSpanHandler` interface to alter that name.
+You can implement the `SpanHandler` interface to alter that name.
 
-The following example shows how to register two beans that implement `FinishedSpanHandler`:
+The following example shows how to register two beans that implement `SpanHandler`:
 
 [source,java]
 ----
-include::{project-root}//spring-cloud-sleuth-core/src/test/java/org/springframework/cloud/sleuth/FinishedSpanHandlerTests.java[tags=finishedSpanHandler,indent=0]
+include::{project-root}//spring-cloud-sleuth-core/src/test/java/org/springframework/cloud/sleuth/SpanHandlerTests.java[tags=spanHandler,indent=0]
 ----
 
 The preceding example results in changing the name of the reported span to `foo bar`, just before it gets reported (for example, to Zipkin).
