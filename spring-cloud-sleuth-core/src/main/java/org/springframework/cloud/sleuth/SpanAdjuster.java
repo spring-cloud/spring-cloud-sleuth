@@ -21,7 +21,7 @@ import zipkin2.Span;
 /**
  * Deprecated Span Adjuster.
  *
- * @deprecated use {@link brave.handler.FinishedSpanHandler}
+ * @deprecated use {@link brave.handler.SpanHandler}
  * @author Marcin Grzejszczak
  */
 @Deprecated

@@ -34,10 +34,10 @@ import org.reactivestreams.Subscription;
 import reactor.core.publisher.BaseSubscriber;
 import reactor.core.publisher.Mono;
 import reactor.netty.http.client.HttpClient;
-import zipkin2.Span;
 
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 
+import static brave.Span.Kind.CLIENT;
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
@@ -161,7 +161,7 @@ abstract class ITSpringConfiguredReactorClient
 
 		assertThat(server.getRequestCount()).isOne();
 
-		reporter.takeRemoteSpanWithError(Span.Kind.CLIENT, "CANCELLED");
+		this.spanHandler.takeRemoteSpanWithErrorMessage(CLIENT, "CANCELLED");
 	}
 
 }

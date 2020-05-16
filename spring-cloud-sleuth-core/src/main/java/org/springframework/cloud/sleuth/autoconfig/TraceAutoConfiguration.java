@@ -25,7 +25,7 @@ import brave.ErrorParser;
 import brave.Tracer;
 import brave.Tracing;
 import brave.TracingCustomizer;
-import brave.handler.FinishedSpanHandler;
+import brave.handler.SpanHandler;
 import brave.propagation.B3Propagation;
 import brave.propagation.CurrentTraceContext;
 import brave.propagation.CurrentTraceContextCustomizer;
@@ -94,7 +94,7 @@ public class TraceAutoConfiguration {
 	List<SpanAdjuster> spanAdjusters = new ArrayList<>();
 
 	@Autowired(required = false)
-	List<FinishedSpanHandler> finishedSpanHandlers = new ArrayList<>();
+	List<SpanHandler> spanHandlers = new ArrayList<>();
 
 	@Autowired(required = false)
 	ExtraFieldPropagation.FactoryBuilder extraFieldPropagationFactoryBuilder;
@@ -121,8 +121,8 @@ public class TraceAutoConfiguration {
 						spanReporters != null ? spanReporters : Collections.emptyList()))
 				.traceId128Bit(sleuthProperties.isTraceId128())
 				.supportsJoin(sleuthProperties.isSupportsJoin());
-		for (FinishedSpanHandler finishedSpanHandlerFactory : this.finishedSpanHandlers) {
-			builder.addFinishedSpanHandler(finishedSpanHandlerFactory);
+		for (SpanHandler spanHandlerFactory : this.spanHandlers) {
+			builder.addSpanHandler(spanHandlerFactory);
 		}
 		for (TracingCustomizer customizer : this.tracingCustomizers) {
 			customizer.customize(builder);
