@@ -25,7 +25,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * Configuration properties for slf4j.
  *
  * @author Arthur Gavlyukovskiy
- * @since 1.0.12 3.0
+ * @since 1.0.12
  */
 @ConfigurationProperties("spring.sleuth.log.slf4j")
 // TODO: Hide in 3.x, if it isn't already deleted
