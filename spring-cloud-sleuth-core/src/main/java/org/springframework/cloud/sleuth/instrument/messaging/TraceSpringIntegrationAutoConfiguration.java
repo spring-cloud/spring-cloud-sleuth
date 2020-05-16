@@ -39,7 +39,10 @@ import org.springframework.messaging.support.MessageHeaderAccessor;
  * @author Spencer Gibb
  * @since 1.0.0
  * @see TracingChannelInterceptor
+ * @deprecated This type should have never been public and will be hidden or removed in
+ * 3.0
  */
+@Deprecated
 @Configuration(proxyBeanMethods = false)
 @ConditionalOnClass(GlobalChannelInterceptor.class)
 @ConditionalOnBean(Tracing.class)

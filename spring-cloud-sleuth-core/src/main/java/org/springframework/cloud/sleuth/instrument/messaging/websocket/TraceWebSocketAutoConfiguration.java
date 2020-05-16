@@ -37,7 +37,10 @@ import org.springframework.web.socket.config.annotation.StompEndpointRegistry;
  * @author Dave Syer
  * @since 1.0.0
  * @see AbstractWebSocketMessageBrokerConfigurer
+ * @deprecated This type should have never been public and will be hidden or removed in
+ * 3.0
  */
+@Deprecated
 @Configuration(proxyBeanMethods = false)
 @ConditionalOnClass(DelegatingWebSocketMessageBrokerConfiguration.class)
 @ConditionalOnBean(Tracing.class)

@@ -39,6 +39,8 @@ import org.springframework.context.ConfigurableApplicationContext;
  * @author Stephane Maldini
  * @since 2.0.0
  */
+// TODO: this is public as it is used out of package, but unlikely intended to be
+// non-internal
 public abstract class ReactorSleuth {
 
 	private static final Log log = LogFactory.getLog(ReactorSleuth.class);

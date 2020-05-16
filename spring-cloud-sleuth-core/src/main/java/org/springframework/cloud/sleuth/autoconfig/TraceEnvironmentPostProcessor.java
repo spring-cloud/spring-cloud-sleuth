@@ -35,7 +35,10 @@ import org.springframework.core.env.PropertySource;
  * @author Dave Syer
  * @author Marcin Grzejszczak
  * @since 2.0.0
+ * @deprecated This type should have never been public and will be hidden or removed in
+ * 3.0
  */
+@Deprecated
 public class TraceEnvironmentPostProcessor implements EnvironmentPostProcessor {
 
 	private static final String PROPERTY_SOURCE_NAME = "defaultProperties";

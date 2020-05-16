@@ -46,7 +46,10 @@ import org.springframework.lang.Nullable;
  *
  * @author Marcin Grzejszczak
  * @since 2.1.1
+ * @deprecated This type should have never been public and will be hidden or removed in
+ * 3.0
  */
+@Deprecated
 public final class TracingJmsListenerEndpointRegistry
 		extends JmsListenerEndpointRegistry {
 

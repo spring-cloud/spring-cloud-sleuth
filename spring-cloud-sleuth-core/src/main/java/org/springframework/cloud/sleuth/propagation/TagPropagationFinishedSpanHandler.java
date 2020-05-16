@@ -35,7 +35,10 @@ import static java.util.Objects.nonNull;
  *
  * @author Taras Danylchuk
  * @since 2.1.0
+ * @deprecated This type should have never been public and will be hidden or removed in
+ * 3.0
  */
+@Deprecated
 public class TagPropagationFinishedSpanHandler extends FinishedSpanHandler {
 
 	private final SleuthProperties sleuthProperties;

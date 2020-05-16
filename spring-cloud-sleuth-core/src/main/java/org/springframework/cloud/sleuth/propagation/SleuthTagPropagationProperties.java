@@ -26,7 +26,10 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  *
  * @author Taras Danylchuk
  * @since 2.1.0
+ * @deprecated This type should have never been public and will be hidden or removed in
+ * 3.0
  */
+@Deprecated
 @ConfigurationProperties("spring.sleuth.propagation.tag")
 public class SleuthTagPropagationProperties {
 

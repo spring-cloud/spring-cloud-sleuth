@@ -37,7 +37,10 @@ import org.springframework.context.annotation.Configuration;
  * @author Spencer Gibb
  * @since 1.0.0
  * @see TraceSchedulingAspect
+ * @deprecated This type should have never been public and will be hidden or removed in
+ * 3.0
  */
+@Deprecated
 @Configuration(proxyBeanMethods = false)
 @ConditionalOnClass(name = "org.aspectj.lang.ProceedingJoinPoint")
 @ConditionalOnProperty(value = "spring.sleuth.scheduled.enabled", matchIfMissing = true)

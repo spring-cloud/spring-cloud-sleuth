@@ -60,7 +60,10 @@ import org.springframework.web.client.RestTemplate;
  * @since 1.0.0
  * @see ZipkinRestTemplateCustomizer
  * @see DefaultZipkinRestTemplateCustomizer
+ * @deprecated This type should have never been public and will be hidden or removed in
+ * 3.0
  */
+@Deprecated
 @Configuration(proxyBeanMethods = false)
 @EnableConfigurationProperties(ZipkinProperties.class)
 @ConditionalOnProperty(value = { "spring.sleuth.enabled", "spring.zipkin.enabled" },

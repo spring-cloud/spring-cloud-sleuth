@@ -35,6 +35,7 @@ import io.grpc.inprocess.InProcessChannelBuilder;
  *
  * @author Tyler Van Gorder
  */
+// TODO: research why we need to continue to maintain this given current libraries
 public class SpringAwareManagedChannelBuilder {
 
 	private List<GrpcManagedChannelBuilderCustomizer> customizers;

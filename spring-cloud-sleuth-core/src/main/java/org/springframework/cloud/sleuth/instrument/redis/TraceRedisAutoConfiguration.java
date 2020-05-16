@@ -39,7 +39,10 @@ import org.springframework.context.annotation.Configuration;
  *
  * @author Chao Chang
  * @since 2.2.0
+ * @deprecated This type should have never been public and will be hidden or removed in
+ * 3.0
  */
+@Deprecated
 @Configuration(proxyBeanMethods = false)
 @ConditionalOnProperty(value = "spring.sleuth.redis.enabled", matchIfMissing = true)
 @ConditionalOnBean({ Tracing.class, ClientResources.class })

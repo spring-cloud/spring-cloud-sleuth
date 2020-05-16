@@ -58,7 +58,10 @@ import org.springframework.util.ClassUtils;
  * which is less sensitive to message manipulation by other interceptors.
  *
  * @author Marcin Grzejszczak
+ * @deprecated This type should have never been public and will be hidden or removed in
+ * 3.0
  */
+@Deprecated
 public final class TracingChannelInterceptor extends ChannelInterceptorAdapter
 		implements ExecutorChannelInterceptor {
 
