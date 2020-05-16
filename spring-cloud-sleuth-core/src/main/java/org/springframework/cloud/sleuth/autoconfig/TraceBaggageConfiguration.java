@@ -14,13 +14,14 @@
  * limitations under the License.
  */
 
-package org.springframework.cloud.sleuth.baggage;
+package org.springframework.cloud.sleuth.autoconfig;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
 
+import brave.Tags;
 import brave.baggage.BaggageField;
 import brave.baggage.BaggagePropagation;
 import brave.baggage.BaggagePropagationConfig.SingleBaggageField;
@@ -29,15 +30,16 @@ import brave.baggage.CorrelationScopeConfig.SingleCorrelationField;
 import brave.baggage.CorrelationScopeCustomizer;
 import brave.baggage.CorrelationScopeDecorator;
 import brave.context.slf4j.MDCScopeDecorator;
-import brave.handler.FinishedSpanHandler;
+import brave.handler.MutableSpan;
+import brave.handler.SpanHandler;
 import brave.propagation.B3Propagation;
 import brave.propagation.CurrentTraceContext.ScopeDecorator;
 import brave.propagation.Propagation;
+import brave.propagation.TraceContext;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.slf4j.MDC;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.condition.AnyNestedCondition;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
@@ -49,6 +51,7 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Conditional;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.lang.Nullable;
 
 /**
  * {@link Configuration} for {@link BaggagePropagation}.
@@ -60,7 +63,7 @@ import org.springframework.context.annotation.Configuration;
  */
 @Configuration(proxyBeanMethods = false)
 @EnableConfigurationProperties(SleuthBaggageProperties.class)
-public class TraceBaggageConfiguration {
+class TraceBaggageConfiguration {
 
 	static final Log logger = LogFactory.getLog(TraceBaggageConfiguration.class);
 
@@ -97,12 +100,6 @@ public class TraceBaggageConfiguration {
 		return new ArrayList<>();
 	}
 
-	@Autowired(required = false)
-	List<BaggagePropagationCustomizer> baggagePropagationCustomizers = new ArrayList<>();
-
-	@Autowired(required = false)
-	List<CorrelationScopeCustomizer> correlationScopeCustomizers = new ArrayList<>();
-
 	/**
 	 * To override the underlying context format, override this bean and set the delegate
 	 * to what you need. {@link BaggagePropagation.FactoryBuilder} will unwrap itself if
@@ -126,7 +123,8 @@ public class TraceBaggageConfiguration {
 			@Qualifier(BAGGAGE_KEYS) List<String> baggageKeys,
 			@Qualifier(LOCAL_KEYS) List<String> localKeys,
 			@Qualifier(PROPAGATION_KEYS) List<String> propagationKeys,
-			SleuthBaggageProperties sleuthBaggageProperties) {
+			SleuthBaggageProperties sleuthBaggageProperties,
+			@Nullable List<BaggagePropagationCustomizer> baggagePropagationCustomizers) {
 
 		Set<String> localFields = redirectOldPropertyToNew(LOCAL_KEYS, localKeys,
 				"spring.sleuth.baggage.local-fields",
@@ -155,8 +153,10 @@ public class TraceBaggageConfiguration {
 			}
 		}
 
-		for (BaggagePropagationCustomizer customizer : this.baggagePropagationCustomizers) {
-			customizer.customize(factoryBuilder);
+		if (baggagePropagationCustomizers != null) {
+			for (BaggagePropagationCustomizer customizer : baggagePropagationCustomizers) {
+				customizer.customize(factoryBuilder);
+			}
 		}
 		return factoryBuilder.build();
 	}
@@ -187,7 +187,8 @@ public class TraceBaggageConfiguration {
 			matchIfMissing = true)
 	ScopeDecorator correlationScopeDecorator(
 			@Qualifier(WHITELISTED_MDC_KEYS) List<String> whiteListedMDCKeys,
-			SleuthBaggageProperties sleuthBaggageProperties) {
+			SleuthBaggageProperties sleuthBaggageProperties,
+			@Nullable List<CorrelationScopeCustomizer> correlationScopeCustomizers) {
 
 		Set<String> correlationFields = redirectOldPropertyToNew(WHITELISTED_MDC_KEYS,
 				whiteListedMDCKeys, "spring.sleuth.baggage.correlation-fields",
@@ -201,24 +202,25 @@ public class TraceBaggageConfiguration {
 		}
 
 		// handle user overrides
-		for (CorrelationScopeCustomizer customizer : this.correlationScopeCustomizers) {
-			customizer.customize(builder);
+		if (correlationScopeCustomizers != null) {
+			for (CorrelationScopeCustomizer customizer : correlationScopeCustomizers) {
+				customizer.customize(builder);
+			}
 		}
 		return builder.build();
 	}
 
 	/**
-	 * This has to be conditional as it creates a bean of type
-	 * {@link FinishedSpanHandler}.
+	 * This has to be conditional as it creates a bean of type {@link SpanHandler}.
 	 *
 	 * <p>
-	 * {@link FinishedSpanHandler} beans, even if {@link FinishedSpanHandler#NOOP}, can
-	 * trigger {@code org.springframework.cloud.sleuth.sampler.SamplerCondition}
+	 * {@link SpanHandler} beans, even if {@link SpanHandler#NOOP}, can trigger
+	 * {@code org.springframework.cloud.sleuth.sampler.SamplerCondition}
 	 */
 	@Configuration
-	@Conditional(BaggageTagFinishedSpanHandlerCondition.class)
+	@Conditional(BaggageTagSpanHandlerCondition.class)
 	@EnableConfigurationProperties(SleuthBaggageProperties.class)
-	static class BaggageTagFinishedSpanHandlerConfiguration {
+	static class BaggageTagSpanHandlerConfiguration {
 
 		@Bean(WHITELISTED_KEYS)
 		@ConfigurationProperties(WHITELISTED_KEYS)
@@ -227,7 +229,7 @@ public class TraceBaggageConfiguration {
 		}
 
 		@Bean
-		FinishedSpanHandler baggageTagFinishedSpanHandler(
+		SpanHandler baggageTagSpanHandler(
 				@Qualifier(WHITELISTED_KEYS) List<String> whiteListedKeys,
 				SleuthBaggageProperties sleuthBaggageProperties) {
 
@@ -236,11 +238,11 @@ public class TraceBaggageConfiguration {
 					sleuthBaggageProperties.getTagFields());
 
 			if (tagFields.isEmpty()) {
-				return FinishedSpanHandler.NOOP; // Brave ignores these
+				return SpanHandler.NOOP; // Brave ignores these
 			}
 
-			return new BaggageTagFinishedSpanHandler(tagFields.stream()
-					.map(BaggageField::create).toArray(BaggageField[]::new));
+			return new BaggageTagSpanHandler(tagFields.stream().map(BaggageField::create)
+					.toArray(BaggageField[]::new));
 		}
 
 	}
@@ -249,9 +251,9 @@ public class TraceBaggageConfiguration {
 	 * We need a special condition as it users could use either comma or yaml encoding,
 	 * possibly with a deprecated prefix.
 	 */
-	static class BaggageTagFinishedSpanHandlerCondition extends AnyNestedCondition {
+	static class BaggageTagSpanHandlerCondition extends AnyNestedCondition {
 
-		BaggageTagFinishedSpanHandlerCondition() {
+		BaggageTagSpanHandlerCondition() {
 			super(ConfigurationPhase.PARSE_CONFIGURATION);
 		}
 
@@ -273,6 +275,24 @@ public class TraceBaggageConfiguration {
 		@ConditionalOnProperty(WHITELISTED_KEYS + "[0]")
 		static class WhitelistedKeysYamlListProperty {
 
+		}
+
+	}
+
+	static final class BaggageTagSpanHandler extends SpanHandler {
+
+		final BaggageField[] fieldsToTag;
+
+		BaggageTagSpanHandler(BaggageField[] fieldsToTag) {
+			this.fieldsToTag = fieldsToTag;
+		}
+
+		@Override
+		public boolean end(TraceContext context, MutableSpan span, Cause cause) {
+			for (BaggageField field : fieldsToTag) {
+				Tags.BAGGAGE_FIELD.tag(field, context, span);
+			}
+			return true;
 		}
 
 	}

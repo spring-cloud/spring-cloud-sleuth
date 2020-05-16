@@ -51,13 +51,10 @@ import org.springframework.web.context.request.async.WebAsyncTask;
  * @since 1.0.0
  * @see org.springframework.stereotype.Controller
  * @see org.springframework.web.client.RestOperations
- * @deprecated This type should have never been public and will be hidden or removed in
- * 3.0
  */
-@Deprecated
 @SuppressWarnings("ArgNamesWarningsInspection")
 @Aspect
-public class TraceWebAspect {
+class TraceWebAspect {
 
 	private static final Log log = org.apache.commons.logging.LogFactory
 			.getLog(TraceWebAspect.class);
@@ -66,7 +63,7 @@ public class TraceWebAspect {
 
 	private final SpanNamer spanNamer;
 
-	public TraceWebAspect(Tracing tracing, SpanNamer spanNamer) {
+	TraceWebAspect(Tracing tracing, SpanNamer spanNamer) {
 		this.tracing = tracing;
 		this.spanNamer = spanNamer;
 	}

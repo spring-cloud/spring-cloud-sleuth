@@ -21,7 +21,7 @@ import org.aopalliance.intercept.MethodInvocation;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import org.springframework.cloud.sleuth.util.SpanNameUtil;
+import org.springframework.cloud.sleuth.internal.SpanNameUtil;
 import org.springframework.util.StringUtils;
 
 /**

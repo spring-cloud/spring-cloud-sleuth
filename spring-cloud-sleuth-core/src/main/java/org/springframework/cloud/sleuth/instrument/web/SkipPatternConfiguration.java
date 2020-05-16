@@ -53,16 +53,13 @@ import org.springframework.util.StringUtils;
  * @author Marcin Grzejszczak
  * @author Tim Ysewyn
  * @since 1.0.0
- * @deprecated This type should have never been public and will be hidden or removed in
- * 3.0
  */
-@Deprecated
 @Configuration(proxyBeanMethods = false)
 @ConditionalOnProperty(value = "spring.sleuth.web.enabled", matchIfMissing = true)
 @ConditionalOnBean(Tracing.class)
 @AutoConfigureAfter(TraceAutoConfiguration.class)
 @EnableConfigurationProperties(SleuthWebProperties.class)
-public class TraceWebAutoConfiguration {
+class SkipPatternConfiguration {
 
 	@Autowired(required = false)
 	List<SingleSkipPattern> patterns = new ArrayList<>();

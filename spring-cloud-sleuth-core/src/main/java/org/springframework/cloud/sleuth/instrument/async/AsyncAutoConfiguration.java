@@ -18,7 +18,6 @@ package org.springframework.cloud.sleuth.instrument.async;
 
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
-import org.springframework.cloud.sleuth.instrument.scheduling.SleuthSchedulingProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -28,15 +27,11 @@ import org.springframework.context.annotation.Configuration;
  *
  * @author Jesus Alonso
  * @since 2.1.0
- * @deprecated This type should have never been public and will be hidden or removed in
- * 3.0
  */
-@Deprecated
 @Configuration(proxyBeanMethods = false)
 @ConditionalOnProperty(value = "spring.sleuth.scheduled.enabled", matchIfMissing = true)
-@EnableConfigurationProperties({ SleuthAsyncProperties.class,
-		SleuthSchedulingProperties.class })
-public class AsyncAutoConfiguration {
+@EnableConfigurationProperties(SleuthAsyncProperties.class)
+class AsyncAutoConfiguration {
 
 	@Bean
 	SleuthContextListener traceContextClosedListener() {

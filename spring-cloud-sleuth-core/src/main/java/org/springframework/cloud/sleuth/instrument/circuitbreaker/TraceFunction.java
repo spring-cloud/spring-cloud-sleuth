@@ -27,11 +27,8 @@ import brave.Tracer;
  *
  * @param <T> type returned by the fallback
  * @since 2.2.1
- * @deprecated This type should have never been public and will be hidden or removed in
- * 3.0
  */
-@Deprecated
-public class TraceFunction<T> implements Function<Throwable, T> {
+class TraceFunction<T> implements Function<Throwable, T> {
 
 	private final Tracer tracer;
 
@@ -39,7 +36,7 @@ public class TraceFunction<T> implements Function<Throwable, T> {
 
 	private final AtomicReference<Span> span;
 
-	public TraceFunction(Tracer tracer, Function<Throwable, T> delegate) {
+	TraceFunction(Tracer tracer, Function<Throwable, T> delegate) {
 		this.tracer = tracer;
 		this.delegate = delegate;
 		this.span = new AtomicReference<>(this.tracer.nextSpan());

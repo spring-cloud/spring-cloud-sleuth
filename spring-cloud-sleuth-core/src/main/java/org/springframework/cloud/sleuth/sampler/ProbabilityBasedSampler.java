@@ -42,11 +42,8 @@ import org.springframework.util.Assert;
  * @author Marcin Grzejszczak
  * @author Adrian Cole
  * @since 1.0.0
- * @deprecated This type should have never been public and will be hidden or removed in
- * 3.0
  */
-@Deprecated
-public class ProbabilityBasedSampler extends Sampler {
+class ProbabilityBasedSampler extends Sampler {
 
 	private final AtomicInteger counter = new AtomicInteger(0);
 
@@ -54,7 +51,7 @@ public class ProbabilityBasedSampler extends Sampler {
 
 	private final SamplerProperties configuration;
 
-	public ProbabilityBasedSampler(SamplerProperties configuration) {
+	ProbabilityBasedSampler(SamplerProperties configuration) {
 		Assert.notNull(configuration.getProbability(),
 				"probability property is required for ProbabilityBasedSampler");
 		int outOf100 = (int) (configuration.getProbability() * 100.0f);

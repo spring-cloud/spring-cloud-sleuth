@@ -29,7 +29,7 @@ import org.apache.commons.logging.LogFactory;
 
 import org.springframework.aop.support.AopUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.cloud.sleuth.util.SpanNameUtil;
+import org.springframework.cloud.sleuth.internal.SpanNameUtil;
 import org.springframework.integration.channel.AbstractMessageChannel;
 import org.springframework.integration.channel.DirectChannel;
 import org.springframework.integration.context.IntegrationObjectSupport;
@@ -56,11 +56,8 @@ import org.springframework.util.ClassUtils;
  * manipulation by other interceptors.
  *
  * @author Marcin Grzejszczak
- * @deprecated This type should have never been public and will be hidden or removed in
- * 3.0
  */
-@Deprecated
-public final class TracingChannelInterceptor extends ChannelInterceptorAdapter
+final class TracingChannelInterceptor extends ChannelInterceptorAdapter
 		implements ExecutorChannelInterceptor {
 
 	/**

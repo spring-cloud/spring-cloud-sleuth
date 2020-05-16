@@ -58,7 +58,7 @@ import org.springframework.lang.Nullable;
 @ConditionalOnBean(Tracing.class)
 @ConditionalOnClass(HttpTracing.class)
 @AutoConfigureAfter(TraceAutoConfiguration.class)
-@Import(TraceWebAutoConfiguration.class)
+@Import(SkipPatternConfiguration.class)
 // public allows @AutoConfigureAfter(TraceHttpAutoConfiguration)
 // for components needing HttpTracing
 public class TraceHttpAutoConfiguration {

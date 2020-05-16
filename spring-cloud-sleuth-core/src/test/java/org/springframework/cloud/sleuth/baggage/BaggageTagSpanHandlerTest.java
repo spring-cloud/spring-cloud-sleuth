@@ -42,9 +42,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 @SpringBootTest(
 		// WebEnvironment.NONE will not read a Yaml profile
 		webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
-		classes = BaggageTagFinishedSpanHandlerTest.Config.class)
+		classes = BaggageTagSpanHandlerTest.Config.class)
 @ActiveProfiles("baggage") // application-baggage.yml
-public class BaggageTagFinishedSpanHandlerTest {
+public class BaggageTagSpanHandlerTest {
 
 	static final BaggageField COUNTRY_CODE = BaggageField.create("country-code");
 	static final BaggageField REQUEST_ID = BaggageField.create("x-vcap-request-id");

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.springframework.cloud.sleuth.baggage;
+package org.springframework.cloud.sleuth.autoconfig;
 
 import java.util.List;
 import java.util.Set;
@@ -27,7 +27,7 @@ import brave.baggage.CorrelationScopeConfig;
 import brave.baggage.CorrelationScopeConfig.SingleCorrelationField;
 import brave.baggage.CorrelationScopeCustomizer;
 import brave.baggage.CorrelationScopeDecorator;
-import brave.handler.FinishedSpanHandler;
+import brave.handler.SpanHandler;
 import brave.propagation.Propagation;
 import org.assertj.core.api.AbstractListAssert;
 import org.assertj.core.api.InstanceOfAssertFactories;
@@ -39,6 +39,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.boot.autoconfigure.AutoConfigurations;
 import org.springframework.boot.test.context.assertj.AssertableApplicationContext;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
+import org.springframework.cloud.sleuth.autoconfig.TraceBaggageConfiguration.BaggageTagSpanHandler;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -152,18 +153,17 @@ public class TraceBaggageConfigurationTests {
 
 	static AbstractListAssert<?, List<? extends String>, String, ObjectAssert<String>> assertThatFieldNamesToTag(
 			AssertableApplicationContext context) {
-		return assertThat(context.getBean(FinishedSpanHandler.class))
-				.isInstanceOf(BaggageTagFinishedSpanHandler.class)
-				.extracting("fieldsToTag").asInstanceOf(array(BaggageField[].class))
-				.extracting(BaggageField::name);
+		return assertThat(context.getBean(SpanHandler.class))
+				.isInstanceOf(BaggageTagSpanHandler.class).extracting("fieldsToTag")
+				.asInstanceOf(array(BaggageField[].class)).extracting(BaggageField::name);
 	}
 
 	@Test
 	public void noopOnNoTagFields() {
 		this.contextRunner.withPropertyValues("spring.sleuth.baggage.tag-fields=")
 				.run((context) -> {
-					assertThat(context.getBean(FinishedSpanHandler.class))
-							.isSameAs(FinishedSpanHandler.NOOP);
+					assertThat(context.getBean(SpanHandler.class))
+							.isSameAs(SpanHandler.NOOP);
 				});
 	}
 

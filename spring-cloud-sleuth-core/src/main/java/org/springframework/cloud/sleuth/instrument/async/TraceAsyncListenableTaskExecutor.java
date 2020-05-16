@@ -32,10 +32,8 @@ import org.springframework.util.concurrent.ListenableFuture;
  * @since 1.0.0
  * @see brave.propagation.CurrentTraceContext#wrap(Runnable)
  * @see brave.propagation.CurrentTraceContext#wrap(Callable)
- * @deprecated This type should have never been public and will be hidden or removed in
- * 3.0
  */
-@Deprecated
+// public as most types in this package were documented for use
 public class TraceAsyncListenableTaskExecutor implements AsyncListenableTaskExecutor {
 
 	private final AsyncListenableTaskExecutor delegate;

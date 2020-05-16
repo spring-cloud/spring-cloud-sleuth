@@ -45,7 +45,7 @@ import org.springframework.context.annotation.Role;
 @ConditionalOnBean(Tracing.class)
 @ConditionalOnProperty(name = "spring.sleuth.annotation.enabled", matchIfMissing = true)
 @AutoConfigureAfter(TraceAutoConfiguration.class)
-public class SleuthAnnotationAutoConfiguration {
+class SleuthAnnotationAutoConfiguration {
 
 	@Bean
 	@ConditionalOnMissingBean

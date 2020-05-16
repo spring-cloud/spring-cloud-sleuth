@@ -25,7 +25,7 @@ import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 
-import org.springframework.cloud.sleuth.util.SpanNameUtil;
+import org.springframework.cloud.sleuth.internal.SpanNameUtil;
 import org.springframework.lang.Nullable;
 
 /**
@@ -41,12 +41,9 @@ import org.springframework.lang.Nullable;
  * @author Spencer Gibb
  * @since 1.0.0
  * @see Tracing
- * @deprecated This type should have never been public and will be hidden or removed in
- * 3.0
  */
-@Deprecated
 @Aspect
-public class TraceSchedulingAspect {
+class TraceSchedulingAspect {
 
 	private static final String CLASS_KEY = "class";
 
@@ -57,7 +54,7 @@ public class TraceSchedulingAspect {
 	@Nullable
 	private final Pattern skipPattern;
 
-	public TraceSchedulingAspect(Tracer tracer, Pattern skipPattern) {
+	TraceSchedulingAspect(Tracer tracer, Pattern skipPattern) {
 		this.tracer = tracer;
 		this.skipPattern = skipPattern;
 	}

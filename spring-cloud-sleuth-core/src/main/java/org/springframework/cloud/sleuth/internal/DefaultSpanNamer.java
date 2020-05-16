@@ -14,10 +14,12 @@
  * limitations under the License.
  */
 
-package org.springframework.cloud.sleuth;
+package org.springframework.cloud.sleuth.internal;
 
 import java.lang.reflect.Method;
 
+import org.springframework.cloud.sleuth.SpanName;
+import org.springframework.cloud.sleuth.SpanNamer;
 import org.springframework.core.annotation.AnnotationUtils;
 
 /**
@@ -36,10 +38,7 @@ import org.springframework.core.annotation.AnnotationUtils;
  * @author Marcin Grzejszczak
  * @since 1.0.0
  * @see SpanName
- * @deprecated This type should have never been public and will be hidden or removed in
- * 3.0
  */
-@Deprecated
 public class DefaultSpanNamer implements SpanNamer {
 
 	private static boolean isDefaultToString(Object delegate, String spanName) {

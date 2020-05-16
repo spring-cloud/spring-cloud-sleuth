@@ -36,21 +36,18 @@ import org.springframework.context.annotation.Configuration;
  *
  * @author Branden Cash
  * @since 2.2.0
- * @deprecated This type should have never been public and will be hidden or removed in
- * 3.0
  */
-@Deprecated
 @Configuration(proxyBeanMethods = false)
 @ConditionalOnBean({ Tracing.class, Scheduler.class })
 @AutoConfigureAfter({ TraceAutoConfiguration.class, QuartzAutoConfiguration.class })
 @ConditionalOnProperty(value = "spring.sleuth.quartz.enabled", matchIfMissing = true)
-public class TraceQuartzAutoConfiguration implements InitializingBean {
+class TraceQuartzAutoConfiguration implements InitializingBean {
 
 	private Scheduler scheduler;
 
 	private Tracing tracing;
 
-	public TraceQuartzAutoConfiguration(Scheduler scheduler, Tracing tracing) {
+	TraceQuartzAutoConfiguration(Scheduler scheduler, Tracing tracing) {
 		this.scheduler = scheduler;
 		this.tracing = tracing;
 	}

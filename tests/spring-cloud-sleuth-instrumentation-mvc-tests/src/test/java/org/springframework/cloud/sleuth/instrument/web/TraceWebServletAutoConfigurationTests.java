@@ -33,7 +33,7 @@ public class TraceWebServletAutoConfigurationTests {
 
 	private final WebApplicationContextRunner contextRunner = new WebApplicationContextRunner()
 			.withConfiguration(AutoConfigurations.of(TraceAutoConfiguration.class,
-					TraceHttpAutoConfiguration.class, TraceWebAutoConfiguration.class,
+					TraceHttpAutoConfiguration.class,
 					TraceWebServletAutoConfiguration.class));
 
 	@Test
