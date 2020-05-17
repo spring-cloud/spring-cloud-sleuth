@@ -16,7 +16,6 @@
 
 package org.springframework.cloud.sleuth.instrument.web;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Pattern;
 
@@ -30,14 +29,16 @@ import brave.http.HttpTracingCustomizer;
 import brave.sampler.SamplerFunction;
 import brave.sampler.SamplerFunctions;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.cloud.sleuth.autoconfig.TraceAutoConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Import;
 import org.springframework.core.Ordered;
 import org.springframework.lang.Nullable;
 
@@ -47,22 +48,25 @@ import org.springframework.lang.Nullable;
  *
  * @author Marcin Grzejszczak
  * @since 2.0.0
- * @deprecated This type should have never been public and will be hidden or removed in
- * 3.0
  */
-@Deprecated
 @Configuration(proxyBeanMethods = false)
-@ConditionalOnBean(TraceWebAutoConfiguration.class)
-@ConditionalOnProperty(name = "spring.sleuth.http.enabled", havingValue = "true",
-		matchIfMissing = true)
-@AutoConfigureAfter(TraceWebAutoConfiguration.class)
-@EnableConfigurationProperties({ TraceKeys.class, SleuthHttpLegacyProperties.class })
+// This was formerly conditional on TraceWebAutoConfiguration, which was
+// conditional on "spring.sleuth.web.enabled". As this is conditional on
+// "spring.sleuth.http.enabled", to be compatible with old behavior we have
+// to be conditional on two properties.
+@ConditionalOnProperty(
+		name = { "spring.sleuth.http.enabled", "spring.sleuth.web.enabled" },
+		havingValue = "true", matchIfMissing = true)
+@ConditionalOnBean(Tracing.class)
+@ConditionalOnClass(HttpTracing.class)
+@AutoConfigureAfter(TraceAutoConfiguration.class)
+@Import(TraceWebAutoConfiguration.class)
+@EnableConfigurationProperties(TraceKeys.class)
+// public allows @AutoConfigureAfter(TraceHttpAutoConfiguration)
+// for components needing HttpTracing
 public class TraceHttpAutoConfiguration {
 
 	static final int TRACING_FILTER_ORDER = Ordered.HIGHEST_PRECEDENCE + 5;
-
-	@Autowired(required = false)
-	List<HttpTracingCustomizer> httpTracingCustomizers = new ArrayList<>();
 
 	@Bean
 	@ConditionalOnMissingBean
@@ -76,7 +80,8 @@ public class TraceHttpAutoConfiguration {
 			@Nullable brave.http.HttpServerParser serverParser,
 			@HttpClientSampler SamplerFunction<HttpRequest> httpClientSampler,
 			@Nullable @ServerSampler HttpSampler serverSampler,
-			@Nullable @HttpServerSampler SamplerFunction<HttpRequest> httpServerSampler) {
+			@Nullable @HttpServerSampler SamplerFunction<HttpRequest> httpServerSampler,
+			@Nullable List<HttpTracingCustomizer> httpTracingCustomizers) {
 		if (httpServerSampler == null) {
 			httpServerSampler = serverSampler;
 		}
@@ -109,10 +114,11 @@ public class TraceHttpAutoConfiguration {
 			builder.serverParser(serverParser);
 		}
 
-		for (HttpTracingCustomizer customizer : this.httpTracingCustomizers) {
-			customizer.customize(builder);
+		if (httpTracingCustomizers != null) {
+			for (HttpTracingCustomizer customizer : httpTracingCustomizers) {
+				customizer.customize(builder);
+			}
 		}
-
 		return builder.build();
 	}
 

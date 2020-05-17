@@ -35,10 +35,8 @@ import org.springframework.core.task.AsyncTaskExecutor;
  *
  * @author Marcin Grzejszczak
  * @since 2.1.0
- * @deprecated This type should have never been public and will be hidden or removed in
- * 3.0
  */
-@Deprecated
+// public as most types in this package were documented for use
 public class LazyTraceAsyncTaskExecutor implements AsyncTaskExecutor {
 
 	private static final Log log = LogFactory.getLog(LazyTraceAsyncTaskExecutor.class);

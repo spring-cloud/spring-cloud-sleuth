@@ -16,7 +16,6 @@
 
 package org.springframework.cloud.sleuth.autoconfig;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
@@ -70,14 +69,13 @@ import org.springframework.util.StringUtils;
  * @author Marcin Grzejszczak
  * @author Tim Ysewyn
  * @since 2.0.0
- * @deprecated This type should have never been public and will be hidden or removed in
- * 3.0
  */
-@Deprecated
 @Configuration(proxyBeanMethods = false)
 @ConditionalOnProperty(value = "spring.sleuth.enabled", matchIfMissing = true)
 @EnableConfigurationProperties(SleuthProperties.class)
 @Import({ SleuthLogAutoConfiguration.class, SamplerAutoConfiguration.class })
+// public allows @AutoConfigureAfter(TraceAutoConfiguration)
+// for components needing Tracing
 public class TraceAutoConfiguration {
 
 	/**
@@ -91,19 +89,7 @@ public class TraceAutoConfiguration {
 	public static final String DEFAULT_SERVICE_NAME = "default";
 
 	@Autowired(required = false)
-	List<SpanAdjuster> spanAdjusters = new ArrayList<>();
-
-	@Autowired(required = false)
-	List<SpanHandler> spanHandlers = new ArrayList<>();
-
-	@Autowired(required = false)
 	ExtraFieldPropagation.FactoryBuilder extraFieldPropagationFactoryBuilder;
-
-	@Autowired(required = false)
-	List<TracingCustomizer> tracingCustomizers = new ArrayList<>();
-
-	@Autowired(required = false)
-	List<ExtraFieldCustomizer> extraFieldCustomizers = new ArrayList<>();
 
 	@Bean
 	@ConditionalOnMissingBean
@@ -111,21 +97,31 @@ public class TraceAutoConfiguration {
 	Tracing tracing(@LocalServiceName String serviceName, Propagation.Factory factory,
 			CurrentTraceContext currentTraceContext, Sampler sampler,
 			ErrorParser errorParser, SleuthProperties sleuthProperties,
-			@Nullable List<Reporter<zipkin2.Span>> spanReporters) {
+			@Nullable List<Reporter<zipkin2.Span>> spanReporters,
+			@Nullable List<SpanAdjuster> spanAdjusters,
+			@Nullable List<SpanHandler> spanHandlers,
+			@Nullable List<TracingCustomizer> tracingCustomizers) {
+		if (spanAdjusters == null) {
+			spanAdjusters = Collections.emptyList();
+		}
 		Tracing.Builder builder = Tracing.newBuilder().sampler(sampler)
 				.errorParser(errorParser)
 				.localServiceName(StringUtils.isEmpty(serviceName) ? DEFAULT_SERVICE_NAME
 						: serviceName)
 				.propagationFactory(factory).currentTraceContext(currentTraceContext)
-				.spanReporter(new CompositeReporter(this.spanAdjusters,
+				.spanReporter(new CompositeReporter(spanAdjusters,
 						spanReporters != null ? spanReporters : Collections.emptyList()))
 				.traceId128Bit(sleuthProperties.isTraceId128())
 				.supportsJoin(sleuthProperties.isSupportsJoin());
-		for (SpanHandler spanHandlerFactory : this.spanHandlers) {
-			builder.addSpanHandler(spanHandlerFactory);
+		if (spanHandlers != null) {
+			for (SpanHandler spanHandlerFactory : spanHandlers) {
+				builder.addSpanHandler(spanHandlerFactory);
+			}
 		}
-		for (TracingCustomizer customizer : this.tracingCustomizers) {
-			customizer.customize(builder);
+		if (tracingCustomizers != null) {
+			for (TracingCustomizer customizer : tracingCustomizers) {
+				customizer.customize(builder);
+			}
 		}
 		return builder.build();
 	}
@@ -144,7 +140,11 @@ public class TraceAutoConfiguration {
 
 	@Bean
 	@ConditionalOnMissingBean
-	Propagation.Factory sleuthPropagation(SleuthProperties sleuthProperties) {
+	Propagation.Factory sleuthPropagation(SleuthProperties sleuthProperties,
+			List<ExtraFieldCustomizer> extraFieldCustomizers) {
+		if (extraFieldCustomizers == null) {
+			extraFieldCustomizers = Collections.emptyList();
+		}
 		if (sleuthProperties.getBaggageKeys().isEmpty()
 				&& sleuthProperties.getPropagationKeys().isEmpty()
 				&& extraFieldCustomizers.isEmpty()
@@ -177,7 +177,7 @@ public class TraceAutoConfiguration {
 				factoryBuilder = factoryBuilder.addRedactedField(key);
 			}
 		}
-		for (ExtraFieldCustomizer customizer : this.extraFieldCustomizers) {
+		for (ExtraFieldCustomizer customizer : extraFieldCustomizers) {
 			customizer.customize(factoryBuilder);
 		}
 		return factoryBuilder.build();
