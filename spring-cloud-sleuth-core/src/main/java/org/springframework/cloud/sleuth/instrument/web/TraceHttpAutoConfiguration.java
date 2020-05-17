@@ -34,6 +34,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.cloud.sleuth.autoconfig.TraceAutoConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -49,12 +50,18 @@ import org.springframework.lang.Nullable;
  * @since 2.0.0
  */
 @Configuration(proxyBeanMethods = false)
-@ConditionalOnProperty(name = "spring.sleuth.http.enabled", havingValue = "true",
-		matchIfMissing = true)
+// This was formerly conditional on TraceWebAutoConfiguration, which was
+// conditional on "spring.sleuth.web.enabled". As this is conditional on
+// "spring.sleuth.http.enabled", to be compatible with old behavior we have
+// to be conditional on two properties.
+@ConditionalOnProperty(
+		name = { "spring.sleuth.http.enabled", "spring.sleuth.web.enabled" },
+		havingValue = "true", matchIfMissing = true)
 @ConditionalOnBean(Tracing.class)
 @ConditionalOnClass(HttpTracing.class)
 @AutoConfigureAfter(TraceAutoConfiguration.class)
 @Import(TraceWebAutoConfiguration.class)
+@EnableConfigurationProperties(TraceKeys.class)
 // public allows @AutoConfigureAfter(TraceHttpAutoConfiguration)
 // for components needing HttpTracing
 public class TraceHttpAutoConfiguration {
