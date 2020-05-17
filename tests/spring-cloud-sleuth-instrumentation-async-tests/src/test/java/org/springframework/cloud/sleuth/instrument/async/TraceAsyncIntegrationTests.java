@@ -40,6 +40,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest(
+		webEnvironment = SpringBootTest.WebEnvironment.NONE,
 		classes = { TraceAsyncIntegrationTests.TraceAsyncITestConfiguration.class })
 public class TraceAsyncIntegrationTests {
 
@@ -131,6 +132,7 @@ public class TraceAsyncIntegrationTests {
 	}
 
 	static class AsyncLogic {
+
 		final SpanCustomizer customizer;
 
 		AsyncLogic(SpanCustomizer customizer) {
