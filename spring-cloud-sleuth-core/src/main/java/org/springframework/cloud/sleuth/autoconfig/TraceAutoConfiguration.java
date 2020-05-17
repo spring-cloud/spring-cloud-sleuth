@@ -16,7 +16,6 @@
 
 package org.springframework.cloud.sleuth.autoconfig;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
@@ -40,7 +39,6 @@ import zipkin2.reporter.Reporter;
 import zipkin2.reporter.ReporterMetrics;
 import zipkin2.reporter.metrics.micrometer.MicrometerReporterMetrics;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -66,14 +64,13 @@ import org.springframework.util.StringUtils;
  * @author Marcin Grzejszczak
  * @author Tim Ysewyn
  * @since 2.0.0
- * @deprecated This type should have never been public and will be hidden or removed in
- * 3.0
  */
-@Deprecated
 @Configuration(proxyBeanMethods = false)
 @ConditionalOnProperty(value = "spring.sleuth.enabled", matchIfMissing = true)
 @EnableConfigurationProperties(SleuthProperties.class)
 @Import({ TraceBaggageConfiguration.class, SamplerAutoConfiguration.class })
+// public allows @AutoConfigureAfter(TraceAutoConfiguration)
+// for components needing Tracing
 public class TraceAutoConfiguration {
 
 	/**
@@ -86,19 +83,15 @@ public class TraceAutoConfiguration {
 	 */
 	public static final String DEFAULT_SERVICE_NAME = "default";
 
-	@Autowired(required = false)
-	List<SpanHandler> spanHandlers = new ArrayList<>();
-
-	@Autowired(required = false)
-	List<TracingCustomizer> tracingCustomizers = new ArrayList<>();
-
 	@Bean
 	@ConditionalOnMissingBean
 	// NOTE: stable bean name as might be used outside sleuth
 	Tracing tracing(@LocalServiceName String serviceName, Propagation.Factory factory,
 			CurrentTraceContext currentTraceContext, Sampler sampler,
 			ErrorParser errorParser, SleuthProperties sleuthProperties,
-			@Nullable List<Reporter<zipkin2.Span>> spanReporters) {
+			@Nullable List<Reporter<zipkin2.Span>> spanReporters,
+			@Nullable List<SpanHandler> spanHandlers,
+			@Nullable List<TracingCustomizer> tracingCustomizers) {
 		Tracing.Builder builder = Tracing.newBuilder().sampler(sampler)
 				.errorParser(errorParser)
 				.localServiceName(StringUtils.isEmpty(serviceName) ? DEFAULT_SERVICE_NAME
@@ -108,11 +101,15 @@ public class TraceAutoConfiguration {
 						spanReporters != null ? spanReporters : Collections.emptyList()))
 				.traceId128Bit(sleuthProperties.isTraceId128())
 				.supportsJoin(sleuthProperties.isSupportsJoin());
-		for (SpanHandler spanHandlerFactory : this.spanHandlers) {
-			builder.addSpanHandler(spanHandlerFactory);
+		if (spanHandlers != null) {
+			for (SpanHandler spanHandlerFactory : spanHandlers) {
+				builder.addSpanHandler(spanHandlerFactory);
+			}
 		}
-		for (TracingCustomizer customizer : this.tracingCustomizers) {
-			customizer.customize(builder);
+		if (tracingCustomizers != null) {
+			for (TracingCustomizer customizer : tracingCustomizers) {
+				customizer.customize(builder);
+			}
 		}
 		return builder.build();
 	}
@@ -128,9 +125,6 @@ public class TraceAutoConfiguration {
 	SpanNamer sleuthSpanNamer() {
 		return new DefaultSpanNamer();
 	}
-
-	@Autowired(required = false)
-	List<CurrentTraceContextCustomizer> currentTraceContextCustomizers = new ArrayList<>();
 
 	@Bean
 	CurrentTraceContext sleuthCurrentTraceContext(CurrentTraceContext.Builder builder,

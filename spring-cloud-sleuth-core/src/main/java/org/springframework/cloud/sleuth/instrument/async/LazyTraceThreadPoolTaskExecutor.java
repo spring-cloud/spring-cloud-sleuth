@@ -39,11 +39,9 @@ import org.springframework.util.concurrent.ListenableFuture;
  *
  * @author Marcin Grzejszczak
  * @since 1.0.10
- * @deprecated This type should have never been public and will be hidden or removed in
- * 3.0
  */
-@Deprecated
 @SuppressWarnings("serial")
+// public as most types in this package were documented for use
 public class LazyTraceThreadPoolTaskExecutor extends ThreadPoolTaskExecutor {
 
 	private static final Log log = LogFactory

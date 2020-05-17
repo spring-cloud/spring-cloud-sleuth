@@ -16,7 +16,6 @@
 
 package org.springframework.cloud.sleuth.instrument.rpc;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import brave.Tracing;
@@ -25,7 +24,6 @@ import brave.rpc.RpcTracing;
 import brave.rpc.RpcTracingCustomizer;
 import brave.sampler.SamplerFunction;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
@@ -41,27 +39,24 @@ import org.springframework.lang.Nullable;
  * Auto-configuration} related to RPC based communication.
  *
  * @since 2.2.0
- * @deprecated This type should have never been public and will be hidden or removed in
- * 3.0
  */
-@Deprecated
 @Configuration(proxyBeanMethods = false)
 @ConditionalOnProperty(name = "spring.sleuth.rpc.enabled", havingValue = "true",
 		matchIfMissing = true)
 @ConditionalOnBean(Tracing.class)
 @ConditionalOnClass(RpcTracing.class)
 @AutoConfigureAfter(TraceAutoConfiguration.class)
+// public allows @AutoConfigureAfter(TraceRpcAutoConfiguration)
+// for components needing RpcTracing
 public class TraceRpcAutoConfiguration {
-
-	@Autowired(required = false)
-	List<RpcTracingCustomizer> rpcTracingCustomizers = new ArrayList<>();
 
 	@Bean
 	@ConditionalOnMissingBean
 	// NOTE: stable bean name as might be used outside sleuth
 	RpcTracing rpcTracing(Tracing tracing,
 			@Nullable @RpcClientSampler SamplerFunction<RpcRequest> clientSampler,
-			@Nullable @RpcServerSampler SamplerFunction<RpcRequest> serverSampler) {
+			@Nullable @RpcServerSampler SamplerFunction<RpcRequest> serverSampler,
+			@Nullable List<RpcTracingCustomizer> rpcTracingCustomizers) {
 
 		RpcTracing.Builder builder = RpcTracing.newBuilder(tracing);
 		if (clientSampler != null) {
@@ -70,8 +65,10 @@ public class TraceRpcAutoConfiguration {
 		if (serverSampler != null) {
 			builder.serverSampler(serverSampler);
 		}
-		for (RpcTracingCustomizer customizer : this.rpcTracingCustomizers) {
-			customizer.customize(builder);
+		if (rpcTracingCustomizers != null) {
+			for (RpcTracingCustomizer customizer : rpcTracingCustomizers) {
+				customizer.customize(builder);
+			}
 		}
 		return builder.build();
 	}

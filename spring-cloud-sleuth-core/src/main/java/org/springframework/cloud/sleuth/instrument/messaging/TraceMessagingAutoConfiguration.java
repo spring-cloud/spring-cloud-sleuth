@@ -17,7 +17,6 @@
 package org.springframework.cloud.sleuth.instrument.messaging;
 
 import java.lang.reflect.Field;
-import java.util.ArrayList;
 import java.util.List;
 
 import brave.Span;
@@ -47,7 +46,6 @@ import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.aop.framework.ProxyFactoryBean;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.BeanFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.beans.factory.config.BeanPostProcessor;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
@@ -77,10 +75,7 @@ import org.springframework.util.ReflectionUtils;
  *
  * @author Marcin Grzejszczak
  * @since 2.0.0
- * @deprecated This type should have never been public and will be hidden or removed in
- * 3.0
  */
-@Deprecated
 @Configuration(proxyBeanMethods = false)
 @ConditionalOnBean(Tracing.class)
 @ConditionalOnClass(MessagingTracing.class)
@@ -88,17 +83,17 @@ import org.springframework.util.ReflectionUtils;
 		TraceSpringMessagingAutoConfiguration.class })
 @OnMessagingEnabled
 @EnableConfigurationProperties(SleuthMessagingProperties.class)
+// public allows @AutoConfigureAfter(TraceMessagingAutoConfiguration)
+// for components needing MessagingTracing
 public class TraceMessagingAutoConfiguration {
-
-	@Autowired(required = false)
-	List<MessagingTracingCustomizer> messagingTracingCustomizers = new ArrayList<>();
 
 	@Bean
 	@ConditionalOnMissingBean
 	// NOTE: stable bean name as might be used outside sleuth
 	MessagingTracing messagingTracing(Tracing tracing,
 			@Nullable @ProducerSampler SamplerFunction<MessagingRequest> producerSampler,
-			@Nullable @ConsumerSampler SamplerFunction<MessagingRequest> consumerSampler) {
+			@Nullable @ConsumerSampler SamplerFunction<MessagingRequest> consumerSampler,
+			@Nullable List<MessagingTracingCustomizer> messagingTracingCustomizers) {
 
 		MessagingTracing.Builder builder = MessagingTracing.newBuilder(tracing);
 		if (producerSampler != null) {
@@ -107,8 +102,10 @@ public class TraceMessagingAutoConfiguration {
 		if (consumerSampler != null) {
 			builder.consumerSampler(consumerSampler);
 		}
-		for (MessagingTracingCustomizer customizer : this.messagingTracingCustomizers) {
-			customizer.customize(builder);
+		if (messagingTracingCustomizers != null) {
+			for (MessagingTracingCustomizer customizer : messagingTracingCustomizers) {
+				customizer.customize(builder);
+			}
 		}
 		return builder.build();
 	}
