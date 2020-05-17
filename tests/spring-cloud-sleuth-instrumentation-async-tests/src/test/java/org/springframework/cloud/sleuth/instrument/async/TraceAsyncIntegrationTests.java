@@ -16,6 +16,7 @@
 
 package org.springframework.cloud.sleuth.instrument.async;
 
+import brave.SpanCustomizer;
 import brave.handler.MutableSpan;
 import brave.handler.SpanHandler;
 import brave.propagation.CurrentTraceContext;
@@ -90,6 +91,7 @@ public class TraceAsyncIntegrationTests {
 
 	static MutableSpan assertSpan_invokeAsync_customName(MutableSpan span) {
 		assertThat(span.name()).isEqualTo("foo");
+		assertThat(span.containsAnnotation("@Async")).isTrue();
 		assertThat(span.tags()).containsEntry("class", "AsyncLogic")
 				.containsEntry("method", "invokeAsync_customName");
 		return span;
@@ -97,6 +99,7 @@ public class TraceAsyncIntegrationTests {
 
 	static MutableSpan assertSpan_invokeAsync(MutableSpan span) {
 		assertThat(span.name()).isEqualTo("invoke-async");
+		assertThat(span.containsAnnotation("@Async")).isTrue();
 		assertThat(span.tags()).containsEntry("class", "AsyncLogic")
 				.containsEntry("method", "invokeAsync");
 		return span;
@@ -116,8 +119,8 @@ public class TraceAsyncIntegrationTests {
 	static class TraceAsyncITestConfiguration {
 
 		@Bean
-		AsyncLogic asyncLogic() {
-			return new AsyncLogic();
+		AsyncLogic asyncLogic(SpanCustomizer customizer) {
+			return new AsyncLogic(customizer);
 		}
 
 		@Bean
@@ -128,14 +131,21 @@ public class TraceAsyncIntegrationTests {
 	}
 
 	static class AsyncLogic {
+		final SpanCustomizer customizer;
+
+		AsyncLogic(SpanCustomizer customizer) {
+			this.customizer = customizer;
+		}
 
 		@Async
 		public void invokeAsync() {
+			customizer.annotate("@Async"); // proves the handler is in scope
 		}
 
 		@Async
 		@SpanName("foo")
 		public void invokeAsync_customName() {
+			customizer.annotate("@Async"); // proves the handler is in scope
 		}
 
 	}
