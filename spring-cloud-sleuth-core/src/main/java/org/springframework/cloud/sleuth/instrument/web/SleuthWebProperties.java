@@ -26,8 +26,7 @@ import org.springframework.boot.context.properties.NestedConfigurationProperty;
  * @since 1.0.12
  */
 @ConfigurationProperties("spring.sleuth.web")
-// TODO: Hide in 3.x, if it isn't already deleted
-public class SleuthWebProperties {
+class SleuthWebProperties {
 
 	/**
 	 * Default set of skip patterns.
@@ -71,7 +70,7 @@ public class SleuthWebProperties {
 
 	/**
 	 * If set to true, auto-configured skip patterns will be ignored.
-	 * @see TraceWebAutoConfiguration
+	 * @see SkipPatternConfiguration
 	 */
 	private boolean ignoreAutoConfiguredSkipPatterns = false;
 

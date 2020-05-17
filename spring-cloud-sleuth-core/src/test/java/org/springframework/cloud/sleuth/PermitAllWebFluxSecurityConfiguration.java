@@ -22,7 +22,7 @@ import org.springframework.security.config.web.server.ServerHttpSecurity;
 import org.springframework.security.web.server.SecurityWebFilterChain;
 
 @Configuration
-public class PermitAllWebFluxSecurityConfiguration {
+class PermitAllWebFluxSecurityConfiguration {
 
 	@Bean
 	SecurityWebFilterChain springWebFilterChain(ServerHttpSecurity http)

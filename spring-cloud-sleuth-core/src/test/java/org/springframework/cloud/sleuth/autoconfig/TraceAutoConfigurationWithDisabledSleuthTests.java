@@ -61,8 +61,8 @@ public class TraceAutoConfigurationWithDisabledSleuthTests {
 	public void shouldNotContainAnyTracingInfoInTheLogs(CapturedOutput capture) {
 		log.info("hello");
 
-		assertThat(applicationName).isEqualTo("foo"); // prove bootstrap-disabled.yml
-														// loaded
+		// prove bootstrap-disabled.yml loaded
+		assertThat(applicationName).isEqualTo("foo");
 
 		// spring.application.name is put in the log format by
 		// TraceEnvironmentPostProcessor

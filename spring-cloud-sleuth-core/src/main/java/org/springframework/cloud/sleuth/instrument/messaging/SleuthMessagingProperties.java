@@ -24,9 +24,8 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * @author Marcin Grzejszczak
  * @since 2.0.0
  */
-// TODO: Hide in 3.x, if it isn't already deleted
 @ConfigurationProperties("spring.sleuth")
-public class SleuthMessagingProperties {
+class SleuthMessagingProperties {
 
 	private Integration integration = new Integration();
 

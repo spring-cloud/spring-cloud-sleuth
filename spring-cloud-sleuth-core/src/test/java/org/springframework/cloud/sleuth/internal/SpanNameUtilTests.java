@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.springframework.cloud.sleuth.util;
+package org.springframework.cloud.sleuth.internal;
 
 import org.assertj.core.api.BDDAssertions;
 import org.junit.jupiter.api.Test;

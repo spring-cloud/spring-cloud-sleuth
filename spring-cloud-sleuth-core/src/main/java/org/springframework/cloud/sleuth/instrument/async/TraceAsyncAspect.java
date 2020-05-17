@@ -26,7 +26,7 @@ import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.reflect.MethodSignature;
 
 import org.springframework.cloud.sleuth.SpanNamer;
-import org.springframework.cloud.sleuth.util.SpanNameUtil;
+import org.springframework.cloud.sleuth.internal.SpanNameUtil;
 import org.springframework.util.ReflectionUtils;
 
 /**
@@ -36,12 +36,9 @@ import org.springframework.util.ReflectionUtils;
  * @author Marcin Grzejszczak
  * @since 1.0.0
  * @see Tracer
- * @deprecated This type should have never been public and will be hidden or removed in
- * 3.0
  */
-@Deprecated
 @Aspect
-public class TraceAsyncAspect {
+class TraceAsyncAspect {
 
 	private static final String CLASS_KEY = "class";
 
@@ -51,7 +48,7 @@ public class TraceAsyncAspect {
 
 	private final SpanNamer spanNamer;
 
-	public TraceAsyncAspect(Tracer tracer, SpanNamer spanNamer) {
+	TraceAsyncAspect(Tracer tracer, SpanNamer spanNamer) {
 		this.tracer = tracer;
 		this.spanNamer = spanNamer;
 	}

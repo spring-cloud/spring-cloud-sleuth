@@ -26,8 +26,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * @since 1.0.0
  */
 @ConfigurationProperties("spring.sleuth.sampler")
-// TODO: Hide in 3.x, if it isn't already deleted
-public class SamplerProperties {
+class SamplerProperties {
 
 	/**
 	 * Probability of requests that should be sampled. E.g. 1.0 - 100% requests should be

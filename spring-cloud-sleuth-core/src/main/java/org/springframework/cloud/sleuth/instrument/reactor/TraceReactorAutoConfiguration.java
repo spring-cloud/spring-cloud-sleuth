@@ -38,7 +38,6 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.cloud.context.scope.refresh.RefreshScope;
 import org.springframework.cloud.context.scope.refresh.RefreshScopeRefreshedEvent;
 import org.springframework.cloud.sleuth.instrument.async.TraceableScheduledExecutorService;
-import org.springframework.cloud.sleuth.instrument.web.TraceWebFluxAutoConfiguration;
 import org.springframework.context.ApplicationListener;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.Bean;
@@ -55,16 +54,14 @@ import static org.springframework.cloud.sleuth.instrument.reactor.TraceReactorAu
  * @author Stephane Maldini
  * @author Marcin Grzejszczak
  * @since 2.0.0
- * @deprecated This type should have never been public and will be hidden or removed in
- * 3.0
  */
-@Deprecated
 @Configuration(proxyBeanMethods = false)
 @ConditionalOnProperty(value = "spring.sleuth.reactor.enabled", matchIfMissing = true)
 @ConditionalOnClass(Mono.class)
-@AutoConfigureAfter(TraceWebFluxAutoConfiguration.class)
+@AutoConfigureAfter(
+		name = "org.springframework.cloud.sleuth.instrument.web.TraceWebFluxAutoConfiguration")
 @EnableConfigurationProperties(SleuthReactorProperties.class)
-public class TraceReactorAutoConfiguration {
+class TraceReactorAutoConfiguration {
 
 	static final String SLEUTH_REACTOR_EXECUTOR_SERVICE_KEY = "sleuth";
 

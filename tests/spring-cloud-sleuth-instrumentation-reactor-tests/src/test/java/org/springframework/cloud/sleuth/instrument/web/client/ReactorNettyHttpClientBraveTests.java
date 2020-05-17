@@ -24,7 +24,6 @@ import reactor.netty.ByteBufFlux;
 import reactor.netty.http.client.HttpClient;
 
 import org.springframework.beans.factory.config.BeanPostProcessor;
-import org.springframework.cloud.sleuth.instrument.reactor.TraceReactorAutoConfiguration;
 import org.springframework.cloud.sleuth.instrument.reactor.TraceReactorAutoConfigurationAccessorConfiguration;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.web.reactive.function.client.WebClient;
@@ -37,8 +36,10 @@ import org.springframework.web.reactive.function.client.WebClient;
 public class ReactorNettyHttpClientBraveTests extends ITSpringConfiguredReactorClient {
 
 	/**
-	 * This borrows hooks from {@link TraceReactorAutoConfiguration} to ensure that the
-	 * invocation trace context is set in scope for hooks like {@link Subscriber#onNext}.
+	 * This borrows hooks from
+	 * {@code org.springframework.cloud.sleuth.instrument.reactor.TraceReactorAutoConfiguration}
+	 * to ensure that the invocation trace context is set in scope for hooks like
+	 * {@link Subscriber#onNext}.
 	 *
 	 * <p>
 	 * We do this implicitly until

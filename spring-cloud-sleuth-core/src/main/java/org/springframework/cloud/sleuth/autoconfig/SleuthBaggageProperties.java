@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.springframework.cloud.sleuth.baggage;
+package org.springframework.cloud.sleuth.autoconfig;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -34,7 +34,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * @since 3.0
  */
 @ConfigurationProperties("spring.sleuth.baggage")
-public class SleuthBaggageProperties {
+class SleuthBaggageProperties {
 
 	/**
 	 * Adds a {@link CorrelationScopeDecorator} to put baggage values into the correlation

@@ -34,7 +34,6 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.cloud.sleuth.SpanNamer;
-import org.springframework.cloud.sleuth.instrument.scheduling.SleuthSchedulingProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Role;
@@ -52,16 +51,12 @@ import org.springframework.scheduling.annotation.AsyncConfigurerSupport;
  * @since 1.0.0
  * @see LazyTraceExecutor
  * @see TraceAsyncAspect
- * @deprecated This type should have never been public and will be hidden or removed in
- * 3.0
  */
-@Deprecated
 @Configuration(proxyBeanMethods = false)
-@EnableConfigurationProperties({ SleuthAsyncProperties.class,
-		SleuthSchedulingProperties.class })
+@EnableConfigurationProperties(SleuthAsyncProperties.class)
 @ConditionalOnProperty(value = "spring.sleuth.async.enabled", matchIfMissing = true)
 @ConditionalOnBean(Tracing.class)
-public class AsyncDefaultAutoConfiguration {
+class AsyncDefaultAutoConfiguration {
 
 	@Bean
 	@ConditionalOnProperty(value = "spring.sleuth.scheduled.enabled",

@@ -40,10 +40,7 @@ import org.springframework.kafka.config.StreamsBuilderFactoryBean;
  * Auto-configuration} enables Kafka Streams span creation and reporting.
  *
  * @author Tim te Beek
- * @deprecated This type should have never been public and will be hidden or removed in
- * 3.0
  */
-@Deprecated
 @Configuration(proxyBeanMethods = false)
 @ConditionalOnBean(Tracing.class)
 @AutoConfigureAfter({ TraceAutoConfiguration.class })
@@ -51,7 +48,7 @@ import org.springframework.kafka.config.StreamsBuilderFactoryBean;
 @ConditionalOnProperty(value = "spring.sleuth.messaging.kafka.streams.enabled",
 		matchIfMissing = true)
 @ConditionalOnClass(KafkaStreams.class)
-public class SleuthKafkaStreamsConfiguration {
+class SleuthKafkaStreamsConfiguration {
 
 	protected SleuthKafkaStreamsConfiguration() {
 	}

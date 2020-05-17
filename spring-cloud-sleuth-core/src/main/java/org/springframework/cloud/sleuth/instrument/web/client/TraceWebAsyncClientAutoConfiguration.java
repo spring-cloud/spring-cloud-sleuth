@@ -44,10 +44,7 @@ import org.springframework.web.client.AsyncRestTemplate;
  *
  * @author Marcin Grzejszczak
  * @since 1.0.0
- * @deprecated This type should have never been public and will be hidden or removed in
- * 3.0
  */
-@Deprecated
 @Configuration(proxyBeanMethods = false)
 @SleuthWebClientEnabled
 @ConditionalOnProperty(value = "spring.sleuth.web.async.client.enabled",
@@ -55,7 +52,7 @@ import org.springframework.web.client.AsyncRestTemplate;
 @ConditionalOnClass(AsyncRestTemplate.class)
 @ConditionalOnBean(HttpTracing.class)
 @AutoConfigureAfter(TraceHttpAutoConfiguration.class)
-public class TraceWebAsyncClientAutoConfiguration {
+class TraceWebAsyncClientAutoConfiguration {
 
 	@Configuration(proxyBeanMethods = false)
 	@ConditionalOnBean(AsyncRestTemplate.class)

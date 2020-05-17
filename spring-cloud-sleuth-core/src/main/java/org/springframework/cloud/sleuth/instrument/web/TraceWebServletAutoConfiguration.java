@@ -38,6 +38,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.cloud.sleuth.SpanNamer;
 import org.springframework.context.annotation.Bean;
@@ -52,17 +53,15 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
  * @author Marcin Grzejszczak
  * @author Spencer Gibb
  * @since 1.0.0
- * @deprecated This type should have never been public and will be hidden or removed in
- * 3.0
  */
-@Deprecated
 @Configuration(proxyBeanMethods = false)
 @ConditionalOnProperty(value = "spring.sleuth.web.enabled", matchIfMissing = true)
 @ConditionalOnWebApplication(type = ConditionalOnWebApplication.Type.SERVLET)
 @ConditionalOnBean(HttpTracing.class)
 @AutoConfigureAfter(TraceHttpAutoConfiguration.class)
+@EnableConfigurationProperties(SleuthWebProperties.class)
 @Import(SpanCustomizingAsyncHandlerInterceptor.class)
-public class TraceWebServletAutoConfiguration {
+class TraceWebServletAutoConfiguration {
 
 	/**
 	 * Default filter order for the Http tracing filter.

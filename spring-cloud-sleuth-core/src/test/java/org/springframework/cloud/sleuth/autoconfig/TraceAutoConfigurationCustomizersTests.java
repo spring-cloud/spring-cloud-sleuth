@@ -32,7 +32,6 @@ import org.springframework.boot.test.context.runner.ApplicationContextRunner;
 import org.springframework.cloud.sleuth.instrument.messaging.TraceMessagingAutoConfiguration;
 import org.springframework.cloud.sleuth.instrument.rpc.TraceRpcAutoConfiguration;
 import org.springframework.cloud.sleuth.instrument.web.TraceHttpAutoConfiguration;
-import org.springframework.cloud.sleuth.instrument.web.TraceWebAutoConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.messaging.support.MessageHeaderAccessor;
@@ -43,10 +42,9 @@ public class TraceAutoConfigurationCustomizersTests {
 
 	private final ApplicationContextRunner contextRunner = new ApplicationContextRunner()
 			.withConfiguration(AutoConfigurations.of(TraceAutoConfiguration.class,
-					TraceWebAutoConfiguration.class, TraceHttpAutoConfiguration.class,
-					TraceRpcAutoConfiguration.class,
-					FakeSpringMessagingAutoConfiguration.class,
-					TraceMessagingAutoConfiguration.class))
+					TraceHttpAutoConfiguration.class, TraceRpcAutoConfiguration.class,
+					TraceMessagingAutoConfiguration.class,
+					FakeSpringMessagingAutoConfiguration.class))
 			.withUserConfiguration(Customizers.class);
 
 	@Test

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.springframework.cloud.sleuth.util;
+package org.springframework.cloud.sleuth.internal;
 
 import org.springframework.util.StringUtils;
 
@@ -23,9 +23,7 @@ import org.springframework.util.StringUtils;
  *
  * @author Adrian Cole
  * @since 1.0.2
- * @deprecated This type should have been internal. It will be hidden or removed in 3.0
  */
-@Deprecated
 public final class SpanNameUtil {
 
 	static final int MAX_NAME_LENGTH = 50;

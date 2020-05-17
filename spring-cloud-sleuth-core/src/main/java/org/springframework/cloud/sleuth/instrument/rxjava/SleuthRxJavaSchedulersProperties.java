@@ -25,8 +25,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * @since 1.0.12
  */
 @ConfigurationProperties("spring.sleuth.rxjava.schedulers")
-// TODO: Hide in 3.x, if it isn't already deleted
-public class SleuthRxJavaSchedulersProperties {
+class SleuthRxJavaSchedulersProperties {
 
 	/**
 	 * Thread names for which spans will not be sampled.

@@ -75,7 +75,6 @@ import org.springframework.cloud.loadbalancer.annotation.LoadBalancerClient;
 import org.springframework.cloud.loadbalancer.core.ServiceInstanceListSupplier;
 import org.springframework.cloud.openfeign.EnableFeignClients;
 import org.springframework.cloud.openfeign.FeignClient;
-import org.springframework.cloud.sleuth.instrument.web.TraceWebServletAutoConfiguration;
 import org.springframework.cloud.sleuth.util.ArrayListSpanReporter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -520,9 +519,10 @@ public class WebClientTests {
 	}
 
 	@Configuration
-	@EnableAutoConfiguration(exclude = { TraceWebServletAutoConfiguration.class,
-			GatewayClassPathWarningAutoConfiguration.class,
-			GatewayAutoConfiguration.class })
+	@EnableAutoConfiguration(
+			excludeName = "org.springframework.cloud.sleuth.instrument.web.TraceWebServletAutoConfiguration",
+			exclude = { GatewayClassPathWarningAutoConfiguration.class,
+					GatewayAutoConfiguration.class })
 	@EnableFeignClients
 	@LoadBalancerClient(value = "fooservice",
 			configuration = SimpleLoadBalancerClientConfiguration.class)

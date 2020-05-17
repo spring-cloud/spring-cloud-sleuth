@@ -34,7 +34,6 @@ import zipkin2.Span;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.cloud.sleuth.instrument.web.TraceWebServletAutoConfiguration;
 import org.springframework.cloud.sleuth.util.ArrayListSpanReporter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
@@ -184,7 +183,10 @@ public class RestTemplateTraceAspectIntegrationTests {
 				.andExpect(status().isOk());
 	}
 
-	@EnableAutoConfiguration(exclude = TraceWebServletAutoConfiguration.class)
+	@EnableAutoConfiguration(
+			// spring boot test will otherwise instrument the client and server with the
+			// same bean factory which isn't expected
+			excludeName = "org.springframework.cloud.sleuth.instrument.web.TraceWebServletAutoConfiguration")
 	@Import(AspectTestingController.class)
 	public static class Config {
 

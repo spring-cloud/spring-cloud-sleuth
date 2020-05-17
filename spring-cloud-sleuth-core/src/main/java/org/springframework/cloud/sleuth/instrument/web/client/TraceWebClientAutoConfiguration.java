@@ -62,16 +62,13 @@ import org.springframework.web.reactive.function.client.WebClient;
  *
  * @author Marcin Grzejszczak
  * @since 1.0.0
- * @deprecated This type should have never been public and will be hidden or removed in
- * 3.0
  */
-@Deprecated
 @Configuration(proxyBeanMethods = false)
 @SleuthWebClientEnabled
 @ConditionalOnBean(HttpTracing.class)
 @AutoConfigureAfter(TraceHttpAutoConfiguration.class)
 @AutoConfigureBefore(HttpClientConfiguration.class)
-public class TraceWebClientAutoConfiguration {
+class TraceWebClientAutoConfiguration {
 
 	@Configuration(proxyBeanMethods = false)
 	@ConditionalOnClass(RestTemplate.class)

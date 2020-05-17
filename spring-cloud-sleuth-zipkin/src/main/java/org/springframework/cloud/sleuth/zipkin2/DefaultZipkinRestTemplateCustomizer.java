@@ -32,15 +32,12 @@ import org.springframework.web.client.RestTemplate;
  *
  * @author Marcin Grzejszczak
  * @since 1.1.0
- * @deprecated This type should have never been public and will be hidden or removed in
- * 3.0
  */
-@Deprecated
-public class DefaultZipkinRestTemplateCustomizer implements ZipkinRestTemplateCustomizer {
+class DefaultZipkinRestTemplateCustomizer implements ZipkinRestTemplateCustomizer {
 
 	private final ZipkinProperties zipkinProperties;
 
-	public DefaultZipkinRestTemplateCustomizer(ZipkinProperties zipkinProperties) {
+	DefaultZipkinRestTemplateCustomizer(ZipkinProperties zipkinProperties) {
 		this.zipkinProperties = zipkinProperties;
 	}
 

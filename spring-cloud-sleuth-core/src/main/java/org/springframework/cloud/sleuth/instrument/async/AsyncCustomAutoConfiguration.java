@@ -24,7 +24,6 @@ import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.AutoConfigureBefore;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.cloud.sleuth.instrument.scheduling.TraceSchedulingAutoConfiguration;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.scheduling.annotation.AsyncConfigurer;
 
@@ -35,16 +34,14 @@ import org.springframework.scheduling.annotation.AsyncConfigurer;
  *
  * @author Dave Syer
  * @since 1.0.0
- * @deprecated This type should have never been public and will be hidden or removed in
- * 3.0
  */
-@Deprecated
 @Configuration(proxyBeanMethods = false)
 @ConditionalOnBean(AsyncConfigurer.class)
 @AutoConfigureBefore(AsyncDefaultAutoConfiguration.class)
 @ConditionalOnProperty(value = "spring.sleuth.async.enabled", matchIfMissing = true)
-@AutoConfigureAfter(TraceSchedulingAutoConfiguration.class)
-public class AsyncCustomAutoConfiguration implements BeanPostProcessor {
+@AutoConfigureAfter(
+		name = "org.springframework.cloud.sleuth.instrument.scheduling.TraceSchedulingAutoConfiguration")
+class AsyncCustomAutoConfiguration implements BeanPostProcessor {
 
 	@Autowired
 	private BeanFactory beanFactory;

@@ -47,7 +47,6 @@ import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.system.CapturedOutput;
 import org.springframework.boot.test.system.OutputCaptureExtension;
-import org.springframework.cloud.sleuth.instrument.web.client.TraceWebClientAutoConfiguration;
 import org.springframework.cloud.sleuth.util.BlockingQueueSpanReporter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -160,7 +159,10 @@ public class TraceFilterWebIntegrationTests {
 		return this.environment.getProperty("local.server.port", Integer.class);
 	}
 
-	@EnableAutoConfiguration(exclude = TraceWebClientAutoConfiguration.class)
+	@EnableAutoConfiguration(
+			// spring boot test will otherwise instrument the client and server with the
+			// same bean factory which isn't expected
+			excludeName = "org.springframework.cloud.sleuth.instrument.web.client.TraceWebClientAutoConfiguration")
 	@Configuration
 	public static class Config {
 

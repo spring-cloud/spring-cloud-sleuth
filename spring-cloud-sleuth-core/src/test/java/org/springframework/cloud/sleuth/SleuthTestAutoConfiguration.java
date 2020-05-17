@@ -24,7 +24,7 @@ import org.springframework.context.annotation.Import;
  * @author Marcin Grzejszczak
  */
 @Configuration
-public class SleuthTestAutoConfiguration {
+class SleuthTestAutoConfiguration {
 
 	@Configuration
 	@ConditionalOnWebApplication(type = ConditionalOnWebApplication.Type.REACTIVE)

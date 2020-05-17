@@ -25,8 +25,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * @since 1.0.11
  */
 @ConfigurationProperties("spring.sleuth")
-// TODO: Hide in 3.x, if it isn't already deleted
-public class SleuthProperties {
+class SleuthProperties {
 
 	private boolean enabled = true;
 

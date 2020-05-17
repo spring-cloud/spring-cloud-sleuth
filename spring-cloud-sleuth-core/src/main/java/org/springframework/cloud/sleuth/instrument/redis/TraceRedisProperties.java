@@ -24,8 +24,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * @author Daniel Albuquerque
  */
 @ConfigurationProperties("spring.sleuth.redis")
-// TODO: Hide in 3.x, if it isn't already deleted
-public class TraceRedisProperties {
+class TraceRedisProperties {
 
 	/**
 	 * Enable span information propagation when using Redis.

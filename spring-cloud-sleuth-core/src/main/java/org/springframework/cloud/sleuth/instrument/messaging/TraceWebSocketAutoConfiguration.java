@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.springframework.cloud.sleuth.instrument.messaging.websocket;
+package org.springframework.cloud.sleuth.instrument.messaging;
 
 import brave.Tracing;
 
@@ -22,7 +22,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.cloud.sleuth.instrument.messaging.TracingChannelInterceptor;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.messaging.simp.config.ChannelRegistration;
 import org.springframework.messaging.simp.config.MessageBrokerRegistry;
@@ -37,17 +36,13 @@ import org.springframework.web.socket.config.annotation.StompEndpointRegistry;
  * @author Dave Syer
  * @since 1.0.0
  * @see AbstractWebSocketMessageBrokerConfigurer
- * @deprecated This type should have never been public and will be hidden or removed in
- * 3.0
  */
-@Deprecated
 @Configuration(proxyBeanMethods = false)
 @ConditionalOnClass(DelegatingWebSocketMessageBrokerConfiguration.class)
 @ConditionalOnBean(Tracing.class)
 @ConditionalOnProperty(value = "spring.sleuth.integration.websockets.enabled",
 		matchIfMissing = true)
-public class TraceWebSocketAutoConfiguration
-		extends AbstractWebSocketMessageBrokerConfigurer {
+class TraceWebSocketAutoConfiguration extends AbstractWebSocketMessageBrokerConfigurer {
 
 	@Autowired
 	Tracing tracing;

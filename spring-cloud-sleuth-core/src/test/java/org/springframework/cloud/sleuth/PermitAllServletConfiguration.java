@@ -25,7 +25,7 @@ import org.springframework.security.config.annotation.web.configuration.WebSecur
 @Configuration
 @EnableWebSecurity
 @Order(99)
-public class PermitAllServletConfiguration extends WebSecurityConfigurerAdapter {
+class PermitAllServletConfiguration extends WebSecurityConfigurerAdapter {
 
 	@Override
 	protected void configure(HttpSecurity http) throws Exception {

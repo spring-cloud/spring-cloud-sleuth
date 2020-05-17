@@ -22,6 +22,7 @@ import brave.http.HttpResponseParser;
 import brave.http.HttpTracing;
 import brave.sampler.SamplerFunction;
 import brave.sampler.SamplerFunctions;
+import org.assertj.core.api.BDDAssertions;
 import org.junit.jupiter.api.Test;
 
 import org.springframework.boot.autoconfigure.AutoConfigurations;
@@ -31,6 +32,7 @@ import org.springframework.boot.test.context.runner.ContextConsumer;
 import org.springframework.cloud.sleuth.autoconfig.TraceAutoConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.support.GenericApplicationContext;
 
 import static org.assertj.core.api.BDDAssertions.then;
 
@@ -191,11 +193,23 @@ public class TraceHttpAutoConfigurationTests {
 		});
 	}
 
+	@Test
+	public void hasNoCycles() {
+		contextRunner()
+				.withConfiguration(AutoConfigurations.of(SkipPatternConfiguration.class,
+						TraceHttpAutoConfiguration.class))
+				.withInitializer(c -> ((GenericApplicationContext) c)
+						.setAllowCircularReferences(false))
+				.run((context) -> {
+					BDDAssertions.then(context.isRunning()).isEqualTo(true);
+				});
+	}
+
 	private ApplicationContextRunner contextRunner(String... propertyValues) {
 		return new ApplicationContextRunner().withPropertyValues(propertyValues)
 				.withConfiguration(AutoConfigurations.of(TraceAutoConfiguration.class,
 						TraceHttpAutoConfiguration.class,
-						TraceWebAutoConfiguration.class));
+						SkipPatternConfiguration.class));
 	}
 
 }

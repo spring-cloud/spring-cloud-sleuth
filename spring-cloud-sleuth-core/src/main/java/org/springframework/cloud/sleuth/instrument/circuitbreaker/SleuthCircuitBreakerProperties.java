@@ -24,9 +24,8 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * @author Marcin Grzejszczak
  * @since 2.2.1
  */
-// TODO: Hide in 3.x, if it isn't already deleted
 @ConfigurationProperties("spring.sleuth.circuitbreaker")
-public class SleuthCircuitBreakerProperties {
+class SleuthCircuitBreakerProperties {
 
 	/**
 	 * Enable Spring Cloud CircuitBreaker instrumentation.

@@ -16,11 +16,9 @@
 
 package org.springframework.cloud.sleuth.instrument.web;
 
-import brave.Tracing;
 import org.junit.jupiter.api.BeforeEach;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.cloud.sleuth.autoconfig.SleuthProperties;
 import org.springframework.context.ApplicationContext;
 import org.springframework.test.context.web.WebAppConfiguration;
 import org.springframework.test.web.servlet.MockMvc;
@@ -44,12 +42,6 @@ public abstract class AbstractMvcIntegrationTest {
 	protected WebApplicationContext webApplicationContext;
 
 	protected MockMvc mockMvc;
-
-	@Autowired
-	protected SleuthProperties properties;
-
-	@Autowired
-	protected Tracing tracing;
 
 	@BeforeEach
 	public void setup() {
