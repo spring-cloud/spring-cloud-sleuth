@@ -60,10 +60,7 @@ import org.springframework.web.client.RestTemplate;
  * @since 1.0.0
  * @see ZipkinRestTemplateCustomizer
  * @see DefaultZipkinRestTemplateCustomizer
- * @deprecated This type should have never been public and will be hidden or removed in
- * 3.0
  */
-@Deprecated
 @Configuration(proxyBeanMethods = false)
 @EnableConfigurationProperties(ZipkinProperties.class)
 @ConditionalOnProperty(value = { "spring.sleuth.enabled", "spring.zipkin.enabled" },
@@ -72,6 +69,7 @@ import org.springframework.web.client.RestTemplate;
 @AutoConfigureAfter(
 		name = "org.springframework.cloud.autoconfigure.RefreshAutoConfiguration")
 @Import(ZipkinSenderConfigurationImportSelector.class)
+// public because the constant REPORTER_BEAN_NAME was documented
 public class ZipkinAutoConfiguration {
 
 	private static final Log log = LogFactory.getLog(ZipkinAutoConfiguration.class);
