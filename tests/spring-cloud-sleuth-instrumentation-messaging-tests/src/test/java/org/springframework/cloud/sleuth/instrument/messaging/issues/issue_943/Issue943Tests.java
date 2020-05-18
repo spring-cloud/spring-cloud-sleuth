@@ -20,10 +20,10 @@ import java.util.stream.Collectors;
 
 import brave.Span;
 import brave.Tracer;
+import brave.test.TestSpanHandler;
 import org.junit.Test;
 
 import org.springframework.boot.SpringApplication;
-import org.springframework.cloud.sleuth.util.ArrayListSpanReporter;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.web.client.RestTemplate;
 
@@ -59,12 +59,11 @@ public class Issue943Tests {
 			}
 
 			// then
-			ArrayListSpanReporter accumulator = applicationContext
-					.getBean(ArrayListSpanReporter.class);
+			TestSpanHandler spans = applicationContext.getBean(TestSpanHandler.class);
 			then(object).contains("Hellow World Message 1 Persist into DB")
 					.contains("Hellow World Message 2 Persist into DB")
 					.contains("Hellow World Message 3 Persist into DB");
-			then(accumulator.getSpans().stream().filter(
+			then(spans.spans().stream().filter(
 					span -> span.traceId().equals(newSpan.context().traceIdString()))
 					.map(span -> span.tags().getOrDefault("channel",
 							span.tags().get("http.path")))

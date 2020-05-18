@@ -16,7 +16,6 @@
 
 package org.springframework.cloud.sleuth.documentation;
 
-import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
@@ -27,8 +26,10 @@ import java.util.concurrent.Future;
 import brave.Span;
 import brave.Tracer;
 import brave.Tracing;
+import brave.handler.MutableSpan;
 import brave.propagation.StrictCurrentTraceContext;
 import brave.sampler.Sampler;
+import brave.test.TestSpanHandler;
 import org.assertj.core.api.BDDAssertions;
 import org.junit.After;
 import org.junit.Before;
@@ -39,7 +40,6 @@ import org.springframework.cloud.sleuth.SpanName;
 import org.springframework.cloud.sleuth.SpanNamer;
 import org.springframework.cloud.sleuth.instrument.async.TraceCallable;
 import org.springframework.cloud.sleuth.instrument.async.TraceRunnable;
-import org.springframework.cloud.sleuth.util.ArrayListSpanReporter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -53,18 +53,18 @@ import static org.assertj.core.api.BDDAssertions.then;
  */
 public class SpringCloudSleuthDocTests {
 
-	ArrayListSpanReporter reporter = new ArrayListSpanReporter();
+	TestSpanHandler spans = new TestSpanHandler();
 
 	StrictCurrentTraceContext currentTraceContext = StrictCurrentTraceContext.create();
 
 	Tracing tracing = Tracing.newBuilder().currentTraceContext(this.currentTraceContext)
-			.sampler(Sampler.ALWAYS_SAMPLE).spanReporter(this.reporter).build();
+			.sampler(Sampler.ALWAYS_SAMPLE).addSpanHandler(this.spans).build();
 
 	Tracer tracer = this.tracing.tracer();
 
 	@Before
 	public void setup() {
-		this.reporter.clear();
+		this.spans.clear();
 	}
 
 	@After
@@ -87,9 +87,8 @@ public class SpringCloudSleuthDocTests {
 		future.get();
 		// end::span_name_annotated_runnable_execution[]
 
-		List<zipkin2.Span> spans = this.reporter.getSpans();
-		then(spans).hasSize(1);
-		then(spans.get(0).name()).isEqualTo("calculatetax");
+		then(this.spans).hasSize(1);
+		then(this.spans.get(0).name()).isEqualTo("calculateTax");
 	}
 
 	@Test
@@ -115,9 +114,8 @@ public class SpringCloudSleuthDocTests {
 		future.get();
 		// end::span_name_to_string_runnable_execution[]
 
-		List<zipkin2.Span> spans = this.reporter.getSpans();
-		then(spans).hasSize(1);
-		then(spans.get(0).name()).isEqualTo("calculatetax");
+		then(this.spans).hasSize(1);
+		then(this.spans.get(0).name()).isEqualTo("calculateTax");
 		executorService.shutdown();
 	}
 
@@ -144,11 +142,10 @@ public class SpringCloudSleuthDocTests {
 		}
 		// end::manual_span_creation[]
 
-		List<zipkin2.Span> spans = this.reporter.getSpans();
-		then(spans).hasSize(1);
-		then(spans.get(0).name()).isEqualTo("calculatetax");
-		then(spans.get(0).tags()).containsEntry("taxValue", "10");
-		then(spans.get(0).annotations()).hasSize(1);
+		then(this.spans).hasSize(1);
+		then(this.spans.get(0).name()).isEqualTo("calculateTax");
+		then(this.spans.get(0).tags()).containsEntry("taxValue", "10");
+		then(this.spans.get(0).annotations()).hasSize(1);
 	}
 
 	@Test
@@ -182,9 +179,8 @@ public class SpringCloudSleuthDocTests {
 			newSpan.finish();
 		}
 
-		List<zipkin2.Span> spans = this.reporter.getSpans();
 		BDDAssertions.then(spans).hasSize(1);
-		BDDAssertions.then(spans.get(0).name()).isEqualTo("calculatetax");
+		BDDAssertions.then(spans.get(0).name()).isEqualTo("calculateTax");
 		BDDAssertions.then(spans.get(0).tags()).containsEntry("taxValue", "10");
 		BDDAssertions.then(spans.get(0).annotations()).hasSize(1);
 		executorService.shutdown();
@@ -222,9 +218,8 @@ public class SpringCloudSleuthDocTests {
 			// end::manual_span_joining[]
 		}).get();
 
-		List<zipkin2.Span> spans = this.reporter.getSpans();
-		Optional<zipkin2.Span> calculateTax = spans.stream()
-				.filter(span -> span.name().equals("calculatecommission")).findFirst();
+		Optional<MutableSpan> calculateTax = spans.spans().stream()
+				.filter(span -> span.name().equals("calculateCommission")).findFirst();
 		BDDAssertions.then(calculateTax).isPresent();
 		BDDAssertions.then(calculateTax.get().tags()).containsEntry("commissionValue",
 				"10");

@@ -22,16 +22,15 @@ import brave.handler.MutableSpan;
 import brave.handler.SpanHandler;
 import brave.propagation.TraceContext;
 import brave.sampler.Sampler;
+import brave.test.TestSpanHandler;
 import org.assertj.core.api.BDDAssertions;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import zipkin2.reporter.Reporter;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.integration.IntegrationAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.cloud.sleuth.util.ArrayListSpanReporter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.test.context.junit4.SpringRunner;
@@ -47,7 +46,7 @@ import static org.springframework.boot.test.context.SpringBootTest.WebEnvironmen
 public class SpanHandlerTests {
 
 	@Autowired
-	ArrayListSpanReporter reporter;
+	TestSpanHandler spans;
 
 	@Autowired
 	Tracer tracer;
@@ -58,8 +57,8 @@ public class SpanHandlerTests {
 
 		hello.finish();
 
-		BDDAssertions.then(this.reporter.getSpans()).hasSize(1);
-		BDDAssertions.then(this.reporter.getSpans().get(0).name()).isEqualTo("foo bar");
+		BDDAssertions.then(this.spans).hasSize(1);
+		BDDAssertions.then(this.spans.get(0).name()).isEqualTo("foo bar");
 	}
 
 	@Configuration
@@ -72,8 +71,8 @@ public class SpanHandlerTests {
 		}
 
 		@Bean
-		Reporter<zipkin2.Span> reporter() {
-			return new ArrayListSpanReporter();
+		SpanHandler testSpanHandler() {
+			return new TestSpanHandler();
 		}
 
 		// tag::spanHandler[]

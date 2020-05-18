@@ -23,7 +23,9 @@ import java.util.Map;
 import brave.Span;
 import brave.Tracer;
 import brave.Tracing;
+import brave.handler.SpanHandler;
 import brave.sampler.Sampler;
+import brave.test.TestSpanHandler;
 import com.netflix.loadbalancer.BaseLoadBalancer;
 import com.netflix.loadbalancer.ILoadBalancer;
 import com.netflix.loadbalancer.Server;
@@ -45,7 +47,6 @@ import org.springframework.cloud.client.loadbalancer.LoadBalanced;
 import org.springframework.cloud.netflix.ribbon.RibbonClient;
 import org.springframework.cloud.openfeign.EnableFeignClients;
 import org.springframework.cloud.openfeign.FeignClient;
-import org.springframework.cloud.sleuth.util.ArrayListSpanReporter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.ResponseEntity;
@@ -88,11 +89,11 @@ public class WebClientExceptionTests {
 	Tracing tracer;
 
 	@Autowired
-	ArrayListSpanReporter reporter;
+	TestSpanHandler spans;
 
 	@Before
 	public void open() {
-		this.reporter.clear();
+		this.spans.clear();
 	}
 
 	// issue #198
@@ -115,8 +116,8 @@ public class WebClientExceptionTests {
 		}
 
 		then(this.tracer.tracer().currentSpan()).isNull();
-		then(this.reporter.getSpans()).isNotEmpty();
-		then(this.reporter.getSpans().get(0).tags()).containsKey("error");
+		then(this.spans).isNotEmpty();
+		then(this.spans.get(0).tags()).containsKey("error");
 	}
 
 	Object[] parametersForShouldCloseSpanUponException() {
@@ -164,8 +165,8 @@ public class WebClientExceptionTests {
 		}
 
 		@Bean
-		ArrayListSpanReporter accumulator() {
-			return new ArrayListSpanReporter();
+		SpanHandler testSpanHandler() {
+			return new TestSpanHandler();
 		}
 
 	}

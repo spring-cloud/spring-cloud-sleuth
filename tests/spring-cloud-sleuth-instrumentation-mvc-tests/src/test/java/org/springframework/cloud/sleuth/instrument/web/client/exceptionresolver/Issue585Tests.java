@@ -22,8 +22,10 @@ import javax.servlet.http.HttpServletRequest;
 
 import brave.Span;
 import brave.Tracing;
+import brave.handler.SpanHandler;
 import brave.propagation.CurrentTraceContext;
 import brave.sampler.Sampler;
+import brave.test.TestSpanHandler;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -35,7 +37,6 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.boot.web.server.LocalServerPort;
-import org.springframework.cloud.sleuth.util.ArrayListSpanReporter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -61,7 +62,7 @@ public class Issue585Tests {
 	CurrentTraceContext currentTraceContext;
 
 	@Autowired
-	ArrayListSpanReporter reporter;
+	TestSpanHandler spans;
 
 	@LocalServerPort
 	int port;
@@ -74,7 +75,7 @@ public class Issue585Tests {
 
 		then(this.currentTraceContext.get()).isNull();
 		then(entity.getStatusCode().value()).isEqualTo(500);
-		then(this.reporter.getSpans().get(0).tags()).containsEntry("custom", "tag")
+		then(this.spans.get(0).tags()).containsEntry("custom", "tag")
 				.containsKeys("error");
 	}
 
@@ -84,8 +85,8 @@ public class Issue585Tests {
 class TestConfig {
 
 	@Bean
-	ArrayListSpanReporter testSpanReporter() {
-		return new ArrayListSpanReporter();
+	SpanHandler testSpanHandler() {
+		return new TestSpanHandler();
 	}
 
 	@Bean

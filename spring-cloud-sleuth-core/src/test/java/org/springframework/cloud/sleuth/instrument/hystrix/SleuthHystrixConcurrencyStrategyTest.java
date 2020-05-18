@@ -24,6 +24,7 @@ import brave.Tracing;
 import brave.propagation.CurrentTraceContext;
 import brave.propagation.StrictCurrentTraceContext;
 import brave.propagation.TraceContext;
+import brave.test.TestSpanHandler;
 import com.netflix.hystrix.HystrixThreadPoolKey;
 import com.netflix.hystrix.HystrixThreadPoolProperties;
 import com.netflix.hystrix.strategy.HystrixPlugins;
@@ -42,7 +43,6 @@ import org.mockito.Mockito;
 
 import org.springframework.cloud.sleuth.DefaultSpanNamer;
 import org.springframework.cloud.sleuth.instrument.async.TraceCallable;
-import org.springframework.cloud.sleuth.util.ArrayListSpanReporter;
 
 import static org.assertj.core.api.BDDAssertions.then;
 
@@ -51,18 +51,18 @@ import static org.assertj.core.api.BDDAssertions.then;
  */
 public class SleuthHystrixConcurrencyStrategyTest {
 
-	ArrayListSpanReporter reporter = new ArrayListSpanReporter();
+	TestSpanHandler spans = new TestSpanHandler();
 
 	StrictCurrentTraceContext currentTraceContext = StrictCurrentTraceContext.create();
 
 	Tracing tracing = Tracing.newBuilder().currentTraceContext(this.currentTraceContext)
-			.spanReporter(this.reporter).build();
+			.addSpanHandler(this.spans).build();
 
 	@Before
 	@After
 	public void setup() {
 		HystrixPlugins.reset();
-		this.reporter.clear();
+		this.spans.clear();
 		this.currentTraceContext.close();
 	}
 
@@ -122,7 +122,7 @@ public class SleuthHystrixConcurrencyStrategyTest {
 		callable.call();
 
 		then(callable).isInstanceOf(TraceCallable.class);
-		then(this.reporter.getSpans()).hasSize(1);
+		then(this.spans).hasSize(1);
 	}
 
 	@Test

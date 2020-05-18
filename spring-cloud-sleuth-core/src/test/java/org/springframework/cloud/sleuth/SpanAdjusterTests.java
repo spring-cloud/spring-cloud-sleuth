@@ -66,12 +66,12 @@ public class SpanAdjusterTests {
 			return Sampler.ALWAYS_SAMPLE;
 		}
 
+		// This uses
 		@Bean
 		Reporter<zipkin2.Span> reporter() {
 			return new ArrayListSpanReporter();
 		}
 
-		// tag::adjuster[]
 		@Bean
 		SpanAdjuster adjusterOne() {
 			return span -> span.toBuilder().name("foo").build();
@@ -81,7 +81,6 @@ public class SpanAdjusterTests {
 		SpanAdjuster adjusterTwo() {
 			return span -> span.toBuilder().name(span.name() + " bar").build();
 		}
-		// end::adjuster[]
 
 	}
 

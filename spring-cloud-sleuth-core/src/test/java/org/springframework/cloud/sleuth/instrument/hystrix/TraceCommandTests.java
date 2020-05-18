@@ -16,7 +16,6 @@
 
 package org.springframework.cloud.sleuth.instrument.hystrix;
 
-import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 
 import brave.Span;
@@ -24,6 +23,7 @@ import brave.Tracer;
 import brave.Tracing;
 import brave.propagation.StrictCurrentTraceContext;
 import brave.sampler.Sampler;
+import brave.test.TestSpanHandler;
 import com.netflix.hystrix.HystrixCommand;
 import com.netflix.hystrix.HystrixCommandKey;
 import com.netflix.hystrix.HystrixCommandProperties;
@@ -34,8 +34,6 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import org.springframework.cloud.sleuth.util.ArrayListSpanReporter;
-
 import static com.netflix.hystrix.HystrixCommand.Setter.withGroupKey;
 import static com.netflix.hystrix.HystrixCommandGroupKey.Factory.asKey;
 import static org.assertj.core.api.BDDAssertions.then;
@@ -44,17 +42,17 @@ public class TraceCommandTests {
 
 	StrictCurrentTraceContext currentTraceContext = StrictCurrentTraceContext.create();
 
-	ArrayListSpanReporter reporter = new ArrayListSpanReporter();
+	TestSpanHandler spans = new TestSpanHandler();
 
 	Tracing tracing = Tracing.newBuilder().currentTraceContext(currentTraceContext)
-			.spanReporter(this.reporter).sampler(Sampler.ALWAYS_SAMPLE).build();
+			.addSpanHandler(this.spans).sampler(Sampler.ALWAYS_SAMPLE).build();
 
 	Tracer tracer = this.tracing.tracer();
 
 	@Before
 	public void setup() {
 		HystrixPlugins.reset();
-		this.reporter.clear();
+		this.spans.clear();
 	}
 
 	@After
@@ -80,10 +78,9 @@ public class TraceCommandTests {
 			throws Exception {
 		whenCommandIsExecuted(traceReturningCommand());
 
-		then(this.reporter.getSpans()).hasSize(1);
-		then(this.reporter.getSpans().get(0).tags()).containsEntry("commandKey",
-				"traceCommandKey");
-		then(this.reporter.getSpans().get(0).duration()).isGreaterThan(0L);
+		then(this.spans).hasSize(1);
+		then(this.spans.get(0).tags()).containsEntry("commandKey", "traceCommandKey");
+		then(this.spans.get(0).finishTimestamp()).isGreaterThan(0L);
 	}
 
 	@Test
@@ -98,10 +95,9 @@ public class TraceCommandTests {
 			span.finish();
 		}
 
-		List<zipkin2.Span> spans = this.reporter.getSpans();
-		then(spans).hasSize(2);
-		then(spans.get(0).traceId()).isEqualTo(span.context().traceIdString());
-		then(spans.get(0).tags()).containsEntry("commandKey", "traceCommandKey")
+		then(this.spans).hasSize(2);
+		then(this.spans.get(0).traceId()).isEqualTo(span.context().traceIdString());
+		then(this.spans.get(0).tags()).containsEntry("commandKey", "traceCommandKey")
 				.containsEntry("commandGroup", "group")
 				.containsEntry("threadPoolKey", "group");
 	}
@@ -162,10 +158,9 @@ public class TraceCommandTests {
 
 		BDDAssertions.then(span.context().traceIdString())
 				.isEqualTo(spanBeforeThrowingException.get().context().traceIdString());
-		List<zipkin2.Span> spans = this.reporter.getSpans();
-		then(spans).hasSize(1);
-		then(spans.get(0).traceId()).isEqualTo(span.context().traceIdString());
-		then(spans.get(0).tags()).containsEntry("commandKey", "command")
+		then(this.spans).hasSize(1);
+		then(this.spans.get(0).traceId()).isEqualTo(span.context().traceIdString());
+		then(this.spans.get(0).tags()).containsEntry("commandKey", "command")
 				.containsEntry("commandGroup", "group")
 				.containsEntry("threadPoolKey", "group")
 				.containsEntry("fallbackMethodName", "getFallback_foobar");

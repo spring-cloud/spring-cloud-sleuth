@@ -19,7 +19,10 @@ package org.springframework.cloud.sleuth.instrument.grpc;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
+import brave.Span.Kind;
+import brave.handler.SpanHandler;
 import brave.sampler.Sampler;
+import brave.test.TestSpanHandler;
 import io.grpc.ClientInterceptor;
 import io.grpc.ManagedChannel;
 import io.grpc.ServerBuilder;
@@ -32,8 +35,6 @@ import org.lognet.springboot.grpc.GRpcServerBuilderConfigurer;
 import org.lognet.springboot.grpc.GRpcService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import zipkin2.Span;
-import zipkin2.reporter.Reporter;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
@@ -43,7 +44,6 @@ import org.springframework.cloud.sleuth.instrument.grpc.stubs.HelloRequest;
 import org.springframework.cloud.sleuth.instrument.grpc.stubs.HelloServiceGrpc;
 import org.springframework.cloud.sleuth.instrument.grpc.stubs.HelloServiceGrpc.HelloServiceBlockingStub;
 import org.springframework.cloud.sleuth.instrument.grpc.stubs.HelloServiceGrpc.HelloServiceImplBase;
-import org.springframework.cloud.sleuth.util.ArrayListSpanReporter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
@@ -73,16 +73,16 @@ public class GrpcTracingIntegrationTests {
 	SpringAwareManagedChannelBuilder clientManagedChannelBuilder;
 
 	@Autowired
-	ArrayListSpanReporter reporter;
+	TestSpanHandler spans;
 
 	@Before
 	public void beforeTest() {
-		this.reporter.clear();
+		this.spans.clear();
 	}
 
 	@After
 	public void afterTest() {
-		this.reporter.clear();
+		this.spans.clear();
 	}
 
 	@Test
@@ -95,10 +95,9 @@ public class GrpcTracingIntegrationTests {
 
 		assertThat(client.sayHello("Testy McTest Face"))
 				.isEqualTo("Hello Testy McTest Face");
-		List<Span> spans = this.reporter.getSpans();
-		assertThat(spans).hasSize(2);
-		assertThat(spans.get(0).kind()).isEqualTo(Span.Kind.SERVER);
-		assertThat(spans.get(1).kind()).isEqualTo(Span.Kind.CLIENT);
+		assertThat(this.spans).hasSize(2);
+		assertThat(this.spans.get(0).kind()).isEqualTo(Kind.SERVER);
+		assertThat(this.spans.get(1).kind()).isEqualTo(Kind.CLIENT);
 
 		// ManagedChannel does not implement Closeable...
 		inProcessManagedChannel.shutdownNow();
@@ -141,9 +140,8 @@ public class GrpcTracingIntegrationTests {
 		}
 
 		@Bean
-		Reporter<zipkin2.Span> reporter() {
-			return new ArrayListSpanReporter();
-
+		SpanHandler testSpanHandler() {
+			return new TestSpanHandler();
 		}
 
 		@Bean

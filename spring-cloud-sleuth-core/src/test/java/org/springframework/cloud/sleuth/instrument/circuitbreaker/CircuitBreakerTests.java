@@ -22,15 +22,16 @@ import brave.ScopedSpan;
 import brave.Span;
 import brave.Tracer;
 import brave.Tracing;
+import brave.handler.MutableSpan;
 import brave.propagation.StrictCurrentTraceContext;
 import brave.sampler.Sampler;
+import brave.test.TestSpanHandler;
 import org.assertj.core.api.BDDAssertions;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
 import org.springframework.cloud.circuitbreaker.resilience4j.Resilience4JCircuitBreakerFactory;
-import org.springframework.cloud.sleuth.util.ArrayListSpanReporter;
 
 import static org.assertj.core.api.BDDAssertions.then;
 
@@ -38,16 +39,16 @@ public class CircuitBreakerTests {
 
 	StrictCurrentTraceContext currentTraceContext = StrictCurrentTraceContext.create();
 
-	ArrayListSpanReporter reporter = new ArrayListSpanReporter();
+	TestSpanHandler spans = new TestSpanHandler();
 
 	Tracing tracing = Tracing.newBuilder().currentTraceContext(this.currentTraceContext)
-			.spanReporter(this.reporter).sampler(Sampler.ALWAYS_SAMPLE).build();
+			.addSpanHandler(this.spans).sampler(Sampler.ALWAYS_SAMPLE).build();
 
 	Tracer tracer = this.tracing.tracer();
 
 	@Before
 	public void setup() {
-		this.reporter.clear();
+		this.spans.clear();
 	}
 
 	@After
@@ -96,7 +97,7 @@ public class CircuitBreakerTests {
 					}))).isInstanceOf(IllegalStateException.class)
 					.hasMessageContaining("boom2");
 
-			then(this.reporter.getSpans()).hasSize(2);
+			then(this.spans).hasSize(2);
 			then(scopedSpan.context().traceIdString())
 					.isEqualTo(first.get().context().traceIdString());
 			then(scopedSpan.context().traceIdString())
@@ -104,8 +105,8 @@ public class CircuitBreakerTests {
 			then(first.get().context().spanIdString())
 					.isNotEqualTo(second.get().context().spanIdString());
 
-			zipkin2.Span reportedSpan = this.reporter.getSpans().get(1);
-			then(reportedSpan.name()).contains("circuitbreakertests");
+			MutableSpan reportedSpan = this.spans.get(1);
+			then(reportedSpan.name()).contains("CircuitBreakerTests");
 			then(reportedSpan.tags().get("error")).contains("boom2");
 		}
 		finally {

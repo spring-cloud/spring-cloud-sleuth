@@ -21,7 +21,10 @@ import java.util.concurrent.atomic.AtomicReference;
 
 import brave.Span;
 import brave.Tracer;
+import brave.handler.MutableSpan;
+import brave.handler.SpanHandler;
 import brave.sampler.Sampler;
+import brave.test.TestSpanHandler;
 import org.awaitility.Awaitility;
 import org.junit.After;
 import org.junit.Before;
@@ -32,7 +35,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.cloud.sleuth.SpanName;
-import org.springframework.cloud.sleuth.util.ArrayListSpanReporter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.task.SimpleAsyncTaskExecutor;
@@ -56,11 +58,11 @@ public class TraceAsyncIntegrationTests {
 	Tracer tracer;
 
 	@Autowired
-	ArrayListSpanReporter reporter;
+	TestSpanHandler spans;
 
 	@Before
 	public void cleanup() {
-		this.reporter.clear();
+		this.spans.clear();
 		this.classPerformingAsyncLogic.clear();
 	}
 
@@ -122,11 +124,11 @@ public class TraceAsyncIntegrationTests {
 		Awaitility.await().atMost(5, SECONDS).untilAsserted(() -> {
 			then(TraceAsyncIntegrationTests.this.classPerformingAsyncLogic.getSpan()
 					.context().traceId()).isEqualTo(span.context().traceId());
-			then(this.reporter.getSpans()).hasSize(2);
+			then(this.spans).hasSize(2);
 			// HTTP
-			then(this.reporter.getSpans().get(0).name()).isEqualTo("http:existing");
+			then(this.spans.get(0).name()).isEqualTo("http:existing");
 			// ASYNC
-			then(this.reporter.getSpans().get(1).tags())
+			then(this.spans.get(1).tags())
 					.containsEntry("class", "ClassPerformingAsyncLogic")
 					.containsEntry("method", "invokeAsynchronousLogic");
 		});
@@ -134,8 +136,8 @@ public class TraceAsyncIntegrationTests {
 
 	private void thenANewAsyncSpanGetsCreated() {
 		Awaitility.await().atMost(5, SECONDS).untilAsserted(() -> {
-			then(this.reporter.getSpans()).hasSize(1);
-			zipkin2.Span storedSpan = this.reporter.getSpans().get(0);
+			then(this.spans).hasSize(1);
+			MutableSpan storedSpan = this.spans.get(0);
 			then(storedSpan.name()).isEqualTo("invoke-asynchronous-logic");
 			then(storedSpan.tags()).containsEntry("class", "ClassPerformingAsyncLogic")
 					.containsEntry("method", "invokeAsynchronousLogic");
@@ -147,11 +149,11 @@ public class TraceAsyncIntegrationTests {
 		Awaitility.await().atMost(5, SECONDS).untilAsserted(() -> {
 			then(TraceAsyncIntegrationTests.this.classPerformingAsyncLogic.getSpan()
 					.context().traceId()).isEqualTo(span.context().traceId());
-			then(this.reporter.getSpans()).hasSize(2);
+			then(this.spans).hasSize(2);
 			// HTTP
-			then(this.reporter.getSpans().get(0).name()).isEqualTo("http:existing");
+			then(this.spans.get(0).name()).isEqualTo("http:existing");
 			// ASYNC
-			then(this.reporter.getSpans().get(1).tags())
+			then(this.spans.get(1).tags())
 					.containsEntry("class", "ClassPerformingAsyncLogic")
 					.containsEntry("method", "customNameInvokeAsynchronousLogic");
 		});
@@ -159,8 +161,8 @@ public class TraceAsyncIntegrationTests {
 
 	private void thenAsyncSpanHasCustomName() {
 		Awaitility.await().atMost(5, SECONDS).untilAsserted(() -> {
-			then(this.reporter.getSpans()).hasSize(1);
-			zipkin2.Span storedSpan = this.reporter.getSpans().get(0);
+			then(this.spans).hasSize(1);
+			MutableSpan storedSpan = this.spans.get(0);
 			then(storedSpan.name()).isEqualTo("foo");
 			then(storedSpan.tags()).containsEntry("class", "ClassPerformingAsyncLogic")
 					.containsEntry("method", "customNameInvokeAsynchronousLogic");
@@ -169,7 +171,7 @@ public class TraceAsyncIntegrationTests {
 
 	@After
 	public void cleanTrace() {
-		this.reporter.clear();
+		this.spans.clear();
 	}
 
 	@EnableAutoConfiguration
@@ -188,8 +190,8 @@ public class TraceAsyncIntegrationTests {
 		}
 
 		@Bean
-		ArrayListSpanReporter reporter() {
-			return new ArrayListSpanReporter();
+		SpanHandler testSpanHandler() {
+			return new TestSpanHandler();
 		}
 
 		@Bean

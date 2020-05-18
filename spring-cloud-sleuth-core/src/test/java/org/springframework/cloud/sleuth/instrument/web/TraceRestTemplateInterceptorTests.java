@@ -18,7 +18,6 @@ package org.springframework.cloud.sleuth.instrument.web;
 
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import brave.Span;
@@ -28,12 +27,12 @@ import brave.http.HttpTracing;
 import brave.propagation.StrictCurrentTraceContext;
 import brave.sampler.Sampler;
 import brave.spring.web.TracingClientHttpRequestInterceptor;
+import brave.test.TestSpanHandler;
 import org.apache.commons.lang3.StringUtils;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import org.springframework.cloud.sleuth.util.ArrayListSpanReporter;
 import org.springframework.cloud.sleuth.util.SpanUtil;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.client.ClientHttpRequestInterceptor;
@@ -56,10 +55,10 @@ public class TraceRestTemplateInterceptorTests {
 
 	StrictCurrentTraceContext currentTraceContext = StrictCurrentTraceContext.create();
 
-	ArrayListSpanReporter reporter = new ArrayListSpanReporter();
+	TestSpanHandler spans = new TestSpanHandler();
 
 	Tracing tracing = Tracing.newBuilder().currentTraceContext(this.currentTraceContext)
-			.spanReporter(this.reporter).build();
+			.addSpanHandler(this.spans).build();
 
 	Tracer tracer = this.tracing.tracer();
 
@@ -133,9 +132,8 @@ public class TraceRestTemplateInterceptorTests {
 			span.finish();
 		}
 
-		List<zipkin2.Span> spans = this.reporter.getSpans();
-		then(spans).isNotEmpty();
-		then(spans.get(0).tags()).containsEntry("http.url", "/foo?a=b")
+		then(this.spans).isNotEmpty();
+		then(this.spans.get(0).tags()).containsEntry("http.url", "/foo?a=b")
 				.containsEntry("http.path", "/foo").containsEntry("http.method", "GET");
 	}
 
@@ -143,7 +141,7 @@ public class TraceRestTemplateInterceptorTests {
 	public void notSampledHeaderAddedWhenNotExportable() {
 		this.tracing.close();
 		this.tracing = Tracing.newBuilder().currentTraceContext(this.currentTraceContext)
-				.spanReporter(this.reporter).sampler(Sampler.NEVER_SAMPLE).build();
+				.addSpanHandler(this.spans).sampler(Sampler.NEVER_SAMPLE).build();
 		this.template.setInterceptors(Arrays.<ClientHttpRequestInterceptor>asList(
 				TracingClientHttpRequestInterceptor.create(HttpTracing.create(tracing))));
 
@@ -157,7 +155,7 @@ public class TraceRestTemplateInterceptorTests {
 			span.finish();
 		}
 
-		then(this.reporter.getSpans()).isEmpty();
+		then(this.spans).isEmpty();
 	}
 
 	// issue #198
@@ -195,10 +193,9 @@ public class TraceRestTemplateInterceptorTests {
 			span.finish();
 		}
 
-		List<zipkin2.Span> spans = this.reporter.getSpans();
-		then(spans).hasSize(2);
+		then(this.spans).hasSize(2);
 		String spanName = spans.get(0).name();
-		then(spanName).isEqualTo("http:/cas~fs~%c3%a5%cb%86%e2%80%99");
+		then(spanName).isEqualTo("http:/cas~fs~%C3%A5%CB%86%E2%80%99");
 		then(StringUtils.isAsciiPrintable(spanName));
 	}
 
@@ -218,9 +215,8 @@ public class TraceRestTemplateInterceptorTests {
 			span.finish();
 		}
 
-		List<zipkin2.Span> spans = this.reporter.getSpans();
-		then(spans).isNotEmpty();
-		String spanName = spans.get(0).name();
+		then(this.spans).isNotEmpty();
+		String spanName = this.spans.get(0).name();
 		then(spanName).hasSize(50);
 		then(StringUtils.isAsciiPrintable(spanName));
 	}

@@ -24,7 +24,10 @@ import java.util.Objects;
 import brave.Span;
 import brave.Tracer;
 import brave.Tracing;
+import brave.handler.MutableSpan;
+import brave.handler.SpanHandler;
 import brave.sampler.Sampler;
+import brave.test.TestSpanHandler;
 import com.netflix.loadbalancer.Server;
 import com.netflix.loadbalancer.ServerList;
 import org.apache.commons.logging.Log;
@@ -47,7 +50,6 @@ import org.springframework.cloud.netflix.zuul.EnableZuulProxy;
 import org.springframework.cloud.netflix.zuul.filters.RouteLocator;
 import org.springframework.cloud.netflix.zuul.filters.ZuulProperties;
 import org.springframework.cloud.netflix.zuul.filters.discovery.DiscoveryClientRouteLocator;
-import org.springframework.cloud.sleuth.util.ArrayListSpanReporter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpEntity;
@@ -81,7 +83,7 @@ public class TraceZuulIntegrationTests {
 	Tracing tracing;
 
 	@Autowired
-	ArrayListSpanReporter spanAccumulator;
+	TestSpanHandler spans;
 
 	@Autowired
 	RestTemplate restTemplate;
@@ -92,7 +94,7 @@ public class TraceZuulIntegrationTests {
 	@Before
 	@After
 	public void cleanup() {
-		this.spanAccumulator.clear();
+		this.spans.clear();
 	}
 
 	@Test
@@ -116,10 +118,9 @@ public class TraceZuulIntegrationTests {
 		}
 
 		then(this.tracing.tracer().currentSpan()).isNull();
-		List<zipkin2.Span> spans = this.spanAccumulator.getSpans();
-		then(spans).isNotEmpty();
-		everySpanHasTheSameTraceId(spans);
-		everyParentIdHasItsCorrespondingSpan(spans);
+		then(this.spans).isNotEmpty();
+		everySpanHasTheSameTraceId(this.spans.spans());
+		everyParentIdHasItsCorrespondingSpan(this.spans.spans());
 	}
 
 	@Test
@@ -138,25 +139,24 @@ public class TraceZuulIntegrationTests {
 		}
 
 		then(this.tracing.tracer().currentSpan()).isNull();
-		List<zipkin2.Span> spans = this.spanAccumulator.getSpans();
-		then(spans).isNotEmpty();
-		everySpanHasTheSameTraceId(spans);
-		everyParentIdHasItsCorrespondingSpan(spans);
+		then(this.spans).isNotEmpty();
+		everySpanHasTheSameTraceId(this.spans.spans());
+		everyParentIdHasItsCorrespondingSpan(this.spans.spans());
 	}
 
-	void everySpanHasTheSameTraceId(List<zipkin2.Span> actual) {
+	void everySpanHasTheSameTraceId(List<MutableSpan> actual) {
 		BDDAssertions.assertThat(actual).isNotNull();
-		List<String> traceIds = actual.stream().map(zipkin2.Span::traceId).distinct()
+		List<String> traceIds = actual.stream().map(MutableSpan::traceId).distinct()
 				.collect(toList());
 		log.info("Stored traceids " + traceIds);
 		assertThat(traceIds).hasSize(1);
 	}
 
-	void everyParentIdHasItsCorrespondingSpan(List<zipkin2.Span> actual) {
+	void everyParentIdHasItsCorrespondingSpan(List<MutableSpan> actual) {
 		BDDAssertions.assertThat(actual).isNotNull();
-		List<String> parentSpanIds = actual.stream().map(zipkin2.Span::parentId)
+		List<String> parentSpanIds = actual.stream().map(MutableSpan::parentId)
 				.filter(Objects::nonNull).collect(toList());
-		List<String> spanIds = actual.stream().map(zipkin2.Span::id).distinct()
+		List<String> spanIds = actual.stream().map(MutableSpan::id).distinct()
 				.collect(toList());
 		List<String> difference = new ArrayList<>(parentSpanIds);
 		difference.removeAll(spanIds);
@@ -192,8 +192,8 @@ class SampleZuulProxyApplication {
 	}
 
 	@Bean
-	ArrayListSpanReporter testSpanReporter() {
-		return new ArrayListSpanReporter();
+	SpanHandler testSpanHandler() {
+		return new TestSpanHandler();
 	}
 
 	@Bean

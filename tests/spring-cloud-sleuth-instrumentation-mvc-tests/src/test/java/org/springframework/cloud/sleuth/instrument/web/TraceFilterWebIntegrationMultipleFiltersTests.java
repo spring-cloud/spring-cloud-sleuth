@@ -30,7 +30,9 @@ import javax.servlet.ServletResponse;
 
 import brave.Span;
 import brave.Tracing;
+import brave.handler.SpanHandler;
 import brave.sampler.Sampler;
+import brave.test.TestSpanHandler;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -39,7 +41,6 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
-import org.springframework.cloud.sleuth.util.ArrayListSpanReporter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.env.Environment;
@@ -73,7 +74,7 @@ public class TraceFilterWebIntegrationMultipleFiltersTests {
 	MyFilter myFilter;
 
 	@Autowired
-	ArrayListSpanReporter reporter;
+	TestSpanHandler spans;
 
 	// issue #550
 	@Autowired
@@ -97,7 +98,7 @@ public class TraceFilterWebIntegrationMultipleFiltersTests {
 
 		then(this.tracer.tracer().currentSpan()).isNull();
 		then(this.myFilter.getSpan().get()).isNotNull();
-		then(this.reporter.getSpans()).isNotEmpty();
+		then(this.spans).isNotEmpty();
 	}
 
 	private int port() {
@@ -156,8 +157,8 @@ public class TraceFilterWebIntegrationMultipleFiltersTests {
 		}
 
 		@Bean
-		ArrayListSpanReporter reporter() {
-			return new ArrayListSpanReporter();
+		SpanHandler testSpanHandler() {
+			return new TestSpanHandler();
 		}
 
 	}

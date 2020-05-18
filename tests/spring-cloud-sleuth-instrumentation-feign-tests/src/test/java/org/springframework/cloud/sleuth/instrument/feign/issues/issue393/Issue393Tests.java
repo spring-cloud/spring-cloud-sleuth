@@ -16,17 +16,16 @@
 
 package org.springframework.cloud.sleuth.instrument.feign.issues.issue393;
 
-import java.util.List;
 import java.util.stream.Collectors;
 
 import brave.Tracing;
+import brave.handler.SpanHandler;
 import brave.sampler.Sampler;
+import brave.test.TestSpanHandler;
 import feign.okhttp.OkHttpClient;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import zipkin2.Span;
-import zipkin2.reporter.Reporter;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
@@ -35,7 +34,6 @@ import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
 import org.springframework.cloud.openfeign.EnableFeignClients;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.cloud.sleuth.instrument.web.TraceWebServletAutoConfiguration;
-import org.springframework.cloud.sleuth.util.ArrayListSpanReporter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.ResponseEntity;
@@ -70,14 +68,14 @@ public class Issue393Tests {
 	RestTemplate template = new RestTemplate();
 
 	@Autowired
-	ArrayListSpanReporter reporter;
+	Tracing tracer;
 
 	@Autowired
-	Tracing tracer;
+	TestSpanHandler spans;
 
 	@Before
 	public void open() {
-		this.reporter.clear();
+		this.spans.clear();
 	}
 
 	@Test
@@ -87,10 +85,9 @@ public class Issue393Tests {
 		ResponseEntity<String> response = this.template.getForEntity(url, String.class);
 
 		then(response.getBody()).isEqualTo("mikesarver foo");
-		List<Span> spans = this.reporter.getSpans();
 		// retries
-		then(spans).hasSize(2);
-		then(spans.stream().map(span -> span.tags().get("http.path"))
+		then(this.spans).hasSize(2);
+		then(this.spans.spans().stream().map(span -> span.tags().get("http.path"))
 				.collect(Collectors.toList())).containsOnly("/name/mikesarver");
 	}
 
@@ -124,8 +121,8 @@ class Application {
 	}
 
 	@Bean
-	public Reporter<Span> spanReporter() {
-		return new ArrayListSpanReporter();
+	public SpanHandler testSpanHandler() {
+		return new TestSpanHandler();
 	}
 
 }

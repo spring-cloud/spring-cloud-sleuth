@@ -16,18 +16,19 @@
 
 package org.springframework.cloud.sleuth.instrument.quartz;
 
-import java.util.ArrayDeque;
 import java.util.HashMap;
 import java.util.Properties;
-import java.util.Queue;
 import java.util.concurrent.CompletableFuture;
 
 import brave.Tracer.SpanInScope;
 import brave.Tracing;
+import brave.handler.MutableSpan;
 import brave.propagation.Propagation.Setter;
 import brave.propagation.StrictCurrentTraceContext;
+import brave.test.IntegrationTestSpanHandler;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.quartz.Job;
 import org.quartz.JobDataMap;
@@ -45,7 +46,6 @@ import org.quartz.impl.StdSchedulerFactory;
 import org.quartz.listeners.JobListenerSupport;
 import org.quartz.listeners.TriggerListenerSupport;
 import org.quartz.utils.StringKeyDirtyFlagMap;
-import zipkin2.Span;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.quartz.JobBuilder.newJob;
@@ -58,6 +58,9 @@ import static org.springframework.cloud.sleuth.instrument.quartz.TracingJobListe
  * @author Branden Cash
  */
 public class TracingJobListenerTest {
+
+	@Rule
+	public IntegrationTestSpanHandler spanHandler = new IntegrationTestSpanHandler();
 
 	private static final JobKey SUCCESSFUL_JOB_KEY = new JobKey("SuccessfulJob");
 
@@ -74,9 +77,7 @@ public class TracingJobListenerTest {
 	private StrictCurrentTraceContext currentTraceContext = StrictCurrentTraceContext
 			.create();
 
-	private Queue<Span> spans = new ArrayDeque<>();
-
-	private Tracing tracing = Tracing.newBuilder().spanReporter(spans::add)
+	private Tracing tracing = Tracing.newBuilder().addSpanHandler(spanHandler)
 			.currentTraceContext(currentTraceContext).build();
 
 	@Before
@@ -124,7 +125,7 @@ public class TracingJobListenerTest {
 		runJob(trigger);
 
 		// expect
-		takeSpan();
+		spanHandler.takeLocalSpan();
 	}
 
 	@Test
@@ -138,7 +139,7 @@ public class TracingJobListenerTest {
 		runJob(trigger);
 
 		// expect
-		Span span = takeSpan();
+		MutableSpan span = spanHandler.takeLocalSpan();
 		assertThat(span.name()).isEqualToIgnoringCase(SUCCESSFUL_JOB_KEY.toString());
 		assertThat(span.tags().get(TRIGGER_TAG_KEY))
 				.isEqualToIgnoringCase(TRIGGER_KEY.toString());
@@ -153,7 +154,7 @@ public class TracingJobListenerTest {
 		runJob(trigger);
 
 		// expect
-		takeSpan();
+		spanHandler.takeLocalSpan();
 	}
 
 	@Test
@@ -166,7 +167,7 @@ public class TracingJobListenerTest {
 		runJob(trigger);
 
 		// expect
-		takeSpan();
+		spanHandler.takeLocalSpan();
 	}
 
 	@Test
@@ -179,15 +180,13 @@ public class TracingJobListenerTest {
 		// when
 		runJob(trigger);
 
-		// expect
-		requireNoSpan();
+		// expect no span
 	}
 
 	@Test
 	public void should_have_parent_and_child_span_when_trigger_contains_span_info()
 			throws Exception {
 		// given
-		brave.Span span = tracing.tracer().nextSpan();
 		JobDataMap data = new JobDataMap();
 		addSpanToJobData(data);
 		Trigger trigger = newTrigger().forJob(SUCCESSFUL_JOB_KEY).usingJobData(data)
@@ -197,8 +196,8 @@ public class TracingJobListenerTest {
 		runJob(trigger);
 
 		// expect
-		Span parent = takeSpan();
-		Span child = takeSpan();
+		MutableSpan parent = spanHandler.takeLocalSpan();
+		MutableSpan child = spanHandler.takeLocalSpan();
 		assertThat(parent.parentId()).isNull();
 		assertThat(child.parentId()).isEqualTo(parent.id());
 	}
@@ -216,8 +215,8 @@ public class TracingJobListenerTest {
 		runJob(trigger);
 
 		// expect
-		Span parent = takeSpan();
-		Span child = takeSpan();
+		MutableSpan parent = spanHandler.takeLocalSpan();
+		MutableSpan child = spanHandler.takeLocalSpan();
 		assertThat(parent.parentId()).isNull();
 		assertThat(child.parentId()).isEqualTo(parent.id());
 	}
@@ -239,7 +238,7 @@ public class TracingJobListenerTest {
 	}
 
 	void addSpanToJobData(JobDataMap data) {
-		brave.Span span = tracing.tracer().nextSpan();
+		brave.Span span = tracing.tracer().nextSpan().start();
 		try (SpanInScope spanInScope = tracing.tracer().withSpanInScope(span)) {
 			tracing.propagation()
 					.injector((Setter<JobDataMap, String>) StringKeyDirtyFlagMap::put)
@@ -248,19 +247,6 @@ public class TracingJobListenerTest {
 		finally {
 			span.finish();
 		}
-	}
-
-	Span takeSpan() throws InterruptedException {
-		Span result = spans.poll();
-		assertThat(result).withFailMessage("Span was not reported, but was expected")
-				.isNotNull();
-		return result;
-	}
-
-	void requireNoSpan() throws InterruptedException {
-		Span result = spans.poll();
-		assertThat(result).withFailMessage("Span was reported, but was not expected")
-				.isNull();
 	}
 
 	public static class CompleteableTriggerListener extends CompletableFuture

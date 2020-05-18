@@ -140,7 +140,7 @@ public class SamplerAutoConfigurationTests {
 	static class WithSpanHandler {
 
 		@Bean
-		SpanHandler spanHandler() {
+		SpanHandler testSpanHandler() {
 			return new SpanHandler() {
 				@Override
 				public boolean end(TraceContext context, MutableSpan span, Cause cause) {

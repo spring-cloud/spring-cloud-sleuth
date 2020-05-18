@@ -16,21 +16,23 @@
 
 package org.springframework.cloud.sleuth.instrument.web;
 
+import java.util.Map;
+
 import brave.Span;
 import brave.Tracing;
+import brave.handler.MutableSpan;
 import brave.http.HttpResponse;
 import brave.sampler.Sampler;
+import brave.test.TestSpanHandler;
 import org.assertj.core.api.BDDAssertions;
 import org.junit.Test;
-
-import org.springframework.cloud.sleuth.util.ArrayListSpanReporter;
 
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.mock;
 
 public class SleuthHttpServerParserTests {
 
-	ArrayListSpanReporter reporter = new ArrayListSpanReporter();
+	TestSpanHandler spans = new TestSpanHandler();
 
 	@Test
 	public void should_tag_span_with_error_when_response_has_error_and_status_is_ok() {
@@ -60,17 +62,13 @@ public class SleuthHttpServerParserTests {
 	}
 
 	private void thenReportedSpanContainsErrorTag() {
-		BDDAssertions
-				.then(this.reporter.getSpans().stream()
-						.flatMap(s -> s.tags().keySet().stream()))
-				.contains("http.status_code");
+		BDDAssertions.then(this.spans).extracting(MutableSpan::tags)
+				.flatExtracting(Map::keySet).contains("http.status_code");
 	}
 
 	private void thenReportedSpanDoesNotContainErrorTag() {
-		BDDAssertions
-				.then(this.reporter.getSpans().stream()
-						.flatMap(s -> s.tags().keySet().stream()))
-				.doesNotContain("http.status_code");
+		BDDAssertions.then(this.spans).extracting(MutableSpan::tags)
+				.flatExtracting(Map::keySet).doesNotContain("http.status_code");
 	}
 
 	private HttpResponse errorResponseWithOkStatus() {
@@ -87,7 +85,7 @@ public class SleuthHttpServerParserTests {
 	}
 
 	private Span newSpan() {
-		return Tracing.newBuilder().spanReporter(this.reporter)
+		return Tracing.newBuilder().addSpanHandler(this.spans)
 				.sampler(Sampler.ALWAYS_SAMPLE).build().tracer().nextSpan().name("span")
 				.start();
 	}

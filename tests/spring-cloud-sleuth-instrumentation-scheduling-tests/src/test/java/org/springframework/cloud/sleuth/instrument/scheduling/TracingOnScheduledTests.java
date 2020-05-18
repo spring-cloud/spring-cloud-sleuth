@@ -21,18 +21,19 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import brave.Span;
 import brave.Tracing;
+import brave.handler.MutableSpan;
+import brave.handler.SpanHandler;
 import brave.sampler.Sampler;
+import brave.test.TestSpanHandler;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import zipkin2.reporter.Reporter;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.cloud.sleuth.util.ArrayListSpanReporter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.scheduling.annotation.EnableScheduling;
@@ -59,13 +60,13 @@ public class TracingOnScheduledTests {
 	TestBeanWithScheduledMethodThatThrowsAnException throwsAnException;
 
 	@Autowired
-	ArrayListSpanReporter reporter;
+	TestSpanHandler spans;
 
 	@Before
 	public void setup() {
 		this.beanWithScheduledMethod.clear();
 		this.beanWithScheduledMethodToBeIgnored.clear();
-		this.reporter.clear();
+		this.spans.clear();
 	}
 
 	@Test
@@ -107,28 +108,28 @@ public class TracingOnScheduledTests {
 		Span storedSpan = TracingOnScheduledTests.this.beanWithScheduledMethod.getSpan();
 		then(storedSpan).isNotNull();
 		then(storedSpan.context().traceId()).isNotNull();
-		zipkin2.Span foundSpan = this.reporter.getSpans().stream()
+		MutableSpan foundSpan = spans.spans().stream()
 				.filter(span -> !span.tags().containsKey("error")
 						&& span.tags().containsValue("TestBeanWithScheduledMethod"))
 				.findFirst().orElseThrow(() -> new AssertionError("Span is missing"));
 		then(foundSpan.tags()).contains(
 				new AbstractMap.SimpleEntry<>("class", "TestBeanWithScheduledMethod"),
 				new AbstractMap.SimpleEntry<>("method", "scheduledMethod"));
-		then(foundSpan.durationAsLong()).isGreaterThan(0L);
+		then(foundSpan.finishTimestamp()).isGreaterThan(0L);
 	}
 
 	private void spanIsSetOnAScheduledMethodWithErrorTag() {
 		Span storedSpan = TracingOnScheduledTests.this.beanWithScheduledMethod.getSpan();
 		then(storedSpan).isNotNull();
 		then(storedSpan.context().traceId()).isNotNull();
-		zipkin2.Span foundSpan = this.reporter.getSpans().stream()
+		MutableSpan foundSpan = spans.spans().stream()
 				.filter(span -> span.tags().containsKey("error")).findFirst()
 				.orElseThrow(() -> new AssertionError("Span is missing"));
 		then(foundSpan.tags()).contains(
 				new AbstractMap.SimpleEntry<>("class",
 						"TestBeanWithScheduledMethodThatThrowsAnException"),
 				new AbstractMap.SimpleEntry<>("method", "scheduledMethod"));
-		then(foundSpan.durationAsLong()).isGreaterThan(0L);
+		then(foundSpan.finishTimestamp()).isGreaterThan(0L);
 		then(foundSpan.tags().get("error")).isNotEmpty();
 	}
 
@@ -145,8 +146,8 @@ public class TracingOnScheduledTests {
 class ScheduledTestConfiguration {
 
 	@Bean
-	Reporter<zipkin2.Span> testRepoter() {
-		return new ArrayListSpanReporter();
+	SpanHandler testSpanHandler() {
+		return new TestSpanHandler();
 	}
 
 	@Bean

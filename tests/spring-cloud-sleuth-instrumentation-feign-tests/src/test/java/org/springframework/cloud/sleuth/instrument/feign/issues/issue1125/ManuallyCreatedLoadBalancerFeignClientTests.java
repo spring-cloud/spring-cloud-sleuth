@@ -19,9 +19,10 @@ package org.springframework.cloud.sleuth.instrument.feign.issues.issue1125;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
-import java.util.List;
 
+import brave.handler.SpanHandler;
 import brave.sampler.Sampler;
+import brave.test.TestSpanHandler;
 import feign.Client;
 import feign.Request;
 import feign.RequestTemplate;
@@ -29,8 +30,6 @@ import feign.Response;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import zipkin2.Span;
-import zipkin2.reporter.Reporter;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
@@ -40,7 +39,6 @@ import org.springframework.cloud.openfeign.EnableFeignClients;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.cloud.openfeign.ribbon.CachingSpringLoadBalancerFactory;
 import org.springframework.cloud.openfeign.ribbon.LoadBalancerFeignClient;
-import org.springframework.cloud.sleuth.util.ArrayListSpanReporter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.test.annotation.DirtiesContext;
@@ -65,11 +63,11 @@ public class ManuallyCreatedLoadBalancerFeignClientTests {
 	AnnotatedFeignClient annotatedFeignClient;
 
 	@Autowired
-	ArrayListSpanReporter reporter;
+	TestSpanHandler spans;
 
 	@Before
 	public void open() {
-		this.reporter.clear();
+		this.spans.clear();
 	}
 
 	@Test
@@ -78,10 +76,9 @@ public class ManuallyCreatedLoadBalancerFeignClientTests {
 
 		then(this.myLoadBalancerClient.wasCalled()).isTrue();
 		then(response).isEqualTo("foo");
-		List<Span> spans = this.reporter.getSpans();
 		// retries
-		then(spans).hasSize(1);
-		then(spans.get(0).tags().get("http.path")).isEqualTo("/test");
+		then(this.spans).hasSize(1);
+		then(this.spans.get(0).tags().get("http.path")).isEqualTo("/test");
 	}
 
 	@Test
@@ -93,10 +90,9 @@ public class ManuallyCreatedLoadBalancerFeignClientTests {
 	@Test
 	public void span_captured() {
 		this.annotatedFeignClient.get();
-		List<Span> spans = this.reporter.getSpans();
 		// retries
-		then(spans).hasSize(1);
-		then(spans.get(0).tags().get("http.path")).isEqualTo("/test");
+		then(this.spans).hasSize(1);
+		then(this.spans.get(0).tags().get("http.path")).isEqualTo("/test");
 	}
 
 }
@@ -119,8 +115,8 @@ class Application {
 	}
 
 	@Bean
-	public Reporter<Span> spanReporter() {
-		return new ArrayListSpanReporter();
+	public SpanHandler testSpanHandler() {
+		return new TestSpanHandler();
 	}
 
 }

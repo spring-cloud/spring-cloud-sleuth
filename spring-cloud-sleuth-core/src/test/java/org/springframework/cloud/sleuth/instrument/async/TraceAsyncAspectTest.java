@@ -18,6 +18,7 @@ package org.springframework.cloud.sleuth.instrument.async;
 
 import brave.Tracing;
 import brave.propagation.StrictCurrentTraceContext;
+import brave.test.TestSpanHandler;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.reflect.MethodSignature;
 import org.assertj.core.api.BDDAssertions;
@@ -28,7 +29,6 @@ import org.mockito.BDDMockito;
 import org.mockito.Mockito;
 
 import org.springframework.cloud.sleuth.DefaultSpanNamer;
-import org.springframework.cloud.sleuth.util.ArrayListSpanReporter;
 
 /**
  * @author Marcin Grzejszczak
@@ -37,10 +37,10 @@ public class TraceAsyncAspectTest {
 
 	StrictCurrentTraceContext currentTraceContext = StrictCurrentTraceContext.create();
 
-	ArrayListSpanReporter reporter = new ArrayListSpanReporter();
+	TestSpanHandler spans = new TestSpanHandler();
 
 	Tracing tracing = Tracing.newBuilder().currentTraceContext(this.currentTraceContext)
-			.spanReporter(this.reporter).build();
+			.addSpanHandler(this.spans).build();
 
 	ProceedingJoinPoint point = Mockito.mock(ProceedingJoinPoint.class);
 
@@ -73,9 +73,9 @@ public class TraceAsyncAspectTest {
 
 		asyncAspect.traceBackgroundThread(this.point);
 
-		BDDAssertions.then(this.reporter.getSpans()).hasSize(1);
-		BDDAssertions.then(this.reporter.getSpans().get(0).name()).isEqualTo("foo-bar");
-		BDDAssertions.then(this.reporter.getSpans().get(0).timestamp()).isPositive();
+		BDDAssertions.then(this.spans).hasSize(1);
+		BDDAssertions.then(this.spans.get(0).name()).isEqualTo("foo-bar");
+		BDDAssertions.then(this.spans.get(0).finishTimestamp()).isPositive();
 	}
 
 }
