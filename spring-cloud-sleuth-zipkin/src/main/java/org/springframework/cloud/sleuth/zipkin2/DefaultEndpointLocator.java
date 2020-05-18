@@ -40,12 +40,8 @@ import org.springframework.util.StringUtils;
  * You can override the name using {@link ZipkinProperties.Service#setName(String)}
  *
  * @author Dave Syer
- * @since 1.0.0
- * @deprecated This type should have never been public and will be hidden or removed in
- * 3.0
  */
-@Deprecated
-public class DefaultEndpointLocator implements EndpointLocator,
+class DefaultEndpointLocator implements EndpointLocator,
 		ApplicationListener<ServletWebServerInitializedEvent> {
 
 	private static final Log log = LogFactory.getLog(DefaultEndpointLocator.class);
@@ -64,9 +60,9 @@ public class DefaultEndpointLocator implements EndpointLocator,
 
 	private InetAddress firstNonLoopbackAddress;
 
-	public DefaultEndpointLocator(Registration registration,
-			ServerProperties serverProperties, Environment environment,
-			ZipkinProperties zipkinProperties, InetUtils inetUtils) {
+	DefaultEndpointLocator(Registration registration, ServerProperties serverProperties,
+			Environment environment, ZipkinProperties zipkinProperties,
+			InetUtils inetUtils) {
 		this.registration = registration;
 		this.serverProperties = serverProperties;
 		this.environment = environment;

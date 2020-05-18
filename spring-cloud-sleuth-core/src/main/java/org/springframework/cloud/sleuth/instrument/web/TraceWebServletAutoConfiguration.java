@@ -86,19 +86,6 @@ class TraceWebServletAutoConfiguration {
 	}
 
 	@Bean
-	@ConditionalOnProperty("spring.sleuth.web.exception-logging-filter-enabled")
-	public FilterRegistrationBean exceptionThrowingFilter(
-			SleuthWebProperties webProperties) {
-		FilterRegistrationBean filterRegistrationBean = new FilterRegistrationBean(
-				new ExceptionLoggingFilter());
-		filterRegistrationBean.setDispatcherTypes(DispatcherType.ASYNC,
-				DispatcherType.ERROR, DispatcherType.FORWARD, DispatcherType.INCLUDE,
-				DispatcherType.REQUEST);
-		filterRegistrationBean.setOrder(webProperties.getFilterOrder());
-		return filterRegistrationBean;
-	}
-
-	@Bean
 	@ConditionalOnMissingBean
 	public TracingFilter tracingFilter(HttpTracing tracing) {
 		return (TracingFilter) TracingFilter.create(tracing);
