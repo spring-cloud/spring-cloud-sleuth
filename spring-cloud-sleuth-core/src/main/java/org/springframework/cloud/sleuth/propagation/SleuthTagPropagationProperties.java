@@ -32,8 +32,8 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 public class SleuthTagPropagationProperties {
 
 	/**
-	 * Enables a {@link TagPropagationSpanHandler} that adds extra propagated fields to
-	 * span tags.
+	 * Enables a {@link TagPropagationFinishedSpanHandler} that adds extra propagated
+	 * fields to span tags.
 	 */
 	private boolean enabled = true;
 

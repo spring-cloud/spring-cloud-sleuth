@@ -25,11 +25,8 @@ import brave.Tracer;
 import brave.Tracing;
 import brave.TracingCustomizer;
 import brave.handler.SpanHandler;
-import brave.propagation.B3Propagation;
 import brave.propagation.CurrentTraceContext;
 import brave.propagation.CurrentTraceContextCustomizer;
-import brave.propagation.ExtraFieldCustomizer;
-import brave.propagation.ExtraFieldPropagation;
 import brave.propagation.Propagation;
 import brave.propagation.ThreadLocalCurrentTraceContext;
 import brave.sampler.Sampler;
@@ -42,7 +39,6 @@ import zipkin2.reporter.Reporter;
 import zipkin2.reporter.ReporterMetrics;
 import zipkin2.reporter.metrics.micrometer.MicrometerReporterMetrics;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -73,7 +69,8 @@ import org.springframework.util.StringUtils;
 @Configuration(proxyBeanMethods = false)
 @ConditionalOnProperty(value = "spring.sleuth.enabled", matchIfMissing = true)
 @EnableConfigurationProperties(SleuthProperties.class)
-@Import({ SleuthLogAutoConfiguration.class, SamplerAutoConfiguration.class })
+@Import({ SleuthLogAutoConfiguration.class, TraceBaggageConfiguration.class,
+		SamplerAutoConfiguration.class })
 // public allows @AutoConfigureAfter(TraceAutoConfiguration)
 // for components needing Tracing
 public class TraceAutoConfiguration {
@@ -87,9 +84,6 @@ public class TraceAutoConfiguration {
 	 * Default value used for service name if none provided.
 	 */
 	public static final String DEFAULT_SERVICE_NAME = "default";
-
-	@Autowired(required = false)
-	ExtraFieldPropagation.FactoryBuilder extraFieldPropagationFactoryBuilder;
 
 	@Bean
 	@ConditionalOnMissingBean
@@ -136,51 +130,6 @@ public class TraceAutoConfiguration {
 	@ConditionalOnMissingBean
 	SpanNamer sleuthSpanNamer() {
 		return new DefaultSpanNamer();
-	}
-
-	@Bean
-	@ConditionalOnMissingBean
-	Propagation.Factory sleuthPropagation(SleuthProperties sleuthProperties,
-			List<ExtraFieldCustomizer> extraFieldCustomizers) {
-		if (extraFieldCustomizers == null) {
-			extraFieldCustomizers = Collections.emptyList();
-		}
-		if (sleuthProperties.getBaggageKeys().isEmpty()
-				&& sleuthProperties.getPropagationKeys().isEmpty()
-				&& extraFieldCustomizers.isEmpty()
-				&& this.extraFieldPropagationFactoryBuilder == null
-				&& sleuthProperties.getLocalKeys().isEmpty()) {
-			return B3Propagation.FACTORY;
-		}
-		ExtraFieldPropagation.FactoryBuilder factoryBuilder;
-		if (this.extraFieldPropagationFactoryBuilder != null) {
-			factoryBuilder = this.extraFieldPropagationFactoryBuilder;
-		}
-		else {
-			factoryBuilder = ExtraFieldPropagation
-					.newFactoryBuilder(B3Propagation.FACTORY);
-		}
-		if (!sleuthProperties.getBaggageKeys().isEmpty()) {
-			factoryBuilder = factoryBuilder
-					// for HTTP
-					.addPrefixedFields("baggage-", sleuthProperties.getBaggageKeys())
-					// for messaging
-					.addPrefixedFields("baggage_", sleuthProperties.getBaggageKeys());
-		}
-		if (!sleuthProperties.getPropagationKeys().isEmpty()) {
-			for (String key : sleuthProperties.getPropagationKeys()) {
-				factoryBuilder = factoryBuilder.addField(key);
-			}
-		}
-		if (!sleuthProperties.getLocalKeys().isEmpty()) {
-			for (String key : sleuthProperties.getLocalKeys()) {
-				factoryBuilder = factoryBuilder.addRedactedField(key);
-			}
-		}
-		for (ExtraFieldCustomizer customizer : extraFieldCustomizers) {
-			customizer.customize(factoryBuilder);
-		}
-		return factoryBuilder.build();
 	}
 
 	@Bean
