@@ -1,7 +1,6 @@
 |===
 |Name | Default | Description
 
-|spring.sleuth.annotation.enabled | true | 
 |spring.sleuth.async.configurer.enabled | true | Enable default AsyncConfigurer.
 |spring.sleuth.async.enabled | true | Enable instrumenting async related components so that the tracing information is passed between threads.
 |spring.sleuth.async.ignored-beans |  | List of {@link java.util.concurrent.Executor} bean names that should be ignored and not wrapped in a trace representation.
@@ -49,7 +48,7 @@
 |spring.sleuth.web.exception-logging-filter-enabled | true | Flag to toggle the presence of a filter that logs thrown exceptions.
 |spring.sleuth.web.exception-throwing-filter-enabled | true | Flag to toggle the presence of a filter that logs thrown exceptions. @deprecated use {@link #exceptionLoggingFilterEnabled}
 |spring.sleuth.web.filter-order |  | Order in which the tracing filters should be registered. Defaults to {@link TraceHttpAutoConfiguration#TRACING_FILTER_ORDER}.
-|spring.sleuth.web.ignore-auto-configured-skip-patterns | false | If set to true, auto-configured skip patterns will be ignored. @see TraceWebAutoConfiguration
+|spring.sleuth.web.ignore-auto-configured-skip-patterns | false | If set to true, auto-configured skip patterns will be ignored. @see SkipPatternConfiguration
 |spring.sleuth.web.skip-pattern | /api-docs.*\|/swagger.*\|.*\.png\|.*\.css\|.*\.js\|.*\.html\|/favicon.ico\|/hystrix.stream | Pattern for URLs that should be skipped in tracing.
 |spring.zipkin.activemq.message-max-bytes | 100000 | Maximum number of bytes for a given message with spans sent to Zipkin over ActiveMQ.
 |spring.zipkin.activemq.queue | zipkin | Name of the ActiveMQ queue where spans should be sent to Zipkin.
