@@ -57,18 +57,6 @@ class SleuthWebProperties {
 	private int filterOrder = TraceHttpAutoConfiguration.TRACING_FILTER_ORDER;
 
 	/**
-	 * Flag to toggle the presence of a filter that logs thrown exceptions.
-	 * @deprecated use {@link #exceptionLoggingFilterEnabled}
-	 */
-	@Deprecated
-	private boolean exceptionThrowingFilterEnabled = true;
-
-	/**
-	 * Flag to toggle the presence of a filter that logs thrown exceptions.
-	 */
-	private boolean exceptionLoggingFilterEnabled = true;
-
-	/**
 	 * If set to true, auto-configured skip patterns will be ignored.
 	 * @see SkipPatternConfiguration
 	 */
@@ -113,23 +101,6 @@ class SleuthWebProperties {
 
 	public void setFilterOrder(int filterOrder) {
 		this.filterOrder = filterOrder;
-	}
-
-	public boolean isExceptionThrowingFilterEnabled() {
-		return this.exceptionThrowingFilterEnabled;
-	}
-
-	public void setExceptionThrowingFilterEnabled(
-			boolean exceptionThrowingFilterEnabled) {
-		this.exceptionThrowingFilterEnabled = exceptionThrowingFilterEnabled;
-	}
-
-	public boolean isExceptionLoggingFilterEnabled() {
-		return this.exceptionLoggingFilterEnabled;
-	}
-
-	public void setExceptionLoggingFilterEnabled(boolean exceptionLoggingFilterEnabled) {
-		this.exceptionLoggingFilterEnabled = exceptionLoggingFilterEnabled;
 	}
 
 	public boolean isIgnoreAutoConfiguredSkipPatterns() {
