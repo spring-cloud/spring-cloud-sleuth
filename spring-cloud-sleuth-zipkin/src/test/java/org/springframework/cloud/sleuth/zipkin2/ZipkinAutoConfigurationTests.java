@@ -17,6 +17,7 @@
 package org.springframework.cloud.sleuth.zipkin2;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeoutException;
 
@@ -26,8 +27,11 @@ import brave.handler.MutableSpan;
 import brave.handler.SpanHandler;
 import brave.propagation.TraceContext;
 import brave.sampler.Sampler;
+import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import okhttp3.mockwebserver.MockWebServer;
 import okhttp3.mockwebserver.RecordedRequest;
+import org.assertj.core.api.BDDAssertions;
 import org.awaitility.Awaitility;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -36,17 +40,24 @@ import zipkin2.Call;
 import zipkin2.CheckResult;
 import zipkin2.codec.Encoding;
 import zipkin2.reporter.AsyncReporter;
+import zipkin2.reporter.InMemoryReporterMetrics;
 import zipkin2.reporter.Reporter;
+import zipkin2.reporter.ReporterMetrics;
 import zipkin2.reporter.Sender;
 import zipkin2.reporter.activemq.ActiveMQSender;
 import zipkin2.reporter.amqp.RabbitMQSender;
+import zipkin2.reporter.brave.ZipkinSpanHandler;
 import zipkin2.reporter.kafka.KafkaSender;
+import zipkin2.reporter.metrics.micrometer.MicrometerReporterMetrics;
 
+import org.springframework.boot.autoconfigure.AutoConfigurations;
 import org.springframework.boot.autoconfigure.amqp.RabbitAutoConfiguration;
 import org.springframework.boot.autoconfigure.context.PropertyPlaceholderAutoConfiguration;
 import org.springframework.boot.autoconfigure.jms.activemq.ActiveMQAutoConfiguration;
 import org.springframework.boot.autoconfigure.kafka.KafkaAutoConfiguration;
+import org.springframework.boot.test.context.FilteredClassLoader;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.context.runner.ApplicationContextRunner;
 import org.springframework.cloud.sleuth.autoconfig.TraceAutoConfiguration;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.context.annotation.Bean;
@@ -57,6 +68,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.BDDAssertions.then;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
+import static org.springframework.cloud.sleuth.zipkin2.ZipkinAutoConfiguration.SPAN_HANDLER_COMPARATOR;
 
 /**
  * Not using {@linkplain SpringBootTest} as we need to change properties per test.
@@ -64,6 +76,9 @@ import static org.mockito.Mockito.when;
  * @author Adrian Cole
  */
 public class ZipkinAutoConfigurationTests {
+
+	private final ApplicationContextRunner contextRunner = new ApplicationContextRunner()
+			.withConfiguration(AutoConfigurations.of(ZipkinAutoConfiguration.class));
 
 	public MockWebServer server = new MockWebServer();
 
@@ -89,7 +104,55 @@ public class ZipkinAutoConfigurationTests {
 	}
 
 	@Test
-	public void defaultsToV2Endpoint() throws Exception {
+	void span_handler_comparator() {
+		SpanHandler handler1 = mock(SpanHandler.class);
+		SpanHandler handler2 = mock(SpanHandler.class);
+		ZipkinSpanHandler zipkin1 = mock(ZipkinSpanHandler.class);
+		ZipkinSpanHandler zipkin2 = mock(ZipkinSpanHandler.class);
+
+		ArrayList<SpanHandler> spanHandlers = new ArrayList<>();
+		spanHandlers.add(handler1);
+		spanHandlers.add(zipkin1);
+		spanHandlers.add(handler2);
+		spanHandlers.add(zipkin2);
+
+		spanHandlers.sort(SPAN_HANDLER_COMPARATOR);
+
+		assertThat(spanHandlers).containsExactly(handler1, handler2, zipkin1, zipkin2);
+	}
+
+	@Test
+	void should_apply_micrometer_reporter_metrics_when_meter_registry_bean_present() {
+		this.contextRunner.withUserConfiguration(WithMeterRegistry.class)
+				.run((context) -> {
+					ReporterMetrics bean = context.getBean(ReporterMetrics.class);
+
+					BDDAssertions.then(bean)
+							.isInstanceOf(MicrometerReporterMetrics.class);
+				});
+	}
+
+	@Test
+	void should_apply_in_memory_metrics_when_meter_registry_bean_missing() {
+		this.contextRunner.run((context) -> {
+			ReporterMetrics bean = context.getBean(ReporterMetrics.class);
+
+			BDDAssertions.then(bean).isInstanceOf(InMemoryReporterMetrics.class);
+		});
+	}
+
+	@Test
+	void should_apply_in_memory_metrics_when_meter_registry_class_missing() {
+		this.contextRunner.withClassLoader(new FilteredClassLoader(MeterRegistry.class))
+				.run((context) -> {
+					ReporterMetrics bean = context.getBean(ReporterMetrics.class);
+
+					BDDAssertions.then(bean).isInstanceOf(InMemoryReporterMetrics.class);
+				});
+	}
+
+	@Test
+	void defaultsToV2Endpoint() throws Exception {
 		this.context = new AnnotationConfigApplicationContext();
 		environment().setProperty("spring.zipkin.base-url",
 				this.server.url("/").toString());
@@ -380,7 +443,7 @@ public class ZipkinAutoConfigurationTests {
 	}
 
 	@Configuration
-	protected static class HandlerHanldersConfig {
+	protected static class HandlersConfig {
 
 		@Bean
 		SpanHandler handlerOne() {
@@ -404,6 +467,26 @@ public class ZipkinAutoConfigurationTests {
 					return true; // keep this span
 				}
 			};
+		}
+
+	}
+
+	@Configuration
+	static class WithMeterRegistry {
+
+		@Bean
+		MeterRegistry meterRegistry() {
+			return new SimpleMeterRegistry();
+		}
+
+	}
+
+	@Configuration
+	static class WithReporter {
+
+		@Bean
+		Reporter<zipkin2.Span> spanReporter() {
+			return zipkin2.Span::toString;
 		}
 
 	}

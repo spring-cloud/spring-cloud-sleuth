@@ -25,8 +25,6 @@ import brave.sampler.RateLimitingSampler;
 import brave.sampler.Sampler;
 import org.assertj.core.api.BDDAssertions;
 import org.junit.jupiter.api.Test;
-import zipkin2.Span;
-import zipkin2.reporter.Reporter;
 
 import org.springframework.boot.autoconfigure.AutoConfigurations;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
@@ -60,28 +58,11 @@ public class SamplerAutoConfigurationTests {
 	}
 
 	@Test
-	void should_use_RateLimitedSampler_withReporter() {
-		this.contextRunner.withUserConfiguration(WithReporter.class).run((context -> {
-			final Sampler bean = context.getBean(Sampler.class);
-			BDDAssertions.then(bean).isInstanceOf(RateLimitingSampler.class);
-		}));
-	}
-
-	@Test
 	void should_use_RateLimitedSampler_withTracingCustomizer() {
 		this.contextRunner.withUserConfiguration(WithTracingCustomizer.class)
 				.run((context -> {
 					final Sampler bean = context.getBean(Sampler.class);
 					BDDAssertions.then(bean).isInstanceOf(RateLimitingSampler.class);
-				}));
-	}
-
-	@Test
-	void should_override_sampler() {
-		this.contextRunner.withUserConfiguration(WithReporter.class, WithSampler.class)
-				.run((context -> {
-					final Sampler bean = context.getBean(Sampler.class);
-					BDDAssertions.then(bean).isSameAs(Sampler.ALWAYS_SAMPLE);
 				}));
 	}
 
@@ -147,26 +128,6 @@ public class SamplerAutoConfigurationTests {
 					return true;
 				}
 			};
-		}
-
-	}
-
-	@Configuration
-	static class WithReporter {
-
-		@Bean
-		Reporter<Span> spanReporter() {
-			return zipkin2.Span::toString;
-		}
-
-	}
-
-	@Configuration
-	static class WithSampler {
-
-		@Bean
-		Sampler alwaysSampler() {
-			return Sampler.ALWAYS_SAMPLE;
 		}
 
 	}

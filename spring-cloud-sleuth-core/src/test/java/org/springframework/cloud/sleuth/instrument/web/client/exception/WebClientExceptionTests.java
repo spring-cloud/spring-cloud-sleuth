@@ -98,7 +98,7 @@ public class WebClientExceptionTests {
 
 		then(this.tracer.tracer().currentSpan()).isNull();
 		then(this.spans).isNotEmpty();
-		then(this.spans.get(0).tags()).containsKey("error");
+		then(this.spans.get(0).error()).isNotNull();
 	}
 
 	static Stream<Object> parametersForShouldCloseSpanUponException() {
