@@ -16,7 +16,9 @@
 
 package org.springframework.cloud.sleuth.autoconfig;
 
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 
 import brave.CurrentSpanCustomizer;
@@ -37,6 +39,7 @@ import zipkin2.Span;
 import zipkin2.reporter.InMemoryReporterMetrics;
 import zipkin2.reporter.Reporter;
 import zipkin2.reporter.ReporterMetrics;
+import zipkin2.reporter.brave.ZipkinSpanHandler;
 import zipkin2.reporter.metrics.micrometer.MicrometerReporterMetrics;
 
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
@@ -82,6 +85,22 @@ public class TraceAutoConfiguration {
 	 */
 	public static final String DEFAULT_SERVICE_NAME = "default";
 
+	/**
+	 * Sort Zipkin Handlers last, so that redactions etc happen prior.
+	 */
+	static final Comparator<SpanHandler> SPAN_HANDLER_COMPARATOR = (o1, o2) -> {
+		if (o1 instanceof ZipkinSpanHandler) {
+			if (o2 instanceof ZipkinSpanHandler) {
+				return 0;
+			}
+			return 1;
+		}
+		else if (o2 instanceof ZipkinSpanHandler) {
+			return -1;
+		}
+		return 0;
+	};
+
 	@Bean
 	@ConditionalOnMissingBean
 	// NOTE: stable bean name as might be used outside sleuth
@@ -110,7 +129,19 @@ public class TraceAutoConfiguration {
 				customizer.customize(builder);
 			}
 		}
+
+		reorderZipkinHandlersLast(builder);
 		return builder.build();
+	}
+
+	private void reorderZipkinHandlersLast(Tracing.Builder builder) {
+		List<SpanHandler> configuredSpanHandlers = new ArrayList<>(
+				builder.spanHandlers());
+		configuredSpanHandlers.sort(SPAN_HANDLER_COMPARATOR);
+		builder.clearSpanHandlers();
+		for (SpanHandler spanHandler : configuredSpanHandlers) {
+			builder.addSpanHandler(spanHandler);
+		}
 	}
 
 	@Bean(name = TRACER_BEAN_NAME)

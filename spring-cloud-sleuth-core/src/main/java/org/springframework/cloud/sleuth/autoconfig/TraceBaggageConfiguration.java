@@ -62,7 +62,7 @@ import org.springframework.lang.Nullable;
  * @since 2.0.0
  */
 @Configuration(proxyBeanMethods = false)
-@EnableConfigurationProperties(SleuthBaggageProperties.class)
+@EnableConfigurationProperties({ SleuthProperties.class, SleuthBaggageProperties.class })
 class TraceBaggageConfiguration {
 
 	static final Log logger = LogFactory.getLog(TraceBaggageConfiguration.class);

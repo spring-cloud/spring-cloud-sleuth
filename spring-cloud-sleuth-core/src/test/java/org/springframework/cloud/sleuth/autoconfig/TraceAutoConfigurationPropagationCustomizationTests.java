@@ -33,8 +33,7 @@ import org.springframework.context.annotation.Configuration;
 public class TraceAutoConfigurationPropagationCustomizationTests {
 
 	// Default for spring-messaging is on 2.2.x is MULTI, though 3.x it is
-	// SINGLE_NO_PARENT
-	// spring-cloud/spring-cloud-sleuth#1607
+	// SINGLE_NO_PARENT spring-cloud/spring-cloud-sleuth#1607
 	Propagation.Factory defaultB3Propagation = B3Propagation.newFactoryBuilder()
 			.injectFormat(Format.SINGLE_NO_PARENT).build();
 

@@ -16,6 +16,7 @@
 
 package org.springframework.cloud.sleuth.autoconfig;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import brave.Tracing;
@@ -23,6 +24,7 @@ import brave.baggage.BaggageField;
 import brave.baggage.BaggagePropagation;
 import brave.baggage.BaggagePropagationConfig.SingleBaggageField;
 import brave.baggage.BaggagePropagationCustomizer;
+import brave.handler.SpanHandler;
 import brave.propagation.B3SinglePropagation;
 import brave.propagation.Propagation;
 import brave.propagation.TraceContextOrSamplingFlags;
@@ -35,6 +37,7 @@ import org.junit.jupiter.api.Test;
 import zipkin2.reporter.InMemoryReporterMetrics;
 import zipkin2.reporter.Reporter;
 import zipkin2.reporter.ReporterMetrics;
+import zipkin2.reporter.brave.ZipkinSpanHandler;
 import zipkin2.reporter.metrics.micrometer.MicrometerReporterMetrics;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -44,10 +47,32 @@ import org.springframework.boot.test.context.runner.ApplicationContextRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.mock;
+import static org.springframework.cloud.sleuth.autoconfig.TraceAutoConfiguration.SPAN_HANDLER_COMPARATOR;
+
 public class TraceAutoConfigurationTests {
 
 	private final ApplicationContextRunner contextRunner = new ApplicationContextRunner()
 			.withConfiguration(AutoConfigurations.of(TraceAutoConfiguration.class));
+
+	@Test
+	void span_handler_comparator() {
+		SpanHandler handler1 = mock(SpanHandler.class);
+		SpanHandler handler2 = mock(SpanHandler.class);
+		ZipkinSpanHandler zipkin1 = mock(ZipkinSpanHandler.class);
+		ZipkinSpanHandler zipkin2 = mock(ZipkinSpanHandler.class);
+
+		ArrayList<SpanHandler> spanHandlers = new ArrayList<>();
+		spanHandlers.add(handler1);
+		spanHandlers.add(zipkin1);
+		spanHandlers.add(handler2);
+		spanHandlers.add(zipkin2);
+
+		spanHandlers.sort(SPAN_HANDLER_COMPARATOR);
+
+		assertThat(spanHandlers).containsExactly(handler1, handler2, zipkin1, zipkin2);
+	}
 
 	@Test
 	void should_apply_micrometer_reporter_metrics_when_meter_registry_bean_present() {
