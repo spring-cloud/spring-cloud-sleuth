@@ -16,8 +16,6 @@
 
 package org.springframework.cloud.sleuth.instrument.messaging;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -26,7 +24,9 @@ import javax.annotation.PreDestroy;
 import brave.Span;
 import brave.Tracer;
 import brave.Tracing;
+import brave.handler.SpanHandler;
 import brave.propagation.StrictCurrentTraceContext;
+import brave.test.TestSpanHandler;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -71,6 +71,9 @@ public class ITTracingChannelInterceptorTests implements MessageHandler {
 
 	@Autowired
 	Tracer tracer;
+
+	@Autowired
+	TestSpanHandler spans;
 
 	Message<?> message;
 
@@ -140,8 +143,8 @@ public class ITTracingChannelInterceptorTests implements MessageHandler {
 		ExecutorService service = Executors.newSingleThreadExecutor();
 
 		@Bean
-		List<zipkin2.Span> spans() {
-			return new ArrayList<>();
+		SpanHandler testSpanHandler() {
+			return new TestSpanHandler();
 		}
 
 		@Bean
@@ -152,7 +155,7 @@ public class ITTracingChannelInterceptorTests implements MessageHandler {
 		@Bean
 		Tracing tracing() {
 			return Tracing.newBuilder().currentTraceContext(currentTraceContext())
-					.spanReporter(spans()::add).build();
+					.addSpanHandler(testSpanHandler()).build();
 		}
 
 		@Bean

@@ -21,9 +21,11 @@ import java.nio.charset.Charset;
 import java.util.HashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import brave.Span;
 import brave.Tracing;
 import brave.http.HttpTracing;
 import brave.propagation.StrictCurrentTraceContext;
+import brave.test.TestSpanHandler;
 import feign.Client;
 import feign.Feign;
 import feign.FeignException;
@@ -39,10 +41,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.BDDMockito;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import zipkin2.Span;
 
 import org.springframework.beans.factory.BeanFactory;
-import org.springframework.cloud.sleuth.util.ArrayListSpanReporter;
 
 import static org.assertj.core.api.Assertions.failBecauseExceptionWasNotThrown;
 import static org.assertj.core.api.BDDAssertions.then;
@@ -70,10 +70,10 @@ public class FeignRetriesTests {
 
 	StrictCurrentTraceContext currentTraceContext = StrictCurrentTraceContext.create();
 
-	ArrayListSpanReporter reporter = new ArrayListSpanReporter();
+	TestSpanHandler spans = new TestSpanHandler();
 
 	Tracing tracing = Tracing.newBuilder().currentTraceContext(this.currentTraceContext)
-			.spanReporter(this.reporter).build();
+			.addSpanHandler(this.spans).build();
 
 	HttpTracing httpTracing = HttpTracing.newBuilder(this.tracing).build();
 
@@ -138,10 +138,8 @@ public class FeignRetriesTests {
 		then(api.decodedPost()).isEqualTo("OK");
 		// request interception should take place only twice (1st request & 2nd retry)
 		then(atomicInteger.get()).isEqualTo(2);
-		then(this.reporter.getSpans().get(0).tags()).containsEntry("error",
-				"IOException");
-		then(this.reporter.getSpans().get(1).kind().ordinal())
-				.isEqualTo(Span.Kind.CLIENT.ordinal());
+		then(this.spans.get(0).error()).isInstanceOf(IOException.class);
+		then(this.spans.get(1).kind()).isEqualTo(Span.Kind.CLIENT);
 	}
 
 	interface TestInterface {

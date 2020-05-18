@@ -17,15 +17,14 @@
 package org.springframework.cloud.sleuth.instrument.web.client.feign;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 
 import brave.Span;
 import brave.Tracer;
 import brave.Tracing;
 import brave.http.HttpTracing;
 import brave.propagation.StrictCurrentTraceContext;
+import brave.test.TestSpanHandler;
 import feign.Client;
 import feign.Request;
 import feign.RequestTemplate;
@@ -59,10 +58,10 @@ public class TracingFeignClientTests {
 
 	StrictCurrentTraceContext currentTraceContext = StrictCurrentTraceContext.create();
 
-	List<zipkin2.Span> spans = new ArrayList<>();
+	TestSpanHandler spans = new TestSpanHandler();
 
 	Tracing tracing = Tracing.newBuilder().currentTraceContext(currentTraceContext)
-			.spanReporter(spans::add).build();
+			.addSpanHandler(spans).build();
 
 	Tracer tracer = this.tracing.tracer();
 
@@ -95,15 +94,15 @@ public class TracingFeignClientTests {
 			span.finish();
 		}
 
-		then(spans.get(0)).extracting("kind.ordinal")
-				.isEqualTo(Span.Kind.CLIENT.ordinal());
+		then(spans.get(0).kind()).isEqualTo(Span.Kind.CLIENT);
 	}
 
 	@Test
 	public void should_log_error_when_exception_thrown() throws IOException {
+		RuntimeException error = new RuntimeException("exception has occurred");
 		Span span = this.tracer.nextSpan().name("foo");
 		BDDMockito.given(this.client.execute(BDDMockito.any(), BDDMockito.any()))
-				.willThrow(new RuntimeException("exception has occurred"));
+				.willThrow(error);
 
 		try (Tracer.SpanInScope ws = this.tracer.withSpanInScope(span.start())) {
 			this.traceFeignClient.execute(this.request, this.options);
@@ -115,9 +114,8 @@ public class TracingFeignClientTests {
 			span.finish();
 		}
 
-		then(this.spans.get(0)).extracting("kind.ordinal")
-				.isEqualTo(Span.Kind.CLIENT.ordinal());
-		then(this.spans.get(0).tags()).containsEntry("error", "exception has occurred");
+		then(this.spans.get(0).kind()).isEqualTo(Span.Kind.CLIENT);
+		then(this.spans.get(0).error()).isSameAs(error);
 	}
 
 	@Test

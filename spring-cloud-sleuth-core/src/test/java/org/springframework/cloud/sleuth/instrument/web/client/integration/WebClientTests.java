@@ -16,7 +16,6 @@
 
 package org.springframework.cloud.sleuth.instrument.web.client.integration;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -33,11 +32,14 @@ import brave.Span;
 import brave.Tracer;
 import brave.Tracing;
 import brave.baggage.BaggagePropagation;
+import brave.handler.MutableSpan;
+import brave.handler.SpanHandler;
 import brave.propagation.B3Propagation;
 import brave.propagation.B3SingleFormat;
 import brave.propagation.SamplingFlags;
 import brave.propagation.TraceContextOrSamplingFlags;
 import brave.sampler.Sampler;
+import brave.test.TestSpanHandler;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.http.HttpResponse;
@@ -55,8 +57,6 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.reactivestreams.Subscription;
 import reactor.core.publisher.BaseSubscriber;
-import zipkin2.Annotation;
-import zipkin2.reporter.Reporter;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -75,7 +75,6 @@ import org.springframework.cloud.loadbalancer.annotation.LoadBalancerClient;
 import org.springframework.cloud.loadbalancer.core.ServiceInstanceListSupplier;
 import org.springframework.cloud.openfeign.EnableFeignClients;
 import org.springframework.cloud.openfeign.FeignClient;
-import org.springframework.cloud.sleuth.util.ArrayListSpanReporter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.env.Environment;
@@ -126,7 +125,7 @@ public class WebClientTests {
 	HttpAsyncClientBuilder httpAsyncClientBuilder; // #845
 
 	@Autowired
-	ArrayListSpanReporter reporter;
+	TestSpanHandler spans;
 
 	@Autowired
 	Tracer tracer;
@@ -149,7 +148,7 @@ public class WebClientTests {
 	@AfterEach
 	@BeforeEach
 	public void close() {
-		this.reporter.clear();
+		this.spans.clear();
 		this.testErrorController.clear();
 		this.fooController.clear();
 	}
@@ -163,10 +162,9 @@ public class WebClientTests {
 
 		Awaitility.await().atMost(2, TimeUnit.SECONDS).untilAsserted(() -> {
 			then(getHeader(response, "b3")).isNull();
-			List<zipkin2.Span> spans = this.reporter.getSpans();
-			then(spans).isNotEmpty();
-			Optional<zipkin2.Span> noTraceSpan = new ArrayList<>(spans).stream()
-					.filter(span -> "get".equals(span.name()) && !span.tags().isEmpty()
+			then(this.spans).isNotEmpty();
+			Optional<MutableSpan> noTraceSpan = this.spans.spans().stream()
+					.filter(span -> "GET".equals(span.name()) && !span.tags().isEmpty()
 							&& span.tags().containsKey("http.path"))
 					.findFirst();
 			then(noTraceSpan.isPresent()).isTrue();
@@ -224,7 +222,7 @@ public class WebClientTests {
 			span.finish();
 		}
 
-		then(this.reporter.getSpans()).isEmpty();
+		then(this.spans).isEmpty();
 		then(this.tracer.currentSpan()).isNull();
 	}
 
@@ -254,7 +252,7 @@ public class WebClientTests {
 		}
 
 		then(this.tracer.currentSpan()).isNull();
-		then(this.reporter.getSpans()).isNotEmpty();
+		then(this.spans).isNotEmpty();
 	}
 
 	@Test
@@ -272,9 +270,9 @@ public class WebClientTests {
 		}
 
 		then(this.tracer.currentSpan()).isNull();
-		then(this.reporter.getSpans()).isNotEmpty().extracting("traceId", String.class)
+		then(this.spans).isNotEmpty().extracting("traceId", String.class)
 				.containsOnly(span.context().traceIdString());
-		then(this.reporter.getSpans()).extracting("kind.name").contains("CLIENT");
+		then(this.spans).extracting("kind.name").contains("CLIENT");
 	}
 
 	@Test
@@ -311,9 +309,9 @@ public class WebClientTests {
 		}
 
 		then(this.tracer.currentSpan()).isNull();
-		then(this.reporter.getSpans()).isNotEmpty().extracting("traceId", String.class)
+		then(this.spans).isNotEmpty().extracting("traceId", String.class)
 				.containsOnly(span.context().traceIdString());
-		then(this.reporter.getSpans()).extracting("kind.name").contains("CLIENT");
+		then(this.spans).extracting("kind.name").contains("CLIENT");
 	}
 
 	@Test
@@ -329,8 +327,7 @@ public class WebClientTests {
 			span.finish();
 		}
 		then(this.tracer.currentSpan()).isNull();
-		then(this.reporter.getSpans()).isNotEmpty().extracting("kind.name")
-				.contains("CLIENT");
+		then(this.spans).isNotEmpty().extracting("kind.name").contains("CLIENT");
 	}
 
 	@Test
@@ -350,8 +347,7 @@ public class WebClientTests {
 		}
 
 		then(this.tracer.currentSpan()).isNull();
-		then(this.reporter.getSpans()).isNotEmpty().extracting("kind.name")
-				.contains("CLIENT");
+		then(this.spans).isNotEmpty().extracting("kind.name").contains("CLIENT");
 	}
 
 	/**
@@ -369,18 +365,18 @@ public class WebClientTests {
 					}
 				});
 
-		then(this.reporter.getSpans()).isEmpty();
+		then(this.spans).isEmpty();
 	}
 
 	@Test
 	public void shouldRespectSkipPattern() {
 		this.webClient.get().uri("http://localhost:" + this.port + "/skip").retrieve()
 				.bodyToMono(String.class).block();
-		then(this.reporter.getSpans()).isEmpty();
+		then(this.spans).isEmpty();
 
 		this.webClient.get().uri("http://localhost:" + this.port + "/doNotSkip")
 				.retrieve().bodyToMono(String.class).block();
-		then(this.reporter.getSpans()).isNotEmpty();
+		then(this.spans).isNotEmpty();
 	}
 
 	static Stream parametersForShouldAttachTraceIdWhenCallingAnotherService() {
@@ -404,7 +400,7 @@ public class WebClientTests {
 		}
 
 		then(this.tracer.currentSpan()).isNull();
-		then(this.reporter.getSpans()).isNotEmpty();
+		then(this.spans).isNotEmpty();
 	}
 
 	static Stream parametersForShouldAttachTraceIdWhenUsingFeignClientWithoutResponseBody() {
@@ -425,22 +421,20 @@ public class WebClientTests {
 		}
 
 		then(this.tracer.currentSpan()).isNull();
-		Optional<zipkin2.Span> storedSpan = this.reporter.getSpans().stream()
+		Optional<MutableSpan> storedSpan = this.spans.spans().stream()
 				.filter(span -> "404".equals(span.tags().get("http.status_code")))
 				.findFirst();
 		then(storedSpan.isPresent()).isTrue();
-		List<zipkin2.Span> spans = this.reporter.getSpans();
-		spans.stream().forEach(span -> {
+		this.spans.spans().stream().forEach(span -> {
 			int initialSize = span.annotations().size();
-			int distinctSize = span.annotations().stream().map(Annotation::value)
+			int distinctSize = span.annotations().stream().map(Map.Entry::getValue)
 					.distinct().collect(Collectors.toList()).size();
 			log.info("logs " + span.annotations());
 			then(initialSize).as("there are no duplicate log entries")
 					.isEqualTo(distinctSize);
 		});
 
-		then(this.reporter.getSpans()).isNotEmpty().extracting("kind.name")
-				.contains("CLIENT");
+		then(this.spans).isNotEmpty().extracting("kind.name").contains("CLIENT");
 	}
 
 	@Test
@@ -466,7 +460,7 @@ public class WebClientTests {
 		}
 		then(this.tracer.currentSpan()).isNull();
 		then(this.customizer.isExecuted()).isTrue();
-		then(this.reporter.getSpans()).extracting("kind.name").contains("CLIENT");
+		then(this.spans).extracting("kind.name").contains("CLIENT");
 	}
 
 	@Test
@@ -563,8 +557,8 @@ public class WebClientTests {
 		}
 
 		@Bean
-		Reporter<zipkin2.Span> spanReporter() {
-			return new ArrayListSpanReporter();
+		SpanHandler testSpanHandler() {
+			return new TestSpanHandler();
 		}
 
 		@Bean

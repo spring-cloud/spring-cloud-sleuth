@@ -16,10 +16,11 @@
 
 package sample;
 
+import brave.handler.MutableSpan;
+import brave.handler.SpanHandler;
+import brave.propagation.TraceContext;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import zipkin2.Span;
-import zipkin2.reporter.Reporter;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -43,11 +44,12 @@ public class SampleFeignApplication {
 	// Use this for debugging (or if there is no Zipkin server running on port 9411)
 	@Bean
 	@ConditionalOnProperty(value = "sample.zipkin.enabled", havingValue = "false")
-	public Reporter<Span> spanReporter() {
-		return new Reporter<Span>() {
+	public SpanHandler spanHandler() {
+		return new SpanHandler() {
 			@Override
-			public void report(Span span) {
+			public boolean end(TraceContext context, MutableSpan span, Cause cause) {
 				logger.info(span);
+				return true;
 			}
 		};
 	}

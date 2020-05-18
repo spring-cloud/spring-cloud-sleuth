@@ -21,7 +21,10 @@ import java.util.concurrent.atomic.AtomicReference;
 import brave.ScopedSpan;
 import brave.Span;
 import brave.Tracer;
+import brave.handler.MutableSpan;
+import brave.handler.SpanHandler;
 import brave.sampler.Sampler;
+import brave.test.TestSpanHandler;
 import org.assertj.core.api.BDDAssertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -31,7 +34,6 @@ import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.cloud.circuitbreaker.resilience4j.Resilience4JCircuitBreakerFactory;
 import org.springframework.cloud.client.circuitbreaker.CircuitBreakerFactory;
-import org.springframework.cloud.sleuth.util.ArrayListSpanReporter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -41,7 +43,7 @@ import static org.assertj.core.api.BDDAssertions.then;
 public class CircuitBreakerIntegrationTests {
 
 	@Autowired
-	ArrayListSpanReporter reporter;
+	TestSpanHandler spans;
 
 	@Autowired
 	Tracer tracer;
@@ -51,7 +53,7 @@ public class CircuitBreakerIntegrationTests {
 
 	@BeforeEach
 	public void setup() {
-		this.reporter.clear();
+		this.spans.clear();
 	}
 
 	@Test
@@ -91,7 +93,7 @@ public class CircuitBreakerIntegrationTests {
 				throw new IllegalStateException("boom2");
 			})).isInstanceOf(IllegalStateException.class).hasMessageContaining("boom2");
 
-			then(this.reporter.getSpans()).hasSize(2);
+			then(this.spans).hasSize(2);
 			then(scopedSpan.context().traceIdString())
 					.isEqualTo(first.get().context().traceIdString());
 			then(scopedSpan.context().traceIdString())
@@ -99,12 +101,12 @@ public class CircuitBreakerIntegrationTests {
 			then(first.get().context().spanIdString())
 					.isNotEqualTo(second.get().context().spanIdString());
 
-			zipkin2.Span reportedSpan = this.reporter.getSpans().get(0);
-			then(reportedSpan.name()).contains("circuitbreakerintegrationtests");
+			MutableSpan reportedSpan = this.spans.get(0);
+			then(reportedSpan.name()).contains("CircuitBreakerIntegrationTests");
 			then(reportedSpan.tags().get("error")).contains("boom");
 
-			reportedSpan = this.reporter.getSpans().get(1);
-			then(reportedSpan.name()).contains("circuitbreakerintegrationtests");
+			reportedSpan = this.spans.get(1);
+			then(reportedSpan.name()).contains("CircuitBreakerIntegrationTests");
 			then(reportedSpan.tags().get("error")).contains("boom2");
 		}
 		finally {
@@ -117,8 +119,8 @@ public class CircuitBreakerIntegrationTests {
 	static class Config {
 
 		@Bean
-		ArrayListSpanReporter arrayListSpanReporter() {
-			return new ArrayListSpanReporter();
+		SpanHandler testSpanHandler() {
+			return new TestSpanHandler();
 		}
 
 		@Bean

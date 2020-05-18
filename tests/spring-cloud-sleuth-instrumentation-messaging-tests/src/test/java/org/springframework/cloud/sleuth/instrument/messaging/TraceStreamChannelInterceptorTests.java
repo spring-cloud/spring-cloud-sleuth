@@ -19,9 +19,11 @@ package org.springframework.cloud.sleuth.instrument.messaging;
 import brave.Span;
 import brave.Tracer;
 import brave.Tracing;
+import brave.handler.SpanHandler;
 import brave.propagation.B3SingleFormat;
 import brave.propagation.TraceContext;
 import brave.sampler.Sampler;
+import brave.test.TestSpanHandler;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
@@ -29,8 +31,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.ImportAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.cloud.sleuth.instrument.util.SpanUtil;
-import org.springframework.cloud.sleuth.util.ArrayListSpanReporter;
 import org.springframework.cloud.stream.binder.test.OutputDestination;
 import org.springframework.cloud.stream.binder.test.TestChannelBinderConfiguration;
 import org.springframework.cloud.stream.function.StreamBridge;
@@ -59,17 +59,17 @@ public class TraceStreamChannelInterceptorTests {
 	private StreamBridge streamBridge;
 
 	@Autowired
-	private ArrayListSpanReporter reporter;
+	private TestSpanHandler spans;
 
 	@AfterEach
 	public void close() {
-		this.reporter.clear();
+		this.spans.clear();
 	}
 
 	@Test
 	public void testSpanPropagationViaBridge() {
 		Span span = this.tracing.tracer().nextSpan().name("http:testSendMessage").start();
-		String expectedSpanId = SpanUtil.idToHex(span.context().spanId());
+		String expectedSpanId = span.context().spanIdString();
 
 		try (Tracer.SpanInScope ws = this.tracing.tracer().withSpanInScope(span)) {
 			this.streamBridge.send("testSupplier-out-0", "hi");
@@ -104,8 +104,8 @@ public class TraceStreamChannelInterceptorTests {
 		}
 
 		@Bean
-		ArrayListSpanReporter reporter() {
-			return new ArrayListSpanReporter();
+		SpanHandler testSpanHandler() {
+			return new TestSpanHandler();
 		}
 
 	}

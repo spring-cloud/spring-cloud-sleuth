@@ -16,14 +16,13 @@
 
 package org.springframework.cloud.sleuth.annotation;
 
+import brave.handler.SpanHandler;
+import brave.test.TestSpanHandler;
 import org.junit.jupiter.api.Test;
-import zipkin2.Span;
-import zipkin2.reporter.Reporter;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.cloud.sleuth.util.ArrayListSpanReporter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -62,8 +61,8 @@ public class SleuthSpanCreatorCircularDependencyTests {
 	protected static class TestConfiguration {
 
 		@Bean
-		Reporter<Span> spanReporter() {
-			return new ArrayListSpanReporter();
+		SpanHandler testSpanHandler() {
+			return new TestSpanHandler();
 		}
 
 		@Bean

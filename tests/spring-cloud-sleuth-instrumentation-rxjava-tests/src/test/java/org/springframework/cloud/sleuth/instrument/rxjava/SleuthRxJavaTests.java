@@ -18,7 +18,9 @@ package org.springframework.cloud.sleuth.instrument.rxjava;
 
 import brave.Span;
 import brave.Tracer;
+import brave.handler.SpanHandler;
 import brave.sampler.Sampler;
+import brave.test.TestSpanHandler;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
@@ -31,7 +33,6 @@ import rx.schedulers.Schedulers;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.cloud.sleuth.util.ArrayListSpanReporter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.test.annotation.DirtiesContext;
@@ -45,7 +46,7 @@ import static org.awaitility.Awaitility.await;
 public class SleuthRxJavaTests {
 
 	@Autowired
-	ArrayListSpanReporter reporter;
+	TestSpanHandler spans;
 
 	@Autowired
 	Tracer tracer;
@@ -60,7 +61,7 @@ public class SleuthRxJavaTests {
 
 	@BeforeEach
 	public void clean() {
-		this.reporter.clear();
+		this.spans.clear();
 	}
 
 	@Test
@@ -73,11 +74,9 @@ public class SleuthRxJavaTests {
 
 		then(this.caller.toString()).isEqualTo("actual_action");
 		then(this.tracer.currentSpan()).isNull();
-		await().atMost(5, SECONDS)
-				.untilAsserted(() -> then(this.reporter.getSpans()).hasSize(1));
-		then(this.reporter.getSpans()).hasSize(1);
-		zipkin2.Span span = this.reporter.getSpans().get(0);
-		then(span.name()).isEqualTo("rxjava");
+		await().atMost(5, SECONDS).untilAsserted(() -> then(this.spans).hasSize(1));
+		then(this.spans).hasSize(1);
+		then(this.spans.get(0).name()).isEqualTo("rxjava");
 	}
 
 	@Test
@@ -97,9 +96,8 @@ public class SleuthRxJavaTests {
 		then(this.caller.toString()).isEqualTo("actual_action");
 		then(this.tracer.currentSpan()).isNull();
 		// making sure here that no new spans were created or reported as closed
-		then(this.reporter.getSpans()).hasSize(1);
-		zipkin2.Span span = this.reporter.getSpans().get(0);
-		then(span.name()).isEqualTo("current_span");
+		then(this.spans).hasSize(1);
+		then(this.spans.get(0).name()).isEqualTo("current_span");
 	}
 
 	@Configuration
@@ -112,8 +110,8 @@ public class SleuthRxJavaTests {
 		}
 
 		@Bean
-		ArrayListSpanReporter spanReporter() {
-			return new ArrayListSpanReporter();
+		SpanHandler testSpanHandler() {
+			return new TestSpanHandler();
 		}
 
 	}

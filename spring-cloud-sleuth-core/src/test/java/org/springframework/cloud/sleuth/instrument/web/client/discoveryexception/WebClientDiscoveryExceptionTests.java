@@ -24,12 +24,13 @@ import java.util.Map;
 
 import brave.Span;
 import brave.Tracer;
+import brave.handler.SpanHandler;
 import brave.sampler.Sampler;
+import brave.test.TestSpanHandler;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import reactor.core.publisher.Flux;
-import zipkin2.reporter.Reporter;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
@@ -42,7 +43,6 @@ import org.springframework.cloud.loadbalancer.core.ServiceInstanceListSupplier;
 import org.springframework.cloud.netflix.eureka.EurekaClientAutoConfiguration;
 import org.springframework.cloud.openfeign.EnableFeignClients;
 import org.springframework.cloud.openfeign.FeignClient;
-import org.springframework.cloud.sleuth.util.ArrayListSpanReporter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.ResponseEntity;
@@ -72,11 +72,11 @@ public class WebClientDiscoveryExceptionTests {
 	Tracer tracer;
 
 	@Autowired
-	ArrayListSpanReporter reporter;
+	TestSpanHandler spans;
 
 	@BeforeEach
 	public void close() {
-		this.reporter.clear();
+		this.spans.clear();
 	}
 
 	// issue #240
@@ -94,8 +94,9 @@ public class WebClientDiscoveryExceptionTests {
 			span.finish();
 		}
 
-		List<zipkin2.Span> spans = this.reporter.getSpans();
-		then(spans.stream().filter(span1 -> span1.kind() == zipkin2.Span.Kind.CLIENT)
+		// hystrix commands should finish at this point
+		Thread.sleep(200);
+		then(this.spans.spans().stream().filter(span1 -> span1.kind() == Span.Kind.CLIENT)
 				.findFirst().get().tags()).containsKey("error");
 	}
 
@@ -148,8 +149,8 @@ public class WebClientDiscoveryExceptionTests {
 		}
 
 		@Bean
-		Reporter<zipkin2.Span> mySpanReporter() {
-			return new ArrayListSpanReporter();
+		SpanHandler testSpanHandler() {
+			return new TestSpanHandler();
 		}
 
 		@Bean

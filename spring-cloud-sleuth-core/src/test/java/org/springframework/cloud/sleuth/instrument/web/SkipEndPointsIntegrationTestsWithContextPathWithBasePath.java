@@ -17,7 +17,9 @@
 package org.springframework.cloud.sleuth.instrument.web;
 
 import brave.Tracer;
+import brave.handler.SpanHandler;
 import brave.sampler.Sampler;
+import brave.test.TestSpanHandler;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -28,7 +30,6 @@ import org.springframework.boot.autoconfigure.amqp.RabbitAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.web.server.LocalServerPort;
 import org.springframework.cloud.sleuth.DisableSecurity;
-import org.springframework.cloud.sleuth.util.ArrayListSpanReporter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -45,7 +46,7 @@ import static org.assertj.core.api.BDDAssertions.then;
 public class SkipEndPointsIntegrationTestsWithContextPathWithBasePath {
 
 	@Autowired
-	ArrayListSpanReporter accumulator;
+	TestSpanHandler spans;
 
 	@Autowired
 	Tracer tracer;
@@ -56,7 +57,7 @@ public class SkipEndPointsIntegrationTestsWithContextPathWithBasePath {
 	@BeforeEach
 	@AfterEach
 	public void clearSpans() {
-		this.accumulator.clear();
+		this.spans.clear();
 	}
 
 	@Test
@@ -66,7 +67,7 @@ public class SkipEndPointsIntegrationTestsWithContextPathWithBasePath {
 				String.class);
 
 		then(this.tracer.currentSpan()).isNull();
-		then(this.accumulator.getSpans()).hasSize(0);
+		then(this.spans).hasSize(0);
 	}
 
 	@Test
@@ -76,7 +77,7 @@ public class SkipEndPointsIntegrationTestsWithContextPathWithBasePath {
 				String.class);
 
 		then(this.tracer.currentSpan()).isNull();
-		then(this.accumulator.getSpans()).hasSize(1);
+		then(this.spans).hasSize(1);
 	}
 
 	@EnableAutoConfiguration(exclude = RabbitAutoConfiguration.class)
@@ -90,8 +91,8 @@ public class SkipEndPointsIntegrationTestsWithContextPathWithBasePath {
 		}
 
 		@Bean
-		ArrayListSpanReporter reporter() {
-			return new ArrayListSpanReporter();
+		SpanHandler testSpanHandler() {
+			return new TestSpanHandler();
 		}
 
 		@Bean

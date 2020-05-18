@@ -29,6 +29,7 @@ import java.util.concurrent.ThreadFactory;
 import brave.Tracer;
 import brave.Tracing;
 import brave.propagation.StrictCurrentTraceContext;
+import brave.test.TestSpanHandler;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -37,8 +38,6 @@ import rx.plugins.RxJavaErrorHandler;
 import rx.plugins.RxJavaObservableExecutionHook;
 import rx.plugins.RxJavaPlugins;
 import rx.plugins.RxJavaSchedulersHook;
-
-import org.springframework.cloud.sleuth.util.ArrayListSpanReporter;
 
 import static org.assertj.core.api.BDDAssertions.then;
 
@@ -53,17 +52,17 @@ public class SleuthRxJavaSchedulersHookTests {
 
 	StrictCurrentTraceContext currentTraceContext = StrictCurrentTraceContext.create();
 
-	ArrayListSpanReporter reporter = new ArrayListSpanReporter();
+	TestSpanHandler spans = new TestSpanHandler();
 
 	Tracing tracing = Tracing.newBuilder().currentTraceContext(this.currentTraceContext)
-			.spanReporter(this.reporter).build();
+			.addSpanHandler(this.spans).build();
 
 	Tracer tracer = this.tracing.tracer();
 
 	@AfterEach
 	public void clean() {
 		this.tracing.close();
-		this.reporter.clear();
+		this.spans.clear();
 		this.currentTraceContext.close();
 	}
 
@@ -101,7 +100,7 @@ public class SleuthRxJavaSchedulersHookTests {
 
 		then(action).isInstanceOf(SleuthRxJavaSchedulersHook.TraceAction.class);
 		then(caller.toString()).isEqualTo("called_from_schedulers_hook");
-		then(this.reporter.getSpans()).isNotEmpty();
+		then(this.spans).isNotEmpty();
 		then(this.tracer.currentSpan()).isNull();
 	}
 
@@ -122,7 +121,7 @@ public class SleuthRxJavaSchedulersHookTests {
 
 		hello.get();
 
-		then(this.reporter.getSpans()).isEmpty();
+		then(this.spans).isEmpty();
 		then(this.tracer.currentSpan()).isNull();
 	}
 

@@ -22,22 +22,22 @@ import java.util.Map;
 import brave.Span;
 import brave.Tracer.SpanInScope;
 import brave.Tracing;
+import brave.handler.SpanHandler;
 import brave.opentracing.BraveSpan;
 import brave.opentracing.BraveSpanContext;
 import brave.opentracing.BraveTracer;
 import brave.propagation.TraceContext;
 import brave.sampler.Sampler;
+import brave.test.TestSpanHandler;
 import io.opentracing.Scope;
 import io.opentracing.propagation.Format;
 import io.opentracing.propagation.TextMapAdapter;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import zipkin2.Annotation;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.cloud.sleuth.util.ArrayListSpanReporter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -57,10 +57,10 @@ import static org.springframework.boot.test.context.SpringBootTest.WebEnvironmen
  */
 @SpringBootTest(webEnvironment = NONE,
 		properties = "spring.sleuth.baggage.remote-fields=country-code")
-public class BraveTracerTest {
+public class OpenTracingTest {
 
 	@Autowired
-	ArrayListSpanReporter spans;
+	TestSpanHandler spans;
 
 	@Autowired
 	Tracing brave;
@@ -144,13 +144,12 @@ public class BraveTracerTest {
 	}
 
 	void checkSpanReportedToZipkin() {
-		assertThat(this.spans.getSpans()).first().satisfies(s -> {
+		assertThat(this.spans).first().satisfies(s -> {
 			assertThat(s.name()).isEqualTo("encode");
-			assertThat(s.timestamp()).isEqualTo(1L);
-			assertThat(s.annotations())
-					.containsExactly(Annotation.create(2L, "pump fake"));
+			assertThat(s.startTimestamp()).isEqualTo(1L);
+			assertThat(s.annotations()).containsExactly(entry(2L, "pump fake"));
 			assertThat(s.tags()).containsExactly(entry("lc", "codec"));
-			assertThat(s.duration()).isEqualTo(2L);
+			assertThat(s.finishTimestamp()).isEqualTo(3L);
 		});
 	}
 
@@ -251,14 +250,14 @@ public class BraveTracerTest {
 	public void ignoresErrorFalseTag_beforeStart() {
 		this.opentracing.buildSpan("encode").withTag("error", false).start().finish();
 
-		assertThat(this.spans.getSpans().get(0).tags()).isEmpty();
+		assertThat(this.spans.get(0).tags()).isEmpty();
 	}
 
 	@Test
 	public void ignoresErrorFalseTag_afterStart() {
 		this.opentracing.buildSpan("encode").start().setTag("error", false).finish();
 
-		assertThat(this.spans.getSpans().get(0).tags()).isEmpty();
+		assertThat(this.spans.get(0).tags()).isEmpty();
 	}
 
 	@BeforeEach
@@ -276,8 +275,8 @@ public class BraveTracerTest {
 		}
 
 		@Bean
-		ArrayListSpanReporter reporter() {
-			return new ArrayListSpanReporter();
+		SpanHandler testSpanHandler() {
+			return new TestSpanHandler();
 		}
 
 	}

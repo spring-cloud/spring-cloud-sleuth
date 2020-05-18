@@ -17,6 +17,7 @@
 package org.springframework.cloud.sleuth.instrument.messaging;
 
 import brave.Tracer;
+import brave.handler.SpanHandler;
 import brave.kafka.clients.KafkaTracing;
 import brave.messaging.MessagingRequest;
 import brave.messaging.MessagingTracing;
@@ -24,6 +25,7 @@ import brave.sampler.Sampler;
 import brave.sampler.SamplerFunction;
 import brave.sampler.SamplerFunctions;
 import brave.spring.rabbit.SpringRabbitTracing;
+import brave.test.TestSpanHandler;
 import org.apache.kafka.clients.consumer.Consumer;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.producer.Producer;
@@ -40,7 +42,6 @@ import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
 import org.springframework.cloud.sleuth.autoconfig.TraceAutoConfiguration;
-import org.springframework.cloud.sleuth.util.ArrayListSpanReporter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.kafka.annotation.KafkaListener;
@@ -61,7 +62,7 @@ public class TraceMessagingAutoConfigurationTests {
 	RabbitTemplate rabbitTemplate;
 
 	@Autowired
-	ArrayListSpanReporter reporter;
+	TestSpanHandler spans;
 
 	@Autowired
 	TestSleuthRabbitBeanPostProcessor postProcessor;
@@ -159,8 +160,8 @@ public class TraceMessagingAutoConfigurationTests {
 		}
 
 		@Bean
-		ArrayListSpanReporter reporter() {
-			return new ArrayListSpanReporter();
+		SpanHandler testSpanHandler() {
+			return new TestSpanHandler();
 		}
 
 		@Bean

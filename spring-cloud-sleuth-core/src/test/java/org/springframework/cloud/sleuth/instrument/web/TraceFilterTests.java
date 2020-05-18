@@ -31,11 +31,11 @@ import brave.propagation.StrictScopeDecorator;
 import brave.propagation.ThreadLocalCurrentTraceContext;
 import brave.sampler.Sampler;
 import brave.servlet.TracingFilter;
+import brave.test.TestSpanHandler;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import org.springframework.cloud.sleuth.util.ArrayListSpanReporter;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -54,12 +54,12 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
  */
 public class TraceFilterTests {
 
-	ArrayListSpanReporter reporter = new ArrayListSpanReporter();
+	TestSpanHandler spans = new TestSpanHandler();
 
 	Tracing tracing = Tracing.newBuilder()
 			.currentTraceContext(ThreadLocalCurrentTraceContext.newBuilder()
 					.addScopeDecorator(StrictScopeDecorator.create()).build())
-			.spanReporter(this.reporter).build();
+			.addSpanHandler(this.spans).build();
 
 	Tracer tracer = this.tracing.tracer();
 
@@ -102,14 +102,14 @@ public class TraceFilterTests {
 		neverSampleFilter().doFilter(this.request, this.response, this.filterChain);
 
 		then(Tracing.current().tracer().currentSpan()).isNull();
-		then(this.reporter.getSpans()).isEmpty();
+		then(this.spans).isEmpty();
 	}
 
 	private Filter neverSampleFilter() {
 		Tracing tracing = Tracing.newBuilder()
 				.currentTraceContext(ThreadLocalCurrentTraceContext.newBuilder()
 						.addScopeDecorator(StrictScopeDecorator.create()).build())
-				.spanReporter(this.reporter).sampler(Sampler.NEVER_SAMPLE)
+				.addSpanHandler(this.spans).sampler(Sampler.NEVER_SAMPLE)
 				.supportsJoin(false).build();
 		HttpTracing httpTracing = HttpTracing.newBuilder(tracing)
 				.clientParser(new HttpClientParser()).serverParser(new HttpServerParser())
@@ -123,8 +123,8 @@ public class TraceFilterTests {
 	public void startsNewTrace() throws Exception {
 		this.filter.doFilter(this.request, this.response, this.filterChain);
 
-		then(this.reporter.getSpans()).hasSize(1);
-		then(this.reporter.getSpans().get(0).tags()).containsEntry("http.path", "/")
+		then(this.spans).hasSize(1);
+		then(this.spans.get(0).tags()).containsEntry("http.path", "/")
 				.containsEntry("http.method", HttpMethod.GET.toString());
 		// we don't check for status_code anymore cause Brave doesn't support it oob
 		// .containsEntry("http.status_code", "200")
@@ -137,9 +137,8 @@ public class TraceFilterTests {
 		this.filter.doFilter(this.request, this.response, this.filterChain);
 
 		then(Tracing.current().tracer().currentSpan()).isNull();
-		then(this.reporter.getSpans()).hasSize(1);
-		then(this.reporter.getSpans().get(0).tags())
-				.doesNotContainKey("http.status_code");
+		then(this.spans).hasSize(1);
+		then(this.spans.get(0).tags()).doesNotContainKey("http.status_code");
 	}
 
 	@Test
@@ -151,9 +150,9 @@ public class TraceFilterTests {
 		this.filter.doFilter(this.request, this.response, this.filterChain);
 
 		then(Tracing.current().tracer().currentSpan()).isNull();
-		then(this.reporter.getSpans()).hasSize(1);
-		then(this.reporter.getSpans().get(0).id()).isEqualTo("0000000000000003");
-		then(this.reporter.getSpans().get(0).tags()).containsEntry("http.path", "/")
+		then(this.spans).hasSize(1);
+		then(this.spans.get(0).id()).isEqualTo("0000000000000003");
+		then(this.spans.get(0).tags()).containsEntry("http.path", "/")
 				.containsEntry("http.method", HttpMethod.GET.toString());
 	}
 
@@ -189,7 +188,7 @@ public class TraceFilterTests {
 		this.filter.doFilter(this.request, this.response, this.filterChain);
 
 		then(Tracing.current().tracer().currentSpan()).isNull();
-		then(this.reporter.getSpans()).hasSize(1);
+		then(this.spans).hasSize(1);
 	}
 
 	@Test
@@ -218,7 +217,7 @@ public class TraceFilterTests {
 		Tracing tracing = Tracing.newBuilder()
 				.currentTraceContext(ThreadLocalCurrentTraceContext.newBuilder()
 						.addScopeDecorator(StrictScopeDecorator.create()).build())
-				.spanReporter(this.reporter).supportsJoin(false).build();
+				.addSpanHandler(this.spans).supportsJoin(false).build();
 		HttpTracing httpTracing = HttpTracing.create(tracing);
 		this.request = builder().header("b3", "0000000000000014-000000000000000a")
 				.buildRequest(new MockServletContext());
@@ -227,8 +226,8 @@ public class TraceFilterTests {
 				this.filterChain);
 
 		then(Tracing.current().tracer().currentSpan()).isNull();
-		then(this.reporter.getSpans()).hasSize(1);
-		then(this.reporter.getSpans().get(0).parentId()).isEqualTo("000000000000000a");
+		then(this.spans).hasSize(1);
+		then(this.spans.get(0).parentId()).isEqualTo("000000000000000a");
 	}
 
 	@Test
@@ -253,8 +252,8 @@ public class TraceFilterTests {
 
 		then(Tracing.current().tracer().currentSpan()).isNull();
 		verifyParentSpanHttpTags();
-		then(this.reporter.getSpans()).hasSize(1);
-		then(this.reporter.getSpans().get(0).tags()).containsEntry("error", "Planned");
+		then(this.spans).hasSize(1);
+		then(this.spans.get(0).tags()).containsEntry("error", "Planned");
 	}
 
 	@Test
@@ -277,7 +276,7 @@ public class TraceFilterTests {
 		this.filter.doFilter(this.request, this.response, this.filterChain);
 
 		then(Tracing.current().tracer().currentSpan()).isNull();
-		then(this.reporter.getSpans()).hasSize(1);
+		then(this.spans).hasSize(1);
 	}
 
 	@Test
@@ -289,7 +288,7 @@ public class TraceFilterTests {
 		this.filter.doFilter(this.request, this.response, this.filterChain);
 
 		then(Tracing.current().tracer().currentSpan()).isNull();
-		then(this.reporter.getSpans()).hasSize(1);
+		then(this.spans).hasSize(1);
 	}
 
 	@Test
@@ -300,7 +299,7 @@ public class TraceFilterTests {
 		this.filter.doFilter(this.request, this.response, this.filterChain);
 
 		then(Tracing.current().tracer().currentSpan()).isNull();
-		then(this.reporter.getSpans()).isNotEmpty();
+		then(this.spans).isNotEmpty();
 		then(this.response.getStatus()).isEqualTo(HttpStatus.OK.value());
 	}
 
@@ -312,7 +311,7 @@ public class TraceFilterTests {
 		this.filter.doFilter(this.request, this.response, this.filterChain);
 
 		then(Tracing.current().tracer().currentSpan()).isNull();
-		then(this.reporter.getSpans()).isNotEmpty();
+		then(this.spans).isNotEmpty();
 		then(this.response.getStatus()).isEqualTo(HttpStatus.OK.value());
 	}
 
@@ -323,7 +322,7 @@ public class TraceFilterTests {
 		neverSampleFilter().doFilter(this.request, this.response, this.filterChain);
 
 		then(Tracing.current().tracer().currentSpan()).isNull();
-		then(this.reporter.getSpans()).isNotEmpty();
+		then(this.spans).isNotEmpty();
 	}
 
 	@SuppressWarnings("Duplicates")
@@ -335,7 +334,7 @@ public class TraceFilterTests {
 		neverSampleFilter().doFilter(this.request, this.response, this.filterChain);
 
 		then(Tracing.current().tracer().currentSpan()).isNull();
-		then(this.reporter.getSpans()).isEmpty();
+		then(this.spans).isEmpty();
 	}
 
 	// #668
@@ -348,8 +347,8 @@ public class TraceFilterTests {
 		this.filter.doFilter(this.request, this.response, this.filterChain);
 
 		then(Tracing.current().tracer().currentSpan()).isNull();
-		then(this.reporter.getSpans()).hasSize(1);
-		then(this.reporter.getSpans().get(0).tags()).containsEntry("http.path", "/")
+		then(this.spans).hasSize(1);
+		then(this.spans.get(0).tags()).containsEntry("http.path", "/")
 				.containsEntry("http.method", HttpMethod.GET.toString());
 		// we don't check for status_code anymore cause Brave doesn't support it oob
 		// .containsEntry("http.status_code", "295")
@@ -362,13 +361,13 @@ public class TraceFilterTests {
 		neverSampleFilter().doFilter(this.request, this.response, this.filterChain);
 
 		then(Tracing.current().tracer().currentSpan()).isNull();
-		then(this.reporter.getSpans()).hasSize(1);
-		then(this.reporter.getSpans().get(0).name()).isEqualTo("get");
+		then(this.spans).hasSize(1);
+		then(this.spans.get(0).name()).isEqualTo("GET");
 	}
 
 	public void verifyParentSpanHttpTags() {
-		then(this.reporter.getSpans().size()).isGreaterThan(0);
-		then(this.reporter.getSpans().get(0).tags()).containsEntry("http.path", "/")
+		then(this.spans).isNotEmpty();
+		then(this.spans.get(0).tags()).containsEntry("http.path", "/")
 				.containsEntry("http.method", HttpMethod.GET.toString());
 	}
 

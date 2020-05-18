@@ -21,20 +21,22 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
 
+import brave.Span;
 import brave.Tracing;
+import brave.handler.MutableSpan;
+import brave.handler.SpanHandler;
 import brave.propagation.CurrentTraceContext;
 import brave.sampler.Sampler;
 import brave.spring.web.TracingAsyncClientHttpRequestInterceptor;
+import brave.test.TestSpanHandler;
 import org.awaitility.Awaitility;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import zipkin2.Span;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.cloud.sleuth.util.ArrayListSpanReporter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
 import org.springframework.core.env.Environment;
@@ -80,7 +82,7 @@ public class RestTemplateTraceAspectIntegrationTests {
 	Tracing tracer;
 
 	@Autowired
-	ArrayListSpanReporter reporter;
+	TestSpanHandler spans;
 
 	@Autowired
 	RestTemplate restTemplate;
@@ -91,7 +93,7 @@ public class RestTemplateTraceAspectIntegrationTests {
 	public void init() {
 		this.mockMvc = MockMvcBuilders.webAppContextSetup(this.context).build();
 		this.controller.reset();
-		this.reporter.clear();
+		this.spans.clear();
 	}
 
 	@BeforeEach
@@ -143,7 +145,7 @@ public class RestTemplateTraceAspectIntegrationTests {
 		whenARequestIsSentToASyncEndpointThatShouldBeFilteredOut();
 
 		then(this.currentTraceContext.get()).isNull();
-		then(this.reporter.getSpans()).isEmpty();
+		then(this.spans).isEmpty();
 	}
 
 	private void whenARequestIsSentToAnAsyncRestTemplateEndpoint() throws Exception {
@@ -170,7 +172,7 @@ public class RestTemplateTraceAspectIntegrationTests {
 	// Brave was never designed to run tests of server and client in one test
 	// that's why we have to pick only CLIENT side
 	private void thenClientKindIsReported() {
-		assertThat(this.reporter.getSpans().stream().map(Span::kind)
+		assertThat(this.spans.spans().stream().map(MutableSpan::kind)
 				.collect(Collectors.toList())).contains(Span.Kind.CLIENT);
 	}
 
@@ -209,8 +211,8 @@ public class RestTemplateTraceAspectIntegrationTests {
 		}
 
 		@Bean
-		ArrayListSpanReporter reporter() {
-			return new ArrayListSpanReporter();
+		SpanHandler testSpanHandler() {
+			return new TestSpanHandler();
 		}
 
 	}

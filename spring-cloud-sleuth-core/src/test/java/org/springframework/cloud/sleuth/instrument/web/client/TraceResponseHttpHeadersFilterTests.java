@@ -19,12 +19,12 @@ package org.springframework.cloud.sleuth.instrument.web.client;
 import brave.Tracing;
 import brave.http.HttpTracing;
 import brave.propagation.StrictCurrentTraceContext;
+import brave.test.TestSpanHandler;
 import org.assertj.core.api.BDDAssertions;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
 import org.springframework.cloud.gateway.filter.headers.HttpHeadersFilter;
-import org.springframework.cloud.sleuth.util.ArrayListSpanReporter;
 import org.springframework.http.HttpHeaders;
 import org.springframework.mock.http.server.reactive.MockServerHttpRequest;
 import org.springframework.mock.web.server.MockServerWebExchange;
@@ -33,10 +33,10 @@ public class TraceResponseHttpHeadersFilterTests {
 
 	StrictCurrentTraceContext currentTraceContext = StrictCurrentTraceContext.create();
 
-	ArrayListSpanReporter reporter = new ArrayListSpanReporter();
+	TestSpanHandler spans = new TestSpanHandler();
 
 	Tracing tracing = Tracing.newBuilder().currentTraceContext(this.currentTraceContext)
-			.spanReporter(this.reporter).build();
+			.addSpanHandler(this.spans).build();
 
 	HttpTracing httpTracing = HttpTracing.newBuilder(this.tracing).build();
 
@@ -58,7 +58,7 @@ public class TraceResponseHttpHeadersFilterTests {
 
 		filter.filter(httpHeaders, exchange);
 
-		BDDAssertions.then(this.reporter.getSpans()).isEmpty();
+		BDDAssertions.then(this.spans).isEmpty();
 	}
 
 	@Test
@@ -75,7 +75,7 @@ public class TraceResponseHttpHeadersFilterTests {
 
 		filter.filter(httpHeaders, exchange);
 
-		BDDAssertions.then(this.reporter.getSpans()).isNotEmpty();
+		BDDAssertions.then(this.spans).isNotEmpty();
 	}
 
 }

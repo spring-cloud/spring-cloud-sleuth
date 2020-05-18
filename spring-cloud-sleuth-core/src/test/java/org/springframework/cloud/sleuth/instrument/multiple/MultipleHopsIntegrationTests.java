@@ -28,7 +28,10 @@ import brave.Tracer.SpanInScope;
 import brave.baggage.BaggageField;
 import brave.baggage.BaggagePropagationConfig;
 import brave.baggage.BaggagePropagationConfig.SingleBaggageField;
+import brave.handler.MutableSpan;
+import brave.handler.SpanHandler;
 import brave.sampler.Sampler;
+import brave.test.TestSpanHandler;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -37,7 +40,6 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.jmx.JmxAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.web.servlet.context.ServletWebServerInitializedEvent;
-import org.springframework.cloud.sleuth.util.ArrayListSpanReporter;
 import org.springframework.context.ApplicationListener;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -69,7 +71,7 @@ public class MultipleHopsIntegrationTests {
 	Tracer tracer;
 
 	@Autowired
-	ArrayListSpanReporter reporter;
+	TestSpanHandler spans;
 
 	@Autowired
 	RestTemplate restTemplate;
@@ -82,7 +84,7 @@ public class MultipleHopsIntegrationTests {
 
 	@BeforeEach
 	public void setup() {
-		this.reporter.clear();
+		this.spans.clear();
 	}
 
 	@Test
@@ -91,16 +93,15 @@ public class MultipleHopsIntegrationTests {
 				"http://localhost:" + this.config.port + "/greeting", String.class);
 
 		await().atMost(5, SECONDS).untilAsserted(() -> {
-			then(this.reporter.getSpans()).hasSize(14);
+			then(this.spans).hasSize(14);
 		});
-		then(this.reporter.getSpans().stream().map(zipkin2.Span::name).collect(toList()))
-				.containsAll(asList("get /greeting", "send"));
-		then(this.reporter.getSpans().stream().map(zipkin2.Span::kind)
+		then(this.spans).extracting(MutableSpan::name)
+				.containsAll(asList("GET /greeting", "send"));
+		then(this.spans).extracting(MutableSpan::kind)
 				// no server kind due to test constraints
-				.collect(toList()))
-						.containsAll(asList(zipkin2.Span.Kind.CONSUMER,
-								zipkin2.Span.Kind.PRODUCER, zipkin2.Span.Kind.SERVER));
-		then(this.reporter.getSpans().stream().map(span -> span.tags().get("channel"))
+				.containsAll(
+						asList(Span.Kind.CONSUMER, Span.Kind.PRODUCER, Span.Kind.SERVER));
+		then(this.spans.spans().stream().map(span -> span.tags().get("channel"))
 				.filter(Objects::nonNull).distinct().collect(toList())).hasSize(3)
 						.containsAll(asList("words", "counts", "greetings"));
 	}
@@ -131,10 +132,10 @@ public class MultipleHopsIntegrationTests {
 		}
 
 		await().atMost(5, SECONDS).untilAsserted(() -> {
-			then(this.reporter.getSpans()).isNotEmpty();
+			then(this.spans).isNotEmpty();
 		});
 
-		List<zipkin2.Span> withBagTags = this.reporter.getSpans().stream()
+		List<MutableSpan> withBagTags = this.spans.spans().stream()
 				.filter(s -> s.tags().containsKey(BUSINESS_PROCESS.name()))
 				.collect(toList());
 
@@ -177,8 +178,8 @@ public class MultipleHopsIntegrationTests {
 		}
 
 		@Bean
-		ArrayListSpanReporter arrayListSpanAccumulator() {
-			return new ArrayListSpanReporter();
+		SpanHandler testSpanHandler() {
+			return new TestSpanHandler();
 		}
 
 		@Bean

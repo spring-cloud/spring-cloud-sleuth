@@ -32,22 +32,21 @@ import brave.propagation.CurrentTraceContext.Scope;
 import brave.propagation.TraceContext;
 import brave.sampler.Sampler;
 import brave.sampler.SamplerFunction;
+import brave.test.IntegrationTestSpanHandler;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.assertj.core.api.BDDAssertions;
-import org.junit.jupiter.api.AfterEach;
+import org.junit.ClassRule;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import zipkin2.Span;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.system.CapturedOutput;
 import org.springframework.boot.test.system.OutputCaptureExtension;
-import org.springframework.cloud.sleuth.util.BlockingQueueSpanReporter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.env.Environment;
@@ -71,14 +70,14 @@ import static org.assertj.core.api.BDDAssertions.then;
 @ExtendWith(OutputCaptureExtension.class)
 public class TraceFilterWebIntegrationTests {
 
+	@ClassRule
+	public static IntegrationTestSpanHandler spanHandler = new IntegrationTestSpanHandler();
+
 	private static final Logger log = LoggerFactory
 			.getLogger(TraceFilterWebIntegrationTests.class);
 
 	@Autowired
 	CurrentTraceContext currentTraceContext;
-
-	@Autowired
-	BlockingQueueSpanReporter reporter;
 
 	@Autowired
 	@HttpServerSampler
@@ -87,18 +86,13 @@ public class TraceFilterWebIntegrationTests {
 	@Autowired
 	Environment environment;
 
-	@AfterEach
-	public void cleanup() {
-		this.reporter.assertEmpty();
-	}
-
 	@Test
 	public void should_tag_url() {
 		new RestTemplate().getForObject("http://localhost:" + port() + "/good",
 				String.class);
 
 		then(this.currentTraceContext.get()).isNull();
-		then(this.reporter.takeSpan().tags()).containsKey("http.url");
+		then(spanHandler.takeRemoteSpan(Kind.SERVER).tags()).containsKey("http.url");
 	}
 
 	@Test
@@ -113,11 +107,11 @@ public class TraceFilterWebIntegrationTests {
 		}
 
 		then(this.currentTraceContext.get()).isNull();
-		Span fromFirstTraceFilterFlow = this.reporter.takeSpan();
+		MutableSpan fromFirstTraceFilterFlow = spanHandler.takeRemoteSpanWithErrorTag(
+				Kind.SERVER,
+				"Request processing failed; nested exception is java.lang.RuntimeException: Throwing exception");
 		then(fromFirstTraceFilterFlow.tags()).containsEntry("http.method", "GET")
-				.containsEntry("mvc.controller.class", "ExceptionThrowingController")
-				.containsEntry("error",
-						"Request processing failed; nested exception is java.lang.RuntimeException: Throwing exception");
+				.containsEntry("mvc.controller.class", "BasicErrorController");
 		// Trace IDs in logs: issue#714
 		String hex = fromFirstTraceFilterFlow.traceId();
 		thenLogsForExceptionLoggingFilterContainTracingInformation(capture, hex);
@@ -144,8 +138,7 @@ public class TraceFilterWebIntegrationTests {
 		}
 
 		then(this.currentTraceContext.get()).isNull();
-		Span span = this.reporter.takeSpan();
-		then(span.kind().ordinal()).isEqualTo(Span.Kind.SERVER.ordinal());
+		MutableSpan span = spanHandler.takeRemoteSpanWithErrorTag(Kind.SERVER, "400");
 		then(span.tags()).containsEntry("http.status_code", "400");
 		then(span.tags()).containsEntry("http.path", "/test_bad_request");
 	}
@@ -177,8 +170,8 @@ public class TraceFilterWebIntegrationTests {
 		}
 
 		@Bean
-		BlockingQueueSpanReporter reporter() {
-			return new BlockingQueueSpanReporter();
+		SpanHandler testSpanHandler() {
+			return spanHandler;
 		}
 
 		@Bean

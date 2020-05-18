@@ -18,14 +18,15 @@ package org.springframework.cloud.sleuth.instrument.feign.issues.issue362;
 
 import java.io.IOException;
 import java.util.Date;
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
 
 import brave.Tracing;
+import brave.handler.SpanHandler;
 import brave.sampler.Sampler;
+import brave.test.TestSpanHandler;
 import feign.Client;
 import feign.Logger;
 import feign.Request;
@@ -35,15 +36,12 @@ import feign.Retryer;
 import feign.codec.ErrorDecoder;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import zipkin2.Span;
-import zipkin2.reporter.Reporter;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.cloud.openfeign.EnableFeignClients;
 import org.springframework.cloud.openfeign.FeignClient;
-import org.springframework.cloud.sleuth.util.ArrayListSpanReporter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpStatus;
@@ -87,12 +85,12 @@ public class Issue362Tests {
 	Tracing tracer;
 
 	@Autowired
-	ArrayListSpanReporter reporter;
+	TestSpanHandler spans;
 
 	@BeforeEach
 	public void setup() {
 		this.feignComponentAsserter.executedComponents.clear();
-		this.reporter.clear();
+		this.spans.clear();
 	}
 
 	@Test
@@ -105,9 +103,8 @@ public class Issue362Tests {
 		then(response.getBody()).isEqualTo("I'm OK");
 		then(this.feignComponentAsserter.executedComponents).containsEntry(Client.class,
 				true);
-		List<Span> spans = this.reporter.getSpans();
-		then(spans).hasSize(1);
-		then(spans.get(0).tags()).containsEntry("http.path", "/service/ok");
+		then(this.spans).hasSize(1);
+		then(this.spans.get(0).tags()).containsEntry("http.path", "/service/ok");
 	}
 
 	@Test
@@ -124,10 +121,9 @@ public class Issue362Tests {
 		then(this.feignComponentAsserter.executedComponents)
 				.containsEntry(ErrorDecoder.class, true)
 				.containsEntry(Client.class, true);
-		List<Span> spans = this.reporter.getSpans();
 		// retries
-		then(spans).hasSize(5);
-		then(spans.stream().map(span -> span.tags().get("http.status_code"))
+		then(this.spans).hasSize(5);
+		then(this.spans.spans().stream().map(span -> span.tags().get("http.status_code"))
 				.collect(Collectors.toList())).containsOnly("409");
 	}
 
@@ -167,8 +163,8 @@ class Application {
 	}
 
 	@Bean
-	public Reporter<Span> spanReporter() {
-		return new ArrayListSpanReporter();
+	public SpanHandler testSpanHandler() {
+		return new TestSpanHandler();
 	}
 
 }

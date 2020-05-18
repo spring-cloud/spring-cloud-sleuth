@@ -16,10 +16,11 @@
 
 package org.springframework.cloud.sleuth.instrument.web.view;
 
+import brave.handler.SpanHandler;
 import brave.sampler.Sampler;
+import brave.test.TestSpanHandler;
 
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
-import org.springframework.cloud.sleuth.util.ArrayListSpanReporter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.config.annotation.ViewControllerRegistry;
@@ -35,8 +36,8 @@ public class Issue469 extends WebMvcConfigurerAdapter {
 	}
 
 	@Bean
-	ArrayListSpanReporter reporter() {
-		return new ArrayListSpanReporter();
+	SpanHandler testSpanHandler() {
+		return new TestSpanHandler();
 	}
 
 	@Bean

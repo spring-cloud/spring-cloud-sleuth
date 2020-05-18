@@ -16,18 +16,19 @@
 
 package org.springframework.cloud.sleuth.instrument.messaging;
 
+import brave.handler.SpanHandler;
 import brave.messaging.MessagingRequest;
 import brave.messaging.MessagingRuleSampler;
 import brave.sampler.Matchers;
 import brave.sampler.RateLimitingSampler;
 import brave.sampler.Sampler;
 import brave.sampler.SamplerFunction;
+import brave.test.TestSpanHandler;
 import org.junit.jupiter.api.Test;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.cloud.sleuth.util.ArrayListSpanReporter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -52,8 +53,8 @@ public class TraceMessagingAutoConfigurationIntegrationTests {
 	public static class Config {
 
 		@Bean
-		ArrayListSpanReporter reporter() {
-			return new ArrayListSpanReporter();
+		SpanHandler testSpanHandler() {
+			return new TestSpanHandler();
 		}
 
 		// tag::custom_messaging_consumer_sampler[]

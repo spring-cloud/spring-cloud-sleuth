@@ -33,11 +33,13 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.EnableAsync;
+import org.springframework.test.annotation.DirtiesContext;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.NONE,
 		classes = { TraceAsyncIntegrationTests.TraceAsyncITestConfiguration.class })
+@DirtiesContext // flakey otherwise
 public class TraceAsyncIntegrationTests {
 
 	@ClassRule
@@ -54,52 +56,34 @@ public class TraceAsyncIntegrationTests {
 
 	@Test
 	public void should_set_span_on_an_async_annotated_method() {
-		asyncLogic.invokeAsync();
+		try (Scope ws = currentTraceContext.maybeScope(context)) {
+			asyncLogic.invokeAsync();
 
-		assertSpan_invokeAsync(takeDesirableSpan());
+			MutableSpan span = takeDesirableSpan();
+			assertThat(span.name()).isEqualTo("invoke-async");
+			assertThat(span.containsAnnotation("@Async")).isTrue();
+			assertThat(span.tags()).containsEntry("class", "AsyncLogic")
+					.containsEntry("method", "invokeAsync");
+
+			// continues the trace
+			assertThat(span.traceId()).isEqualTo(context.traceIdString());
+		}
 	}
 
 	@Test
 	public void should_set_span_with_custom_method_on_an_async_annotated_method() {
-		asyncLogic.invokeAsync_customName();
-
-		assertSpan_invokeAsync_customName(takeDesirableSpan());
-	}
-
-	@Test
-	public void should_continue_a_span_on_an_async_annotated_method() {
-		try (Scope ws = currentTraceContext.maybeScope(context)) {
-			asyncLogic.invokeAsync();
-
-			MutableSpan span = assertSpan_invokeAsync(takeDesirableSpan());
-			assertThat(span.traceId()).isEqualTo(context.traceIdString());
-		}
-	}
-
-	@Test
-	public void should_continue_a_span_with_custom_method_on_an_async_annotated_method() {
 		try (Scope ws = currentTraceContext.maybeScope(context)) {
 			asyncLogic.invokeAsync_customName();
 
-			MutableSpan span = assertSpan_invokeAsync_customName(takeDesirableSpan());
+			MutableSpan span = takeDesirableSpan();
+			assertThat(span.name()).isEqualTo("foo");
+			assertThat(span.containsAnnotation("@Async")).isTrue();
+			assertThat(span.tags()).containsEntry("class", "AsyncLogic")
+					.containsEntry("method", "invokeAsync_customName");
+
+			// continues the trace
 			assertThat(span.traceId()).isEqualTo(context.traceIdString());
 		}
-	}
-
-	static MutableSpan assertSpan_invokeAsync_customName(MutableSpan span) {
-		assertThat(span.name()).isEqualTo("foo");
-		assertThat(span.containsAnnotation("@Async")).isTrue();
-		assertThat(span.tags()).containsEntry("class", "AsyncLogic")
-				.containsEntry("method", "invokeAsync_customName");
-		return span;
-	}
-
-	static MutableSpan assertSpan_invokeAsync(MutableSpan span) {
-		assertThat(span.name()).isEqualTo("invoke-async");
-		assertThat(span.containsAnnotation("@Async")).isTrue();
-		assertThat(span.tags()).containsEntry("class", "AsyncLogic")
-				.containsEntry("method", "invokeAsync");
-		return span;
 	}
 
 	// Sleuth adds spans named "async" with no tags when an executor is used.
@@ -121,7 +105,7 @@ public class TraceAsyncIntegrationTests {
 		}
 
 		@Bean
-		SpanHandler spanHandler() {
+		SpanHandler testSpanHandler() {
 			return spans;
 		}
 

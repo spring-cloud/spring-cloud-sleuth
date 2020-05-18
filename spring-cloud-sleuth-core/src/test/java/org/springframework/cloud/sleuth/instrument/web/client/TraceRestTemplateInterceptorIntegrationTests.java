@@ -23,9 +23,11 @@ import java.util.Map;
 import brave.Span;
 import brave.Tracer;
 import brave.Tracing;
+import brave.handler.MutableSpan;
 import brave.http.HttpTracing;
 import brave.propagation.StrictCurrentTraceContext;
 import brave.spring.web.TracingClientHttpRequestInterceptor;
+import brave.test.TestSpanHandler;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
 import okhttp3.mockwebserver.SocketPolicy;
@@ -34,7 +36,6 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import org.springframework.cloud.sleuth.util.ArrayListSpanReporter;
 import org.springframework.http.client.ClientHttpRequestFactory;
 import org.springframework.http.client.ClientHttpRequestInterceptor;
 import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
@@ -61,10 +62,10 @@ public class TraceRestTemplateInterceptorIntegrationTests {
 
 	StrictCurrentTraceContext currentTraceContext = StrictCurrentTraceContext.create();
 
-	ArrayListSpanReporter reporter = new ArrayListSpanReporter();
+	TestSpanHandler spans = new TestSpanHandler();
 
 	Tracing tracing = Tracing.newBuilder().currentTraceContext(this.currentTraceContext)
-			.spanReporter(this.reporter).build();
+			.addSpanHandler(this.spans).build();
 
 	Tracer tracer = this.tracing.tracer();
 
@@ -104,10 +105,10 @@ public class TraceRestTemplateInterceptorIntegrationTests {
 		}
 
 		// 1 span "new race", 1 span "rest template"
-		BDDAssertions.then(this.reporter.getSpans()).hasSize(2);
-		zipkin2.Span span1 = this.reporter.getSpans().get(0);
-		BDDAssertions.then(span1.tags()).containsEntry("error", "Read timed out");
-		BDDAssertions.then(span1.kind().ordinal()).isEqualTo(Span.Kind.CLIENT.ordinal());
+		BDDAssertions.then(this.spans).hasSize(2);
+		MutableSpan span1 = this.spans.get(0);
+		BDDAssertions.then(span1.error()).hasMessage("Read timed out");
+		BDDAssertions.then(span1.kind()).isEqualTo(Span.Kind.CLIENT);
 	}
 
 	private ClientHttpRequestFactory clientHttpRequestFactory() {

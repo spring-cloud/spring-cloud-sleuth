@@ -20,6 +20,7 @@ import java.io.IOException;
 import java.util.concurrent.TimeUnit;
 
 import brave.Tracing;
+import brave.handler.SpanHandler;
 import brave.http.HttpTracing;
 import brave.httpclient.TracingHttpClientBuilder;
 import brave.propagation.CurrentTraceContext;
@@ -45,7 +46,6 @@ import org.openjdk.jmh.runner.Runner;
 import org.openjdk.jmh.runner.RunnerException;
 import org.openjdk.jmh.runner.options.Options;
 import org.openjdk.jmh.runner.options.OptionsBuilder;
-import zipkin2.reporter.Reporter;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.WebApplicationType;
@@ -61,6 +61,9 @@ import org.springframework.context.ConfigurableApplicationContext;
 @Threads(2)
 @State(Scope.Benchmark)
 public class SpringWebFluxBenchmarks {
+	static final SpanHandler FAKE_SPAN_HANDLER = new SpanHandler() {
+		// intentionally anonymous to prevent logging fallback on NOOP
+	};
 
 	protected static TraceContext defaultTraceContext = TraceContext.newBuilder()
 			.traceIdHigh(333L).traceId(444L).spanId(3).sampled(true).build();
@@ -109,9 +112,9 @@ public class SpringWebFluxBenchmarks {
 		baseUrl = "http://127.0.0.1:" + springWebFluxApp.port + "/foo";
 		client = newClient();
 		tracedClient = newClient(HttpTracing
-				.create(Tracing.newBuilder().spanReporter(Reporter.NOOP).build()));
+				.create(Tracing.newBuilder().addSpanHandler(FAKE_SPAN_HANDLER).build()));
 		unsampledClient = newClient(HttpTracing.create(Tracing.newBuilder()
-				.sampler(Sampler.NEVER_SAMPLE).spanReporter(Reporter.NOOP).build()));
+				.sampler(Sampler.NEVER_SAMPLE).addSpanHandler(FAKE_SPAN_HANDLER).build()));
 		postSetUp();
 	}
 
