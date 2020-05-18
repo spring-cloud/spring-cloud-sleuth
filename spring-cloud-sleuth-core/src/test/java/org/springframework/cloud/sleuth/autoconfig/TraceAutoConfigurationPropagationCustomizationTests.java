@@ -35,8 +35,7 @@ import org.springframework.context.support.GenericApplicationContext;
 public class TraceAutoConfigurationPropagationCustomizationTests {
 
 	// Default for spring-messaging is on 2.2.x is MULTI, though 3.x it is
-	// SINGLE_NO_PARENT
-	// spring-cloud/spring-cloud-sleuth#1607
+	// SINGLE_NO_PARENT spring-cloud/spring-cloud-sleuth#1607
 	Propagation.Factory defaultB3Propagation = B3Propagation.newFactoryBuilder()
 			.injectFormat(Format.MULTI).build();
 
@@ -56,7 +55,7 @@ public class TraceAutoConfigurationPropagationCustomizationTests {
 		this.contextRunner.withPropertyValues("spring.sleuth.baggage-keys=my-baggage")
 				.run((context) -> {
 					BDDAssertions.then(context.getBean(Propagation.Factory.class))
-							.hasFieldOrPropertyWithValue("delegate.delegate",
+							.hasFieldOrPropertyWithValue("delegate",
 									B3Propagation.FACTORY);
 				});
 	}
