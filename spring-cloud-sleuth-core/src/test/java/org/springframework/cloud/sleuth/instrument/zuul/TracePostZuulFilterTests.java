@@ -16,8 +16,6 @@
 
 package org.springframework.cloud.sleuth.instrument.zuul;
 
-import java.util.List;
-
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
@@ -26,6 +24,7 @@ import brave.Tracer;
 import brave.Tracing;
 import brave.http.HttpTracing;
 import brave.propagation.StrictCurrentTraceContext;
+import brave.test.TestSpanHandler;
 import com.netflix.zuul.context.RequestContext;
 import com.netflix.zuul.monitoring.TracerFactory;
 import org.junit.After;
@@ -37,7 +36,6 @@ import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 
 import org.springframework.cloud.netflix.zuul.metrics.EmptyTracerFactory;
-import org.springframework.cloud.sleuth.util.ArrayListSpanReporter;
 
 import static org.assertj.core.api.BDDAssertions.then;
 
@@ -56,10 +54,10 @@ public class TracePostZuulFilterTests {
 
 	StrictCurrentTraceContext currentTraceContext = StrictCurrentTraceContext.create();
 
-	ArrayListSpanReporter reporter = new ArrayListSpanReporter();
+	TestSpanHandler spans = new TestSpanHandler();
 
 	Tracing tracing = Tracing.newBuilder().currentTraceContext(this.currentTraceContext)
-			.spanReporter(this.reporter).build();
+			.addSpanHandler(this.spans).build();
 
 	HttpTracing httpTracing = HttpTracing.newBuilder(this.tracing).build();
 
@@ -110,11 +108,10 @@ public class TracePostZuulFilterTests {
 			span.finish();
 		}
 
-		List<zipkin2.Span> spans = this.reporter.getSpans();
-		then(spans).hasSize(1);
+		then(this.spans).hasSize(1);
 		// initial span
-		then(spans.get(0).tags()).containsEntry("http.status_code", "456");
-		then(spans.get(0).name()).isEqualTo("http:start");
+		then(this.spans.get(0).tags()).containsEntry("http.status_code", "456");
+		then(this.spans.get(0).name()).isEqualTo("http:start");
 		then(this.tracing.tracer().currentSpan()).isNull();
 	}
 

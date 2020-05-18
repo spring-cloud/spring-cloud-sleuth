@@ -22,11 +22,13 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import brave.Span;
 import brave.Tracing;
+import brave.handler.MutableSpan;
 import brave.propagation.StrictCurrentTraceContext;
+import brave.test.TestSpanHandler;
 import org.junit.After;
 import org.junit.Test;
-import zipkin2.Span;
 
 import org.springframework.amqp.support.AmqpHeaders;
 import org.springframework.integration.channel.DirectChannel;
@@ -52,10 +54,10 @@ public class TracingChannelInterceptorTest {
 
 	StrictCurrentTraceContext currentTraceContext = StrictCurrentTraceContext.create();
 
-	List<Span> spans = new ArrayList<>();
+	TestSpanHandler spans = new TestSpanHandler();
 
 	Tracing tracing = Tracing.newBuilder().currentTraceContext(this.currentTraceContext)
-			.spanReporter(this.spans::add).build();
+			.addSpanHandler(this.spans).build();
 
 	ChannelInterceptor interceptor = TracingChannelInterceptor.create(tracing);
 
@@ -94,7 +96,7 @@ public class TracingChannelInterceptorTest {
 
 		assertThat(this.channel.receive().getHeaders()).containsKeys("X-B3-TraceId",
 				"X-B3-SpanId", "X-B3-Sampled", "nativeHeaders");
-		assertThat(this.spans).hasSize(1).flatExtracting(Span::kind)
+		assertThat(this.spans).hasSize(1).extracting(MutableSpan::kind)
 				.containsExactly(Span.Kind.PRODUCER);
 	}
 
@@ -107,7 +109,7 @@ public class TracingChannelInterceptorTest {
 		assertThat(this.message).isNotNull();
 		assertThat(this.message.getHeaders()).containsKeys("X-B3-TraceId", "X-B3-SpanId",
 				"X-B3-Sampled", "nativeHeaders");
-		assertThat(this.spans).flatExtracting(Span::kind).contains(Span.Kind.CONSUMER,
+		assertThat(this.spans).extracting(MutableSpan::kind).contains(Span.Kind.CONSUMER,
 				Span.Kind.PRODUCER);
 	}
 
@@ -171,7 +173,7 @@ public class TracingChannelInterceptorTest {
 
 		assertThat(this.channel.receive().getHeaders()).containsKeys("X-B3-TraceId",
 				"X-B3-SpanId", "X-B3-Sampled", "nativeHeaders");
-		assertThat(this.spans).hasSize(1).flatExtracting(Span::kind)
+		assertThat(this.spans).hasSize(1).extracting(MutableSpan::kind)
 				.containsExactly(Span.Kind.CONSUMER);
 	}
 
@@ -197,7 +199,7 @@ public class TracingChannelInterceptorTest {
 
 		assertThat(messages.get(0).getHeaders()).doesNotContainKeys("X-B3-TraceId",
 				"X-B3-SpanId", "X-B3-Sampled", "nativeHeaders");
-		assertThat(this.spans).flatExtracting(Span::kind)
+		assertThat(this.spans).extracting(MutableSpan::kind)
 				.containsExactly(Span.Kind.CONSUMER, null);
 	}
 
@@ -239,7 +241,7 @@ public class TracingChannelInterceptorTest {
 		this.channel.send(MessageBuilder.withPayload("foo").build());
 		this.channel.receive();
 
-		assertThat(this.spans).flatExtracting(Span::kind)
+		assertThat(this.spans).extracting(MutableSpan::kind)
 				.containsExactlyInAnyOrder(Span.Kind.CONSUMER, Span.Kind.PRODUCER);
 	}
 
@@ -252,7 +254,7 @@ public class TracingChannelInterceptorTest {
 
 		channel.send(MessageBuilder.withPayload("foo").build());
 
-		assertThat(this.spans).flatExtracting(Span::kind)
+		assertThat(this.spans).extracting(MutableSpan::kind)
 				.containsExactly(Span.Kind.CONSUMER, null, Span.Kind.PRODUCER);
 	}
 
@@ -347,7 +349,8 @@ public class TracingChannelInterceptorTest {
 		headers.put(KafkaHeaders.MESSAGE_KEY, "hello");
 		channel.send(MessageBuilder.createMessage("foo", new MessageHeaders(headers)));
 
-		assertThat(this.spans).flatExtracting(Span::remoteServiceName).contains("kafka");
+		assertThat(this.spans).extracting(MutableSpan::remoteServiceName)
+				.contains("kafka");
 	}
 
 	@Test
@@ -361,7 +364,7 @@ public class TracingChannelInterceptorTest {
 		headers.put(AmqpHeaders.RECEIVED_ROUTING_KEY, "hello");
 		channel.send(MessageBuilder.createMessage("foo", new MessageHeaders(headers)));
 
-		assertThat(this.spans).flatExtracting(Span::remoteServiceName)
+		assertThat(this.spans).extracting(MutableSpan::remoteServiceName)
 				.contains("rabbitmq");
 	}
 
@@ -375,7 +378,7 @@ public class TracingChannelInterceptorTest {
 		Map<String, Object> headers = new HashMap<>();
 		channel.send(MessageBuilder.createMessage("foo", new MessageHeaders(headers)));
 
-		assertThat(this.spans).flatExtracting(Span::remoteServiceName)
+		assertThat(this.spans).extracting(MutableSpan::remoteServiceName)
 				.containsOnly("broker", null);
 	}
 

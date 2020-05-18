@@ -16,14 +16,13 @@
 
 package org.springframework.cloud.sleuth.propagation;
 
-import java.util.List;
-import java.util.Map;
-
 import brave.ScopedSpan;
 import brave.Tracer;
+import brave.handler.SpanHandler;
 import brave.propagation.ExtraFieldPropagation;
 import brave.propagation.TraceContext;
 import brave.sampler.Sampler;
+import brave.test.TestSpanHandler;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -31,7 +30,6 @@ import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.cloud.sleuth.util.ArrayListSpanReporter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.test.context.junit4.SpringRunner;
@@ -61,13 +59,13 @@ public class TagPropagationFinishedSpanHandlerTest {
 	private Tracer tracer;
 
 	@Autowired
-	private ArrayListSpanReporter arrayListSpanReporter;
+	private TestSpanHandler spans;
 
 	private ScopedSpan span;
 
 	@Before
 	public void setUp() {
-		this.arrayListSpanReporter.clear();
+		this.spans.clear();
 		this.span = this.tracer.startScopedSpan("my-scoped-span");
 		TraceContext context = this.span.context();
 		ExtraFieldPropagation.set(context, BAGGAGE_KEY, BAGGAGE_VALUE);
@@ -79,12 +77,10 @@ public class TagPropagationFinishedSpanHandlerTest {
 	public void shouldReportWithBaggageInTags() {
 		this.span.finish();
 
-		List<zipkin2.Span> spans = this.arrayListSpanReporter.getSpans();
-		assertThat(spans).hasSize(1);
-		Map<String, String> tags = spans.get(0).tags();
-		assertThat(tags).hasSize(2);
-		assertThat(tags).containsEntry(BAGGAGE_KEY, BAGGAGE_VALUE);
-		assertThat(tags).containsEntry(PROPAGATION_KEY, PROPAGATION_VALUE);
+		assertThat(this.spans).hasSize(1);
+		assertThat(this.spans.get(0).tags()).hasSize(2)
+				.containsEntry(BAGGAGE_KEY, BAGGAGE_VALUE)
+				.containsEntry(PROPAGATION_KEY, PROPAGATION_VALUE);
 	}
 
 	@Configuration
@@ -92,8 +88,8 @@ public class TagPropagationFinishedSpanHandlerTest {
 	public static class TestConfiguration {
 
 		@Bean
-		public ArrayListSpanReporter arrayListSpanReporter() {
-			return new ArrayListSpanReporter();
+		public SpanHandler testSpanHandler() {
+			return new TestSpanHandler();
 		}
 
 		@Bean

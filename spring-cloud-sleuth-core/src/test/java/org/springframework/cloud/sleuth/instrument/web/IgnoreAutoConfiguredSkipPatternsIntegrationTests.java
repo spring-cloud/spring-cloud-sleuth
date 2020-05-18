@@ -17,7 +17,9 @@
 package org.springframework.cloud.sleuth.instrument.web;
 
 import brave.Tracer;
+import brave.handler.SpanHandler;
 import brave.sampler.Sampler;
+import brave.test.TestSpanHandler;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -29,7 +31,6 @@ import org.springframework.boot.autoconfigure.amqp.RabbitAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.web.server.LocalServerPort;
 import org.springframework.cloud.sleuth.DisableSecurity;
-import org.springframework.cloud.sleuth.util.ArrayListSpanReporter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.test.context.junit4.SpringRunner;
@@ -49,7 +50,7 @@ import static org.assertj.core.api.BDDAssertions.then;
 public class IgnoreAutoConfiguredSkipPatternsIntegrationTests {
 
 	@Autowired
-	ArrayListSpanReporter accumulator;
+	TestSpanHandler spans;
 
 	@Autowired
 	Tracer tracer;
@@ -60,7 +61,7 @@ public class IgnoreAutoConfiguredSkipPatternsIntegrationTests {
 	@Before
 	@After
 	public void clearSpans() {
-		this.accumulator.clear();
+		this.spans.clear();
 	}
 
 	@Test
@@ -70,7 +71,7 @@ public class IgnoreAutoConfiguredSkipPatternsIntegrationTests {
 				String.class);
 
 		then(this.tracer.currentSpan()).isNull();
-		then(this.accumulator.getSpans()).hasSize(1);
+		then(this.spans).hasSize(1);
 	}
 
 	@Test
@@ -80,7 +81,7 @@ public class IgnoreAutoConfiguredSkipPatternsIntegrationTests {
 				String.class);
 
 		then(this.tracer.currentSpan()).isNull();
-		then(this.accumulator.getSpans()).hasSize(1);
+		then(this.spans).hasSize(1);
 	}
 
 	@Test
@@ -90,7 +91,7 @@ public class IgnoreAutoConfiguredSkipPatternsIntegrationTests {
 				String.class);
 
 		then(this.tracer.currentSpan()).isNull();
-		then(this.accumulator.getSpans()).hasSize(0);
+		then(this.spans).hasSize(0);
 	}
 
 	@EnableAutoConfiguration(exclude = RabbitAutoConfiguration.class)
@@ -108,8 +109,8 @@ public class IgnoreAutoConfiguredSkipPatternsIntegrationTests {
 		}
 
 		@Bean
-		ArrayListSpanReporter reporter() {
-			return new ArrayListSpanReporter();
+		SpanHandler testSpanHandler() {
+			return new TestSpanHandler();
 		}
 
 		@Bean

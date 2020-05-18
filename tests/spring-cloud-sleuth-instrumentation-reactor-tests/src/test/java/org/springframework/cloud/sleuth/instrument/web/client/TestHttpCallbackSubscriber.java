@@ -24,7 +24,6 @@ import reactor.core.CoreSubscriber;
 import reactor.core.publisher.Mono;
 import reactor.core.publisher.Operators;
 import reactor.util.context.Context;
-import zipkin2.Callback;
 
 /**
  * {@link #subscribe} is made for reactor-netty and WebFlux client requests used in tests.
@@ -32,8 +31,8 @@ import zipkin2.Callback;
  * signalling, or missing signals.
  *
  * <p>
- * The implementation forwards signals to the supplied {@link Callback}, enforcing
- * assumptions about a non-empty, {@link Mono} subscription.
+ * The implementation forwards signals to the supplied {@linkplain BiConsumer callback},
+ * enforcing assumptions about a non-empty, {@link Mono} subscription.
  */
 final class TestHttpCallbackSubscriber implements CoreSubscriber<Integer> {
 

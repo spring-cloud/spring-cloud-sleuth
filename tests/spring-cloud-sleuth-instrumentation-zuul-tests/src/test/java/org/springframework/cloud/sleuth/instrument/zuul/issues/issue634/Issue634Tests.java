@@ -21,8 +21,10 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import brave.Tracing;
+import brave.handler.SpanHandler;
 import brave.http.HttpTracing;
 import brave.sampler.Sampler;
+import brave.test.TestSpanHandler;
 import com.netflix.zuul.ZuulFilter;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -33,7 +35,6 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.boot.web.server.LocalServerPort;
 import org.springframework.cloud.netflix.zuul.EnableZuulProxy;
-import org.springframework.cloud.sleuth.util.ArrayListSpanReporter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.test.annotation.DirtiesContext;
@@ -59,7 +60,7 @@ public class Issue634Tests {
 	TraceCheckingSpanFilter filter;
 
 	@Autowired
-	ArrayListSpanReporter reporter;
+	TestSpanHandler spans;
 
 	@Test
 	public void should_reuse_custom_feign_client() {
@@ -72,7 +73,7 @@ public class Issue634Tests {
 
 		then(new HashSet<>(this.filter.counter.values()))
 				.describedAs("trace id should not be reused from thread").hasSize(1);
-		then(this.reporter.getSpans()).isNotEmpty();
+		then(this.spans).isNotEmpty();
 	}
 
 }
@@ -93,8 +94,8 @@ class TestZuulApplication {
 	}
 
 	@Bean
-	ArrayListSpanReporter reporter() {
-		return new ArrayListSpanReporter();
+	SpanHandler testSpanHandler() {
+		return new TestSpanHandler();
 	}
 
 }

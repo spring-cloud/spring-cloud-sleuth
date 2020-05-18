@@ -16,18 +16,18 @@
 
 package org.springframework.cloud.sleuth.instrument.web.client;
 
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.TimeUnit;
-
+import brave.handler.MutableSpan;
+import brave.handler.SpanHandler;
 import brave.propagation.B3SinglePropagation;
 import brave.propagation.CurrentTraceContext;
 import brave.propagation.CurrentTraceContext.Scope;
 import brave.propagation.Propagation;
 import brave.propagation.TraceContext;
 import brave.sampler.Sampler;
+import brave.test.IntegrationTestSpanHandler;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import org.junit.After;
+import org.junit.ClassRule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import reactor.core.publisher.Flux;
@@ -37,8 +37,6 @@ import reactor.netty.http.client.HttpClient;
 import reactor.netty.http.client.HttpClientResponse;
 import reactor.netty.http.client.PrematureCloseException;
 import reactor.netty.http.server.HttpServer;
-import zipkin2.Span;
-import zipkin2.reporter.Reporter;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
@@ -48,6 +46,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.web.reactive.function.client.WebClient;
 
+import static brave.Span.Kind.CLIENT;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
@@ -65,13 +64,13 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 @RunWith(SpringRunner.class)
 public class ReactorNettyHttpClientSpringBootTests {
 
+	@ClassRule
+	public static IntegrationTestSpanHandler spanHandler = new IntegrationTestSpanHandler();
+
 	DisposableServer disposableServer;
 
 	@Autowired
 	HttpClient httpClient;
-
-	@Autowired
-	BlockingQueue<Span> spans;
 
 	@Autowired
 	CurrentTraceContext currentTraceContext;
@@ -84,7 +83,6 @@ public class ReactorNettyHttpClientSpringBootTests {
 		if (disposableServer != null) {
 			disposableServer.disposeNow();
 		}
-		this.spans.clear();
 	}
 
 	@Test
@@ -97,12 +95,10 @@ public class ReactorNettyHttpClientSpringBootTests {
 
 		assertThat(response.status()).isEqualTo(HttpResponseStatus.OK);
 
-		Span clientSpan = takeClientSpan();
+		MutableSpan clientSpan = spanHandler.takeRemoteSpan(CLIENT);
 
-		assertThat(clientSpan.remoteEndpoint()).satisfiesAnyOf(
-				ep -> assertThat(ep.ipv4()).isNotNull(),
-				ep -> assertThat(ep.ipv6()).isNotNull());
-		assertThat(clientSpan.remoteEndpoint().portAsInt()).isNotZero();
+		assertThat(clientSpan.remoteIp()).isNotNull();
+		assertThat(clientSpan.remotePort()).isNotZero();
 	}
 
 	@Test
@@ -119,7 +115,7 @@ public class ReactorNettyHttpClientSpringBootTests {
 					.uri("/").responseContent().aggregate().asString().block();
 		}
 
-		Span clientSpan = takeClientSpan();
+		MutableSpan clientSpan = spanHandler.takeRemoteSpan(CLIENT);
 
 		assertThat(b3SingleHeaderReadByServer).isEqualTo(context.traceIdString() + "-"
 				+ clientSpan.id() + "-1-" + context.spanIdString());
@@ -138,14 +134,14 @@ public class ReactorNettyHttpClientSpringBootTests {
 
 		String b3SingleHeaderReadByServer = request.block();
 
-		Span clientSpan = takeClientSpan();
+		MutableSpan clientSpan = spanHandler.takeRemoteSpan(CLIENT);
 
 		assertThat(b3SingleHeaderReadByServer)
 				.isEqualTo(clientSpan.traceId() + "-" + clientSpan.id() + "-1");
 	}
 
 	@Test
-	public void shouldTagOnRequestError() throws InterruptedException {
+	public void shouldRecordRequestError() {
 		disposableServer = HttpServer.create().port(0).handle((req, resp) -> {
 			throw new RuntimeException("test");
 		}).bindNow();
@@ -156,17 +152,7 @@ public class ReactorNettyHttpClientSpringBootTests {
 		assertThatThrownBy(request::block)
 				.hasCauseInstanceOf(PrematureCloseException.class);
 
-		Span clientSpan = takeClientSpan();
-
-		assertThat(clientSpan.tags()).containsKey("error");
-	}
-
-	/** Call this to block until a span was reported */
-	Span takeClientSpan() throws InterruptedException {
-		Span result = spans.poll(1, TimeUnit.SECONDS);
-		assertThat(result).withFailMessage("Span was not reported").isNotNull();
-		assertThat(result.kind()).isEqualTo(Span.Kind.CLIENT);
-		return result;
+		spanHandler.takeRemoteSpanWithError(CLIENT);
 	}
 
 	@Configuration
@@ -183,17 +169,9 @@ public class ReactorNettyHttpClientSpringBootTests {
 			return Sampler.ALWAYS_SAMPLE;
 		}
 
-		/**
-		 * Use a blocking queue as it is simpler than wrapping everything in awaitility
-		 */
 		@Bean
-		BlockingQueue<Span> spans() {
-			return new LinkedBlockingQueue<>();
-		}
-
-		@Bean
-		Reporter<zipkin2.Span> spanReporter(BlockingQueue<Span> spans) {
-			return spans::add;
+		SpanHandler testSpanHandler() {
+			return spanHandler;
 		}
 
 		@Bean

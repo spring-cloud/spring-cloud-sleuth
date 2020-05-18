@@ -33,6 +33,7 @@ import brave.Tracer;
 import brave.Tracing;
 import brave.propagation.StrictCurrentTraceContext;
 import brave.propagation.TraceContext;
+import brave.test.TestSpanHandler;
 import org.assertj.core.api.BDDAssertions;
 import org.junit.After;
 import org.junit.Before;
@@ -47,7 +48,6 @@ import org.mockito.junit.MockitoJUnitRunner;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.cloud.sleuth.DefaultSpanNamer;
 import org.springframework.cloud.sleuth.SpanNamer;
-import org.springframework.cloud.sleuth.util.ArrayListSpanReporter;
 
 import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.BDDAssertions.then;
@@ -66,10 +66,10 @@ public class TraceableExecutorServiceTests {
 
 	StrictCurrentTraceContext currentTraceContext = StrictCurrentTraceContext.create();
 
-	ArrayListSpanReporter reporter = new ArrayListSpanReporter();
+	TestSpanHandler spans = new TestSpanHandler();
 
 	Tracing tracing = Tracing.newBuilder().currentTraceContext(this.currentTraceContext)
-			.spanReporter(this.reporter).build();
+			.addSpanHandler(this.spans).build();
 
 	Tracer tracer = this.tracing.tracer();
 
@@ -79,7 +79,7 @@ public class TraceableExecutorServiceTests {
 	public void setup() {
 		this.traceManagerableExecutorService = new TraceableExecutorService(
 				beanFactory(true), this.executorService);
-		this.reporter.clear();
+		this.spans.clear();
 		this.spanVerifyingRunnable.clear();
 	}
 

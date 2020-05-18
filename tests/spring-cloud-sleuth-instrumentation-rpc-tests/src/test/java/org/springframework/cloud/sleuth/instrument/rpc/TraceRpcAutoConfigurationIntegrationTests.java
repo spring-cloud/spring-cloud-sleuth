@@ -16,19 +16,20 @@
 
 package org.springframework.cloud.sleuth.instrument.rpc;
 
+import brave.handler.SpanHandler;
 import brave.rpc.RpcRequest;
 import brave.rpc.RpcRuleSampler;
 import brave.sampler.Matcher;
 import brave.sampler.RateLimitingSampler;
 import brave.sampler.Sampler;
 import brave.sampler.SamplerFunction;
+import brave.test.TestSpanHandler;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.cloud.sleuth.util.ArrayListSpanReporter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.test.context.junit4.SpringRunner;
@@ -57,8 +58,8 @@ public class TraceRpcAutoConfigurationIntegrationTests {
 	public static class Config {
 
 		@Bean
-		ArrayListSpanReporter reporter() {
-			return new ArrayListSpanReporter();
+		SpanHandler testSpanHandler() {
+			return new TestSpanHandler();
 		}
 
 		// tag::custom_rpc_server_sampler[]

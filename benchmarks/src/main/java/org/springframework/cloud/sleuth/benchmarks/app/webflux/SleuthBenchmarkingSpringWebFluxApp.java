@@ -19,11 +19,10 @@ package org.springframework.cloud.sleuth.benchmarks.app.webflux;
 import java.util.regex.Pattern;
 
 import brave.sampler.Sampler;
+import brave.handler.SpanHandler;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import reactor.core.publisher.Mono;
-import zipkin2.Span;
-import zipkin2.reporter.Reporter;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.WebApplicationType;
@@ -80,8 +79,10 @@ public class SleuthBenchmarkingSpringWebFluxApp
 	}
 
 	@Bean
-	public Reporter<Span> reporter() {
-		return Reporter.NOOP;
+	public SpanHandler spanHandler() {
+		return new SpanHandler() {
+			// intentionally anonymous to prevent logging fallback on NOOP
+		};
 	}
 
 	@Override

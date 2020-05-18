@@ -20,26 +20,28 @@ import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
+import brave.handler.MutableSpan;
+import brave.handler.SpanHandler;
+import brave.propagation.TraceContext;
 import org.apache.commons.logging.Log;
-import zipkin2.Span;
-import zipkin2.reporter.Reporter;
 
 /**
  * Span Collector that logs spans and adds Spans to a list.
  *
  * @author Marcin Grzejszczak
  */
-public class IntegrationTestZipkinSpanReporter implements Reporter<Span> {
+public class IntegrationTestZipkinSpanHandler extends SpanHandler {
 
 	private static final Log log = org.apache.commons.logging.LogFactory
-			.getLog(IntegrationTestZipkinSpanReporter.class);
+			.getLog(IntegrationTestZipkinSpanHandler.class);
 
-	public List<Span> hashedSpans = Collections.synchronizedList(new LinkedList<>());
+	public List<MutableSpan> spans = Collections.synchronizedList(new LinkedList<>());
 
 	@Override
-	public void report(Span span) {
+	public boolean end(TraceContext context, MutableSpan span, Cause cause) {
 		log.debug(span);
-		this.hashedSpans.add(span);
+		this.spans.add(span);
+		return true;
 	}
 
 }

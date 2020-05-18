@@ -21,7 +21,10 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import brave.Tracer;
+import brave.handler.MutableSpan;
+import brave.handler.SpanHandler;
 import brave.sampler.Sampler;
+import brave.test.TestSpanHandler;
 import org.awaitility.Awaitility;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -31,7 +34,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-import zipkin2.Span;
 
 import org.springframework.boot.WebApplicationType;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
@@ -40,7 +42,6 @@ import org.springframework.boot.test.system.OutputCaptureRule;
 import org.springframework.cloud.context.refresh.ContextRefresher;
 import org.springframework.cloud.sleuth.instrument.reactor.Issue866Configuration;
 import org.springframework.cloud.sleuth.instrument.reactor.TraceReactorAutoConfigurationAccessorConfiguration;
-import org.springframework.cloud.sleuth.util.ArrayListSpanReporter;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -113,30 +114,30 @@ public class FlatMapTests {
 	}
 
 	private void assertReactorTracing(ConfigurableApplicationContext context) {
-		ArrayListSpanReporter accumulator = context.getBean(ArrayListSpanReporter.class);
+		TestSpanHandler spans = context.getBean(TestSpanHandler.class);
 		int port = context.getBean(Environment.class).getProperty("local.server.port",
 				Integer.class);
 		RequestSender sender = context.getBean(RequestSender.class);
 		TestConfiguration config = context.getBean(TestConfiguration.class);
 		FactoryUser factoryUser = context.getBean(FactoryUser.class);
 		sender.port = port;
-		accumulator.clear();
+		spans.clear();
 
 		Awaitility.await().untilAsserted(() -> {
 			// when
 			LOGGER.info("Start");
-			accumulator.clear();
-			String firstTraceId = flatMapTraceId(accumulator, callFlatMap(port).block());
+			spans.clear();
+			String firstTraceId = flatMapTraceId(spans, callFlatMap(port).block());
 			// then
 			LOGGER.info("Checking first trace id");
 			thenAllWebClientCallsHaveSameTraceId(firstTraceId, sender);
 			thenSpanInFooHasSameTraceId(firstTraceId, config);
-			accumulator.clear();
+			spans.clear();
 			LOGGER.info("All web client calls have same trace id");
 
 			// when
 			LOGGER.info("Second trace start");
-			String secondTraceId = flatMapTraceId(accumulator, callFlatMap(port).block());
+			String secondTraceId = flatMapTraceId(spans, callFlatMap(port).block());
 			// then
 			then(firstTraceId).as("Id will not be reused between calls")
 					.isNotEqualTo(secondTraceId);
@@ -173,15 +174,14 @@ public class FlatMapTests {
 				.exchange();
 	}
 
-	private String flatMapTraceId(ArrayListSpanReporter accumulator,
-			ClientResponse response) {
+	private String flatMapTraceId(TestSpanHandler spans, ClientResponse response) {
 		then(response.statusCode().value()).isEqualTo(200);
-		then(accumulator.getSpans()).isNotEmpty();
-		LOGGER.info("Accumulated spans: " + accumulator.getSpans());
-		List<String> traceIdOfFlatMap = accumulator.getSpans().stream()
+		then(spans).isNotEmpty();
+		LOGGER.info("Accumulated spans: " + spans);
+		List<String> traceIdOfFlatMap = spans.spans().stream()
 				.filter(span -> span.tags().containsKey("http.path")
 						&& span.tags().get("http.path").equals("/withFlatMap"))
-				.map(Span::traceId).collect(Collectors.toList());
+				.map(MutableSpan::traceId).collect(Collectors.toList());
 		then(traceIdOfFlatMap).hasSize(1);
 		return traceIdOfFlatMap.get(0);
 	}
@@ -223,8 +223,8 @@ public class FlatMapTests {
 		}
 
 		@Bean
-		ArrayListSpanReporter reporter() {
-			return new ArrayListSpanReporter();
+		SpanHandler testSpanHandler() {
+			return new TestSpanHandler();
 		}
 
 		@Bean

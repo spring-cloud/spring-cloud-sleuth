@@ -16,17 +16,16 @@
 
 package org.springframework.cloud.sleuth.instrument.feign.issues.issue350;
 
-import java.util.List;
 import java.util.concurrent.ExecutionException;
 
 import brave.Tracing;
+import brave.handler.SpanHandler;
 import brave.sampler.Sampler;
+import brave.test.TestSpanHandler;
 import feign.Logger;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import zipkin2.Span;
-import zipkin2.reporter.Reporter;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
@@ -35,7 +34,6 @@ import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.cloud.openfeign.EnableFeignClients;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.cloud.sleuth.instrument.web.TraceWebServletAutoConfiguration;
-import org.springframework.cloud.sleuth.util.ArrayListSpanReporter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpStatus;
@@ -74,11 +72,11 @@ public class Issue350Tests {
 	Tracing tracer;
 
 	@Autowired
-	ArrayListSpanReporter reporter;
+	TestSpanHandler spans;
 
 	@Before
 	public void setup() {
-		this.reporter.clear();
+		this.spans.clear();
 	}
 
 	@Test
@@ -86,9 +84,8 @@ public class Issue350Tests {
 		this.template.getForEntity("http://localhost:9988/sleuth/test-not-ok",
 				String.class);
 
-		List<Span> spans = this.reporter.getSpans();
-		then(spans).hasSize(1);
-		then(spans.get(0).tags()).containsEntry("http.status_code", "406");
+		then(this.spans).hasSize(1);
+		then(this.spans.get(0).tags()).containsEntry("http.status_code", "406");
 	}
 
 }
@@ -119,8 +116,8 @@ class Application {
 	}
 
 	@Bean
-	public Reporter<Span> spanReporter() {
-		return new ArrayListSpanReporter();
+	public SpanHandler testSpanHandler() {
+		return new TestSpanHandler();
 	}
 
 }

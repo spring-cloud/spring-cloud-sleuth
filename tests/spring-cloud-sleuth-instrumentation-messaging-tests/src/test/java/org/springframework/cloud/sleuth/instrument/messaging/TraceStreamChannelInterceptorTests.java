@@ -19,7 +19,9 @@ package org.springframework.cloud.sleuth.instrument.messaging;
 import brave.Span;
 import brave.Tracer;
 import brave.Tracing;
+import brave.handler.SpanHandler;
 import brave.sampler.Sampler;
+import brave.test.TestSpanHandler;
 import org.junit.After;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -29,7 +31,6 @@ import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.ImportAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.cloud.sleuth.instrument.util.SpanUtil;
-import org.springframework.cloud.sleuth.util.ArrayListSpanReporter;
 import org.springframework.cloud.stream.binder.test.OutputDestination;
 import org.springframework.cloud.stream.binder.test.TestChannelBinderConfiguration;
 import org.springframework.cloud.stream.function.StreamBridge;
@@ -60,11 +61,11 @@ public class TraceStreamChannelInterceptorTests {
 	private StreamBridge streamBridge;
 
 	@Autowired
-	private ArrayListSpanReporter reporter;
+	private TestSpanHandler spans;
 
 	@After
 	public void close() {
-		this.reporter.clear();
+		this.spans.clear();
 	}
 
 	@Test
@@ -100,7 +101,7 @@ public class TraceStreamChannelInterceptorTests {
 		// [0] - producer
 		// [1] - http:testsendmessage
 		assertThat(parentId).as("parentId was not equal to parent's id")
-				.isEqualTo(this.reporter.getSpans().get(1).id());
+				.isEqualTo(this.spans.get(1).id());
 	}
 
 	@Configuration
@@ -114,8 +115,8 @@ public class TraceStreamChannelInterceptorTests {
 		}
 
 		@Bean
-		ArrayListSpanReporter reporter() {
-			return new ArrayListSpanReporter();
+		SpanHandler testSpanHandler() {
+			return new TestSpanHandler();
 		}
 
 	}
