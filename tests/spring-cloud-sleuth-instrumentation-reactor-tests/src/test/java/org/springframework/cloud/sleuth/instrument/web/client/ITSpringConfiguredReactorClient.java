@@ -161,7 +161,7 @@ abstract class ITSpringConfiguredReactorClient
 
 		assertThat(server.getRequestCount()).isOne();
 
-		this.spanHandler.takeRemoteSpanWithErrorMessage(CLIENT, "CANCELLED");
+		this.testSpanHandler.takeRemoteSpanWithErrorMessage(CLIENT, "CANCELLED");
 	}
 
 }
