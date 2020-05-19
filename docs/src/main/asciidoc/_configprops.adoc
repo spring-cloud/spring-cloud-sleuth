@@ -45,8 +45,6 @@
 |spring.sleuth.web.client.enabled | true | Enable interceptor injecting into {@link org.springframework.web.client.RestTemplate}.
 |spring.sleuth.web.client.skip-pattern |  | Pattern for URLs that should be skipped in client side tracing.
 |spring.sleuth.web.enabled | true | When true enables instrumentation for web applications.
-|spring.sleuth.web.exception-logging-filter-enabled | true | Flag to toggle the presence of a filter that logs thrown exceptions.
-|spring.sleuth.web.exception-throwing-filter-enabled | true | Flag to toggle the presence of a filter that logs thrown exceptions. @deprecated use {@link #exceptionLoggingFilterEnabled}
 |spring.sleuth.web.filter-order |  | Order in which the tracing filters should be registered. Defaults to {@link TraceHttpAutoConfiguration#TRACING_FILTER_ORDER}.
 |spring.sleuth.web.ignore-auto-configured-skip-patterns | false | If set to true, auto-configured skip patterns will be ignored. @see SkipPatternConfiguration
 |spring.sleuth.web.skip-pattern | /api-docs.*\|/swagger.*\|.*\.png\|.*\.css\|.*\.js\|.*\.html\|/favicon.ico\|/hystrix.stream | Pattern for URLs that should be skipped in tracing.
