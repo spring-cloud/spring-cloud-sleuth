@@ -374,16 +374,6 @@ Also, you can define your own properties.
 <td class="tableblock halign-left valign-top"><p class="tableblock">When true enables instrumentation for web applications.</p></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock">spring.sleuth.web.exception-logging-filter-enabled</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">true</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Flag to toggle the presence of a filter that logs thrown exceptions.</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock">spring.sleuth.web.exception-throwing-filter-enabled</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">true</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Flag to toggle the presence of a filter that logs thrown exceptions. @deprecated use {@link #exceptionLoggingFilterEnabled}</p></td>
-</tr>
-<tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock">spring.sleuth.web.filter-order</p></td>
 <td class="tableblock halign-left valign-top"></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Order in which the tracing filters should be registered. Defaults to {@link TraceHttpAutoConfiguration#TRACING_FILTER_ORDER}.</p></td>
