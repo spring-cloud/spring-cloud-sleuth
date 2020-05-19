@@ -97,7 +97,7 @@ public class WebClientDiscoveryExceptionTests {
 		// hystrix commands should finish at this point
 		Thread.sleep(200);
 		then(this.spans.spans().stream().filter(span1 -> span1.kind() == Span.Kind.CLIENT)
-				.findFirst().get().tags()).containsKey("error");
+				.findFirst().get().error()).isNotNull();
 	}
 
 	@Test

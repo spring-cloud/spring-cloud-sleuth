@@ -197,7 +197,7 @@ public class TraceFilterIntegrationTests extends AbstractMvcIntegrationTest {
 		// we need to dump the span cause it's not in TracingFilter since TF
 		// has also error dispatch and the ErrorController would report the span
 		then(this.spans).hasSize(1);
-		then(this.spans.get(0).tags()).containsEntry("error",
+		then(this.spans.get(0).error()).hasMessageContaining(
 				"Request processing failed; nested exception is java.lang.RuntimeException");
 	}
 

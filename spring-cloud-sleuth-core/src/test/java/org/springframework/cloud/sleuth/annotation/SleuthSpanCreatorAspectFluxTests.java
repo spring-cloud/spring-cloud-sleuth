@@ -312,8 +312,8 @@ public class SleuthSpanCreatorAspectFluxTests {
 		Awaitility.await().untilAsserted(() -> {
 			then(this.spans).hasSize(1);
 			then(this.spans.get(0).name()).isEqualTo("test-method12");
-			then(this.spans.get(0).tags()).containsEntry("testTag12", "test")
-					.containsEntry("error", "test exception 12");
+			then(this.spans.get(0).tags()).containsEntry("testTag12", "test");
+			then(this.spans.get(0).error()).hasMessageContaining("test exception 12");
 			then(this.spans.get(0).finishTimestamp()).isNotZero();
 			then(this.tracer.currentSpan()).isNull();
 		});
@@ -341,7 +341,7 @@ public class SleuthSpanCreatorAspectFluxTests {
 		Awaitility.await().untilAsserted(() -> {
 			then(this.spans).hasSize(1);
 			then(this.spans.get(0).name()).isEqualTo("foo");
-			then(this.spans.get(0).tags()).containsEntry("error", "test exception 13");
+			then(this.spans.get(0).error()).hasMessageContaining("test exception 13");
 			then(this.spans.get(0).annotations().stream().map(Map.Entry::getValue)
 					.collect(Collectors.toList())).contains("testMethod13.before",
 							"testMethod13.afterFailure", "testMethod13.after");

@@ -107,7 +107,7 @@ public class TraceFilterWebIntegrationTests {
 		}
 
 		then(this.currentTraceContext.get()).isNull();
-		MutableSpan fromFirstTraceFilterFlow = spanHandler.takeRemoteSpanWithErrorTag(
+		MutableSpan fromFirstTraceFilterFlow = spanHandler.takeRemoteSpanWithErrorMessage(
 				Kind.SERVER,
 				"Request processing failed; nested exception is java.lang.RuntimeException: Throwing exception");
 		then(fromFirstTraceFilterFlow.tags()).containsEntry("http.method", "GET")
