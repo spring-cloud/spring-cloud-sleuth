@@ -16,13 +16,6 @@
 
 package org.springframework.cloud.sleuth.instrument.messaging;
 
-import java.util.Arrays;
-import java.util.List;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.Callable;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.TimeUnit;
-
 import javax.jms.Connection;
 import javax.jms.ConnectionFactory;
 import javax.jms.JMSException;
@@ -31,18 +24,11 @@ import javax.jms.TopicConnection;
 import javax.jms.TopicConnectionFactory;
 import javax.jms.XAConnection;
 import javax.jms.XAConnectionFactory;
-import javax.resource.spi.ResourceAdapter;
 
-import brave.Tracing;
-import brave.handler.MutableSpan;
-import brave.handler.SpanHandler;
 import brave.propagation.CurrentTraceContext;
 import brave.propagation.TraceContext;
-import org.apache.activemq.ra.ActiveMQActivationSpec;
-import org.apache.activemq.ra.ActiveMQResourceAdapter;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -56,15 +42,10 @@ import org.springframework.boot.test.context.assertj.AssertableApplicationContex
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.jca.support.ResourceAdapterFactoryBean;
-import org.springframework.jca.work.SimpleTaskWorkManager;
 import org.springframework.jms.annotation.EnableJms;
-import org.springframework.jms.annotation.JmsListener;
 import org.springframework.jms.annotation.JmsListenerConfigurer;
 import org.springframework.jms.config.JmsListenerEndpointRegistrar;
 import org.springframework.jms.config.SimpleJmsListenerEndpoint;
-import org.springframework.jms.core.JmsTemplate;
-import org.springframework.jms.listener.endpoint.JmsMessageEndpointManager;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -77,13 +58,7 @@ public class JmsTracingConfigurationTest {
 
 	final ApplicationContextRunner contextRunner = new ApplicationContextRunner()
 			.withConfiguration(AutoConfigurations.of(JmsTestTracingConfiguration.class,
-					AnnotationJmsListenerConfiguration.class, XAConfiguration.class,
-					SimpleJmsListenerConfiguration.class,
-					JcaJmsListenerConfiguration.class));
-
-	static void clearSpans(AssertableApplicationContext ctx) throws JMSException {
-		ctx.getBean(JmsTestTracingConfiguration.class).clearSpan();
-	}
+					XAConfiguration.class, SimpleJmsListenerConfiguration.class));
 
 	static void checkConnection(AssertableApplicationContext ctx) throws JMSException {
 		// Not using try-with-resources as that doesn't exist in JMS 1.1
@@ -137,7 +112,6 @@ public class JmsTracingConfigurationTest {
 	@Test
 	public void tracesXAConnectionFactories() {
 		this.contextRunner.withUserConfiguration(XAConfiguration.class).run(ctx -> {
-			clearSpans(ctx);
 			checkConnection(ctx);
 			checkXAConnection(ctx);
 		});
@@ -146,68 +120,9 @@ public class JmsTracingConfigurationTest {
 	@Test
 	public void tracesTopicConnectionFactories() {
 		this.contextRunner.withUserConfiguration(XAConfiguration.class).run(ctx -> {
-			clearSpans(ctx);
 			checkConnection(ctx);
 			checkTopicConnection(ctx);
 		});
-	}
-
-	@Test
-	public void tracesListener_jmsMessageListener() {
-		this.contextRunner.withUserConfiguration(SimpleJmsListenerConfiguration.class)
-				.run(ctx -> {
-					clearSpans(ctx);
-					ctx.getBean(JmsTemplate.class).convertAndSend("myQueue", "foo");
-
-					Callable<MutableSpan> takeSpan = ctx.getBean("takeSpan",
-							Callable.class);
-					List<MutableSpan> trace = Arrays.asList(takeSpan.call(),
-							takeSpan.call(), takeSpan.call());
-
-					assertThat(trace).allSatisfy(s -> assertThat(s.traceId())
-							.isEqualTo(trace.get(0).traceId()));
-					assertThat(trace).isNotNull().extracting(MutableSpan::name)
-							.contains("send", "receive", "on-message");
-				});
-	}
-
-	@Test
-	@Ignore("flakey")
-	public void tracesListener_annotationMessageListener() {
-		this.contextRunner.withUserConfiguration(AnnotationJmsListenerConfiguration.class)
-				.run(ctx -> {
-					clearSpans(ctx);
-					ctx.getBean(JmsTemplate.class).convertAndSend("myQueue", "foo");
-
-					Callable<MutableSpan> takeSpan = ctx.getBean("takeSpan",
-							Callable.class);
-					List<MutableSpan> trace = Arrays.asList(takeSpan.call(),
-							takeSpan.call(), takeSpan.call());
-
-					assertThat(trace).allSatisfy(s -> assertThat(s.traceId())
-							.isEqualTo(trace.get(0).traceId()));
-					assertThat(trace).isNotNull().extracting(MutableSpan::name)
-							.containsExactlyInAnyOrder("send", "receive", "on-message");
-				});
-	}
-
-	@Test
-	public void tracesListener_jcaMessageListener() {
-		this.contextRunner.withUserConfiguration(JcaJmsListenerConfiguration.class)
-				.run(ctx -> {
-					clearSpans(ctx);
-					ctx.getBean(JmsTemplate.class).convertAndSend("myQueue", "foo");
-
-					Callable<MutableSpan> takeSpan = ctx.getBean("takeSpan",
-							Callable.class);
-					List<MutableSpan> trace = Arrays.asList(takeSpan.call(),
-							takeSpan.call(), takeSpan.call());
-
-					assertThat(trace).allSatisfy(s -> assertThat(s.traceId())
-							.isEqualTo(trace.get(0).traceId()));
-					assertThat(trace).isNotNull().extracting(MutableSpan::name)
-							.containsExactlyInAnyOrder("send", "receive", "on-message");
-				});
 	}
 
 	@AutoConfigureBefore(ActiveMQAutoConfiguration.class)
@@ -225,7 +140,7 @@ public class JmsTracingConfigurationTest {
 	static class SimpleJmsListenerConfiguration implements JmsListenerConfigurer {
 
 		private static final Log log = LogFactory
-				.getLog(AnnotationJmsListenerConfiguration.class);
+				.getLog(SimpleJmsListenerConfiguration.class);
 
 		@Autowired
 		CurrentTraceContext current;
@@ -251,111 +166,10 @@ public class JmsTracingConfigurationTest {
 
 	}
 
-	@Configuration
-	@EnableJms
-	static class AnnotationJmsListenerConfiguration {
-
-		private static final Log log = LogFactory
-				.getLog(AnnotationJmsListenerConfiguration.class);
-
-		@Autowired
-		CurrentTraceContext current;
-
-		@JmsListener(destination = "myQueue")
-		public void onMessage() {
-			log.info("Got message!");
-			assertThat(this.current.get()).isNotNull()
-					.extracting(TraceContext::parentIdAsLong).isNotEqualTo(0L);
-		}
-
-	}
-
-	@Configuration
-	static class JcaJmsListenerConfiguration {
-
-		@Autowired
-		CurrentTraceContext current;
-
-		@Bean
-		ResourceAdapterFactoryBean resourceAdapter() {
-			ResourceAdapterFactoryBean resourceAdapter = new ResourceAdapterFactoryBean();
-			ActiveMQResourceAdapter real = new ActiveMQResourceAdapter();
-			real.setServerUrl("vm://localhost?broker.persistent=false");
-			resourceAdapter.setResourceAdapter(real);
-			resourceAdapter.setWorkManager(new SimpleTaskWorkManager());
-			return resourceAdapter;
-		}
-
-		@Bean
-		MessageListener simpleMessageListener(CurrentTraceContext current) {
-			return message -> {
-				// Didn't restart the trace
-				assertThat(current.get()).isNotNull()
-						.extracting(TraceContext::parentIdAsLong).isNotEqualTo(0L);
-			};
-		}
-
-		@Bean
-		JmsMessageEndpointManager endpointManager(ResourceAdapter resourceAdapter,
-				MessageListener simpleMessageListener) {
-			JmsMessageEndpointManager endpointManager = new JmsMessageEndpointManager();
-			endpointManager.setResourceAdapter(resourceAdapter);
-
-			ActiveMQActivationSpec spec = new ActiveMQActivationSpec();
-			spec.setUseJndi(false);
-			spec.setDestinationType("javax.jms.Queue");
-			spec.setDestination("myQueue");
-
-			endpointManager.setActivationSpec(spec);
-			endpointManager.setMessageListener(simpleMessageListener);
-			return endpointManager;
-		}
-
-	}
-
 }
 
 @Configuration
 @EnableAutoConfiguration(exclude = KafkaAutoConfiguration.class)
-// this should be able to use IntegrationSpanReporter, but Jenkins fails due to what
-// appears as
-// out of order tests..
 class JmsTestTracingConfiguration {
-
-	/**
-	 * When testing servers or asynchronous clients, spans are reported on a worker
-	 * thread. In order to read them on the main thread, we use a concurrent queue. As
-	 * some implementations report after a response is sent, we use a blocking queue to
-	 * prevent race conditions in tests.
-	 */
-	BlockingQueue<MutableSpan> spans = new LinkedBlockingQueue<>();
-
-	void clearSpan() {
-		this.spans.clear();
-	}
-
-	/**
-	 * Call this to block until a span was reported.
-	 * @return span from queue
-	 */
-	@Bean
-	Callable<MutableSpan> takeSpan() {
-		return () -> {
-			MutableSpan result = this.spans.poll(3, TimeUnit.SECONDS);
-			assertThat(result).withFailMessage("MutableSpan was not reported")
-					.isNotNull();
-			return result;
-		};
-	}
-
-	@Bean
-	Tracing tracing(CurrentTraceContext currentTraceContext) {
-		return Tracing.newBuilder().addSpanHandler(new SpanHandler() {
-			@Override
-			public boolean end(TraceContext context, MutableSpan span, Cause cause) {
-				return spans.add(span);
-			}
-		}).currentTraceContext(currentTraceContext).build();
-	}
 
 }
