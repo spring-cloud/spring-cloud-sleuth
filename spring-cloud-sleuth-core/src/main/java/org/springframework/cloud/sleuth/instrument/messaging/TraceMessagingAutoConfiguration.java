@@ -191,8 +191,8 @@ public class TraceMessagingAutoConfiguration {
 		JmsListenerConfigurer configureTracing(BeanFactory beanFactory,
 				JmsListenerEndpointRegistry defaultRegistry) {
 			return registrar -> {
-				TracingJmsBeanPostProcessor processor = tracingJmsBeanPostProcessor(
-						beanFactory);
+				TracingJmsBeanPostProcessor processor = beanFactory
+						.getBean(TracingJmsBeanPostProcessor.class);
 				JmsListenerEndpointRegistry registry = registrar.getEndpointRegistry();
 				registrar.setEndpointRegistry((JmsListenerEndpointRegistry) processor
 						.wrap(registry == null ? defaultRegistry : registry));
