@@ -16,8 +16,6 @@
 
 package org.springframework.cloud.sleuth.autoconfig;
 
-import brave.propagation.B3Propagation;
-import brave.propagation.B3Propagation.Format;
 import brave.propagation.B3SinglePropagation;
 import brave.propagation.ExtraFieldPropagation;
 import brave.propagation.Propagation;
@@ -34,11 +32,6 @@ import org.springframework.context.support.GenericApplicationContext;
 
 public class TraceAutoConfigurationPropagationCustomizationTests {
 
-	// Default for spring-messaging is on 2.2.x is MULTI, though 3.x it is
-	// SINGLE_NO_PARENT spring-cloud/spring-cloud-sleuth#1607
-	Propagation.Factory defaultB3Propagation = B3Propagation.newFactoryBuilder()
-			.injectFormat(Format.MULTI).build();
-
 	private final ApplicationContextRunner contextRunner = new ApplicationContextRunner()
 			.withConfiguration(AutoConfigurations.of(TraceAutoConfiguration.class));
 
@@ -46,7 +39,7 @@ public class TraceAutoConfigurationPropagationCustomizationTests {
 	public void stillCreatesDefault() {
 		this.contextRunner.run((context) -> {
 			BDDAssertions.then(context.getBean(Propagation.Factory.class))
-					.isEqualTo(defaultB3Propagation);
+					.isEqualTo(TraceBaggageConfiguration.B3_FACTORY);
 		});
 	}
 
@@ -56,7 +49,7 @@ public class TraceAutoConfigurationPropagationCustomizationTests {
 				.run((context) -> {
 					BDDAssertions.then(context.getBean(Propagation.Factory.class))
 							.hasFieldOrPropertyWithValue("delegate",
-									B3Propagation.FACTORY);
+									TraceBaggageConfiguration.B3_FACTORY);
 				});
 	}
 
@@ -65,7 +58,7 @@ public class TraceAutoConfigurationPropagationCustomizationTests {
 		this.contextRunner.withPropertyValues("spring.application.name=")
 				.run((context) -> {
 					BDDAssertions.then(context.getBean(Propagation.Factory.class))
-							.isEqualTo(B3Propagation.FACTORY);
+							.isEqualTo(TraceBaggageConfiguration.B3_FACTORY);
 				});
 	}
 

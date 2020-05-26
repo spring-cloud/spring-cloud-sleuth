@@ -25,6 +25,7 @@ import brave.baggage.BaggagePropagation;
 import brave.baggage.BaggagePropagationConfig.SingleBaggageField;
 import brave.baggage.BaggagePropagationCustomizer;
 import brave.propagation.B3Propagation;
+import brave.propagation.B3Propagation.Format;
 import brave.propagation.ExtraFieldCustomizer;
 import brave.propagation.ExtraFieldPropagation;
 import brave.propagation.Propagation;
@@ -57,6 +58,11 @@ class TraceBaggageConfiguration {
 	static final String BAGGAGE_KEYS = "spring.sleuth.baggage-keys";
 	static final String PROPAGATION_KEYS = "spring.sleuth.propagation-keys";
 
+	// Note: Versions <2.2.3 use injectFormat(MULTI) for non-remote (ex spring-messaging)
+	// See #1643
+	static final Propagation.Factory B3_FACTORY = B3Propagation.newFactoryBuilder()
+			.injectFormat(Format.SINGLE_NO_PARENT).build();
+
 	// These List<String> beans allow us to get deprecated property values, regardless of
 	// if they were comma or yaml encoded. This keeps them out of SleuthBaggageProperties
 
@@ -82,14 +88,15 @@ class TraceBaggageConfiguration {
 	 * To override the underlying context format, override this bean and set the delegate
 	 * to what you need. {@link BaggagePropagation.FactoryBuilder} will unwrap itself if
 	 * no fields are configured.
+	 *
+	 * <p>
+	 * This will use {@link Format#SINGLE_NO_PARENT} for non-remote spans, such as for
+	 * messaging. Note: it will still parse incoming multi-header spans.
 	 */
 	@Bean
 	@ConditionalOnMissingBean
 	BaggagePropagation.FactoryBuilder baggagePropagationFactoryBuilder() {
-		// Default for spring-messaging is on 2.2.x is MULTI, though 3.x it is
-		// SINGLE_NO_PARENT spring-cloud/spring-cloud-sleuth#1607
-		return BaggagePropagation.newFactoryBuilder(B3Propagation.newFactoryBuilder()
-				.injectFormat(B3Propagation.Format.MULTI).build());
+		return BaggagePropagation.newFactoryBuilder(B3_FACTORY);
 	}
 
 	Propagation.Factory sleuthPropagation(
@@ -105,8 +112,7 @@ class TraceBaggageConfiguration {
 			factoryBuilder = extraFieldPropagationFactoryBuilder;
 		}
 		else {
-			factoryBuilder = ExtraFieldPropagation
-					.newFactoryBuilder(B3Propagation.FACTORY);
+			factoryBuilder = ExtraFieldPropagation.newFactoryBuilder(B3_FACTORY);
 		}
 		if (!baggageKeys.isEmpty()) {
 			factoryBuilder
