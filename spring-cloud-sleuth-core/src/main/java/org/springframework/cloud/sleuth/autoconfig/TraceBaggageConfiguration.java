@@ -73,6 +73,11 @@ class TraceBaggageConfiguration {
 	static final String WHITELISTED_KEYS = "spring.sleuth.propagation.tag.whitelisted-keys";
 	static final String WHITELISTED_MDC_KEYS = "spring.sleuth.log.slf4j.whitelisted-mdc-keys";
 
+	// Note: Versions <2.2.3 use injectFormat(MULTI) for non-remote (ex spring-messaging)
+	// See #1643
+	static final Propagation.Factory B3_FACTORY = B3Propagation.newFactoryBuilder()
+			.injectFormat(B3Propagation.Format.SINGLE_NO_PARENT).build();
+
 	// These List<String> beans allow us to get deprecated property values, regardless of
 	// if they were comma or yaml encoded. This keeps them out of SleuthBaggageProperties
 
@@ -112,8 +117,7 @@ class TraceBaggageConfiguration {
 	@Bean
 	@ConditionalOnMissingBean
 	BaggagePropagation.FactoryBuilder baggagePropagationFactoryBuilder() {
-		return BaggagePropagation.newFactoryBuilder(B3Propagation.newFactoryBuilder()
-				.injectFormat(B3Propagation.Format.SINGLE_NO_PARENT).build());
+		return BaggagePropagation.newFactoryBuilder(B3_FACTORY);
 	}
 
 	@Bean

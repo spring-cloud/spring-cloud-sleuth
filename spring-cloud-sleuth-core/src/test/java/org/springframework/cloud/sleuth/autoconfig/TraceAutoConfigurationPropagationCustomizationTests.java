@@ -16,10 +16,7 @@
 
 package org.springframework.cloud.sleuth.autoconfig;
 
-import brave.Tracing;
 import brave.baggage.BaggagePropagation;
-import brave.propagation.B3Propagation;
-import brave.propagation.B3Propagation.Format;
 import brave.propagation.B3SinglePropagation;
 import brave.propagation.Propagation;
 import org.assertj.core.api.BDDAssertions;
@@ -32,11 +29,6 @@ import org.springframework.context.annotation.Configuration;
 
 public class TraceAutoConfigurationPropagationCustomizationTests {
 
-	// Default for spring-messaging is on 2.2.x is MULTI, though 3.x it is
-	// SINGLE_NO_PARENT spring-cloud/spring-cloud-sleuth#1607
-	Propagation.Factory defaultB3Propagation = B3Propagation.newFactoryBuilder()
-			.injectFormat(Format.SINGLE_NO_PARENT).build();
-
 	private final ApplicationContextRunner contextRunner = new ApplicationContextRunner()
 			.withConfiguration(AutoConfigurations.of(TraceAutoConfiguration.class));
 
@@ -44,7 +36,7 @@ public class TraceAutoConfigurationPropagationCustomizationTests {
 	public void stillCreatesDefault() {
 		this.contextRunner.run((context) -> {
 			BDDAssertions.then(context.getBean(Propagation.Factory.class))
-					.isEqualTo(defaultB3Propagation);
+					.isEqualTo(TraceBaggageConfiguration.B3_FACTORY);
 		});
 	}
 
@@ -54,7 +46,8 @@ public class TraceAutoConfigurationPropagationCustomizationTests {
 				.withPropertyValues("spring.sleuth.baggage.remote-fields=country-code")
 				.run((context) -> {
 					BDDAssertions.then(context.getBean(Propagation.Factory.class))
-							.extracting("delegate").isNotNull();
+							.extracting("delegate")
+							.isEqualTo(TraceBaggageConfiguration.B3_FACTORY);
 				});
 	}
 
@@ -62,8 +55,8 @@ public class TraceAutoConfigurationPropagationCustomizationTests {
 	public void defaultValueUsedWhenApplicationNameNotSet() {
 		this.contextRunner.withPropertyValues("spring.application.name=")
 				.run((context) -> {
-					BDDAssertions.then(context.getBean(Tracing.class).propagation())
-							.isEqualTo(defaultB3Propagation);
+					BDDAssertions.then(context.getBean(Propagation.Factory.class))
+							.isEqualTo(TraceBaggageConfiguration.B3_FACTORY);
 				});
 	}
 
