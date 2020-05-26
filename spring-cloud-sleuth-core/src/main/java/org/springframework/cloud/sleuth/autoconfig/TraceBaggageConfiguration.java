@@ -60,8 +60,8 @@ class TraceBaggageConfiguration {
 
 	// Note: Versions <2.2.3 use injectFormat(MULTI) for non-remote (ex spring-messaging)
 	// See #1643
-	static final Propagation.Factory B3_FACTORY =
-			B3Propagation.newFactoryBuilder().injectFormat(Format.SINGLE_NO_PARENT).build();
+	static final Propagation.Factory B3_FACTORY = B3Propagation.newFactoryBuilder()
+			.injectFormat(Format.SINGLE_NO_PARENT).build();
 
 	// These List<String> beans allow us to get deprecated property values, regardless of
 	// if they were comma or yaml encoded. This keeps them out of SleuthBaggageProperties
@@ -90,8 +90,8 @@ class TraceBaggageConfiguration {
 	 * no fields are configured.
 	 *
 	 * <p>
-	 * This will use {@link Format#SINGLE_NO_PARENT} for non-remote spans,
-	 * such as for messaging. Note: it will still parse incoming multi-header spans.
+	 * This will use {@link Format#SINGLE_NO_PARENT} for non-remote spans, such as for
+	 * messaging. Note: it will still parse incoming multi-header spans.
 	 */
 	@Bean
 	@ConditionalOnMissingBean

@@ -16,8 +16,6 @@
 
 package org.springframework.cloud.sleuth.autoconfig;
 
-import brave.propagation.B3Propagation;
-import brave.propagation.B3Propagation.Format;
 import brave.propagation.B3SinglePropagation;
 import brave.propagation.ExtraFieldPropagation;
 import brave.propagation.Propagation;
