@@ -146,7 +146,9 @@ class ReactorSleuthMethodInvocationProcessor
 			Span span;
 			Tracer tracer = this.processor.tracer();
 			if (this.span == null) {
-				span = tracer.newTrace();
+				// If we aren't continuing a trace from this flow, use nextSpan so that it
+				// can consider the "current span" (typically, backed by a thread-local)
+				span = tracer.nextSpan();
 				this.processor.newSpanParser().parse(this.invocation, this.newSpan, span);
 				span.start();
 			}
