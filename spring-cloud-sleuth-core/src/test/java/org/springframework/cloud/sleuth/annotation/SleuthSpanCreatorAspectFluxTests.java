@@ -25,6 +25,8 @@ import java.util.stream.Collectors;
 import brave.Span;
 import brave.Tracer;
 import brave.handler.SpanHandler;
+import brave.propagation.CurrentTraceContext;
+import brave.propagation.CurrentTraceContext.Scope;
 import brave.propagation.TraceContext;
 import brave.sampler.Sampler;
 import brave.test.TestSpanHandler;
@@ -56,10 +58,16 @@ public class SleuthSpanCreatorAspectFluxTests {
 	TestBeanInterface testBean;
 
 	@Autowired
+	CurrentTraceContext currentTraceContext;
+
+	@Autowired
 	Tracer tracer;
 
 	@Autowired
 	TestSpanHandler spans;
+
+	TraceContext context = TraceContext.newBuilder().traceId(1).spanId(1).sampled(true)
+			.build();
 
 	private static String toHexString(Long value) {
 		then(value).isNotNull();
@@ -84,6 +92,20 @@ public class SleuthSpanCreatorAspectFluxTests {
 	public void setup() {
 		this.spans.clear();
 		this.testBean.reset();
+	}
+
+	@Test
+	public void newSpan_shouldContinueExistingTrace() {
+		try (Scope scope = this.currentTraceContext.newScope(context)) {
+			Flux<String> flux = this.testBean.testMethod();
+			verifyNoSpansUntilFluxComplete(flux);
+		}
+
+		Awaitility.await().untilAsserted(() -> {
+			then(this.spans).hasSize(1);
+			then(this.spans.get(0).traceId()).isEqualTo(context.traceIdString());
+			then(this.spans.get(0).parentId()).isEqualTo(context.spanIdString());
+		});
 	}
 
 	@Test
