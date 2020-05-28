@@ -303,10 +303,9 @@ Consider the following example of a Logback configuration file (named https://gi
 						{
 						"severity": "%level",
 						"service": "${springAppName:-}",
-						"trace": "%X{X-B3-TraceId:-}",
-						"span": "%X{X-B3-SpanId:-}",
-						"parent": "%X{X-B3-ParentSpanId:-}",
-						"exportable": "%X{X-Span-Export:-}",
+						"trace": "%X{traceId:-}",
+						"span": "%X{spanId:-}",
+						"baggage": "%X{key:-}",
 						"pid": "${PID:-}",
 						"thread": "%thread",
 						"class": "%logger{40}",
@@ -768,6 +767,11 @@ https://eclipse.org[Eclipse] when working with the code. We use the
 https://eclipse.org/m2e/[m2eclipse] eclipse plugin for maven support. Other IDEs and tools
 should also work without issue as long as they use Maven 3.3.3 or better.
 
+==== Activate the Spring Maven profile
+Spring Cloud projects require the 'spring' Maven profile to be activated to resolve
+the spring milestone and snapshot repositories. Use your preferred IDE to set this
+profile to be active, or you may experience build errors.
+
 ==== Importing into eclipse with m2eclipse
 We recommend the https://eclipse.org/m2e/[m2eclipse] eclipse plugin when working with
 eclipse. If you don't already have m2eclipse installed it is available from the "eclipse
@@ -888,6 +892,7 @@ Checkstyle rules are *disabled by default*. To add checkstyle to your project ju
                 <artifactId>spring-javaformat-maven-plugin</artifactId>
             </plugin>
             <plugin> <5>
+                <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-checkstyle-plugin</artifactId>
             </plugin>
         </plugins>
@@ -895,6 +900,7 @@ Checkstyle rules are *disabled by default*. To add checkstyle to your project ju
     <reporting>
         <plugins>
             <plugin> <5>
+                <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-checkstyle-plugin</artifactId>
             </plugin>
         </plugins>
