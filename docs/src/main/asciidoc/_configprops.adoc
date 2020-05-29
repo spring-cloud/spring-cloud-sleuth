@@ -3,12 +3,12 @@
 
 |spring.sleuth.async.configurer.enabled | true | Enable default AsyncConfigurer.
 |spring.sleuth.async.enabled | true | Enable instrumenting async related components so that the tracing information is passed between threads.
-|spring.sleuth.async.ignored-beans | null | List of {@link java.util.concurrent.Executor} bean names that should be ignored and not wrapped in a trace representation.
+|spring.sleuth.async.ignored-beans |  | List of {@link java.util.concurrent.Executor} bean names that should be ignored and not wrapped in a trace representation.
 |spring.sleuth.baggage.correlation-enabled | true | Adds a {@link CorrelationScopeDecorator} to put baggage values into the correlation context.
-|spring.sleuth.baggage.correlation-fields | null | A list of {@link BaggageField#name() fields} to add to correlation (MDC) context. @see CorrelationScopeConfig.SingleCorrelationField#create(BaggageField)
-|spring.sleuth.baggage.local-fields | null | Same as {@link #remoteFields} except that this field is not propagated to remote services. @see BaggagePropagationConfig.SingleBaggageField#local(BaggageField)
-|spring.sleuth.baggage.remote-fields | null | List of fields that are referenced the same in-process as it is on the wire. For example, the field "x-vcap-request-id" would be set as-is including the prefix. @see BaggagePropagationConfig.SingleBaggageField#remote(BaggageField) @see BaggagePropagationConfig.SingleBaggageField.Builder#addKeyName(String)
-|spring.sleuth.baggage.tag-fields | null | A list of {@link BaggageField#name() fields} to tag into the span. @see Tags#BAGGAGE_FIELD
+|spring.sleuth.baggage.correlation-fields |  | A list of {@link BaggageField#name() fields} to add to correlation (MDC) context. @see CorrelationScopeConfig.SingleCorrelationField#create(BaggageField)
+|spring.sleuth.baggage.local-fields |  | Same as {@link #remoteFields} except that this field is not propagated to remote services. @see BaggagePropagationConfig.SingleBaggageField#local(BaggageField)
+|spring.sleuth.baggage.remote-fields |  | List of fields that are referenced the same in-process as it is on the wire. For example, the field "x-vcap-request-id" would be set as-is including the prefix. @see BaggagePropagationConfig.SingleBaggageField#remote(BaggageField) @see BaggagePropagationConfig.SingleBaggageField.Builder#addKeyName(String)
+|spring.sleuth.baggage.tag-fields |  | A list of {@link BaggageField#name() fields} to tag into the span. @see Tags#BAGGAGE_FIELD
 |spring.sleuth.circuitbreaker.enabled | true | Enable Spring Cloud CircuitBreaker instrumentation.
 |spring.sleuth.enabled | true | null
 |spring.sleuth.feign.enabled | true | Enable span information propagation when using Feign.
@@ -35,32 +35,32 @@
 |spring.sleuth.rpc.enabled | true | Enable tracing of RPC.
 |spring.sleuth.rxjava.schedulers.hook.enabled | true | Enable support for RxJava via RxJavaSchedulersHook.
 |spring.sleuth.rxjava.schedulers.ignoredthreads | [HystrixMetricPoller, ^RxComputation.*$] | Thread names for which spans will not be sampled.
-|spring.sleuth.sampler.probability | null | Probability of requests that should be sampled. E.g. 1.0 - 100% requests should be sampled. The precision is whole-numbers only (i.e. there's no support for 0.1% of the traces).
+|spring.sleuth.sampler.probability |  | Probability of requests that should be sampled. E.g. 1.0 - 100% requests should be sampled. The precision is whole-numbers only (i.e. there's no support for 0.1% of the traces).
 |spring.sleuth.sampler.rate | 10 | A rate per second can be a nice choice for low-traffic endpoints as it allows you surge protection. For example, you may never expect the endpoint to get more than 50 requests per second. If there was a sudden surge of traffic, to 5000 requests per second, you would still end up with 50 traces per second. Conversely, if you had a percentage, like 10%, the same surge would end up with 500 traces per second, possibly overloading your storage. Amazon X-Ray includes a rate-limited sampler (named Reservoir) for this purpose. Brave has taken the same approach via the {@link brave.sampler.RateLimitingSampler}.
 |spring.sleuth.scheduled.enabled | true | Enable tracing for {@link org.springframework.scheduling.annotation.Scheduled}.
-|spring.sleuth.scheduled.skip-pattern | null | Pattern for the fully qualified name of a class that should be skipped.
+|spring.sleuth.scheduled.skip-pattern |  | Pattern for the fully qualified name of a class that should be skipped.
 |spring.sleuth.supports-join | true | True means the tracing system supports sharing a span ID between a client and server.
 |spring.sleuth.trace-id128 | false | When true, generate 128-bit trace IDs instead of 64-bit ones.
-|spring.sleuth.web.additional-skip-pattern | null | Additional pattern for URLs that should be skipped in tracing. This will be appended to the {@link SleuthWebProperties#skipPattern}.
+|spring.sleuth.web.additional-skip-pattern |  | Additional pattern for URLs that should be skipped in tracing. This will be appended to the {@link SleuthWebProperties#skipPattern}.
 |spring.sleuth.web.client.enabled | true | Enable interceptor injecting into {@link org.springframework.web.client.RestTemplate}.
-|spring.sleuth.web.client.skip-pattern | null | Pattern for URLs that should be skipped in client side tracing.
+|spring.sleuth.web.client.skip-pattern |  | Pattern for URLs that should be skipped in client side tracing.
 |spring.sleuth.web.enabled | true | When true enables instrumentation for web applications.
-|spring.sleuth.web.filter-order | null | Order in which the tracing filters should be registered. Defaults to {@link TraceHttpAutoConfiguration#TRACING_FILTER_ORDER}.
+|spring.sleuth.web.filter-order |  | Order in which the tracing filters should be registered. Defaults to {@link TraceHttpAutoConfiguration#TRACING_FILTER_ORDER}.
 |spring.sleuth.web.ignore-auto-configured-skip-patterns | false | If set to true, auto-configured skip patterns will be ignored. @see SkipPatternConfiguration
 |spring.sleuth.web.skip-pattern | /api-docs.*\|/swagger.*\|.*\.png\|.*\.css\|.*\.js\|.*\.html\|/favicon.ico\|/hystrix.stream | Pattern for URLs that should be skipped in tracing.
 |spring.zipkin.activemq.message-max-bytes | 100000 | Maximum number of bytes for a given message with spans sent to Zipkin over ActiveMQ.
 |spring.zipkin.activemq.queue | zipkin | Name of the ActiveMQ queue where spans should be sent to Zipkin.
 |spring.zipkin.base-url | http://localhost:9411/ | URL of the zipkin query server instance. You can also provide the service id of the Zipkin server if Zipkin's registered in service discovery (e.g. https://zipkinserver/).
 |spring.zipkin.compression.enabled | false | null
-|spring.zipkin.discovery-client-enabled | null | If set to {@code false}, will treat the {@link ZipkinProperties#baseUrl} as a URL always.
+|spring.zipkin.discovery-client-enabled |  | If set to {@code false}, will treat the {@link ZipkinProperties#baseUrl} as a URL always.
 |spring.zipkin.enabled | true | Enables sending spans to Zipkin.
-|spring.zipkin.encoder | null | Encoding type of spans sent to Zipkin. Set to {@link SpanBytesEncoder#JSON_V1} if your server is not recent.
+|spring.zipkin.encoder |  | Encoding type of spans sent to Zipkin. Set to {@link SpanBytesEncoder#JSON_V1} if your server is not recent.
 |spring.zipkin.kafka.topic | zipkin | Name of the Kafka topic where spans should be sent to Zipkin.
 |spring.zipkin.locator.discovery.enabled | false | Enabling of locating the host name via service discovery.
 |spring.zipkin.message-timeout | 1 | Timeout in seconds before pending spans will be sent in batches to Zipkin.
-|spring.zipkin.rabbitmq.addresses | null | Addresses of the RabbitMQ brokers used to send spans to Zipkin
+|spring.zipkin.rabbitmq.addresses |  | Addresses of the RabbitMQ brokers used to send spans to Zipkin
 |spring.zipkin.rabbitmq.queue | zipkin | Name of the RabbitMQ queue where spans should be sent to Zipkin.
-|spring.zipkin.sender.type | null | Means of sending spans to Zipkin.
-|spring.zipkin.service.name | null | The name of the service, from which the Span was sent via HTTP, that should appear in Zipkin.
+|spring.zipkin.sender.type |  | Means of sending spans to Zipkin.
+|spring.zipkin.service.name |  | The name of the service, from which the Span was sent via HTTP, that should appear in Zipkin.
 
 |===
