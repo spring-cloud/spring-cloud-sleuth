@@ -1,4 +1,4 @@
-:branch: master
+:branch: 2.2.x
 
 == Introduction
 
