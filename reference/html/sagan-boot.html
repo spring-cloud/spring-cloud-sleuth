@@ -127,8 +127,8 @@ $(globalSwitch);
     &lt;dependencies&gt;
         &lt;dependency&gt;
             &lt;groupId&gt;org.springframework.cloud&lt;/groupId&gt;
-            &lt;artifactId&gt;spring-cloud-sleuth&lt;/artifactId&gt;
-            &lt;version&gt;${spring-cloud-sleuth.version}&lt;/version&gt;
+            &lt;artifactId&gt;spring-cloud-dependencies&lt;/artifactId&gt;
+            &lt;version&gt;${release.train.version}&lt;/version&gt;
             &lt;type&gt;pom&lt;/type&gt;
             &lt;scope&gt;import&lt;/scope&gt;
         &lt;/dependency&gt;
@@ -157,7 +157,7 @@ apply plugin: "io.spring.dependency-management"
 
 dependencyManagement {
      imports {
-          mavenBom "org.springframework.cloud:spring-cloud-sleuth:${springCloudSleuthVersion}"
+          mavenBom "org.springframework.cloud:spring-cloud-dependencies:${releaseTrainVersion}"
      }
 }
 dependencies {
