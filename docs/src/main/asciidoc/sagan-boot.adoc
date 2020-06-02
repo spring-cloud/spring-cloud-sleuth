@@ -35,7 +35,7 @@ apply plugin: "io.spring.dependency-management"
 
 dependencyManagement {
      imports {
-          mavenBom "org.springframework.cloud:spring-cloud-sleuth:${springCloudSleuthVersion}"
+          mavenBom "org.springframework.cloud:spring-cloud-dependencies:${releaseTrainVersion}"
      }
 }
 dependencies {
