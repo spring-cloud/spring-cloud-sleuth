@@ -7,8 +7,8 @@ Maven
     <dependencies>
         <dependency>
             <groupId>org.springframework.cloud</groupId>
-            <artifactId>spring-cloud-sleuth</artifactId>
-            <version>${spring-cloud-sleuth.version}</version>
+            <artifactId>spring-cloud-dependencies</artifactId>
+            <version>${release.train.version}</version>
             <type>pom</type>
             <scope>import</scope>
         </dependency>
@@ -35,7 +35,7 @@ apply plugin: "io.spring.dependency-management"
 
 dependencyManagement {
      imports {
-          mavenBom "org.springframework.cloud:spring-cloud-sleuth:${springCloudSleuthVersion}"
+          mavenBom "org.springframework.cloud:spring-cloud-dependencies:${releaseTrainVersion}"
      }
 }
 dependencies {

@@ -57,7 +57,7 @@ could set `logging.level.org.springframework.web.servlet.DispatcherServlet=DEBUG
 NOTE: Set `spring.application.name=myService` (for instance) to see the service
 name as well as the trace and span IDs.
 
-:branch: master
+:branch: 2.2.x
 
 == Overview
 Spring Cloud Sleuth provides Spring Boot auto-configuration for distributed
