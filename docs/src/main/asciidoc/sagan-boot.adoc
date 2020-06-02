@@ -7,8 +7,8 @@ Maven
     <dependencies>
         <dependency>
             <groupId>org.springframework.cloud</groupId>
-            <artifactId>spring-cloud-sleuth</artifactId>
-            <version>${spring-cloud-sleuth.version}</version>
+            <artifactId>spring-cloud-dependencies</artifactId>
+            <version>${release.train.version}</version>
             <type>pom</type>
             <scope>import</scope>
         </dependency>
