@@ -90,8 +90,8 @@ Doing so forces the current request to be sampled regardless of configuration.
 Baggage are fields that are propagated with the trace, optionally out of process. You can use
 properties to define fields that have no special configuration such as name mapping:
 
- * `spring.sleuth.remote-fields` is a list of header names to accept and propagate to remote services.
- * `spring.sleuth.local-fields` is a list of names to propagate locally
+ * `spring.sleuth.baggage.remote-fields` is a list of header names to accept and propagate to remote services.
+ * `spring.sleuth.baggage.local-fields` is a list of names to propagate locally
 
 No prefixing applies with these keys. What you set is literally what is used.
 
