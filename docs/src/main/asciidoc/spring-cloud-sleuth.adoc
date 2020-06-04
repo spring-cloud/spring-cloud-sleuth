@@ -1016,6 +1016,7 @@ image::https://raw.githubusercontent.com/spring-cloud/spring-cloud-sleuth/{branc
 If you want to use https://www.elastic.co/guide/en/logstash/current/index.html[Logstash], the following listing shows the Grok pattern for Logstash:
 
 [source]
+----
 filter {
   # pattern matching logback pattern
   grok {
@@ -1028,9 +1029,11 @@ filter {
     remove_field => ["timestamp"]
   }
 }
+----
 
 NOTE: If you want to use Grok together with the logs from Cloud Foundry, you have to use the following pattern:
 [source]
+----
 filter {
   # pattern matching logback pattern
   grok {
@@ -1043,6 +1046,7 @@ filter {
     remove_field => ["timestamp"]
   }
 }
+----
 
 === JSON Logback with Logstash
 

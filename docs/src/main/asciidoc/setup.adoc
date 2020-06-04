@@ -13,8 +13,8 @@ If you want both Sleuth and Zipkin, add the `spring-cloud-starter-zipkin` depend
 
 The following example shows how to do so for Maven:
 
-[source,xml,indent=0,subs="verbatim,attributes",role="primary"]
 .Maven
+[source,xml,indent=0,subs="verbatim,attributes",role="primary"]
 ----
     <dependencyManagement> <1>
           <dependencies>
@@ -38,8 +38,8 @@ The following example shows how to do so for Maven:
 
 The following example shows how to do so for Gradle:
 
-[source,groovy,indent=0,subs="verbatim,attributes",role="secondary"]
 .Gradle
+[source,groovy,indent=0,subs="verbatim,attributes",role="secondary"]
 ----
 dependencyManagement { <1>
     imports {
@@ -73,8 +73,8 @@ dependencies.
 
 The following example shows how to do so for Gradle:
 
-[source,xml,indent=0,subs="verbatim,attributes",role="primary"]
 .Maven
+[source,xml,indent=0,subs="verbatim,attributes",role="primary"]
 ----
     <dependencyManagement> <1>
           <dependencies>
@@ -101,8 +101,8 @@ The following example shows how to do so for Gradle:
 <2> Add the dependency to `spring-cloud-starter-zipkin`. That way, all nested dependencies get downloaded.
 <3> To automatically configure RabbitMQ, add the `spring-rabbit` dependency.
 
-[source,groovy,indent=0,subs="verbatim,attributes",role="secondary"]
 .Gradle
+[source,groovy,indent=0,subs="verbatim,attributes",role="secondary"]
 ----
 dependencyManagement { <1>
     imports {
@@ -162,8 +162,8 @@ The following example shows how to add Sleuth with Maven:
 
 The following example shows how to add Sleuth with Gradle:
 
-[source,groovy,indent=0,subs="verbatim,attributes",role="secondary"]
 .Gradle
+[source,groovy,indent=0,subs="verbatim,attributes",role="secondary"]
 ----
 dependencyManagement { <1>
     imports {

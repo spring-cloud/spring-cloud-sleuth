@@ -43,8 +43,10 @@ message. Paste that into Zipkin to visualize the entire trace, regardless of
 how many services the first request ended up hitting.
 
 [source]
+----
 backend.log:  2020-04-09 17:45:40.516 ERROR [backend,5e8eeec48b08e26882aba313eb08f0a4,dcc1df555b5777b3,true] 97203 --- [nio-9000-exec-1] o.s.c.s.i.web.ExceptionLoggingFilter     : Uncaught exception thrown
 frontend.log:2020-04-09 17:45:40.574 ERROR [frontend,5e8eeec48b08e26882aba313eb08f0a4,82aba313eb08f0a4,true] 97192 --- [nio-8081-exec-2] o.s.c.s.i.web.ExceptionLoggingFilter     : Uncaught exception thrown
+----
 
 Above, you'll notice the trace ID is `5e8eeec48b08e26882aba313eb08f0a4`, for
 example. This log configuration was automatically setup by Sleuth.

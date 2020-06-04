@@ -4,6 +4,7 @@ Manual changes to this file will be lost when it is generated again.
 Edit the files in the src/main/asciidoc/ directory instead.
 ////
 
+
 :jdkversion: 1.8
 :github-tag: master
 :github-repo: spring-cloud/spring-cloud-sleuth
@@ -146,8 +147,10 @@ message. Paste that into Zipkin to visualize the entire trace, regardless of
 how many services the first request ended up hitting.
 
 [source]
+----
 backend.log:  2020-04-09 17:45:40.516 ERROR [backend,5e8eeec48b08e26882aba313eb08f0a4,dcc1df555b5777b3,true] 97203 --- [nio-9000-exec-1] o.s.c.s.i.web.ExceptionLoggingFilter     : Uncaught exception thrown
 frontend.log:2020-04-09 17:45:40.574 ERROR [frontend,5e8eeec48b08e26882aba313eb08f0a4,82aba313eb08f0a4,true] 97192 --- [nio-8081-exec-2] o.s.c.s.i.web.ExceptionLoggingFilter     : Uncaught exception thrown
+----
 
 Above, you'll notice the trace ID is `5e8eeec48b08e26882aba313eb08f0a4`, for
 example. This log configuration was automatically setup by Sleuth.
@@ -229,8 +232,8 @@ If you want both Sleuth and Zipkin, add the `spring-cloud-starter-zipkin` depend
 
 The following example shows how to do so for Maven:
 
-[source,xml,indent=0,subs="verbatim,attributes",role="primary"]
 .Maven
+[source,xml,indent=0,subs="verbatim,attributes",role="primary"]
 ----
     <dependencyManagement> <1>
           <dependencies>
@@ -254,8 +257,8 @@ The following example shows how to do so for Maven:
 
 The following example shows how to do so for Gradle:
 
-[source,groovy,indent=0,subs="verbatim,attributes",role="secondary"]
 .Gradle
+[source,groovy,indent=0,subs="verbatim,attributes",role="secondary"]
 ----
 dependencyManagement { <1>
     imports {
@@ -289,8 +292,8 @@ dependencies.
 
 The following example shows how to do so for Gradle:
 
-[source,xml,indent=0,subs="verbatim,attributes",role="primary"]
 .Maven
+[source,xml,indent=0,subs="verbatim,attributes",role="primary"]
 ----
     <dependencyManagement> <1>
           <dependencies>
@@ -317,8 +320,8 @@ The following example shows how to do so for Gradle:
 <2> Add the dependency to `spring-cloud-starter-zipkin`. That way, all nested dependencies get downloaded.
 <3> To automatically configure RabbitMQ, add the `spring-rabbit` dependency.
 
-[source,groovy,indent=0,subs="verbatim,attributes",role="secondary"]
 .Gradle
+[source,groovy,indent=0,subs="verbatim,attributes",role="secondary"]
 ----
 dependencyManagement { <1>
     imports {
@@ -348,46 +351,46 @@ To do this you can use respectively `ZipkinAutoConfiguration.REPORTER_BEAN_NAME`
 @Configuration
 protected static class MyConfig {
 
-	@Bean(ZipkinAutoConfiguration.REPORTER_BEAN_NAME)
-	Reporter<zipkin2.Span> myReporter() {
-		return AsyncReporter.create(mySender());
-	}
+    @Bean(ZipkinAutoConfiguration.REPORTER_BEAN_NAME)
+    Reporter<zipkin2.Span> myReporter() {
+        return AsyncReporter.create(mySender());
+    }
 
-	@Bean(ZipkinAutoConfiguration.SENDER_BEAN_NAME)
-	MySender mySender() {
-		return new MySender();
-	}
+    @Bean(ZipkinAutoConfiguration.SENDER_BEAN_NAME)
+    MySender mySender() {
+        return new MySender();
+    }
 
-	static class MySender extends Sender {
+    static class MySender extends Sender {
 
-		private boolean spanSent = false;
+        private boolean spanSent = false;
 
-		boolean isSpanSent() {
-			return this.spanSent;
-		}
+        boolean isSpanSent() {
+            return this.spanSent;
+        }
 
-		@Override
-		public Encoding encoding() {
-			return Encoding.JSON;
-		}
+        @Override
+        public Encoding encoding() {
+            return Encoding.JSON;
+        }
 
-		@Override
-		public int messageMaxBytes() {
-			return Integer.MAX_VALUE;
-		}
+        @Override
+        public int messageMaxBytes() {
+            return Integer.MAX_VALUE;
+        }
 
-		@Override
-		public int messageSizeInBytes(List<byte[]> encodedSpans) {
-			return encoding().listSizeInBytes(encodedSpans);
-		}
+        @Override
+        public int messageSizeInBytes(List<byte[]> encodedSpans) {
+            return encoding().listSizeInBytes(encodedSpans);
+        }
 
-		@Override
-		public Call<Void> sendSpans(List<byte[]> encodedSpans) {
-			this.spanSent = true;
-			return Call.create(null);
-		}
+        @Override
+        public Call<Void> sendSpans(List<byte[]> encodedSpans) {
+            this.spanSent = true;
+            return Call.create(null);
+        }
 
-	}
+    }
 
 }
 
@@ -424,8 +427,8 @@ The following example shows how to add Sleuth with Maven:
 
 The following example shows how to add Sleuth with Gradle:
 
-[source,groovy,indent=0,subs="verbatim,attributes",role="secondary"]
 .Gradle
+[source,groovy,indent=0,subs="verbatim,attributes",role="secondary"]
 ----
 dependencyManagement { <1>
     imports {
