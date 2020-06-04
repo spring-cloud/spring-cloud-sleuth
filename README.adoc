@@ -4,6 +4,7 @@ Manual changes to this file will be lost when it is generated again.
 Edit the files in the src/main/asciidoc/ directory instead.
 ////
 
+
 :jdkversion: 1.8
 :github-tag: master
 :github-repo: spring-cloud/spring-cloud-sleuth
@@ -93,9 +94,11 @@ Each color of a note signifies a span (there are seven spans - from *A* to *G*).
 Consider the following note:
 
 [source]
+----
 Trace Id = X
 Span Id = D
 Client Sent
+----
 
 This note indicates that the current span has *Trace Id* set to *X* and *Span Id* set to *D*.
 Also, the `Client Sent` event took place.
@@ -189,6 +192,7 @@ https://docssleuth-zipkin-server.cfapps.io/dependency[Click here to see it live!
 When using grep to read the logs of those four applications by scanning for a trace ID equal to (for example) `2485ec27856c56f4`, you get output resembling the following:
 
 [source]
+----
 service1.log:2016-02-26 11:15:47.561  INFO [service1,2485ec27856c56f4,2485ec27856c56f4,true] 68058 --- [nio-8081-exec-1] i.s.c.sleuth.docs.service1.Application   : Hello from service1. Calling service2
 service2.log:2016-02-26 11:15:47.710  INFO [service2,2485ec27856c56f4,9aa10ee6fbde75fa,true] 68059 --- [nio-8082-exec-1] i.s.c.sleuth.docs.service2.Application   : Hello from service2. Calling service3 and then service4
 service3.log:2016-02-26 11:15:47.895  INFO [service3,2485ec27856c56f4,1210be13194bfe5,true] 68060 --- [nio-8083-exec-1] i.s.c.sleuth.docs.service3.Application   : Hello from service3
@@ -196,6 +200,7 @@ service2.log:2016-02-26 11:15:47.924  INFO [service2,2485ec27856c56f4,9aa10ee6fb
 service4.log:2016-02-26 11:15:48.134  INFO [service4,2485ec27856c56f4,1b1845262ffba49d,true] 68061 --- [nio-8084-exec-1] i.s.c.sleuth.docs.service4.Application   : Hello from service4
 service2.log:2016-02-26 11:15:48.156  INFO [service2,2485ec27856c56f4,9aa10ee6fbde75fa,true] 68059 --- [nio-8082-exec-1] i.s.c.sleuth.docs.service2.Application   : Got response from service4 [Hello from service4]
 service1.log:2016-02-26 11:15:48.182  INFO [service1,2485ec27856c56f4,2485ec27856c56f4,true] 68058 --- [nio-8081-exec-1] i.s.c.sleuth.docs.service1.Application   : Got response from service2 [Hello from service2, response from service3 [Hello from service3] and from service4 [Hello from service4]]
+----
 
 If you use a log aggregating tool (such as https://www.elastic.co/products/kibana[Kibana], https://www.splunk.com/[Splunk], and others), you can order the events that took place.
 An example from Kibana would resemble the following image:
@@ -205,6 +210,7 @@ image::https://raw.githubusercontent.com/spring-cloud/spring-cloud-sleuth/{branc
 If you want to use https://www.elastic.co/guide/en/logstash/current/index.html[Logstash], the following listing shows the Grok pattern for Logstash:
 
 [source]
+----
 filter {
   # pattern matching logback pattern
   grok {
@@ -217,9 +223,11 @@ filter {
     remove_field => ["timestamp"]
   }
 }
+----
 
 NOTE: If you want to use Grok together with the logs from Cloud Foundry, you have to use the following pattern:
 [source]
+----
 filter {
   # pattern matching logback pattern
   grok {
@@ -232,6 +240,7 @@ filter {
     remove_field => ["timestamp"]
   }
 }
+----
 
 ===== JSON Logback with Logstash
 
@@ -248,84 +257,83 @@ To do so, you have to do the following (for readability, we pass the dependencie
 Consider the following example of a Logback configuration file (named https://github.com/spring-cloud-samples/sleuth-documentation-apps/blob/master/service1/src/main/resources/logback-spring.xml[logback-spring.xml]).
 
 [source,xml]
------
+----
 <?xml version="1.0" encoding="UTF-8"?>
 <configuration>
-	<include resource="org/springframework/boot/logging/logback/defaults.xml"/>
-	​
-	<springProperty scope="context" name="springAppName" source="spring.application.name"/>
-	<!-- Example for logging into the build folder of your project -->
-	<property name="LOG_FILE" value="${BUILD_FOLDER:-build}/${springAppName}"/>​
+    <include resource="org/springframework/boot/logging/logback/defaults.xml"/>
+    ​
+    <springProperty scope="context" name="springAppName" source="spring.application.name"/>
+    <!-- Example for logging into the build folder of your project -->
+    <property name="LOG_FILE" value="${BUILD_FOLDER:-build}/${springAppName}"/>​
 
-	<!-- You can override this to have a custom pattern -->
-	<property name="CONSOLE_LOG_PATTERN"
-			  value="%clr(%d{yyyy-MM-dd HH:mm:ss.SSS}){faint} %clr(${LOG_LEVEL_PATTERN:-%5p}) %clr(${PID:- }){magenta} %clr(---){faint} %clr([%15.15t]){faint} %clr(%-40.40logger{39}){cyan} %clr(:){faint} %m%n${LOG_EXCEPTION_CONVERSION_WORD:-%wEx}"/>
+    <!-- You can override this to have a custom pattern -->
+    <property name="CONSOLE_LOG_PATTERN"
+              value="%clr(%d{yyyy-MM-dd HH:mm:ss.SSS}){faint} %clr(${LOG_LEVEL_PATTERN:-%5p}) %clr(${PID:- }){magenta} %clr(---){faint} %clr([%15.15t]){faint} %clr(%-40.40logger{39}){cyan} %clr(:){faint} %m%n${LOG_EXCEPTION_CONVERSION_WORD:-%wEx}"/>
 
-	<!-- Appender to log to console -->
-	<appender name="console" class="ch.qos.logback.core.ConsoleAppender">
-		<filter class="ch.qos.logback.classic.filter.ThresholdFilter">
-			<!-- Minimum logging level to be presented in the console logs-->
-			<level>DEBUG</level>
-		</filter>
-		<encoder>
-			<pattern>${CONSOLE_LOG_PATTERN}</pattern>
-			<charset>utf8</charset>
-		</encoder>
-	</appender>
+    <!-- Appender to log to console -->
+    <appender name="console" class="ch.qos.logback.core.ConsoleAppender">
+        <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+            <!-- Minimum logging level to be presented in the console logs-->
+            <level>DEBUG</level>
+        </filter>
+        <encoder>
+            <pattern>${CONSOLE_LOG_PATTERN}</pattern>
+            <charset>utf8</charset>
+        </encoder>
+    </appender>
 
-	<!-- Appender to log to file -->​
-	<appender name="flatfile" class="ch.qos.logback.core.rolling.RollingFileAppender">
-		<file>${LOG_FILE}</file>
-		<rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-			<fileNamePattern>${LOG_FILE}.%d{yyyy-MM-dd}.gz</fileNamePattern>
-			<maxHistory>7</maxHistory>
-		</rollingPolicy>
-		<encoder>
-			<pattern>${CONSOLE_LOG_PATTERN}</pattern>
-			<charset>utf8</charset>
-		</encoder>
-	</appender>
-	​
-	<!-- Appender to log to file in a JSON format -->
-	<appender name="logstash" class="ch.qos.logback.core.rolling.RollingFileAppender">
-		<file>${LOG_FILE}.json</file>
-		<rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-			<fileNamePattern>${LOG_FILE}.json.%d{yyyy-MM-dd}.gz</fileNamePattern>
-			<maxHistory>7</maxHistory>
-		</rollingPolicy>
-		<encoder class="net.logstash.logback.encoder.LoggingEventCompositeJsonEncoder">
-			<providers>
-				<timestamp>
-					<timeZone>UTC</timeZone>
-				</timestamp>
-				<pattern>
-					<pattern>
-						{
-						"severity": "%level",
-						"service": "${springAppName:-}",
-						"trace": "%X{X-B3-TraceId:-}",
-						"span": "%X{X-B3-SpanId:-}",
-						"parent": "%X{X-B3-ParentSpanId:-}",
-						"exportable": "%X{X-Span-Export:-}",
-						"pid": "${PID:-}",
-						"thread": "%thread",
-						"class": "%logger{40}",
-						"rest": "%message"
-						}
-					</pattern>
-				</pattern>
-			</providers>
-		</encoder>
-	</appender>
-	​
-	<root level="INFO">
-		<appender-ref ref="console"/>
-		<!-- uncomment this to have also JSON logs -->
-		<!--<appender-ref ref="logstash"/>-->
-		<!--<appender-ref ref="flatfile"/>-->
-	</root>
+    <!-- Appender to log to file -->​
+    <appender name="flatfile" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${LOG_FILE}</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <fileNamePattern>${LOG_FILE}.%d{yyyy-MM-dd}.gz</fileNamePattern>
+            <maxHistory>7</maxHistory>
+        </rollingPolicy>
+        <encoder>
+            <pattern>${CONSOLE_LOG_PATTERN}</pattern>
+            <charset>utf8</charset>
+        </encoder>
+    </appender>
+    ​
+    <!-- Appender to log to file in a JSON format -->
+    <appender name="logstash" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${LOG_FILE}.json</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <fileNamePattern>${LOG_FILE}.json.%d{yyyy-MM-dd}.gz</fileNamePattern>
+            <maxHistory>7</maxHistory>
+        </rollingPolicy>
+        <encoder class="net.logstash.logback.encoder.LoggingEventCompositeJsonEncoder">
+            <providers>
+                <timestamp>
+                    <timeZone>UTC</timeZone>
+                </timestamp>
+                <pattern>
+                    <pattern>
+                        {
+                        "severity": "%level",
+                        "service": "${springAppName:-}",
+                        "trace": "%X{traceId:-}",
+                        "span": "%X{spanId:-}",
+                        "baggage": "%X{key:-}",
+                        "pid": "${PID:-}",
+                        "thread": "%thread",
+                        "class": "%logger{40}",
+                        "rest": "%message"
+                        }
+                    </pattern>
+                </pattern>
+            </providers>
+        </encoder>
+    </appender>
+    ​
+    <root level="INFO">
+        <appender-ref ref="console"/>
+        <!-- uncomment this to have also JSON logs -->
+        <!--<appender-ref ref="logstash"/>-->
+        <!--<appender-ref ref="flatfile"/>-->
+    </root>
 </configuration>
------
+----
 
 That Logback configuration file:
 
@@ -392,9 +400,9 @@ spring.sleuth:
 [source,java]
 ----
 initialSpan.tag("foo",
-		ExtraFieldPropagation.get(initialSpan.context(), "foo"));
+        ExtraFieldPropagation.get(initialSpan.context(), "foo"));
 initialSpan.tag("UPPER_CASE",
-		ExtraFieldPropagation.get(initialSpan.context(), "UPPER_CASE"));
+        ExtraFieldPropagation.get(initialSpan.context(), "UPPER_CASE"));
 ----
 
 [[sleuth-adding-project]]
@@ -410,8 +418,8 @@ If you want to use only Spring Cloud Sleuth without the Zipkin integration, add 
 
 The following example shows how to add Sleuth with Maven:
 
-[source,xml,indent=0,subs="verbatim,attributes",role="primary"]
 .Maven
+[source,xml,indent=0,subs="verbatim,attributes",role="primary"]
 ----
     <dependencyManagement> <1>
           <dependencies>
@@ -435,8 +443,8 @@ The following example shows how to add Sleuth with Maven:
 
 The following example shows how to add Sleuth with Gradle:
 
-[source,groovy,indent=0,subs="verbatim,attributes",role="secondary"]
 .Gradle
+[source,groovy,indent=0,subs="verbatim,attributes",role="secondary"]
 ----
 dependencyManagement { <1>
     imports {
@@ -457,8 +465,8 @@ If you want both Sleuth and Zipkin, add the `spring-cloud-starter-zipkin` depend
 
 The following example shows how to do so for Maven:
 
-[source,xml,indent=0,subs="verbatim,attributes",role="primary"]
 .Maven
+[source,xml,indent=0,subs="verbatim,attributes",role="primary"]
 ----
     <dependencyManagement> <1>
           <dependencies>
@@ -482,8 +490,8 @@ The following example shows how to do so for Maven:
 
 The following example shows how to do so for Gradle:
 
-[source,groovy,indent=0,subs="verbatim,attributes",role="secondary"]
 .Gradle
+[source,groovy,indent=0,subs="verbatim,attributes",role="secondary"]
 ----
 dependencyManagement { <1>
     imports {
@@ -517,8 +525,8 @@ dependencies.
 
 The following example shows how to do so for Gradle:
 
-[source,xml,indent=0,subs="verbatim,attributes",role="primary"]
 .Maven
+[source,xml,indent=0,subs="verbatim,attributes",role="primary"]
 ----
     <dependencyManagement> <1>
           <dependencies>
@@ -545,8 +553,8 @@ The following example shows how to do so for Gradle:
 <2> Add the dependency to `spring-cloud-starter-zipkin`. That way, all nested dependencies get downloaded.
 <3> To automatically configure RabbitMQ, add the `spring-rabbit` dependency.
 
-[source,groovy,indent=0,subs="verbatim,attributes",role="secondary"]
 .Gradle
+[source,groovy,indent=0,subs="verbatim,attributes",role="secondary"]
 ----
 dependencyManagement { <1>
     imports {
@@ -576,46 +584,46 @@ To do this you can use respectively `ZipkinAutoConfiguration.REPORTER_BEAN_NAME`
 @Configuration
 protected static class MyConfig {
 
-	@Bean(ZipkinAutoConfiguration.REPORTER_BEAN_NAME)
-	Reporter<zipkin2.Span> myReporter() {
-		return AsyncReporter.create(mySender());
-	}
+    @Bean(ZipkinAutoConfiguration.REPORTER_BEAN_NAME)
+    Reporter<zipkin2.Span> myReporter() {
+        return AsyncReporter.create(mySender());
+    }
 
-	@Bean(ZipkinAutoConfiguration.SENDER_BEAN_NAME)
-	MySender mySender() {
-		return new MySender();
-	}
+    @Bean(ZipkinAutoConfiguration.SENDER_BEAN_NAME)
+    MySender mySender() {
+        return new MySender();
+    }
 
-	static class MySender extends Sender {
+    static class MySender extends Sender {
 
-		private boolean spanSent = false;
+        private boolean spanSent = false;
 
-		boolean isSpanSent() {
-			return this.spanSent;
-		}
+        boolean isSpanSent() {
+            return this.spanSent;
+        }
 
-		@Override
-		public Encoding encoding() {
-			return Encoding.JSON;
-		}
+        @Override
+        public Encoding encoding() {
+            return Encoding.JSON;
+        }
 
-		@Override
-		public int messageMaxBytes() {
-			return Integer.MAX_VALUE;
-		}
+        @Override
+        public int messageMaxBytes() {
+            return Integer.MAX_VALUE;
+        }
 
-		@Override
-		public int messageSizeInBytes(List<byte[]> encodedSpans) {
-			return encoding().listSizeInBytes(encodedSpans);
-		}
+        @Override
+        public int messageSizeInBytes(List<byte[]> encodedSpans) {
+            return encoding().listSizeInBytes(encodedSpans);
+        }
 
-		@Override
-		public Call<Void> sendSpans(List<byte[]> encodedSpans) {
-			this.spanSent = true;
-			return Call.create(null);
-		}
+        @Override
+        public Call<Void> sendSpans(List<byte[]> encodedSpans) {
+            this.spanSent = true;
+            return Call.create(null);
+        }
 
-	}
+    }
 
 }
 
@@ -768,6 +776,11 @@ https://eclipse.org[Eclipse] when working with the code. We use the
 https://eclipse.org/m2e/[m2eclipse] eclipse plugin for maven support. Other IDEs and tools
 should also work without issue as long as they use Maven 3.3.3 or better.
 
+==== Activate the Spring Maven profile
+Spring Cloud projects require the 'spring' Maven profile to be activated to resolve
+the spring milestone and snapshot repositories. Use your preferred IDE to set this
+profile to be active, or you may experience build errors.
+
 ==== Importing into eclipse with m2eclipse
 We recommend the https://eclipse.org/m2e/[m2eclipse] eclipse plugin when working with
 eclipse. If you don't already have m2eclipse installed it is available from the "eclipse
@@ -888,6 +901,7 @@ Checkstyle rules are *disabled by default*. To add checkstyle to your project ju
                 <artifactId>spring-javaformat-maven-plugin</artifactId>
             </plugin>
             <plugin> <5>
+                <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-checkstyle-plugin</artifactId>
             </plugin>
         </plugins>
@@ -895,6 +909,7 @@ Checkstyle rules are *disabled by default*. To add checkstyle to your project ju
     <reporting>
         <plugins>
             <plugin> <5>
+                <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-checkstyle-plugin</artifactId>
             </plugin>
         </plugins>

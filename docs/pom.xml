@@ -30,10 +30,9 @@
 	<description>Spring Sleuth Docs</description>
 	<properties>
 		<docs.main>spring-cloud-sleuth</docs.main>
-		<!-- Comma separated list of whitelisted branches -->
-		<docs.whitelisted.branches>2.1.x,2.2.x</docs.whitelisted.branches>
 		<main.basedir>${basedir}/..</main.basedir>
 		<configprops.inclusionPattern>spring.sleuth.*|spring.zipkin.*</configprops.inclusionPattern>
+		<upload-docs-zip.phase>deploy</upload-docs-zip.phase>
 	</properties>
 	<dependencies>
 		<dependency>
@@ -70,6 +69,9 @@
 					</plugin>
 					<plugin>
 						<artifactId>maven-antrun-plugin</artifactId>
+					</plugin>
+					<plugin>
+						<artifactId>maven-deploy-plugin</artifactId>
 					</plugin>
 				</plugins>
 			</build>
