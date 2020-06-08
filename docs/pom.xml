@@ -44,6 +44,9 @@
 			<artifactId>spring-cloud-starter-zipkin</artifactId>
 		</dependency>
 	</dependencies>
+	<build>
+		<sourceDirectory>src/main/asciidoc</sourceDirectory>
+	</build>
 	<profiles>
 		<profile>
 			<id>docs</id>
