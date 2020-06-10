@@ -302,6 +302,10 @@ class SleuthKafkaAspect {
 	private void anyCreateListenerContainer() {
 	} // NOSONAR
 
+	@Pointcut("execution(public * org.springframework.kafka.config.KafkaListenerContainerFactory.createContainer(..))")
+	private void anyCreateContainer() {
+	} // NOSONAR
+
 	@Around("anyProducerFactory()")
 	public Object wrapProducerFactory(ProceedingJoinPoint pjp) throws Throwable {
 		Producer producer = (Producer) pjp.proceed();
@@ -314,7 +318,7 @@ class SleuthKafkaAspect {
 		return this.kafkaTracing.consumer(consumer);
 	}
 
-	@Around("anyCreateListenerContainer()")
+	@Around("anyCreateListenerContainer() || anyCreateContainer()")
 	public Object wrapListenerContainerCreation(ProceedingJoinPoint pjp)
 			throws Throwable {
 		MessageListenerContainer listener = (MessageListenerContainer) pjp.proceed();
