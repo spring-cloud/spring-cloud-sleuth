@@ -19,6 +19,9 @@ package org.springframework.cloud.sleuth.log;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 /**
@@ -31,6 +34,8 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 // TODO: Hide in 3.x, if it isn't already deleted
 public class SleuthSlf4jProperties {
 
+	private static final Log log = LogFactory.getLog(SleuthSlf4jProperties.class);
+
 	/**
 	 * Enable a {@link Slf4jScopeDecorator} that prints tracing information in the logs.
 	 */
@@ -38,10 +43,14 @@ public class SleuthSlf4jProperties {
 
 	/**
 	 * A list of keys to be put from baggage to MDC.
+	 * @deprecated use spring.sleuth.baggage.correlation-fields property
 	 */
+	@Deprecated
 	private List<String> whitelistedMdcKeys = new ArrayList<>();
 
 	public boolean isEnabled() {
+		warning("spring.sleuth.log.slf4j.enabled",
+				"spring.sleuth.baggage.correlation-enabled");
 		return this.enabled;
 	}
 
@@ -54,7 +63,15 @@ public class SleuthSlf4jProperties {
 	}
 
 	public void setWhitelistedMdcKeys(List<String> whitelistedMdcKeys) {
+		warning("spring.sleuth.log.slf4j.whitelisted-mdc-keys",
+				"spring.sleuth.baggage.correlation-fields");
 		this.whitelistedMdcKeys = whitelistedMdcKeys;
+	}
+
+	private void warning(String currentKey, String newKey) {
+		log.warn("The [" + currentKey
+				+ "] property is deprecated and is removed in the next major release version of Sleuth. Please use ["
+				+ newKey + "]");
 	}
 
 }

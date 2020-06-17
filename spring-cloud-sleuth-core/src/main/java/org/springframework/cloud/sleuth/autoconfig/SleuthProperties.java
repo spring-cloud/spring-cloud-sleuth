@@ -19,6 +19,10 @@ package org.springframework.cloud.sleuth.autoconfig;
 import java.util.ArrayList;
 import java.util.List;
 
+import brave.baggage.BaggagePropagationConfig;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 /**
@@ -30,6 +34,8 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 @ConfigurationProperties("spring.sleuth")
 // TODO: Hide in 3.x, if it isn't already deleted
 public class SleuthProperties {
+
+	private static final Log log = LogFactory.getLog(SleuthProperties.class);
 
 	private boolean enabled = true;
 
@@ -50,6 +56,7 @@ public class SleuthProperties {
 	 * @see brave.propagation.ExtraFieldPropagation.FactoryBuilder#addPrefixedFields(String,
 	 * java.util.Collection)
 	 */
+	@Deprecated
 	private List<String> baggageKeys = new ArrayList<>();
 
 	/**
@@ -60,7 +67,9 @@ public class SleuthProperties {
 	 * Note: {@code fieldName} will be implicitly lower-cased.
 	 *
 	 * @see brave.propagation.ExtraFieldPropagation.FactoryBuilder#addField(String)
+	 * @deprecated use {@code spring.sleuth.baggage.remote-fields} property
 	 */
+	@Deprecated
 	private List<String> propagationKeys = new ArrayList<>();
 
 	/**
@@ -68,7 +77,9 @@ public class SleuthProperties {
 	 * services.
 	 *
 	 * @see brave.propagation.ExtraFieldPropagation.FactoryBuilder#addRedactedField(String)
+	 * @deprecated use {@code spring.sleuth.baggage.local-fields} property
 	 */
+	@Deprecated
 	private List<String> localKeys = new ArrayList<>();
 
 	public boolean isEnabled() {
@@ -100,6 +111,14 @@ public class SleuthProperties {
 	}
 
 	public void setBaggageKeys(List<String> baggageKeys) {
+		log.warn("[spring.sleuth.baggage-keys] will be removed in a future release."
+				+ "To change header names define a @Bean of type "
+				+ BaggagePropagationConfig.SingleBaggageField.class.getName()
+				+ ". The preferable approach is to migrate "
+				+ "to using [spring.sleuth.baggage.remote-keys]. The [spring.sleuth.baggage-keys] would prefix the headers "
+				+ "with [baggage_] and [baggage-] so unless all of your applications migrate, to remain backward compatible "
+				+ "you would have to add e.g. for [spring.sleuth.baggage-keys=foo] an entry "
+				+ "[spring.sleuth.baggage.remote-keys=foo,baggage-foo,baggage_foo] and eventually migrate to [spring.sleuth.baggage.remote-keys=foo]");
 		this.baggageKeys = baggageKeys;
 	}
 
@@ -108,6 +127,7 @@ public class SleuthProperties {
 	}
 
 	public void setPropagationKeys(List<String> propagationKeys) {
+		warning("spring.sleuth.propagation-keys", "spring.sleuth.baggage.remote-fields");
 		this.propagationKeys = propagationKeys;
 	}
 
@@ -116,7 +136,14 @@ public class SleuthProperties {
 	}
 
 	public void setLocalKeys(List<String> localKeys) {
+		warning("spring.sleuth.local-keys", "spring.sleuth.baggage.local-fields");
 		this.localKeys = localKeys;
+	}
+
+	private void warning(String currentKey, String newKey) {
+		log.warn("The [" + currentKey
+				+ "] property is deprecated and is removed in the next major release version of Sleuth. Please use ["
+				+ newKey + "]");
 	}
 
 }
