@@ -98,10 +98,7 @@ public class ZipkinBackwardsCompatibilityAutoConfiguration {
 				DefaultListableBeanFactory beanFactory) {
 			List<String> beanNames = new ArrayList<>(
 					Arrays.asList(beanFactory.getBeanNamesForType(Sender.class)));
-			if (beanNames.size() != 1
-					|| !beanNames.contains(ZipkinAutoConfiguration.SENDER_BEAN_NAME)) {
-				beanNames.remove(ZipkinAutoConfiguration.SENDER_BEAN_NAME);
-			}
+			beanNames.remove(ZipkinAutoConfiguration.SENDER_BEAN_NAME);
 			Sender sender = (Sender) beanFactory.getBean(beanNames.get(0));
 			// historical constraint. Note: AsyncReporter supports memory bounds
 			return AsyncReporter.builder(sender).queuedMaxSpans(1000)
