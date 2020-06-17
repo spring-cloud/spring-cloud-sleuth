@@ -16,15 +16,23 @@
 
 package org.springframework.cloud.sleuth.zipkin2;
 
+import java.util.List;
+
 import org.junit.Test;
+import zipkin2.Call;
 import zipkin2.codec.BytesEncoder;
+import zipkin2.codec.Encoding;
+import zipkin2.reporter.AsyncReporter;
 import zipkin2.reporter.InMemoryReporterMetrics;
 import zipkin2.reporter.Reporter;
 import zipkin2.reporter.ReporterMetrics;
+import zipkin2.reporter.Sender;
 
 import org.springframework.boot.autoconfigure.AutoConfigurations;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
 import org.springframework.cloud.sleuth.autoconfig.TraceAutoConfiguration;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -69,6 +77,52 @@ public class ZipkinBackwardsCompatibilityAutoConfigurationTests {
 					assertThat(context.getBeansOfType(ReporterMetrics.class)).isEmpty();
 					assertThat(context.getBeansOfType(Reporter.class)).isEmpty();
 				});
+	}
+
+	@Test
+	public void shouldAllowOverridingSenderOnlyWithoutOverridingTheReporter() {
+		this.contextRunner.withUserConfiguration(MyConfig.class).run(context -> {
+			assertThat(context.getBean(ZipkinProperties.class)).isNotNull();
+			assertThat(context.getBean(Reporter.class)).isInstanceOf(AsyncReporter.class);
+			assertThat(context.getBean(Sender.class)).isInstanceOf(MySender.class);
+			assertThat(context.getBean(BytesEncoder.class)).isNotNull();
+			assertThat(context.getBean(ReporterMetrics.class))
+					.isInstanceOf(InMemoryReporterMetrics.class);
+		});
+	}
+
+	@Configuration
+	protected static class MyConfig {
+
+		@Bean(ZipkinAutoConfiguration.SENDER_BEAN_NAME)
+		Sender mySender() {
+			return new MySender();
+		}
+
+	}
+
+	static class MySender extends Sender {
+
+		@Override
+		public Encoding encoding() {
+			return Encoding.JSON;
+		}
+
+		@Override
+		public int messageMaxBytes() {
+			return Integer.MAX_VALUE;
+		}
+
+		@Override
+		public int messageSizeInBytes(List<byte[]> encodedSpans) {
+			return encoding().listSizeInBytes(encodedSpans);
+		}
+
+		@Override
+		public Call<Void> sendSpans(List<byte[]> encodedSpans) {
+			return Call.create(null);
+		}
+
 	}
 
 }

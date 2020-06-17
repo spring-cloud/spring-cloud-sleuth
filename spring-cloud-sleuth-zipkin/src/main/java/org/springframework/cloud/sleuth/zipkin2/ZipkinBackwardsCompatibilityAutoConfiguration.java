@@ -98,7 +98,10 @@ public class ZipkinBackwardsCompatibilityAutoConfiguration {
 				DefaultListableBeanFactory beanFactory) {
 			List<String> beanNames = new ArrayList<>(
 					Arrays.asList(beanFactory.getBeanNamesForType(Sender.class)));
-			beanNames.remove(ZipkinAutoConfiguration.SENDER_BEAN_NAME);
+			if (beanNames.size() != 1
+					|| !beanNames.contains(ZipkinAutoConfiguration.SENDER_BEAN_NAME)) {
+				beanNames.remove(ZipkinAutoConfiguration.SENDER_BEAN_NAME);
+			}
 			Sender sender = (Sender) beanFactory.getBean(beanNames.get(0));
 			// historical constraint. Note: AsyncReporter supports memory bounds
 			return AsyncReporter.builder(sender).queuedMaxSpans(1000)
@@ -145,17 +148,22 @@ public class ZipkinBackwardsCompatibilityAutoConfiguration {
 					context.getBeanFactory());
 			DefaultListableBeanFactory listableBeanFactory = (DefaultListableBeanFactory) context
 					.getBeanFactory();
-			int foundSenders = listableBeanFactory
-					.getBeanNamesForType(Sender.class).length;
+			String[] foundSenders = listableBeanFactory.getBeanNamesForType(Sender.class);
+			int foundSendersSize = foundSenders.length;
 
 			// Previously we supported 1 Sender bean at a time
 			// which could be overridden by another auto-configuration.
 			// Now we support both the overridden bean and our default zipkinSender bean.
 			// Since this config is adapting the old config we're searching for exactly 1
 			// `Sender` bean before `ZipkinAutoConfiguration` kicks in.
-			if (foundSenders != 1) {
+			if (foundSendersSize != 1) {
 				return ConditionOutcome.noMatch(
 						"None or multiple Sender beans found - no reason to apply backwards compatibility");
+			}
+			else if (foundSenders[0].equals(ZipkinAutoConfiguration.SENDER_BEAN_NAME)) {
+				return ConditionOutcome.noMatch("A single, ["
+						+ ZipkinAutoConfiguration.SENDER_BEAN_NAME
+						+ "] named bean found - no reason to apply backwards compatibility");
 			}
 			int foundReporters = listableBeanFactory
 					.getBeanNamesForType(Reporter.class).length;
