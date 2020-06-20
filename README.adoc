@@ -471,6 +471,11 @@ the `.mvn` configuration, so if you find you have to do it to make a
 build succeed, please raise a ticket to get the settings added to
 source control.
 
+NOTE: Be aware that when you clone repository on Windows and you your
+default Git configuration property `core.autocrlf=false` you will
+experience reformatted source code with CRLF instead of LF. Do not use
+this Git settings when clonning this repository.
+
 For hints on how to build the project look in `.travis.yml` if there
 is one. There should be a "script" and maybe "install" command. Also
 look at the "services" section to see if any services need to be
