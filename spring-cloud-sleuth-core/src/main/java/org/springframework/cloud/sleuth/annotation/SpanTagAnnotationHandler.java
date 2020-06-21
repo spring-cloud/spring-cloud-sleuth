@@ -146,19 +146,20 @@ class SpanTagAnnotationHandler {
 	}
 
 	String resolveTagValue(SpanTag annotation, Object argument) {
-		if (argument == null) {
-			return "";
-		}
+		String value = null;
 		if (annotation.resolver() != NoOpTagValueResolver.class) {
 			TagValueResolver tagValueResolver = this.beanFactory
 					.getBean(annotation.resolver());
-			return tagValueResolver.resolve(argument);
+			value = tagValueResolver.resolve(argument);
 		}
 		else if (StringUtils.hasText(annotation.expression())) {
-			return this.beanFactory.getBean(TagValueExpressionResolver.class)
+			value = this.beanFactory.getBean(TagValueExpressionResolver.class)
 					.resolve(annotation.expression(), argument);
 		}
-		return argument.toString();
+		else if (argument != null) {
+			value = argument.toString();
+		}
+		return value == null ? "" : value;
 	}
 
 }
