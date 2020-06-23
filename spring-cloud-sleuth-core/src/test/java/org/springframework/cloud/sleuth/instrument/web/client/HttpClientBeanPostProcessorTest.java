@@ -71,7 +71,7 @@ public class HttpClientBeanPostProcessorTest {
 				});
 
 		// Wrap and run the assertions
-		tracingMapConnect.apply(original, bootstrap).log().subscribe();
+		tracingMapConnect.apply(original).log().subscribe();
 	}
 
 	@Test
@@ -90,7 +90,7 @@ public class HttpClientBeanPostProcessorTest {
 				});
 
 		// Wrap and run the assertions
-		tracingMapConnect.apply(original, bootstrap).log().subscribe();
+		tracingMapConnect.apply(original).log().subscribe();
 	}
 
 }

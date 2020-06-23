@@ -17,17 +17,17 @@
 package org.springframework.cloud.sleuth.instrument.web.client;
 
 import java.net.InetSocketAddress;
+import java.net.SocketAddress;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.BiConsumer;
-import java.util.function.BiFunction;
+import java.util.function.Function;
 import java.util.function.Supplier;
 
 import brave.Span;
 import brave.http.HttpClientHandler;
 import brave.http.HttpTracing;
 import brave.propagation.TraceContext;
-import io.netty.bootstrap.Bootstrap;
 import reactor.core.publisher.Mono;
 import reactor.netty.Connection;
 import reactor.netty.http.client.HttpClient;
@@ -82,8 +82,8 @@ class HttpClientBeanPostProcessor implements BeanPostProcessor {
 
 	}
 
-	static class TracingMapConnect implements
-			BiFunction<Mono<? extends Connection>, Bootstrap, Mono<? extends Connection>> {
+	static class TracingMapConnect
+			implements Function<Mono<? extends Connection>, Mono<? extends Connection>> {
 
 		static final Exception CANCELLED_ERROR = new CancellationException("CANCELLED") {
 			@Override
@@ -99,8 +99,7 @@ class HttpClientBeanPostProcessor implements BeanPostProcessor {
 		}
 
 		@Override
-		public Mono<? extends Connection> apply(Mono<? extends Connection> mono,
-				Bootstrap bootstrap) {
+		public Mono<? extends Connection> apply(Mono<? extends Connection> mono) {
 			// This function is invoked once per-request. We keep a reference to the
 			// pending client span here, so that only one signal completes the span.
 			PendingSpan pendingSpan = new PendingSpan();
@@ -173,8 +172,12 @@ class HttpClientBeanPostProcessor implements BeanPostProcessor {
 			if (span.isNoop()) {
 				return;
 			}
-			InetSocketAddress socketAddress = connection.address();
-			span.remoteIpAndPort(socketAddress.getHostString(), socketAddress.getPort());
+			SocketAddress socketAddress = connection.address();
+			if (socketAddress instanceof InetSocketAddress) {
+				InetSocketAddress inetSocketAddress = (InetSocketAddress) socketAddress;
+				span.remoteIpAndPort(inetSocketAddress.getHostString(),
+						inetSocketAddress.getPort());
+			}
 		}
 
 	}
