@@ -71,7 +71,7 @@ import org.springframework.util.StringUtils;
  */
 @Configuration(proxyBeanMethods = false)
 @ConditionalOnProperty(value = "spring.sleuth.enabled", matchIfMissing = true)
-@EnableConfigurationProperties(SleuthProperties.class)
+@EnableConfigurationProperties({ SleuthProperties.class, SleuthBaggageProperties.class })
 @Import({ SleuthLogAutoConfiguration.class, TraceBaggageConfiguration.class,
 		SamplerAutoConfiguration.class })
 // public allows @AutoConfigureAfter(TraceAutoConfiguration)
