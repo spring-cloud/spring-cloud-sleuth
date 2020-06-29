@@ -67,6 +67,18 @@
       "defaultValue": true
     },
     {
+      "name": "spring.sleuth.quartz.enabled",
+      "type": "java.lang.Boolean",
+      "description": "Enable tracing for Quartz.",
+      "defaultValue": true
+    },
+    {
+      "name": "spring.sleuth.mongodb.enabled",
+      "type": "java.lang.Boolean",
+      "description": "Enable tracing for MongoDb.",
+      "defaultValue": true
+    },
+    {
       "name": "spring.sleuth.rpc.enabled",
       "type": "java.lang.Boolean",
       "description": "Enable tracing of RPC.",

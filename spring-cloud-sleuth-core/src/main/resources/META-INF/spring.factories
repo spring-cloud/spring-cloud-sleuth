@@ -24,7 +24,8 @@ org.springframework.cloud.sleuth.instrument.messaging.TraceSpringMessagingAutoCo
 org.springframework.cloud.sleuth.instrument.messaging.TraceWebSocketAutoConfiguration,\
 org.springframework.cloud.sleuth.instrument.opentracing.OpentracingAutoConfiguration,\
 org.springframework.cloud.sleuth.instrument.redis.TraceRedisAutoConfiguration,\
-org.springframework.cloud.sleuth.instrument.quartz.TraceQuartzAutoConfiguration
+org.springframework.cloud.sleuth.instrument.quartz.TraceQuartzAutoConfiguration,\
+org.springframework.cloud.sleuth.instrument.mongodb.TraceMongoDbAutoConfiguration
 
 # Environment Post Processor
 org.springframework.boot.env.EnvironmentPostProcessor=\
