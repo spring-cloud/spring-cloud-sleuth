@@ -47,6 +47,8 @@ import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.system.CapturedOutput;
 import org.springframework.boot.test.system.OutputCaptureExtension;
+import org.springframework.cloud.sleuth.annotation.ContinueSpan;
+import org.springframework.cloud.sleuth.annotation.SpanTag;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.env.Environment;
@@ -54,6 +56,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.http.client.ClientHttpResponse;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.DefaultResponseErrorHandler;
 import org.springframework.web.client.HttpClientErrorException;
@@ -93,6 +96,24 @@ public class TraceFilterWebIntegrationTests {
 
 		then(this.currentTraceContext.get()).isNull();
 		then(spanHandler.takeRemoteSpan(Kind.SERVER).tags()).containsKey("http.url");
+	}
+
+	@Test
+	public void should_tag_with_value_from_null_expression() {
+		new RestTemplate().getForObject("http://localhost:" + port() + "/null-parameter",
+				String.class);
+
+		then(this.currentTraceContext.get()).isNull();
+		then(spanHandler.takeRemoteSpan(Kind.SERVER).tags()).containsEntry("foo", "1001");
+	}
+
+	@Test
+	public void should_tag_with_value_from_non_null_expression() {
+		new RestTemplate().getForObject(
+				"http://localhost:" + port() + "/null-parameter?bar=10", String.class);
+
+		then(this.currentTraceContext.get()).isNull();
+		then(spanHandler.takeRemoteSpan(Kind.SERVER).tags()).containsEntry("foo", "11");
 	}
 
 	@Test
@@ -162,6 +183,11 @@ public class TraceFilterWebIntegrationTests {
 		@Bean
 		GoodController goodController() {
 			return new GoodController();
+		}
+
+		@Bean
+		NullParameterController nullParameterController() {
+			return new NullParameterController();
 		}
 
 		@Bean
@@ -254,6 +280,19 @@ public class TraceFilterWebIntegrationTests {
 		public String beGood() {
 			log.info("Good!");
 			return "good";
+		}
+
+	}
+
+	@RestController
+	public static class NullParameterController {
+
+		@RequestMapping("/null-parameter")
+		@ContinueSpan
+		public String nullParameter(
+				@SpanTag(key = "foo", expression = "(#root?:1000)+1") @RequestParam(
+						value = "bar", required = false) Integer param) {
+			return "ok param=" + param;
 		}
 
 	}
