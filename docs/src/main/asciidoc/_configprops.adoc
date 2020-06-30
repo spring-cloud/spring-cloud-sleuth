@@ -27,7 +27,9 @@
 |spring.sleuth.messaging.kafka.remote-service-name | kafka | 
 |spring.sleuth.messaging.rabbit.enabled | true | Enable tracing of RabbitMQ.
 |spring.sleuth.messaging.rabbit.remote-service-name | rabbitmq | 
+|spring.sleuth.mongodb.enabled | true | Enable tracing for MongoDb.
 |spring.sleuth.opentracing.enabled | true | 
+|spring.sleuth.quartz.enabled | true | Enable tracing for Quartz.
 |spring.sleuth.reactor.decorate-on-each | true | When true decorates on each operator, will be less performing, but logging will always contain the tracing entries in each operator. When false decorates on last operator, will be more performing, but logging might not always contain the tracing entries.
 |spring.sleuth.reactor.enabled | true | When true enables instrumentation for reactor.
 |spring.sleuth.redis.enabled | true | Enable span information propagation when using Redis.
