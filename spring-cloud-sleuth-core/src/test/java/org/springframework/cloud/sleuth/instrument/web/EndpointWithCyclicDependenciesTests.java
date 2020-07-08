@@ -19,45 +19,55 @@ package org.springframework.cloud.sleuth.instrument.web;
 import brave.http.HttpTracing;
 import org.junit.jupiter.api.Test;
 
-import org.springframework.boot.actuate.endpoint.annotation.Endpoint;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.actuate.endpoint.web.annotation.RestControllerEndpoint;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.stereotype.Service;
 
 /**
- * It is unusual to inject {@link HttpTracing} into an endpoint vs an end-user api such as
- * {@link brave.Tracer} or {@link brave.SpanCustomizer}. However, someone has done this in
- * the past in #1679 and we decided to allow this. This test shows the odd case will work
- * even though it implies a cyclic dependency.
+ * This tests that actuator components can have instrumented HTTP clients inside of them.
  *
  * @author Marcin Grzejszczak
  */
-@SpringBootTest(classes = { EndpointWithCyclicDependenciesTests.Config.class })
+@SpringBootTest(classes = { EndpointWithCyclicDependenciesTests.ClientConfig.class })
 public class EndpointWithCyclicDependenciesTests {
 
 	@Test
-	public void should_load_context() {
+	void should_load_context() {
+	}
+
+	static class Client {
 
 	}
 
-	@Configuration
 	@EnableAutoConfiguration
-	static class Config {
+	@Configuration
+	static class ClientConfig {
 
 		@Bean
-		MyEndpoint myEndpoint(HttpTracing httpTracing) {
-			return new MyEndpoint(httpTracing);
+		public Client client(HttpTracing httpTracing) {
+			// imagine this instruments the client.
+			return new Client();
 		}
 
 	}
 
-	@Endpoint(id = "my-endpoint")
-	public static class MyEndpoint {
+	@Service
+	static class MyService {
 
-		public MyEndpoint(HttpTracing httpTracing) {
-			// do something with httpTracing
-		}
+		@Autowired
+		Client client;
+
+	}
+
+	@RestControllerEndpoint(id = "admin-endpoint")
+	static class MyRestEndpoint {
+
+		@Autowired
+		MyService myService;
 
 	}
 

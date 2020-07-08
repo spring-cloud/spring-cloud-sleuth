@@ -72,12 +72,16 @@ public class TraceWebAutoConfiguration {
 			return null;
 		}
 
-		// Most applications will not introduce a cyclic dependency on HttpTracing, ex by
-		// injecting
-		// it into an actuator endpoint. Rather than making everything lazy for the odd
-		// case, this
-		// assumes there's no cyclic dep and falls back if we found out there was. See
-		// #1679
+		// Actuator endpoints are queried to make the default skip pattern. There's an
+		// edge case where actuator endpoints indirectly reference the still constructing
+		// HttpTracing bean. Ex: an instrumented client could cause a cyclic dep.
+		//
+		// Below optimizes for the opposite: that custom actuator endpoints are not in
+		// use. This allows configuration to be eagerly parsed, allowing any errors to
+		// surface earlier. In the case there is a cyclic dep, this parsing becomes lazy,
+		// deferring any errors creating the skip pattern.
+		//
+		// See #1679
 		try {
 			Pattern result = consolidateSkipPatterns(patterns);
 			if (result == null) {
