@@ -17,28 +17,53 @@
 package org.springframework.cloud.sleuth.internal;
 
 import brave.propagation.CurrentTraceContext;
+import org.junit.After;
 import org.junit.Test;
 
-import org.springframework.context.ConfigurableApplicationContext;
+import org.springframework.context.annotation.AnnotationConfigApplicationContext;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
 
 import static org.assertj.core.api.BDDAssertions.then;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
 public class LazyBeanTests {
 
+	AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext();
+
+	@After
+	public void close() {
+		context.close();
+	}
+
 	@Test
-	public void should_return_null_when_exception_thrown_upon_bean_retrieval() {
-		ConfigurableApplicationContext springContext = mock(
-				ConfigurableApplicationContext.class);
+	public void should_work_with_basic_type() {
+		context.register(BasicConfig.class);
+		context.refresh();
 
-		when(springContext.getBean(CurrentTraceContext.class))
-				.thenThrow(new IllegalStateException());
+		LazyBean<CurrentTraceContext> provider = LazyBean.create(context,
+				CurrentTraceContext.class);
 
-		LazyBean<CurrentTraceContext> provider = new LazyBean<>(springContext,
+		then(provider.get()).isNotNull();
+	}
+
+	@Test
+	public void should_return_null_when_no_basic_type() {
+		context.refresh();
+
+		LazyBean<CurrentTraceContext> provider = LazyBean.create(context,
 				CurrentTraceContext.class);
 
 		then(provider.get()).isNull();
+	}
+
+	@Configuration
+	static class BasicConfig {
+
+		@Bean
+		CurrentTraceContext currentTraceContext() {
+			return CurrentTraceContext.Default.create();
+		}
+
 	}
 
 }
