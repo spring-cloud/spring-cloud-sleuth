@@ -90,9 +90,8 @@ public class TraceWebAutoConfiguration {
 			return () -> result;
 		}
 		catch (BeanCurrentlyInCreationException e) {
-			// Most likely case is an actuator endpoint declares a constructor param of
-			// HttpTracing
-			// instead of Tracing, SpanCustomizer, etc.
+			// Most likely, there is an actuator endpoint that indirectly references an
+			// instrumented HTTP client.
 			return () -> consolidateSkipPatterns(patterns);
 		}
 	}
