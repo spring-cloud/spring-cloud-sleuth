@@ -19,6 +19,7 @@ package org.springframework.cloud.sleuth.instrument.web;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.List;
 import java.util.Optional;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -42,6 +43,7 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.boot.test.context.runner.WebApplicationContextRunner;
 import org.springframework.cloud.sleuth.autoconfig.TraceAutoConfiguration;
 import org.springframework.context.ApplicationContext;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 import static org.assertj.core.api.BDDAssertions.then;
@@ -113,10 +115,9 @@ public class SkipPatternProviderConfigTest {
 
 	@Test
 	public void should_return_empty_when_no_endpoints() {
-		EndpointsSupplier<ExposableWebEndpoint> endpointsSupplier = Collections::emptyList;
 		Optional<Pattern> pattern = new SkipPatternConfiguration.ActuatorSkipPatternProviderConfig()
 				.skipPatternForActuatorEndpointsSamePort(new ServerProperties(),
-						new WebEndpointProperties(), endpointsSupplier)
+						new WebEndpointProperties(), Collections::emptyList)
 				.skipPattern();
 
 		then(pattern).isEmpty();
@@ -237,9 +238,9 @@ public class SkipPatternProviderConfigTest {
 	@Test
 	public void should_combine_skip_patterns_from_list() throws Exception {
 		SkipPatternConfiguration configuration = new SkipPatternConfiguration();
-		configuration.patterns.addAll(Arrays.asList(foo(), bar()));
+		List<SingleSkipPattern> patterns = Arrays.asList(foo(), bar());
 
-		Pattern pattern = configuration.sleuthSkipPatternProvider().skipPattern();
+		Pattern pattern = configuration.sleuthSkipPatternProvider(patterns).skipPattern();
 
 		then(pattern.pattern()).isEqualTo("foo|bar");
 	}
@@ -273,6 +274,16 @@ public class SkipPatternProviderConfigTest {
 	@Configuration
 	@EnableConfigurationProperties(ServerProperties.class)
 	static class ServerPropertiesConfig {
+
+	}
+
+	@Configuration
+	static class EmptyEndpoints {
+
+		@Bean
+		EndpointsSupplier<ExposableWebEndpoint> endpointsSupplier() {
+			return Collections::emptyList;
+		}
 
 	}
 
