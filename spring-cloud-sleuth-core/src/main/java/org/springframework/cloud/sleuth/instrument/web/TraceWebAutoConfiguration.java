@@ -16,7 +16,6 @@
 
 package org.springframework.cloud.sleuth.instrument.web;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
@@ -26,7 +25,7 @@ import java.util.stream.Collectors;
 
 import brave.Tracing;
 
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.BeanCurrentlyInCreationException;
 import org.springframework.boot.actuate.autoconfigure.endpoint.web.WebEndpointProperties;
 import org.springframework.boot.actuate.autoconfigure.web.server.ConditionalOnManagementPort;
 import org.springframework.boot.actuate.autoconfigure.web.server.ManagementPortType;
@@ -43,6 +42,7 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.cloud.sleuth.autoconfig.TraceAutoConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.lang.Nullable;
 import org.springframework.util.StringUtils;
 
 /**
@@ -64,32 +64,53 @@ import org.springframework.util.StringUtils;
 @EnableConfigurationProperties(SleuthWebProperties.class)
 public class TraceWebAutoConfiguration {
 
-	@Autowired(required = false)
-	List<SingleSkipPattern> patterns = new ArrayList<>();
-
 	@Bean
 	@ConditionalOnMissingBean
-	SkipPatternProvider sleuthSkipPatternProvider() {
-		if (this.patterns == null) {
+	SkipPatternProvider sleuthSkipPatternProvider(
+			@Nullable List<SingleSkipPattern> patterns) {
+		if (patterns == null || patterns.isEmpty()) {
 			return null;
 		}
-		List<Pattern> presentPatterns = this.patterns.stream()
+
+		// Most applications will not introduce a cyclic dependency on HttpTracing, ex by
+		// injecting
+		// it into an actuator endpoint. Rather than making everything lazy for the odd
+		// case, this
+		// assumes there's no cyclic dep and falls back if we found out there was. See
+		// #1679
+		try {
+			Pattern result = consolidateSkipPatterns(patterns);
+			if (result == null) {
+				return null;
+			}
+			return () -> result;
+		}
+		catch (BeanCurrentlyInCreationException e) {
+			// Most likely case is an actuator endpoint declares a constructor param of
+			// HttpTracing
+			// instead of Tracing, SpanCustomizer, etc.
+			return () -> consolidateSkipPatterns(patterns);
+		}
+	}
+
+	@Nullable
+	static Pattern consolidateSkipPatterns(List<SingleSkipPattern> patterns) {
+		List<Pattern> presentPatterns = patterns.stream()
 				.map(SingleSkipPattern::skipPattern).filter(Optional::isPresent)
 				.map(Optional::get).collect(Collectors.toList());
 		if (presentPatterns.isEmpty()) {
 			return null;
 		}
 		if (presentPatterns.size() == 1) {
-			Pattern pattern = presentPatterns.get(0);
-			return () -> pattern;
+			return presentPatterns.get(0);
 		}
+
 		StringJoiner joiner = new StringJoiner("|");
 		for (Pattern pattern : presentPatterns) {
 			String s = pattern.pattern();
 			joiner.add(s);
 		}
-		Pattern pattern = Pattern.compile(joiner.toString());
-		return () -> pattern;
+		return Pattern.compile(joiner.toString());
 	}
 
 	@Configuration(proxyBeanMethods = false)
