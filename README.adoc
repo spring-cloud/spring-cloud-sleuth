@@ -164,6 +164,7 @@ including the count of calls and how many errors exist.
 
 The example application will make a simple diagram like this, but your real
 environment diagram may be more complex.
+
 image::https://raw.githubusercontent.com/spring-cloud/spring-cloud-sleuth/{branch}/docs/src/main/asciidoc/images/zipkin-dependencies.png[Zipkin Dependencies]
 
 *Note*: Production environments will generate a lot of data. You will likely
