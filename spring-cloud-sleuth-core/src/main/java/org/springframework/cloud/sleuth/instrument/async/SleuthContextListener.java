@@ -53,6 +53,9 @@ class SleuthContextListener implements SmartApplicationListener {
 	}
 
 	static SleuthContextListener getBean(BeanFactory beanFactory) {
+		if (beanFactory instanceof ConfigurableApplicationContext) {
+			beanFactory = ((ConfigurableApplicationContext) beanFactory).getBeanFactory();
+		}
 		return CACHE.getOrDefault(beanFactory, new SleuthContextListener());
 	}
 
