@@ -129,6 +129,11 @@ final class RestTemplateSender extends Sender {
 		this.restTemplate.exchange(requestEntity, String.class);
 	}
 
+	@Override
+	public String toString() {
+		return "RestTemplateSender{" + url + "}";
+	}
+
 	class HttpPostCall extends Call.Base<Void> {
 
 		private final byte[] message;

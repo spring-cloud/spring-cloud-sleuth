@@ -28,6 +28,8 @@ import zipkin2.Endpoint;
 import zipkin2.Span;
 import zipkin2.codec.Encoding;
 import zipkin2.codec.SpanBytesEncoder;
+import zipkin2.reporter.Sender;
+import zipkin2.reporter.brave.AsyncZipkinSpanHandler;
 
 import org.springframework.web.client.RestTemplate;
 
@@ -49,9 +51,9 @@ public class RestTemplateSenderTest {
 	@Rule
 	public MockWebServer server = new MockWebServer();
 
-	String endpoint = this.server.url("/api/v2/spans").toString();
+	String baseUrl = "http://localhost:" + this.server.getPort();
 
-	RestTemplateSender sender = new RestTemplateSender(new RestTemplate(), this.endpoint,
+	RestTemplateSender sender = new RestTemplateSender(new RestTemplate(), this.baseUrl,
 			JSON_V2);
 
 	/**
@@ -71,7 +73,7 @@ public class RestTemplateSenderTest {
 	@Test
 	public void proto3() throws Exception {
 		this.server.enqueue(new MockResponse());
-		this.sender = new RestTemplateSender(new RestTemplate(), this.endpoint, PROTO3);
+		this.sender = new RestTemplateSender(new RestTemplate(), this.baseUrl, PROTO3);
 
 		send(SPAN).execute();
 
@@ -81,6 +83,19 @@ public class RestTemplateSenderTest {
 		// proto3 encoding of ListOfSpan is simply a repeated span entry
 		assertThat(request.getBody().readByteArray())
 				.containsExactly(SpanBytesEncoder.PROTO3.encode(SPAN));
+	}
+
+	/**
+	 * The output of toString() on {@link Sender} implementations appears in thread names
+	 * created by {@link AsyncZipkinSpanHandler}. Since thread names are likely to be
+	 * exposed in logs and other monitoring tools, care should be taken to ensure the
+	 * toString() output is a reasonable length and does not contain sensitive
+	 * information.
+	 */
+	@Test
+	public void toStringContainsOnlySenderTypeAndEndpoint() {
+		assertThat(sender.toString())
+				.isEqualTo("RestTemplateSender{" + baseUrl + "/api/v2/spans}");
 	}
 
 	Call<Void> send(Span... spans) {
