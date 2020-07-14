@@ -32,7 +32,8 @@ class SleuthContextListenerTest {
 
 	@Test
 	void should_be_usable_using_context() {
-		SleuthContextListener listener = SleuthContextListener.getBean(applicationContext);
+		SleuthContextListener listener = SleuthContextListener
+				.getBean(applicationContext);
 
 		then(listener).isNotNull();
 		then(listener.isUnusable()).isFalse();
@@ -40,7 +41,8 @@ class SleuthContextListenerTest {
 
 	@Test
 	void should_be_usable_using_beanfactory() {
-		SleuthContextListener listener = SleuthContextListener.getBean(applicationContext.getBeanFactory());
+		SleuthContextListener listener = SleuthContextListener
+				.getBean(applicationContext.getBeanFactory());
 
 		then(listener).isNotNull();
 		then(listener.isUnusable()).isFalse();
