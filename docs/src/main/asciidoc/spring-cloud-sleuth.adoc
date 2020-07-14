@@ -98,14 +98,14 @@ No prefixing applies with these keys. What you set is literally what is used.
 A name set in either of these properties will result in a `BaggageField` of the same name.
 
 In order to automatically set the baggage values to Slf4j's MDC, you have to set
-the `spring.sleuth.baggage.correlation-fields` property with a list of whitelisted
+the `spring.sleuth.baggage.correlation-fields` property with a list of allowed
 local or remote keys. E.g. `spring.sleuth.baggage.correlation-fields=country-code` will set the
 value of the `country-code` baggage into MDC.
 
 IMPORTANT: Remember that adding entries to MDC can drastically decrease the performance of your application!
 
 If you want to add the baggage entries as tags, to make it possible to search for spans via the baggage entries, you can set the value of
-`spring.sleuth.baggage.tag-fields` with a list of whitelisted baggage keys. To disable the feature you have to pass the `spring.sleuth.propagation.tag.enabled=false` property.
+`spring.sleuth.baggage.tag-fields` with a list of allowed baggage keys. To disable the feature you have to pass the `spring.sleuth.propagation.tag.enabled=false` property.
 
 === Java configuration
 
@@ -1079,4 +1079,3 @@ Otherwise, your custom logback file does not properly read the property.
 == Configuration properties
 
 To see the list of all Sleuth related configuration properties please check link:appendix.html[the Appendix page].
-
