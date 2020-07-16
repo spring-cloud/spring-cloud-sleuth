@@ -42,6 +42,7 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.cloud.sleuth.autoconfig.TraceAutoConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.env.Environment;
 import org.springframework.lang.Nullable;
 import org.springframework.util.StringUtils;
 
@@ -129,10 +130,12 @@ public class TraceWebAutoConfiguration {
 		 * @return optional skip pattern
 		 */
 		static Optional<Pattern> getPatternForManagementServerProperties(
+				Environment environment,
 				ManagementServerProperties managementServerProperties) {
 			String contextPath = managementServerProperties.getServlet().getContextPath();
 			if (StringUtils.hasText(contextPath)) {
-				return Optional.of(Pattern.compile(contextPath + ".*"));
+				return Optional.of(Pattern
+						.compile(environment.resolvePlaceholders(contextPath) + ".*"));
 			}
 			return Optional.empty();
 		}
@@ -140,8 +143,9 @@ public class TraceWebAutoConfiguration {
 		@Bean
 		@ConditionalOnBean(ManagementServerProperties.class)
 		public SingleSkipPattern skipPatternForManagementServerProperties(
+				Environment environment,
 				final ManagementServerProperties managementServerProperties) {
-			return () -> getPatternForManagementServerProperties(
+			return () -> getPatternForManagementServerProperties(environment,
 					managementServerProperties);
 		}
 
@@ -155,8 +159,8 @@ public class TraceWebAutoConfiguration {
 			havingValue = "false", matchIfMissing = true)
 	protected static class ActuatorSkipPatternProviderConfig {
 
-		static Optional<Pattern> getEndpointsPatterns(String contextPath,
-				WebEndpointProperties webEndpointProperties,
+		static Optional<Pattern> getEndpointsPatterns(Environment environment,
+				String contextPath, WebEndpointProperties webEndpointProperties,
 				EndpointsSupplier<ExposableWebEndpoint> endpointsSupplier) {
 			Collection<ExposableWebEndpoint> endpoints = endpointsSupplier.getEndpoints();
 			if (endpoints.isEmpty()) {
@@ -165,7 +169,8 @@ public class TraceWebAutoConfiguration {
 			String basePath = webEndpointProperties.getBasePath();
 			String pattern = patternFromEndpoints(contextPath, endpoints, basePath);
 			if (StringUtils.hasText(pattern)) {
-				return Optional.of(Pattern.compile(pattern));
+				return Optional
+						.of(Pattern.compile(environment.resolvePlaceholders(pattern)));
 			}
 			return Optional.empty();
 		}
@@ -211,10 +216,10 @@ public class TraceWebAutoConfiguration {
 		@Bean
 		@ConditionalOnManagementPort(ManagementPortType.SAME)
 		public SingleSkipPattern skipPatternForActuatorEndpointsSamePort(
-				final ServerProperties serverProperties,
+				Environment environment, final ServerProperties serverProperties,
 				final WebEndpointProperties webEndpointProperties,
 				final EndpointsSupplier<ExposableWebEndpoint> endpointsSupplier) {
-			return () -> getEndpointsPatterns(
+			return () -> getEndpointsPatterns(environment,
 					serverProperties.getServlet().getContextPath(), webEndpointProperties,
 					endpointsSupplier);
 		}
@@ -224,10 +229,10 @@ public class TraceWebAutoConfiguration {
 		@ConditionalOnProperty(name = "management.server.servlet.context-path",
 				havingValue = "/", matchIfMissing = true)
 		public SingleSkipPattern skipPatternForActuatorEndpointsDifferentPort(
-				final ServerProperties serverProperties,
+				Environment environment, final ServerProperties serverProperties,
 				final WebEndpointProperties webEndpointProperties,
 				final EndpointsSupplier<ExposableWebEndpoint> endpointsSupplier) {
-			return () -> getEndpointsPatterns(null, webEndpointProperties,
+			return () -> getEndpointsPatterns(environment, null, webEndpointProperties,
 					endpointsSupplier);
 		}
 
@@ -237,10 +242,16 @@ public class TraceWebAutoConfiguration {
 	static class DefaultSkipPatternConfig {
 
 		@Bean
-		SingleSkipPattern defaultSkipPatternBean(
+		SingleSkipPattern defaultSkipPatternBean(Environment environment,
 				SleuthWebProperties sleuthWebProperties) {
-			Pattern pattern = combinePatterns(sleuthWebProperties.getSkipPattern(),
-					sleuthWebProperties.getAdditionalSkipPattern());
+			String skipPattern = sleuthWebProperties.getSkipPattern();
+			String left = StringUtils.hasText(skipPattern)
+					? environment.resolvePlaceholders(skipPattern) : skipPattern;
+			String additionalSkipPattern = sleuthWebProperties.getAdditionalSkipPattern();
+			String right = StringUtils.hasText(additionalSkipPattern)
+					? environment.resolvePlaceholders(additionalSkipPattern)
+					: additionalSkipPattern;
+			Pattern pattern = combinePatterns(left, right);
 			return () -> Optional.ofNullable(pattern);
 		}
 

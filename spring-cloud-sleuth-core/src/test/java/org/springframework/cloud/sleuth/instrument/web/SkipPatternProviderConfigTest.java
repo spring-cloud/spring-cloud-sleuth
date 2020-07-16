@@ -45,6 +45,8 @@ import org.springframework.cloud.sleuth.autoconfig.TraceAutoConfiguration;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.env.Environment;
+import org.springframework.mock.env.MockEnvironment;
 
 import static org.assertj.core.api.BDDAssertions.then;
 
@@ -88,11 +90,17 @@ public class SkipPatternProviderConfigTest {
 				});
 	}
 
+	private Environment environment() {
+		MockEnvironment environment = new MockEnvironment();
+		environment.setProperty("test", "value");
+		return environment;
+	}
+
 	@Test
 	public void should_return_empty_when_management_context_has_no_context_path()
 			throws Exception {
 		Optional<Pattern> pattern = new TraceWebAutoConfiguration.ManagementSkipPatternProviderConfig()
-				.skipPatternForManagementServerProperties(
+				.skipPatternForManagementServerProperties(environment(),
 						new ManagementServerProperties())
 				.skipPattern();
 
@@ -114,10 +122,27 @@ public class SkipPatternProviderConfigTest {
 	}
 
 	@Test
+	public void should_return_management_context_with_context_path_with_placeholders()
+			throws Exception {
+		contextRunner
+				.withConfiguration(
+						UserConfigurations.of(ManagementContextAutoConfiguration.class,
+								ServerPropertiesConfig.class))
+				.withPropertyValues(
+						"management.server.servlet.context-path=${test:value}")
+				.run(context -> {
+					then(extractAllPatterns(context)).containsExactlyInAnyOrder(
+							"/actuator(/|/(health|health/.*|info|info/.*))?", "value.*",
+							SleuthWebProperties.DEFAULT_SKIP_PATTERN);
+				});
+	}
+
+	@Test
 	public void should_return_empty_when_no_endpoints() {
 		Optional<Pattern> pattern = new TraceWebAutoConfiguration.ActuatorSkipPatternProviderConfig()
-				.skipPatternForActuatorEndpointsSamePort(new ServerProperties(),
-						new WebEndpointProperties(), Collections::emptyList)
+				.skipPatternForActuatorEndpointsSamePort(environment(),
+						new ServerProperties(), new WebEndpointProperties(),
+						Collections::emptyList)
 				.skipPattern();
 
 		then(pattern).isEmpty();
@@ -146,6 +171,18 @@ public class SkipPatternProviderConfigTest {
 	}
 
 	@Test
+	public void should_return_endpoints_with_context_path_with_placeholders() {
+		contextRunner
+				.withConfiguration(UserConfigurations.of(ServerPropertiesConfig.class))
+				.withPropertyValues("server.servlet.context-path=${test:foo}")
+				.run(context -> {
+					then(extractAllPatterns(context)).containsExactlyInAnyOrder(
+							"foo/actuator(/|/(health|health/.*|info|info/.*))?",
+							SleuthWebProperties.DEFAULT_SKIP_PATTERN);
+				});
+	}
+
+	@Test
 	public void should_return_endpoints_without_context_path_and_base_path_set_to_root() {
 		contextRunner
 				.withConfiguration(UserConfigurations.of(ServerPropertiesConfig.class))
@@ -158,10 +195,35 @@ public class SkipPatternProviderConfigTest {
 	}
 
 	@Test
+	public void should_return_endpoints_without_context_path_and_base_path_set_to_root_with_placeholders() {
+		contextRunner
+				.withConfiguration(UserConfigurations.of(ServerPropertiesConfig.class))
+				.withPropertyValues("management.endpoints.web.base-path=${test:/}")
+				.run(context -> {
+					then(extractAllPatterns(context)).containsExactlyInAnyOrder(
+							"/(health|health/.*|info|info/.*)",
+							SleuthWebProperties.DEFAULT_SKIP_PATTERN);
+				});
+	}
+
+	@Test
 	public void should_return_endpoints_with_context_path_and_base_path_set_to_root() {
 		contextRunner
 				.withConfiguration(UserConfigurations.of(ServerPropertiesConfig.class))
 				.withPropertyValues("management.endpoints.web.base-path=/",
+						"server.servlet.context-path=foo")
+				.run(context -> {
+					then(extractAllPatterns(context)).containsExactlyInAnyOrder(
+							"foo(/|/(health|health/.*|info|info/.*))?",
+							SleuthWebProperties.DEFAULT_SKIP_PATTERN);
+				});
+	}
+
+	@Test
+	public void should_return_endpoints_with_context_path_and_base_path_set_to_root_with_placeholder() {
+		contextRunner
+				.withConfiguration(UserConfigurations.of(ServerPropertiesConfig.class))
+				.withPropertyValues("management.endpoints.web.base-path=${test:/}",
 						"server.servlet.context-path=foo")
 				.run(context -> {
 					then(extractAllPatterns(context)).containsExactlyInAnyOrder(
@@ -184,11 +246,38 @@ public class SkipPatternProviderConfigTest {
 	}
 
 	@Test
+	public void should_return_endpoints_with_context_path_and_base_path_set_to_root_different_port_with_placeholder() {
+		contextRunner
+				.withConfiguration(UserConfigurations.of(ServerPropertiesConfig.class))
+				.withPropertyValues("management.endpoints.web.base-path=/",
+						"management.server.port=${some-port:0}",
+						"server.servlet.context-path=${some-path:foo}")
+				.run(context -> {
+					then(extractAllPatterns(context)).containsExactlyInAnyOrder(
+							"/(health|health/.*|info|info/.*)",
+							SleuthWebProperties.DEFAULT_SKIP_PATTERN);
+				});
+	}
+
+	@Test
 	public void should_return_endpoints_with_actuator_context_path_only() {
 		contextRunner
 				.withConfiguration(UserConfigurations.of(ServerPropertiesConfig.class))
 				.withPropertyValues("management.endpoints.web.base-path=/mgt",
 						"server.servlet.context-path=foo")
+				.run(context -> {
+					then(extractAllPatterns(context)).containsExactlyInAnyOrder(
+							"foo/mgt(/|/(health|health/.*|info|info/.*))?",
+							SleuthWebProperties.DEFAULT_SKIP_PATTERN);
+				});
+	}
+
+	@Test
+	public void should_return_endpoints_with_actuator_context_path_only_with_placeholder() {
+		contextRunner
+				.withConfiguration(UserConfigurations.of(ServerPropertiesConfig.class))
+				.withPropertyValues("management.endpoints.web.base-path=/${test:mgt}",
+						"server.servlet.context-path=${test2:foo}")
 				.run(context -> {
 					then(extractAllPatterns(context)).containsExactlyInAnyOrder(
 							"foo/mgt(/|/(health|health/.*|info|info/.*))?",
