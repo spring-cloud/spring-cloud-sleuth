@@ -238,7 +238,7 @@
 		<maven.compiler.testSource>1.8</maven.compiler.testSource>
 		<spring-cloud-build.version>3.0.0-SNAPSHOT</spring-cloud-build.version>
 		<spring-cloud-commons.version>3.0.0-SNAPSHOT</spring-cloud-commons.version>
-		<spring-cloud-gateway.version>3.0.0-SNAPSHOT</spring-cloud-gateway.version>
+		<spring-cloud-gateway.version>3.0.0.BUILD-SNAPSHOT</spring-cloud-gateway.version>
 		<spring-cloud-circuitbreaker.version>2.0.0-SNAPSHOT</spring-cloud-circuitbreaker.version>
 		<spring-cloud-stream.version>3.1.0-SNAPSHOT</spring-cloud-stream.version>
 		<spring-cloud-netflix.version>3.0.0-SNAPSHOT</spring-cloud-netflix.version>
