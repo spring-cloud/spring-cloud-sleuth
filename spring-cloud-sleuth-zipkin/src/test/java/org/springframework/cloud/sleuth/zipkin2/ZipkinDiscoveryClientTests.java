@@ -35,6 +35,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.cloud.client.ServiceInstance;
 import org.springframework.cloud.client.loadbalancer.LoadBalancerClient;
 import org.springframework.cloud.client.loadbalancer.LoadBalancerRequest;
+import org.springframework.cloud.client.loadbalancer.Request;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -109,6 +110,10 @@ public class ZipkinDiscoveryClientTests {
 
 				@Override
 				public ServiceInstance choose(String serviceId) {
+					return instance();
+				}
+
+				private ServiceInstance instance() {
 					return new ServiceInstance() {
 						@Override
 						public String getServiceId() {
@@ -140,6 +145,11 @@ public class ZipkinDiscoveryClientTests {
 							return null;
 						}
 					};
+				}
+
+				@Override
+				public <T> ServiceInstance choose(String serviceId, Request<T> request) {
+					return instance();
 				}
 			};
 		}
