@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2019 the original author or authors.
+ * Copyright 2013-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -37,8 +37,13 @@ class SleuthReactorProperties {
 	 * always contain the tracing entries in each operator. When false decorates on last
 	 * operator, will be more performing, but logging might not always contain the tracing
 	 * entries.
+	 * @deprecated use explicit value via
+	 * {@link SleuthReactorProperties#instrumentationType}
 	 */
+	@Deprecated
 	private boolean decorateOnEach = true;
+
+	private InstrumentationType instrumentationType = InstrumentationType.DECORATE_ON_EACH;
 
 	public boolean isEnabled() {
 		return this.enabled;
@@ -48,12 +53,42 @@ class SleuthReactorProperties {
 		this.enabled = enabled;
 	}
 
+	@Deprecated
 	public boolean isDecorateOnEach() {
 		return this.decorateOnEach;
 	}
 
+	@Deprecated
 	public void setDecorateOnEach(boolean decorateOnEach) {
-		this.decorateOnEach = decorateOnEach;
+		this.instrumentationType = decorateOnEach ? InstrumentationType.DECORATE_ON_EACH
+				: InstrumentationType.DECORATE_ON_LAST;
+	}
+
+	public InstrumentationType getInstrumentationType() {
+		return this.instrumentationType;
+	}
+
+	public void setInstrumentationType(InstrumentationType instrumentationType) {
+		this.instrumentationType = instrumentationType;
+	}
+
+	public enum InstrumentationType {
+
+		/**
+		 * Wraps each operator in a Sleuth representation.
+		 */
+		DECORATE_ON_EACH,
+
+		/**
+		 * Wraps only the last operator in Sleuth representation.
+		 */
+		DECORATE_ON_LAST,
+
+		/**
+		 * Does not automatically wrap any operators.
+		 */
+		MANUAL;
+
 	}
 
 }

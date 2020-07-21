@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2019 the original author or authors.
+ * Copyright 2013-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -56,13 +56,15 @@ import org.springframework.web.bind.annotation.RestController;
 @SpringBootApplication
 @RestController
 @EnableAsync
-public class SleuthBenchmarkingSpringApp
-		implements ApplicationListener<ServletWebServerInitializedEvent> {
+public class SleuthBenchmarkingSpringApp implements ApplicationListener<ServletWebServerInitializedEvent> {
 
 	private static final Log log = LogFactory.getLog(SleuthBenchmarkingSpringApp.class);
 
 	public final ExecutorService pool = Executors.newWorkStealingPool();
 
+	/**
+	 * Port of the app.
+	 */
 	public int port;
 
 	@Autowired(required = false)
@@ -109,11 +111,9 @@ public class SleuthBenchmarkingSpringApp
 	}
 
 	@Bean
-	public ServletWebServerFactory servletContainer(
-			@Value("${server.port:0}") int serverPort) {
+	public ServletWebServerFactory servletContainer(@Value("${server.port:0}") int serverPort) {
 		log.info("Starting container at port [" + serverPort + "]");
-		return new TomcatServletWebServerFactory(
-				serverPort == 0 ? SocketUtils.findAvailableTcpPort() : serverPort);
+		return new TomcatServletWebServerFactory(serverPort == 0 ? SocketUtils.findAvailableTcpPort() : serverPort);
 	}
 
 	@PreDestroy

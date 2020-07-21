@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2019 the original author or authors.
+ * Copyright 2013-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,6 +24,8 @@ import brave.propagation.TraceContext;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.reactivestreams.Publisher;
+import org.reactivestreams.Subscriber;
+import org.reactivestreams.Subscription;
 import reactor.core.CoreSubscriber;
 import reactor.core.Fuseable;
 import reactor.core.Scannable;
@@ -96,13 +98,6 @@ public abstract class ReactorSleuth {
 				return sub;
 			}
 
-			Context context = sub.currentContext();
-
-			if (log.isTraceEnabled()) {
-				log.trace("Spring context [" + springContext + "], Reactor context ["
-						+ context + "], name [" + name(sub) + "]");
-			}
-
 			// Try to get the current trace context bean, lenient when there are problems
 			CurrentTraceContext currentTraceContext = lazyCurrentTraceContext.get();
 			if (currentTraceContext == null) {
@@ -118,6 +113,12 @@ public abstract class ReactorSleuth {
 				return sub;
 			}
 
+			Context context = contextWithBeans(springContext, sub);
+			if (log.isTraceEnabled()) {
+				log.trace("Spring context [" + springContext + "], Reactor context ["
+						+ context + "], name [" + name(sub) + "]");
+			}
+
 			TraceContext parent = traceContext(context, currentTraceContext);
 			if (parent == null) {
 				return sub; // no need to scope a null parent
@@ -127,8 +128,43 @@ public abstract class ReactorSleuth {
 				log.trace("Creating a scope passing span subscriber with Reactor Context "
 						+ "[" + context + "] and name [" + name(sub) + "]");
 			}
+			// if (runStyle == Scannable.Attr.RunStyle.SYNC) {
+			// return sub;
+			// }
 			return new ScopePassingSpanSubscriber<>(sub, context, currentTraceContext,
 					parent);
+		});
+	}
+
+	private static <T> Context contextWithBeans(
+			ConfigurableApplicationContext springContext, CoreSubscriber<? super T> sub) {
+		Context context = sub.currentContext();
+		if (!context.hasKey(Tracing.class)) {
+			context = context.put(Tracing.class, springContext.getBean(Tracing.class));
+		}
+		if (!context.hasKey(CurrentTraceContext.class)) {
+			context = context.put(CurrentTraceContext.class,
+					springContext.getBean(CurrentTraceContext.class));
+		}
+		return context;
+	}
+
+	static <T> Function<? super Publisher<T>, ? extends Publisher<T>> springContextSpanOperator(
+			ConfigurableApplicationContext springContext) {
+		if (log.isTraceEnabled()) {
+			log.trace("Spring Context passing operator [" + springContext + "]");
+		}
+		return Operators.liftPublisher((p, sub) -> {
+			// We don't scope scalar results as they happen in an instant. This prevents
+			// excessive overhead when using Flux/Mono #just, #empty, #error, etc.
+			if (p instanceof Fuseable.ScalarCallable) {
+				return sub;
+			}
+			if (!springContext.isActive()) {
+				return sub;
+			}
+			final Context context = contextWithBeans(springContext, sub);
+			return new SleuthContextOperator<>(context, sub);
 		});
 	}
 
@@ -144,6 +180,57 @@ public abstract class ReactorSleuth {
 			return context.get(TraceContext.class);
 		}
 		return fallback.get();
+	}
+
+}
+
+class SleuthContextOperator<T> implements Subscription, CoreSubscriber<T> {
+
+	private final Context context;
+
+	private final Subscriber<? super T> subscriber;
+
+	private Subscription s;
+
+	SleuthContextOperator(Context context, Subscriber<? super T> subscriber) {
+		this.context = context;
+		this.subscriber = subscriber;
+	}
+
+	@Override
+	public void onSubscribe(Subscription subscription) {
+		this.s = subscription;
+		this.subscriber.onSubscribe(this);
+	}
+
+	@Override
+	public void request(long n) {
+		this.s.request(n);
+	}
+
+	@Override
+	public void cancel() {
+		this.s.cancel();
+	}
+
+	@Override
+	public void onNext(T o) {
+		this.subscriber.onNext(o);
+	}
+
+	@Override
+	public void onError(Throwable throwable) {
+		this.subscriber.onError(throwable);
+	}
+
+	@Override
+	public void onComplete() {
+		this.subscriber.onComplete();
+	}
+
+	@Override
+	public Context currentContext() {
+		return this.context;
 	}
 
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2019 the original author or authors.
+ * Copyright 2013-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -37,6 +37,7 @@ import reactor.util.context.Context;
 
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.core.Ordered;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.http.server.reactive.ServerHttpResponse;
 import org.springframework.web.method.HandlerMethod;
@@ -120,6 +121,8 @@ final class TraceWebFilter implements WebFilter, Ordered {
 		}
 		Mono<Void> source = chain.filter(exchange);
 		boolean tracePresent = tracer().currentSpan() != null;
+		// if we're in manual instrumentation type mode then we control how threads are
+		// set
 		if (tracePresent) {
 			// clear any previous trace
 			tracer().withSpanInScope(null); // TODO: dangerous and also allocates stuff
@@ -388,8 +391,8 @@ final class TraceWebFilter implements WebFilter, Ordered {
 
 		@Override
 		public int statusCode() {
-			return delegate.getStatusCode() != null ? delegate.getStatusCode().value()
-					: 0;
+			HttpStatus statusCode = delegate.getStatusCode();
+			return statusCode != null ? statusCode.value() : 0;
 		}
 
 	}

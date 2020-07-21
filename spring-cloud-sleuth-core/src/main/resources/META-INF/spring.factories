@@ -22,6 +22,7 @@ org.springframework.cloud.sleuth.instrument.messaging.TraceMessagingAutoConfigur
 org.springframework.cloud.sleuth.instrument.messaging.TraceSpringIntegrationAutoConfiguration,\
 org.springframework.cloud.sleuth.instrument.messaging.TraceSpringMessagingAutoConfiguration,\
 org.springframework.cloud.sleuth.instrument.messaging.TraceWebSocketAutoConfiguration,\
+org.springframework.cloud.sleuth.instrument.messaging.TraceFunctionAutoConfiguration,\
 org.springframework.cloud.sleuth.instrument.opentracing.OpentracingAutoConfiguration,\
 org.springframework.cloud.sleuth.instrument.redis.TraceRedisAutoConfiguration,\
 org.springframework.cloud.sleuth.instrument.quartz.TraceQuartzAutoConfiguration,\

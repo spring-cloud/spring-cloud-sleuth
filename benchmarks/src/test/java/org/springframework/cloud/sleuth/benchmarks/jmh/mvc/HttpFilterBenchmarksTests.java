@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2019 the original author or authors.
+ * Copyright 2013-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.springframework.cloud.sleuth.benchmarks.jmh.benchmarks;
+package org.springframework.cloud.sleuth.benchmarks.jmh.mvc;
 
 import java.io.IOException;
 import java.util.concurrent.Callable;
@@ -28,6 +28,7 @@ import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 
 import brave.servlet.TracingFilter;
+import jmh.mbr.junit5.Microbenchmark;
 import org.openjdk.jmh.annotations.Benchmark;
 import org.openjdk.jmh.annotations.BenchmarkMode;
 import org.openjdk.jmh.annotations.Fork;
@@ -62,17 +63,21 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.request;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@Warmup(iterations = 10)
+@Warmup(iterations = 5)
 @BenchmarkMode(Mode.SampleTime)
 @OutputTimeUnit(TimeUnit.MICROSECONDS)
 @Threads(Threads.MAX)
-public class HttpFilterBenchmarks {
+@Microbenchmark
+public class HttpFilterBenchmarksTests {
+
+	static {
+		System.setProperty("jmh.mbr.report.publishTo", "csv:http_filter.csv");
+	}
 
 	@Benchmark
 	@Measurement(iterations = 5, time = 1)
-	@Fork(3)
-	public void filterWithoutSleuth(BenchmarkContext context)
-			throws IOException, ServletException {
+	@Fork(2)
+	public void filterWithoutSleuth(BenchmarkContext context) throws IOException, ServletException {
 		MockHttpServletRequest request = builder().buildRequest(new MockServletContext());
 		MockHttpServletResponse response = new MockHttpServletResponse();
 		response.setContentType(MediaType.APPLICATION_JSON_VALUE);
@@ -82,9 +87,8 @@ public class HttpFilterBenchmarks {
 
 	@Benchmark
 	@Measurement(iterations = 5, time = 1)
-	@Fork(3)
-	public void filterWithSleuth(BenchmarkContext context)
-			throws ServletException, IOException {
+	@Fork(2)
+	public void filterWithSleuth(BenchmarkContext context) throws ServletException, IOException {
 		MockHttpServletRequest request = builder().buildRequest(new MockServletContext());
 		MockHttpServletResponse response = new MockHttpServletResponse();
 		response.setContentType(MediaType.APPLICATION_JSON_VALUE);
@@ -107,12 +111,10 @@ public class HttpFilterBenchmarks {
 	}
 
 	private MockHttpServletRequestBuilder builder() {
-		return get("/").accept(MediaType.APPLICATION_JSON).header("User-Agent",
-				"MockMvc");
+		return get("/").accept(MediaType.APPLICATION_JSON).header("User-Agent", "MockMvc");
 	}
 
-	private void performRequest(MockMvc mockMvc, String url, String expectedResult)
-			throws Exception {
+	private void performRequest(MockMvc mockMvc, String url, String expectedResult) throws Exception {
 		MvcResult mvcResult = mockMvc.perform(get("/" + url)).andExpect(status().isOk())
 				.andExpect(request().asyncStarted()).andReturn();
 
@@ -135,16 +137,12 @@ public class HttpFilterBenchmarks {
 
 		@Setup
 		public void setup() {
-			this.withSleuth = new SpringApplication(SleuthBenchmarkingSpringApp.class)
-					.run("--spring.jmx.enabled=false",
-							"--spring.application.name=withSleuth");
+			this.withSleuth = new SpringApplication(SleuthBenchmarkingSpringApp.class).run("--spring.jmx.enabled=false",
+					"--spring.application.name=withSleuth");
 			this.tracingFilter = this.withSleuth.getBean(TracingFilter.class);
 			this.mockMvcForTracedController = MockMvcBuilders
-					.standaloneSetup(
-							this.withSleuth.getBean(SleuthBenchmarkingSpringApp.class))
-					.build();
-			this.mockMvcForUntracedController = MockMvcBuilders
-					.standaloneSetup(new VanillaController()).build();
+					.standaloneSetup(this.withSleuth.getBean(SleuthBenchmarkingSpringApp.class)).build();
+			this.mockMvcForUntracedController = MockMvcBuilders.standaloneSetup(new VanillaController()).build();
 		}
 
 		@TearDown
@@ -162,8 +160,8 @@ public class HttpFilterBenchmarks {
 		}
 
 		@Override
-		public void doFilter(ServletRequest request, ServletResponse response,
-				FilterChain chain) throws IOException, ServletException {
+		public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain)
+				throws IOException, ServletException {
 			chain.doFilter(request, response);
 		}
 

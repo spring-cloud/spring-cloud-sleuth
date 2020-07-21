@@ -1,3 +1,4 @@
 logging.level:
   org.springframework: ERROR
-  org.springframework.cloud.sleuth.benchmarks: INFO
+  org.springframework.sleuth: ERROR
+  brave: ERROR

@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2019 the original author or authors.
+ * Copyright 2013-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,10 +14,11 @@
  * limitations under the License.
  */
 
-package org.springframework.cloud.sleuth.benchmarks.jmh.benchmarks;
+package org.springframework.cloud.sleuth.benchmarks.jmh.mvc;
 
 import java.util.concurrent.TimeUnit;
 
+import jmh.mbr.junit5.Microbenchmark;
 import org.openjdk.jmh.annotations.Benchmark;
 import org.openjdk.jmh.annotations.BenchmarkMode;
 import org.openjdk.jmh.annotations.Fork;
@@ -37,13 +38,18 @@ import org.springframework.context.ConfigurableApplicationContext;
 
 import static org.assertj.core.api.BDDAssertions.then;
 
-@Measurement(iterations = 5)
-@Warmup(iterations = 10)
-@Fork(3)
+@Measurement(iterations = 5, time = 1)
+@Warmup(iterations = 10, time = 1)
+@Fork(2)
 @BenchmarkMode(Mode.SampleTime)
 @OutputTimeUnit(TimeUnit.MICROSECONDS)
 @Threads(Threads.MAX)
-public class AsyncBenchmarks {
+@Microbenchmark
+public class AsyncBenchmarksTests {
+
+	static {
+		System.setProperty("jmh.mbr.report.publishTo", "csv:async.csv");
+	}
 
 	@Benchmark
 	public void asyncMethodWithoutSleuth(BenchmarkContext context) throws Exception {
@@ -68,18 +74,13 @@ public class AsyncBenchmarks {
 
 		@Setup
 		public void setup() {
-			this.withSleuth = new SpringApplication(SleuthBenchmarkingSpringApp.class)
-					.run("--spring.jmx.enabled=false",
-							"--spring.application.name=withSleuth");
-			this.withoutSleuth = new SpringApplication(SleuthBenchmarkingSpringApp.class)
-					.run("--spring.jmx.enabled=false",
-							"--spring.application.name=withoutSleuth",
-							"--spring.sleuth.enabled=false",
-							"--spring.sleuth.async.enabled=false");
-			this.tracedAsyncMethodHavingBean = this.withSleuth
-					.getBean(SleuthBenchmarkingSpringApp.class);
-			this.untracedAsyncMethodHavingBean = this.withoutSleuth
-					.getBean(SleuthBenchmarkingSpringApp.class);
+			this.withSleuth = new SpringApplication(SleuthBenchmarkingSpringApp.class).run("--spring.jmx.enabled=false",
+					"--spring.application.name=withSleuth");
+			this.withoutSleuth = new SpringApplication(SleuthBenchmarkingSpringApp.class).run(
+					"--spring.jmx.enabled=false", "--spring.application.name=withoutSleuth",
+					"--spring.sleuth.enabled=false", "--spring.sleuth.async.enabled=false");
+			this.tracedAsyncMethodHavingBean = this.withSleuth.getBean(SleuthBenchmarkingSpringApp.class);
+			this.untracedAsyncMethodHavingBean = this.withoutSleuth.getBean(SleuthBenchmarkingSpringApp.class);
 		}
 
 		@TearDown

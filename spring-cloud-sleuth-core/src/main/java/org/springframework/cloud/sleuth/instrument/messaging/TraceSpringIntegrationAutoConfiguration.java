@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2019 the original author or authors.
+ * Copyright 2013-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,12 +20,18 @@ import brave.Tracing;
 import brave.propagation.Propagation;
 
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
+import org.springframework.boot.autoconfigure.condition.AnyNestedCondition;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.cloud.function.context.FunctionCatalog;
 import org.springframework.cloud.sleuth.autoconfig.TraceAutoConfiguration;
+import org.springframework.cloud.stream.config.BinderFactoryAutoConfiguration;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Conditional;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.integration.channel.interceptor.GlobalChannelInterceptorWrapper;
 import org.springframework.integration.config.GlobalChannelInterceptor;
@@ -46,8 +52,8 @@ import org.springframework.messaging.support.MessageHeaderAccessor;
 @AutoConfigureAfter({ TraceAutoConfiguration.class,
 		TraceSpringMessagingAutoConfiguration.class })
 @OnMessagingEnabled
-@ConditionalOnProperty(value = "spring.sleuth.integration.enabled", matchIfMissing = true)
 @EnableConfigurationProperties(SleuthMessagingProperties.class)
+@Conditional(TracingChannelInterceptorCondition.class)
 class TraceSpringIntegrationAutoConfiguration {
 
 	@Bean
@@ -65,6 +71,37 @@ class TraceSpringIntegrationAutoConfiguration {
 			Propagation.Getter<MessageHeaderAccessor, String> traceMessagePropagationGetter) {
 		return new TracingChannelInterceptor(tracing, traceMessagePropagationSetter,
 				traceMessagePropagationGetter);
+	}
+
+}
+
+final class TracingChannelInterceptorCondition extends AnyNestedCondition {
+
+	private TracingChannelInterceptorCondition() {
+		super(ConfigurationPhase.REGISTER_BEAN);
+	}
+
+	@ConditionalOnMissingClass("org.springframework.cloud.function.context.FunctionCatalog")
+	@ConditionalOnProperty(value = "spring.sleuth.integration.enabled",
+			matchIfMissing = true)
+	static class OnFunctionMissing {
+
+	}
+
+	@ConditionalOnClass(FunctionCatalog.class)
+	@ConditionalOnBean(BinderFactoryAutoConfiguration.class)
+	@ConditionalOnProperty(value = "spring.sleuth.integration.enabled",
+			matchIfMissing = true)
+	static class OnFunctionPresentAndEnableBinding {
+
+	}
+
+	@ConditionalOnClass(FunctionCatalog.class)
+	@ConditionalOnMissingBean(BinderFactoryAutoConfiguration.class)
+	@ConditionalOnProperty(value = "spring.sleuth.integration.enabled",
+			havingValue = "true")
+	static class OnFunctionPresentEnableBindingOffAndIntegrationExplicitlyOn {
+
 	}
 
 }

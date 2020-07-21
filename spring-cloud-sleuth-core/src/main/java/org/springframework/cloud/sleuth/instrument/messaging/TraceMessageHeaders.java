@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2019 the original author or authors.
+ * Copyright 2013-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,6 +15,9 @@
  */
 
 package org.springframework.cloud.sleuth.instrument.messaging;
+
+import java.util.Arrays;
+import java.util.List;
 
 /**
  * Contains trace related messaging headers. The deprecated headers contained `-` which
@@ -57,6 +60,9 @@ public final class TraceMessageHeaders {
 	 * Span flags message header name.
 	 */
 	public static final String SPAN_FLAGS_NAME = "spanFlags";
+
+	static List<String> HEADERS = Arrays.asList(SAMPLED_NAME, SPAN_FLAGS_NAME,
+			SPAN_ID_NAME, SPAN_NAME_NAME, TRACE_ID_NAME, PARENT_ID_NAME);
 
 	private TraceMessageHeaders() {
 	}

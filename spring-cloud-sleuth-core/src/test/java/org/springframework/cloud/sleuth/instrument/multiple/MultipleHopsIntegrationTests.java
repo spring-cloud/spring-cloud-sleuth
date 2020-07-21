@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2019 the original author or authors.
+ * Copyright 2013-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -60,7 +60,8 @@ import static org.springframework.boot.test.context.SpringBootTest.WebEnvironmen
 		webEnvironment = RANDOM_PORT,
 		properties = {
 				"spring.sleuth.baggage.remote-fields=x-vcap-request-id,country-code",
-				"spring.sleuth.baggage.local-fields=bp" })
+				"spring.sleuth.baggage.local-fields=bp",
+				"spring.sleuth.integration.enabled=true" })
 public class MultipleHopsIntegrationTests {
 
 	static final BaggageField REQUEST_ID = BaggageField.create("x-vcap-request-id");

@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2019 the original author or authors.
+ * Copyright 2013-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -234,11 +234,11 @@ final class TraceExchangeFilterFunction implements ExchangeFilterFunction {
 		public void onNext(ClientResponse response) {
 			try (Scope scope = currentTraceContext.maybeScope(parent)) {
 				// decorate response body
-				this.actual
-						.onNext(ClientResponse.from(response)
-								.body(response.bodyToFlux(DataBuffer.class)
-										.transform(this.scopePassingTransformer))
-								.build());
+				this.actual.onNext(ClientResponse.from(response)
+						// TODO: Why are we using scope passing transformer
+						.body(response.bodyToFlux(DataBuffer.class)
+								.transform(this.scopePassingTransformer))
+						.build());
 			}
 			finally {
 				Span span = getAndSet(null);

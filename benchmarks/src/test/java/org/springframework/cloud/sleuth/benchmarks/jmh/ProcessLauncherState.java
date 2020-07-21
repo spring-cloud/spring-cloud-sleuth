@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.springframework.cloud.sleuth.benchmarks.jmh.benchmarks;
+package org.springframework.cloud.sleuth.benchmarks.jmh;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -57,15 +57,13 @@ public class ProcessLauncherState {
 		this.args.add(count++, "-Djava.security.egd=file:/dev/./urandom");
 		this.args.add(count++, "-XX:TieredStopAtLevel=1"); // zoom
 		if (System.getProperty("bench.args") != null) {
-			this.args.addAll(count++,
-					Arrays.asList(System.getProperty("bench.args").split(" ")));
+			this.args.addAll(count++, Arrays.asList(System.getProperty("bench.args").split(" ")));
 		}
 		this.length = args.length;
 		this.home = new File(dir);
 	}
 
-	protected static String output(InputStream inputStream, String marker)
-			throws IOException {
+	protected static String output(InputStream inputStream, String marker) throws IOException {
 		StringBuilder sb = new StringBuilder();
 		BufferedReader br = null;
 		br = new BufferedReader(new InputStreamReader(inputStream));
@@ -100,8 +98,7 @@ public class ProcessLauncherState {
 
 	public void after() throws Exception {
 		if (started != null && started.isAlive()) {
-			System.err.println(
-					"Stopped " + mainClass + ": " + started.destroyForcibly().waitFor());
+			System.err.println("Stopped " + mainClass + ": " + started.destroyForcibly().waitFor());
 		}
 	}
 

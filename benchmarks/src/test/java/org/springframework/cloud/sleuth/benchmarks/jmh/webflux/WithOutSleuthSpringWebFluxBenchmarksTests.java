@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2019 the original author or authors.
+ * Copyright 2013-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,23 +14,40 @@
  * limitations under the License.
  */
 
-package org.springframework.cloud.sleuth.benchmarks.jmh;
+package org.springframework.cloud.sleuth.benchmarks.jmh.webflux;
 
+import jmh.mbr.junit5.Microbenchmark;
 import org.openjdk.jmh.runner.Runner;
 import org.openjdk.jmh.runner.RunnerException;
 import org.openjdk.jmh.runner.options.Options;
 import org.openjdk.jmh.runner.options.OptionsBuilder;
 
-public class RunSleuthJmhBenchmarksFromIde {
+/**
+ * @author alvin
+ */
+@Microbenchmark
+public class WithOutSleuthSpringWebFluxBenchmarksTests extends SpringWebFluxBenchmarksTests {
 
-	// Convenience main entry-point for testing from IDE
+	static {
+		System.setProperty("jmh.mbr.report.publishTo", "csv:webflux_no_sleuth_instrumentation.csv");
+	}
+
 	public static void main(String[] args) throws RunnerException {
 		Options opt = new OptionsBuilder()
-				.include(RunSleuthJmhBenchmarksFromIde.class.getPackage().getName()
-						+ ".benchmarks.*")
-				.build();
+				.include(".*" + WithOutSleuthSpringWebFluxBenchmarksTests.class.getSimpleName() + ".*").build();
 
 		new Runner(opt).run();
+	}
+
+	@Override
+	protected String[] runArgs() {
+		return new String[] { "--spring.jmx.enabled=false", "--spring.application.name=defaultTraceContext",
+				"--spring.sleuth.enabled=false" };
+	}
+
+	@Override
+	protected void postSetUp() {
+		super.postSetUp();
 	}
 
 }

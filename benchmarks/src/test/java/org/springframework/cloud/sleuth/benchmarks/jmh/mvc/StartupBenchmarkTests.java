@@ -14,8 +14,9 @@
  * limitations under the License.
  */
 
-package org.springframework.cloud.sleuth.benchmarks.jmh.benchmarks;
+package org.springframework.cloud.sleuth.benchmarks.jmh.mvc;
 
+import jmh.mbr.junit5.Microbenchmark;
 import org.openjdk.jmh.annotations.Benchmark;
 import org.openjdk.jmh.annotations.BenchmarkMode;
 import org.openjdk.jmh.annotations.Fork;
@@ -27,11 +28,18 @@ import org.openjdk.jmh.annotations.State;
 import org.openjdk.jmh.annotations.TearDown;
 import org.openjdk.jmh.annotations.Warmup;
 
+import org.springframework.cloud.sleuth.benchmarks.jmh.ProcessLauncherState;
+
 @Measurement(iterations = 5)
 @Warmup(iterations = 1)
 @Fork(value = 2, warmups = 0)
 @BenchmarkMode(Mode.AverageTime)
-public class StartupBenchmark {
+@Microbenchmark
+public class StartupBenchmarkTests {
+
+	static {
+		System.setProperty("jmh.mbr.report.publishTo", "csv:startup.csv");
+	}
 
 	@Benchmark
 	public void withAnnotations(ApplicationState state) throws Exception {
@@ -46,25 +54,21 @@ public class StartupBenchmark {
 
 	@Benchmark
 	public void withoutAsync(ApplicationState state) throws Exception {
-		state.setExtraArgs("--spring.sleuth.async.enabled=false",
-				"--spring.sleuth.annotation.enabled=false");
+		state.setExtraArgs("--spring.sleuth.async.enabled=false", "--spring.sleuth.annotation.enabled=false");
 		state.run();
 	}
 
 	@Benchmark
 	public void withoutScheduled(ApplicationState state) throws Exception {
-		state.setExtraArgs("--spring.sleuth.scheduled.enabled=false",
-				"--spring.sleuth.async.enabled=false",
+		state.setExtraArgs("--spring.sleuth.scheduled.enabled=false", "--spring.sleuth.async.enabled=false",
 				"--spring.sleuth.annotation.enabled=false");
 		state.run();
 	}
 
 	@Benchmark
 	public void withoutWeb(ApplicationState state) throws Exception {
-		state.setExtraArgs("--spring.sleuth.web.enabled=false",
-				"--spring.sleuth.scheduled.enabled=false",
-				"--spring.sleuth.async.enabled=false",
-				"--spring.sleuth.annotation.enabled=false");
+		state.setExtraArgs("--spring.sleuth.web.enabled=false", "--spring.sleuth.scheduled.enabled=false",
+				"--spring.sleuth.async.enabled=false", "--spring.sleuth.annotation.enabled=false");
 		state.run();
 	}
 
