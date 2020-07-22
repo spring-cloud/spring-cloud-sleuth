@@ -29,6 +29,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Scheduler;
 import reactor.core.scheduler.Schedulers;
 
 import org.springframework.boot.SpringApplication;
@@ -205,15 +206,13 @@ class SimpleReactiveManualFunction implements Function<Flux<Message<String>>, Fl
 
 	@Override
 	public Flux<Message<String>> apply(Flux<Message<String>> input) {
-		return input
-				.map(message -> (MessagingSleuthOperator.asFunction(this.tracing, message))
-						.andThen(msg -> MessagingSleuthOperator.withSpanInScope(this.tracing, msg, stringMessage -> {
-							log.info("Hello from simple manual [{}]", stringMessage.getPayload());
-							return stringMessage;
-						})).andThen(msg -> MessagingSleuthOperator.afterMessageHandled(this.tracing, msg, null))
-						.andThen(msg -> MessageBuilder.createMessage(msg.getPayload().toUpperCase(), msg.getHeaders()))
-						.andThen(msg -> MessagingSleuthOperator.handleOutputMessage(this.tracing, msg))
-						.apply(message));
+		return input.map(message -> (MessagingSleuthOperator.asFunction(this.tracing, message))
+				.andThen(msg -> MessagingSleuthOperator.withSpanInScope(this.tracing, msg, stringMessage -> {
+					log.info("Hello from simple manual [{}]", stringMessage.getPayload());
+					return stringMessage;
+				})).andThen(msg -> MessagingSleuthOperator.afterMessageHandled(this.tracing, msg, null))
+				.andThen(msg -> MessageBuilder.createMessage(msg.getPayload().toUpperCase(), msg.getHeaders()))
+				.andThen(msg -> MessagingSleuthOperator.handleOutputMessage(this.tracing, msg)).apply(message));
 	}
 
 }
@@ -248,10 +247,12 @@ class SleuthFunction implements Function<Flux<String>, Flux<String>> {
 
 	private static final Logger log = LoggerFactory.getLogger(SleuthFunction.class);
 
+	static final Scheduler SCHEDULER = Schedulers.newParallel("sleuthFunction");
+
 	@Override
 	public Flux<String> apply(Flux<String> input) {
 		return input.doOnEach(signal -> log.info("Got a message"))
-				.flatMap(s -> Mono.delay(Duration.ofMillis(1), Schedulers.newParallel("foo")).map(aLong -> {
+				.flatMap(s -> Mono.delay(Duration.ofSeconds(1), SCHEDULER).map(aLong -> {
 					log.info("Logging [{}] from flat map", s);
 					return s.toUpperCase();
 				}));
@@ -263,10 +264,12 @@ class SleuthManualFunction implements Function<Flux<String>, Flux<String>> {
 
 	private static final Logger log = LoggerFactory.getLogger(SleuthManualFunction.class);
 
+	static final Scheduler SCHEDULER = Schedulers.newParallel("sleuthManualFunction");
+
 	@Override
 	public Flux<String> apply(Flux<String> input) {
-		return input.doOnEach(WebFluxSleuthOperators.withSpanInScope(() -> log.info("Got a message"))).flatMap(s -> Mono
-				.subscriberContext().delayElement(Duration.ofMillis(1), Schedulers.newParallel("foo")).map(ctx -> {
+		return input.doOnEach(WebFluxSleuthOperators.withSpanInScope(() -> log.info("Got a message")))
+				.flatMap(s -> Mono.subscriberContext().delayElement(Duration.ofSeconds(1), SCHEDULER).map(ctx -> {
 					WebFluxSleuthOperators.withSpanInScope(ctx, () -> log.info("Logging [{}] from flat map", s));
 					return s.toUpperCase();
 				})).doOnEach(signal -> {

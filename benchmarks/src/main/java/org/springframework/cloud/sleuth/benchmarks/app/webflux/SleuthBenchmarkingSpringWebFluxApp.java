@@ -27,6 +27,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Scheduler;
 import reactor.core.scheduler.Schedulers;
 
 import org.springframework.beans.factory.annotation.Value;
@@ -51,6 +52,8 @@ import org.springframework.web.bind.annotation.RestController;
 @SpringBootApplication
 @RestController
 public class SleuthBenchmarkingSpringWebFluxApp implements ApplicationListener<ReactiveWebServerInitializedEvent> {
+
+	static final Scheduler FOO_SCHEDULER = Schedulers.newParallel("foo");
 
 	private static final Logger log = LoggerFactory.getLogger(SleuthBenchmarkingSpringWebFluxApp.class);
 
@@ -106,7 +109,7 @@ public class SleuthBenchmarkingSpringWebFluxApp implements ApplicationListener<R
 	public Mono<String> complexNoSleuth() {
 		return Flux.range(1, 10).map(String::valueOf).collect(Collectors.toList())
 				.doOnEach(signal -> log.info("Got a request"))
-				.flatMap(s -> Mono.delay(Duration.ofMillis(1), Schedulers.newParallel("foo")).map(aLong -> {
+				.flatMap(s -> Mono.delay(Duration.ofSeconds(1), FOO_SCHEDULER).map(aLong -> {
 					log.info("Logging [{}] from flat map", s);
 					return "";
 				}));
@@ -116,7 +119,7 @@ public class SleuthBenchmarkingSpringWebFluxApp implements ApplicationListener<R
 	public Mono<String> complex() {
 		return Flux.range(1, 10).map(String::valueOf).collect(Collectors.toList())
 				.doOnEach(signal -> log.info("Got a request"))
-				.flatMap(s -> Mono.delay(Duration.ofMillis(1), Schedulers.newParallel("foo")).map(aLong -> {
+				.flatMap(s -> Mono.delay(Duration.ofSeconds(1), FOO_SCHEDULER).map(aLong -> {
 					log.info("Logging [{}] from flat map", s);
 					return "";
 				})).doOnEach(signal -> {
@@ -132,13 +135,10 @@ public class SleuthBenchmarkingSpringWebFluxApp implements ApplicationListener<R
 	public Mono<String> complexManual() {
 		return Flux.range(1, 10).map(String::valueOf).collect(Collectors.toList())
 				.doOnEach(WebFluxSleuthOperators.withSpanInScope(() -> log.info("Got a request")))
-				.flatMap(s -> Mono.subscriberContext().delayElement(Duration.ofMillis(1), Schedulers.newParallel("foo"))
-						.map(ctx -> {
-							WebFluxSleuthOperators.withSpanInScope(ctx,
-									() -> log.info("Logging [{}] from flat map", s));
-							return "";
-						}))
-				.doOnEach(signal -> {
+				.flatMap(s -> Mono.subscriberContext().delayElement(Duration.ofSeconds(1), FOO_SCHEDULER).map(ctx -> {
+					WebFluxSleuthOperators.withSpanInScope(ctx, () -> log.info("Logging [{}] from flat map", s));
+					return "";
+				})).doOnEach(signal -> {
 					WebFluxSleuthOperators.withSpanInScope(signal.getContext(), () -> log.info("Doing assertions"));
 					TraceContext traceContext = signal.getContext().get(TraceContext.class);
 					Assert.notNull(traceContext, "Context must be set by Sleuth instrumentation");
