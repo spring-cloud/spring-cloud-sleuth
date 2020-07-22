@@ -25,3 +25,4 @@ pom.xml.versionsBackup
 .sts4-cache
 _includes
 .sdkmanrc
+results/jmh/*.csv

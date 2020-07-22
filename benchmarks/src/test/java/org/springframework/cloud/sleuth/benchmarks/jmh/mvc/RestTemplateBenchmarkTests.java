@@ -59,10 +59,6 @@ import static org.assertj.core.api.BDDAssertions.then;
 @Microbenchmark
 public class RestTemplateBenchmarkTests {
 
-	static {
-		System.setProperty("jmh.mbr.report.publishTo", "csv:rest_template.csv");
-	}
-
 	@Benchmark
 	public void syncEndpointWithoutSleuth(BenchmarkContext context) throws IOException, ServletException {
 		then(context.untracedTemplate.getForObject("/foo", String.class)).isEqualTo("foo");

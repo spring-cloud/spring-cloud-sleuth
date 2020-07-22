@@ -47,10 +47,6 @@ import static org.assertj.core.api.BDDAssertions.then;
 @Microbenchmark
 public class AsyncBenchmarksTests {
 
-	static {
-		System.setProperty("jmh.mbr.report.publishTo", "csv:async.csv");
-	}
-
 	@Benchmark
 	public void asyncMethodWithoutSleuth(BenchmarkContext context) throws Exception {
 		then(context.untracedAsyncMethodHavingBean.async().get()).isEqualTo("async");

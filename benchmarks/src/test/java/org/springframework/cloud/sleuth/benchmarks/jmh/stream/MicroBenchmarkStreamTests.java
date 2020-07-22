@@ -64,10 +64,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 @Microbenchmark
 public class MicroBenchmarkStreamTests {
 
-	static {
-		System.setProperty("jmh.mbr.report.publishTo", "csv:stream.csv");
-	}
-
 	@Benchmark
 	@Testable
 	public void testStream(BenchmarkContext context) throws Exception {

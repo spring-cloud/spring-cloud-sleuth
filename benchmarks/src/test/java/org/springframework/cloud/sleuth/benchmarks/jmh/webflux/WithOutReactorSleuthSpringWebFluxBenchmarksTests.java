@@ -28,10 +28,6 @@ import org.openjdk.jmh.runner.options.OptionsBuilder;
 @Microbenchmark
 public class WithOutReactorSleuthSpringWebFluxBenchmarksTests extends SpringWebFluxBenchmarksTests {
 
-	static {
-		System.setProperty("jmh.mbr.report.publishTo", "csv:webflux_no_reactor_instrumentation.csv");
-	}
-
 	public static void main(String[] args) throws RunnerException {
 		Options opt = new OptionsBuilder()
 				.include(".*" + WithOutReactorSleuthSpringWebFluxBenchmarksTests.class.getSimpleName() + ".*").build();

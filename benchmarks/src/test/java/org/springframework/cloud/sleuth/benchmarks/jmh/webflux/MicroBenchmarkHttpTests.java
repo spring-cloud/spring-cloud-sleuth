@@ -49,10 +49,6 @@ import org.springframework.test.web.reactive.server.WebTestClient;
 @Microbenchmark
 public class MicroBenchmarkHttpTests {
 
-	static {
-		System.setProperty("jmh.mbr.report.publishTo", "csv:http.csv");
-	}
-
 	@Benchmark
 	@Testable
 	public void test(BenchmarkContext context) throws Exception {

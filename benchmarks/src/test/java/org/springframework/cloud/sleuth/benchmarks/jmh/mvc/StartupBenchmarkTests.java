@@ -39,10 +39,6 @@ import org.springframework.cloud.sleuth.benchmarks.jmh.ProcessLauncherState;
 @Disabled("Process doesn't stop")
 public class StartupBenchmarkTests {
 
-	static {
-		System.setProperty("jmh.mbr.report.publishTo", "csv:startup.csv");
-	}
-
 	@Benchmark
 	public void withAnnotations(ApplicationState state) throws Exception {
 		state.run();

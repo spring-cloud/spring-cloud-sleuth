@@ -70,10 +70,6 @@ public class SpringWebFluxBenchmarksTests {
 	protected static TraceContext defaultTraceContext = TraceContext.newBuilder().traceIdHigh(333L).traceId(444L)
 			.spanId(3).sampled(true).build();
 
-	static {
-		System.setProperty("jmh.mbr.report.publishTo", "csv:webflux.csv");
-	}
-
 	protected ConfigurableApplicationContext applicationContext;
 
 	protected SleuthBenchmarkingSpringWebFluxApp springWebFluxApp;

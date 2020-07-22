@@ -47,10 +47,6 @@ import static org.assertj.core.api.BDDAssertions.then;
 @Microbenchmark
 public class AnnotationBenchmarksTests {
 
-	static {
-		System.setProperty("jmh.mbr.report.publishTo", "csv:annotation.csv");
-	}
-
 	@Benchmark
 	public void manuallyCreatedSpans(BenchmarkContext context) throws Exception {
 		then(context.sleuth.manualSpan()).isEqualTo("continued");

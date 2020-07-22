@@ -70,10 +70,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @Microbenchmark
 public class HttpFilterBenchmarksTests {
 
-	static {
-		System.setProperty("jmh.mbr.report.publishTo", "csv:http_filter.csv");
-	}
-
 	@Benchmark
 	@Measurement(iterations = 5, time = 1)
 	@Fork(2)
