@@ -30,8 +30,9 @@
 |spring.sleuth.mongodb.enabled | true | Enable tracing for MongoDb.
 |spring.sleuth.opentracing.enabled | true | 
 |spring.sleuth.quartz.enabled | true | Enable tracing for Quartz.
-|spring.sleuth.reactor.decorate-on-each | true | When true decorates on each operator, will be less performing, but logging will always contain the tracing entries in each operator. When false decorates on last operator, will be more performing, but logging might not always contain the tracing entries.
+|spring.sleuth.reactor.decorate-on-each | true | When true decorates on each operator, will be less performing, but logging will always contain the tracing entries in each operator. When false decorates on last operator, will be more performing, but logging might not always contain the tracing entries. @deprecated use explicit value via {@link SleuthReactorProperties#instrumentationType}
 |spring.sleuth.reactor.enabled | true | When true enables instrumentation for reactor.
+|spring.sleuth.reactor.instrumentation-type |  | 
 |spring.sleuth.redis.enabled | true | Enable span information propagation when using Redis.
 |spring.sleuth.redis.remote-service-name | redis | Service name for the remote Redis endpoint.
 |spring.sleuth.rpc.enabled | true | Enable tracing of RPC.
