@@ -86,7 +86,7 @@ public class RestTemplateBenchmarkTests {
 
 		@Setup
 		public void setup() {
-			new SpringApplication(SleuthBenchmarkingSpringApp.class).run("--spring.jmx.enabled=false",
+			this.withSleuth = new SpringApplication(SleuthBenchmarkingSpringApp.class).run("--spring.jmx.enabled=false",
 					"--spring.application.name=withSleuth");
 			this.mockMvc = MockMvcBuilders.standaloneSetup(this.withSleuth.getBean(SleuthBenchmarkingSpringApp.class))
 					.build();

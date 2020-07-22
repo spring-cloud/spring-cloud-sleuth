@@ -63,8 +63,6 @@ public class SleuthBenchmarkingStreamApplication {
 		System.setProperty("spring.sleuth.reactor.instrumentation-type", "MANUAL");
 		System.setProperty("spring.sleuth.function.type", "simple");
 		ConfigurableApplicationContext context = SpringApplication.run(SleuthBenchmarkingStreamApplication.class, args);
-		System.out.println("PRess any key to continue");
-		System.in.read();
 		for (int i = 0; i < 1; i++) {
 			InputDestination input = context.getBean(InputDestination.class);
 			input.send(MessageBuilder.withPayload("hello".getBytes())
