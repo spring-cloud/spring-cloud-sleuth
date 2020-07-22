@@ -30,9 +30,9 @@ import org.openjdk.jmh.annotations.Warmup;
 
 import org.springframework.cloud.sleuth.benchmarks.jmh.ProcessLauncherState;
 
-@Measurement(iterations = 5)
-@Warmup(iterations = 1)
-@Fork(value = 2, warmups = 0)
+@Measurement(iterations = 5, time = 1)
+@Warmup(iterations = 10, time = 1)
+@Fork(2)
 @BenchmarkMode(Mode.AverageTime)
 @Microbenchmark
 public class StartupBenchmarkTests {

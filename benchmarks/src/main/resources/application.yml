@@ -1,4 +1,4 @@
 logging.level:
   org.springframework: ERROR
-  org.springframework.sleuth: INFO
+  org.springframework.sleuth: ERROR
   brave: ERROR
