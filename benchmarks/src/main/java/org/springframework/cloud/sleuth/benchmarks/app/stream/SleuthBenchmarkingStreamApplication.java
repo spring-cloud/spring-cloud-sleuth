@@ -252,7 +252,7 @@ class SleuthFunction implements Function<Flux<String>, Flux<String>> {
 	@Override
 	public Flux<String> apply(Flux<String> input) {
 		return input.doOnEach(signal -> log.info("Got a message"))
-				.flatMap(s -> Mono.delay(Duration.ofSeconds(1), SCHEDULER).map(aLong -> {
+				.flatMap(s -> Mono.delay(Duration.ofMillis(1), SCHEDULER).map(aLong -> {
 					log.info("Logging [{}] from flat map", s);
 					return s.toUpperCase();
 				}));
@@ -269,7 +269,7 @@ class SleuthManualFunction implements Function<Flux<String>, Flux<String>> {
 	@Override
 	public Flux<String> apply(Flux<String> input) {
 		return input.doOnEach(WebFluxSleuthOperators.withSpanInScope(() -> log.info("Got a message")))
-				.flatMap(s -> Mono.subscriberContext().delayElement(Duration.ofSeconds(1), SCHEDULER).map(ctx -> {
+				.flatMap(s -> Mono.subscriberContext().delayElement(Duration.ofMillis(1), SCHEDULER).map(ctx -> {
 					WebFluxSleuthOperators.withSpanInScope(ctx, () -> log.info("Logging [{}] from flat map", s));
 					return s.toUpperCase();
 				})).doOnEach(signal -> {

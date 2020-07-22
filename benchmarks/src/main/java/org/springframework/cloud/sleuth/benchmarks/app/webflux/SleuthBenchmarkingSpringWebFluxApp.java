@@ -109,7 +109,7 @@ public class SleuthBenchmarkingSpringWebFluxApp implements ApplicationListener<R
 	public Mono<String> complexNoSleuth() {
 		return Flux.range(1, 10).map(String::valueOf).collect(Collectors.toList())
 				.doOnEach(signal -> log.info("Got a request"))
-				.flatMap(s -> Mono.delay(Duration.ofSeconds(1), FOO_SCHEDULER).map(aLong -> {
+				.flatMap(s -> Mono.delay(Duration.ofMillis(1), FOO_SCHEDULER).map(aLong -> {
 					log.info("Logging [{}] from flat map", s);
 					return "";
 				}));
@@ -119,7 +119,7 @@ public class SleuthBenchmarkingSpringWebFluxApp implements ApplicationListener<R
 	public Mono<String> complex() {
 		return Flux.range(1, 10).map(String::valueOf).collect(Collectors.toList())
 				.doOnEach(signal -> log.info("Got a request"))
-				.flatMap(s -> Mono.delay(Duration.ofSeconds(1), FOO_SCHEDULER).map(aLong -> {
+				.flatMap(s -> Mono.delay(Duration.ofMillis(1), FOO_SCHEDULER).map(aLong -> {
 					log.info("Logging [{}] from flat map", s);
 					return "";
 				})).doOnEach(signal -> {
@@ -135,7 +135,7 @@ public class SleuthBenchmarkingSpringWebFluxApp implements ApplicationListener<R
 	public Mono<String> complexManual() {
 		return Flux.range(1, 10).map(String::valueOf).collect(Collectors.toList())
 				.doOnEach(WebFluxSleuthOperators.withSpanInScope(() -> log.info("Got a request")))
-				.flatMap(s -> Mono.subscriberContext().delayElement(Duration.ofSeconds(1), FOO_SCHEDULER).map(ctx -> {
+				.flatMap(s -> Mono.subscriberContext().delayElement(Duration.ofMillis(1), FOO_SCHEDULER).map(ctx -> {
 					WebFluxSleuthOperators.withSpanInScope(ctx, () -> log.info("Logging [{}] from flat map", s));
 					return "";
 				})).doOnEach(signal -> {
