@@ -17,6 +17,7 @@
 package org.springframework.cloud.sleuth.benchmarks.jmh.mvc;
 
 import jmh.mbr.junit5.Microbenchmark;
+import org.junit.jupiter.api.Disabled;
 import org.openjdk.jmh.annotations.Benchmark;
 import org.openjdk.jmh.annotations.BenchmarkMode;
 import org.openjdk.jmh.annotations.Fork;
@@ -35,6 +36,7 @@ import org.springframework.cloud.sleuth.benchmarks.jmh.ProcessLauncherState;
 @Fork(value = 2, warmups = 0)
 @BenchmarkMode(Mode.AverageTime)
 @Microbenchmark
+@Disabled("Process doesn't stop")
 public class StartupBenchmarkTests {
 
 	static {

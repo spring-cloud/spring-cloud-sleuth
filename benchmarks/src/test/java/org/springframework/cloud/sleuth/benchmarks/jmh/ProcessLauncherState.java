@@ -117,6 +117,7 @@ public class ProcessLauncherState {
 	}
 
 	public void run() throws Exception {
+		System.out.println("Running process");
 		List<String> args = new ArrayList<>(this.args);
 		args.add(args.size() - this.length, this.mainClass);
 		if (extraArgs != null) {
