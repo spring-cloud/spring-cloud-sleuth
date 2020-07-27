@@ -26,6 +26,7 @@ import brave.http.HttpServerRequest;
 import brave.http.HttpServerResponse;
 import brave.http.HttpTracing;
 import brave.propagation.TraceContext;
+import brave.propagation.TraceContextOrSamplingFlags;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.reactivestreams.Subscription;
@@ -36,6 +37,7 @@ import reactor.util.annotation.Nullable;
 import reactor.util.context.Context;
 
 import org.springframework.beans.factory.BeanFactory;
+import org.springframework.cloud.sleuth.instrument.reactor.SleuthReactorProperties;
 import org.springframework.core.Ordered;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.server.reactive.ServerHttpRequest;
@@ -62,8 +64,9 @@ final class TraceWebFilter implements WebFilter, Ordered {
 	 */
 	public static final int ORDER = TraceHttpAutoConfiguration.TRACING_FILTER_ORDER;
 
-	protected static final String TRACE_REQUEST_ATTR = TraceWebFilter.class.getName()
-			+ ".TRACE";
+	// Remember that this can be used in other packages
+	protected static final String TRACE_REQUEST_ATTR = TraceContext.class.getName();
+
 	static final String MVC_CONTROLLER_CLASS_KEY = "mvc.controller.class";
 	static final String MVC_CONTROLLER_METHOD_KEY = "mvc.controller.method";
 
@@ -81,6 +84,8 @@ final class TraceWebFilter implements WebFilter, Ordered {
 	HttpServerHandler<HttpServerRequest, HttpServerResponse> handler;
 
 	SleuthWebProperties webProperties;
+
+	SleuthReactorProperties sleuthReactorProperties;
 
 	TraceWebFilter(BeanFactory beanFactory) {
 		this.beanFactory = beanFactory;
@@ -113,6 +118,14 @@ final class TraceWebFilter implements WebFilter, Ordered {
 		return this.webProperties;
 	}
 
+	SleuthReactorProperties sleuthReactorProperties() {
+		if (this.sleuthReactorProperties == null) {
+			this.sleuthReactorProperties = this.beanFactory
+					.getBean(SleuthReactorProperties.class);
+		}
+		return this.sleuthReactorProperties;
+	}
+
 	@Override
 	public Mono<Void> filter(ServerWebExchange exchange, WebFilterChain chain) {
 		String uri = exchange.getRequest().getPath().pathWithinApplication().value();
@@ -120,14 +133,21 @@ final class TraceWebFilter implements WebFilter, Ordered {
 			log.debug("Received a request to uri [" + uri + "]");
 		}
 		Mono<Void> source = chain.filter(exchange);
+		boolean tracePresent = isTracePresent();
+		return new MonoWebFilterTrace(source, exchange, tracePresent, this);
+	}
+
+	private boolean isTracePresent() {
+		if (sleuthReactorProperties()
+				.getInstrumentationType() == SleuthReactorProperties.InstrumentationType.MANUAL) {
+			return false;
+		}
 		boolean tracePresent = tracer().currentSpan() != null;
-		// if we're in manual instrumentation type mode then we control how threads are
-		// set
 		if (tracePresent) {
 			// clear any previous trace
 			tracer().withSpanInScope(null); // TODO: dangerous and also allocates stuff
 		}
-		return new MonoWebFilterTrace(source, exchange, tracePresent, this);
+		return tracePresent;
 	}
 
 	@Override
@@ -141,7 +161,7 @@ final class TraceWebFilter implements WebFilter, Ordered {
 
 		final Tracer tracer;
 
-		final Span attrSpan;
+		final TraceContext traceContext;
 
 		final HttpServerHandler<HttpServerRequest, HttpServerResponse> handler;
 
@@ -155,7 +175,7 @@ final class TraceWebFilter implements WebFilter, Ordered {
 			this.tracer = parent.tracer();
 			this.handler = parent.handler();
 			this.exchange = exchange;
-			this.attrSpan = exchange.getAttribute(TRACE_REQUEST_ATTR);
+			this.traceContext = exchange.getAttribute(TRACE_REQUEST_ATTR);
 			this.initialTracePresent = initialTracePresent;
 		}
 
@@ -184,8 +204,9 @@ final class TraceWebFilter implements WebFilter, Ordered {
 				}
 			}
 			else {
-				if (this.attrSpan != null) {
-					span = this.attrSpan;
+				if (this.traceContext != null) {
+					span = this.tracer.nextSpan(
+							TraceContextOrSamplingFlags.create(this.traceContext));
 					if (log.isDebugEnabled()) {
 						log.debug("Found span in attribute " + span);
 					}
@@ -197,7 +218,7 @@ final class TraceWebFilter implements WebFilter, Ordered {
 						log.debug("Handled receive of span " + span);
 					}
 				}
-				this.exchange.getAttributes().put(TRACE_REQUEST_ATTR, span);
+				this.exchange.getAttributes().put(TRACE_REQUEST_ATTR, span.context());
 			}
 			return span;
 		}

@@ -161,8 +161,6 @@ final class TraceExchangeFilterFunction implements ExchangeFilterFunction {
 
 		final CurrentTraceContext currentTraceContext;
 
-		final Function<? super Publisher<DataBuffer>, ? extends Publisher<DataBuffer>> scopePassingTransformer;
-
 		@Nullable
 		final TraceContext parent;
 
@@ -172,7 +170,6 @@ final class TraceExchangeFilterFunction implements ExchangeFilterFunction {
 			this.request = request;
 			this.handler = filterFunction.handler();
 			this.currentTraceContext = filterFunction.currentTraceContext();
-			this.scopePassingTransformer = filterFunction.scopePassingTransformer;
 			this.parent = currentTraceContext.get();
 		}
 
@@ -208,8 +205,6 @@ final class TraceExchangeFilterFunction implements ExchangeFilterFunction {
 
 		final HttpClientHandler<HttpClientRequest, HttpClientResponse> handler;
 
-		final Function<? super Publisher<DataBuffer>, ? extends Publisher<DataBuffer>> scopePassingTransformer;
-
 		final CurrentTraceContext currentTraceContext;
 
 		TraceWebClientSubscriber(CoreSubscriber<? super ClientResponse> actual,
@@ -218,7 +213,6 @@ final class TraceExchangeFilterFunction implements ExchangeFilterFunction {
 			this.parent = mono.parent;
 			this.handler = mono.handler;
 			this.currentTraceContext = mono.currentTraceContext;
-			this.scopePassingTransformer = mono.scopePassingTransformer;
 			this.context = parent != null
 					&& !parent.equals(ctx.getOrDefault(TraceContext.class, null))
 							? ctx.put(TraceContext.class, parent) : ctx;
@@ -234,11 +228,7 @@ final class TraceExchangeFilterFunction implements ExchangeFilterFunction {
 		public void onNext(ClientResponse response) {
 			try (Scope scope = currentTraceContext.maybeScope(parent)) {
 				// decorate response body
-				this.actual.onNext(ClientResponse.from(response)
-						// TODO: Why are we using scope passing transformer
-						.body(response.bodyToFlux(DataBuffer.class)
-								.transform(this.scopePassingTransformer))
-						.build());
+				this.actual.onNext(response);
 			}
 			finally {
 				Span span = getAndSet(null);

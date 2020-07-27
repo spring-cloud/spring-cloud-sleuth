@@ -929,7 +929,7 @@ to add the `@Role(BeanDefinition.ROLE_INFRASTRUCTURE)` on your
 
 Features from this section can be disabled by setting the `spring.sleuth.messaging.enabled` property with value equal to `false`.
 
-==== Spring Integration and Spring Cloud Stream
+==== Spring Integration
 
 Spring Cloud Sleuth integrates with https://projects.spring.io/spring-integration/[Spring Integration].
 It creates spans for publish and subscribe events.
@@ -946,6 +946,21 @@ it's enough for you to register beans of types:
 
 * `Propagation.Setter<MessageHeaderAccessor, String>` - for writing headers to the message
 * `Propagation.Getter<MessageHeaderAccessor, String>` - for reading headers from the message
+
+==== Spring Cloud Function and Spring Cloud Stream
+
+Spring Cloud Sleuth can instrument Spring Cloud Function. The way to achieve it is to provide a `Function` or `Consumer` or `Supplier` that takes in a `Message` as a parameter e.g. `Function<Message<String>, Message<Integer>>`. If the type is not `Message` then instrumentation will not take place. Out of the box instrumentation will not take place when dealing with Reactor based streams - e.g. `Function<Flux<Message<String>>, Flux<Message<Integer>>>`.
+
+Since Spring Cloud Stream reuses Spring Cloud Function, you'll get the instrumentation out of the box.
+
+You can disable this behavior by setting the value of `spring.sleuth.function.enabled` to `false`.
+
+In order to work with reactive Stream functions you can leverage the `MessagingSleuthOperators` utility class that allows you to manipulate the input and output messages in order to continue the tracing context and to execute custom code within the tracing context.
+
+[source,java]
+-----
+include::{project-root}/benchmarks/src/main/java/org/springframework/cloud/sleuth/benchmarks/app/stream/SleuthBenchmarkingStreamApplication.java[tags=simple_reactive,indent=0]
+-----
 
 ==== Spring RabbitMq
 
@@ -1000,7 +1015,14 @@ To turn off this feature, set the `spring.sleuth.quartz.enabled` property to `fa
 
 === Project Reactor
 
-For projects depending on Project Reactor such as Spring Cloud Gateway, we suggest turning the `spring.sleuth.reactor.decorate-on-each` option to `false`. That way an increased performance gain should be observed in comparison to the standard instrumentation mechanism. What this option does is it will wrap decorate `onLast` operator instead of `onEach` which will result in creation of far fewer objects. The downside of this is that when Project Reactor will change threads, the trace propagation will continue without issues, however anything relying on the `ThreadLocal` such as e.g. MDC entries can be buggy.
+We have three modes of instrumenting reactor based applications that can
+be set via `spring.sleuth.reactor.instrumentation-type` property:
+
+* `ON_EACH` - wraps every Reactor operator in a trace representation. Passes the tracing context in most cases. This mode might lead to drastic performance degradation.
+* `ON_LAST` - wraps last Reactor operator in a trace representation. Passes the tracing context in some cases thus accessing MDC context might not work. This mode might lead to medium performance degradation.
+* `MANUAL` - wraps every Reactor in the least invasive way without passing of tracing context. It's up to the user to do it.
+
+
 
 == Log integration
 Sleuth configures the logging context with variables including the service name

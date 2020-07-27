@@ -106,16 +106,18 @@ public class MicroBenchmarkHttpTests {
 
 			noSleuthSimple("spring.sleuth.enabled", "false", "/simple"), sleuthSimpleManual(
 					"spring.sleuth.reactor.instrumentation-type", "MANUAL",
-					"/simple"), sleuthSimpleOnEach("spring.sleuth.reactor.instrumentation-type", "DECORATE_ON_EACH",
-							"/simple"), sleuthSimpleOnLast("spring.sleuth.reactor.instrumentation-type",
-									"DECORATE_ON_LAST", "/simple"), noSleuthComplex("spring.sleuth.enabled", "false",
-											"/complexNoSleuth"), onEachComplex(
-													"spring.sleuth.reactor.instrumentation-type", "DECORATE_ON_EACH",
-													"/complex"), onLastComplex(
+					"/simple"), sleuthManual("spring.sleuth.reactor.instrumentation-type", "MANUAL",
+							"/simpleManual"), sleuthSimpleOnEach("spring.sleuth.reactor.instrumentation-type",
+									"DECORATE_ON_EACH",
+									"/simple"), sleuthSimpleOnLast("spring.sleuth.reactor.instrumentation-type",
+											"DECORATE_ON_LAST", "/simple"), noSleuthComplex("spring.sleuth.enabled",
+													"false", "/complexNoSleuth"), onEachComplex(
 															"spring.sleuth.reactor.instrumentation-type",
-															"DECORATE_ON_LAST", "/complex"), onManualComplex(
+															"DECORATE_ON_EACH", "/complex"), onLastComplex(
 																	"spring.sleuth.reactor.instrumentation-type",
-																	"MANUAL", "/complexManual");
+																	"DECORATE_ON_LAST", "/complex"), onManualComplex(
+																			"spring.sleuth.reactor.instrumentation-type",
+																			"MANUAL", "/complexManual");
 
 			private String key;
 

@@ -102,7 +102,15 @@ public class SleuthBenchmarkingSpringWebFluxApp implements ApplicationListener<R
 
 	@GetMapping("/simple")
 	public Mono<String> simple() {
-		return Mono.just("hello").map(String::toUpperCase);
+		return Mono.just("hello").map(String::toUpperCase).doOnNext(s -> log.info("Hello from simple [{}]", s));
+	}
+
+	@GetMapping("/simpleManual")
+	public Mono<String> simpleManual() {
+		return Mono.just("hello").map(String::toUpperCase)
+				.doOnEach(signal -> WebFluxSleuthOperators.withSpanInScope(signal.getContext(), () -> {
+					log.info("Hello from simple [{}]", signal.get());
+				}));
 	}
 
 	@GetMapping("/complexNoSleuth")
