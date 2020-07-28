@@ -708,6 +708,8 @@ You can configure which URIs you would like to skip by using the `spring.sleuth.
 If you have `ManagementServerProperties` on the classpath, its value of `contextPath` gets appended to the provided skip pattern.
 If you want to reuse Sleuth's default skip patterns and append your own, pass those patterns by using the `spring.sleuth.web.additionalSkipPattern`.
 
+In order to achieve best results in terms of performance and context propagation we suggest that you switch the `spring.sleuth.reactor.instrumentation-type` to `MANUAL`. In order to execute code with the span in scope you can call `WebFluxSleuthOperators.withSpanInScope`.
+
 To change the order of tracing filter registration, please set the
 `spring.sleuth.web.filter-order` property.
 
@@ -1022,7 +1024,7 @@ be set via `spring.sleuth.reactor.instrumentation-type` property:
 * `ON_LAST` - wraps last Reactor operator in a trace representation. Passes the tracing context in some cases thus accessing MDC context might not work. This mode might lead to medium performance degradation.
 * `MANUAL` - wraps every Reactor in the least invasive way without passing of tracing context. It's up to the user to do it.
 
-
+Current default is `ON_EACH` for backward compatibility reasons, however we encourage the users to migrate to the `MANUAL` instrumentation and profit from `WebFluxSleuthOperators` and `MessagingSleuthOperators`. The performance improvement can be substantial.
 
 == Log integration
 Sleuth configures the logging context with variables including the service name

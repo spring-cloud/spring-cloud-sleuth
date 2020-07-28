@@ -30,9 +30,9 @@ class RequestSender {
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(RequestSender.class);
 
-	private final WebClient webClient;
+	final WebClient webClient;
 
-	private final Tracer tracer;
+	final Tracer tracer;
 
 	int port;
 

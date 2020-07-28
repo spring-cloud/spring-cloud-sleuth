@@ -63,6 +63,22 @@ public final class WebFluxSleuthOperators {
 
 	/**
 	 * Wraps a runnable with a span.
+	 * @param signalType - Reactor's signal type
+	 * @param consumer - lambda to execute within the tracing context
+	 * @return consumer of a signal
+	 */
+	public static Consumer<Signal> withSpanInScope(SignalType signalType,
+			Consumer<Signal> consumer) {
+		return signal -> {
+			if (signalType != signal.getType()) {
+				return;
+			}
+			withSpanInScope(signal.getContext(), () -> consumer.accept(signal));
+		};
+	}
+
+	/**
+	 * Wraps a runnable with a span.
 	 * @param runnable - lambda to execute within the tracing context
 	 * @return consumer of a signal
 	 */

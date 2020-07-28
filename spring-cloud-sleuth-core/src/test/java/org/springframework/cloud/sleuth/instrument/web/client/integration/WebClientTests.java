@@ -100,8 +100,7 @@ import static org.assertj.core.api.BDDAssertions.then;
 @SpringBootTest(classes = WebClientTests.TestConfiguration.class,
 		webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @TestPropertySource(properties = { "spring.application.name=fooservice",
-		"spring.sleuth.web.client.skip-pattern=/skip.*",
-		"spring.sleuth.reactor.instrumentation-type=MANUAL" })
+		"spring.sleuth.web.client.skip-pattern=/skip.*" })
 @DirtiesContext
 public class WebClientTests {
 
