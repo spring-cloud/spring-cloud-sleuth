@@ -130,7 +130,7 @@ class TraceFunctionAroundWrapper extends FunctionAroundWrapper
 	private String inputDestination(
 			SimpleFunctionRegistry.FunctionInvocationWrapper targetFunction) {
 		String functionDefinition = targetFunction.getFunctionDefinition();
-		return functionToDestinationCache
+		return this.functionToDestinationCache
 				.computeIfAbsent(functionDefinition,
 						s -> this.environment.getProperty(
 								"spring.cloud.stream.bindings." + s + "-in-0.destination",
@@ -150,7 +150,7 @@ class TraceFunctionAroundWrapper extends FunctionAroundWrapper
 		if (log.isDebugEnabled()) {
 			log.debug("Context refreshed, will reset the cache");
 		}
-		functionToDestinationCache.clear();
+		this.functionToDestinationCache.clear();
 	}
 
 }

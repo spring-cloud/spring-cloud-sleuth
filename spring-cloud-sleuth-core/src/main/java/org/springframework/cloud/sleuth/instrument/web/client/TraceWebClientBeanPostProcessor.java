@@ -161,37 +161,33 @@ final class TraceExchangeFilterFunction implements ExchangeFilterFunction {
 
 		final CurrentTraceContext currentTraceContext;
 
-		final Function<? super Publisher<DataBuffer>, ? extends Publisher<DataBuffer>> scopePassingTransformer;
-
-		@Nullable
-		final TraceContext parent;
-
 		MonoWebClientTrace(ExchangeFunction next, ClientRequest request,
 				TraceExchangeFilterFunction filterFunction) {
 			this.next = next;
 			this.request = request;
 			this.handler = filterFunction.handler();
 			this.currentTraceContext = filterFunction.currentTraceContext();
-			this.scopePassingTransformer = filterFunction.scopePassingTransformer;
-			this.parent = currentTraceContext.get();
 		}
 
 		@Override
 		public void subscribe(CoreSubscriber<? super ClientResponse> subscriber) {
-
 			Context context = subscriber.currentContext();
-
+			if (log.isTraceEnabled()) {
+				log.trace("Got the following context [" + context + "]");
+			}
 			ClientRequestWrapper wrapper = new ClientRequestWrapper(request);
+			TraceContext parent = context.hasKey(TraceContext.class)
+					? context.get(TraceContext.class) : null;
 			Span span = handler.handleSendWithParent(wrapper, parent);
 			if (log.isDebugEnabled()) {
 				log.debug("HttpClientHandler::handleSend: " + span);
 			}
-
 			// NOTE: We are starting the client span for the request here, but it could be
 			// canceled prior to actually being invoked. TraceWebClientSubscription will
 			// abandon this span, if cancel() happens before request().
-			this.next.exchange(wrapper.buildRequest()).subscribe(
-					new TraceWebClientSubscriber(subscriber, context, span, this));
+			this.next.exchange(wrapper.buildRequest())
+					.subscribe(new TraceWebClientSubscriber(subscriber, context, span,
+							parent, this));
 		}
 
 	}
@@ -208,20 +204,18 @@ final class TraceExchangeFilterFunction implements ExchangeFilterFunction {
 
 		final HttpClientHandler<HttpClientRequest, HttpClientResponse> handler;
 
-		final Function<? super Publisher<DataBuffer>, ? extends Publisher<DataBuffer>> scopePassingTransformer;
-
 		final CurrentTraceContext currentTraceContext;
 
 		TraceWebClientSubscriber(CoreSubscriber<? super ClientResponse> actual,
-				Context ctx, Span clientSpan, MonoWebClientTrace mono) {
+				Context ctx, Span clientSpan, TraceContext parent,
+				MonoWebClientTrace mono) {
 			this.actual = actual;
-			this.parent = mono.parent;
+			this.parent = parent;
 			this.handler = mono.handler;
 			this.currentTraceContext = mono.currentTraceContext;
-			this.scopePassingTransformer = mono.scopePassingTransformer;
-			this.context = parent != null
-					&& !parent.equals(ctx.getOrDefault(TraceContext.class, null))
-							? ctx.put(TraceContext.class, parent) : ctx;
+			this.context = this.parent != null
+					&& !this.parent.equals(ctx.getOrDefault(TraceContext.class, null))
+							? ctx.put(TraceContext.class, this.parent) : ctx;
 			set(clientSpan);
 		}
 
@@ -234,11 +228,7 @@ final class TraceExchangeFilterFunction implements ExchangeFilterFunction {
 		public void onNext(ClientResponse response) {
 			try (Scope scope = currentTraceContext.maybeScope(parent)) {
 				// decorate response body
-				this.actual.onNext(ClientResponse.from(response)
-						// TODO: Why are we using scope passing transformer
-						.body(response.bodyToFlux(DataBuffer.class)
-								.transform(this.scopePassingTransformer))
-						.build());
+				this.actual.onNext(response);
 			}
 			finally {
 				Span span = getAndSet(null);

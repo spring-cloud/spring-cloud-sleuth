@@ -89,9 +89,15 @@ public class MicroBenchmarkStreamTests {
 			this.output = this.applicationContext.getBean(OutputDestination.class);
 		}
 
+		private void sendInputMessage() {
+			// System.out.println("Sending the message to input");
+			input.send(MessageBuilder.withPayload("hello".getBytes())
+					.setHeader("b3", "4883117762eb9420-4883117762eb9420-1").build());
+		}
+
 		protected ConfigurableApplicationContext initContext() {
 			SpringApplication application = new SpringApplicationBuilder(SleuthBenchmarkingStreamApplication.class)
-					.web(WebApplicationType.REACTIVE).application();
+					.web(WebApplicationType.NONE).application();
 			return application.run(runArgs());
 		}
 
@@ -104,9 +110,11 @@ public class MicroBenchmarkStreamTests {
 		}
 
 		void run() {
-			// System.out.println("Sending the message to input");
-			input.send(MessageBuilder.withPayload("hello".getBytes())
-					.setHeader("b3", "4883117762eb9420-4883117762eb9420-1").build());
+			sendInputMessage();
+			assertThatOutputMessageGotReceived();
+		}
+
+		private void assertThatOutputMessageGotReceived() {
 			// System.out.println("Retrieving the message for tests");
 			Message<byte[]> message = output.receive(200L);
 			// System.out.println("Got the message from output");
@@ -138,19 +146,18 @@ public class MicroBenchmarkStreamTests {
 		public enum Instrumentation {
 
 			noSleuthSimple("spring.sleuth.enabled=false,spring.sleuth.function.type=simple"), sleuthSimple(
-					"spring.sleuth.reactor.instrumentation-type=MANUAL,spring.sleuth.function.type=simple"), noSleuthReactiveSimple(
-							"spring.sleuth.enabled=false,spring.sleuth.function.type=reactive_simple"), sleuthReactiveSimpleOnEach(
-									"spring.sleuth.reactor.instrumentation-type=DECORATE_ON_EACH,spring.sleuth.integration.enabled=true,spring.sleuth.function.type=DECORATE_ON_EACH"),
+					"spring.sleuth.function.type=simple"), sleuthSimpleWithAround(
+							"spring.sleuth.function.type=simple_function_with_around"), noSleuthReactiveSimple(
+									"spring.sleuth.enabled=false,spring.sleuth.function.type=reactive_simple"), sleuthReactiveSimpleManual(
+											"spring.sleuth.function.type=reactive_simple_manual"), sleuthReactiveSimpleOnEach(
+													"spring.sleuth.reactor.instrumentation-type=DECORATE_ON_EACH,spring.sleuth.integration.enabled=true,spring.sleuth.function.type=DECORATE_ON_EACH"),
 			// This won't work with messaging
 			// sleuthReactiveSimpleOnLast("spring.sleuth.reactor.instrumentation-type=DECORATE_ON_LAST,spring.sleuth.function.type=DECORATE_ON_LAST"),
 			// NO FUNCTION, NO INTEGRATION, MANUAL OPERATORS
 			sleuthSimpleManual(
-					"spring.sleuth.function.enabled=false,spring.sleuth.integration.enabled=false,spring.sleuth.function.type=simple_manual"), sleuthReactiveSimpleManual(
-							"spring.sleuth.function.enabled=false,spring.sleuth.integration.enabled=false,spring.sleuth.function.type=reactive_simple_manual"),
-			// NO FUNCTION - OLD INTEGRATION STYLE
-			sleuthSimpleNoFunctionInstrumentationManual(
-					"spring.sleuth.function.type=simple_manual,spring.sleuth.function.enabled=false,spring.sleuth.integration.enabled=true,spring.sleuth.reactor.instrumentation-type=MANUAL"), sleuthReactiveSimpleNoFunctionInstrumentationManual(
-							"spring.sleuth.function.type=reactive_simple_manual,spring.sleuth.function.enabled=false,spring.sleuth.integration.enabled=true,spring.sleuth.reactor.instrumentation-type=MANUAL");
+					"spring.sleuth.function.enabled=false,spring.sleuth.integration.enabled=false,spring.sleuth.function.type=simple_manual"), sleuthSimpleNoFunctionInstrumentationManual(
+							"spring.sleuth.function.type=simple_manual,spring.sleuth.function.enabled=false,spring.sleuth.integration.enabled=true,spring.sleuth.reactor.instrumentation-type=MANUAL"), sleuthReactiveSimpleNoFunctionInstrumentationManual(
+									"spring.sleuth.function.type=reactive_simple_manual,spring.sleuth.function.enabled=false,spring.sleuth.integration.enabled=true,spring.sleuth.reactor.instrumentation-type=MANUAL");
 
 			private Set<String> entires = new HashSet<>();
 

@@ -112,17 +112,17 @@ class SimpleReactiveManualFunction
 	@Override
 	public Flux<Message<String>> apply(Flux<Message<String>> input) {
 		return input.map(
-				message -> (MessagingSleuthOperator.asFunction(this.tracing, message))
-						.andThen(msg -> MessagingSleuthOperator
+				message -> (MessagingSleuthOperators.asFunction(this.tracing, message))
+						.andThen(msg -> MessagingSleuthOperators
 								.withSpanInScope(this.tracing, msg, stringMessage -> {
 									log.info("Hello from simple manual [{}]",
 											stringMessage.getPayload());
 									return stringMessage;
 								}))
-						.andThen(msg -> MessagingSleuthOperator
+						.andThen(msg -> MessagingSleuthOperators
 								.afterMessageHandled(this.tracing, msg, null))
 						.andThen(msg -> {
-							MessagingSleuthOperator.withSpanInScope(this.tracing, msg,
+							MessagingSleuthOperators.withSpanInScope(this.tracing, msg,
 									stringMessage -> {
 										log.info("Here we may do some processing");
 									});
@@ -131,7 +131,7 @@ class SimpleReactiveManualFunction
 							return MessageBuilder.createMessage(
 									msg.getPayload().toUpperCase(),
 									new MessageHeaders(headers));
-						}).andThen(msg -> MessagingSleuthOperator
+						}).andThen(msg -> MessagingSleuthOperators
 								.handleOutputMessage(this.tracing, msg))
 						.apply(message));
 	}

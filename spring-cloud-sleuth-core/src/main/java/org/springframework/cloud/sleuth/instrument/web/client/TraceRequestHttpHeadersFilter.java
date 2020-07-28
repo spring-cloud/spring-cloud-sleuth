@@ -23,6 +23,7 @@ import brave.Span;
 import brave.Tracer;
 import brave.http.HttpClientHandler;
 import brave.http.HttpTracing;
+import brave.propagation.TraceContext;
 import brave.propagation.TraceContext.Extractor;
 import brave.propagation.TraceContextOrSamplingFlags;
 import org.apache.commons.logging.Log;
@@ -37,6 +38,8 @@ import org.springframework.web.server.ServerWebExchange;
 final class TraceRequestHttpHeadersFilter extends AbstractHttpHeadersFilter {
 
 	private static final Log log = LogFactory.getLog(TraceRequestHttpHeadersFilter.class);
+
+	static final String TRACE_REQUEST_ATTR = TraceContext.class.getName();
 
 	private TraceRequestHttpHeadersFilter(HttpTracing httpTracing) {
 		super(httpTracing);
@@ -53,7 +56,7 @@ final class TraceRequestHttpHeadersFilter extends AbstractHttpHeadersFilter {
 					+ exchange.getRequest().getHeaders() + "]");
 		}
 		HttpClientRequest request = new HttpClientRequest(exchange.getRequest(), input);
-		Span currentSpan = currentSpan(request);
+		Span currentSpan = currentSpan(exchange, request);
 		Span span = injectedSpan(request, currentSpan);
 		if (log.isDebugEnabled()) {
 			log.debug(
@@ -71,8 +74,8 @@ final class TraceRequestHttpHeadersFilter extends AbstractHttpHeadersFilter {
 		return headersWithInput;
 	}
 
-	private Span currentSpan(HttpClientRequest request) {
-		Span currentSpan = this.tracer.currentSpan();
+	private Span currentSpan(ServerWebExchange exchange, HttpClientRequest request) {
+		Span currentSpan = currentSpan(exchange);
 		if (currentSpan != null) {
 			return currentSpan;
 		}
@@ -81,6 +84,18 @@ final class TraceRequestHttpHeadersFilter extends AbstractHttpHeadersFilter {
 		// this behavior was added in support of gateway.
 		TraceContextOrSamplingFlags contextOrFlags = this.extractor.extract(request);
 		return this.tracer.nextSpan(contextOrFlags);
+	}
+
+	private Span currentSpan(ServerWebExchange exchange) {
+		Object attribute = exchange.getAttribute(TRACE_REQUEST_ATTR);
+		if (attribute instanceof Span) {
+			if (log.isDebugEnabled()) {
+				log.debug("Found trace request attribute in the server web exchange ["
+						+ attribute + "]");
+			}
+			return (Span) attribute;
+		}
+		return this.tracer.currentSpan();
 	}
 
 	private Span injectedSpan(HttpClientRequest request, Span currentSpan) {

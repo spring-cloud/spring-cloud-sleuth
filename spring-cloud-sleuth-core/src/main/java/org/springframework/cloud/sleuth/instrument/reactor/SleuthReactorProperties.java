@@ -16,6 +16,9 @@
 
 package org.springframework.cloud.sleuth.instrument.reactor;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 /**
@@ -25,7 +28,9 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * @since 2.0.2
  */
 @ConfigurationProperties("spring.sleuth.reactor")
-class SleuthReactorProperties {
+public class SleuthReactorProperties {
+
+	private static final Log log = LogFactory.getLog(SleuthReactorProperties.class);
 
 	/**
 	 * When true enables instrumentation for reactor.
@@ -55,13 +60,20 @@ class SleuthReactorProperties {
 
 	@Deprecated
 	public boolean isDecorateOnEach() {
-		return this.decorateOnEach;
+		warn();
+		return this.instrumentationType == InstrumentationType.DECORATE_ON_EACH;
 	}
 
 	@Deprecated
 	public void setDecorateOnEach(boolean decorateOnEach) {
+		warn();
 		this.instrumentationType = decorateOnEach ? InstrumentationType.DECORATE_ON_EACH
 				: InstrumentationType.DECORATE_ON_LAST;
+	}
+
+	private void warn() {
+		log.warn(
+				"You're using the deprecated [spring.sleuth.reactor.decorate-on-each] property. Please use the [spring.sleuth.reactor.instrumentation-type]");
 	}
 
 	public InstrumentationType getInstrumentationType() {

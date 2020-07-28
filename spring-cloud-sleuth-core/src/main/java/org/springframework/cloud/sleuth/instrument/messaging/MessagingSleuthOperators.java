@@ -32,6 +32,8 @@ import org.springframework.messaging.Message;
  * Messaging helpers to manually parse and inject spans. We're treating message headers as
  * a context that gets passed through.
  *
+ * IMPORTANT: This API is experimental and might change in the future.
+ *
  * The {@code forInputMessage} factory methods will retrieve the tracing context from the
  * message headers and set up a a child span in the header under key
  * {@link Span#getClass()} name. If you need to continue it or tag it, it's enough to
@@ -40,16 +42,14 @@ import org.springframework.messaging.Message;
  * The first messaging span (the one that was first found in the input message) is present
  * under the {@code traceHandlerParentSpan} header key.
  *
- * When calling the {@code toOutputMessage} factory method, we will
- *
  * @author Marcin Grzejszczak
  * @since 3.0.0
  */
-public final class MessagingSleuthOperator {
+public final class MessagingSleuthOperators {
 
-	private static final Log log = LogFactory.getLog(MessagingSleuthOperator.class);
+	private static final Log log = LogFactory.getLog(MessagingSleuthOperators.class);
 
-	private MessagingSleuthOperator() {
+	private MessagingSleuthOperators() {
 		throw new IllegalStateException("You can't instantiate a utility class");
 	}
 
@@ -114,7 +114,7 @@ public final class MessagingSleuthOperator {
 	 */
 	public static <T> Function<Message<T>, Message<T>> asFunction(Tracing tracing,
 			Message<T> inputMessage) {
-		return stringMessage -> MessagingSleuthOperator.forInputMessage(tracing,
+		return stringMessage -> MessagingSleuthOperators.forInputMessage(tracing,
 				inputMessage);
 	}
 

@@ -27,6 +27,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.core.publisher.SignalType;
 import reactor.core.scheduler.Scheduler;
 import reactor.core.scheduler.Schedulers;
 
@@ -102,8 +103,16 @@ public class SleuthBenchmarkingSpringWebFluxApp implements ApplicationListener<R
 
 	@GetMapping("/simple")
 	public Mono<String> simple() {
-		return Mono.just("hello").map(String::toUpperCase);
+		return Mono.just("hello").map(String::toUpperCase).doOnNext(s -> log.info("Hello from simple [{}]", s));
 	}
+
+	// tag::simple_manual[]
+	@GetMapping("/simpleManual")
+	public Mono<String> simpleManual() {
+		return Mono.just("hello").map(String::toUpperCase).doOnEach(WebFluxSleuthOperators
+				.withSpanInScope(SignalType.ON_NEXT, signal -> log.info("Hello from simple [{}]", signal.get())));
+	}
+	// end::simple_manual[]
 
 	@GetMapping("/complexNoSleuth")
 	public Mono<String> complexNoSleuth() {
@@ -134,7 +143,7 @@ public class SleuthBenchmarkingSpringWebFluxApp implements ApplicationListener<R
 	@GetMapping("/complexManual")
 	public Mono<String> complexManual() {
 		return Flux.range(1, 10).map(String::valueOf).collect(Collectors.toList())
-				.doOnEach(WebFluxSleuthOperators.withSpanInScope(() -> log.info("Got a request")))
+				.doOnEach(WebFluxSleuthOperators.withSpanInScope(SignalType.ON_NEXT, () -> log.info("Got a request")))
 				.flatMap(s -> Mono.subscriberContext().delayElement(Duration.ofMillis(1), FOO_SCHEDULER).map(ctx -> {
 					WebFluxSleuthOperators.withSpanInScope(ctx, () -> log.info("Logging [{}] from flat map", s));
 					return "";
