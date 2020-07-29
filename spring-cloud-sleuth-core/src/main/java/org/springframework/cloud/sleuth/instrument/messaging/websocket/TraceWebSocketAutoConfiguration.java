@@ -22,6 +22,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.cloud.sleuth.instrument.messaging.SleuthMessagingProperties;
 import org.springframework.cloud.sleuth.instrument.messaging.TracingChannelInterceptor;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.messaging.simp.config.ChannelRegistration;
@@ -52,6 +53,9 @@ public class TraceWebSocketAutoConfiguration
 	@Autowired
 	Tracing tracing;
 
+	@Autowired
+	SleuthMessagingProperties properties;
+
 	@Override
 	public void registerStompEndpoints(StompEndpointRegistry registry) {
 		// The user must register their own endpoints
@@ -59,18 +63,20 @@ public class TraceWebSocketAutoConfiguration
 
 	@Override
 	public void configureMessageBroker(MessageBrokerRegistry registry) {
-		registry.configureBrokerChannel()
-				.setInterceptors(TracingChannelInterceptor.create(this.tracing));
+		registry.configureBrokerChannel().setInterceptors(
+				TracingChannelInterceptor.create(this.tracing, this.properties));
 	}
 
 	@Override
 	public void configureClientOutboundChannel(ChannelRegistration registration) {
-		registration.setInterceptors(TracingChannelInterceptor.create(this.tracing));
+		registration.setInterceptors(
+				TracingChannelInterceptor.create(this.tracing, this.properties));
 	}
 
 	@Override
 	public void configureClientInboundChannel(ChannelRegistration registration) {
-		registration.setInterceptors(TracingChannelInterceptor.create(this.tracing));
+		registration.setInterceptors(
+				TracingChannelInterceptor.create(this.tracing, this.properties));
 	}
 
 }

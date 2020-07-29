@@ -64,10 +64,11 @@ public class TraceSpringIntegrationAutoConfiguration {
 
 	@Bean
 	TracingChannelInterceptor traceChannelInterceptor(Tracing tracing,
+			SleuthMessagingProperties properties,
 			Propagation.Setter<MessageHeaderAccessor, String> traceMessagePropagationSetter,
 			Propagation.Getter<MessageHeaderAccessor, String> traceMessagePropagationGetter) {
-		return new TracingChannelInterceptor(tracing, traceMessagePropagationSetter,
-				traceMessagePropagationGetter);
+		return new TracingChannelInterceptor(tracing, properties,
+				traceMessagePropagationSetter, traceMessagePropagationGetter);
 	}
 
 }

@@ -103,6 +103,8 @@ public final class TracingChannelInterceptor extends ChannelInterceptorAdapter
 
 	final TraceContext.Extractor<MessageHeaderAccessor> extractor;
 
+	final SleuthMessagingProperties properties;
+
 	final boolean integrationObjectSupportPresent;
 
 	private final boolean hasDirectChannelClass;
@@ -111,15 +113,16 @@ public final class TracingChannelInterceptor extends ChannelInterceptorAdapter
 	private final Class<?> directWithAttributesChannelClass;
 
 	@Autowired
-	TracingChannelInterceptor(Tracing tracing) {
-		this(tracing, MessageHeaderPropagation.INSTANCE,
+	TracingChannelInterceptor(Tracing tracing, SleuthMessagingProperties properties) {
+		this(tracing, properties, MessageHeaderPropagation.INSTANCE,
 				MessageHeaderPropagation.INSTANCE);
 	}
 
-	TracingChannelInterceptor(Tracing tracing,
+	TracingChannelInterceptor(Tracing tracing, SleuthMessagingProperties properties,
 			Propagation.Setter<MessageHeaderAccessor, String> setter,
 			Propagation.Getter<MessageHeaderAccessor, String> getter) {
 		this.tracing = tracing;
+		this.properties = properties;
 		this.tracer = tracing.tracer();
 		this.threadLocalSpan = ThreadLocalSpan.create(this.tracer);
 		this.injector = tracing.propagation().injector(setter);
@@ -133,8 +136,9 @@ public final class TracingChannelInterceptor extends ChannelInterceptorAdapter
 						? ClassUtils.resolveClassName(STREAM_DIRECT_CHANNEL, null) : null;
 	}
 
-	public static TracingChannelInterceptor create(Tracing tracing) {
-		return new TracingChannelInterceptor(tracing);
+	public static TracingChannelInterceptor create(Tracing tracing,
+			SleuthMessagingProperties properties) {
+		return new TracingChannelInterceptor(tracing, properties);
 	}
 
 	/**
@@ -194,10 +198,10 @@ public final class TracingChannelInterceptor extends ChannelInterceptorAdapter
 	private String toRemoteServiceName(MessageHeaderAccessor headers) {
 		for (String key : headers.getMessageHeaders().keySet()) {
 			if (key.startsWith("kafka_")) {
-				return "kafka";
+				return this.properties.getMessaging().getKafka().getRemoteServiceName();
 			}
 			else if (key.startsWith("amqp_")) {
-				return "rabbitmq";
+				return this.properties.getMessaging().getRabbit().getRemoteServiceName();
 			}
 		}
 		return REMOTE_SERVICE_NAME;

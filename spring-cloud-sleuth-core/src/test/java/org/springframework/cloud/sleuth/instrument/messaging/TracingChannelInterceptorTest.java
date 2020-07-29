@@ -59,7 +59,8 @@ public class TracingChannelInterceptorTest {
 	Tracing tracing = Tracing.newBuilder().currentTraceContext(this.currentTraceContext)
 			.addSpanHandler(this.spans).build();
 
-	ChannelInterceptor interceptor = TracingChannelInterceptor.create(tracing);
+	ChannelInterceptor interceptor = TracingChannelInterceptor.create(tracing,
+			new SleuthMessagingProperties());
 
 	QueueChannel channel = new QueueChannel();
 
