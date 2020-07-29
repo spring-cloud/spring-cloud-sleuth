@@ -47,6 +47,9 @@ class TraceWebSocketAutoConfiguration extends AbstractWebSocketMessageBrokerConf
 	@Autowired
 	Tracing tracing;
 
+	@Autowired
+	SleuthMessagingProperties properties;
+
 	@Override
 	public void registerStompEndpoints(StompEndpointRegistry registry) {
 		// The user must register their own endpoints
@@ -54,18 +57,20 @@ class TraceWebSocketAutoConfiguration extends AbstractWebSocketMessageBrokerConf
 
 	@Override
 	public void configureMessageBroker(MessageBrokerRegistry registry) {
-		registry.configureBrokerChannel()
-				.setInterceptors(TracingChannelInterceptor.create(this.tracing));
+		registry.configureBrokerChannel().setInterceptors(
+				TracingChannelInterceptor.create(this.tracing, this.properties));
 	}
 
 	@Override
 	public void configureClientOutboundChannel(ChannelRegistration registration) {
-		registration.setInterceptors(TracingChannelInterceptor.create(this.tracing));
+		registration.setInterceptors(
+				TracingChannelInterceptor.create(this.tracing, this.properties));
 	}
 
 	@Override
 	public void configureClientInboundChannel(ChannelRegistration registration) {
-		registration.setInterceptors(TracingChannelInterceptor.create(this.tracing));
+		registration.setInterceptors(
+				TracingChannelInterceptor.create(this.tracing, this.properties));
 	}
 
 }

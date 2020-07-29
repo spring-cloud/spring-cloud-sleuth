@@ -66,7 +66,8 @@ public class TracingChannelInterceptorTest {
 					B3Propagation.newFactoryBuilder().injectFormat(SINGLE).build())
 			.addSpanHandler(this.spans).build();
 
-	ChannelInterceptor interceptor = TracingChannelInterceptor.create(tracing);
+	ChannelInterceptor interceptor = TracingChannelInterceptor.create(tracing,
+			new SleuthMessagingProperties());
 
 	QueueChannel channel = new QueueChannel();
 
