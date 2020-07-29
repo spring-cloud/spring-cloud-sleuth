@@ -58,13 +58,15 @@ That said, you might want to know more about how things work underneath. Here
 are some pointers.
 
 Here are the most core types you might use:
+
 * `SpanCustomizer` - to change the span currently in progress
 * `Tracer` - to get a start new spans ad-hoc
 
 Here are the most relevant links from the OpenZipkin Brave project:
-* [Brave's core library](https://github.com/openzipkin/brave/tree/master/brave)
-* [Baggage (propagated fields)](https://github.com/openzipkin/brave/tree/master/brave#baggage)
-* [HTTP tracing](https://github.com/openzipkin/brave/tree/master/instrumentation/http)
+
+* https://github.com/openzipkin/brave/tree/master/brave[Brave's core library]
+* https://github.com/openzipkin/brave/tree/master/brave#baggage[Baggage (propagated fields)]
+* https://github.com/openzipkin/brave/tree/master/instrumentation/http[HTTP tracing]
 
 == Sampling
 
@@ -111,6 +113,7 @@ If you want to add the baggage entries as tags, to make it possible to search fo
 
 If you need to do anything more advanced than above, do not define properties and instead use a
 `@Bean` config for the baggage fields you use.
+
  * `BaggagePropagationCustomizer` sets up baggage fields
    * Add a `SingleBaggageField` to control header names for a `BaggageField`.
  * `CorrelationScopeCustomizer` sets up MDC fields
