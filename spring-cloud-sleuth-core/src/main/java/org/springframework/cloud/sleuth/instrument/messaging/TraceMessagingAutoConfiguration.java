@@ -61,7 +61,10 @@ import org.springframework.context.annotation.Role;
 import org.springframework.jms.annotation.JmsListenerConfigurer;
 import org.springframework.jms.config.JmsListenerEndpointRegistry;
 import org.springframework.jms.config.TracingJmsListenerEndpointRegistry;
+import org.springframework.kafka.core.ConsumerFactory;
+import org.springframework.kafka.core.ConsumerPostProcessor;
 import org.springframework.kafka.core.ProducerFactory;
+import org.springframework.kafka.core.ProducerPostProcessor;
 import org.springframework.kafka.listener.AbstractMessageListenerContainer;
 import org.springframework.kafka.listener.MessageListener;
 import org.springframework.kafka.listener.MessageListenerContainer;
@@ -159,6 +162,12 @@ public class TraceMessagingAutoConfiguration {
 			return new SleuthKafkaAspect(kafkaTracing, tracer);
 		}
 
+		@Bean
+		KafkaFactoryBeanPostProcessor kafkaFactoryBeanPostProcessor(
+				BeanFactory beanFactory) {
+			return new KafkaFactoryBeanPostProcessor(beanFactory);
+		}
+
 	}
 
 	@Configuration(proxyBeanMethods = false)
@@ -237,6 +246,87 @@ class SleuthRabbitBeanPostProcessor implements BeanPostProcessor {
 			this.tracing = this.beanFactory.getBean(SpringRabbitTracing.class);
 		}
 		return this.tracing;
+	}
+
+}
+
+class KafkaFactoryBeanPostProcessor implements BeanPostProcessor {
+
+	private final BeanFactory beanFactory;
+
+	KafkaFactoryBeanPostProcessor(BeanFactory beanFactory) {
+		this.beanFactory = beanFactory;
+	}
+
+	@SuppressWarnings("unchecked")
+	@Override
+	public Object postProcessAfterInitialization(Object bean, String beanName)
+			throws BeansException {
+		if (bean instanceof ConsumerFactory) {
+			ConsumerFactory factory = (ConsumerFactory) bean;
+			if (factory.getPostProcessors().stream()
+					.noneMatch(o -> o instanceof TraceConsumerPostProcessor)) {
+				factory.addPostProcessor(
+						new TraceConsumerPostProcessor(this.beanFactory));
+			}
+		}
+		else if (bean instanceof ProducerFactory) {
+			ProducerFactory factory = (ProducerFactory) bean;
+			if (factory.getPostProcessors().stream()
+					.noneMatch(o -> o instanceof TraceProducerPostProcessor)) {
+				factory.addPostProcessor(
+						new TraceProducerPostProcessor(this.beanFactory));
+			}
+		}
+		return bean;
+	}
+
+}
+
+class TraceConsumerPostProcessor<K, V> implements ConsumerPostProcessor<K, V> {
+
+	private final BeanFactory beanFactory;
+
+	private KafkaTracing kafkaTracing;
+
+	TraceConsumerPostProcessor(BeanFactory beanFactory) {
+		this.beanFactory = beanFactory;
+	}
+
+	private KafkaTracing kafkaTracing() {
+		if (this.kafkaTracing == null) {
+			this.kafkaTracing = this.beanFactory.getBean(KafkaTracing.class);
+		}
+		return this.kafkaTracing;
+	}
+
+	@Override
+	public Consumer<K, V> apply(Consumer<K, V> kvConsumer) {
+		return kafkaTracing().consumer(kvConsumer);
+	}
+
+}
+
+class TraceProducerPostProcessor<K, V> implements ProducerPostProcessor<K, V> {
+
+	private final BeanFactory beanFactory;
+
+	private KafkaTracing kafkaTracing;
+
+	TraceProducerPostProcessor(BeanFactory beanFactory) {
+		this.beanFactory = beanFactory;
+	}
+
+	private KafkaTracing kafkaTracing() {
+		if (this.kafkaTracing == null) {
+			this.kafkaTracing = this.beanFactory.getBean(KafkaTracing.class);
+		}
+		return this.kafkaTracing;
+	}
+
+	@Override
+	public Producer<K, V> apply(Producer<K, V> kvProducer) {
+		return kafkaTracing().producer(kvProducer);
 	}
 
 }
