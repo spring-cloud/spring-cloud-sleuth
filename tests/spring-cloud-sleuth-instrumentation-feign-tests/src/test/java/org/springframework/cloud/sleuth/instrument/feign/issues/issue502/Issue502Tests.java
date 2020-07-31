@@ -82,7 +82,7 @@ public class Issue502Tests {
 		then(response).isEqualTo("foo");
 		// retries
 		then(this.spans).hasSize(1);
-		// then(this.spans.get(0).tags().get("http.path")).isEqualTo("");
+		//then(this.spans.get(0).tags().get("http.path")).isEqualTo("");
 	}
 
 }
