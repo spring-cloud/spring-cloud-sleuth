@@ -326,7 +326,7 @@
 					<plugin>
 						<groupId>com.lazerycode.jmeter</groupId>
 						<artifactId>jmeter-maven-plugin</artifactId>
-						<version>1.10.1</version>
+						<version>3.1.1</version>
 						<configuration>
 							<testResultsTimestamp>false</testResultsTimestamp>
 							<suppressJMeterOutput>false</suppressJMeterOutput>
