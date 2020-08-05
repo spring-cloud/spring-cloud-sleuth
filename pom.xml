@@ -262,8 +262,8 @@
 <!--		<reactor.version>2020.0.0-SNAPSHOT</reactor.version>-->
 		<spring-security-boot-autoconfigure.version>2.3.1.RELEASE</spring-security-boot-autoconfigure.version>
 		<disable.nohttp.checks>false</disable.nohttp.checks>
-		<okhttp.version>3.14.6</okhttp.version>
-		<mockwebserver.version>3.14.6</mockwebserver.version>
+		<okhttp.version>4.8.0</okhttp.version>
+		<mockwebserver.version>4.8.0</mockwebserver.version>
 		<guava.version>20.0</guava.version>
 		<javax.resource-api.version>1.7.1</javax.resource-api.version>
 		<cglib-nodep.version>3.3.0</cglib-nodep.version>
