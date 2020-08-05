@@ -188,13 +188,6 @@
 				<type>pom</type>
 				<scope>import</scope>
 			</dependency>
-			<!--<dependency>
-				<groupId>io.projectreactor</groupId>
-				<artifactId>reactor-bom</artifactId>
-				<version>${reactor.version}</version>
-				<type>pom</type>
-				<scope>import</scope>
-			</dependency>-->
 			<!-- Spock -->
 			<dependency>
 				<groupId>org.spockframework</groupId>
@@ -259,7 +252,6 @@
 		<spring-cloud-netflix.version>3.0.0-SNAPSHOT</spring-cloud-netflix.version>
 		<spring-cloud-openfeign.version>3.0.0-SNAPSHOT</spring-cloud-openfeign.version>
 		<brave.version>5.12.3</brave.version>
-<!--		<reactor.version>2020.0.0-SNAPSHOT</reactor.version>-->
 		<spring-security-boot-autoconfigure.version>2.3.1.RELEASE</spring-security-boot-autoconfigure.version>
 		<disable.nohttp.checks>false</disable.nohttp.checks>
 		<okhttp.version>4.8.0</okhttp.version>
