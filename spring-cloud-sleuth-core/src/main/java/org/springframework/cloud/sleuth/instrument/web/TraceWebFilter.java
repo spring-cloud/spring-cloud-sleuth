@@ -351,6 +351,14 @@ final class TraceWebFilter implements WebFilter, Ordered {
 
 		@Override
 		public boolean parseClientIpAndPort(Span span) {
+			boolean clientIpAndPortParsed = super.parseClientIpAndPort(span);
+			if (clientIpAndPortParsed) {
+				return true;
+			}
+			return resolveFromInetAddress(span);
+		}
+
+		private boolean resolveFromInetAddress(Span span) {
 			InetSocketAddress addr = delegate.getRemoteAddress();
 			if (addr == null) {
 				return false;

@@ -92,6 +92,11 @@ public class TraceWebFluxTests {
 		// then
 		thenNoSpanWasReported(spans, skippedPatternResponse, controller2);
 
+		// when (issue #1683)
+		response = whenRequestWithXForwardedForIsSent(port, "/api/fn/20");
+		// then
+		thenSpanWasReportedWithRemoteIpTags(spans, response);
+
 		// cleanup
 		context.close();
 	}
@@ -109,6 +114,15 @@ public class TraceWebFluxTests {
 		then(spans.get(0).name()).isEqualTo("GET /api/c2/{id}");
 		then(spans.get(0).tags()).containsEntry("mvc.controller.method", "successful")
 				.containsEntry("mvc.controller.class", "Controller2");
+		then(spans.get(0).remoteIp()).isEqualTo("127.0.0.1");
+	}
+
+	private void thenSpanWasReportedWithRemoteIpTags(TestSpanHandler spans,
+			ClientResponse response) {
+		Awaitility.await()
+				.untilAsserted(() -> then(response.statusCode().value()).isEqualTo(200));
+		then(spans).hasSize(1);
+		then(spans.get(0).remoteIp()).isEqualTo("203.0.113.195");
 	}
 
 	private void thenFunctionalSpanWasReportedWithTags(TestSpanHandler spans,
@@ -134,6 +148,14 @@ public class TraceWebFluxTests {
 	private ClientResponse whenRequestIsSent(int port, String path) {
 		Mono<ClientResponse> exchange = WebClient.create().get()
 				.uri("http://localhost:" + port + path).exchange();
+		return exchange.block();
+	}
+
+	private ClientResponse whenRequestWithXForwardedForIsSent(int port, String path) {
+		Mono<ClientResponse> exchange = WebClient.create().get()
+				.uri("http://localhost:" + port + path)
+				.header("X-Forwarded-For", "203.0.113.195, 70.41.3.18, 150.172.238.178")
+				.exchange();
 		return exchange.block();
 	}
 
