@@ -30,4 +30,5 @@ org.springframework.cloud.sleuth.instrument.mongodb.TraceMongoDbAutoConfiguratio
 
 # Environment Post Processor
 org.springframework.boot.env.EnvironmentPostProcessor=\
-org.springframework.cloud.sleuth.autoconfig.TraceEnvironmentPostProcessor
+org.springframework.cloud.sleuth.autoconfig.TraceEnvironmentPostProcessor,\
+org.springframework.cloud.sleuth.instrument.web.client.TraceGatewayEnvironmentPostProcessor
