@@ -16,7 +16,6 @@
 
 package org.springframework.cloud.sleuth.instrument.async.issues.issue410;
 
-import java.lang.invoke.MethodHandles;
 import java.util.Date;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
@@ -66,8 +65,7 @@ import static org.assertj.core.api.BDDAssertions.then;
 		properties = { "ribbon.eureka.enabled=false", "feign.hystrix.enabled=false" })
 public class Issue410Tests {
 
-	private static final Log log = LogFactory
-			.getLog(MethodHandles.lookup().lookupClass());
+	private static final Log log = LogFactory.getLog(Issue410Tests.class);
 
 	@Autowired
 	Environment environment;
