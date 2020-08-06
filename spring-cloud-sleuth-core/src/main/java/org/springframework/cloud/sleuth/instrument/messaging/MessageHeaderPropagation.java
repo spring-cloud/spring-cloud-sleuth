@@ -19,11 +19,8 @@ package org.springframework.cloud.sleuth.instrument.messaging;
 import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 import brave.propagation.Propagation;
 import org.apache.commons.logging.Log;
@@ -47,21 +44,6 @@ enum MessageHeaderPropagation
 	INSTANCE;
 
 	private static final Log log = LogFactory.getLog(MessageHeaderPropagation.class);
-
-	private static final Set<String> DEPRECATED_HEADERS = new LinkedHashSet<>();
-
-	private static final Map<String, String> LEGACY_HEADER_MAPPING = new HashMap<>();
-
-	static {
-		LEGACY_HEADER_MAPPING.put("X-B3-TraceId", TraceMessageHeaders.TRACE_ID_NAME);
-		LEGACY_HEADER_MAPPING.put("X-B3-SpanId", TraceMessageHeaders.SPAN_ID_NAME);
-		LEGACY_HEADER_MAPPING.put("X-B3-ParentSpanId",
-				TraceMessageHeaders.PARENT_ID_NAME);
-		LEGACY_HEADER_MAPPING.put("X-B3-Sampled", TraceMessageHeaders.SAMPLED_NAME);
-		LEGACY_HEADER_MAPPING.put("X-B3-Flags", TraceMessageHeaders.SPAN_FLAGS_NAME);
-		DEPRECATED_HEADERS.addAll(LEGACY_HEADER_MAPPING.keySet());
-		DEPRECATED_HEADERS.addAll(LEGACY_HEADER_MAPPING.values());
-	}
 
 	static Map<String, ?> propagationHeaders(Map<String, ?> headers,
 			List<String> propagationHeaders) {
@@ -116,15 +98,8 @@ enum MessageHeaderPropagation
 		return nativeAccessor;
 	}
 
-	static final AtomicBoolean LOGGED_PUT_DEPRECATED_HEADER = new AtomicBoolean();
-
 	@Override
 	public void put(MessageHeaderAccessor accessor, String key, String value) {
-		if (DEPRECATED_HEADERS.contains(key)
-				&& LOGGED_PUT_DEPRECATED_HEADER.compareAndSet(false, true)) {
-			log.warn("Please update your code so that it uses the 'b3' header "
-					+ "instead of " + key);
-		}
 		try {
 			doPut(accessor, key, value);
 		}
@@ -177,25 +152,10 @@ enum MessageHeaderPropagation
 						+ "] from message", ex);
 			}
 		}
-		return legacyValue(accessor, key);
-	}
-
-	private String legacyValue(MessageHeaderAccessor accessor, String key) {
-		String legacyKey = LEGACY_HEADER_MAPPING.get(key);
-		if (legacyKey != null) {
-			return doGet(accessor, legacyKey);
-		}
 		return null;
 	}
 
-	static final AtomicBoolean LOGGED_GET_DEPRECATED_HEADER = new AtomicBoolean();
-
 	private String doGet(MessageHeaderAccessor accessor, String key) {
-		if (DEPRECATED_HEADERS.contains(key)
-				&& LOGGED_GET_DEPRECATED_HEADER.compareAndSet(false, true)) {
-			log.warn("Please update your code so that it uses the 'b3' header "
-					+ "instead of " + key);
-		}
 		if (accessor instanceof NativeMessageHeaderAccessor) {
 			NativeMessageHeaderAccessor nativeAccessor = (NativeMessageHeaderAccessor) accessor;
 			String result = nativeAccessor.getFirstNativeHeader(key);
