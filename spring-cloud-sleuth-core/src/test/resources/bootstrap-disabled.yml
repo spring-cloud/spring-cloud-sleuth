@@ -1,5 +1,3 @@
 spring:
   application:
     name: foo
-  sleuth:
-    enabled: false

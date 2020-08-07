@@ -41,7 +41,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 		classes = TraceAutoConfigurationWithDisabledSleuthTests.Config.class)
 @ActiveProfiles("disabled")
 @ExtendWith(OutputCaptureExtension.class)
-@DirtiesContext
 public class TraceAutoConfigurationWithDisabledSleuthTests {
 
 	private static final Log log = LogFactory
