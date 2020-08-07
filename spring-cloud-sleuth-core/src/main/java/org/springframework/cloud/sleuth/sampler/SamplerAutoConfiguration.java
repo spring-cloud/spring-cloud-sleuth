@@ -18,9 +18,11 @@ package org.springframework.cloud.sleuth.sampler;
 
 import brave.sampler.CountingSampler;
 import brave.sampler.Sampler;
+import org.jetbrains.annotations.NotNull;
 
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.cloud.context.config.annotation.RefreshScope;
 import org.springframework.context.annotation.Bean;
@@ -65,7 +67,22 @@ public class SamplerAutoConfiguration {
 		@Bean
 		@RefreshScope
 		@ConditionalOnMissingBean
+		@ConditionalOnProperty(value = "spring.sleuth.sampler.refresh.enabled",
+				matchIfMissing = true)
 		public Sampler defaultTraceSampler(SamplerProperties config) {
+			return sampler(config);
+		}
+
+		@Bean
+		@ConditionalOnMissingBean
+		@ConditionalOnProperty(value = "spring.sleuth.sampler.refresh.enabled",
+				havingValue = "false")
+		public Sampler defaultNonRefreshScopeTraceSampler(SamplerProperties config) {
+			return sampler(config);
+		}
+
+		@NotNull
+		private Sampler sampler(SamplerProperties config) {
 			// TODO: Rewrite: refresh should replace the sampler, not change its state
 			// internally
 			if (config.getProbability() != null) {

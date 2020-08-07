@@ -88,6 +88,8 @@ include::{project-root}/spring-cloud-sleuth-core/src/test/java/org/springframewo
 TIP: You can set the HTTP header `b3` to `1`, or, when doing messaging, you can set the `spanFlags` header to `1`.
 Doing so forces the current request to be sampled regardless of configuration.
 
+By default samplers will work with the refresh scope mechanism. That means that you can change the sampling properties at runtime, refresh the application and the changes will be reflected. However, sometimes the fact of creating a proxy around samplers and calling it from too early (from `@PostConstruct` annotated method) may lead to dead locks. In such a case either create a sampler bean explicitly, or set the property `spring.sleuth.sampler.refresh.enabled` to `false` to disable the refresh scope support.
+
 == Baggage
 Baggage are fields that are propagated with the trace, optionally out of process. You can use
 properties to define fields that have no special configuration such as name mapping:

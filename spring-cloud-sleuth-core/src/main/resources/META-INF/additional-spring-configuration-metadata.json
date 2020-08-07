@@ -83,6 +83,12 @@
       "type": "java.lang.Boolean",
       "description": "Enable tracing of RPC.",
       "defaultValue": true
+    },
+    {
+      "name": "spring.sleuth.sampler.refresh.enabled",
+      "type": "java.lang.Boolean",
+      "description": "Enable refresh scope for sampler.",
+      "defaultValue": true
     }
   ]
 }
