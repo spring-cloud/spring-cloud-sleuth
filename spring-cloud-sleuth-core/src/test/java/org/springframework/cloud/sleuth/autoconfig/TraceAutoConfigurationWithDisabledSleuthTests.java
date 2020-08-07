@@ -62,12 +62,12 @@ public class TraceAutoConfigurationWithDisabledSleuthTests {
 		log.info("hello");
 
 		// prove bootstrap-disabled.yml loaded
-		assertThat(applicationName).isEqualTo("foo");
+		assertThat(applicationName).isEqualTo("disabledapplication");
 
 		// spring.application.name is put in the log format by
 		// TraceEnvironmentPostProcessor
 		// checking for the service name here ensures this isn't accidentally loaded
-		BDDAssertions.then(capture.toString()).doesNotContain("[foo");
+		BDDAssertions.then(capture.toString()).doesNotContain("[disabledapplication");
 	}
 
 	@EnableAutoConfiguration
