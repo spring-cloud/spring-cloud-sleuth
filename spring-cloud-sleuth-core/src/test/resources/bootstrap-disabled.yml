@@ -1,3 +1,5 @@
 spring:
   application:
     name: disabledapplication
+  sleuth:
+    enabled: false

@@ -37,6 +37,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 @SpringBootTest(
 		// WebEnvironment.NONE will not read a Yaml profile
 		webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
+		properties = { "spring.config.use-legacy-processing=true" },
 		classes = TraceAutoConfigurationWithDisabledSleuthTests.Config.class)
 @ActiveProfiles("disabled")
 @ExtendWith(OutputCaptureExtension.class)
