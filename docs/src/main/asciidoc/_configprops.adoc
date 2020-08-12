@@ -40,6 +40,7 @@
 |spring.sleuth.rxjava.schedulers.ignoredthreads | [HystrixMetricPoller, ^RxComputation.*$] | Thread names for which spans will not be sampled.
 |spring.sleuth.sampler.probability |  | Probability of requests that should be sampled. E.g. 1.0 - 100% requests should be sampled. The precision is whole-numbers only (i.e. there's no support for 0.1% of the traces).
 |spring.sleuth.sampler.rate | 10 | A rate per second can be a nice choice for low-traffic endpoints as it allows you surge protection. For example, you may never expect the endpoint to get more than 50 requests per second. If there was a sudden surge of traffic, to 5000 requests per second, you would still end up with 50 traces per second. Conversely, if you had a percentage, like 10%, the same surge would end up with 500 traces per second, possibly overloading your storage. Amazon X-Ray includes a rate-limited sampler (named Reservoir) for this purpose. Brave has taken the same approach via the {@link brave.sampler.RateLimitingSampler}.
+|spring.sleuth.sampler.refresh.enabled | true | Enable refresh scope for sampler.
 |spring.sleuth.scheduled.enabled | true | Enable tracing for {@link org.springframework.scheduling.annotation.Scheduled}.
 |spring.sleuth.scheduled.skip-pattern |  | Pattern for the fully qualified name of a class that should be skipped.
 |spring.sleuth.supports-join | true | True means the tracing system supports sharing a span ID between a client and server.
