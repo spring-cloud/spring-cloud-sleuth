@@ -17,7 +17,7 @@ services.
 
 Here's an example of what it looks like:
 
-image::https://raw.githubusercontent.com/spring-cloud/spring-cloud-sleuth/{branch}/docs/src/main/asciidoc/images/zipkin-trace-screenshot.png[Zipkin Trace]
+image::{github-raw}/src/main/asciidoc/images/zipkin-trace-screenshot.png[Zipkin Trace]
 
 The https://github.com/openzipkin/sleuth-webmvc-example[source repository] of this
 example includes demonstrations of many things, including WebFlux and messaging.

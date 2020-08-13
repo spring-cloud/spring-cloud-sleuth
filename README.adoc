@@ -77,7 +77,7 @@ services.
 
 Here's an example of what it looks like:
 
-image::https://raw.githubusercontent.com/spring-cloud/spring-cloud-sleuth/{branch}/docs/src/main/asciidoc/images/zipkin-trace-screenshot.png[Zipkin Trace]
+image::{github-raw}/src/main/asciidoc/images/zipkin-trace-screenshot.png[Zipkin Trace]
 
 The https://github.com/openzipkin/sleuth-webmvc-example[source repository] of this
 example includes demonstrations of many things, including WebFlux and messaging.
@@ -126,12 +126,12 @@ Zipkin reduces time in triage by contextualizing errors and delays.
 
 Requests colored red in the search screen failed:
 
-image::https://raw.githubusercontent.com/spring-cloud/spring-cloud-sleuth/{branch}/docs/src/main/asciidoc/images/zipkin-error-traces.png[Error Traces]
+image::{github-raw}/src/main/asciidoc/images/zipkin-error-traces.png[Error Traces]
 
 If you then click on one of the traces, you can understand if the failure
 happened before the request hit another service or not:
 
-image::https://raw.githubusercontent.com/spring-cloud/spring-cloud-sleuth/{branch}/docs/src/main/asciidoc/images/zipkin-error-trace-screenshot.png[Error Traces Info propagation]
+image::{github-raw}/src/main/asciidoc/images/zipkin-error-trace-screenshot.png[Error Traces Info propagation]
 
 For example, the above error happened in the "backend" service, and caused the
 "frontend" service to fail.
@@ -165,7 +165,7 @@ including the count of calls and how many errors exist.
 The example application will make a simple diagram like this, but your real
 environment diagram may be more complex.
 
-image::https://raw.githubusercontent.com/spring-cloud/spring-cloud-sleuth/{branch}/docs/src/main/asciidoc/images/zipkin-dependencies.png[Zipkin Dependencies]
+image::{github-raw}/docs/src/main/asciidoc/images/zipkin-dependencies.png[Zipkin Dependencies]
 
 *Note*: Production environments will generate a lot of data. You will likely
 need to run a separate service to aggregate the dependency graph. You can learn
