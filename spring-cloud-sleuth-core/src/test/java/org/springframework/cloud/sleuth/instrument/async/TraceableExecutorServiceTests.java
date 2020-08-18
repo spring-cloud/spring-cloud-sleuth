@@ -78,7 +78,7 @@ public class TraceableExecutorServiceTests {
 	@BeforeEach
 	public void setup() {
 		this.traceManagerableExecutorService = new TraceableExecutorService(
-				beanFactory(true), this.executorService);
+				beanFactory(true), this.executorService, "foo");
 		this.spans.clear();
 		this.spanVerifyingRunnable.clear();
 	}

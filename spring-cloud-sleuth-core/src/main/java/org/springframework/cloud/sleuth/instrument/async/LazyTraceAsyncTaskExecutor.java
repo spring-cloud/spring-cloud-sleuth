@@ -45,6 +45,8 @@ public class LazyTraceAsyncTaskExecutor implements AsyncTaskExecutor {
 
 	private final AsyncTaskExecutor delegate;
 
+	private final String beanName;
+
 	private Tracing tracing;
 
 	private SpanNamer spanNamer;
@@ -53,13 +55,21 @@ public class LazyTraceAsyncTaskExecutor implements AsyncTaskExecutor {
 			AsyncTaskExecutor delegate) {
 		this.beanFactory = beanFactory;
 		this.delegate = delegate;
+		this.beanName = null;
+	}
+
+	public LazyTraceAsyncTaskExecutor(BeanFactory beanFactory, AsyncTaskExecutor delegate,
+			String beanName) {
+		this.beanFactory = beanFactory;
+		this.delegate = delegate;
+		this.beanName = beanName;
 	}
 
 	@Override
 	public void execute(Runnable task) {
 		Runnable taskToRun = task;
 		if (!ContextUtil.isContextUnusable(this.beanFactory)) {
-			taskToRun = new TraceRunnable(tracing(), spanNamer(), task);
+			taskToRun = new TraceRunnable(tracing(), spanNamer(), task, this.beanName);
 		}
 		this.delegate.execute(taskToRun);
 	}
@@ -68,7 +78,7 @@ public class LazyTraceAsyncTaskExecutor implements AsyncTaskExecutor {
 	public void execute(Runnable task, long startTimeout) {
 		Runnable taskToRun = task;
 		if (!ContextUtil.isContextUnusable(this.beanFactory)) {
-			taskToRun = new TraceRunnable(tracing(), spanNamer(), task);
+			taskToRun = new TraceRunnable(tracing(), spanNamer(), task, this.beanName);
 		}
 		this.delegate.execute(taskToRun, startTimeout);
 	}
@@ -77,7 +87,7 @@ public class LazyTraceAsyncTaskExecutor implements AsyncTaskExecutor {
 	public Future<?> submit(Runnable task) {
 		Runnable taskToRun = task;
 		if (!ContextUtil.isContextUnusable(this.beanFactory)) {
-			taskToRun = new TraceRunnable(tracing(), spanNamer(), task);
+			taskToRun = new TraceRunnable(tracing(), spanNamer(), task, this.beanName);
 		}
 		return this.delegate.submit(taskToRun);
 	}
@@ -86,7 +96,7 @@ public class LazyTraceAsyncTaskExecutor implements AsyncTaskExecutor {
 	public <T> Future<T> submit(Callable<T> task) {
 		Callable<T> taskToRun = task;
 		if (!ContextUtil.isContextUnusable(this.beanFactory)) {
-			taskToRun = new TraceCallable<>(tracing(), spanNamer(), task);
+			taskToRun = new TraceCallable<>(tracing(), spanNamer(), task, this.beanName);
 		}
 		return this.delegate.submit(taskToRun);
 	}

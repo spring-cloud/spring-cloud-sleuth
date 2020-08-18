@@ -212,7 +212,7 @@ public class ExecutorBeanPostProcessorTests {
 		ExecutorBeanPostProcessor bpp = new ExecutorBeanPostProcessor(this.beanFactory) {
 			@Override
 			Object createThreadPoolTaskExecutorProxy(Object bean, boolean cglibProxy,
-					ThreadPoolTaskExecutor executor) {
+					ThreadPoolTaskExecutor executor, String beanName) {
 				throw new AopConfigException("foo");
 			}
 		};

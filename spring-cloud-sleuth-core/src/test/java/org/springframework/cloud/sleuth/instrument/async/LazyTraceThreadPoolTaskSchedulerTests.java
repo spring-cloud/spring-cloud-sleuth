@@ -58,8 +58,8 @@ public class LazyTraceThreadPoolTaskSchedulerTests {
 
 	@BeforeEach
 	public void setup() {
-		this.executor = new LazyTraceThreadPoolTaskScheduler(beanFactory(),
-				this.delegate);
+		this.executor = new LazyTraceThreadPoolTaskScheduler(beanFactory(), this.delegate,
+				null);
 	}
 
 	@AfterEach

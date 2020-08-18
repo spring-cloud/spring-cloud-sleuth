@@ -42,7 +42,7 @@ public class TraceableExecutorService implements ExecutorService {
 
 	final ExecutorService delegate;
 
-	private final String spanName;
+	final String spanName;
 
 	Tracing tracing;
 

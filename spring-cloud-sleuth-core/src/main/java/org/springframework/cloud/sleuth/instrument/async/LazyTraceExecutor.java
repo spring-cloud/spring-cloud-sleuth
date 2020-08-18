@@ -42,6 +42,8 @@ public class LazyTraceExecutor implements Executor {
 
 	private final Executor delegate;
 
+	private final String beanName;
+
 	private Tracing tracing;
 
 	private SpanNamer spanNamer;
@@ -49,6 +51,14 @@ public class LazyTraceExecutor implements Executor {
 	public LazyTraceExecutor(BeanFactory beanFactory, Executor delegate) {
 		this.beanFactory = beanFactory;
 		this.delegate = delegate;
+		this.beanName = null;
+	}
+
+	public LazyTraceExecutor(BeanFactory beanFactory, Executor delegate,
+			String beanName) {
+		this.beanFactory = beanFactory;
+		this.delegate = delegate;
+		this.beanName = beanName;
 	}
 
 	@Override
@@ -66,7 +76,8 @@ public class LazyTraceExecutor implements Executor {
 				return;
 			}
 		}
-		this.delegate.execute(new TraceRunnable(this.tracing, spanNamer(), command));
+		this.delegate.execute(
+				new TraceRunnable(this.tracing, spanNamer(), command, this.beanName));
 	}
 
 	// due to some race conditions trace keys might not be ready yet

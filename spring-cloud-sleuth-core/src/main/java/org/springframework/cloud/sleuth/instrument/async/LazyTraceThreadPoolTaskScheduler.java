@@ -62,6 +62,8 @@ class LazyTraceThreadPoolTaskScheduler extends ThreadPoolTaskScheduler {
 
 	private final ThreadPoolTaskScheduler delegate;
 
+	private final String beanName;
+
 	private final Method initializeExecutor;
 
 	private final Method createExecutor;
@@ -77,9 +79,10 @@ class LazyTraceThreadPoolTaskScheduler extends ThreadPoolTaskScheduler {
 	private SpanNamer spanNamer;
 
 	LazyTraceThreadPoolTaskScheduler(BeanFactory beanFactory,
-			ThreadPoolTaskScheduler delegate) {
+			ThreadPoolTaskScheduler delegate, String beanName) {
 		this.beanFactory = beanFactory;
 		this.delegate = delegate;
+		this.beanName = beanName;
 		this.initializeExecutor = ReflectionUtils
 				.findMethod(ThreadPoolTaskScheduler.class, "initializeExecutor", null);
 		makeAccessibleIfNotNull(this.initializeExecutor);
@@ -127,11 +130,13 @@ class LazyTraceThreadPoolTaskScheduler extends ThreadPoolTaskScheduler {
 		if (executorService instanceof TraceableScheduledExecutorService) {
 			return executorService;
 		}
-		return new TraceableExecutorService(this.beanFactory, executorService);
+		return new TraceableExecutorService(this.beanFactory, executorService,
+				this.beanName);
 	}
 
 	private ThreadFactory traceThreadFactory(ThreadFactory threadFactory) {
-		return r -> threadFactory.newThread(new TraceRunnable(tracing(), spanNamer(), r));
+		return r -> threadFactory
+				.newThread(new TraceRunnable(tracing(), spanNamer(), r, this.beanName));
 	}
 
 	@Override
@@ -144,14 +149,16 @@ class LazyTraceThreadPoolTaskScheduler extends ThreadPoolTaskScheduler {
 		if (executorService instanceof TraceableScheduledExecutorService) {
 			return executorService;
 		}
-		return new TraceableScheduledExecutorService(this.beanFactory, executorService);
+		return new TraceableScheduledExecutorService(this.beanFactory, executorService,
+				this.beanName);
 	}
 
 	@Override
 	public ScheduledExecutorService getScheduledExecutor() throws IllegalStateException {
 		ScheduledExecutorService executor = this.delegate.getScheduledExecutor();
 		return executor instanceof TraceableScheduledExecutorService ? executor
-				: new TraceableScheduledExecutorService(this.beanFactory, executor);
+				: new TraceableScheduledExecutorService(this.beanFactory, executor,
+						this.beanName);
 	}
 
 	@Override
@@ -164,7 +171,7 @@ class LazyTraceThreadPoolTaskScheduler extends ThreadPoolTaskScheduler {
 		}
 		return new LazyTraceScheduledThreadPoolExecutor(executor.getCorePoolSize(),
 				executor.getThreadFactory(), executor.getRejectedExecutionHandler(),
-				this.beanFactory, executor);
+				this.beanFactory, executor, this.beanName);
 	}
 
 	@Override
@@ -184,41 +191,45 @@ class LazyTraceThreadPoolTaskScheduler extends ThreadPoolTaskScheduler {
 
 	@Override
 	public void execute(Runnable task) {
-		this.delegate.execute(new TraceRunnable(tracing(), spanNamer(), task));
+		this.delegate
+				.execute(new TraceRunnable(tracing(), spanNamer(), task, this.beanName));
 	}
 
 	@Override
 	public void execute(Runnable task, long startTimeout) {
-		this.delegate.execute(new TraceRunnable(tracing(), spanNamer(), task),
+		this.delegate.execute(
+				new TraceRunnable(tracing(), spanNamer(), task, this.beanName),
 				startTimeout);
 	}
 
 	@Override
 	public Future<?> submit(Runnable task) {
-		return this.delegate.submit(new TraceRunnable(tracing(), spanNamer(), task));
+		return this.delegate
+				.submit(new TraceRunnable(tracing(), spanNamer(), task, this.beanName));
 	}
 
 	@Override
 	public <T> Future<T> submit(Callable<T> task) {
-		return this.delegate.submit(new TraceCallable<>(tracing(), spanNamer(), task));
+		return this.delegate
+				.submit(new TraceCallable<>(tracing(), spanNamer(), task, this.beanName));
 	}
 
 	@Override
 	public ListenableFuture<?> submitListenable(Runnable task) {
-		return this.delegate
-				.submitListenable(new TraceRunnable(tracing(), spanNamer(), task));
+		return this.delegate.submitListenable(
+				new TraceRunnable(tracing(), spanNamer(), task, this.beanName));
 	}
 
 	@Override
 	public <T> ListenableFuture<T> submitListenable(Callable<T> task) {
-		return this.delegate
-				.submitListenable(new TraceCallable<>(tracing(), spanNamer(), task));
+		return this.delegate.submitListenable(
+				new TraceCallable<>(tracing(), spanNamer(), task, this.beanName));
 	}
 
 	@Override
 	public void cancelRemainingTask(Runnable task) {
 		ReflectionUtils.invokeMethod(this.cancelRemainingTask, this.delegate,
-				new TraceRunnable(tracing(), spanNamer(), task));
+				new TraceRunnable(tracing(), spanNamer(), task, this.beanName));
 	}
 
 	@Override
@@ -229,13 +240,14 @@ class LazyTraceThreadPoolTaskScheduler extends ThreadPoolTaskScheduler {
 	@Override
 	@Nullable
 	public ScheduledFuture<?> schedule(Runnable task, Trigger trigger) {
-		return this.delegate.schedule(new TraceRunnable(tracing(), spanNamer(), task),
-				trigger);
+		return this.delegate.schedule(
+				new TraceRunnable(tracing(), spanNamer(), task, this.beanName), trigger);
 	}
 
 	@Override
 	public ScheduledFuture<?> schedule(Runnable task, Date startTime) {
-		return this.delegate.schedule(new TraceRunnable(tracing(), spanNamer(), task),
+		return this.delegate.schedule(
+				new TraceRunnable(tracing(), spanNamer(), task, this.beanName),
 				startTime);
 	}
 
@@ -243,26 +255,28 @@ class LazyTraceThreadPoolTaskScheduler extends ThreadPoolTaskScheduler {
 	public ScheduledFuture<?> scheduleAtFixedRate(Runnable task, Date startTime,
 			long period) {
 		return this.delegate.scheduleAtFixedRate(
-				new TraceRunnable(tracing(), spanNamer(), task), startTime, period);
+				new TraceRunnable(tracing(), spanNamer(), task, this.beanName), startTime,
+				period);
 	}
 
 	@Override
 	public ScheduledFuture<?> scheduleAtFixedRate(Runnable task, long period) {
 		return this.delegate.scheduleAtFixedRate(
-				new TraceRunnable(tracing(), spanNamer(), task), period);
+				new TraceRunnable(tracing(), spanNamer(), task, this.beanName), period);
 	}
 
 	@Override
 	public ScheduledFuture<?> scheduleWithFixedDelay(Runnable task, Date startTime,
 			long delay) {
 		return this.delegate.scheduleWithFixedDelay(
-				new TraceRunnable(tracing(), spanNamer(), task), startTime, delay);
+				new TraceRunnable(tracing(), spanNamer(), task, this.beanName), startTime,
+				delay);
 	}
 
 	@Override
 	public ScheduledFuture<?> scheduleWithFixedDelay(Runnable task, long delay) {
 		return this.delegate.scheduleWithFixedDelay(
-				new TraceRunnable(tracing(), spanNamer(), task), delay);
+				new TraceRunnable(tracing(), spanNamer(), task, this.beanName), delay);
 	}
 
 	@Override
@@ -385,7 +399,8 @@ class LazyTraceThreadPoolTaskScheduler extends ThreadPoolTaskScheduler {
 
 	@Override
 	public ScheduledFuture<?> schedule(Runnable task, Instant startTime) {
-		return this.delegate.schedule(new TraceRunnable(tracing(), spanNamer(), task),
+		return this.delegate.schedule(
+				new TraceRunnable(tracing(), spanNamer(), task, this.beanName),
 				startTime);
 	}
 
@@ -393,26 +408,28 @@ class LazyTraceThreadPoolTaskScheduler extends ThreadPoolTaskScheduler {
 	public ScheduledFuture<?> scheduleAtFixedRate(Runnable task, Instant startTime,
 			Duration period) {
 		return this.delegate.scheduleAtFixedRate(
-				new TraceRunnable(tracing(), spanNamer(), task), startTime, period);
+				new TraceRunnable(tracing(), spanNamer(), task, this.beanName), startTime,
+				period);
 	}
 
 	@Override
 	public ScheduledFuture<?> scheduleAtFixedRate(Runnable task, Duration period) {
 		return this.delegate.scheduleAtFixedRate(
-				new TraceRunnable(tracing(), spanNamer(), task), period);
+				new TraceRunnable(tracing(), spanNamer(), task, this.beanName), period);
 	}
 
 	@Override
 	public ScheduledFuture<?> scheduleWithFixedDelay(Runnable task, Instant startTime,
 			Duration delay) {
 		return this.delegate.scheduleWithFixedDelay(
-				new TraceRunnable(tracing(), spanNamer(), task), startTime, delay);
+				new TraceRunnable(tracing(), spanNamer(), task, this.beanName), startTime,
+				delay);
 	}
 
 	@Override
 	public ScheduledFuture<?> scheduleWithFixedDelay(Runnable task, Duration delay) {
 		return this.delegate.scheduleWithFixedDelay(
-				new TraceRunnable(tracing(), spanNamer(), task), delay);
+				new TraceRunnable(tracing(), spanNamer(), task, this.beanName), delay);
 	}
 
 	private Tracing tracing() {
