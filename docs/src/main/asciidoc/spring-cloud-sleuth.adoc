@@ -1261,8 +1261,8 @@ We inject a `ExchangeFilterFunction` implementation that creates a span and, thr
 
 To block this feature, set `spring.sleuth.web.client.enabled` to `false`.
 
-IMPORTANT: You have to register `WebClient` as a bean so that the tracing instrumentation gets applied.
-If you create a `WebClient` instance with a `new` keyword,  the instrumentation does NOT work.
+IMPORTANT: You have to register either a `WebClient` or `WebClient.Builder` as a bean so that the tracing instrumentation gets applied.
+If you manually create a `WebClient` or `WebClient.Builder`, the instrumentation does NOT work.
 
 ==== Traverson
 
