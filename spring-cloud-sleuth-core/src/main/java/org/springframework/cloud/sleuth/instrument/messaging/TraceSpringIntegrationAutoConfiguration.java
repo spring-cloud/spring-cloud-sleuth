@@ -23,19 +23,22 @@ import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.AnyNestedCondition;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.cloud.function.context.FunctionCatalog;
 import org.springframework.cloud.sleuth.autoconfig.TraceAutoConfiguration;
-import org.springframework.cloud.stream.config.BinderFactoryAutoConfiguration;
+import org.springframework.cloud.stream.annotation.EnableBinding;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.ConditionContext;
 import org.springframework.context.annotation.Conditional;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.ConfigurationCondition;
+import org.springframework.core.type.AnnotatedTypeMetadata;
 import org.springframework.integration.channel.interceptor.GlobalChannelInterceptorWrapper;
 import org.springframework.integration.config.GlobalChannelInterceptor;
 import org.springframework.messaging.support.MessageHeaderAccessor;
+import org.springframework.util.ObjectUtils;
 
 /**
  * {@link org.springframework.boot.autoconfigure.EnableAutoConfiguration
@@ -90,7 +93,7 @@ final class TracingChannelInterceptorCondition extends AnyNestedCondition {
 	}
 
 	@ConditionalOnClass(FunctionCatalog.class)
-	@ConditionalOnBean(BinderFactoryAutoConfiguration.class)
+	@Conditional(OnEnableBindingCondition.class)
 	@ConditionalOnProperty(value = "spring.sleuth.integration.enabled",
 			matchIfMissing = true)
 	static class OnFunctionPresentAndEnableBinding {
@@ -98,11 +101,32 @@ final class TracingChannelInterceptorCondition extends AnyNestedCondition {
 	}
 
 	@ConditionalOnClass(FunctionCatalog.class)
-	@ConditionalOnMissingBean(BinderFactoryAutoConfiguration.class)
+	@Conditional(OnEnableBindingMissingCondition.class)
 	@ConditionalOnProperty(value = "spring.sleuth.integration.enabled",
 			havingValue = "true")
 	static class OnFunctionPresentEnableBindingOffAndIntegrationExplicitlyOn {
 
 	}
 
+}
+
+class OnEnableBindingCondition implements ConfigurationCondition {
+
+	@Override
+	public ConfigurationPhase getConfigurationPhase() {
+		return ConfigurationPhase.PARSE_CONFIGURATION;
+	}
+
+	@Override
+	public boolean matches(ConditionContext context, AnnotatedTypeMetadata metadata) {
+		return !ObjectUtils.isEmpty(context.getBeanFactory().getBeanNamesForAnnotation(EnableBinding.class));
+	}
+}
+
+class OnEnableBindingMissingCondition extends OnEnableBindingCondition {
+
+	@Override
+	public boolean matches(ConditionContext context, AnnotatedTypeMetadata metadata) {
+		return !super.matches(context, metadata);
+	}
 }
