@@ -119,8 +119,10 @@ class OnEnableBindingCondition implements ConfigurationCondition {
 
 	@Override
 	public boolean matches(ConditionContext context, AnnotatedTypeMetadata metadata) {
-		return !ObjectUtils.isEmpty(context.getBeanFactory().getBeanNamesForAnnotation(EnableBinding.class));
+		return !ObjectUtils.isEmpty(
+				context.getBeanFactory().getBeanNamesForAnnotation(EnableBinding.class));
 	}
+
 }
 
 class OnEnableBindingMissingCondition extends OnEnableBindingCondition {
@@ -129,4 +131,5 @@ class OnEnableBindingMissingCondition extends OnEnableBindingCondition {
 	public boolean matches(ConditionContext context, AnnotatedTypeMetadata metadata) {
 		return !super.matches(context, metadata);
 	}
+
 }

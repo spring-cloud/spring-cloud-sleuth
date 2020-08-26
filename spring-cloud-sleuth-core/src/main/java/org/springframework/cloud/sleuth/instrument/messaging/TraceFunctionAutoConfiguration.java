@@ -107,6 +107,12 @@ class TraceFunctionAroundWrapper extends FunctionAroundWrapper
 			traceMessageHandler.afterMessageHandled(wrappedInputMessage.childSpan,
 					throwable);
 		}
+		if (result == null) {
+			if (log.isDebugEnabled()) {
+				log.debug("Returned message is null - we have a consumer");
+			}
+			return null;
+		}
 		Message msgResult = toMessage(result);
 		MessageAndSpan wrappedOutputMessage = traceMessageHandler.wrapOutputMessage(
 				msgResult,
