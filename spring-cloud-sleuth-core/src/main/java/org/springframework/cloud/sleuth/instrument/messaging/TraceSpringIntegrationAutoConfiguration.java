@@ -28,7 +28,6 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.cloud.function.context.FunctionCatalog;
 import org.springframework.cloud.sleuth.autoconfig.TraceAutoConfiguration;
-import org.springframework.cloud.stream.annotation.EnableBinding;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ConditionContext;
 import org.springframework.context.annotation.Conditional;
@@ -119,8 +118,15 @@ class OnEnableBindingCondition implements ConfigurationCondition {
 
 	@Override
 	public boolean matches(ConditionContext context, AnnotatedTypeMetadata metadata) {
+		Class clazz;
+		try {
+			clazz = Class.forName("org.springframework.cloud.stream.annotation.EnableBinding");
+		}
+		catch (ClassNotFoundException e) {
+			return false;
+		}
 		return !ObjectUtils.isEmpty(
-				context.getBeanFactory().getBeanNamesForAnnotation(EnableBinding.class));
+				context.getBeanFactory().getBeanNamesForAnnotation(clazz));
 	}
 
 }
