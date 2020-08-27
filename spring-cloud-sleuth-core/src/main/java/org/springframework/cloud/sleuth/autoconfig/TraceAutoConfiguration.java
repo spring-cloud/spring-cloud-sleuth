@@ -142,4 +142,10 @@ public class TraceAutoConfiguration {
 		return CurrentSpanCustomizer.create(tracing);
 	}
 
+	@Bean
+	@ConditionalOnProperty(value = "spring.sleuth.span-handler.enabled", matchIfMissing = true)
+	SpanHandler spanIgnoringSpanHandler(SleuthProperties sleuthProperties) {
+		return new SpanIgnoringSpanHandler(sleuthProperties);
+	}
+
 }

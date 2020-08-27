@@ -381,12 +381,12 @@ anything not already done by Sleuth with auto-configuration or properties.
 If you define one of the following as a `Bean`, Sleuth will invoke it to
 customize behaviour:
 
-* RpcTracingCustomizer - for RPC tagging and sampling policy
-* HttpTracingCustomizer - for HTTP tagging and sampling policy
-* MessagingTracingCustomizer - for messaging tagging and sampling policy
-* CurrentTraceContextCustomizer - to integrate decorators such as correlation.
-* BaggagePropagationCustomizer - for propagating baggage fields in process and over headers
-* CorrelationScopeDecoratorCustomizer - for scope decorations such as MDC (logging) field correlation
+* `RpcTracingCustomizer` - for RPC tagging and sampling policy
+* `HttpTracingCustomizer` - for HTTP tagging and sampling policy
+* `MessagingTracingCustomizer` - for messaging tagging and sampling policy
+* `CurrentTraceContextCustomizer` - to integrate decorators such as correlation.
+* `BaggagePropagationCustomize`r - for propagating baggage fields in process and over headers
+* `CorrelationScopeDecoratorCustomizer` - for scope decorations such as MDC (logging) field correlation
 
 === HTTP
 
@@ -539,6 +539,8 @@ include::{project-root}//spring-cloud-sleuth-core/src/test/java/org/springframew
 ----
 
 The preceding example results in changing the name of the reported span to `foo bar`, just before it gets reported (for example, to Zipkin).
+
+Sleuth registers a `SpanHandler` bean that can automatically skip reporting spans of given name patterns. The property `spring.sleuth.span-handler.span-name-patterns-to-skip` contains the default skip patterns for span names. The property `spring.sleuth.span-handler.additional-span-name-patterns-to-skip` will append the provided span name patterns to the existing ones. In order to disable this functionality just set `spring.sleuth.span-handler.enabled` to `false`.
 
 === Host Locator
 
