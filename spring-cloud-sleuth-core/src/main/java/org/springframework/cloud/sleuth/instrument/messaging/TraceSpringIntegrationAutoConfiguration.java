@@ -120,13 +120,14 @@ class OnEnableBindingCondition implements ConfigurationCondition {
 	public boolean matches(ConditionContext context, AnnotatedTypeMetadata metadata) {
 		Class clazz;
 		try {
-			clazz = Class.forName("org.springframework.cloud.stream.annotation.EnableBinding");
+			clazz = Class
+					.forName("org.springframework.cloud.stream.annotation.EnableBinding");
 		}
 		catch (ClassNotFoundException e) {
 			return false;
 		}
-		return !ObjectUtils.isEmpty(
-				context.getBeanFactory().getBeanNamesForAnnotation(clazz));
+		return !ObjectUtils
+				.isEmpty(context.getBeanFactory().getBeanNamesForAnnotation(clazz));
 	}
 
 }
