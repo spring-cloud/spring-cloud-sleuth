@@ -6,13 +6,18 @@
 |spring.sleuth.async.enabled | true | Enable instrumenting async related components so that the tracing information is passed between threads.
 |spring.sleuth.async.ignored-beans |  | List of {@link java.util.concurrent.Executor} bean names that should be ignored and not wrapped in a trace representation.
 |spring.sleuth.baggage-keys |  | List of baggage key names that should be propagated out of process. These keys will be prefixed with `baggage` before the actual key. This property is set in order to be backward compatible with previous Sleuth versions. @see brave.propagation.ExtraFieldPropagation.FactoryBuilder#addPrefixedFields(String, java.util.Collection)
+|spring.sleuth.baggage.correlation-enabled | true | Adds a {@link CorrelationScopeDecorator} to put baggage values into the correlation context.
+|spring.sleuth.baggage.correlation-fields |  | A list of {@link BaggageField#name() fields} to add to correlation (MDC) context. @see CorrelationScopeConfig.SingleCorrelationField#create(BaggageField)
+|spring.sleuth.baggage.local-fields |  | Same as {@link #remoteFields} except that this field is not propagated to remote services. @see BaggagePropagationConfig.SingleBaggageField#local(BaggageField)
+|spring.sleuth.baggage.remote-fields |  | List of fields that are referenced the same in-process as it is on the wire. For example, the field "x-vcap-request-id" would be set as-is including the prefix. @see BaggagePropagationConfig.SingleBaggageField#remote(BaggageField) @see BaggagePropagationConfig.SingleBaggageField.Builder#addKeyName(String)
+|spring.sleuth.baggage.tag-fields |  | A list of {@link BaggageField#name() fields} to tag into the span. @see Tags#BAGGAGE_FIELD
 |spring.sleuth.circuitbreaker.enabled | true | Enable Spring Cloud CircuitBreaker instrumentation.
 |spring.sleuth.enabled | true | 
 |spring.sleuth.feign.enabled | true | Enable span information propagation when using Feign.
 |spring.sleuth.feign.processor.enabled | true | Enable post processor that wraps Feign Context in its tracing representations.
 |spring.sleuth.grpc.enabled | true | Enable span information propagation when using GRPC.
 |spring.sleuth.http.enabled | true | 
-|spring.sleuth.http.legacy.enabled | false | 
+|spring.sleuth.http.legacy.enabled | false | Enables the legacy Sleuth setup.
 |spring.sleuth.hystrix.strategy.enabled | true | Enable custom HystrixConcurrencyStrategy that wraps all Callable instances into their Sleuth representative - the TraceCallable.
 |spring.sleuth.hystrix.strategy.passthrough | false | When enabled the tracing information is passed to the Hystrix execution threads but spans are not created for each execution.
 |spring.sleuth.integration.enabled | true | Enable Spring Integration sleuth instrumentation.
