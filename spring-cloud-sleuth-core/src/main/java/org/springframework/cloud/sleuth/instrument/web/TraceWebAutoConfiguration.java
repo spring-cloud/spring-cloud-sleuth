@@ -25,7 +25,7 @@ import java.util.stream.Collectors;
 
 import brave.Tracing;
 
-import org.springframework.beans.factory.BeanCurrentlyInCreationException;
+import org.springframework.beans.factory.BeanCreationException;
 import org.springframework.boot.actuate.autoconfigure.endpoint.web.WebEndpointProperties;
 import org.springframework.boot.actuate.autoconfigure.web.server.ConditionalOnManagementPort;
 import org.springframework.boot.actuate.autoconfigure.web.server.ManagementPortType;
@@ -90,7 +90,7 @@ public class TraceWebAutoConfiguration {
 			}
 			return () -> result;
 		}
-		catch (BeanCurrentlyInCreationException e) {
+		catch (BeanCreationException e) {
 			// Most likely, there is an actuator endpoint that indirectly references an
 			// instrumented HTTP client.
 			return () -> consolidateSkipPatterns(patterns);
