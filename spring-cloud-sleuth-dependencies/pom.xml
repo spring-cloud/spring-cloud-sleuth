@@ -37,6 +37,14 @@
 	</properties>
 	<dependencyManagement>
 		<dependencies>
+<!--	fixme Caused by: java.lang.NoSuchMethodError: reactor.core.publisher.Sinks$Many.tryEmitNext(Ljava/lang/Object;)Lreactor/core/publisher/Sinks$Emission;		-->
+			<dependency>
+				<groupId>io.projectreactor</groupId>
+				<artifactId>reactor-bom</artifactId>
+				<version>2020.0.0-SNAPSHOT</version>
+				<type>pom</type>
+				<scope>import</scope>
+			</dependency>
 			<dependency>
 				<groupId>org.springframework.cloud</groupId>
 				<artifactId>spring-cloud-sleuth-core</artifactId>

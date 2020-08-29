@@ -20,7 +20,6 @@ import java.util.List;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
-import java.util.function.Function;
 
 import brave.Span;
 import brave.http.HttpClientHandler;
@@ -32,24 +31,22 @@ import brave.propagation.CurrentTraceContext.Scope;
 import brave.propagation.TraceContext;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.reactivestreams.Publisher;
 import org.reactivestreams.Subscription;
 import reactor.core.CoreSubscriber;
+import reactor.core.Scannable;
 import reactor.core.publisher.Mono;
 import reactor.util.annotation.Nullable;
 import reactor.util.context.Context;
 
 import org.springframework.beans.factory.config.BeanPostProcessor;
+import org.springframework.cloud.sleuth.instrument.reactor.SleuthDecorator;
 import org.springframework.cloud.sleuth.internal.LazyBean;
 import org.springframework.context.ConfigurableApplicationContext;
-import org.springframework.core.io.buffer.DataBuffer;
 import org.springframework.web.reactive.function.client.ClientRequest;
 import org.springframework.web.reactive.function.client.ClientResponse;
 import org.springframework.web.reactive.function.client.ExchangeFilterFunction;
 import org.springframework.web.reactive.function.client.ExchangeFunction;
 import org.springframework.web.reactive.function.client.WebClient;
-
-import static org.springframework.cloud.sleuth.instrument.reactor.ReactorSleuth.scopePassingSpanOperator;
 
 /**
  * {@link BeanPostProcessor} to wrap a {@link WebClient} instance into its trace
@@ -115,8 +112,6 @@ final class TraceExchangeFilterFunction implements ExchangeFilterFunction {
 
 	final LazyBean<HttpTracing> httpTracing;
 
-	final Function<? super Publisher<DataBuffer>, ? extends Publisher<DataBuffer>> scopePassingTransformer;
-
 	// Lazy initialized fields
 	HttpClientHandler<HttpClientRequest, HttpClientResponse> handler;
 
@@ -124,7 +119,6 @@ final class TraceExchangeFilterFunction implements ExchangeFilterFunction {
 
 	TraceExchangeFilterFunction(ConfigurableApplicationContext springContext) {
 		this.httpTracing = LazyBean.create(springContext, HttpTracing.class);
-		this.scopePassingTransformer = scopePassingSpanOperator(springContext);
 	}
 
 	public static ExchangeFilterFunction create(
@@ -151,7 +145,8 @@ final class TraceExchangeFilterFunction implements ExchangeFilterFunction {
 		return this.handler;
 	}
 
-	private static final class MonoWebClientTrace extends Mono<ClientResponse> {
+	private static final class MonoWebClientTrace extends Mono<ClientResponse>
+			implements Scannable, SleuthDecorator {
 
 		final ExchangeFunction next;
 
@@ -190,10 +185,18 @@ final class TraceExchangeFilterFunction implements ExchangeFilterFunction {
 							parent, this));
 		}
 
+		@Override
+		public Object scanUnsafe(Scannable.Attr key) {
+			if (key == Scannable.Attr.RUN_STYLE) {
+				return Scannable.Attr.RunStyle.SYNC;
+			}
+			return null;
+		}
+
 	}
 
 	static final class TraceWebClientSubscriber extends AtomicReference<Span>
-			implements CoreSubscriber<ClientResponse> {
+			implements CoreSubscriber<ClientResponse>, Scannable {
 
 		final CoreSubscriber<? super ClientResponse> actual;
 
@@ -275,6 +278,14 @@ final class TraceExchangeFilterFunction implements ExchangeFilterFunction {
 		@Override
 		public Context currentContext() {
 			return this.context;
+		}
+
+		@Override
+		public Object scanUnsafe(Scannable.Attr key) {
+			if (key == Scannable.Attr.RUN_STYLE) {
+				return Scannable.Attr.RunStyle.SYNC;
+			}
+			return null;
 		}
 
 	}

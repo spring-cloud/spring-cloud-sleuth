@@ -39,7 +39,7 @@ import org.springframework.context.annotation.AnnotationConfigApplicationContext
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.BDDAssertions.then;
-import static org.springframework.cloud.sleuth.instrument.reactor.ReactorSleuth.scopePassingSpanOperator;
+import static org.springframework.cloud.sleuth.instrument.reactor.ReactorSleuth.onEachScopePassingSpanOperatorForOnEachHook;
 import static org.springframework.cloud.sleuth.instrument.reactor.TraceReactorAutoConfiguration.TraceReactorConfiguration.SLEUTH_TRACE_REACTOR_KEY;
 
 /**
@@ -80,7 +80,7 @@ public class FlowsScopePassingSpanSubscriberTests {
 		springContext.registerBean(CurrentTraceContext.class, () -> currentTraceContext);
 		springContext.refresh();
 
-		Function<? super Publisher<Integer>, ? extends Publisher<Integer>> transformer = scopePassingSpanOperator(
+		Function<? super Publisher<Integer>, ? extends Publisher<Integer>> transformer = onEachScopePassingSpanOperatorForOnEachHook(
 				this.springContext);
 
 		try (Scope ws = this.currentTraceContext.newScope(context)) {

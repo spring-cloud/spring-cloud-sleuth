@@ -16,7 +16,9 @@
 
 package org.springframework.cloud.sleuth.instrument.reactor;
 
+import java.util.function.BiFunction;
 import java.util.function.Function;
+import java.util.function.Predicate;
 
 import brave.Tracing;
 import brave.propagation.CurrentTraceContext;
@@ -78,13 +80,31 @@ public abstract class ReactorSleuth {
 		LazyBean<CurrentTraceContext> lazyCurrentTraceContext = LazyBean
 				.create(springContext, CurrentTraceContext.class);
 
-		return Operators.liftPublisher((p, sub) -> {
-			// We don't scope scalar results as they happen in an instant. This prevents
-			// excessive overhead when using Flux/Mono #just, #empty, #error, etc.
-			if (p instanceof Fuseable.ScalarCallable) {
-				return sub;
-			}
+		return Operators.liftPublisher(p -> !(p instanceof Fuseable.ScalarCallable),
+				(BiFunction) liftFunction(springContext, lazyCurrentTraceContext));
+	}
 
+	static <T> Function<? super Publisher<T>, ? extends Publisher<T>> onEachScopePassingSpanOperatorForOnEachHook(
+			ConfigurableApplicationContext springContext) {
+		if (log.isTraceEnabled()) {
+			log.trace("Scope passing operator [" + springContext + "]");
+		}
+
+		// keep a reference outside the lambda so that any caching will be visible to
+		// all publishers
+		LazyBean<CurrentTraceContext> lazyCurrentTraceContext = LazyBean
+				.create(springContext, CurrentTraceContext.class);
+
+		Predicate<Publisher> publisherPredicate = p -> Hack.shouldDecorate(p);
+		BiFunction lifter = liftFunction(springContext, lazyCurrentTraceContext);
+		// return Operators.liftPublisher(publisherPredicate, lifter);
+		return Hack.liftPublisher(publisherPredicate, lifter);
+	}
+
+	static <O> BiFunction<Publisher, ? super CoreSubscriber<? super O>, ? extends CoreSubscriber<? super O>> liftFunction(
+			ConfigurableApplicationContext springContext,
+			LazyBean<CurrentTraceContext> lazyCurrentTraceContext) {
+		return (p, sub) -> {
 			if (!springContext.isActive()) {
 				boolean assertOn = false;
 				assert assertOn = true; // gives a message in unit test failures
@@ -113,7 +133,7 @@ public abstract class ReactorSleuth {
 				return sub;
 			}
 
-			Context context = contextWithBeans(springContext, sub);
+			Context context = contextWithBeans(springContext, sub.currentContext());
 			if (log.isTraceEnabled()) {
 				log.trace("Spring context [" + springContext + "], Reactor context ["
 						+ context + "], name [" + name(sub) + "]");
@@ -124,21 +144,26 @@ public abstract class ReactorSleuth {
 				return sub; // no need to scope a null parent
 			}
 
+			// Handle scenarios such as Mono.defer
+			if (sub instanceof ScopePassingSpanSubscriber) {
+				ScopePassingSpanSubscriber<?> scopePassing = (ScopePassingSpanSubscriber) sub;
+				if (scopePassing.parent.equals(parent)) {
+					return sub; // don't double-wrap
+				}
+			}
+
 			if (log.isTraceEnabled()) {
 				log.trace("Creating a scope passing span subscriber with Reactor Context "
 						+ "[" + context + "] and name [" + name(sub) + "]");
 			}
-			// if (runStyle == Scannable.Attr.RunStyle.SYNC) {
-			// return sub;
-			// }
+
 			return new ScopePassingSpanSubscriber<>(sub, context, currentTraceContext,
 					parent);
-		});
+		};
 	}
 
 	private static <T> Context contextWithBeans(
-			ConfigurableApplicationContext springContext, CoreSubscriber<? super T> sub) {
-		Context context = sub.currentContext();
+			ConfigurableApplicationContext springContext, Context context) {
 		if (!context.hasKey(Tracing.class)) {
 			context = context.put(Tracing.class, springContext.getBean(Tracing.class));
 		}
@@ -154,18 +179,48 @@ public abstract class ReactorSleuth {
 		if (log.isTraceEnabled()) {
 			log.trace("Spring Context passing operator [" + springContext + "]");
 		}
-		return Operators.liftPublisher((p, sub) -> {
+		return Operators.liftPublisher(p -> {
 			// We don't scope scalar results as they happen in an instant. This prevents
 			// excessive overhead when using Flux/Mono #just, #empty, #error, etc.
-			if (p instanceof Fuseable.ScalarCallable) {
+			return !(p instanceof Fuseable.ScalarCallable) && springContext.isActive();
+		}, (p, sub) -> {
+			Context ctxBefore = sub.currentContext();
+			Context context = contextWithBeans(springContext, ctxBefore);
+			if (context == ctxBefore) {
 				return sub;
 			}
-			if (!springContext.isActive()) {
-				return sub;
-			}
-			final Context context = contextWithBeans(springContext, sub);
 			return new SleuthContextOperator<>(context, sub);
 		});
+	}
+
+	static <T> Function<? super Publisher<T>, ? extends Publisher<T>> onLastScopePassingSpanOperatorForOnEachHook(
+			ConfigurableApplicationContext springContext) {
+		LazyBean<CurrentTraceContext> lazyCurrentTraceContext = LazyBean
+				.create(springContext, CurrentTraceContext.class);
+
+		BiFunction<Publisher, ? super CoreSubscriber<? super T>, ? extends CoreSubscriber<? super T>> scopePassingSpanSubscriber = liftFunction(
+				springContext, lazyCurrentTraceContext);
+		BiFunction<Publisher, ? super CoreSubscriber<? super T>, ? extends CoreSubscriber<? super T>> skipIfNoBraveCtx = (
+				pub, sub) -> {
+			TraceContext traceContext = lazyCurrentTraceContext.get().get();
+			if (sub.currentContext().getOrDefault(TraceContext.class,
+					null) == traceContext) {
+				return sub;
+			}
+			return scopePassingSpanSubscriber.apply(pub, sub);
+		};
+		// return Operators.liftPublisher(
+		return Hack.liftPublisher(p -> {
+			boolean addContext = !(p instanceof Fuseable.ScalarCallable)
+					&& springContext.isActive();
+			if (addContext) {
+				CurrentTraceContext currentTraceContext = lazyCurrentTraceContext.get();
+				if (currentTraceContext != null) {
+					addContext = currentTraceContext.get() != null;
+				}
+			}
+			return addContext;
+		}, skipIfNoBraveCtx);
 	}
 
 	static String name(CoreSubscriber<?> sub) {

@@ -28,6 +28,7 @@ import org.junit.jupiter.api.Test;
 import org.reactivestreams.Publisher;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.core.publisher.Sinks;
 import reactor.core.scheduler.Schedulers;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -118,6 +119,41 @@ public class ScopePassingSpanSubscriberSpringBootTests {
 
 			then(this.currentTraceContext.get()).isEqualTo(context2);
 			then(spanInOperation.get()).isEqualTo(context2);
+		}
+
+		then(this.currentTraceContext.get()).isNull();
+	}
+
+	@Test
+	public void should_pass_tracing_info_when_using_reactor_async_processor() {
+		final AtomicReference<TraceContext> spanInOperation = new AtomicReference<>();
+
+		Sinks.One<Integer> one = Sinks.one();
+		try (Scope ws = this.currentTraceContext.newScope(context)) {
+			one.asMono()
+					// hook is not applied for Processors so first operator after it will
+					// not be decorated with brave context
+					.map(d -> d + 1).map((d) -> {
+						spanInOperation.set(this.currentTraceContext.get());
+						return d + 1;
+					}).map(d -> d + 1).doOnSubscribe(subscription -> {
+						final Thread thread = new Thread(() -> {
+							try {
+								Thread.sleep(300);
+							}
+							catch (InterruptedException e) {
+								e.printStackTrace();
+							}
+							one.emitValue(0);
+						});
+						thread.setName("async_processor_source");
+						thread.setDaemon(true);
+						thread.start();
+					}).subscribeOn(Schedulers.boundedElastic()).block();
+
+			Awaitility.await()
+					.untilAsserted(() -> then(spanInOperation.get()).isEqualTo(context));
+			then(this.currentTraceContext.get()).isEqualTo(context);
 		}
 
 		then(this.currentTraceContext.get()).isNull();

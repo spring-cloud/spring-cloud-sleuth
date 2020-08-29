@@ -25,6 +25,8 @@ import brave.http.HttpServerHandler;
 import brave.http.HttpServerRequest;
 import brave.http.HttpServerResponse;
 import brave.http.HttpTracing;
+import brave.propagation.CurrentTraceContext;
+import brave.propagation.CurrentTraceContext.Scope;
 import brave.propagation.TraceContext;
 import brave.propagation.TraceContextOrSamplingFlags;
 import org.apache.commons.logging.Log;
@@ -37,6 +39,7 @@ import reactor.util.annotation.Nullable;
 import reactor.util.context.Context;
 
 import org.springframework.beans.factory.BeanFactory;
+import org.springframework.cloud.sleuth.instrument.reactor.SleuthDecorator;
 import org.springframework.cloud.sleuth.instrument.reactor.SleuthReactorProperties;
 import org.springframework.core.Ordered;
 import org.springframework.http.HttpStatus;
@@ -87,6 +90,8 @@ final class TraceWebFilter implements WebFilter, Ordered {
 
 	SleuthReactorProperties sleuthReactorProperties;
 
+	CurrentTraceContext currentTraceContext;
+
 	TraceWebFilter(BeanFactory beanFactory) {
 		this.beanFactory = beanFactory;
 	}
@@ -109,6 +114,14 @@ final class TraceWebFilter implements WebFilter, Ordered {
 			this.tracer = this.beanFactory.getBean(HttpTracing.class).tracing().tracer();
 		}
 		return this.tracer;
+	}
+
+	CurrentTraceContext currentTraceContext() {
+		if (this.currentTraceContext == null) {
+			this.currentTraceContext = this.beanFactory.getBean(HttpTracing.class)
+					.tracing().currentTraceContext();
+		}
+		return this.currentTraceContext;
 	}
 
 	SleuthWebProperties sleuthWebProperties() {
@@ -155,13 +168,16 @@ final class TraceWebFilter implements WebFilter, Ordered {
 		return sleuthWebProperties().getFilterOrder();
 	}
 
-	private static class MonoWebFilterTrace extends MonoOperator<Void, Void> {
+	private static class MonoWebFilterTrace extends MonoOperator<Void, Void>
+			implements SleuthDecorator {
 
 		final ServerWebExchange exchange;
 
 		final Tracer tracer;
 
 		final TraceContext traceContext;
+
+		final CurrentTraceContext currentTraceContext;
 
 		final HttpServerHandler<HttpServerRequest, HttpServerResponse> handler;
 
@@ -173,6 +189,7 @@ final class TraceWebFilter implements WebFilter, Ordered {
 				boolean initialTracePresent, TraceWebFilter parent) {
 			super(source);
 			this.tracer = parent.tracer();
+			this.currentTraceContext = parent.currentTraceContext();
 			this.handler = parent.handler();
 			this.exchange = exchange;
 			this.traceContext = exchange.getAttribute(TRACE_REQUEST_ATTR);
@@ -182,8 +199,19 @@ final class TraceWebFilter implements WebFilter, Ordered {
 		@Override
 		public void subscribe(CoreSubscriber<? super Void> subscriber) {
 			Context context = contextWithoutInitialSpan(subscriber.currentContext());
-			this.source.subscribe(new WebFilterTraceSubscriber(subscriber, context,
-					findOrCreateSpan(context), this));
+			Span span = findOrCreateSpan(context);
+			try (Scope scope = this.currentTraceContext.maybeScope(span.context())) {
+				this.source.subscribe(
+						new WebFilterTraceSubscriber(subscriber, context, span, this));
+			}
+		}
+
+		@Override
+		public Object scanUnsafe(Attr key) {
+			if (key == Attr.RUN_STYLE) {
+				return Attr.RunStyle.SYNC;
+			}
+			return super.scanUnsafe(key);
 		}
 
 		private Context contextWithoutInitialSpan(Context context) {
@@ -223,7 +251,8 @@ final class TraceWebFilter implements WebFilter, Ordered {
 			return span;
 		}
 
-		static final class WebFilterTraceSubscriber implements CoreSubscriber<Void> {
+		static final class WebFilterTraceSubscriber
+				implements CoreSubscriber<Void>, Subscription {
 
 			final CoreSubscriber<? super Void> actual;
 
@@ -235,6 +264,10 @@ final class TraceWebFilter implements WebFilter, Ordered {
 
 			final HttpServerHandler<HttpServerRequest, HttpServerResponse> handler;
 
+			final CurrentTraceContext currentTraceContext;
+
+			Subscription s;
+
 			WebFilterTraceSubscriber(CoreSubscriber<? super Void> actual, Context context,
 					Span span, MonoWebFilterTrace parent) {
 				this.actual = actual;
@@ -242,11 +275,29 @@ final class TraceWebFilter implements WebFilter, Ordered {
 				this.context = context.put(TraceContext.class, span.context());
 				this.exchange = parent.exchange;
 				this.handler = parent.handler;
+				this.currentTraceContext = parent.currentTraceContext;
 			}
 
 			@Override
 			public void onSubscribe(Subscription subscription) {
-				this.actual.onSubscribe(subscription);
+				this.s = subscription;
+				try (Scope scope = this.currentTraceContext.maybeScope(span.context())) {
+					this.actual.onSubscribe(this);
+				}
+			}
+
+			@Override
+			public void request(long n) {
+				try (Scope scope = this.currentTraceContext.maybeScope(span.context())) {
+					this.s.request(n);
+				}
+			}
+
+			@Override
+			public void cancel() {
+				try (Scope scope = this.currentTraceContext.maybeScope(span.context())) {
+					this.s.cancel();
+				}
 			}
 
 			@Override
@@ -256,14 +307,18 @@ final class TraceWebFilter implements WebFilter, Ordered {
 
 			@Override
 			public void onError(Throwable t) {
-				terminateSpan(t);
-				this.actual.onError(t);
+				try (Scope scope = this.currentTraceContext.maybeScope(span.context())) {
+					terminateSpan(t);
+					this.actual.onError(t);
+				}
 			}
 
 			@Override
 			public void onComplete() {
-				terminateSpan(null);
-				this.actual.onComplete();
+				try (Scope scope = this.currentTraceContext.maybeScope(span.context())) {
+					terminateSpan(null);
+					this.actual.onComplete();
+				}
 			}
 
 			@Override

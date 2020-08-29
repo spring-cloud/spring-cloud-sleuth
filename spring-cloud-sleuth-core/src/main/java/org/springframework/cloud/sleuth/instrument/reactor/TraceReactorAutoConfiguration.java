@@ -47,6 +47,8 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.env.ConfigurableEnvironment;
 
+import static org.springframework.cloud.sleuth.instrument.reactor.ReactorSleuth.onEachScopePassingSpanOperatorForOnEachHook;
+import static org.springframework.cloud.sleuth.instrument.reactor.ReactorSleuth.onLastScopePassingSpanOperatorForOnEachHook;
 import static org.springframework.cloud.sleuth.instrument.reactor.ReactorSleuth.scopePassingSpanOperator;
 import static org.springframework.cloud.sleuth.instrument.reactor.ReactorSleuth.springContextSpanOperator;
 import static org.springframework.cloud.sleuth.instrument.reactor.TraceReactorAutoConfiguration.TraceReactorConfiguration.SLEUTH_TRACE_REACTOR_KEY;
@@ -136,7 +138,9 @@ class HooksRefresher implements ApplicationListener<RefreshScopeRefreshedEvent> 
 				log.trace("Decorating onEach operator instrumentation");
 			}
 			Hooks.onEachOperator(SLEUTH_TRACE_REACTOR_KEY,
-					scopePassingSpanOperator(this.context));
+					onEachScopePassingSpanOperatorForOnEachHook(this.context));
+			Hooks.onLastOperator(SLEUTH_TRACE_REACTOR_KEY,
+					onLastScopePassingSpanOperatorForOnEachHook(this.context));
 			break;
 		case DECORATE_ON_LAST:
 			if (log.isTraceEnabled()) {
@@ -191,6 +195,7 @@ class HookRegisteringBeanDefinitionRegistryPostProcessor
 		}
 		else if (property == SleuthReactorProperties.InstrumentationType.DECORATE_ON_EACH) {
 			decorateOnEach(springContext);
+			decorateOnLast(onLastScopePassingSpanOperatorForOnEachHook(springContext));
 		}
 		else if (property == SleuthReactorProperties.InstrumentationType.DECORATE_ON_LAST) {
 			decorateOnLast(scopePassingSpanOperator(springContext));
@@ -218,7 +223,7 @@ class HookRegisteringBeanDefinitionRegistryPostProcessor
 			log.trace("Decorating onEach operator instrumentation");
 		}
 		Hooks.onEachOperator(SLEUTH_TRACE_REACTOR_KEY,
-				scopePassingSpanOperator(springContext));
+				onEachScopePassingSpanOperatorForOnEachHook(springContext));
 	}
 
 	@Override

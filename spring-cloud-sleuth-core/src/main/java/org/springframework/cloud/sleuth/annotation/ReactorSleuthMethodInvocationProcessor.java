@@ -36,6 +36,7 @@ import reactor.core.publisher.MonoOperator;
 import reactor.util.annotation.Nullable;
 import reactor.util.context.Context;
 
+import org.springframework.cloud.sleuth.instrument.reactor.SleuthDecorator;
 import org.springframework.util.StringUtils;
 
 /**
@@ -164,7 +165,8 @@ class ReactorSleuthMethodInvocationProcessor
 
 	}
 
-	private static final class MonoSpan extends MonoOperator<Object, Object> {
+	private static final class MonoSpan extends MonoOperator<Object, Object>
+			implements SleuthDecorator {
 
 		final Span span;
 
@@ -207,6 +209,14 @@ class ReactorSleuthMethodInvocationProcessor
 				this.source.subscribe(new SpanSubscriber(actual, this.processor,
 						this.invocation, this.span == null, span, this.log, this.hasLog));
 			}
+		}
+
+		@Override
+		public Object scanUnsafe(Attr key) {
+			if (key == Attr.RUN_STYLE) {
+				return Attr.RunStyle.SYNC;
+			}
+			return super.scanUnsafe(key);
 		}
 
 	}
@@ -315,6 +325,9 @@ class ReactorSleuthMethodInvocationProcessor
 			}
 			if (key == Attr.PARENT) {
 				return this.parent;
+			}
+			if (key == Attr.RUN_STYLE) {
+				return Attr.RunStyle.SYNC;
 			}
 			return null;
 		}
