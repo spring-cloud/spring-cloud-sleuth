@@ -89,6 +89,12 @@
       "type": "java.lang.Boolean",
       "description": "Enable refresh scope for sampler.",
       "defaultValue": true
+    },
+    {
+      "name": "spring.sleuth.web.webclient.enabled",
+      "type": "java.lang.Boolean",
+      "description": "Enable tracing instrumentation for WebClient.",
+      "defaultValue": true
     }
   ]
 }
