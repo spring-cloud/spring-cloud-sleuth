@@ -26,7 +26,6 @@ import brave.httpclient.TracingHttpClientBuilder;
 import brave.spring.web.TracingClientHttpRequestInterceptor;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.impl.nio.client.HttpAsyncClientBuilder;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import reactor.netty.http.client.HttpClient;
 
 import org.springframework.beans.BeansException;
@@ -39,6 +38,7 @@ import org.springframework.boot.autoconfigure.AutoConfigureBefore;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.autoconfigure.security.oauth2.resource.UserInfoRestTemplateCustomizer;
 import org.springframework.boot.web.client.RestTemplateCustomizer;
 import org.springframework.cloud.commons.httpclient.HttpClientConfiguration;
@@ -131,7 +131,8 @@ class TraceWebClientAutoConfiguration {
 
 	@Configuration(proxyBeanMethods = false)
 	@ConditionalOnClass(WebClient.class)
-	@ConditionalOnProperty(value = "spring.sleuth.web.webclient.enabled", matchIfMissing = true)
+	@ConditionalOnProperty(value = "spring.sleuth.web.webclient.enabled",
+			matchIfMissing = true)
 	static class WebClientConfig {
 
 		@Bean
