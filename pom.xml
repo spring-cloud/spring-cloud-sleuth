@@ -252,7 +252,7 @@
 		<spring-cloud-netflix.version>3.0.0-SNAPSHOT</spring-cloud-netflix.version>
 		<spring-cloud-openfeign.version>3.0.0-SNAPSHOT</spring-cloud-openfeign.version>
 		<brave.version>5.12.3</brave.version>
-		<spring-security-boot-autoconfigure.version>2.3.1.RELEASE</spring-security-boot-autoconfigure.version>
+		<spring-security-boot-autoconfigure.version>2.3.3.RELEASE</spring-security-boot-autoconfigure.version>
 		<disable.nohttp.checks>false</disable.nohttp.checks>
 		<okhttp.version>4.8.0</okhttp.version>
 		<mockwebserver.version>4.8.0</mockwebserver.version>
