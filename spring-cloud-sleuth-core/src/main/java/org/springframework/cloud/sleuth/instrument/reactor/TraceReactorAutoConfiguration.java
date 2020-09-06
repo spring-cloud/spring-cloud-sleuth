@@ -40,7 +40,6 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.cloud.context.scope.refresh.RefreshScope;
 import org.springframework.cloud.context.scope.refresh.RefreshScopeRefreshedEvent;
-import org.springframework.cloud.sleuth.instrument.async.TraceableScheduledExecutorService;
 import org.springframework.context.ApplicationListener;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.Bean;
@@ -203,11 +202,9 @@ class HookRegisteringBeanDefinitionRegistryPostProcessor
 		else if (property == SleuthReactorProperties.InstrumentationType.MANUAL) {
 			decorateOnLast(springContextSpanOperator(springContext));
 		}
-		Schedulers.setExecutorServiceDecorator(
+		Schedulers.onScheduleHook(
 				TraceReactorAutoConfiguration.SLEUTH_REACTOR_EXECUTOR_SERVICE_KEY,
-				(scheduler,
-						scheduledExecutorService) -> new TraceableScheduledExecutorService(
-								springContext, scheduledExecutorService));
+				ReactorSleuth.sleuthOnScheduleHook(springContext));
 	}
 
 	private static void decorateOnLast(
@@ -233,7 +230,7 @@ class HookRegisteringBeanDefinitionRegistryPostProcessor
 		}
 		Hooks.resetOnEachOperator(SLEUTH_TRACE_REACTOR_KEY);
 		Hooks.resetOnLastOperator(SLEUTH_TRACE_REACTOR_KEY);
-		Schedulers.removeExecutorServiceDecorator(
+		Schedulers.resetOnScheduleHook(
 				TraceReactorAutoConfiguration.SLEUTH_REACTOR_EXECUTOR_SERVICE_KEY);
 	}
 

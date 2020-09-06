@@ -115,6 +115,9 @@ final class ScopePassingSpanSubscriber<T> implements SpanSubscription<T>, Scanna
 		if (key == Attr.PARENT) {
 			return this.s;
 		}
+		else if (key == Attr.RUN_STYLE) {
+			return Attr.RunStyle.SYNC;
+		}
 		else {
 			return key == Attr.ACTUAL ? this.subscriber : null;
 		}

@@ -237,9 +237,32 @@ public abstract class ReactorSleuth {
 		return fallback.get();
 	}
 
+	static Function<Runnable, Runnable> sleuthOnScheduleHook(
+			ConfigurableApplicationContext springContext) {
+		LazyBean<CurrentTraceContext> lazyCurrentTraceContext = LazyBean
+				.create(springContext, CurrentTraceContext.class);
+		return delegate -> {
+			if (springContext.isActive()) {
+				final CurrentTraceContext currentTraceContext = lazyCurrentTraceContext
+						.get();
+				if (currentTraceContext == null) {
+					return delegate;
+				}
+				final TraceContext traceContext = currentTraceContext.get();
+				return () -> {
+					try (CurrentTraceContext.Scope scope = currentTraceContext
+							.maybeScope(traceContext)) {
+						delegate.run();
+					}
+				};
+			}
+			return delegate;
+		};
+	}
+
 }
 
-class SleuthContextOperator<T> implements Subscription, CoreSubscriber<T> {
+class SleuthContextOperator<T> implements Subscription, CoreSubscriber<T>, Scannable {
 
 	private final Context context;
 
@@ -286,6 +309,14 @@ class SleuthContextOperator<T> implements Subscription, CoreSubscriber<T> {
 	@Override
 	public Context currentContext() {
 		return this.context;
+	}
+
+	@Override
+	public Object scanUnsafe(Attr key) {
+		if (key == Attr.RUN_STYLE) {
+			return Attr.RunStyle.SYNC;
+		}
+		return null;
 	}
 
 }
