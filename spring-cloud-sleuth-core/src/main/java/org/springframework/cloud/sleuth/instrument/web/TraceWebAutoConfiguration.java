@@ -24,8 +24,12 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import brave.Tracing;
+import org.apache.commons.lang.exception.ExceptionUtils;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 import org.springframework.beans.factory.BeanCreationException;
+import org.springframework.beans.factory.BeanCurrentlyInCreationException;
 import org.springframework.boot.actuate.autoconfigure.endpoint.web.WebEndpointProperties;
 import org.springframework.boot.actuate.autoconfigure.web.server.ConditionalOnManagementPort;
 import org.springframework.boot.actuate.autoconfigure.web.server.ManagementPortType;
@@ -65,6 +69,8 @@ import org.springframework.util.StringUtils;
 @EnableConfigurationProperties(SleuthWebProperties.class)
 public class TraceWebAutoConfiguration {
 
+	private static final Log logger = LogFactory.getLog(TraceWebAutoConfiguration.class);
+
 	@Bean
 	@ConditionalOnMissingBean
 	SkipPatternProvider sleuthSkipPatternProvider(
@@ -91,9 +97,19 @@ public class TraceWebAutoConfiguration {
 			return () -> result;
 		}
 		catch (BeanCreationException e) {
-			// Most likely, there is an actuator endpoint that indirectly references an
-			// instrumented HTTP client.
-			return () -> consolidateSkipPatterns(patterns);
+			if (ExceptionUtils.indexOfThrowable(e,
+					BeanCurrentlyInCreationException.class) != -1) {
+				// Most likely, there is an actuator endpoint that indirectly references
+				// an
+				// instrumented HTTP client.
+				logger.info(
+						"Is there an actuator endpoint that indirectly references an instrumented HTTP client?",
+						e);
+				return () -> consolidateSkipPatterns(patterns);
+			}
+			else {
+				throw e;
+			}
 		}
 	}
 
