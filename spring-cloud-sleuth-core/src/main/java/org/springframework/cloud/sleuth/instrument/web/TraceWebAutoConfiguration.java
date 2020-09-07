@@ -24,6 +24,7 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import brave.Tracing;
+import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -96,9 +97,8 @@ public class TraceWebAutoConfiguration {
 			return () -> result;
 		}
 		catch (BeanCreationException e) {
-			Throwable cause = e.getCause();
-			if (e instanceof BeanCurrentlyInCreationException || (cause != null
-					&& cause instanceof BeanCurrentlyInCreationException)) {
+			if (ExceptionUtils.indexOfThrowable(e,
+					BeanCurrentlyInCreationException.class) != -1) {
 				// Most likely, there is an actuator endpoint that indirectly references
 				// an
 				// instrumented HTTP client.
