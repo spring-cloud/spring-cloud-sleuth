@@ -87,8 +87,7 @@ public class TraceContextPropagationChannelInterceptorTests {
 		// Trace and Span IDs are implicitly checked
 		TraceContext extracted = B3SingleFormat.parseB3SingleFormat(b3).context();
 
-		assertThat(extracted.spanIdString()).as("spanId was equal to parent's id")
-				.isNotEqualTo(expectedSpanId);
+		assertThat(extracted.spanIdString()).as("spanId was equal to parent's id").isNotEqualTo(expectedSpanId);
 	}
 
 	@Configuration

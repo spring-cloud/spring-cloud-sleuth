@@ -40,8 +40,7 @@ public class SampleFeignApplicationTests {
 
 	// https://github.com/spring-cloud/spring-cloud-sleuth/issues/1396
 	@Test
-	public void should_not_pass_dash_as_default_service_name(
-			CapturedOutput outputCapture) {
+	public void should_not_pass_dash_as_default_service_name(CapturedOutput outputCapture) {
 		log.info("HELLO");
 
 		BDDAssertions.then(outputCapture.toString()).doesNotContain("INFO [-,,,]");

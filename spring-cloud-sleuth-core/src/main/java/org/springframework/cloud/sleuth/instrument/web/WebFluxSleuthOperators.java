@@ -51,8 +51,7 @@ public final class WebFluxSleuthOperators {
 	 * @param runnable - lambda to execute within the tracing context
 	 * @return consumer of a signal
 	 */
-	public static Consumer<Signal> withSpanInScope(SignalType signalType,
-			Runnable runnable) {
+	public static Consumer<Signal> withSpanInScope(SignalType signalType, Runnable runnable) {
 		return signal -> {
 			if (signalType != signal.getType()) {
 				return;
@@ -67,8 +66,7 @@ public final class WebFluxSleuthOperators {
 	 * @param consumer - lambda to execute within the tracing context
 	 * @return consumer of a signal
 	 */
-	public static Consumer<Signal> withSpanInScope(SignalType signalType,
-			Consumer<Signal> consumer) {
+	public static Consumer<Signal> withSpanInScope(SignalType signalType, Consumer<Signal> consumer) {
 		return signal -> {
 			if (signalType != signal.getType()) {
 				return;
@@ -97,8 +95,7 @@ public final class WebFluxSleuthOperators {
 	public static void withSpanInScope(Context context, Runnable runnable) {
 		CurrentTraceContext currentTraceContext = context.get(CurrentTraceContext.class);
 		TraceContext traceContext = traceContextOrNew(context);
-		try (CurrentTraceContext.Scope scope = currentTraceContext
-				.maybeScope(traceContext)) {
+		try (CurrentTraceContext.Scope scope = currentTraceContext.maybeScope(traceContext)) {
 			runnable.run();
 		}
 	}
@@ -134,12 +131,10 @@ public final class WebFluxSleuthOperators {
 	 * its attribute
 	 * @param runnable - lambda to execute within the tracing context
 	 */
-	public static void withSpanInScope(Tracing tracing, ServerWebExchange exchange,
-			Runnable runnable) {
+	public static void withSpanInScope(Tracing tracing, ServerWebExchange exchange, Runnable runnable) {
 		CurrentTraceContext currentTraceContext = tracing.currentTraceContext();
 		TraceContext traceContext = traceContextFromExchangeOrNew(tracing, exchange);
-		try (CurrentTraceContext.Scope scope = currentTraceContext
-				.maybeScope(traceContext)) {
+		try (CurrentTraceContext.Scope scope = currentTraceContext.maybeScope(traceContext)) {
 			runnable.run();
 		}
 	}
@@ -153,8 +148,7 @@ public final class WebFluxSleuthOperators {
 	 * @param <T> callable's return type
 	 * @return value from the callable
 	 */
-	public static <T> T withSpanInScope(Tracing tracing, ServerWebExchange exchange,
-			Callable<T> callable) {
+	public static <T> T withSpanInScope(Tracing tracing, ServerWebExchange exchange, Callable<T> callable) {
 		CurrentTraceContext currentTraceContext = tracing.currentTraceContext();
 		TraceContext traceContext = traceContextFromExchangeOrNew(tracing, exchange);
 		return withContext(callable, currentTraceContext, traceContext);
@@ -189,10 +183,9 @@ public final class WebFluxSleuthOperators {
 		return currentTraceContext(signal.getContext());
 	}
 
-	private static <T> T withContext(Callable<T> callable,
-			CurrentTraceContext currentTraceContext, TraceContext traceContext) {
-		try (CurrentTraceContext.Scope scope = currentTraceContext
-				.maybeScope(traceContext)) {
+	private static <T> T withContext(Callable<T> callable, CurrentTraceContext currentTraceContext,
+			TraceContext traceContext) {
+		try (CurrentTraceContext.Scope scope = currentTraceContext.maybeScope(traceContext)) {
 			try {
 				return callable.call();
 			}
@@ -202,8 +195,7 @@ public final class WebFluxSleuthOperators {
 		}
 	}
 
-	private static TraceContext traceContextFromExchangeOrNew(Tracing tracing,
-			ServerWebExchange exchange) {
+	private static TraceContext traceContextFromExchangeOrNew(Tracing tracing, ServerWebExchange exchange) {
 		TraceContext traceContext = exchange.getAttribute(TraceContext.class.getName());
 		if (traceContext == null) {
 			if (log.isDebugEnabled()) {

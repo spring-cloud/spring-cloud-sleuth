@@ -26,7 +26,6 @@ import org.aopalliance.intercept.MethodInvocation;
  */
 interface SleuthMethodInvocationProcessor {
 
-	Object process(MethodInvocation invocation, NewSpan newSpan,
-			ContinueSpan continueSpan) throws Throwable;
+	Object process(MethodInvocation invocation, NewSpan newSpan, ContinueSpan continueSpan) throws Throwable;
 
 }

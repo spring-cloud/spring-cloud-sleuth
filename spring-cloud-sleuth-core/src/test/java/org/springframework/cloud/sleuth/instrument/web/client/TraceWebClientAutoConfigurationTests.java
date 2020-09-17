@@ -66,16 +66,14 @@ public class TraceWebClientAutoConfigurationTests {
 		assertInterceptorsOrder(assertInterceptorsNotEmpty(this.builder.build()));
 	}
 
-	private List<ClientHttpRequestInterceptor> assertInterceptorsNotEmpty(
-			RestTemplate restTemplate) {
+	private List<ClientHttpRequestInterceptor> assertInterceptorsNotEmpty(RestTemplate restTemplate) {
 		then(restTemplate).isNotNull();
 		List<ClientHttpRequestInterceptor> interceptors = restTemplate.getInterceptors();
 		then(interceptors).isNotEmpty();
 		return interceptors;
 	}
 
-	private void assertInterceptorsOrder(
-			List<ClientHttpRequestInterceptor> interceptors) {
+	private void assertInterceptorsOrder(List<ClientHttpRequestInterceptor> interceptors) {
 		int traceInterceptorIndex = -1;
 		int myInterceptorIndex = -1;
 		int mySecondInterceptorIndex = -1;
@@ -94,10 +92,9 @@ public class TraceWebClientAutoConfigurationTests {
 				mySecondInterceptorIndex = i;
 			}
 		}
-		then(traceInterceptorIndex).isGreaterThanOrEqualTo(0)
-				.isLessThan(myInterceptorIndex).isLessThan(mySecondInterceptorIndex);
-		then(numberOfInstances.values())
-				.as("Can't have duplicate entries for interceptors")
+		then(traceInterceptorIndex).isGreaterThanOrEqualTo(0).isLessThan(myInterceptorIndex)
+				.isLessThan(mySecondInterceptorIndex);
+		then(numberOfInstances.values()).as("Can't have duplicate entries for interceptors")
 				.containsOnlyElementsOf(Collections.singletonList(1));
 	}
 
@@ -118,8 +115,7 @@ public class TraceWebClientAutoConfigurationTests {
 
 		// custom builder
 		@Bean
-		RestTemplateBuilder myRestTemplateBuilder(
-				List<RestTemplateCustomizer> customizers) {
+		RestTemplateBuilder myRestTemplateBuilder(List<RestTemplateCustomizer> customizers) {
 			return new RestTemplateBuilder().additionalCustomizers(customizers)
 					.additionalInterceptors(new MyClientHttpRequestInterceptor());
 		}
@@ -136,9 +132,8 @@ public class TraceWebClientAutoConfigurationTests {
 		@Qualifier("secondRestTemplate")
 		RestTemplate secondRestTemplate() {
 			RestTemplate restTemplate = new RestTemplate();
-			restTemplate
-					.setInterceptors(Arrays.asList(new MyClientHttpRequestInterceptor(),
-							new MySecondClientHttpRequestInterceptor()));
+			restTemplate.setInterceptors(
+					Arrays.asList(new MyClientHttpRequestInterceptor(), new MySecondClientHttpRequestInterceptor()));
 			return restTemplate;
 		}
 
@@ -146,8 +141,7 @@ public class TraceWebClientAutoConfigurationTests {
 		@Bean
 		RestTemplateCustomizer myRestTemplateCustomizer() {
 			return restTemplate -> {
-				restTemplate.getInterceptors().add(0,
-						new MySecondClientHttpRequestInterceptor());
+				restTemplate.getInterceptors().add(0, new MySecondClientHttpRequestInterceptor());
 			};
 		}
 
@@ -158,8 +152,8 @@ public class TraceWebClientAutoConfigurationTests {
 class MyClientHttpRequestInterceptor implements ClientHttpRequestInterceptor {
 
 	@Override
-	public ClientHttpResponse intercept(HttpRequest request, byte[] body,
-			ClientHttpRequestExecution execution) throws IOException {
+	public ClientHttpResponse intercept(HttpRequest request, byte[] body, ClientHttpRequestExecution execution)
+			throws IOException {
 		return execution.execute(request, body);
 	}
 
@@ -168,8 +162,8 @@ class MyClientHttpRequestInterceptor implements ClientHttpRequestInterceptor {
 class MySecondClientHttpRequestInterceptor implements ClientHttpRequestInterceptor {
 
 	@Override
-	public ClientHttpResponse intercept(HttpRequest request, byte[] body,
-			ClientHttpRequestExecution execution) throws IOException {
+	public ClientHttpResponse intercept(HttpRequest request, byte[] body, ClientHttpRequestExecution execution)
+			throws IOException {
 		return execution.execute(request, body);
 	}
 

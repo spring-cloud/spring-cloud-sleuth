@@ -44,8 +44,8 @@ public class TraceCallableTests {
 
 	TestSpanHandler spans = new TestSpanHandler();
 
-	Tracing tracing = Tracing.newBuilder().currentTraceContext(this.currentTraceContext)
-			.addSpanHandler(this.spans).build();
+	Tracing tracing = Tracing.newBuilder().currentTraceContext(this.currentTraceContext).addSpanHandler(this.spans)
+			.build();
 
 	Tracer tracer = this.tracing.tracer();
 
@@ -67,19 +67,16 @@ public class TraceCallableTests {
 	}
 
 	@Test
-	public void should_remove_span_from_thread_local_after_finishing_work()
-			throws Exception {
+	public void should_remove_span_from_thread_local_after_finishing_work() throws Exception {
 		givenCallableGetsSubmitted(thatRetrievesTraceFromThreadLocal());
 
-		Span secondSpan = whenNonTraceableCallableGetsSubmitted(
-				thatRetrievesTraceFromThreadLocal());
+		Span secondSpan = whenNonTraceableCallableGetsSubmitted(thatRetrievesTraceFromThreadLocal());
 
 		then(secondSpan).isNull();
 	}
 
 	@Test
-	public void should_remove_parent_span_from_thread_local_after_finishing_work()
-			throws Exception {
+	public void should_remove_parent_span_from_thread_local_after_finishing_work() throws Exception {
 		Span parent = this.tracer.nextSpan().name("http:parent");
 		try (Tracer.SpanInScope ws = this.tracer.withSpanInScope(parent)) {
 			Span child = givenCallableGetsSubmitted(thatRetrievesTraceFromThreadLocal());
@@ -88,8 +85,7 @@ public class TraceCallableTests {
 		}
 		then(this.tracer.currentSpan()).isNull();
 
-		Span secondSpan = whenNonTraceableCallableGetsSubmitted(
-				thatRetrievesTraceFromThreadLocal());
+		Span secondSpan = whenNonTraceableCallableGetsSubmitted(thatRetrievesTraceFromThreadLocal());
 
 		then(secondSpan).isNull();
 	}
@@ -103,8 +99,7 @@ public class TraceCallableTests {
 	}
 
 	@Test
-	public void should_take_name_of_span_from_to_string_if_span_name_annotation_is_missing()
-			throws Exception {
+	public void should_take_name_of_span_from_to_string_if_span_name_annotation_is_missing() throws Exception {
 		whenCallableGetsSubmitted(thatRetrievesTraceFromThreadLocal());
 
 		then(this.spans).hasSize(1);
@@ -132,15 +127,13 @@ public class TraceCallableTests {
 
 	private Span whenCallableGetsSubmitted(Callable<Span> callable)
 			throws InterruptedException, java.util.concurrent.ExecutionException {
-		return this.executor.submit(
-				new TraceCallable<>(this.tracing, new DefaultSpanNamer(), callable))
-				.get();
+		return this.executor.submit(new TraceCallable<>(this.tracing, new DefaultSpanNamer(), callable)).get();
 	}
 
 	private Span whenATraceKeepingCallableGetsSubmitted()
 			throws InterruptedException, java.util.concurrent.ExecutionException {
-		return this.executor.submit(new TraceCallable<>(this.tracing,
-				new DefaultSpanNamer(), new TraceKeepingCallable())).get();
+		return this.executor
+				.submit(new TraceCallable<>(this.tracing, new DefaultSpanNamer(), new TraceKeepingCallable())).get();
 	}
 
 	private Span whenNonTraceableCallableGetsSubmitted(Callable<Span> callable)

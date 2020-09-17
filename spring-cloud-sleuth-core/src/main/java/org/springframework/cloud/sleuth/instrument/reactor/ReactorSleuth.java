@@ -75,8 +75,8 @@ public abstract class ReactorSleuth {
 
 		// keep a reference outside the lambda so that any caching will be visible to
 		// all publishers
-		LazyBean<CurrentTraceContext> lazyCurrentTraceContext = LazyBean
-				.create(springContext, CurrentTraceContext.class);
+		LazyBean<CurrentTraceContext> lazyCurrentTraceContext = LazyBean.create(springContext,
+				CurrentTraceContext.class);
 
 		return Operators.liftPublisher((p, sub) -> {
 			// We don't scope scalar results as they happen in an instant. This prevents
@@ -90,8 +90,8 @@ public abstract class ReactorSleuth {
 				assert assertOn = true; // gives a message in unit test failures
 				if (log.isTraceEnabled() || assertOn) {
 					String message = "Spring Context [" + springContext
-							+ "] is not yet refreshed. This is unexpected. Reactor Context is ["
-							+ sub.currentContext() + "] and name is [" + name(sub) + "]";
+							+ "] is not yet refreshed. This is unexpected. Reactor Context is [" + sub.currentContext()
+							+ "] and name is [" + name(sub) + "]";
 					log.trace(message);
 					assert false : message; // should never happen, but don't break.
 				}
@@ -105,8 +105,8 @@ public abstract class ReactorSleuth {
 				assert assertOn = true; // gives a message in unit test failures
 				if (log.isTraceEnabled() || assertOn) {
 					String message = "Spring Context [" + springContext
-							+ "] did not return a CurrentTraceContext. Reactor Context is ["
-							+ sub.currentContext() + "] and name is [" + name(sub) + "]";
+							+ "] did not return a CurrentTraceContext. Reactor Context is [" + sub.currentContext()
+							+ "] and name is [" + name(sub) + "]";
 					log.trace(message);
 					assert false : message; // should never happen, but don't break.
 				}
@@ -115,8 +115,8 @@ public abstract class ReactorSleuth {
 
 			Context context = contextWithBeans(springContext, sub);
 			if (log.isTraceEnabled()) {
-				log.trace("Spring context [" + springContext + "], Reactor context ["
-						+ context + "], name [" + name(sub) + "]");
+				log.trace("Spring context [" + springContext + "], Reactor context [" + context + "], name ["
+						+ name(sub) + "]");
 			}
 
 			TraceContext parent = traceContext(context, currentTraceContext);
@@ -125,26 +125,24 @@ public abstract class ReactorSleuth {
 			}
 
 			if (log.isTraceEnabled()) {
-				log.trace("Creating a scope passing span subscriber with Reactor Context "
-						+ "[" + context + "] and name [" + name(sub) + "]");
+				log.trace("Creating a scope passing span subscriber with Reactor Context " + "[" + context
+						+ "] and name [" + name(sub) + "]");
 			}
 			// if (runStyle == Scannable.Attr.RunStyle.SYNC) {
 			// return sub;
 			// }
-			return new ScopePassingSpanSubscriber<>(sub, context, currentTraceContext,
-					parent);
+			return new ScopePassingSpanSubscriber<>(sub, context, currentTraceContext, parent);
 		});
 	}
 
-	private static <T> Context contextWithBeans(
-			ConfigurableApplicationContext springContext, CoreSubscriber<? super T> sub) {
+	private static <T> Context contextWithBeans(ConfigurableApplicationContext springContext,
+			CoreSubscriber<? super T> sub) {
 		Context context = sub.currentContext();
 		if (!context.hasKey(Tracing.class)) {
 			context = context.put(Tracing.class, springContext.getBean(Tracing.class));
 		}
 		if (!context.hasKey(CurrentTraceContext.class)) {
-			context = context.put(CurrentTraceContext.class,
-					springContext.getBean(CurrentTraceContext.class));
+			context = context.put(CurrentTraceContext.class, springContext.getBean(CurrentTraceContext.class));
 		}
 		return context;
 	}

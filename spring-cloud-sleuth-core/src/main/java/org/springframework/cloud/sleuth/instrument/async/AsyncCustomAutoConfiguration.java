@@ -39,24 +39,20 @@ import org.springframework.scheduling.annotation.AsyncConfigurer;
 @ConditionalOnBean(AsyncConfigurer.class)
 @AutoConfigureBefore(AsyncDefaultAutoConfiguration.class)
 @ConditionalOnProperty(value = "spring.sleuth.async.enabled", matchIfMissing = true)
-@AutoConfigureAfter(
-		name = "org.springframework.cloud.sleuth.instrument.scheduling.TraceSchedulingAutoConfiguration")
+@AutoConfigureAfter(name = "org.springframework.cloud.sleuth.instrument.scheduling.TraceSchedulingAutoConfiguration")
 class AsyncCustomAutoConfiguration implements BeanPostProcessor {
 
 	@Autowired
 	private BeanFactory beanFactory;
 
 	@Override
-	public Object postProcessBeforeInitialization(Object bean, String beanName)
-			throws BeansException {
+	public Object postProcessBeforeInitialization(Object bean, String beanName) throws BeansException {
 		return bean;
 	}
 
 	@Override
-	public Object postProcessAfterInitialization(Object bean, String beanName)
-			throws BeansException {
-		if (bean instanceof AsyncConfigurer
-				&& !(bean instanceof LazyTraceAsyncCustomizer)) {
+	public Object postProcessAfterInitialization(Object bean, String beanName) throws BeansException {
+		if (bean instanceof AsyncConfigurer && !(bean instanceof LazyTraceAsyncCustomizer)) {
 			AsyncConfigurer configurer = (AsyncConfigurer) bean;
 			return new LazyTraceAsyncCustomizer(this.beanFactory, configurer);
 		}

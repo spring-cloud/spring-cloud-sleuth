@@ -51,38 +51,33 @@ class TracingConnectionFactoryBeanPostProcessor implements BeanPostProcessor {
 	}
 
 	@Override
-	public Object postProcessAfterInitialization(Object bean, String beanName)
-			throws BeansException {
+	public Object postProcessAfterInitialization(Object bean, String beanName) throws BeansException {
 		// Wrap the caching connection factories instead of its target, because it catches
 		// callbacks
 		// such as ExceptionListener. If we don't wrap, cached callbacks like this won't
 		// be traced.
 		if (bean instanceof CachingConnectionFactory) {
-			return new LazyConnectionFactory(this.beanFactory,
-					(CachingConnectionFactory) bean);
+			return new LazyConnectionFactory(this.beanFactory, (CachingConnectionFactory) bean);
 		}
 		if (bean instanceof JmsMessageEndpointManager) {
 			JmsMessageEndpointManager manager = (JmsMessageEndpointManager) bean;
 			MessageListener listener = manager.getMessageListener();
 			if (listener != null) {
-				manager.setMessageListener(
-						new LazyMessageListener(this.beanFactory, listener));
+				manager.setMessageListener(new LazyMessageListener(this.beanFactory, listener));
 			}
 			return bean;
 		}
 		if (bean instanceof XAConnectionFactory && bean instanceof ConnectionFactory) {
-			return new LazyConnectionAndXaConnectionFactory(this.beanFactory,
-					(ConnectionFactory) bean, (XAConnectionFactory) bean);
+			return new LazyConnectionAndXaConnectionFactory(this.beanFactory, (ConnectionFactory) bean,
+					(XAConnectionFactory) bean);
 		}
 		// We check XA first in case the ConnectionFactory also implements
 		// XAConnectionFactory
 		else if (bean instanceof XAConnectionFactory) {
-			return new LazyXAConnectionFactory(this.beanFactory,
-					(XAConnectionFactory) bean);
+			return new LazyXAConnectionFactory(this.beanFactory, (XAConnectionFactory) bean);
 		}
 		else if (bean instanceof TopicConnectionFactory) {
-			return new LazyTopicConnectionFactory(this.beanFactory,
-					(TopicConnectionFactory) bean);
+			return new LazyTopicConnectionFactory(this.beanFactory, (TopicConnectionFactory) bean);
 		}
 		else if (bean instanceof ConnectionFactory) {
 			return new LazyConnectionFactory(this.beanFactory, (ConnectionFactory) bean);
@@ -167,8 +162,7 @@ class LazyTopicConnectionFactory implements TopicConnectionFactory {
 	}
 
 	@Override
-	public TopicConnection createTopicConnection(String s, String s1)
-			throws JMSException {
+	public TopicConnection createTopicConnection(String s, String s1) throws JMSException {
 		return jmsTracing().topicConnection(this.delegate.createTopicConnection(s, s1));
 	}
 
@@ -275,20 +269,16 @@ class LazyConnectionFactory implements ConnectionFactory {
 
 }
 
-class LazyConnectionAndXaConnectionFactory
-		implements ConnectionFactory, XAConnectionFactory {
+class LazyConnectionAndXaConnectionFactory implements ConnectionFactory, XAConnectionFactory {
 
 	private final ConnectionFactory connectionFactoryDelegate;
 
 	private final XAConnectionFactory xaConnectionFactoryDelegate;
 
-	LazyConnectionAndXaConnectionFactory(BeanFactory beanFactory,
-			ConnectionFactory connectionFactoryDelegate,
+	LazyConnectionAndXaConnectionFactory(BeanFactory beanFactory, ConnectionFactory connectionFactoryDelegate,
 			XAConnectionFactory xaConnectionFactoryDelegate) {
-		this.connectionFactoryDelegate = new LazyConnectionFactory(beanFactory,
-				connectionFactoryDelegate);
-		this.xaConnectionFactoryDelegate = new LazyXAConnectionFactory(beanFactory,
-				xaConnectionFactoryDelegate);
+		this.connectionFactoryDelegate = new LazyConnectionFactory(beanFactory, connectionFactoryDelegate);
+		this.xaConnectionFactoryDelegate = new LazyXAConnectionFactory(beanFactory, xaConnectionFactoryDelegate);
 	}
 
 	@Override
@@ -297,8 +287,7 @@ class LazyConnectionAndXaConnectionFactory
 	}
 
 	@Override
-	public Connection createConnection(String userName, String password)
-			throws JMSException {
+	public Connection createConnection(String userName, String password) throws JMSException {
 		return this.connectionFactoryDelegate.createConnection(userName, password);
 	}
 
@@ -314,8 +303,7 @@ class LazyConnectionAndXaConnectionFactory
 
 	@Override
 	public JMSContext createContext(String userName, String password, int sessionMode) {
-		return this.connectionFactoryDelegate.createContext(userName, password,
-				sessionMode);
+		return this.connectionFactoryDelegate.createContext(userName, password, sessionMode);
 	}
 
 	@Override
@@ -329,8 +317,7 @@ class LazyConnectionAndXaConnectionFactory
 	}
 
 	@Override
-	public XAConnection createXAConnection(String userName, String password)
-			throws JMSException {
+	public XAConnection createXAConnection(String userName, String password) throws JMSException {
 		return this.xaConnectionFactoryDelegate.createXAConnection(userName, password);
 	}
 

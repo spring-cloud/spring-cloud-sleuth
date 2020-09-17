@@ -54,8 +54,7 @@ public class LazyTraceExecutor implements Executor {
 		this.beanName = null;
 	}
 
-	public LazyTraceExecutor(BeanFactory beanFactory, Executor delegate,
-			String beanName) {
+	public LazyTraceExecutor(BeanFactory beanFactory, Executor delegate, String beanName) {
 		this.beanFactory = beanFactory;
 		this.delegate = delegate;
 		this.beanName = beanName;
@@ -76,8 +75,7 @@ public class LazyTraceExecutor implements Executor {
 				return;
 			}
 		}
-		this.delegate.execute(
-				new TraceRunnable(this.tracing, spanNamer(), command, this.beanName));
+		this.delegate.execute(new TraceRunnable(this.tracing, spanNamer(), command, this.beanName));
 	}
 
 	// due to some race conditions trace keys might not be ready yet
@@ -87,8 +85,7 @@ public class LazyTraceExecutor implements Executor {
 				this.spanNamer = this.beanFactory.getBean(SpanNamer.class);
 			}
 			catch (NoSuchBeanDefinitionException e) {
-				log.warn(
-						"SpanNamer bean not found - will provide a manually created instance");
+				log.warn("SpanNamer bean not found - will provide a manually created instance");
 				return new DefaultSpanNamer();
 			}
 		}

@@ -33,24 +33,21 @@ class SpanIgnoringSpanHandlerTests {
 
 	@Test
 	void should_handle_span_when_not_yet_finished() {
-		SpanIgnoringSpanHandler handler = new SpanIgnoringSpanHandler(
-				new SleuthProperties());
+		SpanIgnoringSpanHandler handler = new SpanIgnoringSpanHandler(new SleuthProperties());
 
 		then(handler.end(null, null, SpanHandler.Cause.ABANDONED)).isTrue();
 	}
 
 	@Test
 	void should_handle_span_when_name_null() {
-		SpanIgnoringSpanHandler handler = new SpanIgnoringSpanHandler(
-				new SleuthProperties());
+		SpanIgnoringSpanHandler handler = new SpanIgnoringSpanHandler(new SleuthProperties());
 
 		then(handler.end(null, new MutableSpan(), SpanHandler.Cause.FINISHED)).isTrue();
 	}
 
 	@Test
 	void should_handle_span_when_not_present_in_main_list_of_spans_to_skip() {
-		SpanIgnoringSpanHandler handler = new SpanIgnoringSpanHandler(
-				new SleuthProperties());
+		SpanIgnoringSpanHandler handler = new SpanIgnoringSpanHandler(new SleuthProperties());
 
 		then(handler.end(null, namedSpan(), SpanHandler.Cause.FINISHED)).isTrue();
 	}
@@ -64,8 +61,7 @@ class SpanIgnoringSpanHandlerTests {
 	@Test
 	void should_not_handle_span_when_present_in_main_list_of_spans_to_skip() {
 		SleuthProperties sleuthProperties = new SleuthProperties();
-		sleuthProperties.getSpanHandler()
-				.setSpanNamePatternsToSkip(Collections.singletonList("someName"));
+		sleuthProperties.getSpanHandler().setSpanNamePatternsToSkip(Collections.singletonList("someName"));
 		SpanIgnoringSpanHandler handler = new SpanIgnoringSpanHandler(sleuthProperties);
 
 		then(handler.end(null, namedSpan(), SpanHandler.Cause.FINISHED)).isFalse();
@@ -91,8 +87,8 @@ class SpanIgnoringSpanHandlerTests {
 		end(handler(sleuthPropertiesWithAdditionalEntries("b")));
 		end(handler(sleuthPropertiesWithAdditionalEntries("c")));
 
-		then(SpanIgnoringSpanHandler.cache).containsKey("someOtherName").containsKey("a")
-				.containsKey("b").containsKey("c");
+		then(SpanIgnoringSpanHandler.cache).containsKey("someOtherName").containsKey("a").containsKey("b")
+				.containsKey("c");
 	}
 
 	private final ApplicationContextRunner contextRunner = new ApplicationContextRunner()
@@ -101,16 +97,13 @@ class SpanIgnoringSpanHandlerTests {
 	@Test
 	void should_not_register_span_handler_when_property_passed() {
 		this.contextRunner.withPropertyValues("spring.sleuth.span-handler.enabled=false")
-				.run((context) -> BDDAssertions
-						.thenThrownBy(
-								() -> context.getBean(SpanIgnoringSpanHandler.class))
+				.run((context) -> BDDAssertions.thenThrownBy(() -> context.getBean(SpanIgnoringSpanHandler.class))
 						.isInstanceOf(NoSuchBeanDefinitionException.class));
 	}
 
 	@Test
 	void should_register_span_handler_by_default() {
-		this.contextRunner
-				.run((context) -> context.getBean(SpanIgnoringSpanHandler.class));
+		this.contextRunner.run((context) -> context.getBean(SpanIgnoringSpanHandler.class));
 	}
 
 	private SleuthProperties sleuthPropertiesWithAdditionalEntries() {
@@ -119,8 +112,7 @@ class SpanIgnoringSpanHandlerTests {
 
 	private SleuthProperties sleuthPropertiesWithAdditionalEntries(String name) {
 		SleuthProperties sleuthProperties = new SleuthProperties();
-		sleuthProperties.getSpanHandler()
-				.setAdditionalSpanNamePatternsToIgnore(Collections.singletonList(name));
+		sleuthProperties.getSpanHandler().setAdditionalSpanNamePatternsToIgnore(Collections.singletonList(name));
 		return sleuthProperties;
 	}
 

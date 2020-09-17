@@ -38,11 +38,9 @@ import org.springframework.web.client.RestTemplate;
 
 import static org.assertj.core.api.BDDAssertions.then;
 
-@SpringBootTest(
-		classes = SkipEndPointsIntegrationTestsWithContextPathWithBasePath.Config.class,
+@SpringBootTest(classes = SkipEndPointsIntegrationTestsWithContextPathWithBasePath.Config.class,
 		webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
-		properties = { "management.endpoints.web.exposure.include:*",
-				"server.servlet.context-path:/context-path" })
+		properties = { "management.endpoints.web.exposure.include:*", "server.servlet.context-path:/context-path" })
 public class SkipEndPointsIntegrationTestsWithContextPathWithBasePath {
 
 	@Autowired
@@ -62,8 +60,7 @@ public class SkipEndPointsIntegrationTestsWithContextPathWithBasePath {
 
 	@Test
 	public void should_not_sample_skipped_endpoint_with_context_path() {
-		new RestTemplate().getForObject(
-				"http://localhost:" + this.port + "/context-path/actuator/health",
+		new RestTemplate().getForObject("http://localhost:" + this.port + "/context-path/actuator/health",
 				String.class);
 
 		then(this.tracer.currentSpan()).isNull();
@@ -72,9 +69,7 @@ public class SkipEndPointsIntegrationTestsWithContextPathWithBasePath {
 
 	@Test
 	public void should_sample_non_actuator_endpoint_with_context_path() {
-		new RestTemplate().getForObject(
-				"http://localhost:" + this.port + "/context-path/something",
-				String.class);
+		new RestTemplate().getForObject("http://localhost:" + this.port + "/context-path/something", String.class);
 
 		then(this.tracer.currentSpan()).isNull();
 		then(this.spans).hasSize(1);

@@ -55,8 +55,7 @@ import org.springframework.web.client.RestTemplate;
 import static org.assertj.core.api.BDDAssertions.then;
 import static org.springframework.boot.test.context.SpringBootTest.WebEnvironment.RANDOM_PORT;
 
-@SpringBootTest(classes = { WebClientDiscoveryExceptionTests.TestConfiguration.class },
-		webEnvironment = RANDOM_PORT)
+@SpringBootTest(classes = { WebClientDiscoveryExceptionTests.TestConfiguration.class }, webEnvironment = RANDOM_PORT)
 @TestPropertySource(properties = { "spring.application.name=exceptionservice" })
 @DirtiesContext
 public class WebClientDiscoveryExceptionTests {
@@ -96,15 +95,14 @@ public class WebClientDiscoveryExceptionTests {
 
 		// hystrix commands should finish at this point
 		Thread.sleep(200);
-		then(this.spans.spans().stream().filter(span1 -> span1.kind() == Span.Kind.CLIENT)
-				.findFirst().get().error()).isNotNull();
+		then(this.spans.spans().stream().filter(span1 -> span1.kind() == Span.Kind.CLIENT).findFirst().get().error())
+				.isNotNull();
 	}
 
 	@Test
 	public void testFeignInterfaceWithException() throws Exception {
 		shouldCloseSpanUponException(
-				(ResponseEntityProvider) (tests) -> tests.testFeignInterfaceWithException
-						.shouldFailToConnect());
+				(ResponseEntityProvider) (tests) -> tests.testFeignInterfaceWithException.shouldFailToConnect());
 	}
 
 	@Test

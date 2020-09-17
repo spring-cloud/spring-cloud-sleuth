@@ -51,8 +51,7 @@ import static org.springframework.boot.test.context.SpringBootTest.WebEnvironmen
  * @author Marcin Grzejszczak
  */
 
-@SpringBootTest(
-		classes = { TraceWebAsyncClientAutoConfigurationTests.TestConfiguration.class },
+@SpringBootTest(classes = { TraceWebAsyncClientAutoConfigurationTests.TestConfiguration.class },
 		webEnvironment = RANDOM_PORT)
 public class TraceWebAsyncClientAutoConfigurationTests {
 
@@ -74,12 +73,10 @@ public class TraceWebAsyncClientAutoConfigurationTests {
 	}
 
 	@Test
-	public void should_close_span_upon_success_callback()
-			throws ExecutionException, InterruptedException {
+	public void should_close_span_upon_success_callback() throws ExecutionException, InterruptedException {
 		brave.Span initialSpan = this.tracer.tracer().nextSpan().name("foo");
 
-		try (Tracer.SpanInScope ws = this.tracer.tracer()
-				.withSpanInScope(initialSpan.start())) {
+		try (Tracer.SpanInScope ws = this.tracer.tracer().withSpanInScope(initialSpan.start())) {
 			ListenableFuture<ResponseEntity<String>> future = this.asyncRestTemplate
 					.getForEntity("http://localhost:" + port() + "/foo", String.class);
 			String result = future.get().getBody();
@@ -91,11 +88,8 @@ public class TraceWebAsyncClientAutoConfigurationTests {
 		}
 
 		Awaitility.await().untilAsserted(() -> {
-			then(this.spans.spans().stream()
-					.filter(span -> Span.Kind.CLIENT == span.kind()).findFirst().get())
-							.matches(span -> span.finishTimestamp()
-									- span.startTimestamp() >= TimeUnit.MILLISECONDS
-											.toMicros(100));
+			then(this.spans.spans().stream().filter(span -> Span.Kind.CLIENT == span.kind()).findFirst().get()).matches(
+					span -> span.finishTimestamp() - span.startTimestamp() >= TimeUnit.MILLISECONDS.toMicros(100));
 			then(this.tracer.tracer().currentSpan()).isNull();
 		});
 	}
@@ -104,8 +98,7 @@ public class TraceWebAsyncClientAutoConfigurationTests {
 	public void should_close_span_upon_failure_callback() {
 		ListenableFuture<ResponseEntity<String>> future;
 		try {
-			future = this.asyncRestTemplate.getForEntity(
-					"http://localhost:" + port() + "/blowsup", String.class);
+			future = this.asyncRestTemplate.getForEntity("http://localhost:" + port() + "/blowsup", String.class);
 			future.get();
 			BDDAssertions.fail("should throw an exception from the controller");
 		}
@@ -115,8 +108,8 @@ public class TraceWebAsyncClientAutoConfigurationTests {
 		Awaitility.await().untilAsserted(() -> {
 			MutableSpan reportedRpcSpan = new ArrayList<>(this.spans.spans()).stream()
 					.filter(span -> Span.Kind.CLIENT == span.kind()).findFirst().get();
-			then(reportedRpcSpan).matches(span -> span.finishTimestamp()
-					- span.startTimestamp() >= TimeUnit.MILLISECONDS.toMicros(100));
+			then(reportedRpcSpan).matches(
+					span -> span.finishTimestamp() - span.startTimestamp() >= TimeUnit.MILLISECONDS.toMicros(100));
 			then(reportedRpcSpan.tags()).containsKey("error");
 			then(this.tracer.tracer().currentSpan()).isNull();
 		});

@@ -37,16 +37,14 @@ import org.springframework.util.StringUtils;
  *
  * @author Marcin Grzejszczak
  */
-enum MessageHeaderPropagation
-		implements Propagation.Setter<MessageHeaderAccessor, String>,
+enum MessageHeaderPropagation implements Propagation.Setter<MessageHeaderAccessor, String>,
 		Propagation.Getter<MessageHeaderAccessor, String> {
 
 	INSTANCE;
 
 	private static final Log log = LogFactory.getLog(MessageHeaderPropagation.class);
 
-	static Map<String, ?> propagationHeaders(Map<String, ?> headers,
-			List<String> propagationHeaders) {
+	static Map<String, ?> propagationHeaders(Map<String, ?> headers, List<String> propagationHeaders) {
 		Map<String, Object> headersToCopy = new HashMap<>();
 		for (Map.Entry<String, ?> entry : headers.entrySet()) {
 			if (propagationHeaders.contains(entry.getKey())) {
@@ -56,21 +54,18 @@ enum MessageHeaderPropagation
 		return headersToCopy;
 	}
 
-	static void removeAnyTraceHeaders(MessageHeaderAccessor accessor,
-			List<String> keysToRemove) {
+	static void removeAnyTraceHeaders(MessageHeaderAccessor accessor, List<String> keysToRemove) {
 		for (String keyToRemove : keysToRemove) {
 			accessor.removeHeader(keyToRemove);
 			if (accessor instanceof NativeMessageHeaderAccessor) {
 				NativeMessageHeaderAccessor nativeAccessor = (NativeMessageHeaderAccessor) accessor;
 				if (accessor.isMutable()) {
 					// 1184 native headers can be an immutable map
-					ensureNativeHeadersAreMutable(nativeAccessor)
-							.removeNativeHeader(keyToRemove);
+					ensureNativeHeadersAreMutable(nativeAccessor).removeNativeHeader(keyToRemove);
 				}
 			}
 			else {
-				Object nativeHeaders = accessor
-						.getHeader(NativeMessageHeaderAccessor.NATIVE_HEADERS);
+				Object nativeHeaders = accessor.getHeader(NativeMessageHeaderAccessor.NATIVE_HEADERS);
 				if (nativeHeaders instanceof Map) {
 					((Map) nativeHeaders).remove(keyToRemove);
 				}
@@ -93,8 +88,7 @@ enum MessageHeaderPropagation
 		nativeHeaderMap = nativeHeaderMap instanceof LinkedMultiValueMap ? nativeHeaderMap
 				: new LinkedMultiValueMap<>(nativeHeaderMap);
 		nativeAccessor.removeHeader(NativeMessageHeaderAccessor.NATIVE_HEADERS);
-		nativeAccessor.setHeader(NativeMessageHeaderAccessor.NATIVE_HEADERS,
-				nativeHeaderMap);
+		nativeAccessor.setHeader(NativeMessageHeaderAccessor.NATIVE_HEADERS, nativeHeaderMap);
 		return nativeAccessor;
 	}
 
@@ -105,8 +99,7 @@ enum MessageHeaderPropagation
 		}
 		catch (Exception ex) {
 			if (log.isDebugEnabled()) {
-				log.debug("An exception happened when we tried to retrieve the [" + key
-						+ "] from message", ex);
+				log.debug("An exception happened when we tried to retrieve the [" + key + "] from message", ex);
 			}
 		}
 	}
@@ -118,16 +111,13 @@ enum MessageHeaderPropagation
 			ensureNativeHeadersAreMutable(nativeAccessor).setNativeHeader(key, value);
 		}
 		else {
-			Object nativeHeaders = accessor
-					.getHeader(NativeMessageHeaderAccessor.NATIVE_HEADERS);
+			Object nativeHeaders = accessor.getHeader(NativeMessageHeaderAccessor.NATIVE_HEADERS);
 			if (nativeHeaders == null) {
 				nativeHeaders = new LinkedMultiValueMap<>();
-				accessor.setHeader(NativeMessageHeaderAccessor.NATIVE_HEADERS,
-						nativeHeaders);
+				accessor.setHeader(NativeMessageHeaderAccessor.NATIVE_HEADERS, nativeHeaders);
 			}
 			if (nativeHeaders instanceof Map<?, ?>) {
-				Map<String, List<String>> copy = toNativeHeaderMap(
-						(Map<String, List<String>>) nativeHeaders);
+				Map<String, List<String>> copy = toNativeHeaderMap((Map<String, List<String>>) nativeHeaders);
 				copy.put(key, Collections.singletonList(value));
 				accessor.setHeader(NativeMessageHeaderAccessor.NATIVE_HEADERS, copy);
 			}
@@ -148,8 +138,7 @@ enum MessageHeaderPropagation
 		}
 		catch (Exception ex) {
 			if (log.isDebugEnabled()) {
-				log.debug("An exception happened when we tried to retrieve the [" + key
-						+ "] from message", ex);
+				log.debug("An exception happened when we tried to retrieve the [" + key + "] from message", ex);
 			}
 		}
 		return null;
@@ -164,8 +153,7 @@ enum MessageHeaderPropagation
 			}
 		}
 		else {
-			Object nativeHeaders = accessor
-					.getHeader(NativeMessageHeaderAccessor.NATIVE_HEADERS);
+			Object nativeHeaders = accessor.getHeader(NativeMessageHeaderAccessor.NATIVE_HEADERS);
 			if (nativeHeaders instanceof Map) {
 				Object result = ((Map) nativeHeaders).get(key);
 				if (result instanceof List && !((List) result).isEmpty()) {

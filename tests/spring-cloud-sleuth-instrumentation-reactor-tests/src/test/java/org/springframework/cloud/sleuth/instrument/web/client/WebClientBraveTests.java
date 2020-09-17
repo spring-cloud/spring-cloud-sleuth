@@ -48,23 +48,19 @@ public class WebClientBraveTests extends ITSpringConfiguredReactorClient {
 	 * {@link BeanPostProcessor}.
 	 */
 	public WebClientBraveTests() {
-		super(WebClientConfiguration.class, WebClientAutoConfiguration.class,
-				TraceWebClientBeanPostProcessor.class);
+		super(WebClientConfiguration.class, WebClientAutoConfiguration.class, TraceWebClientBeanPostProcessor.class);
 	}
 
 	@Override
-	Mono<Integer> postMono(AnnotationConfigApplicationContext context,
-			String pathIncludingQuery, String body) {
-		return context.getBean(WebClient.Builder.class).build().post()
-				.uri(pathIncludingQuery).body(BodyInserters.fromValue(body)).exchange()
+	Mono<Integer> postMono(AnnotationConfigApplicationContext context, String pathIncludingQuery, String body) {
+		return context.getBean(WebClient.Builder.class).build().post().uri(pathIncludingQuery)
+				.body(BodyInserters.fromValue(body)).exchange().map(ClientResponse::rawStatusCode);
+	}
+
+	@Override
+	Mono<Integer> getMono(AnnotationConfigApplicationContext context, String pathIncludingQuery) {
+		return context.getBean(WebClient.Builder.class).build().get().uri(pathIncludingQuery).exchange()
 				.map(ClientResponse::rawStatusCode);
-	}
-
-	@Override
-	Mono<Integer> getMono(AnnotationConfigApplicationContext context,
-			String pathIncludingQuery) {
-		return context.getBean(WebClient.Builder.class).build().get()
-				.uri(pathIncludingQuery).exchange().map(ClientResponse::rawStatusCode);
 	}
 
 	@Test
@@ -94,8 +90,7 @@ public class WebClientBraveTests extends ITSpringConfiguredReactorClient {
 		 */
 		@Bean
 		@Order(0)
-		public WebClientCustomizer clientConnectorCustomizer(HttpClient httpClient,
-				URI baseUrl) {
+		public WebClientCustomizer clientConnectorCustomizer(HttpClient httpClient, URI baseUrl) {
 			return (builder) -> builder.baseUrl(baseUrl.toString())
 					.clientConnector(new ReactorClientHttpConnector(httpClient));
 		}

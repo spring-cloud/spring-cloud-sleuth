@@ -28,8 +28,7 @@ import reactor.core.Fuseable;
  * @param <T> - type of the subscription
  * @author Marcin Grzejszczak
  */
-interface SpanSubscription<T>
-		extends Subscription, CoreSubscriber<T>, Fuseable.QueueSubscription<T> {
+interface SpanSubscription<T> extends Subscription, CoreSubscriber<T>, Fuseable.QueueSubscription<T> {
 
 	@Override
 	default T poll() {

@@ -35,8 +35,7 @@ import org.springframework.web.client.RestTemplate;
  * @author Spencer Gibb
  */
 @RestController
-public class SampleController
-		implements ApplicationListener<ServletWebServerInitializedEvent> {
+public class SampleController implements ApplicationListener<ServletWebServerInitializedEvent> {
 
 	private static final Log log = LogFactory.getLog(SampleController.class);
 
@@ -57,8 +56,7 @@ public class SampleController
 	public String hi() throws InterruptedException {
 		Thread.sleep(this.random.nextInt(1000));
 		log.info("Home page");
-		String s = this.restTemplate
-				.getForObject("http://localhost:" + this.port + "/hi2", String.class);
+		String s = this.restTemplate.getForObject("http://localhost:" + this.port + "/hi2", String.class);
 		return "hi/" + s;
 	}
 
@@ -100,8 +98,7 @@ public class SampleController
 		Thread.sleep(millis);
 		this.tracer.currentSpan().tag("random-sleep-millis", String.valueOf(millis));
 
-		String s = this.restTemplate
-				.getForObject("http://localhost:" + this.port + "/call", String.class);
+		String s = this.restTemplate.getForObject("http://localhost:" + this.port + "/call", String.class);
 		span.finish();
 		return "traced/" + s;
 	}
@@ -112,8 +109,7 @@ public class SampleController
 		log.info(String.format("Sleeping for [%d] millis", millis));
 		Thread.sleep(millis);
 		this.tracer.currentSpan().tag("random-sleep-millis", String.valueOf(millis));
-		String s = this.restTemplate
-				.getForObject("http://localhost:" + this.port + "/call", String.class);
+		String s = this.restTemplate.getForObject("http://localhost:" + this.port + "/call", String.class);
 		return "start/" + s;
 	}
 

@@ -35,8 +35,8 @@ public class TraceResponseHttpHeadersFilterTests {
 
 	TestSpanHandler spans = new TestSpanHandler();
 
-	Tracing tracing = Tracing.newBuilder().currentTraceContext(this.currentTraceContext)
-			.addSpanHandler(this.spans).build();
+	Tracing tracing = Tracing.newBuilder().currentTraceContext(this.currentTraceContext).addSpanHandler(this.spans)
+			.build();
 
 	HttpTracing httpTracing = HttpTracing.newBuilder(this.tracing).build();
 
@@ -48,12 +48,10 @@ public class TraceResponseHttpHeadersFilterTests {
 
 	@Test
 	public void should_not_report_span_when_no_span_was_present_in_attribute() {
-		HttpHeadersFilter filter = TraceResponseHttpHeadersFilter
-				.create(this.httpTracing);
+		HttpHeadersFilter filter = TraceResponseHttpHeadersFilter.create(this.httpTracing);
 		HttpHeaders httpHeaders = new HttpHeaders();
 		httpHeaders.set("b3", "52f112af7472aff0-53e6ab6fc5dfee58");
-		MockServerHttpRequest request = MockServerHttpRequest.post("foo/bar")
-				.headers(httpHeaders).build();
+		MockServerHttpRequest request = MockServerHttpRequest.post("foo/bar").headers(httpHeaders).build();
 		MockServerWebExchange exchange = MockServerWebExchange.builder(request).build();
 
 		filter.filter(httpHeaders, exchange);
@@ -63,15 +61,12 @@ public class TraceResponseHttpHeadersFilterTests {
 
 	@Test
 	public void should_report_span_when_span_was_present_in_attribute() {
-		HttpHeadersFilter filter = TraceResponseHttpHeadersFilter
-				.create(this.httpTracing);
+		HttpHeadersFilter filter = TraceResponseHttpHeadersFilter.create(this.httpTracing);
 		HttpHeaders httpHeaders = new HttpHeaders();
 		httpHeaders.set("b3", "52f112af7472aff0-53e6ab6fc5dfee58");
-		MockServerHttpRequest request = MockServerHttpRequest.post("foo/bar")
-				.headers(httpHeaders).build();
+		MockServerHttpRequest request = MockServerHttpRequest.post("foo/bar").headers(httpHeaders).build();
 		MockServerWebExchange exchange = MockServerWebExchange.builder(request).build();
-		exchange.getAttributes().put(TraceResponseHttpHeadersFilter.SPAN_ATTRIBUTE,
-				this.tracing.tracer().nextSpan());
+		exchange.getAttributes().put(TraceResponseHttpHeadersFilter.SPAN_ATTRIBUTE, this.tracing.tracer().nextSpan());
 
 		filter.filter(httpHeaders, exchange);
 

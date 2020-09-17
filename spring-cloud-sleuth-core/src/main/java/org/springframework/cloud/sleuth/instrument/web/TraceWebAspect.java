@@ -56,8 +56,7 @@ import org.springframework.web.context.request.async.WebAsyncTask;
 @Aspect
 class TraceWebAspect {
 
-	private static final Log log = org.apache.commons.logging.LogFactory
-			.getLog(TraceWebAspect.class);
+	private static final Log log = org.apache.commons.logging.LogFactory.getLog(TraceWebAspect.class);
 
 	private final Tracing tracing;
 
@@ -107,8 +106,7 @@ class TraceWebAspect {
 	}
 
 	@Around("anyControllerOrRestControllerWithPublicWebAsyncTaskMethod()")
-	public Object wrapWebAsyncTaskWithCorrelationId(ProceedingJoinPoint pjp)
-			throws Throwable {
+	public Object wrapWebAsyncTaskWithCorrelationId(ProceedingJoinPoint pjp) throws Throwable {
 		final WebAsyncTask<?> webAsyncTask = (WebAsyncTask<?>) pjp.proceed();
 		TraceContext currentSpan = this.tracing.currentTraceContext().get();
 		if (currentSpan == null) {
@@ -120,8 +118,8 @@ class TraceWebAspect {
 			}
 			Field callableField = WebAsyncTask.class.getDeclaredField("callable");
 			callableField.setAccessible(true);
-			callableField.set(webAsyncTask, new TraceCallable<>(this.tracing,
-					this.spanNamer, webAsyncTask.getCallable()));
+			callableField.set(webAsyncTask,
+					new TraceCallable<>(this.tracing, this.spanNamer, webAsyncTask.getCallable()));
 		}
 		catch (NoSuchFieldException ex) {
 			log.warn("Cannot wrap webAsyncTask's callable with TraceCallable", ex);

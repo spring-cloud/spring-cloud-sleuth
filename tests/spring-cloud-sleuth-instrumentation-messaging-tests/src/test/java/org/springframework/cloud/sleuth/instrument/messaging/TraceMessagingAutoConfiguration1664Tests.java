@@ -89,8 +89,7 @@ class MySleuthKafka1664Aspect extends SleuthKafkaAspect {
 	}
 
 	@Override
-	public Object wrapListenerContainerCreation(ProceedingJoinPoint pjp)
-			throws Throwable {
+	public Object wrapListenerContainerCreation(ProceedingJoinPoint pjp) throws Throwable {
 		this.adapterWrapped = true;
 		return Mockito.mock(MessageListenerContainer.class);
 	}

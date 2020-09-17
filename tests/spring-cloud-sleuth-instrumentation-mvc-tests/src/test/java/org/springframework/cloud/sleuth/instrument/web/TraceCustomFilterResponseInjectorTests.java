@@ -56,8 +56,7 @@ import static brave.propagation.B3SingleFormat.writeB3SingleFormat;
 import static org.assertj.core.api.BDDAssertions.then;
 import static org.springframework.boot.test.context.SpringBootTest.WebEnvironment.RANDOM_PORT;
 
-@SpringBootTest(classes = TraceCustomFilterResponseInjectorTests.Config.class,
-		webEnvironment = RANDOM_PORT)
+@SpringBootTest(classes = TraceCustomFilterResponseInjectorTests.Config.class, webEnvironment = RANDOM_PORT)
 @DirtiesContext
 public class TraceCustomFilterResponseInjectorTests {
 
@@ -74,15 +73,12 @@ public class TraceCustomFilterResponseInjectorTests {
 	@SuppressWarnings("unchecked")
 	public void should_inject_trace_and_span_ids_in_response_headers() {
 		RequestEntity<?> requestEntity = RequestEntity
-				.get(URI.create("http://localhost:" + this.config.port + "/headers"))
-				.build();
+				.get(URI.create("http://localhost:" + this.config.port + "/headers")).build();
 
 		@SuppressWarnings("rawtypes")
-		ResponseEntity<Map> responseEntity = this.restTemplate.exchange(requestEntity,
-				Map.class);
+		ResponseEntity<Map> responseEntity = this.restTemplate.exchange(requestEntity, Map.class);
 
-		then(responseEntity.getHeaders()).containsKey("b3")
-				.as("Trace headers must be present in response headers");
+		then(responseEntity.getHeaders()).containsKey("b3").as("Trace headers must be present in response headers");
 	}
 
 	@Configuration
@@ -94,14 +90,13 @@ public class TraceCustomFilterResponseInjectorTests {
 		@Bean
 		BaggagePropagation.FactoryBuilder baggagePropagationFactoryBuilder() {
 			// Use b3 single format as it is less verbose
-			return BaggagePropagation.newFactoryBuilder(B3Propagation.newFactoryBuilder()
-					.injectFormat(CLIENT, SINGLE_NO_PARENT).build());
+			return BaggagePropagation.newFactoryBuilder(
+					B3Propagation.newFactoryBuilder().injectFormat(CLIENT, SINGLE_NO_PARENT).build());
 		}
 
 		// tag::configuration[]
 		@Bean
-		HttpResponseInjectingTraceFilter responseInjectingTraceFilter(
-				HttpTracing httpTracing) {
+		HttpResponseInjectingTraceFilter responseInjectingTraceFilter(HttpTracing httpTracing) {
 			return new HttpResponseInjectingTraceFilter(httpTracing);
 		}
 		// end::configuration[]
@@ -133,8 +128,8 @@ public class TraceCustomFilterResponseInjectorTests {
 		}
 
 		@Override
-		public void doFilter(ServletRequest request, ServletResponse servletResponse,
-				FilterChain filterChain) throws IOException, ServletException {
+		public void doFilter(ServletRequest request, ServletResponse servletResponse, FilterChain filterChain)
+				throws IOException, ServletException {
 			HttpServletResponse response = (HttpServletResponse) servletResponse;
 			Span currentSpan = this.httpTracing.tracing().tracer().currentSpan();
 			response.addHeader("b3", writeB3SingleFormat(currentSpan.context()));

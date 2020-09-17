@@ -80,8 +80,7 @@ public class WebClientExceptionTests {
 	// issue #198
 	@ParameterizedTest
 	@MethodSource("parametersForShouldCloseSpanUponException")
-	public void shouldCloseSpanUponException(ResponseEntityProvider provider)
-			throws IOException {
+	public void shouldCloseSpanUponException(ResponseEntityProvider provider) throws IOException {
 		Span span = this.tracer.tracer().nextSpan().name("new trace").start();
 
 		try (Tracer.SpanInScope ws = this.tracer.tracer().withSpanInScope(span)) {
@@ -103,10 +102,9 @@ public class WebClientExceptionTests {
 
 	static Stream<Object> parametersForShouldCloseSpanUponException() {
 		return Stream.of(
-				(ResponseEntityProvider) (tests) -> tests.testFeignInterfaceWithException
-						.shouldFailToConnect(),
-				(ResponseEntityProvider) (tests) -> tests.template
-						.getForEntity("https://exceptionservice/", Map.class));
+				(ResponseEntityProvider) (tests) -> tests.testFeignInterfaceWithException.shouldFailToConnect(),
+				(ResponseEntityProvider) (tests) -> tests.template.getForEntity("https://exceptionservice/",
+						Map.class));
 	}
 
 	@FeignClient("exceptionservice")
@@ -158,8 +156,7 @@ public class WebClientExceptionTests {
 		@Bean
 		public ServiceInstanceListSupplier serviceInstanceListSupplier(Environment env) {
 			return ServiceInstanceListSupplier.fixed(env)
-					.instance("invalid.host.to.break.tests", 1234, "exceptionservice")
-					.build();
+					.instance("invalid.host.to.break.tests", 1234, "exceptionservice").build();
 		}
 
 	}

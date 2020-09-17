@@ -55,8 +55,7 @@ public class TraceCallable<V> implements Callable<V> {
 		this(tracing, spanNamer, delegate, null);
 	}
 
-	public TraceCallable(Tracing tracing, SpanNamer spanNamer, Callable<V> delegate,
-			String name) {
+	public TraceCallable(Tracing tracing, SpanNamer spanNamer, Callable<V> delegate, String name) {
 		this.tracer = tracing.tracer();
 		this.delegate = delegate;
 		this.parent = tracing.currentTraceContext().get();
@@ -65,8 +64,7 @@ public class TraceCallable<V> implements Callable<V> {
 
 	@Override
 	public V call() throws Exception {
-		ScopedSpan span = this.tracer.startScopedSpanWithParent(this.spanName,
-				this.parent);
+		ScopedSpan span = this.tracer.startScopedSpanWithParent(this.spanName, this.parent);
 		try {
 			return this.delegate.call();
 		}

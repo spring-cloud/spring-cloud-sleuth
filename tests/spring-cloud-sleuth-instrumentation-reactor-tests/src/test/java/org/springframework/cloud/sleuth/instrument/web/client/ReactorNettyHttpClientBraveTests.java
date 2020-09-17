@@ -72,18 +72,14 @@ public class ReactorNettyHttpClientBraveTests extends ITSpringConfiguredReactorC
 	}
 
 	@Override
-	Mono<Integer> postMono(AnnotationConfigApplicationContext context,
-			String pathIncludingQuery, String body) {
-		return context.getBean(HttpClient.class).post()
-				.send(ByteBufFlux.fromString(Mono.just(body))).uri(pathIncludingQuery)
-				.response().map(r -> r.status().code());
+	Mono<Integer> postMono(AnnotationConfigApplicationContext context, String pathIncludingQuery, String body) {
+		return context.getBean(HttpClient.class).post().send(ByteBufFlux.fromString(Mono.just(body)))
+				.uri(pathIncludingQuery).response().map(r -> r.status().code());
 	}
 
 	@Override
-	Mono<Integer> getMono(AnnotationConfigApplicationContext context,
-			String pathIncludingQuery) {
-		return context.getBean(HttpClient.class).get().uri(pathIncludingQuery).response()
-				.map(r -> r.status().code());
+	Mono<Integer> getMono(AnnotationConfigApplicationContext context, String pathIncludingQuery) {
+		return context.getBean(HttpClient.class).get().uri(pathIncludingQuery).response().map(r -> r.status().code());
 	}
 
 }

@@ -29,8 +29,7 @@ class LoadBalancerClientZipkinLoadBalancer implements ZipkinLoadBalancer {
 
 	private final ZipkinProperties zipkinProperties;
 
-	LoadBalancerClientZipkinLoadBalancer(LoadBalancerClient loadBalancerClient,
-			ZipkinProperties zipkinProperties) {
+	LoadBalancerClientZipkinLoadBalancer(LoadBalancerClient loadBalancerClient, ZipkinProperties zipkinProperties) {
 		this.loadBalancerClient = loadBalancerClient;
 		this.zipkinProperties = zipkinProperties;
 	}

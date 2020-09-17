@@ -46,8 +46,7 @@ class RequestSender {
 	public Mono<String> get(Integer someParameterNotUsedNow) {
 		LOGGER.info("getting for parameter {}", someParameterNotUsedNow);
 		this.span = this.tracer.currentSpan();
-		return this.webClient.method(HttpMethod.GET)
-				.uri("http://localhost:" + this.port + "/foo").retrieve()
+		return this.webClient.method(HttpMethod.GET).uri("http://localhost:" + this.port + "/foo").retrieve()
 				.bodyToMono(String.class);
 	}
 

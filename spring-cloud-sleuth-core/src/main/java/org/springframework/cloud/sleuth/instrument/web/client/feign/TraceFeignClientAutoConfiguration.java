@@ -68,13 +68,11 @@ class TraceFeignClientAutoConfiguration {
 	}
 
 	@Configuration(proxyBeanMethods = false)
-	@ConditionalOnProperty(name = "spring.sleuth.feign.processor.enabled",
-			matchIfMissing = true)
+	@ConditionalOnProperty(name = "spring.sleuth.feign.processor.enabled", matchIfMissing = true)
 	protected static class FeignBeanPostProcessorConfiguration {
 
 		@Bean
-		static FeignContextBeanPostProcessor feignContextBeanPostProcessor(
-				BeanFactory beanFactory) {
+		static FeignContextBeanPostProcessor feignContextBeanPostProcessor(BeanFactory beanFactory) {
 			return new FeignContextBeanPostProcessor(beanFactory);
 		}
 
@@ -85,8 +83,7 @@ class TraceFeignClientAutoConfiguration {
 	protected static class OkHttpClientFeignBeanPostProcessorConfiguration {
 
 		@Bean
-		static OkHttpFeignClientBeanPostProcessor okHttpFeignClientBeanPostProcessor(
-				BeanFactory beanFactory) {
+		static OkHttpFeignClientBeanPostProcessor okHttpFeignClientBeanPostProcessor(BeanFactory beanFactory) {
 			return new OkHttpFeignClientBeanPostProcessor(beanFactory);
 		}
 

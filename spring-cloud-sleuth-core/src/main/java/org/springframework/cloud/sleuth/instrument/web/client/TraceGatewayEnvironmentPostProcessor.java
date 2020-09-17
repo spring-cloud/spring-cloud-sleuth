@@ -39,27 +39,22 @@ import org.springframework.util.StringUtils;
  */
 class TraceGatewayEnvironmentPostProcessor implements EnvironmentPostProcessor {
 
-	private static final Log log = LogFactory
-			.getLog(TraceGatewayEnvironmentPostProcessor.class);
+	private static final Log log = LogFactory.getLog(TraceGatewayEnvironmentPostProcessor.class);
 
 	private static final String PROPERTY_SOURCE_NAME = "defaultProperties";
 
 	@Override
-	public void postProcessEnvironment(ConfigurableEnvironment environment,
-			SpringApplication application) {
+	public void postProcessEnvironment(ConfigurableEnvironment environment, SpringApplication application) {
 		Map<String, Object> map = new HashMap<>();
 		if (sleuthEnabled(environment) && isGatewayOnTheClasspath()) {
-			String instrumentationType = environment
-					.getProperty("spring.sleuth.reactor.instrumentation-type");
+			String instrumentationType = environment.getProperty("spring.sleuth.reactor.instrumentation-type");
 			if (log.isDebugEnabled()) {
-				log.debug("Found the following instrumentation type ["
-						+ instrumentationType + "]");
+				log.debug("Found the following instrumentation type [" + instrumentationType + "]");
 			}
 			if (StringUtils.isEmpty(instrumentationType)) {
 				instrumentationType = "manual";
 				if (log.isDebugEnabled()) {
-					log.debug("No instrumentation type passed, will force it to ["
-							+ instrumentationType + "]");
+					log.debug("No instrumentation type passed, will force it to [" + instrumentationType + "]");
 				}
 			}
 			map.put("spring.sleuth.reactor.instrumentation-type", instrumentationType);
@@ -68,14 +63,12 @@ class TraceGatewayEnvironmentPostProcessor implements EnvironmentPostProcessor {
 	}
 
 	private boolean sleuthEnabled(ConfigurableEnvironment environment) {
-		return Boolean
-				.parseBoolean(environment.getProperty("spring.sleuth.enabled", "true"));
+		return Boolean.parseBoolean(environment.getProperty("spring.sleuth.enabled", "true"));
 	}
 
 	private boolean isGatewayOnTheClasspath() {
 		try {
-			ClassUtils.forName("org.springframework.cloud.gateway.filter.GatewayFilter",
-					null);
+			ClassUtils.forName("org.springframework.cloud.gateway.filter.GatewayFilter", null);
 			return true;
 		}
 		catch (ClassNotFoundException e) {
@@ -83,8 +76,7 @@ class TraceGatewayEnvironmentPostProcessor implements EnvironmentPostProcessor {
 		}
 	}
 
-	private void addOrReplace(MutablePropertySources propertySources,
-			Map<String, Object> map) {
+	private void addOrReplace(MutablePropertySources propertySources, Map<String, Object> map) {
 		MapPropertySource target = null;
 		if (propertySources.contains(PROPERTY_SOURCE_NAME)) {
 			PropertySource<?> source = propertySources.get(PROPERTY_SOURCE_NAME);

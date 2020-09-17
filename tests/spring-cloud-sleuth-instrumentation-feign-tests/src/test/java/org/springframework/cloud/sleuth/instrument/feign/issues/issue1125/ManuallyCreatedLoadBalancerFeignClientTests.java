@@ -49,8 +49,7 @@ import org.springframework.web.bind.annotation.RequestMethod;
 
 import static org.assertj.core.api.BDDAssertions.then;
 
-@SpringBootTest(classes = Application.class,
-		webEnvironment = SpringBootTest.WebEnvironment.NONE)
+@SpringBootTest(classes = Application.class, webEnvironment = SpringBootTest.WebEnvironment.NONE)
 @DirtiesContext(classMode = ClassMode.AFTER_EACH_TEST_METHOD)
 public class ManuallyCreatedLoadBalancerFeignClientTests {
 
@@ -150,9 +149,9 @@ class MyDelegateClient implements Client {
 	@Override
 	public Response execute(Request request, Request.Options options) {
 		this.wasCalled = true;
-		return Response.builder().body("foo", StandardCharsets.UTF_8)
-				.request(Request.create(Request.HttpMethod.POST, "/foo", new HashMap<>(),
-						Request.Body.empty(), new RequestTemplate()))
+		return Response
+				.builder().body("foo", StandardCharsets.UTF_8).request(Request.create(Request.HttpMethod.POST, "/foo",
+						new HashMap<>(), Request.Body.empty(), new RequestTemplate()))
 				.headers(new HashMap<>()).status(200).build();
 	}
 

@@ -74,8 +74,7 @@ final class TraceWebFilter implements WebFilter, Ordered {
 
 	private static final String STATUS_CODE_KEY = "http.status_code";
 
-	private static final String TRACE_SPAN_WITHOUT_PARENT = TraceWebFilter.class.getName()
-			+ ".SPAN_WITH_NO_PARENT";
+	private static final String TRACE_SPAN_WITHOUT_PARENT = TraceWebFilter.class.getName() + ".SPAN_WITH_NO_PARENT";
 
 	private final BeanFactory beanFactory;
 
@@ -98,8 +97,7 @@ final class TraceWebFilter implements WebFilter, Ordered {
 	@SuppressWarnings("unchecked")
 	HttpServerHandler<HttpServerRequest, HttpServerResponse> handler() {
 		if (this.handler == null) {
-			this.handler = HttpServerHandler
-					.create(this.beanFactory.getBean(HttpTracing.class));
+			this.handler = HttpServerHandler.create(this.beanFactory.getBean(HttpTracing.class));
 		}
 		return this.handler;
 	}
@@ -120,8 +118,7 @@ final class TraceWebFilter implements WebFilter, Ordered {
 
 	SleuthReactorProperties sleuthReactorProperties() {
 		if (this.sleuthReactorProperties == null) {
-			this.sleuthReactorProperties = this.beanFactory
-					.getBean(SleuthReactorProperties.class);
+			this.sleuthReactorProperties = this.beanFactory.getBean(SleuthReactorProperties.class);
 		}
 		return this.sleuthReactorProperties;
 	}
@@ -138,8 +135,7 @@ final class TraceWebFilter implements WebFilter, Ordered {
 	}
 
 	private boolean isTracePresent() {
-		if (sleuthReactorProperties()
-				.getInstrumentationType() == SleuthReactorProperties.InstrumentationType.MANUAL) {
+		if (sleuthReactorProperties().getInstrumentationType() == SleuthReactorProperties.InstrumentationType.MANUAL) {
 			return false;
 		}
 		boolean tracePresent = tracer().currentSpan() != null;
@@ -169,8 +165,8 @@ final class TraceWebFilter implements WebFilter, Ordered {
 
 		final boolean initialTracePresent;
 
-		MonoWebFilterTrace(Mono<? extends Void> source, ServerWebExchange exchange,
-				boolean initialTracePresent, TraceWebFilter parent) {
+		MonoWebFilterTrace(Mono<? extends Void> source, ServerWebExchange exchange, boolean initialTracePresent,
+				TraceWebFilter parent) {
 			super(source);
 			this.tracer = parent.tracer();
 			this.handler = parent.handler();
@@ -182,8 +178,7 @@ final class TraceWebFilter implements WebFilter, Ordered {
 		@Override
 		public void subscribe(CoreSubscriber<? super Void> subscriber) {
 			Context context = contextWithoutInitialSpan(subscriber.currentContext());
-			this.source.subscribe(new WebFilterTraceSubscriber(subscriber, context,
-					findOrCreateSpan(context), this));
+			this.source.subscribe(new WebFilterTraceSubscriber(subscriber, context, findOrCreateSpan(context), this));
 		}
 
 		private Context contextWithoutInitialSpan(Context context) {
@@ -205,15 +200,13 @@ final class TraceWebFilter implements WebFilter, Ordered {
 			}
 			else {
 				if (this.traceContext != null) {
-					span = this.tracer.nextSpan(
-							TraceContextOrSamplingFlags.create(this.traceContext));
+					span = this.tracer.nextSpan(TraceContextOrSamplingFlags.create(this.traceContext));
 					if (log.isDebugEnabled()) {
 						log.debug("Found span in attribute " + span);
 					}
 				}
 				else {
-					span = this.handler.handleReceive(
-							new WrappedRequest(this.exchange.getRequest()));
+					span = this.handler.handleReceive(new WrappedRequest(this.exchange.getRequest()));
 					if (log.isDebugEnabled()) {
 						log.debug("Handled receive of span " + span);
 					}
@@ -235,8 +228,8 @@ final class TraceWebFilter implements WebFilter, Ordered {
 
 			final HttpServerHandler<HttpServerRequest, HttpServerResponse> handler;
 
-			WebFilterTraceSubscriber(CoreSubscriber<? super Void> actual, Context context,
-					Span span, MonoWebFilterTrace parent) {
+			WebFilterTraceSubscriber(CoreSubscriber<? super Void> actual, Context context, Span span,
+					MonoWebFilterTrace parent) {
 				this.actual = actual;
 				this.span = span;
 				this.context = context.put(TraceContext.class, span.context());
@@ -272,17 +265,13 @@ final class TraceWebFilter implements WebFilter, Ordered {
 			}
 
 			private void terminateSpan(@Nullable Throwable t) {
-				Object attribute = this.exchange
-						.getAttribute(HandlerMapping.BEST_MATCHING_HANDLER_ATTRIBUTE);
+				Object attribute = this.exchange.getAttribute(HandlerMapping.BEST_MATCHING_HANDLER_ATTRIBUTE);
 				addClassMethodTag(attribute, this.span);
 				addClassNameTag(attribute, this.span);
-				Object pattern = this.exchange
-						.getAttribute(HandlerMapping.BEST_MATCHING_PATTERN_ATTRIBUTE);
+				Object pattern = this.exchange.getAttribute(HandlerMapping.BEST_MATCHING_PATTERN_ATTRIBUTE);
 				String httpRoute = pattern != null ? pattern.toString() : "";
-				addResponseTagsForSpanWithoutParent(this.exchange,
-						this.exchange.getResponse(), this.span);
-				WrappedResponse response = new WrappedResponse(
-						this.exchange.getResponse(),
+				addResponseTagsForSpanWithoutParent(this.exchange, this.exchange.getResponse(), this.span);
+				WrappedResponse response = new WrappedResponse(this.exchange.getResponse(),
 						this.exchange.getRequest().getMethodValue(), httpRoute);
 				this.handler.handleSend(response, t, this.span);
 				if (log.isDebugEnabled()) {
@@ -295,8 +284,7 @@ final class TraceWebFilter implements WebFilter, Ordered {
 					String methodName = ((HandlerMethod) handler).getMethod().getName();
 					span.tag(MVC_CONTROLLER_METHOD_KEY, methodName);
 					if (log.isDebugEnabled()) {
-						log.debug("Adding a method tag with value [" + methodName
-								+ "] to a span " + span);
+						log.debug("Adding a method tag with value [" + methodName + "] to a span " + span);
 					}
 				}
 			}
@@ -313,18 +301,15 @@ final class TraceWebFilter implements WebFilter, Ordered {
 					className = handler.getClass().getSimpleName();
 				}
 				if (log.isDebugEnabled()) {
-					log.debug("Adding a class tag with value [" + className
-							+ "] to a span " + span);
+					log.debug("Adding a class tag with value [" + className + "] to a span " + span);
 				}
 				span.tag(MVC_CONTROLLER_CLASS_KEY, className);
 			}
 
-			private void addResponseTagsForSpanWithoutParent(ServerWebExchange exchange,
-					ServerHttpResponse response, Span span) {
-				if (spanWithoutParent(exchange) && response.getStatusCode() != null
-						&& span != null) {
-					span.tag(STATUS_CODE_KEY,
-							String.valueOf(response.getStatusCode().value()));
+			private void addResponseTagsForSpanWithoutParent(ServerWebExchange exchange, ServerHttpResponse response,
+					Span span) {
+				if (spanWithoutParent(exchange) && response.getStatusCode() != null && span != null) {
+					span.tag(STATUS_CODE_KEY, String.valueOf(response.getStatusCode().value()));
 				}
 			}
 
@@ -363,8 +348,7 @@ final class TraceWebFilter implements WebFilter, Ordered {
 			if (addr == null) {
 				return false;
 			}
-			return span.remoteIpAndPort(addr.getAddress().getHostAddress(),
-					addr.getPort());
+			return span.remoteIpAndPort(addr.getAddress().getHostAddress(), addr.getPort());
 		}
 
 		@Override

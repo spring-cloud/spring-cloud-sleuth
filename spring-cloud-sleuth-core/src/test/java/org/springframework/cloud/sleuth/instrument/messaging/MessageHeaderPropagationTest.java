@@ -26,8 +26,7 @@ import org.springframework.messaging.support.NativeMessageHeaderAccessor;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-public class MessageHeaderPropagationTest
-		extends PropagationSetterTest<MessageHeaderAccessor, String> {
+public class MessageHeaderPropagationTest extends PropagationSetterTest<MessageHeaderAccessor, String> {
 
 	MessageHeaderAccessor carrier = new MessageHeaderAccessor();
 
@@ -49,8 +48,7 @@ public class MessageHeaderPropagationTest
 	@Override
 	protected Iterable<String> read(MessageHeaderAccessor carrier, String key) {
 		Object result = carrier.getHeader(key);
-		return result != null ? Collections.singleton(result.toString())
-				: Collections.emptyList();
+		return result != null ? Collections.singleton(result.toString()) : Collections.emptyList();
 	}
 
 	@Test
@@ -93,8 +91,7 @@ public class MessageHeaderPropagationTest
 		MessageHeaderAccessor carrier = carrier();
 		carrier.setHeader(NativeMessageHeaderAccessor.NATIVE_HEADERS,
 				"{spanTraceId=[123], spanId=[456], spanSampled=[0]}");
-		MessageHeaderPropagation.removeAnyTraceHeaders(carrier,
-				Collections.singletonList("b3"));
+		MessageHeaderPropagation.removeAnyTraceHeaders(carrier, Collections.singletonList("b3"));
 	}
 
 	@Test

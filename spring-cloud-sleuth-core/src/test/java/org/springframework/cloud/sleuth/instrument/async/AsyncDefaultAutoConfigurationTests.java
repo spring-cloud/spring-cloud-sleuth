@@ -36,8 +36,7 @@ public class AsyncDefaultAutoConfigurationTests {
 
 	@Test
 	public void should_work_with_proxies() {
-		BDDAssertions.then(this.executor).isNotNull()
-				.isInstanceOf(TraceableScheduledExecutorService.class);
+		BDDAssertions.then(this.executor).isNotNull().isInstanceOf(TraceableScheduledExecutorService.class);
 	}
 
 	@Configuration

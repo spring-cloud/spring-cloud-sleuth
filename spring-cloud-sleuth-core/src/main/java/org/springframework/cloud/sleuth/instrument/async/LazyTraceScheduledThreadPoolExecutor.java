@@ -53,8 +53,7 @@ import org.springframework.util.ReflectionUtils;
 // TODO: Think of a better solution than this
 class LazyTraceScheduledThreadPoolExecutor extends ScheduledThreadPoolExecutor {
 
-	private static final Log log = LogFactory
-			.getLog(LazyTraceScheduledThreadPoolExecutor.class);
+	private static final Log log = LogFactory.getLog(LazyTraceScheduledThreadPoolExecutor.class);
 
 	private final BeanFactory beanFactory;
 
@@ -88,33 +87,25 @@ class LazyTraceScheduledThreadPoolExecutor extends ScheduledThreadPoolExecutor {
 		this.beanFactory = beanFactory;
 		this.delegate = delegate;
 		this.beanName = beanName;
-		this.decorateTaskRunnable = ReflectionUtils.findMethod(
-				ScheduledThreadPoolExecutor.class, "decorateTask", Runnable.class,
-				RunnableScheduledFuture.class);
+		this.decorateTaskRunnable = ReflectionUtils.findMethod(ScheduledThreadPoolExecutor.class, "decorateTask",
+				Runnable.class, RunnableScheduledFuture.class);
 		makeAccessibleIfNotNull(this.decorateTaskRunnable);
-		this.decorateTaskCallable = ReflectionUtils.findMethod(
-				ScheduledThreadPoolExecutor.class, "decorateTaskCallable", Callable.class,
-				RunnableScheduledFuture.class);
+		this.decorateTaskCallable = ReflectionUtils.findMethod(ScheduledThreadPoolExecutor.class,
+				"decorateTaskCallable", Callable.class, RunnableScheduledFuture.class);
 		makeAccessibleIfNotNull(this.decorateTaskCallable);
-		this.finalize = ReflectionUtils.findMethod(ScheduledThreadPoolExecutor.class,
-				"finalize", null);
+		this.finalize = ReflectionUtils.findMethod(ScheduledThreadPoolExecutor.class, "finalize", null);
 		makeAccessibleIfNotNull(this.finalize);
-		this.beforeExecute = ReflectionUtils.findMethod(ScheduledThreadPoolExecutor.class,
-				"beforeExecute", null);
+		this.beforeExecute = ReflectionUtils.findMethod(ScheduledThreadPoolExecutor.class, "beforeExecute", null);
 		makeAccessibleIfNotNull(this.beforeExecute);
-		this.afterExecute = ReflectionUtils.findMethod(ScheduledThreadPoolExecutor.class,
-				"afterExecute", null);
+		this.afterExecute = ReflectionUtils.findMethod(ScheduledThreadPoolExecutor.class, "afterExecute", null);
 		makeAccessibleIfNotNull(this.afterExecute);
-		this.terminated = ReflectionUtils.findMethod(ScheduledThreadPoolExecutor.class,
-				"terminated", null);
+		this.terminated = ReflectionUtils.findMethod(ScheduledThreadPoolExecutor.class, "terminated", null);
 		makeAccessibleIfNotNull(this.terminated);
-		this.newTaskForRunnable = ReflectionUtils.findMethod(
-				ScheduledThreadPoolExecutor.class, "newTaskFor", Runnable.class,
-				Object.class);
+		this.newTaskForRunnable = ReflectionUtils.findMethod(ScheduledThreadPoolExecutor.class, "newTaskFor",
+				Runnable.class, Object.class);
 		makeAccessibleIfNotNull(this.newTaskForRunnable);
-		this.newTaskForCallable = ReflectionUtils.findMethod(
-				ScheduledThreadPoolExecutor.class, "newTaskFor", Callable.class,
-				Object.class);
+		this.newTaskForCallable = ReflectionUtils.findMethod(ScheduledThreadPoolExecutor.class, "newTaskFor",
+				Callable.class, Object.class);
 		makeAccessibleIfNotNull(this.newTaskForCallable);
 	}
 
@@ -125,114 +116,89 @@ class LazyTraceScheduledThreadPoolExecutor extends ScheduledThreadPoolExecutor {
 	}
 
 	LazyTraceScheduledThreadPoolExecutor(int corePoolSize, ThreadFactory threadFactory,
-			RejectedExecutionHandler handler, BeanFactory beanFactory,
-			ScheduledThreadPoolExecutor delegate, String beanName) {
+			RejectedExecutionHandler handler, BeanFactory beanFactory, ScheduledThreadPoolExecutor delegate,
+			String beanName) {
 		super(corePoolSize, threadFactory, handler);
 		this.beanFactory = beanFactory;
 		this.delegate = delegate;
 		this.beanName = beanName;
-		this.decorateTaskRunnable = ReflectionUtils.findMethod(
-				ScheduledThreadPoolExecutor.class, "decorateTask", Runnable.class,
-				RunnableScheduledFuture.class);
+		this.decorateTaskRunnable = ReflectionUtils.findMethod(ScheduledThreadPoolExecutor.class, "decorateTask",
+				Runnable.class, RunnableScheduledFuture.class);
 		makeAccessibleIfNotNull(this.decorateTaskRunnable);
-		this.decorateTaskCallable = ReflectionUtils.findMethod(
-				ScheduledThreadPoolExecutor.class, "decorateTaskCallable", Callable.class,
-				RunnableScheduledFuture.class);
+		this.decorateTaskCallable = ReflectionUtils.findMethod(ScheduledThreadPoolExecutor.class,
+				"decorateTaskCallable", Callable.class, RunnableScheduledFuture.class);
 		makeAccessibleIfNotNull(this.decorateTaskCallable);
-		this.finalize = ReflectionUtils.findMethod(ScheduledThreadPoolExecutor.class,
-				"finalize", null);
+		this.finalize = ReflectionUtils.findMethod(ScheduledThreadPoolExecutor.class, "finalize", null);
 		makeAccessibleIfNotNull(this.finalize);
-		this.beforeExecute = ReflectionUtils.findMethod(ScheduledThreadPoolExecutor.class,
-				"beforeExecute", null);
+		this.beforeExecute = ReflectionUtils.findMethod(ScheduledThreadPoolExecutor.class, "beforeExecute", null);
 		makeAccessibleIfNotNull(this.beforeExecute);
-		this.afterExecute = ReflectionUtils.findMethod(ScheduledThreadPoolExecutor.class,
-				"afterExecute", null);
+		this.afterExecute = ReflectionUtils.findMethod(ScheduledThreadPoolExecutor.class, "afterExecute", null);
 		makeAccessibleIfNotNull(this.afterExecute);
-		this.terminated = ReflectionUtils.findMethod(ScheduledThreadPoolExecutor.class,
-				"terminated");
+		this.terminated = ReflectionUtils.findMethod(ScheduledThreadPoolExecutor.class, "terminated");
 		makeAccessibleIfNotNull(this.terminated);
-		this.newTaskForRunnable = ReflectionUtils.findMethod(
-				ScheduledThreadPoolExecutor.class, "newTaskFor", Runnable.class,
-				Object.class);
+		this.newTaskForRunnable = ReflectionUtils.findMethod(ScheduledThreadPoolExecutor.class, "newTaskFor",
+				Runnable.class, Object.class);
 		makeAccessibleIfNotNull(this.newTaskForRunnable);
-		this.newTaskForCallable = ReflectionUtils.findMethod(
-				ScheduledThreadPoolExecutor.class, "newTaskFor", Callable.class,
-				Object.class);
+		this.newTaskForCallable = ReflectionUtils.findMethod(ScheduledThreadPoolExecutor.class, "newTaskFor",
+				Callable.class, Object.class);
 		makeAccessibleIfNotNull(this.newTaskForCallable);
 	}
 
 	@Override
 	@SuppressWarnings("unchecked")
-	public <V> RunnableScheduledFuture<V> decorateTask(Runnable runnable,
-			RunnableScheduledFuture<V> task) {
-		return (RunnableScheduledFuture<V>) ReflectionUtils.invokeMethod(
-				this.decorateTaskRunnable, this.delegate,
+	public <V> RunnableScheduledFuture<V> decorateTask(Runnable runnable, RunnableScheduledFuture<V> task) {
+		return (RunnableScheduledFuture<V>) ReflectionUtils.invokeMethod(this.decorateTaskRunnable, this.delegate,
 				new TraceRunnable(tracing(), spanNamer(), runnable, this.beanName), task);
 	}
 
 	@Override
 	@SuppressWarnings("unchecked")
-	public <V> RunnableScheduledFuture<V> decorateTask(Callable<V> callable,
-			RunnableScheduledFuture<V> task) {
-		return (RunnableScheduledFuture<V>) ReflectionUtils.invokeMethod(
-				this.decorateTaskCallable, this.delegate,
-				new TraceCallable<>(tracing(), spanNamer(), callable, this.beanName),
-				task);
+	public <V> RunnableScheduledFuture<V> decorateTask(Callable<V> callable, RunnableScheduledFuture<V> task) {
+		return (RunnableScheduledFuture<V>) ReflectionUtils.invokeMethod(this.decorateTaskCallable, this.delegate,
+				new TraceCallable<>(tracing(), spanNamer(), callable, this.beanName), task);
 	}
 
 	@Override
 	public ScheduledFuture<?> schedule(Runnable command, long delay, TimeUnit unit) {
-		return this.delegate.schedule(
-				new TraceRunnable(tracing(), spanNamer(), command, this.beanName), delay,
+		return this.delegate.schedule(new TraceRunnable(tracing(), spanNamer(), command, this.beanName), delay, unit);
+	}
+
+	@Override
+	public <V> ScheduledFuture<V> schedule(Callable<V> callable, long delay, TimeUnit unit) {
+		return this.delegate.schedule(new TraceCallable<>(tracing(), spanNamer(), callable, this.beanName), delay,
 				unit);
 	}
 
 	@Override
-	public <V> ScheduledFuture<V> schedule(Callable<V> callable, long delay,
-			TimeUnit unit) {
-		return this.delegate.schedule(
-				new TraceCallable<>(tracing(), spanNamer(), callable, this.beanName),
-				delay, unit);
-	}
-
-	@Override
-	public ScheduledFuture<?> scheduleAtFixedRate(Runnable command, long initialDelay,
-			long period, TimeUnit unit) {
-		return this.delegate.scheduleAtFixedRate(
-				new TraceRunnable(tracing(), spanNamer(), command, this.beanName),
+	public ScheduledFuture<?> scheduleAtFixedRate(Runnable command, long initialDelay, long period, TimeUnit unit) {
+		return this.delegate.scheduleAtFixedRate(new TraceRunnable(tracing(), spanNamer(), command, this.beanName),
 				initialDelay, period, unit);
 	}
 
 	@Override
-	public ScheduledFuture<?> scheduleWithFixedDelay(Runnable command, long initialDelay,
-			long delay, TimeUnit unit) {
-		return this.delegate.scheduleWithFixedDelay(
-				new TraceRunnable(tracing(), spanNamer(), command, this.beanName),
+	public ScheduledFuture<?> scheduleWithFixedDelay(Runnable command, long initialDelay, long delay, TimeUnit unit) {
+		return this.delegate.scheduleWithFixedDelay(new TraceRunnable(tracing(), spanNamer(), command, this.beanName),
 				initialDelay, delay, unit);
 	}
 
 	@Override
 	public void execute(Runnable command) {
-		this.delegate.execute(
-				new TraceRunnable(tracing(), spanNamer(), command, this.beanName));
+		this.delegate.execute(new TraceRunnable(tracing(), spanNamer(), command, this.beanName));
 	}
 
 	@Override
 	public Future<?> submit(Runnable task) {
-		return this.delegate
-				.submit(new TraceRunnable(tracing(), spanNamer(), task, this.beanName));
+		return this.delegate.submit(new TraceRunnable(tracing(), spanNamer(), task, this.beanName));
 	}
 
 	@Override
 	public <T> Future<T> submit(Runnable task, T result) {
-		return this.delegate.submit(
-				new TraceRunnable(tracing(), spanNamer(), task, this.beanName), result);
+		return this.delegate.submit(new TraceRunnable(tracing(), spanNamer(), task, this.beanName), result);
 	}
 
 	@Override
 	public <T> Future<T> submit(Callable<T> task) {
-		return this.delegate
-				.submit(new TraceCallable<>(tracing(), spanNamer(), task, this.beanName));
+		return this.delegate.submit(new TraceCallable<>(tracing(), spanNamer(), task, this.beanName));
 	}
 
 	@Override
@@ -296,8 +262,7 @@ class LazyTraceScheduledThreadPoolExecutor extends ScheduledThreadPoolExecutor {
 	}
 
 	@Override
-	public boolean awaitTermination(long timeout, TimeUnit unit)
-			throws InterruptedException {
+	public boolean awaitTermination(long timeout, TimeUnit unit) throws InterruptedException {
 		return this.delegate.awaitTermination(timeout, unit);
 	}
 
@@ -435,28 +400,23 @@ class LazyTraceScheduledThreadPoolExecutor extends ScheduledThreadPoolExecutor {
 	@Override
 	@SuppressWarnings("unchecked")
 	public <T> RunnableFuture<T> newTaskFor(Runnable runnable, T value) {
-		return (RunnableFuture<T>) ReflectionUtils.invokeMethod(this.newTaskForRunnable,
-				this.delegate,
-				new TraceRunnable(tracing(), spanNamer(), runnable, this.beanName),
-				value);
+		return (RunnableFuture<T>) ReflectionUtils.invokeMethod(this.newTaskForRunnable, this.delegate,
+				new TraceRunnable(tracing(), spanNamer(), runnable, this.beanName), value);
 	}
 
 	@Override
 	@SuppressWarnings("unchecked")
 	public <T> RunnableFuture<T> newTaskFor(Callable<T> callable) {
-		return (RunnableFuture<T>) ReflectionUtils.invokeMethod(this.newTaskForCallable,
-				this.delegate,
+		return (RunnableFuture<T>) ReflectionUtils.invokeMethod(this.newTaskForCallable, this.delegate,
 				new TraceCallable<>(tracing(), spanNamer(), callable, this.beanName));
 	}
 
 	@Override
-	public <T> T invokeAny(Collection<? extends Callable<T>> tasks)
-			throws InterruptedException, ExecutionException {
+	public <T> T invokeAny(Collection<? extends Callable<T>> tasks) throws InterruptedException, ExecutionException {
 		return this.delegate.invokeAny(wrapCallableCollection(tasks));
 	}
 
-	private <T> Collection<? extends Callable<T>> wrapCallableCollection(
-			Collection<? extends Callable<T>> tasks) {
+	private <T> Collection<? extends Callable<T>> wrapCallableCollection(Collection<? extends Callable<T>> tasks) {
 		List<Callable<T>> ts = new ArrayList<>();
 		for (Callable<T> task : tasks) {
 			if (!(task instanceof TraceCallable)) {
@@ -467,21 +427,19 @@ class LazyTraceScheduledThreadPoolExecutor extends ScheduledThreadPoolExecutor {
 	}
 
 	@Override
-	public <T> T invokeAny(Collection<? extends Callable<T>> tasks, long timeout,
-			TimeUnit unit)
+	public <T> T invokeAny(Collection<? extends Callable<T>> tasks, long timeout, TimeUnit unit)
 			throws InterruptedException, ExecutionException, TimeoutException {
 		return this.delegate.invokeAny(wrapCallableCollection(tasks), timeout, unit);
 	}
 
 	@Override
-	public <T> List<Future<T>> invokeAll(Collection<? extends Callable<T>> tasks)
-			throws InterruptedException {
+	public <T> List<Future<T>> invokeAll(Collection<? extends Callable<T>> tasks) throws InterruptedException {
 		return this.delegate.invokeAll(wrapCallableCollection(tasks));
 	}
 
 	@Override
-	public <T> List<Future<T>> invokeAll(Collection<? extends Callable<T>> tasks,
-			long timeout, TimeUnit unit) throws InterruptedException {
+	public <T> List<Future<T>> invokeAll(Collection<? extends Callable<T>> tasks, long timeout, TimeUnit unit)
+			throws InterruptedException {
 		return this.delegate.invokeAll(wrapCallableCollection(tasks), timeout, unit);
 	}
 
@@ -498,8 +456,7 @@ class LazyTraceScheduledThreadPoolExecutor extends ScheduledThreadPoolExecutor {
 				this.spanNamer = this.beanFactory.getBean(SpanNamer.class);
 			}
 			catch (NoSuchBeanDefinitionException e) {
-				log.warn(
-						"SpanNamer bean not found - will provide a manually created instance");
+				log.warn("SpanNamer bean not found - will provide a manually created instance");
 				return new DefaultSpanNamer();
 			}
 		}

@@ -68,8 +68,7 @@ class TraceGrpcAutoConfiguration {
 	}
 
 	@Bean
-	GrpcManagedChannelBuilderCustomizer tracingManagedChannelBuilderCustomizer(
-			GrpcTracing grpcTracing) {
+	GrpcManagedChannelBuilderCustomizer tracingManagedChannelBuilderCustomizer(GrpcTracing grpcTracing) {
 		return new TracingManagedChannelBuilderCustomizer(grpcTracing);
 	}
 

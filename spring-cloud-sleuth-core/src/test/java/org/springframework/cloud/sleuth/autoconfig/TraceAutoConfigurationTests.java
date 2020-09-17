@@ -96,13 +96,11 @@ public class TraceAutoConfigurationTests {
 
 	@Test
 	void should_use_baggageBean() {
-		this.contextRunner.withUserConfiguration(WithBaggageBeans.class, Baggage.class)
-				.run((context -> {
-					final Baggage bean = context.getBean(Baggage.class);
-					BDDAssertions.then(bean.fields).containsOnly(
-							BaggageField.create("country-code"),
-							BaggageField.create("x-vcap-request-id"));
-				}));
+		this.contextRunner.withUserConfiguration(WithBaggageBeans.class, Baggage.class).run((context -> {
+			final Baggage bean = context.getBean(Baggage.class);
+			BDDAssertions.then(bean.fields).containsOnly(BaggageField.create("country-code"),
+					BaggageField.create("x-vcap-request-id"));
+		}));
 	}
 
 	@Test
@@ -110,21 +108,17 @@ public class TraceAutoConfigurationTests {
 		this.contextRunner.withPropertyValues("spring.sleuth.baggage.local-fields=bp")
 				.withUserConfiguration(Baggage.class).run((context -> {
 					final Baggage bean = context.getBean(Baggage.class);
-					BDDAssertions.then(bean.fields)
-							.containsExactly(BaggageField.create("bp"));
+					BDDAssertions.then(bean.fields).containsExactly(BaggageField.create("bp"));
 				}));
 	}
 
 	@Test
 	void should_combine_baggage_beans_and_properties() {
 		this.contextRunner.withPropertyValues("spring.sleuth.baggage.local-fields=bp")
-				.withUserConfiguration(WithBaggageBeans.class, Baggage.class)
-				.run((context -> {
+				.withUserConfiguration(WithBaggageBeans.class, Baggage.class).run((context -> {
 					final Baggage bean = context.getBean(Baggage.class);
-					BDDAssertions.then(bean.fields).containsOnly(
-							BaggageField.create("country-code"),
-							BaggageField.create("x-vcap-request-id"),
-							BaggageField.create("bp"));
+					BDDAssertions.then(bean.fields).containsOnly(BaggageField.create("country-code"),
+							BaggageField.create("x-vcap-request-id"), BaggageField.create("bp"));
 				}));
 	}
 
@@ -132,10 +126,8 @@ public class TraceAutoConfigurationTests {
 	void should_use_baggagePropagationFactoryBuilder_bean() {
 		// BaggagePropagation.FactoryBuilder unwraps itself if there are no baggage fields
 		// defined
-		this.contextRunner
-				.withUserConfiguration(WithBaggagePropagationFactoryBuilderBean.class)
-				.run((context -> BDDAssertions
-						.then(context.getBean(Propagation.Factory.class))
+		this.contextRunner.withUserConfiguration(WithBaggagePropagationFactoryBuilderBean.class)
+				.run((context -> BDDAssertions.then(context.getBean(Propagation.Factory.class))
 						.isSameAs(B3SinglePropagation.FACTORY)));
 	}
 
@@ -148,8 +140,8 @@ public class TraceAutoConfigurationTests {
 		Baggage(Tracing tracing) {
 			// When predefined baggage fields exist, the result !=
 			// TraceContextOrSamplingFlags.EMPTY
-			TraceContextOrSamplingFlags emptyExtraction = tracing.propagation()
-					.extractor((c, k) -> null).extract(Boolean.TRUE);
+			TraceContextOrSamplingFlags emptyExtraction = tracing.propagation().extractor((c, k) -> null)
+					.extract(Boolean.TRUE);
 			fields = BaggageField.getAll(emptyExtraction);
 		}
 
@@ -160,14 +152,12 @@ public class TraceAutoConfigurationTests {
 
 		@Bean
 		BaggagePropagationCustomizer countryCode() {
-			return fb -> fb
-					.add(SingleBaggageField.remote(BaggageField.create("country-code")));
+			return fb -> fb.add(SingleBaggageField.remote(BaggageField.create("country-code")));
 		}
 
 		@Bean
 		BaggagePropagationCustomizer requestId() {
-			return fb -> fb.add(
-					SingleBaggageField.remote(BaggageField.create("x-vcap-request-id")));
+			return fb -> fb.add(SingleBaggageField.remote(BaggageField.create("x-vcap-request-id")));
 		}
 
 	}

@@ -32,8 +32,7 @@ import org.apache.commons.logging.Log;
  */
 public class IntegrationTestZipkinSpanHandler extends SpanHandler {
 
-	private static final Log log = org.apache.commons.logging.LogFactory
-			.getLog(IntegrationTestZipkinSpanHandler.class);
+	private static final Log log = org.apache.commons.logging.LogFactory.getLog(IntegrationTestZipkinSpanHandler.class);
 
 	public List<MutableSpan> spans = Collections.synchronizedList(new LinkedList<>());
 

@@ -39,8 +39,8 @@ public class TraceRequestHttpHeadersFilterTests {
 
 	TestSpanHandler spans = new TestSpanHandler();
 
-	Tracing tracing = Tracing.newBuilder().currentTraceContext(this.currentTraceContext)
-			.addSpanHandler(this.spans).build();
+	Tracing tracing = Tracing.newBuilder().currentTraceContext(this.currentTraceContext).addSpanHandler(this.spans)
+			.build();
 
 	HttpTracing httpTracing = HttpTracing.newBuilder(this.tracing).build();
 
@@ -57,28 +57,20 @@ public class TraceRequestHttpHeadersFilterTests {
 		httpHeaders.set("X-Hello", "World");
 		httpHeaders.set("X-B3-TraceId", "52f112af7472aff0");
 		httpHeaders.set("X-B3-SpanId", "53e6ab6fc5dfee58");
-		MockServerHttpRequest request = MockServerHttpRequest.post("foo/bar")
-				.headers(httpHeaders).build();
+		MockServerHttpRequest request = MockServerHttpRequest.post("foo/bar").headers(httpHeaders).build();
 		MockServerWebExchange exchange = MockServerWebExchange.builder(request).build();
 
-		HttpHeaders filteredHeaders = filter.filter(requestHeaders(httpHeaders),
-				exchange);
+		HttpHeaders filteredHeaders = filter.filter(requestHeaders(httpHeaders), exchange);
 
 		// we want to continue the trace
-		BDDAssertions.then(filteredHeaders.get("X-B3-TraceId"))
-				.isEqualTo(httpHeaders.get("X-B3-TraceId"));
+		BDDAssertions.then(filteredHeaders.get("X-B3-TraceId")).isEqualTo(httpHeaders.get("X-B3-TraceId"));
 		// but we want to have a new span id
-		BDDAssertions.then(filteredHeaders.get("X-B3-SpanId"))
-				.isNotEqualTo(httpHeaders.get("X-B3-SpanId"));
-		BDDAssertions.then(filteredHeaders.get("X-Hello"))
-				.isEqualTo(Collections.singletonList("World"));
+		BDDAssertions.then(filteredHeaders.get("X-B3-SpanId")).isNotEqualTo(httpHeaders.get("X-B3-SpanId"));
+		BDDAssertions.then(filteredHeaders.get("X-Hello")).isEqualTo(Collections.singletonList("World"));
 		BDDAssertions.then(filteredHeaders.get("X-Hello-Request"))
 				.isEqualTo(Collections.singletonList("Request World"));
 		BDDAssertions.then(filteredHeaders.get("X-Auth-User")).hasSize(1);
-		BDDAssertions
-				.then((Object) exchange
-						.getAttribute(TraceRequestHttpHeadersFilter.SPAN_ATTRIBUTE))
-				.isNotNull();
+		BDDAssertions.then((Object) exchange.getAttribute(TraceRequestHttpHeadersFilter.SPAN_ATTRIBUTE)).isNotNull();
 	}
 
 	@Test
@@ -87,12 +79,10 @@ public class TraceRequestHttpHeadersFilterTests {
 		HttpHeaders httpHeaders = new HttpHeaders();
 		httpHeaders.set("X-Hello", "World");
 		httpHeaders.set("B3", "1111111111111111-1111111111111111");
-		MockServerHttpRequest request = MockServerHttpRequest.post("foo/bar")
-				.headers(httpHeaders).build();
+		MockServerHttpRequest request = MockServerHttpRequest.post("foo/bar").headers(httpHeaders).build();
 		MockServerWebExchange exchange = MockServerWebExchange.builder(request).build();
 
-		HttpHeaders filteredHeaders = filter.filter(requestHeaders(httpHeaders),
-				exchange);
+		HttpHeaders filteredHeaders = filter.filter(requestHeaders(httpHeaders), exchange);
 
 		// we want to continue the trace
 		BDDAssertions.then(filteredHeaders.get("X-B3-TraceId"))
@@ -102,15 +92,11 @@ public class TraceRequestHttpHeadersFilterTests {
 				.isNotEqualTo(Collections.singletonList("1111111111111111"));
 		// we don't want to propagate b3
 		BDDAssertions.then(filteredHeaders.get("B3")).isNullOrEmpty();
-		BDDAssertions.then(filteredHeaders.get("X-Hello"))
-				.isEqualTo(Collections.singletonList("World"));
+		BDDAssertions.then(filteredHeaders.get("X-Hello")).isEqualTo(Collections.singletonList("World"));
 		BDDAssertions.then(filteredHeaders.get("X-Hello-Request"))
 				.isEqualTo(Collections.singletonList("Request World"));
 		BDDAssertions.then(filteredHeaders.get("X-Auth-User")).hasSize(1);
-		BDDAssertions
-				.then((Object) exchange
-						.getAttribute(TraceRequestHttpHeadersFilter.SPAN_ATTRIBUTE))
-				.isNotNull();
+		BDDAssertions.then((Object) exchange.getAttribute(TraceRequestHttpHeadersFilter.SPAN_ATTRIBUTE)).isNotNull();
 	}
 
 	@Test
@@ -118,23 +104,17 @@ public class TraceRequestHttpHeadersFilterTests {
 		HttpHeadersFilter filter = TraceRequestHttpHeadersFilter.create(this.httpTracing);
 		HttpHeaders httpHeaders = new HttpHeaders();
 		httpHeaders.set("X-Hello", "World");
-		MockServerHttpRequest request = MockServerHttpRequest.post("foo/bar")
-				.headers(httpHeaders).build();
+		MockServerHttpRequest request = MockServerHttpRequest.post("foo/bar").headers(httpHeaders).build();
 		MockServerWebExchange exchange = MockServerWebExchange.builder(request).build();
 
-		HttpHeaders filteredHeaders = filter.filter(requestHeaders(httpHeaders),
-				exchange);
+		HttpHeaders filteredHeaders = filter.filter(requestHeaders(httpHeaders), exchange);
 
 		BDDAssertions.then(filteredHeaders.get("X-B3-TraceId")).isNotEmpty();
 		BDDAssertions.then(filteredHeaders.get("X-B3-SpanId")).isNotEmpty();
-		BDDAssertions.then(filteredHeaders.get("X-Hello"))
-				.isEqualTo(Collections.singletonList("World"));
+		BDDAssertions.then(filteredHeaders.get("X-Hello")).isEqualTo(Collections.singletonList("World"));
 		BDDAssertions.then(filteredHeaders.get("X-Hello-Request"))
 				.isEqualTo(Collections.singletonList("Request World"));
-		BDDAssertions
-				.then((Object) exchange
-						.getAttribute(TraceRequestHttpHeadersFilter.SPAN_ATTRIBUTE))
-				.isNotNull();
+		BDDAssertions.then((Object) exchange.getAttribute(TraceRequestHttpHeadersFilter.SPAN_ATTRIBUTE)).isNotNull();
 	}
 
 	// #1469
@@ -143,8 +123,7 @@ public class TraceRequestHttpHeadersFilterTests {
 		HttpHeadersFilter filter = TraceRequestHttpHeadersFilter.create(this.httpTracing);
 		HttpHeaders httpHeaders = new HttpHeaders();
 		httpHeaders.set("X-Hello", "World");
-		MockServerHttpRequest request = MockServerHttpRequest.post("foo/bar")
-				.headers(httpHeaders).build();
+		MockServerHttpRequest request = MockServerHttpRequest.post("foo/bar").headers(httpHeaders).build();
 		MockServerWebExchange exchange = MockServerWebExchange.builder(request).build();
 
 		HttpHeaders filteredHeaders = filter.filter(requestHeaders(), exchange);
@@ -152,10 +131,7 @@ public class TraceRequestHttpHeadersFilterTests {
 		BDDAssertions.then(filteredHeaders.get("X-B3-TraceId")).isNotEmpty();
 		BDDAssertions.then(filteredHeaders.get("X-B3-SpanId")).isNotEmpty();
 		BDDAssertions.then(filteredHeaders.get("X-Hello")).isNullOrEmpty();
-		BDDAssertions
-				.then((Object) exchange
-						.getAttribute(TraceRequestHttpHeadersFilter.SPAN_ATTRIBUTE))
-				.isNotNull();
+		BDDAssertions.then((Object) exchange.getAttribute(TraceRequestHttpHeadersFilter.SPAN_ATTRIBUTE)).isNotNull();
 	}
 
 	// #1352
@@ -165,22 +141,17 @@ public class TraceRequestHttpHeadersFilterTests {
 		HttpHeaders httpHeaders = new HttpHeaders();
 		httpHeaders.add("X-Hello-Request", "Request World");
 		httpHeaders.addAll("X-Hello", Arrays.asList("World1", "World2"));
-		MockServerHttpRequest request = MockServerHttpRequest.post("foo/bar")
-				.headers(httpHeaders).build();
+		MockServerHttpRequest request = MockServerHttpRequest.post("foo/bar").headers(httpHeaders).build();
 		MockServerWebExchange exchange = MockServerWebExchange.builder(request).build();
 
 		HttpHeaders filteredHeaders = filter.filter(httpHeaders, exchange);
 
 		BDDAssertions.then(filteredHeaders.get("X-B3-TraceId")).isNotEmpty();
 		BDDAssertions.then(filteredHeaders.get("X-B3-SpanId")).isNotEmpty();
-		BDDAssertions.then(filteredHeaders.get("X-Hello"))
-				.isEqualTo(Arrays.asList("World1", "World2"));
+		BDDAssertions.then(filteredHeaders.get("X-Hello")).isEqualTo(Arrays.asList("World1", "World2"));
 		BDDAssertions.then(filteredHeaders.get("X-Hello-Request"))
 				.isEqualTo(Collections.singletonList("Request World"));
-		BDDAssertions
-				.then((Object) exchange
-						.getAttribute(TraceRequestHttpHeadersFilter.SPAN_ATTRIBUTE))
-				.isNotNull();
+		BDDAssertions.then((Object) exchange.getAttribute(TraceRequestHttpHeadersFilter.SPAN_ATTRIBUTE)).isNotNull();
 	}
 
 	private HttpHeaders requestHeaders() {

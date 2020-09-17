@@ -57,8 +57,8 @@ public class SpringCloudSleuthDocTests {
 
 	StrictCurrentTraceContext currentTraceContext = StrictCurrentTraceContext.create();
 
-	Tracing tracing = Tracing.newBuilder().currentTraceContext(this.currentTraceContext)
-			.sampler(Sampler.ALWAYS_SAMPLE).addSpanHandler(this.spans).build();
+	Tracing tracing = Tracing.newBuilder().currentTraceContext(this.currentTraceContext).sampler(Sampler.ALWAYS_SAMPLE)
+			.addSpanHandler(this.spans).build();
 
 	Tracer tracer = this.tracing.tracer();
 
@@ -74,14 +74,12 @@ public class SpringCloudSleuthDocTests {
 	}
 
 	@Test
-	public void should_set_runnable_name_to_annotated_value()
-			throws ExecutionException, InterruptedException {
+	public void should_set_runnable_name_to_annotated_value() throws ExecutionException, InterruptedException {
 		ExecutorService executorService = Executors.newSingleThreadExecutor();
 		SpanNamer spanNamer = new DefaultSpanNamer();
 
 		// tag::span_name_annotated_runnable_execution[]
-		Runnable runnable = new TraceRunnable(this.tracing, spanNamer,
-				new TaxCountingRunnable());
+		Runnable runnable = new TraceRunnable(this.tracing, spanNamer, new TaxCountingRunnable());
 		Future<?> future = executorService.submit(runnable);
 		// ... some additional logic ...
 		future.get();
@@ -92,8 +90,7 @@ public class SpringCloudSleuthDocTests {
 	}
 
 	@Test
-	public void should_set_runnable_name_to_to_string_value()
-			throws ExecutionException, InterruptedException {
+	public void should_set_runnable_name_to_to_string_value() throws ExecutionException, InterruptedException {
 		ExecutorService executorService = Executors.newSingleThreadExecutor();
 		SpanNamer spanNamer = new DefaultSpanNamer();
 
@@ -221,8 +218,7 @@ public class SpringCloudSleuthDocTests {
 		Optional<MutableSpan> calculateTax = spans.spans().stream()
 				.filter(span -> span.name().equals("calculateCommission")).findFirst();
 		BDDAssertions.then(calculateTax).isPresent();
-		BDDAssertions.then(calculateTax.get().tags()).containsEntry("commissionValue",
-				"10");
+		BDDAssertions.then(calculateTax.get().tags()).containsEntry("commissionValue", "10");
 		BDDAssertions.then(calculateTax.get().annotations()).hasSize(1);
 		executorService.shutdown();
 	}
@@ -243,12 +239,10 @@ public class SpringCloudSleuthDocTests {
 			}
 		};
 		// Manual `TraceRunnable` creation with explicit "calculateTax" Span name
-		Runnable traceRunnable = new TraceRunnable(this.tracing, spanNamer, runnable,
-				"calculateTax");
+		Runnable traceRunnable = new TraceRunnable(this.tracing, spanNamer, runnable, "calculateTax");
 		// Wrapping `Runnable` with `Tracing`. That way the current span will be available
 		// in the thread of `Runnable`
-		Runnable traceRunnableFromTracer = this.tracing.currentTraceContext()
-				.wrap(runnable);
+		Runnable traceRunnableFromTracer = this.tracing.currentTraceContext().wrap(runnable);
 		// end::trace_runnable[]
 
 		then(traceRunnable).isExactlyInstanceOf(TraceRunnable.class);
@@ -270,12 +264,10 @@ public class SpringCloudSleuthDocTests {
 			}
 		};
 		// Manual `TraceCallable` creation with explicit "calculateTax" Span name
-		Callable<String> traceCallable = new TraceCallable<>(this.tracing, spanNamer,
-				callable, "calculateTax");
+		Callable<String> traceCallable = new TraceCallable<>(this.tracing, spanNamer, callable, "calculateTax");
 		// Wrapping `Callable` with `Tracing`. That way the current span will be available
 		// in the thread of `Callable`
-		Callable<String> traceCallableFromTracer = this.tracing.currentTraceContext()
-				.wrap(callable);
+		Callable<String> traceCallableFromTracer = this.tracing.currentTraceContext().wrap(callable);
 		// end::trace_callable[]
 	}
 

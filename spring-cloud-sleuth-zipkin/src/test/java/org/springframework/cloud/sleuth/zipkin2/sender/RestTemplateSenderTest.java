@@ -39,13 +39,11 @@ import static zipkin2.codec.SpanBytesEncoder.PROTO3;
 
 public class RestTemplateSenderTest {
 
-	static final Span SPAN = Span.newBuilder().traceId("7180c278b62e8f6a216a2aea45d08fc9")
-			.parentId("6b221d5bc9e6496c").id("5b4185666d50f68b").name("get /backend")
-			.kind(Span.Kind.SERVER).shared(true)
-			.localEndpoint(Endpoint.newBuilder().serviceName("backend")
-					.ip("192.168.99.101").port(9000).build())
-			.timestamp(1472470996250000L).duration(100000L).putTag("http.method", "GET")
-			.putTag("http.path", "/backend").build();
+	static final Span SPAN = Span.newBuilder().traceId("7180c278b62e8f6a216a2aea45d08fc9").parentId("6b221d5bc9e6496c")
+			.id("5b4185666d50f68b").name("get /backend").kind(Span.Kind.SERVER).shared(true)
+			.localEndpoint(Endpoint.newBuilder().serviceName("backend").ip("192.168.99.101").port(9000).build())
+			.timestamp(1472470996250000L).duration(100000L).putTag("http.method", "GET").putTag("http.path", "/backend")
+			.build();
 
 	public MockWebServer server = new MockWebServer();
 
@@ -56,8 +54,7 @@ public class RestTemplateSenderTest {
 
 	String endpoint = this.server.url("/api/v2/spans").toString();
 
-	RestTemplateSender sender = new RestTemplateSender(new RestTemplate(), this.endpoint,
-			JSON_V2);
+	RestTemplateSender sender = new RestTemplateSender(new RestTemplate(), this.endpoint, JSON_V2);
 
 	/**
 	 * Tests that json is not manipulated as a side-effect of using rest template.
@@ -84,15 +81,13 @@ public class RestTemplateSenderTest {
 		assertThat(request.getHeader("Content-Type")).isEqualTo("application/x-protobuf");
 
 		// proto3 encoding of ListOfSpan is simply a repeated span entry
-		assertThat(request.getBody().readByteArray())
-				.containsExactly(SpanBytesEncoder.PROTO3.encode(SPAN));
+		assertThat(request.getBody().readByteArray()).containsExactly(SpanBytesEncoder.PROTO3.encode(SPAN));
 	}
 
 	Call<Void> send(Span... spans) {
-		SpanBytesEncoder bytesEncoder = this.sender.encoding() == Encoding.JSON
-				? SpanBytesEncoder.JSON_V2 : SpanBytesEncoder.PROTO3;
-		return this.sender
-				.sendSpans(Stream.of(spans).map(bytesEncoder::encode).collect(toList()));
+		SpanBytesEncoder bytesEncoder = this.sender.encoding() == Encoding.JSON ? SpanBytesEncoder.JSON_V2
+				: SpanBytesEncoder.PROTO3;
+		return this.sender.sendSpans(Stream.of(spans).map(bytesEncoder::encode).collect(toList()));
 	}
 
 }

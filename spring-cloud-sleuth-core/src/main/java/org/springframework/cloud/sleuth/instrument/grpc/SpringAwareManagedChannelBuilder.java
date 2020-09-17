@@ -40,8 +40,7 @@ public class SpringAwareManagedChannelBuilder {
 
 	private List<GrpcManagedChannelBuilderCustomizer> customizers;
 
-	public SpringAwareManagedChannelBuilder(
-			Optional<List<GrpcManagedChannelBuilderCustomizer>> customizers) {
+	public SpringAwareManagedChannelBuilder(Optional<List<GrpcManagedChannelBuilderCustomizer>> customizers) {
 		this.customizers = customizers.orElse(null);
 	}
 

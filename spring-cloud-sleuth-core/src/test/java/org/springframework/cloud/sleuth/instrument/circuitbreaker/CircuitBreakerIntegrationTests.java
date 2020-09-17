@@ -67,8 +67,7 @@ public class CircuitBreakerIntegrationTests {
 			Span span = this.factory.create("name").run(tracer::currentSpan);
 
 			then(span).isNotNull();
-			then(scopedSpan.context().traceIdString())
-					.isEqualTo(span.context().traceIdString());
+			then(scopedSpan.context().traceIdString()).isEqualTo(span.context().traceIdString());
 		}
 		finally {
 			scopedSpan.finish();
@@ -94,12 +93,9 @@ public class CircuitBreakerIntegrationTests {
 			})).isInstanceOf(IllegalStateException.class).hasMessageContaining("boom2");
 
 			then(this.spans).hasSize(2);
-			then(scopedSpan.context().traceIdString())
-					.isEqualTo(first.get().context().traceIdString());
-			then(scopedSpan.context().traceIdString())
-					.isEqualTo(second.get().context().traceIdString());
-			then(first.get().context().spanIdString())
-					.isNotEqualTo(second.get().context().spanIdString());
+			then(scopedSpan.context().traceIdString()).isEqualTo(first.get().context().traceIdString());
+			then(scopedSpan.context().traceIdString()).isEqualTo(second.get().context().traceIdString());
+			then(first.get().context().spanIdString()).isNotEqualTo(second.get().context().spanIdString());
 
 			MutableSpan reportedSpan = this.spans.get(0);
 			then(reportedSpan.name()).contains("CircuitBreakerIntegrationTests");

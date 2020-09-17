@@ -50,13 +50,11 @@ public class TraceableExecutorService implements ExecutorService {
 
 	BeanFactory beanFactory;
 
-	public TraceableExecutorService(BeanFactory beanFactory,
-			final ExecutorService delegate) {
+	public TraceableExecutorService(BeanFactory beanFactory, final ExecutorService delegate) {
 		this(beanFactory, delegate, null);
 	}
 
-	public TraceableExecutorService(BeanFactory beanFactory,
-			final ExecutorService delegate, String spanName) {
+	public TraceableExecutorService(BeanFactory beanFactory, final ExecutorService delegate, String spanName) {
 		this.delegate = delegate;
 		this.beanFactory = beanFactory;
 		this.spanName = spanName;
@@ -89,8 +87,7 @@ public class TraceableExecutorService implements ExecutorService {
 	}
 
 	@Override
-	public boolean awaitTermination(long timeout, TimeUnit unit)
-			throws InterruptedException {
+	public boolean awaitTermination(long timeout, TimeUnit unit) throws InterruptedException {
 		return this.delegate.awaitTermination(timeout, unit);
 	}
 
@@ -102,10 +99,8 @@ public class TraceableExecutorService implements ExecutorService {
 
 	@Override
 	public <T> Future<T> submit(Runnable task, T result) {
-		return this.delegate.submit(
-				ContextUtil.isContextUnusable(this.beanFactory) ? task
-						: new TraceRunnable(tracing(), spanNamer(), task, this.spanName),
-				result);
+		return this.delegate.submit(ContextUtil.isContextUnusable(this.beanFactory) ? task
+				: new TraceRunnable(tracing(), spanNamer(), task, this.spanName), result);
 	}
 
 	@Override
@@ -115,36 +110,32 @@ public class TraceableExecutorService implements ExecutorService {
 	}
 
 	@Override
-	public <T> List<Future<T>> invokeAll(Collection<? extends Callable<T>> tasks)
+	public <T> List<Future<T>> invokeAll(Collection<? extends Callable<T>> tasks) throws InterruptedException {
+		return this.delegate
+				.invokeAll(ContextUtil.isContextUnusable(this.beanFactory) ? tasks : wrapCallableCollection(tasks));
+	}
+
+	@Override
+	public <T> List<Future<T>> invokeAll(Collection<? extends Callable<T>> tasks, long timeout, TimeUnit unit)
 			throws InterruptedException {
-		return this.delegate.invokeAll(ContextUtil.isContextUnusable(this.beanFactory)
-				? tasks : wrapCallableCollection(tasks));
+		return this.delegate.invokeAll(
+				ContextUtil.isContextUnusable(this.beanFactory) ? tasks : wrapCallableCollection(tasks), timeout, unit);
 	}
 
 	@Override
-	public <T> List<Future<T>> invokeAll(Collection<? extends Callable<T>> tasks,
-			long timeout, TimeUnit unit) throws InterruptedException {
-		return this.delegate.invokeAll(ContextUtil.isContextUnusable(this.beanFactory)
-				? tasks : wrapCallableCollection(tasks), timeout, unit);
+	public <T> T invokeAny(Collection<? extends Callable<T>> tasks) throws InterruptedException, ExecutionException {
+		return this.delegate
+				.invokeAny(ContextUtil.isContextUnusable(this.beanFactory) ? tasks : wrapCallableCollection(tasks));
 	}
 
 	@Override
-	public <T> T invokeAny(Collection<? extends Callable<T>> tasks)
-			throws InterruptedException, ExecutionException {
-		return this.delegate.invokeAny(ContextUtil.isContextUnusable(this.beanFactory)
-				? tasks : wrapCallableCollection(tasks));
-	}
-
-	@Override
-	public <T> T invokeAny(Collection<? extends Callable<T>> tasks, long timeout,
-			TimeUnit unit)
+	public <T> T invokeAny(Collection<? extends Callable<T>> tasks, long timeout, TimeUnit unit)
 			throws InterruptedException, ExecutionException, TimeoutException {
-		return this.delegate.invokeAny(ContextUtil.isContextUnusable(this.beanFactory)
-				? tasks : wrapCallableCollection(tasks), timeout, unit);
+		return this.delegate.invokeAny(
+				ContextUtil.isContextUnusable(this.beanFactory) ? tasks : wrapCallableCollection(tasks), timeout, unit);
 	}
 
-	private <T> Collection<? extends Callable<T>> wrapCallableCollection(
-			Collection<? extends Callable<T>> tasks) {
+	private <T> Collection<? extends Callable<T>> wrapCallableCollection(Collection<? extends Callable<T>> tasks) {
 		List<Callable<T>> ts = new ArrayList<>();
 		for (Callable<T> task : tasks) {
 			if (!(task instanceof TraceCallable)) {

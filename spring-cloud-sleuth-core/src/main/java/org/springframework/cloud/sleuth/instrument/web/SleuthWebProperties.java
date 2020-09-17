@@ -107,8 +107,7 @@ class SleuthWebProperties {
 		return ignoreAutoConfiguredSkipPatterns;
 	}
 
-	public void setIgnoreAutoConfiguredSkipPatterns(
-			boolean ignoreAutoConfiguredSkipPatterns) {
+	public void setIgnoreAutoConfiguredSkipPatterns(boolean ignoreAutoConfiguredSkipPatterns) {
 		this.ignoreAutoConfiguredSkipPatterns = ignoreAutoConfiguredSkipPatterns;
 	}
 

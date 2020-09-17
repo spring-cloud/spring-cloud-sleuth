@@ -52,9 +52,8 @@ import org.springframework.lang.Nullable;
 // conditional on "spring.sleuth.web.enabled". As this is conditional on
 // "spring.sleuth.http.enabled", to be compatible with old behavior we have
 // to be conditional on two properties.
-@ConditionalOnProperty(
-		name = { "spring.sleuth.http.enabled", "spring.sleuth.web.enabled" },
-		havingValue = "true", matchIfMissing = true)
+@ConditionalOnProperty(name = { "spring.sleuth.http.enabled", "spring.sleuth.web.enabled" }, havingValue = "true",
+		matchIfMissing = true)
 @ConditionalOnBean(Tracing.class)
 @ConditionalOnClass(HttpTracing.class)
 @AutoConfigureAfter(TraceAutoConfiguration.class)
@@ -80,8 +79,8 @@ public class TraceHttpAutoConfiguration {
 			@Nullable List<HttpTracingCustomizer> httpTracingCustomizers) {
 		SamplerFunction<HttpRequest> combinedSampler = combineUserProvidedSamplerWithSkipPatternSampler(
 				httpServerSampler, provider);
-		HttpTracing.Builder builder = HttpTracing.newBuilder(tracing)
-				.clientSampler(httpClientSampler).serverSampler(combinedSampler);
+		HttpTracing.Builder builder = HttpTracing.newBuilder(tracing).clientSampler(httpClientSampler)
+				.serverSampler(combinedSampler);
 
 		if (httpClientRequestParser != null || httpClientResponseParser != null) {
 			if (httpClientRequestParser != null) {
@@ -116,10 +115,9 @@ public class TraceHttpAutoConfiguration {
 	}
 
 	private SamplerFunction<HttpRequest> combineUserProvidedSamplerWithSkipPatternSampler(
-			@Nullable SamplerFunction<HttpRequest> serverSampler,
-			@Nullable SkipPatternProvider provider) {
-		SamplerFunction<HttpRequest> skipPatternSampler = provider != null
-				? new SkipPatternHttpServerSampler(provider) : null;
+			@Nullable SamplerFunction<HttpRequest> serverSampler, @Nullable SkipPatternProvider provider) {
+		SamplerFunction<HttpRequest> skipPatternSampler = provider != null ? new SkipPatternHttpServerSampler(provider)
+				: null;
 		if (serverSampler == null && skipPatternSampler == null) {
 			return SamplerFunctions.deferDecision();
 		}
@@ -134,8 +132,7 @@ public class TraceHttpAutoConfiguration {
 
 	@Bean
 	@ConditionalOnMissingBean(name = HttpClientSampler.NAME)
-	SamplerFunction<HttpRequest> sleuthHttpClientSampler(
-			SleuthWebProperties sleuthWebProperties) {
+	SamplerFunction<HttpRequest> sleuthHttpClientSampler(SleuthWebProperties sleuthWebProperties) {
 		String skipPattern = sleuthWebProperties.getClient().getSkipPattern();
 		if (skipPattern == null) {
 			return SamplerFunctions.deferDecision();
@@ -157,8 +154,7 @@ final class CompositeHttpSampler implements SamplerFunction<HttpRequest> {
 
 	final SamplerFunction<HttpRequest> right;
 
-	CompositeHttpSampler(SamplerFunction<HttpRequest> left,
-			SamplerFunction<HttpRequest> right) {
+	CompositeHttpSampler(SamplerFunction<HttpRequest> left, SamplerFunction<HttpRequest> right) {
 		this.left = left;
 		this.right = right;
 	}

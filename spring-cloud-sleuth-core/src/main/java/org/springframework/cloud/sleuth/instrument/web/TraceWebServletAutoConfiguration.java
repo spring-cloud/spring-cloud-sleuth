@@ -74,13 +74,10 @@ class TraceWebServletAutoConfiguration {
 	}
 
 	@Bean
-	public FilterRegistrationBean traceWebFilter(BeanFactory beanFactory,
-			SleuthWebProperties webProperties) {
-		FilterRegistrationBean filterRegistrationBean = new FilterRegistrationBean(
-				new LazyTracingFilter(beanFactory));
-		filterRegistrationBean.setDispatcherTypes(DispatcherType.ASYNC,
-				DispatcherType.ERROR, DispatcherType.FORWARD, DispatcherType.INCLUDE,
-				DispatcherType.REQUEST);
+	public FilterRegistrationBean traceWebFilter(BeanFactory beanFactory, SleuthWebProperties webProperties) {
+		FilterRegistrationBean filterRegistrationBean = new FilterRegistrationBean(new LazyTracingFilter(beanFactory));
+		filterRegistrationBean.setDispatcherTypes(DispatcherType.ASYNC, DispatcherType.ERROR, DispatcherType.FORWARD,
+				DispatcherType.INCLUDE, DispatcherType.REQUEST);
 		filterRegistrationBean.setOrder(webProperties.getFilterOrder());
 		return filterRegistrationBean;
 	}
@@ -120,8 +117,8 @@ final class LazyTracingFilter implements Filter {
 	}
 
 	@Override
-	public void doFilter(ServletRequest request, ServletResponse response,
-			FilterChain chain) throws IOException, ServletException {
+	public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain)
+			throws IOException, ServletException {
 		tracingFilter().doFilter(request, response, chain);
 	}
 

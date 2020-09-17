@@ -66,11 +66,8 @@ public class SleuthRxJavaTests {
 
 	@Test
 	public void should_create_new_span_when_rx_java_action_is_executed_and_there_was_no_span() {
-		Observable
-				.defer(() -> Observable.just(
-						(Action0) () -> this.caller = new StringBuffer("actual_action")))
-				.subscribeOn(Schedulers.newThread()).toBlocking()
-				.subscribe(Action0::call);
+		Observable.defer(() -> Observable.just((Action0) () -> this.caller = new StringBuffer("actual_action")))
+				.subscribeOn(Schedulers.newThread()).toBlocking().subscribe(Action0::call);
 
 		then(this.caller.toString()).isEqualTo("actual_action");
 		then(this.tracer.currentSpan()).isNull();
@@ -84,10 +81,8 @@ public class SleuthRxJavaTests {
 		Span spanInCurrentThread = this.tracer.nextSpan().name("current_span");
 
 		try (Tracer.SpanInScope ws = this.tracer.withSpanInScope(spanInCurrentThread)) {
-			Observable.defer(() -> Observable.just(
-					(Action0) () -> this.caller = new StringBuffer("actual_action")))
-					.subscribeOn(Schedulers.newThread()).toBlocking()
-					.subscribe(Action0::call);
+			Observable.defer(() -> Observable.just((Action0) () -> this.caller = new StringBuffer("actual_action")))
+					.subscribeOn(Schedulers.newThread()).toBlocking().subscribe(Action0::call);
 		}
 		finally {
 			spanInCurrentThread.finish();

@@ -52,8 +52,7 @@ public class TraceRunnable implements Runnable {
 		this(tracing, spanNamer, delegate, null);
 	}
 
-	public TraceRunnable(Tracing tracing, SpanNamer spanNamer, Runnable delegate,
-			String name) {
+	public TraceRunnable(Tracing tracing, SpanNamer spanNamer, Runnable delegate, String name) {
 		this.tracer = tracing.tracer();
 		this.delegate = delegate;
 		this.parent = tracing.currentTraceContext().get();
@@ -62,8 +61,7 @@ public class TraceRunnable implements Runnable {
 
 	@Override
 	public void run() {
-		ScopedSpan span = this.tracer.startScopedSpanWithParent(this.spanName,
-				this.parent);
+		ScopedSpan span = this.tracer.startScopedSpanWithParent(this.spanName, this.parent);
 		try {
 			this.delegate.run();
 		}

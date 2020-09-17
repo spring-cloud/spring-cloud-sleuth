@@ -36,13 +36,12 @@ class DefaultSpanCreator implements NewSpanParser {
 
 	@Override
 	public void parse(MethodInvocation pjp, NewSpan newSpan, SpanCustomizer span) {
-		String name = newSpan == null || StringUtils.isEmpty(newSpan.name())
-				? pjp.getMethod().getName() : newSpan.name();
+		String name = newSpan == null || StringUtils.isEmpty(newSpan.name()) ? pjp.getMethod().getName()
+				: newSpan.name();
 		String changedName = SpanNameUtil.toLowerHyphen(name);
 		if (log.isDebugEnabled()) {
-			log.debug("For the class [" + pjp.getThis().getClass() + "] method " + "["
-					+ pjp.getMethod().getName() + "] will name the span [" + changedName
-					+ "]");
+			log.debug("For the class [" + pjp.getThis().getClass() + "] method " + "[" + pjp.getMethod().getName()
+					+ "] will name the span [" + changedName + "]");
 		}
 		span.name(changedName);
 	}

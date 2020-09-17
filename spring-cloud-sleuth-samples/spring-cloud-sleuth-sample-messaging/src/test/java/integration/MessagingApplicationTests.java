@@ -42,9 +42,7 @@ import org.springframework.test.context.TestPropertySource;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.BDDAssertions.then;
 
-@SpringBootTest(
-		classes = { IntegrationSpanCollectorConfig.class,
-				SampleMessagingApplication.class },
+@SpringBootTest(classes = { IntegrationSpanCollectorConfig.class, SampleMessagingApplication.class },
 		webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT)
 @TestPropertySource(properties = { "sample.zipkin.enabled=true" })
 @DirtiesContext
@@ -66,12 +64,10 @@ public class MessagingApplicationTests extends AbstractIntegrationTest {
 	public void should_have_passed_trace_id_when_message_is_about_to_be_sent() {
 		long traceId = new Random().nextLong();
 
-		await().atMost(15, SECONDS)
-				.untilAsserted(() -> httpMessageWithTraceIdInHeadersIsSuccessfullySent(
-						sampleAppUrl + "/", traceId).run());
+		await().atMost(15, SECONDS).untilAsserted(
+				() -> httpMessageWithTraceIdInHeadersIsSuccessfullySent(sampleAppUrl + "/", traceId).run());
 
-		await().atMost(15, SECONDS)
-				.untilAsserted(() -> thenAllSpansHaveTraceIdEqualTo(traceId));
+		await().atMost(15, SECONDS).untilAsserted(() -> thenAllSpansHaveTraceIdEqualTo(traceId));
 	}
 
 	@Test
@@ -79,9 +75,8 @@ public class MessagingApplicationTests extends AbstractIntegrationTest {
 		long traceId = new Random().nextLong();
 		long spanId = new Random().nextLong();
 
-		await().atMost(15, SECONDS)
-				.untilAsserted(() -> httpMessageWithTraceIdInHeadersIsSuccessfullySent(
-						sampleAppUrl + "/", traceId, spanId).run());
+		await().atMost(15, SECONDS).untilAsserted(
+				() -> httpMessageWithTraceIdInHeadersIsSuccessfullySent(sampleAppUrl + "/", traceId, spanId).run());
 
 		await().atMost(15, SECONDS).untilAsserted(() -> {
 			thenAllSpansHaveTraceIdEqualTo(traceId);
@@ -93,9 +88,8 @@ public class MessagingApplicationTests extends AbstractIntegrationTest {
 	public void should_have_passed_trace_id_with_annotations_in_async_thread_when_message_is_about_to_be_sent() {
 		long traceId = new Random().nextLong();
 
-		await().atMost(15, SECONDS)
-				.untilAsserted(() -> httpMessageWithTraceIdInHeadersIsSuccessfullySent(
-						sampleAppUrl + "/xform", traceId).run());
+		await().atMost(15, SECONDS).untilAsserted(
+				() -> httpMessageWithTraceIdInHeadersIsSuccessfullySent(sampleAppUrl + "/xform", traceId).run());
 
 		await().atMost(15, SECONDS).untilAsserted(() -> {
 			thenAllSpansHaveTraceIdEqualTo(traceId);
@@ -104,18 +98,17 @@ public class MessagingApplicationTests extends AbstractIntegrationTest {
 	}
 
 	private void thenThereIsAtLeastOneTagWithKey(String key) {
-		then(this.testSpanHandler.spans.stream().map(MutableSpan::tags)
-				.flatMap(m -> m.keySet().stream()).anyMatch(b -> b.equals(key))).isTrue();
+		then(this.testSpanHandler.spans.stream().map(MutableSpan::tags).flatMap(m -> m.keySet().stream())
+				.anyMatch(b -> b.equals(key))).isTrue();
 	}
 
 	private void thenAllSpansHaveTraceIdEqualTo(long traceId) {
 		String traceIdHex = Long.toHexString(traceId);
-		log.info("Stored spans: [\n" + this.testSpanHandler.spans.stream()
-				.map(MutableSpan::toString).collect(Collectors.joining("\n")) + "\n]");
-		then(this.testSpanHandler.spans.stream()
-				.filter(span -> !span.traceId().equals(SpanUtil.idToHex(traceId)))
-				.collect(Collectors.toList()))
-						.describedAs("All spans have same trace id [" + traceIdHex + "]")
+		log.info("Stored spans: [\n"
+				+ this.testSpanHandler.spans.stream().map(MutableSpan::toString).collect(Collectors.joining("\n"))
+				+ "\n]");
+		then(this.testSpanHandler.spans.stream().filter(span -> !span.traceId().equals(SpanUtil.idToHex(traceId)))
+				.collect(Collectors.toList())).describedAs("All spans have same trace id [" + traceIdHex + "]")
 						.isEmpty();
 	}
 
@@ -127,13 +120,11 @@ public class MessagingApplicationTests extends AbstractIntegrationTest {
 		Optional<MutableSpan> lastHttpSpansParent = findLastHttpSpansParent();
 		// "http:/parent/" -> "message:messages" -> "http:/foo" (CS + CR) -> "http:/foo"
 		// (SS)
-		thenAllSpansArePresent(firstHttpSpan, eventSpans, lastHttpSpansParent,
-				eventSentSpan, producerSpan);
+		thenAllSpansArePresent(firstHttpSpan, eventSpans, lastHttpSpansParent, eventSentSpan, producerSpan);
 		then(this.testSpanHandler.spans).as("There were 6 spans").hasSize(6);
 		log.info("Checking the parent child structure");
 		List<Optional<MutableSpan>> parentChild = this.testSpanHandler.spans.stream()
-				.filter(span -> span.parentId() != null)
-				.map(span -> this.testSpanHandler.spans.stream()
+				.filter(span -> span.parentId() != null).map(span -> this.testSpanHandler.spans.stream()
 						.filter(span1 -> span1.id().equals(span.parentId())).findAny())
 				.collect(Collectors.toList());
 		log.info("List of parents and children " + parentChild);
@@ -141,32 +132,27 @@ public class MessagingApplicationTests extends AbstractIntegrationTest {
 	}
 
 	private Optional<MutableSpan> findLastHttpSpansParent() {
-		return this.testSpanHandler.spans.stream()
-				.filter(span -> "GET /".equals(span.name()) && span.kind() != null)
+		return this.testSpanHandler.spans.stream().filter(span -> "GET /".equals(span.name()) && span.kind() != null)
 				.findFirst();
 	}
 
 	private Optional<MutableSpan> findSpanWithKind(Span.Kind kind) {
-		return this.testSpanHandler.spans.stream()
-				.filter(span -> kind.equals(span.kind())).findFirst();
+		return this.testSpanHandler.spans.stream().filter(span -> kind.equals(span.kind())).findFirst();
 	}
 
 	private List<MutableSpan> findAllEventRelatedSpans() {
-		return this.testSpanHandler.spans.stream()
-				.filter(span -> "send".equals(span.name()) && span.parentId() != null)
+		return this.testSpanHandler.spans.stream().filter(span -> "send".equals(span.name()) && span.parentId() != null)
 				.collect(Collectors.toList());
 	}
 
 	private Optional<MutableSpan> findFirstHttpRequestSpan() {
 		return this.testSpanHandler.spans.stream()
 				// home is the name of the method
-				.filter(span -> span.tags().values().stream().anyMatch("home"::equals))
-				.findFirst();
+				.filter(span -> span.tags().values().stream().anyMatch("home"::equals)).findFirst();
 	}
 
-	private void thenAllSpansArePresent(Optional<MutableSpan> firstHttpSpan,
-			List<MutableSpan> eventSpans, Optional<MutableSpan> lastHttpSpan,
-			Optional<MutableSpan> eventSentSpan,
+	private void thenAllSpansArePresent(Optional<MutableSpan> firstHttpSpan, List<MutableSpan> eventSpans,
+			Optional<MutableSpan> lastHttpSpan, Optional<MutableSpan> eventSentSpan,
 			Optional<MutableSpan> eventReceivedSpan) {
 		log.info("Found following spans");
 		log.info("First http span " + firstHttpSpan);
@@ -174,8 +160,8 @@ public class MessagingApplicationTests extends AbstractIntegrationTest {
 		log.info("Event sent span " + eventSentSpan);
 		log.info("Event received span " + eventReceivedSpan);
 		log.info("Last http span " + lastHttpSpan);
-		log.info("All found spans \n" + this.testSpanHandler.spans.stream()
-				.map(MutableSpan::toString).collect(Collectors.joining("\n")));
+		log.info("All found spans \n"
+				+ this.testSpanHandler.spans.stream().map(MutableSpan::toString).collect(Collectors.joining("\n")));
 		then(firstHttpSpan.isPresent()).isTrue();
 		then(eventSpans).isNotEmpty();
 		then(eventSentSpan.isPresent()).isTrue();

@@ -54,8 +54,7 @@ final class RestTemplateSender extends Sender {
 	 */
 	transient boolean closeCalled;
 
-	RestTemplateSender(RestTemplate restTemplate, String baseUrl,
-			BytesEncoder<Span> encoder) {
+	RestTemplateSender(RestTemplate restTemplate, String baseUrl, BytesEncoder<Span> encoder) {
 		this.restTemplate = restTemplate;
 		this.encoding = encoder.encoding();
 		if (encoder.equals(JSON_V2)) {
@@ -71,8 +70,7 @@ final class RestTemplateSender extends Sender {
 			this.url = baseUrl + (baseUrl.endsWith("/") ? "" : "/") + "api/v1/spans";
 		}
 		else {
-			throw new UnsupportedOperationException(
-					"Unsupported encoding: " + this.encoding.name());
+			throw new UnsupportedOperationException("Unsupported encoding: " + this.encoding.name());
 		}
 		this.messageEncoder = BytesMessageEncoder.forEncoding(this.encoding);
 	}
@@ -124,8 +122,8 @@ final class RestTemplateSender extends Sender {
 	void post(byte[] json) {
 		HttpHeaders httpHeaders = new HttpHeaders();
 		httpHeaders.setContentType(this.mediaType);
-		RequestEntity<byte[]> requestEntity = new RequestEntity<>(json, httpHeaders,
-				HttpMethod.POST, URI.create(this.url));
+		RequestEntity<byte[]> requestEntity = new RequestEntity<>(json, httpHeaders, HttpMethod.POST,
+				URI.create(this.url));
 		this.restTemplate.exchange(requestEntity, String.class);
 	}
 

@@ -32,19 +32,16 @@ public class AsyncCustomAutoConfigurationTest {
 	public void should_return_bean_when_its_not_a_async_configurer() throws Exception {
 		AsyncCustomAutoConfiguration configuration = new AsyncCustomAutoConfiguration();
 
-		Object bean = configuration.postProcessAfterInitialization(new Object(),
-				"someName");
+		Object bean = configuration.postProcessAfterInitialization(new Object(), "someName");
 
 		then(bean).isNotInstanceOf(LazyTraceAsyncCustomizer.class);
 	}
 
 	@Test
-	public void should_return_lazy_async_configurer_when_bean_is_async_configurer()
-			throws Exception {
+	public void should_return_lazy_async_configurer_when_bean_is_async_configurer() throws Exception {
 		AsyncCustomAutoConfiguration configuration = new AsyncCustomAutoConfiguration();
 
-		Object bean = configuration
-				.postProcessAfterInitialization(mock(AsyncConfigurer.class), "someName");
+		Object bean = configuration.postProcessAfterInitialization(mock(AsyncConfigurer.class), "someName");
 
 		then(bean).isInstanceOf(LazyTraceAsyncCustomizer.class);
 	}

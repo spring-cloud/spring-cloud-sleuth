@@ -50,8 +50,7 @@ class TraceSchedulingAutoConfiguration {
 	public TraceSchedulingAspect traceSchedulingAspect(Tracer tracer,
 			SleuthSchedulingProperties sleuthSchedulingProperties) {
 		String skipPatternString = sleuthSchedulingProperties.getSkipPattern();
-		Pattern skipPattern = skipPatternString != null
-				? Pattern.compile(skipPatternString) : null;
+		Pattern skipPattern = skipPatternString != null ? Pattern.compile(skipPatternString) : null;
 		return new TraceSchedulingAspect(tracer, skipPattern);
 	}
 

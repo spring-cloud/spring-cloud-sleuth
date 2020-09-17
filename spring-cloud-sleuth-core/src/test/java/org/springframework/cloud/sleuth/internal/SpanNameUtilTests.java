@@ -29,8 +29,7 @@ public class SpanNameUtilTests {
 
 	@Test
 	public void should_convert_a_class_name_in_hyphen_based_notation() throws Exception {
-		BDDAssertions.then(SpanNameUtil.toLowerHyphen("MySuperClassName"))
-				.isEqualTo("my-super-class-name");
+		BDDAssertions.then(SpanNameUtil.toLowerHyphen("MySuperClassName")).isEqualTo("my-super-class-name");
 	}
 
 	@Test
@@ -49,8 +48,7 @@ public class SpanNameUtilTests {
 		for (int i = 0; i < 60; i++) {
 			sb.append("a");
 		}
-		BDDAssertions.then(SpanNameUtil.shorten(sb.toString()).length())
-				.isEqualTo(SpanNameUtil.MAX_NAME_LENGTH);
+		BDDAssertions.then(SpanNameUtil.shorten(sb.toString()).length()).isEqualTo(SpanNameUtil.MAX_NAME_LENGTH);
 	}
 
 }

@@ -75,10 +75,8 @@ class TraceWebClientAutoConfiguration {
 	static class RestTemplateConfig {
 
 		@Bean
-		public TracingClientHttpRequestInterceptor tracingClientHttpRequestInterceptor(
-				HttpTracing httpTracing) {
-			return (TracingClientHttpRequestInterceptor) TracingClientHttpRequestInterceptor
-					.create(httpTracing);
+		public TracingClientHttpRequestInterceptor tracingClientHttpRequestInterceptor(HttpTracing httpTracing) {
+			return (TracingClientHttpRequestInterceptor) TracingClientHttpRequestInterceptor.create(httpTracing);
 		}
 
 		@Configuration(proxyBeanMethods = false)
@@ -96,8 +94,7 @@ class TraceWebClientAutoConfiguration {
 			@Bean
 			@Order
 			RestTemplateCustomizer traceRestTemplateCustomizer() {
-				return new TraceRestTemplateCustomizer(
-						new LazyTracingClientHttpRequestInterceptor(this.beanFactory));
+				return new TraceRestTemplateCustomizer(new LazyTracingClientHttpRequestInterceptor(this.beanFactory));
 			}
 
 		}
@@ -161,16 +158,14 @@ class TraceWebClientAutoConfiguration {
 	static class NettyConfiguration {
 
 		@Bean
-		static HttpClientBeanPostProcessor httpClientBeanPostProcessor(
-				ConfigurableApplicationContext springContext) {
+		static HttpClientBeanPostProcessor httpClientBeanPostProcessor(ConfigurableApplicationContext springContext) {
 			return new HttpClientBeanPostProcessor(springContext);
 		}
 
 	}
 
 	@Configuration(proxyBeanMethods = false)
-	@ConditionalOnClass({ UserInfoRestTemplateCustomizer.class,
-			OAuth2RestTemplate.class })
+	@ConditionalOnClass({ UserInfoRestTemplateCustomizer.class, OAuth2RestTemplate.class })
 	protected static class TraceOAuthConfiguration {
 
 		@Bean
@@ -181,13 +176,11 @@ class TraceWebClientAutoConfiguration {
 
 		@Bean
 		@ConditionalOnMissingBean
-		static UserInfoRestTemplateCustomizer traceUserInfoRestTemplateCustomizer(
-				BeanFactory beanFactory) {
+		static UserInfoRestTemplateCustomizer traceUserInfoRestTemplateCustomizer(BeanFactory beanFactory) {
 			return new TraceUserInfoRestTemplateCustomizer(beanFactory);
 		}
 
-		private static class UserInfoRestTemplateCustomizerBPP
-				implements BeanPostProcessor {
+		private static class UserInfoRestTemplateCustomizerBPP implements BeanPostProcessor {
 
 			private final BeanFactory beanFactory;
 
@@ -196,14 +189,12 @@ class TraceWebClientAutoConfiguration {
 			}
 
 			@Override
-			public Object postProcessBeforeInitialization(Object bean, String beanName)
-					throws BeansException {
+			public Object postProcessBeforeInitialization(Object bean, String beanName) throws BeansException {
 				return bean;
 			}
 
 			@Override
-			public Object postProcessAfterInitialization(final Object bean,
-					String beanName) throws BeansException {
+			public Object postProcessAfterInitialization(final Object bean, String beanName) throws BeansException {
 				final BeanFactory beanFactory = this.beanFactory;
 				if (bean instanceof UserInfoRestTemplateCustomizer
 						&& !(bean instanceof TraceUserInfoRestTemplateCustomizer)) {
@@ -272,14 +263,12 @@ class TraceRestTemplateBeanPostProcessor implements BeanPostProcessor {
 	}
 
 	@Override
-	public Object postProcessBeforeInitialization(Object bean, String beanName)
-			throws BeansException {
+	public Object postProcessBeforeInitialization(Object bean, String beanName) throws BeansException {
 		return bean;
 	}
 
 	@Override
-	public Object postProcessAfterInitialization(Object bean, String beanName)
-			throws BeansException {
+	public Object postProcessAfterInitialization(Object bean, String beanName) throws BeansException {
 		if (bean instanceof RestTemplate) {
 			RestTemplate rt = (RestTemplate) bean;
 			new RestTemplateInterceptorInjector(interceptor()).inject(rt);
@@ -304,15 +293,14 @@ class LazyTracingClientHttpRequestInterceptor implements ClientHttpRequestInterc
 	}
 
 	@Override
-	public ClientHttpResponse intercept(HttpRequest request, byte[] body,
-			ClientHttpRequestExecution execution) throws IOException {
+	public ClientHttpResponse intercept(HttpRequest request, byte[] body, ClientHttpRequestExecution execution)
+			throws IOException {
 		return interceptor().intercept(request, body, execution);
 	}
 
 	private TracingClientHttpRequestInterceptor interceptor() {
 		if (this.interceptor == null) {
-			this.interceptor = this.beanFactory
-					.getBean(TracingClientHttpRequestInterceptor.class);
+			this.interceptor = this.beanFactory.getBean(TracingClientHttpRequestInterceptor.class);
 		}
 		return this.interceptor;
 	}

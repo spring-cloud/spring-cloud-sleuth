@@ -120,8 +120,7 @@ class SleuthAdvisorConfig extends AbstractPointcutAdvisor implements BeanFactory
 	/**
 	 * Checks if a class or a method is is annotated with Sleuth related annotations.
 	 */
-	private final class AnnotationClassOrMethodOrArgsPointcut
-			extends DynamicMethodMatcherPointcut {
+	private final class AnnotationClassOrMethodOrArgsPointcut extends DynamicMethodMatcherPointcut {
 
 		@Override
 		public boolean matches(Method method, Class<?> targetClass, Object... args) {
@@ -136,8 +135,7 @@ class SleuthAdvisorConfig extends AbstractPointcutAdvisor implements BeanFactory
 				@Override
 				public boolean matches(Class<?> clazz) {
 					return new AnnotationClassOrMethodFilter(NewSpan.class).matches(clazz)
-							|| new AnnotationClassOrMethodFilter(ContinueSpan.class)
-									.matches(clazz);
+							|| new AnnotationClassOrMethodFilter(ContinueSpan.class).matches(clazz);
 				}
 			};
 		}
@@ -180,12 +178,9 @@ class SleuthInterceptor implements IntroductionInterceptor, BeanFactoryAware {
 		if (method == null) {
 			return invocation.proceed();
 		}
-		Method mostSpecificMethod = AopUtils.getMostSpecificMethod(method,
-				invocation.getThis().getClass());
-		NewSpan newSpan = SleuthAnnotationUtils.findAnnotation(mostSpecificMethod,
-				NewSpan.class);
-		ContinueSpan continueSpan = SleuthAnnotationUtils
-				.findAnnotation(mostSpecificMethod, ContinueSpan.class);
+		Method mostSpecificMethod = AopUtils.getMostSpecificMethod(method, invocation.getThis().getClass());
+		NewSpan newSpan = SleuthAnnotationUtils.findAnnotation(mostSpecificMethod, NewSpan.class);
+		ContinueSpan continueSpan = SleuthAnnotationUtils.findAnnotation(mostSpecificMethod, ContinueSpan.class);
 		if (newSpan == null && continueSpan == null) {
 			return invocation.proceed();
 		}
@@ -194,8 +189,7 @@ class SleuthInterceptor implements IntroductionInterceptor, BeanFactoryAware {
 
 	private SleuthMethodInvocationProcessor methodInvocationProcessor() {
 		if (this.methodInvocationProcessor == null) {
-			this.methodInvocationProcessor = this.beanFactory
-					.getBean(SleuthMethodInvocationProcessor.class);
+			this.methodInvocationProcessor = this.beanFactory.getBean(SleuthMethodInvocationProcessor.class);
 		}
 		return this.methodInvocationProcessor;
 	}

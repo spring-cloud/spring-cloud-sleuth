@@ -47,8 +47,7 @@ import org.springframework.lang.Nullable;
  * @author Marcin Grzejszczak
  * @since 2.1.1
  */
-public final class TracingJmsListenerEndpointRegistry
-		extends JmsListenerEndpointRegistry {
+public final class TracingJmsListenerEndpointRegistry extends JmsListenerEndpointRegistry {
 
 	private final BeanFactory beanFactory;
 
@@ -63,8 +62,7 @@ public final class TracingJmsListenerEndpointRegistry
 
 	final Field embeddedValueResolverField;
 
-	public TracingJmsListenerEndpointRegistry(JmsListenerEndpointRegistry registry,
-			BeanFactory beanFactory) {
+	public TracingJmsListenerEndpointRegistry(JmsListenerEndpointRegistry registry, BeanFactory beanFactory) {
 		this.delegate = registry;
 		this.beanFactory = beanFactory;
 		this.messageHandlerMethodFactoryField = tryField("messageHandlerMethodFactory");
@@ -80,8 +78,7 @@ public final class TracingJmsListenerEndpointRegistry
 
 	private CurrentTraceContext currentTraceContext() {
 		if (this.currentTraceContext == null) {
-			this.currentTraceContext = this.beanFactory
-					.getBean(CurrentTraceContext.class);
+			this.currentTraceContext = this.beanFactory.getBean(CurrentTraceContext.class);
 		}
 		return this.currentTraceContext;
 	}
@@ -112,14 +109,13 @@ public final class TracingJmsListenerEndpointRegistry
 	}
 
 	@Override
-	public void registerListenerContainer(JmsListenerEndpoint endpoint,
-			JmsListenerContainerFactory<?> factory) {
+	public void registerListenerContainer(JmsListenerEndpoint endpoint, JmsListenerContainerFactory<?> factory) {
 		this.delegate.registerListenerContainer(wrapEndpoint(endpoint), factory);
 	}
 
 	@Override
-	protected MessageListenerContainer createListenerContainer(
-			JmsListenerEndpoint endpoint, JmsListenerContainerFactory<?> factory) {
+	protected MessageListenerContainer createListenerContainer(JmsListenerEndpoint endpoint,
+			JmsListenerContainerFactory<?> factory) {
 		return this.delegate.createListenerContainer(wrapEndpoint(endpoint), factory);
 	}
 
@@ -176,10 +172,9 @@ public final class TracingJmsListenerEndpointRegistry
 	}
 
 	@Override
-	public void registerListenerContainer(JmsListenerEndpoint endpoint,
-			JmsListenerContainerFactory<?> factory, boolean startImmediately) {
-		this.delegate.registerListenerContainer(wrapEndpoint(endpoint), factory,
-				startImmediately);
+	public void registerListenerContainer(JmsListenerEndpoint endpoint, JmsListenerContainerFactory<?> factory,
+			boolean startImmediately) {
+		this.delegate.registerListenerContainer(wrapEndpoint(endpoint), factory, startImmediately);
 	}
 
 	private JmsListenerEndpoint wrapEndpoint(JmsListenerEndpoint endpoint) {
@@ -223,8 +218,7 @@ public final class TracingJmsListenerEndpointRegistry
 	 */
 	MethodJmsListenerEndpoint trace(MethodJmsListenerEndpoint source) {
 		// Skip out rather than incompletely copying the source
-		if (this.messageHandlerMethodFactoryField == null
-				|| this.embeddedValueResolverField == null) {
+		if (this.messageHandlerMethodFactoryField == null || this.embeddedValueResolverField == null) {
 			return source;
 		}
 		// We want the stock implementation, except we want to wrap the message listener
@@ -232,8 +226,7 @@ public final class TracingJmsListenerEndpointRegistry
 		MethodJmsListenerEndpoint dest = new MethodJmsListenerEndpoint() {
 			@Override
 			protected MessagingMessageListenerAdapter createMessageListenerInstance() {
-				return new TracingMessagingMessageListenerAdapter(jmsTracing(),
-						currentTraceContext());
+				return new TracingMessagingMessageListenerAdapter(jmsTracing(), currentTraceContext());
 			}
 		};
 		// set state from AbstractJmsListenerEndpoint
@@ -247,8 +240,7 @@ public final class TracingJmsListenerEndpointRegistry
 		dest.setMethod(source.getMethod());
 		dest.setMostSpecificMethod(source.getMostSpecificMethod());
 		try {
-			dest.setMessageHandlerMethodFactory(
-					get(source, this.messageHandlerMethodFactoryField));
+			dest.setMessageHandlerMethodFactory(get(source, this.messageHandlerMethodFactoryField));
 			dest.setEmbeddedValueResolver(get(source, this.embeddedValueResolverField));
 		}
 		catch (IllegalAccessException e) {
@@ -266,15 +258,13 @@ final class TracingMethodJmsListenerEndpoint extends MethodJmsListenerEndpoint {
 /**
  * This wraps the message listener in a child span.
  */
-final class TracingMessagingMessageListenerAdapter
-		extends MessagingMessageListenerAdapter {
+final class TracingMessagingMessageListenerAdapter extends MessagingMessageListenerAdapter {
 
 	final JmsTracing jmsTracing;
 
 	final CurrentTraceContext current;
 
-	TracingMessagingMessageListenerAdapter(JmsTracing jmsTracing,
-			CurrentTraceContext current) {
+	TracingMessagingMessageListenerAdapter(JmsTracing jmsTracing, CurrentTraceContext current) {
 		this.jmsTracing = jmsTracing;
 		this.current = current;
 	}

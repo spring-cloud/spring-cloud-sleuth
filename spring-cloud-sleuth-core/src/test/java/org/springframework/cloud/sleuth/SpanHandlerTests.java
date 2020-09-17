@@ -39,8 +39,7 @@ import static org.springframework.boot.test.context.SpringBootTest.WebEnvironmen
 /**
  * @author Marcin Grzejszczak
  */
-@SpringBootTest(classes = SpanHandlerTests.SpanHandlerAspectTestsConfig.class,
-		webEnvironment = NONE)
+@SpringBootTest(classes = SpanHandlerTests.SpanHandlerAspectTestsConfig.class, webEnvironment = NONE)
 public class SpanHandlerTests {
 
 	@Autowired
@@ -83,8 +82,7 @@ public class SpanHandlerTests {
 		SpanHandler handlerOne() {
 			return new SpanHandler() {
 				@Override
-				public boolean end(TraceContext traceContext, MutableSpan span,
-						Cause cause) {
+				public boolean end(TraceContext traceContext, MutableSpan span, Cause cause) {
 					span.name("foo");
 					return true; // keep this span
 				}
@@ -95,8 +93,7 @@ public class SpanHandlerTests {
 		SpanHandler handlerTwo() {
 			return new SpanHandler() {
 				@Override
-				public boolean end(TraceContext traceContext, MutableSpan span,
-						Cause cause) {
+				public boolean end(TraceContext traceContext, MutableSpan span, Cause cause) {
 					span.name(span.name() + " bar");
 					return true; // keep this span
 				}

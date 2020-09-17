@@ -56,12 +56,9 @@ import static org.assertj.core.api.BDDAssertions.then;
 import static org.awaitility.Awaitility.await;
 import static org.springframework.boot.test.context.SpringBootTest.WebEnvironment.RANDOM_PORT;
 
-@SpringBootTest(classes = MultipleHopsIntegrationTests.Config.class,
-		webEnvironment = RANDOM_PORT,
-		properties = {
-				"spring.sleuth.baggage.remote-fields=x-vcap-request-id,country-code",
-				"spring.sleuth.baggage.local-fields=bp",
-				"spring.sleuth.integration.enabled=true" })
+@SpringBootTest(classes = MultipleHopsIntegrationTests.Config.class, webEnvironment = RANDOM_PORT,
+		properties = { "spring.sleuth.baggage.remote-fields=x-vcap-request-id,country-code",
+				"spring.sleuth.baggage.local-fields=bp", "spring.sleuth.integration.enabled=true" })
 public class MultipleHopsIntegrationTests {
 
 	static final BaggageField REQUEST_ID = BaggageField.create("x-vcap-request-id");
@@ -90,21 +87,17 @@ public class MultipleHopsIntegrationTests {
 
 	@Test
 	public void should_prepare_spans_for_export() {
-		this.restTemplate.getForObject(
-				"http://localhost:" + this.config.port + "/greeting", String.class);
+		this.restTemplate.getForObject("http://localhost:" + this.config.port + "/greeting", String.class);
 
 		await().atMost(5, SECONDS).untilAsserted(() -> {
 			then(this.spans).hasSize(14);
 		});
-		then(this.spans).extracting(MutableSpan::name)
-				.containsAll(asList("GET /greeting", "send"));
+		then(this.spans).extracting(MutableSpan::name).containsAll(asList("GET /greeting", "send"));
 		then(this.spans).extracting(MutableSpan::kind)
 				// no server kind due to test constraints
-				.containsAll(
-						asList(Span.Kind.CONSUMER, Span.Kind.PRODUCER, Span.Kind.SERVER));
-		then(this.spans.spans().stream().map(span -> span.tags().get("channel"))
-				.filter(Objects::nonNull).distinct().collect(toList())).hasSize(3)
-						.containsAll(asList("words", "counts", "greetings"));
+				.containsAll(asList(Span.Kind.CONSUMER, Span.Kind.PRODUCER, Span.Kind.SERVER));
+		then(this.spans.spans().stream().map(span -> span.tags().get("channel")).filter(Objects::nonNull).distinct()
+				.collect(toList())).hasSize(3).containsAll(asList("words", "counts", "greetings"));
 	}
 
 	@Test
@@ -122,8 +115,7 @@ public class MultipleHopsIntegrationTests {
 
 			// set request ID in a header not with the api explicitly
 			HttpHeaders headers = new HttpHeaders();
-			headers.put(REQUEST_ID.name(),
-					Collections.singletonList("f4308d05-2228-4468-80f6-92a8377ba193"));
+			headers.put(REQUEST_ID.name(), Collections.singletonList("f4308d05-2228-4468-80f6-92a8377ba193"));
 			RequestEntity requestEntity = new RequestEntity(headers, HttpMethod.GET,
 					URI.create("http://localhost:" + this.config.port + "/greeting"));
 			this.restTemplate.exchange(requestEntity, String.class);
@@ -137,18 +129,15 @@ public class MultipleHopsIntegrationTests {
 		});
 
 		List<MutableSpan> withBagTags = this.spans.spans().stream()
-				.filter(s -> s.tags().containsKey(BUSINESS_PROCESS.name()))
-				.collect(toList());
+				.filter(s -> s.tags().containsKey(BUSINESS_PROCESS.name())).collect(toList());
 
 		// set with tag api
 		then(withBagTags).as("only initialSpan was bag tagged").hasSize(1);
-		assertThat(withBagTags.get(0).tags()).containsEntry(BUSINESS_PROCESS.name(),
-				"ALM");
+		assertThat(withBagTags.get(0).tags()).containsEntry(BUSINESS_PROCESS.name(), "ALM");
 
 		// set with baggage api
 		then(this.application.allSpans()).as("All have request ID")
-				.allMatch(span -> "f4308d05-2228-4468-80f6-92a8377ba193"
-						.equals(REQUEST_ID.getValue(span.context())));
+				.allMatch(span -> "f4308d05-2228-4468-80f6-92a8377ba193".equals(REQUEST_ID.getValue(span.context())));
 
 		// baz is not tagged in the initial span, only downstream!
 		then(this.application.allSpans()).as("All downstream have country-code")
@@ -158,8 +147,7 @@ public class MultipleHopsIntegrationTests {
 
 	@Configuration
 	@SpringBootApplication(exclude = JmxAutoConfiguration.class)
-	public static class Config
-			implements ApplicationListener<ServletWebServerInitializedEvent> {
+	public static class Config implements ApplicationListener<ServletWebServerInitializedEvent> {
 
 		int port;
 

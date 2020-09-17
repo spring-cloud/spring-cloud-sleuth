@@ -64,17 +64,14 @@ public final class MessagingSleuthOperators {
 	 */
 	public static <T> Message<T> forInputMessage(Tracing tracing, Message<T> message,
 			Consumer<Message<T>> withSpanInScope) {
-		TraceMessageHandler traceMessageHandler = TraceMessageHandler
-				.forNonSpringIntegration(tracing);
-		MessageAndSpans wrappedInputMessage = traceMessageHandler
-				.wrapInputMessage(message, "");
+		TraceMessageHandler traceMessageHandler = TraceMessageHandler.forNonSpringIntegration(tracing);
+		MessageAndSpans wrappedInputMessage = traceMessageHandler.wrapInputMessage(message, "");
 		if (log.isDebugEnabled()) {
 			log.debug("Wrapped input msg " + wrappedInputMessage);
 		}
 		Tracer tracer = tracing.tracer();
 		Throwable t = null;
-		try (Tracer.SpanInScope ws = tracer
-				.withSpanInScope(wrappedInputMessage.childSpan.start())) {
+		try (Tracer.SpanInScope ws = tracer.withSpanInScope(wrappedInputMessage.childSpan.start())) {
 			withSpanInScope.accept(wrappedInputMessage.msg);
 		}
 		catch (Exception e) {
@@ -95,10 +92,8 @@ public final class MessagingSleuthOperators {
 	 * @return message with tracing context
 	 */
 	public static <T> Message<T> forInputMessage(Tracing tracing, Message<T> message) {
-		TraceMessageHandler traceMessageHandler = TraceMessageHandler
-				.forNonSpringIntegration(tracing);
-		MessageAndSpans wrappedInputMessage = traceMessageHandler
-				.wrapInputMessage(message, "");
+		TraceMessageHandler traceMessageHandler = TraceMessageHandler.forNonSpringIntegration(tracing);
+		MessageAndSpans wrappedInputMessage = traceMessageHandler.wrapInputMessage(message, "");
 		if (log.isDebugEnabled()) {
 			log.debug("Wrapped input msg " + wrappedInputMessage);
 		}
@@ -112,10 +107,8 @@ public final class MessagingSleuthOperators {
 	 * @param <T> input message type
 	 * @return function representation of input message with tracing context
 	 */
-	public static <T> Function<Message<T>, Message<T>> asFunction(Tracing tracing,
-			Message<T> inputMessage) {
-		return stringMessage -> MessagingSleuthOperators.forInputMessage(tracing,
-				inputMessage);
+	public static <T> Function<Message<T>, Message<T>> asFunction(Tracing tracing, Message<T> inputMessage) {
+		return stringMessage -> MessagingSleuthOperators.forInputMessage(tracing, inputMessage);
 	}
 
 	/**
@@ -126,8 +119,7 @@ public final class MessagingSleuthOperators {
 	 * @return span retrieved from message or {@code null} if there was no span
 	 */
 	public static <T> Span spanFromMessage(Tracing tracing, Message<T> message) {
-		TraceMessageHandler traceMessageHandler = TraceMessageHandler
-				.forNonSpringIntegration(tracing);
+		TraceMessageHandler traceMessageHandler = TraceMessageHandler.forNonSpringIntegration(tracing);
 		Span span = traceMessageHandler.spanFromMessage(message);
 		if (log.isDebugEnabled()) {
 			log.debug("Found the following span in message " + span);
@@ -143,8 +135,7 @@ public final class MessagingSleuthOperators {
 	 * be reported
 	 * @param <T> - payload type
 	 */
-	public static <T> void withSpanInScope(Tracing tracing, Message<T> message,
-			Consumer<Message<T>> withSpanInScope) {
+	public static <T> void withSpanInScope(Tracing tracing, Message<T> message, Consumer<Message<T>> withSpanInScope) {
 		Span span = spanFromMessage(tracing, message);
 		Tracer tracer = tracing.tracer();
 		try (Tracer.SpanInScope ws = tracer.withSpanInScope(span)) {
@@ -179,8 +170,7 @@ public final class MessagingSleuthOperators {
 	 * @param <T> - message payload
 	 * @return instrumented message
 	 */
-	public static <T> Message<T> handleOutputMessage(Tracing tracing,
-			Message<T> message) {
+	public static <T> Message<T> handleOutputMessage(Tracing tracing, Message<T> message) {
 		return handleOutputMessage(tracing, message, null);
 	}
 
@@ -194,10 +184,8 @@ public final class MessagingSleuthOperators {
 	 * @param <T> - message payload
 	 * @return instrumented message
 	 */
-	public static <T> Message<T> handleOutputMessage(Tracing tracing, Message<T> message,
-			Throwable throwable) {
-		TraceMessageHandler traceMessageHandler = TraceMessageHandler
-				.forNonSpringIntegration(tracing);
+	public static <T> Message<T> handleOutputMessage(Tracing tracing, Message<T> message, Throwable throwable) {
+		TraceMessageHandler traceMessageHandler = TraceMessageHandler.forNonSpringIntegration(tracing);
 		Span span = traceMessageHandler.parentSpan(message);
 		span = span != null ? span : traceMessageHandler.consumerSpan(message);
 		if (span == null) {
@@ -220,10 +208,8 @@ public final class MessagingSleuthOperators {
 	 * @param <T> - message payload
 	 * @return instrumented message
 	 */
-	public static <T> Message<T> afterMessageHandled(Tracing tracing, Message<T> message,
-			Throwable ex) {
-		TraceMessageHandler traceMessageHandler = TraceMessageHandler
-				.forNonSpringIntegration(tracing);
+	public static <T> Message<T> afterMessageHandled(Tracing tracing, Message<T> message, Throwable ex) {
+		TraceMessageHandler traceMessageHandler = TraceMessageHandler.forNonSpringIntegration(tracing);
 		Span span = traceMessageHandler.spanFromMessage(message);
 		traceMessageHandler.afterMessageHandled(span, ex);
 		return message;

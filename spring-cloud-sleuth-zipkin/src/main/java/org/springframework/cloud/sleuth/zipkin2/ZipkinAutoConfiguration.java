@@ -78,11 +78,9 @@ import org.springframework.web.client.RestTemplate;
  */
 @Configuration(proxyBeanMethods = false)
 @EnableConfigurationProperties(ZipkinProperties.class)
-@ConditionalOnProperty(value = { "spring.sleuth.enabled", "spring.zipkin.enabled" },
-		matchIfMissing = true)
+@ConditionalOnProperty(value = { "spring.sleuth.enabled", "spring.zipkin.enabled" }, matchIfMissing = true)
 @AutoConfigureBefore(TraceAutoConfiguration.class)
-@AutoConfigureAfter(
-		name = "org.springframework.cloud.autoconfigure.RefreshAutoConfiguration")
+@AutoConfigureAfter(name = "org.springframework.cloud.autoconfigure.RefreshAutoConfiguration")
 @Import(ZipkinSenderConfigurationImportSelector.class)
 // public because the constant REPORTER_BEAN_NAME was documented
 public class ZipkinAutoConfiguration {
@@ -119,28 +117,25 @@ public class ZipkinAutoConfiguration {
 
 	@Bean(REPORTER_BEAN_NAME)
 	@ConditionalOnMissingBean(name = REPORTER_BEAN_NAME)
-	public Reporter<Span> reporter(ReporterMetrics reporterMetrics,
-			ZipkinProperties zipkin, @Qualifier(SENDER_BEAN_NAME) Sender sender) {
+	public Reporter<Span> reporter(ReporterMetrics reporterMetrics, ZipkinProperties zipkin,
+			@Qualifier(SENDER_BEAN_NAME) Sender sender) {
 		CheckResult checkResult = checkResult(sender, 1_000L);
 		logCheckResult(sender, checkResult);
 
 		// historical constraint. Note: AsyncReporter supports memory bounds
-		AsyncReporter<Span> asyncReporter = AsyncReporter.builder(sender)
-				.queuedMaxSpans(1000)
-				.messageTimeout(zipkin.getMessageTimeout(), TimeUnit.SECONDS)
-				.metrics(reporterMetrics).build(zipkin.getEncoder());
+		AsyncReporter<Span> asyncReporter = AsyncReporter.builder(sender).queuedMaxSpans(1000)
+				.messageTimeout(zipkin.getMessageTimeout(), TimeUnit.SECONDS).metrics(reporterMetrics)
+				.build(zipkin.getEncoder());
 
 		return asyncReporter;
 	}
 
 	private void logCheckResult(Sender sender, CheckResult checkResult) {
 		if (log.isDebugEnabled() && checkResult != null && checkResult.ok()) {
-			log.debug("Check result of the [" + sender.toString() + "] is [" + checkResult
-					+ "]");
+			log.debug("Check result of the [" + sender.toString() + "] is [" + checkResult + "]");
 		}
 		else if (checkResult != null && !checkResult.ok()) {
-			log.warn("Check result of the [" + sender.toString() + "] contains an error ["
-					+ checkResult + "]");
+			log.warn("Check result of the [" + sender.toString() + "] contains an error [" + checkResult + "]");
 		}
 	}
 
@@ -165,8 +160,8 @@ public class ZipkinAutoConfiguration {
 				return outcome[0];
 			}
 			thread.interrupt();
-			return CheckResult.failed(new TimeoutException(
-					thread.getName() + " timed out after " + deadlineMillis + "ms"));
+			return CheckResult
+					.failed(new TimeoutException(thread.getName() + " timed out after " + deadlineMillis + "ms"));
 		}
 		catch (InterruptedException e) {
 			Thread.currentThread().interrupt();
@@ -176,8 +171,7 @@ public class ZipkinAutoConfiguration {
 
 	/** Returns one handler for as many reporters as exist. */
 	@Bean
-	SpanHandler zipkinSpanHandler(@Nullable List<Reporter<Span>> spanReporters,
-			@Nullable Tag<Throwable> errorTag) {
+	SpanHandler zipkinSpanHandler(@Nullable List<Reporter<Span>> spanReporters, @Nullable Tag<Throwable> errorTag) {
 		if (spanReporters == null) {
 			return SpanHandler.NOOP;
 		}
@@ -202,8 +196,7 @@ public class ZipkinAutoConfiguration {
 	@Bean
 	TracingCustomizer reorderZipkinHandlersLast() {
 		return builder -> {
-			List<SpanHandler> configuredSpanHandlers = new ArrayList<>(
-					builder.spanHandlers());
+			List<SpanHandler> configuredSpanHandlers = new ArrayList<>(builder.spanHandlers());
 			configuredSpanHandlers.sort(SPAN_HANDLER_COMPARATOR);
 			builder.clearSpanHandlers();
 			for (SpanHandler spanHandler : configuredSpanHandlers) {
@@ -214,15 +207,14 @@ public class ZipkinAutoConfiguration {
 
 	@Bean
 	@ConditionalOnMissingBean
-	public ZipkinRestTemplateCustomizer zipkinRestTemplateCustomizer(
-			ZipkinProperties zipkinProperties) {
+	public ZipkinRestTemplateCustomizer zipkinRestTemplateCustomizer(ZipkinProperties zipkinProperties) {
 		return new DefaultZipkinRestTemplateCustomizer(zipkinProperties);
 	}
 
 	@Configuration(proxyBeanMethods = false)
 	@ConditionalOnMissingBean(EndpointLocator.class)
-	@ConditionalOnProperty(value = "spring.zipkin.locator.discovery.enabled",
-			havingValue = "false", matchIfMissing = true)
+	@ConditionalOnProperty(value = "spring.zipkin.locator.discovery.enabled", havingValue = "false",
+			matchIfMissing = true)
 	protected static class DefaultEndpointLocatorConfiguration {
 
 		@Autowired(required = false)
@@ -239,8 +231,8 @@ public class ZipkinAutoConfiguration {
 
 		@Bean
 		public EndpointLocator zipkinEndpointLocator() {
-			return new DefaultEndpointLocator(null, this.serverProperties,
-					this.environment, this.zipkinProperties, this.inetUtils);
+			return new DefaultEndpointLocator(null, this.serverProperties, this.environment, this.zipkinProperties,
+					this.inetUtils);
 		}
 
 	}
@@ -248,8 +240,7 @@ public class ZipkinAutoConfiguration {
 	@Configuration(proxyBeanMethods = false)
 	@ConditionalOnClass(Registration.class)
 	@ConditionalOnMissingBean(EndpointLocator.class)
-	@ConditionalOnProperty(value = "spring.zipkin.locator.discovery.enabled",
-			havingValue = "true")
+	@ConditionalOnProperty(value = "spring.zipkin.locator.discovery.enabled", havingValue = "true")
 	protected static class RegistrationEndpointLocatorConfiguration {
 
 		@Autowired(required = false)
@@ -269,8 +260,8 @@ public class ZipkinAutoConfiguration {
 
 		@Bean
 		public EndpointLocator zipkinEndpointLocator() {
-			return new DefaultEndpointLocator(this.registration, this.serverProperties,
-					this.environment, this.zipkinProperties, this.inetUtils);
+			return new DefaultEndpointLocator(this.registration, this.serverProperties, this.environment,
+					this.zipkinProperties, this.inetUtils);
 		}
 
 	}
@@ -329,8 +320,7 @@ public class ZipkinAutoConfiguration {
 				catch (RuntimeException ex) {
 					// TODO: message lifted from ListReporter: this is probably too much
 					// for warn level
-					log.warn("Exception occurred while trying to report the span " + span,
-							ex);
+					log.warn("Exception occurred while trying to report the span " + span, ex);
 				}
 			}
 		}

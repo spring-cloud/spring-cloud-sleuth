@@ -47,8 +47,7 @@ public class TraceNoWebEnvironmentTests {
 			client.createSomeTestRequest();
 		}
 		catch (Exception e) {
-			then(e.getCause().getClass())
-					.isNotEqualTo(NoSuchBeanDefinitionException.class);
+			then(e.getCause().getClass()).isNotEqualTo(NoSuchBeanDefinitionException.class);
 		}
 	}
 

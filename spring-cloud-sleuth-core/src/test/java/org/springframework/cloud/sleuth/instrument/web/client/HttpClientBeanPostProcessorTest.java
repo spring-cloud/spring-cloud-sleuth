@@ -45,8 +45,7 @@ public class HttpClientBeanPostProcessorTest {
 	@Mock
 	Bootstrap bootstrap;
 
-	TraceContext traceContext = TraceContext.newBuilder().traceId(1).spanId(2)
-			.sampled(true).build();
+	TraceContext traceContext = TraceContext.newBuilder().traceId(1).spanId(2).sampled(true).build();
 
 	@BeforeEach
 	public void setup() {
@@ -63,10 +62,8 @@ public class HttpClientBeanPostProcessorTest {
 				.handle(new BiConsumer<Connection, SynchronousSink<Connection>>() {
 					@Override
 					public void accept(Connection t, SynchronousSink<Connection> ctx) {
-						assertThat(ctx.currentContext().get(TraceContext.class))
-								.isSameAs(traceContext);
-						assertThat(ctx.currentContext().get(PendingSpan.class))
-								.isNotNull();
+						assertThat(ctx.currentContext().get(TraceContext.class)).isSameAs(traceContext);
+						assertThat(ctx.currentContext().get(PendingSpan.class)).isNotNull();
 					}
 				});
 
@@ -82,10 +79,8 @@ public class HttpClientBeanPostProcessorTest {
 				.handle(new BiConsumer<Connection, SynchronousSink<Connection>>() {
 					@Override
 					public void accept(Connection t, SynchronousSink<Connection> ctx) {
-						assertThat(ctx.currentContext().getOrEmpty(TraceContext.class))
-								.isEmpty();
-						assertThat(ctx.currentContext().get(PendingSpan.class))
-								.isNotNull();
+						assertThat(ctx.currentContext().getOrEmpty(TraceContext.class)).isEmpty();
+						assertThat(ctx.currentContext().get(PendingSpan.class)).isNotNull();
 					}
 				});
 

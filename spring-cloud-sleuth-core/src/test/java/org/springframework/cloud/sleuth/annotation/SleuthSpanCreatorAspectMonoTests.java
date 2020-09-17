@@ -203,8 +203,7 @@ public class SleuthSpanCreatorAspectMonoTests {
 		Awaitility.await().untilAsserted(() -> {
 			then(this.spans).hasSize(1);
 			then(this.spans.get(0).name()).isEqualTo("custom-name-on-test-method9");
-			then(this.spans.get(0).tags()).containsEntry("class", "TestBean")
-					.containsEntry("method", "testMethod9");
+			then(this.spans.get(0).tags()).containsEntry("class", "TestBean").containsEntry("method", "testMethod9");
 			then(this.spans.get(0).finishTimestamp()).isNotZero();
 			then(this.tracer.currentSpan()).isNull();
 		});
@@ -229,9 +228,8 @@ public class SleuthSpanCreatorAspectMonoTests {
 			then(this.spans).hasSize(1);
 			then(this.spans.get(0).name()).isEqualTo("foo");
 			then(this.spans.get(0).tags()).containsEntry("customTestTag10", "test");
-			then(this.spans.get(0).annotations().stream().map(Map.Entry::getValue)
-					.collect(Collectors.toList())).contains("customTest.before",
-							"customTest.after");
+			then(this.spans.get(0).annotations().stream().map(Map.Entry::getValue).collect(Collectors.toList()))
+					.contains("customTest.before", "customTest.after");
 			then(this.spans.get(0).finishTimestamp()).isNotZero();
 			then(this.tracer.currentSpan()).isNull();
 		});
@@ -245,9 +243,8 @@ public class SleuthSpanCreatorAspectMonoTests {
 			then(this.spans).hasSize(1);
 			then(this.spans.get(0).name()).isEqualTo("test-method10");
 			then(this.spans.get(0).tags()).containsEntry("customTestTag10", "test");
-			then(this.spans.get(0).annotations().stream().map(Map.Entry::getValue)
-					.collect(Collectors.toList())).contains("customTest.before",
-							"customTest.after");
+			then(this.spans.get(0).annotations().stream().map(Map.Entry::getValue).collect(Collectors.toList()))
+					.contains("customTest.before", "customTest.after");
 			then(this.spans.get(0).finishTimestamp()).isNotZero();
 			then(this.tracer.currentSpan()).isNull();
 		});
@@ -272,9 +269,8 @@ public class SleuthSpanCreatorAspectMonoTests {
 			then(this.spans).hasSize(1);
 			then(this.spans.get(0).name()).isEqualTo("foo");
 			then(this.spans.get(0).tags()).containsEntry("customTestTag10", "test");
-			then(this.spans.get(0).annotations().stream().map(Map.Entry::getValue)
-					.collect(Collectors.toList())).contains("customTest.before",
-							"customTest.after");
+			then(this.spans.get(0).annotations().stream().map(Map.Entry::getValue).collect(Collectors.toList()))
+					.contains("customTest.before", "customTest.after");
 			then(this.spans.get(0).finishTimestamp()).isNotZero();
 			then(this.tracer.currentSpan()).isNull();
 		});
@@ -299,12 +295,10 @@ public class SleuthSpanCreatorAspectMonoTests {
 		Awaitility.await().untilAsserted(() -> {
 			then(this.spans).hasSize(1);
 			then(this.spans.get(0).name()).isEqualTo("foo");
-			then(this.spans.get(0).tags()).containsEntry("class", "TestBean")
-					.containsEntry("method", "testMethod11")
+			then(this.spans.get(0).tags()).containsEntry("class", "TestBean").containsEntry("method", "testMethod11")
 					.containsEntry("customTestTag11", "test");
-			then(this.spans.get(0).annotations().stream().map(Map.Entry::getValue)
-					.collect(Collectors.toList())).contains("customTest.before",
-							"customTest.after");
+			then(this.spans.get(0).annotations().stream().map(Map.Entry::getValue).collect(Collectors.toList()))
+					.contains("customTest.before", "customTest.after");
 			then(this.spans.get(0).finishTimestamp()).isNotZero();
 			then(this.tracer.currentSpan()).isNull();
 		});
@@ -355,9 +349,8 @@ public class SleuthSpanCreatorAspectMonoTests {
 			then(this.spans).hasSize(1);
 			then(this.spans.get(0).name()).isEqualTo("foo");
 			then(this.spans.get(0).error()).hasMessageContaining("test exception 13");
-			then(this.spans.get(0).annotations().stream().map(Map.Entry::getValue)
-					.collect(Collectors.toList())).contains("testMethod13.before",
-							"testMethod13.afterFailure", "testMethod13.after");
+			then(this.spans.get(0).annotations().stream().map(Map.Entry::getValue).collect(Collectors.toList()))
+					.contains("testMethod13.before", "testMethod13.afterFailure", "testMethod13.after");
 			then(this.spans.get(0).finishTimestamp()).isNotZero();
 			then(this.tracer.currentSpan()).isNull();
 		});
@@ -392,8 +385,7 @@ public class SleuthSpanCreatorAspectMonoTests {
 
 	@Test
 	public void shouldReturnNewSpanFromTraceContextOuter() {
-		Mono<Pair<Pair<String, String>, String>> mono = this.testBeanOuter
-				.outerNewSpanInTraceContext();
+		Mono<Pair<Pair<String, String>, String>> mono = this.testBeanOuter.outerNewSpanInTraceContext();
 
 		then(this.spans).isEmpty();
 
@@ -405,15 +397,13 @@ public class SleuthSpanCreatorAspectMonoTests {
 
 		Awaitility.await().untilAsserted(() -> {
 			MutableSpan outerSpan = spans.spans().stream()
-					.filter(span -> span.name().equals("outer-span-in-trace-context"))
-					.findFirst().orElseThrow(() -> new AssertionError(
-							"No span with name [outer-span-in-trace-context] found"));
+					.filter(span -> span.name().equals("outer-span-in-trace-context")).findFirst()
+					.orElseThrow(() -> new AssertionError("No span with name [outer-span-in-trace-context] found"));
 			then(outerSpan.name()).isEqualTo("outer-span-in-trace-context");
 			then(outerSpan.id()).isEqualTo(outerSpanIdBefore);
-			MutableSpan innerSpan = spans.spans().stream()
-					.filter(span -> span.name().equals("span-in-trace-context"))
-					.findFirst().orElseThrow(() -> new AssertionError(
-							"No span with name [span-in-trace-context] found"));
+			MutableSpan innerSpan = spans.spans().stream().filter(span -> span.name().equals("span-in-trace-context"))
+					.findFirst()
+					.orElseThrow(() -> new AssertionError("No span with name [span-in-trace-context] found"));
 			then(innerSpan.name()).isEqualTo("span-in-trace-context");
 			then(innerSpan.id()).isEqualTo(innerSpanId);
 			then(this.tracer.currentSpan()).isNull();
@@ -438,8 +428,7 @@ public class SleuthSpanCreatorAspectMonoTests {
 
 	@Test
 	public void shouldReturnNewSpanFromSubscriberContextOuter() {
-		Mono<Pair<Pair<String, String>, String>> mono = this.testBeanOuter
-				.outerNewSpanInSubscriberContext();
+		Mono<Pair<Pair<String, String>, String>> mono = this.testBeanOuter.outerNewSpanInSubscriberContext();
 
 		then(this.spans).isEmpty();
 
@@ -450,16 +439,14 @@ public class SleuthSpanCreatorAspectMonoTests {
 		then(outerSpanIdBefore).isNotEqualTo(innerSpanId);
 
 		Awaitility.await().untilAsserted(() -> {
-			MutableSpan outerSpan = spans.spans().stream().filter(
-					span -> span.name().equals("outer-span-in-subscriber-context"))
-					.findFirst().orElseThrow(() -> new AssertionError(
-							"No span with name [outer-span-in-subscriber-context] found"));
+			MutableSpan outerSpan = spans.spans().stream()
+					.filter(span -> span.name().equals("outer-span-in-subscriber-context")).findFirst().orElseThrow(
+							() -> new AssertionError("No span with name [outer-span-in-subscriber-context] found"));
 			then(outerSpan.name()).isEqualTo("outer-span-in-subscriber-context");
 			then(outerSpan.id()).isEqualTo(outerSpanIdBefore);
 			MutableSpan innerSpan = spans.spans().stream()
-					.filter(span -> span.name().equals("span-in-subscriber-context"))
-					.findFirst().orElseThrow(() -> new AssertionError(
-							"No span with name [span-in-subscriber-context] found"));
+					.filter(span -> span.name().equals("span-in-subscriber-context")).findFirst()
+					.orElseThrow(() -> new AssertionError("No span with name [span-in-subscriber-context] found"));
 			then(innerSpan.name()).isEqualTo("span-in-subscriber-context");
 			then(innerSpan.id()).isEqualTo(innerSpanId);
 			then(this.tracer.currentSpan()).isNull();
@@ -592,8 +579,7 @@ public class SleuthSpanCreatorAspectMonoTests {
 		}
 
 		@Override
-		public Mono<String> testMethod10_v2(
-				@SpanTag(key = "customTestTag10") String param) {
+		public Mono<String> testMethod10_v2(@SpanTag(key = "customTestTag10") String param) {
 			return TEST_MONO;
 		}
 
@@ -605,14 +591,12 @@ public class SleuthSpanCreatorAspectMonoTests {
 
 		@Override
 		public Mono<String> testMethod12(String param) {
-			return Mono
-					.defer(() -> Mono.error(new RuntimeException("test exception 12")));
+			return Mono.defer(() -> Mono.error(new RuntimeException("test exception 12")));
 		}
 
 		@Override
 		public Mono<String> testMethod13() {
-			return Mono
-					.defer(() -> Mono.error(new RuntimeException("test exception 13")));
+			return Mono.defer(() -> Mono.error(new RuntimeException("test exception 13")));
 		}
 
 		@Override
@@ -622,8 +606,7 @@ public class SleuthSpanCreatorAspectMonoTests {
 
 		@Override
 		public Mono<String> newSpanInSubscriberContext() {
-			return Mono.subscriberContext()
-					.flatMap(context -> Mono.just(id(this.tracer)));
+			return Mono.subscriberContext().flatMap(context -> Mono.just(id(this.tracer)));
 		}
 
 	}
@@ -641,10 +624,8 @@ public class SleuthSpanCreatorAspectMonoTests {
 
 		@NewSpan(name = "outerSpanInTraceContext")
 		public Mono<Pair<Pair<String, String>, String>> outerNewSpanInTraceContext() {
-			return Mono.defer(() -> Mono.just(id(this.tracer))
-					.zipWith(this.testBeanInterface.newSpanInTraceContext())
-					.map(pair -> Pair.of(Pair.of(pair.getT1(), id(this.tracer)),
-							pair.getT2())));
+			return Mono.defer(() -> Mono.just(id(this.tracer)).zipWith(this.testBeanInterface.newSpanInTraceContext())
+					.map(pair -> Pair.of(Pair.of(pair.getT1(), id(this.tracer)), pair.getT2())));
 		}
 
 		@NewSpan(name = "outerSpanInSubscriberContext")
@@ -652,8 +633,7 @@ public class SleuthSpanCreatorAspectMonoTests {
 			return Mono.subscriberContext()
 					.flatMap(context -> Mono.just(id(this.tracer))
 							.zipWith(this.testBeanInterface.newSpanInSubscriberContext())
-							.map(pair -> Pair.of(Pair.of(pair.getT1(), id(this.tracer)),
-									pair.getT2())));
+							.map(pair -> Pair.of(Pair.of(pair.getT1(), id(this.tracer)), pair.getT2())));
 		}
 
 	}

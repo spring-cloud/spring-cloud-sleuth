@@ -55,8 +55,7 @@ interface MyNameRemote {
 /**
  * @author Marcin Grzejszczak
  */
-@SpringBootTest(classes = Application.class,
-		webEnvironment = SpringBootTest.WebEnvironment.NONE)
+@SpringBootTest(classes = Application.class, webEnvironment = SpringBootTest.WebEnvironment.NONE)
 public class Issue502Tests {
 
 	@Autowired
@@ -121,9 +120,9 @@ class MyClient implements Client {
 	@Override
 	public Response execute(Request request, Request.Options options) {
 		this.wasCalled = true;
-		return Response.builder().body("foo", StandardCharsets.UTF_8)
-				.request(Request.create(Request.HttpMethod.POST, "/foo", new HashMap<>(),
-						Request.Body.empty(), new RequestTemplate()))
+		return Response
+				.builder().body("foo", StandardCharsets.UTF_8).request(Request.create(Request.HttpMethod.POST, "/foo",
+						new HashMap<>(), Request.Body.empty(), new RequestTemplate()))
 				.headers(new HashMap<>()).status(200).build();
 	}
 

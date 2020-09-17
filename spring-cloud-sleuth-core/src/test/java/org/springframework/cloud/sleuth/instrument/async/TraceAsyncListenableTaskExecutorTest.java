@@ -41,8 +41,7 @@ public class TraceAsyncListenableTaskExecutorTest {
 
 	StrictCurrentTraceContext currentTraceContext = StrictCurrentTraceContext.create();
 
-	Tracing tracing = Tracing.newBuilder().currentTraceContext(currentTraceContext)
-			.build();
+	Tracing tracing = Tracing.newBuilder().currentTraceContext(currentTraceContext).build();
 
 	Tracer tracer = this.tracing.tracer();
 
@@ -61,8 +60,7 @@ public class TraceAsyncListenableTaskExecutorTest {
 		Span span = this.tracer.nextSpan().name("foo");
 
 		try (Tracer.SpanInScope ws = this.tracer.withSpanInScope(span.start())) {
-			this.traceAsyncListenableTaskExecutor
-					.submitListenable(aRunnable(this.tracing, executed)).get();
+			this.traceAsyncListenableTaskExecutor.submitListenable(aRunnable(this.tracing, executed)).get();
 		}
 		finally {
 			span.finish();
@@ -77,8 +75,7 @@ public class TraceAsyncListenableTaskExecutorTest {
 		Span spanFromListenable;
 
 		try (Tracer.SpanInScope ws = this.tracer.withSpanInScope(span.start())) {
-			spanFromListenable = this.traceAsyncListenableTaskExecutor
-					.submitListenable(aCallable(this.tracing)).get();
+			spanFromListenable = this.traceAsyncListenableTaskExecutor.submitListenable(aCallable(this.tracing)).get();
 		}
 		finally {
 			span.finish();
@@ -93,8 +90,7 @@ public class TraceAsyncListenableTaskExecutorTest {
 		Span span = this.tracer.nextSpan().name("foo");
 
 		try (Tracer.SpanInScope ws = this.tracer.withSpanInScope(span.start())) {
-			this.traceAsyncListenableTaskExecutor
-					.execute(aRunnable(this.tracing, executed));
+			this.traceAsyncListenableTaskExecutor.execute(aRunnable(this.tracing, executed));
 		}
 		finally {
 			span.finish();
@@ -111,8 +107,7 @@ public class TraceAsyncListenableTaskExecutorTest {
 		Span span = this.tracer.nextSpan().name("foo");
 
 		try (Tracer.SpanInScope ws = this.tracer.withSpanInScope(span.start())) {
-			this.traceAsyncListenableTaskExecutor
-					.execute(aRunnable(this.tracing, executed), 1L);
+			this.traceAsyncListenableTaskExecutor.execute(aRunnable(this.tracing, executed), 1L);
 		}
 		finally {
 			span.finish();
@@ -129,8 +124,7 @@ public class TraceAsyncListenableTaskExecutorTest {
 		Span spanFromListenable;
 
 		try (Tracer.SpanInScope ws = this.tracer.withSpanInScope(span.start())) {
-			spanFromListenable = this.traceAsyncListenableTaskExecutor
-					.submit(aCallable(this.tracing)).get();
+			spanFromListenable = this.traceAsyncListenableTaskExecutor.submit(aCallable(this.tracing)).get();
 		}
 		finally {
 			span.finish();
@@ -145,8 +139,7 @@ public class TraceAsyncListenableTaskExecutorTest {
 		Span span = this.tracer.nextSpan().name("foo");
 
 		try (Tracer.SpanInScope ws = this.tracer.withSpanInScope(span.start())) {
-			this.traceAsyncListenableTaskExecutor
-					.submit(aRunnable(this.tracing, executed)).get();
+			this.traceAsyncListenableTaskExecutor.submit(aRunnable(this.tracing, executed)).get();
 		}
 		finally {
 			span.finish();

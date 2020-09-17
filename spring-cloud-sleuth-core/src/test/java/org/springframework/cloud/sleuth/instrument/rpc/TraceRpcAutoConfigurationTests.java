@@ -35,8 +35,7 @@ public class TraceRpcAutoConfigurationTests {
 	@Test
 	public void defaultsToBraveRpcClientSampler() {
 		contextRunner().run((context) -> {
-			SamplerFunction<RpcRequest> clientSampler = context.getBean(RpcTracing.class)
-					.clientSampler();
+			SamplerFunction<RpcRequest> clientSampler = context.getBean(RpcTracing.class).clientSampler();
 
 			then(clientSampler).isSameAs(SamplerFunctions.deferDecision());
 		});
@@ -44,20 +43,17 @@ public class TraceRpcAutoConfigurationTests {
 
 	@Test
 	public void configuresUserProvidedRpcClientSampler() {
-		contextRunner().withUserConfiguration(RpcClientSamplerConfig.class)
-				.run((context) -> {
-					SamplerFunction<RpcRequest> clientSampler = context
-							.getBean(RpcTracing.class).clientSampler();
+		contextRunner().withUserConfiguration(RpcClientSamplerConfig.class).run((context) -> {
+			SamplerFunction<RpcRequest> clientSampler = context.getBean(RpcTracing.class).clientSampler();
 
-					then(clientSampler).isSameAs(RpcClientSamplerConfig.INSTANCE);
-				});
+			then(clientSampler).isSameAs(RpcClientSamplerConfig.INSTANCE);
+		});
 	}
 
 	@Test
 	public void defaultsToBraveRpcServerSampler() {
 		contextRunner().run((context) -> {
-			SamplerFunction<RpcRequest> serverSampler = context.getBean(RpcTracing.class)
-					.serverSampler();
+			SamplerFunction<RpcRequest> serverSampler = context.getBean(RpcTracing.class).serverSampler();
 
 			then(serverSampler).isSameAs(SamplerFunctions.deferDecision());
 		});
@@ -65,19 +61,16 @@ public class TraceRpcAutoConfigurationTests {
 
 	@Test
 	public void configuresUserProvidedRpcServerSampler() {
-		contextRunner().withUserConfiguration(RpcServerSamplerConfig.class)
-				.run((context) -> {
-					SamplerFunction<RpcRequest> serverSampler = context
-							.getBean(RpcTracing.class).serverSampler();
+		contextRunner().withUserConfiguration(RpcServerSamplerConfig.class).run((context) -> {
+			SamplerFunction<RpcRequest> serverSampler = context.getBean(RpcTracing.class).serverSampler();
 
-					then(serverSampler).isSameAs(RpcServerSamplerConfig.INSTANCE);
-				});
+			then(serverSampler).isSameAs(RpcServerSamplerConfig.INSTANCE);
+		});
 	}
 
 	private ApplicationContextRunner contextRunner(String... propertyValues) {
-		return new ApplicationContextRunner().withPropertyValues(propertyValues)
-				.withConfiguration(AutoConfigurations.of(TraceAutoConfiguration.class,
-						TraceRpcAutoConfiguration.class));
+		return new ApplicationContextRunner().withPropertyValues(propertyValues).withConfiguration(
+				AutoConfigurations.of(TraceAutoConfiguration.class, TraceRpcAutoConfiguration.class));
 	}
 
 }

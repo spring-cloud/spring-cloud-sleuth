@@ -31,8 +31,7 @@ import org.springframework.lang.Nullable;
  */
 public final class LazyBean<T> {
 
-	public static <T> LazyBean<T> create(ConfigurableApplicationContext springContext,
-			Class<T> requiredType) {
+	public static <T> LazyBean<T> create(ConfigurableApplicationContext springContext, Class<T> requiredType) {
 		return new LazyBean<>(springContext, requiredType);
 	}
 
@@ -65,8 +64,7 @@ public final class LazyBean<T> {
 		}
 		catch (Exception ex) {
 			if (log.isDebugEnabled()) {
-				log.debug("Spring context [" + springContext + "] error getting ["
-						+ requiredType + "].", ex);
+				log.debug("Spring context [" + springContext + "] error getting [" + requiredType + "].", ex);
 			}
 		}
 		return this.value;

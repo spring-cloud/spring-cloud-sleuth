@@ -50,15 +50,13 @@ class TraceMongoDbAutoConfiguration {
 	@Bean
 	// for tests
 	@ConditionalOnMissingBean(TraceMongoClientSettingsBuilderCustomizer.class)
-	MongoClientSettingsBuilderCustomizer traceMongoClientSettingsBuilderCustomizer(
-			Tracing tracing) {
+	MongoClientSettingsBuilderCustomizer traceMongoClientSettingsBuilderCustomizer(Tracing tracing) {
 		return new TraceMongoClientSettingsBuilderCustomizer(tracing);
 	}
 
 }
 
-class TraceMongoClientSettingsBuilderCustomizer
-		implements MongoClientSettingsBuilderCustomizer {
+class TraceMongoClientSettingsBuilderCustomizer implements MongoClientSettingsBuilderCustomizer {
 
 	private final Tracing tracing;
 
@@ -68,8 +66,7 @@ class TraceMongoClientSettingsBuilderCustomizer
 
 	@Override
 	public void customize(MongoClientSettings.Builder clientSettingsBuilder) {
-		clientSettingsBuilder.addCommandListener(
-				MongoDBTracing.create(this.tracing).commandListener());
+		clientSettingsBuilder.addCommandListener(MongoDBTracing.create(this.tracing).commandListener());
 	}
 
 }

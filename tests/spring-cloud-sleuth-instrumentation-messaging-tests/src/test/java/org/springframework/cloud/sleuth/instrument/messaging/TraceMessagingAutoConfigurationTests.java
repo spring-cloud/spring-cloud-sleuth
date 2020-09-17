@@ -105,8 +105,8 @@ public class TraceMessagingAutoConfigurationTests {
 	@Test
 	public void defaultsToBraveProducerSampler() {
 		contextRunner().run((context) -> {
-			SamplerFunction<MessagingRequest> producerSampler = context
-					.getBean(MessagingTracing.class).producerSampler();
+			SamplerFunction<MessagingRequest> producerSampler = context.getBean(MessagingTracing.class)
+					.producerSampler();
 
 			then(producerSampler).isSameAs(SamplerFunctions.deferDecision());
 		});
@@ -114,20 +114,19 @@ public class TraceMessagingAutoConfigurationTests {
 
 	@Test
 	public void configuresUserProvidedProducerSampler() {
-		contextRunner().withUserConfiguration(ProducerSamplerConfig.class)
-				.run((context) -> {
-					SamplerFunction<MessagingRequest> producerSampler = context
-							.getBean(MessagingTracing.class).producerSampler();
+		contextRunner().withUserConfiguration(ProducerSamplerConfig.class).run((context) -> {
+			SamplerFunction<MessagingRequest> producerSampler = context.getBean(MessagingTracing.class)
+					.producerSampler();
 
-					then(producerSampler).isSameAs(ProducerSamplerConfig.INSTANCE);
-				});
+			then(producerSampler).isSameAs(ProducerSamplerConfig.INSTANCE);
+		});
 	}
 
 	@Test
 	public void defaultsToBraveConsumerSampler() {
 		contextRunner().run((context) -> {
-			SamplerFunction<MessagingRequest> consumerSampler = context
-					.getBean(MessagingTracing.class).consumerSampler();
+			SamplerFunction<MessagingRequest> consumerSampler = context.getBean(MessagingTracing.class)
+					.consumerSampler();
 
 			then(consumerSampler).isSameAs(SamplerFunctions.deferDecision());
 		});
@@ -135,19 +134,17 @@ public class TraceMessagingAutoConfigurationTests {
 
 	@Test
 	public void configuresUserProvidedConsumerSampler() {
-		contextRunner().withUserConfiguration(ConsumerSamplerConfig.class)
-				.run((context) -> {
-					SamplerFunction<MessagingRequest> consumerSampler = context
-							.getBean(MessagingTracing.class).consumerSampler();
+		contextRunner().withUserConfiguration(ConsumerSamplerConfig.class).run((context) -> {
+			SamplerFunction<MessagingRequest> consumerSampler = context.getBean(MessagingTracing.class)
+					.consumerSampler();
 
-					then(consumerSampler).isSameAs(ConsumerSamplerConfig.INSTANCE);
-				});
+			then(consumerSampler).isSameAs(ConsumerSamplerConfig.INSTANCE);
+		});
 	}
 
 	private ApplicationContextRunner contextRunner(String... propertyValues) {
-		return new ApplicationContextRunner().withPropertyValues(propertyValues)
-				.withConfiguration(AutoConfigurations.of(TraceAutoConfiguration.class,
-						TraceMessagingAutoConfiguration.class));
+		return new ApplicationContextRunner().withPropertyValues(propertyValues).withConfiguration(
+				AutoConfigurations.of(TraceAutoConfiguration.class, TraceMessagingAutoConfiguration.class));
 	}
 
 	@Configuration
@@ -165,8 +162,7 @@ public class TraceMessagingAutoConfigurationTests {
 		}
 
 		@Bean
-		SleuthRabbitBeanPostProcessor sleuthRabbitBeanPostProcessor(
-				BeanFactory beanFactory) {
+		SleuthRabbitBeanPostProcessor sleuthRabbitBeanPostProcessor(BeanFactory beanFactory) {
 			return new TestSleuthRabbitBeanPostProcessor(beanFactory);
 		}
 
@@ -176,8 +172,7 @@ public class TraceMessagingAutoConfigurationTests {
 		}
 
 		@Bean
-		TestSleuthJmsBeanPostProcessor sleuthJmsBeanPostProcessor(
-				BeanFactory beanFactory) {
+		TestSleuthJmsBeanPostProcessor sleuthJmsBeanPostProcessor(BeanFactory beanFactory) {
 			return new TestSleuthJmsBeanPostProcessor(beanFactory);
 		}
 
@@ -231,8 +226,7 @@ class MySleuthKafkaAspect extends SleuthKafkaAspect {
 	}
 
 	@Override
-	public Object wrapListenerContainerCreation(ProceedingJoinPoint pjp)
-			throws Throwable {
+	public Object wrapListenerContainerCreation(ProceedingJoinPoint pjp) throws Throwable {
 		this.adapterWrapped = true;
 		return Mockito.mock(MessageListenerContainer.class);
 	}
@@ -248,8 +242,7 @@ class TestSleuthJmsBeanPostProcessor extends TracingConnectionFactoryBeanPostPro
 	}
 
 	@Override
-	public Object postProcessAfterInitialization(Object bean, String beanName)
-			throws BeansException {
+	public Object postProcessAfterInitialization(Object bean, String beanName) throws BeansException {
 		this.tracingCalled = true;
 		return super.postProcessAfterInitialization(bean, beanName);
 	}

@@ -31,16 +31,13 @@ import org.springframework.beans.factory.BeanFactory;
  * @since 1.0.0
  */
 // public as most types in this package were documented for use
-public class TraceableScheduledExecutorService extends TraceableExecutorService
-		implements ScheduledExecutorService {
+public class TraceableScheduledExecutorService extends TraceableExecutorService implements ScheduledExecutorService {
 
-	public TraceableScheduledExecutorService(BeanFactory beanFactory,
-			final ExecutorService delegate) {
+	public TraceableScheduledExecutorService(BeanFactory beanFactory, final ExecutorService delegate) {
 		super(beanFactory, delegate);
 	}
 
-	public TraceableScheduledExecutorService(BeanFactory beanFactory,
-			final ExecutorService delegate, String beanName) {
+	public TraceableScheduledExecutorService(BeanFactory beanFactory, final ExecutorService delegate, String beanName) {
 		super(beanFactory, delegate, beanName);
 	}
 
@@ -50,40 +47,30 @@ public class TraceableScheduledExecutorService extends TraceableExecutorService
 
 	@Override
 	public ScheduledFuture<?> schedule(Runnable command, long delay, TimeUnit unit) {
-		return getScheduledExecutorService()
-				.schedule(ContextUtil.isContextUnusable(this.beanFactory) ? command
-						: new TraceRunnable(tracing(), spanNamer(), command,
-								this.spanName),
-						delay, unit);
+		return getScheduledExecutorService().schedule(ContextUtil.isContextUnusable(this.beanFactory) ? command
+				: new TraceRunnable(tracing(), spanNamer(), command, this.spanName), delay, unit);
 	}
 
 	@Override
-	public <V> ScheduledFuture<V> schedule(Callable<V> callable, long delay,
-			TimeUnit unit) {
-		return getScheduledExecutorService()
-				.schedule(ContextUtil.isContextUnusable(this.beanFactory) ? callable
-						: new TraceCallable<>(tracing(), spanNamer(), callable,
-								this.spanName),
-						delay, unit);
+	public <V> ScheduledFuture<V> schedule(Callable<V> callable, long delay, TimeUnit unit) {
+		return getScheduledExecutorService().schedule(ContextUtil.isContextUnusable(this.beanFactory) ? callable
+				: new TraceCallable<>(tracing(), spanNamer(), callable, this.spanName), delay, unit);
 	}
 
 	@Override
-	public ScheduledFuture<?> scheduleAtFixedRate(Runnable command, long initialDelay,
-			long period, TimeUnit unit) {
-		return getScheduledExecutorService()
-				.scheduleAtFixedRate(ContextUtil.isContextUnusable(this.beanFactory)
-						? command : new TraceRunnable(tracing(), spanNamer(), command,
-								this.spanName),
-						initialDelay, period, unit);
+	public ScheduledFuture<?> scheduleAtFixedRate(Runnable command, long initialDelay, long period, TimeUnit unit) {
+		return getScheduledExecutorService().scheduleAtFixedRate(
+				ContextUtil.isContextUnusable(this.beanFactory) ? command
+						: new TraceRunnable(tracing(), spanNamer(), command, this.spanName),
+				initialDelay, period, unit);
 	}
 
 	@Override
-	public ScheduledFuture<?> scheduleWithFixedDelay(Runnable command, long initialDelay,
-			long delay, TimeUnit unit) {
+	public ScheduledFuture<?> scheduleWithFixedDelay(Runnable command, long initialDelay, long delay, TimeUnit unit) {
 		return getScheduledExecutorService()
-				.scheduleWithFixedDelay(ContextUtil.isContextUnusable(this.beanFactory)
-						? command : new TraceRunnable(tracing(), spanNamer(), command,
-								this.spanName),
+				.scheduleWithFixedDelay(
+						ContextUtil.isContextUnusable(this.beanFactory) ? command
+								: new TraceRunnable(tracing(), spanNamer(), command, this.spanName),
 						initialDelay, delay, unit);
 	}
 

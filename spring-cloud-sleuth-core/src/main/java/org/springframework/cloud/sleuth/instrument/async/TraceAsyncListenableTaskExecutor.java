@@ -40,28 +40,24 @@ public class TraceAsyncListenableTaskExecutor implements AsyncListenableTaskExec
 
 	private final Tracing tracing;
 
-	TraceAsyncListenableTaskExecutor(AsyncListenableTaskExecutor delegate,
-			Tracing tracing) {
+	TraceAsyncListenableTaskExecutor(AsyncListenableTaskExecutor delegate, Tracing tracing) {
 		this.delegate = delegate;
 		this.tracing = tracing;
 	}
 
 	@Override
 	public ListenableFuture<?> submitListenable(Runnable task) {
-		return this.delegate
-				.submitListenable(this.tracing.currentTraceContext().wrap(task));
+		return this.delegate.submitListenable(this.tracing.currentTraceContext().wrap(task));
 	}
 
 	@Override
 	public <T> ListenableFuture<T> submitListenable(Callable<T> task) {
-		return this.delegate
-				.submitListenable(this.tracing.currentTraceContext().wrap(task));
+		return this.delegate.submitListenable(this.tracing.currentTraceContext().wrap(task));
 	}
 
 	@Override
 	public void execute(Runnable task, long startTimeout) {
-		this.delegate.execute(this.tracing.currentTraceContext().wrap(task),
-				startTimeout);
+		this.delegate.execute(this.tracing.currentTraceContext().wrap(task), startTimeout);
 	}
 
 	@Override

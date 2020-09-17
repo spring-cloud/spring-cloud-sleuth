@@ -39,21 +39,18 @@ class TraceEnvironmentPostProcessor implements EnvironmentPostProcessor {
 	private static final String PROPERTY_SOURCE_NAME = "defaultProperties";
 
 	@Override
-	public void postProcessEnvironment(ConfigurableEnvironment environment,
-			SpringApplication application) {
+	public void postProcessEnvironment(ConfigurableEnvironment environment, SpringApplication application) {
 		Map<String, Object> map = new HashMap<String, Object>();
 		// This doesn't work with all logging systems but it's a useful default so you see
 		// traces in logs without having to configure it.
-		if (Boolean
-				.parseBoolean(environment.getProperty("spring.sleuth.enabled", "true"))) {
-			map.put("logging.pattern.level", "%5p [${spring.zipkin.service.name:"
-					+ "${spring.application.name:}},%X{traceId:-},%X{spanId:-}]");
+		if (Boolean.parseBoolean(environment.getProperty("spring.sleuth.enabled", "true"))) {
+			map.put("logging.pattern.level",
+					"%5p [${spring.zipkin.service.name:" + "${spring.application.name:}},%X{traceId:-},%X{spanId:-}]");
 		}
 		addOrReplace(environment.getPropertySources(), map);
 	}
 
-	private void addOrReplace(MutablePropertySources propertySources,
-			Map<String, Object> map) {
+	private void addOrReplace(MutablePropertySources propertySources, Map<String, Object> map) {
 		MapPropertySource target = null;
 		if (propertySources.contains(PROPERTY_SOURCE_NAME)) {
 			PropertySource<?> source = propertySources.get(PROPERTY_SOURCE_NAME);

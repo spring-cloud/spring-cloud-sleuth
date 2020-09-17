@@ -60,8 +60,8 @@ final class TracingFeignClient implements Client {
 		this.currentTraceContext = httpTracing.tracing().currentTraceContext();
 		this.handler = HttpClientHandler.create(httpTracing);
 		Client delegateTarget = ProxyUtils.getTargetObject(delegate);
-		this.delegate = delegateTarget instanceof TracingFeignClient
-				? ((TracingFeignClient) delegateTarget).delegate : delegateTarget;
+		this.delegate = delegateTarget instanceof TracingFeignClient ? ((TracingFeignClient) delegateTarget).delegate
+				: delegateTarget;
 	}
 
 	static Client create(HttpTracing httpTracing, Client delegate) {
@@ -89,8 +89,7 @@ final class TracingFeignClient implements Client {
 			throw e;
 		}
 		finally {
-			ResponseWrapper response = res != null
-					? new ResponseWrapper(request, res, error) : null;
+			ResponseWrapper response = res != null ? new ResponseWrapper(request, res, error) : null;
 			this.handler.handleReceive(response, error, span);
 
 			if (log.isDebugEnabled()) {
@@ -99,12 +98,10 @@ final class TracingFeignClient implements Client {
 		}
 	}
 
-	void handleSendAndReceive(Span span, Request req, @Nullable Response res,
-			@Nullable Throwable error) {
+	void handleSendAndReceive(Span span, Request req, @Nullable Response res, @Nullable Throwable error) {
 		RequestWrapper request = new RequestWrapper(req);
 		this.handler.handleSend(request, span);
-		ResponseWrapper response = res != null ? new ResponseWrapper(request, res, error)
-				: null;
+		ResponseWrapper response = res != null ? new ResponseWrapper(request, res, error) : null;
 		this.handler.handleReceive(response, error, span);
 	}
 
@@ -145,8 +142,7 @@ final class TracingFeignClient implements Client {
 		@Override
 		public String header(String name) {
 			Collection<String> result = delegate.headers().get(name);
-			return result != null && result.iterator().hasNext()
-					? result.iterator().next() : null;
+			return result != null && result.iterator().hasNext() ? result.iterator().next() : null;
 		}
 
 		@Override
@@ -157,8 +153,7 @@ final class TracingFeignClient implements Client {
 			if (!headers.containsKey(name)) {
 				headers.put(name, Collections.singletonList(value));
 				if (log.isTraceEnabled()) {
-					log.trace(
-							"Added key [" + name + "] and header value [" + value + "]");
+					log.trace("Added key [" + name + "] and header value [" + value + "]");
 				}
 			}
 			else {
@@ -176,8 +171,7 @@ final class TracingFeignClient implements Client {
 			String url = delegate.url();
 			byte[] body = delegate.body();
 			Charset charset = delegate.charset();
-			return Request.create(delegate.httpMethod(), url, headers, body, charset,
-					delegate.requestTemplate());
+			return Request.create(delegate.httpMethod(), url, headers, body, charset, delegate.requestTemplate());
 		}
 
 	}
@@ -191,8 +185,7 @@ final class TracingFeignClient implements Client {
 		@Nullable
 		final Throwable error;
 
-		ResponseWrapper(RequestWrapper request, Response response,
-				@Nullable Throwable error) {
+		ResponseWrapper(RequestWrapper request, Response response, @Nullable Throwable error) {
 			this.request = request;
 			this.response = response;
 			this.error = error;

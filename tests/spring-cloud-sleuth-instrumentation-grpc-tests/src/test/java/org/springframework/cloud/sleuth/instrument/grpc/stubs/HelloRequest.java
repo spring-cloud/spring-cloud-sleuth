@@ -68,8 +68,7 @@ public final class HelloRequest extends com.google.protobuf.GeneratedMessageV3 i
 			throw new java.lang.NullPointerException();
 		}
 		int mutable_bitField0_ = 0;
-		com.google.protobuf.UnknownFieldSet.Builder unknownFields = com.google.protobuf.UnknownFieldSet
-				.newBuilder();
+		com.google.protobuf.UnknownFieldSet.Builder unknownFields = com.google.protobuf.UnknownFieldSet.newBuilder();
 		try {
 			boolean done = false;
 			while (!done) {
@@ -79,8 +78,7 @@ public final class HelloRequest extends com.google.protobuf.GeneratedMessageV3 i
 					done = true;
 					break;
 				default:
-					if (!parseUnknownFieldProto3(input, unknownFields, extensionRegistry,
-							tag)) {
+					if (!parseUnknownFieldProto3(input, unknownFields, extensionRegistry, tag)) {
 						done = true;
 					}
 					break;
@@ -96,8 +94,7 @@ public final class HelloRequest extends com.google.protobuf.GeneratedMessageV3 i
 			throw e.setUnfinishedMessage(this);
 		}
 		catch (java.io.IOException e) {
-			throw new com.google.protobuf.InvalidProtocolBufferException(e)
-					.setUnfinishedMessage(this);
+			throw new com.google.protobuf.InvalidProtocolBufferException(e).setUnfinishedMessage(this);
 		}
 		finally {
 			this.unknownFields = unknownFields.build();
@@ -131,52 +128,40 @@ public final class HelloRequest extends com.google.protobuf.GeneratedMessageV3 i
 		return PARSER.parseFrom(data, extensionRegistry);
 	}
 
-	public static HelloRequest parseFrom(byte[] data)
-			throws com.google.protobuf.InvalidProtocolBufferException {
+	public static HelloRequest parseFrom(byte[] data) throws com.google.protobuf.InvalidProtocolBufferException {
 		return PARSER.parseFrom(data);
 	}
 
-	public static HelloRequest parseFrom(byte[] data,
-			com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+	public static HelloRequest parseFrom(byte[] data, com.google.protobuf.ExtensionRegistryLite extensionRegistry)
 			throws com.google.protobuf.InvalidProtocolBufferException {
 		return PARSER.parseFrom(data, extensionRegistry);
 	}
 
-	public static HelloRequest parseFrom(java.io.InputStream input)
-			throws java.io.IOException {
+	public static HelloRequest parseFrom(java.io.InputStream input) throws java.io.IOException {
 		return com.google.protobuf.GeneratedMessageV3.parseWithIOException(PARSER, input);
 	}
 
 	public static HelloRequest parseFrom(java.io.InputStream input,
-			com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-			throws java.io.IOException {
-		return com.google.protobuf.GeneratedMessageV3.parseWithIOException(PARSER, input,
-				extensionRegistry);
+			com.google.protobuf.ExtensionRegistryLite extensionRegistry) throws java.io.IOException {
+		return com.google.protobuf.GeneratedMessageV3.parseWithIOException(PARSER, input, extensionRegistry);
 	}
 
-	public static HelloRequest parseDelimitedFrom(java.io.InputStream input)
-			throws java.io.IOException {
-		return com.google.protobuf.GeneratedMessageV3
-				.parseDelimitedWithIOException(PARSER, input);
+	public static HelloRequest parseDelimitedFrom(java.io.InputStream input) throws java.io.IOException {
+		return com.google.protobuf.GeneratedMessageV3.parseDelimitedWithIOException(PARSER, input);
 	}
 
 	public static HelloRequest parseDelimitedFrom(java.io.InputStream input,
-			com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-			throws java.io.IOException {
-		return com.google.protobuf.GeneratedMessageV3
-				.parseDelimitedWithIOException(PARSER, input, extensionRegistry);
+			com.google.protobuf.ExtensionRegistryLite extensionRegistry) throws java.io.IOException {
+		return com.google.protobuf.GeneratedMessageV3.parseDelimitedWithIOException(PARSER, input, extensionRegistry);
 	}
 
-	public static HelloRequest parseFrom(com.google.protobuf.CodedInputStream input)
-			throws java.io.IOException {
+	public static HelloRequest parseFrom(com.google.protobuf.CodedInputStream input) throws java.io.IOException {
 		return com.google.protobuf.GeneratedMessageV3.parseWithIOException(PARSER, input);
 	}
 
 	public static HelloRequest parseFrom(com.google.protobuf.CodedInputStream input,
-			com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-			throws java.io.IOException {
-		return com.google.protobuf.GeneratedMessageV3.parseWithIOException(PARSER, input,
-				extensionRegistry);
+			com.google.protobuf.ExtensionRegistryLite extensionRegistry) throws java.io.IOException {
+		return com.google.protobuf.GeneratedMessageV3.parseWithIOException(PARSER, input, extensionRegistry);
 	}
 
 	public static Builder newBuilder() {
@@ -203,8 +188,7 @@ public final class HelloRequest extends com.google.protobuf.GeneratedMessageV3 i
 	@Override
 	protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable internalGetFieldAccessorTable() {
 		return HelloServiceOuterClass.internal_static_sample_grpc_HelloRequest_fieldAccessorTable
-				.ensureFieldAccessorsInitialized(HelloRequest.class,
-						HelloRequest.Builder.class);
+				.ensureFieldAccessorsInitialized(HelloRequest.class, HelloRequest.Builder.class);
 	}
 
 	/**
@@ -231,8 +215,7 @@ public final class HelloRequest extends com.google.protobuf.GeneratedMessageV3 i
 	public com.google.protobuf.ByteString getNameBytes() {
 		java.lang.Object ref = this.name_;
 		if (ref instanceof java.lang.String) {
-			com.google.protobuf.ByteString b = com.google.protobuf.ByteString
-					.copyFromUtf8((java.lang.String) ref);
+			com.google.protobuf.ByteString b = com.google.protobuf.ByteString.copyFromUtf8((java.lang.String) ref);
 			this.name_ = b;
 			return b;
 		}
@@ -256,8 +239,7 @@ public final class HelloRequest extends com.google.protobuf.GeneratedMessageV3 i
 	}
 
 	@Override
-	public void writeTo(com.google.protobuf.CodedOutputStream output)
-			throws java.io.IOException {
+	public void writeTo(com.google.protobuf.CodedOutputStream output) throws java.io.IOException {
 		if (!getNameBytes().isEmpty()) {
 			com.google.protobuf.GeneratedMessageV3.writeString(output, 1, this.name_);
 		}
@@ -273,8 +255,7 @@ public final class HelloRequest extends com.google.protobuf.GeneratedMessageV3 i
 
 		size = 0;
 		if (!getNameBytes().isEmpty()) {
-			size += com.google.protobuf.GeneratedMessageV3.computeStringSize(1,
-					this.name_);
+			size += com.google.protobuf.GeneratedMessageV3.computeStringSize(1, this.name_);
 		}
 		size += this.unknownFields.getSerializedSize();
 		this.memoizedSize = size;
@@ -322,8 +303,7 @@ public final class HelloRequest extends com.google.protobuf.GeneratedMessageV3 i
 	}
 
 	@java.lang.Override
-	protected Builder newBuilderForType(
-			com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+	protected Builder newBuilderForType(com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
 		Builder builder = new Builder(parent);
 		return builder;
 	}
@@ -345,8 +325,7 @@ public final class HelloRequest extends com.google.protobuf.GeneratedMessageV3 i
 	 *
 	 * Protobuf type {@code HelloRequest}
 	 */
-	public static final class Builder
-			extends com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
+	public static final class Builder extends com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
 			// @@protoc_insertion_point(builder_implements:HelloRequest)
 			HelloRequestOrBuilder {
 
@@ -369,8 +348,7 @@ public final class HelloRequest extends com.google.protobuf.GeneratedMessageV3 i
 		@Override
 		protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable internalGetFieldAccessorTable() {
 			return HelloServiceOuterClass.internal_static_sample_grpc_HelloRequest_fieldAccessorTable
-					.ensureFieldAccessorsInitialized(HelloRequest.class,
-							HelloRequest.Builder.class);
+					.ensureFieldAccessorsInitialized(HelloRequest.class, HelloRequest.Builder.class);
 		}
 
 		private void maybeForceBuilderInitialization() {
@@ -419,8 +397,7 @@ public final class HelloRequest extends com.google.protobuf.GeneratedMessageV3 i
 		}
 
 		@Override
-		public Builder setField(com.google.protobuf.Descriptors.FieldDescriptor field,
-				java.lang.Object value) {
+		public Builder setField(com.google.protobuf.Descriptors.FieldDescriptor field, java.lang.Object value) {
 			return super.setField(field, value);
 		}
 
@@ -435,16 +412,13 @@ public final class HelloRequest extends com.google.protobuf.GeneratedMessageV3 i
 		}
 
 		@Override
-		public Builder setRepeatedField(
-				com.google.protobuf.Descriptors.FieldDescriptor field, int index,
+		public Builder setRepeatedField(com.google.protobuf.Descriptors.FieldDescriptor field, int index,
 				java.lang.Object value) {
 			return super.setRepeatedField(field, index, value);
 		}
 
 		@Override
-		public Builder addRepeatedField(
-				com.google.protobuf.Descriptors.FieldDescriptor field,
-				java.lang.Object value) {
+		public Builder addRepeatedField(com.google.protobuf.Descriptors.FieldDescriptor field, java.lang.Object value) {
 			return super.addRepeatedField(field, value);
 		}
 
@@ -479,8 +453,7 @@ public final class HelloRequest extends com.google.protobuf.GeneratedMessageV3 i
 
 		@Override
 		public Builder mergeFrom(com.google.protobuf.CodedInputStream input,
-				com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-				throws java.io.IOException {
+				com.google.protobuf.ExtensionRegistryLite extensionRegistry) throws java.io.IOException {
 			HelloRequest parsedMessage = null;
 			try {
 				parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
@@ -534,8 +507,7 @@ public final class HelloRequest extends com.google.protobuf.GeneratedMessageV3 i
 		public com.google.protobuf.ByteString getNameBytes() {
 			java.lang.Object ref = this.name_;
 			if (ref instanceof String) {
-				com.google.protobuf.ByteString b = com.google.protobuf.ByteString
-						.copyFromUtf8((java.lang.String) ref);
+				com.google.protobuf.ByteString b = com.google.protobuf.ByteString.copyFromUtf8((java.lang.String) ref);
 				this.name_ = b;
 				return b;
 			}
@@ -569,14 +541,12 @@ public final class HelloRequest extends com.google.protobuf.GeneratedMessageV3 i
 		}
 
 		@Override
-		public final Builder setUnknownFields(
-				final com.google.protobuf.UnknownFieldSet unknownFields) {
+		public final Builder setUnknownFields(final com.google.protobuf.UnknownFieldSet unknownFields) {
 			return super.setUnknownFieldsProto3(unknownFields);
 		}
 
 		@Override
-		public final Builder mergeUnknownFields(
-				final com.google.protobuf.UnknownFieldSet unknownFields) {
+		public final Builder mergeUnknownFields(final com.google.protobuf.UnknownFieldSet unknownFields) {
 			return super.mergeUnknownFields(unknownFields);
 		}
 

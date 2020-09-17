@@ -34,8 +34,7 @@ class TraceFeignContext extends FeignContext {
 
 	private final FeignContext delegate;
 
-	TraceFeignContext(TraceFeignObjectWrapper traceFeignObjectWrapper,
-			FeignContext delegate) {
+	TraceFeignContext(TraceFeignObjectWrapper traceFeignObjectWrapper, FeignContext delegate) {
 		this.traceFeignObjectWrapper = traceFeignObjectWrapper;
 		this.delegate = delegate;
 	}
@@ -59,8 +58,7 @@ class TraceFeignContext extends FeignContext {
 		}
 		Map<String, T> convertedInstances = new HashMap<>();
 		for (Map.Entry<String, T> entry : instances.entrySet()) {
-			convertedInstances.put(entry.getKey(),
-					(T) this.traceFeignObjectWrapper.wrap(entry.getValue()));
+			convertedInstances.put(entry.getKey(), (T) this.traceFeignObjectWrapper.wrap(entry.getValue()));
 		}
 		return convertedInstances;
 	}

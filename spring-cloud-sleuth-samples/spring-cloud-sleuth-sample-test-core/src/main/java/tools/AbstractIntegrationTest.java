@@ -39,17 +39,14 @@ public abstract class AbstractIntegrationTest {
 	protected final RestTemplate restTemplate = new AssertingRestTemplate();
 
 	public static ConditionFactory await() {
-		return Awaitility.await().pollInterval(POLL_INTERVAL, SECONDS).atMost(TIMEOUT,
-				SECONDS);
+		return Awaitility.await().pollInterval(POLL_INTERVAL, SECONDS).atMost(TIMEOUT, SECONDS);
 	}
 
-	protected Runnable httpMessageWithTraceIdInHeadersIsSuccessfullySent(String endpoint,
-			long traceId) {
+	protected Runnable httpMessageWithTraceIdInHeadersIsSuccessfullySent(String endpoint, long traceId) {
 		return new RequestSendingRunnable(this.restTemplate, endpoint, traceId, traceId);
 	}
 
-	protected Runnable httpMessageWithTraceIdInHeadersIsSuccessfullySent(String endpoint,
-			long traceId, Long spanId) {
+	protected Runnable httpMessageWithTraceIdInHeadersIsSuccessfullySent(String endpoint, long traceId, Long spanId) {
 		return new RequestSendingRunnable(this.restTemplate, endpoint, traceId, spanId);
 	}
 

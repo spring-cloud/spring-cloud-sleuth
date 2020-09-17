@@ -59,10 +59,8 @@ import org.springframework.scheduling.annotation.AsyncConfigurerSupport;
 class AsyncDefaultAutoConfiguration {
 
 	@Bean
-	@ConditionalOnProperty(value = "spring.sleuth.scheduled.enabled",
-			matchIfMissing = true)
-	public static ExecutorBeanPostProcessor executorBeanPostProcessor(
-			BeanFactory beanFactory) {
+	@ConditionalOnProperty(value = "spring.sleuth.scheduled.enabled", matchIfMissing = true)
+	public static ExecutorBeanPostProcessor executorBeanPostProcessor(BeanFactory beanFactory) {
 		return new ExecutorBeanPostProcessor(beanFactory);
 	}
 
@@ -76,13 +74,11 @@ class AsyncDefaultAutoConfiguration {
 	 */
 	@Configuration(proxyBeanMethods = false)
 	@ConditionalOnMissingBean(AsyncConfigurer.class)
-	@ConditionalOnProperty(value = "spring.sleuth.async.configurer.enabled",
-			matchIfMissing = true)
+	@ConditionalOnProperty(value = "spring.sleuth.async.configurer.enabled", matchIfMissing = true)
 	@Role(BeanDefinition.ROLE_INFRASTRUCTURE)
 	static class DefaultAsyncConfigurerSupport extends AsyncConfigurerSupport {
 
-		private static final Log log = LogFactory
-				.getLog(DefaultAsyncConfigurerSupport.class);
+		private static final Log log = LogFactory.getLog(DefaultAsyncConfigurerSupport.class);
 
 		@Autowired
 		private BeanFactory beanFactory;
@@ -113,25 +109,21 @@ class AsyncDefaultAutoConfiguration {
 			catch (NoUniqueBeanDefinitionException ex) {
 				log.debug("Could not find unique TaskExecutor bean", ex);
 				try {
-					return this.beanFactory.getBean(
-							AsyncExecutionAspectSupport.DEFAULT_TASK_EXECUTOR_BEAN_NAME,
+					return this.beanFactory.getBean(AsyncExecutionAspectSupport.DEFAULT_TASK_EXECUTOR_BEAN_NAME,
 							Executor.class);
 				}
 				catch (NoSuchBeanDefinitionException ex2) {
 					if (log.isInfoEnabled()) {
-						log.info(
-								"More than one TaskExecutor bean found within the context, and none is named "
-										+ "'taskExecutor'. Mark one of them as primary or name it 'taskExecutor' (possibly "
-										+ "as an alias) in order to use it for async processing: "
-										+ ex.getBeanNamesFound());
+						log.info("More than one TaskExecutor bean found within the context, and none is named "
+								+ "'taskExecutor'. Mark one of them as primary or name it 'taskExecutor' (possibly "
+								+ "as an alias) in order to use it for async processing: " + ex.getBeanNamesFound());
 					}
 				}
 			}
 			catch (NoSuchBeanDefinitionException ex) {
 				log.debug("Could not find default TaskExecutor bean", ex);
 				try {
-					return this.beanFactory.getBean(
-							AsyncExecutionAspectSupport.DEFAULT_TASK_EXECUTOR_BEAN_NAME,
+					return this.beanFactory.getBean(AsyncExecutionAspectSupport.DEFAULT_TASK_EXECUTOR_BEAN_NAME,
 							Executor.class);
 				}
 				catch (NoSuchBeanDefinitionException ex2) {

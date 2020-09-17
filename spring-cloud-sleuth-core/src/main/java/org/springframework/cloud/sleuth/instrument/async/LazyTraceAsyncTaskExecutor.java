@@ -51,15 +51,13 @@ public class LazyTraceAsyncTaskExecutor implements AsyncTaskExecutor {
 
 	private SpanNamer spanNamer;
 
-	public LazyTraceAsyncTaskExecutor(BeanFactory beanFactory,
-			AsyncTaskExecutor delegate) {
+	public LazyTraceAsyncTaskExecutor(BeanFactory beanFactory, AsyncTaskExecutor delegate) {
 		this.beanFactory = beanFactory;
 		this.delegate = delegate;
 		this.beanName = null;
 	}
 
-	public LazyTraceAsyncTaskExecutor(BeanFactory beanFactory, AsyncTaskExecutor delegate,
-			String beanName) {
+	public LazyTraceAsyncTaskExecutor(BeanFactory beanFactory, AsyncTaskExecutor delegate, String beanName) {
 		this.beanFactory = beanFactory;
 		this.delegate = delegate;
 		this.beanName = beanName;
@@ -108,8 +106,7 @@ public class LazyTraceAsyncTaskExecutor implements AsyncTaskExecutor {
 				this.spanNamer = this.beanFactory.getBean(SpanNamer.class);
 			}
 			catch (NoSuchBeanDefinitionException e) {
-				log.warn(
-						"SpanNamer bean not found - will provide a manually created instance");
+				log.warn("SpanNamer bean not found - will provide a manually created instance");
 				return new DefaultSpanNamer();
 			}
 		}

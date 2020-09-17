@@ -53,8 +53,7 @@ class TraceRedisAutoConfiguration {
 		@Bean
 		static TraceLettuceClientResourcesBeanPostProcessor traceLettuceClientResourcesBeanPostProcessor(
 				BeanFactory beanFactory, TraceRedisProperties traceRedisProperties) {
-			return new TraceLettuceClientResourcesBeanPostProcessor(beanFactory,
-					traceRedisProperties);
+			return new TraceLettuceClientResourcesBeanPostProcessor(beanFactory, traceRedisProperties);
 		}
 
 	}
@@ -63,8 +62,7 @@ class TraceRedisAutoConfiguration {
 
 class TraceLettuceClientResourcesBeanPostProcessor implements BeanPostProcessor {
 
-	private static final Log log = LogFactory
-			.getLog(TraceLettuceClientResourcesBeanPostProcessor.class);
+	private static final Log log = LogFactory.getLog(TraceLettuceClientResourcesBeanPostProcessor.class);
 
 	private final BeanFactory beanFactory;
 
@@ -72,30 +70,25 @@ class TraceLettuceClientResourcesBeanPostProcessor implements BeanPostProcessor 
 
 	private Tracing tracing;
 
-	TraceLettuceClientResourcesBeanPostProcessor(BeanFactory beanFactory,
-			TraceRedisProperties traceRedisProperties) {
+	TraceLettuceClientResourcesBeanPostProcessor(BeanFactory beanFactory, TraceRedisProperties traceRedisProperties) {
 		this.beanFactory = beanFactory;
 		this.traceRedisProperties = traceRedisProperties;
 	}
 
 	@Override
-	public Object postProcessBeforeInitialization(Object bean, String beanName)
-			throws BeansException {
+	public Object postProcessBeforeInitialization(Object bean, String beanName) throws BeansException {
 		return bean;
 	}
 
 	@Override
-	public Object postProcessAfterInitialization(Object bean, String beanName)
-			throws BeansException {
+	public Object postProcessAfterInitialization(Object bean, String beanName) throws BeansException {
 		if (bean instanceof ClientResources) {
 			ClientResources cr = (ClientResources) bean;
 			if (!cr.tracing().isEnabled()) {
 				if (log.isDebugEnabled()) {
-					log.debug(
-							"Lettuce ClientResources bean is auto-configured to enable tracing.");
+					log.debug("Lettuce ClientResources bean is auto-configured to enable tracing.");
 				}
-				BraveTracing lettuceTracing = BraveTracing.builder().tracing(tracing())
-						.excludeCommandArgsFromSpanTags()
+				BraveTracing lettuceTracing = BraveTracing.builder().tracing(tracing()).excludeCommandArgsFromSpanTags()
 						.serviceName(traceRedisProperties.getRemoteServiceName()).build();
 				return cr.mutate().tracing(lettuceTracing).build();
 			}

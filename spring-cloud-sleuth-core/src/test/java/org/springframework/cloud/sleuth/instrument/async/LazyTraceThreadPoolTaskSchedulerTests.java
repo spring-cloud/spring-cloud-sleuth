@@ -45,8 +45,7 @@ public class LazyTraceThreadPoolTaskSchedulerTests {
 
 	StrictCurrentTraceContext currentTraceContext = StrictCurrentTraceContext.create();
 
-	Tracing tracing = Tracing.newBuilder().currentTraceContext(currentTraceContext)
-			.build();
+	Tracing tracing = Tracing.newBuilder().currentTraceContext(currentTraceContext).build();
 
 	@Mock(lenient = true)
 	BeanFactory beanFactory;
@@ -58,8 +57,7 @@ public class LazyTraceThreadPoolTaskSchedulerTests {
 
 	@BeforeEach
 	public void setup() {
-		this.executor = new LazyTraceThreadPoolTaskScheduler(beanFactory(), this.delegate,
-				null);
+		this.executor = new LazyTraceThreadPoolTaskScheduler(beanFactory(), this.delegate, null);
 	}
 
 	@AfterEach
@@ -70,10 +68,8 @@ public class LazyTraceThreadPoolTaskSchedulerTests {
 	}
 
 	BeanFactory beanFactory() {
-		BDDMockito.given(this.beanFactory.getBean(Tracing.class))
-				.willReturn(this.tracing);
-		BDDMockito.given(this.beanFactory.getBean(SpanNamer.class))
-				.willReturn(new DefaultSpanNamer());
+		BDDMockito.given(this.beanFactory.getBean(Tracing.class)).willReturn(this.tracing);
+		BDDMockito.given(this.beanFactory.getBean(SpanNamer.class)).willReturn(new DefaultSpanNamer());
 		SleuthContextListenerAccessor.set(this.beanFactory, true);
 		return this.beanFactory;
 	}
@@ -135,8 +131,7 @@ public class LazyTraceThreadPoolTaskSchedulerTests {
 		};
 		this.executor.execute(r);
 
-		BDDMockito.then(this.delegate).should()
-				.execute(BDDMockito.any(TraceRunnable.class));
+		BDDMockito.then(this.delegate).should().execute(BDDMockito.any(TraceRunnable.class));
 	}
 
 	@Test
@@ -145,8 +140,7 @@ public class LazyTraceThreadPoolTaskSchedulerTests {
 		};
 		this.executor.execute(r, 10L);
 
-		BDDMockito.then(this.delegate).should()
-				.execute(BDDMockito.any(TraceRunnable.class), BDDMockito.eq(10L));
+		BDDMockito.then(this.delegate).should().execute(BDDMockito.any(TraceRunnable.class), BDDMockito.eq(10L));
 	}
 
 	@Test
@@ -155,8 +149,7 @@ public class LazyTraceThreadPoolTaskSchedulerTests {
 		};
 		this.executor.submit(c);
 
-		BDDMockito.then(this.delegate).should()
-				.submit(BDDMockito.any(TraceRunnable.class));
+		BDDMockito.then(this.delegate).should().submit(BDDMockito.any(TraceRunnable.class));
 	}
 
 	@Test
@@ -164,8 +157,7 @@ public class LazyTraceThreadPoolTaskSchedulerTests {
 		Callable c = () -> null;
 		this.executor.submit(c);
 
-		BDDMockito.then(this.delegate).should()
-				.submit(BDDMockito.any(TraceCallable.class));
+		BDDMockito.then(this.delegate).should().submit(BDDMockito.any(TraceCallable.class));
 	}
 
 	@Test
@@ -174,8 +166,7 @@ public class LazyTraceThreadPoolTaskSchedulerTests {
 		};
 		this.executor.submitListenable(c);
 
-		BDDMockito.then(this.delegate).should()
-				.submitListenable(BDDMockito.any(TraceRunnable.class));
+		BDDMockito.then(this.delegate).should().submitListenable(BDDMockito.any(TraceRunnable.class));
 	}
 
 	@Test
@@ -183,8 +174,7 @@ public class LazyTraceThreadPoolTaskSchedulerTests {
 		Callable c = () -> null;
 		this.executor.submitListenable(c);
 
-		BDDMockito.then(this.delegate).should()
-				.submitListenable(BDDMockito.any(TraceCallable.class));
+		BDDMockito.then(this.delegate).should().submitListenable(BDDMockito.any(TraceCallable.class));
 	}
 
 	@Test
@@ -201,8 +191,7 @@ public class LazyTraceThreadPoolTaskSchedulerTests {
 		Trigger trigger = triggerContext -> null;
 		this.executor.schedule(c, trigger);
 
-		BDDMockito.then(this.delegate).should()
-				.schedule(BDDMockito.any(TraceRunnable.class), BDDMockito.eq(trigger));
+		BDDMockito.then(this.delegate).should().schedule(BDDMockito.any(TraceRunnable.class), BDDMockito.eq(trigger));
 	}
 
 	@Test
@@ -212,8 +201,7 @@ public class LazyTraceThreadPoolTaskSchedulerTests {
 		Date date = new Date();
 		this.executor.schedule(c, date);
 
-		BDDMockito.then(this.delegate).should()
-				.schedule(BDDMockito.any(TraceRunnable.class), BDDMockito.eq(date));
+		BDDMockito.then(this.delegate).should().schedule(BDDMockito.any(TraceRunnable.class), BDDMockito.eq(date));
 	}
 
 	@Test
@@ -223,9 +211,8 @@ public class LazyTraceThreadPoolTaskSchedulerTests {
 		Date date = new Date();
 		this.executor.scheduleAtFixedRate(c, date, 10L);
 
-		BDDMockito.then(this.delegate).should().scheduleAtFixedRate(
-				BDDMockito.any(TraceRunnable.class), BDDMockito.eq(date),
-				BDDMockito.eq(10L));
+		BDDMockito.then(this.delegate).should().scheduleAtFixedRate(BDDMockito.any(TraceRunnable.class),
+				BDDMockito.eq(date), BDDMockito.eq(10L));
 	}
 
 	@Test
@@ -234,8 +221,8 @@ public class LazyTraceThreadPoolTaskSchedulerTests {
 		};
 		this.executor.scheduleAtFixedRate(c, 10L);
 
-		BDDMockito.then(this.delegate).should().scheduleAtFixedRate(
-				BDDMockito.any(TraceRunnable.class), BDDMockito.eq(10L));
+		BDDMockito.then(this.delegate).should().scheduleAtFixedRate(BDDMockito.any(TraceRunnable.class),
+				BDDMockito.eq(10L));
 	}
 
 	@Test
@@ -245,9 +232,8 @@ public class LazyTraceThreadPoolTaskSchedulerTests {
 		Date date = new Date();
 		this.executor.scheduleWithFixedDelay(c, date, 10L);
 
-		BDDMockito.then(this.delegate).should().scheduleWithFixedDelay(
-				BDDMockito.any(TraceRunnable.class), BDDMockito.eq(date),
-				BDDMockito.eq(10L));
+		BDDMockito.then(this.delegate).should().scheduleWithFixedDelay(BDDMockito.any(TraceRunnable.class),
+				BDDMockito.eq(date), BDDMockito.eq(10L));
 	}
 
 	@Test
@@ -256,8 +242,8 @@ public class LazyTraceThreadPoolTaskSchedulerTests {
 		};
 		this.executor.scheduleWithFixedDelay(c, 10L);
 
-		BDDMockito.then(this.delegate).should().scheduleWithFixedDelay(
-				BDDMockito.any(TraceRunnable.class), BDDMockito.eq(10L));
+		BDDMockito.then(this.delegate).should().scheduleWithFixedDelay(BDDMockito.any(TraceRunnable.class),
+				BDDMockito.eq(10L));
 	}
 
 	@Test
@@ -268,9 +254,8 @@ public class LazyTraceThreadPoolTaskSchedulerTests {
 		Duration duration = Duration.ZERO;
 		this.executor.scheduleWithFixedDelay(c, instant, duration);
 
-		BDDMockito.then(this.delegate).should().scheduleWithFixedDelay(
-				BDDMockito.any(TraceRunnable.class), BDDMockito.eq(instant),
-				BDDMockito.eq(duration));
+		BDDMockito.then(this.delegate).should().scheduleWithFixedDelay(BDDMockito.any(TraceRunnable.class),
+				BDDMockito.eq(instant), BDDMockito.eq(duration));
 	}
 
 	@Test
@@ -280,8 +265,8 @@ public class LazyTraceThreadPoolTaskSchedulerTests {
 		Duration duration = Duration.ZERO;
 		this.executor.scheduleWithFixedDelay(c, duration);
 
-		BDDMockito.then(this.delegate).should().scheduleWithFixedDelay(
-				BDDMockito.any(TraceRunnable.class), BDDMockito.eq(duration));
+		BDDMockito.then(this.delegate).should().scheduleWithFixedDelay(BDDMockito.any(TraceRunnable.class),
+				BDDMockito.eq(duration));
 	}
 
 	@Test
@@ -439,8 +424,7 @@ public class LazyTraceThreadPoolTaskSchedulerTests {
 		Instant instant = Instant.now();
 		this.executor.schedule(r, instant);
 
-		BDDMockito.then(this.delegate).should()
-				.schedule(BDDMockito.any(TraceRunnable.class), BDDMockito.eq(instant));
+		BDDMockito.then(this.delegate).should().schedule(BDDMockito.any(TraceRunnable.class), BDDMockito.eq(instant));
 	}
 
 	@Test
@@ -451,9 +435,8 @@ public class LazyTraceThreadPoolTaskSchedulerTests {
 		Duration duration = Duration.ZERO;
 		this.executor.scheduleAtFixedRate(r, instant, duration);
 
-		BDDMockito.then(this.delegate).should().scheduleAtFixedRate(
-				BDDMockito.any(TraceRunnable.class), BDDMockito.eq(instant),
-				BDDMockito.eq(duration));
+		BDDMockito.then(this.delegate).should().scheduleAtFixedRate(BDDMockito.any(TraceRunnable.class),
+				BDDMockito.eq(instant), BDDMockito.eq(duration));
 	}
 
 	@Test
@@ -463,8 +446,8 @@ public class LazyTraceThreadPoolTaskSchedulerTests {
 		Duration duration = Duration.ZERO;
 		this.executor.scheduleAtFixedRate(r, duration);
 
-		BDDMockito.then(this.delegate).should().scheduleAtFixedRate(
-				BDDMockito.any(TraceRunnable.class), BDDMockito.eq(duration));
+		BDDMockito.then(this.delegate).should().scheduleAtFixedRate(BDDMockito.any(TraceRunnable.class),
+				BDDMockito.eq(duration));
 	}
 
 }

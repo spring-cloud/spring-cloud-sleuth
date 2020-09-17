@@ -45,8 +45,7 @@ public abstract class AbstractMvcIntegrationTest {
 
 	@BeforeEach
 	public void setup() {
-		DefaultMockMvcBuilder mockMvcBuilder = MockMvcBuilders
-				.webAppContextSetup(this.webApplicationContext);
+		DefaultMockMvcBuilder mockMvcBuilder = MockMvcBuilders.webAppContextSetup(this.webApplicationContext);
 		configureMockMvcBuilder(mockMvcBuilder);
 		this.mockMvc = mockMvcBuilder.build();
 	}

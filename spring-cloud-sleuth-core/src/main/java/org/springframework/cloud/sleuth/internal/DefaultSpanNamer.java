@@ -45,8 +45,7 @@ public class DefaultSpanNamer implements SpanNamer {
 		if (delegate instanceof Method) {
 			return delegate.toString().equals(spanName);
 		}
-		return (delegate.getClass().getName() + "@"
-				+ Integer.toHexString(delegate.hashCode())).equals(spanName);
+		return (delegate.getClass().getName() + "@" + Integer.toHexString(delegate.hashCode())).equals(spanName);
 	}
 
 	@Override

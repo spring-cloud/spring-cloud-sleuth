@@ -55,8 +55,7 @@ import org.springframework.web.client.RestTemplate;
 import static org.assertj.core.api.Assertions.fail;
 import static org.assertj.core.api.BDDAssertions.then;
 
-@FeignClient(value = "myFeignClient", url = "http://localhost:9998",
-		configuration = CustomConfig.class)
+@FeignClient(value = "myFeignClient", url = "http://localhost:9998", configuration = CustomConfig.class)
 interface MyFeignClient {
 
 	@RequestMapping("/service/ok")
@@ -71,8 +70,7 @@ interface MyFeignClient {
  * @author Marcin Grzejszczak
  */
 
-@SpringBootTest(classes = Application.class,
-		webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT)
+@SpringBootTest(classes = Application.class, webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT)
 @TestPropertySource(properties = { "server.port=9998" })
 public class Issue362Tests {
 
@@ -97,12 +95,10 @@ public class Issue362Tests {
 	public void should_successfully_work_with_custom_error_decoder_when_sending_successful_request() {
 		String securedURl = "http://localhost:9998/sleuth/test-ok";
 
-		ResponseEntity<String> response = this.template.getForEntity(securedURl,
-				String.class);
+		ResponseEntity<String> response = this.template.getForEntity(securedURl, String.class);
 
 		then(response.getBody()).isEqualTo("I'm OK");
-		then(this.feignComponentAsserter.executedComponents).containsEntry(Client.class,
-				true);
+		then(this.feignComponentAsserter.executedComponents).containsEntry(Client.class, true);
 		then(this.spans).hasSize(1);
 		then(this.spans.get(0).tags()).containsEntry("http.path", "/service/ok");
 	}
@@ -118,13 +114,12 @@ public class Issue362Tests {
 		catch (Exception e) {
 		}
 
-		then(this.feignComponentAsserter.executedComponents)
-				.containsEntry(ErrorDecoder.class, true)
+		then(this.feignComponentAsserter.executedComponents).containsEntry(ErrorDecoder.class, true)
 				.containsEntry(Client.class, true);
 		// retries
 		then(this.spans).hasSize(5);
-		then(this.spans.spans().stream().map(span -> span.tags().get("http.status_code"))
-				.collect(Collectors.toList())).containsOnly("409");
+		then(this.spans.spans().stream().map(span -> span.tags().get("http.status_code")).collect(Collectors.toList()))
+				.containsOnly("409");
 	}
 
 }
@@ -205,8 +200,8 @@ class CustomConfig {
 		public Exception decode(String methodKey, Response response) {
 			this.feignComponentAsserter.executedComponents.put(ErrorDecoder.class, true);
 			if (response.status() == 409) {
-				return new RetryableException(response.status(), "Article not Ready",
-						Request.HttpMethod.GET, new Date(), response.request());
+				return new RetryableException(response.status(), "Article not Ready", Request.HttpMethod.GET,
+						new Date(), response.request());
 			}
 			else {
 				return super.decode(methodKey, response);
@@ -225,8 +220,7 @@ class CustomConfig {
 		}
 
 		@Override
-		public Response execute(Request request, Request.Options options)
-				throws IOException {
+		public Response execute(Request request, Request.Options options) throws IOException {
 			this.feignComponentAsserter.executedComponents.put(Client.class, true);
 			return super.execute(request, options);
 		}

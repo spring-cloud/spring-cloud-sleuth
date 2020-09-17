@@ -47,8 +47,7 @@ import org.springframework.context.annotation.Configuration;
 @AutoConfigureAfter(TraceAutoConfiguration.class)
 @ConditionalOnClass(CircuitBreaker.class)
 @ConditionalOnBean(Tracing.class)
-@ConditionalOnProperty(value = "spring.sleuth.circuitbreaker.enabled",
-		matchIfMissing = true)
+@ConditionalOnProperty(value = "spring.sleuth.circuitbreaker.enabled", matchIfMissing = true)
 @EnableConfigurationProperties(SleuthCircuitBreakerProperties.class)
 class SleuthCircuitBreakerAutoConfiguration {
 
@@ -93,8 +92,7 @@ class TraceCircuitBreaker implements CircuitBreaker {
 
 	@Override
 	public <T> T run(Supplier<T> toRun, Function<Throwable, T> fallback) {
-		return this.delegate.run(new TraceSupplier<>(this.tracer, toRun),
-				new TraceFunction<>(this.tracer, fallback));
+		return this.delegate.run(new TraceSupplier<>(this.tracer, toRun), new TraceFunction<>(this.tracer, fallback));
 	}
 
 	@Override

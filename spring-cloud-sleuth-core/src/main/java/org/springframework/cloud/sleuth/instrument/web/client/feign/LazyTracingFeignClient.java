@@ -53,17 +53,15 @@ class LazyTracingFeignClient implements Client {
 	@Override
 	public Response execute(Request request, Request.Options options) throws IOException {
 		if (log.isDebugEnabled()) {
-			log.debug(
-					"Sending a request via tracing feign client [" + tracingFeignClient()
-							+ "] " + "and the delegate [" + this.delegate + "]");
+			log.debug("Sending a request via tracing feign client [" + tracingFeignClient() + "] "
+					+ "and the delegate [" + this.delegate + "]");
 		}
 		return tracingFeignClient().execute(request, options);
 	}
 
 	private Client tracingFeignClient() {
 		if (this.tracingFeignClient == null) {
-			this.tracingFeignClient = TracingFeignClient.create(httpTracing(),
-					this.delegate);
+			this.tracingFeignClient = TracingFeignClient.create(httpTracing(), this.delegate);
 		}
 		return this.tracingFeignClient;
 	}

@@ -22,8 +22,7 @@ import io.grpc.ManagedChannelBuilder;
 /**
  * @author Tyler Van Gorder
  */
-public class TracingManagedChannelBuilderCustomizer
-		implements GrpcManagedChannelBuilderCustomizer {
+public class TracingManagedChannelBuilderCustomizer implements GrpcManagedChannelBuilderCustomizer {
 
 	GrpcTracing grpcTracing;
 

@@ -53,12 +53,10 @@ public class NullSpanTagAnnotationHandlerTests {
 	@Test
 	public void shouldUseEmptyStringWheCustomTagValueResolverReturnsNull()
 			throws NoSuchMethodException, SecurityException {
-		Method method = AnnotationMockClass.class
-				.getMethod("getAnnotationForTagValueResolver", String.class);
+		Method method = AnnotationMockClass.class.getMethod("getAnnotationForTagValueResolver", String.class);
 		Annotation annotation = method.getParameterAnnotations()[0][0];
 		if (annotation instanceof SpanTag) {
-			String resolvedValue = this.handler.resolveTagValue((SpanTag) annotation,
-					"test");
+			String resolvedValue = this.handler.resolveTagValue((SpanTag) annotation, "test");
 			assertThat(resolvedValue).isEqualTo("");
 		}
 		else {
@@ -67,14 +65,11 @@ public class NullSpanTagAnnotationHandlerTests {
 	}
 
 	@Test
-	public void shouldUseEmptyStringWhenTagValueExpressionReturnNull()
-			throws NoSuchMethodException, SecurityException {
-		Method method = AnnotationMockClass.class
-				.getMethod("getAnnotationForTagValueExpression", String.class);
+	public void shouldUseEmptyStringWhenTagValueExpressionReturnNull() throws NoSuchMethodException, SecurityException {
+		Method method = AnnotationMockClass.class.getMethod("getAnnotationForTagValueExpression", String.class);
 		Annotation annotation = method.getParameterAnnotations()[0][0];
 		if (annotation instanceof SpanTag) {
-			String resolvedValue = this.handler.resolveTagValue((SpanTag) annotation,
-					"test");
+			String resolvedValue = this.handler.resolveTagValue((SpanTag) annotation, "test");
 
 			assertThat(resolvedValue).isEqualTo("");
 		}
@@ -84,14 +79,11 @@ public class NullSpanTagAnnotationHandlerTests {
 	}
 
 	@Test
-	public void shouldUseEmptyStringWhenArgumentIsNull()
-			throws NoSuchMethodException, SecurityException {
-		Method method = AnnotationMockClass.class
-				.getMethod("getAnnotationForArgumentToString", Long.class);
+	public void shouldUseEmptyStringWhenArgumentIsNull() throws NoSuchMethodException, SecurityException {
+		Method method = AnnotationMockClass.class.getMethod("getAnnotationForArgumentToString", Long.class);
 		Annotation annotation = method.getParameterAnnotations()[0][0];
 		if (annotation instanceof SpanTag) {
-			String resolvedValue = this.handler.resolveTagValue((SpanTag) annotation,
-					null);
+			String resolvedValue = this.handler.resolveTagValue((SpanTag) annotation, null);
 			assertThat(resolvedValue).isEqualTo("");
 		}
 		else {
@@ -123,8 +115,7 @@ public class NullSpanTagAnnotationHandlerTests {
 		}
 
 		@NewSpan
-		public void getAnnotationForTagValueExpression(
-				@SpanTag(key = "test", expression = "null") String test) {
+		public void getAnnotationForTagValueExpression(@SpanTag(key = "test", expression = "null") String test) {
 		}
 
 		@NewSpan

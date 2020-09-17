@@ -62,10 +62,8 @@ public class TraceRpcAutoConfigurationIntegrationTests {
 		// tag::custom_rpc_server_sampler[]
 		@Bean(name = RpcServerSampler.NAME)
 		SamplerFunction<RpcRequest> myRpcSampler() {
-			Matcher<RpcRequest> userAuth = and(serviceEquals("users.UserService"),
-					methodEquals("GetUserToken"));
-			return RpcRuleSampler.newBuilder()
-					.putRule(serviceEquals("grpc.health.v1.Health"), Sampler.NEVER_SAMPLE)
+			Matcher<RpcRequest> userAuth = and(serviceEquals("users.UserService"), methodEquals("GetUserToken"));
+			return RpcRuleSampler.newBuilder().putRule(serviceEquals("grpc.health.v1.Health"), Sampler.NEVER_SAMPLE)
 					.putRule(userAuth, RateLimitingSampler.create(100)).build();
 		}
 		// end::custom_rpc_server_sampler[]

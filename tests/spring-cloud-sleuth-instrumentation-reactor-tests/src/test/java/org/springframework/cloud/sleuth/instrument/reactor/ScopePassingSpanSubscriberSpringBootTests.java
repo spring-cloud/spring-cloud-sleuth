@@ -49,11 +49,9 @@ public class ScopePassingSpanSubscriberSpringBootTests {
 	@Autowired
 	CurrentTraceContext currentTraceContext;
 
-	TraceContext context = TraceContext.newBuilder().traceId(1).spanId(1).sampled(true)
-			.build();
+	TraceContext context = TraceContext.newBuilder().traceId(1).spanId(1).sampled(true).build();
 
-	TraceContext context2 = TraceContext.newBuilder().traceId(1).spanId(2).sampled(true)
-			.build();
+	TraceContext context2 = TraceContext.newBuilder().traceId(1).spanId(2).sampled(true).build();
 
 	@Test
 	public void should_pass_tracing_info_when_using_reactor() {
@@ -77,12 +75,11 @@ public class ScopePassingSpanSubscriberSpringBootTests {
 		final AtomicReference<TraceContext> spanInOperation = new AtomicReference<>();
 
 		try (Scope ws = this.currentTraceContext.newScope(context)) {
-			Mono.just(1).flatMap(d -> Flux.just(d + 1).collectList().map(p -> p.get(0)))
-					.map(d -> d + 1).map((d) -> {
-						spanInOperation.set(this.currentTraceContext.get());
-						return d + 1;
-					}).map(d -> d + 1).subscribe(d -> {
-					});
+			Mono.just(1).flatMap(d -> Flux.just(d + 1).collectList().map(p -> p.get(0))).map(d -> d + 1).map((d) -> {
+				spanInOperation.set(this.currentTraceContext.get());
+				return d + 1;
+			}).map(d -> d + 1).subscribe(d -> {
+			});
 		}
 
 		then(this.currentTraceContext.get()).isNull();
@@ -94,24 +91,21 @@ public class ScopePassingSpanSubscriberSpringBootTests {
 		final AtomicReference<TraceContext> spanInOperation = new AtomicReference<>();
 
 		try (Scope ws = this.currentTraceContext.newScope(context)) {
-			Flux.just(1, 2, 3).publishOn(Schedulers.single()).log("reactor.1")
-					.map(d -> d + 1).map(d -> d + 1)
-					.publishOn(Schedulers.newSingle("secondThread")).log("reactor.2")
-					.map((d) -> {
+			Flux.just(1, 2, 3).publishOn(Schedulers.single()).log("reactor.1").map(d -> d + 1).map(d -> d + 1)
+					.publishOn(Schedulers.newSingle("secondThread")).log("reactor.2").map((d) -> {
 						spanInOperation.set(this.currentTraceContext.get());
 						return d + 1;
 					}).map(d -> d + 1).blockLast();
 
-			Awaitility.await()
-					.untilAsserted(() -> then(spanInOperation.get()).isEqualTo(context));
+			Awaitility.await().untilAsserted(() -> then(spanInOperation.get()).isEqualTo(context));
 			then(this.currentTraceContext.get()).isEqualTo(context);
 		}
 
 		then(this.currentTraceContext.get()).isNull();
 
 		try (Scope ws = this.currentTraceContext.newScope(context2)) {
-			Flux.just(1, 2, 3).publishOn(Schedulers.single()).log("reactor.")
-					.map(d -> d + 1).map(d -> d + 1).map((d) -> {
+			Flux.just(1, 2, 3).publishOn(Schedulers.single()).log("reactor.").map(d -> d + 1).map(d -> d + 1)
+					.map((d) -> {
 						spanInOperation.set(this.currentTraceContext.get());
 						return d + 1;
 					}).map(d -> d + 1).blockLast();
@@ -138,10 +132,9 @@ public class ScopePassingSpanSubscriberSpringBootTests {
 		final AtomicReference<TraceContext> spanInZipOperation = new AtomicReference<>();
 
 		try (Scope ws = this.currentTraceContext.newScope(context)) {
-			Mono.fromCallable(this.currentTraceContext::get).map(span -> span)
-					.doOnNext(spanInOperation::set)
-					.zipWith(Mono.fromCallable(this.currentTraceContext::get)
-							.map(span -> span).doOnNext(spanInZipOperation::set))
+			Mono.fromCallable(this.currentTraceContext::get).map(span -> span).doOnNext(spanInOperation::set)
+					.zipWith(Mono.fromCallable(this.currentTraceContext::get).map(span -> span)
+							.doOnNext(spanInZipOperation::set))
 					.block();
 		}
 
@@ -153,9 +146,7 @@ public class ScopePassingSpanSubscriberSpringBootTests {
 	@Test
 	public void should_work_for_mono_just_with_flat_map() {
 		try (Scope ws = this.currentTraceContext.newScope(context)) {
-			Mono.just("value1")
-					.flatMap(request -> Mono.just("value2").then(Mono.just("foo")))
-					.map(a -> "qwe").block();
+			Mono.just("value1").flatMap(request -> Mono.just("value2").then(Mono.just("foo"))).map(a -> "qwe").block();
 		}
 	}
 
@@ -177,11 +168,8 @@ public class ScopePassingSpanSubscriberSpringBootTests {
 		final AtomicReference<TraceContext> spanInOperation = new AtomicReference<>();
 
 		try (Scope ws = this.currentTraceContext.newScope(context)) {
-			Flux.range(0, 5)
-					.flatMap(it -> Mono.delay(Duration.ofMillis(1))
-							.map(context -> this.currentTraceContext.get())
-							.doOnNext(spanInOperation::set))
-					.blockFirst();
+			Flux.range(0, 5).flatMap(it -> Mono.delay(Duration.ofMillis(1))
+					.map(context -> this.currentTraceContext.get()).doOnNext(spanInOperation::set)).blockFirst();
 		}
 
 		then(spanInOperation.get()).isEqualTo(context);

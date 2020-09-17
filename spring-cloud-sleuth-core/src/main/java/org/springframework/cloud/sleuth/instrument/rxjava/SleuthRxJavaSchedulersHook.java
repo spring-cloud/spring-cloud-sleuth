@@ -55,16 +55,14 @@ class SleuthRxJavaSchedulersHook extends RxJavaSchedulersHook {
 			if (this.delegate instanceof SleuthRxJavaSchedulersHook) {
 				return;
 			}
-			RxJavaErrorHandler errorHandler = RxJavaPlugins.getInstance()
-					.getErrorHandler();
-			RxJavaObservableExecutionHook observableExecutionHook = RxJavaPlugins
-					.getInstance().getObservableExecutionHook();
+			RxJavaErrorHandler errorHandler = RxJavaPlugins.getInstance().getErrorHandler();
+			RxJavaObservableExecutionHook observableExecutionHook = RxJavaPlugins.getInstance()
+					.getObservableExecutionHook();
 			logCurrentStateOfRxJavaPlugins(errorHandler, observableExecutionHook);
 			RxJavaPlugins.getInstance().reset();
 			RxJavaPlugins.getInstance().registerSchedulersHook(this);
 			RxJavaPlugins.getInstance().registerErrorHandler(errorHandler);
-			RxJavaPlugins.getInstance()
-					.registerObservableExecutionHook(observableExecutionHook);
+			RxJavaPlugins.getInstance().registerObservableExecutionHook(observableExecutionHook);
 		}
 		catch (Exception ex) {
 			log.error("Failed to register Sleuth RxJava SchedulersHook", ex);
@@ -74,9 +72,9 @@ class SleuthRxJavaSchedulersHook extends RxJavaSchedulersHook {
 	private void logCurrentStateOfRxJavaPlugins(RxJavaErrorHandler errorHandler,
 			RxJavaObservableExecutionHook observableExecutionHook) {
 		if (log.isDebugEnabled()) {
-			log.debug("Current RxJava plugins configuration is [" + "schedulersHook ["
-					+ this.delegate + "]," + "errorHandler [" + errorHandler + "],"
-					+ "observableExecutionHook [" + observableExecutionHook + "]," + "]");
+			log.debug("Current RxJava plugins configuration is [" + "schedulersHook [" + this.delegate + "],"
+					+ "errorHandler [" + errorHandler + "]," + "observableExecutionHook [" + observableExecutionHook
+					+ "]," + "]");
 			log.debug("Registering Sleuth RxJava Schedulers Hook.");
 		}
 	}
@@ -86,13 +84,11 @@ class SleuthRxJavaSchedulersHook extends RxJavaSchedulersHook {
 		if (action instanceof TraceAction) {
 			return action;
 		}
-		Action0 wrappedAction = this.delegate != null ? this.delegate.onSchedule(action)
-				: action;
+		Action0 wrappedAction = this.delegate != null ? this.delegate.onSchedule(action) : action;
 		if (wrappedAction instanceof TraceAction) {
 			return action;
 		}
-		return super.onSchedule(
-				new TraceAction(this.tracer, wrappedAction, this.threadsToSample));
+		return super.onSchedule(new TraceAction(this.tracer, wrappedAction, this.threadsToSample));
 	}
 
 	/**

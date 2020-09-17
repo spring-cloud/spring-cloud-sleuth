@@ -55,17 +55,14 @@ public class ScopePassingSpanSubscriberTests {
 		// iterator. That's not allowed, and will cause an exception
 		// Fuseable$QueueSubscription.NOT_SUPPORTED_MESSAGE.
 		// This ensures AssertJ uses normal toString.
-		StandardRepresentation.registerFormatterForType(ScopePassingSpanSubscriber.class,
-				Objects::toString);
+		StandardRepresentation.registerFormatterForType(ScopePassingSpanSubscriber.class, Objects::toString);
 	}
 
 	StrictCurrentTraceContext currentTraceContext = StrictCurrentTraceContext.create();
 
-	TraceContext context = TraceContext.newBuilder().traceId(1).spanId(1).sampled(true)
-			.build();
+	TraceContext context = TraceContext.newBuilder().traceId(1).spanId(1).sampled(true).build();
 
-	TraceContext context2 = TraceContext.newBuilder().traceId(1).spanId(2).sampled(true)
-			.build();
+	TraceContext context2 = TraceContext.newBuilder().traceId(1).spanId(2).sampled(true).build();
 
 	Subscriber<Object> assertNotScopePassingSpanSubscriber = new CoreSubscriber<Object>() {
 		@Override
@@ -132,8 +129,8 @@ public class ScopePassingSpanSubscriberTests {
 
 	@Test
 	public void should_propagate_current_context() {
-		ScopePassingSpanSubscriber<?> subscriber = new ScopePassingSpanSubscriber<>(null,
-				Context.of("foo", "bar"), this.currentTraceContext, null);
+		ScopePassingSpanSubscriber<?> subscriber = new ScopePassingSpanSubscriber<>(null, Context.of("foo", "bar"),
+				this.currentTraceContext, null);
 
 		then((String) subscriber.currentContext().get("foo")).isEqualTo("bar");
 	}
@@ -144,16 +141,16 @@ public class ScopePassingSpanSubscriberTests {
 	@Test
 	public void should_not_redundantly_copy_context() {
 		Context initial = Context.of(TraceContext.class, context);
-		ScopePassingSpanSubscriber<?> subscriber = new ScopePassingSpanSubscriber<>(null,
-				initial, this.currentTraceContext, context);
+		ScopePassingSpanSubscriber<?> subscriber = new ScopePassingSpanSubscriber<>(null, initial,
+				this.currentTraceContext, context);
 
 		then(initial).isSameAs(subscriber.currentContext());
 	}
 
 	@Test
 	public void should_set_empty_context_when_context_is_null() {
-		ScopePassingSpanSubscriber<?> subscriber = new ScopePassingSpanSubscriber<>(null,
-				Context.empty(), this.currentTraceContext, null);
+		ScopePassingSpanSubscriber<?> subscriber = new ScopePassingSpanSubscriber<>(null, Context.empty(),
+				this.currentTraceContext, null);
 
 		then(subscriber.currentContext().isEmpty()).isTrue();
 	}
@@ -161,9 +158,8 @@ public class ScopePassingSpanSubscriberTests {
 	@Test
 	public void should_put_current_span_to_context() {
 		try (Scope ws = this.currentTraceContext.newScope(context2)) {
-			CoreSubscriber<?> subscriber = new ScopePassingSpanSubscriber<>(
-					new BaseSubscriber<Object>() {
-					}, Context.empty(), currentTraceContext, context);
+			CoreSubscriber<?> subscriber = new ScopePassingSpanSubscriber<>(new BaseSubscriber<Object>() {
+			}, Context.empty(), currentTraceContext, context);
 
 			then(subscriber.currentContext().get(TraceContext.class)).isEqualTo(context);
 		}
@@ -179,14 +175,11 @@ public class ScopePassingSpanSubscriberTests {
 
 		try (Scope ws = this.currentTraceContext.newScope(context)) {
 
-			transformer.apply(Mono.just(1))
-					.subscribe(assertNotScopePassingSpanSubscriber);
+			transformer.apply(Mono.just(1)).subscribe(assertNotScopePassingSpanSubscriber);
 
-			transformer.apply(Mono.error(new Exception()))
-					.subscribe(assertNotScopePassingSpanSubscriber);
+			transformer.apply(Mono.error(new Exception())).subscribe(assertNotScopePassingSpanSubscriber);
 
-			transformer.apply(Mono.empty())
-					.subscribe(assertNotScopePassingSpanSubscriber);
+			transformer.apply(Mono.empty()).subscribe(assertNotScopePassingSpanSubscriber);
 
 		}
 	}
@@ -201,14 +194,11 @@ public class ScopePassingSpanSubscriberTests {
 
 		try (Scope ws = this.currentTraceContext.newScope(context)) {
 
-			transformer.apply(Mono.just(1).hide())
-					.subscribe(assertScopePassingSpanSubscriber);
+			transformer.apply(Mono.just(1).hide()).subscribe(assertScopePassingSpanSubscriber);
 
-			transformer.apply(Mono.<Integer>error(new Exception()).hide())
-					.subscribe(assertScopePassingSpanSubscriber);
+			transformer.apply(Mono.<Integer>error(new Exception()).hide()).subscribe(assertScopePassingSpanSubscriber);
 
-			transformer.apply(Mono.<Integer>empty().hide())
-					.subscribe(assertScopePassingSpanSubscriber);
+			transformer.apply(Mono.<Integer>empty().hide()).subscribe(assertScopePassingSpanSubscriber);
 		}
 	}
 

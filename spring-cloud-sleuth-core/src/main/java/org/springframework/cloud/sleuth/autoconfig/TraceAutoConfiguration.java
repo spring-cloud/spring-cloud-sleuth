@@ -74,15 +74,12 @@ public class TraceAutoConfiguration {
 	@ConditionalOnMissingBean
 	// NOTE: stable bean name as might be used outside sleuth
 	Tracing tracing(@LocalServiceName String serviceName, Propagation.Factory factory,
-			CurrentTraceContext currentTraceContext, Sampler sampler,
-			SleuthProperties sleuthProperties, @Nullable List<SpanHandler> spanHandlers,
-			@Nullable List<TracingCustomizer> tracingCustomizers) {
+			CurrentTraceContext currentTraceContext, Sampler sampler, SleuthProperties sleuthProperties,
+			@Nullable List<SpanHandler> spanHandlers, @Nullable List<TracingCustomizer> tracingCustomizers) {
 		Tracing.Builder builder = Tracing.newBuilder().sampler(sampler)
-				.localServiceName(StringUtils.isEmpty(serviceName) ? DEFAULT_SERVICE_NAME
-						: serviceName)
+				.localServiceName(StringUtils.isEmpty(serviceName) ? DEFAULT_SERVICE_NAME : serviceName)
 				.propagationFactory(factory).currentTraceContext(currentTraceContext)
-				.traceId128Bit(sleuthProperties.isTraceId128())
-				.supportsJoin(sleuthProperties.isSupportsJoin());
+				.traceId128Bit(sleuthProperties.isTraceId128()).supportsJoin(sleuthProperties.isSupportsJoin());
 		if (spanHandlers != null) {
 			for (SpanHandler spanHandlerFactory : spanHandlers) {
 				builder.addSpanHandler(spanHandlerFactory);
@@ -143,8 +140,7 @@ public class TraceAutoConfiguration {
 	}
 
 	@Bean
-	@ConditionalOnProperty(value = "spring.sleuth.span-handler.enabled",
-			matchIfMissing = true)
+	@ConditionalOnProperty(value = "spring.sleuth.span-handler.enabled", matchIfMissing = true)
 	SpanHandler spanIgnoringSpanHandler(SleuthProperties sleuthProperties) {
 		return new SpanIgnoringSpanHandler(sleuthProperties);
 	}

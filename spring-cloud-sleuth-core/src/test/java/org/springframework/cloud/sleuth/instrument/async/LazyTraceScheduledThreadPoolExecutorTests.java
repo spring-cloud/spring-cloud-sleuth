@@ -39,8 +39,7 @@ public class LazyTraceScheduledThreadPoolExecutorTests {
 		};
 		BeanFactory beanFactory = BDDMockito.mock(BeanFactory.class);
 
-		new LazyTraceScheduledThreadPoolExecutor(10, beanFactory, executor, null)
-				.finalize();
+		new LazyTraceScheduledThreadPoolExecutor(10, beanFactory, executor, null).finalize();
 
 		BDDAssertions.then(wasCalled).isFalse();
 		BDDAssertions.then(executor.isShutdown()).isFalse();

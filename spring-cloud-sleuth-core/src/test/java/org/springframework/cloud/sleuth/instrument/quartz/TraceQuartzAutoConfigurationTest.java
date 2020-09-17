@@ -38,9 +38,8 @@ import static org.mockito.Mockito.when;
  */
 public class TraceQuartzAutoConfigurationTest {
 
-	private final ApplicationContextRunner contextRunner = new ApplicationContextRunner()
-			.withConfiguration(AutoConfigurations.of(SchedulerConfig.class,
-					TracingConfig.class, TraceQuartzAutoConfiguration.class));
+	private final ApplicationContextRunner contextRunner = new ApplicationContextRunner().withConfiguration(
+			AutoConfigurations.of(SchedulerConfig.class, TracingConfig.class, TraceQuartzAutoConfiguration.class));
 
 	@Test
 	public void should_create_job_listener_bean_when_all_conditions_are_met() {

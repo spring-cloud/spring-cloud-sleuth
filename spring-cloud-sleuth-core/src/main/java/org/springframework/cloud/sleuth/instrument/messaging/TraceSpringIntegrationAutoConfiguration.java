@@ -51,29 +51,26 @@ import org.springframework.util.ObjectUtils;
 @Configuration(proxyBeanMethods = false)
 @ConditionalOnClass(GlobalChannelInterceptor.class)
 @ConditionalOnBean(Tracing.class)
-@AutoConfigureAfter({ TraceAutoConfiguration.class,
-		TraceSpringMessagingAutoConfiguration.class })
+@AutoConfigureAfter({ TraceAutoConfiguration.class, TraceSpringMessagingAutoConfiguration.class })
 @OnMessagingEnabled
 @EnableConfigurationProperties(SleuthMessagingProperties.class)
 @Conditional(TracingChannelInterceptorCondition.class)
 class TraceSpringIntegrationAutoConfiguration {
 
 	@Bean
-	public GlobalChannelInterceptorWrapper tracingGlobalChannelInterceptorWrapper(
-			TracingChannelInterceptor interceptor, SleuthMessagingProperties properties) {
-		GlobalChannelInterceptorWrapper wrapper = new GlobalChannelInterceptorWrapper(
-				interceptor);
+	public GlobalChannelInterceptorWrapper tracingGlobalChannelInterceptorWrapper(TracingChannelInterceptor interceptor,
+			SleuthMessagingProperties properties) {
+		GlobalChannelInterceptorWrapper wrapper = new GlobalChannelInterceptorWrapper(interceptor);
 		wrapper.setPatterns(properties.getIntegration().getPatterns());
 		return wrapper;
 	}
 
 	@Bean
-	TracingChannelInterceptor traceChannelInterceptor(Tracing tracing,
-			SleuthMessagingProperties properties,
+	TracingChannelInterceptor traceChannelInterceptor(Tracing tracing, SleuthMessagingProperties properties,
 			Propagation.Setter<MessageHeaderAccessor, String> traceMessagePropagationSetter,
 			Propagation.Getter<MessageHeaderAccessor, String> traceMessagePropagationGetter) {
-		return new TracingChannelInterceptor(tracing, properties,
-				traceMessagePropagationSetter, traceMessagePropagationGetter);
+		return new TracingChannelInterceptor(tracing, properties, traceMessagePropagationSetter,
+				traceMessagePropagationGetter);
 	}
 
 }
@@ -85,24 +82,21 @@ final class TracingChannelInterceptorCondition extends AnyNestedCondition {
 	}
 
 	@ConditionalOnMissingClass("org.springframework.cloud.function.context.FunctionCatalog")
-	@ConditionalOnProperty(value = "spring.sleuth.integration.enabled",
-			matchIfMissing = true)
+	@ConditionalOnProperty(value = "spring.sleuth.integration.enabled", matchIfMissing = true)
 	static class OnFunctionMissing {
 
 	}
 
 	@ConditionalOnClass(FunctionCatalog.class)
 	@Conditional(OnEnableBindingCondition.class)
-	@ConditionalOnProperty(value = "spring.sleuth.integration.enabled",
-			matchIfMissing = true)
+	@ConditionalOnProperty(value = "spring.sleuth.integration.enabled", matchIfMissing = true)
 	static class OnFunctionPresentAndEnableBinding {
 
 	}
 
 	@ConditionalOnClass(FunctionCatalog.class)
 	@Conditional(OnEnableBindingMissingCondition.class)
-	@ConditionalOnProperty(value = "spring.sleuth.integration.enabled",
-			havingValue = "true")
+	@ConditionalOnProperty(value = "spring.sleuth.integration.enabled", havingValue = "true")
 	static class OnFunctionPresentEnableBindingOffAndIntegrationExplicitlyOn {
 
 	}
@@ -120,14 +114,12 @@ class OnEnableBindingCondition implements ConfigurationCondition {
 	public boolean matches(ConditionContext context, AnnotatedTypeMetadata metadata) {
 		Class clazz;
 		try {
-			clazz = Class
-					.forName("org.springframework.cloud.stream.annotation.EnableBinding");
+			clazz = Class.forName("org.springframework.cloud.stream.annotation.EnableBinding");
 		}
 		catch (ClassNotFoundException e) {
 			return false;
 		}
-		return !ObjectUtils
-				.isEmpty(context.getBeanFactory().getBeanNamesForAnnotation(clazz));
+		return !ObjectUtils.isEmpty(context.getBeanFactory().getBeanNamesForAnnotation(clazz));
 	}
 
 }

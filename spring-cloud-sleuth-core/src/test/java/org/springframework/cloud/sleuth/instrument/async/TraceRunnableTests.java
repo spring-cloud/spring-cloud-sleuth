@@ -44,8 +44,8 @@ public class TraceRunnableTests {
 
 	TestSpanHandler spans = new TestSpanHandler();
 
-	Tracing tracing = Tracing.newBuilder().currentTraceContext(this.currentTraceContext)
-			.addSpanHandler(this.spans).build();
+	Tracing tracing = Tracing.newBuilder().currentTraceContext(this.currentTraceContext).addSpanHandler(this.spans)
+			.build();
 
 	Tracer tracer = this.tracing.tracer();
 
@@ -58,8 +58,7 @@ public class TraceRunnableTests {
 	}
 
 	@Test
-	public void should_remove_span_from_thread_local_after_finishing_work()
-			throws Exception {
+	public void should_remove_span_from_thread_local_after_finishing_work() throws Exception {
 		// given
 		TraceKeepingRunnable traceKeepingRunnable = runnableThatRetrievesTraceFromThreadLocal();
 		givenRunnableGetsSubmitted(traceKeepingRunnable);
@@ -71,17 +70,15 @@ public class TraceRunnableTests {
 
 		// then
 		Span secondSpan = traceKeepingRunnable.span;
-		then(secondSpan.context().traceId()).as("second span id")
-				.isNotEqualTo(firstSpan.context().traceId()).as("first span id");
+		then(secondSpan.context().traceId()).as("second span id").isNotEqualTo(firstSpan.context().traceId())
+				.as("first span id");
 
 		// and
-		then(secondSpan.context().parentId()).as("saved span as remnant of first span")
-				.isNull();
+		then(secondSpan.context().parentId()).as("saved span as remnant of first span").isNull();
 	}
 
 	@Test
-	public void should_not_find_thread_local_in_non_traceable_callback()
-			throws Exception {
+	public void should_not_find_thread_local_in_non_traceable_callback() throws Exception {
 		// given
 		TraceKeepingRunnable traceKeepingRunnable = runnableThatRetrievesTraceFromThreadLocal();
 		givenRunnableGetsSubmitted(traceKeepingRunnable);
@@ -107,8 +104,7 @@ public class TraceRunnableTests {
 	}
 
 	@Test
-	public void should_take_name_of_span_from_to_string_if_span_name_annotation_is_missing()
-			throws Exception {
+	public void should_take_name_of_span_from_to_string_if_span_name_annotation_is_missing() throws Exception {
 		final AtomicReference<Span> span = new AtomicReference<>();
 		Runnable runnable = runnableWithCustomToString(span);
 
@@ -127,13 +123,10 @@ public class TraceRunnableTests {
 	}
 
 	private void whenRunnableGetsSubmitted(Runnable runnable) throws Exception {
-		this.executor
-				.submit(new TraceRunnable(this.tracing, new DefaultSpanNamer(), runnable))
-				.get();
+		this.executor.submit(new TraceRunnable(this.tracing, new DefaultSpanNamer(), runnable)).get();
 	}
 
-	private void whenNonTraceableRunnableGetsSubmitted(Runnable runnable)
-			throws Exception {
+	private void whenNonTraceableRunnableGetsSubmitted(Runnable runnable) throws Exception {
 		this.executor.submit(runnable).get();
 	}
 

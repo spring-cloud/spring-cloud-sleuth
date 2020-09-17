@@ -76,8 +76,7 @@ public class TraceFilterWebIntegrationTests {
 	@ClassRule
 	public static IntegrationTestSpanHandler spanHandler = new IntegrationTestSpanHandler();
 
-	private static final Logger log = LoggerFactory
-			.getLogger(TraceFilterWebIntegrationTests.class);
+	private static final Logger log = LoggerFactory.getLogger(TraceFilterWebIntegrationTests.class);
 
 	@Autowired
 	CurrentTraceContext currentTraceContext;
@@ -91,8 +90,7 @@ public class TraceFilterWebIntegrationTests {
 
 	@Test
 	public void should_tag_url() {
-		new RestTemplate().getForObject("http://localhost:" + port() + "/good",
-				String.class);
+		new RestTemplate().getForObject("http://localhost:" + port() + "/good", String.class);
 
 		then(this.currentTraceContext.get()).isNull();
 		then(spanHandler.takeRemoteSpan(Kind.SERVER).tags()).containsKey("http.url");
@@ -100,8 +98,7 @@ public class TraceFilterWebIntegrationTests {
 
 	@Test
 	public void should_tag_with_value_from_null_expression() {
-		new RestTemplate().getForObject("http://localhost:" + port() + "/null-parameter",
-				String.class);
+		new RestTemplate().getForObject("http://localhost:" + port() + "/null-parameter", String.class);
 
 		then(this.currentTraceContext.get()).isNull();
 		then(spanHandler.takeRemoteSpan(Kind.SERVER).tags()).containsEntry("foo", "1001");
@@ -109,50 +106,42 @@ public class TraceFilterWebIntegrationTests {
 
 	@Test
 	public void should_tag_with_value_from_non_null_expression() {
-		new RestTemplate().getForObject(
-				"http://localhost:" + port() + "/null-parameter?bar=10", String.class);
+		new RestTemplate().getForObject("http://localhost:" + port() + "/null-parameter?bar=10", String.class);
 
 		then(this.currentTraceContext.get()).isNull();
 		then(spanHandler.takeRemoteSpan(Kind.SERVER).tags()).containsEntry("foo", "11");
 	}
 
 	@Test
-	public void exception_logging_span_handler_logs_synchronous_exceptions(
-			CapturedOutput capture) {
+	public void exception_logging_span_handler_logs_synchronous_exceptions(CapturedOutput capture) {
 		try {
-			new RestTemplate().getForObject("http://localhost:" + port() + "/",
-					String.class);
+			new RestTemplate().getForObject("http://localhost:" + port() + "/", String.class);
 			BDDAssertions.fail("should fail due to runtime exception");
 		}
 		catch (Exception e) {
 		}
 
 		then(this.currentTraceContext.get()).isNull();
-		MutableSpan fromFirstTraceFilterFlow = spanHandler.takeRemoteSpanWithErrorMessage(
-				Kind.SERVER,
+		MutableSpan fromFirstTraceFilterFlow = spanHandler.takeRemoteSpanWithErrorMessage(Kind.SERVER,
 				"Request processing failed; nested exception is java.lang.RuntimeException: Throwing exception");
-		then(fromFirstTraceFilterFlow.tags()).containsEntry("http.method", "GET")
-				.containsEntry("mvc.controller.class", "BasicErrorController");
+		then(fromFirstTraceFilterFlow.tags()).containsEntry("http.method", "GET").containsEntry("mvc.controller.class",
+				"BasicErrorController");
 		// Trace IDs in logs: issue#714
 		String hex = fromFirstTraceFilterFlow.traceId();
 		thenLogsForExceptionLoggingFilterContainTracingInformation(capture, hex);
 	}
 
-	private void thenLogsForExceptionLoggingFilterContainTracingInformation(
-			CapturedOutput capture, String hex) {
+	private void thenLogsForExceptionLoggingFilterContainTracingInformation(CapturedOutput capture, String hex) {
 		String[] split = capture.toString().split("\n");
-		List<String> list = Arrays.stream(split)
-				.filter(s -> s.contains("Uncaught exception thrown"))
-				.filter(s -> s.contains(hex + "," + hex + "]"))
-				.collect(Collectors.toList());
+		List<String> list = Arrays.stream(split).filter(s -> s.contains("Uncaught exception thrown"))
+				.filter(s -> s.contains(hex + "," + hex + "]")).collect(Collectors.toList());
 		then(list).isNotEmpty();
 	}
 
 	@Test
 	public void should_create_spans_for_endpoint_returning_unsuccessful_result() {
 		try {
-			new RestTemplate().getForObject(
-					"http://localhost:" + port() + "/test_bad_request", String.class);
+			new RestTemplate().getForObject("http://localhost:" + port() + "/test_bad_request", String.class);
 			fail("should throw exception");
 		}
 		catch (HttpClientErrorException e) {
@@ -205,8 +194,7 @@ public class TraceFilterWebIntegrationTests {
 			return new SpanHandler() {
 				@Override
 				public boolean end(TraceContext context, MutableSpan span, Cause cause) {
-					if (span.kind() != Kind.SERVER || span.error() == null
-							|| !log.isErrorEnabled()) {
+					if (span.kind() != Kind.SERVER || span.error() == null || !log.isErrorEnabled()) {
 						return true; // don't add overhead as we only log server errors
 					}
 
@@ -289,9 +277,8 @@ public class TraceFilterWebIntegrationTests {
 
 		@RequestMapping("/null-parameter")
 		@ContinueSpan
-		public String nullParameter(
-				@SpanTag(key = "foo", expression = "(#root?:1000)+1") @RequestParam(
-						value = "bar", required = false) Integer param) {
+		public String nullParameter(@SpanTag(key = "foo", expression = "(#root?:1000)+1") @RequestParam(value = "bar",
+				required = false) Integer param) {
 			return "ok param=" + param;
 		}
 
@@ -300,8 +287,7 @@ public class TraceFilterWebIntegrationTests {
 	@RestController
 	public static class ExceptionThrowingController {
 
-		private static final Log log = LogFactory
-				.getLog(ExceptionThrowingController.class);
+		private static final Log log = LogFactory.getLog(ExceptionThrowingController.class);
 
 		@RequestMapping("/")
 		public void throwException() {

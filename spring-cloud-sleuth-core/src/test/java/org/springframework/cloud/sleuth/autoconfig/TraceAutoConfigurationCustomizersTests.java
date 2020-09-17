@@ -41,22 +41,19 @@ import static org.assertj.core.api.BDDAssertions.then;
 public class TraceAutoConfigurationCustomizersTests {
 
 	private final ApplicationContextRunner contextRunner = new ApplicationContextRunner()
-			.withConfiguration(AutoConfigurations.of(TraceAutoConfiguration.class,
-					TraceHttpAutoConfiguration.class, TraceRpcAutoConfiguration.class,
-					TraceMessagingAutoConfiguration.class,
+			.withConfiguration(AutoConfigurations.of(TraceAutoConfiguration.class, TraceHttpAutoConfiguration.class,
+					TraceRpcAutoConfiguration.class, TraceMessagingAutoConfiguration.class,
 					FakeSpringMessagingAutoConfiguration.class))
 			.withUserConfiguration(Customizers.class);
 
 	@Test
 	public void should_apply_customizers() {
-		this.contextRunner
-				.withPropertyValues("spring.sleuth.baggage.remote-fields=country-code")
-				.run((context) -> {
-					Customizers bean = context.getBean(Customizers.class);
+		this.contextRunner.withPropertyValues("spring.sleuth.baggage.remote-fields=country-code").run((context) -> {
+			Customizers bean = context.getBean(Customizers.class);
 
-					shouldApplyCustomizations(bean);
-					shouldNotOverrideTheDefaults(context);
-				});
+			shouldApplyCustomizations(bean);
+			shouldNotOverrideTheDefaults(context);
+		});
 	}
 
 	@Test

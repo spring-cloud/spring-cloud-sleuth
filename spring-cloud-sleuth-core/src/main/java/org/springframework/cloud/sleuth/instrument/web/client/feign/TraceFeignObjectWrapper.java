@@ -47,12 +47,10 @@ final class TraceFeignObjectWrapper {
 	private static final String DELEGATE = "delegate";
 
 	static {
-		loadBalancerPresent = ClassUtils.isPresent(
-				"org.springframework.cloud.openfeign.loadbalancer.FeignBlockingLoadBalancerClient",
-				null)
+		loadBalancerPresent = ClassUtils
+				.isPresent("org.springframework.cloud.openfeign.loadbalancer.FeignBlockingLoadBalancerClient", null)
 				&& ClassUtils.isPresent(
-						"org.springframework.cloud.loadbalancer.blocking.client.BlockingLoadBalancerClient",
-						null);
+						"org.springframework.cloud.loadbalancer.blocking.client.BlockingLoadBalancerClient", null);
 	}
 
 	private final BeanFactory beanFactory;
@@ -78,25 +76,21 @@ final class TraceFeignObjectWrapper {
 		if (AopUtils.getTargetClass(bean).equals(FeignBlockingLoadBalancerClient.class)) {
 			FeignBlockingLoadBalancerClient client = ProxyUtils.getTargetObject(bean);
 			return new TraceFeignBlockingLoadBalancerClient(
-					(Client) new TraceFeignObjectWrapper(this.beanFactory)
-							.wrap(client.getDelegate()),
+					(Client) new TraceFeignObjectWrapper(this.beanFactory).wrap(client.getDelegate()),
 					(LoadBalancerClient) loadBalancerClient(), this.beanFactory);
 		}
 		else {
 			FeignBlockingLoadBalancerClient client = ProxyUtils.getTargetObject(bean);
 			try {
-				Field delegate = FeignBlockingLoadBalancerClient.class
-						.getDeclaredField(DELEGATE);
+				Field delegate = FeignBlockingLoadBalancerClient.class.getDeclaredField(DELEGATE);
 				delegate.setAccessible(true);
-				delegate.set(client, new TraceFeignObjectWrapper(this.beanFactory)
-						.wrap(client.getDelegate()));
+				delegate.set(client, new TraceFeignObjectWrapper(this.beanFactory).wrap(client.getDelegate()));
 			}
-			catch (NoSuchFieldException | IllegalArgumentException
-					| IllegalAccessException | SecurityException e) {
+			catch (NoSuchFieldException | IllegalArgumentException | IllegalAccessException | SecurityException e) {
 				log.warn(EXCEPTION_WARNING, e);
 			}
-			return new TraceFeignBlockingLoadBalancerClient(client,
-					(LoadBalancerClient) loadBalancerClient(), this.beanFactory);
+			return new TraceFeignBlockingLoadBalancerClient(client, (LoadBalancerClient) loadBalancerClient(),
+					this.beanFactory);
 		}
 	}
 

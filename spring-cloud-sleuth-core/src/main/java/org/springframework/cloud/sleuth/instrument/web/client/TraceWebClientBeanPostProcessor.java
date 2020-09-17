@@ -97,8 +97,7 @@ final class TraceWebClientBeanPostProcessor implements BeanPostProcessor {
 		};
 	}
 
-	private boolean noneMatchTraceExchangeFunction(
-			List<ExchangeFilterFunction> functions) {
+	private boolean noneMatchTraceExchangeFunction(List<ExchangeFilterFunction> functions) {
 		for (ExchangeFilterFunction function : functions) {
 			if (function instanceof TraceExchangeFilterFunction) {
 				return false;
@@ -127,8 +126,7 @@ final class TraceExchangeFilterFunction implements ExchangeFilterFunction {
 		this.scopePassingTransformer = scopePassingSpanOperator(springContext);
 	}
 
-	public static ExchangeFilterFunction create(
-			ConfigurableApplicationContext springContext) {
+	public static ExchangeFilterFunction create(ConfigurableApplicationContext springContext) {
 		return new TraceExchangeFilterFunction(springContext);
 	}
 
@@ -161,8 +159,7 @@ final class TraceExchangeFilterFunction implements ExchangeFilterFunction {
 
 		final CurrentTraceContext currentTraceContext;
 
-		MonoWebClientTrace(ExchangeFunction next, ClientRequest request,
-				TraceExchangeFilterFunction filterFunction) {
+		MonoWebClientTrace(ExchangeFunction next, ClientRequest request, TraceExchangeFilterFunction filterFunction) {
 			this.next = next;
 			this.request = request;
 			this.handler = filterFunction.handler();
@@ -176,8 +173,7 @@ final class TraceExchangeFilterFunction implements ExchangeFilterFunction {
 				log.trace("Got the following context [" + context + "]");
 			}
 			ClientRequestWrapper wrapper = new ClientRequestWrapper(request);
-			TraceContext parent = context.hasKey(TraceContext.class)
-					? context.get(TraceContext.class) : null;
+			TraceContext parent = context.hasKey(TraceContext.class) ? context.get(TraceContext.class) : null;
 			Span span = handler.handleSendWithParent(wrapper, parent);
 			if (log.isDebugEnabled()) {
 				log.debug("HttpClientHandler::handleSend: " + span);
@@ -186,8 +182,7 @@ final class TraceExchangeFilterFunction implements ExchangeFilterFunction {
 			// canceled prior to actually being invoked. TraceWebClientSubscription will
 			// abandon this span, if cancel() happens before request().
 			this.next.exchange(wrapper.buildRequest())
-					.subscribe(new TraceWebClientSubscriber(subscriber, context, span,
-							parent, this));
+					.subscribe(new TraceWebClientSubscriber(subscriber, context, span, parent, this));
 		}
 
 	}
@@ -206,16 +201,14 @@ final class TraceExchangeFilterFunction implements ExchangeFilterFunction {
 
 		final CurrentTraceContext currentTraceContext;
 
-		TraceWebClientSubscriber(CoreSubscriber<? super ClientResponse> actual,
-				Context ctx, Span clientSpan, TraceContext parent,
-				MonoWebClientTrace mono) {
+		TraceWebClientSubscriber(CoreSubscriber<? super ClientResponse> actual, Context ctx, Span clientSpan,
+				TraceContext parent, MonoWebClientTrace mono) {
 			this.actual = actual;
 			this.parent = parent;
 			this.handler = mono.handler;
 			this.currentTraceContext = mono.currentTraceContext;
-			this.context = this.parent != null
-					&& !this.parent.equals(ctx.getOrDefault(TraceContext.class, null))
-							? ctx.put(TraceContext.class, this.parent) : ctx;
+			this.context = this.parent != null && !this.parent.equals(ctx.getOrDefault(TraceContext.class, null))
+					? ctx.put(TraceContext.class, this.parent) : ctx;
 			set(clientSpan);
 		}
 
@@ -234,8 +227,7 @@ final class TraceExchangeFilterFunction implements ExchangeFilterFunction {
 				Span span = getAndSet(null);
 				if (span != null) {
 					// TODO: is there a way to read the request at response time?
-					this.handler.handleReceive(new ClientResponseWrapper(response), null,
-							span);
+					this.handler.handleReceive(new ClientResponseWrapper(response), null, span);
 				}
 			}
 		}
@@ -294,8 +286,7 @@ final class TraceExchangeFilterFunction implements ExchangeFilterFunction {
 
 		volatile boolean requested;
 
-		TraceWebClientSubscription(Subscription delegate,
-				AtomicReference<Span> pendingSpan) {
+		TraceWebClientSubscription(Subscription delegate, AtomicReference<Span> pendingSpan) {
 			this.delegate = delegate;
 			this.pendingSpan = pendingSpan;
 		}
@@ -315,9 +306,8 @@ final class TraceExchangeFilterFunction implements ExchangeFilterFunction {
 			Span span = pendingSpan.getAndSet(null);
 			if (span != null) {
 				if (log.isDebugEnabled()) {
-					log.debug(
-							"Subscription was cancelled. TraceWebClientBeanPostProcessor Will close the span ["
-									+ span + "]");
+					log.debug("Subscription was cancelled. TraceWebClientBeanPostProcessor Will close the span [" + span
+							+ "]");
 				}
 
 				if (!requested) { // Abandon the span.

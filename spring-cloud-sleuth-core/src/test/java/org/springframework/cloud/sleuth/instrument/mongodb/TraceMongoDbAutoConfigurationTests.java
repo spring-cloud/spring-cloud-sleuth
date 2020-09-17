@@ -39,8 +39,7 @@ import static org.assertj.core.api.BDDAssertions.then;
 class TraceMongoDbAutoConfigurationTests {
 
 	@Test
-	void should_record_a_span_when_working_with_mongodb_commands(
-			@Autowired TestSpanHandler handler) {
+	void should_record_a_span_when_working_with_mongodb_commands(@Autowired TestSpanHandler handler) {
 		then(handler.spans()).isNotEmpty();
 		MutableSpan span = handler.get(0);
 		then(span.traceId()).isNotEmpty();
@@ -58,8 +57,7 @@ class TraceMongoDbAutoConfigurationTests {
 		}
 
 		@Bean
-		TraceMongoClientSettingsBuilderCustomizer testMongoClientSettingsBuilderCustomizer(
-				Tracing tracing) {
+		TraceMongoClientSettingsBuilderCustomizer testMongoClientSettingsBuilderCustomizer(Tracing tracing) {
 			return new TestMongoClientSettingsBuilderCustomizer(tracing);
 		}
 
@@ -67,8 +65,7 @@ class TraceMongoDbAutoConfigurationTests {
 
 }
 
-class TestMongoClientSettingsBuilderCustomizer
-		extends TraceMongoClientSettingsBuilderCustomizer {
+class TestMongoClientSettingsBuilderCustomizer extends TraceMongoClientSettingsBuilderCustomizer {
 
 	TestMongoClientSettingsBuilderCustomizer(Tracing tracing) {
 		super(tracing);
@@ -77,12 +74,9 @@ class TestMongoClientSettingsBuilderCustomizer
 	@Override
 	public void customize(MongoClientSettings.Builder clientSettingsBuilder) {
 		super.customize(clientSettingsBuilder);
-		CommandListener listener = clientSettingsBuilder.build().getCommandListeners()
-				.get(0);
-		listener.commandStarted(new CommandStartedEvent(0, null, "", "",
-				BDDMockito.mock(BsonDocument.class)));
-		listener.commandSucceeded(new CommandSucceededEvent(1, null, "",
-				BDDMockito.mock(BsonDocument.class), 100));
+		CommandListener listener = clientSettingsBuilder.build().getCommandListeners().get(0);
+		listener.commandStarted(new CommandStartedEvent(0, null, "", "", BDDMockito.mock(BsonDocument.class)));
+		listener.commandSucceeded(new CommandSucceededEvent(1, null, "", BDDMockito.mock(BsonDocument.class), 100));
 	}
 
 }

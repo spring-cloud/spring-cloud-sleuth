@@ -38,8 +38,7 @@ final class OkHttpFeignClientBeanPostProcessor implements BeanPostProcessor {
 	}
 
 	@Override
-	public Object postProcessBeforeInitialization(Object bean, String beanName)
-			throws BeansException {
+	public Object postProcessBeforeInitialization(Object bean, String beanName) throws BeansException {
 		if (bean instanceof OkHttpClient && !(bean instanceof LazyClient)) {
 			return new LazyClient(this.beanFactory, (Client) bean);
 		}
@@ -47,8 +46,7 @@ final class OkHttpFeignClientBeanPostProcessor implements BeanPostProcessor {
 	}
 
 	@Override
-	public Object postProcessAfterInitialization(Object bean, String beanName)
-			throws BeansException {
+	public Object postProcessAfterInitialization(Object bean, String beanName) throws BeansException {
 		return bean;
 	}
 

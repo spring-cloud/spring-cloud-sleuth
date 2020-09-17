@@ -70,16 +70,14 @@ public class TraceRedisAutoConfigurationTests {
 		@Bean
 		TestTraceLettuceClientResourcesBeanPostProcessor testTraceLettuceClientResourcesBeanPostProcessor(
 				BeanFactory beanFactory, TraceRedisProperties traceRedisProperties) {
-			return new TestTraceLettuceClientResourcesBeanPostProcessor(beanFactory,
-					traceRedisProperties);
+			return new TestTraceLettuceClientResourcesBeanPostProcessor(beanFactory, traceRedisProperties);
 		}
 
 	}
 
 }
 
-class TestTraceLettuceClientResourcesBeanPostProcessor
-		extends TraceLettuceClientResourcesBeanPostProcessor {
+class TestTraceLettuceClientResourcesBeanPostProcessor extends TraceLettuceClientResourcesBeanPostProcessor {
 
 	boolean tracingCalled = false;
 
@@ -89,8 +87,7 @@ class TestTraceLettuceClientResourcesBeanPostProcessor
 	}
 
 	@Override
-	public Object postProcessAfterInitialization(Object bean, String beanName)
-			throws BeansException {
+	public Object postProcessAfterInitialization(Object bean, String beanName) throws BeansException {
 		this.tracingCalled = true;
 		return super.postProcessAfterInitialization(bean, beanName);
 	}

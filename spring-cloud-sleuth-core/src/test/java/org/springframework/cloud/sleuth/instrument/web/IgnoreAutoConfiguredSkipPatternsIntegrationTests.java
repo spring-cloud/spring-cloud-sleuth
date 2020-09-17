@@ -40,8 +40,7 @@ import static org.assertj.core.api.BDDAssertions.then;
 
 @SpringBootTest(classes = IgnoreAutoConfiguredSkipPatternsIntegrationTests.Config.class,
 		webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
-		properties = { "management.endpoints.web.exposure.include:*",
-				"server.servlet.context-path:/context-path",
+		properties = { "management.endpoints.web.exposure.include:*", "server.servlet.context-path:/context-path",
 				"spring.sleuth.web.ignoreAutoConfiguredSkipPatterns:true" })
 public class IgnoreAutoConfiguredSkipPatternsIntegrationTests {
 
@@ -62,8 +61,7 @@ public class IgnoreAutoConfiguredSkipPatternsIntegrationTests {
 
 	@Test
 	public void should_sample_actuator_endpoint_when_override_pattern_is_true() {
-		new RestTemplate().getForObject(
-				"http://localhost:" + this.port + "/context-path/actuator/health",
+		new RestTemplate().getForObject("http://localhost:" + this.port + "/context-path/actuator/health",
 				String.class);
 
 		then(this.tracer.currentSpan()).isNull();
@@ -72,9 +70,7 @@ public class IgnoreAutoConfiguredSkipPatternsIntegrationTests {
 
 	@Test
 	public void should_sample_non_actuator_endpoint_when_override_pattern_is_true() {
-		new RestTemplate().getForObject(
-				"http://localhost:" + this.port + "/context-path/something",
-				String.class);
+		new RestTemplate().getForObject("http://localhost:" + this.port + "/context-path/something", String.class);
 
 		then(this.tracer.currentSpan()).isNull();
 		then(this.spans).hasSize(1);
@@ -82,9 +78,7 @@ public class IgnoreAutoConfiguredSkipPatternsIntegrationTests {
 
 	@Test
 	public void should_not_sample_default_skip_patterns_when_override_pattern_is_true() {
-		new RestTemplate().getForObject(
-				"http://localhost:" + this.port + "/context-path/index.html",
-				String.class);
+		new RestTemplate().getForObject("http://localhost:" + this.port + "/context-path/index.html", String.class);
 
 		then(this.tracer.currentSpan()).isNull();
 		then(this.spans).hasSize(0);

@@ -52,16 +52,14 @@ final class TraceRequestHttpHeadersFilter extends AbstractHttpHeadersFilter {
 	@Override
 	public HttpHeaders filter(HttpHeaders input, ServerWebExchange exchange) {
 		if (log.isDebugEnabled()) {
-			log.debug("Will instrument the HTTP request headers ["
-					+ exchange.getRequest().getHeaders() + "]");
+			log.debug("Will instrument the HTTP request headers [" + exchange.getRequest().getHeaders() + "]");
 		}
 		HttpClientRequest request = new HttpClientRequest(exchange.getRequest(), input);
 		Span currentSpan = currentSpan(exchange, request);
 		Span span = injectedSpan(request, currentSpan);
 		if (log.isDebugEnabled()) {
-			log.debug(
-					"Client span  " + span + " created for the request. New headers are "
-							+ request.filteredHeaders.toSingleValueMap());
+			log.debug("Client span  " + span + " created for the request. New headers are "
+					+ request.filteredHeaders.toSingleValueMap());
 		}
 		exchange.getAttributes().put(SPAN_ATTRIBUTE, span);
 		HttpHeaders headersWithInput = new HttpHeaders();
@@ -90,8 +88,7 @@ final class TraceRequestHttpHeadersFilter extends AbstractHttpHeadersFilter {
 		Object attribute = exchange.getAttribute(TRACE_REQUEST_ATTR);
 		if (attribute instanceof Span) {
 			if (log.isDebugEnabled()) {
-				log.debug("Found trace request attribute in the server web exchange ["
-						+ attribute + "]");
+				log.debug("Found trace request attribute in the server web exchange [" + attribute + "]");
 			}
 			return (Span) attribute;
 		}
@@ -106,8 +103,7 @@ final class TraceRequestHttpHeadersFilter extends AbstractHttpHeadersFilter {
 		return this.handler.handleSend(request, clientSpan);
 	}
 
-	private void addHeadersWithInput(HttpHeaders filteredHeaders,
-			HttpHeaders headersWithInput) {
+	private void addHeadersWithInput(HttpHeaders filteredHeaders, HttpHeaders headersWithInput) {
 		for (Map.Entry<String, List<String>> entry : filteredHeaders.entrySet()) {
 			String key = entry.getKey();
 			List<String> value = entry.getValue();
@@ -124,8 +120,7 @@ final class TraceRequestHttpHeadersFilter extends AbstractHttpHeadersFilter {
 
 final class TraceResponseHttpHeadersFilter extends AbstractHttpHeadersFilter {
 
-	private static final Log log = LogFactory
-			.getLog(TraceResponseHttpHeadersFilter.class);
+	private static final Log log = LogFactory.getLog(TraceResponseHttpHeadersFilter.class);
 
 	private TraceResponseHttpHeadersFilter(HttpTracing httpTracing) {
 		super(httpTracing);
@@ -173,8 +168,7 @@ abstract class AbstractHttpHeadersFilter implements HttpHeadersFilter {
 
 	AbstractHttpHeadersFilter(HttpTracing httpTracing) {
 		this.tracer = httpTracing.tracing().tracer();
-		this.extractor = httpTracing.tracing().propagation()
-				.extractor(HttpClientRequest::header);
+		this.extractor = httpTracing.tracing().propagation().extractor(HttpClientRequest::header);
 		this.handler = HttpClientHandler.create(httpTracing);
 		this.httpTracing = httpTracing;
 	}
@@ -237,8 +231,7 @@ abstract class AbstractHttpHeadersFilter implements HttpHeadersFilter {
 
 		@Override
 		public int statusCode() {
-			return delegate.getStatusCode() != null ? delegate.getStatusCode().value()
-					: 0;
+			return delegate.getStatusCode() != null ? delegate.getStatusCode().value() : 0;
 		}
 
 	}

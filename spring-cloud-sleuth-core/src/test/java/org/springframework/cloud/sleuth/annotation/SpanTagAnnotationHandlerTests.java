@@ -51,14 +51,11 @@ public class SpanTagAnnotationHandlerTests {
 	}
 
 	@Test
-	public void shouldUseCustomTagValueResolver()
-			throws NoSuchMethodException, SecurityException {
-		Method method = AnnotationMockClass.class
-				.getMethod("getAnnotationForTagValueResolver", String.class);
+	public void shouldUseCustomTagValueResolver() throws NoSuchMethodException, SecurityException {
+		Method method = AnnotationMockClass.class.getMethod("getAnnotationForTagValueResolver", String.class);
 		Annotation annotation = method.getParameterAnnotations()[0][0];
 		if (annotation instanceof SpanTag) {
-			String resolvedValue = this.handler.resolveTagValue((SpanTag) annotation,
-					"test");
+			String resolvedValue = this.handler.resolveTagValue((SpanTag) annotation, "test");
 			assertThat(resolvedValue).isEqualTo("Value from myCustomTagValueResolver");
 		}
 		else {
@@ -67,14 +64,11 @@ public class SpanTagAnnotationHandlerTests {
 	}
 
 	@Test
-	public void shouldUseTagValueExpression()
-			throws NoSuchMethodException, SecurityException {
-		Method method = AnnotationMockClass.class
-				.getMethod("getAnnotationForTagValueExpression", String.class);
+	public void shouldUseTagValueExpression() throws NoSuchMethodException, SecurityException {
+		Method method = AnnotationMockClass.class.getMethod("getAnnotationForTagValueExpression", String.class);
 		Annotation annotation = method.getParameterAnnotations()[0][0];
 		if (annotation instanceof SpanTag) {
-			String resolvedValue = this.handler.resolveTagValue((SpanTag) annotation,
-					"test");
+			String resolvedValue = this.handler.resolveTagValue((SpanTag) annotation, "test");
 
 			assertThat(resolvedValue).isEqualTo("hello characters");
 		}
@@ -84,10 +78,8 @@ public class SpanTagAnnotationHandlerTests {
 	}
 
 	@Test
-	public void shouldReturnArgumentToString()
-			throws NoSuchMethodException, SecurityException {
-		Method method = AnnotationMockClass.class
-				.getMethod("getAnnotationForArgumentToString", Long.class);
+	public void shouldReturnArgumentToString() throws NoSuchMethodException, SecurityException {
+		Method method = AnnotationMockClass.class.getMethod("getAnnotationForArgumentToString", Long.class);
 		Annotation annotation = method.getParameterAnnotations()[0][0];
 		if (annotation instanceof SpanTag) {
 			String resolvedValue = this.handler.resolveTagValue((SpanTag) annotation, 15);
@@ -127,8 +119,8 @@ public class SpanTagAnnotationHandlerTests {
 
 		// tag::spel[]
 		@NewSpan
-		public void getAnnotationForTagValueExpression(@SpanTag(key = "test",
-				expression = "'hello' + ' characters'") String test) {
+		public void getAnnotationForTagValueExpression(
+				@SpanTag(key = "test", expression = "'hello' + ' characters'") String test) {
 		}
 		// end::spel[]
 

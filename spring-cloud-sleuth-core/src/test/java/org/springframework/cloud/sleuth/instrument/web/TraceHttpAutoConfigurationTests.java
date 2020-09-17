@@ -41,8 +41,7 @@ public class TraceHttpAutoConfigurationTests {
 	@Test
 	public void defaultsClientSamplerToDefer() {
 		contextRunner().run((context) -> {
-			SamplerFunction<HttpRequest> clientSampler = context
-					.getBean(HttpTracing.class).clientRequestSampler();
+			SamplerFunction<HttpRequest> clientSampler = context.getBean(HttpTracing.class).clientRequestSampler();
 
 			then(clientSampler).isSameAs(SamplerFunctions.deferDecision());
 		});
@@ -50,32 +49,26 @@ public class TraceHttpAutoConfigurationTests {
 
 	@Test
 	public void configuresClientSkipPattern() throws Exception {
-		contextRunner()
-				.withPropertyValues("spring.sleuth.web.client.skip-pattern=foo.*|bar.*")
-				.run((context) -> {
-					SamplerFunction<HttpRequest> clientSampler = context
-							.getBean(HttpTracing.class).clientRequestSampler();
+		contextRunner().withPropertyValues("spring.sleuth.web.client.skip-pattern=foo.*|bar.*").run((context) -> {
+			SamplerFunction<HttpRequest> clientSampler = context.getBean(HttpTracing.class).clientRequestSampler();
 
-					then(clientSampler).isInstanceOf(SkipPatternHttpClientSampler.class);
-				});
+			then(clientSampler).isInstanceOf(SkipPatternHttpClientSampler.class);
+		});
 	}
 
 	@Test
 	public void configuresUserProvidedHttpClientSampler() {
-		contextRunner().withUserConfiguration(HttpClientSamplerConfig.class)
-				.run((context) -> {
-					SamplerFunction<HttpRequest> clientSampler = context
-							.getBean(HttpTracing.class).clientRequestSampler();
+		contextRunner().withUserConfiguration(HttpClientSamplerConfig.class).run((context) -> {
+			SamplerFunction<HttpRequest> clientSampler = context.getBean(HttpTracing.class).clientRequestSampler();
 
-					then(clientSampler).isSameAs(HttpClientSamplerConfig.INSTANCE);
-				});
+			then(clientSampler).isSameAs(HttpClientSamplerConfig.INSTANCE);
+		});
 	}
 
 	@Test
 	public void defaultsServerSamplerToSkipPattern() {
 		contextRunner().run((context) -> {
-			SamplerFunction<HttpRequest> serverSampler = context
-					.getBean(HttpTracing.class).serverRequestSampler();
+			SamplerFunction<HttpRequest> serverSampler = context.getBean(HttpTracing.class).serverRequestSampler();
 
 			then(serverSampler).isInstanceOf(SkipPatternHttpServerSampler.class);
 		});
@@ -83,13 +76,11 @@ public class TraceHttpAutoConfigurationTests {
 
 	@Test
 	public void defaultsServerSamplerToDeferWhenSkipPatternCleared() {
-		contextRunner().withPropertyValues("spring.sleuth.web.skip-pattern")
-				.run((context) -> {
-					SamplerFunction<HttpRequest> clientSampler = context
-							.getBean(HttpTracing.class).serverRequestSampler();
+		contextRunner().withPropertyValues("spring.sleuth.web.skip-pattern").run((context) -> {
+			SamplerFunction<HttpRequest> clientSampler = context.getBean(HttpTracing.class).serverRequestSampler();
 
-					then(clientSampler).isSameAs(SamplerFunctions.deferDecision());
-				});
+			then(clientSampler).isSameAs(SamplerFunctions.deferDecision());
+		});
 	}
 
 	@Test
@@ -102,13 +93,11 @@ public class TraceHttpAutoConfigurationTests {
 			SamplerFunction<HttpRequest> instance) {
 		return (context) -> {
 
-			SamplerFunction<HttpRequest> serverSampler = context
-					.getBean(HttpTracing.class).serverRequestSampler();
+			SamplerFunction<HttpRequest> serverSampler = context.getBean(HttpTracing.class).serverRequestSampler();
 
 			then(serverSampler).isInstanceOf(CompositeHttpSampler.class);
 
-			then(((CompositeHttpSampler) serverSampler).left)
-					.isInstanceOf(SkipPatternHttpServerSampler.class);
+			then(((CompositeHttpSampler) serverSampler).left).isInstanceOf(SkipPatternHttpServerSampler.class);
 			then(((CompositeHttpSampler) serverSampler).right).isSameAs(instance);
 		};
 	}
@@ -116,10 +105,8 @@ public class TraceHttpAutoConfigurationTests {
 	@Test
 	public void defaultHttpClientParser() {
 		contextRunner().run((context) -> {
-			HttpRequestParser clientRequestParser = context.getBean(HttpTracing.class)
-					.clientRequestParser();
-			HttpResponseParser clientResponseParser = context.getBean(HttpTracing.class)
-					.clientResponseParser();
+			HttpRequestParser clientRequestParser = context.getBean(HttpTracing.class).clientRequestParser();
+			HttpResponseParser clientResponseParser = context.getBean(HttpTracing.class).clientResponseParser();
 
 			then(clientRequestParser).isInstanceOf(HttpRequestParser.Default.class);
 			then(clientResponseParser).isInstanceOf(HttpResponseParser.Default.class);
@@ -128,27 +115,20 @@ public class TraceHttpAutoConfigurationTests {
 
 	@Test
 	public void configuresUserProvidedHttpClientParser() {
-		contextRunner().withUserConfiguration(HttpClientParserConfig.class)
-				.run((context) -> {
-					HttpRequestParser clientRequestParser = context
-							.getBean(HttpTracing.class).clientRequestParser();
-					HttpResponseParser clientResponseParser = context
-							.getBean(HttpTracing.class).clientResponseParser();
+		contextRunner().withUserConfiguration(HttpClientParserConfig.class).run((context) -> {
+			HttpRequestParser clientRequestParser = context.getBean(HttpTracing.class).clientRequestParser();
+			HttpResponseParser clientResponseParser = context.getBean(HttpTracing.class).clientResponseParser();
 
-					then(clientRequestParser)
-							.isSameAs(HttpClientParserConfig.REQUEST_PARSER);
-					then(clientResponseParser)
-							.isSameAs(HttpClientParserConfig.RESPONSE_PARSER);
-				});
+			then(clientRequestParser).isSameAs(HttpClientParserConfig.REQUEST_PARSER);
+			then(clientResponseParser).isSameAs(HttpClientParserConfig.RESPONSE_PARSER);
+		});
 	}
 
 	@Test
 	public void defaultHttpServerParser() {
 		contextRunner().run((context) -> {
-			HttpRequestParser serverRequestParser = context.getBean(HttpTracing.class)
-					.serverRequestParser();
-			HttpResponseParser serverResponseParser = context.getBean(HttpTracing.class)
-					.serverResponseParser();
+			HttpRequestParser serverRequestParser = context.getBean(HttpTracing.class).serverRequestParser();
+			HttpResponseParser serverResponseParser = context.getBean(HttpTracing.class).serverResponseParser();
 
 			then(serverRequestParser).isInstanceOf(HttpRequestParser.Default.class);
 			then(serverResponseParser).isInstanceOf(HttpResponseParser.Default.class);
@@ -157,18 +137,13 @@ public class TraceHttpAutoConfigurationTests {
 
 	@Test
 	public void configuresUserProvidedHttpServerParser() {
-		contextRunner().withUserConfiguration(HttpServerParserConfig.class)
-				.run((context) -> {
-					HttpRequestParser serverRequestParser = context
-							.getBean(HttpTracing.class).serverRequestParser();
-					HttpResponseParser serverResponseParser = context
-							.getBean(HttpTracing.class).serverResponseParser();
+		contextRunner().withUserConfiguration(HttpServerParserConfig.class).run((context) -> {
+			HttpRequestParser serverRequestParser = context.getBean(HttpTracing.class).serverRequestParser();
+			HttpResponseParser serverResponseParser = context.getBean(HttpTracing.class).serverResponseParser();
 
-					then(serverRequestParser)
-							.isSameAs(HttpServerParserConfig.REQUEST_PARSER);
-					then(serverResponseParser)
-							.isSameAs(HttpServerParserConfig.RESPONSE_PARSER);
-				});
+			then(serverRequestParser).isSameAs(HttpServerParserConfig.REQUEST_PARSER);
+			then(serverResponseParser).isSameAs(HttpServerParserConfig.RESPONSE_PARSER);
+		});
 	}
 
 	/**
@@ -177,14 +152,10 @@ public class TraceHttpAutoConfigurationTests {
 	@Test
 	public void configuresUserProvidedHttpClientAndServerParser() {
 		contextRunner().withUserConfiguration(HttpParserConfig.class).run((context) -> {
-			HttpRequestParser serverRequestParser = context.getBean(HttpTracing.class)
-					.serverRequestParser();
-			HttpResponseParser serverResponseParser = context.getBean(HttpTracing.class)
-					.serverResponseParser();
-			HttpRequestParser clientRequestParser = context.getBean(HttpTracing.class)
-					.clientRequestParser();
-			HttpResponseParser clientResponseParser = context.getBean(HttpTracing.class)
-					.clientResponseParser();
+			HttpRequestParser serverRequestParser = context.getBean(HttpTracing.class).serverRequestParser();
+			HttpResponseParser serverResponseParser = context.getBean(HttpTracing.class).serverResponseParser();
+			HttpRequestParser clientRequestParser = context.getBean(HttpTracing.class).clientRequestParser();
+			HttpResponseParser clientResponseParser = context.getBean(HttpTracing.class).clientResponseParser();
 
 			then(clientRequestParser).isSameAs(HttpParserConfig.REQUEST_PARSER);
 			then(clientResponseParser).isSameAs(HttpParserConfig.RESPONSE_PARSER);
@@ -196,20 +167,17 @@ public class TraceHttpAutoConfigurationTests {
 	@Test
 	public void hasNoCycles() {
 		contextRunner()
-				.withConfiguration(AutoConfigurations.of(SkipPatternConfiguration.class,
-						TraceHttpAutoConfiguration.class))
-				.withInitializer(c -> ((GenericApplicationContext) c)
-						.setAllowCircularReferences(false))
+				.withConfiguration(
+						AutoConfigurations.of(SkipPatternConfiguration.class, TraceHttpAutoConfiguration.class))
+				.withInitializer(c -> ((GenericApplicationContext) c).setAllowCircularReferences(false))
 				.run((context) -> {
 					BDDAssertions.then(context.isRunning()).isEqualTo(true);
 				});
 	}
 
 	private ApplicationContextRunner contextRunner(String... propertyValues) {
-		return new ApplicationContextRunner().withPropertyValues(propertyValues)
-				.withConfiguration(AutoConfigurations.of(TraceAutoConfiguration.class,
-						TraceHttpAutoConfiguration.class,
-						SkipPatternConfiguration.class));
+		return new ApplicationContextRunner().withPropertyValues(propertyValues).withConfiguration(AutoConfigurations
+				.of(TraceAutoConfiguration.class, TraceHttpAutoConfiguration.class, SkipPatternConfiguration.class));
 	}
 
 }

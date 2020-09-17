@@ -86,8 +86,7 @@ class TraceMessageHandler {
 		this.tracing = tracing;
 		this.tracer = tracing.tracer();
 		this.injector = tracing.propagation().injector(MessageHeaderPropagation.INSTANCE);
-		this.extractor = tracing.propagation()
-				.extractor(MessageHeaderPropagation.INSTANCE);
+		this.extractor = tracing.propagation().extractor(MessageHeaderPropagation.INSTANCE);
 		// TODO: Abstractions to reuse in TraceChannelInterceptors?
 		this.preSendFunction = preSendFunction;
 		this.preSendMessageManipulator = preSendMessageManipulator;
@@ -96,17 +95,15 @@ class TraceMessageHandler {
 
 	static TraceMessageHandler forNonSpringIntegration(Tracing tracing) {
 		Tracer tracer = tracing.tracer();
-		Function<TraceContext, Span> preSendFunction = ctx -> tracer
-				.nextSpan(TraceContextOrSamplingFlags.create(ctx)).name("handle").start();
-		TriConsumer<MessageHeaderAccessor, Span, Span> preSendMessageManipulator = (
-				headers, parentSpan, childSpan) -> {
+		Function<TraceContext, Span> preSendFunction = ctx -> tracer.nextSpan(TraceContextOrSamplingFlags.create(ctx))
+				.name("handle").start();
+		TriConsumer<MessageHeaderAccessor, Span, Span> preSendMessageManipulator = (headers, parentSpan, childSpan) -> {
 			headers.setHeader("traceHandlerParentSpan", parentSpan);
 			headers.setHeader(Span.class.getName(), childSpan);
 		};
 		Function<TraceContext, Span> postReceiveFunction = ctx -> tracer
 				.nextSpan(TraceContextOrSamplingFlags.create(ctx));
-		return new TraceMessageHandler(tracing, preSendFunction,
-				preSendMessageManipulator, postReceiveFunction);
+		return new TraceMessageHandler(tracing, preSendFunction, preSendMessageManipulator, postReceiveFunction);
 	}
 
 	/**
@@ -135,16 +132,14 @@ class TraceMessageHandler {
 		clearTracingHeaders(headers);
 		this.preSendMessageManipulator.accept(headers, consumerSpan, span);
 		if (log.isDebugEnabled()) {
-			log.debug(
-					"Created a handle span after retrieving the message " + consumerSpan);
+			log.debug("Created a handle span after retrieving the message " + consumerSpan);
 		}
 		if (message instanceof ErrorMessage) {
-			return new MessageAndSpans(new ErrorMessage((Throwable) message.getPayload(),
-					headers.getMessageHeaders()), consumerSpan, span);
+			return new MessageAndSpans(new ErrorMessage((Throwable) message.getPayload(), headers.getMessageHeaders()),
+					consumerSpan, span);
 		}
 		headers.setImmutable();
-		return new MessageAndSpans(
-				new GenericMessage<>(message.getPayload(), headers.getMessageHeaders()),
+		return new MessageAndSpans(new GenericMessage<>(message.getPayload(), headers.getMessageHeaders()),
 				consumerSpan, span);
 	}
 
@@ -202,8 +197,8 @@ class TraceMessageHandler {
 	 * @param destinationName - destination to which the message should be sent
 	 * @return a tuple with the wrapped message and a corresponding span
 	 */
-	MessageAndSpan wrapOutputMessage(Message<?> message,
-			TraceContextOrSamplingFlags parentSpan, String destinationName) {
+	MessageAndSpan wrapOutputMessage(Message<?> message, TraceContextOrSamplingFlags parentSpan,
+			String destinationName) {
 		Message<?> retrievedMessage = getMessage(message);
 		MessageHeaderAccessor headers = mutableHeaderAccessor(retrievedMessage);
 		Span span = this.outputMessageSpanFunction.apply(parentSpan.context());
@@ -213,12 +208,10 @@ class TraceMessageHandler {
 		if (log.isDebugEnabled()) {
 			log.debug("Created a new span output message " + span);
 		}
-		return new MessageAndSpan(outputMessage(message, retrievedMessage, headers),
-				span);
+		return new MessageAndSpan(outputMessage(message, retrievedMessage, headers), span);
 	}
 
-	private void markProducerSpan(MessageHeaderAccessor headers, Span span,
-			String destinationName) {
+	private void markProducerSpan(MessageHeaderAccessor headers, Span span, String destinationName) {
 		if (!span.isNoop()) {
 			span.kind(Span.Kind.PRODUCER).name("send").start();
 			span.remoteServiceName(toRemoteServiceName(headers));
@@ -238,25 +231,20 @@ class TraceMessageHandler {
 		return REMOTE_SERVICE_NAME;
 	}
 
-	private Message<?> outputMessage(Message<?> originalMessage,
-			Message<?> retrievedMessage, MessageHeaderAccessor additionalHeaders) {
-		MessageHeaderAccessor headers = MessageHeaderAccessor
-				.getMutableAccessor(originalMessage);
+	private Message<?> outputMessage(Message<?> originalMessage, Message<?> retrievedMessage,
+			MessageHeaderAccessor additionalHeaders) {
+		MessageHeaderAccessor headers = MessageHeaderAccessor.getMutableAccessor(originalMessage);
 		clearTechnicalTracingHeaders(headers);
 		if (originalMessage instanceof ErrorMessage) {
 			ErrorMessage errorMessage = (ErrorMessage) originalMessage;
-			headers.copyHeaders(MessageHeaderPropagation.propagationHeaders(
-					additionalHeaders.getMessageHeaders(),
+			headers.copyHeaders(MessageHeaderPropagation.propagationHeaders(additionalHeaders.getMessageHeaders(),
 					this.tracing.propagation().keys()));
-			return new ErrorMessage(errorMessage.getPayload(),
-					isWebSockets(headers) ? headers.getMessageHeaders()
-							: new MessageHeaders(headers.getMessageHeaders()),
-					errorMessage.getOriginalMessage());
+			return new ErrorMessage(errorMessage.getPayload(), isWebSockets(headers) ? headers.getMessageHeaders()
+					: new MessageHeaders(headers.getMessageHeaders()), errorMessage.getOriginalMessage());
 		}
 		headers.copyHeaders(additionalHeaders.getMessageHeaders());
 		return new GenericMessage<>(retrievedMessage.getPayload(),
-				isWebSockets(headers) ? headers.getMessageHeaders()
-						: new MessageHeaders(headers.getMessageHeaders()));
+				isWebSockets(headers) ? headers.getMessageHeaders() : new MessageHeaders(headers.getMessageHeaders()));
 	}
 
 	private boolean isWebSockets(MessageHeaderAccessor headerAccessor) {
@@ -342,8 +330,7 @@ class MessageAndSpans {
 
 	@Override
 	public String toString() {
-		return "MessageAndSpans{" + "msg=" + msg + ", parentSpan=" + parentSpan
-				+ ", childSpan=" + childSpan + '}';
+		return "MessageAndSpans{" + "msg=" + msg + ", parentSpan=" + parentSpan + ", childSpan=" + childSpan + '}';
 	}
 
 }

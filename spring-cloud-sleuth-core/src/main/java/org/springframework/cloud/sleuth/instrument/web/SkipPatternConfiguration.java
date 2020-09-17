@@ -64,8 +64,7 @@ class SkipPatternConfiguration {
 
 	@Bean
 	@ConditionalOnMissingBean
-	SkipPatternProvider sleuthSkipPatternProvider(
-			@Nullable List<SingleSkipPattern> patterns) {
+	SkipPatternProvider sleuthSkipPatternProvider(@Nullable List<SingleSkipPattern> patterns) {
 		if (patterns == null || patterns.isEmpty()) {
 			return null;
 		}
@@ -96,9 +95,8 @@ class SkipPatternConfiguration {
 
 	@Nullable
 	static Pattern consolidateSkipPatterns(List<SingleSkipPattern> patterns) {
-		List<Pattern> presentPatterns = patterns.stream()
-				.map(SingleSkipPattern::skipPattern).filter(Optional::isPresent)
-				.map(Optional::get).collect(Collectors.toList());
+		List<Pattern> presentPatterns = patterns.stream().map(SingleSkipPattern::skipPattern)
+				.filter(Optional::isPresent).map(Optional::get).collect(Collectors.toList());
 		if (presentPatterns.isEmpty()) {
 			return null;
 		}
@@ -116,8 +114,8 @@ class SkipPatternConfiguration {
 
 	@Configuration(proxyBeanMethods = false)
 	@ConditionalOnClass(ManagementServerProperties.class)
-	@ConditionalOnProperty(value = "spring.sleuth.web.ignoreAutoConfiguredSkipPatterns",
-			havingValue = "false", matchIfMissing = true)
+	@ConditionalOnProperty(value = "spring.sleuth.web.ignoreAutoConfiguredSkipPatterns", havingValue = "false",
+			matchIfMissing = true)
 	protected static class ManagementSkipPatternProviderConfig {
 
 		/**
@@ -126,38 +124,33 @@ class SkipPatternConfiguration {
 		 * @param managementServerProperties properties
 		 * @return optional skip pattern
 		 */
-		static Optional<Pattern> getPatternForManagementServerProperties(
-				Environment environment,
+		static Optional<Pattern> getPatternForManagementServerProperties(Environment environment,
 				ManagementServerProperties managementServerProperties) {
 			String contextPath = managementServerProperties.getServlet().getContextPath();
 			if (StringUtils.hasText(contextPath)) {
-				return Optional.of(Pattern
-						.compile(environment.resolvePlaceholders(contextPath) + ".*"));
+				return Optional.of(Pattern.compile(environment.resolvePlaceholders(contextPath) + ".*"));
 			}
 			return Optional.empty();
 		}
 
 		@Bean
 		@ConditionalOnBean(ManagementServerProperties.class)
-		public SingleSkipPattern skipPatternForManagementServerProperties(
-				Environment environment,
+		public SingleSkipPattern skipPatternForManagementServerProperties(Environment environment,
 				final ManagementServerProperties managementServerProperties) {
-			return () -> getPatternForManagementServerProperties(environment,
-					managementServerProperties);
+			return () -> getPatternForManagementServerProperties(environment, managementServerProperties);
 		}
 
 	}
 
 	@Configuration(proxyBeanMethods = false)
-	@ConditionalOnClass({ ServerProperties.class, EndpointsSupplier.class,
-			ExposableWebEndpoint.class })
+	@ConditionalOnClass({ ServerProperties.class, EndpointsSupplier.class, ExposableWebEndpoint.class })
 	@ConditionalOnBean(ServerProperties.class)
-	@ConditionalOnProperty(value = "spring.sleuth.web.ignoreAutoConfiguredSkipPatterns",
-			havingValue = "false", matchIfMissing = true)
+	@ConditionalOnProperty(value = "spring.sleuth.web.ignoreAutoConfiguredSkipPatterns", havingValue = "false",
+			matchIfMissing = true)
 	protected static class ActuatorSkipPatternProviderConfig {
 
-		static Optional<Pattern> getEndpointsPatterns(Environment environment,
-				String contextPath, WebEndpointProperties webEndpointProperties,
+		static Optional<Pattern> getEndpointsPatterns(Environment environment, String contextPath,
+				WebEndpointProperties webEndpointProperties,
 				EndpointsSupplier<ExposableWebEndpoint> endpointsSupplier) {
 			Collection<ExposableWebEndpoint> endpoints = endpointsSupplier.getEndpoints();
 			if (endpoints.isEmpty()) {
@@ -166,16 +159,14 @@ class SkipPatternConfiguration {
 			String basePath = webEndpointProperties.getBasePath();
 			String pattern = patternFromEndpoints(contextPath, endpoints, basePath);
 			if (StringUtils.hasText(pattern)) {
-				return Optional
-						.of(Pattern.compile(environment.resolvePlaceholders(pattern)));
+				return Optional.of(Pattern.compile(environment.resolvePlaceholders(pattern)));
 			}
 			return Optional.empty();
 		}
 
-		private static String patternFromEndpoints(String contextPath,
-				Collection<ExposableWebEndpoint> endpoints, String basePath) {
-			StringJoiner joiner = new StringJoiner("|",
-					getPathPrefix(contextPath, basePath),
+		private static String patternFromEndpoints(String contextPath, Collection<ExposableWebEndpoint> endpoints,
+				String basePath) {
+			StringJoiner joiner = new StringJoiner("|", getPathPrefix(contextPath, basePath),
 					getPathSuffix(contextPath, basePath));
 			for (ExposableWebEndpoint endpoint : endpoints) {
 				String path = endpoint.getRootPath();
@@ -203,8 +194,8 @@ class SkipPatternConfiguration {
 
 		private static String getPathSuffix(String contextPath, String actuatorBasePath) {
 			String result = ")";
-			if (StringUtils.hasText(contextPath) || (StringUtils.hasText(actuatorBasePath)
-					&& !"/".equals(actuatorBasePath))) {
+			if (StringUtils.hasText(contextPath)
+					|| (StringUtils.hasText(actuatorBasePath) && !"/".equals(actuatorBasePath))) {
 				result += ")?";
 			}
 			return result;
@@ -212,25 +203,21 @@ class SkipPatternConfiguration {
 
 		@Bean
 		@ConditionalOnManagementPort(ManagementPortType.SAME)
-		public SingleSkipPattern skipPatternForActuatorEndpointsSamePort(
-				Environment environment, final ServerProperties serverProperties,
-				final WebEndpointProperties webEndpointProperties,
+		public SingleSkipPattern skipPatternForActuatorEndpointsSamePort(Environment environment,
+				final ServerProperties serverProperties, final WebEndpointProperties webEndpointProperties,
 				final EndpointsSupplier<ExposableWebEndpoint> endpointsSupplier) {
-			return () -> getEndpointsPatterns(environment,
-					serverProperties.getServlet().getContextPath(), webEndpointProperties,
-					endpointsSupplier);
+			return () -> getEndpointsPatterns(environment, serverProperties.getServlet().getContextPath(),
+					webEndpointProperties, endpointsSupplier);
 		}
 
 		@Bean
 		@ConditionalOnManagementPort(ManagementPortType.DIFFERENT)
-		@ConditionalOnProperty(name = "management.server.servlet.context-path",
-				havingValue = "/", matchIfMissing = true)
-		public SingleSkipPattern skipPatternForActuatorEndpointsDifferentPort(
-				Environment environment, final ServerProperties serverProperties,
-				final WebEndpointProperties webEndpointProperties,
+		@ConditionalOnProperty(name = "management.server.servlet.context-path", havingValue = "/",
+				matchIfMissing = true)
+		public SingleSkipPattern skipPatternForActuatorEndpointsDifferentPort(Environment environment,
+				final ServerProperties serverProperties, final WebEndpointProperties webEndpointProperties,
 				final EndpointsSupplier<ExposableWebEndpoint> endpointsSupplier) {
-			return () -> getEndpointsPatterns(environment, null, webEndpointProperties,
-					endpointsSupplier);
+			return () -> getEndpointsPatterns(environment, null, webEndpointProperties, endpointsSupplier);
 		}
 
 	}
@@ -239,15 +226,12 @@ class SkipPatternConfiguration {
 	static class DefaultSkipPatternConfig {
 
 		@Bean
-		SingleSkipPattern defaultSkipPatternBean(Environment environment,
-				SleuthWebProperties sleuthWebProperties) {
+		SingleSkipPattern defaultSkipPatternBean(Environment environment, SleuthWebProperties sleuthWebProperties) {
 			String skipPattern = sleuthWebProperties.getSkipPattern();
-			String left = StringUtils.hasText(skipPattern)
-					? environment.resolvePlaceholders(skipPattern) : skipPattern;
+			String left = StringUtils.hasText(skipPattern) ? environment.resolvePlaceholders(skipPattern) : skipPattern;
 			String additionalSkipPattern = sleuthWebProperties.getAdditionalSkipPattern();
 			String right = StringUtils.hasText(additionalSkipPattern)
-					? environment.resolvePlaceholders(additionalSkipPattern)
-					: additionalSkipPattern;
+					? environment.resolvePlaceholders(additionalSkipPattern) : additionalSkipPattern;
 			Pattern pattern = combinePatterns(left, right);
 			return () -> Optional.ofNullable(pattern);
 		}

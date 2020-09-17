@@ -38,11 +38,9 @@ import org.springframework.web.client.RestTemplate;
 
 import static org.assertj.core.api.BDDAssertions.then;
 
-@SpringBootTest(
-		classes = SkipEndPointsIntegrationTestsWithoutContextPathWithoutBasePath.Config.class,
+@SpringBootTest(classes = SkipEndPointsIntegrationTestsWithoutContextPathWithoutBasePath.Config.class,
 		webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
-		properties = { "management.endpoints.web.exposure.include:*",
-				"management.endpoints.web.base-path:/" })
+		properties = { "management.endpoints.web.exposure.include:*", "management.endpoints.web.base-path:/" })
 public class SkipEndPointsIntegrationTestsWithoutContextPathWithoutBasePath {
 
 	@LocalServerPort
@@ -62,8 +60,7 @@ public class SkipEndPointsIntegrationTestsWithoutContextPathWithoutBasePath {
 
 	@Test
 	public void should_sample_non_actuator_endpoint() {
-		new RestTemplate().getForObject("http://localhost:" + this.port + "/something",
-				String.class);
+		new RestTemplate().getForObject("http://localhost:" + this.port + "/something", String.class);
 
 		then(this.tracer.currentSpan()).isNull();
 		then(this.spans).hasSize(1);
@@ -71,8 +68,7 @@ public class SkipEndPointsIntegrationTestsWithoutContextPathWithoutBasePath {
 
 	@Test
 	public void should_sample_non_actuator_endpoint_with_healthcare_in_path() {
-		new RestTemplate().getForObject("http://localhost:" + this.port + "/healthcare",
-				String.class);
+		new RestTemplate().getForObject("http://localhost:" + this.port + "/healthcare", String.class);
 
 		then(this.tracer.currentSpan()).isNull();
 		then(this.spans).hasSize(1);
@@ -80,8 +76,7 @@ public class SkipEndPointsIntegrationTestsWithoutContextPathWithoutBasePath {
 
 	@Test
 	public void should_not_sample_actuator_endpoint() {
-		new RestTemplate().getForObject("http://localhost:" + this.port + "/health",
-				String.class);
+		new RestTemplate().getForObject("http://localhost:" + this.port + "/health", String.class);
 
 		then(this.tracer.currentSpan()).isNull();
 		then(this.spans).hasSize(0);
@@ -89,8 +84,7 @@ public class SkipEndPointsIntegrationTestsWithoutContextPathWithoutBasePath {
 
 	@Test
 	public void should_not_sample_actuator_endpoint_with_parameter() {
-		new RestTemplate().getForObject("http://localhost:" + this.port + "/metrics?xyz",
-				String.class);
+		new RestTemplate().getForObject("http://localhost:" + this.port + "/metrics?xyz", String.class);
 
 		then(this.tracer.currentSpan()).isNull();
 		then(this.spans).hasSize(0);

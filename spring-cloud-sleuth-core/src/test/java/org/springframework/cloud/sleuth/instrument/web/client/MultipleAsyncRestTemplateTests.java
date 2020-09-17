@@ -71,8 +71,7 @@ import static org.assertj.core.api.BDDAssertions.then;
 @DirtiesContext
 public class MultipleAsyncRestTemplateTests {
 
-	private static final Log log = LogFactory
-			.getLog(MultipleAsyncRestTemplateTests.class);
+	private static final Log log = LogFactory.getLog(MultipleAsyncRestTemplateTests.class);
 
 	@Autowired
 	@Qualifier("customAsyncRestTemplate")
@@ -103,8 +102,7 @@ public class MultipleAsyncRestTemplateTests {
 	public void should_pass_tracing_context_with_custom_async_client() throws Exception {
 		Span span = this.tracer.nextSpan().name("foo");
 		try (Tracer.SpanInScope ws = this.tracer.withSpanInScope(span.start())) {
-			String result = this.asyncRestTemplate
-					.getForEntity("http://localhost:" + this.port + "/foo", String.class)
+			String result = this.asyncRestTemplate.getForEntity("http://localhost:" + this.port + "/foo", String.class)
 					.get().getBody();
 			then(span.context().traceIdString()).isEqualTo(result);
 		}
@@ -124,8 +122,7 @@ public class MultipleAsyncRestTemplateTests {
 	}
 
 	@Test
-	public void should_inject_traced_executor_that_passes_tracing_context()
-			throws Exception {
+	public void should_inject_traced_executor_that_passes_tracing_context() throws Exception {
 		Span span = this.tracer.nextSpan().name("foo");
 		AtomicBoolean executed = new AtomicBoolean(false);
 		try (Tracer.SpanInScope ws = this.tracer.withSpanInScope(span.start())) {
@@ -135,8 +132,8 @@ public class MultipleAsyncRestTemplateTests {
 				then(currentSpan).isNotNull();
 				long currentTraceId = currentSpan.context().traceId();
 				long initialTraceId = span.context().traceId();
-				log.info("Hello from runnable before trace id check. Initial ["
-						+ initialTraceId + "] current [" + currentTraceId + "]");
+				log.info("Hello from runnable before trace id check. Initial [" + initialTraceId + "] current ["
+						+ currentTraceId + "]");
 				then(currentTraceId).isEqualTo(initialTraceId);
 				executed.set(true);
 				log.info("Hello from runnable");
@@ -159,8 +156,7 @@ public class MultipleAsyncRestTemplateTests {
 
 		@Bean(name = "customAsyncRestTemplate")
 		public AsyncRestTemplate traceAsyncRestTemplate() {
-			return new AsyncRestTemplate(asyncClientFactory(),
-					clientHttpRequestFactory());
+			return new AsyncRestTemplate(asyncClientFactory(), clientHttpRequestFactory());
 		}
 
 		private ClientHttpRequestFactory clientHttpRequestFactory() {
@@ -227,8 +223,7 @@ class CustomClientHttpRequestFactory implements ClientHttpRequestFactory {
 	private final SimpleClientHttpRequestFactory factory = new SimpleClientHttpRequestFactory();
 
 	@Override
-	public ClientHttpRequest createRequest(URI uri, HttpMethod httpMethod)
-			throws IOException {
+	public ClientHttpRequest createRequest(URI uri, HttpMethod httpMethod) throws IOException {
 		return this.factory.createRequest(uri, httpMethod);
 	}
 
@@ -243,8 +238,7 @@ class CustomAsyncClientHttpRequestFactory implements AsyncClientHttpRequestFacto
 	}
 
 	@Override
-	public AsyncClientHttpRequest createAsyncRequest(URI uri, HttpMethod httpMethod)
-			throws IOException {
+	public AsyncClientHttpRequest createAsyncRequest(URI uri, HttpMethod httpMethod) throws IOException {
 		return this.factory.createAsyncRequest(uri, httpMethod);
 	}
 

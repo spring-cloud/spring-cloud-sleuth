@@ -64,8 +64,8 @@ public class TraceRestTemplateInterceptorIntegrationTests {
 
 	TestSpanHandler spans = new TestSpanHandler();
 
-	Tracing tracing = Tracing.newBuilder().currentTraceContext(this.currentTraceContext)
-			.addSpanHandler(this.spans).build();
+	Tracing tracing = Tracing.newBuilder().currentTraceContext(this.currentTraceContext).addSpanHandler(this.spans)
+			.build();
 
 	Tracer tracer = this.tracing.tracer();
 
@@ -73,9 +73,8 @@ public class TraceRestTemplateInterceptorIntegrationTests {
 
 	@BeforeEach
 	public void setup() {
-		this.template.setInterceptors(Arrays
-				.<ClientHttpRequestInterceptor>asList(TracingClientHttpRequestInterceptor
-						.create(HttpTracing.create(this.tracing))));
+		this.template.setInterceptors(Arrays.<ClientHttpRequestInterceptor>asList(
+				TracingClientHttpRequestInterceptor.create(HttpTracing.create(this.tracing))));
 	}
 
 	@AfterEach
@@ -87,14 +86,12 @@ public class TraceRestTemplateInterceptorIntegrationTests {
 	// Issue #198
 	@Test
 	public void spanRemovedFromThreadUponException() throws IOException {
-		this.mockWebServer.enqueue(
-				new MockResponse().setSocketPolicy(SocketPolicy.DISCONNECT_AT_START));
+		this.mockWebServer.enqueue(new MockResponse().setSocketPolicy(SocketPolicy.DISCONNECT_AT_START));
 		Span span = this.tracer.nextSpan().name("new trace");
 
 		try (Tracer.SpanInScope ws = this.tracer.withSpanInScope(span.start())) {
-			this.template.getForEntity(
-					"http://localhost:" + this.mockWebServer.getPort() + "/exception",
-					Map.class).getBody();
+			this.template.getForEntity("http://localhost:" + this.mockWebServer.getPort() + "/exception", Map.class)
+					.getBody();
 			fail("should throw an exception");
 		}
 		catch (RuntimeException e) {

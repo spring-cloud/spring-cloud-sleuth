@@ -48,8 +48,7 @@ import static org.assertj.core.api.Assertions.assertThat;
  * present.
  */
 // Function of spring context so that shutdown hooks happen!
-abstract class ITSpringConfiguredReactorClient
-		extends ITHttpAsyncClient<AnnotationConfigApplicationContext> {
+abstract class ITSpringConfiguredReactorClient extends ITHttpAsyncClient<AnnotationConfigApplicationContext> {
 
 	@Before
 	@After
@@ -73,8 +72,7 @@ abstract class ITSpringConfiguredReactorClient
 		AnnotationConfigApplicationContext result = new AnnotationConfigApplicationContext();
 		URI baseUrl = URI.create("http://127.0.0.1:" + server.getPort());
 		result.registerBean(HttpTracing.class, () -> httpTracing);
-		result.registerBean(CurrentTraceContext.class,
-				() -> httpTracing.tracing().currentTraceContext());
+		result.registerBean(CurrentTraceContext.class, () -> httpTracing.tracing().currentTraceContext());
 		result.registerBean(HttpClient.class, () -> testHttpClient(baseUrl));
 		result.registerBean(URI.class, () -> baseUrl);
 		result.register(componentClasses);
@@ -84,10 +82,8 @@ abstract class ITSpringConfiguredReactorClient
 
 	static HttpClient testHttpClient(URI baseUrl) {
 		return HttpClient.create().baseUrl(baseUrl.toString())
-				.tcpConfiguration(tcpClient -> tcpClient
-						.option(ChannelOption.CONNECT_TIMEOUT_MILLIS, 1000)
-						.doOnConnected(conn -> conn
-								.addHandler(new ReadTimeoutHandler(3, TimeUnit.SECONDS))))
+				.tcpConfiguration(tcpClient -> tcpClient.option(ChannelOption.CONNECT_TIMEOUT_MILLIS, 1000)
+						.doOnConnected(conn -> conn.addHandler(new ReadTimeoutHandler(3, TimeUnit.SECONDS))))
 				.disableRetry(true).followRedirect(true);
 	}
 
@@ -97,14 +93,12 @@ abstract class ITSpringConfiguredReactorClient
 	}
 
 	@Override
-	final protected void get(AnnotationConfigApplicationContext context,
-			String pathIncludingQuery) {
+	final protected void get(AnnotationConfigApplicationContext context, String pathIncludingQuery) {
 		getMono(context, pathIncludingQuery).block();
 	}
 
 	@Override
-	final protected void post(AnnotationConfigApplicationContext context,
-			String pathIncludingQuery, String body) {
+	final protected void post(AnnotationConfigApplicationContext context, String pathIncludingQuery, String body) {
 		postMono(context, pathIncludingQuery, body).block();
 	}
 
@@ -115,12 +109,10 @@ abstract class ITSpringConfiguredReactorClient
 	}
 
 	/** Returns a {@link Mono} of the HTTP status code from the given "POST" request. */
-	abstract Mono<Integer> postMono(AnnotationConfigApplicationContext context,
-			String pathIncludingQuery, String body);
+	abstract Mono<Integer> postMono(AnnotationConfigApplicationContext context, String pathIncludingQuery, String body);
 
 	/** Returns a {@link Mono} of the HTTP status code. */
-	abstract Mono<Integer> getMono(AnnotationConfigApplicationContext context,
-			String pathIncludingQuery);
+	abstract Mono<Integer> getMono(AnnotationConfigApplicationContext context, String pathIncludingQuery);
 
 	/**
 	 * This assumes that implementations do not issue an HTTP request until

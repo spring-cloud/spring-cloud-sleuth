@@ -39,8 +39,7 @@ import static org.assertj.core.api.Assertions.assertThat;
  */
 @SpringBootTest(
 		// WebEnvironment.NONE will not read a Yaml profile
-		webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
-		classes = BaggageTagSpanHandlerTest.Config.class)
+		webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT, classes = BaggageTagSpanHandlerTest.Config.class)
 @ActiveProfiles("baggage") // application-baggage.yml
 public class BaggageTagSpanHandlerTest {
 

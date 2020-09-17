@@ -28,17 +28,15 @@ import org.springframework.util.StringUtils;
  * @author Marcin Grzejszczak
  * @since 2.1.0
  */
-class NonReactorSleuthMethodInvocationProcessor
-		extends AbstractSleuthMethodInvocationProcessor {
+class NonReactorSleuthMethodInvocationProcessor extends AbstractSleuthMethodInvocationProcessor {
 
 	@Override
-	public Object process(MethodInvocation invocation, NewSpan newSpan,
-			ContinueSpan continueSpan) throws Throwable {
+	public Object process(MethodInvocation invocation, NewSpan newSpan, ContinueSpan continueSpan) throws Throwable {
 		return proceedUnderSynchronousSpan(invocation, newSpan, continueSpan);
 	}
 
-	private Object proceedUnderSynchronousSpan(MethodInvocation invocation,
-			NewSpan newSpan, ContinueSpan continueSpan) throws Throwable {
+	private Object proceedUnderSynchronousSpan(MethodInvocation invocation, NewSpan newSpan, ContinueSpan continueSpan)
+			throws Throwable {
 		Span span = tracer().currentSpan();
 		// in case of @ContinueSpan and no span in tracer we start new span and should
 		// close it on completion

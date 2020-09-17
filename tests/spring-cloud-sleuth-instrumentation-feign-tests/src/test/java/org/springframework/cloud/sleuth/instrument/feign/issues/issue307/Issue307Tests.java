@@ -52,9 +52,8 @@ public class Issue307Tests {
 
 	@Test
 	public void should_start_context() {
-		try (ConfigurableApplicationContext applicationContext = SpringApplication.run(
-				SleuthSampleApplication.class, "--spring.jmx.enabled=false",
-				"--server.port=0")) {
+		try (ConfigurableApplicationContext applicationContext = SpringApplication.run(SleuthSampleApplication.class,
+				"--spring.jmx.enabled=false", "--server.port=0")) {
 			// code
 		}
 	}
@@ -67,8 +66,7 @@ public class Issue307Tests {
 @EnableFeignClients
 class SleuthSampleApplication {
 
-	private static final Logger LOG = LoggerFactory
-			.getLogger(SleuthSampleApplication.class.getName());
+	private static final Logger LOG = LoggerFactory.getLogger(SleuthSampleApplication.class.getName());
 
 	@Autowired
 	private RestTemplate restTemplate;

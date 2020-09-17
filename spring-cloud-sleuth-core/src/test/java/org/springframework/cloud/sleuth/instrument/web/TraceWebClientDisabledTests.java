@@ -25,8 +25,8 @@ import org.springframework.context.annotation.Configuration;
 /**
  * @author Marcin Grzejszczak
  */
-@SpringBootTest(classes = { TraceWebClientDisabledTests.Config.class }, properties = {
-		"spring.sleuth.web.enabled=true", "spring.sleuth.web.client.enabled=false" })
+@SpringBootTest(classes = { TraceWebClientDisabledTests.Config.class },
+		properties = { "spring.sleuth.web.enabled=true", "spring.sleuth.web.client.enabled=false" })
 public class TraceWebClientDisabledTests {
 
 	@Test

@@ -32,8 +32,7 @@ import org.springframework.web.client.RestTemplate;
  *
  */
 @MessageEndpoint
-public class SampleService
-		implements ApplicationListener<ServletWebServerInitializedEvent> {
+public class SampleService implements ApplicationListener<ServletWebServerInitializedEvent> {
 
 	private static final Log log = LogFactory.getLog(SampleService.class);
 
@@ -45,8 +44,7 @@ public class SampleService
 	@ServiceActivator(inputChannel = "messages")
 	public void log(Message<?> message) {
 		log.info("Received: " + message);
-		this.restTemplate.getForObject("http://localhost:" + this.port + "/foo",
-				String.class);
+		this.restTemplate.getForObject("http://localhost:" + this.port + "/foo", String.class);
 	}
 
 	@Override

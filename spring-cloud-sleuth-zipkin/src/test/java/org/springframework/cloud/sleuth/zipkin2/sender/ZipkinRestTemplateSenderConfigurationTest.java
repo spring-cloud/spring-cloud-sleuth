@@ -44,10 +44,8 @@ public class ZipkinRestTemplateSenderConfigurationTest {
 	public void disableZipkinDiscoveryClient() {
 		ConfigurableApplicationContext ctxt = new SpringApplication(
 				ZipkinRestTemplateSenderConfigurationTest.MyDiscoveryClientZipkinUrlExtractorConfiguration.class,
-				ZipkinProperties.class)
-						.run("--spring.zipkin.discovery-client-enabled=false");
-		assertThat(ctxt.getBean(ZipkinLoadBalancer.class))
-				.isInstanceOf(NoOpZipkinLoadBalancer.class);
+				ZipkinProperties.class).run("--spring.zipkin.discovery-client-enabled=false");
+		assertThat(ctxt.getBean(ZipkinLoadBalancer.class)).isInstanceOf(NoOpZipkinLoadBalancer.class);
 		ctxt.close();
 	}
 
@@ -55,10 +53,8 @@ public class ZipkinRestTemplateSenderConfigurationTest {
 	public void enableZipkinDiscoveryClient() {
 		ConfigurableApplicationContext ctxt = new SpringApplication(
 				ZipkinRestTemplateSenderConfigurationTest.MyDiscoveryClientZipkinUrlExtractorConfiguration.class,
-				ZipkinProperties.class)
-						.run("--spring.zipkin.discovery-client-enabled=true");
-		assertThat(ctxt.getBean(ZipkinLoadBalancer.class))
-				.isInstanceOf(LoadBalancerClientZipkinLoadBalancer.class);
+				ZipkinProperties.class).run("--spring.zipkin.discovery-client-enabled=true");
+		assertThat(ctxt.getBean(ZipkinLoadBalancer.class)).isInstanceOf(LoadBalancerClientZipkinLoadBalancer.class);
 		ctxt.close();
 	}
 
@@ -78,8 +74,7 @@ public class ZipkinRestTemplateSenderConfigurationTest {
 
 		URI uri = extractor.zipkinUrl(zipkinProperties);
 
-		assertThat(uri.toString())
-				.isEqualTo(URI.create(zipkinProperties.getBaseUrl()).toString());
+		assertThat(uri.toString()).isEqualTo(URI.create(zipkinProperties.getBaseUrl()).toString());
 		assertThat(portCalculated).isFalse();
 	}
 
@@ -92,8 +87,7 @@ public class ZipkinRestTemplateSenderConfigurationTest {
 
 		URI uri = extractor.zipkinUrl(zipkinProperties);
 
-		assertThat(uri.toString())
-				.isEqualTo(URI.create("https://example.com").toString());
+		assertThat(uri.toString()).isEqualTo(URI.create("https://example.com").toString());
 	}
 
 	@Test
@@ -104,8 +98,7 @@ public class ZipkinRestTemplateSenderConfigurationTest {
 
 		URI uri = extractor.zipkinUrl(zipkinProperties);
 
-		assertThat(uri.toString())
-				.isEqualTo(URI.create(zipkinProperties.getBaseUrl()).toString());
+		assertThat(uri.toString()).isEqualTo(URI.create(zipkinProperties.getBaseUrl()).toString());
 	}
 
 	@Configuration
@@ -113,8 +106,8 @@ public class ZipkinRestTemplateSenderConfigurationTest {
 	static class MyDiscoveryClientZipkinUrlExtractorConfiguration {
 
 		@Configuration
-		@ConditionalOnProperty(value = "spring.zipkin.discovery-client-enabled",
-				havingValue = "true", matchIfMissing = true)
+		@ConditionalOnProperty(value = "spring.zipkin.discovery-client-enabled", havingValue = "true",
+				matchIfMissing = true)
 		static class ZipkinClientLoadBalancedConfiguration {
 
 			@Autowired(required = false)
@@ -122,17 +115,14 @@ public class ZipkinRestTemplateSenderConfigurationTest {
 
 			@Bean
 			@ConditionalOnMissingBean
-			ZipkinLoadBalancer loadBalancerClientZipkinLoadBalancer(
-					ZipkinProperties zipkinProperties) {
-				return new LoadBalancerClientZipkinLoadBalancer(this.client,
-						zipkinProperties);
+			ZipkinLoadBalancer loadBalancerClientZipkinLoadBalancer(ZipkinProperties zipkinProperties) {
+				return new LoadBalancerClientZipkinLoadBalancer(this.client, zipkinProperties);
 			}
 
 		}
 
 		@Configuration
-		@ConditionalOnProperty(value = "spring.zipkin.discovery-client-enabled",
-				havingValue = "false")
+		@ConditionalOnProperty(value = "spring.zipkin.discovery-client-enabled", havingValue = "false")
 		static class ZipkinClientNoOpConfiguration {
 
 			@Bean

@@ -52,8 +52,8 @@ class ZipkinActiveMqSenderConfiguration {
 
 		@Bean(ZipkinAutoConfiguration.SENDER_BEAN_NAME)
 		Sender activeMqSender(ActiveMQConnectionFactory factory) {
-			return ActiveMQSender.newBuilder().connectionFactory(factory)
-					.messageMaxBytes(this.messageMaxBytes).queue(this.queue).build();
+			return ActiveMQSender.newBuilder().connectionFactory(factory).messageMaxBytes(this.messageMaxBytes)
+					.queue(this.queue).build();
 		}
 
 	}

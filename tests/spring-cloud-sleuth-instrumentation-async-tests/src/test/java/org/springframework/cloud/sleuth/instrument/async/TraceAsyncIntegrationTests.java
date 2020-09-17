@@ -45,8 +45,7 @@ public class TraceAsyncIntegrationTests {
 	@ClassRule
 	public static IntegrationTestSpanHandler spans = new IntegrationTestSpanHandler();
 
-	TraceContext context = TraceContext.newBuilder().traceId(1).spanId(2).sampled(true)
-			.build();
+	TraceContext context = TraceContext.newBuilder().traceId(1).spanId(2).sampled(true).build();
 
 	@Autowired
 	AsyncLogic asyncLogic;
@@ -62,8 +61,7 @@ public class TraceAsyncIntegrationTests {
 			MutableSpan span = takeDesirableSpan();
 			assertThat(span.name()).isEqualTo("invoke-async");
 			assertThat(span.containsAnnotation("@Async")).isTrue();
-			assertThat(span.tags()).containsEntry("class", "AsyncLogic")
-					.containsEntry("method", "invokeAsync");
+			assertThat(span.tags()).containsEntry("class", "AsyncLogic").containsEntry("method", "invokeAsync");
 
 			// continues the trace
 			assertThat(span.traceId()).isEqualTo(context.traceIdString());
@@ -78,8 +76,8 @@ public class TraceAsyncIntegrationTests {
 			MutableSpan span = takeDesirableSpan();
 			assertThat(span.name()).isEqualTo("foo");
 			assertThat(span.containsAnnotation("@Async")).isTrue();
-			assertThat(span.tags()).containsEntry("class", "AsyncLogic")
-					.containsEntry("method", "invokeAsync_customName");
+			assertThat(span.tags()).containsEntry("class", "AsyncLogic").containsEntry("method",
+					"invokeAsync_customName");
 
 			// continues the trace
 			assertThat(span.traceId()).isEqualTo(context.traceIdString());

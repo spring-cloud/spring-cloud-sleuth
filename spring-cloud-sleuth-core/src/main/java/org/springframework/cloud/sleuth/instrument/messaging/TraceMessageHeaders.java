@@ -61,8 +61,8 @@ public final class TraceMessageHeaders {
 	 */
 	public static final String SPAN_FLAGS_NAME = "spanFlags";
 
-	static List<String> HEADERS = Arrays.asList(SAMPLED_NAME, SPAN_FLAGS_NAME,
-			SPAN_ID_NAME, SPAN_NAME_NAME, TRACE_ID_NAME, PARENT_ID_NAME);
+	static List<String> HEADERS = Arrays.asList(SAMPLED_NAME, SPAN_FLAGS_NAME, SPAN_ID_NAME, SPAN_NAME_NAME,
+			TRACE_ID_NAME, PARENT_ID_NAME);
 
 	private TraceMessageHeaders() {
 	}

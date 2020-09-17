@@ -59,8 +59,7 @@ class LazyClient implements Client {
 				this.delegate = this.beanFactory.getBean(Client.class);
 			}
 			catch (BeansException ex) {
-				this.delegate = TracingFeignClient.create(
-						beanFactory.getBean(HttpTracing.class),
+				this.delegate = TracingFeignClient.create(beanFactory.getBean(HttpTracing.class),
 						new Client.Default(null, null));
 			}
 		}

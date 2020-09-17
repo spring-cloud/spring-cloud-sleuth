@@ -68,8 +68,8 @@ public class TraceableExecutorServiceTests {
 
 	TestSpanHandler spans = new TestSpanHandler();
 
-	Tracing tracing = Tracing.newBuilder().currentTraceContext(this.currentTraceContext)
-			.addSpanHandler(this.spans).build();
+	Tracing tracing = Tracing.newBuilder().currentTraceContext(this.currentTraceContext).addSpanHandler(this.spans)
+			.build();
 
 	Tracer tracer = this.tracing.tracer();
 
@@ -77,8 +77,8 @@ public class TraceableExecutorServiceTests {
 
 	@BeforeEach
 	public void setup() {
-		this.traceManagerableExecutorService = new TraceableExecutorService(
-				beanFactory(true), this.executorService, "foo");
+		this.traceManagerableExecutorService = new TraceableExecutorService(beanFactory(true), this.executorService,
+				"foo");
 		this.spans.clear();
 		this.spanVerifyingRunnable.clear();
 	}
@@ -96,43 +96,35 @@ public class TraceableExecutorServiceTests {
 			throws Exception {
 		ScopedSpan span = this.tracer.startScopedSpan("http:PARENT");
 		try {
-			CompletableFuture.allOf(runnablesExecutedViaTraceManagerableExecutorService())
-					.get();
+			CompletableFuture.allOf(runnablesExecutedViaTraceManagerableExecutorService()).get();
 		}
 		finally {
 			span.finish();
 		}
 
-		then(this.spanVerifyingRunnable.traceIds.stream().distinct().collect(toList()))
-				.hasSize(1);
-		then(this.spanVerifyingRunnable.spanIds.stream().distinct().collect(toList()))
-				.hasSize(TOTAL_THREADS);
+		then(this.spanVerifyingRunnable.traceIds.stream().distinct().collect(toList())).hasSize(1);
+		then(this.spanVerifyingRunnable.spanIds.stream().distinct().collect(toList())).hasSize(TOTAL_THREADS);
 	}
 
 	@Test
 	@SuppressWarnings("unchecked")
-	public void should_wrap_methods_in_trace_representation_only_for_non_tracing_callables()
-			throws Exception {
+	public void should_wrap_methods_in_trace_representation_only_for_non_tracing_callables() throws Exception {
 		ExecutorService executorService = Mockito.mock(ExecutorService.class);
-		TraceableExecutorService traceExecutorService = new TraceableExecutorService(
-				beanFactory(true), executorService);
+		TraceableExecutorService traceExecutorService = new TraceableExecutorService(beanFactory(true),
+				executorService);
 
 		traceExecutorService.invokeAll(callables());
-		BDDMockito.then(executorService).should()
-				.invokeAll(BDDMockito.argThat(withSpanContinuingTraceCallablesOnly()));
+		BDDMockito.then(executorService).should().invokeAll(BDDMockito.argThat(withSpanContinuingTraceCallablesOnly()));
 
 		traceExecutorService.invokeAll(callables(), 1L, TimeUnit.DAYS);
-		BDDMockito.then(executorService).should().invokeAll(
-				BDDMockito.argThat(withSpanContinuingTraceCallablesOnly()),
+		BDDMockito.then(executorService).should().invokeAll(BDDMockito.argThat(withSpanContinuingTraceCallablesOnly()),
 				BDDMockito.eq(1L), BDDMockito.eq(TimeUnit.DAYS));
 
 		traceExecutorService.invokeAny(callables());
-		BDDMockito.then(executorService).should()
-				.invokeAny(BDDMockito.argThat(withSpanContinuingTraceCallablesOnly()));
+		BDDMockito.then(executorService).should().invokeAny(BDDMockito.argThat(withSpanContinuingTraceCallablesOnly()));
 
 		traceExecutorService.invokeAny(callables(), 1L, TimeUnit.DAYS);
-		BDDMockito.then(executorService).should().invokeAny(
-				BDDMockito.argThat(withSpanContinuingTraceCallablesOnly()),
+		BDDMockito.then(executorService).should().invokeAny(BDDMockito.argThat(withSpanContinuingTraceCallablesOnly()),
 				BDDMockito.eq(1L), BDDMockito.eq(TimeUnit.DAYS));
 	}
 
@@ -141,8 +133,8 @@ public class TraceableExecutorServiceTests {
 	public void should_not_wrap_methods_in_trace_representation_only_for_non_tracing_callables_when_context_not_ready()
 			throws Exception {
 		ExecutorService executorService = Mockito.mock(ExecutorService.class);
-		TraceableExecutorService traceExecutorService = new TraceableExecutorService(
-				beanFactory(false), executorService);
+		TraceableExecutorService traceExecutorService = new TraceableExecutorService(beanFactory(false),
+				executorService);
 
 		traceExecutorService.invokeAll(callables());
 		BDDMockito.then(executorService).should(BDDMockito.never())
@@ -150,8 +142,8 @@ public class TraceableExecutorServiceTests {
 
 		traceExecutorService.invokeAll(callables(), 1L, TimeUnit.DAYS);
 		BDDMockito.then(executorService).should(BDDMockito.never()).invokeAll(
-				BDDMockito.argThat(withSpanContinuingTraceCallablesOnly()),
-				BDDMockito.eq(1L), BDDMockito.eq(TimeUnit.DAYS));
+				BDDMockito.argThat(withSpanContinuingTraceCallablesOnly()), BDDMockito.eq(1L),
+				BDDMockito.eq(TimeUnit.DAYS));
 
 		traceExecutorService.invokeAny(callables());
 		BDDMockito.then(executorService).should(BDDMockito.never())
@@ -159,16 +151,15 @@ public class TraceableExecutorServiceTests {
 
 		traceExecutorService.invokeAny(callables(), 1L, TimeUnit.DAYS);
 		BDDMockito.then(executorService).should(BDDMockito.never()).invokeAny(
-				BDDMockito.argThat(withSpanContinuingTraceCallablesOnly()),
-				BDDMockito.eq(1L), BDDMockito.eq(TimeUnit.DAYS));
+				BDDMockito.argThat(withSpanContinuingTraceCallablesOnly()), BDDMockito.eq(1L),
+				BDDMockito.eq(TimeUnit.DAYS));
 	}
 
 	private ArgumentMatcher<Collection<? extends Callable<Object>>> withSpanContinuingTraceCallablesOnly() {
 		return argument -> {
 			try {
 				BDDAssertions.then(argument).flatExtracting(Object::getClass)
-						.containsOnlyElementsOf(
-								Collections.singletonList(TraceCallable.class));
+						.containsOnlyElementsOf(Collections.singletonList(TraceCallable.class));
 			}
 			catch (AssertionError e) {
 				return false;
@@ -185,8 +176,7 @@ public class TraceableExecutorServiceTests {
 	}
 
 	@Test
-	public void should_propagate_trace_info_when_compleable_future_is_used()
-			throws Exception {
+	public void should_propagate_trace_info_when_compleable_future_is_used() throws Exception {
 		ExecutorService executorService = this.executorService;
 		BeanFactory beanFactory = beanFactory(true);
 		// tag::completablefuture[]
@@ -219,17 +209,14 @@ public class TraceableExecutorServiceTests {
 	private CompletableFuture<?>[] runnablesExecutedViaTraceManagerableExecutorService() {
 		List<CompletableFuture<?>> futures = new ArrayList<>();
 		for (int i = 0; i < TOTAL_THREADS; i++) {
-			futures.add(CompletableFuture.runAsync(this.spanVerifyingRunnable,
-					this.traceManagerableExecutorService));
+			futures.add(CompletableFuture.runAsync(this.spanVerifyingRunnable, this.traceManagerableExecutorService));
 		}
 		return futures.toArray(new CompletableFuture[futures.size()]);
 	}
 
 	BeanFactory beanFactory(boolean refreshed) {
-		BDDMockito.given(this.beanFactory.getBean(Tracing.class))
-				.willReturn(this.tracing);
-		BDDMockito.given(this.beanFactory.getBean(SpanNamer.class))
-				.willReturn(new DefaultSpanNamer());
+		BDDMockito.given(this.beanFactory.getBean(Tracing.class)).willReturn(this.tracing);
+		BDDMockito.given(this.beanFactory.getBean(SpanNamer.class)).willReturn(new DefaultSpanNamer());
 		SleuthContextListenerAccessor.set(this.beanFactory, refreshed);
 		return this.beanFactory;
 	}

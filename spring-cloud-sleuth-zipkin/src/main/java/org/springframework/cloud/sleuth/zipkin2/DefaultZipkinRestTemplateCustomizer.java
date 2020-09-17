@@ -51,8 +51,8 @@ class DefaultZipkinRestTemplateCustomizer implements ZipkinRestTemplateCustomize
 
 	private class GZipInterceptor implements ClientHttpRequestInterceptor {
 
-		public ClientHttpResponse intercept(HttpRequest request, byte[] body,
-				ClientHttpRequestExecution execution) throws IOException {
+		public ClientHttpResponse intercept(HttpRequest request, byte[] body, ClientHttpRequestExecution execution)
+				throws IOException {
 			request.getHeaders().add("Content-Encoding", "gzip");
 			ByteArrayOutputStream gzipped = new ByteArrayOutputStream();
 			try (GZIPOutputStream compressor = new GZIPOutputStream(gzipped)) {

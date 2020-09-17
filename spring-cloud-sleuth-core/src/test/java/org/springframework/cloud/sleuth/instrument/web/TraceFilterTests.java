@@ -56,17 +56,15 @@ public class TraceFilterTests {
 
 	TestSpanHandler spans = new TestSpanHandler();
 
-	Tracing tracing = Tracing.newBuilder()
-			.currentTraceContext(ThreadLocalCurrentTraceContext.newBuilder()
-					.addScopeDecorator(StrictScopeDecorator.create()).build())
+	Tracing tracing = Tracing.newBuilder().currentTraceContext(
+			ThreadLocalCurrentTraceContext.newBuilder().addScopeDecorator(StrictScopeDecorator.create()).build())
 			.addSpanHandler(this.spans).build();
 
 	Tracer tracer = this.tracing.tracer();
 
-	HttpTracing httpTracing = HttpTracing.newBuilder(this.tracing)
-			.clientParser(new HttpClientParser()).serverParser(new HttpServerParser())
-			.serverSampler(new SkipPatternHttpServerSampler(() -> Pattern.compile("")))
-			.build();
+	HttpTracing httpTracing = HttpTracing.newBuilder(this.tracing).clientParser(new HttpClientParser())
+			.serverParser(new HttpServerParser())
+			.serverSampler(new SkipPatternHttpServerSampler(() -> Pattern.compile(""))).build();
 
 	Filter filter = TracingFilter.create(this.httpTracing);
 
@@ -85,8 +83,7 @@ public class TraceFilterTests {
 	}
 
 	public MockHttpServletRequestBuilder builder() {
-		return get("/?foo=bar").accept(MediaType.APPLICATION_JSON).header("User-Agent",
-				"MockMvc");
+		return get("/?foo=bar").accept(MediaType.APPLICATION_JSON).header("User-Agent", "MockMvc");
 	}
 
 	@AfterEach
@@ -96,8 +93,7 @@ public class TraceFilterTests {
 
 	@Test
 	public void notTraced() throws Exception {
-		this.request = get("/favicon.ico").accept(MediaType.ALL)
-				.buildRequest(new MockServletContext());
+		this.request = get("/favicon.ico").accept(MediaType.ALL).buildRequest(new MockServletContext());
 
 		neverSampleFilter().doFilter(this.request, this.response, this.filterChain);
 
@@ -109,13 +105,10 @@ public class TraceFilterTests {
 		Tracing tracing = Tracing.newBuilder()
 				.currentTraceContext(ThreadLocalCurrentTraceContext.newBuilder()
 						.addScopeDecorator(StrictScopeDecorator.create()).build())
-				.addSpanHandler(this.spans).sampler(Sampler.NEVER_SAMPLE)
-				.supportsJoin(false).build();
-		HttpTracing httpTracing = HttpTracing.newBuilder(tracing)
-				.clientParser(new HttpClientParser()).serverParser(new HttpServerParser())
-				.serverSampler(
-						new SkipPatternHttpServerSampler(() -> Pattern.compile("")))
-				.build();
+				.addSpanHandler(this.spans).sampler(Sampler.NEVER_SAMPLE).supportsJoin(false).build();
+		HttpTracing httpTracing = HttpTracing.newBuilder(tracing).clientParser(new HttpClientParser())
+				.serverParser(new HttpServerParser())
+				.serverSampler(new SkipPatternHttpServerSampler(() -> Pattern.compile(""))).build();
 		return TracingFilter.create(httpTracing);
 	}
 
@@ -124,15 +117,14 @@ public class TraceFilterTests {
 		this.filter.doFilter(this.request, this.response, this.filterChain);
 
 		then(this.spans).hasSize(1);
-		then(this.spans.get(0).tags()).containsEntry("http.path", "/")
-				.containsEntry("http.method", HttpMethod.GET.toString());
+		then(this.spans.get(0).tags()).containsEntry("http.path", "/").containsEntry("http.method",
+				HttpMethod.GET.toString());
 		// we don't check for status_code anymore cause Brave doesn't support it oob
 		// .containsEntry("http.status_code", "200")
 	}
 
 	@Test
-	public void shouldNotStoreHttpStatusCodeWhenResponseCodeHasNotYetBeenSet()
-			throws Exception {
+	public void shouldNotStoreHttpStatusCodeWhenResponseCodeHasNotYetBeenSet() throws Exception {
 		this.response.setStatus(0);
 		this.filter.doFilter(this.request, this.response, this.filterChain);
 
@@ -143,8 +135,7 @@ public class TraceFilterTests {
 
 	@Test
 	public void startsNewTraceWithParentIdInHeaders() throws Exception {
-		this.request = builder()
-				.header("b3", "0000000000000002-0000000000000003-1-000000000000000a")
+		this.request = builder().header("b3", "0000000000000002-0000000000000003-1-000000000000000a")
 				.buildRequest(new MockServletContext());
 
 		this.filter.doFilter(this.request, this.response, this.filterChain);
@@ -152,8 +143,8 @@ public class TraceFilterTests {
 		then(Tracing.current().tracer().currentSpan()).isNull();
 		then(this.spans).hasSize(1);
 		then(this.spans.get(0).id()).isEqualTo("0000000000000003");
-		then(this.spans.get(0).tags()).containsEntry("http.path", "/")
-				.containsEntry("http.method", HttpMethod.GET.toString());
+		then(this.spans.get(0).tags()).containsEntry("http.path", "/").containsEntry("http.method",
+				HttpMethod.GET.toString());
 	}
 
 	@Test
@@ -192,8 +183,7 @@ public class TraceFilterTests {
 	}
 
 	@Test
-	public void doesntDetachASpanIfStatusCodeNotSuccessfulAndRequestWasProcessed()
-			throws Exception {
+	public void doesntDetachASpanIfStatusCodeNotSuccessfulAndRequestWasProcessed() throws Exception {
 		Span span = this.tracer.nextSpan().name("http:foo");
 		this.response.setStatus(404);
 
@@ -222,8 +212,7 @@ public class TraceFilterTests {
 		this.request = builder().header("b3", "0000000000000014-000000000000000a")
 				.buildRequest(new MockServletContext());
 
-		TracingFilter.create(httpTracing).doFilter(this.request, this.response,
-				this.filterChain);
+		TracingFilter.create(httpTracing).doFilter(this.request, this.response, this.filterChain);
 
 		then(Tracing.current().tracer().currentSpan()).isNull();
 		then(this.spans).hasSize(1);
@@ -237,8 +226,7 @@ public class TraceFilterTests {
 
 		this.filterChain = new MockFilterChain() {
 			@Override
-			public void doFilter(javax.servlet.ServletRequest request,
-					javax.servlet.ServletResponse response)
+			public void doFilter(javax.servlet.ServletRequest request, javax.servlet.ServletResponse response)
 					throws java.io.IOException, javax.servlet.ServletException {
 				throw new RuntimeException("Planned");
 			}
@@ -258,8 +246,7 @@ public class TraceFilterTests {
 
 	@Test
 	public void detachesSpanWhenResponseStatusIsNot2xx() throws Exception {
-		this.request = builder().header("b3", "14-a")
-				.buildRequest(new MockServletContext());
+		this.request = builder().header("b3", "14-a").buildRequest(new MockServletContext());
 
 		this.response.setStatus(404);
 
@@ -293,8 +280,7 @@ public class TraceFilterTests {
 
 	@Test
 	public void returns400IfSpanIsMalformedAndCreatesANewSpan() throws Exception {
-		this.request = builder().header("b3", "asd")
-				.buildRequest(new MockServletContext());
+		this.request = builder().header("b3", "asd").buildRequest(new MockServletContext());
 
 		this.filter.doFilter(this.request, this.response, this.filterChain);
 
@@ -305,8 +291,7 @@ public class TraceFilterTests {
 
 	@Test
 	public void returns200IfSpanParentIsMalformedAndCreatesANewSpan() throws Exception {
-		this.request = builder().header("b3", "asd")
-				.buildRequest(new MockServletContext());
+		this.request = builder().header("b3", "asd").buildRequest(new MockServletContext());
 
 		this.filter.doFilter(this.request, this.response, this.filterChain);
 
@@ -328,8 +313,7 @@ public class TraceFilterTests {
 	@SuppressWarnings("Duplicates")
 	@Test
 	public void usesSamplingMechanismWhenIncomingTraceIsMalformed() throws Exception {
-		this.request = builder().header("b3", "asd")
-				.buildRequest(new MockServletContext());
+		this.request = builder().header("b3", "asd").buildRequest(new MockServletContext());
 
 		neverSampleFilter().doFilter(this.request, this.response, this.filterChain);
 
@@ -340,16 +324,15 @@ public class TraceFilterTests {
 	// #668
 	@Test
 	public void shouldSetTraceKeysForAnUntracedRequest() throws Exception {
-		this.request = builder().param("foo", "bar")
-				.buildRequest(new MockServletContext());
+		this.request = builder().param("foo", "bar").buildRequest(new MockServletContext());
 		this.response.setStatus(295);
 
 		this.filter.doFilter(this.request, this.response, this.filterChain);
 
 		then(Tracing.current().tracer().currentSpan()).isNull();
 		then(this.spans).hasSize(1);
-		then(this.spans.get(0).tags()).containsEntry("http.path", "/")
-				.containsEntry("http.method", HttpMethod.GET.toString());
+		then(this.spans.get(0).tags()).containsEntry("http.path", "/").containsEntry("http.method",
+				HttpMethod.GET.toString());
 		// we don't check for status_code anymore cause Brave doesn't support it oob
 		// .containsEntry("http.status_code", "295")
 	}
@@ -367,8 +350,8 @@ public class TraceFilterTests {
 
 	public void verifyParentSpanHttpTags() {
 		then(this.spans).isNotEmpty();
-		then(this.spans.get(0).tags()).containsEntry("http.path", "/")
-				.containsEntry("http.method", HttpMethod.GET.toString());
+		then(this.spans.get(0).tags()).containsEntry("http.path", "/").containsEntry("http.method",
+				HttpMethod.GET.toString());
 	}
 
 }

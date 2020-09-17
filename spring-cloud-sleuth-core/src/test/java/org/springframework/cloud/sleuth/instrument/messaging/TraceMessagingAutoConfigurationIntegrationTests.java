@@ -60,10 +60,8 @@ public class TraceMessagingAutoConfigurationIntegrationTests {
 		// tag::custom_messaging_consumer_sampler[]
 		@Bean(name = ConsumerSampler.NAME)
 		SamplerFunction<MessagingRequest> myMessagingSampler() {
-			return MessagingRuleSampler.newBuilder()
-					.putRule(channelNameEquals("alerts"), Sampler.NEVER_SAMPLE)
-					.putRule(Matchers.alwaysMatch(), RateLimitingSampler.create(100))
-					.build();
+			return MessagingRuleSampler.newBuilder().putRule(channelNameEquals("alerts"), Sampler.NEVER_SAMPLE)
+					.putRule(Matchers.alwaysMatch(), RateLimitingSampler.create(100)).build();
 		}
 		// end::custom_messaging_consumer_sampler[]
 

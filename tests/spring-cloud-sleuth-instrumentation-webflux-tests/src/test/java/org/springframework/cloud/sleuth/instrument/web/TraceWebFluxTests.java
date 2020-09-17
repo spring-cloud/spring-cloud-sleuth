@@ -54,18 +54,14 @@ public class TraceWebFluxTests {
 	@Test
 	public void should_instrument_web_filter() throws Exception {
 		// setup
-		ConfigurableApplicationContext context = new SpringApplicationBuilder(
-				TraceWebFluxTests.Config.class)
-						.web(WebApplicationType.REACTIVE)
-						.properties("server.port=0", "spring.jmx.enabled=false",
-								"spring.sleuth.web.skipPattern=/skipped",
-								"spring.application.name=TraceWebFluxTests",
-								"security.basic.enabled=false",
-								"management.security.enabled=false")
-						.run();
+		ConfigurableApplicationContext context = new SpringApplicationBuilder(TraceWebFluxTests.Config.class)
+				.web(WebApplicationType.REACTIVE)
+				.properties("server.port=0", "spring.jmx.enabled=false", "spring.sleuth.web.skipPattern=/skipped",
+						"spring.application.name=TraceWebFluxTests", "security.basic.enabled=false",
+						"management.security.enabled=false")
+				.run();
 		TestSpanHandler spans = context.getBean(TestSpanHandler.class);
-		int port = context.getBean(Environment.class).getProperty("local.server.port",
-				Integer.class);
+		int port = context.getBean(Environment.class).getProperty("local.server.port", Integer.class);
 		Controller2 controller2 = context.getBean(Controller2.class);
 		clean(spans, controller2);
 
@@ -106,10 +102,8 @@ public class TraceWebFluxTests {
 		controller2.span = null;
 	}
 
-	private void thenSpanWasReportedWithTags(TestSpanHandler spans,
-			ClientResponse response) {
-		Awaitility.await()
-				.untilAsserted(() -> then(response.statusCode().value()).isEqualTo(200));
+	private void thenSpanWasReportedWithTags(TestSpanHandler spans, ClientResponse response) {
+		Awaitility.await().untilAsserted(() -> then(response.statusCode().value()).isEqualTo(200));
 		then(spans).hasSize(1);
 		then(spans.get(0).name()).isEqualTo("GET /api/c2/{id}");
 		then(spans.get(0).tags()).containsEntry("mvc.controller.method", "successful")
@@ -117,26 +111,21 @@ public class TraceWebFluxTests {
 		then(spans.get(0).remoteIp()).isEqualTo("127.0.0.1");
 	}
 
-	private void thenSpanWasReportedWithRemoteIpTags(TestSpanHandler spans,
-			ClientResponse response) {
-		Awaitility.await()
-				.untilAsserted(() -> then(response.statusCode().value()).isEqualTo(200));
+	private void thenSpanWasReportedWithRemoteIpTags(TestSpanHandler spans, ClientResponse response) {
+		Awaitility.await().untilAsserted(() -> then(response.statusCode().value()).isEqualTo(200));
 		then(spans).hasSize(1);
 		then(spans.get(0).remoteIp()).isEqualTo("203.0.113.195");
 	}
 
-	private void thenFunctionalSpanWasReportedWithTags(TestSpanHandler spans,
-			ClientResponse response) {
-		Awaitility.await()
-				.untilAsserted(() -> then(response.statusCode().value()).isEqualTo(200));
+	private void thenFunctionalSpanWasReportedWithTags(TestSpanHandler spans, ClientResponse response) {
+		Awaitility.await().untilAsserted(() -> then(response.statusCode().value()).isEqualTo(200));
 		then(spans).hasSize(1);
 		then(spans.get(0).name()).isEqualTo("GET /api/fn/{id}");
 		then(spans.get(0).tags()).hasEntrySatisfying("mvc.controller.class",
 				value -> then(value).startsWith("TraceWebFluxTests$Config$$Lambda$"));
 	}
 
-	private void thenNoSpanWasReported(TestSpanHandler spans, ClientResponse response,
-			Controller2 controller2) {
+	private void thenNoSpanWasReported(TestSpanHandler spans, ClientResponse response, Controller2 controller2) {
 		Awaitility.await().untilAsserted(() -> {
 			then(response.statusCode().value()).isEqualTo(200);
 			then(spans).isEmpty();
@@ -146,30 +135,25 @@ public class TraceWebFluxTests {
 	}
 
 	private ClientResponse whenRequestIsSent(int port, String path) {
-		Mono<ClientResponse> exchange = WebClient.create().get()
-				.uri("http://localhost:" + port + path).exchange();
+		Mono<ClientResponse> exchange = WebClient.create().get().uri("http://localhost:" + port + path).exchange();
 		return exchange.block();
 	}
 
 	private ClientResponse whenRequestWithXForwardedForIsSent(int port, String path) {
-		Mono<ClientResponse> exchange = WebClient.create().get()
-				.uri("http://localhost:" + port + path)
-				.header("X-Forwarded-For", "203.0.113.195, 70.41.3.18, 150.172.238.178")
-				.exchange();
+		Mono<ClientResponse> exchange = WebClient.create().get().uri("http://localhost:" + port + path)
+				.header("X-Forwarded-For", "203.0.113.195, 70.41.3.18, 150.172.238.178").exchange();
 		return exchange.block();
 	}
 
 	private ClientResponse whenRequestIsSentToSkippedPattern(int port) {
-		Mono<ClientResponse> exchange = WebClient.create().get()
-				.uri("http://localhost:" + port + "/skipped").exchange();
+		Mono<ClientResponse> exchange = WebClient.create().get().uri("http://localhost:" + port + "/skipped")
+				.exchange();
 		return exchange.block();
 	}
 
 	private ClientResponse whenNonSampledRequestIsSent(int port) {
-		Mono<ClientResponse> exchange = WebClient.create().get()
-				.uri("http://localhost:" + port + "/api/c2/10")
-				.header("b3", EXPECTED_TRACE_ID + "-" + EXPECTED_TRACE_ID + "-0")
-				.exchange();
+		Mono<ClientResponse> exchange = WebClient.create().get().uri("http://localhost:" + port + "/api/c2/10")
+				.header("b3", EXPECTED_TRACE_ID + "-" + EXPECTED_TRACE_ID + "-0").exchange();
 		return exchange.block();
 	}
 
@@ -201,10 +185,8 @@ public class TraceWebFluxTests {
 
 		@Bean
 		RouterFunction<ServerResponse> route() {
-			return RouterFunctions.route()
-					.GET("/api/fn/{id}", serverRequest -> ServerResponse.ok()
-							.bodyValue(serverRequest.pathVariable("id")))
-					.build();
+			return RouterFunctions.route().GET("/api/fn/{id}",
+					serverRequest -> ServerResponse.ok().bodyValue(serverRequest.pathVariable("id"))).build();
 		}
 
 	}

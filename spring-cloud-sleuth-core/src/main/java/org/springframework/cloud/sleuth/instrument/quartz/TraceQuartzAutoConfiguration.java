@@ -62,8 +62,7 @@ class TraceQuartzAutoConfiguration implements InitializingBean {
 
 	@Override
 	public void afterPropertiesSet() throws Exception {
-		TracingJobListener tracingJobListener = beanFactory
-				.getBean(TracingJobListener.class);
+		TracingJobListener tracingJobListener = beanFactory.getBean(TracingJobListener.class);
 		scheduler.getListenerManager().addTriggerListener(tracingJobListener);
 		scheduler.getListenerManager().addJobListener(tracingJobListener);
 	}

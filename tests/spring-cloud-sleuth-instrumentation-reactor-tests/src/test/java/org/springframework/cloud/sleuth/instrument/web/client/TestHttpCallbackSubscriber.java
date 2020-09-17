@@ -90,8 +90,7 @@ final class TestHttpCallbackSubscriber implements CoreSubscriber<Integer> {
 			// Tests make a non-empty Mono subscription, which should not signal
 			// onComplete() before onNext(). If we reach here, possibly instrumentation
 			// is not signaling onNext() when it should.
-			callback.accept(null,
-					new AssertionError("onComplete() called before onNext!"));
+			callback.accept(null, new AssertionError("onComplete() called before onNext!"));
 		}
 	}
 

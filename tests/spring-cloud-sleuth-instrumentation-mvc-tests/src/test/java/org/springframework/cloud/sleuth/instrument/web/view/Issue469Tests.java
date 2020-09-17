@@ -27,10 +27,8 @@ import org.springframework.web.client.RestTemplate;
 
 import static org.assertj.core.api.BDDAssertions.then;
 
-@SpringBootTest(classes = Issue469.class,
-		webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-@TestPropertySource(properties = { "spring.mvc.view.prefix=/WEB-INF/jsp/",
-		"spring.mvc.view.suffix=.jsp" })
+@SpringBootTest(classes = Issue469.class, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@TestPropertySource(properties = { "spring.mvc.view.prefix=/WEB-INF/jsp/", "spring.mvc.view.suffix=.jsp" })
 public class Issue469Tests {
 
 	@Autowired
@@ -44,8 +42,7 @@ public class Issue469Tests {
 	@Test
 	public void should_not_result_in_tracing_exceptions_when_using_view_controllers() {
 		try {
-			this.restTemplate.getForObject("http://localhost:" + port() + "/welcome",
-					String.class);
+			this.restTemplate.getForObject("http://localhost:" + port() + "/welcome", String.class);
 		}
 		catch (Exception e) {
 			// JSPs are not rendered

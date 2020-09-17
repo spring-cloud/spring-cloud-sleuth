@@ -118,8 +118,7 @@ public class DemoApplication {
 	}
 
 	public List<Span> allSpans() {
-		return Arrays.asList(this.httpSpan, this.splitterSpan, this.aggregatorSpan,
-				this.serviceActivatorSpan);
+		return Arrays.asList(this.httpSpan, this.splitterSpan, this.aggregatorSpan, this.serviceActivatorSpan);
 	}
 
 }

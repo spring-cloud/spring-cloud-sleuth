@@ -45,12 +45,9 @@ class ZipkinRabbitSenderConfiguration {
 	private String addresses;
 
 	@Bean(ZipkinAutoConfiguration.SENDER_BEAN_NAME)
-	Sender rabbitSender(CachingConnectionFactory connectionFactory,
-			RabbitProperties config) {
-		String addresses = StringUtils.hasText(this.addresses) ? this.addresses
-				: config.determineAddresses();
-		return RabbitMQSender.newBuilder()
-				.connectionFactory(connectionFactory.getRabbitConnectionFactory())
+	Sender rabbitSender(CachingConnectionFactory connectionFactory, RabbitProperties config) {
+		String addresses = StringUtils.hasText(this.addresses) ? this.addresses : config.determineAddresses();
+		return RabbitMQSender.newBuilder().connectionFactory(connectionFactory.getRabbitConnectionFactory())
 				.queue(this.queue).addresses(addresses).build();
 	}
 

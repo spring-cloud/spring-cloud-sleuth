@@ -38,8 +38,7 @@ import org.springframework.messaging.support.MessageBuilder;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-@SpringBootTest(classes = StreamFunctionAdapterTests.Config.class,
-		webEnvironment = SpringBootTest.WebEnvironment.NONE)
+@SpringBootTest(classes = StreamFunctionAdapterTests.Config.class, webEnvironment = SpringBootTest.WebEnvironment.NONE)
 public class StreamFunctionAdapterTests {
 
 	@Autowired(required = false)
@@ -56,8 +55,7 @@ public class StreamFunctionAdapterTests {
 
 	@Test
 	void should_instrument_a_simple_message_to_message_function() {
-		assertThat(tracingChannelInterceptor)
-				.as("Ensure that we're doing instrumentation via function wrapper")
+		assertThat(tracingChannelInterceptor).as("Ensure that we're doing instrumentation via function wrapper")
 				.isNull();
 
 		this.inputDestination.send(MessageBuilder.withPayload("hello".getBytes())
@@ -69,8 +67,8 @@ public class StreamFunctionAdapterTests {
 		String b3 = message.getHeaders().get("b3", String.class);
 		assertThat(b3).startsWith("4883117762eb9420");
 
-		assertThat(this.handler.spans()).hasSize(3).extracting("kind")
-				.containsOnly(Span.Kind.CONSUMER, null, Span.Kind.PRODUCER);
+		assertThat(this.handler.spans()).hasSize(3).extracting("kind").containsOnly(Span.Kind.CONSUMER, null,
+				Span.Kind.PRODUCER);
 	}
 
 	@Configuration
@@ -99,8 +97,7 @@ class SimpleFunction implements Function<Message<String>, Message<String>> {
 	@Override
 	public Message<String> apply(Message<String> input) {
 		log.info("Hello from simple [{}]", input);
-		return MessageBuilder.createMessage(input.getPayload().toUpperCase(),
-				input.getHeaders());
+		return MessageBuilder.createMessage(input.getPayload().toUpperCase(), input.getHeaders());
 	}
 
 }

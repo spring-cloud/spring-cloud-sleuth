@@ -56,9 +56,8 @@ import static org.assertj.core.api.Assertions.assertThat;
  */
 public class JmsTracingConfigurationTest {
 
-	final ApplicationContextRunner contextRunner = new ApplicationContextRunner()
-			.withConfiguration(AutoConfigurations.of(JmsTestTracingConfiguration.class,
-					XAConfiguration.class, SimpleJmsListenerConfiguration.class));
+	final ApplicationContextRunner contextRunner = new ApplicationContextRunner().withConfiguration(AutoConfigurations
+			.of(JmsTestTracingConfiguration.class, XAConfiguration.class, SimpleJmsListenerConfiguration.class));
 
 	static void checkConnection(AssertableApplicationContext ctx) throws JMSException {
 		// Not using try-with-resources as that doesn't exist in JMS 1.1
@@ -88,11 +87,9 @@ public class JmsTracingConfigurationTest {
 		}
 	}
 
-	static void checkTopicConnection(AssertableApplicationContext ctx)
-			throws JMSException {
+	static void checkTopicConnection(AssertableApplicationContext ctx) throws JMSException {
 		// Not using try-with-resources as that doesn't exist in JMS 1.1
-		TopicConnection con = ctx.getBean(TopicConnectionFactory.class)
-				.createTopicConnection();
+		TopicConnection con = ctx.getBean(TopicConnectionFactory.class).createTopicConnection();
 		try {
 			con.setExceptionListener(exception -> {
 			});
@@ -139,8 +136,7 @@ public class JmsTracingConfigurationTest {
 	@EnableJms
 	static class SimpleJmsListenerConfiguration implements JmsListenerConfigurer {
 
-		private static final Log log = LogFactory
-				.getLog(SimpleJmsListenerConfiguration.class);
+		private static final Log log = LogFactory.getLog(SimpleJmsListenerConfiguration.class);
 
 		@Autowired
 		CurrentTraceContext current;
@@ -159,8 +155,7 @@ public class JmsTracingConfigurationTest {
 			return message -> {
 				log.info("Got message");
 				// Didn't restart the trace
-				assertThat(current.get()).isNotNull()
-						.extracting(TraceContext::parentIdAsLong).isNotEqualTo(0L);
+				assertThat(current.get()).isNotNull().extracting(TraceContext::parentIdAsLong).isNotEqualTo(0L);
 			};
 		}
 

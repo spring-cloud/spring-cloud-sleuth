@@ -39,8 +39,8 @@ public class TraceAsyncAspectTest {
 
 	TestSpanHandler spans = new TestSpanHandler();
 
-	Tracing tracing = Tracing.newBuilder().currentTraceContext(this.currentTraceContext)
-			.addSpanHandler(this.spans).build();
+	Tracing tracing = Tracing.newBuilder().currentTraceContext(this.currentTraceContext).addSpanHandler(this.spans)
+			.build();
 
 	ProceedingJoinPoint point = Mockito.mock(ProceedingJoinPoint.class);
 
@@ -48,8 +48,7 @@ public class TraceAsyncAspectTest {
 	public void setup() throws NoSuchMethodException {
 		MethodSignature signature = Mockito.mock(MethodSignature.class);
 		BDDMockito.given(signature.getName()).willReturn("fooBar");
-		BDDMockito.given(signature.getMethod())
-				.willReturn(TraceAsyncAspectTest.class.getMethod("setup"));
+		BDDMockito.given(signature.getMethod()).willReturn(TraceAsyncAspectTest.class.getMethod("setup"));
 		BDDMockito.given(this.point.getSignature()).willReturn(signature);
 		BDDMockito.given(this.point.getTarget()).willReturn("");
 	}
@@ -63,8 +62,7 @@ public class TraceAsyncAspectTest {
 	// Issue#926
 	@Test
 	public void should_work() throws Throwable {
-		TraceAsyncAspect asyncAspect = new TraceAsyncAspect(this.tracing.tracer(),
-				new DefaultSpanNamer()) {
+		TraceAsyncAspect asyncAspect = new TraceAsyncAspect(this.tracing.tracer(), new DefaultSpanNamer()) {
 			@Override
 			String name(ProceedingJoinPoint pjp) {
 				return "foo-bar";

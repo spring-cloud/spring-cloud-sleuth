@@ -60,8 +60,7 @@ class SleuthMessagingProperties {
 		 * Defaults to any channel name not matching the Hystrix Stream and functional
 		 * Stream channel names.
 		 */
-		private String[] patterns = new String[] { "!hystrixStreamOutput*", "*",
-				"!channel*" };
+		private String[] patterns = new String[] { "!hystrixStreamOutput*", "*", "!channel*" };
 
 		/**
 		 * Enable Spring Integration sleuth instrumentation.

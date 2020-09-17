@@ -42,16 +42,13 @@ public class Issue866Configuration {
 	@Bean
 	HookRegisteringBeanDefinitionRegistryPostProcessor overridingProcessorForTests(
 			ConfigurableApplicationContext context) {
-		log.info(
-				"Registering a HookRegisteringBeanDefinitionRegistryPostProcessor for context ["
-						+ context + "]");
+		log.info("Registering a HookRegisteringBeanDefinitionRegistryPostProcessor for context [" + context + "]");
 		TestHook hook = new TestHook(context);
 		Issue866Configuration.hook = hook;
 		return hook;
 	}
 
-	public static class TestHook
-			extends HookRegisteringBeanDefinitionRegistryPostProcessor {
+	public static class TestHook extends HookRegisteringBeanDefinitionRegistryPostProcessor {
 
 		public boolean executed = false;
 
@@ -60,8 +57,7 @@ public class Issue866Configuration {
 		}
 
 		@Override
-		public void postProcessBeanFactory(ConfigurableListableBeanFactory beanFactory)
-				throws BeansException {
+		public void postProcessBeanFactory(ConfigurableListableBeanFactory beanFactory) throws BeansException {
 			super.postProcessBeanFactory(beanFactory);
 			this.executed = true;
 		}

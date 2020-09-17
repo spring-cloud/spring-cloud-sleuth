@@ -69,8 +69,7 @@ class ZipkinKafkaSenderConfiguration {
 			if (bootstrapServers instanceof List) {
 				properties.put("bootstrap.servers", join((List) bootstrapServers));
 			}
-			return KafkaSender.newBuilder().topic(this.topic).overrides(properties)
-					.build();
+			return KafkaSender.newBuilder().topic(this.topic).overrides(properties).build();
 		}
 
 	}

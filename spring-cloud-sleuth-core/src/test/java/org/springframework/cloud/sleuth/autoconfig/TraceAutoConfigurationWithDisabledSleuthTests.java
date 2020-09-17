@@ -43,8 +43,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 @ExtendWith(OutputCaptureExtension.class)
 public class TraceAutoConfigurationWithDisabledSleuthTests {
 
-	private static final Log log = LogFactory
-			.getLog(TraceAutoConfigurationWithDisabledSleuthTests.class);
+	private static final Log log = LogFactory.getLog(TraceAutoConfigurationWithDisabledSleuthTests.class);
 
 	@Autowired(required = false)
 	Tracing tracing;

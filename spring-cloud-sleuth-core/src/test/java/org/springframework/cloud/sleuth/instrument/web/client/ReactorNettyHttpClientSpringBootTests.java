@@ -72,8 +72,7 @@ public class ReactorNettyHttpClientSpringBootTests {
 	@Autowired
 	CurrentTraceContext currentTraceContext;
 
-	TraceContext context = TraceContext.newBuilder().traceId(1).spanId(1).sampled(true)
-			.build();
+	TraceContext context = TraceContext.newBuilder().traceId(1).spanId(1).sampled(true).build();
 
 	@AfterEach
 	public void tearDown() {
@@ -84,11 +83,9 @@ public class ReactorNettyHttpClientSpringBootTests {
 
 	@Test
 	public void shouldRecordRemoteEndpoint() throws Exception {
-		disposableServer = HttpServer.create().port(0)
-				.handle((in, out) -> out.sendString(Flux.just("foo"))).bindNow();
+		disposableServer = HttpServer.create().port(0).handle((in, out) -> out.sendString(Flux.just("foo"))).bindNow();
 
-		HttpClientResponse response = httpClient.port(disposableServer.port()).get()
-				.uri("/").response().block();
+		HttpClientResponse response = httpClient.port(disposableServer.port()).get().uri("/").response().block();
 
 		assertThat(response.status()).isEqualTo(HttpResponseStatus.OK);
 
@@ -102,39 +99,34 @@ public class ReactorNettyHttpClientSpringBootTests {
 	public void shouldUseInvocationContext() throws Exception {
 		disposableServer = HttpServer.create().port(0)
 				// this reads the trace context header, b3, returning it in the response
-				.handle((in, out) -> out
-						.sendString(Flux.just(in.requestHeaders().get("b3"))))
-				.bindNow();
+				.handle((in, out) -> out.sendString(Flux.just(in.requestHeaders().get("b3")))).bindNow();
 
 		String b3SingleHeaderReadByServer;
 		try (Scope ws = currentTraceContext.newScope(context)) {
-			b3SingleHeaderReadByServer = httpClient.port(disposableServer.port()).get()
-					.uri("/").responseContent().aggregate().asString().block();
+			b3SingleHeaderReadByServer = httpClient.port(disposableServer.port()).get().uri("/").responseContent()
+					.aggregate().asString().block();
 		}
 
 		MutableSpan clientSpan = spanHandler.takeRemoteSpan(CLIENT);
 
-		assertThat(b3SingleHeaderReadByServer).isEqualTo(context.traceIdString() + "-"
-				+ clientSpan.id() + "-1-" + context.spanIdString());
+		assertThat(b3SingleHeaderReadByServer)
+				.isEqualTo(context.traceIdString() + "-" + clientSpan.id() + "-1-" + context.spanIdString());
 	}
 
 	@Test
 	public void shouldSendTraceContextToServer_rootSpan() throws Exception {
 		disposableServer = HttpServer.create().port(0)
 				// this reads the trace context header, b3, returning it in the response
-				.handle((in, out) -> out
-						.sendString(Flux.just(in.requestHeaders().get("b3"))))
-				.bindNow();
+				.handle((in, out) -> out.sendString(Flux.just(in.requestHeaders().get("b3")))).bindNow();
 
-		Mono<String> request = httpClient.port(disposableServer.port()).get().uri("/")
-				.responseContent().aggregate().asString();
+		Mono<String> request = httpClient.port(disposableServer.port()).get().uri("/").responseContent().aggregate()
+				.asString();
 
 		String b3SingleHeaderReadByServer = request.block();
 
 		MutableSpan clientSpan = spanHandler.takeRemoteSpan(CLIENT);
 
-		assertThat(b3SingleHeaderReadByServer)
-				.isEqualTo(clientSpan.traceId() + "-" + clientSpan.id() + "-1");
+		assertThat(b3SingleHeaderReadByServer).isEqualTo(clientSpan.traceId() + "-" + clientSpan.id() + "-1");
 	}
 
 	@Test
@@ -143,11 +135,10 @@ public class ReactorNettyHttpClientSpringBootTests {
 			throw new RuntimeException("test");
 		}).bindNow();
 
-		Mono<String> request = httpClient.port(disposableServer.port()).get().uri("/")
-				.responseContent().aggregate().asString();
+		Mono<String> request = httpClient.port(disposableServer.port()).get().uri("/").responseContent().aggregate()
+				.asString();
 
-		assertThatThrownBy(request::block)
-				.hasCauseInstanceOf(PrematureCloseException.class);
+		assertThatThrownBy(request::block).hasCauseInstanceOf(PrematureCloseException.class);
 
 		spanHandler.takeRemoteSpanWithError(CLIENT);
 	}

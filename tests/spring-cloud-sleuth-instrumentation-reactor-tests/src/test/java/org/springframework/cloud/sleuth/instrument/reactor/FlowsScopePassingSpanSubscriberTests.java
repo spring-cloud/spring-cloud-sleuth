@@ -52,14 +52,12 @@ public class FlowsScopePassingSpanSubscriberTests {
 		// iterator. That's not allowed, and will cause an exception
 		// Fuseable$QueueSubscription.NOT_SUPPORTED_MESSAGE.
 		// This ensures AssertJ uses normal toString.
-		StandardRepresentation.registerFormatterForType(ScopePassingSpanSubscriber.class,
-				Objects::toString);
+		StandardRepresentation.registerFormatterForType(ScopePassingSpanSubscriber.class, Objects::toString);
 	}
 
 	final CurrentTraceContext currentTraceContext = CurrentTraceContext.Default.create();
 
-	TraceContext context = TraceContext.newBuilder().traceId(1).spanId(1).sampled(true)
-			.build();
+	TraceContext context = TraceContext.newBuilder().traceId(1).spanId(1).sampled(true).build();
 
 	AnnotationConfigApplicationContext springContext = new AnnotationConfigApplicationContext();
 
@@ -133,21 +131,17 @@ public class FlowsScopePassingSpanSubscriberTests {
 
 			transformer.apply(Mono.just(1)).subscribe(assertNoSpanSubscriber);
 
-			transformer.apply(Mono.<Integer>error(new Exception()).hide())
-					.subscribe(assertSpanSubscriber);
+			transformer.apply(Mono.<Integer>error(new Exception()).hide()).subscribe(assertSpanSubscriber);
 
-			transformer.apply(Mono.error(new Exception()))
-					.subscribe(assertNoSpanSubscriber);
+			transformer.apply(Mono.error(new Exception())).subscribe(assertNoSpanSubscriber);
 
-			transformer.apply(Mono.<Integer>empty().hide())
-					.subscribe(assertSpanSubscriber);
+			transformer.apply(Mono.<Integer>empty().hide()).subscribe(assertSpanSubscriber);
 
 			transformer.apply(Mono.empty()).subscribe(assertNoSpanSubscriber);
 
 		}
 
-		Awaitility.await()
-				.untilAsserted(() -> then(this.currentTraceContext.get()).isNull());
+		Awaitility.await().untilAsserted(() -> then(this.currentTraceContext.get()).isNull());
 	}
 
 }

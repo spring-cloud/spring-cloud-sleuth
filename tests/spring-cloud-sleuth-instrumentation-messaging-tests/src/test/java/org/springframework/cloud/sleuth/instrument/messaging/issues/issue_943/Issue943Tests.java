@@ -38,24 +38,19 @@ public class Issue943Tests {
 
 	@Test
 	public void should_pass_tracing_context_via_spring_integration() {
-		try (ConfigurableApplicationContext applicationContext = SpringApplication.run(
-				HelloSpringIntegration.class, "--spring.jmx.enabled=false",
-				"--server.port=0", "--spring.sleuth.integration.enabled=true")) {
+		try (ConfigurableApplicationContext applicationContext = SpringApplication.run(HelloSpringIntegration.class,
+				"--spring.jmx.enabled=false", "--server.port=0", "--spring.sleuth.integration.enabled=true")) {
 			// given
 			Tracer tracer = applicationContext.getBean(Tracer.class);
 			Span newSpan = tracer.nextSpan().name("foo").start();
 			String object;
 			try (Tracer.SpanInScope ws = tracer.withSpanInScope(newSpan)) {
-				RestTemplate restTemplate = applicationContext
-						.getBean(RestTemplate.class);
+				RestTemplate restTemplate = applicationContext.getBean(RestTemplate.class);
 				// when
-				object = restTemplate
-						.getForObject(
-								"http://localhost:"
-										+ applicationContext.getEnvironment()
-												.getProperty("local.server.port")
-										+ "/getHelloWorldMessage",
-								String.class);
+				object = restTemplate.getForObject(
+						"http://localhost:" + applicationContext.getEnvironment().getProperty("local.server.port")
+								+ "/getHelloWorldMessage",
+						String.class);
 			}
 
 			// then
@@ -63,15 +58,11 @@ public class Issue943Tests {
 			then(object).contains("Hellow World Message 1 Persist into DB")
 					.contains("Hellow World Message 2 Persist into DB")
 					.contains("Hellow World Message 3 Persist into DB");
-			then(spans.spans().stream().filter(
-					span -> span.traceId().equals(newSpan.context().traceIdString()))
-					.map(span -> span.tags().getOrDefault("channel",
-							span.tags().get("http.path")))
-					.collect(Collectors.toList()))
-							.as("trace context was propagated successfully").isNotEmpty()
-							.contains("splitterOutChannel", "messagingChannel",
-									"messagingProcessedChannel", "messagingOutputChannel",
-									"/getHelloWorldMessage");
+			then(spans.spans().stream().filter(span -> span.traceId().equals(newSpan.context().traceIdString()))
+					.map(span -> span.tags().getOrDefault("channel", span.tags().get("http.path")))
+					.collect(Collectors.toList())).as("trace context was propagated successfully").isNotEmpty()
+							.contains("splitterOutChannel", "messagingChannel", "messagingProcessedChannel",
+									"messagingOutputChannel", "/getHelloWorldMessage");
 		}
 	}
 

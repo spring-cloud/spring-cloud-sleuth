@@ -38,20 +38,17 @@ public class ProbabilityBasedSamplerTests {
 		this.samplerConfiguration.setProbability(1f);
 
 		for (int i = 0; i < 10; i++) {
-			then(new ProbabilityBasedSampler(this.samplerConfiguration)
-					.isSampled(RANDOM.nextLong())).isTrue();
+			then(new ProbabilityBasedSampler(this.samplerConfiguration).isSampled(RANDOM.nextLong())).isTrue();
 		}
 
 	}
 
 	@Test
-	public void should_reject_all_samples_when_config_has_0_probability()
-			throws Exception {
+	public void should_reject_all_samples_when_config_has_0_probability() throws Exception {
 		this.samplerConfiguration.setProbability(0f);
 
 		for (int i = 0; i < 10; i++) {
-			then(new ProbabilityBasedSampler(this.samplerConfiguration)
-					.isSampled(RANDOM.nextLong())).isFalse();
+			then(new ProbabilityBasedSampler(this.samplerConfiguration).isSampled(RANDOM.nextLong())).isFalse();
 		}
 	}
 
@@ -67,8 +64,7 @@ public class ProbabilityBasedSamplerTests {
 	}
 
 	@Test
-	public void should_pass_given_percent_of_samples_with_fractional_element()
-			throws Exception {
+	public void should_pass_given_percent_of_samples_with_fractional_element() throws Exception {
 		int numberOfIterations = 1000;
 		float probability = 0.35f;
 		this.samplerConfiguration.setProbability(probability);
@@ -82,8 +78,8 @@ public class ProbabilityBasedSamplerTests {
 	@Test
 	public void should_fail_given_no_probability() {
 		assertThatThrownBy(() -> new ProbabilityBasedSampler(this.samplerConfiguration))
-				.isInstanceOf(IllegalArgumentException.class).hasMessage(
-						"probability property is required for ProbabilityBasedSampler");
+				.isInstanceOf(IllegalArgumentException.class)
+				.hasMessage("probability property is required for ProbabilityBasedSampler");
 	}
 
 	private int countNumberOfSampledElements(int numberOfIterations) {

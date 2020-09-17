@@ -43,8 +43,7 @@ import org.springframework.scheduling.annotation.EnableAsync;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.BDDAssertions.then;
 
-@SpringBootTest(
-		classes = { TraceAsyncIntegrationTests.TraceAsyncITestConfiguration.class })
+@SpringBootTest(classes = { TraceAsyncIntegrationTests.TraceAsyncITestConfiguration.class })
 public class TraceAsyncIntegrationTests {
 
 	@Autowired
@@ -118,15 +117,14 @@ public class TraceAsyncIntegrationTests {
 
 	private void thenTraceIdIsPassedFromTheCurrentThreadToTheAsyncOne(final Span span) {
 		Awaitility.await().atMost(5, SECONDS).untilAsserted(() -> {
-			then(TraceAsyncIntegrationTests.this.classPerformingAsyncLogic.getSpan()
-					.context().traceId()).isEqualTo(span.context().traceId());
+			then(TraceAsyncIntegrationTests.this.classPerformingAsyncLogic.getSpan().context().traceId())
+					.isEqualTo(span.context().traceId());
 			then(this.spans).hasSize(2);
 			// HTTP
 			then(this.spans.get(0).name()).isEqualTo("http:existing");
 			// ASYNC
-			then(this.spans.get(1).tags())
-					.containsEntry("class", "ClassPerformingAsyncLogic")
-					.containsEntry("method", "invokeAsynchronousLogic");
+			then(this.spans.get(1).tags()).containsEntry("class", "ClassPerformingAsyncLogic").containsEntry("method",
+					"invokeAsynchronousLogic");
 		});
 	}
 
@@ -135,23 +133,21 @@ public class TraceAsyncIntegrationTests {
 			then(this.spans).hasSize(1);
 			MutableSpan storedSpan = this.spans.get(0);
 			then(storedSpan.name()).isEqualTo("invoke-asynchronous-logic");
-			then(storedSpan.tags()).containsEntry("class", "ClassPerformingAsyncLogic")
-					.containsEntry("method", "invokeAsynchronousLogic");
+			then(storedSpan.tags()).containsEntry("class", "ClassPerformingAsyncLogic").containsEntry("method",
+					"invokeAsynchronousLogic");
 		});
 	}
 
-	private void thenTraceIdIsPassedFromTheCurrentThreadToTheAsyncOneAndSpanHasCustomName(
-			final Span span) {
+	private void thenTraceIdIsPassedFromTheCurrentThreadToTheAsyncOneAndSpanHasCustomName(final Span span) {
 		Awaitility.await().atMost(5, SECONDS).untilAsserted(() -> {
-			then(TraceAsyncIntegrationTests.this.classPerformingAsyncLogic.getSpan()
-					.context().traceId()).isEqualTo(span.context().traceId());
+			then(TraceAsyncIntegrationTests.this.classPerformingAsyncLogic.getSpan().context().traceId())
+					.isEqualTo(span.context().traceId());
 			then(this.spans).hasSize(2);
 			// HTTP
 			then(this.spans.get(0).name()).isEqualTo("http:existing");
 			// ASYNC
-			then(this.spans.get(1).tags())
-					.containsEntry("class", "ClassPerformingAsyncLogic")
-					.containsEntry("method", "customNameInvokeAsynchronousLogic");
+			then(this.spans.get(1).tags()).containsEntry("class", "ClassPerformingAsyncLogic").containsEntry("method",
+					"customNameInvokeAsynchronousLogic");
 		});
 	}
 
@@ -160,8 +156,8 @@ public class TraceAsyncIntegrationTests {
 			then(this.spans).hasSize(1);
 			MutableSpan storedSpan = this.spans.get(0);
 			then(storedSpan.name()).isEqualTo("foo");
-			then(storedSpan.tags()).containsEntry("class", "ClassPerformingAsyncLogic")
-					.containsEntry("method", "customNameInvokeAsynchronousLogic");
+			then(storedSpan.tags()).containsEntry("class", "ClassPerformingAsyncLogic").containsEntry("method",
+					"customNameInvokeAsynchronousLogic");
 		});
 	}
 

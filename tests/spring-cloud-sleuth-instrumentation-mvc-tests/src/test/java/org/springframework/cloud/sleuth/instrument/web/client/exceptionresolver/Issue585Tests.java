@@ -49,8 +49,7 @@ import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExcep
 
 import static org.assertj.core.api.BDDAssertions.then;
 
-@SpringBootTest(classes = TestConfig.class,
-		webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@SpringBootTest(classes = TestConfig.class, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 public class Issue585Tests {
 
 	TestRestTemplate testRestTemplate = new TestRestTemplate();
@@ -66,14 +65,12 @@ public class Issue585Tests {
 
 	@Test
 	public void should_report_span_when_using_custom_exception_resolver() {
-		ResponseEntity<String> entity = this.testRestTemplate.getForEntity(
-				"http://localhost:" + this.port + "/sleuthtest?greeting=foo",
-				String.class);
+		ResponseEntity<String> entity = this.testRestTemplate
+				.getForEntity("http://localhost:" + this.port + "/sleuthtest?greeting=foo", String.class);
 
 		then(this.currentTraceContext.get()).isNull();
 		then(entity.getStatusCode().value()).isEqualTo(500);
-		then(this.spans.get(0).tags()).containsEntry("custom", "tag")
-				.containsKeys("error");
+		then(this.spans.get(0).tags()).containsEntry("custom", "tag").containsKeys("error");
 	}
 
 }
@@ -113,18 +110,15 @@ class TestController {
 @ControllerAdvice
 class CustomExceptionHandler extends ResponseEntityExceptionHandler {
 
-	private final static Logger logger = LoggerFactory
-			.getLogger(CustomExceptionHandler.class);
+	private final static Logger logger = LoggerFactory.getLogger(CustomExceptionHandler.class);
 
 	@Autowired
 	private Tracing tracer;
 
 	@ExceptionHandler(Exception.class)
-	protected ResponseEntity<ExceptionResponse> handleDefaultError(Exception ex,
-			HttpServletRequest request) {
-		ExceptionResponse exceptionResponse = new ExceptionResponse("ERR-01",
-				ex.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR,
-				request.getRequestURI(), Instant.now().toEpochMilli());
+	protected ResponseEntity<ExceptionResponse> handleDefaultError(Exception ex, HttpServletRequest request) {
+		ExceptionResponse exceptionResponse = new ExceptionResponse("ERR-01", ex.getMessage(),
+				HttpStatus.INTERNAL_SERVER_ERROR, request.getRequestURI(), Instant.now().toEpochMilli());
 		reportErrorSpan(ex.getMessage());
 		return new ResponseEntity<>(exceptionResponse, HttpStatus.INTERNAL_SERVER_ERROR);
 	}
@@ -151,8 +145,7 @@ class ExceptionResponse {
 
 	private Long epochTime;
 
-	ExceptionResponse(String errorCode, String errorMessage, HttpStatus httpStatus,
-			String path, Long epochTime) {
+	ExceptionResponse(String errorCode, String errorMessage, HttpStatus httpStatus, String path, Long epochTime) {
 		this.errorCode = errorCode;
 		this.errorMessage = errorMessage;
 		this.httpStatus = httpStatus;

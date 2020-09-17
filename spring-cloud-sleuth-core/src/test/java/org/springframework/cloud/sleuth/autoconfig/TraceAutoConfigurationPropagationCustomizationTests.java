@@ -42,32 +42,26 @@ public class TraceAutoConfigurationPropagationCustomizationTests {
 
 	@Test
 	public void allowsCustomization() {
-		this.contextRunner
-				.withPropertyValues("spring.sleuth.baggage.remote-fields=country-code")
-				.run((context) -> {
-					BDDAssertions.then(context.getBean(Propagation.Factory.class))
-							.extracting("delegate")
-							.isEqualTo(TraceBaggageConfiguration.B3_FACTORY);
-				});
+		this.contextRunner.withPropertyValues("spring.sleuth.baggage.remote-fields=country-code").run((context) -> {
+			BDDAssertions.then(context.getBean(Propagation.Factory.class)).extracting("delegate")
+					.isEqualTo(TraceBaggageConfiguration.B3_FACTORY);
+		});
 	}
 
 	@Test
 	public void defaultValueUsedWhenApplicationNameNotSet() {
-		this.contextRunner.withPropertyValues("spring.application.name=")
-				.run((context) -> {
-					BDDAssertions.then(context.getBean(Propagation.Factory.class))
-							.isEqualTo(TraceBaggageConfiguration.B3_FACTORY);
-				});
+		this.contextRunner.withPropertyValues("spring.application.name=").run((context) -> {
+			BDDAssertions.then(context.getBean(Propagation.Factory.class))
+					.isEqualTo(TraceBaggageConfiguration.B3_FACTORY);
+		});
 	}
 
 	@Test
 	public void allowsCustomizationOfBuilder() {
-		this.contextRunner
-				.withPropertyValues("spring.sleuth.baggage.remote-fields=country-code")
+		this.contextRunner.withPropertyValues("spring.sleuth.baggage.remote-fields=country-code")
 				.withUserConfiguration(CustomPropagationFactoryBuilderConfig.class)
-				.run((context) -> BDDAssertions
-						.then(context.getBean(Propagation.Factory.class))
-						.extracting("delegate").isSameAs(B3SinglePropagation.FACTORY));
+				.run((context) -> BDDAssertions.then(context.getBean(Propagation.Factory.class)).extracting("delegate")
+						.isSameAs(B3SinglePropagation.FACTORY));
 	}
 
 	@Configuration

@@ -93,8 +93,7 @@ public class TracingOnScheduledTests {
 	}
 
 	@Test
-	public void should_not_create_span_in_the_scheduled_class_that_matches_skip_pattern()
-			throws Exception {
+	public void should_not_create_span_in_the_scheduled_class_that_matches_skip_pattern() throws Exception {
 		await().atMost(5, SECONDS).untilAsserted(() -> {
 			then(this.beanWithScheduledMethodToBeIgnored.isExecuted()).isTrue();
 			then(this.beanWithScheduledMethodToBeIgnored.getSpan()).isNull();
@@ -105,12 +104,10 @@ public class TracingOnScheduledTests {
 		Span storedSpan = TracingOnScheduledTests.this.beanWithScheduledMethod.getSpan();
 		then(storedSpan).isNotNull();
 		then(storedSpan.context().traceId()).isNotNull();
-		MutableSpan foundSpan = spans.spans().stream()
-				.filter(span -> !span.tags().containsKey("error")
-						&& span.tags().containsValue("TestBeanWithScheduledMethod"))
+		MutableSpan foundSpan = spans.spans().stream().filter(
+				span -> !span.tags().containsKey("error") && span.tags().containsValue("TestBeanWithScheduledMethod"))
 				.findFirst().orElseThrow(() -> new AssertionError("Span is missing"));
-		then(foundSpan.tags()).contains(
-				new AbstractMap.SimpleEntry<>("class", "TestBeanWithScheduledMethod"),
+		then(foundSpan.tags()).contains(new AbstractMap.SimpleEntry<>("class", "TestBeanWithScheduledMethod"),
 				new AbstractMap.SimpleEntry<>("method", "scheduledMethod"));
 		then(foundSpan.finishTimestamp()).isGreaterThan(0L);
 	}
@@ -119,20 +116,17 @@ public class TracingOnScheduledTests {
 		Span storedSpan = TracingOnScheduledTests.this.beanWithScheduledMethod.getSpan();
 		then(storedSpan).isNotNull();
 		then(storedSpan.context().traceId()).isNotNull();
-		MutableSpan foundSpan = spans.spans().stream()
-				.filter(span -> span.tags().containsKey("error")).findFirst()
+		MutableSpan foundSpan = spans.spans().stream().filter(span -> span.tags().containsKey("error")).findFirst()
 				.orElseThrow(() -> new AssertionError("Span is missing"));
 		then(foundSpan.tags()).contains(
-				new AbstractMap.SimpleEntry<>("class",
-						"TestBeanWithScheduledMethodThatThrowsAnException"),
+				new AbstractMap.SimpleEntry<>("class", "TestBeanWithScheduledMethodThatThrowsAnException"),
 				new AbstractMap.SimpleEntry<>("method", "scheduledMethod"));
 		then(foundSpan.finishTimestamp()).isGreaterThan(0L);
 		then(foundSpan.tags().get("error")).isNotEmpty();
 	}
 
 	private void differentSpanHasBeenSetThan(final Span spanToCompare) {
-		then(TracingOnScheduledTests.this.beanWithScheduledMethod.getSpan())
-				.isNotEqualTo(spanToCompare);
+		then(TracingOnScheduledTests.this.beanWithScheduledMethod.getSpan()).isNotEqualTo(spanToCompare);
 	}
 
 }
@@ -153,8 +147,7 @@ class ScheduledTestConfiguration {
 	}
 
 	@Bean
-	TestBeanWithScheduledMethodToBeIgnored testBeanWithScheduledMethodToBeIgnored(
-			Tracing tracing) {
+	TestBeanWithScheduledMethodToBeIgnored testBeanWithScheduledMethodToBeIgnored(Tracing tracing) {
 		return new TestBeanWithScheduledMethodToBeIgnored(tracing);
 	}
 

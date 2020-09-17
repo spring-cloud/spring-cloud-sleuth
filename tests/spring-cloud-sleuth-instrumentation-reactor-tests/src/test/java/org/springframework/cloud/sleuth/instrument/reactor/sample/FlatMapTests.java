@@ -80,57 +80,48 @@ public class FlatMapTests {
 	@Test
 	public void should_work_with_flat_maps(CapturedOutput capture) {
 		// given
-		ConfigurableApplicationContext context = new SpringApplicationBuilder(
-				FlatMapTests.TestConfiguration.class, Issue866Configuration.class)
+		ConfigurableApplicationContext context = new SpringApplicationBuilder(FlatMapTests.TestConfiguration.class,
+				Issue866Configuration.class)
 						.web(WebApplicationType.REACTIVE)
 						.properties("server.port=0", "spring.jmx.enabled=false",
-								"spring.application.name=TraceWebFluxTests",
-								"security.basic.enabled=false",
+								"spring.application.name=TraceWebFluxTests", "security.basic.enabled=false",
 								"management.security.enabled=false")
 						.run();
-		assertReactorTracing(context, capture,
-				() -> context.getBean(TestConfiguration.class).spanInFoo);
+		assertReactorTracing(context, capture, () -> context.getBean(TestConfiguration.class).spanInFoo);
 	}
 
 	@Test
-	public void should_work_with_flat_maps_with_on_last_operator_instrumentation(
-			CapturedOutput capture) {
+	public void should_work_with_flat_maps_with_on_last_operator_instrumentation(CapturedOutput capture) {
 		// given
-		ConfigurableApplicationContext context = new SpringApplicationBuilder(
-				FlatMapTests.TestConfiguration.class, Issue866Configuration.class)
+		ConfigurableApplicationContext context = new SpringApplicationBuilder(FlatMapTests.TestConfiguration.class,
+				Issue866Configuration.class)
 						.web(WebApplicationType.REACTIVE)
 						.properties("server.port=0", "spring.jmx.enabled=false",
 								"spring.sleuth.reactor.decorate-on-each=false",
-								"spring.application.name=TraceWebFlux2Tests",
-								"security.basic.enabled=false",
+								"spring.application.name=TraceWebFlux2Tests", "security.basic.enabled=false",
 								"management.security.enabled=false")
 						.run();
-		assertReactorTracing(context, capture,
-				() -> context.getBean(TestConfiguration.class).spanInFoo);
+		assertReactorTracing(context, capture, () -> context.getBean(TestConfiguration.class).spanInFoo);
 	}
 
 	@Test
-	public void should_work_with_flat_maps_with_on_manual_operator_instrumentation(
-			CapturedOutput capture) {
+	public void should_work_with_flat_maps_with_on_manual_operator_instrumentation(CapturedOutput capture) {
 		// given
 		ConfigurableApplicationContext context = new SpringApplicationBuilder(
 				FlatMapTests.TestManualConfiguration.class, Issue866Configuration.class)
 						.web(WebApplicationType.REACTIVE)
 						.properties("server.port=0", "spring.jmx.enabled=false",
 								"spring.sleuth.reactor.instrumentation-type=MANUAL",
-								"spring.application.name=TraceWebFlux3Tests",
-								"security.basic.enabled=false",
+								"spring.application.name=TraceWebFlux3Tests", "security.basic.enabled=false",
 								"management.security.enabled=false")
 						.run();
-		assertReactorTracing(context, capture,
-				() -> context.getBean(TestManualConfiguration.class).spanInFoo);
+		assertReactorTracing(context, capture, () -> context.getBean(TestManualConfiguration.class).spanInFoo);
 	}
 
-	private void assertReactorTracing(ConfigurableApplicationContext context,
-			CapturedOutput capture, SpanProvider spanProvider) {
+	private void assertReactorTracing(ConfigurableApplicationContext context, CapturedOutput capture,
+			SpanProvider spanProvider) {
 		TestSpanHandler spans = context.getBean(TestSpanHandler.class);
-		int port = context.getBean(Environment.class).getProperty("local.server.port",
-				Integer.class);
+		int port = context.getBean(Environment.class).getProperty("local.server.port", Integer.class);
 		RequestSender sender = context.getBean(RequestSender.class);
 		FactoryUser factoryUser = context.getBean(FactoryUser.class);
 		sender.port = port;
@@ -152,29 +143,23 @@ public class FlatMapTests {
 			LOGGER.info("Second trace start");
 			String secondTraceId = flatMapTraceId(spans, callFlatMap(port).block());
 			// then
-			then(firstTraceId).as("Id will not be reused between calls")
-					.isNotEqualTo(secondTraceId);
+			then(firstTraceId).as("Id will not be reused between calls").isNotEqualTo(secondTraceId);
 			LOGGER.info("Id was not reused between calls");
 			thenSpanInFooHasSameTraceId(secondTraceId, spanProvider);
 			LOGGER.info("Span in Foo has same trace id");
 			// and
 			List<String> requestUri = Arrays.stream(capture.toString().split("\n"))
-					.filter(s -> s.contains("Received a request to uri"))
-					.map(s -> s.split(",")[1]).collect(Collectors.toList());
-			LOGGER.info(
-					"TracingFilter should not have any trace when receiving a request "
-							+ requestUri);
-			then(requestUri).as(
-					"TracingFilter should not have any trace when receiving a request")
-					.containsOnly("");
+					.filter(s -> s.contains("Received a request to uri")).map(s -> s.split(",")[1])
+					.collect(Collectors.toList());
+			LOGGER.info("TracingFilter should not have any trace when receiving a request " + requestUri);
+			then(requestUri).as("TracingFilter should not have any trace when receiving a request").containsOnly("");
 			// and #866
 			then(factoryUser.wasSchedulerWrapped).isTrue();
 			LOGGER.info("Factory was wrapped");
 		});
 	}
 
-	private void thenAllWebClientCallsHaveSameTraceId(String traceId,
-			RequestSender sender) {
+	private void thenAllWebClientCallsHaveSameTraceId(String traceId, RequestSender sender) {
 		then(sender.span.context().traceIdString()).isEqualTo(traceId);
 	}
 
@@ -183,17 +168,15 @@ public class FlatMapTests {
 	}
 
 	private Mono<ClientResponse> callFlatMap(int port) {
-		return WebClient.create().get().uri("http://localhost:" + port + "/withFlatMap")
-				.exchange();
+		return WebClient.create().get().uri("http://localhost:" + port + "/withFlatMap").exchange();
 	}
 
 	private String flatMapTraceId(TestSpanHandler spans, ClientResponse response) {
 		then(response.statusCode().value()).isEqualTo(200);
 		then(spans).isNotEmpty();
 		LOGGER.info("Accumulated spans: " + spans);
-		List<String> traceIdOfFlatMap = spans.spans().stream()
-				.filter(span -> span.tags().containsKey("http.path")
-						&& span.tags().get("http.path").equals("/withFlatMap"))
+		List<String> traceIdOfFlatMap = spans.spans().stream().filter(
+				span -> span.tags().containsKey("http.path") && span.tags().get("http.path").equals("/withFlatMap"))
 				.map(MutableSpan::traceId).collect(Collectors.toList());
 		then(traceIdOfFlatMap).hasSize(1);
 		return traceIdOfFlatMap.get(0);
@@ -206,8 +189,7 @@ public class FlatMapTests {
 		brave.Span spanInFoo;
 
 		@Bean
-		RouterFunction<ServerResponse> handlers(Tracer tracer,
-				RequestSender requestSender) {
+		RouterFunction<ServerResponse> handlers(Tracer tracer, RequestSender requestSender) {
 			return route(GET("/noFlatMap"), request -> {
 				LOGGER.info("noFlatMap");
 				Flux<Integer> one = requestSender.getAll().map(String::length);
@@ -215,9 +197,8 @@ public class FlatMapTests {
 			}).andRoute(GET("/withFlatMap"), request -> {
 				LOGGER.info("withFlatMap");
 				Flux<Integer> one = requestSender.getAll().map(String::length);
-				Flux<Integer> response = one
-						.flatMap(size -> requestSender.getAll().doOnEach(
-								sig -> LOGGER.info(sig.getContext().toString())))
+				Flux<Integer> response = one.flatMap(
+						size -> requestSender.getAll().doOnEach(sig -> LOGGER.info(sig.getContext().toString())))
 						.map(string -> {
 							LOGGER.info("WHATEVER YEAH");
 							return string.length();
@@ -265,24 +246,19 @@ public class FlatMapTests {
 		brave.Span spanInFoo;
 
 		@Bean
-		RouterFunction<ServerResponse> handlers(Tracing tracing,
-				ManualRequestSender requestSender) {
+		RouterFunction<ServerResponse> handlers(Tracing tracing, ManualRequestSender requestSender) {
 			return route(GET("/noFlatMap"), request -> {
 				ServerWebExchange exchange = request.exchange();
-				WebFluxSleuthOperators.withSpanInScope(tracing, exchange,
-						() -> LOGGER.info("noFlatMap"));
+				WebFluxSleuthOperators.withSpanInScope(tracing, exchange, () -> LOGGER.info("noFlatMap"));
 				Flux<Integer> one = requestSender.getAll().map(String::length);
 				return ServerResponse.ok().body(one, Integer.class);
 			}).andRoute(GET("/withFlatMap"), request -> {
 				ServerWebExchange exchange = request.exchange();
-				WebFluxSleuthOperators.withSpanInScope(tracing, exchange,
-						() -> LOGGER.info("withFlatMap"));
+				WebFluxSleuthOperators.withSpanInScope(tracing, exchange, () -> LOGGER.info("withFlatMap"));
 				Flux<Integer> one = requestSender.getAll().map(String::length);
 				Flux<Integer> response = one
-						.flatMap(size -> requestSender.getAll()
-								.doOnEach(sig -> WebFluxSleuthOperators.withSpanInScope(
-										sig.getContext(),
-										() -> LOGGER.info(sig.getContext().toString()))))
+						.flatMap(size -> requestSender.getAll().doOnEach(sig -> WebFluxSleuthOperators
+								.withSpanInScope(sig.getContext(), () -> LOGGER.info(sig.getContext().toString()))))
 						.map(string -> {
 							WebFluxSleuthOperators.withSpanInScope(tracing, exchange,
 									() -> LOGGER.info("WHATEVER YEAH"));

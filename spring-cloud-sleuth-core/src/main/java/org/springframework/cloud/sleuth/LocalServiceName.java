@@ -30,8 +30,7 @@ import org.springframework.beans.factory.annotation.Value;
  * @author Marcin Grzejszczak
  * @since 2.2.0
  */
-@Target({ ElementType.FIELD, ElementType.METHOD, ElementType.PARAMETER,
-		ElementType.ANNOTATION_TYPE })
+@Target({ ElementType.FIELD, ElementType.METHOD, ElementType.PARAMETER, ElementType.ANNOTATION_TYPE })
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
 @Value("${spring.zipkin.service.name:${spring.application.name:default}}")

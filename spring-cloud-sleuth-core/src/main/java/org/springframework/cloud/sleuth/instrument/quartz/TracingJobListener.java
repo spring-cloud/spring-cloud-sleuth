@@ -67,12 +67,10 @@ class TracingJobListener implements JobListener, TriggerListener {
 	public void triggerFired(Trigger trigger, JobExecutionContext context) {
 		TraceContextOrSamplingFlags extracted = tracing.propagation().extractor(GETTER)
 				.extract(context.getMergedJobDataMap());
-		Span span = tracing.tracer().nextSpan(extracted)
-				.name(context.getTrigger().getJobKey().toString())
+		Span span = tracing.tracer().nextSpan(extracted).name(context.getTrigger().getJobKey().toString())
 				.tag(TRIGGER_TAG_KEY, context.getTrigger().getKey().toString());
 		context.put(CONTEXT_SPAN_KEY, span);
-		context.put(CONTEXT_SPAN_IN_SCOPE_KEY,
-				tracing.tracer().withSpanInScope(span.start()));
+		context.put(CONTEXT_SPAN_IN_SCOPE_KEY, tracing.tracer().withSpanInScope(span.start()));
 	}
 
 	@Override
@@ -102,8 +100,7 @@ class TracingJobListener implements JobListener, TriggerListener {
 	}
 
 	@Override
-	public void jobWasExecuted(JobExecutionContext context,
-			JobExecutionException jobException) {
+	public void jobWasExecuted(JobExecutionContext context, JobExecutionException jobException) {
 	}
 
 	private void closeTrace(JobExecutionContext context) {

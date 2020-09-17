@@ -41,8 +41,8 @@ public class CircuitBreakerTests {
 
 	TestSpanHandler spans = new TestSpanHandler();
 
-	Tracing tracing = Tracing.newBuilder().currentTraceContext(this.currentTraceContext)
-			.addSpanHandler(this.spans).sampler(Sampler.ALWAYS_SAMPLE).build();
+	Tracing tracing = Tracing.newBuilder().currentTraceContext(this.currentTraceContext).addSpanHandler(this.spans)
+			.sampler(Sampler.ALWAYS_SAMPLE).build();
 
 	Tracer tracer = this.tracing.tracer();
 
@@ -69,8 +69,7 @@ public class CircuitBreakerTests {
 					.run(new TraceSupplier<>(tracer, tracer::currentSpan));
 
 			then(span).isNotNull();
-			then(scopedSpan.context().traceIdString())
-					.isEqualTo(span.context().traceIdString());
+			then(scopedSpan.context().traceIdString()).isEqualTo(span.context().traceIdString());
 		}
 		finally {
 			scopedSpan.finish();
@@ -87,23 +86,19 @@ public class CircuitBreakerTests {
 		try {
 			scopedSpan = tracer.startScopedSpan("start");
 			// when
-			BDDAssertions.thenThrownBy(() -> new Resilience4JCircuitBreakerFactory()
-					.create("name").run(new TraceSupplier<>(tracer, () -> {
+			BDDAssertions.thenThrownBy(
+					() -> new Resilience4JCircuitBreakerFactory().create("name").run(new TraceSupplier<>(tracer, () -> {
 						first.set(tracer.currentSpan());
 						throw new IllegalStateException("boom");
 					}), new TraceFunction<>(tracer, throwable -> {
 						second.set(tracer.currentSpan());
 						throw new IllegalStateException("boom2");
-					}))).isInstanceOf(IllegalStateException.class)
-					.hasMessageContaining("boom2");
+					}))).isInstanceOf(IllegalStateException.class).hasMessageContaining("boom2");
 
 			then(this.spans).hasSize(2);
-			then(scopedSpan.context().traceIdString())
-					.isEqualTo(first.get().context().traceIdString());
-			then(scopedSpan.context().traceIdString())
-					.isEqualTo(second.get().context().traceIdString());
-			then(first.get().context().spanIdString())
-					.isNotEqualTo(second.get().context().spanIdString());
+			then(scopedSpan.context().traceIdString()).isEqualTo(first.get().context().traceIdString());
+			then(scopedSpan.context().traceIdString()).isEqualTo(second.get().context().traceIdString());
+			then(first.get().context().spanIdString()).isNotEqualTo(second.get().context().spanIdString());
 
 			MutableSpan reportedSpan = this.spans.get(1);
 			then(reportedSpan.name()).contains("CircuitBreakerTests");

@@ -45,8 +45,7 @@ import static org.assertj.core.api.Assertions.assertThat;
  * @author Spencer Gibb
  */
 @SpringBootTest(classes = TraceStreamChannelInterceptorTests.App.class,
-		properties = { "spring.cloud.stream.source=testSupplier",
-				"spring.sleuth.integration.enabled=true" })
+		properties = { "spring.cloud.stream.source=testSupplier", "spring.sleuth.integration.enabled=true" })
 @DirtiesContext
 public class TraceStreamChannelInterceptorTests {
 
@@ -90,8 +89,7 @@ public class TraceStreamChannelInterceptorTests {
 		// Trace and Span IDs are implicitly checked
 		TraceContext extracted = B3SingleFormat.parseB3SingleFormat(b3).context();
 
-		assertThat(extracted.spanIdString()).as("spanId was equal to parent's id")
-				.isNotEqualTo(expectedSpanId);
+		assertThat(extracted.spanIdString()).as("spanId was equal to parent's id").isNotEqualTo(expectedSpanId);
 	}
 
 	@Configuration

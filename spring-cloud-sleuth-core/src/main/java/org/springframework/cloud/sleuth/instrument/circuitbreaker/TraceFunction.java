@@ -56,8 +56,7 @@ class TraceFunction<T> implements Function<Throwable, T> {
 		}
 		finally {
 			if (tr != null) {
-				String message = tr.getMessage() == null ? tr.getClass().getSimpleName()
-						: tr.getMessage();
+				String message = tr.getMessage() == null ? tr.getClass().getSimpleName() : tr.getMessage();
 				span.tag("error", message);
 			}
 			span.finish();

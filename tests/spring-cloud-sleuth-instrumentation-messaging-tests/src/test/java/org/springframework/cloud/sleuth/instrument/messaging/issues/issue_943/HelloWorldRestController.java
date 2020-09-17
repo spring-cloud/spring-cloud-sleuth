@@ -35,14 +35,12 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 public class HelloWorldRestController {
 
-	private static final Logger LOG = LoggerFactory
-			.getLogger(HelloWorldRestController.class);
+	private static final Logger LOG = LoggerFactory.getLogger(HelloWorldRestController.class);
 
 	@Autowired
 	private ApplicationContext applicationContext;
 
-	@RequestMapping(path = "getHelloWorldMessage", method = RequestMethod.GET,
-			produces = MediaType.TEXT_PLAIN_VALUE)
+	@RequestMapping(path = "getHelloWorldMessage", method = RequestMethod.GET, produces = MediaType.TEXT_PLAIN_VALUE)
 	public ResponseEntity<String> getHelloWorld() throws Exception {
 
 		LOG.info("Inside getHelloWorldMessage");
@@ -52,11 +50,9 @@ public class HelloWorldRestController {
 		requestMessage[1] = "Hellow World Message 2";
 		requestMessage[2] = "Hellow World Message 3";
 
-		PollableChannel outputChannel = (PollableChannel) this.applicationContext
-				.getBean("messagingOutputChannel");
+		PollableChannel outputChannel = (PollableChannel) this.applicationContext.getBean("messagingOutputChannel");
 
-		MessagingGateway messagingGateway = (MessagingGateway) this.applicationContext
-				.getBean("messagingGateway");
+		MessagingGateway messagingGateway = (MessagingGateway) this.applicationContext.getBean("messagingGateway");
 
 		messagingGateway.processMessage(requestMessage);
 

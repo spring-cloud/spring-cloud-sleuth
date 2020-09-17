@@ -49,68 +49,58 @@ public class DefaultEndpointLocatorConfigurationTest {
 
 	@Test
 	public void endpointLocatorShouldDefaultToServerPropertiesEndpointLocator() {
-		ConfigurableApplicationContext ctxt = new SpringApplication(
-				EmptyConfiguration.class).run("--spring.jmx.enabled=false");
-		assertThat(ctxt.getBean(EndpointLocator.class))
-				.isInstanceOf(DefaultEndpointLocator.class);
+		ConfigurableApplicationContext ctxt = new SpringApplication(EmptyConfiguration.class)
+				.run("--spring.jmx.enabled=false");
+		assertThat(ctxt.getBean(EndpointLocator.class)).isInstanceOf(DefaultEndpointLocator.class);
 		ctxt.close();
 	}
 
 	@Test
 	public void endpointLocatorShouldDefaultToServerPropertiesEndpointLocatorEvenWhenDiscoveryClientPresent() {
-		ConfigurableApplicationContext ctxt = new SpringApplication(
-				ConfigurationWithRegistration.class).run("--spring.jmx.enabled=false");
-		assertThat(ctxt.getBean(EndpointLocator.class))
-				.isInstanceOf(DefaultEndpointLocator.class);
+		ConfigurableApplicationContext ctxt = new SpringApplication(ConfigurationWithRegistration.class)
+				.run("--spring.jmx.enabled=false");
+		assertThat(ctxt.getBean(EndpointLocator.class)).isInstanceOf(DefaultEndpointLocator.class);
 		ctxt.close();
 	}
 
 	@Test
 	public void endpointLocatorShouldRespectExistingEndpointLocator() {
-		ConfigurableApplicationContext ctxt = new SpringApplication(
-				ConfigurationWithCustomLocator.class).run("--spring.jmx.enabled=false");
-		assertThat(ctxt.getBean(EndpointLocator.class))
-				.isSameAs(ConfigurationWithCustomLocator.locator);
+		ConfigurableApplicationContext ctxt = new SpringApplication(ConfigurationWithCustomLocator.class)
+				.run("--spring.jmx.enabled=false");
+		assertThat(ctxt.getBean(EndpointLocator.class)).isSameAs(ConfigurationWithCustomLocator.locator);
 		ctxt.close();
 	}
 
 	@Test
 	public void endpointLocatorShouldSetServiceNameToServiceId() {
-		ConfigurableApplicationContext ctxt = new SpringApplication(
-				ConfigurationWithRegistration.class).run("--spring.jmx.enabled=false",
-						"--spring.zipkin.locator.discovery.enabled=true");
-		assertThat(ctxt.getBean(EndpointLocator.class).local().serviceName())
-				.isEqualTo("from-registration");
+		ConfigurableApplicationContext ctxt = new SpringApplication(ConfigurationWithRegistration.class)
+				.run("--spring.jmx.enabled=false", "--spring.zipkin.locator.discovery.enabled=true");
+		assertThat(ctxt.getBean(EndpointLocator.class).local().serviceName()).isEqualTo("from-registration");
 		ctxt.close();
 	}
 
 	@Test
 	public void endpointLocatorShouldAcceptServiceNameOverride() {
-		ConfigurableApplicationContext ctxt = new SpringApplication(
-				ConfigurationWithRegistration.class).run("--spring.jmx.enabled=false",
-						"--spring.zipkin.locator.discovery.enabled=true",
-						"--spring.zipkin.service.name=foo");
-		assertThat(ctxt.getBean(EndpointLocator.class).local().serviceName())
-				.isEqualTo("foo");
+		ConfigurableApplicationContext ctxt = new SpringApplication(ConfigurationWithRegistration.class).run(
+				"--spring.jmx.enabled=false", "--spring.zipkin.locator.discovery.enabled=true",
+				"--spring.zipkin.service.name=foo");
+		assertThat(ctxt.getBean(EndpointLocator.class).local().serviceName()).isEqualTo("foo");
 		ctxt.close();
 	}
 
 	@Test
 	public void endpointLocatorShouldRespectExistingEndpointLocatorEvenWhenAskedToBeDiscovery() {
-		ConfigurableApplicationContext ctxt = new SpringApplication(
-				ConfigurationWithRegistration.class, ConfigurationWithCustomLocator.class)
-						.run("--spring.jmx.enabled=false",
-								"--spring.zipkin.locator.discovery.enabled=true");
-		assertThat(ctxt.getBean(EndpointLocator.class))
-				.isSameAs(ConfigurationWithCustomLocator.locator);
+		ConfigurableApplicationContext ctxt = new SpringApplication(ConfigurationWithRegistration.class,
+				ConfigurationWithCustomLocator.class).run("--spring.jmx.enabled=false",
+						"--spring.zipkin.locator.discovery.enabled=true");
+		assertThat(ctxt.getBean(EndpointLocator.class)).isSameAs(ConfigurationWithCustomLocator.locator);
 		ctxt.close();
 	}
 
 	@Test
 	public void portDefaultsTo8080() throws UnknownHostException {
-		DefaultEndpointLocator locator = new DefaultEndpointLocator(null,
-				new ServerProperties(), this.environment, new ZipkinProperties(),
-				localAddress(ADDRESS1234));
+		DefaultEndpointLocator locator = new DefaultEndpointLocator(null, new ServerProperties(), this.environment,
+				new ZipkinProperties(), localAddress(ADDRESS1234));
 
 		assertThat(locator.local().port()).isEqualTo(8080);
 	}
@@ -120,17 +110,16 @@ public class DefaultEndpointLocatorConfigurationTest {
 		ServerProperties properties = new ServerProperties();
 		properties.setPort(1234);
 
-		DefaultEndpointLocator locator = new DefaultEndpointLocator(null, properties,
-				this.environment, new ZipkinProperties(), localAddress(ADDRESS1234));
+		DefaultEndpointLocator locator = new DefaultEndpointLocator(null, properties, this.environment,
+				new ZipkinProperties(), localAddress(ADDRESS1234));
 
 		assertThat(locator.local().port()).isEqualTo(1234);
 	}
 
 	@Test
 	public void portDefaultsToLocalhost() throws UnknownHostException {
-		DefaultEndpointLocator locator = new DefaultEndpointLocator(null,
-				new ServerProperties(), this.environment, new ZipkinProperties(),
-				localAddress(ADDRESS1234));
+		DefaultEndpointLocator locator = new DefaultEndpointLocator(null, new ServerProperties(), this.environment,
+				new ZipkinProperties(), localAddress(ADDRESS1234));
 
 		assertThat(locator.local().ipv4()).isEqualTo("1.2.3.4");
 	}
@@ -140,9 +129,8 @@ public class DefaultEndpointLocatorConfigurationTest {
 		ServerProperties properties = new ServerProperties();
 		properties.setAddress(InetAddress.getByAddress(ADDRESS1234));
 
-		DefaultEndpointLocator locator = new DefaultEndpointLocator(null, properties,
-				this.environment, new ZipkinProperties(),
-				localAddress(new byte[] { 4, 4, 4, 4 }));
+		DefaultEndpointLocator locator = new DefaultEndpointLocator(null, properties, this.environment,
+				new ZipkinProperties(), localAddress(new byte[] { 4, 4, 4, 4 }));
 
 		assertThat(locator.local().ipv4()).isEqualTo("1.2.3.4");
 	}
@@ -153,8 +141,8 @@ public class DefaultEndpointLocatorConfigurationTest {
 		ZipkinProperties zipkinProperties = new ZipkinProperties();
 		zipkinProperties.getService().setName("foo");
 
-		DefaultEndpointLocator locator = new DefaultEndpointLocator(null, properties,
-				this.environment, zipkinProperties, localAddress(ADDRESS1234));
+		DefaultEndpointLocator locator = new DefaultEndpointLocator(null, properties, this.environment,
+				zipkinProperties, localAddress(ADDRESS1234));
 
 		assertThat(locator.local().serviceName()).isEqualTo("foo");
 	}
@@ -164,16 +152,15 @@ public class DefaultEndpointLocatorConfigurationTest {
 		ServerProperties properties = new ServerProperties();
 		properties.setPort(-1);
 
-		DefaultEndpointLocator locator = new DefaultEndpointLocator(null, properties,
-				this.environment, new ZipkinProperties(), localAddress(ADDRESS1234));
+		DefaultEndpointLocator locator = new DefaultEndpointLocator(null, properties, this.environment,
+				new ZipkinProperties(), localAddress(ADDRESS1234));
 
 		assertThat(locator.local().port()).isEqualTo(8080);
 	}
 
 	private InetUtils localAddress(byte[] address) throws UnknownHostException {
 		InetUtils mocked = Mockito.spy(new InetUtils(new InetUtilsProperties()));
-		Mockito.when(mocked.findFirstNonLoopbackAddress())
-				.thenReturn(InetAddress.getByAddress(address));
+		Mockito.when(mocked.findFirstNonLoopbackAddress()).thenReturn(InetAddress.getByAddress(address));
 		return mocked;
 	}
 

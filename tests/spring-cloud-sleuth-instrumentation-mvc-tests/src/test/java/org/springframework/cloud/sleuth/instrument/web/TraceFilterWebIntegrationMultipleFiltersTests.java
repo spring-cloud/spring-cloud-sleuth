@@ -170,8 +170,8 @@ public class TraceFilterWebIntegrationMultipleFiltersTests {
 		}
 
 		@Override
-		public void doFilter(ServletRequest request, ServletResponse response,
-				FilterChain chain) throws IOException, ServletException {
+		public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain)
+				throws IOException, ServletException {
 			Span currentSpan = this.tracer.tracer().currentSpan();
 			this.span.set(currentSpan);
 		}

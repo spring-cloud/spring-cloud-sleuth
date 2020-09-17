@@ -37,8 +37,7 @@ public class SpelTagValueExpressionResolverTests {
 	}
 
 	@Test
-	public void should_use_to_string_if_expression_is_not_analyzed_properly()
-			throws Exception {
+	public void should_use_to_string_if_expression_is_not_analyzed_properly() throws Exception {
 		SpelTagValueExpressionResolver resolver = new SpelTagValueExpressionResolver();
 
 		String resolved = resolver.resolve("invalid() structure + 1", new Foo());

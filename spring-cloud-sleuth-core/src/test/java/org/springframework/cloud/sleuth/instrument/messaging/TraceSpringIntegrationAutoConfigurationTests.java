@@ -32,34 +32,29 @@ class TraceSpringIntegrationAutoConfigurationTests {
 
 	private final ApplicationContextRunner contextRunner = new ApplicationContextRunner()
 			.withConfiguration(AutoConfigurations.of(TraceAutoConfiguration.class,
-					TraceSpringMessagingAutoConfiguration.class,
-					TraceSpringIntegrationAutoConfiguration.class));
+					TraceSpringMessagingAutoConfiguration.class, TraceSpringIntegrationAutoConfiguration.class));
 
 	@Test
 	void should_not_create_tracing_channel_interceptor_when_function_on_the_classpath() {
-		this.contextRunner.run(context -> assertThat(context)
-				.doesNotHaveBean(TracingChannelInterceptor.class));
+		this.contextRunner.run(context -> assertThat(context).doesNotHaveBean(TracingChannelInterceptor.class));
 	}
 
 	@Test
 	void should_create_tracing_channel_interceptor_when_function_not_on_the_classpath() {
 		this.contextRunner.withClassLoader(new FilteredClassLoader(FunctionCatalog.class))
-				.run(context -> assertThat(context)
-						.hasSingleBean(TracingChannelInterceptor.class));
+				.run(context -> assertThat(context).hasSingleBean(TracingChannelInterceptor.class));
 	}
 
 	@Test
 	void should_create_tracing_channel_interceptor_when_function_on_the_classpath_but_enable_binding_is_set() {
 		this.contextRunner.withUserConfiguration(WithEnabledBinding.class)
-				.run(context -> assertThat(context)
-						.hasSingleBean(TracingChannelInterceptor.class));
+				.run(context -> assertThat(context).hasSingleBean(TracingChannelInterceptor.class));
 	}
 
 	@Test
 	void should_create_tracing_channel_interceptor_when_function_on_the_classpath_no_enable_binding_is_set_and_property_set() {
 		this.contextRunner.withSystemProperties("spring.sleuth.integration.enabled=true")
-				.run(context -> assertThat(context)
-						.hasSingleBean(TracingChannelInterceptor.class));
+				.run(context -> assertThat(context).hasSingleBean(TracingChannelInterceptor.class));
 	}
 
 	@Configuration

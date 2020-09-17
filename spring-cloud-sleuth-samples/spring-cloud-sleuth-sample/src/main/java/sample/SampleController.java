@@ -35,8 +35,7 @@ import org.springframework.web.client.RestTemplate;
  * @author Spencer Gibb
  */
 @RestController
-public class SampleController
-		implements ApplicationListener<ServletWebServerInitializedEvent> {
+public class SampleController implements ApplicationListener<ServletWebServerInitializedEvent> {
 
 	private static final Log log = LogFactory.getLog(SampleController.class);
 
@@ -58,8 +57,7 @@ public class SampleController
 		log.info("hi!");
 		Thread.sleep(this.random.nextInt(1000));
 
-		String s = this.restTemplate
-				.getForObject("http://localhost:" + this.port + "/hi2", String.class);
+		String s = this.restTemplate.getForObject("http://localhost:" + this.port + "/hi2", String.class);
 		return "hi/" + s;
 	}
 
@@ -71,8 +69,7 @@ public class SampleController
 				log.info("call");
 				int millis = SampleController.this.random.nextInt(1000);
 				Thread.sleep(millis);
-				SampleController.this.tracer.currentSpan().tag("callable-sleep-millis",
-						String.valueOf(millis));
+				SampleController.this.tracer.currentSpan().tag("callable-sleep-millis", String.valueOf(millis));
 				Span span = SampleController.this.tracer.currentSpan();
 				return "async hi: " + span;
 			}
@@ -104,8 +101,7 @@ public class SampleController
 		Thread.sleep(millis);
 		this.tracer.currentSpan().tag("random-sleep-millis", String.valueOf(millis));
 
-		String s = this.restTemplate
-				.getForObject("http://localhost:" + this.port + "/call", String.class);
+		String s = this.restTemplate.getForObject("http://localhost:" + this.port + "/call", String.class);
 		span.finish();
 		return "traced/" + s;
 	}
@@ -118,8 +114,7 @@ public class SampleController
 		Thread.sleep(millis);
 		this.tracer.currentSpan().tag("random-sleep-millis", String.valueOf(millis));
 
-		String s = this.restTemplate
-				.getForObject("http://localhost:" + this.port + "/call", String.class);
+		String s = this.restTemplate.getForObject("http://localhost:" + this.port + "/call", String.class);
 		return "start/" + s;
 	}
 

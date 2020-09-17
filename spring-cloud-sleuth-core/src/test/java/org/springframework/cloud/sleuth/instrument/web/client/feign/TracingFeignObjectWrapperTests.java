@@ -47,25 +47,21 @@ public class TracingFeignObjectWrapperTests {
 
 	@Test
 	public void should_wrap_a_client_into_lazy_trace_client() {
-		then(this.traceFeignObjectWrapper.wrap(mock(Client.class)))
-				.isExactlyInstanceOf(LazyTracingFeignClient.class);
+		then(this.traceFeignObjectWrapper.wrap(mock(Client.class))).isExactlyInstanceOf(LazyTracingFeignClient.class);
 	}
 
 	@Test
 	public void should_not_wrap_a_bean_that_is_not_feign_related() {
 		String notFeignRelatedObject = "object";
-		then(this.traceFeignObjectWrapper.wrap(notFeignRelatedObject))
-				.isSameAs(notFeignRelatedObject);
+		then(this.traceFeignObjectWrapper.wrap(notFeignRelatedObject)).isSameAs(notFeignRelatedObject);
 	}
 
 	// gh-1528
 	@Test
 	public void should_wrap_feign_loadbalancer_client() {
 		Client delegate = mock(Client.class);
-		BlockingLoadBalancerClient loadBalancerClient = mock(
-				BlockingLoadBalancerClient.class);
-		when(beanFactory.getBean(LoadBalancerClient.class))
-				.thenReturn(loadBalancerClient);
+		BlockingLoadBalancerClient loadBalancerClient = mock(BlockingLoadBalancerClient.class);
+		when(beanFactory.getBean(LoadBalancerClient.class)).thenReturn(loadBalancerClient);
 
 		Object wrapped = traceFeignObjectWrapper
 				.wrap(new FeignBlockingLoadBalancerClient(delegate, loadBalancerClient));
@@ -77,23 +73,19 @@ public class TracingFeignObjectWrapperTests {
 	@Test
 	public void should_wrap_subclass_of_feign_loadbalancer_client() {
 		Client delegate = mock(Client.class);
-		BlockingLoadBalancerClient loadBalancerClient = mock(
-				BlockingLoadBalancerClient.class);
-		when(beanFactory.getBean(LoadBalancerClient.class))
-				.thenReturn(loadBalancerClient);
+		BlockingLoadBalancerClient loadBalancerClient = mock(BlockingLoadBalancerClient.class);
+		when(beanFactory.getBean(LoadBalancerClient.class)).thenReturn(loadBalancerClient);
 
-		Object wrapped = traceFeignObjectWrapper.wrap(
-				new TestFeignBlockingLoadBalancerClient(delegate, loadBalancerClient));
+		Object wrapped = traceFeignObjectWrapper
+				.wrap(new TestFeignBlockingLoadBalancerClient(delegate, loadBalancerClient));
 
 		assertThat(wrapped).isInstanceOf(TraceFeignBlockingLoadBalancerClient.class);
 
 	}
 
-	static class TestFeignBlockingLoadBalancerClient
-			extends FeignBlockingLoadBalancerClient {
+	static class TestFeignBlockingLoadBalancerClient extends FeignBlockingLoadBalancerClient {
 
-		TestFeignBlockingLoadBalancerClient(Client delegate,
-				BlockingLoadBalancerClient loadBalancerClient) {
+		TestFeignBlockingLoadBalancerClient(Client delegate, BlockingLoadBalancerClient loadBalancerClient) {
 			super(delegate, loadBalancerClient);
 		}
 

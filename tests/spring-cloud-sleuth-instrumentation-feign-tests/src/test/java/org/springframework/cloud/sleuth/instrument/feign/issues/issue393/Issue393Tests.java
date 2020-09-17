@@ -56,10 +56,8 @@ interface MyNameRemote {
  * @author Marcin Grzejszczak
  */
 
-@SpringBootTest(classes = Application.class,
-		webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT)
-@TestPropertySource(
-		properties = { "spring.application.name=demo-feign-uri", "server.port=9978" })
+@SpringBootTest(classes = Application.class, webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT)
+@TestPropertySource(properties = { "spring.application.name=demo-feign-uri", "server.port=9978" })
 public class Issue393Tests {
 
 	RestTemplate template = new RestTemplate();
@@ -84,8 +82,8 @@ public class Issue393Tests {
 		then(response.getBody()).isEqualTo("mikesarver foo");
 		// retries
 		then(this.spans).hasSize(2);
-		then(this.spans.spans().stream().map(span -> span.tags().get("http.path"))
-				.collect(Collectors.toList())).containsOnly("/name/mikesarver");
+		then(this.spans.spans().stream().map(span -> span.tags().get("http.path")).collect(Collectors.toList()))
+				.containsOnly("/name/mikesarver");
 	}
 
 }

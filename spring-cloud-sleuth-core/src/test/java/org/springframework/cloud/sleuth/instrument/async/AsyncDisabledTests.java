@@ -36,8 +36,7 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 import static org.assertj.core.api.BDDAssertions.then;
 
 @SpringBootTest(classes = AsyncDisabledTests.ConfigureThreadPoolTaskScheduler.class,
-		webEnvironment = SpringBootTest.WebEnvironment.NONE,
-		properties = "spring.sleuth.scheduled.enabled=false")
+		webEnvironment = SpringBootTest.WebEnvironment.NONE, properties = "spring.sleuth.scheduled.enabled=false")
 public class AsyncDisabledTests {
 
 	@Autowired

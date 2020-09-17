@@ -122,36 +122,30 @@ class TraceBaggageConfiguration {
 
 	@Bean
 	@ConditionalOnMissingBean
-	Propagation.Factory sleuthPropagation(
-			BaggagePropagation.FactoryBuilder factoryBuilder,
-			@Qualifier(BAGGAGE_KEYS) List<String> baggageKeys,
-			@Qualifier(LOCAL_KEYS) List<String> localKeys,
-			@Qualifier(PROPAGATION_KEYS) List<String> propagationKeys,
-			SleuthBaggageProperties sleuthBaggageProperties,
+	Propagation.Factory sleuthPropagation(BaggagePropagation.FactoryBuilder factoryBuilder,
+			@Qualifier(BAGGAGE_KEYS) List<String> baggageKeys, @Qualifier(LOCAL_KEYS) List<String> localKeys,
+			@Qualifier(PROPAGATION_KEYS) List<String> propagationKeys, SleuthBaggageProperties sleuthBaggageProperties,
 			@Nullable List<BaggagePropagationCustomizer> baggagePropagationCustomizers) {
 
-		Set<String> localFields = redirectOldPropertyToNew(LOCAL_KEYS, localKeys,
-				"spring.sleuth.baggage.local-fields",
+		Set<String> localFields = redirectOldPropertyToNew(LOCAL_KEYS, localKeys, "spring.sleuth.baggage.local-fields",
 				sleuthBaggageProperties.getLocalFields());
 		for (String fieldName : localFields) {
 			factoryBuilder.add(SingleBaggageField.local(BaggageField.create(fieldName)));
 		}
 
-		Set<String> remoteFields = redirectOldPropertyToNew(PROPAGATION_KEYS,
-				propagationKeys, "spring.sleuth.baggage.remote-fields",
-				sleuthBaggageProperties.getRemoteFields());
+		Set<String> remoteFields = redirectOldPropertyToNew(PROPAGATION_KEYS, propagationKeys,
+				"spring.sleuth.baggage.remote-fields", sleuthBaggageProperties.getRemoteFields());
 		for (String fieldName : remoteFields) {
 			factoryBuilder.add(SingleBaggageField.remote(BaggageField.create(fieldName)));
 		}
 
 		if (!baggageKeys.isEmpty()) {
 			logger.warn("'" + BAGGAGE_KEYS + "' will be removed in a future release.\n"
-					+ "To change header names define a @Bean of type "
-					+ SingleBaggageField.class.getName());
+					+ "To change header names define a @Bean of type " + SingleBaggageField.class.getName());
 
 			for (String key : baggageKeys) {
-				factoryBuilder.add(SingleBaggageField.newBuilder(BaggageField.create(key))
-						.addKeyName("baggage-" + key) // for HTTP
+				factoryBuilder.add(SingleBaggageField.newBuilder(BaggageField.create(key)).addKeyName("baggage-" + key) // for
+																														// HTTP
 						.addKeyName("baggage_" + key) // for messaging
 						.build());
 			}
@@ -165,8 +159,8 @@ class TraceBaggageConfiguration {
 		return factoryBuilder.build();
 	}
 
-	static Set<String> redirectOldPropertyToNew(String oldProperty, List<String> oldValue,
-			String newProperty, List<String> newValue) {
+	static Set<String> redirectOldPropertyToNew(String oldProperty, List<String> oldValue, String newProperty,
+			List<String> newValue) {
 		Set<String> result = new TreeSet<>(String.CASE_INSENSITIVE_ORDER);
 		result.addAll(newValue);
 		if (!oldValue.isEmpty()) {
@@ -187,22 +181,18 @@ class TraceBaggageConfiguration {
 	@Bean
 	@ConditionalOnMissingBean(CorrelationScopeDecorator.class)
 	@ConditionalOnBean(CorrelationScopeDecorator.Builder.class)
-	@ConditionalOnProperty(value = "spring.sleuth.baggage.correlation-enabled",
-			matchIfMissing = true)
-	ScopeDecorator correlationScopeDecorator(
-			@Qualifier(WHITELISTED_MDC_KEYS) List<String> whiteListedMDCKeys,
+	@ConditionalOnProperty(value = "spring.sleuth.baggage.correlation-enabled", matchIfMissing = true)
+	ScopeDecorator correlationScopeDecorator(@Qualifier(WHITELISTED_MDC_KEYS) List<String> whiteListedMDCKeys,
 			SleuthBaggageProperties sleuthBaggageProperties,
 			@Nullable List<CorrelationScopeCustomizer> correlationScopeCustomizers) {
 
-		Set<String> correlationFields = redirectOldPropertyToNew(WHITELISTED_MDC_KEYS,
-				whiteListedMDCKeys, "spring.sleuth.baggage.correlation-fields",
-				sleuthBaggageProperties.getCorrelationFields());
+		Set<String> correlationFields = redirectOldPropertyToNew(WHITELISTED_MDC_KEYS, whiteListedMDCKeys,
+				"spring.sleuth.baggage.correlation-fields", sleuthBaggageProperties.getCorrelationFields());
 
 		// Add fields from properties
 		CorrelationScopeDecorator.Builder builder = MDCScopeDecorator.newBuilder();
 		for (String field : correlationFields) {
-			builder.add(SingleCorrelationField.newBuilder(BaggageField.create(field))
-					.build());
+			builder.add(SingleCorrelationField.newBuilder(BaggageField.create(field)).build());
 		}
 
 		// handle user overrides
@@ -233,20 +223,17 @@ class TraceBaggageConfiguration {
 		}
 
 		@Bean
-		SpanHandler baggageTagSpanHandler(
-				@Qualifier(WHITELISTED_KEYS) List<String> whiteListedKeys,
+		SpanHandler baggageTagSpanHandler(@Qualifier(WHITELISTED_KEYS) List<String> whiteListedKeys,
 				SleuthBaggageProperties sleuthBaggageProperties) {
 
-			Set<String> tagFields = redirectOldPropertyToNew(WHITELISTED_KEYS,
-					whiteListedKeys, "spring.sleuth.baggage.tag-fields",
-					sleuthBaggageProperties.getTagFields());
+			Set<String> tagFields = redirectOldPropertyToNew(WHITELISTED_KEYS, whiteListedKeys,
+					"spring.sleuth.baggage.tag-fields", sleuthBaggageProperties.getTagFields());
 
 			if (tagFields.isEmpty()) {
 				return SpanHandler.NOOP; // Brave ignores these
 			}
 
-			return new BaggageTagSpanHandler(tagFields.stream().map(BaggageField::create)
-					.toArray(BaggageField[]::new));
+			return new BaggageTagSpanHandler(tagFields.stream().map(BaggageField::create).toArray(BaggageField[]::new));
 		}
 
 	}

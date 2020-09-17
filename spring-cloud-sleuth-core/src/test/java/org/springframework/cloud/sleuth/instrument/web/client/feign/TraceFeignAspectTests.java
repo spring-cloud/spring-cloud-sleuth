@@ -51,8 +51,7 @@ public class TraceFeignAspectTests {
 
 	StrictCurrentTraceContext currentTraceContext = StrictCurrentTraceContext.create();
 
-	Tracing tracing = Tracing.newBuilder().currentTraceContext(currentTraceContext)
-			.build();
+	Tracing tracing = Tracing.newBuilder().currentTraceContext(currentTraceContext).build();
 
 	HttpTracing httpTracing = HttpTracing.newBuilder(this.tracing).build();
 
@@ -84,10 +83,8 @@ public class TraceFeignAspectTests {
 	}
 
 	@Test
-	public void should_not_wrap_traced_feign_client_in_trace_representation()
-			throws Throwable {
-		given(this.pjp.getTarget())
-				.willReturn(new TracingFeignClient(this.httpTracing, this.client));
+	public void should_not_wrap_traced_feign_client_in_trace_representation() throws Throwable {
+		given(this.pjp.getTarget()).willReturn(new TracingFeignClient(this.httpTracing, this.client));
 
 		this.traceFeignAspect.feignClientWasCalled(this.pjp);
 

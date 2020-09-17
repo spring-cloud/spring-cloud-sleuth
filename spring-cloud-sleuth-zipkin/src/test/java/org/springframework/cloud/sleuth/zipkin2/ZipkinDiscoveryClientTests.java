@@ -41,17 +41,17 @@ import org.springframework.context.annotation.Configuration;
 
 import static org.assertj.core.api.BDDAssertions.then;
 
-@SpringBootTest(classes = ZipkinDiscoveryClientTests.Config.class, properties = {
-		"spring.zipkin.baseUrl=https://zipkin/", "spring.zipkin.sender.type=web" // override
-																					// default
-																					// priority
-																					// which
-																					// picks
-																					// rabbit
-																					// due
-																					// to
-																					// classpath
-})
+@SpringBootTest(classes = ZipkinDiscoveryClientTests.Config.class,
+		properties = { "spring.zipkin.baseUrl=https://zipkin/", "spring.zipkin.sender.type=web" // override
+																								// default
+																								// priority
+																								// which
+																								// picks
+																								// rabbit
+																								// due
+																								// to
+																								// classpath
+		})
 public class ZipkinDiscoveryClientTests {
 
 	public static MockWebServer ZIPKIN_RULE = new MockWebServer();
@@ -75,8 +75,7 @@ public class ZipkinDiscoveryClientTests {
 
 		span.finish();
 
-		Awaitility.await().untilAsserted(
-				() -> then(ZIPKIN_RULE.getRequestCount()).isGreaterThan(0));
+		Awaitility.await().untilAsserted(() -> then(ZIPKIN_RULE.getRequestCount()).isGreaterThan(0));
 	}
 
 	@Configuration
@@ -92,14 +91,13 @@ public class ZipkinDiscoveryClientTests {
 		LoadBalancerClient loadBalancerClient() {
 			return new LoadBalancerClient() {
 				@Override
-				public <T> T execute(String serviceId, LoadBalancerRequest<T> request)
-						throws IOException {
+				public <T> T execute(String serviceId, LoadBalancerRequest<T> request) throws IOException {
 					return null;
 				}
 
 				@Override
-				public <T> T execute(String serviceId, ServiceInstance serviceInstance,
-						LoadBalancerRequest<T> request) throws IOException {
+				public <T> T execute(String serviceId, ServiceInstance serviceInstance, LoadBalancerRequest<T> request)
+						throws IOException {
 					return null;
 				}
 

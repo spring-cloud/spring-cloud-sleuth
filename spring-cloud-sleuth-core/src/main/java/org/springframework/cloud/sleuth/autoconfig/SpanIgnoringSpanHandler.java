@@ -56,8 +56,7 @@ class SpanIgnoringSpanHandler extends SpanHandler {
 		}
 		List<Pattern> spanNamesToIgnore = spanNamesToIgnore();
 		String name = span.name();
-		if (StringUtils.hasText(name)
-				&& spanNamesToIgnore.stream().anyMatch(p -> p.matcher(name).matches())) {
+		if (StringUtils.hasText(name) && spanNamesToIgnore.stream().anyMatch(p -> p.matcher(name).matches())) {
 			if (log.isDebugEnabled()) {
 				log.debug("Will ignore a span with name [" + name + "]");
 			}
@@ -67,16 +66,14 @@ class SpanIgnoringSpanHandler extends SpanHandler {
 	}
 
 	private List<Pattern> spanNamesToIgnore() {
-		return spanNames().stream()
-				.map(regex -> cache.computeIfAbsent(regex, Pattern::compile))
+		return spanNames().stream().map(regex -> cache.computeIfAbsent(regex, Pattern::compile))
 				.collect(Collectors.toList());
 	}
 
 	private List<String> spanNames() {
 		List<String> spanNamesToIgnore = new ArrayList<>(
 				this.sleuthProperties.getSpanHandler().getSpanNamePatternsToSkip());
-		spanNamesToIgnore.addAll(this.sleuthProperties.getSpanHandler()
-				.getAdditionalSpanNamePatternsToIgnore());
+		spanNamesToIgnore.addAll(this.sleuthProperties.getSpanHandler().getAdditionalSpanNamePatternsToIgnore());
 		return spanNamesToIgnore;
 	}
 

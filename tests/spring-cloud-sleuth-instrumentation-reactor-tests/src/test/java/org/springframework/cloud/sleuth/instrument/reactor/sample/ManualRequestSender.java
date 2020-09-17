@@ -29,8 +29,7 @@ import org.springframework.web.reactive.function.client.WebClient;
 
 class ManualRequestSender extends RequestSender {
 
-	private static final Logger LOGGER = LoggerFactory
-			.getLogger(ManualRequestSender.class);
+	private static final Logger LOGGER = LoggerFactory.getLogger(ManualRequestSender.class);
 
 	ManualRequestSender(WebClient webClient, Tracer tracer) {
 		super(webClient, tracer);
@@ -38,25 +37,21 @@ class ManualRequestSender extends RequestSender {
 
 	@Override
 	public Mono<String> get(Integer someParameterNotUsedNow) {
-		return Mono.just(this.webClient).doOnEach(
-				WebFluxSleuthOperators.withSpanInScope(SignalType.ON_NEXT, () -> {
-					this.span = this.tracer.currentSpan();
-					LOGGER.info("getting for parameter {}", someParameterNotUsedNow);
-				}))
-				.flatMap(webClient -> Mono.subscriberContext()
-						.flatMap(ctx -> WebFluxSleuthOperators.withSpanInScope(ctx,
-								() -> webClient.method(HttpMethod.GET)
-										.uri("http://localhost:" + port + "/foo")
-										.retrieve().bodyToMono(String.class))));
+		return Mono.just(this.webClient).doOnEach(WebFluxSleuthOperators.withSpanInScope(SignalType.ON_NEXT, () -> {
+			this.span = this.tracer.currentSpan();
+			LOGGER.info("getting for parameter {}", someParameterNotUsedNow);
+		})).flatMap(webClient -> Mono.subscriberContext()
+				.flatMap(ctx -> WebFluxSleuthOperators.withSpanInScope(ctx, () -> webClient.method(HttpMethod.GET)
+						.uri("http://localhost:" + port + "/foo").retrieve().bodyToMono(String.class))));
 	}
 
 	@Override
 	public Flux<String> getAll() {
-		return Flux.just("").flatMap(s -> Flux.deferWithContext(ctx -> Flux.just("")
-				.doOnNext(t -> WebFluxSleuthOperators.withSpanInScope(ctx,
-						() -> LOGGER.info("before merge")))
-				.mergeWith(get(2)).mergeWith(get(3)).doOnNext(t -> WebFluxSleuthOperators
-						.withSpanInScope(ctx, () -> LOGGER.info("after merge")))));
+		return Flux.just("")
+				.flatMap(s -> Flux.deferWithContext(ctx -> Flux.just("")
+						.doOnNext(t -> WebFluxSleuthOperators.withSpanInScope(ctx, () -> LOGGER.info("before merge")))
+						.mergeWith(get(2)).mergeWith(get(3))
+						.doOnNext(t -> WebFluxSleuthOperators.withSpanInScope(ctx, () -> LOGGER.info("after merge")))));
 	}
 
 }

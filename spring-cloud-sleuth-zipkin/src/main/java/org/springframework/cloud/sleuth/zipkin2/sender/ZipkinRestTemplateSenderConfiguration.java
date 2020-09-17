@@ -52,8 +52,7 @@ import org.springframework.web.client.RestTemplate;
 @EnableConfigurationProperties(ZipkinSenderProperties.class)
 class ZipkinRestTemplateSenderConfiguration {
 
-	private static final Log log = LogFactory
-			.getLog(ZipkinRestTemplateSenderConfiguration.class);
+	private static final Log log = LogFactory.getLog(ZipkinRestTemplateSenderConfiguration.class);
 
 	@Autowired
 	ZipkinUrlExtractor extractor;
@@ -63,8 +62,7 @@ class ZipkinRestTemplateSenderConfiguration {
 			ZipkinRestTemplateCustomizer zipkinRestTemplateCustomizer) {
 		RestTemplate restTemplate = new ZipkinRestTemplateWrapper(zipkin, this.extractor);
 		restTemplate = zipkinRestTemplateCustomizer.customizeTemplate(restTemplate);
-		return new RestTemplateSender(restTemplate, zipkin.getBaseUrl(),
-				zipkin.getEncoder());
+		return new RestTemplateSender(restTemplate, zipkin.getBaseUrl(), zipkin.getEncoder());
 	}
 
 	@Bean
@@ -145,8 +143,8 @@ class ZipkinRestTemplateSenderConfiguration {
 	static class DiscoveryClientZipkinUrlExtractorConfiguration {
 
 		@Configuration(proxyBeanMethods = false)
-		@ConditionalOnProperty(value = "spring.zipkin.discovery-client-enabled",
-				havingValue = "true", matchIfMissing = true)
+		@ConditionalOnProperty(value = "spring.zipkin.discovery-client-enabled", havingValue = "true",
+				matchIfMissing = true)
 		static class ZipkinClientLoadBalancedConfiguration {
 
 			@Autowired(required = false)
@@ -154,17 +152,14 @@ class ZipkinRestTemplateSenderConfiguration {
 
 			@Bean
 			@ConditionalOnMissingBean
-			ZipkinLoadBalancer loadBalancerClientZipkinLoadBalancer(
-					ZipkinProperties zipkinProperties) {
-				return new LoadBalancerClientZipkinLoadBalancer(this.client,
-						zipkinProperties);
+			ZipkinLoadBalancer loadBalancerClientZipkinLoadBalancer(ZipkinProperties zipkinProperties) {
+				return new LoadBalancerClientZipkinLoadBalancer(this.client, zipkinProperties);
 			}
 
 		}
 
 		@Configuration(proxyBeanMethods = false)
-		@ConditionalOnProperty(value = "spring.zipkin.discovery-client-enabled",
-				havingValue = "false")
+		@ConditionalOnProperty(value = "spring.zipkin.discovery-client-enabled", havingValue = "false")
 		static class ZipkinClientNoOpConfiguration {
 
 			@Bean
@@ -205,8 +200,7 @@ class ZipkinRestTemplateWrapper extends RestTemplate {
 
 	private final ZipkinUrlExtractor extractor;
 
-	ZipkinRestTemplateWrapper(ZipkinProperties zipkinProperties,
-			ZipkinUrlExtractor extractor) {
+	ZipkinRestTemplateWrapper(ZipkinProperties zipkinProperties, ZipkinUrlExtractor extractor) {
 		this.zipkinProperties = zipkinProperties;
 		this.extractor = extractor;
 		setRequestFactory(clientHttpRequestFactory());
@@ -220,9 +214,8 @@ class ZipkinRestTemplateWrapper extends RestTemplate {
 	}
 
 	@Override
-	protected <T> T doExecute(URI originalUrl, HttpMethod method,
-			RequestCallback requestCallback, ResponseExtractor<T> responseExtractor)
-			throws RestClientException {
+	protected <T> T doExecute(URI originalUrl, HttpMethod method, RequestCallback requestCallback,
+			ResponseExtractor<T> responseExtractor) throws RestClientException {
 		URI uri = this.extractor.zipkinUrl(this.zipkinProperties);
 		URI newUri = resolvedZipkinUri(originalUrl, uri);
 		return super.doExecute(newUri, method, requestCallback, responseExtractor);
@@ -230,15 +223,14 @@ class ZipkinRestTemplateWrapper extends RestTemplate {
 
 	private URI resolvedZipkinUri(URI originalUrl, URI resolvedZipkinUri) {
 		try {
-			return new URI(resolvedZipkinUri.getScheme(), resolvedZipkinUri.getUserInfo(),
-					resolvedZipkinUri.getHost(), resolvedZipkinUri.getPort(),
-					originalUrl.getPath(), originalUrl.getQuery(),
+			return new URI(resolvedZipkinUri.getScheme(), resolvedZipkinUri.getUserInfo(), resolvedZipkinUri.getHost(),
+					resolvedZipkinUri.getPort(), originalUrl.getPath(), originalUrl.getQuery(),
 					originalUrl.getFragment());
 		}
 		catch (URISyntaxException e) {
 			if (log.isDebugEnabled()) {
-				log.debug("Failed to create the new URI from original [" + originalUrl
-						+ "] and new one [" + resolvedZipkinUri + "]");
+				log.debug("Failed to create the new URI from original [" + originalUrl + "] and new one ["
+						+ resolvedZipkinUri + "]");
 			}
 			return originalUrl;
 		}

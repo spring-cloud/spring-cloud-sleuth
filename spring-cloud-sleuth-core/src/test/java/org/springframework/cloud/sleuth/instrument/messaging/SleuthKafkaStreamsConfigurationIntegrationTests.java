@@ -46,36 +46,31 @@ import static org.mockito.Mockito.verify;
 class SleuthKafkaStreamsConfigurationIntegrationTests {
 
 	private final ApplicationContextRunner contextRunner = new ApplicationContextRunner()
-			.withConfiguration(AutoConfigurations.of(TraceAutoConfiguration.class,
-					SleuthKafkaStreamsConfiguration.class))
+			.withConfiguration(
+					AutoConfigurations.of(TraceAutoConfiguration.class, SleuthKafkaStreamsConfiguration.class))
 			.withUserConfiguration(UserConfig.class);
 
 	@Test
 	void should_create_KafkaStreamsTracing() {
-		this.contextRunner.run(
-				context -> assertThat(context).hasSingleBean(KafkaStreamsTracing.class));
+		this.contextRunner.run(context -> assertThat(context).hasSingleBean(KafkaStreamsTracing.class));
 	}
 
 	@Test
 	void should_not_create_KafkaStreamsTracing_when_KafkaStreams_not_present() {
 		this.contextRunner.withClassLoader(new FilteredClassLoader(KafkaStreams.class))
-				.run(context -> assertThat(context)
-						.doesNotHaveBean(KafkaStreamsTracing.class));
+				.run(context -> assertThat(context).doesNotHaveBean(KafkaStreamsTracing.class));
 	}
 
 	@Test
 	void should_not_create_KafkaStreamsTracing_when_kafkastreams_disabled() {
-		this.contextRunner
-				.withPropertyValues("spring.sleuth.messaging.kafka.streams.enabled=false")
-				.run(context -> assertThat(context)
-						.doesNotHaveBean(KafkaStreamsTracing.class));
+		this.contextRunner.withPropertyValues("spring.sleuth.messaging.kafka.streams.enabled=false")
+				.run(context -> assertThat(context).doesNotHaveBean(KafkaStreamsTracing.class));
 	}
 
 	@Test
 	void should_not_create_KafkaStreamsTracing_when_messaging_disabled() {
 		this.contextRunner.withPropertyValues("spring.sleuth.messaging.enabled=false")
-				.run(context -> assertThat(context)
-						.doesNotHaveBean(KafkaStreamsTracing.class));
+				.run(context -> assertThat(context).doesNotHaveBean(KafkaStreamsTracing.class));
 	}
 
 	@Test
@@ -93,8 +88,7 @@ class SleuthKafkaStreamsConfigurationIntegrationTests {
 
 	@AfterEach
 	void afterEach(CapturedOutput output) {
-		assertThat(output).doesNotContain(
-				"is not eligible for getting processed by all BeanPostProcessors");
+		assertThat(output).doesNotContain("is not eligible for getting processed by all BeanPostProcessors");
 	}
 
 	@Configuration

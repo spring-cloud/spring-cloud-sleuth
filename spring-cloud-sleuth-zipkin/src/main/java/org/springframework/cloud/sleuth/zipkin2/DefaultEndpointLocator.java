@@ -41,8 +41,7 @@ import org.springframework.util.StringUtils;
  *
  * @author Dave Syer
  */
-class DefaultEndpointLocator implements EndpointLocator,
-		ApplicationListener<ServletWebServerInitializedEvent> {
+class DefaultEndpointLocator implements EndpointLocator, ApplicationListener<ServletWebServerInitializedEvent> {
 
 	private static final Log log = LogFactory.getLog(DefaultEndpointLocator.class);
 
@@ -60,9 +59,8 @@ class DefaultEndpointLocator implements EndpointLocator,
 
 	private InetAddress firstNonLoopbackAddress;
 
-	DefaultEndpointLocator(Registration registration, ServerProperties serverProperties,
-			Environment environment, ZipkinProperties zipkinProperties,
-			InetUtils inetUtils) {
+	DefaultEndpointLocator(Registration registration, ServerProperties serverProperties, Environment environment,
+			ZipkinProperties zipkinProperties, InetUtils inetUtils) {
 		this.registration = registration;
 		this.serverProperties = serverProperties;
 		this.environment = environment;
@@ -83,8 +81,7 @@ class DefaultEndpointLocator implements EndpointLocator,
 		if (log.isDebugEnabled()) {
 			log.debug("Span will contain serviceName [" + serviceName + "]");
 		}
-		Endpoint.Builder builder = Endpoint.newBuilder().serviceName(serviceName)
-				.port(getPort());
+		Endpoint.Builder builder = Endpoint.newBuilder().serviceName(serviceName).port(getPort());
 		return addAddress(builder).build();
 	}
 
@@ -129,8 +126,7 @@ class DefaultEndpointLocator implements EndpointLocator,
 			return builder;
 		}
 		else if (this.environment.containsProperty(IP_ADDRESS_PROP_NAME)
-				&& builder.parseIp(this.environment.getProperty(IP_ADDRESS_PROP_NAME,
-						String.class))) {
+				&& builder.parseIp(this.environment.getProperty(IP_ADDRESS_PROP_NAME, String.class))) {
 			return builder;
 		}
 		else {

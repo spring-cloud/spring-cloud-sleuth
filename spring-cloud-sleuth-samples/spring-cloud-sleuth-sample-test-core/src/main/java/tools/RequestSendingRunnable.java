@@ -52,8 +52,7 @@ public class RequestSendingRunnable implements Runnable {
 
 	private final long spanId;
 
-	public RequestSendingRunnable(RestTemplate restTemplate, String url, long traceId,
-			Long spanId) {
+	public RequestSendingRunnable(RestTemplate restTemplate, String url, long traceId, Long spanId) {
 		this.restTemplate = restTemplate;
 		this.url = url;
 		this.traceId = traceId;
@@ -62,11 +61,9 @@ public class RequestSendingRunnable implements Runnable {
 
 	@Override
 	public void run() {
-		log.info(String.format(
-				"Sending the request to url [%s] with trace id in headers [%d]", this.url,
-				this.traceId));
-		ResponseEntity<String> responseEntity = this.restTemplate
-				.exchange(requestWithTraceId(), String.class);
+		log.info(
+				String.format("Sending the request to url [%s] with trace id in headers [%d]", this.url, this.traceId));
+		ResponseEntity<String> responseEntity = this.restTemplate.exchange(requestWithTraceId(), String.class);
 		then(responseEntity.getStatusCode()).isEqualTo(HttpStatus.OK);
 		log.info(String.format("Received the following response [%s]", responseEntity));
 	}
@@ -75,8 +72,7 @@ public class RequestSendingRunnable implements Runnable {
 		HttpHeaders headers = new HttpHeaders();
 		headers.add("b3", idToHex(this.traceId) + "-" + idToHex(this.spanId));
 		URI uri = URI.create(this.url);
-		RequestEntity<Void> requestEntity = new RequestEntity<>(headers, HttpMethod.GET,
-				uri);
+		RequestEntity<Void> requestEntity = new RequestEntity<>(headers, HttpMethod.GET, uri);
 		log.info("Request [" + requestEntity + "] is ready");
 		return requestEntity;
 	}

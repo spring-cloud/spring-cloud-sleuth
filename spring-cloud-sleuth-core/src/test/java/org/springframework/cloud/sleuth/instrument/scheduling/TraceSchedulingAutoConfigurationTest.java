@@ -28,22 +28,18 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 class TraceSchedulingAutoConfigurationTest {
 
-	private final ApplicationContextRunner contextRunner = new ApplicationContextRunner()
-			.withConfiguration(AutoConfigurations.of(TraceAutoConfiguration.class,
-					TraceSchedulingAutoConfiguration.class));
+	private final ApplicationContextRunner contextRunner = new ApplicationContextRunner().withConfiguration(
+			AutoConfigurations.of(TraceAutoConfiguration.class, TraceSchedulingAutoConfiguration.class));
 
 	@Test
 	void shoud_create_TraceSchedulingAspect() {
-		this.contextRunner.run(context -> assertThat(context)
-				.hasSingleBean(TraceSchedulingAspect.class));
+		this.contextRunner.run(context -> assertThat(context).hasSingleBean(TraceSchedulingAspect.class));
 	}
 
 	@Test
 	void shoud_not_create_TraceSchedulingAspect_without_aspectJ() {
-		this.contextRunner
-				.withClassLoader(new FilteredClassLoader(ProceedingJoinPoint.class))
-				.run(context -> assertThat(context)
-						.doesNotHaveBean(TraceSchedulingAspect.class));
+		this.contextRunner.withClassLoader(new FilteredClassLoader(ProceedingJoinPoint.class))
+				.run(context -> assertThat(context).doesNotHaveBean(TraceSchedulingAspect.class));
 	}
 
 }

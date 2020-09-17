@@ -26,8 +26,7 @@ import org.springframework.messaging.support.NativeMessageHeaderAccessor;
  *
  * @author Marcin Grzejszczak
  */
-public class MessageHeaderPropagation_NativeTest
-		extends PropagationSetterTest<MessageHeaderAccessor, String> {
+public class MessageHeaderPropagation_NativeTest extends PropagationSetterTest<MessageHeaderAccessor, String> {
 
 	NativeMessageHeaderAccessor carrier = new NativeMessageHeaderAccessor() {
 	};

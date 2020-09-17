@@ -32,11 +32,9 @@ import org.springframework.beans.factory.BeanFactoryAware;
  *
  * @author Marcin Grzejszczak
  */
-abstract class AbstractSleuthMethodInvocationProcessor
-		implements SleuthMethodInvocationProcessor, BeanFactoryAware {
+abstract class AbstractSleuthMethodInvocationProcessor implements SleuthMethodInvocationProcessor, BeanFactoryAware {
 
-	private static final Log logger = LogFactory
-			.getLog(AbstractSleuthMethodInvocationProcessor.class);
+	private static final Log logger = LogFactory.getLog(AbstractSleuthMethodInvocationProcessor.class);
 
 	private static final String CLASS_KEY = "class";
 
@@ -110,8 +108,7 @@ abstract class AbstractSleuthMethodInvocationProcessor
 
 	CurrentTraceContext currentTraceContext() {
 		if (this.currentTraceContext == null) {
-			this.currentTraceContext = this.beanFactory
-					.getBean(CurrentTraceContext.class);
+			this.currentTraceContext = this.beanFactory.getBean(CurrentTraceContext.class);
 		}
 		return this.currentTraceContext;
 	}
@@ -125,8 +122,7 @@ abstract class AbstractSleuthMethodInvocationProcessor
 
 	SpanTagAnnotationHandler spanTagAnnotationHandler() {
 		if (this.spanTagAnnotationHandler == null) {
-			this.spanTagAnnotationHandler = new SpanTagAnnotationHandler(
-					this.beanFactory);
+			this.spanTagAnnotationHandler = new SpanTagAnnotationHandler(this.beanFactory);
 		}
 		return this.spanTagAnnotationHandler;
 	}

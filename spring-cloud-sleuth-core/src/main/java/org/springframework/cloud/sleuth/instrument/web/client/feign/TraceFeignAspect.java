@@ -58,8 +58,7 @@ class TraceFeignAspect {
 		return pjp.proceed();
 	}
 
-	Object executeTraceFeignClient(Object bean, ProceedingJoinPoint pjp)
-			throws IOException {
+	Object executeTraceFeignClient(Object bean, ProceedingJoinPoint pjp) throws IOException {
 		Object[] args = pjp.getArgs();
 		Request request = (Request) args[0];
 		Request.Options options = (Request.Options) args[1];

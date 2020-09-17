@@ -49,9 +49,7 @@ public class Issue546Tests {
 
 	@Test
 	public void should_pass_tracing_info_when_using_callbacks() {
-		new RestTemplate().getForObject(
-				"http://localhost:" + port() + "/trace-async-rest-template",
-				String.class);
+		new RestTemplate().getForObject("http://localhost:" + port() + "/trace-async-rest-template", String.class);
 	}
 
 	private int port() {
@@ -94,8 +92,7 @@ class Controller {
 	}
 
 	@RequestMapping("/trace-async-rest-template")
-	public void asyncTest(@RequestParam(required = false) boolean isSleep)
-			throws InterruptedException {
+	public void asyncTest(@RequestParam(required = false) boolean isSleep) throws InterruptedException {
 		log.info("(/trace-async-rest-template) I got a request!");
 		final long traceId = this.tracer.tracer().currentSpan().context().traceId();
 		ListenableFuture<ResponseEntity<HogeBean>> res = this.traceAsyncRestTemplate
@@ -104,17 +101,13 @@ class Controller {
 			Thread.sleep(1000);
 		}
 		res.addCallback(success -> {
-			then(Controller.this.tracer.tracer().currentSpan().context().traceId())
-					.isEqualTo(traceId);
+			then(Controller.this.tracer.tracer().currentSpan().context().traceId()).isEqualTo(traceId);
 			log.info("(/trace-async-rest-template) success");
-			then(Controller.this.tracer.tracer().currentSpan().context().traceId())
-					.isEqualTo(traceId);
+			then(Controller.this.tracer.tracer().currentSpan().context().traceId()).isEqualTo(traceId);
 		}, failure -> {
-			then(Controller.this.tracer.tracer().currentSpan().context().traceId())
-					.isEqualTo(traceId);
+			then(Controller.this.tracer.tracer().currentSpan().context().traceId()).isEqualTo(traceId);
 			log.error("(/trace-async-rest-template) failure", failure);
-			then(Controller.this.tracer.tracer().currentSpan().context().traceId())
-					.isEqualTo(traceId);
+			then(Controller.this.tracer.tracer().currentSpan().context().traceId()).isEqualTo(traceId);
 		});
 	}
 

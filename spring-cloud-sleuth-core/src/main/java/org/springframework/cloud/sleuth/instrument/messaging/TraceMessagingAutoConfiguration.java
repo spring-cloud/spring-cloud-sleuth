@@ -82,8 +82,7 @@ import org.springframework.util.ReflectionUtils;
 @Configuration(proxyBeanMethods = false)
 @ConditionalOnBean(Tracing.class)
 @ConditionalOnClass(MessagingTracing.class)
-@AutoConfigureAfter({ TraceAutoConfiguration.class,
-		TraceSpringMessagingAutoConfiguration.class })
+@AutoConfigureAfter({ TraceAutoConfiguration.class, TraceSpringMessagingAutoConfiguration.class })
 @OnMessagingEnabled
 @EnableConfigurationProperties(SleuthMessagingProperties.class)
 // public allows @AutoConfigureAfter(TraceMessagingAutoConfiguration)
@@ -114,16 +113,14 @@ public class TraceMessagingAutoConfiguration {
 	}
 
 	@Configuration(proxyBeanMethods = false)
-	@ConditionalOnProperty(value = "spring.sleuth.messaging.rabbit.enabled",
-			matchIfMissing = true)
+	@ConditionalOnProperty(value = "spring.sleuth.messaging.rabbit.enabled", matchIfMissing = true)
 	@ConditionalOnClass(RabbitTemplate.class)
 	protected static class SleuthRabbitConfiguration {
 
 		@Bean
 		// for tests
 		@ConditionalOnMissingBean
-		static SleuthRabbitBeanPostProcessor sleuthRabbitBeanPostProcessor(
-				BeanFactory beanFactory) {
+		static SleuthRabbitBeanPostProcessor sleuthRabbitBeanPostProcessor(BeanFactory beanFactory) {
 			return new SleuthRabbitBeanPostProcessor(beanFactory);
 		}
 
@@ -132,27 +129,21 @@ public class TraceMessagingAutoConfiguration {
 		SpringRabbitTracing springRabbitTracing(MessagingTracing messagingTracing,
 				SleuthMessagingProperties properties) {
 			return SpringRabbitTracing.newBuilder(messagingTracing)
-					.remoteServiceName(
-							properties.getMessaging().getRabbit().getRemoteServiceName())
-					.build();
+					.remoteServiceName(properties.getMessaging().getRabbit().getRemoteServiceName()).build();
 		}
 
 	}
 
 	@Configuration(proxyBeanMethods = false)
-	@ConditionalOnProperty(value = "spring.sleuth.messaging.kafka.enabled",
-			matchIfMissing = true)
+	@ConditionalOnProperty(value = "spring.sleuth.messaging.kafka.enabled", matchIfMissing = true)
 	@ConditionalOnClass(ProducerFactory.class)
 	protected static class SleuthKafkaConfiguration {
 
 		@Bean
 		@ConditionalOnMissingBean
-		KafkaTracing kafkaTracing(MessagingTracing messagingTracing,
-				SleuthMessagingProperties properties) {
+		KafkaTracing kafkaTracing(MessagingTracing messagingTracing, SleuthMessagingProperties properties) {
 			return KafkaTracing.newBuilder(messagingTracing)
-					.remoteServiceName(
-							properties.getMessaging().getKafka().getRemoteServiceName())
-					.build();
+					.remoteServiceName(properties.getMessaging().getKafka().getRemoteServiceName()).build();
 		}
 
 		@Bean
@@ -163,16 +154,14 @@ public class TraceMessagingAutoConfiguration {
 		}
 
 		@Bean
-		KafkaFactoryBeanPostProcessor kafkaFactoryBeanPostProcessor(
-				BeanFactory beanFactory) {
+		KafkaFactoryBeanPostProcessor kafkaFactoryBeanPostProcessor(BeanFactory beanFactory) {
 			return new KafkaFactoryBeanPostProcessor(beanFactory);
 		}
 
 	}
 
 	@Configuration(proxyBeanMethods = false)
-	@ConditionalOnProperty(value = "spring.sleuth.messaging.jms.enabled",
-			matchIfMissing = true)
+	@ConditionalOnProperty(value = "spring.sleuth.messaging.jms.enabled", matchIfMissing = true)
 	@ConditionalOnClass(JmsListenerConfigurer.class)
 	@ConditionalOnBean(JmsListenerEndpointRegistry.class)
 	@Role(BeanDefinition.ROLE_INFRASTRUCTURE)
@@ -180,31 +169,25 @@ public class TraceMessagingAutoConfiguration {
 
 		@Bean
 		@ConditionalOnMissingBean
-		JmsTracing jmsTracing(MessagingTracing messagingTracing,
-				SleuthMessagingProperties properties) {
+		JmsTracing jmsTracing(MessagingTracing messagingTracing, SleuthMessagingProperties properties) {
 			return JmsTracing.newBuilder(messagingTracing)
-					.remoteServiceName(
-							properties.getMessaging().getJms().getRemoteServiceName())
-					.build();
+					.remoteServiceName(properties.getMessaging().getJms().getRemoteServiceName()).build();
 		}
 
 		@Bean
 		// for tests
 		@ConditionalOnMissingBean
-		TracingConnectionFactoryBeanPostProcessor tracingConnectionFactoryBeanPostProcessor(
-				BeanFactory beanFactory) {
+		TracingConnectionFactoryBeanPostProcessor tracingConnectionFactoryBeanPostProcessor(BeanFactory beanFactory) {
 			return new TracingConnectionFactoryBeanPostProcessor(beanFactory);
 		}
 
 		@Bean
-		JmsListenerConfigurer configureTracing(BeanFactory beanFactory,
-				JmsListenerEndpointRegistry defaultRegistry) {
+		JmsListenerConfigurer configureTracing(BeanFactory beanFactory, JmsListenerEndpointRegistry defaultRegistry) {
 			return registrar -> {
-				TracingJmsBeanPostProcessor processor = beanFactory
-						.getBean(TracingJmsBeanPostProcessor.class);
+				TracingJmsBeanPostProcessor processor = beanFactory.getBean(TracingJmsBeanPostProcessor.class);
 				JmsListenerEndpointRegistry registry = registrar.getEndpointRegistry();
-				registrar.setEndpointRegistry((JmsListenerEndpointRegistry) processor
-						.wrap(registry == null ? defaultRegistry : registry));
+				registrar.setEndpointRegistry(
+						(JmsListenerEndpointRegistry) processor.wrap(registry == null ? defaultRegistry : registry));
 			};
 		}
 
@@ -229,14 +212,13 @@ class SleuthRabbitBeanPostProcessor implements BeanPostProcessor {
 	}
 
 	@Override
-	public Object postProcessBeforeInitialization(Object bean, String beanName)
-			throws BeansException {
+	public Object postProcessBeforeInitialization(Object bean, String beanName) throws BeansException {
 		if (bean instanceof RabbitTemplate) {
 			return rabbitTracing().decorateRabbitTemplate((RabbitTemplate) bean);
 		}
 		else if (bean instanceof SimpleRabbitListenerContainerFactory) {
-			return rabbitTracing().decorateSimpleRabbitListenerContainerFactory(
-					(SimpleRabbitListenerContainerFactory) bean);
+			return rabbitTracing()
+					.decorateSimpleRabbitListenerContainerFactory((SimpleRabbitListenerContainerFactory) bean);
 		}
 		return bean;
 	}
@@ -260,22 +242,17 @@ class KafkaFactoryBeanPostProcessor implements BeanPostProcessor {
 
 	@SuppressWarnings("unchecked")
 	@Override
-	public Object postProcessAfterInitialization(Object bean, String beanName)
-			throws BeansException {
+	public Object postProcessAfterInitialization(Object bean, String beanName) throws BeansException {
 		if (bean instanceof ConsumerFactory) {
 			ConsumerFactory factory = (ConsumerFactory) bean;
-			if (factory.getPostProcessors().stream()
-					.noneMatch(o -> o instanceof TraceConsumerPostProcessor)) {
-				factory.addPostProcessor(
-						new TraceConsumerPostProcessor(this.beanFactory));
+			if (factory.getPostProcessors().stream().noneMatch(o -> o instanceof TraceConsumerPostProcessor)) {
+				factory.addPostProcessor(new TraceConsumerPostProcessor(this.beanFactory));
 			}
 		}
 		else if (bean instanceof ProducerFactory) {
 			ProducerFactory factory = (ProducerFactory) bean;
-			if (factory.getPostProcessors().stream()
-					.noneMatch(o -> o instanceof TraceProducerPostProcessor)) {
-				factory.addPostProcessor(
-						new TraceProducerPostProcessor(this.beanFactory));
+			if (factory.getPostProcessors().stream().noneMatch(o -> o instanceof TraceProducerPostProcessor)) {
+				factory.addPostProcessor(new TraceProducerPostProcessor(this.beanFactory));
 			}
 		}
 		return bean;
@@ -345,8 +322,8 @@ class SleuthKafkaAspect {
 	SleuthKafkaAspect(KafkaTracing kafkaTracing, Tracer tracer) {
 		this.kafkaTracing = kafkaTracing;
 		this.tracer = tracer;
-		this.recordMessageConverter = ReflectionUtils.findField(
-				MessagingMessageListenerAdapter.class, "recordMessageConverter");
+		this.recordMessageConverter = ReflectionUtils.findField(MessagingMessageListenerAdapter.class,
+				"recordMessageConverter");
 	}
 
 	@Pointcut("execution(public * org.springframework.kafka.core.ProducerFactory.createProducer(..))")
@@ -378,13 +355,11 @@ class SleuthKafkaAspect {
 	}
 
 	@Around("anyCreateListenerContainer() || anyCreateContainer()")
-	public Object wrapListenerContainerCreation(ProceedingJoinPoint pjp)
-			throws Throwable {
+	public Object wrapListenerContainerCreation(ProceedingJoinPoint pjp) throws Throwable {
 		MessageListenerContainer listener = (MessageListenerContainer) pjp.proceed();
 		if (listener instanceof AbstractMessageListenerContainer) {
 			AbstractMessageListenerContainer container = (AbstractMessageListenerContainer) listener;
-			Object someMessageListener = container.getContainerProperties()
-					.getMessageListener();
+			Object someMessageListener = container.getContainerProperties().getMessageListener();
 			if (someMessageListener == null) {
 				if (log.isDebugEnabled()) {
 					log.debug("No message listener to wrap. Proceeding");
@@ -411,19 +386,16 @@ class SleuthKafkaAspect {
 	Object createProxy(Object bean) {
 		ProxyFactoryBean factory = new ProxyFactoryBean();
 		factory.setProxyTargetClass(true);
-		factory.addAdvice(
-				new MessageListenerMethodInterceptor(this.kafkaTracing, this.tracer));
+		factory.addAdvice(new MessageListenerMethodInterceptor(this.kafkaTracing, this.tracer));
 		factory.setTarget(bean);
 		return factory.getObject();
 	}
 
 }
 
-class MessageListenerMethodInterceptor<T extends MessageListener>
-		implements MethodInterceptor {
+class MessageListenerMethodInterceptor<T extends MessageListener> implements MethodInterceptor {
 
-	private static final Log log = LogFactory
-			.getLog(MessageListenerMethodInterceptor.class);
+	private static final Log log = LogFactory.getLog(MessageListenerMethodInterceptor.class);
 
 	private final KafkaTracing kafkaTracing;
 
@@ -447,8 +419,7 @@ class MessageListenerMethodInterceptor<T extends MessageListener>
 		if (log.isDebugEnabled()) {
 			log.debug("Wrapping onMessage call");
 		}
-		Span span = this.kafkaTracing.nextSpan((ConsumerRecord<?, ?>) record)
-				.name("on-message").start();
+		Span span = this.kafkaTracing.nextSpan((ConsumerRecord<?, ?>) record).name("on-message").start();
 		try (Tracer.SpanInScope ws = this.tracer.withSpanInScope(span)) {
 			return invocation.proceed();
 		}
@@ -485,22 +456,19 @@ class TracingJmsBeanPostProcessor implements BeanPostProcessor {
 	}
 
 	@Override
-	public Object postProcessAfterInitialization(Object bean, String beanName)
-			throws BeansException {
+	public Object postProcessAfterInitialization(Object bean, String beanName) throws BeansException {
 		return wrap(bean);
 	}
 
 	Object wrap(Object bean) {
 		if (typeMatches(bean)) {
-			return new TracingJmsListenerEndpointRegistry(
-					(JmsListenerEndpointRegistry) bean, this.beanFactory);
+			return new TracingJmsListenerEndpointRegistry((JmsListenerEndpointRegistry) bean, this.beanFactory);
 		}
 		return bean;
 	}
 
 	private boolean typeMatches(Object bean) {
-		return bean instanceof JmsListenerEndpointRegistry
-				&& !(bean instanceof TracingJmsListenerEndpointRegistry);
+		return bean instanceof JmsListenerEndpointRegistry && !(bean instanceof TracingJmsListenerEndpointRegistry);
 	}
 
 }

@@ -93,8 +93,7 @@ class SleuthProperties {
 		/**
 		 * List of span names to ignore. They will not be sent to external systems.
 		 */
-		private List<String> spanNamePatternsToSkip = Arrays
-				.asList("^catalogWatchTaskScheduler$");
+		private List<String> spanNamePatternsToSkip = Arrays.asList("^catalogWatchTaskScheduler$");
 
 		/**
 		 * Additional list of span names to ignore. Will be appended to
@@ -122,8 +121,7 @@ class SleuthProperties {
 			return this.additionalSpanNamePatternsToIgnore;
 		}
 
-		public void setAdditionalSpanNamePatternsToIgnore(
-				List<String> additionalSpanNamePatternsToIgnore) {
+		public void setAdditionalSpanNamePatternsToIgnore(List<String> additionalSpanNamePatternsToIgnore) {
 			this.additionalSpanNamePatternsToIgnore = additionalSpanNamePatternsToIgnore;
 		}
 

@@ -44,8 +44,7 @@ import org.springframework.util.StringUtils;
  * @author Marcin Grzejszczak
  * @since 2.1.0
  */
-class ReactorSleuthMethodInvocationProcessor
-		extends AbstractSleuthMethodInvocationProcessor {
+class ReactorSleuthMethodInvocationProcessor extends AbstractSleuthMethodInvocationProcessor {
 
 	Tracing tracing;
 
@@ -59,21 +58,19 @@ class ReactorSleuthMethodInvocationProcessor
 	}
 
 	@Override
-	public Object process(MethodInvocation invocation, NewSpan newSpan,
-			ContinueSpan continueSpan) throws Throwable {
+	public Object process(MethodInvocation invocation, NewSpan newSpan, ContinueSpan continueSpan) throws Throwable {
 		Method method = invocation.getMethod();
 		if (isReactorReturnType(method.getReturnType())) {
 			return proceedUnderReactorSpan(invocation, newSpan, continueSpan);
 		}
 		else {
-			return nonReactorSleuthMethodInvocationProcessor().process(invocation,
-					newSpan, continueSpan);
+			return nonReactorSleuthMethodInvocationProcessor().process(invocation, newSpan, continueSpan);
 		}
 	}
 
 	@SuppressWarnings("unchecked")
-	private Object proceedUnderReactorSpan(MethodInvocation invocation, NewSpan newSpan,
-			ContinueSpan continueSpan) throws Throwable {
+	private Object proceedUnderReactorSpan(MethodInvocation invocation, NewSpan newSpan, ContinueSpan continueSpan)
+			throws Throwable {
 		Span spanPrevious = tracer().currentSpan();
 		// in case of @ContinueSpan and no span in tracer we start new span and should
 		// close it on completion
@@ -89,16 +86,13 @@ class ReactorSleuthMethodInvocationProcessor
 		Publisher<?> publisher = (Publisher) invocation.proceed();
 
 		if (publisher instanceof Mono) {
-			return new MonoSpan((Mono<Object>) publisher, this, newSpan, span, invocation,
-					log);
+			return new MonoSpan((Mono<Object>) publisher, this, newSpan, span, invocation, log);
 		}
 		else if (publisher instanceof Flux) {
-			return new FluxSpan((Flux<Object>) publisher, this, newSpan, span, invocation,
-					log);
+			return new FluxSpan((Flux<Object>) publisher, this, newSpan, span, invocation, log);
 		}
 		else {
-			throw new IllegalArgumentException(
-					"Unexpected type of publisher: " + publisher.getClass());
+			throw new IllegalArgumentException("Unexpected type of publisher: " + publisher.getClass());
 		}
 	}
 
@@ -109,8 +103,7 @@ class ReactorSleuthMethodInvocationProcessor
 	private NonReactorSleuthMethodInvocationProcessor nonReactorSleuthMethodInvocationProcessor() {
 		if (this.nonReactorSleuthMethodInvocationProcessor == null) {
 			this.nonReactorSleuthMethodInvocationProcessor = new NonReactorSleuthMethodInvocationProcessor();
-			this.nonReactorSleuthMethodInvocationProcessor
-					.setBeanFactory(this.beanFactory);
+			this.nonReactorSleuthMethodInvocationProcessor.setBeanFactory(this.beanFactory);
 		}
 		return this.nonReactorSleuthMethodInvocationProcessor;
 	}
@@ -129,9 +122,8 @@ class ReactorSleuthMethodInvocationProcessor
 
 		final NewSpan newSpan;
 
-		FluxSpan(Flux<Object> source, ReactorSleuthMethodInvocationProcessor processor,
-				NewSpan newSpan, @Nullable Span span, MethodInvocation invocation,
-				String log) {
+		FluxSpan(Flux<Object> source, ReactorSleuthMethodInvocationProcessor processor, NewSpan newSpan,
+				@Nullable Span span, MethodInvocation invocation, String log) {
 			super(source);
 			this.span = span;
 			this.newSpan = newSpan;
@@ -155,10 +147,9 @@ class ReactorSleuthMethodInvocationProcessor
 			else {
 				span = this.span;
 			}
-			try (Scope ws = this.processor.currentTraceContext()
-					.maybeScope(span.context())) {
-				this.source.subscribe(new SpanSubscriber(actual, this.processor,
-						this.invocation, this.span == null, span, this.log, this.hasLog));
+			try (Scope ws = this.processor.currentTraceContext().maybeScope(span.context())) {
+				this.source.subscribe(new SpanSubscriber(actual, this.processor, this.invocation, this.span == null,
+						span, this.log, this.hasLog));
 			}
 		}
 
@@ -178,9 +169,8 @@ class ReactorSleuthMethodInvocationProcessor
 
 		final NewSpan newSpan;
 
-		MonoSpan(Mono<Object> source, ReactorSleuthMethodInvocationProcessor processor,
-				NewSpan newSpan, @Nullable Span span, MethodInvocation invocation,
-				String log) {
+		MonoSpan(Mono<Object> source, ReactorSleuthMethodInvocationProcessor processor, NewSpan newSpan,
+				@Nullable Span span, MethodInvocation invocation, String log) {
 			super(source);
 			this.processor = processor;
 			this.newSpan = newSpan;
@@ -202,17 +192,15 @@ class ReactorSleuthMethodInvocationProcessor
 			else {
 				span = this.span;
 			}
-			try (Scope ws = this.processor.currentTraceContext()
-					.maybeScope(span.context())) {
-				this.source.subscribe(new SpanSubscriber(actual, this.processor,
-						this.invocation, this.span == null, span, this.log, this.hasLog));
+			try (Scope ws = this.processor.currentTraceContext().maybeScope(span.context())) {
+				this.source.subscribe(new SpanSubscriber(actual, this.processor, this.invocation, this.span == null,
+						span, this.log, this.hasLog));
 			}
 		}
 
 	}
 
-	private static final class SpanSubscriber
-			implements CoreSubscriber<Object>, Subscription, Scannable {
+	private static final class SpanSubscriber implements CoreSubscriber<Object>, Subscription, Scannable {
 
 		final CoreSubscriber<? super Object> actual;
 
@@ -232,10 +220,8 @@ class ReactorSleuthMethodInvocationProcessor
 
 		Subscription parent;
 
-		SpanSubscriber(CoreSubscriber<? super Object> actual,
-				ReactorSleuthMethodInvocationProcessor processor,
-				MethodInvocation invocation, boolean isNewSpan, Span span, String log,
-				boolean hasLog) {
+		SpanSubscriber(CoreSubscriber<? super Object> actual, ReactorSleuthMethodInvocationProcessor processor,
+				MethodInvocation invocation, boolean isNewSpan, Span span, String log, boolean hasLog) {
 			this.actual = actual;
 			this.isNewSpan = isNewSpan;
 			this.span = span;
@@ -244,8 +230,7 @@ class ReactorSleuthMethodInvocationProcessor
 			this.processor = processor;
 
 			this.currentTraceContext = processor.tracing().currentTraceContext();
-			this.context = actual.currentContext().put(TraceContext.class,
-					span.context());
+			this.context = actual.currentContext().put(TraceContext.class, span.context());
 
 			processor.before(invocation, this.span, this.log, this.hasLog);
 		}

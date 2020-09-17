@@ -60,23 +60,20 @@ public class SamplerAutoConfiguration {
 
 	@Configuration(proxyBeanMethods = false)
 	@Conditional(SamplerCondition.class)
-	@ConditionalOnBean(
-			type = "org.springframework.cloud.context.scope.refresh.RefreshScope")
+	@ConditionalOnBean(type = "org.springframework.cloud.context.scope.refresh.RefreshScope")
 	protected static class RefreshScopedSamplerConfiguration {
 
 		@Bean
 		@RefreshScope
 		@ConditionalOnMissingBean
-		@ConditionalOnProperty(value = "spring.sleuth.sampler.refresh.enabled",
-				matchIfMissing = true)
+		@ConditionalOnProperty(value = "spring.sleuth.sampler.refresh.enabled", matchIfMissing = true)
 		public Sampler defaultTraceSampler(SamplerProperties config) {
 			return sampler(config);
 		}
 
 		@Bean
 		@ConditionalOnMissingBean
-		@ConditionalOnProperty(value = "spring.sleuth.sampler.refresh.enabled",
-				havingValue = "false")
+		@ConditionalOnProperty(value = "spring.sleuth.sampler.refresh.enabled", havingValue = "false")
 		public Sampler defaultNonRefreshScopeTraceSampler(SamplerProperties config) {
 			return sampler(config);
 		}
@@ -95,8 +92,7 @@ public class SamplerAutoConfiguration {
 
 	@Configuration(proxyBeanMethods = false)
 	@Conditional(SamplerCondition.class)
-	@ConditionalOnMissingBean(
-			type = "org.springframework.cloud.context.scope.refresh.RefreshScope")
+	@ConditionalOnMissingBean(type = "org.springframework.cloud.context.scope.refresh.RefreshScope")
 	protected static class NonRefreshScopeSamplerConfiguration {
 
 		@Bean

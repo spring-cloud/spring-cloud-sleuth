@@ -43,8 +43,7 @@ import org.springframework.messaging.support.MessageBuilder;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-@SpringBootTest(classes = StreamMessageOperatorsTests.Config.class,
-		webEnvironment = SpringBootTest.WebEnvironment.NONE)
+@SpringBootTest(classes = StreamMessageOperatorsTests.Config.class, webEnvironment = SpringBootTest.WebEnvironment.NONE)
 public class StreamMessageOperatorsTests {
 
 	@Autowired(required = false)
@@ -61,8 +60,7 @@ public class StreamMessageOperatorsTests {
 
 	@Test
 	void should_instrument_a_simple_message_to_message_function() {
-		assertThat(tracingChannelInterceptor)
-				.as("Ensure that we're doing instrumentation via function wrapper")
+		assertThat(tracingChannelInterceptor).as("Ensure that we're doing instrumentation via function wrapper")
 				.isNull();
 
 		this.inputDestination.send(MessageBuilder.withPayload("hello".getBytes())
@@ -74,8 +72,8 @@ public class StreamMessageOperatorsTests {
 		String b3 = message.getHeaders().get("b3", String.class);
 		assertThat(b3).startsWith("4883117762eb9420");
 
-		assertThat(this.handler.spans()).hasSize(3).extracting("kind")
-				.containsOnly(Span.Kind.CONSUMER, null, Span.Kind.PRODUCER);
+		assertThat(this.handler.spans()).hasSize(3).extracting("kind").containsOnly(Span.Kind.CONSUMER, null,
+				Span.Kind.PRODUCER);
 	}
 
 	@Configuration
@@ -97,11 +95,9 @@ public class StreamMessageOperatorsTests {
 
 }
 
-class SimpleReactiveManualFunction
-		implements Function<Flux<Message<String>>, Flux<Message<String>>> {
+class SimpleReactiveManualFunction implements Function<Flux<Message<String>>, Flux<Message<String>>> {
 
-	private static final Logger log = LoggerFactory
-			.getLogger(SimpleReactiveManualFunction.class);
+	private static final Logger log = LoggerFactory.getLogger(SimpleReactiveManualFunction.class);
 
 	private final Tracing tracing;
 
@@ -111,29 +107,19 @@ class SimpleReactiveManualFunction
 
 	@Override
 	public Flux<Message<String>> apply(Flux<Message<String>> input) {
-		return input.map(
-				message -> (MessagingSleuthOperators.asFunction(this.tracing, message))
-						.andThen(msg -> MessagingSleuthOperators
-								.withSpanInScope(this.tracing, msg, stringMessage -> {
-									log.info("Hello from simple manual [{}]",
-											stringMessage.getPayload());
-									return stringMessage;
-								}))
-						.andThen(msg -> MessagingSleuthOperators
-								.afterMessageHandled(this.tracing, msg, null))
-						.andThen(msg -> {
-							MessagingSleuthOperators.withSpanInScope(this.tracing, msg,
-									stringMessage -> {
-										log.info("Here we may do some processing");
-									});
-							Map<String, Object> headers = new HashMap<>(msg.getHeaders());
-							headers.put("destination", "specialDestination");
-							return MessageBuilder.createMessage(
-									msg.getPayload().toUpperCase(),
-									new MessageHeaders(headers));
-						}).andThen(msg -> MessagingSleuthOperators
-								.handleOutputMessage(this.tracing, msg))
-						.apply(message));
+		return input.map(message -> (MessagingSleuthOperators.asFunction(this.tracing, message))
+				.andThen(msg -> MessagingSleuthOperators.withSpanInScope(this.tracing, msg, stringMessage -> {
+					log.info("Hello from simple manual [{}]", stringMessage.getPayload());
+					return stringMessage;
+				})).andThen(msg -> MessagingSleuthOperators.afterMessageHandled(this.tracing, msg, null))
+				.andThen(msg -> {
+					MessagingSleuthOperators.withSpanInScope(this.tracing, msg, stringMessage -> {
+						log.info("Here we may do some processing");
+					});
+					Map<String, Object> headers = new HashMap<>(msg.getHeaders());
+					headers.put("destination", "specialDestination");
+					return MessageBuilder.createMessage(msg.getPayload().toUpperCase(), new MessageHeaders(headers));
+				}).andThen(msg -> MessagingSleuthOperators.handleOutputMessage(this.tracing, msg)).apply(message));
 	}
 
 }

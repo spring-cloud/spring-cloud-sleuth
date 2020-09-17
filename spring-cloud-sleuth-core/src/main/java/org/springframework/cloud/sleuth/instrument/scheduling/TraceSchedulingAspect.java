@@ -61,8 +61,7 @@ class TraceSchedulingAspect {
 
 	@Around("execution (@org.springframework.scheduling.annotation.Scheduled  * *.*(..))")
 	public Object traceBackgroundThread(final ProceedingJoinPoint pjp) throws Throwable {
-		if (this.skipPattern != null && this.skipPattern
-				.matcher(pjp.getTarget().getClass().getName()).matches()) {
+		if (this.skipPattern != null && this.skipPattern.matcher(pjp.getTarget().getClass().getName()).matches()) {
 			// we might have a span in context due to wrapping of runnables
 			// we want to clear that context
 			this.tracer.withSpanInScope(null);
@@ -76,8 +75,7 @@ class TraceSchedulingAspect {
 			return pjp.proceed();
 		}
 		catch (Throwable ex) {
-			String message = ex.getMessage() == null ? ex.getClass().getSimpleName()
-					: ex.getMessage();
+			String message = ex.getMessage() == null ? ex.getClass().getSimpleName() : ex.getMessage();
 			span.tag("error", message);
 			throw ex;
 		}

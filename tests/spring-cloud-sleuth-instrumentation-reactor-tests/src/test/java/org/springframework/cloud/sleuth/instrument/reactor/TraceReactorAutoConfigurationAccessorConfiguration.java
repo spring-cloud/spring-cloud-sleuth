@@ -35,8 +35,7 @@ public final class TraceReactorAutoConfigurationAccessorConfiguration {
 		throw new IllegalStateException("Can't instantiate a utility class");
 	}
 
-	private static final Log log = LogFactory
-			.getLog(TraceReactorAutoConfigurationAccessorConfiguration.class);
+	private static final Log log = LogFactory.getLog(TraceReactorAutoConfigurationAccessorConfiguration.class);
 
 	public static void close() {
 		if (log.isTraceEnabled()) {

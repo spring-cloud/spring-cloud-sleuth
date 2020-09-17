@@ -136,8 +136,7 @@ public class SleuthSpanCreatorAspectTests {
 
 		then(this.spans).hasSize(1);
 		then(this.spans.get(0).name()).isEqualTo("custom-name-on-test-method9");
-		then(this.spans.get(0).tags()).containsEntry("class", "TestBean")
-				.containsEntry("method", "testMethod9");
+		then(this.spans.get(0).tags()).containsEntry("class", "TestBean").containsEntry("method", "testMethod9");
 		then(this.spans.get(0).finishTimestamp()).isNotZero();
 		then(this.tracer.currentSpan()).isNull();
 	}
@@ -156,9 +155,8 @@ public class SleuthSpanCreatorAspectTests {
 		then(this.spans).hasSize(1);
 		then(this.spans.get(0).name()).isEqualTo("foo");
 		then(this.spans.get(0).tags()).containsEntry("customTestTag10", "test");
-		then(this.spans.get(0).annotations().stream().map(Map.Entry::getValue)
-				.collect(Collectors.toList())).contains("customTest.before",
-						"customTest.after");
+		then(this.spans.get(0).annotations().stream().map(Map.Entry::getValue).collect(Collectors.toList()))
+				.contains("customTest.before", "customTest.after");
 		then(this.spans.get(0).finishTimestamp()).isNotZero();
 		then(this.tracer.currentSpan()).isNull();
 	}
@@ -170,9 +168,8 @@ public class SleuthSpanCreatorAspectTests {
 		then(this.spans).hasSize(1);
 		then(this.spans.get(0).name()).isEqualTo("test-method10");
 		then(this.spans.get(0).tags()).containsEntry("customTestTag10", "test");
-		then(this.spans.get(0).annotations().stream().map(Map.Entry::getValue)
-				.collect(Collectors.toList())).contains("customTest.before",
-						"customTest.after");
+		then(this.spans.get(0).annotations().stream().map(Map.Entry::getValue).collect(Collectors.toList()))
+				.contains("customTest.before", "customTest.after");
 		then(this.spans.get(0).finishTimestamp()).isNotZero();
 		then(this.tracer.currentSpan()).isNull();
 	}
@@ -191,9 +188,8 @@ public class SleuthSpanCreatorAspectTests {
 		then(this.spans).hasSize(1);
 		then(this.spans.get(0).name()).isEqualTo("foo");
 		then(this.spans.get(0).tags()).containsEntry("customTestTag10", "test");
-		then(this.spans.get(0).annotations().stream().map(Map.Entry::getValue)
-				.collect(Collectors.toList())).contains("customTest.before",
-						"customTest.after");
+		then(this.spans.get(0).annotations().stream().map(Map.Entry::getValue).collect(Collectors.toList()))
+				.contains("customTest.before", "customTest.after");
 		then(this.spans.get(0).finishTimestamp()).isNotZero();
 		then(this.tracer.currentSpan()).isNull();
 	}
@@ -213,12 +209,10 @@ public class SleuthSpanCreatorAspectTests {
 
 		then(this.spans).hasSize(1);
 		then(this.spans.get(0).name()).isEqualTo("foo");
-		then(this.spans.get(0).tags()).containsEntry("class", "TestBean")
-				.containsEntry("method", "testMethod11")
+		then(this.spans.get(0).tags()).containsEntry("class", "TestBean").containsEntry("method", "testMethod11")
 				.containsEntry("customTestTag11", "test");
-		then(this.spans.get(0).annotations().stream().map(Map.Entry::getValue)
-				.collect(Collectors.toList())).contains("customTest.before",
-						"customTest.after");
+		then(this.spans.get(0).annotations().stream().map(Map.Entry::getValue).collect(Collectors.toList()))
+				.contains("customTest.before", "customTest.after");
 		then(this.spans.get(0).finishTimestamp()).isNotZero();
 		then(this.tracer.currentSpan()).isNull();
 	}
@@ -257,9 +251,8 @@ public class SleuthSpanCreatorAspectTests {
 		then(this.spans).hasSize(1);
 		then(this.spans.get(0).name()).isEqualTo("foo");
 		then(this.spans.get(0).error()).hasMessageContaining("test exception 13");
-		then(this.spans.get(0).annotations().stream().map(Map.Entry::getValue)
-				.collect(Collectors.toList())).contains("testMethod13.before",
-						"testMethod13.afterFailure", "testMethod13.after");
+		then(this.spans.get(0).annotations().stream().map(Map.Entry::getValue).collect(Collectors.toList()))
+				.contains("testMethod13.before", "testMethod13.afterFailure", "testMethod13.after");
 		then(this.spans.get(0).finishTimestamp()).isNotZero();
 		then(this.tracer.currentSpan()).isNull();
 	}

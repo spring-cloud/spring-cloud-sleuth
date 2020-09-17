@@ -83,8 +83,7 @@ class TestConsumerFactory implements ConsumerFactory {
 	List<ConsumerPostProcessor> postProcessors = new ArrayList<>();
 
 	@Override
-	public Consumer createConsumer(String groupId, String clientIdPrefix,
-			String clientIdSuffix) {
+	public Consumer createConsumer(String groupId, String clientIdPrefix, String clientIdSuffix) {
 		return null;
 	}
 

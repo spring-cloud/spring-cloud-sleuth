@@ -56,13 +56,11 @@ class SpanTagAnnotationHandler {
 	void addAnnotatedParameters(MethodInvocation pjp) {
 		try {
 			Method method = pjp.getMethod();
-			Method mostSpecificMethod = AopUtils.getMostSpecificMethod(method,
-					pjp.getThis().getClass());
+			Method mostSpecificMethod = AopUtils.getMostSpecificMethod(method, pjp.getThis().getClass());
 			List<SleuthAnnotatedParameter> annotatedParameters = SleuthAnnotationUtils
 					.findAnnotatedParameters(mostSpecificMethod, pjp.getArguments());
 			getAnnotationsFromInterfaces(pjp, mostSpecificMethod, annotatedParameters);
-			mergeAnnotatedMethodsIfNecessary(pjp, method, mostSpecificMethod,
-					annotatedParameters);
+			mergeAnnotatedMethodsIfNecessary(pjp, method, mostSpecificMethod, annotatedParameters);
 			addAnnotatedArguments(annotatedParameters);
 		}
 		catch (SecurityException ex) {
@@ -70,8 +68,7 @@ class SpanTagAnnotationHandler {
 		}
 	}
 
-	private void getAnnotationsFromInterfaces(MethodInvocation pjp,
-			Method mostSpecificMethod,
+	private void getAnnotationsFromInterfaces(MethodInvocation pjp, Method mostSpecificMethod,
 			List<SleuthAnnotatedParameter> annotatedParameters) {
 		Class<?>[] implementedInterfaces = pjp.getThis().getClass().getInterfaces();
 		if (implementedInterfaces.length > 0) {
@@ -79,10 +76,8 @@ class SpanTagAnnotationHandler {
 				for (Method methodFromInterface : implementedInterface.getMethods()) {
 					if (methodsAreTheSame(mostSpecificMethod, methodFromInterface)) {
 						List<SleuthAnnotatedParameter> annotatedParametersForActualMethod = SleuthAnnotationUtils
-								.findAnnotatedParameters(methodFromInterface,
-										pjp.getArguments());
-						mergeAnnotatedParameters(annotatedParameters,
-								annotatedParametersForActualMethod);
+								.findAnnotatedParameters(methodFromInterface, pjp.getArguments());
+						mergeAnnotatedParameters(annotatedParameters, annotatedParametersForActualMethod);
 					}
 				}
 			}
@@ -90,25 +85,22 @@ class SpanTagAnnotationHandler {
 	}
 
 	private boolean methodsAreTheSame(Method mostSpecificMethod, Method method1) {
-		return method1.getName().equals(mostSpecificMethod.getName()) && Arrays.equals(
-				method1.getParameterTypes(), mostSpecificMethod.getParameterTypes());
+		return method1.getName().equals(mostSpecificMethod.getName())
+				&& Arrays.equals(method1.getParameterTypes(), mostSpecificMethod.getParameterTypes());
 	}
 
-	private void mergeAnnotatedMethodsIfNecessary(MethodInvocation pjp, Method method,
-			Method mostSpecificMethod,
+	private void mergeAnnotatedMethodsIfNecessary(MethodInvocation pjp, Method method, Method mostSpecificMethod,
 			List<SleuthAnnotatedParameter> annotatedParameters) {
 		// that can happen if we have an abstraction and a concrete class that is
 		// annotated with @NewSpan annotation
 		if (!method.equals(mostSpecificMethod)) {
 			List<SleuthAnnotatedParameter> annotatedParametersForActualMethod = SleuthAnnotationUtils
 					.findAnnotatedParameters(method, pjp.getArguments());
-			mergeAnnotatedParameters(annotatedParameters,
-					annotatedParametersForActualMethod);
+			mergeAnnotatedParameters(annotatedParameters, annotatedParametersForActualMethod);
 		}
 	}
 
-	private void mergeAnnotatedParameters(
-			List<SleuthAnnotatedParameter> annotatedParametersIndices,
+	private void mergeAnnotatedParameters(List<SleuthAnnotatedParameter> annotatedParametersIndices,
 			List<SleuthAnnotatedParameter> annotatedParametersIndicesForActualMethod) {
 		for (SleuthAnnotatedParameter container : annotatedParametersIndicesForActualMethod) {
 			final int index = container.parameterIndex;
@@ -141,20 +133,19 @@ class SpanTagAnnotationHandler {
 	}
 
 	private String resolveTagKey(SleuthAnnotatedParameter container) {
-		return StringUtils.hasText(container.annotation.value())
-				? container.annotation.value() : container.annotation.key();
+		return StringUtils.hasText(container.annotation.value()) ? container.annotation.value()
+				: container.annotation.key();
 	}
 
 	String resolveTagValue(SpanTag annotation, Object argument) {
 		String value = null;
 		if (annotation.resolver() != NoOpTagValueResolver.class) {
-			TagValueResolver tagValueResolver = this.beanFactory
-					.getBean(annotation.resolver());
+			TagValueResolver tagValueResolver = this.beanFactory.getBean(annotation.resolver());
 			value = tagValueResolver.resolve(argument);
 		}
 		else if (StringUtils.hasText(annotation.expression())) {
-			value = this.beanFactory.getBean(TagValueExpressionResolver.class)
-					.resolve(annotation.expression(), argument);
+			value = this.beanFactory.getBean(TagValueExpressionResolver.class).resolve(annotation.expression(),
+					argument);
 		}
 		else if (argument != null) {
 			value = argument.toString();

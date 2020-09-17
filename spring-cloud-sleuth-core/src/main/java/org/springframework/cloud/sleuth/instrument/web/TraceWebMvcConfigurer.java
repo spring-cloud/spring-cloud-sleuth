@@ -40,8 +40,7 @@ class TraceWebMvcConfigurer implements WebMvcConfigurer {
 
 	@Override
 	public void addInterceptors(InterceptorRegistry registry) {
-		registry.addInterceptor(this.applicationContext
-				.getBean(SpanCustomizingAsyncHandlerInterceptor.class));
+		registry.addInterceptor(this.applicationContext.getBean(SpanCustomizingAsyncHandlerInterceptor.class));
 	}
 
 }

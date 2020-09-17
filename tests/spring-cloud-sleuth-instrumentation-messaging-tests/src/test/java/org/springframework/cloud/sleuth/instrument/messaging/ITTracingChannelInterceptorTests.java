@@ -56,8 +56,7 @@ import static org.springframework.boot.test.context.SpringBootTest.WebEnvironmen
  *
  * @author Marcin Grzejszczak
  */
-@SpringBootTest(classes = ITTracingChannelInterceptorTests.App.class,
-		webEnvironment = WebEnvironment.NONE,
+@SpringBootTest(classes = ITTracingChannelInterceptorTests.App.class, webEnvironment = WebEnvironment.NONE,
 		properties = "spring.sleuth.integration.enabled=true")
 @DirtiesContext
 public class ITTracingChannelInterceptorTests implements MessageHandler {
@@ -104,8 +103,7 @@ public class ITTracingChannelInterceptorTests implements MessageHandler {
 	// formerly known as TraceChannelInterceptorTest.executableSpanCreation
 	@Test
 	public void propagatesNoopSpan() {
-		this.directChannel
-				.send(MessageBuilder.withPayload("hi").setHeader("b3", "0").build());
+		this.directChannel.send(MessageBuilder.withPayload("hi").setHeader("b3", "0").build());
 
 		assertThat(this.message.getHeaders()).containsEntry("b3", "0");
 
@@ -114,27 +112,21 @@ public class ITTracingChannelInterceptorTests implements MessageHandler {
 
 	@Test
 	public void messageHeadersStillMutableForStomp() {
-		this.directChannel.send(MessageBuilder.withPayload("hi")
-				.setHeader("stompCommand", "DISCONNECT").build());
+		this.directChannel.send(MessageBuilder.withPayload("hi").setHeader("stompCommand", "DISCONNECT").build());
 
-		assertThat(MessageHeaderAccessor.getAccessor(this.message,
-				MessageHeaderAccessor.class)).isNotNull();
+		assertThat(MessageHeaderAccessor.getAccessor(this.message, MessageHeaderAccessor.class)).isNotNull();
 
 		this.message = null;
-		this.directChannel.send(MessageBuilder.withPayload("hi")
-				.setHeader("simpMessageType", "sth").build());
+		this.directChannel.send(MessageBuilder.withPayload("hi").setHeader("simpMessageType", "sth").build());
 
-		assertThat(MessageHeaderAccessor.getAccessor(this.message,
-				MessageHeaderAccessor.class)).isNotNull();
+		assertThat(MessageHeaderAccessor.getAccessor(this.message, MessageHeaderAccessor.class)).isNotNull();
 	}
 
 	@Test
 	public void messageHeadersImmutableForNonStomp() {
-		this.directChannel
-				.send(MessageBuilder.withPayload("hi").setHeader("foo", "bar").build());
+		this.directChannel.send(MessageBuilder.withPayload("hi").setHeader("foo", "bar").build());
 
-		assertThat(MessageHeaderAccessor.getAccessor(this.message,
-				MessageHeaderAccessor.class)).isNull();
+		assertThat(MessageHeaderAccessor.getAccessor(this.message, MessageHeaderAccessor.class)).isNull();
 	}
 
 	@Configuration
@@ -155,8 +147,8 @@ public class ITTracingChannelInterceptorTests implements MessageHandler {
 
 		@Bean
 		Tracing tracing() {
-			return Tracing.newBuilder().currentTraceContext(currentTraceContext())
-					.addSpanHandler(testSpanHandler()).build();
+			return Tracing.newBuilder().currentTraceContext(currentTraceContext()).addSpanHandler(testSpanHandler())
+					.build();
 		}
 
 		@Bean

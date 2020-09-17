@@ -30,8 +30,7 @@ import org.springframework.integration.config.EnableIntegration;
 import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.web.client.RestTemplate;
 
-@SpringBootApplication(exclude = { DataSourceAutoConfiguration.class,
-		HibernateJpaAutoConfiguration.class })
+@SpringBootApplication(exclude = { DataSourceAutoConfiguration.class, HibernateJpaAutoConfiguration.class })
 @ImportResource("classpath:beans/applicationContext.xml")
 @EnableIntegration
 @EnableAsync

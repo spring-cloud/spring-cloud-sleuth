@@ -46,8 +46,8 @@ public class AssertingRestTemplate extends RestTemplate {
 			@Override
 			public void handleError(ClientHttpResponse response) throws IOException {
 				if (hasError(response)) {
-					log.error("Response has status code [" + response.getStatusCode()
-							+ "] and text [" + response.getStatusText() + "])");
+					log.error("Response has status code [" + response.getStatusCode() + "] and text ["
+							+ response.getStatusText() + "])");
 				}
 			}
 		});
@@ -60,8 +60,8 @@ public class AssertingRestTemplate extends RestTemplate {
 			return super.doExecute(url, method, requestCallback, responseExtractor);
 		}
 		catch (Exception e) {
-			log.error("Exception occurred while sending the message to uri [" + url
-					+ "]. Exception [" + e.getCause() + "]");
+			log.error("Exception occurred while sending the message to uri [" + url + "]. Exception [" + e.getCause()
+					+ "]");
 			throw new AssertionError(e);
 		}
 	}

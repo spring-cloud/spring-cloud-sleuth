@@ -67,8 +67,7 @@ class SleuthContextListener implements SmartApplicationListener {
 
 	@Override
 	public void onApplicationEvent(ApplicationEvent event) {
-		if (event instanceof ContextRefreshedEvent
-				|| event instanceof ContextClosedEvent) {
+		if (event instanceof ContextRefreshedEvent || event instanceof ContextClosedEvent) {
 			if (log.isDebugEnabled()) {
 				log.debug("Context refreshed or closed [" + event + "]");
 			}
@@ -79,8 +78,7 @@ class SleuthContextListener implements SmartApplicationListener {
 				beanFactory = ((ConfigurableApplicationContext) context).getBeanFactory();
 			}
 			SleuthContextListener listener = CACHE.getOrDefault(beanFactory, this);
-			listener.refreshed.compareAndSet(false,
-					event instanceof ContextRefreshedEvent);
+			listener.refreshed.compareAndSet(false, event instanceof ContextRefreshedEvent);
 			listener.closed.compareAndSet(false, event instanceof ContextClosedEvent);
 			CACHE.put(beanFactory, listener);
 		}

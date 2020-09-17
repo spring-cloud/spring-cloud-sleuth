@@ -26,12 +26,11 @@ public final class HelloServiceOuterClass {
 	private static com.google.protobuf.Descriptors.FileDescriptor descriptor;
 
 	static {
-		java.lang.String[] descriptorData = {
-				"\n\022HelloService.proto\022\013sample.grpc\"\034\n\014Hel"
-						+ "loRequest\022\014\n\004name\030\001 \001(\t\"\035\n\nHelloReply\022\017\n"
-						+ "\007message\030\001 \001(\t2P\n\014HelloService\022@\n\010SayHel"
-						+ "lo\022\031.sample.grpc.HelloRequest\032\027.sample.g"
-						+ "rpc.HelloReply\"\000B\002P\001b\006proto3" };
+		java.lang.String[] descriptorData = { "\n\022HelloService.proto\022\013sample.grpc\"\034\n\014Hel"
+				+ "loRequest\022\014\n\004name\030\001 \001(\t\"\035\n\nHelloReply\022\017\n"
+				+ "\007message\030\001 \001(\t2P\n\014HelloService\022@\n\010SayHel"
+				+ "lo\022\031.sample.grpc.HelloRequest\032\027.sample.g"
+				+ "rpc.HelloReply\"\000B\002P\001b\006proto3" };
 		com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner = new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {
 			@Override
 			public com.google.protobuf.ExtensionRegistry assignDescriptors(
@@ -40,30 +39,23 @@ public final class HelloServiceOuterClass {
 				return null;
 			}
 		};
-		com.google.protobuf.Descriptors.FileDescriptor.internalBuildGeneratedFileFrom(
-				descriptorData, new com.google.protobuf.Descriptors.FileDescriptor[] {},
-				assigner);
-		internal_static_sample_grpc_HelloRequest_descriptor = getDescriptor()
-				.getMessageTypes().get(0);
+		com.google.protobuf.Descriptors.FileDescriptor.internalBuildGeneratedFileFrom(descriptorData,
+				new com.google.protobuf.Descriptors.FileDescriptor[] {}, assigner);
+		internal_static_sample_grpc_HelloRequest_descriptor = getDescriptor().getMessageTypes().get(0);
 		internal_static_sample_grpc_HelloRequest_fieldAccessorTable = new com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
-				internal_static_sample_grpc_HelloRequest_descriptor,
-				new java.lang.String[] { "Name", });
-		internal_static_sample_grpc_HelloReply_descriptor = getDescriptor()
-				.getMessageTypes().get(1);
+				internal_static_sample_grpc_HelloRequest_descriptor, new java.lang.String[] { "Name", });
+		internal_static_sample_grpc_HelloReply_descriptor = getDescriptor().getMessageTypes().get(1);
 		internal_static_sample_grpc_HelloReply_fieldAccessorTable = new com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
-				internal_static_sample_grpc_HelloReply_descriptor,
-				new java.lang.String[] { "Message", });
+				internal_static_sample_grpc_HelloReply_descriptor, new java.lang.String[] { "Message", });
 	}
 
 	private HelloServiceOuterClass() {
 	}
 
-	public static void registerAllExtensions(
-			com.google.protobuf.ExtensionRegistryLite registry) {
+	public static void registerAllExtensions(com.google.protobuf.ExtensionRegistryLite registry) {
 	}
 
-	public static void registerAllExtensions(
-			com.google.protobuf.ExtensionRegistry registry) {
+	public static void registerAllExtensions(com.google.protobuf.ExtensionRegistry registry) {
 		registerAllExtensions((com.google.protobuf.ExtensionRegistryLite) registry);
 	}
 

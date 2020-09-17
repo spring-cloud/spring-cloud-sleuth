@@ -33,8 +33,7 @@ import static org.assertj.core.api.BDDAssertions.then;
 /**
  * @author Tim te Beek
  */
-@SpringBootTest(classes = SleuthKafkaStreamsConfigurationTest.Config.class,
-		webEnvironment = WebEnvironment.NONE)
+@SpringBootTest(classes = SleuthKafkaStreamsConfigurationTest.Config.class, webEnvironment = WebEnvironment.NONE)
 public class SleuthKafkaStreamsConfigurationTest {
 
 	@Autowired

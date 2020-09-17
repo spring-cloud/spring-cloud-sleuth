@@ -54,8 +54,8 @@ public class SleuthRxJavaSchedulersHookTests {
 
 	TestSpanHandler spans = new TestSpanHandler();
 
-	Tracing tracing = Tracing.newBuilder().currentTraceContext(this.currentTraceContext)
-			.addSpanHandler(this.spans).build();
+	Tracing tracing = Tracing.newBuilder().currentTraceContext(this.currentTraceContext).addSpanHandler(this.spans)
+			.build();
 
 	Tracer tracer = this.tracing.tracer();
 
@@ -76,13 +76,11 @@ public class SleuthRxJavaSchedulersHookTests {
 	@Test
 	public void should_not_override_existing_custom_hooks() {
 		RxJavaPlugins.getInstance().registerErrorHandler(new MyRxJavaErrorHandler());
-		RxJavaPlugins.getInstance()
-				.registerObservableExecutionHook(new MyRxJavaObservableExecutionHook());
+		RxJavaPlugins.getInstance().registerObservableExecutionHook(new MyRxJavaObservableExecutionHook());
 
 		new SleuthRxJavaSchedulersHook(this.tracer, this.threadsToIgnore);
 
-		then(RxJavaPlugins.getInstance().getErrorHandler())
-				.isExactlyInstanceOf(MyRxJavaErrorHandler.class);
+		then(RxJavaPlugins.getInstance().getErrorHandler()).isExactlyInstanceOf(MyRxJavaErrorHandler.class);
 		then(RxJavaPlugins.getInstance().getObservableExecutionHook())
 				.isExactlyInstanceOf(MyRxJavaObservableExecutionHook.class);
 	}
@@ -90,8 +88,7 @@ public class SleuthRxJavaSchedulersHookTests {
 	@Test
 	public void should_wrap_delegates_action_in_wrapped_action_when_delegate_is_present_on_schedule() {
 		RxJavaPlugins.getInstance().registerSchedulersHook(new MyRxJavaSchedulersHook());
-		SleuthRxJavaSchedulersHook schedulersHook = new SleuthRxJavaSchedulersHook(
-				this.tracer, this.threadsToIgnore);
+		SleuthRxJavaSchedulersHook schedulersHook = new SleuthRxJavaSchedulersHook(this.tracer, this.threadsToIgnore);
 		Action0 action = schedulersHook.onSchedule(() -> {
 			caller = new StringBuilder("hello");
 		});
@@ -109,8 +106,8 @@ public class SleuthRxJavaSchedulersHookTests {
 			throws ExecutionException, InterruptedException {
 		String threadNameToIgnore = "^MyCustomThread.*$";
 		RxJavaPlugins.getInstance().registerSchedulersHook(new MyRxJavaSchedulersHook());
-		SleuthRxJavaSchedulersHook schedulersHook = new SleuthRxJavaSchedulersHook(
-				this.tracer, Collections.singletonList(threadNameToIgnore));
+		SleuthRxJavaSchedulersHook schedulersHook = new SleuthRxJavaSchedulersHook(this.tracer,
+				Collections.singletonList(threadNameToIgnore));
 		Future<Void> hello = executorService().submit((Callable<Void>) () -> {
 			Action0 action = schedulersHook.onSchedule(() -> {
 				caller = new StringBuilder("hello");

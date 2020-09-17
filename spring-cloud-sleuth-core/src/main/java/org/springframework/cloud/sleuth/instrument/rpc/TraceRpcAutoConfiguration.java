@@ -41,8 +41,7 @@ import org.springframework.lang.Nullable;
  * @since 2.2.0
  */
 @Configuration(proxyBeanMethods = false)
-@ConditionalOnProperty(name = "spring.sleuth.rpc.enabled", havingValue = "true",
-		matchIfMissing = true)
+@ConditionalOnProperty(name = "spring.sleuth.rpc.enabled", havingValue = "true", matchIfMissing = true)
 @ConditionalOnBean(Tracing.class)
 @ConditionalOnClass(RpcTracing.class)
 @AutoConfigureAfter(TraceAutoConfiguration.class)
@@ -53,8 +52,7 @@ public class TraceRpcAutoConfiguration {
 	@Bean
 	@ConditionalOnMissingBean
 	// NOTE: stable bean name as might be used outside sleuth
-	RpcTracing rpcTracing(Tracing tracing,
-			@Nullable @RpcClientSampler SamplerFunction<RpcRequest> clientSampler,
+	RpcTracing rpcTracing(Tracing tracing, @Nullable @RpcClientSampler SamplerFunction<RpcRequest> clientSampler,
 			@Nullable @RpcServerSampler SamplerFunction<RpcRequest> serverSampler,
 			@Nullable List<RpcTracingCustomizer> rpcTracingCustomizers) {
 

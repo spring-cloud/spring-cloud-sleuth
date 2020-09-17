@@ -77,8 +77,7 @@ class TracingMethodMessageHandlerAdapter {
 			}
 
 			// incur timestamp overhead only once
-			long timestamp = tracing.clock(consumerSpan.context())
-					.currentTimeMicroseconds();
+			long timestamp = tracing.clock(consumerSpan.context()).currentTimeMicroseconds();
 			consumerSpan.start(timestamp);
 			long consumerFinish = timestamp + 1L; // save a clock reading
 			consumerSpan.finish(consumerFinish);
@@ -99,8 +98,7 @@ class TracingMethodMessageHandlerAdapter {
 		}
 	}
 
-	private TraceContextOrSamplingFlags extractAndClearHeaders(
-			MessageConsumerRequest request) {
+	private TraceContextOrSamplingFlags extractAndClearHeaders(MessageConsumerRequest request) {
 		TraceContextOrSamplingFlags extracted = extractor.extract(request);
 
 		for (String propagationKey : tracing.propagation().keys()) {
@@ -134,8 +132,7 @@ final class MessageConsumerRequest extends ConsumerRequest {
 
 	final Getter<MessageHeaderAccessor, String> getter;
 
-	MessageConsumerRequest(Message delegate,
-			Getter<MessageHeaderAccessor, String> getter) {
+	MessageConsumerRequest(Message delegate, Getter<MessageHeaderAccessor, String> getter) {
 		this.delegate = delegate;
 		this.mutableHeaders = MessageHeaderAccessor.getMutableAccessor(delegate);
 		this.getter = getter;

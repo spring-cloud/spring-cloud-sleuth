@@ -58,18 +58,16 @@ public class TraceRestTemplateInterceptorTests {
 
 	TestSpanHandler spans = new TestSpanHandler();
 
-	Tracing tracing = Tracing.newBuilder().currentTraceContext(this.currentTraceContext)
-			.addSpanHandler(this.spans).build();
+	Tracing tracing = Tracing.newBuilder().currentTraceContext(this.currentTraceContext).addSpanHandler(this.spans)
+			.build();
 
 	Tracer tracer = this.tracing.tracer();
 
 	private TestController testController = new TestController();
 
-	private MockMvc mockMvc = MockMvcBuilders.standaloneSetup(this.testController)
-			.build();
+	private MockMvc mockMvc = MockMvcBuilders.standaloneSetup(this.testController).build();
 
-	private RestTemplate template = new RestTemplate(
-			new MockMvcClientHttpRequestFactory(this.mockMvc));
+	private RestTemplate template = new RestTemplate(new MockMvcClientHttpRequestFactory(this.mockMvc));
 
 	@BeforeEach
 	public void setup() {
@@ -77,8 +75,8 @@ public class TraceRestTemplateInterceptorTests {
 	}
 
 	private void setInterceptors(HttpTracing httpTracing) {
-		this.template.setInterceptors(Arrays.<ClientHttpRequestInterceptor>asList(
-				TracingClientHttpRequestInterceptor.create(httpTracing)));
+		this.template.setInterceptors(
+				Arrays.<ClientHttpRequestInterceptor>asList(TracingClientHttpRequestInterceptor.create(httpTracing)));
 	}
 
 	@AfterEach
@@ -90,8 +88,7 @@ public class TraceRestTemplateInterceptorTests {
 	@Test
 	public void headersAddedWhenNoTracingWasPresent() {
 		@SuppressWarnings("unchecked")
-		Map<String, String> headers = this.template.getForEntity("/", Map.class)
-				.getBody();
+		Map<String, String> headers = this.template.getForEntity("/", Map.class).getBody();
 
 		// Default inject format for client spans is B3 multi
 		then(headers.get("X-B3-TraceId")).isNotNull();
@@ -119,11 +116,10 @@ public class TraceRestTemplateInterceptorTests {
 	// Issue #290
 	@Test
 	public void requestHeadersAddedWhenTracing() {
-		setInterceptors(HttpTracing.newBuilder(this.tracing)
-				.clientRequestParser((request, context, span) -> {
-					HttpTags.URL.tag(request, context, span);
-					HttpRequestParser.DEFAULT.parse(request, context, span);
-				}).build());
+		setInterceptors(HttpTracing.newBuilder(this.tracing).clientRequestParser((request, context, span) -> {
+			HttpTags.URL.tag(request, context, span);
+			HttpRequestParser.DEFAULT.parse(request, context, span);
+		}).build());
 		Span span = this.tracer.nextSpan().name("new trace");
 
 		try (Tracer.SpanInScope ws = this.tracer.withSpanInScope(span.start())) {
@@ -134,15 +130,15 @@ public class TraceRestTemplateInterceptorTests {
 		}
 
 		then(this.spans).isNotEmpty();
-		then(this.spans.get(0).tags()).containsEntry("http.url", "/foo?a=b")
-				.containsEntry("http.path", "/foo").containsEntry("http.method", "GET");
+		then(this.spans.get(0).tags()).containsEntry("http.url", "/foo?a=b").containsEntry("http.path", "/foo")
+				.containsEntry("http.method", "GET");
 	}
 
 	@Test
 	public void notSampledHeaderAddedWhenNotSampled() {
 		this.tracing.close();
-		this.tracing = Tracing.newBuilder().currentTraceContext(this.currentTraceContext)
-				.addSpanHandler(this.spans).sampler(Sampler.NEVER_SAMPLE).build();
+		this.tracing = Tracing.newBuilder().currentTraceContext(this.currentTraceContext).addSpanHandler(this.spans)
+				.sampler(Sampler.NEVER_SAMPLE).build();
 		this.template.setInterceptors(Arrays.<ClientHttpRequestInterceptor>asList(
 				TracingClientHttpRequestInterceptor.create(HttpTracing.create(tracing))));
 
@@ -180,8 +176,7 @@ public class TraceRestTemplateInterceptorTests {
 
 	@Test
 	public void createdSpanNameHasOnlyPrintableAsciiCharactersForNonEncodedURIWithNonAsciiChars() {
-		setInterceptors(HttpTracing.newBuilder(this.tracing)
-				.clientParser(new HttpClientParser()).build());
+		setInterceptors(HttpTracing.newBuilder(this.tracing).clientParser(new HttpClientParser()).build());
 		Span span = this.tracer.nextSpan().name("new trace");
 
 		try (Tracer.SpanInScope ws = this.tracer.withSpanInScope(span.start())) {
@@ -220,8 +215,7 @@ public class TraceRestTemplateInterceptorTests {
 			throw new RuntimeException("foo");
 		}
 
-		private void addHeaders(Map<String, String> map, HttpHeaders headers,
-				String... names) {
+		private void addHeaders(Map<String, String> map, HttpHeaders headers, String... names) {
 			if (headers != null) {
 				for (String name : names) {
 					String value = headers.getFirst(name);

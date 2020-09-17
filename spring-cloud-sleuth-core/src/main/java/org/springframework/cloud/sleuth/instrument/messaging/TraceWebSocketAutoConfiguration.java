@@ -40,8 +40,7 @@ import org.springframework.web.socket.config.annotation.StompEndpointRegistry;
 @Configuration(proxyBeanMethods = false)
 @ConditionalOnClass(DelegatingWebSocketMessageBrokerConfiguration.class)
 @ConditionalOnBean(Tracing.class)
-@ConditionalOnProperty(value = "spring.sleuth.integration.websockets.enabled",
-		matchIfMissing = true)
+@ConditionalOnProperty(value = "spring.sleuth.integration.websockets.enabled", matchIfMissing = true)
 class TraceWebSocketAutoConfiguration extends AbstractWebSocketMessageBrokerConfigurer {
 
 	@Autowired
@@ -57,20 +56,18 @@ class TraceWebSocketAutoConfiguration extends AbstractWebSocketMessageBrokerConf
 
 	@Override
 	public void configureMessageBroker(MessageBrokerRegistry registry) {
-		registry.configureBrokerChannel().setInterceptors(
-				TracingChannelInterceptor.create(this.tracing, this.properties));
+		registry.configureBrokerChannel()
+				.setInterceptors(TracingChannelInterceptor.create(this.tracing, this.properties));
 	}
 
 	@Override
 	public void configureClientOutboundChannel(ChannelRegistration registration) {
-		registration.setInterceptors(
-				TracingChannelInterceptor.create(this.tracing, this.properties));
+		registration.setInterceptors(TracingChannelInterceptor.create(this.tracing, this.properties));
 	}
 
 	@Override
 	public void configureClientInboundChannel(ChannelRegistration registration) {
-		registration.setInterceptors(
-				TracingChannelInterceptor.create(this.tracing, this.properties));
+		registration.setInterceptors(TracingChannelInterceptor.create(this.tracing, this.properties));
 	}
 
 }

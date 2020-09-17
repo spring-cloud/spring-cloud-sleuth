@@ -52,8 +52,7 @@ class ProbabilityBasedSampler extends Sampler {
 	private final SamplerProperties configuration;
 
 	ProbabilityBasedSampler(SamplerProperties configuration) {
-		Assert.notNull(configuration.getProbability(),
-				"probability property is required for ProbabilityBasedSampler");
+		Assert.notNull(configuration.getProbability(), "probability property is required for ProbabilityBasedSampler");
 		int outOf100 = (int) (configuration.getProbability() * 100.0f);
 		this.sampleDecisions = randomBitSet(100, outOf100, new Random());
 		this.configuration = configuration;

@@ -123,13 +123,11 @@ public class ZipkinAutoConfigurationTests {
 
 	@Test
 	void should_apply_micrometer_reporter_metrics_when_meter_registry_bean_present() {
-		this.contextRunner.withUserConfiguration(WithMeterRegistry.class)
-				.run((context) -> {
-					ReporterMetrics bean = context.getBean(ReporterMetrics.class);
+		this.contextRunner.withUserConfiguration(WithMeterRegistry.class).run((context) -> {
+			ReporterMetrics bean = context.getBean(ReporterMetrics.class);
 
-					BDDAssertions.then(bean)
-							.isInstanceOf(MicrometerReporterMetrics.class);
-				});
+			BDDAssertions.then(bean).isInstanceOf(MicrometerReporterMetrics.class);
+		});
 	}
 
 	@Test
@@ -143,30 +141,25 @@ public class ZipkinAutoConfigurationTests {
 
 	@Test
 	void should_apply_in_memory_metrics_when_meter_registry_class_missing() {
-		this.contextRunner.withClassLoader(new FilteredClassLoader(MeterRegistry.class))
-				.run((context) -> {
-					ReporterMetrics bean = context.getBean(ReporterMetrics.class);
+		this.contextRunner.withClassLoader(new FilteredClassLoader(MeterRegistry.class)).run((context) -> {
+			ReporterMetrics bean = context.getBean(ReporterMetrics.class);
 
-					BDDAssertions.then(bean).isInstanceOf(InMemoryReporterMetrics.class);
-				});
+			BDDAssertions.then(bean).isInstanceOf(InMemoryReporterMetrics.class);
+		});
 	}
 
 	@Test
 	void defaultsToV2Endpoint() throws Exception {
 		this.context = new AnnotationConfigApplicationContext();
-		environment().setProperty("spring.zipkin.base-url",
-				this.server.url("/").toString());
-		this.context.register(ZipkinAutoConfiguration.class,
-				PropertyPlaceholderAutoConfiguration.class, TraceAutoConfiguration.class,
-				Config.class);
+		environment().setProperty("spring.zipkin.base-url", this.server.url("/").toString());
+		this.context.register(ZipkinAutoConfiguration.class, PropertyPlaceholderAutoConfiguration.class,
+				TraceAutoConfiguration.class, Config.class);
 		this.context.refresh();
-		Span span = this.context.getBean(Tracing.class).tracer().nextSpan().name("foo")
-				.tag("foo", "bar").start();
+		Span span = this.context.getBean(Tracing.class).tracer().nextSpan().name("foo").tag("foo", "bar").start();
 
 		span.finish();
 
-		Awaitility.await().untilAsserted(
-				() -> then(this.server.getRequestCount()).isGreaterThan(1));
+		Awaitility.await().untilAsserted(() -> then(this.server.getRequestCount()).isGreaterThan(1));
 		// first request is for health check
 		this.server.takeRequest();
 		// second request is the span one
@@ -183,20 +176,16 @@ public class ZipkinAutoConfigurationTests {
 	@Test
 	public void encoderDirectsEndpoint() throws Exception {
 		this.context = new AnnotationConfigApplicationContext();
-		environment().setProperty("spring.zipkin.base-url",
-				this.server.url("/").toString());
+		environment().setProperty("spring.zipkin.base-url", this.server.url("/").toString());
 		environment().setProperty("spring.zipkin.encoder", "JSON_V1");
-		this.context.register(ZipkinAutoConfiguration.class,
-				PropertyPlaceholderAutoConfiguration.class, TraceAutoConfiguration.class,
-				Config.class);
+		this.context.register(ZipkinAutoConfiguration.class, PropertyPlaceholderAutoConfiguration.class,
+				TraceAutoConfiguration.class, Config.class);
 		this.context.refresh();
-		Span span = this.context.getBean(Tracing.class).tracer().nextSpan().name("foo")
-				.tag("foo", "bar").start();
+		Span span = this.context.getBean(Tracing.class).tracer().nextSpan().name("foo").tag("foo", "bar").start();
 
 		span.finish();
 
-		Awaitility.await().untilAsserted(
-				() -> then(this.server.getRequestCount()).isGreaterThan(0));
+		Awaitility.await().untilAsserted(() -> then(this.server.getRequestCount()).isGreaterThan(0));
 		// first request is for health check
 		this.server.takeRequest();
 		// second request is the span one
@@ -210,9 +199,8 @@ public class ZipkinAutoConfigurationTests {
 		this.context = new AnnotationConfigApplicationContext();
 		environment().setProperty("spring.zipkin.rabbitmq.queue", "zipkin2");
 		environment().setProperty("spring.zipkin.sender.type", "rabbit");
-		this.context.register(PropertyPlaceholderAutoConfiguration.class,
-				RabbitAutoConfiguration.class, ZipkinAutoConfiguration.class,
-				TraceAutoConfiguration.class);
+		this.context.register(PropertyPlaceholderAutoConfiguration.class, RabbitAutoConfiguration.class,
+				ZipkinAutoConfiguration.class, TraceAutoConfiguration.class);
 		this.context.refresh();
 
 		then(this.context.getBean(Sender.class)).isInstanceOf(RabbitMQSender.class);
@@ -225,9 +213,8 @@ public class ZipkinAutoConfigurationTests {
 		this.context = new AnnotationConfigApplicationContext();
 		environment().setProperty("spring.zipkin.kafka.topic", "zipkin2");
 		environment().setProperty("spring.zipkin.sender.type", "kafka");
-		this.context.register(PropertyPlaceholderAutoConfiguration.class,
-				KafkaAutoConfiguration.class, ZipkinAutoConfiguration.class,
-				TraceAutoConfiguration.class);
+		this.context.register(PropertyPlaceholderAutoConfiguration.class, KafkaAutoConfiguration.class,
+				ZipkinAutoConfiguration.class, TraceAutoConfiguration.class);
 		this.context.refresh();
 
 		then(this.context.getBean(Sender.class)).isInstanceOf(KafkaSender.class);
@@ -242,9 +229,8 @@ public class ZipkinAutoConfigurationTests {
 		environment().setProperty("spring.zipkin.activemq.queue", "zipkin2");
 		environment().setProperty("spring.zipkin.activemq.message-max-bytes", "50");
 		environment().setProperty("spring.zipkin.sender.type", "activemq");
-		this.context.register(PropertyPlaceholderAutoConfiguration.class,
-				ActiveMQAutoConfiguration.class, ZipkinAutoConfiguration.class,
-				TraceAutoConfiguration.class);
+		this.context.register(PropertyPlaceholderAutoConfiguration.class, ActiveMQAutoConfiguration.class,
+				ZipkinAutoConfiguration.class, TraceAutoConfiguration.class);
 		this.context.refresh();
 
 		then(this.context.getBean(Sender.class)).isInstanceOf(ActiveMQSender.class);
@@ -256,13 +242,11 @@ public class ZipkinAutoConfigurationTests {
 	public void canOverrideBySender() throws Exception {
 		this.context = new AnnotationConfigApplicationContext();
 		environment().setProperty("spring.zipkin.sender.type", "web");
-		this.context.register(PropertyPlaceholderAutoConfiguration.class,
-				RabbitAutoConfiguration.class, KafkaAutoConfiguration.class,
-				ZipkinAutoConfiguration.class, TraceAutoConfiguration.class);
+		this.context.register(PropertyPlaceholderAutoConfiguration.class, RabbitAutoConfiguration.class,
+				KafkaAutoConfiguration.class, ZipkinAutoConfiguration.class, TraceAutoConfiguration.class);
 		this.context.refresh();
 
-		then(this.context.getBean(Sender.class).getClass().getName())
-				.contains("RestTemplateSender");
+		then(this.context.getBean(Sender.class).getClass().getName()).contains("RestTemplateSender");
 
 		this.context.close();
 	}
@@ -271,13 +255,11 @@ public class ZipkinAutoConfigurationTests {
 	public void canOverrideBySenderAndIsCaseInsensitive() throws Exception {
 		this.context = new AnnotationConfigApplicationContext();
 		environment().setProperty("spring.zipkin.sender.type", "WEB");
-		this.context.register(PropertyPlaceholderAutoConfiguration.class,
-				RabbitAutoConfiguration.class, KafkaAutoConfiguration.class,
-				ZipkinAutoConfiguration.class, TraceAutoConfiguration.class);
+		this.context.register(PropertyPlaceholderAutoConfiguration.class, RabbitAutoConfiguration.class,
+				KafkaAutoConfiguration.class, ZipkinAutoConfiguration.class, TraceAutoConfiguration.class);
 		this.context.refresh();
 
-		then(this.context.getBean(Sender.class).getClass().getName())
-				.contains("RestTemplateSender");
+		then(this.context.getBean(Sender.class).getClass().getName()).contains("RestTemplateSender");
 
 		this.context.close();
 	}
@@ -286,9 +268,8 @@ public class ZipkinAutoConfigurationTests {
 	public void rabbitWinsWhenKafkaPresent() throws Exception {
 		this.context = new AnnotationConfigApplicationContext();
 		environment().setProperty("spring.zipkin.sender.type", "rabbit");
-		this.context.register(PropertyPlaceholderAutoConfiguration.class,
-				RabbitAutoConfiguration.class, KafkaAutoConfiguration.class,
-				ZipkinAutoConfiguration.class, TraceAutoConfiguration.class);
+		this.context.register(PropertyPlaceholderAutoConfiguration.class, RabbitAutoConfiguration.class,
+				KafkaAutoConfiguration.class, ZipkinAutoConfiguration.class, TraceAutoConfiguration.class);
 		this.context.refresh();
 
 		then(this.context.getBean(Sender.class)).isInstanceOf(RabbitMQSender.class);
@@ -299,28 +280,24 @@ public class ZipkinAutoConfigurationTests {
 	@Test
 	public void supportsMultipleReporters() throws Exception {
 		this.context = new AnnotationConfigApplicationContext();
-		environment().setProperty("spring.zipkin.base-url",
-				this.server.url("/").toString());
-		this.context.register(ZipkinAutoConfiguration.class,
-				PropertyPlaceholderAutoConfiguration.class, TraceAutoConfiguration.class,
-				Config.class, MultipleReportersConfig.class);
+		environment().setProperty("spring.zipkin.base-url", this.server.url("/").toString());
+		this.context.register(ZipkinAutoConfiguration.class, PropertyPlaceholderAutoConfiguration.class,
+				TraceAutoConfiguration.class, Config.class, MultipleReportersConfig.class);
 		this.context.refresh();
 
 		then(this.context.getBeansOfType(Sender.class)).hasSize(2);
-		then(this.context.getBeansOfType(Sender.class))
-				.containsKeys(ZipkinAutoConfiguration.SENDER_BEAN_NAME, "otherSender");
+		then(this.context.getBeansOfType(Sender.class)).containsKeys(ZipkinAutoConfiguration.SENDER_BEAN_NAME,
+				"otherSender");
 
 		then(this.context.getBeansOfType(Reporter.class)).hasSize(2);
-		then(this.context.getBeansOfType(Reporter.class)).containsKeys(
-				ZipkinAutoConfiguration.REPORTER_BEAN_NAME, "otherReporter");
+		then(this.context.getBeansOfType(Reporter.class)).containsKeys(ZipkinAutoConfiguration.REPORTER_BEAN_NAME,
+				"otherReporter");
 
-		Span span = this.context.getBean(Tracing.class).tracer().nextSpan().name("foo")
-				.tag("foo", "bar").start();
+		Span span = this.context.getBean(Tracing.class).tracer().nextSpan().name("foo").tag("foo", "bar").start();
 
 		span.finish();
 
-		Awaitility.await().untilAsserted(
-				() -> then(this.server.getRequestCount()).isGreaterThan(1));
+		Awaitility.await().untilAsserted(() -> then(this.server.getRequestCount()).isGreaterThan(1));
 		// first request is for health check
 		this.server.takeRequest();
 		// second request is the span one
@@ -328,34 +305,28 @@ public class ZipkinAutoConfigurationTests {
 		then(request.getPath()).isEqualTo("/api/v2/spans");
 		then(request.getBody().readUtf8()).contains("localEndpoint");
 
-		MultipleReportersConfig.OtherSender sender = this.context
-				.getBean(MultipleReportersConfig.OtherSender.class);
+		MultipleReportersConfig.OtherSender sender = this.context.getBean(MultipleReportersConfig.OtherSender.class);
 		Awaitility.await().untilAsserted(() -> then(sender.isSpanSent()).isTrue());
 	}
 
 	@Test
 	public void shouldOverrideDefaultBeans() {
 		this.context = new AnnotationConfigApplicationContext();
-		this.context.register(ZipkinAutoConfiguration.class,
-				PropertyPlaceholderAutoConfiguration.class, TraceAutoConfiguration.class,
-				Config.class, MyConfig.class);
+		this.context.register(ZipkinAutoConfiguration.class, PropertyPlaceholderAutoConfiguration.class,
+				TraceAutoConfiguration.class, Config.class, MyConfig.class);
 		this.context.refresh();
 
 		then(this.context.getBeansOfType(Sender.class)).hasSize(1);
-		then(this.context.getBeansOfType(Sender.class))
-				.containsKeys(ZipkinAutoConfiguration.SENDER_BEAN_NAME);
+		then(this.context.getBeansOfType(Sender.class)).containsKeys(ZipkinAutoConfiguration.SENDER_BEAN_NAME);
 
 		then(this.context.getBeansOfType(Reporter.class)).hasSize(1);
-		then(this.context.getBeansOfType(Reporter.class))
-				.containsKeys(ZipkinAutoConfiguration.REPORTER_BEAN_NAME);
+		then(this.context.getBeansOfType(Reporter.class)).containsKeys(ZipkinAutoConfiguration.REPORTER_BEAN_NAME);
 
-		Span span = this.context.getBean(Tracing.class).tracer().nextSpan().name("foo")
-				.tag("foo", "bar").start();
+		Span span = this.context.getBean(Tracing.class).tracer().nextSpan().name("foo").tag("foo", "bar").start();
 
 		span.finish();
 
-		Awaitility.await()
-				.untilAsserted(() -> then(this.server.getRequestCount()).isEqualTo(0));
+		Awaitility.await().untilAsserted(() -> then(this.server.getRequestCount()).isEqualTo(0));
 
 		MyConfig.MySender sender = this.context.getBean(MyConfig.MySender.class);
 		Awaitility.await().untilAsserted(() -> then(sender.isSpanSent()).isTrue());
@@ -375,8 +346,7 @@ public class ZipkinAutoConfigurationTests {
 		RuntimeException exception = new RuntimeException("dead");
 		when(sender.check()).thenReturn(CheckResult.failed(exception));
 
-		assertThat(ZipkinAutoConfiguration.checkResult(sender, 200).error())
-				.isSameAs(exception);
+		assertThat(ZipkinAutoConfiguration.checkResult(sender, 200).error()).isSameAs(exception);
 	}
 
 	/** Bug in {@link Sender} as it shouldn't throw */
@@ -386,8 +356,7 @@ public class ZipkinAutoConfigurationTests {
 		RuntimeException exception = new RuntimeException("dead");
 		when(sender.check()).thenThrow(exception);
 
-		assertThat(ZipkinAutoConfiguration.checkResult(sender, 200).error())
-				.isSameAs(exception);
+		assertThat(ZipkinAutoConfiguration.checkResult(sender, 200).error()).isSameAs(exception);
 	}
 
 	@Test
@@ -428,8 +397,7 @@ public class ZipkinAutoConfigurationTests {
 			public String toString() {
 				return "FakeSender{}";
 			}
-		}, 200).error()).isInstanceOf(TimeoutException.class)
-				.hasMessage("FakeSender{} check() timed out after 200ms");
+		}, 200).error()).isInstanceOf(TimeoutException.class).hasMessage("FakeSender{} check() timed out after 200ms");
 	}
 
 	@Configuration
@@ -449,8 +417,7 @@ public class ZipkinAutoConfigurationTests {
 		SpanHandler handlerOne() {
 			return new SpanHandler() {
 				@Override
-				public boolean end(TraceContext traceContext, MutableSpan span,
-						Cause cause) {
+				public boolean end(TraceContext traceContext, MutableSpan span, Cause cause) {
 					span.name("foo");
 					return true; // keep this span
 				}
@@ -461,8 +428,7 @@ public class ZipkinAutoConfigurationTests {
 		SpanHandler handlerTwo() {
 			return new SpanHandler() {
 				@Override
-				public boolean end(TraceContext traceContext, MutableSpan span,
-						Cause cause) {
+				public boolean end(TraceContext traceContext, MutableSpan span, Cause cause) {
 					span.name(span.name() + " bar");
 					return true; // keep this span
 				}

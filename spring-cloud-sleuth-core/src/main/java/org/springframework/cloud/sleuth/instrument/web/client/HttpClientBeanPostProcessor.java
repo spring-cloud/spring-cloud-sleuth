@@ -50,10 +50,8 @@ class HttpClientBeanPostProcessor implements BeanPostProcessor {
 	}
 
 	@Override
-	public Object postProcessAfterInitialization(Object bean, String beanName)
-			throws BeansException {
-		LazyBean<HttpTracing> httpTracing = LazyBean.create(this.springContext,
-				HttpTracing.class);
+	public Object postProcessAfterInitialization(Object bean, String beanName) throws BeansException {
+		LazyBean<HttpTracing> httpTracing = LazyBean.create(this.springContext, HttpTracing.class);
 		if (bean instanceof HttpClient) {
 			// This adds handlers to manage the span lifecycle. All require explicit
 			// propagation of the current span as a reactor context property.
@@ -63,15 +61,12 @@ class HttpClientBeanPostProcessor implements BeanPostProcessor {
 			// In our case, we treat a normal response no differently than one in
 			// preparation of a redirect follow-up.
 			TracingDoOnResponse doOnResponse = new TracingDoOnResponse(httpTracing);
-			return ((HttpClient) bean)
-					.doOnResponseError(new TracingDoOnErrorResponse(httpTracing))
+			return ((HttpClient) bean).doOnResponseError(new TracingDoOnErrorResponse(httpTracing))
 					.doOnRedirect(doOnResponse).doOnResponse(doOnResponse)
 					.doOnRequestError(new TracingDoOnErrorRequest(httpTracing))
-					.doOnRequest(new TracingDoOnRequest(httpTracing))
-					.mapConnect(new TracingMapConnect(() -> {
+					.doOnRequest(new TracingDoOnRequest(httpTracing)).mapConnect(new TracingMapConnect(() -> {
 						HttpTracing ref = httpTracing.get();
-						return ref != null ? ref.tracing().currentTraceContext().get()
-								: null;
+						return ref != null ? ref.tracing().currentTraceContext().get() : null;
 					}));
 		}
 		return bean;
@@ -82,8 +77,7 @@ class HttpClientBeanPostProcessor implements BeanPostProcessor {
 
 	}
 
-	static class TracingMapConnect
-			implements Function<Mono<? extends Connection>, Mono<? extends Connection>> {
+	static class TracingMapConnect implements Function<Mono<? extends Connection>, Mono<? extends Connection>> {
 
 		static final Exception CANCELLED_ERROR = new CancellationException("CANCELLED") {
 			@Override
@@ -123,8 +117,7 @@ class HttpClientBeanPostProcessor implements BeanPostProcessor {
 
 	}
 
-	private static class TracingDoOnRequest
-			implements BiConsumer<HttpClientRequest, Connection> {
+	private static class TracingDoOnRequest implements BiConsumer<HttpClientRequest, Connection> {
 
 		final LazyBean<HttpTracing> httpTracing;
 
@@ -143,8 +136,7 @@ class HttpClientBeanPostProcessor implements BeanPostProcessor {
 
 		@Override
 		public void accept(HttpClientRequest req, Connection connection) {
-			PendingSpan pendingSpan = req.currentContext().getOrDefault(PendingSpan.class,
-					null);
+			PendingSpan pendingSpan = req.currentContext().getOrDefault(PendingSpan.class, null);
 			if (pendingSpan == null) {
 				return; // Somehow TracingMapConnect was not invoked.. skip out
 			}
@@ -159,8 +151,7 @@ class HttpClientBeanPostProcessor implements BeanPostProcessor {
 			}
 
 			// Start a new client span with the appropriate parent
-			TraceContext parent = req.currentContext().getOrDefault(TraceContext.class,
-					null);
+			TraceContext parent = req.currentContext().getOrDefault(TraceContext.class, null);
 			HttpClientRequestWrapper request = new HttpClientRequestWrapper(req);
 
 			span = handler().handleSendWithParent(request, parent);
@@ -175,8 +166,7 @@ class HttpClientBeanPostProcessor implements BeanPostProcessor {
 			SocketAddress socketAddress = connection.address();
 			if (socketAddress instanceof InetSocketAddress) {
 				InetSocketAddress inetSocketAddress = (InetSocketAddress) socketAddress;
-				span.remoteIpAndPort(inetSocketAddress.getHostString(),
-						inetSocketAddress.getPort());
+				span.remoteIpAndPort(inetSocketAddress.getHostString(), inetSocketAddress.getPort());
 			}
 		}
 
@@ -241,8 +231,7 @@ class HttpClientBeanPostProcessor implements BeanPostProcessor {
 			return this.handler;
 		}
 
-		void handle(Context context, @Nullable HttpClientResponse resp,
-				@Nullable Throwable error) {
+		void handle(Context context, @Nullable HttpClientResponse resp, @Nullable Throwable error) {
 			PendingSpan pendingSpan = context.getOrDefault(PendingSpan.class, null);
 			if (pendingSpan == null) {
 				return; // Somehow TracingMapConnect was not invoked.. skip out
@@ -252,8 +241,7 @@ class HttpClientBeanPostProcessor implements BeanPostProcessor {
 			if (span == null) {
 				return; // Unexpected. In the handle method, without a span to finish!
 			}
-			HttpClientResponseWrapper response = resp != null
-					? new HttpClientResponseWrapper(resp) : null;
+			HttpClientResponseWrapper response = resp != null ? new HttpClientResponseWrapper(resp) : null;
 			handler().handleReceive(response, error, span);
 		}
 

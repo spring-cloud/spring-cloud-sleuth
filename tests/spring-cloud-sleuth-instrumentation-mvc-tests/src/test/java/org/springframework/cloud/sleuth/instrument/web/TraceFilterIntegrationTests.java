@@ -103,8 +103,7 @@ public class TraceFilterIntegrationTests extends AbstractMvcIntegrationTest {
 	}
 
 	@Test
-	public void should_ignore_sampling_the_span_if_uri_matches_management_properties_context_path()
-			throws Exception {
+	public void should_ignore_sampling_the_span_if_uri_matches_management_properties_context_path() throws Exception {
 		MvcResult mvcResult = whenSentInfoWithTraceId(new Random().nextLong());
 
 		// https://github.com/spring-cloud/spring-cloud-sleuth/issues/327
@@ -142,23 +141,20 @@ public class TraceFilterIntegrationTests extends AbstractMvcIntegrationTest {
 		Long expectedTraceId = new Random().nextLong();
 
 		MvcResult mvcResult = whenSentFutureWithTraceId(expectedTraceId);
-		this.mockMvc.perform(asyncDispatch(mvcResult)).andExpect(status().isOk())
-				.andReturn();
+		this.mockMvc.perform(asyncDispatch(mvcResult)).andExpect(status().isOk()).andReturn();
 
 		then(this.tracer.currentSpan()).isNull();
 	}
 
 	@Test
-	public void should_add_a_custom_tag_to_the_span_created_in_controller()
-			throws Exception {
+	public void should_add_a_custom_tag_to_the_span_created_in_controller() throws Exception {
 		Long expectedTraceId = new Random().nextLong();
 
 		MvcResult mvcResult = whenSentDeferredWithTraceId(expectedTraceId);
-		this.mockMvc.perform(asyncDispatch(mvcResult)).andExpect(status().isOk())
-				.andReturn();
+		this.mockMvc.perform(asyncDispatch(mvcResult)).andExpect(status().isOk()).andReturn();
 
-		Optional<MutableSpan> taggedSpan = this.spans.spans().stream()
-				.filter(span -> span.tags().containsKey("tag")).findFirst();
+		Optional<MutableSpan> taggedSpan = this.spans.spans().stream().filter(span -> span.tags().containsKey("tag"))
+				.findFirst();
 		then(taggedSpan.isPresent()).isTrue();
 		then(taggedSpan.get().tags()).containsEntry("tag", "value")
 				.containsEntry("mvc.controller.method", "deferredMethod")
@@ -167,8 +163,7 @@ public class TraceFilterIntegrationTests extends AbstractMvcIntegrationTest {
 	}
 
 	@Test
-	public void should_log_tracing_information_when_404_exception_was_thrown()
-			throws Exception {
+	public void should_log_tracing_information_when_404_exception_was_thrown() throws Exception {
 		Long expectedTraceId = new Random().nextLong();
 
 		whenSentToNonExistentEndpointWithTraceId(expectedTraceId);
@@ -176,14 +171,12 @@ public class TraceFilterIntegrationTests extends AbstractMvcIntegrationTest {
 		// it's a span with the same ids
 		then(this.spans).hasSize(1);
 		MutableSpan serverSpan = this.spans.get(0);
-		then(serverSpan.tags()).containsEntry("custom", "tag")
-				.containsEntry("http.status_code", "404");
+		then(serverSpan.tags()).containsEntry("custom", "tag").containsEntry("http.status_code", "404");
 		then(this.tracer.currentSpan()).isNull();
 	}
 
 	@Test
-	public void should_log_tracing_information_when_500_exception_was_thrown()
-			throws Exception {
+	public void should_log_tracing_information_when_500_exception_was_thrown() throws Exception {
 		Long expectedTraceId = new Random().nextLong();
 
 		try {
@@ -197,32 +190,29 @@ public class TraceFilterIntegrationTests extends AbstractMvcIntegrationTest {
 		// we need to dump the span cause it's not in TracingFilter since TF
 		// has also error dispatch and the ErrorController would report the span
 		then(this.spans).hasSize(1);
-		then(this.spans.get(0).error()).hasMessageContaining(
-				"Request processing failed; nested exception is java.lang.RuntimeException");
+		then(this.spans.get(0).error())
+				.hasMessageContaining("Request processing failed; nested exception is java.lang.RuntimeException");
 	}
 
 	@Test
-	public void should_assume_that_a_request_without_span_and_with_trace_is_a_root_span()
-			throws Exception {
+	public void should_assume_that_a_request_without_span_and_with_trace_is_a_root_span() throws Exception {
 		Long expectedTraceId = new Random().nextLong();
 
 		whenSentRequestWithTraceIdAndNoSpanId(expectedTraceId);
 		whenSentRequestWithTraceIdAndNoSpanId(expectedTraceId);
 
-		then(this.spans.spans().stream().filter(span -> span.id().equals(span.traceId()))
-				.findAny().isPresent()).as("a root span exists").isTrue();
+		then(this.spans.spans().stream().filter(span -> span.id().equals(span.traceId())).findAny().isPresent())
+				.as("a root span exists").isTrue();
 		then(this.tracer.currentSpan()).isNull();
 	}
 
 	@Test
-	public void should_return_custom_response_headers_when_custom_trace_filter_gets_registered()
-			throws Exception {
+	public void should_return_custom_response_headers_when_custom_trace_filter_gets_registered() throws Exception {
 		Long expectedTraceId = new Random().nextLong();
 
 		MvcResult mvcResult = whenSentPingWithTraceId(expectedTraceId);
 
-		then(mvcResult.getResponse().getHeader("ZIPKIN-TRACE-ID"))
-				.isEqualTo(SpanUtil.idToHex(expectedTraceId));
+		then(mvcResult.getResponse().getHeader("ZIPKIN-TRACE-ID")).isEqualTo(SpanUtil.idToHex(expectedTraceId));
 		then(this.spans).hasSize(1);
 		then(this.spans.get(0).tags()).containsEntry("custom", "tag");
 	}
@@ -233,9 +223,7 @@ public class TraceFilterIntegrationTests extends AbstractMvcIntegrationTest {
 	}
 
 	private MvcResult whenSentPingWithoutTracingData() throws Exception {
-		return this.mockMvc
-				.perform(MockMvcRequestBuilders.get("/ping").accept(MediaType.TEXT_PLAIN))
-				.andReturn();
+		return this.mockMvc.perform(MockMvcRequestBuilders.get("/ping").accept(MediaType.TEXT_PLAIN)).andReturn();
 	}
 
 	private MvcResult whenSentPingWithTraceId(Long passedTraceId) throws Exception {
@@ -254,16 +242,12 @@ public class TraceFilterIntegrationTests extends AbstractMvcIntegrationTest {
 		return sendDeferredWithTraceId(passedTraceId);
 	}
 
-	private MvcResult whenSentToNonExistentEndpointWithTraceId(Long passedTraceId)
-			throws Exception {
-		return sendRequestWithTraceId("/exception/nonExistent", passedTraceId,
-				HttpStatus.NOT_FOUND);
+	private MvcResult whenSentToNonExistentEndpointWithTraceId(Long passedTraceId) throws Exception {
+		return sendRequestWithTraceId("/exception/nonExistent", passedTraceId, HttpStatus.NOT_FOUND);
 	}
 
-	private MvcResult whenSentToExceptionThrowingEndpoint(Long passedTraceId)
-			throws Exception {
-		return sendRequestWithTraceId("/throwsException", passedTraceId,
-				HttpStatus.INTERNAL_SERVER_ERROR);
+	private MvcResult whenSentToExceptionThrowingEndpoint(Long passedTraceId) throws Exception {
+		return sendRequestWithTraceId("/throwsException", passedTraceId, HttpStatus.INTERNAL_SERVER_ERROR);
 	}
 
 	private MvcResult sendPingWithTraceId(Long traceId) throws Exception {
@@ -275,28 +259,19 @@ public class TraceFilterIntegrationTests extends AbstractMvcIntegrationTest {
 	}
 
 	private MvcResult sendRequestWithTraceId(String path, Long traceId) throws Exception {
-		return this.mockMvc
-				.perform(MockMvcRequestBuilders.get(path).accept(MediaType.TEXT_PLAIN)
-						.header("b3",
-								SpanUtil.idToHex(traceId) + "-"
-										+ SpanUtil.idToHex(new Random().nextLong())))
-				.andReturn();
+		return this.mockMvc.perform(MockMvcRequestBuilders.get(path).accept(MediaType.TEXT_PLAIN).header("b3",
+				SpanUtil.idToHex(traceId) + "-" + SpanUtil.idToHex(new Random().nextLong()))).andReturn();
 	}
 
-	private MvcResult whenSentRequestWithTraceIdAndNoSpanId(Long traceId)
-			throws Exception {
-		return this.mockMvc.perform(MockMvcRequestBuilders.get("/ping")
-				.accept(MediaType.TEXT_PLAIN).header("b3", SpanUtil.idToHex(traceId)))
-				.andReturn();
+	private MvcResult whenSentRequestWithTraceIdAndNoSpanId(Long traceId) throws Exception {
+		return this.mockMvc.perform(MockMvcRequestBuilders.get("/ping").accept(MediaType.TEXT_PLAIN).header("b3",
+				SpanUtil.idToHex(traceId))).andReturn();
 	}
 
-	private MvcResult sendRequestWithTraceId(String path, Long traceId, HttpStatus status)
-			throws Exception {
+	private MvcResult sendRequestWithTraceId(String path, Long traceId, HttpStatus status) throws Exception {
 		return this.mockMvc
-				.perform(MockMvcRequestBuilders.get(path).accept(MediaType.TEXT_PLAIN)
-						.header("b3",
-								SpanUtil.idToHex(traceId) + "-"
-										+ SpanUtil.idToHex(new Random().nextLong())))
+				.perform(MockMvcRequestBuilders.get(path).accept(MediaType.TEXT_PLAIN).header("b3",
+						SpanUtil.idToHex(traceId) + "-" + SpanUtil.idToHex(new Random().nextLong())))
 				.andExpect(status().is(status.value())).andReturn();
 	}
 
@@ -369,8 +344,7 @@ public class TraceFilterIntegrationTests extends AbstractMvcIntegrationTest {
 			@Primary
 			ManagementServerProperties managementServerProperties() {
 				ManagementServerProperties managementServerProperties = new ManagementServerProperties();
-				managementServerProperties.getServlet()
-						.setContextPath("/additionalContextPath");
+				managementServerProperties.getServlet().setContextPath("/additionalContextPath");
 				return managementServerProperties;
 			}
 
@@ -392,16 +366,15 @@ class MyFilter extends GenericFilterBean {
 	}
 
 	@Override
-	public void doFilter(ServletRequest request, ServletResponse response,
-			FilterChain chain) throws IOException, ServletException {
+	public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain)
+			throws IOException, ServletException {
 		Span currentSpan = this.tracer.currentSpan();
 		if (currentSpan == null) {
 			chain.doFilter(request, response);
 			return;
 		}
 		// for readability we're returning trace id in a hex form
-		((HttpServletResponse) response).addHeader("ZIPKIN-TRACE-ID",
-				currentSpan.context().traceIdString());
+		((HttpServletResponse) response).addHeader("ZIPKIN-TRACE-ID", currentSpan.context().traceIdString());
 		// we can also add some custom tags
 		currentSpan.tag("custom", "tag");
 		chain.doFilter(request, response);

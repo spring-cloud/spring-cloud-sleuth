@@ -40,10 +40,8 @@ import static org.assertj.core.api.Assertions.assertThat;
  * @author Marcin Grzejszczak
  */
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.NONE,
-		properties = {
-				"spring.sleuth.baggage.remote-fields=x-vcap-request-id,country-code",
-				"spring.sleuth.baggage.local-fields=bp",
-				"spring.sleuth.baggage.correlation-fields=country-code,bp" })
+		properties = { "spring.sleuth.baggage.remote-fields=x-vcap-request-id,country-code",
+				"spring.sleuth.baggage.local-fields=bp", "spring.sleuth.baggage.correlation-fields=country-code,bp" })
 @SpringBootConfiguration
 @EnableAutoConfiguration
 public class CorrelationScopeDecoratorTest {
@@ -95,8 +93,7 @@ public class CorrelationScopeDecoratorTest {
 	public void should_remove_entries_from_mdc_for_null_span() {
 		COUNTRY_CODE.updateValue(this.span.context(), "FO");
 
-		try (Scope scope1 = this.scopeDecorator.decorateScope(this.span.context(),
-				NOOP)) {
+		try (Scope scope1 = this.scopeDecorator.decorateScope(this.span.context(), NOOP)) {
 			assertThat(MDC.get(COUNTRY_CODE.name())).isEqualTo("FO");
 
 			try (Scope scope2 = this.scopeDecorator.decorateScope(null, NOOP)) {
@@ -139,13 +136,13 @@ public class CorrelationScopeDecoratorTest {
 	@Test
 	public void should_only_include_whitelist() {
 		assertThat(this.scopeDecorator).extracting("fields")
-				.asInstanceOf(
-						InstanceOfAssertFactories.array(SingleCorrelationField[].class))
-				.extracting(SingleCorrelationField::name)
-				.containsOnly("traceId", "spanId", "bp", COUNTRY_CODE.name()); // x-vcap-request-id
-																				// is not
-																				// in the
-																				// whitelist
+				.asInstanceOf(InstanceOfAssertFactories.array(SingleCorrelationField[].class))
+				.extracting(SingleCorrelationField::name).containsOnly("traceId", "spanId", "bp", COUNTRY_CODE.name()); // x-vcap-request-id
+																														// is
+																														// not
+																														// in
+																														// the
+																														// whitelist
 	}
 
 	@Test

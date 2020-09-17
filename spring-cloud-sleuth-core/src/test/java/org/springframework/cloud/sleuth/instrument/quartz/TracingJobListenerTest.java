@@ -74,11 +74,10 @@ public class TracingJobListenerTest {
 
 	private CompletableFuture completableJob;
 
-	private StrictCurrentTraceContext currentTraceContext = StrictCurrentTraceContext
-			.create();
+	private StrictCurrentTraceContext currentTraceContext = StrictCurrentTraceContext.create();
 
-	private Tracing tracing = Tracing.newBuilder().addSpanHandler(spanHandler)
-			.currentTraceContext(currentTraceContext).build();
+	private Tracing tracing = Tracing.newBuilder().addSpanHandler(spanHandler).currentTraceContext(currentTraceContext)
+			.build();
 
 	@BeforeEach
 	public void setUp() throws Exception {
@@ -86,17 +85,13 @@ public class TracingJobListenerTest {
 		completableJob = new CompleteableTriggerListener();
 
 		scheduler = createScheduler(getClass().getSimpleName(), 1);
-		scheduler.addJob(newJob(ExceptionalJob.class).withIdentity(EXCEPTIONAL_JOB_KEY)
-				.storeDurably().build(), true);
-		scheduler.addJob(newJob(SuccessfulJob.class).withIdentity(SUCCESSFUL_JOB_KEY)
-				.storeDurably().build(), true);
+		scheduler.addJob(newJob(ExceptionalJob.class).withIdentity(EXCEPTIONAL_JOB_KEY).storeDurably().build(), true);
+		scheduler.addJob(newJob(SuccessfulJob.class).withIdentity(SUCCESSFUL_JOB_KEY).storeDurably().build(), true);
 
 		scheduler.getListenerManager().addTriggerListener(listener);
 		scheduler.getListenerManager().addJobListener(listener);
-		scheduler.getListenerManager()
-				.addTriggerListener((CompleteableTriggerListener) completableJob);
-		scheduler.getListenerManager()
-				.addJobListener((CompleteableTriggerListener) completableJob);
+		scheduler.getListenerManager().addTriggerListener((CompleteableTriggerListener) completableJob);
+		scheduler.getListenerManager().addJobListener((CompleteableTriggerListener) completableJob);
 		scheduler.start();
 	}
 
@@ -129,11 +124,9 @@ public class TracingJobListenerTest {
 	}
 
 	@Test
-	public void should_have_span_with_proper_name_and_tag_when_job_is_successful()
-			throws Exception {
+	public void should_have_span_with_proper_name_and_tag_when_job_is_successful() throws Exception {
 		// given
-		Trigger trigger = newTrigger().withIdentity(TRIGGER_KEY)
-				.forJob(SUCCESSFUL_JOB_KEY).startNow().build();
+		Trigger trigger = newTrigger().withIdentity(TRIGGER_KEY).forJob(SUCCESSFUL_JOB_KEY).startNow().build();
 
 		// when
 		runJob(trigger);
@@ -141,8 +134,7 @@ public class TracingJobListenerTest {
 		// expect
 		MutableSpan span = spanHandler.takeLocalSpan();
 		assertThat(span.name()).isEqualToIgnoringCase(SUCCESSFUL_JOB_KEY.toString());
-		assertThat(span.tags().get(TRIGGER_TAG_KEY))
-				.isEqualToIgnoringCase(TRIGGER_KEY.toString());
+		assertThat(span.tags().get(TRIGGER_TAG_KEY)).isEqualToIgnoringCase(TRIGGER_KEY.toString());
 	}
 
 	@Test
@@ -171,8 +163,7 @@ public class TracingJobListenerTest {
 	}
 
 	@Test
-	public void should_not_complete_span_when_context_is_modified_to_remove_keys()
-			throws Exception {
+	public void should_not_complete_span_when_context_is_modified_to_remove_keys() throws Exception {
 		// given
 		scheduler.getListenerManager().addJobListener(new ContextModifyingJobListener());
 		Trigger trigger = newTrigger().forJob(EXCEPTIONAL_JOB_KEY).startNow().build();
@@ -184,13 +175,11 @@ public class TracingJobListenerTest {
 	}
 
 	@Test
-	public void should_have_parent_and_child_span_when_trigger_contains_span_info()
-			throws Exception {
+	public void should_have_parent_and_child_span_when_trigger_contains_span_info() throws Exception {
 		// given
 		JobDataMap data = new JobDataMap();
 		addSpanToJobData(data);
-		Trigger trigger = newTrigger().forJob(SUCCESSFUL_JOB_KEY).usingJobData(data)
-				.startNow().build();
+		Trigger trigger = newTrigger().forJob(SUCCESSFUL_JOB_KEY).usingJobData(data).startNow().build();
 
 		// when
 		runJob(trigger);
@@ -208,8 +197,7 @@ public class TracingJobListenerTest {
 		// given
 		JobDataMap data = new JobDataMap(new HashMap<Integer, Integer>());
 		addSpanToJobData(data);
-		Trigger trigger = newTrigger().forJob(SUCCESSFUL_JOB_KEY).usingJobData(data)
-				.startNow().build();
+		Trigger trigger = newTrigger().forJob(SUCCESSFUL_JOB_KEY).usingJobData(data).startNow().build();
 
 		// when
 		runJob(trigger);
@@ -230,18 +218,15 @@ public class TracingJobListenerTest {
 		Properties config = new Properties();
 		config.setProperty("org.quartz.scheduler.instanceName", name + "Scheduler");
 		config.setProperty("org.quartz.scheduler.instanceId", "AUTO");
-		config.setProperty("org.quartz.threadPool.threadCount",
-				Integer.toString(threadPoolSize));
-		config.setProperty("org.quartz.threadPool.class",
-				"org.quartz.simpl.SimpleThreadPool");
+		config.setProperty("org.quartz.threadPool.threadCount", Integer.toString(threadPoolSize));
+		config.setProperty("org.quartz.threadPool.class", "org.quartz.simpl.SimpleThreadPool");
 		return new StdSchedulerFactory(config).getScheduler();
 	}
 
 	void addSpanToJobData(JobDataMap data) {
 		brave.Span span = tracing.tracer().nextSpan().start();
 		try (SpanInScope spanInScope = tracing.tracer().withSpanInScope(span)) {
-			tracing.propagation()
-					.injector((Setter<JobDataMap, String>) StringKeyDirtyFlagMap::put)
+			tracing.propagation().injector((Setter<JobDataMap, String>) StringKeyDirtyFlagMap::put)
 					.inject(tracing.currentTraceContext().get(), data);
 		}
 		finally {
@@ -249,8 +234,7 @@ public class TracingJobListenerTest {
 		}
 	}
 
-	public static class CompleteableTriggerListener extends CompletableFuture
-			implements TriggerListener, JobListener {
+	public static class CompleteableTriggerListener extends CompletableFuture implements TriggerListener, JobListener {
 
 		@Override
 		public String getName() {
@@ -286,8 +270,7 @@ public class TracingJobListenerTest {
 		}
 
 		@Override
-		public void jobWasExecuted(JobExecutionContext context,
-				JobExecutionException jobException) {
+		public void jobWasExecuted(JobExecutionContext context, JobExecutionException jobException) {
 		}
 
 	}

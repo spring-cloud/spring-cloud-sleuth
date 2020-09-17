@@ -40,8 +40,7 @@ public class LazyBeanTests {
 		context.register(BasicConfig.class);
 		context.refresh();
 
-		LazyBean<CurrentTraceContext> provider = LazyBean.create(context,
-				CurrentTraceContext.class);
+		LazyBean<CurrentTraceContext> provider = LazyBean.create(context, CurrentTraceContext.class);
 
 		then(provider.get()).isNotNull();
 	}
@@ -50,8 +49,7 @@ public class LazyBeanTests {
 	public void should_return_null_when_no_basic_type() {
 		context.refresh();
 
-		LazyBean<CurrentTraceContext> provider = LazyBean.create(context,
-				CurrentTraceContext.class);
+		LazyBean<CurrentTraceContext> provider = LazyBean.create(context, CurrentTraceContext.class);
 
 		then(provider.get()).isNull();
 	}

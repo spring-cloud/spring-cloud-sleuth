@@ -79,8 +79,7 @@ class TraceAsyncAspect {
 	private Method getMethod(ProceedingJoinPoint pjp, Object object) {
 		MethodSignature signature = (MethodSignature) pjp.getSignature();
 		Method method = signature.getMethod();
-		return ReflectionUtils.findMethod(object.getClass(), method.getName(),
-				method.getParameterTypes());
+		return ReflectionUtils.findMethod(object.getClass(), method.getName(), method.getParameterTypes());
 	}
 
 }

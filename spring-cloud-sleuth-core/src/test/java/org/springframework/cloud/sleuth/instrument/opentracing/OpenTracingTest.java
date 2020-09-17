@@ -55,8 +55,7 @@ import static org.springframework.boot.test.context.SpringBootTest.WebEnvironmen
  *
  * @author Marcin Grzejszczak
  */
-@SpringBootTest(webEnvironment = NONE,
-		properties = "spring.sleuth.baggage.remote-fields=country-code")
+@SpringBootTest(webEnvironment = NONE, properties = "spring.sleuth.baggage.remote-fields=country-code")
 public class OpenTracingTest {
 
 	@Autowired
@@ -70,8 +69,8 @@ public class OpenTracingTest {
 
 	@Test
 	public void startWithOpenTracingAndFinishWithBrave() {
-		BraveSpan openTracingSpan = this.opentracing.buildSpan("encode")
-				.withTag("lc", "codec").withStartTimestamp(1L).start();
+		BraveSpan openTracingSpan = this.opentracing.buildSpan("encode").withTag("lc", "codec").withStartTimestamp(1L)
+				.start();
 
 		Span braveSpan = openTracingSpan.unwrap();
 
@@ -83,14 +82,13 @@ public class OpenTracingTest {
 
 	@Test
 	public void extractTraceContext() {
-		Map<String, String> map = singletonMap("b3",
-				"0000000000000001-0000000000000002-1");
+		Map<String, String> map = singletonMap("b3", "0000000000000001-0000000000000002-1");
 
-		BraveSpanContext openTracingContext = this.opentracing
-				.extract(Format.Builtin.HTTP_HEADERS, new TextMapAdapter(map));
+		BraveSpanContext openTracingContext = this.opentracing.extract(Format.Builtin.HTTP_HEADERS,
+				new TextMapAdapter(map));
 
-		assertThat(openTracingContext.unwrap()).isEqualTo(
-				TraceContext.newBuilder().traceId(1L).spanId(2L).sampled(true).build());
+		assertThat(openTracingContext.unwrap())
+				.isEqualTo(TraceContext.newBuilder().traceId(1L).spanId(2L).sampled(true).build());
 	}
 
 	@Test
@@ -99,23 +97,21 @@ public class OpenTracingTest {
 		map.put("b3", "0000000000000001-0000000000000002-1");
 		map.put("country-code", "FO");
 
-		BraveSpanContext openTracingContext = this.opentracing
-				.extract(Format.Builtin.HTTP_HEADERS, new TextMapAdapter(map));
+		BraveSpanContext openTracingContext = this.opentracing.extract(Format.Builtin.HTTP_HEADERS,
+				new TextMapAdapter(map));
 
-		assertThat(openTracingContext.baggageItems())
-				.containsExactly(entry("country-code", "FO"));
+		assertThat(openTracingContext.baggageItems()).containsExactly(entry("country-code", "FO"));
 	}
 
 	@Test
 	public void extractTraceContextTextMap() {
-		Map<String, String> map = singletonMap("b3",
-				"0000000000000001-0000000000000002-1");
+		Map<String, String> map = singletonMap("b3", "0000000000000001-0000000000000002-1");
 
-		BraveSpanContext openTracingContext = this.opentracing
-				.extract(Format.Builtin.TEXT_MAP, new TextMapAdapter(map));
+		BraveSpanContext openTracingContext = this.opentracing.extract(Format.Builtin.TEXT_MAP,
+				new TextMapAdapter(map));
 
-		assertThat(openTracingContext.unwrap()).isEqualTo(
-				TraceContext.newBuilder().traceId(1L).spanId(2L).sampled(true).build());
+		assertThat(openTracingContext.unwrap())
+				.isEqualTo(TraceContext.newBuilder().traceId(1L).spanId(2L).sampled(true).build());
 	}
 
 	@Test
@@ -124,11 +120,11 @@ public class OpenTracingTest {
 		map.put("B3", "0000000000000001-0000000000000002-1");
 		map.put("other", "1");
 
-		BraveSpanContext openTracingContext = this.opentracing
-				.extract(Format.Builtin.HTTP_HEADERS, new TextMapAdapter(map));
+		BraveSpanContext openTracingContext = this.opentracing.extract(Format.Builtin.HTTP_HEADERS,
+				new TextMapAdapter(map));
 
-		assertThat(openTracingContext.unwrap()).isEqualTo(
-				TraceContext.newBuilder().traceId(1L).spanId(2L).sampled(true).build());
+		assertThat(openTracingContext.unwrap())
+				.isEqualTo(TraceContext.newBuilder().traceId(1L).spanId(2L).sampled(true).build());
 	}
 
 	@Test
@@ -160,13 +156,11 @@ public class OpenTracingTest {
 
 		try (Scope scopeA = this.opentracing.scopeManager().activate(spanA)) {
 			try (Scope scopeB = this.opentracing.scopeManager().activate(spanB)) {
-				assertThat(
-						this.opentracing.scopeManager().activeSpan().context().unwrap())
-								.isEqualTo(spanB.context().unwrap());
+				assertThat(this.opentracing.scopeManager().activeSpan().context().unwrap())
+						.isEqualTo(spanB.context().unwrap());
 			}
 
-			assertThat(opentracing.scopeManager().activeSpan().context().unwrap())
-					.isEqualTo(spanA.context().unwrap());
+			assertThat(opentracing.scopeManager().activeSpan().context().unwrap()).isEqualTo(spanA.context().unwrap());
 		}
 	}
 
@@ -186,8 +180,7 @@ public class OpenTracingTest {
 		Long idOfSpanA = spanA.context().spanId();
 		try (SpanInScope scopeA = this.brave.tracer().withSpanInScope(spanA)) {
 
-			Span spanB = this.brave.tracer().newChild(spanA.context()).name("spanB")
-					.start();
+			Span spanB = this.brave.tracer().newChild(spanA.context()).name("spanB").start();
 			idOfSpanB = spanB.context().spanId();
 			parentIdOfSpanB = spanB.context().parentId();
 			try (SpanInScope scopeB = this.brave.tracer().withSpanInScope(spanB)) {
@@ -199,8 +192,7 @@ public class OpenTracingTest {
 
 			shouldBeIdOfSpanA = this.brave.currentTraceContext().get().spanId();
 
-			Span spanC = this.brave.tracer().newChild(spanA.context()).name("spanC")
-					.start();
+			Span spanC = this.brave.tracer().newChild(spanA.context()).name("spanC").start();
 			parentIdOfSpanC = spanC.context().parentId();
 			try (SpanInScope scopeC = this.brave.tracer().withSpanInScope(spanC)) {
 				// nothing to do here
@@ -213,16 +205,10 @@ public class OpenTracingTest {
 			spanA.finish();
 		}
 
-		assertThat(shouldBeIdOfSpanA)
-				.as("SpanA should have been active again after closing B")
-				.isEqualTo(idOfSpanA);
-		assertThat(shouldBeIdOfSpanB)
-				.as("SpanB should have been active prior to its closure")
-				.isEqualTo(idOfSpanB);
-		assertThat(parentIdOfSpanB).as("SpanB's parent should be SpanA")
-				.isEqualTo(idOfSpanA);
-		assertThat(parentIdOfSpanC).as("SpanC's parent should be SpanA")
-				.isEqualTo(idOfSpanA);
+		assertThat(shouldBeIdOfSpanA).as("SpanA should have been active again after closing B").isEqualTo(idOfSpanA);
+		assertThat(shouldBeIdOfSpanB).as("SpanB should have been active prior to its closure").isEqualTo(idOfSpanB);
+		assertThat(parentIdOfSpanB).as("SpanB's parent should be SpanA").isEqualTo(idOfSpanA);
+		assertThat(parentIdOfSpanC).as("SpanC's parent should be SpanA").isEqualTo(idOfSpanA);
 	}
 
 	@Test
@@ -231,8 +217,7 @@ public class OpenTracingTest {
 		try (Scope scopeA = this.opentracing.activateSpan(spanA)) {
 			BraveSpan spanB = this.opentracing.buildSpan("spanB").start();
 			// OpenTracing doesn't expose parent ID, so we will check trace ID instead
-			assertThat(spanB.context().toTraceId())
-					.isEqualTo(spanA.context().toTraceId());
+			assertThat(spanB.context().toTraceId()).isEqualTo(spanA.context().toTraceId());
 		}
 	}
 
@@ -240,8 +225,7 @@ public class OpenTracingTest {
 	public void implicitParentFromSpanManager_start_ignoreActiveSpan() {
 		BraveSpan spanA = this.opentracing.buildSpan("spanA").start();
 		try (Scope scopeA = this.opentracing.activateSpan(spanA)) {
-			BraveSpan spanB = this.opentracing.buildSpan("spanB").ignoreActiveSpan()
-					.start();
+			BraveSpan spanB = this.opentracing.buildSpan("spanB").ignoreActiveSpan().start();
 			assertThat(spanB.unwrap().context().parentId()).isNull(); // new trace
 		}
 	}

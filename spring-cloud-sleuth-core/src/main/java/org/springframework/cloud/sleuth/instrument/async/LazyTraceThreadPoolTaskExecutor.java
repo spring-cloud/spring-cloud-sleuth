@@ -44,8 +44,7 @@ import org.springframework.util.concurrent.ListenableFuture;
 // public as most types in this package were documented for use
 public class LazyTraceThreadPoolTaskExecutor extends ThreadPoolTaskExecutor {
 
-	private static final Log log = LogFactory
-			.getLog(LazyTraceThreadPoolTaskExecutor.class);
+	private static final Log log = LogFactory.getLog(LazyTraceThreadPoolTaskExecutor.class);
 
 	private final BeanFactory beanFactory;
 
@@ -57,15 +56,13 @@ public class LazyTraceThreadPoolTaskExecutor extends ThreadPoolTaskExecutor {
 
 	private SpanNamer spanNamer;
 
-	public LazyTraceThreadPoolTaskExecutor(BeanFactory beanFactory,
-			ThreadPoolTaskExecutor delegate) {
+	public LazyTraceThreadPoolTaskExecutor(BeanFactory beanFactory, ThreadPoolTaskExecutor delegate) {
 		this.beanFactory = beanFactory;
 		this.delegate = delegate;
 		this.beanName = null;
 	}
 
-	public LazyTraceThreadPoolTaskExecutor(BeanFactory beanFactory,
-			ThreadPoolTaskExecutor delegate, String beanName) {
+	public LazyTraceThreadPoolTaskExecutor(BeanFactory beanFactory, ThreadPoolTaskExecutor delegate, String beanName) {
 		this.beanFactory = beanFactory;
 		this.delegate = delegate;
 		this.beanName = beanName;
@@ -79,10 +76,8 @@ public class LazyTraceThreadPoolTaskExecutor extends ThreadPoolTaskExecutor {
 
 	@Override
 	public void execute(Runnable task, long startTimeout) {
-		this.delegate.execute(
-				ContextUtil.isContextUnusable(this.beanFactory) ? task
-						: new TraceRunnable(tracing(), spanNamer(), task, this.beanName),
-				startTimeout);
+		this.delegate.execute(ContextUtil.isContextUnusable(this.beanFactory) ? task
+				: new TraceRunnable(tracing(), spanNamer(), task, this.beanName), startTimeout);
 	}
 
 	@Override
@@ -99,17 +94,14 @@ public class LazyTraceThreadPoolTaskExecutor extends ThreadPoolTaskExecutor {
 
 	@Override
 	public ListenableFuture<?> submitListenable(Runnable task) {
-		return this.delegate
-				.submitListenable(ContextUtil.isContextUnusable(this.beanFactory) ? task
-						: new TraceRunnable(tracing(), spanNamer(), task, this.beanName));
+		return this.delegate.submitListenable(ContextUtil.isContextUnusable(this.beanFactory) ? task
+				: new TraceRunnable(tracing(), spanNamer(), task, this.beanName));
 	}
 
 	@Override
 	public <T> ListenableFuture<T> submitListenable(Callable<T> task) {
-		return this.delegate
-				.submitListenable(ContextUtil.isContextUnusable(this.beanFactory) ? task
-						: new TraceCallable<>(tracing(), spanNamer(), task,
-								this.beanName));
+		return this.delegate.submitListenable(ContextUtil.isContextUnusable(this.beanFactory) ? task
+				: new TraceCallable<>(tracing(), spanNamer(), task, this.beanName));
 	}
 
 	@Override
@@ -123,16 +115,13 @@ public class LazyTraceThreadPoolTaskExecutor extends ThreadPoolTaskExecutor {
 	}
 
 	@Override
-	public void setRejectedExecutionHandler(
-			RejectedExecutionHandler rejectedExecutionHandler) {
+	public void setRejectedExecutionHandler(RejectedExecutionHandler rejectedExecutionHandler) {
 		this.delegate.setRejectedExecutionHandler(rejectedExecutionHandler);
 	}
 
 	@Override
-	public void setWaitForTasksToCompleteOnShutdown(
-			boolean waitForJobsToCompleteOnShutdown) {
-		this.delegate
-				.setWaitForTasksToCompleteOnShutdown(waitForJobsToCompleteOnShutdown);
+	public void setWaitForTasksToCompleteOnShutdown(boolean waitForJobsToCompleteOnShutdown) {
+		this.delegate.setWaitForTasksToCompleteOnShutdown(waitForJobsToCompleteOnShutdown);
 	}
 
 	@Override
@@ -296,8 +285,7 @@ public class LazyTraceThreadPoolTaskExecutor extends ThreadPoolTaskExecutor {
 				this.spanNamer = this.beanFactory.getBean(SpanNamer.class);
 			}
 			catch (NoSuchBeanDefinitionException e) {
-				log.warn(
-						"SpanNamer bean not found - will provide a manually created instance");
+				log.warn("SpanNamer bean not found - will provide a manually created instance");
 				return new DefaultSpanNamer();
 			}
 		}

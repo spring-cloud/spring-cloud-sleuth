@@ -38,14 +38,12 @@ public class CompositeHttpSamplerTests {
 
 	@Test
 	public void should_return_null_on_both_null() {
-		then(new CompositeHttpSampler(new NullSampler(), new NullSampler())
-				.trySample(this.request)).isNull();
+		then(new CompositeHttpSampler(new NullSampler(), new NullSampler()).trySample(this.request)).isNull();
 	}
 
 	@ParameterizedTest
 	@MethodSource("falseArgs")
-	void should_return_false_on_any_false(SamplerFunction<HttpRequest> left,
-			SamplerFunction<HttpRequest> right) {
+	void should_return_false_on_any_false(SamplerFunction<HttpRequest> left, SamplerFunction<HttpRequest> right) {
 		then(new CompositeHttpSampler(left, right).trySample(this.request)).isFalse();
 	}
 
@@ -57,8 +55,7 @@ public class CompositeHttpSamplerTests {
 
 	@Test
 	public void should_return_true_on_both_true() {
-		then(new CompositeHttpSampler(new TrueSampler(), new TrueSampler())
-				.trySample(this.request)).isTrue();
+		then(new CompositeHttpSampler(new TrueSampler(), new TrueSampler()).trySample(this.request)).isTrue();
 	}
 
 }

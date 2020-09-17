@@ -57,8 +57,7 @@ import static org.assertj.core.api.BDDAssertions.then;
 /**
  * @author Marcin Grzejszczak
  */
-@SpringBootTest(classes = { AppConfig.class, Application.class },
-		webEnvironment = WebEnvironment.RANDOM_PORT)
+@SpringBootTest(classes = { AppConfig.class, Application.class }, webEnvironment = WebEnvironment.RANDOM_PORT)
 public class Issue410Tests {
 
 	private static final Log log = LogFactory.getLog(Issue410Tests.class);
@@ -86,14 +85,13 @@ public class Issue410Tests {
 		Span span = this.tracer.nextSpan().name("foo");
 		log.info("Starting test");
 		try (Tracer.SpanInScope ws = this.tracer.withSpanInScope(span)) {
-			String response = this.restTemplate.getForObject(
-					"http://localhost:" + port() + "/without_pool", String.class);
+			String response = this.restTemplate.getForObject("http://localhost:" + port() + "/without_pool",
+					String.class);
 
 			then(response).isEqualTo(span.context().traceIdString());
 			Awaitility.await().untilAsserted(() -> {
 				then(this.asyncTask.getSpan().get()).isNotNull();
-				then(this.asyncTask.getSpan().get().context().traceId())
-						.isEqualTo(span.context().traceId());
+				then(this.asyncTask.getSpan().get().context().traceId()).isEqualTo(span.context().traceId());
 			});
 		}
 		finally {
@@ -108,14 +106,12 @@ public class Issue410Tests {
 		Span span = this.tracer.nextSpan().name("foo");
 		log.info("Starting test");
 		try (Tracer.SpanInScope ws = this.tracer.withSpanInScope(span)) {
-			String response = this.restTemplate.getForObject(
-					"http://localhost:" + port() + "/with_pool", String.class);
+			String response = this.restTemplate.getForObject("http://localhost:" + port() + "/with_pool", String.class);
 
 			then(response).isEqualTo(span.context().traceIdString());
 			Awaitility.await().untilAsserted(() -> {
 				then(this.asyncTask.getSpan().get()).isNotNull();
-				then(this.asyncTask.getSpan().get().context().traceId())
-						.isEqualTo(span.context().traceId());
+				then(this.asyncTask.getSpan().get().context().traceId()).isEqualTo(span.context().traceId());
 			});
 		}
 		finally {
@@ -133,14 +129,13 @@ public class Issue410Tests {
 		Span span = this.tracer.nextSpan().name("foo");
 		log.info("Starting test");
 		try (Tracer.SpanInScope ws = this.tracer.withSpanInScope(span)) {
-			String response = this.restTemplate.getForObject(
-					"http://localhost:" + port() + "/completable", String.class);
+			String response = this.restTemplate.getForObject("http://localhost:" + port() + "/completable",
+					String.class);
 
 			then(response).isEqualTo(span.context().traceIdString());
 			Awaitility.await().untilAsserted(() -> {
 				then(this.asyncTask.getSpan().get()).isNotNull();
-				then(this.asyncTask.getSpan().get().context().traceId())
-						.isEqualTo(span.context().traceId());
+				then(this.asyncTask.getSpan().get().context().traceId()).isEqualTo(span.context().traceId());
 			});
 		}
 		finally {
@@ -158,14 +153,13 @@ public class Issue410Tests {
 		Span span = this.tracer.nextSpan().name("foo");
 		log.info("Starting test");
 		try (Tracer.SpanInScope ws = this.tracer.withSpanInScope(span)) {
-			String response = this.restTemplate.getForObject(
-					"http://localhost:" + port() + "/taskScheduler", String.class);
+			String response = this.restTemplate.getForObject("http://localhost:" + port() + "/taskScheduler",
+					String.class);
 
 			then(response).isEqualTo(span.context().traceIdString());
 			Awaitility.await().untilAsserted(() -> {
 				then(this.asyncTask.getSpan().get()).isNotNull();
-				then(this.asyncTask.getSpan().get().context().traceId())
-						.isEqualTo(span.context().traceId());
+				then(this.asyncTask.getSpan().get().context().traceId()).isEqualTo(span.context().traceId());
 			});
 		}
 		finally {
@@ -183,15 +177,13 @@ public class Issue410Tests {
 		Span span = this.tracer.nextSpan().name("foo");
 		log.info("Starting test");
 		try (Tracer.SpanInScope ws = this.tracer.withSpanInScope(span)) {
-			String response = this.restTemplate.getForObject(
-					"http://localhost:" + port() + "/threadPoolTaskScheduler_submit",
-					String.class);
+			String response = this.restTemplate
+					.getForObject("http://localhost:" + port() + "/threadPoolTaskScheduler_submit", String.class);
 
 			then(response).isEqualTo(span.context().traceIdString());
 			Awaitility.await().untilAsserted(() -> {
 				then(this.asyncTask.getSpan().get()).isNotNull();
-				then(this.asyncTask.getSpan().get().context().traceId())
-						.isEqualTo(span.context().traceId());
+				then(this.asyncTask.getSpan().get().context().traceId()).isEqualTo(span.context().traceId());
 			});
 		}
 		finally {
@@ -206,15 +198,13 @@ public class Issue410Tests {
 		Span span = this.tracer.nextSpan().name("foo");
 		log.info("Starting test");
 		try (Tracer.SpanInScope ws = this.tracer.withSpanInScope(span)) {
-			String response = this.restTemplate.getForObject(
-					"http://localhost:" + port() + "/threadPoolTaskScheduler_schedule",
-					String.class);
+			String response = this.restTemplate
+					.getForObject("http://localhost:" + port() + "/threadPoolTaskScheduler_schedule", String.class);
 
 			then(response).isEqualTo(span.context().traceIdString());
 			Awaitility.await().untilAsserted(() -> {
 				then(this.asyncTask.getSpan().get()).isNotNull();
-				then(this.asyncTask.getSpan().get().context().traceId())
-						.isEqualTo(span.context().traceId());
+				then(this.asyncTask.getSpan().get().context().traceId()).isEqualTo(span.context().traceId());
 			});
 		}
 		finally {
@@ -232,15 +222,13 @@ public class Issue410Tests {
 		Span span = this.tracer.nextSpan().name("foo");
 		log.info("Starting test");
 		try (Tracer.SpanInScope ws = this.tracer.withSpanInScope(span)) {
-			String response = this.restTemplate.getForObject(
-					"http://localhost:" + port() + "/scheduledThreadPoolExecutor",
-					String.class);
+			String response = this.restTemplate
+					.getForObject("http://localhost:" + port() + "/scheduledThreadPoolExecutor", String.class);
 
 			then(response).isEqualTo(span.context().traceIdString());
 			Awaitility.await().untilAsserted(() -> {
 				then(this.asyncTask.getSpan().get()).isNotNull();
-				then(this.asyncTask.getSpan().get().context().traceId())
-						.isEqualTo(span.context().traceId());
+				then(this.asyncTask.getSpan().get().context().traceId()).isEqualTo(span.context().traceId());
 			});
 		}
 		finally {
@@ -345,17 +333,15 @@ class AsyncTask {
 			AsyncTask.log.info("Second completable future");
 			return AsyncTask.this.tracer.currentSpan();
 		}, AsyncTask.this.executor);
-		CompletableFuture<Span> response = CompletableFuture.allOf(span1, span2)
-				.thenApply(ignoredVoid -> {
-					AsyncTask.log.info("Third completable future");
-					Span joinedSpan1 = span1.join();
-					Span joinedSpan2 = span2.join();
-					then(joinedSpan2).isNotNull();
-					then(joinedSpan1.context().traceId())
-							.isEqualTo(joinedSpan2.context().traceId());
-					AsyncTask.log.info("TraceIds are correct");
-					return joinedSpan2;
-				});
+		CompletableFuture<Span> response = CompletableFuture.allOf(span1, span2).thenApply(ignoredVoid -> {
+			AsyncTask.log.info("Third completable future");
+			Span joinedSpan1 = span1.join();
+			Span joinedSpan2 = span2.join();
+			then(joinedSpan2).isNotNull();
+			then(joinedSpan1.context().traceId()).isEqualTo(joinedSpan2.context().traceId());
+			AsyncTask.log.info("TraceIds are correct");
+			return joinedSpan2;
+		});
 		this.span.set(response.get());
 		return this.span.get();
 	}
@@ -365,30 +351,25 @@ class AsyncTask {
 		CompletableFuture<Span> span1 = CompletableFuture.supplyAsync(() -> {
 			AsyncTask.log.info("First completable future");
 			return AsyncTask.this.tracer.currentSpan();
-		}, new LazyTraceExecutor(AsyncTask.this.beanFactory,
-				AsyncTask.this.taskScheduler));
+		}, new LazyTraceExecutor(AsyncTask.this.beanFactory, AsyncTask.this.taskScheduler));
 		CompletableFuture<Span> span2 = CompletableFuture.supplyAsync(() -> {
 			AsyncTask.log.info("Second completable future");
 			return AsyncTask.this.tracer.currentSpan();
-		}, new LazyTraceExecutor(AsyncTask.this.beanFactory,
-				AsyncTask.this.taskScheduler));
-		CompletableFuture<Span> response = CompletableFuture.allOf(span1, span2)
-				.thenApply(ignoredVoid -> {
-					AsyncTask.log.info("Third completable future");
-					Span joinedSpan1 = span1.join();
-					Span joinedSpan2 = span2.join();
-					then(joinedSpan2).isNotNull();
-					then(joinedSpan1.context().traceId())
-							.isEqualTo(joinedSpan2.context().traceId());
-					AsyncTask.log.info("TraceIds are correct");
-					return joinedSpan2;
-				});
+		}, new LazyTraceExecutor(AsyncTask.this.beanFactory, AsyncTask.this.taskScheduler));
+		CompletableFuture<Span> response = CompletableFuture.allOf(span1, span2).thenApply(ignoredVoid -> {
+			AsyncTask.log.info("Third completable future");
+			Span joinedSpan1 = span1.join();
+			Span joinedSpan2 = span2.join();
+			then(joinedSpan2).isNotNull();
+			then(joinedSpan1.context().traceId()).isEqualTo(joinedSpan2.context().traceId());
+			AsyncTask.log.info("TraceIds are correct");
+			return joinedSpan2;
+		});
 		this.span.set(response.get());
 		return this.span.get();
 	}
 
-	public Span scheduledThreadPoolExecutor()
-			throws ExecutionException, InterruptedException {
+	public Span scheduledThreadPoolExecutor() throws ExecutionException, InterruptedException {
 		log.info("This task is running with ScheduledThreadPoolExecutor");
 		this.scheduledThreadPoolExecutor.submit(() -> {
 			log.info("Hello from runnable");
@@ -397,8 +378,7 @@ class AsyncTask {
 		return this.span.get();
 	}
 
-	public Span threadPoolTaskSchedulerSubmit()
-			throws ExecutionException, InterruptedException {
+	public Span threadPoolTaskSchedulerSubmit() throws ExecutionException, InterruptedException {
 		log.info("This task is running with ThreadPoolTaskScheduler");
 		this.threadPoolTaskScheduler.submit(() -> {
 			log.info("Hello from runnable");
@@ -407,8 +387,7 @@ class AsyncTask {
 		return this.span.get();
 	}
 
-	public Span threadPoolTaskSchedulerSchedule()
-			throws ExecutionException, InterruptedException {
+	public Span threadPoolTaskSchedulerSchedule() throws ExecutionException, InterruptedException {
 		log.info("This task is running with ThreadPoolTaskScheduler");
 		this.threadPoolTaskScheduler.schedule(() -> {
 			log.info("Hello from runnable");
@@ -463,22 +442,19 @@ class Application {
 	}
 
 	@RequestMapping("/threadPoolTaskScheduler_submit")
-	public String threadPoolTaskSchedulerSubmit()
-			throws ExecutionException, InterruptedException {
+	public String threadPoolTaskSchedulerSubmit() throws ExecutionException, InterruptedException {
 		log.info("Executing completable via ThreadPoolTaskScheduler");
 		return this.asyncTask.threadPoolTaskSchedulerSubmit().context().traceIdString();
 	}
 
 	@RequestMapping("/threadPoolTaskScheduler_schedule")
-	public String threadPoolTaskSchedulerSchedule()
-			throws ExecutionException, InterruptedException {
+	public String threadPoolTaskSchedulerSchedule() throws ExecutionException, InterruptedException {
 		log.info("Executing completable via ThreadPoolTaskScheduler");
 		return this.asyncTask.threadPoolTaskSchedulerSchedule().context().traceIdString();
 	}
 
 	@RequestMapping("/scheduledThreadPoolExecutor")
-	public String scheduledThreadPoolExecutor()
-			throws ExecutionException, InterruptedException {
+	public String scheduledThreadPoolExecutor() throws ExecutionException, InterruptedException {
 		log.info("Executing completable via ScheduledThreadPoolExecutor");
 		return this.asyncTask.scheduledThreadPoolExecutor().context().traceIdString();
 	}

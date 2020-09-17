@@ -40,8 +40,7 @@ import org.springframework.cloud.openfeign.loadbalancer.FeignBlockingLoadBalance
  */
 class TraceFeignBlockingLoadBalancerClient extends FeignBlockingLoadBalancerClient {
 
-	private static final Log LOG = LogFactory
-			.getLog(TraceFeignBlockingLoadBalancerClient.class);
+	private static final Log LOG = LogFactory.getLog(TraceFeignBlockingLoadBalancerClient.class);
 
 	private final BeanFactory beanFactory;
 
@@ -51,8 +50,8 @@ class TraceFeignBlockingLoadBalancerClient extends FeignBlockingLoadBalancerClie
 
 	TracingFeignClient tracingFeignClient;
 
-	TraceFeignBlockingLoadBalancerClient(Client delegate,
-			LoadBalancerClient loadBalancerClient, BeanFactory beanFactory) {
+	TraceFeignBlockingLoadBalancerClient(Client delegate, LoadBalancerClient loadBalancerClient,
+			BeanFactory beanFactory) {
 		super(delegate, loadBalancerClient);
 		this.beanFactory = beanFactory;
 	}
@@ -91,8 +90,7 @@ class TraceFeignBlockingLoadBalancerClient extends FeignBlockingLoadBalancerClie
 					LOG.debug(
 							"General exception was thrown, so most likely the traced client wasn't called. Falling back to a manual span");
 				}
-				tracingFeignClient().handleSendAndReceive(fallbackSpan, request, response,
-						e);
+				tracingFeignClient().handleSendAndReceive(fallbackSpan, request, response, e);
 			}
 			throw e;
 		}
@@ -121,8 +119,7 @@ class TraceFeignBlockingLoadBalancerClient extends FeignBlockingLoadBalancerClie
 
 	private TracingFeignClient tracingFeignClient() {
 		if (tracingFeignClient == null) {
-			tracingFeignClient = (TracingFeignClient) TracingFeignClient
-					.create(httpTracing(), getDelegate());
+			tracingFeignClient = (TracingFeignClient) TracingFeignClient.create(httpTracing(), getDelegate());
 		}
 		return tracingFeignClient;
 	}

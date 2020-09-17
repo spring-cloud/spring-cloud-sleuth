@@ -85,14 +85,12 @@ public class GrpcTracingIntegrationTests {
 
 	@Test
 	public void integrationTest() throws Exception {
-		ManagedChannel inProcessManagedChannel = this.clientManagedChannelBuilder
-				.inProcessChannelBuilder("testServer").directExecutor().build();
+		ManagedChannel inProcessManagedChannel = this.clientManagedChannelBuilder.inProcessChannelBuilder("testServer")
+				.directExecutor().build();
 
-		HelloServiceGrpcClient client = new HelloServiceGrpcClient(
-				inProcessManagedChannel);
+		HelloServiceGrpcClient client = new HelloServiceGrpcClient(inProcessManagedChannel);
 
-		assertThat(client.sayHello("Testy McTest Face"))
-				.isEqualTo("Hello Testy McTest Face");
+		assertThat(client.sayHello("Testy McTest Face")).isEqualTo("Hello Testy McTest Face");
 		assertThat(this.spans).hasSize(2);
 		assertThat(this.spans.get(0).kind()).isEqualTo(Kind.SERVER);
 		assertThat(this.spans.get(1).kind()).isEqualTo(Kind.CLIENT);
@@ -164,8 +162,7 @@ public class GrpcTracingIntegrationTests {
 		private Logger logger = LoggerFactory.getLogger(HelloGrpcService.class);
 
 		@Override
-		public void sayHello(HelloRequest request,
-				StreamObserver<HelloReply> responseObserver) {
+		public void sayHello(HelloRequest request, StreamObserver<HelloReply> responseObserver) {
 			String message = "Hello " + request.getName();
 			this.logger.debug("In the grpc server stub.");
 			HelloReply reply = HelloReply.newBuilder().setMessage(message).build();
@@ -191,11 +188,9 @@ public class GrpcTracingIntegrationTests {
 		@Override
 		public String sayHello(String name) throws Exception {
 
-			HelloServiceBlockingStub stub = HelloServiceGrpc
-					.newBlockingStub(this.managedChannel)
-					.withDeadlineAfter(3, TimeUnit.SECONDS);
-			HelloReply reply = stub
-					.sayHello(HelloRequest.newBuilder().setName(name).build());
+			HelloServiceBlockingStub stub = HelloServiceGrpc.newBlockingStub(this.managedChannel).withDeadlineAfter(3,
+					TimeUnit.SECONDS);
+			HelloReply reply = stub.sayHello(HelloRequest.newBuilder().setName(name).build());
 			return reply.getMessage();
 
 		}

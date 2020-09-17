@@ -31,8 +31,7 @@ final class ServletUtils {
 
 	}
 
-	static String getHeader(HttpServletRequest request, HttpServletResponse response,
-			String name) {
+	static String getHeader(HttpServletRequest request, HttpServletResponse response, String name) {
 		String value = request.getHeader(name);
 		return value != null ? value : response.getHeader(name);
 	}

@@ -60,8 +60,8 @@ public class GH1102Tests {
 	public void should_store_retries_as_separate_spans() throws Exception {
 		ScopedSpan foo = this.tracer.startScopedSpan("foo");
 		try {
-			this.webClient.get().uri("http://localhost:" + this.port + "/test").retrieve()
-					.bodyToMono(String.class).retry(1).block();
+			this.webClient.get().uri("http://localhost:" + this.port + "/test").retrieve().bodyToMono(String.class)
+					.retry(1).block();
 			BDDAssertions.fail("should throw exception");
 		}
 		catch (WebClientResponseException ex) {
@@ -72,8 +72,7 @@ public class GH1102Tests {
 		}
 
 		// Default inject format for client spans is B3 multi
-		BDDAssertions.then(this.testRetry.getHttpHeaders().get("x-b3-traceid"))
-				.hasSize(1);
+		BDDAssertions.then(this.testRetry.getHttpHeaders().get("x-b3-traceid")).hasSize(1);
 	}
 
 	@EnableAutoConfiguration

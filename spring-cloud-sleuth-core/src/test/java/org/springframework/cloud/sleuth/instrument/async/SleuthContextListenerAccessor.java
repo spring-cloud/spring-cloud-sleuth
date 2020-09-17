@@ -27,8 +27,8 @@ public final class SleuthContextListenerAccessor {
 	}
 
 	public static void set(BeanFactory beanFactory, boolean refreshed) {
-		SleuthContextListener.CACHE.put(beanFactory, new SleuthContextListener(
-				new AtomicBoolean(refreshed), new AtomicBoolean(false)));
+		SleuthContextListener.CACHE.put(beanFactory,
+				new SleuthContextListener(new AtomicBoolean(refreshed), new AtomicBoolean(false)));
 	}
 
 }
