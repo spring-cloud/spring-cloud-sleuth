@@ -128,8 +128,7 @@ class TraceWebClientAutoConfiguration {
 
 	@Configuration(proxyBeanMethods = false)
 	@ConditionalOnClass(WebClient.class)
-	@ConditionalOnProperty(value = "spring.sleuth.web.webclient.enabled",
-			matchIfMissing = true)
+	@ConditionalOnProperty(value = "spring.sleuth.web.webclient.enabled", matchIfMissing = true)
 	static class WebClientConfig {
 
 		@Bean
