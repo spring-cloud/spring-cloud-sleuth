@@ -247,7 +247,8 @@ public class FlatMapTests {
 		brave.Span spanInFoo;
 
 		@Bean
-		RouterFunction<ServerResponse> handlers(io.opentelemetry.trace.Tracer tracing, ManualRequestSender requestSender) {
+		RouterFunction<ServerResponse> handlers(io.opentelemetry.trace.Tracer tracing,
+				ManualRequestSender requestSender) {
 			return route(GET("/noFlatMap"), request -> {
 				ServerWebExchange exchange = request.exchange();
 				WebFluxSleuthOperators.withSpanInScope(tracing, exchange, () -> LOGGER.info("noFlatMap"));
