@@ -18,10 +18,9 @@ package org.springframework.cloud.sleuth.instrument.async;
 
 import java.util.concurrent.Callable;
 
-import brave.ScopedSpan;
-import brave.Tracer;
-import brave.Tracing;
-import brave.propagation.TraceContext;
+import io.opentelemetry.context.Scope;
+import io.opentelemetry.trace.Span;
+import io.opentelemetry.trace.Tracer;
 
 import org.springframework.cloud.sleuth.SpanNamer;
 
@@ -47,33 +46,33 @@ public class TraceCallable<V> implements Callable<V> {
 
 	private final Callable<V> delegate;
 
-	private final TraceContext parent;
+	private final Span parent;
 
 	private final String spanName;
 
-	public TraceCallable(Tracing tracing, SpanNamer spanNamer, Callable<V> delegate) {
-		this(tracing, spanNamer, delegate, null);
+	public TraceCallable(Tracer tracer, SpanNamer spanNamer, Callable<V> delegate) {
+		this(tracer, spanNamer, delegate, null);
 	}
 
-	public TraceCallable(Tracing tracing, SpanNamer spanNamer, Callable<V> delegate, String name) {
-		this.tracer = tracing.tracer();
+	public TraceCallable(Tracer tracer, SpanNamer spanNamer, Callable<V> delegate, String name) {
+		this.tracer = tracer;
 		this.delegate = delegate;
-		this.parent = tracing.currentTraceContext().get();
+		this.parent = tracer.getCurrentSpan();
 		this.spanName = name != null ? name : spanNamer.name(delegate, DEFAULT_SPAN_NAME);
 	}
 
 	@Override
 	public V call() throws Exception {
-		ScopedSpan span = this.tracer.startScopedSpanWithParent(this.spanName, this.parent);
-		try {
+		Span span = this.tracer.spanBuilder(this.spanName).setParent(this.parent).startSpan();
+		try (Scope scope = this.tracer.withSpan(span)) {
 			return this.delegate.call();
 		}
 		catch (Exception | Error ex) {
-			span.error(ex);
+			span.recordException(ex);
 			throw ex;
 		}
 		finally {
-			span.finish();
+			span.end();
 		}
 	}
 

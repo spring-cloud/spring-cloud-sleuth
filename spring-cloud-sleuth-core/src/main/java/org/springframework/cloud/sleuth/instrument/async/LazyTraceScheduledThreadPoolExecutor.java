@@ -33,7 +33,7 @@ import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-import brave.Tracing;
+import io.opentelemetry.trace.Tracer;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -77,7 +77,7 @@ class LazyTraceScheduledThreadPoolExecutor extends ScheduledThreadPoolExecutor {
 
 	private final Method newTaskForCallable;
 
-	private Tracing tracing;
+	private Tracer tracing;
 
 	private SpanNamer spanNamer;
 
@@ -443,9 +443,9 @@ class LazyTraceScheduledThreadPoolExecutor extends ScheduledThreadPoolExecutor {
 		return this.delegate.invokeAll(wrapCallableCollection(tasks), timeout, unit);
 	}
 
-	private Tracing tracing() {
+	private Tracer tracing() {
 		if (this.tracing == null) {
-			this.tracing = this.beanFactory.getBean(Tracing.class);
+			this.tracing = this.beanFactory.getBean(Tracer.class);
 		}
 		return this.tracing;
 	}

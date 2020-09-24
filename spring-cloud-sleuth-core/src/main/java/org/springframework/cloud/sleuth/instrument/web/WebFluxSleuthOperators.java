@@ -19,9 +19,9 @@ package org.springframework.cloud.sleuth.instrument.web;
 import java.util.concurrent.Callable;
 import java.util.function.Consumer;
 
-import brave.Tracing;
-import brave.propagation.CurrentTraceContext;
-import brave.propagation.TraceContext;
+import io.opentelemetry.context.Scope;
+import io.opentelemetry.trace.Span;
+import io.opentelemetry.trace.Tracer;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import reactor.core.publisher.Signal;
@@ -89,103 +89,101 @@ public final class WebFluxSleuthOperators {
 
 	/**
 	 * Wraps a runnable with a span.
-	 * @param context - Reactor context that contains the {@link TraceContext}
+	 * @param context - Reactor context that contains the {@link Span}
 	 * @param runnable - lambda to execute within the tracing context
 	 */
 	public static void withSpanInScope(Context context, Runnable runnable) {
-		CurrentTraceContext currentTraceContext = context.get(CurrentTraceContext.class);
-		TraceContext traceContext = traceContextOrNew(context);
-		try (CurrentTraceContext.Scope scope = currentTraceContext.maybeScope(traceContext)) {
+		Tracer tracer = context.get(Tracer.class);
+		Span span = spanOrNew(context);
+		try (Scope scope = tracer.withSpan(span)) {
 			runnable.run();
 		}
 	}
 
 	/**
 	 * Wraps a callable with a span.
-	 * @param context - Reactor context that contains the {@link TraceContext}
+	 * @param context - Reactor context that contains the {@link Span}
 	 * @param callable - lambda to execute within the tracing context
 	 * @param <T> callable's return type
 	 * @return value from the callable
 	 */
 	public static <T> T withSpanInScope(Context context, Callable<T> callable) {
-		CurrentTraceContext currentTraceContext = context.get(CurrentTraceContext.class);
-		TraceContext traceContext = traceContextOrNew(context);
-		return withContext(callable, currentTraceContext, traceContext);
+		Tracer tracer = context.get(Tracer.class);
+		Span span = spanOrNew(context);
+		return withContext(callable, tracer, span);
 	}
 
-	private static TraceContext traceContextOrNew(Context context) {
-		Tracing tracing = context.get(Tracing.class);
-		if (!context.hasKey(TraceContext.class)) {
+	private static Span spanOrNew(Context context) {
+		Tracer tracer = context.get(Tracer.class);
+		if (!context.hasKey(Span.class)) {
 			if (log.isDebugEnabled()) {
 				log.debug("No trace context found, will create a new span");
 			}
-			return tracing.tracer().nextSpan().context();
+			return tracer.spanBuilder("").startSpan();
 		}
-		return context.get(TraceContext.class);
+		return context.get(Span.class);
 	}
 
 	/**
 	 * Wraps a runnable with a span.
-	 * @param tracing - tracing bean
-	 * @param exchange - server web exchange that can contain the {@link TraceContext} in
+	 * @param tracer - tracer bean
+	 * @param exchange - server web exchange that can contain the {@link Span} in
 	 * its attribute
-	 * @param runnable - lambda to execute within the tracing context
+	 * @param runnable - lambda to execute within the tracer context
 	 */
-	public static void withSpanInScope(Tracing tracing, ServerWebExchange exchange, Runnable runnable) {
-		CurrentTraceContext currentTraceContext = tracing.currentTraceContext();
-		TraceContext traceContext = traceContextFromExchangeOrNew(tracing, exchange);
-		try (CurrentTraceContext.Scope scope = currentTraceContext.maybeScope(traceContext)) {
+	public static void withSpanInScope(Tracer tracer, ServerWebExchange exchange, Runnable runnable) {
+		Span span = spanFromExchangeOrNew(tracer, exchange);
+		try (Scope scope = tracer.withSpan(span)) {
 			runnable.run();
 		}
 	}
 
 	/**
 	 * Wraps a callable with a span.
-	 * @param tracing - tracing bean
-	 * @param exchange - server web exchange that can contain the {@link TraceContext} in
+	 * @param tracer - tracer bean
+	 * @param exchange - server web exchange that can contain the {@link Span} in
 	 * its attribute
-	 * @param callable - lambda to execute within the tracing context
+	 * @param callable - lambda to execute within the tracer context
 	 * @param <T> callable's return type
 	 * @return value from the callable
 	 */
-	public static <T> T withSpanInScope(Tracing tracing, ServerWebExchange exchange, Callable<T> callable) {
-		CurrentTraceContext currentTraceContext = tracing.currentTraceContext();
-		TraceContext traceContext = traceContextFromExchangeOrNew(tracing, exchange);
-		return withContext(callable, currentTraceContext, traceContext);
+	public static <T> T withSpanInScope(Tracer tracer, ServerWebExchange exchange, Callable<T> callable) {
+		Span span = spanFromExchangeOrNew(tracer, exchange);
+		return withContext(callable, tracer, span);
 	}
 
 	/**
 	 * Returns the current trace context.
-	 * @param exchange - server web exchange that can contain the {@link TraceContext} in
+	 * @param exchange - server web exchange that can contain the {@link Span} in
 	 * its attribute
 	 * @return current trace context or {@code null} if it's not present
 	 */
-	public static TraceContext currentTraceContext(ServerWebExchange exchange) {
-		return exchange.getAttribute(TraceContext.class.getName());
+	public static Span currentTracer(ServerWebExchange exchange) {
+		return exchange.getAttribute(Span.class.getName());
 	}
 
 	/**
 	 * Returns the current trace context.
-	 * @param context - Reactor context that can contain the {@link TraceContext}
+	 * @param context - Reactor context that can contain the {@link Span}
 	 * @return current trace context or {@code null} if it's not present
 	 */
-	public static TraceContext currentTraceContext(Context context) {
-		return context.getOrDefault(TraceContext.class, null);
+	public static Tracer currentTracer(Context context) {
+		return context.getOrDefault(Tracer.class, null);
 	}
 
 	/**
 	 * Returns the current trace context.
-	 * @param signal - Reactor signal that can contain the {@link TraceContext} in its
+	 * @param signal - Reactor signal that can contain the {@link Span} in its
 	 * context
 	 * @return current trace context or {@code null} if it's not present
 	 */
-	public static TraceContext currentTraceContext(Signal signal) {
-		return currentTraceContext(signal.getContext());
+	public static Tracer currentTracer(Signal signal) {
+		return currentTracer(signal.getContext());
 	}
 
-	private static <T> T withContext(Callable<T> callable, CurrentTraceContext currentTraceContext,
-			TraceContext traceContext) {
-		try (CurrentTraceContext.Scope scope = currentTraceContext.maybeScope(traceContext)) {
+	private static <T> T withContext(Callable<T> callable, Tracer tracer,
+			Span span) {
+		try (Scope scope = tracer.withSpan(span)) {
 			try {
 				return callable.call();
 			}
@@ -195,15 +193,15 @@ public final class WebFluxSleuthOperators {
 		}
 	}
 
-	private static TraceContext traceContextFromExchangeOrNew(Tracing tracing, ServerWebExchange exchange) {
-		TraceContext traceContext = exchange.getAttribute(TraceContext.class.getName());
-		if (traceContext == null) {
+	private static Span spanFromExchangeOrNew(Tracer tracer, ServerWebExchange exchange) {
+		Span span = exchange.getAttribute(Span.class.getName());
+		if (span == null) {
 			if (log.isDebugEnabled()) {
 				log.debug("No trace context found, will create a new span");
 			}
-			traceContext = tracing.tracer().nextSpan().context();
+			span = tracer.spanBuilder("").startSpan();
 		}
-		return traceContext;
+		return span;
 	}
 
 }

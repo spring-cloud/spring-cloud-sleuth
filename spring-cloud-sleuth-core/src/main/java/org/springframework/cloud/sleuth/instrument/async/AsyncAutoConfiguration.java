@@ -16,7 +16,7 @@
 
 package org.springframework.cloud.sleuth.instrument.async;
 
-import brave.Tracing;
+import io.opentelemetry.trace.Tracer;
 
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -32,7 +32,7 @@ import org.springframework.context.annotation.Configuration;
  * @since 2.1.0
  */
 @Configuration(proxyBeanMethods = false)
-@ConditionalOnBean(Tracing.class)
+@ConditionalOnBean(Tracer.class)
 @ConditionalOnProperty(value = "spring.sleuth.scheduled.enabled", matchIfMissing = true)
 @EnableConfigurationProperties(SleuthAsyncProperties.class)
 class AsyncAutoConfiguration {

@@ -23,6 +23,7 @@ import brave.propagation.CurrentTraceContext;
 import brave.propagation.CurrentTraceContext.Scope;
 import brave.propagation.StrictCurrentTraceContext;
 import brave.propagation.TraceContext;
+import io.opentelemetry.trace.Tracer;
 import org.assertj.core.presentation.StandardRepresentation;
 import org.junit.After;
 import org.junit.Before;
@@ -59,6 +60,8 @@ public class ScopePassingSpanSubscriberTests {
 	}
 
 	StrictCurrentTraceContext currentTraceContext = StrictCurrentTraceContext.create();
+
+	Tracer tracer = new BraveTracer()
 
 	TraceContext context = TraceContext.newBuilder().traceId(1).spanId(1).sampled(true).build();
 

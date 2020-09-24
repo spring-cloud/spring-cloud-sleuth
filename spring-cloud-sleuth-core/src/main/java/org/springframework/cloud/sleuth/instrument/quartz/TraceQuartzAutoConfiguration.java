@@ -16,7 +16,7 @@
 
 package org.springframework.cloud.sleuth.instrument.quartz;
 
-import brave.Tracing;
+import io.opentelemetry.trace.Tracer;
 import org.quartz.Scheduler;
 
 import org.springframework.beans.factory.BeanFactory;
@@ -38,18 +38,18 @@ import org.springframework.context.annotation.Configuration;
  * @since 2.2.0
  */
 @Configuration(proxyBeanMethods = false)
-@ConditionalOnBean({ Tracing.class, Scheduler.class })
+@ConditionalOnBean({ Tracer.class, Scheduler.class })
 @AutoConfigureAfter({ TraceAutoConfiguration.class, QuartzAutoConfiguration.class })
 @ConditionalOnProperty(value = "spring.sleuth.quartz.enabled", matchIfMissing = true)
 class TraceQuartzAutoConfiguration implements InitializingBean {
 
 	private Scheduler scheduler;
 
-	private Tracing tracing;
+	private Tracer tracer;
 
-	TraceQuartzAutoConfiguration(Scheduler scheduler, Tracing tracing) {
+	TraceQuartzAutoConfiguration(Scheduler scheduler, Tracer tracer) {
 		this.scheduler = scheduler;
-		this.tracing = tracing;
+		this.tracer = tracer;
 	}
 
 	@Autowired
@@ -57,7 +57,7 @@ class TraceQuartzAutoConfiguration implements InitializingBean {
 
 	@Bean
 	public TracingJobListener tracingJobListener() {
-		return new TracingJobListener(tracing);
+		return new TracingJobListener(tracer);
 	}
 
 	@Override

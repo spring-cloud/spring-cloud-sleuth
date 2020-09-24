@@ -16,7 +16,7 @@
 
 package org.springframework.cloud.sleuth.annotation;
 
-import brave.SpanCustomizer;
+import io.opentelemetry.trace.Span;
 import org.aopalliance.intercept.MethodInvocation;
 
 /**
@@ -33,6 +33,6 @@ public interface NewSpanParser {
 	 * @param newSpan meta data of the new span
 	 * @param span span to customize
 	 */
-	void parse(MethodInvocation methodInvocation, NewSpan newSpan, SpanCustomizer span);
+	void parse(MethodInvocation methodInvocation, NewSpan newSpan, Span span);
 
 }

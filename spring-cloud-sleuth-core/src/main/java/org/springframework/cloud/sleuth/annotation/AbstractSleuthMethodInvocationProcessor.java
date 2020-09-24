@@ -16,9 +16,8 @@
 
 package org.springframework.cloud.sleuth.annotation;
 
-import brave.Span;
-import brave.Tracer;
-import brave.propagation.CurrentTraceContext;
+import io.opentelemetry.trace.Span;
+import io.opentelemetry.trace.Tracer;
 import org.aopalliance.intercept.MethodInvocation;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -46,8 +45,6 @@ abstract class AbstractSleuthMethodInvocationProcessor implements SleuthMethodIn
 
 	private Tracer tracer;
 
-	private CurrentTraceContext currentTraceContext;
-
 	private SpanTagAnnotationHandler spanTagAnnotationHandler;
 
 	void before(MethodInvocation invocation, Span span, String log, boolean hasLog) {
@@ -63,7 +60,7 @@ abstract class AbstractSleuthMethodInvocationProcessor implements SleuthMethodIn
 			logEvent(span, log + ".after");
 		}
 		if (isNewSpan) {
-			span.finish();
+			span.end();
 		}
 	}
 
@@ -74,12 +71,12 @@ abstract class AbstractSleuthMethodInvocationProcessor implements SleuthMethodIn
 		if (hasLog) {
 			logEvent(span, log + ".afterFailure");
 		}
-		span.error(e);
+		span.recordException(e);
 	}
 
 	void addTags(MethodInvocation invocation, Span span) {
-		span.tag(CLASS_KEY, invocation.getThis().getClass().getSimpleName());
-		span.tag(METHOD_KEY, invocation.getMethod().getName());
+		span.setAttribute(CLASS_KEY, invocation.getThis().getClass().getSimpleName());
+		span.setAttribute(METHOD_KEY, invocation.getMethod().getName());
 	}
 
 	void logEvent(Span span, String name) {
@@ -89,7 +86,7 @@ abstract class AbstractSleuthMethodInvocationProcessor implements SleuthMethodIn
 					+ "the same class then the aspect will not be properly resolved");
 			return;
 		}
-		span.annotate(name);
+		span.addEvent(name);
 	}
 
 	String log(ContinueSpan continueSpan) {
@@ -105,14 +102,6 @@ abstract class AbstractSleuthMethodInvocationProcessor implements SleuthMethodIn
 		}
 		return this.tracer;
 	}
-
-	CurrentTraceContext currentTraceContext() {
-		if (this.currentTraceContext == null) {
-			this.currentTraceContext = this.beanFactory.getBean(CurrentTraceContext.class);
-		}
-		return this.currentTraceContext;
-	}
-
 	NewSpanParser newSpanParser() {
 		if (this.newSpanParser == null) {
 			this.newSpanParser = this.beanFactory.getBean(NewSpanParser.class);

@@ -37,6 +37,10 @@
 
 	<dependencies>
 		<dependency>
+			<groupId>io.opentelemetry</groupId>
+			<artifactId>opentelemetry-api</artifactId>
+		</dependency>
+		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-web</artifactId>
 			<optional>true</optional>
@@ -195,79 +199,6 @@
 			<groupId>org.aspectj</groupId>
 			<artifactId>aspectjrt</artifactId>
 		</dependency>
-		<!-- BRAVE -->
-		<dependency>
-			<groupId>io.zipkin.brave</groupId>
-			<artifactId>brave</artifactId>
-			<exclusions>
-				<exclusion>
-					<groupId>io.zipkin.reporter2</groupId>
-					<artifactId>*</artifactId>
-				</exclusion>
-				<exclusion>
-					<groupId>io.zipkin.zipkin2</groupId>
-					<artifactId>*</artifactId>
-				</exclusion>
-			</exclusions>
-		</dependency>
-		<dependency>
-			<groupId>io.zipkin.brave</groupId>
-			<artifactId>brave-context-slf4j</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>io.zipkin.brave</groupId>
-			<artifactId>brave-instrumentation-messaging</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>io.zipkin.brave</groupId>
-			<artifactId>brave-instrumentation-rpc</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>io.zipkin.brave</groupId>
-			<artifactId>brave-instrumentation-spring-web</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>io.zipkin.brave</groupId>
-			<artifactId>brave-instrumentation-spring-rabbit</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>io.zipkin.brave</groupId>
-			<artifactId>brave-instrumentation-kafka-clients</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>io.zipkin.brave</groupId>
-			<artifactId>brave-instrumentation-kafka-streams</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>io.zipkin.brave</groupId>
-			<artifactId>brave-instrumentation-httpclient</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>io.zipkin.brave</groupId>
-			<artifactId>brave-instrumentation-httpasyncclient</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>io.zipkin.brave</groupId>
-			<artifactId>brave-instrumentation-spring-webmvc</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>io.zipkin.brave</groupId>
-			<artifactId>brave-instrumentation-jms</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>io.zipkin.brave</groupId>
-			<artifactId>brave-instrumentation-mongodb</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>javax.jms</groupId>
-			<artifactId>javax.jms-api</artifactId>
-			<optional>true</optional>
-		</dependency>
-		<dependency>
-			<groupId>io.opentracing.brave</groupId>
-			<artifactId>brave-opentracing</artifactId>
-			<optional>true</optional>
-		</dependency>
 		<dependency>
 			<groupId>org.apache.httpcomponents</groupId>
 			<artifactId>httpasyncclient</artifactId>
@@ -281,39 +212,6 @@
 		<dependency>
 			<groupId>org.springframework</groupId>
 			<artifactId>spring-jms</artifactId>
-			<optional>true</optional>
-		</dependency>
-		<!-- GRPC Optional Dependencies -->
-		<dependency>
-			<groupId>io.github.lognet</groupId>
-			<artifactId>grpc-spring-boot-starter</artifactId>
-			<optional>true</optional>
-			<exclusions>
-				<exclusion>
-					<groupId>org.springframework.boot</groupId>
-					<artifactId>spring-boot-starter</artifactId>
-				</exclusion>
-			</exclusions>
-		</dependency>
-		<dependency>
-			<groupId>io.zipkin.brave</groupId>
-			<artifactId>brave-instrumentation-grpc</artifactId>
-			<optional>true</optional>
-		</dependency>
-		<dependency>
-			<groupId>io.zipkin.reporter2</groupId>
-			<artifactId>zipkin-reporter-metrics-micrometer</artifactId>
-			<exclusions>
-				<exclusion>
-					<groupId>io.micrometer</groupId>
-					<artifactId>micrometer-core</artifactId>
-				</exclusion>
-			</exclusions>
-		</dependency>
-		<!-- Instrumentation of Lettuce -->
-		<dependency>
-			<groupId>io.lettuce</groupId>
-			<artifactId>lettuce-core</artifactId>
 			<optional>true</optional>
 		</dependency>
 		<!-- For Instrumentation of Quartz -->
@@ -331,11 +229,6 @@
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-test</artifactId>
-			<scope>test</scope>
-		</dependency>
-		<dependency>
-			<groupId>io.zipkin.brave</groupId>
-			<artifactId>brave-instrumentation-http-tests</artifactId>
 			<scope>test</scope>
 		</dependency>
 		<dependency>

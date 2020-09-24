@@ -20,7 +20,7 @@ import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.List;
 
-import brave.SpanCustomizer;
+import io.opentelemetry.trace.Tracer;
 import org.aopalliance.intercept.MethodInvocation;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -47,7 +47,7 @@ class SpanTagAnnotationHandler {
 
 	private final BeanFactory beanFactory;
 
-	private SpanCustomizer spanCustomizer;
+	private Tracer tracer;
 
 	SpanTagAnnotationHandler(BeanFactory beanFactory) {
 		this.beanFactory = beanFactory;
@@ -121,15 +121,15 @@ class SpanTagAnnotationHandler {
 		for (SleuthAnnotatedParameter container : toBeAdded) {
 			String tagValue = resolveTagValue(container.annotation, container.argument);
 			String tagKey = resolveTagKey(container);
-			span().tag(tagKey, tagValue);
+			tracer().getCurrentSpan().setAttribute(tagKey, tagValue);
 		}
 	}
 
-	private SpanCustomizer span() {
-		if (this.spanCustomizer == null) {
-			this.spanCustomizer = this.beanFactory.getBean(SpanCustomizer.class);
+	private Tracer tracer() {
+		if (this.tracer == null) {
+			this.tracer = this.beanFactory.getBean(Tracer.class);
 		}
-		return this.spanCustomizer;
+		return this.tracer;
 	}
 
 	private String resolveTagKey(SleuthAnnotatedParameter container) {

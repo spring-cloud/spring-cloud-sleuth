@@ -16,11 +16,13 @@
 
 package org.springframework.cloud.sleuth.instrument.quartz;
 
-import brave.Span;
-import brave.Tracer.SpanInScope;
-import brave.Tracing;
-import brave.propagation.Propagation.Getter;
-import brave.propagation.TraceContextOrSamplingFlags;
+import io.grpc.Context;
+import io.opentelemetry.OpenTelemetry;
+import io.opentelemetry.context.Scope;
+import io.opentelemetry.context.propagation.TextMapPropagator.Getter;
+import io.opentelemetry.trace.Span;
+import io.opentelemetry.trace.Tracer;
+import io.opentelemetry.trace.TracingContextUtils;
 import org.quartz.JobDataMap;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
@@ -42,9 +44,9 @@ class TracingJobListener implements JobListener, TriggerListener {
 
 	static final String CONTEXT_SPAN_KEY = Span.class.getName();
 
-	static final String CONTEXT_SPAN_IN_SCOPE_KEY = SpanInScope.class.getName();
+	static final String CONTEXT_SPAN_IN_SCOPE_KEY = Scope.class.getName();
 
-	private static final Getter<JobDataMap, String> GETTER = (carrier, key) -> {
+	private static final Getter<JobDataMap> GETTER = (carrier, key) -> {
 		Object value = carrier.get(key);
 		if (value instanceof String) {
 			return (String) value;
@@ -52,10 +54,10 @@ class TracingJobListener implements JobListener, TriggerListener {
 		return null;
 	};
 
-	private final Tracing tracing;
+	private final Tracer tracer;
 
-	TracingJobListener(Tracing tracing) {
-		this.tracing = tracing;
+	TracingJobListener(Tracer tracing) {
+		this.tracer = tracing;
 	}
 
 	@Override
@@ -65,12 +67,20 @@ class TracingJobListener implements JobListener, TriggerListener {
 
 	@Override
 	public void triggerFired(Trigger trigger, JobExecutionContext context) {
-		TraceContextOrSamplingFlags extracted = tracing.propagation().extractor(GETTER)
-				.extract(context.getMergedJobDataMap());
-		Span span = tracing.tracer().nextSpan(extracted).name(context.getTrigger().getJobKey().toString())
-				.tag(TRIGGER_TAG_KEY, context.getTrigger().getKey().toString());
-		context.put(CONTEXT_SPAN_KEY, span);
-		context.put(CONTEXT_SPAN_IN_SCOPE_KEY, tracing.tracer().withSpanInScope(span.start()));
+		Context ctx = OpenTelemetry.getPropagators().getTextMapPropagator().extract(Context.current(),
+				context.getMergedJobDataMap(), GETTER);
+		Span extractedSpan = TracingContextUtils.getSpanWithoutDefault(ctx);
+		String name = context.getTrigger().getJobKey().toString();
+		extractedSpan = extractedSpan != null ? withUpdatedName(extractedSpan, name)
+				: tracer.spanBuilder(name).startSpan();
+		extractedSpan.setAttribute(TRIGGER_TAG_KEY, context.getTrigger().getKey().toString());
+		context.put(CONTEXT_SPAN_KEY, extractedSpan);
+		context.put(CONTEXT_SPAN_IN_SCOPE_KEY, tracer.withSpan(extractedSpan));
+	}
+
+	private Span withUpdatedName(Span span, String name) {
+		span.updateName(name);
+		return span;
 	}
 
 	@Override
@@ -106,11 +116,11 @@ class TracingJobListener implements JobListener, TriggerListener {
 	private void closeTrace(JobExecutionContext context) {
 		Object spanInScope = context.get(CONTEXT_SPAN_IN_SCOPE_KEY);
 		Object span = context.get(CONTEXT_SPAN_KEY);
-		if (spanInScope instanceof SpanInScope) {
-			((SpanInScope) spanInScope).close();
+		if (spanInScope instanceof Scope) {
+			((Scope) spanInScope).close();
 		}
 		if (span instanceof Span) {
-			((Span) span).finish();
+			((Span) span).end();
 		}
 	}
 

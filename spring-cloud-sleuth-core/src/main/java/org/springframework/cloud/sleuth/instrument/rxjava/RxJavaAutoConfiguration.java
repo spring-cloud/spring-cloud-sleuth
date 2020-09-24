@@ -18,8 +18,7 @@ package org.springframework.cloud.sleuth.instrument.rxjava;
 
 import java.util.Arrays;
 
-import brave.Tracer;
-import brave.Tracing;
+import io.opentelemetry.trace.Tracer;
 import rx.plugins.RxJavaSchedulersHook;
 
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
@@ -40,7 +39,7 @@ import org.springframework.context.annotation.Configuration;
  */
 @Configuration(proxyBeanMethods = false)
 @AutoConfigureAfter(TraceAutoConfiguration.class)
-@ConditionalOnBean(Tracing.class)
+@ConditionalOnBean(Tracer.class)
 @ConditionalOnClass(RxJavaSchedulersHook.class)
 @ConditionalOnProperty(value = "spring.sleuth.rxjava.schedulers.hook.enabled", matchIfMissing = true)
 @EnableConfigurationProperties(SleuthRxJavaSchedulersProperties.class)

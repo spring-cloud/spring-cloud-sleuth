@@ -29,7 +29,7 @@ import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.ThreadFactory;
 
-import brave.Tracing;
+import io.opentelemetry.trace.Tracer;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -73,7 +73,7 @@ class LazyTraceThreadPoolTaskScheduler extends ThreadPoolTaskScheduler {
 
 	private final Method getDefaultThreadNamePrefix;
 
-	private Tracing tracing;
+	private Tracer tracing;
 
 	private SpanNamer spanNamer;
 
@@ -394,9 +394,9 @@ class LazyTraceThreadPoolTaskScheduler extends ThreadPoolTaskScheduler {
 				delay);
 	}
 
-	private Tracing tracing() {
+	private Tracer tracing() {
 		if (this.tracing == null) {
-			this.tracing = this.beanFactory.getBean(Tracing.class);
+			this.tracing = this.beanFactory.getBean(Tracer.class);
 		}
 		return this.tracing;
 	}

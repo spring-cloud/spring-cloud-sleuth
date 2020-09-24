@@ -16,7 +16,7 @@
 
 package org.springframework.cloud.sleuth.annotation;
 
-import brave.SpanCustomizer;
+import io.opentelemetry.trace.Span;
 import org.aopalliance.intercept.MethodInvocation;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -35,7 +35,7 @@ class DefaultSpanCreator implements NewSpanParser {
 	private static final Log log = LogFactory.getLog(DefaultSpanCreator.class);
 
 	@Override
-	public void parse(MethodInvocation pjp, NewSpan newSpan, SpanCustomizer span) {
+	public void parse(MethodInvocation pjp, NewSpan newSpan, Span span) {
 		String name = newSpan == null || StringUtils.isEmpty(newSpan.name()) ? pjp.getMethod().getName()
 				: newSpan.name();
 		String changedName = SpanNameUtil.toLowerHyphen(name);
@@ -43,7 +43,7 @@ class DefaultSpanCreator implements NewSpanParser {
 			log.debug("For the class [" + pjp.getThis().getClass() + "] method " + "[" + pjp.getMethod().getName()
 					+ "] will name the span [" + changedName + "]");
 		}
-		span.name(changedName);
+		span.updateName(changedName);
 	}
 
 }

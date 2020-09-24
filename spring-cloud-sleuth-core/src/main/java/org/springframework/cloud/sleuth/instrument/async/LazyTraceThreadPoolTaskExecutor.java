@@ -22,7 +22,7 @@ import java.util.concurrent.RejectedExecutionHandler;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
 
-import brave.Tracing;
+import io.opentelemetry.trace.Tracer;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -52,7 +52,7 @@ public class LazyTraceThreadPoolTaskExecutor extends ThreadPoolTaskExecutor {
 
 	private final String beanName;
 
-	private Tracing tracing;
+	private Tracer tracing;
 
 	private SpanNamer spanNamer;
 
@@ -272,9 +272,9 @@ public class LazyTraceThreadPoolTaskExecutor extends ThreadPoolTaskExecutor {
 		this.delegate.setTaskDecorator(taskDecorator);
 	}
 
-	private Tracing tracing() {
+	private Tracer tracing() {
 		if (this.tracing == null) {
-			this.tracing = this.beanFactory.getBean(Tracing.class);
+			this.tracing = this.beanFactory.getBean(Tracer.class);
 		}
 		return this.tracing;
 	}

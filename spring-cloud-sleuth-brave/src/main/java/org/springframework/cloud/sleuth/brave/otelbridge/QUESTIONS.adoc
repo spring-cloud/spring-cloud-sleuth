@@ -1,0 +1,34 @@
+= List of questions to OTel
+
+== OTel-API
+
+* Why can't I retrieve a span from context via propagators?
+
+```java
+  Context extractedContext = OpenTelemetry.getPropagators().getTextMapPropagator()
+        .extract(Context.current(), httpExchange, getter);
+  Span serverSpan = null;
+  try (Scope scope = ContextUtils.withScopedContext(extractedContext)) {
+    serverSpan = tracer.getCurrentSpan();
+  }
+```
+
+whereas it would be great no to put the span in scope and just retrieve it:
+
+```java
+  Context extractedContext = OpenTelemetry.getPropagators().getTextMapPropagator()
+        .extract(Context.current(), httpExchange, getter);
+  Span span = ContextUtils.getSpan(extractedContext);
+```
+
+* How can I continue a span? (*File an issue* - in the specification repo - supports join?)
+** How can I continue it having `SpanContext`?
+* How can I create a builder for a span to add `kind` ?
+
+== OTel-SDK jar
+
+According to https://github.com/open-telemetry/opentelemetry-java/blob/master/QUICKSTART.md[Quickstart] I shouldn't be using OTel-SDK jar, however the API jar is missing features.
+
+* Why sampling API is not in `-api` jar?
+** Due to this you can't really create any bridges between libraries and OTel
+* How can I use my own tracer when using the SDK jar that has a tracer in META-INF already?

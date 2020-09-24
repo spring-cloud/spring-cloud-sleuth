@@ -47,6 +47,7 @@
 	<modules>
 		<module>spring-cloud-sleuth-dependencies</module>
 		<module>spring-cloud-sleuth-core</module>
+		<module>spring-cloud-sleuth-brave</module>
 		<module>tests</module>
 		<module>spring-cloud-sleuth-zipkin</module>
 		<module>spring-cloud-starter-sleuth</module>
@@ -219,6 +220,11 @@
 				<!-- not test because we need it in stream -->
 			</dependency>
 			<dependency>
+				<groupId>io.opentelemetry</groupId>
+				<artifactId>opentelemetry-api</artifactId>
+				<version>${opentelemetry-api.version}</version>
+			</dependency>
+			<dependency>
 				<groupId>org.hamcrest</groupId>
 				<artifactId>hamcrest-core</artifactId>
 				<version>2.2</version>
@@ -264,6 +270,7 @@
 		<!-- Until we switch it to true in sc-build -->
 		<javadoc.failOnError>true</javadoc.failOnError>
 		<javadoc.failOnWarnings>false</javadoc.failOnWarnings>
+		<opentelemetry-api.version>0.8.0</opentelemetry-api.version>
 	</properties>
 
 	<profiles>

@@ -16,7 +16,7 @@
 
 package org.springframework.cloud.sleuth.annotation;
 
-import brave.Tracing;
+import io.opentelemetry.trace.Tracer;
 
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
@@ -42,7 +42,7 @@ import org.springframework.context.annotation.Role;
  */
 @Configuration(proxyBeanMethods = false)
 @Role(BeanDefinition.ROLE_INFRASTRUCTURE)
-@ConditionalOnBean(Tracing.class)
+@ConditionalOnBean(Tracer.class)
 @ConditionalOnProperty(name = "spring.sleuth.annotation.enabled", matchIfMissing = true)
 @AutoConfigureAfter(TraceAutoConfiguration.class)
 class SleuthAnnotationAutoConfiguration {

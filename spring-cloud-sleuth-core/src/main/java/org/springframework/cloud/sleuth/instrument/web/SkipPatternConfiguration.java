@@ -23,7 +23,7 @@ import java.util.StringJoiner;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-import brave.Tracing;
+import io.opentelemetry.trace.Tracer;
 
 import org.springframework.beans.factory.BeanCurrentlyInCreationException;
 import org.springframework.boot.actuate.autoconfigure.endpoint.web.WebEndpointProperties;
@@ -57,10 +57,10 @@ import org.springframework.util.StringUtils;
  */
 @Configuration(proxyBeanMethods = false)
 @ConditionalOnProperty(value = "spring.sleuth.web.enabled", matchIfMissing = true)
-@ConditionalOnBean(Tracing.class)
+@ConditionalOnBean(Tracer.class)
 @AutoConfigureAfter(TraceAutoConfiguration.class)
 @EnableConfigurationProperties(SleuthWebProperties.class)
-class SkipPatternConfiguration {
+public class SkipPatternConfiguration {
 
 	@Bean
 	@ConditionalOnMissingBean

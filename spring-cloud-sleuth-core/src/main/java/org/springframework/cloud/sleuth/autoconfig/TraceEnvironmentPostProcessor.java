@@ -34,6 +34,7 @@ import org.springframework.core.env.PropertySource;
  * @author Marcin Grzejszczak
  * @since 2.0.0
  */
+// TODO: [OTEL] What to do about this?
 class TraceEnvironmentPostProcessor implements EnvironmentPostProcessor {
 
 	private static final String PROPERTY_SOURCE_NAME = "defaultProperties";

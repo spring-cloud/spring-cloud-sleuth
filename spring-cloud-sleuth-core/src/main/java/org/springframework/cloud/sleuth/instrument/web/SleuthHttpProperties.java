@@ -29,6 +29,7 @@ class SleuthHttpProperties {
 
 	private boolean enabled = true;
 
+	@Deprecated
 	private Legacy legacy = new Legacy();
 
 	public boolean isEnabled() {

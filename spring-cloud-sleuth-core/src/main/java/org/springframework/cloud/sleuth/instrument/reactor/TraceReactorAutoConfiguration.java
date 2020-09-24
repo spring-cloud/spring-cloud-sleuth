@@ -20,7 +20,7 @@ import java.io.Closeable;
 import java.io.IOException;
 import java.util.function.Function;
 
-import brave.Tracing;
+import io.opentelemetry.trace.Tracer;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.reactivestreams.Publisher;
@@ -69,7 +69,7 @@ class TraceReactorAutoConfiguration {
 	static final String SLEUTH_REACTOR_EXECUTOR_SERVICE_KEY = "sleuth";
 
 	@Configuration(proxyBeanMethods = false)
-	@ConditionalOnBean(Tracing.class)
+	@ConditionalOnBean(Tracer.class)
 	static class TraceReactorConfiguration {
 
 		static final String SLEUTH_TRACE_REACTOR_KEY = TraceReactorConfiguration.class.getName();

@@ -19,8 +19,7 @@ package org.springframework.cloud.sleuth.instrument.circuitbreaker;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
-import brave.Tracer;
-import brave.Tracing;
+import io.opentelemetry.trace.Tracer;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
@@ -46,7 +45,7 @@ import org.springframework.context.annotation.Configuration;
 @Configuration(proxyBeanMethods = false)
 @AutoConfigureAfter(TraceAutoConfiguration.class)
 @ConditionalOnClass(CircuitBreaker.class)
-@ConditionalOnBean(Tracing.class)
+@ConditionalOnBean(Tracer.class)
 @ConditionalOnProperty(value = "spring.sleuth.circuitbreaker.enabled", matchIfMissing = true)
 @EnableConfigurationProperties(SleuthCircuitBreakerProperties.class)
 class SleuthCircuitBreakerAutoConfiguration {

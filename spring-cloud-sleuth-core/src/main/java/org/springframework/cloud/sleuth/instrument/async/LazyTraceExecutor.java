@@ -18,7 +18,7 @@ package org.springframework.cloud.sleuth.instrument.async;
 
 import java.util.concurrent.Executor;
 
-import brave.Tracing;
+import io.opentelemetry.trace.Tracer;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -44,7 +44,7 @@ public class LazyTraceExecutor implements Executor {
 
 	private final String beanName;
 
-	private Tracing tracing;
+	private Tracer tracing;
 
 	private SpanNamer spanNamer;
 
@@ -68,7 +68,7 @@ public class LazyTraceExecutor implements Executor {
 		}
 		if (this.tracing == null) {
 			try {
-				this.tracing = this.beanFactory.getBean(Tracing.class);
+				this.tracing = this.beanFactory.getBean(Tracer.class);
 			}
 			catch (NoSuchBeanDefinitionException e) {
 				this.delegate.execute(command);

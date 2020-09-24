@@ -18,8 +18,9 @@ package org.springframework.cloud.sleuth.instrument.rxjava;
 
 import java.util.List;
 
-import brave.Span;
-import brave.Tracer;
+import io.opentelemetry.context.Scope;
+import io.opentelemetry.trace.Span;
+import io.opentelemetry.trace.Tracer;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import rx.functions.Action0;
@@ -111,7 +112,7 @@ class SleuthRxJavaSchedulersHook extends RxJavaSchedulersHook {
 		TraceAction(Tracer tracer, Action0 actual, List<String> threadsToIgnore) {
 			this.tracer = tracer;
 			this.threadsToIgnore = threadsToIgnore;
-			this.parent = this.tracer.currentSpan();
+			this.parent = this.tracer.getCurrentSpan();
 			this.actual = actual;
 		}
 
@@ -133,20 +134,17 @@ class SleuthRxJavaSchedulersHook extends RxJavaSchedulersHook {
 			}
 			Span span = this.parent;
 			boolean created = false;
-			if (span != null) {
-				span = this.tracer.toSpan(this.parent.context());
-			}
-			else {
-				span = this.tracer.nextSpan().name(RXJAVA_COMPONENT).start();
-				span.tag(THREAD_NAME_KEY, Thread.currentThread().getName());
+			if (span == null) {
+				span = this.tracer.spanBuilder(RXJAVA_COMPONENT).startSpan();
+				span.setAttribute(THREAD_NAME_KEY, Thread.currentThread().getName());
 				created = true;
 			}
-			try (Tracer.SpanInScope ws = this.tracer.withSpanInScope(span)) {
+			try (Scope scope = this.tracer.withSpan(span)) {
 				this.actual.call();
 			}
 			finally {
 				if (created) {
-					span.finish();
+					span.end();
 				}
 			}
 		}

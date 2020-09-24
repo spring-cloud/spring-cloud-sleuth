@@ -39,7 +39,7 @@ import org.springframework.cloud.client.loadbalancer.LoadBalancerClient;
 import org.springframework.cloud.openfeign.EnableFeignClients;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.cloud.openfeign.loadbalancer.FeignBlockingLoadBalancerClient;
-import org.springframework.cloud.sleuth.instrument.web.HttpClientSampler;
+import org.springframework.cloud.sleuth.brave.instrument.web.HttpClientSampler;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.test.annotation.DirtiesContext;

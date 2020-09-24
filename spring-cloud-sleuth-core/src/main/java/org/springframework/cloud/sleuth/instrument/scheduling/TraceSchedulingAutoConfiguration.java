@@ -18,8 +18,8 @@ package org.springframework.cloud.sleuth.instrument.scheduling;
 
 import java.util.regex.Pattern;
 
-import brave.Tracer;
-import brave.Tracing;
+import io.opentelemetry.trace.Tracer;
+import io.opentelemetry.trace.Tracer;
 
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
@@ -41,7 +41,7 @@ import org.springframework.context.annotation.Configuration;
 @Configuration(proxyBeanMethods = false)
 @ConditionalOnClass(name = "org.aspectj.lang.ProceedingJoinPoint")
 @ConditionalOnProperty(value = "spring.sleuth.scheduled.enabled", matchIfMissing = true)
-@ConditionalOnBean(Tracing.class)
+@ConditionalOnBean(Tracer.class)
 @AutoConfigureAfter(TraceAutoConfiguration.class)
 @EnableConfigurationProperties(SleuthSchedulingProperties.class)
 class TraceSchedulingAutoConfiguration {

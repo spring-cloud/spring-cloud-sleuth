@@ -26,10 +26,10 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.ThreadFactory;
 
-import brave.Tracer;
 import brave.Tracing;
 import brave.propagation.StrictCurrentTraceContext;
 import brave.test.TestSpanHandler;
+import io.opentelemetry.trace.Tracer;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -38,6 +38,8 @@ import rx.plugins.RxJavaErrorHandler;
 import rx.plugins.RxJavaObservableExecutionHook;
 import rx.plugins.RxJavaPlugins;
 import rx.plugins.RxJavaSchedulersHook;
+
+import org.springframework.cloud.sleuth.brave.otelbridge.BraveTracer;
 
 import static org.assertj.core.api.BDDAssertions.then;
 
@@ -57,7 +59,7 @@ public class SleuthRxJavaSchedulersHookTests {
 	Tracing tracing = Tracing.newBuilder().currentTraceContext(this.currentTraceContext).addSpanHandler(this.spans)
 			.build();
 
-	Tracer tracer = this.tracing.tracer();
+	Tracer tracer = new BraveTracer(this.tracing.tracer());
 
 	@AfterEach
 	public void clean() {

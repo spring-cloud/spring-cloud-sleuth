@@ -1,0 +1,100 @@
+{
+  "properties": [
+    {
+      "name": "spring.sleuth.integration.enabled",
+      "type": "java.lang.Boolean",
+      "description": "Enable Spring Integration sleuth instrumentation.",
+      "defaultValue": true
+    },
+    {
+      "name": "spring.sleuth.integration.websockets.enabled",
+      "type": "java.lang.Boolean",
+      "description": "Enable tracing for WebSockets.",
+      "defaultValue": true
+    },
+    {
+      "name": "spring.sleuth.async.enabled",
+      "type": "java.lang.Boolean",
+      "description": "Enable instrumenting async related components so that the tracing information is passed between threads.",
+      "defaultValue": true
+    },
+    {
+      "name": "spring.sleuth.async.configurer.enabled",
+      "type": "java.lang.Boolean",
+      "description": "Enable default AsyncConfigurer.",
+      "defaultValue": true
+    },
+    {
+      "name": "spring.sleuth.feign.enabled",
+      "type": "java.lang.Boolean",
+      "description": "Enable span information propagation when using Feign.",
+      "defaultValue": true
+    },
+    {
+      "name": "spring.sleuth.feign.processor.enabled",
+      "type": "java.lang.Boolean",
+      "description": "Enable post processor that wraps Feign Context in its tracing representations.",
+      "defaultValue": true
+    },
+    {
+      "name": "spring.sleuth.grpc.enabled",
+      "type": "java.lang.Boolean",
+      "description": "Enable span information propagation when using GRPC.",
+      "defaultValue": true
+    },
+    {
+      "name": "spring.sleuth.messaging.jms.enabled",
+      "type": "java.lang.Boolean",
+      "description": "Enable tracing of JMS.",
+      "defaultValue": true
+    },
+    {
+      "name": "spring.sleuth.messaging.rabbit.enabled",
+      "type": "java.lang.Boolean",
+      "description": "Enable tracing of RabbitMQ.",
+      "defaultValue": true
+    },
+    {
+      "name": "spring.sleuth.messaging.kafka.enabled",
+      "type": "java.lang.Boolean",
+      "description": "Enable tracing of Kafka.",
+      "defaultValue": true
+    },
+    {
+      "name": "spring.sleuth.messaging.kafka.mapper.enabled",
+      "type": "java.lang.Boolean",
+      "description": "Enable DefaultKafkaHeaderMapper tracing for Kafka.",
+      "defaultValue": true
+    },
+    {
+      "name": "spring.sleuth.quartz.enabled",
+      "type": "java.lang.Boolean",
+      "description": "Enable tracing for Quartz.",
+      "defaultValue": true
+    },
+    {
+      "name": "spring.sleuth.mongodb.enabled",
+      "type": "java.lang.Boolean",
+      "description": "Enable tracing for MongoDb.",
+      "defaultValue": true
+    },
+    {
+      "name": "spring.sleuth.rpc.enabled",
+      "type": "java.lang.Boolean",
+      "description": "Enable tracing of RPC.",
+      "defaultValue": true
+    },
+    {
+      "name": "spring.sleuth.sampler.refresh.enabled",
+      "type": "java.lang.Boolean",
+      "description": "Enable refresh scope for sampler.",
+      "defaultValue": true
+    },
+    {
+      "name": "spring.sleuth.web.webclient.enabled",
+      "type": "java.lang.Boolean",
+      "description": "Enable tracing instrumentation for WebClient.",
+      "defaultValue": true
+    }
+  ]
+}
