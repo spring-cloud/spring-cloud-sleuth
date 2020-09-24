@@ -217,7 +217,7 @@ class ReactorSleuthMethodInvocationProcessor extends AbstractSleuthMethodInvocat
 			this.hasLog = hasLog;
 			this.processor = processor;
 			this.context = actual.currentContext().put(Span.class, span);
-			this.tracer = processor.tracer;
+			this.tracer = processor.tracer();
 			processor.before(invocation, this.span, this.log, this.hasLog);
 		}
 

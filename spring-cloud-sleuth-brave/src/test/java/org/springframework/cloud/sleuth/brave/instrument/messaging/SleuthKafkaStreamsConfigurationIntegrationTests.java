@@ -33,6 +33,7 @@ import org.springframework.boot.test.context.runner.ApplicationContextRunner;
 import org.springframework.boot.test.system.CapturedOutput;
 import org.springframework.boot.test.system.OutputCaptureExtension;
 import org.springframework.cloud.sleuth.autoconfig.TraceAutoConfiguration;
+import org.springframework.cloud.sleuth.brave.autoconfig.TraceBraveAutoConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.kafka.config.StreamsBuilderFactoryBean;
@@ -46,8 +47,8 @@ import static org.mockito.Mockito.verify;
 class SleuthKafkaStreamsConfigurationIntegrationTests {
 
 	private final ApplicationContextRunner contextRunner = new ApplicationContextRunner()
-			.withConfiguration(
-					AutoConfigurations.of(TraceAutoConfiguration.class, SleuthKafkaStreamsConfiguration.class))
+			.withConfiguration(AutoConfigurations.of(TraceAutoConfiguration.class, TraceBraveAutoConfiguration.class,
+					SleuthKafkaStreamsConfiguration.class))
 			.withUserConfiguration(UserConfig.class);
 
 	@Test
@@ -63,13 +64,13 @@ class SleuthKafkaStreamsConfigurationIntegrationTests {
 
 	@Test
 	void should_not_create_KafkaStreamsTracing_when_kafkastreams_disabled() {
-		this.contextRunner.withPropertyValues("spring.sleuth.messaging.kafka.streams.enabled=false")
+		this.contextRunner.withPropertyValues("spring.sleuth.brave.messaging.kafka.streams.enabled=false")
 				.run(context -> assertThat(context).doesNotHaveBean(KafkaStreamsTracing.class));
 	}
 
 	@Test
 	void should_not_create_KafkaStreamsTracing_when_messaging_disabled() {
-		this.contextRunner.withPropertyValues("spring.sleuth.messaging.enabled=false")
+		this.contextRunner.withPropertyValues("spring.sleuth.brave.messaging.enabled=false")
 				.run(context -> assertThat(context).doesNotHaveBean(KafkaStreamsTracing.class));
 	}
 

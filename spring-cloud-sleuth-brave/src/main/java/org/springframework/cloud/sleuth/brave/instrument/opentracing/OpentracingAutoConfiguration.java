@@ -39,7 +39,7 @@ import org.springframework.context.annotation.Configuration;
  * @since 2.0.0
  */
 @Configuration(proxyBeanMethods = false)
-@ConditionalOnProperty(value = "spring.sleuth.opentracing.enabled", matchIfMissing = true)
+@ConditionalOnProperty(value = "spring.sleuth.brave.opentracing.enabled", matchIfMissing = true)
 @ConditionalOnBean(Tracing.class)
 @ConditionalOnClass(Tracer.class)
 @AutoConfigureAfter(TraceBraveAutoConfiguration.class)

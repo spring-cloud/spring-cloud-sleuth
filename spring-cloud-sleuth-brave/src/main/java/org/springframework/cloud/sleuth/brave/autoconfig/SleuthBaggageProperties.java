@@ -33,7 +33,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * @author Adrian Cole
  * @since 3.0
  */
-@ConfigurationProperties("spring.sleuth.baggage")
+@ConfigurationProperties("spring.sleuth.brave.baggage")
 class SleuthBaggageProperties {
 
 	/**

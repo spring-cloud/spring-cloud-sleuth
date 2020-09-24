@@ -53,11 +53,10 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
  * @since 1.0.0
  */
 @Configuration(proxyBeanMethods = false)
-@ConditionalOnProperty(value = "spring.sleuth.web.enabled", matchIfMissing = true)
+@ConditionalOnProperty(value = "spring.sleuth.brave.web.enabled", matchIfMissing = true)
 @ConditionalOnWebApplication(type = ConditionalOnWebApplication.Type.SERVLET)
 @ConditionalOnBean(HttpTracing.class)
 @AutoConfigureAfter(TraceHttpAutoConfiguration.class)
-@EnableConfigurationProperties(SleuthWebProperties.class)
 @Import(SpanCustomizingAsyncHandlerInterceptor.class)
 class TraceWebServletAutoConfiguration {
 

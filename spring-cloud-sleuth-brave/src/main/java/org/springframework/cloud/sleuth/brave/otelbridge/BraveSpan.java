@@ -25,6 +25,9 @@ import io.opentelemetry.trace.Event;
 import io.opentelemetry.trace.SpanContext;
 import io.opentelemetry.trace.Status;
 
+import org.springframework.core.NestedExceptionUtils;
+import org.springframework.integration.util.StackTraceUtils;
+
 public class BraveSpan implements io.opentelemetry.trace.Span {
 
 	final brave.Span span;
@@ -103,12 +106,13 @@ public class BraveSpan implements io.opentelemetry.trace.Span {
 	@Override
 	public void recordException(Throwable exception) {
 		this.span.error(exception);
+		this.span.tag("error", NestedExceptionUtils.getMostSpecificCause(exception).getMessage());
 	}
 
 	@Override
 	public void recordException(Throwable exception, Attributes additionalAttributes) {
 		// TODO: What about attributes
-		this.span.error(exception);
+		recordException(exception);
 	}
 
 	@Override

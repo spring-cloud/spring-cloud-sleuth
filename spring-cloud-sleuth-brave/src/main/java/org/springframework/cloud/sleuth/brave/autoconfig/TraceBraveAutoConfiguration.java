@@ -30,10 +30,12 @@ import brave.propagation.Propagation;
 import brave.propagation.ThreadLocalCurrentTraceContext;
 import brave.sampler.Sampler;
 
+import org.springframework.boot.autoconfigure.AutoConfigureBefore;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.cloud.sleuth.SpanNamer;
+import org.springframework.cloud.sleuth.autoconfig.TraceAutoConfiguration;
 import org.springframework.cloud.sleuth.brave.LocalServiceName;
 import org.springframework.cloud.sleuth.brave.otelbridge.BraveTracer;
 import org.springframework.cloud.sleuth.brave.sampler.SamplerAutoConfiguration;
@@ -54,9 +56,10 @@ import org.springframework.util.StringUtils;
  * @since 3.0.0
  */
 @Configuration(proxyBeanMethods = false)
-@ConditionalOnProperty(value = "spring.sleuth.enabled", matchIfMissing = true)
+@ConditionalOnProperty(value = { "spring.sleuth.enabled", "spring.sleuth.brave.enabled" }, matchIfMissing = true)
 @EnableConfigurationProperties(SleuthProperties.class)
 @Import({ TraceBaggageConfiguration.class, SamplerAutoConfiguration.class })
+@AutoConfigureBefore(TraceAutoConfiguration.class)
 // public allows @AutoConfigureAfter(TraceAutoConfiguration)
 // for components needing Tracing
 public class TraceBraveAutoConfiguration {
@@ -146,7 +149,7 @@ public class TraceBraveAutoConfiguration {
 	}
 
 	@Bean
-	@ConditionalOnProperty(value = "spring.sleuth.span-handler.enabled", matchIfMissing = true)
+	@ConditionalOnProperty(value = "spring.sleuth.brave.span-handler.enabled", matchIfMissing = true)
 	SpanHandler spanIgnoringSpanHandler(SleuthProperties sleuthProperties) {
 		return new SpanIgnoringSpanHandler(sleuthProperties);
 	}

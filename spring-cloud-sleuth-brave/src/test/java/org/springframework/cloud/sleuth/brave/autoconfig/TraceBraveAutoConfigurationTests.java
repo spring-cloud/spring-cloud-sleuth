@@ -47,7 +47,7 @@ import org.springframework.context.annotation.Configuration;
 public class TraceBraveAutoConfigurationTests {
 
 	private final ApplicationContextRunner contextRunner = new ApplicationContextRunner()
-			.withConfiguration(AutoConfigurations.of(TraceAutoConfiguration.class));
+			.withConfiguration(AutoConfigurations.of(TraceAutoConfiguration.class, TraceBraveAutoConfiguration.class));
 
 	/**
 	 * Duplicates {@link SamplerAutoConfigurationTests} intentionally, to ensure
@@ -104,7 +104,7 @@ public class TraceBraveAutoConfigurationTests {
 
 	@Test
 	void should_use_local_keys_from_properties() {
-		this.contextRunner.withPropertyValues("spring.sleuth.baggage.local-fields=bp")
+		this.contextRunner.withPropertyValues("spring.sleuth.brave.baggage.local-fields=bp")
 				.withUserConfiguration(Baggage.class).run((context -> {
 					final Baggage bean = context.getBean(Baggage.class);
 					BDDAssertions.then(bean.fields).containsExactly(BaggageField.create("bp"));
@@ -113,7 +113,7 @@ public class TraceBraveAutoConfigurationTests {
 
 	@Test
 	void should_combine_baggage_beans_and_properties() {
-		this.contextRunner.withPropertyValues("spring.sleuth.baggage.local-fields=bp")
+		this.contextRunner.withPropertyValues("spring.sleuth.brave.baggage.local-fields=bp")
 				.withUserConfiguration(WithBaggageBeans.class, Baggage.class).run((context -> {
 					final Baggage bean = context.getBean(Baggage.class);
 					BDDAssertions.then(bean.fields).containsOnly(BaggageField.create("country-code"),

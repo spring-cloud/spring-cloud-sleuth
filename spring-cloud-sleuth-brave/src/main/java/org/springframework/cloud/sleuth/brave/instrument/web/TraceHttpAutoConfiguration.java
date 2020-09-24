@@ -33,6 +33,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.cloud.sleuth.brave.autoconfig.TraceBraveAutoConfiguration;
 import org.springframework.cloud.sleuth.instrument.web.SkipPatternConfiguration;
 import org.springframework.cloud.sleuth.instrument.web.SkipPatternProvider;
@@ -50,16 +51,13 @@ import org.springframework.lang.Nullable;
  * @since 2.0.0
  */
 @Configuration(proxyBeanMethods = false)
-// This was formerly conditional on TraceWebAutoConfiguration, which was
-// conditional on "spring.sleuth.web.enabled". As this is conditional on
-// "spring.sleuth.http.enabled", to be compatible with old behavior we have
-// to be conditional on two properties.
-@ConditionalOnProperty(name = { "spring.sleuth.http.enabled", "spring.sleuth.web.enabled" }, havingValue = "true",
-		matchIfMissing = true)
+@ConditionalOnProperty(name = { "spring.sleuth.brave.http.enabled", "spring.sleuth.brave.web.enabled" },
+		havingValue = "true", matchIfMissing = true)
 @ConditionalOnBean(Tracing.class)
 @ConditionalOnClass(HttpTracing.class)
 @AutoConfigureAfter(TraceBraveAutoConfiguration.class)
 @Import(SkipPatternConfiguration.class)
+@EnableConfigurationProperties({ SleuthWebProperties.class, SleuthHttpProperties.class })
 // public allows @AutoConfigureAfter(TraceHttpAutoConfiguration)
 // for components needing HttpTracing
 public class TraceHttpAutoConfiguration {

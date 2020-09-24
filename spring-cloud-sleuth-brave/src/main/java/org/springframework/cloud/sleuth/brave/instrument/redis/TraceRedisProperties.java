@@ -23,7 +23,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  *
  * @author Daniel Albuquerque
  */
-@ConfigurationProperties("spring.sleuth.redis")
+@ConfigurationProperties("spring.sleuth.brave.redis")
 class TraceRedisProperties {
 
 	/**

@@ -67,11 +67,11 @@ class TraceBaggageConfiguration {
 
 	static final Log logger = LogFactory.getLog(TraceBaggageConfiguration.class);
 
-	static final String LOCAL_KEYS = "spring.sleuth.local-keys";
-	static final String BAGGAGE_KEYS = "spring.sleuth.baggage-keys";
-	static final String PROPAGATION_KEYS = "spring.sleuth.propagation-keys";
-	static final String WHITELISTED_KEYS = "spring.sleuth.propagation.tag.whitelisted-keys";
-	static final String WHITELISTED_MDC_KEYS = "spring.sleuth.log.slf4j.whitelisted-mdc-keys";
+	static final String LOCAL_KEYS = "spring.sleuth.brave.local-keys";
+	static final String BAGGAGE_KEYS = "spring.sleuth.brave.baggage-keys";
+	static final String PROPAGATION_KEYS = "spring.sleuth.brave.propagation-keys";
+	static final String WHITELISTED_KEYS = "spring.sleuth.brave.propagation.tag.whitelisted-keys";
+	static final String WHITELISTED_MDC_KEYS = "spring.sleuth.brave.log.slf4j.whitelisted-mdc-keys";
 
 	// Note: Versions <2.2.3 use injectFormat(MULTI) for non-remote (ex spring-messaging)
 	// See #1643
@@ -127,14 +127,14 @@ class TraceBaggageConfiguration {
 			@Qualifier(PROPAGATION_KEYS) List<String> propagationKeys, SleuthBaggageProperties sleuthBaggageProperties,
 			@Nullable List<BaggagePropagationCustomizer> baggagePropagationCustomizers) {
 
-		Set<String> localFields = redirectOldPropertyToNew(LOCAL_KEYS, localKeys, "spring.sleuth.baggage.local-fields",
+		Set<String> localFields = redirectOldPropertyToNew(LOCAL_KEYS, localKeys, "spring.sleuth.brave.baggage.local-fields",
 				sleuthBaggageProperties.getLocalFields());
 		for (String fieldName : localFields) {
 			factoryBuilder.add(SingleBaggageField.local(BaggageField.create(fieldName)));
 		}
 
 		Set<String> remoteFields = redirectOldPropertyToNew(PROPAGATION_KEYS, propagationKeys,
-				"spring.sleuth.baggage.remote-fields", sleuthBaggageProperties.getRemoteFields());
+				"spring.sleuth.brave.baggage.remote-fields", sleuthBaggageProperties.getRemoteFields());
 		for (String fieldName : remoteFields) {
 			factoryBuilder.add(SingleBaggageField.remote(BaggageField.create(fieldName)));
 		}
@@ -181,13 +181,13 @@ class TraceBaggageConfiguration {
 	@Bean
 	@ConditionalOnMissingBean(CorrelationScopeDecorator.class)
 	@ConditionalOnBean(CorrelationScopeDecorator.Builder.class)
-	@ConditionalOnProperty(value = "spring.sleuth.baggage.correlation-enabled", matchIfMissing = true)
+	@ConditionalOnProperty(value = "spring.sleuth.brave.baggage.correlation-enabled", matchIfMissing = true)
 	ScopeDecorator correlationScopeDecorator(@Qualifier(WHITELISTED_MDC_KEYS) List<String> whiteListedMDCKeys,
 			SleuthBaggageProperties sleuthBaggageProperties,
 			@Nullable List<CorrelationScopeCustomizer> correlationScopeCustomizers) {
 
 		Set<String> correlationFields = redirectOldPropertyToNew(WHITELISTED_MDC_KEYS, whiteListedMDCKeys,
-				"spring.sleuth.baggage.correlation-fields", sleuthBaggageProperties.getCorrelationFields());
+				"spring.sleuth.brave.baggage.correlation-fields", sleuthBaggageProperties.getCorrelationFields());
 
 		// Add fields from properties
 		CorrelationScopeDecorator.Builder builder = MDCScopeDecorator.newBuilder();
@@ -227,7 +227,7 @@ class TraceBaggageConfiguration {
 				SleuthBaggageProperties sleuthBaggageProperties) {
 
 			Set<String> tagFields = redirectOldPropertyToNew(WHITELISTED_KEYS, whiteListedKeys,
-					"spring.sleuth.baggage.tag-fields", sleuthBaggageProperties.getTagFields());
+					"spring.sleuth.brave.baggage.tag-fields", sleuthBaggageProperties.getTagFields());
 
 			if (tagFields.isEmpty()) {
 				return SpanHandler.NOOP; // Brave ignores these
@@ -248,12 +248,12 @@ class TraceBaggageConfiguration {
 			super(ConfigurationPhase.PARSE_CONFIGURATION);
 		}
 
-		@ConditionalOnProperty("spring.sleuth.baggage.tag-fields")
+		@ConditionalOnProperty("spring.sleuth.brave.baggage.tag-fields")
 		static class TagFieldsProperty {
 
 		}
 
-		@ConditionalOnProperty("spring.sleuth.baggage.tag-fields[0]")
+		@ConditionalOnProperty("spring.sleuth.brave.baggage.tag-fields[0]")
 		static class TagFieldsYamlListProperty {
 
 		}

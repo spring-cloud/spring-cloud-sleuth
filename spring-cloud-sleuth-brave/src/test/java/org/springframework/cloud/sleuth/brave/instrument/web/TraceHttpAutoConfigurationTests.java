@@ -30,6 +30,7 @@ import org.springframework.boot.test.context.assertj.AssertableApplicationContex
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
 import org.springframework.boot.test.context.runner.ContextConsumer;
 import org.springframework.cloud.sleuth.autoconfig.TraceAutoConfiguration;
+import org.springframework.cloud.sleuth.brave.autoconfig.TraceBraveAutoConfiguration;
 import org.springframework.cloud.sleuth.instrument.web.SkipPatternConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -50,7 +51,7 @@ public class TraceHttpAutoConfigurationTests {
 
 	@Test
 	public void configuresClientSkipPattern() throws Exception {
-		contextRunner().withPropertyValues("spring.sleuth.web.client.skip-pattern=foo.*|bar.*").run((context) -> {
+		contextRunner().withPropertyValues("spring.sleuth.brave.web.client.skip-pattern=foo.*|bar.*").run((context) -> {
 			SamplerFunction<HttpRequest> clientSampler = context.getBean(HttpTracing.class).clientRequestSampler();
 
 			then(clientSampler).isInstanceOf(SkipPatternHttpClientSampler.class);
@@ -77,7 +78,7 @@ public class TraceHttpAutoConfigurationTests {
 
 	@Test
 	public void defaultsServerSamplerToDeferWhenSkipPatternCleared() {
-		contextRunner().withPropertyValues("spring.sleuth.web.skip-pattern").run((context) -> {
+		contextRunner().withPropertyValues("spring.sleuth.brave.web.skip-pattern").run((context) -> {
 			SamplerFunction<HttpRequest> clientSampler = context.getBean(HttpTracing.class).serverRequestSampler();
 
 			then(clientSampler).isSameAs(SamplerFunctions.deferDecision());
@@ -177,8 +178,9 @@ public class TraceHttpAutoConfigurationTests {
 	}
 
 	private ApplicationContextRunner contextRunner(String... propertyValues) {
-		return new ApplicationContextRunner().withPropertyValues(propertyValues).withConfiguration(AutoConfigurations
-				.of(TraceAutoConfiguration.class, TraceHttpAutoConfiguration.class, SkipPatternConfiguration.class));
+		return new ApplicationContextRunner().withPropertyValues(propertyValues).withConfiguration(
+				AutoConfigurations.of(TraceAutoConfiguration.class, TraceBraveAutoConfiguration.class,
+						TraceHttpAutoConfiguration.class, SkipPatternConfiguration.class));
 	}
 
 }

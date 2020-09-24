@@ -25,7 +25,7 @@ import org.springframework.boot.context.properties.NestedConfigurationProperty;
  * @author Arthur Gavlyukovskiy
  * @since 1.0.12
  */
-@ConfigurationProperties("spring.sleuth.web")
+@ConfigurationProperties("spring.sleuth.brave.web")
 class SleuthWebProperties {
 
 	/**

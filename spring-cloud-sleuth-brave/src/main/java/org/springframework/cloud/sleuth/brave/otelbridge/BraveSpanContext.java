@@ -24,7 +24,7 @@ import io.opentelemetry.trace.TraceState;
 
 public class BraveSpanContext extends io.opentelemetry.trace.SpanContext {
 
-	private final TraceContext traceContext;
+	final TraceContext traceContext;
 
 	public BraveSpanContext(TraceContext traceContext) {
 		this.traceContext = traceContext;

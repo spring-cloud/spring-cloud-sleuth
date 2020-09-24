@@ -23,6 +23,7 @@ import org.springframework.boot.test.context.FilteredClassLoader;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
 import org.springframework.cloud.function.context.FunctionCatalog;
 import org.springframework.cloud.sleuth.autoconfig.TraceAutoConfiguration;
+import org.springframework.cloud.sleuth.brave.autoconfig.TraceBraveAutoConfiguration;
 import org.springframework.cloud.stream.annotation.EnableBinding;
 import org.springframework.context.annotation.Configuration;
 
@@ -31,7 +32,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 class TraceSpringIntegrationAutoConfigurationTests {
 
 	private final ApplicationContextRunner contextRunner = new ApplicationContextRunner()
-			.withConfiguration(AutoConfigurations.of(TraceAutoConfiguration.class,
+			.withConfiguration(AutoConfigurations.of(TraceAutoConfiguration.class, TraceBraveAutoConfiguration.class,
 					TraceSpringMessagingAutoConfiguration.class, TraceSpringIntegrationAutoConfiguration.class));
 
 	@Test
@@ -53,7 +54,7 @@ class TraceSpringIntegrationAutoConfigurationTests {
 
 	@Test
 	void should_create_tracing_channel_interceptor_when_function_on_the_classpath_no_enable_binding_is_set_and_property_set() {
-		this.contextRunner.withSystemProperties("spring.sleuth.integration.enabled=true")
+		this.contextRunner.withSystemProperties("spring.sleuth.brave.integration.enabled=true")
 				.run(context -> assertThat(context).hasSingleBean(TracingChannelInterceptor.class));
 	}
 

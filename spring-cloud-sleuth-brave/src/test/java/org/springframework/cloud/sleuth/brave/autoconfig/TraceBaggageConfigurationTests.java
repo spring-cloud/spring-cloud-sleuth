@@ -56,13 +56,13 @@ public class TraceBaggageConfigurationTests {
 
 	@Test
 	public void shouldCreateLocalFields() {
-		this.contextRunner.withPropertyValues("spring.sleuth.baggage.local-fields=bp")
+		this.contextRunner.withPropertyValues("spring.sleuth.brave.baggage.local-fields=bp")
 				.run((context) -> assertThatBaggageFieldNameToKeyNames(context).containsOnly(tuple("bp", EMPTY_ARRAY)));
 	}
 
 	@Test
 	public void shouldCreateLocalFields_oldName() {
-		this.contextRunner.withPropertyValues("spring.sleuth.local-keys=bp")
+		this.contextRunner.withPropertyValues("spring.sleuth.brave.local-keys=bp")
 				.run((context) -> assertThatBaggageFieldNameToKeyNames(context).containsOnly(tuple("bp", EMPTY_ARRAY)));
 	}
 
@@ -74,7 +74,7 @@ public class TraceBaggageConfigurationTests {
 
 	@Test
 	public void shouldCreateRemoteFields() {
-		this.contextRunner.withPropertyValues("spring.sleuth.baggage.remote-fields=x-vcap-request-id,country-code")
+		this.contextRunner.withPropertyValues("spring.sleuth.brave.baggage.remote-fields=x-vcap-request-id,country-code")
 				.run((context) -> assertThatBaggageFieldNameToKeyNames(context).containsOnly(
 						tuple("x-vcap-request-id", new String[] { "x-vcap-request-id" }),
 						tuple("country-code", new String[] { "country-code" })));
@@ -82,7 +82,7 @@ public class TraceBaggageConfigurationTests {
 
 	@Test
 	public void shouldCreateRemoteFields_oldName() {
-		this.contextRunner.withPropertyValues("spring.sleuth.propagation-keys=x-vcap-request-id,country-code")
+		this.contextRunner.withPropertyValues("spring.sleuth.brave.propagation-keys=x-vcap-request-id,country-code")
 				.run((context) -> assertThatBaggageFieldNameToKeyNames(context).containsOnly(
 						tuple("x-vcap-request-id", new String[] { "x-vcap-request-id" }),
 						tuple("country-code", new String[] { "country-code" })));
@@ -90,7 +90,7 @@ public class TraceBaggageConfigurationTests {
 
 	@Test
 	public void shouldCreateDeprecatedBaggageFields() {
-		this.contextRunner.withPropertyValues("spring.sleuth.baggage-keys=country-code")
+		this.contextRunner.withPropertyValues("spring.sleuth.brave.baggage-keys=country-code")
 				.run((context) -> assertThatBaggageFieldNameToKeyNames(context).containsOnly(
 						tuple("country-code", new String[] { "baggage-country-code", "baggage_country-code" })));
 	}
@@ -104,30 +104,30 @@ public class TraceBaggageConfigurationTests {
 
 	@Test
 	public void shouldCreateTagHandler() {
-		this.contextRunner.withPropertyValues("spring.sleuth.baggage.tag-fields=x-vcap-request-id,country-code")
+		this.contextRunner.withPropertyValues("spring.sleuth.brave.baggage.tag-fields=x-vcap-request-id,country-code")
 				.run((context) -> assertThatFieldNamesToTag(context).containsOnly("x-vcap-request-id", "country-code"));
 	}
 
 	@Test
 	public void shouldCreateTagHandler_yaml() {
 		this.contextRunner
-				.withPropertyValues("spring.sleuth.baggage.tag-fields[0]=x-vcap-request-id",
-						"spring.sleuth.baggage.tag-fields[1]=country-code")
+				.withPropertyValues("spring.sleuth.brave.baggage.tag-fields[0]=x-vcap-request-id",
+						"spring.sleuth.brave.baggage.tag-fields[1]=country-code")
 				.run((context) -> assertThatFieldNamesToTag(context).containsOnly("x-vcap-request-id", "country-code"));
 	}
 
 	@Test
 	public void shouldCreateTagHandler_oldProperty() {
 		this.contextRunner
-				.withPropertyValues("spring.sleuth.propagation.tag.whitelisted-keys=x-vcap-request-id,country-code")
+				.withPropertyValues("spring.sleuth.brave.propagation.tag.whitelisted-keys=x-vcap-request-id,country-code")
 				.run((context) -> assertThatFieldNamesToTag(context).containsOnly("x-vcap-request-id", "country-code"));
 	}
 
 	@Test
 	public void shouldCreateTagHandler_oldProperty_yaml() {
 		this.contextRunner
-				.withPropertyValues("spring.sleuth.propagation.tag.whitelisted-keys[0]=x-vcap-request-id",
-						"spring.sleuth.propagation.tag.whitelisted-keys[1]=country-code")
+				.withPropertyValues("spring.sleuth.brave.propagation.tag.whitelisted-keys[0]=x-vcap-request-id",
+						"spring.sleuth.brave.propagation.tag.whitelisted-keys[1]=country-code")
 				.run((context) -> assertThatFieldNamesToTag(context).containsOnly("x-vcap-request-id", "country-code"));
 	}
 
@@ -139,7 +139,7 @@ public class TraceBaggageConfigurationTests {
 
 	@Test
 	public void noopOnNoTagFields() {
-		this.contextRunner.withPropertyValues("spring.sleuth.baggage.tag-fields=").run((context) -> {
+		this.contextRunner.withPropertyValues("spring.sleuth.brave.baggage.tag-fields=").run((context) -> {
 			assertThat(context.getBean(SpanHandler.class)).isSameAs(SpanHandler.NOOP);
 		});
 	}
@@ -154,7 +154,7 @@ public class TraceBaggageConfigurationTests {
 
 	@Test
 	public void canMakeAllCorrelationFieldsDirty() {
-		this.contextRunner.withPropertyValues("spring.sleuth.baggage.correlation-fields=country-code")
+		this.contextRunner.withPropertyValues("spring.sleuth.brave.baggage.correlation-fields=country-code")
 				.withUserConfiguration(DirtyCorrelationFieldConfiguration.class)
 				.run((context) -> assertThat(context.getBean(CorrelationScopeDecorator.class)).extracting("fields")
 						.asInstanceOf(array(SingleCorrelationField[].class)).filteredOn(c -> !c.readOnly())

@@ -49,7 +49,7 @@ import org.springframework.messaging.support.MessageBuilder;
  * @since 3.0.0
  */
 @Configuration(proxyBeanMethods = false)
-@ConditionalOnProperty(value = "spring.sleuth.function.enabled", matchIfMissing = true)
+@ConditionalOnProperty(value = "spring.sleuth.brave.function.enabled", matchIfMissing = true)
 @ConditionalOnBean(Tracing.class)
 @ConditionalOnClass({ Tracer.class, FunctionAroundWrapper.class })
 @AutoConfigureAfter(TraceAutoConfiguration.class)

@@ -82,21 +82,21 @@ final class TracingChannelInterceptorCondition extends AnyNestedCondition {
 	}
 
 	@ConditionalOnMissingClass("org.springframework.cloud.function.context.FunctionCatalog")
-	@ConditionalOnProperty(value = "spring.sleuth.integration.enabled", matchIfMissing = true)
+	@ConditionalOnProperty(value = "spring.sleuth.brave.integration.enabled", matchIfMissing = true)
 	static class OnFunctionMissing {
 
 	}
 
 	@ConditionalOnClass(FunctionCatalog.class)
 	@Conditional(OnEnableBindingCondition.class)
-	@ConditionalOnProperty(value = "spring.sleuth.integration.enabled", matchIfMissing = true)
+	@ConditionalOnProperty(value = "spring.sleuth.brave.integration.enabled", matchIfMissing = true)
 	static class OnFunctionPresentAndEnableBinding {
 
 	}
 
 	@ConditionalOnClass(FunctionCatalog.class)
 	@Conditional(OnEnableBindingMissingCondition.class)
-	@ConditionalOnProperty(value = "spring.sleuth.integration.enabled", havingValue = "true")
+	@ConditionalOnProperty(value = "spring.sleuth.brave.integration.enabled", havingValue = "true")
 	static class OnFunctionPresentEnableBindingOffAndIntegrationExplicitlyOn {
 
 	}

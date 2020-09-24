@@ -35,7 +35,7 @@ import org.springframework.context.annotation.Configuration;
  * @since 2.0.0
  */
 @Configuration(proxyBeanMethods = false)
-@ConditionalOnProperty(value = "spring.sleuth.web.enabled", matchIfMissing = true)
+@ConditionalOnProperty(value = "spring.sleuth.brave.web.enabled", matchIfMissing = true)
 @ConditionalOnWebApplication(type = ConditionalOnWebApplication.Type.REACTIVE)
 @ConditionalOnBean(Tracer.class)
 @AutoConfigureAfter(SkipPatternConfiguration.class)

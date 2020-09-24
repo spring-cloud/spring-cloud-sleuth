@@ -25,7 +25,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * @author Adrian Cole
  * @since 1.0.0
  */
-@ConfigurationProperties("spring.sleuth.sampler")
+@ConfigurationProperties("spring.sleuth.brave.sampler")
 class SamplerProperties {
 
 	/**

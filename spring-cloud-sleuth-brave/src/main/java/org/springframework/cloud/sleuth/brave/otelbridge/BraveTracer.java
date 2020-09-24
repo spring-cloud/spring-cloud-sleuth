@@ -16,7 +16,6 @@
 
 package org.springframework.cloud.sleuth.brave.otelbridge;
 
-import brave.Tracer;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.trace.Span;
 
@@ -30,7 +29,11 @@ public class BraveTracer implements io.opentelemetry.trace.Tracer {
 
 	@Override
 	public Span getCurrentSpan() {
-		return new BraveSpan(tracer.currentSpan());
+		brave.Span span = tracer.currentSpan();
+		if (span == null) {
+			return null;
+		}
+		return new BraveSpan(span);
 	}
 
 	@Override

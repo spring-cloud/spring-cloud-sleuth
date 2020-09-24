@@ -17,10 +17,12 @@
 package org.springframework.cloud.sleuth.brave.otelbridge;
 
 import java.util.AbstractMap;
+import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 
 import javax.annotation.Nullable;
+import javax.annotation.concurrent.Immutable;
 
 import brave.Tracer;
 import brave.propagation.TraceContext;
@@ -28,6 +30,7 @@ import brave.propagation.TraceContextOrSamplingFlags;
 import io.grpc.Context;
 import io.opentelemetry.common.AttributeValue;
 import io.opentelemetry.common.Attributes;
+import io.opentelemetry.internal.Utils;
 import io.opentelemetry.trace.Link;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.SpanContext;
@@ -38,7 +41,7 @@ public class BraveSpanBuilder implements Span.Builder {
 
 	private final String name;
 
-	private final TraceContext.Builder traceContext = TraceContext.newBuilder();
+	private BraveSpanContext parentContext;
 
 	private final List<AbstractMap.SimpleEntry<String, String>> tags = new LinkedList<>();
 
@@ -57,13 +60,19 @@ public class BraveSpanBuilder implements Span.Builder {
 
 	@Override
 	public Span.Builder setParent(Span parent) {
-		this.traceContext.parentId(Long.parseLong(parent.getContext().getSpanId().toLowerBase16()));
+		if (parent == null) {
+			return this;
+		}
+		this.parentContext = (BraveSpanContext) parent.getContext();
 		return this;
 	}
 
 	@Override
 	public Span.Builder setParent(SpanContext remoteParent) {
-		this.traceContext.parentId(Long.parseLong(remoteParent.getSpanId().toLowerBase16()));
+		if (remoteParent == null) {
+			return this;
+		}
+		this.parentContext = (BraveSpanContext) remoteParent;
 		return this;
 	}
 
@@ -75,7 +84,7 @@ public class BraveSpanBuilder implements Span.Builder {
 
 	@Override
 	public Span.Builder setNoParent() {
-		this.traceContext.parentId(null);
+		this.parentContext = null;
 		return this;
 	}
 
@@ -152,7 +161,7 @@ public class BraveSpanBuilder implements Span.Builder {
 
 	@Override
 	public Span startSpan() {
-		brave.Span nextSpan = this.tracer.nextSpan(TraceContextOrSamplingFlags.create(this.traceContext.build()));
+		brave.Span nextSpan = nextSpan();
 		if (this.name != null) {
 			nextSpan.name(this.name);
 		}
@@ -162,6 +171,13 @@ public class BraveSpanBuilder implements Span.Builder {
 			nextSpan.start(this.startTimestamp);
 		}
 		return new BraveSpan(nextSpan, this.name);
+	}
+
+	private brave.Span nextSpan() {
+		if (this.parentContext != null) {
+			return this.tracer.nextSpan(TraceContextOrSamplingFlags.create(this.parentContext.traceContext));
+		}
+		return this.tracer.nextSpan();
 	}
 
 }

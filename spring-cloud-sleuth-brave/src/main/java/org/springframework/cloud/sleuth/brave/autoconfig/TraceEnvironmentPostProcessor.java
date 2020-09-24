@@ -43,7 +43,7 @@ class TraceEnvironmentPostProcessor implements EnvironmentPostProcessor {
 		Map<String, Object> map = new HashMap<String, Object>();
 		// This doesn't work with all logging systems but it's a useful default so you see
 		// traces in logs without having to configure it.
-		if (Boolean.parseBoolean(environment.getProperty("spring.sleuth.enabled", "true"))) {
+		if (Boolean.parseBoolean(environment.getProperty("spring.sleuth.brave.enabled", "true"))) {
 			map.put("logging.pattern.level",
 					"%5p [${spring.zipkin.service.name:" + "${spring.application.name:}},%X{traceId:-},%X{spanId:-}]");
 		}
