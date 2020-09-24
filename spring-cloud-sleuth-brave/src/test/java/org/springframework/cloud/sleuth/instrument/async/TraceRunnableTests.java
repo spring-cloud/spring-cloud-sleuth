@@ -31,6 +31,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import org.springframework.cloud.sleuth.SpanName;
+import org.springframework.cloud.sleuth.brave.otelbridge.BraveTracer;
 import org.springframework.cloud.sleuth.internal.DefaultSpanNamer;
 
 import static org.assertj.core.api.BDDAssertions.then;
@@ -123,7 +124,8 @@ public class TraceRunnableTests {
 	}
 
 	private void whenRunnableGetsSubmitted(Runnable runnable) throws Exception {
-		this.executor.submit(new TraceRunnable(this.tracing, new DefaultSpanNamer(), runnable)).get();
+		this.executor.submit(new TraceRunnable(new BraveTracer(tracing.tracer()), new DefaultSpanNamer(), runnable))
+				.get();
 	}
 
 	private void whenNonTraceableRunnableGetsSubmitted(Runnable runnable) throws Exception {

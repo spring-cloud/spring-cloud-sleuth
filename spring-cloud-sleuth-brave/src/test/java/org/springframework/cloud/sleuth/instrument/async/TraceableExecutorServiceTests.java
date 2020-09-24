@@ -47,6 +47,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.cloud.sleuth.SpanNamer;
+import org.springframework.cloud.sleuth.brave.otelbridge.BraveTracer;
 import org.springframework.cloud.sleuth.internal.DefaultSpanNamer;
 
 import static java.util.stream.Collectors.toList;
@@ -170,7 +171,7 @@ public class TraceableExecutorServiceTests {
 
 	private List callables() {
 		List list = new ArrayList<>();
-		list.add(new TraceCallable<>(this.tracing, new DefaultSpanNamer(), () -> "foo"));
+		list.add(new TraceCallable<>(new BraveTracer(this.tracer), new DefaultSpanNamer(), () -> "foo"));
 		list.add((Callable) () -> "bar");
 		return list;
 	}

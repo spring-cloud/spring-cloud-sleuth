@@ -28,6 +28,7 @@ import org.junit.jupiter.api.Test;
 import org.mockito.BDDMockito;
 import org.mockito.Mockito;
 
+import org.springframework.cloud.sleuth.brave.otelbridge.BraveTracer;
 import org.springframework.cloud.sleuth.internal.DefaultSpanNamer;
 
 /**
@@ -62,7 +63,8 @@ public class TraceAsyncAspectTest {
 	// Issue#926
 	@Test
 	public void should_work() throws Throwable {
-		TraceAsyncAspect asyncAspect = new TraceAsyncAspect(this.tracing.tracer(), new DefaultSpanNamer()) {
+		TraceAsyncAspect asyncAspect = new TraceAsyncAspect(new BraveTracer(this.tracing.tracer()),
+				new DefaultSpanNamer()) {
 			@Override
 			String name(ProceedingJoinPoint pjp) {
 				return "foo-bar";

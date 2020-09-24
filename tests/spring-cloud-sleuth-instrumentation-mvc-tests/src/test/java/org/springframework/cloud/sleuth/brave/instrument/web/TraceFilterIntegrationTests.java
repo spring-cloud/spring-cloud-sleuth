@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.springframework.cloud.sleuth.instrument.web;
+package org.springframework.cloud.sleuth.brave.instrument.web;
 
 import java.io.IOException;
 import java.util.Optional;
@@ -46,6 +46,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.actuate.autoconfigure.web.server.ManagementServerProperties;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.cloud.sleuth.instrument.web.AbstractMvcIntegrationTest;
 import org.springframework.cloud.sleuth.util.SpanUtil;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

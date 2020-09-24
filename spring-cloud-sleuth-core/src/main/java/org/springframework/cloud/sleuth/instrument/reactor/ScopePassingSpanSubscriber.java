@@ -49,8 +49,7 @@ final class ScopePassingSpanSubscriber<T> implements SpanSubscription<T>, Scanna
 
 	private Subscription s;
 
-	ScopePassingSpanSubscriber(Subscriber<? super T> subscriber, Context ctx, Tracer tracer,
-			@Nullable Span parent) {
+	ScopePassingSpanSubscriber(Subscriber<? super T> subscriber, Context ctx, Tracer tracer, @Nullable Span parent) {
 		this.subscriber = subscriber;
 		this.tracer = tracer;
 		this.parent = parent;

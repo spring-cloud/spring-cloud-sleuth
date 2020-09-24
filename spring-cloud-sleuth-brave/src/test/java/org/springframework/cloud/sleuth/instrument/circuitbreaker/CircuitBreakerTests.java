@@ -32,6 +32,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import org.springframework.cloud.circuitbreaker.resilience4j.Resilience4JCircuitBreakerFactory;
+import org.springframework.cloud.sleuth.brave.otelbridge.BraveTracer;
 
 import static org.assertj.core.api.BDDAssertions.then;
 
@@ -66,7 +67,7 @@ public class CircuitBreakerTests {
 			scopedSpan = tracer.startScopedSpan("start");
 			// when
 			Span span = new Resilience4JCircuitBreakerFactory().create("name")
-					.run(new TraceSupplier<>(tracer, tracer::currentSpan));
+					.run(new TraceSupplier<>(new BraveTracer(tracer), tracer::currentSpan));
 
 			then(span).isNotNull();
 			then(scopedSpan.context().traceIdString()).isEqualTo(span.context().traceIdString());
@@ -86,11 +87,11 @@ public class CircuitBreakerTests {
 		try {
 			scopedSpan = tracer.startScopedSpan("start");
 			// when
-			BDDAssertions.thenThrownBy(
-					() -> new Resilience4JCircuitBreakerFactory().create("name").run(new TraceSupplier<>(tracer, () -> {
+			BDDAssertions.thenThrownBy(() -> new Resilience4JCircuitBreakerFactory().create("name")
+					.run(new TraceSupplier<>(new BraveTracer(tracer), () -> {
 						first.set(tracer.currentSpan());
 						throw new IllegalStateException("boom");
-					}), new TraceFunction<>(tracer, throwable -> {
+					}), new TraceFunction<>(new BraveTracer(tracer), throwable -> {
 						second.set(tracer.currentSpan());
 						throw new IllegalStateException("boom2");
 					}))).isInstanceOf(IllegalStateException.class).hasMessageContaining("boom2");

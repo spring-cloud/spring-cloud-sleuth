@@ -26,6 +26,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.NoSuchBeanDefinitionException;
 import org.springframework.boot.autoconfigure.AutoConfigurations;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
+import org.springframework.cloud.sleuth.autoconfig.TraceAutoConfiguration;
 
 import static org.assertj.core.api.BDDAssertions.then;
 
@@ -92,7 +93,7 @@ class SpanIgnoringSpanHandlerTests {
 	}
 
 	private final ApplicationContextRunner contextRunner = new ApplicationContextRunner()
-			.withConfiguration(AutoConfigurations.of(TraceAutoConfiguration.class));
+			.withConfiguration(AutoConfigurations.of(TraceAutoConfiguration.class, TraceBraveAutoConfiguration.class));
 
 	@Test
 	void should_not_register_span_handler_when_property_passed() {

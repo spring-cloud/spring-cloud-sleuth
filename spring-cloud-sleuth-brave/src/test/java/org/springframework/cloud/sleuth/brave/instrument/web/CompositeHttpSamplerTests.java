@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.springframework.cloud.sleuth.instrument.web;
+package org.springframework.cloud.sleuth.brave.instrument.web;
 
 import java.util.stream.Stream;
 

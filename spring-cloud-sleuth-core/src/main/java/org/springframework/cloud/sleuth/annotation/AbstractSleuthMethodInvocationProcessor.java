@@ -102,6 +102,7 @@ abstract class AbstractSleuthMethodInvocationProcessor implements SleuthMethodIn
 		}
 		return this.tracer;
 	}
+
 	NewSpanParser newSpanParser() {
 		if (this.newSpanParser == null) {
 			this.newSpanParser = this.beanFactory.getBean(NewSpanParser.class);

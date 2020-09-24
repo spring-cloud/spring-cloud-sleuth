@@ -29,6 +29,8 @@ import org.awaitility.Awaitility;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
+import org.springframework.cloud.sleuth.brave.otelbridge.BraveTracer;
+import org.springframework.cloud.sleuth.internal.DefaultSpanNamer;
 import org.springframework.core.task.AsyncListenableTaskExecutor;
 import org.springframework.core.task.SimpleAsyncTaskExecutor;
 
@@ -46,7 +48,7 @@ public class TraceAsyncListenableTaskExecutorTest {
 	Tracer tracer = this.tracing.tracer();
 
 	TraceAsyncListenableTaskExecutor traceAsyncListenableTaskExecutor = new TraceAsyncListenableTaskExecutor(
-			this.delegate, this.tracing, spanNamer);
+			this.delegate, new BraveTracer(this.tracer), new DefaultSpanNamer());
 
 	@AfterEach
 	public void close() {

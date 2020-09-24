@@ -127,8 +127,8 @@ public final class WebFluxSleuthOperators {
 	/**
 	 * Wraps a runnable with a span.
 	 * @param tracer - tracer bean
-	 * @param exchange - server web exchange that can contain the {@link Span} in
-	 * its attribute
+	 * @param exchange - server web exchange that can contain the {@link Span} in its
+	 * attribute
 	 * @param runnable - lambda to execute within the tracer context
 	 */
 	public static void withSpanInScope(Tracer tracer, ServerWebExchange exchange, Runnable runnable) {
@@ -141,8 +141,8 @@ public final class WebFluxSleuthOperators {
 	/**
 	 * Wraps a callable with a span.
 	 * @param tracer - tracer bean
-	 * @param exchange - server web exchange that can contain the {@link Span} in
-	 * its attribute
+	 * @param exchange - server web exchange that can contain the {@link Span} in its
+	 * attribute
 	 * @param callable - lambda to execute within the tracer context
 	 * @param <T> callable's return type
 	 * @return value from the callable
@@ -154,8 +154,8 @@ public final class WebFluxSleuthOperators {
 
 	/**
 	 * Returns the current trace context.
-	 * @param exchange - server web exchange that can contain the {@link Span} in
-	 * its attribute
+	 * @param exchange - server web exchange that can contain the {@link Span} in its
+	 * attribute
 	 * @return current trace context or {@code null} if it's not present
 	 */
 	public static Span currentTracer(ServerWebExchange exchange) {
@@ -173,16 +173,14 @@ public final class WebFluxSleuthOperators {
 
 	/**
 	 * Returns the current trace context.
-	 * @param signal - Reactor signal that can contain the {@link Span} in its
-	 * context
+	 * @param signal - Reactor signal that can contain the {@link Span} in its context
 	 * @return current trace context or {@code null} if it's not present
 	 */
 	public static Tracer currentTracer(Signal signal) {
 		return currentTracer(signal.getContext());
 	}
 
-	private static <T> T withContext(Callable<T> callable, Tracer tracer,
-			Span span) {
+	private static <T> T withContext(Callable<T> callable, Tracer tracer, Span span) {
 		try (Scope scope = tracer.withSpan(span)) {
 			try {
 				return callable.call();

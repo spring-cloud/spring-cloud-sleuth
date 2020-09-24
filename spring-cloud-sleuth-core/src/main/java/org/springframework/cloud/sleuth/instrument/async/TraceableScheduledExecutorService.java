@@ -59,10 +59,11 @@ public class TraceableScheduledExecutorService extends TraceableExecutorService 
 
 	@Override
 	public ScheduledFuture<?> scheduleAtFixedRate(Runnable command, long initialDelay, long period, TimeUnit unit) {
-		return getScheduledExecutorService().scheduleAtFixedRate(
-				ContextUtil.isContextUnusable(this.beanFactory) ? command
-						: new TraceRunnable(tracer(), spanNamer(), command, this.spanName),
-				initialDelay, period, unit);
+		return getScheduledExecutorService()
+				.scheduleAtFixedRate(
+						ContextUtil.isContextUnusable(this.beanFactory) ? command
+								: new TraceRunnable(tracer(), spanNamer(), command, this.spanName),
+						initialDelay, period, unit);
 	}
 
 	@Override

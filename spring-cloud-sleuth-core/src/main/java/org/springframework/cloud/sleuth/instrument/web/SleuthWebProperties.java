@@ -51,11 +51,13 @@ class SleuthWebProperties {
 	private String additionalSkipPattern;
 
 	// TODO: [OTEL] Do sth about this?
-/*	*//**
-	 * Order in which the tracing filters should be registered. Defaults to
-	 * {@link TraceHttpAutoConfiguration#TRACING_FILTER_ORDER}.
-	 *//*
-	private int filterOrder = TraceHttpAutoConfiguration.TRACING_FILTER_ORDER;*/
+	/*	*//**
+			 * Order in which the tracing filters should be registered. Defaults to
+			 * {@link TraceHttpAutoConfiguration#TRACING_FILTER_ORDER}.
+			 *//*
+				 * private int filterOrder =
+				 * TraceHttpAutoConfiguration.TRACING_FILTER_ORDER;
+				 */
 
 	/**
 	 * If set to true, auto-configured skip patterns will be ignored.
@@ -96,13 +98,11 @@ class SleuthWebProperties {
 		this.additionalSkipPattern = emptyToNull(additionalSkipPattern);
 	}
 
-	/*public int getFilterOrder() {
-		return this.filterOrder;
-	}
-
-	public void setFilterOrder(int filterOrder) {
-		this.filterOrder = filterOrder;
-	}*/
+	/*
+	 * public int getFilterOrder() { return this.filterOrder; }
+	 *
+	 * public void setFilterOrder(int filterOrder) { this.filterOrder = filterOrder; }
+	 */
 
 	public boolean isIgnoreAutoConfiguredSkipPatterns() {
 		return ignoreAutoConfiguredSkipPatterns;

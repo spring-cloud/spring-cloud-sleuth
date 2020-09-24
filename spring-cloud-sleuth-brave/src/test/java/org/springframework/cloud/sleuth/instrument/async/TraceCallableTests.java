@@ -31,6 +31,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import org.springframework.cloud.sleuth.SpanName;
+import org.springframework.cloud.sleuth.brave.otelbridge.BraveTracer;
 import org.springframework.cloud.sleuth.internal.DefaultSpanNamer;
 
 import static org.assertj.core.api.BDDAssertions.then;
@@ -127,13 +128,15 @@ public class TraceCallableTests {
 
 	private Span whenCallableGetsSubmitted(Callable<Span> callable)
 			throws InterruptedException, java.util.concurrent.ExecutionException {
-		return this.executor.submit(new TraceCallable<>(this.tracing, new DefaultSpanNamer(), callable)).get();
+		return this.executor.submit(new TraceCallable<>(new BraveTracer(this.tracer), new DefaultSpanNamer(), callable))
+				.get();
 	}
 
 	private Span whenATraceKeepingCallableGetsSubmitted()
 			throws InterruptedException, java.util.concurrent.ExecutionException {
-		return this.executor
-				.submit(new TraceCallable<>(this.tracing, new DefaultSpanNamer(), new TraceKeepingCallable())).get();
+		return this.executor.submit(
+				new TraceCallable<>(new BraveTracer(this.tracer), new DefaultSpanNamer(), new TraceKeepingCallable()))
+				.get();
 	}
 
 	private Span whenNonTraceableCallableGetsSubmitted(Callable<Span> callable)

@@ -30,6 +30,7 @@ import brave.handler.MutableSpan;
 import brave.propagation.StrictCurrentTraceContext;
 import brave.sampler.Sampler;
 import brave.test.TestSpanHandler;
+import io.opentelemetry.context.Scope;
 import org.assertj.core.api.BDDAssertions;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -37,6 +38,7 @@ import org.junit.jupiter.api.Test;
 
 import org.springframework.cloud.sleuth.SpanName;
 import org.springframework.cloud.sleuth.SpanNamer;
+import org.springframework.cloud.sleuth.brave.otelbridge.BraveTracer;
 import org.springframework.cloud.sleuth.instrument.async.TraceCallable;
 import org.springframework.cloud.sleuth.instrument.async.TraceRunnable;
 import org.springframework.cloud.sleuth.internal.DefaultSpanNamer;
@@ -60,7 +62,9 @@ public class SpringCloudSleuthDocTests {
 	Tracing tracing = Tracing.newBuilder().currentTraceContext(this.currentTraceContext).sampler(Sampler.ALWAYS_SAMPLE)
 			.addSpanHandler(this.spans).build();
 
-	Tracer tracer = this.tracing.tracer();
+	Tracer braveTracer = this.tracing.tracer();
+
+	BraveTracer tracer = new BraveTracer(this.braveTracer);
 
 	@BeforeEach
 	public void setup() {
@@ -79,7 +83,7 @@ public class SpringCloudSleuthDocTests {
 		SpanNamer spanNamer = new DefaultSpanNamer();
 
 		// tag::span_name_annotated_runnable_execution[]
-		Runnable runnable = new TraceRunnable(this.tracing, spanNamer, new TaxCountingRunnable());
+		Runnable runnable = new TraceRunnable(this.tracer, spanNamer, new TaxCountingRunnable());
 		Future<?> future = executorService.submit(runnable);
 		// ... some additional logic ...
 		future.get();
@@ -95,7 +99,7 @@ public class SpringCloudSleuthDocTests {
 		SpanNamer spanNamer = new DefaultSpanNamer();
 
 		// tag::span_name_to_string_runnable_execution[]
-		Runnable runnable = new TraceRunnable(this.tracing, spanNamer, new Runnable() {
+		Runnable runnable = new TraceRunnable(this.tracer, spanNamer, new Runnable() {
 			@Override
 			public void run() {
 				// perform logic
@@ -123,19 +127,19 @@ public class SpringCloudSleuthDocTests {
 		// tag::manual_span_creation[]
 		// Start a span. If there was a span present in this thread it will become
 		// the `newSpan`'s parent.
-		Span newSpan = this.tracer.nextSpan().name("calculateTax");
-		try (Tracer.SpanInScope ws = this.tracer.withSpanInScope(newSpan.start())) {
+		io.opentelemetry.trace.Span newSpan = this.tracer.spanBuilder("calculateTax").startSpan();
+		try (Scope scope = this.tracer.withSpan(newSpan)) {
 			// ...
 			// You can tag a span
-			newSpan.tag("taxValue", taxValue);
+			newSpan.setAttribute("taxValue", taxValue);
 			// ...
 			// You can log an event on a span
-			newSpan.annotate("taxCalculated");
+			newSpan.addEvent("taxCalculated");
 		}
 		finally {
 			// Once done remember to finish the span. This will allow collecting
 			// the span to send it to Zipkin
-			newSpan.finish();
+			newSpan.end();
 		}
 		// end::manual_span_creation[]
 
@@ -145,17 +149,18 @@ public class SpringCloudSleuthDocTests {
 		then(this.spans.get(0).annotations()).hasSize(1);
 	}
 
+	// TODO: [OTEL] migrate this and other samples
 	@Test
 	public void should_continue_a_span_with_tracer() throws Exception {
 		ExecutorService executorService = Executors.newSingleThreadExecutor();
 		String taxValue = "10";
-		Span newSpan = this.tracer.nextSpan().name("calculateTax");
-		try (Tracer.SpanInScope ws = this.tracer.withSpanInScope(newSpan.start())) {
+		Span newSpan = this.braveTracer.nextSpan().name("calculateTax");
+		try (Tracer.SpanInScope ws = this.braveTracer.withSpanInScope(newSpan.start())) {
 			executorService.submit(() -> {
 				// tag::manual_span_continuation[]
 				// let's assume that we're in a thread Y and we've received
 				// the `initialSpan` from thread X
-				Span continuedSpan = this.tracer.toSpan(newSpan.context());
+				Span continuedSpan = this.braveTracer.toSpan(newSpan.context());
 				try {
 					// ...
 					// You can tag a span
@@ -187,7 +192,7 @@ public class SpringCloudSleuthDocTests {
 	public void should_start_a_span_with_explicit_parent() throws Exception {
 		ExecutorService executorService = Executors.newSingleThreadExecutor();
 		String commissionValue = "10";
-		Span initialSpan = this.tracer.nextSpan().name("calculateTax").start();
+		Span initialSpan = this.braveTracer.nextSpan().name("calculateTax").start();
 
 		executorService.submit(() -> {
 			// tag::manual_span_joining[]
@@ -195,8 +200,8 @@ public class SpringCloudSleuthDocTests {
 			// the `initialSpan` from thread X. `initialSpan` will be the parent
 			// of the `newSpan`
 			Span newSpan = null;
-			try (Tracer.SpanInScope ws = this.tracer.withSpanInScope(initialSpan)) {
-				newSpan = this.tracer.nextSpan().name("calculateCommission");
+			try (Tracer.SpanInScope ws = this.braveTracer.withSpanInScope(initialSpan)) {
+				newSpan = this.braveTracer.nextSpan().name("calculateCommission");
 				// ...
 				// You can tag a span
 				newSpan.tag("commissionValue", commissionValue);
@@ -239,7 +244,7 @@ public class SpringCloudSleuthDocTests {
 			}
 		};
 		// Manual `TraceRunnable` creation with explicit "calculateTax" Span name
-		Runnable traceRunnable = new TraceRunnable(this.tracing, spanNamer, runnable, "calculateTax");
+		Runnable traceRunnable = new TraceRunnable(this.tracer, spanNamer, runnable, "calculateTax");
 		// Wrapping `Runnable` with `Tracing`. That way the current span will be available
 		// in the thread of `Runnable`
 		Runnable traceRunnableFromTracer = this.tracing.currentTraceContext().wrap(runnable);
@@ -264,7 +269,7 @@ public class SpringCloudSleuthDocTests {
 			}
 		};
 		// Manual `TraceCallable` creation with explicit "calculateTax" Span name
-		Callable<String> traceCallable = new TraceCallable<>(this.tracing, spanNamer, callable, "calculateTax");
+		Callable<String> traceCallable = new TraceCallable<>(this.tracer, spanNamer, callable, "calculateTax");
 		// Wrapping `Callable` with `Tracing`. That way the current span will be available
 		// in the thread of `Callable`
 		Callable<String> traceCallableFromTracer = this.tracing.currentTraceContext().wrap(callable);

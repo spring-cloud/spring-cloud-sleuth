@@ -100,7 +100,7 @@ public class SleuthRxJavaSchedulersHookTests {
 		then(action).isInstanceOf(SleuthRxJavaSchedulersHook.TraceAction.class);
 		then(caller.toString()).isEqualTo("called_from_schedulers_hook");
 		then(this.spans).isNotEmpty();
-		then(this.tracer.currentSpan()).isNull();
+		then(this.tracer.getCurrentSpan()).isNull();
 	}
 
 	@Test
@@ -121,7 +121,7 @@ public class SleuthRxJavaSchedulersHookTests {
 		hello.get();
 
 		then(this.spans).isEmpty();
-		then(this.tracer.currentSpan()).isNull();
+		then(this.tracer.getCurrentSpan()).isNull();
 	}
 
 	private ExecutorService executorService() {

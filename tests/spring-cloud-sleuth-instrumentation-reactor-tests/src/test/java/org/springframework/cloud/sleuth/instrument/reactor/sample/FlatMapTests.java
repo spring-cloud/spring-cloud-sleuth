@@ -43,6 +43,7 @@ import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.boot.test.system.CapturedOutput;
 import org.springframework.boot.test.system.OutputCaptureExtension;
+import org.springframework.cloud.sleuth.brave.otelbridge.BraveTracer;
 import org.springframework.cloud.sleuth.instrument.reactor.Issue866Configuration;
 import org.springframework.cloud.sleuth.instrument.reactor.TraceReactorAutoConfigurationAccessorConfiguration;
 import org.springframework.cloud.sleuth.instrument.web.WebFluxSleuthOperators;
@@ -246,7 +247,7 @@ public class FlatMapTests {
 		brave.Span spanInFoo;
 
 		@Bean
-		RouterFunction<ServerResponse> handlers(Tracing tracing, ManualRequestSender requestSender) {
+		RouterFunction<ServerResponse> handlers(io.opentelemetry.trace.Tracer tracing, ManualRequestSender requestSender) {
 			return route(GET("/noFlatMap"), request -> {
 				ServerWebExchange exchange = request.exchange();
 				WebFluxSleuthOperators.withSpanInScope(tracing, exchange, () -> LOGGER.info("noFlatMap"));
@@ -269,7 +270,7 @@ public class FlatMapTests {
 				ServerWebExchange exchange = request.exchange();
 				WebFluxSleuthOperators.withSpanInScope(tracing, exchange, () -> {
 					LOGGER.info("foo");
-					this.spanInFoo = tracing.tracer().currentSpan();
+					this.spanInFoo = ((BraveTracer) tracing).tracer().currentSpan();
 				});
 				return ServerResponse.ok().body(Flux.just(1), Integer.class);
 			});
