@@ -128,7 +128,7 @@ public class WebClientDiscoveryExceptionTests {
 
 	@Configuration
 	@EnableAutoConfiguration(
-			excludeName = "org.springframework.cloud.sleuth.instrument.web.TraceWebServletAutoConfiguration",
+			excludeName = "org.springframework.cloud.sleuth.brave.instrument.web.TraceWebServletAutoConfiguration",
 			exclude = EurekaClientAutoConfiguration.class)
 	@EnableDiscoveryClient
 	@EnableFeignClients

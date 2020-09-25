@@ -57,7 +57,7 @@ import static org.springframework.boot.test.context.SpringBootTest.WebEnvironmen
  * @author Marcin Grzejszczak
  */
 @SpringBootTest(classes = ITTracingChannelInterceptorTests.App.class, webEnvironment = WebEnvironment.NONE,
-		properties = "spring.sleuth.integration.enabled=true")
+		properties = "spring.sleuth.brave.integration.enabled=true")
 @DirtiesContext
 public class ITTracingChannelInterceptorTests implements MessageHandler {
 

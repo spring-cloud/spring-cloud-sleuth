@@ -16,15 +16,18 @@
 
 package org.springframework.cloud.sleuth.instrument.async;
 
+import brave.Span;
 import brave.SpanCustomizer;
+import brave.Tracer;
 import brave.handler.MutableSpan;
 import brave.handler.SpanHandler;
 import brave.propagation.CurrentTraceContext;
-import brave.propagation.CurrentTraceContext.Scope;
 import brave.propagation.TraceContext;
 import brave.test.IntegrationTestSpanHandler;
 import org.junit.ClassRule;
 import org.junit.jupiter.api.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -42,6 +45,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 @DirtiesContext // flakey otherwise
 public class TraceAsyncIntegrationTests {
 
+	private static final Logger log = LoggerFactory.getLogger(TraceAsyncIntegrationTests.class);
+
 	@ClassRule
 	public static IntegrationTestSpanHandler spans = new IntegrationTestSpanHandler();
 
@@ -53,12 +58,19 @@ public class TraceAsyncIntegrationTests {
 	@Autowired
 	CurrentTraceContext currentTraceContext;
 
+	// TODO: [OTEL] Maybe scope doesn't work for some reason. A span is allocated by Brave
+	// even though I don't do it explicitly
+	@Autowired
+	Tracer tracer;
+
 	@Test
 	public void should_set_span_on_an_async_annotated_method() {
-		try (Scope ws = currentTraceContext.maybeScope(context)) {
+		Span parent = tracer.joinSpan(context);
+		try (Tracer.SpanInScope ws = tracer.withSpanInScope(parent.start())) {
+			log.info("HELLO");
 			asyncLogic.invokeAsync();
 
-			MutableSpan span = takeDesirableSpan();
+			MutableSpan span = takeDesirableSpan("invoke-async");
 			assertThat(span.name()).isEqualTo("invoke-async");
 			assertThat(span.containsAnnotation("@Async")).isTrue();
 			assertThat(span.tags()).containsEntry("class", "AsyncLogic").containsEntry("method", "invokeAsync");
@@ -66,14 +78,20 @@ public class TraceAsyncIntegrationTests {
 			// continues the trace
 			assertThat(span.traceId()).isEqualTo(context.traceIdString());
 		}
+		finally {
+			parent.finish();
+		}
+
 	}
 
 	@Test
 	public void should_set_span_with_custom_method_on_an_async_annotated_method() {
-		try (Scope ws = currentTraceContext.maybeScope(context)) {
+		Span parent = tracer.joinSpan(context);
+		try (Tracer.SpanInScope ws = tracer.withSpanInScope(parent.start())) {
+			log.info("HELLO");
 			asyncLogic.invokeAsync_customName();
 
-			MutableSpan span = takeDesirableSpan();
+			MutableSpan span = takeDesirableSpan("foo");
 			assertThat(span.name()).isEqualTo("foo");
 			assertThat(span.containsAnnotation("@Async")).isTrue();
 			assertThat(span.tags()).containsEntry("class", "AsyncLogic").containsEntry("method",
@@ -82,14 +100,21 @@ public class TraceAsyncIntegrationTests {
 			// continues the trace
 			assertThat(span.traceId()).isEqualTo(context.traceIdString());
 		}
+		finally {
+			parent.finish();
+		}
 	}
 
 	// Sleuth adds spans named "async" with no tags when an executor is used.
 	// We don't want that one.
-	MutableSpan takeDesirableSpan() {
+	MutableSpan takeDesirableSpan(String name) {
 		MutableSpan span1 = spans.takeLocalSpan();
 		MutableSpan span2 = spans.takeLocalSpan();
-		return span1.name().equals("async") ? span2 : span1;
+		log.info("Two last spans [" + span2 + "] and [" + span1 + "]");
+		MutableSpan span = span1 != null && name.equals(span1.name()) ? span1
+				: span2 != null && name.equals(span2.name()) ? span2 : null;
+		assertThat(span).as("No span with name <> was found", name).isNotNull();
+		return span;
 	}
 
 	@DefaultTestAutoConfiguration
@@ -111,6 +136,8 @@ public class TraceAsyncIntegrationTests {
 
 	static class AsyncLogic {
 
+		private static final Logger log = LoggerFactory.getLogger(AsyncLogic.class);
+
 		final SpanCustomizer customizer;
 
 		AsyncLogic(SpanCustomizer customizer) {
@@ -120,12 +147,14 @@ public class TraceAsyncIntegrationTests {
 		@Async
 		public void invokeAsync() {
 			customizer.annotate("@Async"); // proves the handler is in scope
+			log.info("HELLO ASYNC");
 		}
 
 		@Async
 		@SpanName("foo")
 		public void invokeAsync_customName() {
 			customizer.annotate("@Async"); // proves the handler is in scope
+			log.info("HELLO ASYNC CUSTOM NAME");
 		}
 
 	}

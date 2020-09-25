@@ -82,7 +82,6 @@ import org.springframework.core.env.Environment;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.annotation.DirtiesContext;
-import org.springframework.test.context.TestPropertySource;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -98,9 +97,8 @@ import static org.assertj.core.api.Assertions.fail;
 import static org.assertj.core.api.BDDAssertions.then;
 
 @SpringBootTest(classes = WebClientTests.TestConfiguration.class,
-		webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-@TestPropertySource(
-		properties = { "spring.application.name=fooservice", "spring.sleuth.brave.web.client.skip-pattern=/skip.*" })
+		webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
+		properties = { "spring.application.name=fooservice", "spring.sleuth.web.client.skip-pattern=/skip.*" })
 @DirtiesContext
 public class WebClientTests {
 
@@ -493,7 +491,7 @@ public class WebClientTests {
 
 	@Configuration
 	@EnableAutoConfiguration(
-			excludeName = "org.springframework.cloud.sleuth.instrument.web.TraceWebServletAutoConfiguration",
+			excludeName = "org.springframework.cloud.sleuth.brave.instrument.web.TraceWebServletAutoConfiguration",
 			exclude = { GatewayClassPathWarningAutoConfiguration.class, GatewayAutoConfiguration.class })
 	@EnableFeignClients
 	@LoadBalancerClient(value = "fooservice", configuration = SimpleLoadBalancerClientConfiguration.class)

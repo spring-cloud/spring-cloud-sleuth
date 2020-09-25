@@ -26,6 +26,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplicat
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
+import org.springframework.context.annotation.Primary;
 
 /**
  * @author Marcin Grzejszczak
@@ -37,13 +38,15 @@ class SleuthTestAutoConfiguration {
 	static class TestMongoConfiguration {
 
 		@Bean
+		@Primary
 		@ConditionalOnProperty(value = "test.mongo.mock.enabled", matchIfMissing = true)
-		MongoClient mongoClient() {
+		MongoClient testMongoClient() {
 			return BDDMockito.mock(MongoClient.class);
 		}
 
 		@Bean(name = "mongoHealthIndicator")
-		HealthIndicator mongoHealthIndicator() {
+		@Primary
+		HealthIndicator testMongoHealthIndicator() {
 			return () -> Health.up().build();
 		}
 

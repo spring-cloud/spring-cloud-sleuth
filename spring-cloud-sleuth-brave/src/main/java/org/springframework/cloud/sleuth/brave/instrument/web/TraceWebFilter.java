@@ -37,7 +37,8 @@ import reactor.util.annotation.Nullable;
 import reactor.util.context.Context;
 
 import org.springframework.beans.factory.BeanFactory;
-import org.springframework.cloud.sleuth.instrument.reactor.SleuthReactorProperties;
+import org.springframework.cloud.sleuth.brave.instrument.reactor.SleuthReactorProperties;
+import org.springframework.cloud.sleuth.instrument.web.SleuthWebProperties;
 import org.springframework.core.Ordered;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.server.reactive.ServerHttpRequest;

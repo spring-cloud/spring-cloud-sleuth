@@ -216,7 +216,8 @@ public class TraceableExecutorServiceTests {
 	}
 
 	BeanFactory beanFactory(boolean refreshed) {
-		BDDMockito.given(this.beanFactory.getBean(Tracing.class)).willReturn(this.tracing);
+		BDDMockito.given(this.beanFactory.getBean(io.opentelemetry.trace.Tracer.class))
+				.willReturn(new BraveTracer(this.tracing.tracer()));
 		BDDMockito.given(this.beanFactory.getBean(SpanNamer.class)).willReturn(new DefaultSpanNamer());
 		SleuthContextListenerAccessor.set(this.beanFactory, refreshed);
 		return this.beanFactory;

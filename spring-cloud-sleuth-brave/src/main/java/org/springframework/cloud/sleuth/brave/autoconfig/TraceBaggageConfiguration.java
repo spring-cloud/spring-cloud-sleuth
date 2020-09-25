@@ -127,8 +127,8 @@ class TraceBaggageConfiguration {
 			@Qualifier(PROPAGATION_KEYS) List<String> propagationKeys, SleuthBaggageProperties sleuthBaggageProperties,
 			@Nullable List<BaggagePropagationCustomizer> baggagePropagationCustomizers) {
 
-		Set<String> localFields = redirectOldPropertyToNew(LOCAL_KEYS, localKeys, "spring.sleuth.brave.baggage.local-fields",
-				sleuthBaggageProperties.getLocalFields());
+		Set<String> localFields = redirectOldPropertyToNew(LOCAL_KEYS, localKeys,
+				"spring.sleuth.brave.baggage.local-fields", sleuthBaggageProperties.getLocalFields());
 		for (String fieldName : localFields) {
 			factoryBuilder.add(SingleBaggageField.local(BaggageField.create(fieldName)));
 		}

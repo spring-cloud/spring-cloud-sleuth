@@ -9,10 +9,10 @@ org.springframework.cloud.sleuth.instrument.async.AsyncDefaultAutoConfiguration,
 org.springframework.cloud.sleuth.instrument.scheduling.TraceSchedulingAutoConfiguration,\
 org.springframework.cloud.sleuth.instrument.circuitbreaker.SleuthCircuitBreakerAutoConfiguration,\
 org.springframework.cloud.sleuth.instrument.rxjava.RxJavaAutoConfiguration,\
-org.springframework.cloud.sleuth.instrument.reactor.TraceReactorAutoConfiguration,\
+org.springframework.cloud.sleuth.brave.instrument.reactor.TraceReactorAutoConfiguration,\
 org.springframework.cloud.sleuth.instrument.quartz.TraceQuartzAutoConfiguration
 
 # Environment Post Processor
 org.springframework.boot.env.EnvironmentPostProcessor=\
 org.springframework.cloud.sleuth.autoconfig.TraceEnvironmentPostProcessor,\
-org.springframework.cloud.sleuth.instrument.web.client.TraceGatewayEnvironmentPostProcessor
+org.springframework.cloud.sleuth.brave.instrument.web.client.TraceGatewayEnvironmentPostProcessor

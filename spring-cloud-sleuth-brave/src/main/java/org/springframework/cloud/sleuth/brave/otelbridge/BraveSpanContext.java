@@ -59,4 +59,8 @@ public class BraveSpanContext extends io.opentelemetry.trace.SpanContext {
 		return false;
 	}
 
+	public TraceContext unwrap() {
+		return this.traceContext;
+	}
+
 }

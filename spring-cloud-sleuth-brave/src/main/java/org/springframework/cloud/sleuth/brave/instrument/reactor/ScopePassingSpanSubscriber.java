@@ -14,19 +14,19 @@
  * limitations under the License.
  */
 
-package org.springframework.cloud.sleuth.instrument.reactor;
+package org.springframework.cloud.sleuth.brave.instrument.reactor;
 
-import io.opentelemetry.context.Scope;
-import io.opentelemetry.trace.Span;
-import io.opentelemetry.trace.Tracer;
+import javax.annotation.Nullable;
+
+import brave.propagation.CurrentTraceContext;
+import brave.propagation.CurrentTraceContext.Scope;
+import brave.propagation.TraceContext;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.reactivestreams.Subscriber;
 import org.reactivestreams.Subscription;
 import reactor.core.Scannable;
 import reactor.util.context.Context;
-
-import org.springframework.lang.Nullable;
 
 /**
  * A trace representation of the {@link Subscriber} that always continues a span.
@@ -43,18 +43,19 @@ final class ScopePassingSpanSubscriber<T> implements SpanSubscription<T>, Scanna
 
 	private final Context context;
 
-	private final Tracer tracer;
+	private final CurrentTraceContext currentTraceContext;
 
-	private final Span parent;
+	private final TraceContext parent;
 
 	private Subscription s;
 
-	ScopePassingSpanSubscriber(Subscriber<? super T> subscriber, Context ctx, Tracer tracer, @Nullable Span parent) {
+	ScopePassingSpanSubscriber(Subscriber<? super T> subscriber, Context ctx, CurrentTraceContext currentTraceContext,
+			@Nullable TraceContext parent) {
 		this.subscriber = subscriber;
-		this.tracer = tracer;
+		this.currentTraceContext = currentTraceContext;
 		this.parent = parent;
-		this.context = parent != null && !parent.equals(ctx.getOrDefault(Span.class, null))
-				? ctx.put(Span.class, parent) : ctx;
+		this.context = parent != null && !parent.equals(ctx.getOrDefault(TraceContext.class, null))
+				? ctx.put(TraceContext.class, parent) : ctx;
 		if (log.isTraceEnabled()) {
 			log.trace("Parent span [" + parent + "], context [" + this.context + "]");
 		}
@@ -63,42 +64,42 @@ final class ScopePassingSpanSubscriber<T> implements SpanSubscription<T>, Scanna
 	@Override
 	public void onSubscribe(Subscription subscription) {
 		this.s = subscription;
-		try (Scope scope = this.tracer.withSpan(this.parent)) {
+		try (Scope scope = this.currentTraceContext.maybeScope(this.parent)) {
 			this.subscriber.onSubscribe(this);
 		}
 	}
 
 	@Override
 	public void request(long n) {
-		try (Scope scope = this.tracer.withSpan(this.parent)) {
+		try (Scope scope = this.currentTraceContext.maybeScope(this.parent)) {
 			this.s.request(n);
 		}
 	}
 
 	@Override
 	public void cancel() {
-		try (Scope scope = this.tracer.withSpan(this.parent)) {
+		try (Scope scope = this.currentTraceContext.maybeScope(this.parent)) {
 			this.s.cancel();
 		}
 	}
 
 	@Override
 	public void onNext(T o) {
-		try (Scope scope = this.tracer.withSpan(this.parent)) {
+		try (Scope scope = this.currentTraceContext.maybeScope(this.parent)) {
 			this.subscriber.onNext(o);
 		}
 	}
 
 	@Override
 	public void onError(Throwable throwable) {
-		try (Scope scope = this.tracer.withSpan(this.parent)) {
+		try (Scope scope = this.currentTraceContext.maybeScope(this.parent)) {
 			this.subscriber.onError(throwable);
 		}
 	}
 
 	@Override
 	public void onComplete() {
-		try (Scope scope = this.tracer.withSpan(this.parent)) {
+		try (Scope scope = this.currentTraceContext.maybeScope(this.parent)) {
 			this.subscriber.onComplete();
 		}
 	}

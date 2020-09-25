@@ -44,7 +44,7 @@ public class TraceableExecutorService implements ExecutorService {
 
 	final String spanName;
 
-	Tracer tracing;
+	Tracer tracer;
 
 	SpanNamer spanNamer;
 
@@ -146,10 +146,10 @@ public class TraceableExecutorService implements ExecutorService {
 	}
 
 	Tracer tracer() {
-		if (this.tracing == null && this.beanFactory != null) {
-			this.tracing = this.beanFactory.getBean(Tracer.class);
+		if (this.tracer == null && this.beanFactory != null) {
+			this.tracer = this.beanFactory.getBean(Tracer.class);
 		}
-		return this.tracing;
+		return this.tracer;
 	}
 
 	SpanNamer spanNamer() {

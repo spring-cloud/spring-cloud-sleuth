@@ -14,19 +14,15 @@
  * limitations under the License.
  */
 
-package org.springframework.cloud.sleuth.instrument.reactor;
+package org.springframework.cloud.sleuth.brave.instrument.reactor;
 
 import java.util.Objects;
 import java.util.function.Function;
 
-import brave.Tracer;
-import brave.Tracing;
 import brave.propagation.CurrentTraceContext;
 import brave.propagation.CurrentTraceContext.Scope;
 import brave.propagation.StrictCurrentTraceContext;
 import brave.propagation.TraceContext;
-import brave.propagation.TraceContextOrSamplingFlags;
-import io.opentelemetry.trace.Span;
 import org.assertj.core.presentation.StandardRepresentation;
 import org.junit.After;
 import org.junit.Before;
@@ -41,15 +37,13 @@ import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 import reactor.util.context.Context;
 
-import org.springframework.cloud.sleuth.brave.otelbridge.BraveSpan;
-import org.springframework.cloud.sleuth.brave.otelbridge.BraveTracer;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.BDDAssertions.then;
-import static org.springframework.cloud.sleuth.instrument.reactor.ReactorSleuth.scopePassingSpanOperator;
-import static org.springframework.cloud.sleuth.instrument.reactor.TraceReactorAutoConfiguration.SLEUTH_REACTOR_EXECUTOR_SERVICE_KEY;
-import static org.springframework.cloud.sleuth.instrument.reactor.TraceReactorAutoConfiguration.TraceReactorConfiguration.SLEUTH_TRACE_REACTOR_KEY;
+import static org.springframework.cloud.sleuth.brave.instrument.reactor.ReactorSleuth.scopePassingSpanOperator;
+import static org.springframework.cloud.sleuth.brave.instrument.reactor.TraceReactorAutoConfiguration.SLEUTH_REACTOR_EXECUTOR_SERVICE_KEY;
+import static org.springframework.cloud.sleuth.brave.instrument.reactor.TraceReactorAutoConfiguration.TraceReactorConfiguration.SLEUTH_TRACE_REACTOR_KEY;
 
 /**
  * @author Marcin Grzejszczak
@@ -65,8 +59,6 @@ public class ScopePassingSpanSubscriberTests {
 	}
 
 	StrictCurrentTraceContext currentTraceContext = StrictCurrentTraceContext.create();
-
-	Tracer tracer = Tracing.newBuilder().currentTraceContext(currentTraceContext).build().tracer();
 
 	TraceContext context = TraceContext.newBuilder().traceId(1).spanId(1).sampled(true).build();
 
@@ -138,7 +130,7 @@ public class ScopePassingSpanSubscriberTests {
 	@Test
 	public void should_propagate_current_context() {
 		ScopePassingSpanSubscriber<?> subscriber = new ScopePassingSpanSubscriber<>(null, Context.of("foo", "bar"),
-				new BraveTracer(tracer), null);
+				this.currentTraceContext, null);
 
 		then((String) subscriber.currentContext().get("foo")).isEqualTo("bar");
 	}
@@ -148,10 +140,9 @@ public class ScopePassingSpanSubscriberTests {
 	 */
 	@Test
 	public void should_not_redundantly_copy_context() {
-		BraveSpan braveSpan = new BraveSpan(tracer.nextSpan(TraceContextOrSamplingFlags.create(context)));
-		Context initial = Context.of(Span.class, braveSpan);
+		Context initial = Context.of(TraceContext.class, context);
 		ScopePassingSpanSubscriber<?> subscriber = new ScopePassingSpanSubscriber<>(null, initial,
-				new BraveTracer(tracer), braveSpan);
+				this.currentTraceContext, context);
 
 		then(initial).isSameAs(subscriber.currentContext());
 	}
@@ -159,19 +150,18 @@ public class ScopePassingSpanSubscriberTests {
 	@Test
 	public void should_set_empty_context_when_context_is_null() {
 		ScopePassingSpanSubscriber<?> subscriber = new ScopePassingSpanSubscriber<>(null, Context.empty(),
-				new BraveTracer(tracer), null);
+				this.currentTraceContext, null);
 
 		then(subscriber.currentContext().isEmpty()).isTrue();
 	}
 
 	@Test
 	public void should_put_current_span_to_context() {
-		BraveSpan braveSpan = new BraveSpan(tracer.nextSpan(TraceContextOrSamplingFlags.create(context)));
 		try (Scope ws = this.currentTraceContext.newScope(context2)) {
 			CoreSubscriber<?> subscriber = new ScopePassingSpanSubscriber<>(new BaseSubscriber<Object>() {
-			}, Context.empty(), new BraveTracer(tracer), braveSpan);
+			}, Context.empty(), currentTraceContext, context);
 
-			then(subscriber.currentContext().get(Span.class)).isEqualTo(braveSpan);
+			then(subscriber.currentContext().get(TraceContext.class)).isEqualTo(context);
 		}
 	}
 

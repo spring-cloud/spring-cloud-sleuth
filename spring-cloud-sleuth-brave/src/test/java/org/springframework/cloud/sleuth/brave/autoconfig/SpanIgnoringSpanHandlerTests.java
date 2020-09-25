@@ -93,7 +93,8 @@ class SpanIgnoringSpanHandlerTests {
 	}
 
 	private final ApplicationContextRunner contextRunner = new ApplicationContextRunner()
-			.withConfiguration(AutoConfigurations.of(TraceAutoConfiguration.class, TraceBraveAutoConfiguration.class, TraceBraveAutoConfiguration.class));
+			.withConfiguration(AutoConfigurations.of(TraceAutoConfiguration.class, TraceBraveAutoConfiguration.class,
+					TraceBraveAutoConfiguration.class));
 
 	@Test
 	void should_not_register_span_handler_when_property_passed() {

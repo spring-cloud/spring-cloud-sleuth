@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.springframework.cloud.sleuth.instrument.reactor.sample;
+package org.springframework.cloud.sleuth.brave.instrument.reactor.sample;
 
 import brave.Tracer;
 import org.slf4j.Logger;
@@ -23,7 +23,7 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.core.publisher.SignalType;
 
-import org.springframework.cloud.sleuth.instrument.web.WebFluxSleuthOperators;
+import org.springframework.cloud.sleuth.brave.instrument.web.WebFluxSleuthOperators;
 import org.springframework.http.HttpMethod;
 import org.springframework.web.reactive.function.client.WebClient;
 

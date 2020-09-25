@@ -16,6 +16,8 @@
 
 package org.springframework.cloud.sleuth.autoconfig;
 
+import io.opentelemetry.OpenTelemetry;
+import io.opentelemetry.context.propagation.ContextPropagators;
 import io.opentelemetry.trace.DefaultTracer;
 import io.opentelemetry.trace.Tracer;
 
@@ -45,6 +47,12 @@ public class TraceAutoConfiguration {
 	@ConditionalOnMissingBean
 	Tracer defaultTracer() {
 		return DefaultTracer.getInstance();
+	}
+
+	@Bean
+	@ConditionalOnMissingBean
+	ContextPropagators contextPropagators() {
+		return OpenTelemetry.getPropagators();
 	}
 
 	@Bean

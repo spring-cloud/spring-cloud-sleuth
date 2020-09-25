@@ -24,7 +24,7 @@ import reactor.netty.ByteBufFlux;
 import reactor.netty.http.client.HttpClient;
 
 import org.springframework.beans.factory.config.BeanPostProcessor;
-import org.springframework.cloud.sleuth.instrument.reactor.TraceReactorAutoConfigurationAccessorConfiguration;
+import org.springframework.cloud.sleuth.brave.instrument.reactor.TraceReactorAutoConfigurationAccessorConfiguration;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.web.reactive.function.client.WebClient;
 
@@ -37,7 +37,7 @@ public class ReactorNettyHttpClientBraveTests extends ITSpringConfiguredReactorC
 
 	/**
 	 * This borrows hooks from
-	 * {@code org.springframework.cloud.sleuth.instrument.reactor.TraceReactorAutoConfiguration}
+	 * {@code org.springframework.cloud.sleuth.brave.instrument.reactor.TraceReactorAutoConfiguration}
 	 * to ensure that the invocation trace context is set in scope for hooks like
 	 * {@link Subscriber#onNext}.
 	 *
@@ -48,7 +48,8 @@ public class ReactorNettyHttpClientBraveTests extends ITSpringConfiguredReactorC
 	 * {@code Mono<Connection>} created in
 	 * {@code reactor.netty.http.client.MonoConnect$MonoHttpConnect} with
 	 * {@code ScopePassingSpanSubscriber}. While this looks like cheating the test, Sleuth
-	 * will always setup these hooks anyway unless "spring.sleuth.reactor.enabled=false".
+	 * will always setup these hooks anyway unless
+	 * "spring.sleuth.brave.reactor.enabled=false".
 	 */
 	@Override
 	protected AnnotationConfigApplicationContext newClient(int port) {

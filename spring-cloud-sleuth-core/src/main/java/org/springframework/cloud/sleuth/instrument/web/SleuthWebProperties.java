@@ -18,6 +18,7 @@ package org.springframework.cloud.sleuth.instrument.web;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.context.properties.NestedConfigurationProperty;
+import org.springframework.core.Ordered;
 
 /**
  * Configuration properties for web tracing.
@@ -26,7 +27,7 @@ import org.springframework.boot.context.properties.NestedConfigurationProperty;
  * @since 1.0.12
  */
 @ConfigurationProperties("spring.sleuth.web")
-class SleuthWebProperties {
+public class SleuthWebProperties {
 
 	/**
 	 * Default set of skip patterns.
@@ -51,13 +52,11 @@ class SleuthWebProperties {
 	private String additionalSkipPattern;
 
 	// TODO: [OTEL] Do sth about this?
-	/*	*//**
-			 * Order in which the tracing filters should be registered. Defaults to
-			 * {@link TraceHttpAutoConfiguration#TRACING_FILTER_ORDER}.
-			 *//*
-				 * private int filterOrder =
-				 * TraceHttpAutoConfiguration.TRACING_FILTER_ORDER;
-				 */
+	/**
+	 * Order in which the tracing filters should be registered. Defaults to
+	 * {@link TraceHttpAutoConfiguration#TRACING_FILTER_ORDER}.
+	 */
+	private int filterOrder = Ordered.HIGHEST_PRECEDENCE + 5;
 
 	/**
 	 * If set to true, auto-configured skip patterns will be ignored.
@@ -98,11 +97,13 @@ class SleuthWebProperties {
 		this.additionalSkipPattern = emptyToNull(additionalSkipPattern);
 	}
 
-	/*
-	 * public int getFilterOrder() { return this.filterOrder; }
-	 *
-	 * public void setFilterOrder(int filterOrder) { this.filterOrder = filterOrder; }
-	 */
+	public int getFilterOrder() {
+		return this.filterOrder;
+	}
+
+	public void setFilterOrder(int filterOrder) {
+		this.filterOrder = filterOrder;
+	}
 
 	public boolean isIgnoreAutoConfiguredSkipPatterns() {
 		return ignoreAutoConfiguredSkipPatterns;

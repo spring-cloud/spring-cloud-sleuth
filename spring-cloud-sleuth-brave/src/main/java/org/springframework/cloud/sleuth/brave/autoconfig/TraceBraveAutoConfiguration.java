@@ -29,6 +29,8 @@ import brave.propagation.CurrentTraceContextCustomizer;
 import brave.propagation.Propagation;
 import brave.propagation.ThreadLocalCurrentTraceContext;
 import brave.sampler.Sampler;
+import io.opentelemetry.OpenTelemetry;
+import io.opentelemetry.context.propagation.ContextPropagators;
 
 import org.springframework.boot.autoconfigure.AutoConfigureBefore;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -37,6 +39,7 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.cloud.sleuth.SpanNamer;
 import org.springframework.cloud.sleuth.autoconfig.TraceAutoConfiguration;
 import org.springframework.cloud.sleuth.brave.LocalServiceName;
+import org.springframework.cloud.sleuth.brave.otelbridge.BraveContextPropagators;
 import org.springframework.cloud.sleuth.brave.otelbridge.BraveTracer;
 import org.springframework.cloud.sleuth.brave.sampler.SamplerAutoConfiguration;
 import org.springframework.cloud.sleuth.internal.DefaultSpanNamer;
@@ -65,6 +68,11 @@ import org.springframework.util.StringUtils;
 public class TraceBraveAutoConfiguration {
 
 	/**
+	 * Tracing bean name. Name of the bean matters for some instrumentations.
+	 */
+	public static final String TRACING_BEAN_NAME = "tracing";
+
+	/**
 	 * Tracer bean name. Name of the bean matters for some instrumentations.
 	 */
 	public static final String TRACER_BEAN_NAME = "tracer";
@@ -74,7 +82,7 @@ public class TraceBraveAutoConfiguration {
 	 */
 	public static final String DEFAULT_SERVICE_NAME = "default";
 
-	@Bean
+	@Bean(name = TRACING_BEAN_NAME)
 	@ConditionalOnMissingBean
 	// NOTE: stable bean name as might be used outside sleuth
 	Tracing tracing(@LocalServiceName String serviceName, Propagation.Factory factory,
@@ -102,6 +110,14 @@ public class TraceBraveAutoConfiguration {
 	@ConditionalOnMissingBean
 	Tracer tracer(Tracing tracing) {
 		return tracing.tracer();
+	}
+
+	@Bean
+	@ConditionalOnMissingBean
+	ContextPropagators otelContextPropagators(Propagation.Factory factory, Tracer tracer) {
+		BraveContextPropagators contextPropagators = new BraveContextPropagators(factory, tracer);
+		OpenTelemetry.setPropagators(contextPropagators);
+		return contextPropagators;
 	}
 
 	@Bean

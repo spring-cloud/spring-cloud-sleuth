@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.springframework.cloud.sleuth.instrument.web.client;
+package org.springframework.cloud.sleuth.brave.instrument.web.client;
 
 import java.util.Collections;
 import java.util.concurrent.Callable;
@@ -176,7 +176,7 @@ public class RestTemplateTraceAspectIntegrationTests {
 	@EnableAutoConfiguration(
 			// spring boot test will otherwise instrument the client and server with the
 			// same bean factory which isn't expected
-			excludeName = "org.springframework.cloud.sleuth.instrument.web.TraceWebServletAutoConfiguration")
+			excludeName = "org.springframework.cloud.sleuth.brave.instrument.web.TraceWebServletAutoConfiguration")
 	@Import(AspectTestingController.class)
 	public static class Config {
 

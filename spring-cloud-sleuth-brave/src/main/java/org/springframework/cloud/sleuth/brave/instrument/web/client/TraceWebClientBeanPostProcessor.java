@@ -49,7 +49,7 @@ import org.springframework.web.reactive.function.client.ExchangeFilterFunction;
 import org.springframework.web.reactive.function.client.ExchangeFunction;
 import org.springframework.web.reactive.function.client.WebClient;
 
-import static org.springframework.cloud.sleuth.instrument.reactor.ReactorSleuth.scopePassingSpanOperator;
+import static org.springframework.cloud.sleuth.brave.instrument.reactor.ReactorSleuth.scopePassingSpanOperator;
 
 /**
  * {@link BeanPostProcessor} to wrap a {@link WebClient} instance into its trace

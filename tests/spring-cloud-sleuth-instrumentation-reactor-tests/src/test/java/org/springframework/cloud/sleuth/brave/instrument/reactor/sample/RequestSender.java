@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.springframework.cloud.sleuth.instrument.reactor.sample;
+package org.springframework.cloud.sleuth.brave.instrument.reactor.sample;
 
 import brave.Span;
 import brave.Tracer;

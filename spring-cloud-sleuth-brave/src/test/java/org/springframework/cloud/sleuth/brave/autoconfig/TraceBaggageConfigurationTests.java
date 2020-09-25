@@ -74,7 +74,8 @@ public class TraceBaggageConfigurationTests {
 
 	@Test
 	public void shouldCreateRemoteFields() {
-		this.contextRunner.withPropertyValues("spring.sleuth.brave.baggage.remote-fields=x-vcap-request-id,country-code")
+		this.contextRunner
+				.withPropertyValues("spring.sleuth.brave.baggage.remote-fields=x-vcap-request-id,country-code")
 				.run((context) -> assertThatBaggageFieldNameToKeyNames(context).containsOnly(
 						tuple("x-vcap-request-id", new String[] { "x-vcap-request-id" }),
 						tuple("country-code", new String[] { "country-code" })));
@@ -119,7 +120,8 @@ public class TraceBaggageConfigurationTests {
 	@Test
 	public void shouldCreateTagHandler_oldProperty() {
 		this.contextRunner
-				.withPropertyValues("spring.sleuth.brave.propagation.tag.whitelisted-keys=x-vcap-request-id,country-code")
+				.withPropertyValues(
+						"spring.sleuth.brave.propagation.tag.whitelisted-keys=x-vcap-request-id,country-code")
 				.run((context) -> assertThatFieldNamesToTag(context).containsOnly("x-vcap-request-id", "country-code"));
 	}
 

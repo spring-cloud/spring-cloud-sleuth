@@ -22,25 +22,35 @@ import io.opentelemetry.common.AttributeValue;
 import io.opentelemetry.common.Attributes;
 import io.opentelemetry.trace.EndSpanOptions;
 import io.opentelemetry.trace.Event;
+import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.SpanContext;
 import io.opentelemetry.trace.Status;
 
 import org.springframework.core.NestedExceptionUtils;
-import org.springframework.integration.util.StackTraceUtils;
 
-public class BraveSpan implements io.opentelemetry.trace.Span {
+/**
+ * Brave version of {@link Span}.
+ *
+ * @author Marcin Grzejszczak
+ * @since 3.0.0
+ */
+public class BraveSpan implements Span {
 
 	final brave.Span span;
+
+	final BraveSpanContext context;
 
 	String name;
 
 	public BraveSpan(brave.Span span) {
 		this.span = span;
+		this.context = new BraveSpanContext(span.context());
 	}
 
 	public BraveSpan(brave.Span span, String name) {
 		this.span = span;
 		this.name = name;
+		this.context = new BraveSpanContext(span.context());
 	}
 
 	@Override
@@ -133,7 +143,7 @@ public class BraveSpan implements io.opentelemetry.trace.Span {
 
 	@Override
 	public SpanContext getContext() {
-		return new BraveSpanContext(this.span.context());
+		return this.context;
 	}
 
 	@Override

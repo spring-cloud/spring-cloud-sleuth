@@ -17,8 +17,8 @@
 package org.springframework.cloud.sleuth.instrument.quartz;
 
 import io.grpc.Context;
-import io.opentelemetry.OpenTelemetry;
 import io.opentelemetry.context.Scope;
+import io.opentelemetry.context.propagation.ContextPropagators;
 import io.opentelemetry.context.propagation.TextMapPropagator.Getter;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.Tracer;
@@ -56,8 +56,11 @@ class TracingJobListener implements JobListener, TriggerListener {
 
 	private final Tracer tracer;
 
-	TracingJobListener(Tracer tracing) {
-		this.tracer = tracing;
+	private final ContextPropagators contextPropagators;
+
+	TracingJobListener(Tracer tracer, ContextPropagators contextPropagators) {
+		this.tracer = tracer;
+		this.contextPropagators = contextPropagators;
 	}
 
 	@Override
@@ -67,7 +70,7 @@ class TracingJobListener implements JobListener, TriggerListener {
 
 	@Override
 	public void triggerFired(Trigger trigger, JobExecutionContext context) {
-		Context ctx = OpenTelemetry.getPropagators().getTextMapPropagator().extract(Context.current(),
+		Context ctx = this.contextPropagators.getTextMapPropagator().extract(Context.current(),
 				context.getMergedJobDataMap(), GETTER);
 		Span extractedSpan = TracingContextUtils.getSpanWithoutDefault(ctx);
 		String name = context.getTrigger().getJobKey().toString();

@@ -51,7 +51,7 @@ public class TraceHttpAutoConfigurationTests {
 
 	@Test
 	public void configuresClientSkipPattern() throws Exception {
-		contextRunner().withPropertyValues("spring.sleuth.brave.web.client.skip-pattern=foo.*|bar.*").run((context) -> {
+		contextRunner().withPropertyValues("spring.sleuth.web.client.skip-pattern=foo.*|bar.*").run((context) -> {
 			SamplerFunction<HttpRequest> clientSampler = context.getBean(HttpTracing.class).clientRequestSampler();
 
 			then(clientSampler).isInstanceOf(SkipPatternHttpClientSampler.class);
@@ -78,7 +78,7 @@ public class TraceHttpAutoConfigurationTests {
 
 	@Test
 	public void defaultsServerSamplerToDeferWhenSkipPatternCleared() {
-		contextRunner().withPropertyValues("spring.sleuth.brave.web.skip-pattern").run((context) -> {
+		contextRunner().withPropertyValues("spring.sleuth.web.skip-pattern").run((context) -> {
 			SamplerFunction<HttpRequest> clientSampler = context.getBean(HttpTracing.class).serverRequestSampler();
 
 			then(clientSampler).isSameAs(SamplerFunctions.deferDecision());

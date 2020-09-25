@@ -57,8 +57,8 @@ import static org.awaitility.Awaitility.await;
 import static org.springframework.boot.test.context.SpringBootTest.WebEnvironment.RANDOM_PORT;
 
 @SpringBootTest(classes = MultipleHopsIntegrationTests.Config.class, webEnvironment = RANDOM_PORT,
-		properties = { "spring.sleuth.baggage.remote-fields=x-vcap-request-id,country-code",
-				"spring.sleuth.baggage.local-fields=bp", "spring.sleuth.integration.enabled=true" })
+		properties = { "spring.sleuth.brave.baggage.remote-fields=x-vcap-request-id,country-code",
+				"spring.sleuth.brave.baggage.local-fields=bp", "spring.sleuth.brave.integration.enabled=true" })
 public class MultipleHopsIntegrationTests {
 
 	static final BaggageField REQUEST_ID = BaggageField.create("x-vcap-request-id");

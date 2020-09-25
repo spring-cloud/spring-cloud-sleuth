@@ -43,10 +43,11 @@ public class TraceBraveAutoConfigurationPropagationCustomizationTests {
 
 	@Test
 	public void allowsCustomization() {
-		this.contextRunner.withPropertyValues("spring.sleuth.brave.baggage.remote-fields=country-code").run((context) -> {
-			BDDAssertions.then(context.getBean(Propagation.Factory.class)).extracting("delegate")
-					.isEqualTo(TraceBaggageConfiguration.B3_FACTORY);
-		});
+		this.contextRunner.withPropertyValues("spring.sleuth.brave.baggage.remote-fields=country-code")
+				.run((context) -> {
+					BDDAssertions.then(context.getBean(Propagation.Factory.class)).extracting("delegate")
+							.isEqualTo(TraceBaggageConfiguration.B3_FACTORY);
+				});
 	}
 
 	@Test

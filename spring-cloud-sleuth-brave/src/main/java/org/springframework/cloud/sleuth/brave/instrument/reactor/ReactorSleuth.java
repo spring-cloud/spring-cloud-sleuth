@@ -14,12 +14,13 @@
  * limitations under the License.
  */
 
-package org.springframework.cloud.sleuth.instrument.reactor;
+package org.springframework.cloud.sleuth.brave.instrument.reactor;
 
 import java.util.function.Function;
 
-import io.opentelemetry.trace.Span;
-import io.opentelemetry.trace.Tracer;
+import brave.Tracing;
+import brave.propagation.CurrentTraceContext;
+import brave.propagation.TraceContext;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.reactivestreams.Publisher;
@@ -50,8 +51,8 @@ public abstract class ReactorSleuth {
 	}
 
 	/**
-	 * Return a span operator pointcut given a {@link Tracer}. This can be used in reactor
-	 * via {@link reactor.core.publisher.Flux#transform(Function)},
+	 * Return a span operator pointcut given a {@link Tracing}. This can be used in
+	 * reactor via {@link reactor.core.publisher.Flux#transform(Function)},
 	 * {@link reactor.core.publisher.Mono#transform(Function)},
 	 * {@link reactor.core.publisher.Hooks#onLastOperator(Function)} or
 	 * {@link reactor.core.publisher.Hooks#onLastOperator(Function)}. The Span operator
@@ -74,7 +75,8 @@ public abstract class ReactorSleuth {
 
 		// keep a reference outside the lambda so that any caching will be visible to
 		// all publishers
-		LazyBean<Tracer> lazyTracer = LazyBean.create(springContext, Tracer.class);
+		LazyBean<CurrentTraceContext> lazyCurrentTraceContext = LazyBean.create(springContext,
+				CurrentTraceContext.class);
 
 		return Operators.liftPublisher((p, sub) -> {
 			// We don't scope scalar results as they happen in an instant. This prevents
@@ -97,8 +99,8 @@ public abstract class ReactorSleuth {
 			}
 
 			// Try to get the current trace context bean, lenient when there are problems
-			Tracer tracer = lazyTracer.get();
-			if (tracer == null) {
+			CurrentTraceContext currentTraceContext = lazyCurrentTraceContext.get();
+			if (currentTraceContext == null) {
 				boolean assertOn = false;
 				assert assertOn = true; // gives a message in unit test failures
 				if (log.isTraceEnabled() || assertOn) {
@@ -117,7 +119,7 @@ public abstract class ReactorSleuth {
 						+ name(sub) + "]");
 			}
 
-			Span parent = traceContext(context, tracer.getCurrentSpan());
+			TraceContext parent = traceContext(context, currentTraceContext);
 			if (parent == null) {
 				return sub; // no need to scope a null parent
 			}
@@ -129,15 +131,18 @@ public abstract class ReactorSleuth {
 			// if (runStyle == Scannable.Attr.RunStyle.SYNC) {
 			// return sub;
 			// }
-			return new ScopePassingSpanSubscriber<>(sub, context, tracer, parent);
+			return new ScopePassingSpanSubscriber<>(sub, context, currentTraceContext, parent);
 		});
 	}
 
 	private static <T> Context contextWithBeans(ConfigurableApplicationContext springContext,
 			CoreSubscriber<? super T> sub) {
 		Context context = sub.currentContext();
-		if (!context.hasKey(Tracer.class)) {
-			context = context.put(Tracer.class, springContext.getBean(Tracer.class));
+		if (!context.hasKey(Tracing.class)) {
+			context = context.put(Tracing.class, springContext.getBean(Tracing.class));
+		}
+		if (!context.hasKey(CurrentTraceContext.class)) {
+			context = context.put(CurrentTraceContext.class, springContext.getBean(CurrentTraceContext.class));
 		}
 		return context;
 	}
@@ -165,11 +170,14 @@ public abstract class ReactorSleuth {
 		return Scannable.from(sub).name();
 	}
 
-	static Span traceContext(Context context, Span fallback) {
-		if (context.hasKey(Span.class)) {
-			return context.get(Span.class);
+	/**
+	 * Like {@link CurrentTraceContext#get()}, except it first checks the reactor context.
+	 */
+	static TraceContext traceContext(Context context, CurrentTraceContext fallback) {
+		if (context.hasKey(TraceContext.class)) {
+			return context.get(TraceContext.class);
 		}
-		return fallback;
+		return fallback.get();
 	}
 
 }

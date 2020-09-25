@@ -37,6 +37,7 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.cloud.sleuth.brave.autoconfig.TraceBraveAutoConfiguration;
 import org.springframework.cloud.sleuth.instrument.web.SkipPatternConfiguration;
 import org.springframework.cloud.sleuth.instrument.web.SkipPatternProvider;
+import org.springframework.cloud.sleuth.instrument.web.SleuthWebProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
@@ -51,8 +52,8 @@ import org.springframework.lang.Nullable;
  * @since 2.0.0
  */
 @Configuration(proxyBeanMethods = false)
-@ConditionalOnProperty(name = { "spring.sleuth.brave.http.enabled", "spring.sleuth.brave.web.enabled" },
-		havingValue = "true", matchIfMissing = true)
+@ConditionalOnProperty(name = { "spring.sleuth.brave.http.enabled", "spring.sleuth.web.enabled" }, havingValue = "true",
+		matchIfMissing = true)
 @ConditionalOnBean(Tracing.class)
 @ConditionalOnClass(HttpTracing.class)
 @AutoConfigureAfter(TraceBraveAutoConfiguration.class)

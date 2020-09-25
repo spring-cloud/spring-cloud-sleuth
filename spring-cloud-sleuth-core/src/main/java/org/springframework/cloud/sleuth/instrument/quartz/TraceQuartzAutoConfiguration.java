@@ -16,6 +16,7 @@
 
 package org.springframework.cloud.sleuth.instrument.quartz;
 
+import io.opentelemetry.context.propagation.ContextPropagators;
 import io.opentelemetry.trace.Tracer;
 import org.quartz.Scheduler;
 
@@ -43,13 +44,16 @@ import org.springframework.context.annotation.Configuration;
 @ConditionalOnProperty(value = "spring.sleuth.quartz.enabled", matchIfMissing = true)
 class TraceQuartzAutoConfiguration implements InitializingBean {
 
-	private Scheduler scheduler;
+	private final Scheduler scheduler;
 
-	private Tracer tracer;
+	private final Tracer tracer;
 
-	TraceQuartzAutoConfiguration(Scheduler scheduler, Tracer tracer) {
+	private final ContextPropagators contextPropagators;
+
+	TraceQuartzAutoConfiguration(Scheduler scheduler, Tracer tracer, ContextPropagators contextPropagators) {
 		this.scheduler = scheduler;
 		this.tracer = tracer;
+		this.contextPropagators = contextPropagators;
 	}
 
 	@Autowired
@@ -57,14 +61,14 @@ class TraceQuartzAutoConfiguration implements InitializingBean {
 
 	@Bean
 	public TracingJobListener tracingJobListener() {
-		return new TracingJobListener(tracer);
+		return new TracingJobListener(this.tracer, this.contextPropagators);
 	}
 
 	@Override
 	public void afterPropertiesSet() throws Exception {
-		TracingJobListener tracingJobListener = beanFactory.getBean(TracingJobListener.class);
-		scheduler.getListenerManager().addTriggerListener(tracingJobListener);
-		scheduler.getListenerManager().addJobListener(tracingJobListener);
+		TracingJobListener tracingJobListener = this.beanFactory.getBean(TracingJobListener.class);
+		this.scheduler.getListenerManager().addTriggerListener(tracingJobListener);
+		this.scheduler.getListenerManager().addJobListener(tracingJobListener);
 	}
 
 }

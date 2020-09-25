@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.springframework.cloud.sleuth.instrument.web.client;
+package org.springframework.cloud.sleuth.brave.instrument.web.client;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -47,7 +47,7 @@ class TraceGatewayEnvironmentPostProcessor implements EnvironmentPostProcessor {
 	public void postProcessEnvironment(ConfigurableEnvironment environment, SpringApplication application) {
 		Map<String, Object> map = new HashMap<>();
 		if (sleuthEnabled(environment) && isGatewayOnTheClasspath()) {
-			String instrumentationType = environment.getProperty("spring.sleuth.reactor.instrumentation-type");
+			String instrumentationType = environment.getProperty("spring.sleuth.brave.reactor.instrumentation-type");
 			if (log.isDebugEnabled()) {
 				log.debug("Found the following instrumentation type [" + instrumentationType + "]");
 			}
@@ -57,7 +57,7 @@ class TraceGatewayEnvironmentPostProcessor implements EnvironmentPostProcessor {
 					log.debug("No instrumentation type passed, will force it to [" + instrumentationType + "]");
 				}
 			}
-			map.put("spring.sleuth.reactor.instrumentation-type", instrumentationType);
+			map.put("spring.sleuth.brave.reactor.instrumentation-type", instrumentationType);
 		}
 		addOrReplace(environment.getPropertySources(), map);
 	}

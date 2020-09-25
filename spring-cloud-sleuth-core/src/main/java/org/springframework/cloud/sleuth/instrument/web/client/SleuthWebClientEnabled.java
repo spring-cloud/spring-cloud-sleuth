@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.springframework.cloud.sleuth.instrument.web.client;
+package org.springframework.cloud.sleuth.brave.instrument.web.client;
 
 import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;

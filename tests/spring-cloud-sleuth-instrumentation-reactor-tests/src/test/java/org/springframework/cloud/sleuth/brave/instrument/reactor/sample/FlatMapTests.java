@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.springframework.cloud.sleuth.instrument.reactor.sample;
+package org.springframework.cloud.sleuth.brave.instrument.reactor.sample;
 
 import java.util.Arrays;
 import java.util.List;
@@ -23,7 +23,6 @@ import java.util.stream.Collectors;
 
 import brave.Span;
 import brave.Tracer;
-import brave.Tracing;
 import brave.handler.MutableSpan;
 import brave.handler.SpanHandler;
 import brave.sampler.Sampler;
@@ -43,10 +42,10 @@ import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.boot.test.system.CapturedOutput;
 import org.springframework.boot.test.system.OutputCaptureExtension;
+import org.springframework.cloud.sleuth.brave.instrument.reactor.Issue866Configuration;
+import org.springframework.cloud.sleuth.brave.instrument.reactor.TraceReactorAutoConfigurationAccessorConfiguration;
+import org.springframework.cloud.sleuth.brave.instrument.web.WebFluxSleuthOperators;
 import org.springframework.cloud.sleuth.brave.otelbridge.BraveTracer;
-import org.springframework.cloud.sleuth.instrument.reactor.Issue866Configuration;
-import org.springframework.cloud.sleuth.instrument.reactor.TraceReactorAutoConfigurationAccessorConfiguration;
-import org.springframework.cloud.sleuth.instrument.web.WebFluxSleuthOperators;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -98,7 +97,7 @@ public class FlatMapTests {
 				Issue866Configuration.class)
 						.web(WebApplicationType.REACTIVE)
 						.properties("server.port=0", "spring.jmx.enabled=false",
-								"spring.sleuth.reactor.decorate-on-each=false",
+								"spring.sleuth.brave.reactor.decorate-on-each=false",
 								"spring.application.name=TraceWebFlux2Tests", "security.basic.enabled=false",
 								"management.security.enabled=false")
 						.run();
@@ -112,7 +111,7 @@ public class FlatMapTests {
 				FlatMapTests.TestManualConfiguration.class, Issue866Configuration.class)
 						.web(WebApplicationType.REACTIVE)
 						.properties("server.port=0", "spring.jmx.enabled=false",
-								"spring.sleuth.reactor.instrumentation-type=MANUAL",
+								"spring.sleuth.brave.reactor.instrumentation-type=MANUAL",
 								"spring.application.name=TraceWebFlux3Tests", "security.basic.enabled=false",
 								"management.security.enabled=false")
 						.run();

@@ -39,7 +39,7 @@ public class Issue943Tests {
 	@Test
 	public void should_pass_tracing_context_via_spring_integration() {
 		try (ConfigurableApplicationContext applicationContext = SpringApplication.run(HelloSpringIntegration.class,
-				"--spring.jmx.enabled=false", "--server.port=0", "--spring.sleuth.integration.enabled=true")) {
+				"--spring.jmx.enabled=false", "--server.port=0", "--spring.sleuth.brave.integration.enabled=true")) {
 			// given
 			Tracer tracer = applicationContext.getBean(Tracer.class);
 			Span newSpan = tracer.nextSpan().name("foo").start();

@@ -19,6 +19,12 @@ package org.springframework.cloud.sleuth.brave.otelbridge;
 import brave.Tracer;
 import io.opentelemetry.context.Scope;
 
+/**
+ * Brave version of {@link Scope}.
+ *
+ * @author Marcin Grzejszczak
+ * @since 3.0.0
+ */
 public class BraveScope implements Scope {
 
 	private final Tracer.SpanInScope spanInScope;

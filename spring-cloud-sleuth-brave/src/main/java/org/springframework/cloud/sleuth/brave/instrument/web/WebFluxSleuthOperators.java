@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.springframework.cloud.sleuth.instrument.web;
+package org.springframework.cloud.sleuth.brave.instrument.web;
 
 import java.util.concurrent.Callable;
 import java.util.function.Consumer;
@@ -94,7 +94,7 @@ public final class WebFluxSleuthOperators {
 	 */
 	public static void withSpanInScope(Context context, Runnable runnable) {
 		Tracer tracer = context.get(Tracer.class);
-		Span span = spanOrNew(context);
+		Span span = spanOrNew(tracer, context);
 		try (Scope scope = tracer.withSpan(span)) {
 			runnable.run();
 		}
@@ -109,12 +109,11 @@ public final class WebFluxSleuthOperators {
 	 */
 	public static <T> T withSpanInScope(Context context, Callable<T> callable) {
 		Tracer tracer = context.get(Tracer.class);
-		Span span = spanOrNew(context);
+		Span span = spanOrNew(tracer, context);
 		return withContext(callable, tracer, span);
 	}
 
-	private static Span spanOrNew(Context context) {
-		Tracer tracer = context.get(Tracer.class);
+	private static Span spanOrNew(Tracer tracer, Context context) {
 		if (!context.hasKey(Span.class)) {
 			if (log.isDebugEnabled()) {
 				log.debug("No trace context found, will create a new span");

@@ -18,8 +18,17 @@ package org.springframework.cloud.sleuth.brave.otelbridge;
 
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.trace.Span;
+import io.opentelemetry.trace.Tracer;
 
-public class BraveTracer implements io.opentelemetry.trace.Tracer {
+import org.springframework.util.Assert;
+
+/**
+ * Brave version of {@link Tracer}.
+ *
+ * @author Marcin Grzejszczak
+ * @since 3.0.0
+ */
+public class BraveTracer implements Tracer {
 
 	private final brave.Tracer tracer;
 
@@ -38,6 +47,7 @@ public class BraveTracer implements io.opentelemetry.trace.Tracer {
 
 	@Override
 	public Scope withSpan(Span span) {
+		Assert.notNull(span, "Span must not be null");
 		return new BraveScope(tracer.withSpanInScope(((BraveSpan) span).span));
 	}
 
@@ -46,6 +56,9 @@ public class BraveTracer implements io.opentelemetry.trace.Tracer {
 		return new BraveSpanBuilder(this.tracer, spanName);
 	}
 
+	/**
+	 * @return Brave's {@link brave.Tracer}.
+	 */
 	public brave.Tracer tracer() {
 		return this.tracer;
 	}

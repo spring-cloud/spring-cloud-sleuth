@@ -25,6 +25,8 @@ import org.quartz.Scheduler;
 import org.springframework.boot.autoconfigure.AutoConfigurations;
 import org.springframework.boot.autoconfigure.AutoConfigureBefore;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
+import org.springframework.cloud.sleuth.autoconfig.TraceAutoConfiguration;
+import org.springframework.cloud.sleuth.brave.autoconfig.TraceBraveAutoConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -39,7 +41,8 @@ import static org.mockito.Mockito.when;
 public class TraceQuartzAutoConfigurationTest {
 
 	private final ApplicationContextRunner contextRunner = new ApplicationContextRunner().withConfiguration(
-			AutoConfigurations.of(SchedulerConfig.class, TracingConfig.class, TraceQuartzAutoConfiguration.class));
+			AutoConfigurations.of(SchedulerConfig.class, TracingConfig.class, TraceBraveAutoConfiguration.class,
+					TraceAutoConfiguration.class, TraceQuartzAutoConfiguration.class));
 
 	@Test
 	public void should_create_job_listener_bean_when_all_conditions_are_met() {
@@ -124,12 +127,12 @@ public class TraceQuartzAutoConfigurationTest {
 	public static class TracingConfig {
 
 		@Bean
-		public Tracing tracing() {
+		public Tracing testTracing() {
 			return mock(Tracing.class);
 		}
 
 		@Bean
-		public Tracer tracer() {
+		public Tracer testTracer() {
 			return mock(Tracer.class);
 		}
 

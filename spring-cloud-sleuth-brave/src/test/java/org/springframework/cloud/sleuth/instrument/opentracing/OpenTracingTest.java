@@ -55,7 +55,7 @@ import static org.springframework.boot.test.context.SpringBootTest.WebEnvironmen
  *
  * @author Marcin Grzejszczak
  */
-@SpringBootTest(webEnvironment = NONE, properties = "spring.sleuth.baggage.remote-fields=country-code")
+@SpringBootTest(webEnvironment = NONE, properties = "spring.sleuth.brave.baggage.remote-fields=country-code")
 public class OpenTracingTest {
 
 	@Autowired

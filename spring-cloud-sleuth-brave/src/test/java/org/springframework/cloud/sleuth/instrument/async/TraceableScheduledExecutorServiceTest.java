@@ -23,6 +23,7 @@ import java.util.function.Predicate;
 
 import brave.Tracing;
 import brave.propagation.StrictCurrentTraceContext;
+import io.opentelemetry.trace.Tracer;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -35,6 +36,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.cloud.sleuth.SpanNamer;
+import org.springframework.cloud.sleuth.brave.otelbridge.BraveTracer;
 import org.springframework.cloud.sleuth.internal.DefaultSpanNamer;
 
 import static org.mockito.ArgumentMatchers.any;
@@ -166,7 +168,7 @@ public class TraceableScheduledExecutorServiceTest {
 	}
 
 	BeanFactory beanFactory() {
-		BDDMockito.given(this.beanFactory.getBean(Tracing.class)).willReturn(this.tracing);
+		BDDMockito.given(this.beanFactory.getBean(Tracer.class)).willReturn(new BraveTracer(this.tracing.tracer()));
 		BDDMockito.given(this.beanFactory.getBean(SpanNamer.class)).willReturn(new DefaultSpanNamer());
 		SleuthContextListenerAccessor.set(this.beanFactory, true);
 		return this.beanFactory;

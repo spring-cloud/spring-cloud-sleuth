@@ -2,6 +2,7 @@
 org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
 org.springframework.cloud.sleuth.brave.autoconfig.TraceBraveAutoConfiguration,\
 org.springframework.cloud.sleuth.brave.instrument.web.TraceHttpAutoConfiguration,\
+org.springframework.cloud.sleuth.brave.instrument.web.TraceWebServletAutoConfiguration,\
 org.springframework.cloud.sleuth.brave.instrument.web.client.TraceWebClientAutoConfiguration,\
 org.springframework.cloud.sleuth.brave.instrument.web.client.TraceWebAsyncClientAutoConfiguration,\
 org.springframework.cloud.sleuth.brave.instrument.web.client.feign.TraceFeignClientAutoConfiguration,\

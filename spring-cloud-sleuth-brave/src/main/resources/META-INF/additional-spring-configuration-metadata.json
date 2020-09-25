@@ -1,97 +1,97 @@
 {
   "properties": [
     {
-      "name": "spring.sleuth.integration.enabled",
+      "name": "spring.sleuth.brave.integration.enabled",
       "type": "java.lang.Boolean",
       "description": "Enable Spring Integration sleuth instrumentation.",
       "defaultValue": true
     },
     {
-      "name": "spring.sleuth.integration.websockets.enabled",
+      "name": "spring.sleuth.brave.integration.websockets.enabled",
       "type": "java.lang.Boolean",
       "description": "Enable tracing for WebSockets.",
       "defaultValue": true
     },
     {
-      "name": "spring.sleuth.async.enabled",
+      "name": "spring.sleuth.brave.async.enabled",
       "type": "java.lang.Boolean",
       "description": "Enable instrumenting async related components so that the tracing information is passed between threads.",
       "defaultValue": true
     },
     {
-      "name": "spring.sleuth.async.configurer.enabled",
+      "name": "spring.sleuth.brave.async.configurer.enabled",
       "type": "java.lang.Boolean",
       "description": "Enable default AsyncConfigurer.",
       "defaultValue": true
     },
     {
-      "name": "spring.sleuth.feign.enabled",
+      "name": "spring.sleuth.brave.feign.enabled",
       "type": "java.lang.Boolean",
       "description": "Enable span information propagation when using Feign.",
       "defaultValue": true
     },
     {
-      "name": "spring.sleuth.feign.processor.enabled",
+      "name": "spring.sleuth.brave.feign.processor.enabled",
       "type": "java.lang.Boolean",
       "description": "Enable post processor that wraps Feign Context in its tracing representations.",
       "defaultValue": true
     },
     {
-      "name": "spring.sleuth.grpc.enabled",
+      "name": "spring.sleuth.brave.grpc.enabled",
       "type": "java.lang.Boolean",
       "description": "Enable span information propagation when using GRPC.",
       "defaultValue": true
     },
     {
-      "name": "spring.sleuth.messaging.jms.enabled",
+      "name": "spring.sleuth.brave.messaging.jms.enabled",
       "type": "java.lang.Boolean",
       "description": "Enable tracing of JMS.",
       "defaultValue": true
     },
     {
-      "name": "spring.sleuth.messaging.rabbit.enabled",
+      "name": "spring.sleuth.brave.messaging.rabbit.enabled",
       "type": "java.lang.Boolean",
       "description": "Enable tracing of RabbitMQ.",
       "defaultValue": true
     },
     {
-      "name": "spring.sleuth.messaging.kafka.enabled",
+      "name": "spring.sleuth.brave.messaging.kafka.enabled",
       "type": "java.lang.Boolean",
       "description": "Enable tracing of Kafka.",
       "defaultValue": true
     },
     {
-      "name": "spring.sleuth.messaging.kafka.mapper.enabled",
+      "name": "spring.sleuth.brave.messaging.kafka.mapper.enabled",
       "type": "java.lang.Boolean",
       "description": "Enable DefaultKafkaHeaderMapper tracing for Kafka.",
       "defaultValue": true
     },
     {
-      "name": "spring.sleuth.quartz.enabled",
+      "name": "spring.sleuth.brave.quartz.enabled",
       "type": "java.lang.Boolean",
       "description": "Enable tracing for Quartz.",
       "defaultValue": true
     },
     {
-      "name": "spring.sleuth.mongodb.enabled",
+      "name": "spring.sleuth.brave.mongodb.enabled",
       "type": "java.lang.Boolean",
       "description": "Enable tracing for MongoDb.",
       "defaultValue": true
     },
     {
-      "name": "spring.sleuth.rpc.enabled",
+      "name": "spring.sleuth.brave.rpc.enabled",
       "type": "java.lang.Boolean",
       "description": "Enable tracing of RPC.",
       "defaultValue": true
     },
     {
-      "name": "spring.sleuth.sampler.refresh.enabled",
+      "name": "spring.sleuth.brave.sampler.refresh.enabled",
       "type": "java.lang.Boolean",
       "description": "Enable refresh scope for sampler.",
       "defaultValue": true
     },
     {
-      "name": "spring.sleuth.web.webclient.enabled",
+      "name": "spring.sleuth.brave.web.webclient.enabled",
       "type": "java.lang.Boolean",
       "description": "Enable tracing instrumentation for WebClient.",
       "defaultValue": true

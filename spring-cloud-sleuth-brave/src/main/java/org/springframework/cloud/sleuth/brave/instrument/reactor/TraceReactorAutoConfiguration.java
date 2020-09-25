@@ -14,13 +14,13 @@
  * limitations under the License.
  */
 
-package org.springframework.cloud.sleuth.instrument.reactor;
+package org.springframework.cloud.sleuth.brave.instrument.reactor;
 
 import java.io.Closeable;
 import java.io.IOException;
 import java.util.function.Function;
 
-import io.opentelemetry.trace.Tracer;
+import brave.Tracing;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.reactivestreams.Publisher;
@@ -47,9 +47,9 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.env.ConfigurableEnvironment;
 
-import static org.springframework.cloud.sleuth.instrument.reactor.ReactorSleuth.scopePassingSpanOperator;
-import static org.springframework.cloud.sleuth.instrument.reactor.ReactorSleuth.springContextSpanOperator;
-import static org.springframework.cloud.sleuth.instrument.reactor.TraceReactorAutoConfiguration.TraceReactorConfiguration.SLEUTH_TRACE_REACTOR_KEY;
+import static org.springframework.cloud.sleuth.brave.instrument.reactor.ReactorSleuth.scopePassingSpanOperator;
+import static org.springframework.cloud.sleuth.brave.instrument.reactor.ReactorSleuth.springContextSpanOperator;
+import static org.springframework.cloud.sleuth.brave.instrument.reactor.TraceReactorAutoConfiguration.TraceReactorConfiguration.SLEUTH_TRACE_REACTOR_KEY;
 
 /**
  * {@link org.springframework.boot.autoconfigure.EnableAutoConfiguration
@@ -60,7 +60,7 @@ import static org.springframework.cloud.sleuth.instrument.reactor.TraceReactorAu
  * @since 2.0.0
  */
 @Configuration(proxyBeanMethods = false)
-@ConditionalOnProperty(value = "spring.sleuth.reactor.enabled", matchIfMissing = true)
+@ConditionalOnProperty(value = "spring.sleuth.brave.reactor.enabled", matchIfMissing = true)
 @ConditionalOnClass(Mono.class)
 @AutoConfigureAfter(name = "org.springframework.cloud.sleuth.instrument.web.TraceWebFluxAutoConfiguration")
 @EnableConfigurationProperties(SleuthReactorProperties.class)
@@ -69,7 +69,7 @@ class TraceReactorAutoConfiguration {
 	static final String SLEUTH_REACTOR_EXECUTOR_SERVICE_KEY = "sleuth";
 
 	@Configuration(proxyBeanMethods = false)
-	@ConditionalOnBean(Tracer.class)
+	@ConditionalOnBean(Tracing.class)
 	static class TraceReactorConfiguration {
 
 		static final String SLEUTH_TRACE_REACTOR_KEY = TraceReactorConfiguration.class.getName();
@@ -168,12 +168,13 @@ class HookRegisteringBeanDefinitionRegistryPostProcessor implements BeanDefiniti
 	static void setupHooks(ConfigurableApplicationContext springContext) {
 		ConfigurableEnvironment environment = springContext.getEnvironment();
 		SleuthReactorProperties.InstrumentationType property = environment.getProperty(
-				"spring.sleuth.reactor.instrumentation-type", SleuthReactorProperties.InstrumentationType.class,
+				"spring.sleuth.brave.reactor.instrumentation-type", SleuthReactorProperties.InstrumentationType.class,
 				SleuthReactorProperties.InstrumentationType.DECORATE_ON_EACH);
-		Boolean decorateOnEach = environment.getProperty("spring.sleuth.reactor.decorate-on-each", Boolean.class, true);
+		Boolean decorateOnEach = environment.getProperty("spring.sleuth.brave.reactor.decorate-on-each", Boolean.class,
+				true);
 		if (!decorateOnEach) {
 			log.warn(
-					"You're using the deprecated [spring.sleuth.reactor.decorate-on-each] property. Please use the [spring.sleuth.reactor.instrumentation-type] one instead.");
+					"You're using the deprecated [spring.sleuth.brave.reactor.decorate-on-each] property. Please use the [spring.sleuth.brave.reactor.instrumentation-type] one instead.");
 			decorateOnLast(scopePassingSpanOperator(springContext));
 		}
 		else if (property == SleuthReactorProperties.InstrumentationType.DECORATE_ON_EACH) {

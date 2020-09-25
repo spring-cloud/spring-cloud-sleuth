@@ -1,6 +1,6 @@
 logging.level.org.springframework.cloud: DEBUG
 logging.level.com.netflix.discovery.InstanceInfoReplicator: ERROR
-logging.level.org.springframework.cloud.sleuth.instrument.web.client.feign: TRACE
+logging.level.org.springframework.cloud.sleuth.brave.instrument.web.client.feign: TRACE
 
 # comma separated list of matchers
 spring.sleuth.rxjava.schedulers.ignoredthreads: HystixMetricPoller,^MyCustomThread.*$,^RxComputation.*$
