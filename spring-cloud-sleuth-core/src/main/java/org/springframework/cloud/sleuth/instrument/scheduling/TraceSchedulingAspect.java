@@ -19,6 +19,7 @@ package org.springframework.cloud.sleuth.instrument.scheduling;
 import java.util.regex.Pattern;
 
 import io.opentelemetry.context.Scope;
+import io.opentelemetry.trace.DefaultSpan;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.Tracer;
 import org.aspectj.lang.ProceedingJoinPoint;
@@ -61,6 +62,7 @@ class TraceSchedulingAspect {
 	@Around("execution (@org.springframework.scheduling.annotation.Scheduled  * *.*(..))")
 	public Object traceBackgroundThread(final ProceedingJoinPoint pjp) throws Throwable {
 		if (this.skipPattern != null && this.skipPattern.matcher(pjp.getTarget().getClass().getName()).matches()) {
+			this.tracer.withSpan(DefaultSpan.getInvalid());
 			return pjp.proceed();
 		}
 		String spanName = SpanNameUtil.toLowerHyphen(pjp.getSignature().getName());

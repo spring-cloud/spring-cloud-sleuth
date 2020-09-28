@@ -59,6 +59,7 @@ import org.springframework.boot.test.context.FilteredClassLoader;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
 import org.springframework.cloud.sleuth.autoconfig.TraceAutoConfiguration;
+import org.springframework.cloud.sleuth.brave.autoconfig.TraceBraveAutoConfiguration;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -153,7 +154,7 @@ public class ZipkinAutoConfigurationTests {
 		this.context = new AnnotationConfigApplicationContext();
 		environment().setProperty("spring.zipkin.base-url", this.server.url("/").toString());
 		this.context.register(ZipkinAutoConfiguration.class, PropertyPlaceholderAutoConfiguration.class,
-				TraceAutoConfiguration.class, Config.class);
+				TraceAutoConfiguration.class, TraceBraveAutoConfiguration.class, Config.class);
 		this.context.refresh();
 		Span span = this.context.getBean(Tracing.class).tracer().nextSpan().name("foo").tag("foo", "bar").start();
 
@@ -179,7 +180,7 @@ public class ZipkinAutoConfigurationTests {
 		environment().setProperty("spring.zipkin.base-url", this.server.url("/").toString());
 		environment().setProperty("spring.zipkin.encoder", "JSON_V1");
 		this.context.register(ZipkinAutoConfiguration.class, PropertyPlaceholderAutoConfiguration.class,
-				TraceAutoConfiguration.class, Config.class);
+				TraceAutoConfiguration.class, TraceBraveAutoConfiguration.class, Config.class);
 		this.context.refresh();
 		Span span = this.context.getBean(Tracing.class).tracer().nextSpan().name("foo").tag("foo", "bar").start();
 
@@ -282,7 +283,8 @@ public class ZipkinAutoConfigurationTests {
 		this.context = new AnnotationConfigApplicationContext();
 		environment().setProperty("spring.zipkin.base-url", this.server.url("/").toString());
 		this.context.register(ZipkinAutoConfiguration.class, PropertyPlaceholderAutoConfiguration.class,
-				TraceAutoConfiguration.class, Config.class, MultipleReportersConfig.class);
+				TraceAutoConfiguration.class, TraceBraveAutoConfiguration.class, Config.class,
+				MultipleReportersConfig.class);
 		this.context.refresh();
 
 		then(this.context.getBeansOfType(Sender.class)).hasSize(2);
@@ -313,7 +315,7 @@ public class ZipkinAutoConfigurationTests {
 	public void shouldOverrideDefaultBeans() {
 		this.context = new AnnotationConfigApplicationContext();
 		this.context.register(ZipkinAutoConfiguration.class, PropertyPlaceholderAutoConfiguration.class,
-				TraceAutoConfiguration.class, Config.class, MyConfig.class);
+				TraceAutoConfiguration.class, TraceBraveAutoConfiguration.class, Config.class, MyConfig.class);
 		this.context.refresh();
 
 		then(this.context.getBeansOfType(Sender.class)).hasSize(1);

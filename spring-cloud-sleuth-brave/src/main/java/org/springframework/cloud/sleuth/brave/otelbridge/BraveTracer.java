@@ -17,6 +17,7 @@
 package org.springframework.cloud.sleuth.brave.otelbridge;
 
 import io.opentelemetry.context.Scope;
+import io.opentelemetry.trace.DefaultSpan;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.Tracer;
 
@@ -48,7 +49,8 @@ public class BraveTracer implements Tracer {
 	@Override
 	public Scope withSpan(Span span) {
 		Assert.notNull(span, "Span must not be null");
-		return new BraveScope(tracer.withSpanInScope(((BraveSpan) span).span));
+		brave.Span braveSpan = span == DefaultSpan.getInvalid() ? null : ((BraveSpan) span).span;
+		return new BraveScope(tracer.withSpanInScope(braveSpan));
 	}
 
 	@Override

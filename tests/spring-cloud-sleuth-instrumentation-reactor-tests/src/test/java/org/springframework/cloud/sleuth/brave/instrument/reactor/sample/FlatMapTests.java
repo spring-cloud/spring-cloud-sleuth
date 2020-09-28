@@ -23,6 +23,7 @@ import java.util.stream.Collectors;
 
 import brave.Span;
 import brave.Tracer;
+import brave.Tracing;
 import brave.handler.MutableSpan;
 import brave.handler.SpanHandler;
 import brave.sampler.Sampler;
@@ -45,7 +46,6 @@ import org.springframework.boot.test.system.OutputCaptureExtension;
 import org.springframework.cloud.sleuth.brave.instrument.reactor.Issue866Configuration;
 import org.springframework.cloud.sleuth.brave.instrument.reactor.TraceReactorAutoConfigurationAccessorConfiguration;
 import org.springframework.cloud.sleuth.brave.instrument.web.WebFluxSleuthOperators;
-import org.springframework.cloud.sleuth.brave.otelbridge.BraveTracer;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -246,8 +246,7 @@ public class FlatMapTests {
 		brave.Span spanInFoo;
 
 		@Bean
-		RouterFunction<ServerResponse> handlers(io.opentelemetry.trace.Tracer tracing,
-				ManualRequestSender requestSender) {
+		RouterFunction<ServerResponse> handlers(Tracing tracing, ManualRequestSender requestSender) {
 			return route(GET("/noFlatMap"), request -> {
 				ServerWebExchange exchange = request.exchange();
 				WebFluxSleuthOperators.withSpanInScope(tracing, exchange, () -> LOGGER.info("noFlatMap"));
@@ -270,7 +269,7 @@ public class FlatMapTests {
 				ServerWebExchange exchange = request.exchange();
 				WebFluxSleuthOperators.withSpanInScope(tracing, exchange, () -> {
 					LOGGER.info("foo");
-					this.spanInFoo = ((BraveTracer) tracing).tracer().currentSpan();
+					this.spanInFoo = tracing.tracer().currentSpan();
 				});
 				return ServerResponse.ok().body(Flux.just(1), Integer.class);
 			});
