@@ -24,7 +24,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * @author Marcin Grzejszczak
  * @since 2.0.0
  */
-@ConfigurationProperties("spring.sleuth.brave.http")
+@ConfigurationProperties("spring.sleuth.http")
 class SleuthHttpProperties {
 
 	private boolean enabled = true;

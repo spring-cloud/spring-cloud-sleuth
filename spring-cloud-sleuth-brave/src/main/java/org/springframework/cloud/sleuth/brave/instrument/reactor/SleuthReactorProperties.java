@@ -27,7 +27,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * @author Marcin Grzejszczak
  * @since 2.0.2
  */
-@ConfigurationProperties("spring.sleuth.brave.reactor")
+@ConfigurationProperties("spring.sleuth.reactor")
 public class SleuthReactorProperties {
 
 	private static final Log log = LogFactory.getLog(SleuthReactorProperties.class);
@@ -73,7 +73,7 @@ public class SleuthReactorProperties {
 
 	private void warn() {
 		log.warn(
-				"You're using the deprecated [spring.sleuth.brave.reactor.decorate-on-each] property. Please use the [spring.sleuth.brave.reactor.instrumentation-type]");
+				"You're using the deprecated [spring.sleuth.reactor.decorate-on-each] property. Please use the [spring.sleuth.reactor.instrumentation-type]");
 	}
 
 	public InstrumentationType getInstrumentationType() {

@@ -43,7 +43,7 @@ import org.springframework.context.annotation.Scope;
  * @since 1.0.0
  */
 @Configuration(proxyBeanMethods = false)
-@ConditionalOnProperty(value = "spring.sleuth.brave.feign.enabled", matchIfMissing = true)
+@ConditionalOnProperty(value = "spring.sleuth.feign.enabled", matchIfMissing = true)
 @ConditionalOnClass({ Client.class, FeignContext.class })
 @ConditionalOnBean(HttpTracing.class)
 @AutoConfigureBefore(FeignAutoConfiguration.class)
@@ -68,7 +68,7 @@ class TraceFeignClientAutoConfiguration {
 	}
 
 	@Configuration(proxyBeanMethods = false)
-	@ConditionalOnProperty(name = "spring.sleuth.brave.feign.processor.enabled", matchIfMissing = true)
+	@ConditionalOnProperty(name = "spring.sleuth.feign.processor.enabled", matchIfMissing = true)
 	protected static class FeignBeanPostProcessorConfiguration {
 
 		@Bean

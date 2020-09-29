@@ -41,7 +41,7 @@ import org.springframework.context.annotation.Configuration;
  * @since 2.2.0
  */
 @Configuration(proxyBeanMethods = false)
-@ConditionalOnProperty(value = "spring.sleuth.brave.redis.enabled", matchIfMissing = true)
+@ConditionalOnProperty(value = "spring.sleuth.redis.enabled", matchIfMissing = true)
 @ConditionalOnBean({ Tracing.class, ClientResources.class })
 @AutoConfigureAfter({ TraceBraveAutoConfiguration.class })
 @EnableConfigurationProperties(TraceRedisProperties.class)

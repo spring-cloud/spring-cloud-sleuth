@@ -1,10 +1,9 @@
 spring:
   sleuth:
-    brave:
-      baggage:
-        foo: bar
-        remoteFields:
-          - country-code
-          - x-vcap-request-id
-        tagFields:
-          - country-code
+    baggage:
+      foo: bar
+      remoteFields:
+        - country-code
+        - x-vcap-request-id
+      tagFields:
+        - country-code

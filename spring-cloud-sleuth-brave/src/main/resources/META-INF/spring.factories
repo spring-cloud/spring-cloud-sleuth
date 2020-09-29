@@ -17,8 +17,11 @@ org.springframework.cloud.sleuth.brave.instrument.messaging.TraceFunctionAutoCon
 org.springframework.cloud.sleuth.brave.instrument.messaging.TraceWebSocketAutoConfiguration,\
 org.springframework.cloud.sleuth.brave.instrument.opentracing.OpentracingAutoConfiguration,\
 org.springframework.cloud.sleuth.brave.instrument.redis.TraceRedisAutoConfiguration,\
-org.springframework.cloud.sleuth.brave.instrument.mongodb.TraceMongoDbAutoConfiguration
+org.springframework.cloud.sleuth.brave.instrument.mongodb.TraceMongoDbAutoConfiguration,\
+org.springframework.cloud.sleuth.brave.instrument.scheduling.TraceSchedulingAutoConfiguration,\
+org.springframework.cloud.sleuth.brave.instrument.reactor.TraceReactorAutoConfiguration
 
 # Environment Post Processor
 org.springframework.boot.env.EnvironmentPostProcessor=\
-org.springframework.cloud.sleuth.brave.autoconfig.TraceEnvironmentPostProcessor
+org.springframework.cloud.sleuth.brave.autoconfig.TraceEnvironmentPostProcessor,\
+org.springframework.cloud.sleuth.brave.instrument.web.client.TraceGatewayEnvironmentPostProcessor

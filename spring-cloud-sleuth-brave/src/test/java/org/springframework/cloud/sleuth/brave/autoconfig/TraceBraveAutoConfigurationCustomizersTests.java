@@ -49,13 +49,12 @@ public class TraceBraveAutoConfigurationCustomizersTests {
 
 	@Test
 	public void should_apply_customizers() {
-		this.contextRunner.withPropertyValues("spring.sleuth.brave.baggage.remote-fields=country-code")
-				.run((context) -> {
-					Customizers bean = context.getBean(Customizers.class);
+		this.contextRunner.withPropertyValues("spring.sleuth.baggage.remote-fields=country-code").run((context) -> {
+			Customizers bean = context.getBean(Customizers.class);
 
-					shouldApplyCustomizations(bean);
-					shouldNotOverrideTheDefaults(context);
-				});
+			shouldApplyCustomizations(bean);
+			shouldNotOverrideTheDefaults(context);
+		});
 	}
 
 	@Test

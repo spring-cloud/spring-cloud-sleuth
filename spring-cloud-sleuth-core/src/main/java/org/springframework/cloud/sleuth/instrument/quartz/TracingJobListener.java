@@ -17,6 +17,7 @@
 package org.springframework.cloud.sleuth.instrument.quartz;
 
 import io.grpc.Context;
+import io.opentelemetry.OpenTelemetry;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.context.propagation.ContextPropagators;
 import io.opentelemetry.context.propagation.TextMapPropagator.Getter;
@@ -57,6 +58,10 @@ class TracingJobListener implements JobListener, TriggerListener {
 	private final Tracer tracer;
 
 	private final ContextPropagators contextPropagators;
+
+	TracingJobListener(Tracer tracer) {
+		this(tracer, OpenTelemetry.getPropagators());
+	}
 
 	TracingJobListener(Tracer tracer, ContextPropagators contextPropagators) {
 		this.tracer = tracer;

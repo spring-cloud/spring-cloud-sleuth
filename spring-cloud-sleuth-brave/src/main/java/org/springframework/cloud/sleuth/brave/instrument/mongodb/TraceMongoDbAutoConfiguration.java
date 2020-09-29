@@ -43,7 +43,7 @@ import org.springframework.context.annotation.Configuration;
 @ConditionalOnBean(Tracing.class)
 @AutoConfigureAfter(TraceBraveAutoConfiguration.class)
 @AutoConfigureBefore(MongoAutoConfiguration.class)
-@ConditionalOnProperty(value = "spring.sleuth.brave.mongodb.enabled", matchIfMissing = true)
+@ConditionalOnProperty(value = "spring.sleuth.mongodb.enabled", matchIfMissing = true)
 @ConditionalOnClass(MongoClientSettings.Builder.class)
 class TraceMongoDbAutoConfiguration {
 

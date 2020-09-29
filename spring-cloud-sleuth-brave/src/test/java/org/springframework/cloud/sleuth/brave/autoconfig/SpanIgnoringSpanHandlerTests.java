@@ -98,7 +98,7 @@ class SpanIgnoringSpanHandlerTests {
 
 	@Test
 	void should_not_register_span_handler_when_property_passed() {
-		this.contextRunner.withPropertyValues("spring.sleuth.brave.span-handler.enabled=false")
+		this.contextRunner.withPropertyValues("spring.sleuth.span-handler.enabled=false")
 				.run((context) -> BDDAssertions.thenThrownBy(() -> context.getBean(SpanIgnoringSpanHandler.class))
 						.isInstanceOf(NoSuchBeanDefinitionException.class));
 	}

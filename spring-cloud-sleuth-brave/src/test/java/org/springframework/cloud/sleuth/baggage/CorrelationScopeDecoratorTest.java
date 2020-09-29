@@ -40,9 +40,8 @@ import static org.assertj.core.api.Assertions.assertThat;
  * @author Marcin Grzejszczak
  */
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.NONE,
-		properties = { "spring.sleuth.brave.baggage.remote-fields=x-vcap-request-id,country-code",
-				"spring.sleuth.brave.baggage.local-fields=bp",
-				"spring.sleuth.brave.baggage.correlation-fields=country-code,bp" })
+		properties = { "spring.sleuth.baggage.remote-fields=x-vcap-request-id,country-code",
+				"spring.sleuth.baggage.local-fields=bp", "spring.sleuth.baggage.correlation-fields=country-code,bp" })
 @SpringBootConfiguration
 @EnableAutoConfiguration
 public class CorrelationScopeDecoratorTest {

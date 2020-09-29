@@ -33,7 +33,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ ElementType.TYPE, ElementType.METHOD })
 @Documented
-@ConditionalOnProperty(value = "spring.sleuth.brave.messaging.enabled", matchIfMissing = true)
+@ConditionalOnProperty(value = "spring.sleuth.messaging.enabled", matchIfMissing = true)
 @interface OnMessagingEnabled {
 
 }

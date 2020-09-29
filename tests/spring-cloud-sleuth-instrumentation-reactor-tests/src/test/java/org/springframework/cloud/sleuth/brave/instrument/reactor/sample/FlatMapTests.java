@@ -97,7 +97,7 @@ public class FlatMapTests {
 				Issue866Configuration.class)
 						.web(WebApplicationType.REACTIVE)
 						.properties("server.port=0", "spring.jmx.enabled=false",
-								"spring.sleuth.brave.reactor.decorate-on-each=false",
+								"spring.sleuth.reactor.decorate-on-each=false",
 								"spring.application.name=TraceWebFlux2Tests", "security.basic.enabled=false",
 								"management.security.enabled=false")
 						.run();
@@ -111,7 +111,7 @@ public class FlatMapTests {
 				FlatMapTests.TestManualConfiguration.class, Issue866Configuration.class)
 						.web(WebApplicationType.REACTIVE)
 						.properties("server.port=0", "spring.jmx.enabled=false",
-								"spring.sleuth.brave.reactor.instrumentation-type=MANUAL",
+								"spring.sleuth.reactor.instrumentation-type=MANUAL",
 								"spring.application.name=TraceWebFlux3Tests", "security.basic.enabled=false",
 								"management.security.enabled=false")
 						.run();

@@ -19,6 +19,7 @@ package org.springframework.cloud.sleuth.instrument.rxjava;
 import java.util.List;
 
 import io.opentelemetry.context.Scope;
+import io.opentelemetry.trace.DefaultSpan;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.Tracer;
 import org.apache.commons.logging.Log;
@@ -134,7 +135,7 @@ class SleuthRxJavaSchedulersHook extends RxJavaSchedulersHook {
 			}
 			Span span = this.parent;
 			boolean created = false;
-			if (span == null) {
+			if (span == DefaultSpan.getInvalid()) {
 				span = this.tracer.spanBuilder(RXJAVA_COMPONENT).startSpan();
 				span.setAttribute(THREAD_NAME_KEY, Thread.currentThread().getName());
 				created = true;

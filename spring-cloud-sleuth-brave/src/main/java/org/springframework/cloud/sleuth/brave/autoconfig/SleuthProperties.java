@@ -28,7 +28,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * @author Marcin Grzejszczak
  * @since 1.0.11
  */
-@ConfigurationProperties("spring.sleuth.brave")
+@ConfigurationProperties("spring.sleuth")
 class SleuthProperties {
 
 	private boolean enabled = true;

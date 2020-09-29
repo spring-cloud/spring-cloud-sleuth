@@ -45,7 +45,7 @@ import static org.assertj.core.api.Assertions.assertThat;
  * @author Spencer Gibb
  */
 @SpringBootTest(classes = TraceStreamChannelInterceptorTests.App.class,
-		properties = { "spring.cloud.stream.source=testSupplier", "spring.sleuth.brave.integration.enabled=true" })
+		properties = { "spring.cloud.stream.source=testSupplier", "spring.sleuth.integration.enabled=true" })
 @DirtiesContext
 public class TraceStreamChannelInterceptorTests {
 

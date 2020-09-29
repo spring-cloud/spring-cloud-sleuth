@@ -26,6 +26,7 @@ import brave.Tracer;
 import io.grpc.Context;
 import io.opentelemetry.common.AttributeValue;
 import io.opentelemetry.common.Attributes;
+import io.opentelemetry.trace.DefaultSpan;
 import io.opentelemetry.trace.Link;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.SpanContext;
@@ -61,7 +62,7 @@ public class BraveSpanBuilder implements Span.Builder {
 
 	@Override
 	public Span.Builder setParent(Span parent) {
-		if (parent == null) {
+		if (parent == DefaultSpan.getInvalid()) {
 			return this;
 		}
 		this.parent = (BraveSpanContext) parent.getContext();

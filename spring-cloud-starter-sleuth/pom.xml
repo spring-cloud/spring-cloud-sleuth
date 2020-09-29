@@ -42,7 +42,7 @@
 		</dependency>
 		<dependency>
 			<groupId>org.springframework.cloud</groupId>
-			<artifactId>spring-cloud-sleuth-core</artifactId>
+			<artifactId>spring-cloud-sleuth-brave</artifactId>
 		</dependency>
 	</dependencies>
 </project>

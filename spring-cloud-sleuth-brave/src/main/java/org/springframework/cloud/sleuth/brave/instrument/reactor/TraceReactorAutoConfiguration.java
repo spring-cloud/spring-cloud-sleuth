@@ -60,7 +60,7 @@ import static org.springframework.cloud.sleuth.brave.instrument.reactor.TraceRea
  * @since 2.0.0
  */
 @Configuration(proxyBeanMethods = false)
-@ConditionalOnProperty(value = "spring.sleuth.brave.reactor.enabled", matchIfMissing = true)
+@ConditionalOnProperty(value = "spring.sleuth.reactor.enabled", matchIfMissing = true)
 @ConditionalOnClass(Mono.class)
 @AutoConfigureAfter(name = "org.springframework.cloud.sleuth.instrument.web.TraceWebFluxAutoConfiguration")
 @EnableConfigurationProperties(SleuthReactorProperties.class)
@@ -168,13 +168,12 @@ class HookRegisteringBeanDefinitionRegistryPostProcessor implements BeanDefiniti
 	static void setupHooks(ConfigurableApplicationContext springContext) {
 		ConfigurableEnvironment environment = springContext.getEnvironment();
 		SleuthReactorProperties.InstrumentationType property = environment.getProperty(
-				"spring.sleuth.brave.reactor.instrumentation-type", SleuthReactorProperties.InstrumentationType.class,
+				"spring.sleuth.reactor.instrumentation-type", SleuthReactorProperties.InstrumentationType.class,
 				SleuthReactorProperties.InstrumentationType.DECORATE_ON_EACH);
-		Boolean decorateOnEach = environment.getProperty("spring.sleuth.brave.reactor.decorate-on-each", Boolean.class,
-				true);
+		Boolean decorateOnEach = environment.getProperty("spring.sleuth.reactor.decorate-on-each", Boolean.class, true);
 		if (!decorateOnEach) {
 			log.warn(
-					"You're using the deprecated [spring.sleuth.brave.reactor.decorate-on-each] property. Please use the [spring.sleuth.brave.reactor.instrumentation-type] one instead.");
+					"You're using the deprecated [spring.sleuth.reactor.decorate-on-each] property. Please use the [spring.sleuth.reactor.instrumentation-type] one instead.");
 			decorateOnLast(scopePassingSpanOperator(springContext));
 		}
 		else if (property == SleuthReactorProperties.InstrumentationType.DECORATE_ON_EACH) {

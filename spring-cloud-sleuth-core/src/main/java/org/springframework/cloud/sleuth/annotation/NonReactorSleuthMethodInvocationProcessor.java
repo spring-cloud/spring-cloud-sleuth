@@ -17,6 +17,7 @@
 package org.springframework.cloud.sleuth.annotation;
 
 import io.opentelemetry.context.Scope;
+import io.opentelemetry.trace.DefaultSpan;
 import io.opentelemetry.trace.Span;
 import org.aopalliance.intercept.MethodInvocation;
 
@@ -40,7 +41,7 @@ class NonReactorSleuthMethodInvocationProcessor extends AbstractSleuthMethodInvo
 		Span span = tracer().getCurrentSpan();
 		// in case of @ContinueSpan and no span in tracer we start new span and should
 		// close it on completion
-		boolean startNewSpan = newSpan != null || span == null;
+		boolean startNewSpan = newSpan != null || span == DefaultSpan.getInvalid();
 		if (startNewSpan) {
 			span = tracer().spanBuilder("").startSpan();
 			newSpanParser().parse(invocation, newSpan, span);

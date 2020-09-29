@@ -41,7 +41,7 @@ public class BraveTracer implements Tracer {
 	public Span getCurrentSpan() {
 		brave.Span span = tracer.currentSpan();
 		if (span == null) {
-			return null;
+			return DefaultSpan.getInvalid();
 		}
 		return new BraveSpan(span);
 	}

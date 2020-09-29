@@ -52,12 +52,12 @@ public class SleuthBenchmarkingStreamApplication {
 
 	public static void main(String[] args) throws InterruptedException, IOException {
 		// System.setProperty("spring.sleuth.enabled", "false");
-		// System.setProperty("spring.sleuth.brave.reactor.instrumentation-type",
+		// System.setProperty("spring.sleuth.reactor.instrumentation-type",
 		// "DECORATE_ON_EACH");
-		// System.setProperty("spring.sleuth.brave.reactor.instrumentation-type",
+		// System.setProperty("spring.sleuth.reactor.instrumentation-type",
 		// "DECORATE_ON_LAST");
-		// System.setProperty("spring.sleuth.brave.reactor.instrumentation-type", "MANUAL");
-		System.setProperty("spring.sleuth.brave.reactor.instrumentation-type", "MANUAL");
+		// System.setProperty("spring.sleuth.reactor.instrumentation-type", "MANUAL");
+		System.setProperty("spring.sleuth.reactor.instrumentation-type", "MANUAL");
 		System.setProperty("spring.sleuth.function.type", "simple");
 		ConfigurableApplicationContext context = SpringApplication.run(SleuthBenchmarkingStreamApplication.class, args);
 		for (int i = 0; i < 1; i++) {

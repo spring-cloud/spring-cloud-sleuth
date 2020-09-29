@@ -150,14 +150,14 @@ public class MicroBenchmarkStreamTests {
 							"spring.sleuth.function.type=simple_function_with_around"), noSleuthReactiveSimple(
 									"spring.sleuth.enabled=false,spring.sleuth.function.type=reactive_simple"), sleuthReactiveSimpleManual(
 											"spring.sleuth.function.type=reactive_simple_manual"), sleuthReactiveSimpleOnEach(
-													"spring.sleuth.brave.reactor.instrumentation-type=DECORATE_ON_EACH,spring.sleuth.integration.enabled=true,spring.sleuth.function.type=DECORATE_ON_EACH"),
+													"spring.sleuth.reactor.instrumentation-type=DECORATE_ON_EACH,spring.sleuth.integration.enabled=true,spring.sleuth.function.type=DECORATE_ON_EACH"),
 			// This won't work with messaging
-			// sleuthReactiveSimpleOnLast("spring.sleuth.brave.reactor.instrumentation-type=DECORATE_ON_LAST,spring.sleuth.function.type=DECORATE_ON_LAST"),
+			// sleuthReactiveSimpleOnLast("spring.sleuth.reactor.instrumentation-type=DECORATE_ON_LAST,spring.sleuth.function.type=DECORATE_ON_LAST"),
 			// NO FUNCTION, NO INTEGRATION, MANUAL OPERATORS
 			sleuthSimpleManual(
 					"spring.sleuth.function.enabled=false,spring.sleuth.integration.enabled=false,spring.sleuth.function.type=simple_manual"), sleuthSimpleNoFunctionInstrumentationManual(
-							"spring.sleuth.function.type=simple_manual,spring.sleuth.function.enabled=false,spring.sleuth.integration.enabled=true,spring.sleuth.brave.reactor.instrumentation-type=MANUAL"), sleuthReactiveSimpleNoFunctionInstrumentationManual(
-									"spring.sleuth.function.type=reactive_simple_manual,spring.sleuth.function.enabled=false,spring.sleuth.integration.enabled=true,spring.sleuth.brave.reactor.instrumentation-type=MANUAL");
+							"spring.sleuth.function.type=simple_manual,spring.sleuth.function.enabled=false,spring.sleuth.integration.enabled=true,spring.sleuth.reactor.instrumentation-type=MANUAL"), sleuthReactiveSimpleNoFunctionInstrumentationManual(
+									"spring.sleuth.function.type=reactive_simple_manual,spring.sleuth.function.enabled=false,spring.sleuth.integration.enabled=true,spring.sleuth.reactor.instrumentation-type=MANUAL");
 
 			private Set<String> entires = new HashSet<>();
 

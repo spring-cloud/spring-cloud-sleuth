@@ -19,6 +19,7 @@ package org.springframework.cloud.sleuth.instrument.async;
 import java.lang.reflect.Method;
 
 import io.opentelemetry.context.Scope;
+import io.opentelemetry.trace.DefaultSpan;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.Tracer;
 import org.aspectj.lang.ProceedingJoinPoint;
@@ -70,7 +71,7 @@ class TraceAsyncAspect {
 
 	private Span span(String spanName) {
 		Span span = this.tracer.getCurrentSpan();
-		if (span == null) {
+		if (span == DefaultSpan.getInvalid()) {
 			return this.tracer.spanBuilder(spanName).startSpan();
 		}
 		span.updateName(spanName);

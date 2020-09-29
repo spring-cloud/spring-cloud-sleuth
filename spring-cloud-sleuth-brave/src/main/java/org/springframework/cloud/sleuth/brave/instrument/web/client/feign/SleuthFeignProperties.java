@@ -24,7 +24,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * @author Marcin Grzejszczak
  * @since 2.0.2
  */
-@ConfigurationProperties("spring.sleuth.brave.feign")
+@ConfigurationProperties("spring.sleuth.feign")
 class SleuthFeignProperties {
 
 	/**

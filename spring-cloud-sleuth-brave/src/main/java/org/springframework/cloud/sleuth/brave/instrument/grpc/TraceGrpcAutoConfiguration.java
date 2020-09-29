@@ -42,7 +42,7 @@ import org.springframework.context.annotation.Bean;
  * @author Tyler Van Gorder
  */
 @ConditionalOnClass({ GrpcTracing.class, GRpcGlobalInterceptor.class })
-@ConditionalOnProperty(value = "spring.sleuth.brave.grpc.enabled", matchIfMissing = true)
+@ConditionalOnProperty(value = "spring.sleuth.grpc.enabled", matchIfMissing = true)
 @ConditionalOnBean(RpcTracing.class)
 @AutoConfigureAfter(TraceRpcAutoConfiguration.class)
 class TraceGrpcAutoConfiguration {

@@ -94,22 +94,22 @@ By default samplers will work with the refresh scope mechanism. That means that 
 Baggage are fields that are propagated with the trace, optionally out of process. You can use
 properties to define fields that have no special configuration such as name mapping:
 
- * `spring.sleuth.brave.baggage.remote-fields` is a list of header names to accept and propagate to remote services.
- * `spring.sleuth.brave.baggage.local-fields` is a list of names to propagate locally
+ * `spring.sleuth.baggage.remote-fields` is a list of header names to accept and propagate to remote services.
+ * `spring.sleuth.baggage.local-fields` is a list of names to propagate locally
 
 No prefixing applies with these keys. What you set is literally what is used.
 
 A name set in either of these properties will result in a `BaggageField` of the same name.
 
 In order to automatically set the baggage values to Slf4j's MDC, you have to set
-the `spring.sleuth.brave.baggage.correlation-fields` property with a list of allowed
-local or remote keys. E.g. `spring.sleuth.brave.baggage.correlation-fields=country-code` will set the
+the `spring.sleuth.baggage.correlation-fields` property with a list of allowed
+local or remote keys. E.g. `spring.sleuth.baggage.correlation-fields=country-code` will set the
 value of the `country-code` baggage into MDC.
 
 IMPORTANT: Remember that adding entries to MDC can drastically decrease the performance of your application!
 
 If you want to add the baggage entries as tags, to make it possible to search for spans via the baggage entries, you can set the value of
-`spring.sleuth.brave.baggage.tag-fields` with a list of allowed baggage keys. To disable the feature you have to pass the `spring.sleuth.propagation.tag.enabled=false` property.
+`spring.sleuth.baggage.tag-fields` with a list of allowed baggage keys. To disable the feature you have to pass the `spring.sleuth.propagation.tag.enabled=false` property.
 
 === Java configuration
 
@@ -715,7 +715,7 @@ You can configure which URIs you would like to skip by using the `spring.sleuth.
 If you have `ManagementServerProperties` on the classpath, its value of `contextPath` gets appended to the provided skip pattern.
 If you want to reuse Sleuth's default skip patterns and append your own, pass those patterns by using the `spring.sleuth.web.additionalSkipPattern`.
 
-In order to achieve best results in terms of performance and context propagation we suggest that you switch the `spring.sleuth.brave.reactor.instrumentation-type` to `MANUAL`. In order to execute code with the span in scope you can call `WebFluxSleuthOperators.withSpanInScope`.
+In order to achieve best results in terms of performance and context propagation we suggest that you switch the `spring.sleuth.reactor.instrumentation-type` to `MANUAL`. In order to execute code with the span in scope you can call `WebFluxSleuthOperators.withSpanInScope`.
 
 To change the order of tracing filter registration, please set the
 `spring.sleuth.web.filter-order` property.
@@ -1025,7 +1025,7 @@ To turn off this feature, set the `spring.sleuth.quartz.enabled` property to `fa
 === Project Reactor
 
 We have three modes of instrumenting reactor based applications that can
-be set via `spring.sleuth.brave.reactor.instrumentation-type` property:
+be set via `spring.sleuth.reactor.instrumentation-type` property:
 
 * `ON_EACH` - wraps every Reactor operator in a trace representation. Passes the tracing context in most cases. This mode might lead to drastic performance degradation.
 * `ON_LAST` - wraps last Reactor operator in a trace representation. Passes the tracing context in some cases thus accessing MDC context might not work. This mode might lead to medium performance degradation.

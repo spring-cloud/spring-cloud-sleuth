@@ -203,7 +203,7 @@ headers. Tags are key value pairs sent in a Span to Zipkin. Baggage values are
 not added spans by default, which means you can't search based on Baggage
 unless  you opt-in.
 
-To make baggage also tags, use the property `spring.sleuth.brave.baggage.tag-fields`
+To make baggage also tags, use the property `spring.sleuth.baggage.tag-fields`
 like so:
 [source,yml]
 ----

@@ -54,7 +54,7 @@ class TraceSpringIntegrationAutoConfigurationTests {
 
 	@Test
 	void should_create_tracing_channel_interceptor_when_function_on_the_classpath_no_enable_binding_is_set_and_property_set() {
-		this.contextRunner.withSystemProperties("spring.sleuth.brave.integration.enabled=true")
+		this.contextRunner.withSystemProperties("spring.sleuth.integration.enabled=true")
 				.run(context -> assertThat(context).hasSingleBean(TracingChannelInterceptor.class));
 	}
 

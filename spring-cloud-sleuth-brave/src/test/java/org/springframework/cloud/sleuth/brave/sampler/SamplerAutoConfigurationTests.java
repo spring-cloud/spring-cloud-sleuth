@@ -79,7 +79,7 @@ public class SamplerAutoConfigurationTests {
 	@Test
 	void should_use_non_refresh_scope_sampler_when_property_passed_and_refresh_scope_present() {
 		this.contextRunner.withUserConfiguration(WithTracingCustomizer.class, WithRefreshScope.class)
-				.withPropertyValues("spring.sleuth.brave.sampler.refresh.enabled=false").run((context -> {
+				.withPropertyValues("spring.sleuth.sampler.refresh.enabled=false").run((context -> {
 					BDDAssertions.then(context.containsBean("defaultNonRefreshScopeTraceSampler"))
 							.as("non refresh scope bean should be picked").isTrue();
 					BDDAssertions.then(context.containsBean("defaultTraceSampler"))

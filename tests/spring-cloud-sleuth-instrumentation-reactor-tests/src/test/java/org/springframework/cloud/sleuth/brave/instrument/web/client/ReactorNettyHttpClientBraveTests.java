@@ -48,8 +48,7 @@ public class ReactorNettyHttpClientBraveTests extends ITSpringConfiguredReactorC
 	 * {@code Mono<Connection>} created in
 	 * {@code reactor.netty.http.client.MonoConnect$MonoHttpConnect} with
 	 * {@code ScopePassingSpanSubscriber}. While this looks like cheating the test, Sleuth
-	 * will always setup these hooks anyway unless
-	 * "spring.sleuth.brave.reactor.enabled=false".
+	 * will always setup these hooks anyway unless "spring.sleuth.reactor.enabled=false".
 	 */
 	@Override
 	protected AnnotationConfigApplicationContext newClient(int port) {

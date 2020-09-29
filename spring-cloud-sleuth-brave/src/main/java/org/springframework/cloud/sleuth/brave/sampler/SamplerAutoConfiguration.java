@@ -66,14 +66,14 @@ public class SamplerAutoConfiguration {
 		@Bean
 		@RefreshScope
 		@ConditionalOnMissingBean
-		@ConditionalOnProperty(value = "spring.sleuth.brave.sampler.refresh.enabled", matchIfMissing = true)
+		@ConditionalOnProperty(value = "spring.sleuth.sampler.refresh.enabled", matchIfMissing = true)
 		public Sampler defaultTraceSampler(SamplerProperties config) {
 			return sampler(config);
 		}
 
 		@Bean
 		@ConditionalOnMissingBean
-		@ConditionalOnProperty(value = "spring.sleuth.brave.sampler.refresh.enabled", havingValue = "false")
+		@ConditionalOnProperty(value = "spring.sleuth.sampler.refresh.enabled", havingValue = "false")
 		public Sampler defaultNonRefreshScopeTraceSampler(SamplerProperties config) {
 			return sampler(config);
 		}

@@ -16,14 +16,11 @@
 
 package org.springframework.cloud.sleuth.autoconfig;
 
-import io.opentelemetry.OpenTelemetry;
-import io.opentelemetry.context.propagation.ContextPropagators;
 import io.opentelemetry.trace.DefaultTracer;
 import io.opentelemetry.trace.Tracer;
 
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.cloud.sleuth.SpanNamer;
 import org.springframework.cloud.sleuth.internal.DefaultSpanNamer;
 import org.springframework.context.annotation.Bean;
@@ -40,19 +37,12 @@ import org.springframework.context.annotation.Configuration;
  */
 @Configuration(proxyBeanMethods = false)
 @ConditionalOnProperty(value = "spring.sleuth.enabled", matchIfMissing = true)
-@EnableConfigurationProperties(SleuthProperties.class)
 public class TraceAutoConfiguration {
 
 	@Bean
 	@ConditionalOnMissingBean
 	Tracer defaultTracer() {
 		return DefaultTracer.getInstance();
-	}
-
-	@Bean
-	@ConditionalOnMissingBean
-	ContextPropagators contextPropagators() {
-		return OpenTelemetry.getPropagators();
 	}
 
 	@Bean

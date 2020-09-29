@@ -16,7 +16,6 @@
 
 package org.springframework.cloud.sleuth.instrument.quartz;
 
-import io.opentelemetry.context.propagation.ContextPropagators;
 import io.opentelemetry.trace.Tracer;
 import org.quartz.Scheduler;
 
@@ -48,12 +47,9 @@ class TraceQuartzAutoConfiguration implements InitializingBean {
 
 	private final Tracer tracer;
 
-	private final ContextPropagators contextPropagators;
-
-	TraceQuartzAutoConfiguration(Scheduler scheduler, Tracer tracer, ContextPropagators contextPropagators) {
+	TraceQuartzAutoConfiguration(Scheduler scheduler, Tracer tracer) {
 		this.scheduler = scheduler;
 		this.tracer = tracer;
-		this.contextPropagators = contextPropagators;
 	}
 
 	@Autowired
@@ -61,7 +57,7 @@ class TraceQuartzAutoConfiguration implements InitializingBean {
 
 	@Bean
 	public TracingJobListener tracingJobListener() {
-		return new TracingJobListener(this.tracer, this.contextPropagators);
+		return new TracingJobListener(this.tracer);
 	}
 
 	@Override

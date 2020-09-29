@@ -64,13 +64,13 @@ class SleuthKafkaStreamsConfigurationIntegrationTests {
 
 	@Test
 	void should_not_create_KafkaStreamsTracing_when_kafkastreams_disabled() {
-		this.contextRunner.withPropertyValues("spring.sleuth.brave.messaging.kafka.streams.enabled=false")
+		this.contextRunner.withPropertyValues("spring.sleuth.messaging.kafka.streams.enabled=false")
 				.run(context -> assertThat(context).doesNotHaveBean(KafkaStreamsTracing.class));
 	}
 
 	@Test
 	void should_not_create_KafkaStreamsTracing_when_messaging_disabled() {
-		this.contextRunner.withPropertyValues("spring.sleuth.brave.messaging.enabled=false")
+		this.contextRunner.withPropertyValues("spring.sleuth.messaging.enabled=false")
 				.run(context -> assertThat(context).doesNotHaveBean(KafkaStreamsTracing.class));
 	}
 

@@ -48,9 +48,11 @@
 		<module>spring-cloud-sleuth-dependencies</module>
 		<module>spring-cloud-sleuth-core</module>
 		<module>spring-cloud-sleuth-brave</module>
+		<module>spring-cloud-sleuth-otel</module>
 		<module>tests</module>
 		<module>spring-cloud-sleuth-zipkin</module>
 		<module>spring-cloud-starter-sleuth</module>
+		<module>spring-cloud-starter-sleuth-otel</module>
 		<module>spring-cloud-starter-zipkin</module>
 		<module>spring-cloud-sleuth-samples</module>
 		<module>docs</module>
@@ -219,10 +221,51 @@
 				<version>${objenesis.version}</version>
 				<!-- not test because we need it in stream -->
 			</dependency>
+			<!-- OpenTelemetry -->
 			<dependency>
 				<groupId>io.opentelemetry</groupId>
 				<artifactId>opentelemetry-api</artifactId>
-				<version>${opentelemetry-api.version}</version>
+				<version>${opentelemetry.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>io.opentelemetry</groupId>
+				<artifactId>opentelemetry-sdk</artifactId>
+				<version>${opentelemetry.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>io.opentelemetry</groupId>
+				<artifactId>opentelemetry-exporters-logging</artifactId>
+				<version>${opentelemetry.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>io.opentelemetry</groupId>
+				<artifactId>opentelemetry-sdk-extension-jaeger-remote-sampler</artifactId>
+				<version>${opentelemetry.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>io.opentelemetry</groupId>
+				<artifactId>opentelemetry-sdk-extension-async-processor</artifactId>
+				<version>${opentelemetry.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>io.opentelemetry</groupId>
+				<artifactId>opentelemetry-exporters-zipkin</artifactId>
+				<version>${opentelemetry.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>io.opentelemetry</groupId>
+				<artifactId>opentelemetry-extension-trace-propagators</artifactId>
+				<version>${opentelemetry.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>io.opentelemetry.instrumentation</groupId>
+				<artifactId>opentelemetry-spring-boot-autoconfigure</artifactId>
+				<version>${opentelemetry.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>io.opentelemetry</groupId>
+				<artifactId>opentelemetry-extension-auto-annotations</artifactId>
+				<version>${opentelemetry.version}</version>
 			</dependency>
 			<dependency>
 				<groupId>org.hamcrest</groupId>
@@ -258,6 +301,7 @@
 		<spring-cloud-netflix.version>3.0.0-SNAPSHOT</spring-cloud-netflix.version>
 		<spring-cloud-openfeign.version>3.0.0-SNAPSHOT</spring-cloud-openfeign.version>
 		<brave.version>5.12.3</brave.version>
+		<opentelemetry.version>0.8.0</opentelemetry.version>
 		<spring-security-boot-autoconfigure.version>2.3.3.RELEASE</spring-security-boot-autoconfigure.version>
 		<disable.nohttp.checks>false</disable.nohttp.checks>
 		<okhttp.version>4.8.0</okhttp.version>
@@ -270,8 +314,28 @@
 		<!-- Until we switch it to true in sc-build -->
 		<javadoc.failOnError>true</javadoc.failOnError>
 		<javadoc.failOnWarnings>false</javadoc.failOnWarnings>
-		<opentelemetry-api.version>0.8.0</opentelemetry-api.version>
 	</properties>
+
+	<repositories>
+		<repository>
+			<snapshots>
+				<enabled>false</enabled>
+			</snapshots>
+			<id>bintray-open-telemetry-maven</id>
+			<name>bintray</name>
+			<url>https://dl.bintray.com/open-telemetry/maven</url>
+		</repository>
+	</repositories>
+	<pluginRepositories>
+		<pluginRepository>
+			<snapshots>
+				<enabled>false</enabled>
+			</snapshots>
+			<id>bintray-open-telemetry-maven</id>
+			<name>bintray-plugins</name>
+			<url>https://dl.bintray.com/open-telemetry/maven</url>
+		</pluginRepository>
+	</pluginRepositories>
 
 	<profiles>
 		<profile>

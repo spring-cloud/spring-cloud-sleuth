@@ -29,6 +29,7 @@ import java.util.concurrent.ThreadFactory;
 import brave.Tracing;
 import brave.propagation.StrictCurrentTraceContext;
 import brave.test.TestSpanHandler;
+import io.opentelemetry.trace.DefaultSpan;
 import io.opentelemetry.trace.Tracer;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -100,7 +101,7 @@ public class SleuthRxJavaSchedulersHookTests {
 		then(action).isInstanceOf(SleuthRxJavaSchedulersHook.TraceAction.class);
 		then(caller.toString()).isEqualTo("called_from_schedulers_hook");
 		then(this.spans).isNotEmpty();
-		then(this.tracer.getCurrentSpan()).isNull();
+		then(this.tracer.getCurrentSpan()).isSameAs(DefaultSpan.getInvalid());
 	}
 
 	@Test
@@ -121,7 +122,7 @@ public class SleuthRxJavaSchedulersHookTests {
 		hello.get();
 
 		then(this.spans).isEmpty();
-		then(this.tracer.getCurrentSpan()).isNull();
+		then(this.tracer.getCurrentSpan()).isSameAs(DefaultSpan.getInvalid());
 	}
 
 	private ExecutorService executorService() {

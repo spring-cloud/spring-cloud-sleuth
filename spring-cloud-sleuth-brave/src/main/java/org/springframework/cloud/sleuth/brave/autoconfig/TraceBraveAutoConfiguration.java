@@ -59,7 +59,7 @@ import org.springframework.util.StringUtils;
  * @since 3.0.0
  */
 @Configuration(proxyBeanMethods = false)
-@ConditionalOnProperty(value = { "spring.sleuth.enabled", "spring.sleuth.brave.enabled" }, matchIfMissing = true)
+@ConditionalOnProperty(value = { "spring.sleuth.enabled", "spring.sleuth.enabled" }, matchIfMissing = true)
 @EnableConfigurationProperties(SleuthProperties.class)
 @Import({ TraceBaggageConfiguration.class, SamplerAutoConfiguration.class })
 @AutoConfigureBefore(TraceAutoConfiguration.class)
@@ -165,7 +165,7 @@ public class TraceBraveAutoConfiguration {
 	}
 
 	@Bean
-	@ConditionalOnProperty(value = "spring.sleuth.brave.span-handler.enabled", matchIfMissing = true)
+	@ConditionalOnProperty(value = "spring.sleuth.span-handler.enabled", matchIfMissing = true)
 	SpanHandler spanIgnoringSpanHandler(SleuthProperties sleuthProperties) {
 		return new SpanIgnoringSpanHandler(sleuthProperties);
 	}
