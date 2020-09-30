@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.springframework.cloud.sleuth.brave.instrument.web.client;
+package org.springframework.cloud.sleuth.instrument.web.client;
 
 import java.util.Collections;
 import java.util.concurrent.Callable;

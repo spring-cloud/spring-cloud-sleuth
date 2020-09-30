@@ -22,21 +22,30 @@
 		 xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 
-	<artifactId>spring-cloud-sleuth-tests</artifactId>
+	<artifactId>spring-cloud-sleuth-tests-brave</artifactId>
 	<packaging>pom</packaging>
 	<name>Spring Cloud Sleuth Tests</name>
 	<description>Spring Cloud Sleuth Tests</description>
 
 	<parent>
 		<groupId>org.springframework.cloud</groupId>
-		<artifactId>spring-cloud-sleuth</artifactId>
+		<artifactId>spring-cloud-sleuth-tests</artifactId>
 		<version>3.0.0-SNAPSHOT</version>
 		<relativePath>..</relativePath>
 	</parent>
 
 	<modules>
-		<module>brave</module>
-		<module>otel</module>
+		<module>spring-cloud-sleuth-instrumentation-async-tests</module>
+		<module>spring-cloud-sleuth-instrumentation-grpc-tests</module>
+		<module>spring-cloud-sleuth-instrumentation-messaging-tests</module>
+		<module>spring-cloud-sleuth-instrumentation-reactor-tests</module>
+		<module>spring-cloud-sleuth-instrumentation-lettuce-tests</module>
+		<module>spring-cloud-sleuth-instrumentation-rxjava-tests</module>
+		<module>spring-cloud-sleuth-instrumentation-scheduling-tests</module>
+		<module>spring-cloud-sleuth-instrumentation-rpc-tests</module>
+		<module>spring-cloud-sleuth-instrumentation-mvc-tests</module>
+		<module>spring-cloud-sleuth-instrumentation-webflux-tests</module>
+		<module>spring-cloud-sleuth-instrumentation-feign-tests</module>
 	</modules>
 
 	<build>
