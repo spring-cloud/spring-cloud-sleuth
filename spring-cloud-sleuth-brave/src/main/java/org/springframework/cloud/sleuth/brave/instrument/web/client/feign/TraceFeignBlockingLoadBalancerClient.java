@@ -18,8 +18,8 @@ package org.springframework.cloud.sleuth.brave.instrument.web.client.feign;
 
 import java.io.IOException;
 
-import brave.Span;
-import brave.Tracer;
+import org.springframework.cloud.sleuth.api.Span;
+import org.springframework.cloud.sleuth.api.Tracer;
 import brave.http.HttpTracing;
 import feign.Client;
 import feign.Request;

@@ -18,14 +18,12 @@ package org.springframework.cloud.sleuth.brave.instrument.scheduling;
 
 import java.util.regex.Pattern;
 
-import io.opentelemetry.context.Scope;
-import io.opentelemetry.trace.DefaultSpan;
-import io.opentelemetry.trace.Span;
-import io.opentelemetry.trace.Tracer;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 
+import org.springframework.cloud.sleuth.api.Span;
+import org.springframework.cloud.sleuth.api.Tracer;
 import org.springframework.cloud.sleuth.internal.SpanNameUtil;
 import org.springframework.lang.Nullable;
 
@@ -62,33 +60,33 @@ class TraceSchedulingAspect {
 	@Around("execution (@org.springframework.scheduling.annotation.Scheduled  * *.*(..))")
 	public Object traceBackgroundThread(final ProceedingJoinPoint pjp) throws Throwable {
 		if (this.skipPattern != null && this.skipPattern.matcher(pjp.getTarget().getClass().getName()).matches()) {
-			this.tracer.withSpan(DefaultSpan.getInvalid());
+			// we might have a span in context due to wrapping of runnables
+			// we want to clear that context
+			this.tracer.withSpanInScope(null);
 			return pjp.proceed();
 		}
 		String spanName = SpanNameUtil.toLowerHyphen(pjp.getSignature().getName());
 		Span span = startOrContinueRenamedSpan(spanName);
-		try (Scope scope = this.tracer.withSpan(span)) {
-			span.setAttribute(CLASS_KEY, pjp.getTarget().getClass().getSimpleName());
-			span.setAttribute(METHOD_KEY, pjp.getSignature().getName());
+		try (Tracer.SpanInScope ws = this.tracer.withSpanInScope(span.start())) {
+			span.tag(CLASS_KEY, pjp.getTarget().getClass().getSimpleName());
+			span.tag(METHOD_KEY, pjp.getSignature().getName());
 			return pjp.proceed();
 		}
 		catch (Throwable ex) {
-			String message = ex.getMessage() == null ? ex.getClass().getSimpleName() : ex.getMessage();
-			span.setAttribute("error", message);
+			span.error(ex);
 			throw ex;
 		}
 		finally {
-			span.end();
+			span.finish();
 		}
 	}
 
 	private Span startOrContinueRenamedSpan(String spanName) {
-		Span currentSpan = this.tracer.getCurrentSpan();
-		if (currentSpan != DefaultSpan.getInvalid()) {
-			currentSpan.updateName(spanName);
-			return currentSpan;
+		Span currentSpan = this.tracer.currentSpan();
+		if (currentSpan != null) {
+			return currentSpan.name(spanName);
 		}
-		return this.tracer.spanBuilder(spanName).startSpan();
+		return this.tracer.nextSpan().name(spanName);
 	}
 
 }

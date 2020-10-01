@@ -16,7 +16,7 @@
 
 package org.springframework.cloud.sleuth.instrument.async;
 
-import io.opentelemetry.trace.Tracer;
+import org.springframework.cloud.sleuth.api.Tracer;
 
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;

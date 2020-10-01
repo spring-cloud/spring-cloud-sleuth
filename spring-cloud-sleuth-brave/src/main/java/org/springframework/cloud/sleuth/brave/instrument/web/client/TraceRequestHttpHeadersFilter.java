@@ -19,17 +19,21 @@ package org.springframework.cloud.sleuth.brave.instrument.web.client;
 import java.util.List;
 import java.util.Map;
 
-import brave.Span;
-import brave.Tracer;
 import brave.http.HttpClientHandler;
 import brave.http.HttpTracing;
-import brave.propagation.TraceContext;
 import brave.propagation.TraceContext.Extractor;
 import brave.propagation.TraceContextOrSamplingFlags;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import org.springframework.cloud.gateway.filter.headers.HttpHeadersFilter;
+import org.springframework.cloud.sleuth.api.Span;
+import org.springframework.cloud.sleuth.api.TraceContext;
+import org.springframework.cloud.sleuth.api.Tracer;
+import org.springframework.cloud.sleuth.brave.bridge.BraveSamplingFlags;
+import org.springframework.cloud.sleuth.brave.bridge.BraveSpan;
+import org.springframework.cloud.sleuth.brave.bridge.BraveTraceContext;
+import org.springframework.cloud.sleuth.brave.bridge.BraveTracer;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.http.server.reactive.ServerHttpResponse;
@@ -81,7 +85,7 @@ final class TraceRequestHttpHeadersFilter extends AbstractHttpHeadersFilter {
 		// server would always place its span in scope. However, in commit 848442e,
 		// this behavior was added in support of gateway.
 		TraceContextOrSamplingFlags contextOrFlags = this.extractor.extract(request);
-		return this.tracer.nextSpan(contextOrFlags);
+		return this.tracer.nextSpan(contextOrFlags.context() != null ? BraveTraceContext.fromBrave(contextOrFlags.context()) : BraveSamplingFlags.fromBrave(contextOrFlags.samplingFlags()));
 	}
 
 	private Span currentSpan(ServerWebExchange exchange) {
@@ -97,10 +101,10 @@ final class TraceRequestHttpHeadersFilter extends AbstractHttpHeadersFilter {
 
 	private Span injectedSpan(HttpClientRequest request, Span currentSpan) {
 		if (currentSpan == null) {
-			return this.handler.handleSend(request);
+			return BraveSpan.fromBrave(this.handler.handleSend(request));
 		}
 		Span clientSpan = this.tracer.newChild(currentSpan.context());
-		return this.handler.handleSend(request, clientSpan);
+		return BraveSpan.fromBrave(this.handler.handleSend(request, BraveSpan.toBrave(clientSpan)));
 	}
 
 	private void addHeadersWithInput(HttpHeaders filteredHeaders, HttpHeaders headersWithInput) {
@@ -140,7 +144,7 @@ final class TraceResponseHttpHeadersFilter extends AbstractHttpHeadersFilter {
 			log.debug("Will instrument the response");
 		}
 		HttpClientResponse response = new HttpClientResponse(exchange.getResponse());
-		this.handler.handleReceive(response, null, (Span) storedSpan);
+		this.handler.handleReceive(response, null, (brave.Span) storedSpan);
 		if (log.isDebugEnabled()) {
 			log.debug("The response was handled for span " + storedSpan);
 		}
@@ -167,7 +171,7 @@ abstract class AbstractHttpHeadersFilter implements HttpHeadersFilter {
 	final Extractor<HttpClientRequest> extractor;
 
 	AbstractHttpHeadersFilter(HttpTracing httpTracing) {
-		this.tracer = httpTracing.tracing().tracer();
+		this.tracer = BraveTracer.fromBrave(httpTracing.tracing().tracer());
 		this.extractor = httpTracing.tracing().propagation().extractor(HttpClientRequest::header);
 		this.handler = HttpClientHandler.create(httpTracing);
 		this.httpTracing = httpTracing;

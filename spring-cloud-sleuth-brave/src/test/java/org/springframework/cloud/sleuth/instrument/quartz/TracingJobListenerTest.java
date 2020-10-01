@@ -47,8 +47,8 @@ import org.quartz.listeners.JobListenerSupport;
 import org.quartz.listeners.TriggerListenerSupport;
 import org.quartz.utils.StringKeyDirtyFlagMap;
 
-import org.springframework.cloud.sleuth.brave.otelbridge.BraveContextPropagators;
-import org.springframework.cloud.sleuth.brave.otelbridge.BraveTracer;
+import org.springframework.cloud.sleuth.brave.bridge.BraveTracer;
+import org.springframework.cloud.sleuth.brave.bridge.propagation.BravePropagator;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.quartz.JobBuilder.newJob;
@@ -84,8 +84,8 @@ public class TracingJobListenerTest {
 
 	@BeforeEach
 	public void setUp() throws Exception {
-		listener = new TracingJobListener(new BraveTracer(this.tracing.tracer()),
-				new BraveContextPropagators(tracing.propagation(), tracing.tracer()));
+		listener = new TracingJobListener(BraveTracer.fromBrave(this.tracing.tracer()),
+				new BravePropagator(tracing.propagation()));
 		completableJob = new CompleteableTriggerListener();
 
 		scheduler = createScheduler(getClass().getSimpleName(), 1);

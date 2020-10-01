@@ -14,28 +14,14 @@
  * limitations under the License.
  */
 
-package org.springframework.cloud.sleuth.brave.otelbridge;
+package org.springframework.cloud.sleuth.api.dunno;
 
-import brave.Tracer;
-import io.opentelemetry.context.Scope;
+import org.springframework.cloud.sleuth.api.Span;
 
-/**
- * Brave version of {@link Scope}.
- *
- * @author Marcin Grzejszczak
- * @since 3.0.0
- */
-public class BraveScope implements Scope {
+public interface CarrierHandler<INPUT_CARRIER, OUTPUT_CARRIER> {
 
-	private final Tracer.SpanInScope spanInScope;
+	Span handleReceive(INPUT_CARRIER input);
 
-	public BraveScope(Tracer.SpanInScope spanInScope) {
-		this.spanInScope = spanInScope;
-	}
-
-	@Override
-	public void close() {
-		this.spanInScope.close();
-	}
+	void handleSend(OUTPUT_CARRIER output, Span span);
 
 }

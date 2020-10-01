@@ -16,7 +16,7 @@
 
 package org.springframework.cloud.sleuth.annotation;
 
-import io.opentelemetry.trace.Span;
+import org.springframework.cloud.sleuth.api.Span;
 import org.aopalliance.intercept.MethodInvocation;
 
 /**

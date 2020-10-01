@@ -19,7 +19,7 @@ package org.springframework.cloud.sleuth.instrument.async;
 import java.util.concurrent.Callable;
 import java.util.concurrent.Future;
 
-import io.opentelemetry.trace.Tracer;
+import org.springframework.cloud.sleuth.api.Tracer;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 

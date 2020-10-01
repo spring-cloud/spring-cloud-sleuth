@@ -19,15 +19,15 @@ package org.springframework.cloud.sleuth.brave.instrument.web;
 import java.util.concurrent.Callable;
 import java.util.function.Consumer;
 
-import brave.Tracing;
-import brave.propagation.CurrentTraceContext;
-import brave.propagation.TraceContext;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import reactor.core.publisher.Signal;
 import reactor.core.publisher.SignalType;
 import reactor.util.context.Context;
 
+import org.springframework.cloud.sleuth.api.CurrentTraceContext;
+import org.springframework.cloud.sleuth.api.TraceContext;
+import org.springframework.cloud.sleuth.api.Tracer;
 import org.springframework.web.server.ServerWebExchange;
 
 /**
@@ -114,26 +114,27 @@ public final class WebFluxSleuthOperators {
 	}
 
 	private static TraceContext traceContextOrNew(Context context) {
-		Tracing tracing = context.get(Tracing.class);
+		Tracer tracer = context.get(Tracer.class);
 		if (!context.hasKey(TraceContext.class)) {
 			if (log.isDebugEnabled()) {
 				log.debug("No trace context found, will create a new span");
 			}
-			return tracing.tracer().nextSpan().context();
+			return tracer.nextSpan().context();
 		}
 		return context.get(TraceContext.class);
 	}
 
 	/**
 	 * Wraps a runnable with a span.
-	 * @param tracing - tracing bean
+	 * @param tracer - tracer bean
+	 * @param currentTraceContext - currentTraceContext bean
 	 * @param exchange - server web exchange that can contain the {@link TraceContext} in
 	 * its attribute
-	 * @param runnable - lambda to execute within the tracing context
+	 * @param runnable - lambda to execute within the currentTraceContext context
 	 */
-	public static void withSpanInScope(Tracing tracing, ServerWebExchange exchange, Runnable runnable) {
-		CurrentTraceContext currentTraceContext = tracing.currentTraceContext();
-		TraceContext traceContext = traceContextFromExchangeOrNew(tracing, exchange);
+	public static void withSpanInScope(Tracer tracer, CurrentTraceContext currentTraceContext,
+			ServerWebExchange exchange, Runnable runnable) {
+		TraceContext traceContext = traceContextFromExchangeOrNew(tracer, exchange);
 		try (CurrentTraceContext.Scope scope = currentTraceContext.maybeScope(traceContext)) {
 			runnable.run();
 		}
@@ -141,16 +142,17 @@ public final class WebFluxSleuthOperators {
 
 	/**
 	 * Wraps a callable with a span.
-	 * @param tracing - tracing bean
+	 * @param tracer - tracer bean
+	 * @param currentTraceContext - currentTraceContext bean
 	 * @param exchange - server web exchange that can contain the {@link TraceContext} in
 	 * its attribute
 	 * @param callable - lambda to execute within the tracing context
 	 * @param <T> callable's return type
 	 * @return value from the callable
 	 */
-	public static <T> T withSpanInScope(Tracing tracing, ServerWebExchange exchange, Callable<T> callable) {
-		CurrentTraceContext currentTraceContext = tracing.currentTraceContext();
-		TraceContext traceContext = traceContextFromExchangeOrNew(tracing, exchange);
+	public static <T> T withSpanInScope(Tracer tracer, CurrentTraceContext currentTraceContext,
+			ServerWebExchange exchange, Callable<T> callable) {
+		TraceContext traceContext = traceContextFromExchangeOrNew(tracer, exchange);
 		return withContext(callable, currentTraceContext, traceContext);
 	}
 
@@ -195,13 +197,13 @@ public final class WebFluxSleuthOperators {
 		}
 	}
 
-	private static TraceContext traceContextFromExchangeOrNew(Tracing tracing, ServerWebExchange exchange) {
+	private static TraceContext traceContextFromExchangeOrNew(Tracer tracer, ServerWebExchange exchange) {
 		TraceContext traceContext = exchange.getAttribute(TraceContext.class.getName());
 		if (traceContext == null) {
 			if (log.isDebugEnabled()) {
 				log.debug("No trace context found, will create a new span");
 			}
-			traceContext = tracing.tracer().nextSpan().context();
+			traceContext = tracer.nextSpan().context();
 		}
 		return traceContext;
 	}

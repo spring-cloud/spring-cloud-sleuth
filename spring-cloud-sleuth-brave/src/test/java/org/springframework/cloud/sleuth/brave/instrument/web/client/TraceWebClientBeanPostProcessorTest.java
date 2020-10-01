@@ -18,7 +18,6 @@ package org.springframework.cloud.sleuth.brave.instrument.web.client;
 
 import java.util.concurrent.atomic.AtomicReference;
 
-import brave.Span;
 import org.assertj.core.api.BDDAssertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -26,6 +25,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.reactivestreams.Subscription;
 
+import org.springframework.cloud.sleuth.api.Span;
 import org.springframework.cloud.sleuth.brave.instrument.web.client.TraceExchangeFilterFunction.TraceWebClientSubscription;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.web.reactive.function.client.WebClient;

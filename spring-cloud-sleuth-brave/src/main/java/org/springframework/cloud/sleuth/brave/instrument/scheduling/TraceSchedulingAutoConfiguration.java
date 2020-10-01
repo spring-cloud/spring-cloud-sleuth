@@ -18,7 +18,7 @@ package org.springframework.cloud.sleuth.brave.instrument.scheduling;
 
 import java.util.regex.Pattern;
 
-import io.opentelemetry.trace.Tracer;
+import org.springframework.cloud.sleuth.api.Tracer;
 
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;

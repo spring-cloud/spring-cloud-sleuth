@@ -20,7 +20,6 @@ import java.util.function.Function;
 
 import brave.Tracing;
 import brave.propagation.CurrentTraceContext;
-import brave.propagation.TraceContext;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.reactivestreams.Publisher;
@@ -32,6 +31,8 @@ import reactor.core.Scannable;
 import reactor.core.publisher.Operators;
 import reactor.util.context.Context;
 
+import org.springframework.cloud.sleuth.api.TraceContext;
+import org.springframework.cloud.sleuth.brave.bridge.BraveTraceContext;
 import org.springframework.cloud.sleuth.internal.LazyBean;
 import org.springframework.context.ConfigurableApplicationContext;
 
@@ -177,7 +178,7 @@ public abstract class ReactorSleuth {
 		if (context.hasKey(TraceContext.class)) {
 			return context.get(TraceContext.class);
 		}
-		return fallback.get();
+		return BraveTraceContext.fromBrave(fallback.get());
 	}
 
 }

@@ -22,14 +22,12 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
-import brave.Span;
 import brave.http.HttpClientHandler;
 import brave.http.HttpClientRequest;
 import brave.http.HttpClientResponse;
 import brave.http.HttpTracing;
 import brave.propagation.CurrentTraceContext;
 import brave.propagation.CurrentTraceContext.Scope;
-import brave.propagation.TraceContext;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.reactivestreams.Publisher;
@@ -40,6 +38,10 @@ import reactor.util.annotation.Nullable;
 import reactor.util.context.Context;
 
 import org.springframework.beans.factory.config.BeanPostProcessor;
+import org.springframework.cloud.sleuth.api.Span;
+import org.springframework.cloud.sleuth.api.TraceContext;
+import org.springframework.cloud.sleuth.brave.bridge.BraveSpan;
+import org.springframework.cloud.sleuth.brave.bridge.BraveTraceContext;
 import org.springframework.cloud.sleuth.internal.LazyBean;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.core.io.buffer.DataBuffer;
@@ -174,7 +176,7 @@ final class TraceExchangeFilterFunction implements ExchangeFilterFunction {
 			}
 			ClientRequestWrapper wrapper = new ClientRequestWrapper(request);
 			TraceContext parent = context.hasKey(TraceContext.class) ? context.get(TraceContext.class) : null;
-			Span span = handler.handleSendWithParent(wrapper, parent);
+			Span span = BraveSpan.fromBrave(handler.handleSendWithParent(wrapper, BraveTraceContext.toBrave(parent)));
 			if (log.isDebugEnabled()) {
 				log.debug("HttpClientHandler::handleSend: " + span);
 			}
@@ -219,7 +221,7 @@ final class TraceExchangeFilterFunction implements ExchangeFilterFunction {
 
 		@Override
 		public void onNext(ClientResponse response) {
-			try (Scope scope = currentTraceContext.maybeScope(parent)) {
+			try (Scope scope = currentTraceContext.maybeScope(BraveTraceContext.toBrave(parent))) {
 				// decorate response body
 				this.actual.onNext(response);
 			}
@@ -227,14 +229,14 @@ final class TraceExchangeFilterFunction implements ExchangeFilterFunction {
 				Span span = getAndSet(null);
 				if (span != null) {
 					// TODO: is there a way to read the request at response time?
-					this.handler.handleReceive(new ClientResponseWrapper(response), null, span);
+					this.handler.handleReceive(new ClientResponseWrapper(response), null, BraveSpan.toBrave(span));
 				}
 			}
 		}
 
 		@Override
 		public void onError(Throwable t) {
-			try (Scope scope = currentTraceContext.maybeScope(parent)) {
+			try (Scope scope = currentTraceContext.maybeScope(BraveTraceContext.toBrave(parent))) {
 				this.actual.onError(t);
 			}
 			finally {
@@ -248,7 +250,7 @@ final class TraceExchangeFilterFunction implements ExchangeFilterFunction {
 
 		@Override
 		public void onComplete() {
-			try (Scope scope = currentTraceContext.maybeScope(parent)) {
+			try (Scope scope = currentTraceContext.maybeScope(BraveTraceContext.toBrave(parent))) {
 				this.actual.onComplete();
 			}
 			finally {

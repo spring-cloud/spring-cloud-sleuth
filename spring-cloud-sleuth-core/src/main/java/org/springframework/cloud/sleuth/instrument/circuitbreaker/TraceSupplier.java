@@ -19,9 +19,8 @@ package org.springframework.cloud.sleuth.instrument.circuitbreaker;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Supplier;
 
-import io.opentelemetry.context.Scope;
-import io.opentelemetry.trace.Span;
-import io.opentelemetry.trace.Tracer;
+import org.springframework.cloud.sleuth.api.Span;
+import org.springframework.cloud.sleuth.api.Tracer;
 
 /**
  * Trace representation of a {@link Supplier}.
@@ -40,16 +39,15 @@ class TraceSupplier<T> implements Supplier<T> {
 	TraceSupplier(Tracer tracer, Supplier<T> delegate) {
 		this.tracer = tracer;
 		this.delegate = delegate;
-		this.span = new AtomicReference<>(this.tracer.spanBuilder("").startSpan());
+		this.span = new AtomicReference<>(this.tracer.nextSpan());
 	}
 
 	@Override
 	public T get() {
 		String name = this.delegate.getClass().getSimpleName();
-		Span span = this.span.get();
-		span.updateName(name);
+		Span span = this.span.get().name(name);
 		Throwable tr = null;
-		try (Scope scope = this.tracer.withSpan(span)) {
+		try (Tracer.SpanInScope ws = this.tracer.withSpanInScope(span.start())) {
 			return this.delegate.get();
 		}
 		catch (Throwable t) {
@@ -58,9 +56,9 @@ class TraceSupplier<T> implements Supplier<T> {
 		}
 		finally {
 			if (tr != null) {
-				span.recordException(tr);
+				span.error(tr);
 			}
-			span.end();
+			span.finish();
 			this.span.set(null);
 		}
 	}

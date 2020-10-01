@@ -18,11 +18,10 @@ package org.springframework.cloud.sleuth.instrument.async;
 
 import java.util.concurrent.Callable;
 
-import io.opentelemetry.context.Scope;
-import io.opentelemetry.trace.Span;
-import io.opentelemetry.trace.Tracer;
-
 import org.springframework.cloud.sleuth.SpanNamer;
+import org.springframework.cloud.sleuth.api.ScopedSpan;
+import org.springframework.cloud.sleuth.api.TraceContext;
+import org.springframework.cloud.sleuth.api.Tracer;
 
 /**
  * Callable that passes Span between threads. The Span name is taken either from the
@@ -46,7 +45,7 @@ public class TraceCallable<V> implements Callable<V> {
 
 	private final Callable<V> delegate;
 
-	private final Span parent;
+	private final TraceContext parent;
 
 	private final String spanName;
 
@@ -57,22 +56,22 @@ public class TraceCallable<V> implements Callable<V> {
 	public TraceCallable(Tracer tracer, SpanNamer spanNamer, Callable<V> delegate, String name) {
 		this.tracer = tracer;
 		this.delegate = delegate;
-		this.parent = tracer.getCurrentSpan();
+		this.parent = tracer.currentSpan() != null ? tracer.currentSpan().context() : null;
 		this.spanName = name != null ? name : spanNamer.name(delegate, DEFAULT_SPAN_NAME);
 	}
 
 	@Override
 	public V call() throws Exception {
-		Span span = this.tracer.spanBuilder(this.spanName).setParent(this.parent).startSpan();
-		try (Scope scope = this.tracer.withSpan(span)) {
+		ScopedSpan span = this.tracer.startScopedSpanWithParent(this.spanName, this.parent);
+		try {
 			return this.delegate.call();
 		}
 		catch (Exception | Error ex) {
-			span.recordException(ex);
+			span.error(ex);
 			throw ex;
 		}
 		finally {
-			span.end();
+			span.finish();
 		}
 	}
 

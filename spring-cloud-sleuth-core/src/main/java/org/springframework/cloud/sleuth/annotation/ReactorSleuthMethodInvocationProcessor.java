@@ -18,10 +18,6 @@ package org.springframework.cloud.sleuth.annotation;
 
 import java.lang.reflect.Method;
 
-import io.opentelemetry.context.Scope;
-import io.opentelemetry.trace.DefaultSpan;
-import io.opentelemetry.trace.Span;
-import io.opentelemetry.trace.Tracer;
 import org.aopalliance.intercept.MethodInvocation;
 import org.reactivestreams.Publisher;
 import org.reactivestreams.Subscription;
@@ -34,6 +30,9 @@ import reactor.core.publisher.MonoOperator;
 import reactor.util.annotation.Nullable;
 import reactor.util.context.Context;
 
+import org.springframework.cloud.sleuth.api.CurrentTraceContext;
+import org.springframework.cloud.sleuth.api.Span;
+import org.springframework.cloud.sleuth.api.Tracer;
 import org.springframework.util.StringUtils;
 
 /**
@@ -62,11 +61,11 @@ class ReactorSleuthMethodInvocationProcessor extends AbstractSleuthMethodInvocat
 	@SuppressWarnings("unchecked")
 	private Object proceedUnderReactorSpan(MethodInvocation invocation, NewSpan newSpan, ContinueSpan continueSpan)
 			throws Throwable {
-		Span spanPrevious = tracer().getCurrentSpan();
+		Span spanPrevious = tracer().currentSpan();
 		// in case of @ContinueSpan and no span in tracer we start new span and should
 		// close it on completion
 		Span span;
-		if (newSpan != null || spanPrevious == DefaultSpan.getInvalid()) {
+		if (newSpan != null || spanPrevious == null) {
 			span = null;
 		}
 		else {
@@ -131,13 +130,14 @@ class ReactorSleuthMethodInvocationProcessor extends AbstractSleuthMethodInvocat
 			if (this.span == null) {
 				// If we aren't continuing a trace from this flow, use nextSpan so that it
 				// can consider the "current span" (typically, backed by a thread-local)
-				span = tracer.spanBuilder("").startSpan();
+				span = tracer.nextSpan();
 				this.processor.newSpanParser().parse(this.invocation, this.newSpan, span);
+				span.start();
 			}
 			else {
 				span = this.span;
 			}
-			try (Scope ws = tracer.withSpan(span)) {
+			try (CurrentTraceContext.Scope ws = this.processor.currentTraceContext().maybeScope(span.context())) {
 				this.source.subscribe(new SpanSubscriber(actual, this.processor, this.invocation, this.span == null,
 						span, this.log, this.hasLog));
 			}
@@ -175,13 +175,14 @@ class ReactorSleuthMethodInvocationProcessor extends AbstractSleuthMethodInvocat
 			Span span;
 			Tracer tracer = this.processor.tracer();
 			if (this.span == null) {
-				span = tracer.spanBuilder("").startSpan();
+				span = tracer.nextSpan();
 				this.processor.newSpanParser().parse(this.invocation, this.newSpan, span);
+				span.start();
 			}
 			else {
 				span = this.span;
 			}
-			try (Scope ws = tracer.withSpan(span)) {
+			try (CurrentTraceContext.Scope ws = this.processor.currentTraceContext().maybeScope(span.context())) {
 				this.source.subscribe(new SpanSubscriber(actual, this.processor, this.invocation, this.span == null,
 						span, this.log, this.hasLog));
 			}
@@ -224,14 +225,14 @@ class ReactorSleuthMethodInvocationProcessor extends AbstractSleuthMethodInvocat
 
 		@Override
 		public void request(long n) {
-			try (Scope scope = this.tracer.withSpan(this.span)) {
+			try (Tracer.SpanInScope scope = this.tracer.withSpanInScope(this.span)) {
 				this.parent.request(n);
 			}
 		}
 
 		@Override
 		public void cancel() {
-			try (Scope scope = this.tracer.withSpan(this.span)) {
+			try (Tracer.SpanInScope scope = this.tracer.withSpanInScope(this.span)) {
 				this.parent.cancel();
 			}
 			finally {
@@ -247,21 +248,21 @@ class ReactorSleuthMethodInvocationProcessor extends AbstractSleuthMethodInvocat
 		@Override
 		public void onSubscribe(Subscription subscription) {
 			this.parent = subscription;
-			try (Scope scope = this.tracer.withSpan(this.span)) {
+			try (Tracer.SpanInScope scope = this.tracer.withSpanInScope(this.span)) {
 				this.actual.onSubscribe(this);
 			}
 		}
 
 		@Override
 		public void onNext(Object o) {
-			try (Scope scope = this.tracer.withSpan(this.span)) {
+			try (Tracer.SpanInScope scope = this.tracer.withSpanInScope(this.span)) {
 				this.actual.onNext(o);
 			}
 		}
 
 		@Override
 		public void onError(Throwable error) {
-			try (Scope scope = this.tracer.withSpan(this.span)) {
+			try (Tracer.SpanInScope scope = this.tracer.withSpanInScope(this.span)) {
 				this.processor.onFailure(this.span, this.log, this.hasLog, error);
 				this.actual.onError(error);
 			}
@@ -272,7 +273,7 @@ class ReactorSleuthMethodInvocationProcessor extends AbstractSleuthMethodInvocat
 
 		@Override
 		public void onComplete() {
-			try (Scope scope = this.tracer.withSpan(this.span)) {
+			try (Tracer.SpanInScope scope = this.tracer.withSpanInScope(this.span)) {
 				this.actual.onComplete();
 			}
 			finally {

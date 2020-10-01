@@ -67,6 +67,7 @@
 			<artifactId>opentelemetry-extension-auto-annotations</artifactId>
 			<optional>true</optional>
 		</dependency>
+		<!-- TODO: [OTEL] Move it out -->
 		<dependency>
 			<groupId>io.opentelemetry.instrumentation</groupId>
 			<artifactId>opentelemetry-spring-boot-autoconfigure</artifactId>

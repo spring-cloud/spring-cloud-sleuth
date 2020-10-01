@@ -20,13 +20,13 @@ import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.List;
 
-import io.opentelemetry.trace.Tracer;
 import org.aopalliance.intercept.MethodInvocation;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import org.springframework.aop.support.AopUtils;
 import org.springframework.beans.factory.BeanFactory;
+import org.springframework.cloud.sleuth.api.SpanCustomizer;
 import org.springframework.util.StringUtils;
 
 /**
@@ -47,7 +47,7 @@ class SpanTagAnnotationHandler {
 
 	private final BeanFactory beanFactory;
 
-	private Tracer tracer;
+	private SpanCustomizer spanCustomizer;
 
 	SpanTagAnnotationHandler(BeanFactory beanFactory) {
 		this.beanFactory = beanFactory;
@@ -121,15 +121,15 @@ class SpanTagAnnotationHandler {
 		for (SleuthAnnotatedParameter container : toBeAdded) {
 			String tagValue = resolveTagValue(container.annotation, container.argument);
 			String tagKey = resolveTagKey(container);
-			tracer().getCurrentSpan().setAttribute(tagKey, tagValue);
+			span().tag(tagKey, tagValue);
 		}
 	}
 
-	private Tracer tracer() {
-		if (this.tracer == null) {
-			this.tracer = this.beanFactory.getBean(Tracer.class);
+	private SpanCustomizer span() {
+		if (this.spanCustomizer == null) {
+			this.spanCustomizer = this.beanFactory.getBean(SpanCustomizer.class);
 		}
-		return this.tracer;
+		return this.spanCustomizer;
 	}
 
 	private String resolveTagKey(SleuthAnnotatedParameter container) {

@@ -16,11 +16,10 @@
 
 package org.springframework.cloud.sleuth.annotation;
 
-import io.opentelemetry.context.Scope;
-import io.opentelemetry.trace.DefaultSpan;
-import io.opentelemetry.trace.Span;
 import org.aopalliance.intercept.MethodInvocation;
 
+import org.springframework.cloud.sleuth.api.Span;
+import org.springframework.cloud.sleuth.api.Tracer;
 import org.springframework.util.StringUtils;
 
 /**
@@ -38,17 +37,18 @@ class NonReactorSleuthMethodInvocationProcessor extends AbstractSleuthMethodInvo
 
 	private Object proceedUnderSynchronousSpan(MethodInvocation invocation, NewSpan newSpan, ContinueSpan continueSpan)
 			throws Throwable {
-		Span span = tracer().getCurrentSpan();
+		Span span = tracer().currentSpan();
 		// in case of @ContinueSpan and no span in tracer we start new span and should
 		// close it on completion
-		boolean startNewSpan = newSpan != null || span == DefaultSpan.getInvalid();
+		boolean startNewSpan = newSpan != null || span == null;
 		if (startNewSpan) {
-			span = tracer().spanBuilder("").startSpan();
+			span = tracer().nextSpan();
 			newSpanParser().parse(invocation, newSpan, span);
+			span.start();
 		}
 		String log = log(continueSpan);
 		boolean hasLog = StringUtils.hasText(log);
-		try (Scope scope = tracer().withSpan(span)) {
+		try (Tracer.SpanInScope scope = tracer().withSpanInScope(span)) {
 			before(invocation, span, log, hasLog);
 			return invocation.proceed();
 		}

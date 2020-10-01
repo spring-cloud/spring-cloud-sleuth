@@ -47,7 +47,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.cloud.sleuth.SpanNamer;
-import org.springframework.cloud.sleuth.brave.otelbridge.BraveTracer;
+import org.springframework.cloud.sleuth.brave.bridge.BraveTracer;
 import org.springframework.cloud.sleuth.internal.DefaultSpanNamer;
 
 import static java.util.stream.Collectors.toList;
@@ -171,7 +171,7 @@ public class TraceableExecutorServiceTests {
 
 	private List callables() {
 		List list = new ArrayList<>();
-		list.add(new TraceCallable<>(new BraveTracer(this.tracer), new DefaultSpanNamer(), () -> "foo"));
+		list.add(new TraceCallable<>(BraveTracer.fromBrave(this.tracer), new DefaultSpanNamer(), () -> "foo"));
 		list.add((Callable) () -> "bar");
 		return list;
 	}
@@ -216,8 +216,8 @@ public class TraceableExecutorServiceTests {
 	}
 
 	BeanFactory beanFactory(boolean refreshed) {
-		BDDMockito.given(this.beanFactory.getBean(io.opentelemetry.trace.Tracer.class))
-				.willReturn(new BraveTracer(this.tracing.tracer()));
+		BDDMockito.given(this.beanFactory.getBean(org.springframework.cloud.sleuth.api.Tracer.class))
+				.willReturn(BraveTracer.fromBrave(this.tracing.tracer()));
 		BDDMockito.given(this.beanFactory.getBean(SpanNamer.class)).willReturn(new DefaultSpanNamer());
 		SleuthContextListenerAccessor.set(this.beanFactory, refreshed);
 		return this.beanFactory;

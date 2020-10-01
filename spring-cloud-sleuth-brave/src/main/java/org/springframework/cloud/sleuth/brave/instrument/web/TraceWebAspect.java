@@ -19,9 +19,6 @@ package org.springframework.cloud.sleuth.brave.instrument.web;
 import java.lang.reflect.Field;
 import java.util.concurrent.Callable;
 
-import io.opentelemetry.trace.DefaultSpan;
-import io.opentelemetry.trace.Span;
-import io.opentelemetry.trace.Tracer;
 import org.apache.commons.logging.Log;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
@@ -29,6 +26,9 @@ import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Pointcut;
 
 import org.springframework.cloud.sleuth.SpanNamer;
+import org.springframework.cloud.sleuth.api.CurrentTraceContext;
+import org.springframework.cloud.sleuth.api.TraceContext;
+import org.springframework.cloud.sleuth.api.Tracer;
 import org.springframework.cloud.sleuth.instrument.async.TraceCallable;
 import org.springframework.web.context.request.async.WebAsyncTask;
 
@@ -60,11 +60,14 @@ class TraceWebAspect {
 	private static final Log log = org.apache.commons.logging.LogFactory.getLog(TraceWebAspect.class);
 
 	private final Tracer tracer;
+	
+	private final CurrentTraceContext currentTraceContext;
 
 	private final SpanNamer spanNamer;
 
-	TraceWebAspect(Tracer tracer, SpanNamer spanNamer) {
+	TraceWebAspect(Tracer tracer, CurrentTraceContext currentTraceContext, SpanNamer spanNamer) {
 		this.tracer = tracer;
+		this.currentTraceContext = currentTraceContext;
 		this.spanNamer = spanNamer;
 	}
 
@@ -96,8 +99,8 @@ class TraceWebAspect {
 	@SuppressWarnings("unchecked")
 	public Object wrapWithCorrelationId(ProceedingJoinPoint pjp) throws Throwable {
 		Callable<Object> callable = (Callable<Object>) pjp.proceed();
-		Span currentSpan = this.tracer.getCurrentSpan();
-		if (currentSpan == DefaultSpan.getInvalid()) {
+		TraceContext currentSpan = this.currentTraceContext.get();
+		if (currentSpan == null) {
 			return callable;
 		}
 		if (log.isDebugEnabled()) {
@@ -109,8 +112,8 @@ class TraceWebAspect {
 	@Around("anyControllerOrRestControllerWithPublicWebAsyncTaskMethod()")
 	public Object wrapWebAsyncTaskWithCorrelationId(ProceedingJoinPoint pjp) throws Throwable {
 		final WebAsyncTask<?> webAsyncTask = (WebAsyncTask<?>) pjp.proceed();
-		Span currentSpan = this.tracer.getCurrentSpan();
-		if (currentSpan == DefaultSpan.getInvalid()) {
+		TraceContext currentSpan = this.currentTraceContext.get();
+		if (currentSpan == null) {
 			return webAsyncTask;
 		}
 		try {

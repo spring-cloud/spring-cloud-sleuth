@@ -24,7 +24,6 @@ import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-import brave.Span;
 import brave.http.HttpClientHandler;
 import brave.http.HttpClientRequest;
 import brave.http.HttpClientResponse;
@@ -37,6 +36,9 @@ import feign.Response;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import org.springframework.cloud.sleuth.api.Span;
+import org.springframework.cloud.sleuth.brave.bridge.BraveSpan;
+import org.springframework.cloud.sleuth.brave.bridge.BraveTraceContext;
 import org.springframework.cloud.util.ProxyUtils;
 import org.springframework.lang.Nullable;
 
@@ -71,13 +73,13 @@ final class TracingFeignClient implements Client {
 	@Override
 	public Response execute(Request req, Request.Options options) throws IOException {
 		RequestWrapper request = new RequestWrapper(req);
-		Span span = this.handler.handleSend(request);
+		Span span = BraveSpan.fromBrave(this.handler.handleSend(request));
 		if (log.isDebugEnabled()) {
 			log.debug("Handled send of " + span);
 		}
 		Response res = null;
 		Throwable error = null;
-		try (Scope ws = this.currentTraceContext.newScope(span.context())) {
+		try (Scope ws = this.currentTraceContext.newScope(BraveTraceContext.toBrave(span.context()))) {
 			res = this.delegate.execute(request.build(), options);
 			if (res == null) { // possibly null on bad implementation or mocks
 				res = Response.builder().request(req).build();
@@ -90,7 +92,7 @@ final class TracingFeignClient implements Client {
 		}
 		finally {
 			ResponseWrapper response = res != null ? new ResponseWrapper(request, res, error) : null;
-			this.handler.handleReceive(response, error, span);
+			this.handler.handleReceive(response, error, BraveSpan.toBrave(span));
 
 			if (log.isDebugEnabled()) {
 				log.debug("Handled receive of " + span);
@@ -100,9 +102,9 @@ final class TracingFeignClient implements Client {
 
 	void handleSendAndReceive(Span span, Request req, @Nullable Response res, @Nullable Throwable error) {
 		RequestWrapper request = new RequestWrapper(req);
-		this.handler.handleSend(request, span);
+		this.handler.handleSend(request, BraveSpan.toBrave(span));
 		ResponseWrapper response = res != null ? new ResponseWrapper(request, res, error) : null;
-		this.handler.handleReceive(response, error, span);
+		this.handler.handleReceive(response, error, BraveSpan.toBrave(span));
 	}
 
 	static final class RequestWrapper extends HttpClientRequest {

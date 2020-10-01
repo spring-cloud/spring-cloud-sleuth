@@ -16,8 +16,6 @@
 
 package org.springframework.cloud.sleuth.annotation;
 
-import io.opentelemetry.trace.Span;
-import io.opentelemetry.trace.Tracer;
 import org.aopalliance.intercept.MethodInvocation;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -25,6 +23,9 @@ import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.BeanFactoryAware;
+import org.springframework.cloud.sleuth.api.CurrentTraceContext;
+import org.springframework.cloud.sleuth.api.Span;
+import org.springframework.cloud.sleuth.api.Tracer;
 
 /**
  * Sleuth annotation processor.
@@ -45,6 +46,8 @@ abstract class AbstractSleuthMethodInvocationProcessor implements SleuthMethodIn
 
 	private Tracer tracer;
 
+	private CurrentTraceContext currentTraceContext;
+
 	private SpanTagAnnotationHandler spanTagAnnotationHandler;
 
 	void before(MethodInvocation invocation, Span span, String log, boolean hasLog) {
@@ -60,7 +63,7 @@ abstract class AbstractSleuthMethodInvocationProcessor implements SleuthMethodIn
 			logEvent(span, log + ".after");
 		}
 		if (isNewSpan) {
-			span.end();
+			span.finish();
 		}
 	}
 
@@ -71,12 +74,12 @@ abstract class AbstractSleuthMethodInvocationProcessor implements SleuthMethodIn
 		if (hasLog) {
 			logEvent(span, log + ".afterFailure");
 		}
-		span.recordException(e);
+		span.error(e);
 	}
 
 	void addTags(MethodInvocation invocation, Span span) {
-		span.setAttribute(CLASS_KEY, invocation.getThis().getClass().getSimpleName());
-		span.setAttribute(METHOD_KEY, invocation.getMethod().getName());
+		span.tag(CLASS_KEY, invocation.getThis().getClass().getSimpleName());
+		span.tag(METHOD_KEY, invocation.getMethod().getName());
 	}
 
 	void logEvent(Span span, String name) {
@@ -86,7 +89,7 @@ abstract class AbstractSleuthMethodInvocationProcessor implements SleuthMethodIn
 					+ "the same class then the aspect will not be properly resolved");
 			return;
 		}
-		span.addEvent(name);
+		span.annotate(name);
 	}
 
 	String log(ContinueSpan continueSpan) {
@@ -101,6 +104,13 @@ abstract class AbstractSleuthMethodInvocationProcessor implements SleuthMethodIn
 			this.tracer = this.beanFactory.getBean(Tracer.class);
 		}
 		return this.tracer;
+	}
+
+	CurrentTraceContext currentTraceContext() {
+		if (this.currentTraceContext == null) {
+			this.currentTraceContext = this.beanFactory.getBean(CurrentTraceContext.class);
+		}
+		return this.currentTraceContext;
 	}
 
 	NewSpanParser newSpanParser() {

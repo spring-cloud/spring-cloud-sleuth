@@ -19,9 +19,8 @@ package org.springframework.cloud.sleuth.instrument.circuitbreaker;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
 
-import io.opentelemetry.context.Scope;
-import io.opentelemetry.trace.Span;
-import io.opentelemetry.trace.Tracer;
+import org.springframework.cloud.sleuth.api.Span;
+import org.springframework.cloud.sleuth.api.Tracer;
 
 /**
  * Trace representation of a {@link Function}.
@@ -40,16 +39,15 @@ class TraceFunction<T> implements Function<Throwable, T> {
 	TraceFunction(Tracer tracer, Function<Throwable, T> delegate) {
 		this.tracer = tracer;
 		this.delegate = delegate;
-		this.span = new AtomicReference<>(this.tracer.spanBuilder("").startSpan());
+		this.span = new AtomicReference<>(this.tracer.nextSpan());
 	}
 
 	@Override
 	public T apply(Throwable throwable) {
 		String name = this.delegate.getClass().getSimpleName();
-		Span span = this.span.get();
-		span.updateName(name);
+		Span span = this.span.get().name(name);
 		Throwable tr = null;
-		try (Scope scope = this.tracer.withSpan(span)) {
+		try (Tracer.SpanInScope ws = this.tracer.withSpanInScope(span.start())) {
 			return this.delegate.apply(throwable);
 		}
 		catch (Throwable t) {
@@ -58,9 +56,9 @@ class TraceFunction<T> implements Function<Throwable, T> {
 		}
 		finally {
 			if (tr != null) {
-				span.recordException(tr);
+				span.error(tr);
 			}
-			span.end();
+			span.finish();
 			this.span.set(null);
 		}
 	}

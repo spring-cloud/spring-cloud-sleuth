@@ -27,6 +27,7 @@ import org.springframework.boot.autoconfigure.AutoConfigureBefore;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
 import org.springframework.cloud.sleuth.autoconfig.TraceAutoConfiguration;
 import org.springframework.cloud.sleuth.brave.autoconfig.TraceBraveAutoConfiguration;
+import org.springframework.cloud.sleuth.brave.bridge.TraceBraveBridgeAutoConfiguation;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -40,8 +41,9 @@ import static org.mockito.Mockito.when;
  */
 public class TraceQuartzAutoConfigurationTest {
 
-	private final ApplicationContextRunner contextRunner = new ApplicationContextRunner().withConfiguration(
-			AutoConfigurations.of(SchedulerConfig.class, TracingConfig.class, TraceBraveAutoConfiguration.class,
+	private final ApplicationContextRunner contextRunner = new ApplicationContextRunner()
+			.withConfiguration(AutoConfigurations.of(SchedulerConfig.class, TracingConfig.class,
+					TraceBraveAutoConfiguration.class, TraceBraveBridgeAutoConfiguation.class,
 					TraceAutoConfiguration.class, TraceQuartzAutoConfiguration.class));
 
 	@Test

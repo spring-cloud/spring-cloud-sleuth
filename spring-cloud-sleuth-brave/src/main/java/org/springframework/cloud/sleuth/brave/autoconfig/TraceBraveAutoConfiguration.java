@@ -29,8 +29,6 @@ import brave.propagation.CurrentTraceContextCustomizer;
 import brave.propagation.Propagation;
 import brave.propagation.ThreadLocalCurrentTraceContext;
 import brave.sampler.Sampler;
-import io.opentelemetry.OpenTelemetry;
-import io.opentelemetry.context.propagation.ContextPropagators;
 
 import org.springframework.boot.autoconfigure.AutoConfigureBefore;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -39,8 +37,6 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.cloud.sleuth.SpanNamer;
 import org.springframework.cloud.sleuth.autoconfig.TraceAutoConfiguration;
 import org.springframework.cloud.sleuth.brave.LocalServiceName;
-import org.springframework.cloud.sleuth.brave.otelbridge.BraveContextPropagators;
-import org.springframework.cloud.sleuth.brave.otelbridge.BraveTracer;
 import org.springframework.cloud.sleuth.brave.sampler.SamplerAutoConfiguration;
 import org.springframework.cloud.sleuth.internal.DefaultSpanNamer;
 import org.springframework.context.annotation.Bean;
@@ -59,7 +55,7 @@ import org.springframework.util.StringUtils;
  * @since 3.0.0
  */
 @Configuration(proxyBeanMethods = false)
-@ConditionalOnProperty(value = { "spring.sleuth.enabled", "spring.sleuth.enabled" }, matchIfMissing = true)
+@ConditionalOnProperty(value = "spring.sleuth.enabled", matchIfMissing = true)
 @EnableConfigurationProperties(SleuthProperties.class)
 @Import({ TraceBaggageConfiguration.class, SamplerAutoConfiguration.class })
 @AutoConfigureBefore(TraceAutoConfiguration.class)
@@ -110,19 +106,6 @@ public class TraceBraveAutoConfiguration {
 	@ConditionalOnMissingBean
 	Tracer tracer(Tracing tracing) {
 		return tracing.tracer();
-	}
-
-	@Bean
-	@ConditionalOnMissingBean
-	ContextPropagators otelContextPropagators(Propagation.Factory factory, Tracer tracer) {
-		BraveContextPropagators contextPropagators = new BraveContextPropagators(factory, tracer);
-		OpenTelemetry.setPropagators(contextPropagators);
-		return contextPropagators;
-	}
-
-	@Bean
-	io.opentelemetry.trace.Tracer otelTracer(Tracer tracer) {
-		return new BraveTracer(tracer);
 	}
 
 	@Bean

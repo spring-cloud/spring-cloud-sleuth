@@ -19,7 +19,7 @@ package org.springframework.cloud.sleuth.instrument.circuitbreaker;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
-import io.opentelemetry.trace.Tracer;
+import org.springframework.cloud.sleuth.api.Tracer;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
