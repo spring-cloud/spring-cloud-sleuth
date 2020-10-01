@@ -254,7 +254,7 @@
 		<brave.version>5.12.3</brave.version>
 		<spring-security-boot-autoconfigure.version>2.3.3.RELEASE</spring-security-boot-autoconfigure.version>
 		<disable.nohttp.checks>false</disable.nohttp.checks>
-		<okhttp.version>4.8.0</okhttp.version>
+		<okhttp.version>4.9.0</okhttp.version>
 		<mockwebserver.version>4.8.0</mockwebserver.version>
 		<guava.version>20.0</guava.version>
 		<javax.resource-api.version>1.7.1</javax.resource-api.version>
