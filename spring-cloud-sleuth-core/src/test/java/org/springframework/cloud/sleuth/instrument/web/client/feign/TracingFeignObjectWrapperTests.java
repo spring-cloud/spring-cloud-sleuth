@@ -25,6 +25,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.cloud.client.loadbalancer.LoadBalancerClient;
+import org.springframework.cloud.client.loadbalancer.reactive.LoadBalancerProperties;
 import org.springframework.cloud.loadbalancer.blocking.client.BlockingLoadBalancerClient;
 import org.springframework.cloud.openfeign.loadbalancer.FeignBlockingLoadBalancerClient;
 
@@ -64,7 +65,7 @@ public class TracingFeignObjectWrapperTests {
 		when(beanFactory.getBean(LoadBalancerClient.class)).thenReturn(loadBalancerClient);
 
 		Object wrapped = traceFeignObjectWrapper
-				.wrap(new FeignBlockingLoadBalancerClient(delegate, loadBalancerClient));
+				.wrap(new FeignBlockingLoadBalancerClient(delegate, loadBalancerClient, new LoadBalancerProperties()));
 
 		assertThat(wrapped).isInstanceOf(TraceFeignBlockingLoadBalancerClient.class);
 	}
@@ -86,7 +87,7 @@ public class TracingFeignObjectWrapperTests {
 	static class TestFeignBlockingLoadBalancerClient extends FeignBlockingLoadBalancerClient {
 
 		TestFeignBlockingLoadBalancerClient(Client delegate, BlockingLoadBalancerClient loadBalancerClient) {
-			super(delegate, loadBalancerClient);
+			super(delegate, loadBalancerClient, new LoadBalancerProperties());
 		}
 
 	}
