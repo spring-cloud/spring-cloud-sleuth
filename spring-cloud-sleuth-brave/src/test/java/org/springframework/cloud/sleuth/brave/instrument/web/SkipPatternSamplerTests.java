@@ -25,6 +25,8 @@ import org.mockito.BDDMockito;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import org.springframework.cloud.sleuth.brave.bridge.http.BraveHttpRequest;
+
 import static org.assertj.core.api.BDDAssertions.then;
 
 /**
@@ -46,7 +48,7 @@ public class SkipPatternSamplerTests {
 			}
 		};
 
-		then(sampler.trySample(this.request)).isNull();
+		then(sampler.trySample(BraveHttpRequest.fromBrave(this.request))).isNull();
 	}
 
 	@Test
@@ -59,7 +61,7 @@ public class SkipPatternSamplerTests {
 			}
 		};
 
-		then(sampler.trySample(this.request)).isFalse();
+		then(sampler.trySample(BraveHttpRequest.fromBrave(this.request))).isFalse();
 	}
 
 	@Test
@@ -82,8 +84,8 @@ public class SkipPatternSamplerTests {
 			}
 		};
 
-		then(sampler.trySample(this.request)).isFalse();
-		then(sampler.trySample(this.request)).isFalse();
+		then(sampler.trySample(BraveHttpRequest.fromBrave(this.request))).isFalse();
+		then(sampler.trySample(BraveHttpRequest.fromBrave(this.request))).isFalse();
 	}
 
 }

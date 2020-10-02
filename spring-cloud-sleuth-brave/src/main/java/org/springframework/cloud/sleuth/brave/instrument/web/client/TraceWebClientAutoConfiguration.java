@@ -26,7 +26,6 @@ import brave.httpclient.TracingHttpClientBuilder;
 import brave.spring.web.TracingClientHttpRequestInterceptor;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.impl.nio.client.HttpAsyncClientBuilder;
-import reactor.netty.http.client.HttpClient;
 
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.BeanFactory;
@@ -42,7 +41,6 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.autoconfigure.security.oauth2.resource.UserInfoRestTemplateCustomizer;
 import org.springframework.boot.web.client.RestTemplateCustomizer;
 import org.springframework.cloud.commons.httpclient.HttpClientConfiguration;
-import org.springframework.cloud.gateway.filter.headers.HttpHeadersFilter;
 import org.springframework.cloud.sleuth.brave.instrument.web.TraceHttpAutoConfiguration;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.Bean;
@@ -122,46 +120,6 @@ class TraceWebClientAutoConfiguration {
 		@ConditionalOnMissingBean
 		HttpAsyncClientBuilder traceHttpAsyncClientBuilder(HttpTracing httpTracing) {
 			return TracingHttpAsyncClientBuilder.create(httpTracing);
-		}
-
-	}
-
-	@Configuration(proxyBeanMethods = false)
-	@ConditionalOnClass(WebClient.class)
-	@ConditionalOnProperty(value = "spring.sleuth.web.webclient.enabled", matchIfMissing = true)
-	static class WebClientConfig {
-
-		@Bean
-		static TraceWebClientBeanPostProcessor traceWebClientBeanPostProcessor(
-				ConfigurableApplicationContext springContext) {
-			return new TraceWebClientBeanPostProcessor(springContext);
-		}
-
-	}
-
-	@Configuration(proxyBeanMethods = false)
-	@ConditionalOnClass(HttpHeadersFilter.class)
-	static class HttpHeadersFilterConfig {
-
-		@Bean
-		HttpHeadersFilter traceRequestHttpHeadersFilter(HttpTracing httpTracing) {
-			return TraceRequestHttpHeadersFilter.create(httpTracing);
-		}
-
-		@Bean
-		HttpHeadersFilter traceResponseHttpHeadersFilter(HttpTracing httpTracing) {
-			return TraceResponseHttpHeadersFilter.create(httpTracing);
-		}
-
-	}
-
-	@Configuration(proxyBeanMethods = false)
-	@ConditionalOnClass(HttpClient.class)
-	static class NettyConfiguration {
-
-		@Bean
-		static HttpClientBeanPostProcessor httpClientBeanPostProcessor(ConfigurableApplicationContext springContext) {
-			return new HttpClientBeanPostProcessor(springContext);
 		}
 
 	}

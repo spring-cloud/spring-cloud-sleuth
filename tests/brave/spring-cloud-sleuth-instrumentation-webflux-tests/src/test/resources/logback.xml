@@ -25,7 +25,7 @@
 	<logger name="org.springframework.cloud.sleuth.log" level="DEBUG"/>
 	<logger name="org.springframework.cloud.sleuth.trace" level="DEBUG"/>
 	<logger name="org.springframework.cloud.sleuth.instrument.rxjava" level="DEBUG"/>
-	<logger name="org.springframework.cloud.sleuth.brave.instrument.reactor" level="TRACE"/>
+	<logger name="org.springframework.cloud.sleuth.instrument.reactor" level="TRACE"/>
 	<root level="INFO">
 		<appender-ref ref="CONSOLE"/>
 		<appender-ref ref="FILE"/>

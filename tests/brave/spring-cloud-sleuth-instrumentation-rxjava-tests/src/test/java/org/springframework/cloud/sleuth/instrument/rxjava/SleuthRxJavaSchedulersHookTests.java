@@ -29,8 +29,6 @@ import java.util.concurrent.ThreadFactory;
 import brave.Tracing;
 import brave.propagation.StrictCurrentTraceContext;
 import brave.test.TestSpanHandler;
-import io.opentelemetry.trace.DefaultSpan;
-import io.opentelemetry.trace.Tracer;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -40,7 +38,8 @@ import rx.plugins.RxJavaObservableExecutionHook;
 import rx.plugins.RxJavaPlugins;
 import rx.plugins.RxJavaSchedulersHook;
 
-import org.springframework.cloud.sleuth.brave.otelbridge.BraveTracer;
+import org.springframework.cloud.sleuth.api.Tracer;
+import org.springframework.cloud.sleuth.brave.bridge.BraveTracer;
 
 import static org.assertj.core.api.BDDAssertions.then;
 
@@ -60,7 +59,7 @@ public class SleuthRxJavaSchedulersHookTests {
 	Tracing tracing = Tracing.newBuilder().currentTraceContext(this.currentTraceContext).addSpanHandler(this.spans)
 			.build();
 
-	Tracer tracer = new BraveTracer(this.tracing.tracer());
+	Tracer tracer = BraveTracer.fromBrave(this.tracing.tracer());
 
 	@AfterEach
 	public void clean() {
@@ -101,7 +100,7 @@ public class SleuthRxJavaSchedulersHookTests {
 		then(action).isInstanceOf(SleuthRxJavaSchedulersHook.TraceAction.class);
 		then(caller.toString()).isEqualTo("called_from_schedulers_hook");
 		then(this.spans).isNotEmpty();
-		then(this.tracer.getCurrentSpan()).isSameAs(DefaultSpan.getInvalid());
+		then(this.tracer.currentSpan()).isNull();
 	}
 
 	@Test
@@ -122,7 +121,7 @@ public class SleuthRxJavaSchedulersHookTests {
 		hello.get();
 
 		then(this.spans).isEmpty();
-		then(this.tracer.getCurrentSpan()).isSameAs(DefaultSpan.getInvalid());
+		then(this.tracer.currentSpan()).isNull();
 	}
 
 	private ExecutorService executorService() {

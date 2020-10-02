@@ -2,14 +2,12 @@
 org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
 org.springframework.cloud.sleuth.brave.autoconfig.TraceBraveAutoConfiguration,\
 org.springframework.cloud.sleuth.brave.bridge.TraceBraveBridgeAutoConfiguation,\
+org.springframework.cloud.sleuth.brave.bridge.http.TraceBraveHttpBridgeAutoConfiguation,\
 org.springframework.cloud.sleuth.brave.instrument.web.TraceHttpAutoConfiguration,\
-org.springframework.cloud.sleuth.brave.instrument.web.SkipPatternConfiguration,\
 org.springframework.cloud.sleuth.brave.instrument.web.TraceWebServletAutoConfiguration,\
 org.springframework.cloud.sleuth.brave.instrument.web.client.TraceWebClientAutoConfiguration,\
 org.springframework.cloud.sleuth.brave.instrument.web.client.TraceWebAsyncClientAutoConfiguration,\
-org.springframework.cloud.sleuth.brave.instrument.scheduling.TraceSchedulingAutoConfiguration,\
 org.springframework.cloud.sleuth.brave.instrument.web.client.feign.TraceFeignClientAutoConfiguration,\
-org.springframework.cloud.sleuth.brave.instrument.reactor.TraceReactorAutoConfiguration,\
 org.springframework.cloud.sleuth.brave.instrument.web.TraceWebFluxAutoConfiguration,\
 org.springframework.cloud.sleuth.brave.instrument.rpc.TraceRpcAutoConfiguration,\
 org.springframework.cloud.sleuth.brave.instrument.grpc.TraceGrpcAutoConfiguration,\
@@ -25,5 +23,4 @@ org.springframework.cloud.sleuth.brave.instrument.mongodb.TraceMongoDbAutoConfig
 
 # Environment Post Processor
 org.springframework.boot.env.EnvironmentPostProcessor=\
-org.springframework.cloud.sleuth.brave.autoconfig.TraceEnvironmentPostProcessor,\
-org.springframework.cloud.sleuth.brave.instrument.web.client.TraceGatewayEnvironmentPostProcessor
+org.springframework.cloud.sleuth.brave.autoconfig.TraceEnvironmentPostProcessor

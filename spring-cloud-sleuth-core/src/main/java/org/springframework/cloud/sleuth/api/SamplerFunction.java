@@ -21,10 +21,10 @@ import org.springframework.lang.Nullable;
 /**
  * Decides whether to start a new trace based on request properties such as an HTTP path.
  *
- * <p>Ex. Here's a sampler that only traces api requests
- * <pre>{@code
+ * <p>
+ * Ex. Here's a sampler that only traces api requests <pre>{@code
  * serverSampler = new SamplerFunction<HttpRequest>() {
- *   @Override public Boolean trySample(HttpRequest request) {
+ *   &#64;Override public Boolean trySample(HttpRequest request) {
  *     return request.path().startsWith("/api");
  *   }
  * });
@@ -34,16 +34,76 @@ import org.springframework.lang.Nullable;
  * @since 5.8
  */
 // interface, not abstract type, to allow backporting of existing samplers.
-// This implies we cannot add new methods later, as the bytecode level of Brave core is 1.6
+// This implies we cannot add new methods later, as the bytecode level of Brave core is
+// 1.6
 public interface SamplerFunction<T> {
-  /**
-   * Returns an overriding sampling decision for a new trace. Returning null is typically used to
-   * defer to the sampler.
-   *
-   * @param arg parameter to evaluate for a sampling decision. null input results in a null result
-   * @return true to sample a new trace or false to deny. Null defers the decision.
-   * @since 5.8
-   */
-  @Nullable
-  Boolean trySample(@Nullable T arg);
+
+	/**
+	 * Returns an overriding sampling decision for a new trace. Returning null is
+	 * typically used to defer to the sampler.
+	 * @param arg parameter to evaluate for a sampling decision. null input results in a
+	 * null result
+	 * @return true to sample a new trace or false to deny. Null defers the decision.
+	 * @since 5.8
+	 */
+	@Nullable
+	Boolean trySample(@Nullable T arg);
+
+	/**
+	 * Ignores the argument and returns null. This is typically used to defer to the
+	 * tracer.
+	 *
+	 * @since 5.8
+	 */
+	// using a method instead of exposing a constant allows this to be used for any
+	// argument type
+	static <T> SamplerFunction<T> deferDecision() {
+		return (SamplerFunction<T>) Constants.DEFER_DECISION;
+	}
+
+	/**
+	 * Ignores the argument and returns false. This means it will never start new traces.
+	 *
+	 * <p>
+	 * For example, you may wish to only capture traces if they originated from an inbound
+	 * server request. Such a policy would filter out client requests made during
+	 * bootstrap.
+	 *
+	 * @since 5.8
+	 */
+	// using a method instead of exposing a constant allows this to be used for any
+	// argument type
+	static <T> SamplerFunction<T> neverSample() {
+		return (SamplerFunction<T>) Constants.NEVER_SAMPLE;
+	}
+
+	enum Constants implements SamplerFunction<Object> {
+
+		DEFER_DECISION {
+			@Override
+			@Nullable
+			public Boolean trySample(Object request) {
+				return null;
+			}
+
+			@Override
+			public String toString() {
+				return "DeferDecision";
+			}
+		},
+		NEVER_SAMPLE {
+			@Override
+			@Nullable
+			public Boolean trySample(Object request) {
+				return false;
+			}
+
+			@Override
+			public String toString() {
+				return "NeverSample";
+			}
+		}
+
+	}
+
 }

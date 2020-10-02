@@ -18,8 +18,8 @@ package org.springframework.cloud.sleuth.brave.instrument.web;
 
 import java.util.regex.Pattern;
 
-import brave.http.HttpRequest;
-import brave.sampler.SamplerFunction;
+import org.springframework.cloud.sleuth.api.SamplerFunction;
+import org.springframework.cloud.sleuth.api.http.HttpRequest;
 
 /**
  * Doesn't sample a span if skip pattern is matched.

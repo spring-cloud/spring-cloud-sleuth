@@ -65,6 +65,14 @@ public class BraveCurrentTraceContext implements CurrentTraceContext {
 	public ExecutorService executorService(ExecutorService delegate) {
 		return this.delegate.executorService(delegate);
 	}
+
+	public static brave.propagation.CurrentTraceContext toBrave(CurrentTraceContext context) {
+		return ((BraveCurrentTraceContext) context).delegate;
+	}
+
+	public static CurrentTraceContext fromBrave(brave.propagation.CurrentTraceContext context) {
+		return new BraveCurrentTraceContext(context);
+	}
 }
 
 class BraveScope implements CurrentTraceContext.Scope {

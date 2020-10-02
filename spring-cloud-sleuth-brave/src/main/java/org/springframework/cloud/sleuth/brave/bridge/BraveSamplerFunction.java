@@ -16,7 +16,11 @@
 
 package org.springframework.cloud.sleuth.brave.bridge;
 
+import brave.sampler.SamplerFunctions;
+
 import org.springframework.cloud.sleuth.api.SamplerFunction;
+import org.springframework.cloud.sleuth.api.http.HttpRequest;
+import org.springframework.cloud.sleuth.brave.bridge.http.BraveHttpRequest;
 
 public class BraveSamplerFunction<T> implements SamplerFunction<T> {
 
@@ -29,5 +33,17 @@ public class BraveSamplerFunction<T> implements SamplerFunction<T> {
 	@Override
 	public Boolean trySample(T arg) {
 		return this.samplerFunction.trySample(arg);
+	}
+
+	public static <T, V> brave.sampler.SamplerFunction<V> toBrave(SamplerFunction<T> samplerFunction, Class<T> sleuthInput, Class<V> braveInput) {
+		if (sleuthInput.equals(HttpRequest.class) && braveInput.equals(brave.http.HttpRequest.class)) {
+			return arg -> samplerFunction.trySample((T) BraveHttpRequest.fromBrave((brave.http.HttpRequest) arg));
+		}
+		// TODO: [OTEL] come back to this
+		return SamplerFunctions.deferDecision();
+	}
+
+	public static brave.sampler.SamplerFunction<brave.http.HttpRequest> toHttpBrave(SamplerFunction<HttpRequest> samplerFunction) {
+		return arg -> samplerFunction.trySample(BraveHttpRequest.fromBrave((brave.http.HttpRequest) arg));
 	}
 }

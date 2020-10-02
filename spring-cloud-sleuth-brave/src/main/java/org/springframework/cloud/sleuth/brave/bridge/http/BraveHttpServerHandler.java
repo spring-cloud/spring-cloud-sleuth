@@ -16,33 +16,27 @@
 
 package org.springframework.cloud.sleuth.brave.bridge.http;
 
-import brave.http.HttpServerHandler;
-import brave.http.HttpServerRequest;
-import brave.http.HttpServerResponse;
-
-import org.springframework.cloud.sleuth.api.dunno.CarrierHandler;
 import org.springframework.cloud.sleuth.api.Span;
+import org.springframework.cloud.sleuth.api.http.HttpServerHandler;
+import org.springframework.cloud.sleuth.api.http.HttpServerRequest;
+import org.springframework.cloud.sleuth.api.http.HttpServerResponse;
 import org.springframework.cloud.sleuth.brave.bridge.BraveSpan;
 
-public class BraveHttpServerHandler implements CarrierHandler<HttpServerRequest, HttpServerResponse> {
+public class BraveHttpServerHandler implements HttpServerHandler {
 
-	final HttpServerHandler delegate;
+	final brave.http.HttpServerHandler<brave.http.HttpServerRequest, brave.http.HttpServerResponse> delegate;
 
-	public BraveHttpServerHandler(HttpServerHandler delegate) {
+	public BraveHttpServerHandler(brave.http.HttpServerHandler<brave.http.HttpServerRequest, brave.http.HttpServerResponse> delegate) {
 		this.delegate = delegate;
 	}
 
 	@Override
-	public Span handleReceive(HttpServerRequest input) {
-		return BraveSpan.fromBrave(this.delegate.handleReceive(input));
+	public Span handleReceive(HttpServerRequest request) {
+		return BraveSpan.fromBrave(this.delegate.handleReceive(BraveHttpServerRequest.toBrave(request)));
 	}
 
 	@Override
-	public void handleSend(HttpServerResponse output, Span span) {
-		this.delegate.handleSend(output, BraveSpan.toBrave(span));
-	}
-
-	public static HttpServerHandler<HttpServerRequest, HttpServerResponse> toBrave(CarrierHandler<HttpServerRequest, HttpServerResponse> carrier) {
-		return ((BraveHttpServerHandler) carrier).delegate;
+	public void handleSend(HttpServerResponse response, Span span) {
+		this.delegate.handleSend(BraveHttpServerResponse.toBrave(response), BraveSpan.toBrave(span));
 	}
 }

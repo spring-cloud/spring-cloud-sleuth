@@ -20,24 +20,31 @@ import java.util.List;
 import java.util.regex.Pattern;
 
 import brave.Tracing;
-import brave.http.HttpRequest;
 import brave.http.HttpRequestParser;
 import brave.http.HttpResponseParser;
 import brave.http.HttpTracing;
 import brave.http.HttpTracingCustomizer;
-import brave.sampler.SamplerFunction;
-import brave.sampler.SamplerFunctions;
 
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
+import org.springframework.boot.autoconfigure.AutoConfigureBefore;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.cloud.sleuth.api.SamplerFunction;
+import org.springframework.cloud.sleuth.api.http.HttpRequest;
 import org.springframework.cloud.sleuth.brave.autoconfig.TraceBraveAutoConfiguration;
+import org.springframework.cloud.sleuth.brave.bridge.BraveSamplerFunction;
+import org.springframework.cloud.sleuth.instrument.web.HttpClientSampler;
+import org.springframework.cloud.sleuth.instrument.web.HttpServerSampler;
+import org.springframework.cloud.sleuth.instrument.web.SkipPatternConfiguration;
+import org.springframework.cloud.sleuth.instrument.web.SkipPatternProvider;
+import org.springframework.cloud.sleuth.instrument.web.SleuthHttpProperties;
+import org.springframework.cloud.sleuth.instrument.web.SleuthWebProperties;
+import org.springframework.cloud.sleuth.instrument.web.client.feign.TraceFeignClientAutoConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Import;
 import org.springframework.core.Ordered;
 import org.springframework.lang.Nullable;
 
@@ -53,11 +60,11 @@ import org.springframework.lang.Nullable;
 		matchIfMissing = true)
 @ConditionalOnBean(Tracing.class)
 @ConditionalOnClass(HttpTracing.class)
-@AutoConfigureAfter(TraceBraveAutoConfiguration.class)
-@Import(SkipPatternConfiguration.class)
+@AutoConfigureAfter({ TraceBraveAutoConfiguration.class, SkipPatternConfiguration.class })
 @EnableConfigurationProperties({ SleuthWebProperties.class, SleuthHttpProperties.class })
 // public allows @AutoConfigureAfter(TraceHttpAutoConfiguration)
 // for components needing HttpTracing
+@AutoConfigureBefore(TraceFeignClientAutoConfiguration.class)
 public class TraceHttpAutoConfiguration {
 
 	static final int TRACING_FILTER_ORDER = Ordered.HIGHEST_PRECEDENCE + 5;
@@ -77,8 +84,8 @@ public class TraceHttpAutoConfiguration {
 			@Nullable List<HttpTracingCustomizer> httpTracingCustomizers) {
 		SamplerFunction<HttpRequest> combinedSampler = combineUserProvidedSamplerWithSkipPatternSampler(
 				httpServerSampler, provider);
-		HttpTracing.Builder builder = HttpTracing.newBuilder(tracing).clientSampler(httpClientSampler)
-				.serverSampler(combinedSampler);
+		HttpTracing.Builder builder = HttpTracing.newBuilder(tracing).clientSampler(BraveSamplerFunction.toHttpBrave(httpClientSampler))
+				.serverSampler(BraveSamplerFunction.toHttpBrave(combinedSampler));
 
 		if (httpClientRequestParser != null || httpClientResponseParser != null) {
 			if (httpClientRequestParser != null) {
@@ -117,7 +124,7 @@ public class TraceHttpAutoConfiguration {
 		SamplerFunction<HttpRequest> skipPatternSampler = provider != null ? new SkipPatternHttpServerSampler(provider)
 				: null;
 		if (serverSampler == null && skipPatternSampler == null) {
-			return SamplerFunctions.deferDecision();
+			return SamplerFunction.deferDecision();
 		}
 		else if (serverSampler == null) {
 			return skipPatternSampler;
@@ -133,7 +140,7 @@ public class TraceHttpAutoConfiguration {
 	SamplerFunction<HttpRequest> sleuthHttpClientSampler(SleuthWebProperties sleuthWebProperties) {
 		String skipPattern = sleuthWebProperties.getClient().getSkipPattern();
 		if (skipPattern == null) {
-			return SamplerFunctions.deferDecision();
+			return SamplerFunction.deferDecision();
 		}
 
 		return new SkipPatternHttpClientSampler(Pattern.compile(skipPattern));
