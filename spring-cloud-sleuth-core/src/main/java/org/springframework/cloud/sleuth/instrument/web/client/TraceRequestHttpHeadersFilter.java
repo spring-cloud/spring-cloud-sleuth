@@ -81,7 +81,10 @@ final class TraceRequestHttpHeadersFilter extends AbstractHttpHeadersFilter {
 		// server would always place its span in scope. However, in commit 848442e,
 		// this behavior was added in support of gateway.
 		TraceContext extract = this.propagator.extract(request, HttpClientRequest::header);
-		return this.tracer.nextSpan(extract);
+		if (extract != null) {
+			return this.tracer.nextSpan(extract);
+		}
+		return this.tracer.nextSpan();
 	}
 
 	private Span currentSpan(ServerWebExchange exchange) {

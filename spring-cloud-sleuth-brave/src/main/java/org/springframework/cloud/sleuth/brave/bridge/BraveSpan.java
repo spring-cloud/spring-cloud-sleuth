@@ -22,105 +22,110 @@ import org.springframework.cloud.sleuth.api.TraceContext;
 
 public class BraveSpan implements Span {
 
-	final brave.Span span;
+	final brave.Span delegate;
 
-	public BraveSpan(brave.Span span) {
-		this.span = span;
+	public BraveSpan(brave.Span delegate) {
+		this.delegate = delegate;
 	}
 
 	@Override
 	public boolean isNoop() {
-		return this.span.isNoop();
+		return this.delegate.isNoop();
 	}
 
 	@Override
 	public TraceContext context() {
-		if (this.span == null) {
+		if (this.delegate == null) {
 			return null;
 		}
-		return new BraveTraceContext(this.span.context());
+		return new BraveTraceContext(this.delegate.context());
 	}
 
 	@Override
 	public SpanCustomizer customizer() {
-		return new BraveSpanCustomizer(this.span.customizer());
+		return new BraveSpanCustomizer(this.delegate.customizer());
 	}
 
 	@Override
 	public Span start() {
-		return new BraveSpan(this.span.start());
+		return new BraveSpan(this.delegate.start());
 	}
 
 	@Override
 	public Span start(long timestamp) {
-		return new BraveSpan(this.span.start(timestamp));
+		return new BraveSpan(this.delegate.start(timestamp));
 	}
 
 	@Override
 	public Span name(String name) {
-		return new BraveSpan(this.span.name(name));
+		return new BraveSpan(this.delegate.name(name));
 	}
 
 	@Override
 	public Span kind(Kind kind) {
-		return new BraveSpan(this.span.kind(kind != null ? brave.Span.Kind.valueOf(kind.toString()) : null));
+		return new BraveSpan(this.delegate.kind(kind != null ? brave.Span.Kind.valueOf(kind.toString()) : null));
 	}
 
 	@Override
 	public Span annotate(String value) {
-		return new BraveSpan(this.span.annotate(value));
+		return new BraveSpan(this.delegate.annotate(value));
 	}
 
 	@Override
 	public Span annotate(long timestamp, String value) {
-		return new BraveSpan(this.span.annotate(timestamp, value));
+		return new BraveSpan(this.delegate.annotate(timestamp, value));
 	}
 
 	@Override
 	public Span tag(String key, String value) {
-		return new BraveSpan(this.span.tag(key, value));
+		return new BraveSpan(this.delegate.tag(key, value));
 	}
 
 	@Override
 	public Span error(Throwable throwable) {
 		String message = throwable.getMessage() == null ? throwable.getClass().getSimpleName() : throwable.getMessage();
-		this.span.tag("error", message);
-		this.span.error(throwable);
-		return new BraveSpan(this.span);
+		this.delegate.tag("error", message);
+		this.delegate.error(throwable);
+		return new BraveSpan(this.delegate);
 	}
 
 	@Override
 	public Span remoteServiceName(String remoteServiceName) {
-		return new BraveSpan(this.span.remoteServiceName(remoteServiceName));
+		return new BraveSpan(this.delegate.remoteServiceName(remoteServiceName));
 	}
 
 	@Override
 	public boolean remoteIpAndPort(String remoteIp, int remotePort) {
-		return this.span.remoteIpAndPort(remoteIp, remotePort);
+		return this.delegate.remoteIpAndPort(remoteIp, remotePort);
 	}
 
 	@Override
 	public void finish() {
-		this.span.finish();
+		this.delegate.finish();
 	}
 
 	@Override
 	public void abandon() {
-		this.span.abandon();
+		this.delegate.abandon();
 	}
 
 	@Override
 	public void finish(long timestamp) {
-		this.span.finish(timestamp);
+		this.delegate.finish(timestamp);
 	}
 
 	@Override
 	public void flush() {
-		this.span.flush();
+		this.delegate.flush();
+	}
+
+	@Override
+	public String toString() {
+		return this.delegate != null ? this.delegate.toString() : "null";
 	}
 
 	public static brave.Span toBrave(Span span) {
-		return ((BraveSpan) span).span;
+		return ((BraveSpan) span).delegate;
 	}
 
 	public static Span fromBrave(brave.Span span) {

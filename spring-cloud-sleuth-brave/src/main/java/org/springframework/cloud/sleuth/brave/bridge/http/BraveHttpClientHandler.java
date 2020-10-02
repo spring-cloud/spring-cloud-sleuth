@@ -52,4 +52,8 @@ public class BraveHttpClientHandler implements HttpClientHandler {
 		this.delegate.handleReceive(BraveHttpClientResponse.toBrave(response), BraveSpan.toBrave(span));
 	}
 
+	public static HttpClientHandler fromBrave(brave.http.HttpClientHandler<brave.http.HttpClientRequest, brave.http.HttpClientResponse> handler) {
+		return new BraveHttpClientHandler(handler);
+	}
+
 }

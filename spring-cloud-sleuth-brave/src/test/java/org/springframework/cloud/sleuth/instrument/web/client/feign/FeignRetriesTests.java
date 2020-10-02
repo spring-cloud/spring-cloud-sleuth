@@ -23,6 +23,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import brave.Span;
 import brave.Tracing;
+import brave.http.HttpTracing;
 import brave.propagation.StrictCurrentTraceContext;
 import brave.test.TestSpanHandler;
 import feign.Client;
@@ -45,6 +46,7 @@ import org.springframework.beans.factory.BeanFactory;
 import org.springframework.cloud.sleuth.api.CurrentTraceContext;
 import org.springframework.cloud.sleuth.api.http.HttpClientHandler;
 import org.springframework.cloud.sleuth.brave.bridge.BraveCurrentTraceContext;
+import org.springframework.cloud.sleuth.brave.bridge.http.BraveHttpClientHandler;
 
 import static org.assertj.core.api.Assertions.failBecauseExceptionWasNotThrown;
 import static org.assertj.core.api.BDDAssertions.then;
@@ -70,15 +72,14 @@ public class FeignRetriesTests {
 	@Mock(lenient = true)
 	BeanFactory beanFactory;
 
-	@Mock
-	HttpClientHandler handler;
-
 	StrictCurrentTraceContext currentTraceContext = StrictCurrentTraceContext.create();
 
 	TestSpanHandler spans = new TestSpanHandler();
 
 	Tracing tracing = Tracing.newBuilder().currentTraceContext(this.currentTraceContext).addSpanHandler(this.spans)
 			.build();
+
+	HttpClientHandler handler = BraveHttpClientHandler.fromBrave(brave.http.HttpClientHandler.create(HttpTracing.create(this.tracing)));
 
 	@BeforeEach
 	@AfterEach

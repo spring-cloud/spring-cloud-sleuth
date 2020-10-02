@@ -21,9 +21,9 @@ import brave.http.HttpRequestParser;
 import brave.http.HttpResponseParser;
 import brave.http.HttpTracing;
 import brave.sampler.SamplerFunction;
-import brave.sampler.SamplerFunctions;
 import org.assertj.core.api.BDDAssertions;
 import org.junit.jupiter.api.Test;
+import org.mockito.BDDMockito;
 
 import org.springframework.boot.autoconfigure.AutoConfigurations;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
@@ -45,7 +45,7 @@ public class TraceHttpAutoConfigurationTests {
 		contextRunner().run((context) -> {
 			SamplerFunction<HttpRequest> clientSampler = context.getBean(HttpTracing.class).clientRequestSampler();
 
-			then(clientSampler).isSameAs(SamplerFunctions.deferDecision());
+			then(clientSampler.trySample(mockHttpRequestForPath("foo"))).isNull();
 		});
 	}
 
@@ -54,8 +54,16 @@ public class TraceHttpAutoConfigurationTests {
 		contextRunner().withPropertyValues("spring.sleuth.web.client.skip-pattern=foo.*|bar.*").run((context) -> {
 			SamplerFunction<HttpRequest> clientSampler = context.getBean(HttpTracing.class).clientRequestSampler();
 
-			then(clientSampler).isInstanceOf(SkipPatternHttpClientSampler.class);
+			then(clientSampler.trySample(mockHttpRequestForPath("foo"))).isFalse();
+			then(clientSampler.trySample(mockHttpRequestForPath("bar"))).isFalse();
+			then(clientSampler.trySample(mockHttpRequestForPath("baz"))).isNull();
 		});
+	}
+
+	private HttpRequest mockHttpRequestForPath(String path) {
+		HttpRequest httpRequest = BDDMockito.mock(HttpRequest.class);
+		BDDMockito.given(httpRequest.path()).willReturn(path);
+		return httpRequest;
 	}
 
 	@Test
@@ -63,16 +71,18 @@ public class TraceHttpAutoConfigurationTests {
 		contextRunner().withUserConfiguration(HttpClientSamplerConfig.class).run((context) -> {
 			SamplerFunction<HttpRequest> clientSampler = context.getBean(HttpTracing.class).clientRequestSampler();
 
-			then(clientSampler).isSameAs(HttpClientSamplerConfig.INSTANCE);
+			then(clientSampler.trySample(mockHttpRequestForPath("foo"))).isNull();
 		});
 	}
 
 	@Test
 	public void defaultsServerSamplerToSkipPattern() {
-		contextRunner().run((context) -> {
+		contextRunner().withPropertyValues("spring.sleuth.web.skip-pattern=foo.*|bar.*").run((context) -> {
 			SamplerFunction<HttpRequest> serverSampler = context.getBean(HttpTracing.class).serverRequestSampler();
 
-			then(serverSampler).isInstanceOf(SkipPatternHttpServerSampler.class);
+			then(serverSampler.trySample(mockHttpRequestForPath("foo"))).isFalse();
+			then(serverSampler.trySample(mockHttpRequestForPath("bar"))).isFalse();
+			then(serverSampler.trySample(mockHttpRequestForPath("baz"))).isNull();
 		});
 	}
 
@@ -81,29 +91,9 @@ public class TraceHttpAutoConfigurationTests {
 		contextRunner().withPropertyValues("spring.sleuth.web.skip-pattern").run((context) -> {
 			SamplerFunction<HttpRequest> clientSampler = context.getBean(HttpTracing.class).serverRequestSampler();
 
-			then(clientSampler).isSameAs(SamplerFunctions.deferDecision());
+			then(clientSampler.trySample(mockHttpRequestForPath("foo"))).isNull();
 		});
 	}
-
-	// TODO: [OTEL] Fix this
-	/*@Test
-	public void wrapsUserProvidedHttpServerSampler() {
-		contextRunner().withUserConfiguration(HttpServerSamplerConfig.class)
-				.run(thenCompositeHttpServerSamplerOf(HttpServerSamplerConfig.INSTANCE));
-	}
-
-	private ContextConsumer<AssertableApplicationContext> thenCompositeHttpServerSamplerOf(
-			SamplerFunction<HttpRequest> instance) {
-		return (context) -> {
-
-			SamplerFunction<HttpRequest> serverSampler = context.getBean(HttpTracing.class).serverRequestSampler();
-
-			then(serverSampler).isInstanceOf(CompositeHttpSampler.class);
-
-			then(((CompositeHttpSampler) serverSampler).left).isInstanceOf(SkipPatternHttpServerSampler.class);
-			then(((CompositeHttpSampler) serverSampler).right).isSameAs(instance);
-		};
-	}*/
 
 	@Test
 	public void defaultHttpClientParser() {
@@ -189,10 +179,10 @@ public class TraceHttpAutoConfigurationTests {
 @Configuration
 class HttpClientSamplerConfig {
 
-	static final SamplerFunction<HttpRequest> INSTANCE = request -> null;
+	static final org.springframework.cloud.sleuth.api.SamplerFunction<org.springframework.cloud.sleuth.api.http.HttpRequest> INSTANCE = request -> null;
 
 	@Bean(HttpClientSampler.NAME)
-	SamplerFunction<HttpRequest> sleuthHttpClientSampler() {
+	org.springframework.cloud.sleuth.api.SamplerFunction<org.springframework.cloud.sleuth.api.http.HttpRequest> sleuthHttpClientSampler() {
 		return INSTANCE;
 	}
 
@@ -201,10 +191,10 @@ class HttpClientSamplerConfig {
 @Configuration
 class HttpServerSamplerConfig {
 
-	static final SamplerFunction<HttpRequest> INSTANCE = request -> null;
+	static final org.springframework.cloud.sleuth.api.SamplerFunction<org.springframework.cloud.sleuth.api.http.HttpRequest> INSTANCE = request -> null;
 
 	@Bean(HttpServerSampler.NAME)
-	SamplerFunction<HttpRequest> sleuthHttpServerSampler() {
+	org.springframework.cloud.sleuth.api.SamplerFunction<org.springframework.cloud.sleuth.api.http.HttpRequest> sleuthHttpServerSampler() {
 		return INSTANCE;
 	}
 

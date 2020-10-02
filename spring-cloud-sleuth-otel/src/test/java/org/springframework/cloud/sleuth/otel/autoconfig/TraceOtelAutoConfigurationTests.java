@@ -17,7 +17,6 @@
 package org.springframework.cloud.sleuth.otel.autoconfig;
 
 import io.opentelemetry.instrumentation.spring.autoconfigure.TracerAutoConfiguration;
-import io.opentelemetry.trace.DefaultTracer;
 import io.opentelemetry.trace.Tracer;
 import org.junit.jupiter.api.Test;
 
@@ -35,8 +34,7 @@ class TraceOtelAutoConfigurationTests {
 	void should_start_context_with_otel_tracer() {
 		ApplicationContextRunner runner = new ApplicationContextRunner().withConfiguration(otelConfiguration());
 
-		runner.run(context -> assertThat(context).hasNotFailed().hasSingleBean(Tracer.class)
-				.doesNotHaveBean(DefaultTracer.class));
+		runner.run(context -> assertThat(context).hasNotFailed().hasSingleBean(Tracer.class));
 	}
 
 	@Test
@@ -44,12 +42,12 @@ class TraceOtelAutoConfigurationTests {
 		ApplicationContextRunner runner = new ApplicationContextRunner().withConfiguration(otelConfiguration())
 				.withPropertyValues("spring.sleuth.enabled=false");
 
-		runner.run(context -> assertThat(context).hasNotFailed().hasSingleBean(DefaultTracer.class));
+		runner.run(context -> assertThat(context).hasNotFailed().doesNotHaveBean(Tracer.class));
 	}
 
 	private AutoConfigurations otelConfiguration() {
 		return AutoConfigurations.of(TraceAutoConfiguration.class, TracerAutoConfiguration.class,
-				TraceOtelAutoConfiguration.class, TraceOtelDisabledAutoConfiguration.class);
+				TraceOtelAutoConfiguration.class);
 	}
 
 	@Configuration

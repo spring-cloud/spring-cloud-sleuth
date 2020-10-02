@@ -73,7 +73,7 @@ public class BraveTracer implements Tracer {
 
 	@Override
 	public SpanInScope withSpanInScope(Span span) {
-		return new BraveSpanInScope(tracer.withSpanInScope(((BraveSpan) span).span));
+		return new BraveSpanInScope(tracer.withSpanInScope(span == null ? null : ((BraveSpan) span).delegate));
 	}
 
 	@Override

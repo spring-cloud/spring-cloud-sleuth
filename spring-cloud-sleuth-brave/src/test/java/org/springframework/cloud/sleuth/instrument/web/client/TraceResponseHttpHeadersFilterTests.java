@@ -23,11 +23,12 @@ import brave.test.TestSpanHandler;
 import org.assertj.core.api.BDDAssertions;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.BDDMockito;
 
 import org.springframework.cloud.gateway.filter.headers.HttpHeadersFilter;
 import org.springframework.cloud.sleuth.api.http.HttpClientHandler;
+import org.springframework.cloud.sleuth.brave.bridge.BraveSpan;
 import org.springframework.cloud.sleuth.brave.bridge.BraveTracer;
+import org.springframework.cloud.sleuth.brave.bridge.http.BraveHttpClientHandler;
 import org.springframework.cloud.sleuth.brave.bridge.propagation.BravePropagator;
 import org.springframework.http.HttpHeaders;
 import org.springframework.mock.http.server.reactive.MockServerHttpRequest;
@@ -44,7 +45,7 @@ public class TraceResponseHttpHeadersFilterTests {
 
 	HttpTracing httpTracing = HttpTracing.newBuilder(this.tracing).build();
 
-	HttpClientHandler handler = BDDMockito.mock(HttpClientHandler.class);
+	HttpClientHandler handler = BraveHttpClientHandler.fromBrave(brave.http.HttpClientHandler.create(this.httpTracing));
 
 	@AfterEach
 	public void close() {
@@ -72,7 +73,7 @@ public class TraceResponseHttpHeadersFilterTests {
 		httpHeaders.set("b3", "52f112af7472aff0-53e6ab6fc5dfee58");
 		MockServerHttpRequest request = MockServerHttpRequest.post("foo/bar").headers(httpHeaders).build();
 		MockServerWebExchange exchange = MockServerWebExchange.builder(request).build();
-		exchange.getAttributes().put(TraceResponseHttpHeadersFilter.SPAN_ATTRIBUTE, this.tracing.tracer().nextSpan());
+		exchange.getAttributes().put(TraceResponseHttpHeadersFilter.SPAN_ATTRIBUTE, BraveSpan.fromBrave(this.tracing.tracer().nextSpan()));
 
 		filter.filter(httpHeaders, exchange);
 

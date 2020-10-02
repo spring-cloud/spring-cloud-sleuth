@@ -70,7 +70,44 @@ public class BraveHttpServerResponse implements HttpServerResponse {
 	public static brave.http.HttpServerResponse toBrave(HttpServerResponse response) {
 		if (response == null) {
 			return null;
+		} else if (response instanceof BraveHttpServerResponse) {
+			return ((BraveHttpServerResponse) response).delegate;
 		}
-		return ((BraveHttpServerResponse) response).delegate;
+		return new brave.http.HttpServerResponse() {
+			@Override
+			public brave.http.HttpServerRequest request() {
+				return BraveHttpServerRequest.toBrave(response.request());
+			}
+
+			@Override
+			public Throwable error() {
+				return response.error();
+			}
+
+			@Override
+			public String method() {
+				return response.method();
+			}
+
+			@Override
+			public String route() {
+				return response.route();
+			}
+
+			@Override
+			public String toString() {
+				return response.toString();
+			}
+
+			@Override
+			public int statusCode() {
+				return response.statusCode();
+			}
+
+			@Override
+			public Object unwrap() {
+				return response.unwrap();
+			}
+		};
 	}
 }

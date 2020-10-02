@@ -241,7 +241,7 @@ class HttpClientBeanPostProcessor implements BeanPostProcessor {
 			if (span == null) {
 				return; // Unexpected. In the handle method, without a span to finish!
 			}
-			HttpClientResponseWrapper response = resp != null ? new HttpClientResponseWrapper(resp, error) : null;
+			HttpClientResponseWrapper response = new HttpClientResponseWrapper(resp, error);
 			handler().handleReceive(response, span);
 		}
 

@@ -42,6 +42,7 @@ import org.mockito.stubbing.Answer;
 
 import org.springframework.cloud.sleuth.api.http.HttpClientHandler;
 import org.springframework.cloud.sleuth.brave.bridge.BraveCurrentTraceContext;
+import org.springframework.cloud.sleuth.brave.bridge.http.BraveHttpClientHandler;
 
 import static org.assertj.core.api.BDDAssertions.then;
 
@@ -72,8 +73,7 @@ public class TracingFeignClientTests {
 	@Mock
 	Client client;
 
-	@Mock
-	HttpClientHandler handler;
+	HttpClientHandler handler = BraveHttpClientHandler.fromBrave(brave.http.HttpClientHandler.create(this.httpTracing));
 
 	Client traceFeignClient;
 

@@ -26,11 +26,11 @@ import brave.test.TestSpanHandler;
 import org.assertj.core.api.BDDAssertions;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.BDDMockito;
 
 import org.springframework.cloud.gateway.filter.headers.HttpHeadersFilter;
 import org.springframework.cloud.sleuth.api.http.HttpClientHandler;
 import org.springframework.cloud.sleuth.brave.bridge.BraveTracer;
+import org.springframework.cloud.sleuth.brave.bridge.http.BraveHttpClientHandler;
 import org.springframework.cloud.sleuth.brave.bridge.propagation.BravePropagator;
 import org.springframework.http.HttpHeaders;
 import org.springframework.mock.http.server.reactive.MockServerHttpRequest;
@@ -48,7 +48,7 @@ public class TraceRequestHttpHeadersFilterTests {
 
 	HttpTracing httpTracing = HttpTracing.newBuilder(this.tracing).build();
 
-	HttpClientHandler handler = BDDMockito.mock(HttpClientHandler.class);
+	HttpClientHandler handler = BraveHttpClientHandler.fromBrave(brave.http.HttpClientHandler.create(this.httpTracing));
 
 	@AfterEach
 	public void close() {

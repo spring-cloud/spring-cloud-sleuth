@@ -18,6 +18,8 @@ package org.springframework.cloud.sleuth.brave.instrument.web;
 
 import java.util.stream.Stream;
 
+import brave.http.HttpRequest;
+import brave.sampler.SamplerFunction;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -25,9 +27,6 @@ import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-
-import org.springframework.cloud.sleuth.api.SamplerFunction;
-import org.springframework.cloud.sleuth.api.http.HttpRequest;
 
 import static org.assertj.core.api.BDDAssertions.then;
 

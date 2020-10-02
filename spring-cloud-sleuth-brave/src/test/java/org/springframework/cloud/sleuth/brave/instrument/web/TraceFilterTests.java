@@ -36,7 +36,6 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import org.springframework.cloud.sleuth.brave.bridge.BraveSamplerFunction;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -65,7 +64,7 @@ public class TraceFilterTests {
 
 	HttpTracing httpTracing = HttpTracing.newBuilder(this.tracing).clientParser(new HttpClientParser())
 			.serverParser(new HttpServerParser())
-			.serverSampler(BraveSamplerFunction.toHttpBrave(new SkipPatternHttpServerSampler(() -> Pattern.compile("")))).build();
+			.serverSampler(new SkipPatternHttpServerSampler(() -> Pattern.compile(""))).build();
 
 	Filter filter = TracingFilter.create(this.httpTracing);
 
@@ -109,7 +108,7 @@ public class TraceFilterTests {
 				.addSpanHandler(this.spans).sampler(Sampler.NEVER_SAMPLE).supportsJoin(false).build();
 		HttpTracing httpTracing = HttpTracing.newBuilder(tracing).clientParser(new HttpClientParser())
 				.serverParser(new HttpServerParser())
-				.serverSampler(BraveSamplerFunction.toHttpBrave(new SkipPatternHttpServerSampler(() -> Pattern.compile("")))).build();
+				.serverSampler(new SkipPatternHttpServerSampler(() -> Pattern.compile(""))).build();
 		return TracingFilter.create(httpTracing);
 	}
 

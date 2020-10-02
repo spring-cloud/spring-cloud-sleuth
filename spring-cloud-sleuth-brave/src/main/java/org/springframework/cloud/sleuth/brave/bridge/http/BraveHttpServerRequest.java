@@ -66,6 +66,35 @@ public class BraveHttpServerRequest implements HttpServerRequest {
 		if (request == null) {
 			return null;
 		}
-		return ((BraveHttpServerRequest) request).delegate;
+		if (request instanceof BraveHttpServerRequest) {
+			return ((BraveHttpServerRequest) request).delegate;
+		}
+		return new brave.http.HttpServerRequest() {
+
+			@Override
+			public Object unwrap() {
+				return request.unwrap();
+			}
+
+			@Override
+			public String method() {
+				return request.method();
+			}
+
+			@Override
+			public String path() {
+				return request.path();
+			}
+
+			@Override
+			public String url() {
+				return request.url();
+			}
+
+			@Override
+			public String header(String name) {
+				return request.header(name);
+			}
+		};
 	}
 }

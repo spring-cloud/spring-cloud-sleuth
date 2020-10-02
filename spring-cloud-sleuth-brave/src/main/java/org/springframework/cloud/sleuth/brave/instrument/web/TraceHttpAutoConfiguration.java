@@ -20,11 +20,15 @@ import java.util.List;
 import java.util.regex.Pattern;
 
 import brave.Tracing;
+import brave.http.HttpRequest;
 import brave.http.HttpRequestParser;
 import brave.http.HttpResponseParser;
 import brave.http.HttpTracing;
 import brave.http.HttpTracingCustomizer;
+import brave.sampler.SamplerFunction;
+import brave.sampler.SamplerFunctions;
 
+import org.springframework.beans.factory.BeanFactory;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.AutoConfigureBefore;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
@@ -32,10 +36,9 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
-import org.springframework.cloud.sleuth.api.SamplerFunction;
-import org.springframework.cloud.sleuth.api.http.HttpRequest;
 import org.springframework.cloud.sleuth.brave.autoconfig.TraceBraveAutoConfiguration;
 import org.springframework.cloud.sleuth.brave.bridge.BraveSamplerFunction;
+import org.springframework.cloud.sleuth.brave.bridge.http.TraceBraveHttpBridgeAutoConfiguration;
 import org.springframework.cloud.sleuth.instrument.web.HttpClientSampler;
 import org.springframework.cloud.sleuth.instrument.web.HttpServerSampler;
 import org.springframework.cloud.sleuth.instrument.web.SkipPatternConfiguration;
@@ -64,7 +67,7 @@ import org.springframework.lang.Nullable;
 @EnableConfigurationProperties({ SleuthWebProperties.class, SleuthHttpProperties.class })
 // public allows @AutoConfigureAfter(TraceHttpAutoConfiguration)
 // for components needing HttpTracing
-@AutoConfigureBefore(TraceFeignClientAutoConfiguration.class)
+@AutoConfigureBefore({ TraceFeignClientAutoConfiguration.class, TraceBraveHttpBridgeAutoConfiguration.class })
 public class TraceHttpAutoConfiguration {
 
 	static final int TRACING_FILTER_ORDER = Ordered.HIGHEST_PRECEDENCE + 5;
@@ -79,13 +82,14 @@ public class TraceHttpAutoConfiguration {
 			@Nullable @HttpServerRequestParser HttpRequestParser httpServerRequestParser,
 			@Nullable @HttpServerResponseParser HttpResponseParser httpServerResponseParser,
 			@Nullable brave.http.HttpServerParser serverParser,
-			@HttpClientSampler SamplerFunction<HttpRequest> httpClientSampler,
-			@Nullable @HttpServerSampler SamplerFunction<HttpRequest> httpServerSampler,
+			BeanFactory beanFactory,
 			@Nullable List<HttpTracingCustomizer> httpTracingCustomizers) {
+		SamplerFunction<HttpRequest> httpClientSampler = toBraveSampler(beanFactory, HttpClientSampler.NAME);
+		SamplerFunction<HttpRequest> httpServerSampler = beanFactory.containsBean(HttpServerSampler.NAME) ? toBraveSampler(beanFactory, HttpServerSampler.NAME) : null;
 		SamplerFunction<HttpRequest> combinedSampler = combineUserProvidedSamplerWithSkipPatternSampler(
 				httpServerSampler, provider);
-		HttpTracing.Builder builder = HttpTracing.newBuilder(tracing).clientSampler(BraveSamplerFunction.toHttpBrave(httpClientSampler))
-				.serverSampler(BraveSamplerFunction.toHttpBrave(combinedSampler));
+		HttpTracing.Builder builder = HttpTracing.newBuilder(tracing).clientSampler(httpClientSampler)
+				.serverSampler(combinedSampler);
 
 		if (httpClientRequestParser != null || httpClientResponseParser != null) {
 			if (httpClientRequestParser != null) {
@@ -119,12 +123,22 @@ public class TraceHttpAutoConfiguration {
 		return builder.build();
 	}
 
+	private SamplerFunction<HttpRequest> toBraveSampler(BeanFactory beanFactory, String beanName) {
+		Object bean = beanFactory.getBean(beanName);
+		SamplerFunction<HttpRequest> braveSampler = bean instanceof SamplerFunction ? (SamplerFunction<HttpRequest>) bean : bean instanceof org.springframework.cloud.sleuth.api.SamplerFunction ? BraveSamplerFunction
+				.toHttpBrave((org.springframework.cloud.sleuth.api.SamplerFunction<org.springframework.cloud.sleuth.api.http.HttpRequest>) bean) : null;
+		if (braveSampler == null) {
+			throw new IllegalStateException("Bean with name [" + HttpClientSampler.NAME + "] is of type [" + bean.getClass() + "] and only [" + SamplerFunction.class + "] and [" + org.springframework.cloud.sleuth.api.SamplerFunction.class + "] are supported");
+		}
+		return braveSampler;
+	}
+
 	private SamplerFunction<HttpRequest> combineUserProvidedSamplerWithSkipPatternSampler(
 			@Nullable SamplerFunction<HttpRequest> serverSampler, @Nullable SkipPatternProvider provider) {
 		SamplerFunction<HttpRequest> skipPatternSampler = provider != null ? new SkipPatternHttpServerSampler(provider)
 				: null;
 		if (serverSampler == null && skipPatternSampler == null) {
-			return SamplerFunction.deferDecision();
+			return SamplerFunctions.deferDecision();
 		}
 		else if (serverSampler == null) {
 			return skipPatternSampler;
@@ -140,7 +154,7 @@ public class TraceHttpAutoConfiguration {
 	SamplerFunction<HttpRequest> sleuthHttpClientSampler(SleuthWebProperties sleuthWebProperties) {
 		String skipPattern = sleuthWebProperties.getClient().getSkipPattern();
 		if (skipPattern == null) {
-			return SamplerFunction.deferDecision();
+			return SamplerFunctions.deferDecision();
 		}
 
 		return new SkipPatternHttpClientSampler(Pattern.compile(skipPattern));

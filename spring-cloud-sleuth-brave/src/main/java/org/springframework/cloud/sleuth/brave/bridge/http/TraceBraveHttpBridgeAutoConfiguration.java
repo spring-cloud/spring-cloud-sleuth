@@ -19,20 +19,20 @@ package org.springframework.cloud.sleuth.brave.bridge.http;
 import brave.http.HttpTracing;
 
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
-import org.springframework.boot.autoconfigure.AutoConfigureBefore;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.cloud.sleuth.api.Tracer;
 import org.springframework.cloud.sleuth.api.http.HttpClientHandler;
 import org.springframework.cloud.sleuth.api.http.HttpServerHandler;
-import org.springframework.cloud.sleuth.autoconfig.TraceAutoConfiguration;
 import org.springframework.cloud.sleuth.brave.bridge.TraceBraveBridgeAutoConfiguation;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 @Configuration(proxyBeanMethods = false)
 @ConditionalOnProperty(value = "spring.sleuth.enabled", matchIfMissing = true)
+@ConditionalOnBean({ Tracer.class, HttpTracing.class })
 @AutoConfigureAfter(TraceBraveBridgeAutoConfiguation.class)
-@AutoConfigureBefore(TraceAutoConfiguration.class)
-public class TraceBraveHttpBridgeAutoConfiguation {
+public class TraceBraveHttpBridgeAutoConfiguration {
 
 	@Bean
 	HttpClientHandler braveHttpClientHandler(HttpTracing httpTracing) {

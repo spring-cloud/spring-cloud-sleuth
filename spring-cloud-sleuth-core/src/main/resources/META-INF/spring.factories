@@ -17,4 +17,4 @@ org.springframework.cloud.sleuth.instrument.reactor.TraceReactorAutoConfiguratio
 
 # Environment Post Processor
 org.springframework.boot.env.EnvironmentPostProcessor=\
-org.springframework.cloud.sleuth.brave.instrument.web.client.TraceGatewayEnvironmentPostProcessor
+org.springframework.cloud.sleuth.instrument.web.client.TraceGatewayEnvironmentPostProcessor

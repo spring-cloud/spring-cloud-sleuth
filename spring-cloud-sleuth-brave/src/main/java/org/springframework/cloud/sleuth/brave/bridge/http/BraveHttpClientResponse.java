@@ -68,6 +68,41 @@ public class BraveHttpClientResponse implements HttpClientResponse {
 	}
 
 	public static brave.http.HttpClientResponse toBrave(HttpClientResponse httpClientResponse) {
-		return ((BraveHttpClientResponse) httpClientResponse).delegate;
+		if (httpClientResponse == null) {
+			return null;
+		} else if (httpClientResponse instanceof BraveHttpClientResponse) {
+			return ((BraveHttpClientResponse) httpClientResponse).delegate;
+		}
+		return new brave.http.HttpClientResponse() {
+			@Override
+			public int statusCode() {
+				return httpClientResponse.statusCode();
+			}
+
+			@Override
+			public Object unwrap() {
+				return httpClientResponse.unwrap();
+			}
+
+			@Override
+			public brave.http.HttpClientRequest request() {
+				return BraveHttpClientRequest.toBrave(httpClientResponse.request());
+			}
+
+			@Override
+			public Throwable error() {
+				return httpClientResponse.error();
+			}
+
+			@Override
+			public String method() {
+				return httpClientResponse.method();
+			}
+
+			@Override
+			public String route() {
+				return httpClientResponse.route();
+			}
+		};
 	}
 }

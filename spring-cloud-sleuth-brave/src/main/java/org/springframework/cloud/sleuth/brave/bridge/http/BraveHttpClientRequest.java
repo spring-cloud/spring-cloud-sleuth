@@ -68,6 +68,40 @@ public class BraveHttpClientRequest implements HttpClientRequest {
 	}
 
 	public static brave.http.HttpClientRequest toBrave(HttpClientRequest httpClientRequest) {
-		return ((BraveHttpClientRequest) httpClientRequest).delegate;
+		if (httpClientRequest instanceof BraveHttpClientRequest) {
+			return ((BraveHttpClientRequest) httpClientRequest).delegate;
+		}
+		return new brave.http.HttpClientRequest() {
+
+			@Override
+			public Object unwrap() {
+				return httpClientRequest.unwrap();
+			}
+
+			@Override
+			public String method() {
+				return httpClientRequest.method();
+			}
+
+			@Override
+			public String path() {
+				return httpClientRequest.path();
+			}
+
+			@Override
+			public String url() {
+				return httpClientRequest.url();
+			}
+
+			@Override
+			public String header(String name) {
+				return httpClientRequest.header(name);
+			}
+
+			@Override
+			public void header(String name, String value) {
+				httpClientRequest.header(name, value);
+			}
+		};
 	}
 }

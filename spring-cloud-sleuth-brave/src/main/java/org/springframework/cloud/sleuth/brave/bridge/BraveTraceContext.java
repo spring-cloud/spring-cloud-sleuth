@@ -17,6 +17,7 @@
 package org.springframework.cloud.sleuth.brave.bridge;
 
 import java.util.List;
+import java.util.Objects;
 
 import brave.internal.Nullable;
 
@@ -110,17 +111,17 @@ public class BraveTraceContext implements TraceContext {
 
 	@Override
 	public String toString() {
-		return this.traceContext.toString();
+		return this.traceContext != null ? this.traceContext.toString() : "null";
 	}
 
 	@Override
 	public boolean equals(Object o) {
-		return this.traceContext.equals(o);
+		return Objects.equals(this.traceContext, o);
 	}
 
 	@Override
 	public int hashCode() {
-		return this.traceContext.hashCode();
+		return Objects.hashCode(this.traceContext);
 	}
 
 	@Nullable

@@ -87,7 +87,7 @@ final class TracingFeignClient implements Client {
 			throw e;
 		}
 		finally {
-			ResponseWrapper response = res != null ? new ResponseWrapper(request, res, error) : null;
+			ResponseWrapper response = new ResponseWrapper(request, res, error);
 			this.handler.handleReceive(response, span);
 
 			if (log.isDebugEnabled()) {

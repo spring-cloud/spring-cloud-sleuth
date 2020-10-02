@@ -31,6 +31,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.cloud.sleuth.api.http.HttpClientHandler;
 import org.springframework.cloud.sleuth.brave.bridge.BraveCurrentTraceContext;
+import org.springframework.cloud.sleuth.brave.bridge.http.BraveHttpClientHandler;
 
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.never;
@@ -51,14 +52,13 @@ public class TraceFeignAspectTests {
 	@Mock
 	ProceedingJoinPoint pjp;
 
-	@Mock
-	HttpClientHandler handler;
-
 	StrictCurrentTraceContext currentTraceContext = StrictCurrentTraceContext.create();
 
 	Tracing tracing = Tracing.newBuilder().currentTraceContext(currentTraceContext).build();
 
 	HttpTracing httpTracing = HttpTracing.newBuilder(this.tracing).build();
+
+	HttpClientHandler handler = BraveHttpClientHandler.fromBrave(brave.http.HttpClientHandler.create(this.httpTracing));
 
 	TraceFeignAspect traceFeignAspect;
 

@@ -147,7 +147,7 @@ public class ScopePassingSpanSubscriberTests {
 		ScopePassingSpanSubscriber<?> subscriber = new ScopePassingSpanSubscriber<>(null, initial,
 				this.currentTraceContext, context);
 
-		then(initial).isSameAs(subscriber.currentContext());
+		then(initial.get(TraceContext.class)).isSameAs(subscriber.currentContext().get(TraceContext.class));
 	}
 
 	@Test
