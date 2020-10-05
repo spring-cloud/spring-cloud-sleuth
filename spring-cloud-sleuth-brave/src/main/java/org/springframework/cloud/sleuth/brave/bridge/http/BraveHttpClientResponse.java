@@ -27,7 +27,7 @@ public class BraveHttpClientResponse implements HttpClientResponse {
 	public BraveHttpClientResponse(brave.http.HttpClientResponse delegate) {
 		this.delegate = delegate;
 	}
-	
+
 	@Override
 	public String method() {
 		return this.delegate.method();
@@ -70,7 +70,8 @@ public class BraveHttpClientResponse implements HttpClientResponse {
 	public static brave.http.HttpClientResponse toBrave(HttpClientResponse httpClientResponse) {
 		if (httpClientResponse == null) {
 			return null;
-		} else if (httpClientResponse instanceof BraveHttpClientResponse) {
+		}
+		else if (httpClientResponse instanceof BraveHttpClientResponse) {
 			return ((BraveHttpClientResponse) httpClientResponse).delegate;
 		}
 		return new brave.http.HttpClientResponse() {
@@ -105,4 +106,5 @@ public class BraveHttpClientResponse implements HttpClientResponse {
 			}
 		};
 	}
+
 }

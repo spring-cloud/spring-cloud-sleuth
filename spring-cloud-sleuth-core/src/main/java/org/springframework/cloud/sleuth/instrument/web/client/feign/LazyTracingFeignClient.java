@@ -64,7 +64,8 @@ class LazyTracingFeignClient implements Client {
 
 	private Client tracingFeignClient() {
 		if (this.tracingFeignClient == null) {
-			this.tracingFeignClient = TracingFeignClient.create(currentTraceContext(), httpClientHandler(), this.delegate);
+			this.tracingFeignClient = TracingFeignClient.create(currentTraceContext(), httpClientHandler(),
+					this.delegate);
 		}
 		return this.tracingFeignClient;
 	}

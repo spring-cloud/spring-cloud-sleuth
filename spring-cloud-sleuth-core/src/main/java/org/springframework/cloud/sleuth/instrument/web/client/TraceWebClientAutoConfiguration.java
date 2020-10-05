@@ -55,12 +55,14 @@ class TraceWebClientAutoConfiguration {
 	static class HttpHeadersFilterConfig {
 
 		@Bean
-		HttpHeadersFilter traceRequestHttpHeadersFilter(Tracer tracer, HttpClientHandler handler, Propagator propagator) {
+		HttpHeadersFilter traceRequestHttpHeadersFilter(Tracer tracer, HttpClientHandler handler,
+				Propagator propagator) {
 			return TraceRequestHttpHeadersFilter.create(tracer, handler, propagator);
 		}
 
 		@Bean
-		HttpHeadersFilter traceResponseHttpHeadersFilter(Tracer tracer, HttpClientHandler handler, Propagator propagator) {
+		HttpHeadersFilter traceResponseHttpHeadersFilter(Tracer tracer, HttpClientHandler handler,
+				Propagator propagator) {
 			return TraceResponseHttpHeadersFilter.create(tracer, handler, propagator);
 		}
 
@@ -91,4 +93,3 @@ class TraceWebClientAutoConfiguration {
 	}
 
 }
-

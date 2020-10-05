@@ -81,11 +81,11 @@ public class TraceHttpAutoConfiguration {
 			@Nullable brave.http.HttpClientParser clientParser,
 			@Nullable @HttpServerRequestParser HttpRequestParser httpServerRequestParser,
 			@Nullable @HttpServerResponseParser HttpResponseParser httpServerResponseParser,
-			@Nullable brave.http.HttpServerParser serverParser,
-			BeanFactory beanFactory,
+			@Nullable brave.http.HttpServerParser serverParser, BeanFactory beanFactory,
 			@Nullable List<HttpTracingCustomizer> httpTracingCustomizers) {
 		SamplerFunction<HttpRequest> httpClientSampler = toBraveSampler(beanFactory, HttpClientSampler.NAME);
-		SamplerFunction<HttpRequest> httpServerSampler = beanFactory.containsBean(HttpServerSampler.NAME) ? toBraveSampler(beanFactory, HttpServerSampler.NAME) : null;
+		SamplerFunction<HttpRequest> httpServerSampler = beanFactory.containsBean(HttpServerSampler.NAME)
+				? toBraveSampler(beanFactory, HttpServerSampler.NAME) : null;
 		SamplerFunction<HttpRequest> combinedSampler = combineUserProvidedSamplerWithSkipPatternSampler(
 				httpServerSampler, provider);
 		HttpTracing.Builder builder = HttpTracing.newBuilder(tracing).clientSampler(httpClientSampler)
@@ -125,10 +125,16 @@ public class TraceHttpAutoConfiguration {
 
 	private SamplerFunction<HttpRequest> toBraveSampler(BeanFactory beanFactory, String beanName) {
 		Object bean = beanFactory.getBean(beanName);
-		SamplerFunction<HttpRequest> braveSampler = bean instanceof SamplerFunction ? (SamplerFunction<HttpRequest>) bean : bean instanceof org.springframework.cloud.sleuth.api.SamplerFunction ? BraveSamplerFunction
-				.toHttpBrave((org.springframework.cloud.sleuth.api.SamplerFunction<org.springframework.cloud.sleuth.api.http.HttpRequest>) bean) : null;
+		SamplerFunction<HttpRequest> braveSampler = bean instanceof SamplerFunction
+				? (SamplerFunction<HttpRequest>) bean
+				: bean instanceof org.springframework.cloud.sleuth.api.SamplerFunction
+						? BraveSamplerFunction.toHttpBrave(
+								(org.springframework.cloud.sleuth.api.SamplerFunction<org.springframework.cloud.sleuth.api.http.HttpRequest>) bean)
+						: null;
 		if (braveSampler == null) {
-			throw new IllegalStateException("Bean with name [" + HttpClientSampler.NAME + "] is of type [" + bean.getClass() + "] and only [" + SamplerFunction.class + "] and [" + org.springframework.cloud.sleuth.api.SamplerFunction.class + "] are supported");
+			throw new IllegalStateException("Bean with name [" + HttpClientSampler.NAME + "] is of type ["
+					+ bean.getClass() + "] and only [" + SamplerFunction.class + "] and ["
+					+ org.springframework.cloud.sleuth.api.SamplerFunction.class + "] are supported");
 		}
 		return braveSampler;
 	}

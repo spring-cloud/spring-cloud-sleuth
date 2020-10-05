@@ -65,7 +65,7 @@ class HttpClientBeanPostProcessor implements BeanPostProcessor {
 					.doOnRedirect(doOnResponse).doOnResponse(doOnResponse)
 					.doOnRequestError(new TracingDoOnErrorRequest(springContext))
 					.doOnRequest(new TracingDoOnRequest(springContext)).mapConnect(new TracingMapConnect(() -> {
-						 CurrentTraceContext ref = currentContext.get();
+						CurrentTraceContext ref = currentContext.get();
 						return ref != null ? ref.get() : null;
 					}));
 		}
@@ -287,7 +287,8 @@ class HttpClientBeanPostProcessor implements BeanPostProcessor {
 
 	}
 
-	static final class HttpClientResponseWrapper implements org.springframework.cloud.sleuth.api.http.HttpClientResponse {
+	static final class HttpClientResponseWrapper
+			implements org.springframework.cloud.sleuth.api.http.HttpClientResponse {
 
 		final HttpClientResponse delegate;
 
@@ -327,6 +328,7 @@ class HttpClientBeanPostProcessor implements BeanPostProcessor {
 		public Throwable error() {
 			return this.error;
 		}
+
 	}
 
 }

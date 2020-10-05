@@ -51,8 +51,8 @@ public abstract class ReactorSleuth {
 	}
 
 	/**
-	 * Return a span operator pointcut given a Tracing. This can be used in
-	 * reactor via {@link reactor.core.publisher.Flux#transform(Function)},
+	 * Return a span operator pointcut given a Tracing. This can be used in reactor via
+	 * {@link reactor.core.publisher.Flux#transform(Function)},
 	 * {@link reactor.core.publisher.Mono#transform(Function)},
 	 * {@link reactor.core.publisher.Hooks#onLastOperator(Function)} or
 	 * {@link reactor.core.publisher.Hooks#onLastOperator(Function)}. The Span operator

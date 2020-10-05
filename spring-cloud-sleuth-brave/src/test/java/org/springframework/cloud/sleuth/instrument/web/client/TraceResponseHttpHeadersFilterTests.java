@@ -55,7 +55,8 @@ public class TraceResponseHttpHeadersFilterTests {
 
 	@Test
 	public void should_not_report_span_when_no_span_was_present_in_attribute() {
-		HttpHeadersFilter filter = TraceResponseHttpHeadersFilter.create(BraveTracer.fromBrave(tracing.tracer()), this.handler, new BravePropagator(httpTracing.tracing().propagation()));
+		HttpHeadersFilter filter = TraceResponseHttpHeadersFilter.create(BraveTracer.fromBrave(tracing.tracer()),
+				this.handler, new BravePropagator(httpTracing.tracing().propagation()));
 		HttpHeaders httpHeaders = new HttpHeaders();
 		httpHeaders.set("b3", "52f112af7472aff0-53e6ab6fc5dfee58");
 		MockServerHttpRequest request = MockServerHttpRequest.post("foo/bar").headers(httpHeaders).build();
@@ -68,12 +69,14 @@ public class TraceResponseHttpHeadersFilterTests {
 
 	@Test
 	public void should_report_span_when_span_was_present_in_attribute() {
-		HttpHeadersFilter filter = TraceResponseHttpHeadersFilter.create(BraveTracer.fromBrave(tracing.tracer()), this.handler, new BravePropagator(httpTracing.tracing().propagation()));
+		HttpHeadersFilter filter = TraceResponseHttpHeadersFilter.create(BraveTracer.fromBrave(tracing.tracer()),
+				this.handler, new BravePropagator(httpTracing.tracing().propagation()));
 		HttpHeaders httpHeaders = new HttpHeaders();
 		httpHeaders.set("b3", "52f112af7472aff0-53e6ab6fc5dfee58");
 		MockServerHttpRequest request = MockServerHttpRequest.post("foo/bar").headers(httpHeaders).build();
 		MockServerWebExchange exchange = MockServerWebExchange.builder(request).build();
-		exchange.getAttributes().put(TraceResponseHttpHeadersFilter.SPAN_ATTRIBUTE, BraveSpan.fromBrave(this.tracing.tracer().nextSpan()));
+		exchange.getAttributes().put(TraceResponseHttpHeadersFilter.SPAN_ATTRIBUTE,
+				BraveSpan.fromBrave(this.tracing.tracer().nextSpan()));
 
 		filter.filter(httpHeaders, exchange);
 

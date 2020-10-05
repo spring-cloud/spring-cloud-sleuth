@@ -51,7 +51,8 @@ public class BraveTracer implements Tracer {
 
 	@Override
 	public Span nextSpan(TraceContext extracted) {
-		brave.propagation.TraceContext context = extracted != null ? (((BraveTraceContext) extracted).traceContext) : null;
+		brave.propagation.TraceContext context = extracted != null ? (((BraveTraceContext) extracted).traceContext)
+				: null;
 		if (context == null) {
 			return null;
 		}
@@ -61,9 +62,11 @@ public class BraveTracer implements Tracer {
 	@Override
 	public Span nextSpan(SamplingFlags extracted) {
 		if (extracted instanceof BraveTraceContext) {
-			return new BraveSpan(this.tracer.nextSpan(TraceContextOrSamplingFlags.create(((BraveTraceContext) extracted).traceContext)));
+			return new BraveSpan(this.tracer
+					.nextSpan(TraceContextOrSamplingFlags.create(((BraveTraceContext) extracted).traceContext)));
 		}
-		return new BraveSpan(this.tracer.nextSpan(TraceContextOrSamplingFlags.create(((BraveSamplingFlags) extracted).samplingFlags)));
+		return new BraveSpan(this.tracer
+				.nextSpan(TraceContextOrSamplingFlags.create(((BraveSamplingFlags) extracted).samplingFlags)));
 	}
 
 	@Override
@@ -102,7 +105,8 @@ public class BraveTracer implements Tracer {
 
 	@Override
 	public <T> ScopedSpan startScopedSpan(String name, SamplerFunction<T> samplerFunction, T arg) {
-		return new BraveScopedSpan(this.tracer.startScopedSpan(name, ((BraveSamplerFunction) samplerFunction).samplerFunction, arg));
+		return new BraveScopedSpan(
+				this.tracer.startScopedSpan(name, ((BraveSamplerFunction) samplerFunction).samplerFunction, arg));
 	}
 
 	@Override
@@ -113,7 +117,8 @@ public class BraveTracer implements Tracer {
 	@Override
 	public <T> Span nextSpanWithParent(SamplerFunction<T> samplerFunction, T arg, TraceContext parent) {
 		brave.propagation.TraceContext context = parent != null ? (((BraveTraceContext) parent).traceContext) : null;
-		return new BraveSpan(this.tracer.nextSpanWithParent(((BraveSamplerFunction) samplerFunction).samplerFunction, arg, context));
+		return new BraveSpan(
+				this.tracer.nextSpanWithParent(((BraveSamplerFunction) samplerFunction).samplerFunction, arg, context));
 	}
 
 	@Override
@@ -125,6 +130,7 @@ public class BraveTracer implements Tracer {
 	public static Tracer fromBrave(brave.Tracer tracer) {
 		return new BraveTracer(tracer);
 	}
+
 }
 
 class BraveSpanInScope implements Tracer.SpanInScope {
@@ -139,4 +145,5 @@ class BraveSpanInScope implements Tracer.SpanInScope {
 	public void close() {
 		this.delegate.close();
 	}
+
 }

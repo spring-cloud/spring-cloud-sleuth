@@ -60,7 +60,7 @@ class TraceWebAspect {
 	private static final Log log = org.apache.commons.logging.LogFactory.getLog(TraceWebAspect.class);
 
 	private final Tracer tracer;
-	
+
 	private final CurrentTraceContext currentTraceContext;
 
 	private final SpanNamer spanNamer;

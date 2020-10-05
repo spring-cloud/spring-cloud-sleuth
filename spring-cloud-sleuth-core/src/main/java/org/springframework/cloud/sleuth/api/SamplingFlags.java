@@ -19,11 +19,14 @@ package org.springframework.cloud.sleuth.api;
 import org.springframework.lang.Nullable;
 
 public interface SamplingFlags {
+
 	@Nullable
 	Boolean sampled();
 
-	// Setting this on SamplingFlags object isn't currently supported as there's no obvious use case
+	// Setting this on SamplingFlags object isn't currently supported as there's no
+	// obvious use case
 	boolean sampledLocal();
 
 	boolean debug();
+
 }

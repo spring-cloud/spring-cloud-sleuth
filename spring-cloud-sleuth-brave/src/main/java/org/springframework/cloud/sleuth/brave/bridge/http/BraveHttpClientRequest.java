@@ -26,7 +26,7 @@ public class BraveHttpClientRequest implements HttpClientRequest {
 	public BraveHttpClientRequest(brave.http.HttpClientRequest delegate) {
 		this.delegate = delegate;
 	}
-	
+
 	@Override
 	public String method() {
 		return this.delegate.method();
@@ -104,4 +104,5 @@ public class BraveHttpClientRequest implements HttpClientRequest {
 			}
 		};
 	}
+
 }

@@ -17,9 +17,10 @@
 package org.springframework.cloud.sleuth.api;
 
 public interface ScopedSpan {
+
 	/**
-	 * When true, no recording will take place, so no data is reported on finish. However, the trace
-	 * context is in scope until {@link #finish()} is called.
+	 * When true, no recording will take place, so no data is reported on finish. However,
+	 * the trace context is in scope until {@link #finish()} is called.
 	 *
 	 * @since 4.19
 	 */
@@ -30,7 +31,8 @@ public interface ScopedSpan {
 	 *
 	 * @since 4.19
 	 */
-	// This api is exposed as there's always a context in scope by definition, and the context is
+	// This api is exposed as there's always a context in scope by definition, and the
+	// context is
 	// needed for methods like BaggageField.updateValue
 	TraceContext context();
 
@@ -58,17 +60,19 @@ public interface ScopedSpan {
 	/**
 	 * Records an error that impacted this operation.
 	 *
-	 * <p><em>Note:</em> Calling this does not {@linkplain #finish() finish} the span.
+	 * <p>
+	 * <em>Note:</em> Calling this does not {@linkplain #finish() finish} the span.
 	 *
 	 * @since 4.19
 	 */
 	ScopedSpan error(Throwable throwable);
 
 	/**
-	 * Closes the scope associated with this span,
-	 * then reports the span complete, assigning the most precise duration possible.
+	 * Closes the scope associated with this span, then reports the span complete,
+	 * assigning the most precise duration possible.
 	 *
 	 * @since 4.19
 	 */
 	void finish();
+
 }

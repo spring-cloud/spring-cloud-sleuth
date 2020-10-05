@@ -40,4 +40,5 @@ public class BraveSpanCustomizer implements SpanCustomizer {
 	public SpanCustomizer annotate(String value) {
 		return new BraveSpanCustomizer(this.spanCustomizer.annotate(value));
 	}
+
 }

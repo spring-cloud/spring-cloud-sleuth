@@ -44,4 +44,5 @@ public class BraveSamplingFlags implements SamplingFlags {
 	public static SamplingFlags fromBrave(brave.propagation.SamplingFlags samplingFlags) {
 		return new BraveSamplingFlags(samplingFlags);
 	}
+
 }

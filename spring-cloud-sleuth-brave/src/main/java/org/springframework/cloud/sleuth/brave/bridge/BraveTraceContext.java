@@ -149,9 +149,11 @@ public class BraveTraceContext implements TraceContext {
 	public static TraceContext fromBrave(brave.propagation.TraceContext traceContext) {
 		return new BraveTraceContext(traceContext);
 	}
+
 }
 
 class BraveTraceContextBuilder implements TraceContext.Builder {
+
 	private final brave.propagation.TraceContext.Builder delegate;
 
 	BraveTraceContextBuilder(brave.propagation.TraceContext.Builder delegate) {
@@ -222,4 +224,5 @@ class BraveTraceContextBuilder implements TraceContext.Builder {
 	public TraceContext build() {
 		return new BraveTraceContext(this.delegate.build());
 	}
+
 }

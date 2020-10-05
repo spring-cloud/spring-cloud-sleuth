@@ -24,14 +24,15 @@ import java.util.concurrent.ExecutorService;
 import org.springframework.lang.Nullable;
 
 public interface CurrentTraceContext {
+
 	/** Returns the current span in scope or null if there isn't one. */
 	@Nullable
 	TraceContext get();
 
 	/**
-	 * Sets the current span in scope until the returned object is closed. It is a programming error
-	 * to drop or never close the result. Using try-with-resources is preferred for this reason.
-	 *
+	 * Sets the current span in scope until the returned object is closed. It is a
+	 * programming error to drop or never close the result. Using try-with-resources is
+	 * preferred for this reason.
 	 * @param context span to place into scope or null to clear the scope
 	 */
 	CurrentTraceContext.Scope newScope(@Nullable TraceContext context);
@@ -47,6 +48,10 @@ public interface CurrentTraceContext {
 	ExecutorService executorService(ExecutorService delegate);
 
 	interface Scope extends Closeable {
-		@Override void close();
+
+		@Override
+		void close();
+
 	}
+
 }

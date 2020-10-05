@@ -21,6 +21,7 @@ import org.springframework.cloud.sleuth.api.TraceContext;
 import org.springframework.lang.Nullable;
 
 public interface HttpClientHandler {
+
 	Span handleSend(HttpClientRequest request);
 
 	Span handleSendWithParent(HttpClientRequest request, @Nullable TraceContext parent);
@@ -28,4 +29,5 @@ public interface HttpClientHandler {
 	Span handleSend(HttpClientRequest request, Span span);
 
 	void handleReceive(HttpClientResponse response, Span span);
+
 }

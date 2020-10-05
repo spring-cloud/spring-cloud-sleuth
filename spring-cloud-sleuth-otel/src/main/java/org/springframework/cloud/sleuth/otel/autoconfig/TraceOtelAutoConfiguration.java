@@ -16,9 +16,6 @@
 
 package org.springframework.cloud.sleuth.otel.autoconfig;
 
-import io.opentelemetry.instrumentation.spring.autoconfigure.TracerAutoConfiguration;
-
-import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.AutoConfigureBefore;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.cloud.sleuth.autoconfig.TraceAutoConfiguration;
@@ -34,7 +31,6 @@ import org.springframework.context.annotation.Configuration;
 @Configuration(proxyBeanMethods = false)
 @ConditionalOnProperty(value = "spring.sleuth.enabled", havingValue = "true", matchIfMissing = true)
 @AutoConfigureBefore(TraceAutoConfiguration.class)
-@AutoConfigureAfter({ TracerAutoConfiguration.class, TraceOtelDisabledAutoConfiguration.class })
 public class TraceOtelAutoConfiguration {
 
 }

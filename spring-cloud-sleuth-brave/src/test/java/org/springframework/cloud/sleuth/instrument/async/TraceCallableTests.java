@@ -128,15 +128,15 @@ public class TraceCallableTests {
 
 	private Span whenCallableGetsSubmitted(Callable<Span> callable)
 			throws InterruptedException, java.util.concurrent.ExecutionException {
-		return this.executor.submit(new TraceCallable<>(BraveTracer.fromBrave(this.tracer), new DefaultSpanNamer(), callable))
+		return this.executor
+				.submit(new TraceCallable<>(BraveTracer.fromBrave(this.tracer), new DefaultSpanNamer(), callable))
 				.get();
 	}
 
 	private Span whenATraceKeepingCallableGetsSubmitted()
 			throws InterruptedException, java.util.concurrent.ExecutionException {
-		return this.executor.submit(
-				new TraceCallable<>(BraveTracer.fromBrave(this.tracer), new DefaultSpanNamer(), new TraceKeepingCallable()))
-				.get();
+		return this.executor.submit(new TraceCallable<>(BraveTracer.fromBrave(this.tracer), new DefaultSpanNamer(),
+				new TraceKeepingCallable())).get();
 	}
 
 	private Span whenNonTraceableCallableGetsSubmitted(Callable<Span> callable)

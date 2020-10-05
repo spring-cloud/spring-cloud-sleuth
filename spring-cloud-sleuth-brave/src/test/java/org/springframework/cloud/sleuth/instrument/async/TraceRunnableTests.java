@@ -124,7 +124,8 @@ public class TraceRunnableTests {
 	}
 
 	private void whenRunnableGetsSubmitted(Runnable runnable) throws Exception {
-		this.executor.submit(new TraceRunnable(BraveTracer.fromBrave(tracing.tracer()), new DefaultSpanNamer(), runnable))
+		this.executor
+				.submit(new TraceRunnable(BraveTracer.fromBrave(tracing.tracer()), new DefaultSpanNamer(), runnable))
 				.get();
 	}
 

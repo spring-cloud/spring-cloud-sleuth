@@ -40,4 +40,5 @@ public class BravePropagator implements Propagator {
 		}
 		return BraveTraceContext.fromBrave(extract.context());
 	}
+
 }

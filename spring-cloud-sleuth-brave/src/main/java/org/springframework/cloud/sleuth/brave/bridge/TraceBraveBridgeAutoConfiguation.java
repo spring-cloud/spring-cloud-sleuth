@@ -56,4 +56,5 @@ public class TraceBraveBridgeAutoConfiguation {
 	Propagator bravePropagator(Propagation.Factory factory) {
 		return new BravePropagator(factory);
 	}
+
 }

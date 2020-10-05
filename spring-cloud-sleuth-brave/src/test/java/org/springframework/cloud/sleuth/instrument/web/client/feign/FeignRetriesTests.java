@@ -79,12 +79,14 @@ public class FeignRetriesTests {
 	Tracing tracing = Tracing.newBuilder().currentTraceContext(this.currentTraceContext).addSpanHandler(this.spans)
 			.build();
 
-	HttpClientHandler handler = BraveHttpClientHandler.fromBrave(brave.http.HttpClientHandler.create(HttpTracing.create(this.tracing)));
+	HttpClientHandler handler = BraveHttpClientHandler
+			.fromBrave(brave.http.HttpClientHandler.create(HttpTracing.create(this.tracing)));
 
 	@BeforeEach
 	@AfterEach
 	public void setup() {
-		BDDMockito.given(this.beanFactory.getBean(CurrentTraceContext.class)).willReturn(BraveCurrentTraceContext.fromBrave(this.currentTraceContext));
+		BDDMockito.given(this.beanFactory.getBean(CurrentTraceContext.class))
+				.willReturn(BraveCurrentTraceContext.fromBrave(this.currentTraceContext));
 		BDDMockito.given(this.beanFactory.getBean(HttpClientHandler.class)).willReturn(this.handler);
 	}
 
@@ -101,7 +103,9 @@ public class FeignRetriesTests {
 		};
 		String url = "http://localhost:" + this.server.getPort();
 
-		TestInterface api = Feign.builder().client(new TracingFeignClient(BraveCurrentTraceContext.fromBrave(this.currentTraceContext), this.handler, client))
+		TestInterface api = Feign.builder()
+				.client(new TracingFeignClient(BraveCurrentTraceContext.fromBrave(this.currentTraceContext),
+						this.handler, client))
 				.target(TestInterface.class, url);
 
 		try {
@@ -130,10 +134,13 @@ public class FeignRetriesTests {
 						.build();
 			}
 		};
-		TestInterface api = Feign.builder().client(new TracingFeignClient(BraveCurrentTraceContext.fromBrave(this.currentTraceContext), this.handler, (request, options) -> {
-			atomicInteger.incrementAndGet();
-			return client.execute(request, options);
-		})).target(TestInterface.class, url);
+		TestInterface api = Feign.builder()
+				.client(new TracingFeignClient(BraveCurrentTraceContext.fromBrave(this.currentTraceContext),
+						this.handler, (request, options) -> {
+							atomicInteger.incrementAndGet();
+							return client.execute(request, options);
+						}))
+				.target(TestInterface.class, url);
 
 		then(api.decodedPost()).isEqualTo("OK");
 		// request interception should take place only twice (1st request & 2nd retry)

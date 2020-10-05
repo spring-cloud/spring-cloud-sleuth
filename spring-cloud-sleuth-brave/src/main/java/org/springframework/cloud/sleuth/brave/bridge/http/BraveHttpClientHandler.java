@@ -28,7 +28,8 @@ public class BraveHttpClientHandler implements HttpClientHandler {
 
 	final brave.http.HttpClientHandler<brave.http.HttpClientRequest, brave.http.HttpClientResponse> delegate;
 
-	public BraveHttpClientHandler(brave.http.HttpClientHandler<brave.http.HttpClientRequest, brave.http.HttpClientResponse> delegate) {
+	public BraveHttpClientHandler(
+			brave.http.HttpClientHandler<brave.http.HttpClientRequest, brave.http.HttpClientResponse> delegate) {
 		this.delegate = delegate;
 	}
 
@@ -39,12 +40,14 @@ public class BraveHttpClientHandler implements HttpClientHandler {
 
 	@Override
 	public Span handleSendWithParent(HttpClientRequest request, TraceContext parent) {
-		return BraveSpan.fromBrave(this.delegate.handleSendWithParent(BraveHttpClientRequest.toBrave(request), BraveTraceContext.toBrave(parent)));
+		return BraveSpan.fromBrave(this.delegate.handleSendWithParent(BraveHttpClientRequest.toBrave(request),
+				BraveTraceContext.toBrave(parent)));
 	}
 
 	@Override
 	public Span handleSend(HttpClientRequest request, Span span) {
-		return BraveSpan.fromBrave(this.delegate.handleSend(BraveHttpClientRequest.toBrave(request), BraveSpan.toBrave(span)));
+		return BraveSpan
+				.fromBrave(this.delegate.handleSend(BraveHttpClientRequest.toBrave(request), BraveSpan.toBrave(span)));
 	}
 
 	@Override
@@ -52,7 +55,8 @@ public class BraveHttpClientHandler implements HttpClientHandler {
 		this.delegate.handleReceive(BraveHttpClientResponse.toBrave(response), BraveSpan.toBrave(span));
 	}
 
-	public static HttpClientHandler fromBrave(brave.http.HttpClientHandler<brave.http.HttpClientRequest, brave.http.HttpClientResponse> handler) {
+	public static HttpClientHandler fromBrave(
+			brave.http.HttpClientHandler<brave.http.HttpClientRequest, brave.http.HttpClientResponse> handler) {
 		return new BraveHttpClientHandler(handler);
 	}
 

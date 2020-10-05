@@ -26,7 +26,8 @@ public class BraveHttpServerHandler implements HttpServerHandler {
 
 	final brave.http.HttpServerHandler<brave.http.HttpServerRequest, brave.http.HttpServerResponse> delegate;
 
-	public BraveHttpServerHandler(brave.http.HttpServerHandler<brave.http.HttpServerRequest, brave.http.HttpServerResponse> delegate) {
+	public BraveHttpServerHandler(
+			brave.http.HttpServerHandler<brave.http.HttpServerRequest, brave.http.HttpServerResponse> delegate) {
 		this.delegate = delegate;
 	}
 
@@ -39,4 +40,5 @@ public class BraveHttpServerHandler implements HttpServerHandler {
 	public void handleSend(HttpServerResponse response, Span span) {
 		this.delegate.handleSend(BraveHttpServerResponse.toBrave(response), BraveSpan.toBrave(span));
 	}
+
 }

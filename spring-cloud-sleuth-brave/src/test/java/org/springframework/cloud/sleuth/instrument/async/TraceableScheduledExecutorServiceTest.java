@@ -168,7 +168,8 @@ public class TraceableScheduledExecutorServiceTest {
 	}
 
 	BeanFactory beanFactory() {
-		BDDMockito.given(this.beanFactory.getBean(Tracer.class)).willReturn(BraveTracer.fromBrave(this.tracing.tracer()));
+		BDDMockito.given(this.beanFactory.getBean(Tracer.class))
+				.willReturn(BraveTracer.fromBrave(this.tracing.tracer()));
 		BDDMockito.given(this.beanFactory.getBean(SpanNamer.class)).willReturn(new DefaultSpanNamer());
 		SleuthContextListenerAccessor.set(this.beanFactory, true);
 		return this.beanFactory;

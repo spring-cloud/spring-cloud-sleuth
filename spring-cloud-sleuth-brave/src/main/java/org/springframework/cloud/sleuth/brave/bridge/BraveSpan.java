@@ -131,4 +131,5 @@ public class BraveSpan implements Span {
 	public static Span fromBrave(brave.Span span) {
 		return new BraveSpan(span);
 	}
+
 }

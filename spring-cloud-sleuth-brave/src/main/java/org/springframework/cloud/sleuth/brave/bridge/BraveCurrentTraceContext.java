@@ -73,6 +73,7 @@ public class BraveCurrentTraceContext implements CurrentTraceContext {
 	public static CurrentTraceContext fromBrave(brave.propagation.CurrentTraceContext context) {
 		return new BraveCurrentTraceContext(context);
 	}
+
 }
 
 class BraveScope implements CurrentTraceContext.Scope {
@@ -87,4 +88,5 @@ class BraveScope implements CurrentTraceContext.Scope {
 	public void close() {
 		this.delegate.close();
 	}
+
 }

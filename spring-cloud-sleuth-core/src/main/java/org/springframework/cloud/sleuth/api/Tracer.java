@@ -33,13 +33,17 @@ public interface Tracer {
 
 	<T> Span nextSpan(SamplerFunction<T> samplerFunction, T arg);
 
-	<T> Span nextSpanWithParent(SamplerFunction<T> samplerFunction, T arg,
-			@Nullable TraceContext parent);
+	<T> Span nextSpanWithParent(SamplerFunction<T> samplerFunction, T arg, @Nullable TraceContext parent);
 
-	// this api is needed to make tools such as executors which need to carry the invocation context
+	// this api is needed to make tools such as executors which need to carry the
+	// invocation context
 	ScopedSpan startScopedSpanWithParent(String name, @Nullable TraceContext parent);
 
 	interface SpanInScope extends Closeable {
-		@Override void close();
+
+		@Override
+		void close();
+
 	}
+
 }

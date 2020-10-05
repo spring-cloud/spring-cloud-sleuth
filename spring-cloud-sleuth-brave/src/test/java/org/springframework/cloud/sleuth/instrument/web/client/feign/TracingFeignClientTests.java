@@ -79,7 +79,8 @@ public class TracingFeignClientTests {
 
 	@BeforeEach
 	public void setup() {
-		this.traceFeignClient = TracingFeignClient.create(BraveCurrentTraceContext.fromBrave(this.currentTraceContext), this.handler, this.client);
+		this.traceFeignClient = TracingFeignClient.create(BraveCurrentTraceContext.fromBrave(this.currentTraceContext),
+				this.handler, this.client);
 	}
 
 	@AfterEach

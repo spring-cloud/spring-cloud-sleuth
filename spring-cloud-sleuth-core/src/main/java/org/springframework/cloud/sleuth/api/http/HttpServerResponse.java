@@ -20,6 +20,7 @@ import org.springframework.cloud.sleuth.api.Span;
 import org.springframework.lang.Nullable;
 
 public interface HttpServerResponse extends HttpResponse {
+
 	@Override
 	default Span.Kind spanKind() {
 		return Span.Kind.SERVER;
@@ -34,4 +35,5 @@ public interface HttpServerResponse extends HttpResponse {
 	default Throwable error() {
 		return null;
 	}
+
 }

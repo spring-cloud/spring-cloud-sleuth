@@ -61,4 +61,5 @@ public class BraveScopedSpan implements ScopedSpan {
 	public void finish() {
 		this.span.finish();
 	}
+
 }

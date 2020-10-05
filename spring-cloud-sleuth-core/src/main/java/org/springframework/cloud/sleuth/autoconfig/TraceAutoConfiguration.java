@@ -19,6 +19,12 @@ package org.springframework.cloud.sleuth.autoconfig;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.cloud.sleuth.SpanNamer;
+import org.springframework.cloud.sleuth.api.SamplerFunction;
+import org.springframework.cloud.sleuth.api.SamplingFlags;
+import org.springframework.cloud.sleuth.api.ScopedSpan;
+import org.springframework.cloud.sleuth.api.Span;
+import org.springframework.cloud.sleuth.api.SpanCustomizer;
+import org.springframework.cloud.sleuth.api.TraceContext;
 import org.springframework.cloud.sleuth.api.Tracer;
 import org.springframework.cloud.sleuth.internal.DefaultSpanNamer;
 import org.springframework.context.annotation.Bean;
@@ -40,7 +46,82 @@ public class TraceAutoConfiguration {
 	@Bean
 	@ConditionalOnMissingBean
 	Tracer defaultTracer() {
-		return null;
+		return new Tracer() {
+			@Override
+			public Span newTrace() {
+				return null;
+			}
+
+			@Override
+			public Span joinSpan(TraceContext context) {
+				return null;
+			}
+
+			@Override
+			public Span newChild(TraceContext parent) {
+				return null;
+			}
+
+			@Override
+			public Span nextSpan(TraceContext extracted) {
+				return null;
+			}
+
+			@Override
+			public Span nextSpan(SamplingFlags extracted) {
+				return null;
+			}
+
+			@Override
+			public Span toSpan(TraceContext context) {
+				return null;
+			}
+
+			@Override
+			public SpanInScope withSpanInScope(Span span) {
+				return null;
+			}
+
+			@Override
+			public SpanCustomizer currentSpanCustomizer() {
+				return null;
+			}
+
+			@Override
+			public Span currentSpan() {
+				return null;
+			}
+
+			@Override
+			public Span nextSpan() {
+				return null;
+			}
+
+			@Override
+			public ScopedSpan startScopedSpan(String name) {
+				return null;
+			}
+
+			@Override
+			public <T> ScopedSpan startScopedSpan(String name, SamplerFunction<T> samplerFunction, T arg) {
+				return null;
+			}
+
+			@Override
+			public <T> Span nextSpan(SamplerFunction<T> samplerFunction, T arg) {
+				return null;
+			}
+
+			@Override
+			public <T> Span nextSpanWithParent(SamplerFunction<T> samplerFunction, T arg, TraceContext parent) {
+				return null;
+			}
+
+			@Override
+			public ScopedSpan startScopedSpanWithParent(String name, TraceContext parent) {
+				return null;
+			}
+		};
 	}
 
 	@Bean

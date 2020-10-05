@@ -16,8 +16,11 @@
 
 package org.springframework.cloud.sleuth.brave.bridge.http;
 
+import java.net.InetSocketAddress;
+
 import org.springframework.cloud.sleuth.api.Span;
 import org.springframework.cloud.sleuth.api.http.HttpServerRequest;
+import org.springframework.http.server.reactive.ServerHttpRequest;
 
 public class BraveHttpServerRequest implements HttpServerRequest {
 
@@ -26,7 +29,7 @@ public class BraveHttpServerRequest implements HttpServerRequest {
 	public BraveHttpServerRequest(brave.http.HttpServerRequest delegate) {
 		this.delegate = delegate;
 	}
-	
+
 	@Override
 	public String method() {
 		return this.delegate.method();
@@ -95,6 +98,29 @@ public class BraveHttpServerRequest implements HttpServerRequest {
 			public String header(String name) {
 				return request.header(name);
 			}
+
+			@Override
+			public boolean parseClientIpAndPort(brave.Span span) {
+				boolean clientIpAndPortParsed = super.parseClientIpAndPort(span);
+				if (clientIpAndPortParsed) {
+					return true;
+				}
+				return resolveFromInetAddress(span);
+			}
+
+			private boolean resolveFromInetAddress(brave.Span span) {
+				Object delegate = request.unwrap();
+				if (delegate instanceof ServerHttpRequest) {
+					InetSocketAddress addr = ((ServerHttpRequest) delegate).getRemoteAddress();
+					if (addr == null) {
+						return false;
+					}
+					return span.remoteIpAndPort(addr.getAddress().getHostAddress(), addr.getPort());
+				}
+				return false;
+			}
+
 		};
 	}
+
 }

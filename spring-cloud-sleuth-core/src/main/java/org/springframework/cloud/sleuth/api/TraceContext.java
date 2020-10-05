@@ -58,6 +58,7 @@ public interface TraceContext extends SamplingFlags {
 	String spanIdString();
 
 	interface Builder {
+
 		Builder traceIdHigh(long traceIdHigh);
 
 		Builder traceId(long traceId);
@@ -83,5 +84,7 @@ public interface TraceContext extends SamplingFlags {
 		Builder addExtra(Object extra);
 
 		TraceContext build();
+
 	}
+
 }

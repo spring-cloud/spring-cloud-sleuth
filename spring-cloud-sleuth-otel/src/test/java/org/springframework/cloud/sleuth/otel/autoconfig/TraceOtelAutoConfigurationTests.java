@@ -16,7 +16,6 @@
 
 package org.springframework.cloud.sleuth.otel.autoconfig;
 
-import io.opentelemetry.instrumentation.spring.autoconfigure.TracerAutoConfiguration;
 import io.opentelemetry.trace.Tracer;
 import org.junit.jupiter.api.Test;
 
@@ -46,8 +45,7 @@ class TraceOtelAutoConfigurationTests {
 	}
 
 	private AutoConfigurations otelConfiguration() {
-		return AutoConfigurations.of(TraceAutoConfiguration.class, TracerAutoConfiguration.class,
-				TraceOtelAutoConfiguration.class);
+		return AutoConfigurations.of(TraceAutoConfiguration.class, TraceOtelAutoConfiguration.class);
 	}
 
 	@Configuration

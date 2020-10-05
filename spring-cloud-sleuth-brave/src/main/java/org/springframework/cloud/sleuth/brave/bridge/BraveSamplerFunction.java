@@ -35,7 +35,8 @@ public class BraveSamplerFunction<T> implements SamplerFunction<T> {
 		return this.samplerFunction.trySample(arg);
 	}
 
-	public static <T, V> brave.sampler.SamplerFunction<V> toBrave(SamplerFunction<T> samplerFunction, Class<T> sleuthInput, Class<V> braveInput) {
+	public static <T, V> brave.sampler.SamplerFunction<V> toBrave(SamplerFunction<T> samplerFunction,
+			Class<T> sleuthInput, Class<V> braveInput) {
 		if (sleuthInput.equals(HttpRequest.class) && braveInput.equals(brave.http.HttpRequest.class)) {
 			return arg -> samplerFunction.trySample((T) BraveHttpRequest.fromBrave((brave.http.HttpRequest) arg));
 		}
@@ -43,7 +44,9 @@ public class BraveSamplerFunction<T> implements SamplerFunction<T> {
 		return SamplerFunctions.deferDecision();
 	}
 
-	public static brave.sampler.SamplerFunction<brave.http.HttpRequest> toHttpBrave(SamplerFunction<HttpRequest> samplerFunction) {
+	public static brave.sampler.SamplerFunction<brave.http.HttpRequest> toHttpBrave(
+			SamplerFunction<HttpRequest> samplerFunction) {
 		return arg -> samplerFunction.trySample(BraveHttpRequest.fromBrave((brave.http.HttpRequest) arg));
 	}
+
 }

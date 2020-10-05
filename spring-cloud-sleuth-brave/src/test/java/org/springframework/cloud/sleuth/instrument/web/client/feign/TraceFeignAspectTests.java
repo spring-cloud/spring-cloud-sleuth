@@ -89,7 +89,8 @@ public class TraceFeignAspectTests {
 
 	@Test
 	public void should_not_wrap_traced_feign_client_in_trace_representation() throws Throwable {
-		given(this.pjp.getTarget()).willReturn(new TracingFeignClient(BraveCurrentTraceContext.fromBrave(this.currentTraceContext), this.handler, this.client));
+		given(this.pjp.getTarget()).willReturn(new TracingFeignClient(
+				BraveCurrentTraceContext.fromBrave(this.currentTraceContext), this.handler, this.client));
 
 		this.traceFeignAspect.feignClientWasCalled(this.pjp);
 

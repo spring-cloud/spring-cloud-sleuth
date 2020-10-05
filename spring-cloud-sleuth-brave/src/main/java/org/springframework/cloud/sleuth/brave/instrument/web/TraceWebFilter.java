@@ -332,24 +332,6 @@ final class TraceWebFilter implements WebFilter, Ordered {
 			return delegate;
 		}
 
-		// TODO: [OTEL] Move to a bean or sth
-		/*@Override
-		public boolean parseClientIpAndPort(Span span) {
-			boolean clientIpAndPortParsed = super.parseClientIpAndPort(span);
-			if (clientIpAndPortParsed) {
-				return true;
-			}
-			return resolveFromInetAddress(span);
-		}
-
-		private boolean resolveFromInetAddress(Span span) {
-			InetSocketAddress addr = delegate.getRemoteAddress();
-			if (addr == null) {
-				return false;
-			}
-			return span.remoteIpAndPort(addr.getAddress().getHostAddress(), addr.getPort());
-		}*/
-
 		@Override
 		public String method() {
 			return delegate.getMethodValue();
@@ -414,6 +396,7 @@ final class TraceWebFilter implements WebFilter, Ordered {
 		public Throwable error() {
 			return this.throwable;
 		}
+
 	}
 
 }

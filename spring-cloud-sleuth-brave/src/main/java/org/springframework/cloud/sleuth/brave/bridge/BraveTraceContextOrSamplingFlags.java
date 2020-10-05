@@ -23,6 +23,8 @@ import org.springframework.cloud.sleuth.api.TraceContext;
 public class BraveTraceContextOrSamplingFlags {
 
 	public static TraceContext create(TraceContext braveTraceContext) {
-		return new BraveTraceContext(TraceContextOrSamplingFlags.create(((BraveTraceContext) braveTraceContext).traceContext).context());
+		return new BraveTraceContext(
+				TraceContextOrSamplingFlags.create(((BraveTraceContext) braveTraceContext).traceContext).context());
 	}
+
 }
