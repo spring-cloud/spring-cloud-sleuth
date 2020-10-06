@@ -16,39 +16,33 @@
 
 package org.springframework.cloud.sleuth.instrument.async;
 
-import java.util.concurrent.Executor;
-
-import org.apache.commons.configuration.beanutils.BeanFactory;
+import org.assertj.core.api.BDDAssertions;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.Mockito;
 
 import org.springframework.scheduling.annotation.AsyncConfigurer;
-
-import static org.assertj.core.api.BDDAssertions.then;
 
 /**
  * @author Marcin Grzejszczak
  */
-@ExtendWith(MockitoExtension.class)
-public class LazyTraceAsyncCustomizerTest {
-
-	@Mock
-	BeanFactory beanFactory;
-
-	@Mock
-	AsyncConfigurer asyncConfigurer;
-
-	@InjectMocks
-	LazyTraceAsyncCustomizer lazyTraceAsyncCustomizer;
+public class AsyncCustomAutoConfigurationTest {
 
 	@Test
-	public void should_wrap_async_executor_in_trace_version() throws Exception {
-		Executor executor = this.lazyTraceAsyncCustomizer.getAsyncExecutor();
+	public void should_return_bean_when_its_not_a_async_configurer() throws Exception {
+		AsyncCustomAutoConfiguration configuration = new AsyncCustomAutoConfiguration();
 
-		then(executor).isExactlyInstanceOf(LazyTraceExecutor.class);
+		Object bean = configuration.postProcessAfterInitialization(new Object(), "someName");
+
+		BDDAssertions.then(bean).isNotInstanceOf(LazyTraceAsyncCustomizer.class);
+	}
+
+	@Test
+	public void should_return_lazy_async_configurer_when_bean_is_async_configurer() throws Exception {
+		AsyncCustomAutoConfiguration configuration = new AsyncCustomAutoConfiguration();
+
+		Object bean = configuration.postProcessAfterInitialization(Mockito.mock(AsyncConfigurer.class), "someName");
+
+		BDDAssertions.then(bean).isInstanceOf(LazyTraceAsyncCustomizer.class);
 	}
 
 }

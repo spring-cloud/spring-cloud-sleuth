@@ -16,13 +16,12 @@
 
 package org.springframework.cloud.sleuth.instrument.async;
 
+import org.assertj.core.api.BDDAssertions;
 import org.junit.jupiter.api.Test;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.ConfigurableApplicationContext;
-
-import static org.assertj.core.api.BDDAssertions.then;
 
 @SpringBootTest(classes = SleuthContextListener.class)
 class SleuthContextListenerTest {
@@ -34,16 +33,16 @@ class SleuthContextListenerTest {
 	void should_be_usable_using_context() {
 		SleuthContextListener listener = SleuthContextListener.getBean(applicationContext);
 
-		then(listener).isNotNull();
-		then(listener.isUnusable()).isFalse();
+		BDDAssertions.then(listener).isNotNull();
+		BDDAssertions.then(listener.isUnusable()).isFalse();
 	}
 
 	@Test
 	void should_be_usable_using_beanfactory() {
 		SleuthContextListener listener = SleuthContextListener.getBean(applicationContext.getBeanFactory());
 
-		then(listener).isNotNull();
-		then(listener.isUnusable()).isFalse();
+		BDDAssertions.then(listener).isNotNull();
+		BDDAssertions.then(listener.isUnusable()).isFalse();
 	}
 
 }

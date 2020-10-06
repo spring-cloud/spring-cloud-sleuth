@@ -32,11 +32,9 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import brave.Tracing;
 import org.aopalliance.aop.Advice;
 import org.assertj.core.api.BDDAssertions;
 import org.awaitility.Awaitility;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -54,9 +52,6 @@ import org.springframework.core.task.SimpleAsyncTaskExecutor;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.security.concurrent.DelegatingSecurityContextExecutorService;
 
-import static org.assertj.core.api.BDDAssertions.then;
-import static org.assertj.core.api.BDDAssertions.thenThrownBy;
-
 /**
  * @author Marcin Grzejszczak
  * @author Denys Ivano
@@ -68,8 +63,6 @@ public class ExecutorBeanPostProcessorTests {
 	@Mock(lenient = true)
 	BeanFactory beanFactory;
 
-	Tracing tracing = Tracing.newBuilder().build();
-
 	private SleuthAsyncProperties sleuthAsyncProperties;
 
 	@BeforeEach
@@ -78,17 +71,12 @@ public class ExecutorBeanPostProcessorTests {
 		Mockito.when(this.beanFactory.getBean(SleuthAsyncProperties.class)).thenReturn(this.sleuthAsyncProperties);
 	}
 
-	@AfterEach
-	public void clear() {
-		this.tracing.close();
-	}
-
 	@Test
 	public void should_create_a_cglib_proxy_by_default() throws Exception {
 		Object o = new ExecutorBeanPostProcessor(this.beanFactory).postProcessAfterInitialization(new Foo(), "foo");
 
-		then(o).isInstanceOf(Foo.class);
-		then(AopUtils.isCglibProxy(o)).isTrue();
+		BDDAssertions.then(o).isInstanceOf(Foo.class);
+		BDDAssertions.then(AopUtils.isCglibProxy(o)).isTrue();
 	}
 
 	@Test
@@ -97,7 +85,7 @@ public class ExecutorBeanPostProcessorTests {
 
 		Object o = new ExecutorBeanPostProcessor(this.beanFactory).postProcessAfterInitialization(service, "foo");
 
-		then(o).isInstanceOf(TraceableExecutorService.class);
+		BDDAssertions.then(o).isInstanceOf(TraceableExecutorService.class);
 		service.shutdown();
 	}
 
@@ -108,7 +96,7 @@ public class ExecutorBeanPostProcessorTests {
 
 		Object o = new ExecutorBeanPostProcessor(this.beanFactory).postProcessAfterInitialization(service, "foo");
 
-		then(o).isInstanceOf(TraceableScheduledExecutorService.class);
+		BDDAssertions.then(o).isInstanceOf(TraceableScheduledExecutorService.class);
 		service.shutdown();
 	}
 
@@ -118,7 +106,7 @@ public class ExecutorBeanPostProcessorTests {
 
 		Object o = new ExecutorBeanPostProcessor(this.beanFactory).postProcessAfterInitialization(service, "foo");
 
-		then(o).isSameAs(service);
+		BDDAssertions.then(o).isSameAs(service);
 	}
 
 	@Test
@@ -127,7 +115,7 @@ public class ExecutorBeanPostProcessorTests {
 
 		Object o = new ExecutorBeanPostProcessor(this.beanFactory).postProcessAfterInitialization(service, "foo");
 
-		then(o).isSameAs(service);
+		BDDAssertions.then(o).isSameAs(service);
 	}
 
 	@Test
@@ -136,7 +124,7 @@ public class ExecutorBeanPostProcessorTests {
 
 		Object o = new ExecutorBeanPostProcessor(this.beanFactory).postProcessAfterInitialization(service, "foo");
 
-		then(o).isSameAs(service);
+		BDDAssertions.then(o).isSameAs(service);
 	}
 
 	@Test
@@ -145,7 +133,7 @@ public class ExecutorBeanPostProcessorTests {
 
 		Object o = new ExecutorBeanPostProcessor(this.beanFactory).postProcessAfterInitialization(service, "foo");
 
-		then(o).isSameAs(service);
+		BDDAssertions.then(o).isSameAs(service);
 	}
 
 	@Test
@@ -154,7 +142,7 @@ public class ExecutorBeanPostProcessorTests {
 
 		Object o = new ExecutorBeanPostProcessor(this.beanFactory).postProcessAfterInitialization(service, "foo");
 
-		then(o).isSameAs(service);
+		BDDAssertions.then(o).isSameAs(service);
 	}
 
 	@Test
@@ -171,7 +159,7 @@ public class ExecutorBeanPostProcessorTests {
 
 		Object wrappedService = bpp.postProcessAfterInitialization(service, "foo");
 
-		then(wrappedService).isInstanceOf(TraceableScheduledExecutorService.class);
+		BDDAssertions.then(wrappedService).isInstanceOf(TraceableScheduledExecutorService.class);
 		service.shutdown();
 	}
 
@@ -180,8 +168,8 @@ public class ExecutorBeanPostProcessorTests {
 		Object o = new ExecutorBeanPostProcessor(this.beanFactory)
 				.postProcessAfterInitialization(new FooThreadPoolTaskExecutor(), "foo");
 
-		then(o).isInstanceOf(FooThreadPoolTaskExecutor.class);
-		then(AopUtils.isCglibProxy(o)).isTrue();
+		BDDAssertions.then(o).isInstanceOf(FooThreadPoolTaskExecutor.class);
+		BDDAssertions.then(AopUtils.isCglibProxy(o)).isTrue();
 	}
 
 	@Test
@@ -196,7 +184,7 @@ public class ExecutorBeanPostProcessorTests {
 			}
 		};
 
-		thenThrownBy(() -> bpp.postProcessAfterInitialization(taskExecutor, "foo"))
+		BDDAssertions.thenThrownBy(() -> bpp.postProcessAfterInitialization(taskExecutor, "foo"))
 				.isInstanceOf(AopConfigException.class).hasMessage("foo");
 	}
 
@@ -213,7 +201,7 @@ public class ExecutorBeanPostProcessorTests {
 
 		Object o = bpp.postProcessAfterInitialization(service, "foo");
 
-		then(o).isInstanceOf(TraceableExecutorService.class);
+		BDDAssertions.then(o).isInstanceOf(TraceableExecutorService.class);
 	}
 
 	@Test
@@ -223,7 +211,7 @@ public class ExecutorBeanPostProcessorTests {
 
 		ExecutorService o = (ExecutorService) bpp.postProcessAfterInitialization(service, "foo");
 
-		thenThrownBy(() -> o.submit((Callable<Object>) () -> "hello")).hasMessage("foo")
+		BDDAssertions.thenThrownBy(() -> o.submit((Callable<Object>) () -> "hello")).hasMessage("foo")
 				.isInstanceOf(IllegalStateException.class);
 	}
 
@@ -305,14 +293,14 @@ public class ExecutorBeanPostProcessorTests {
 		Executor executor = Runnable::run;
 		Executor wrappedExecutor = (Executor) beanPostProcessor.postProcessAfterInitialization(executor, "executor");
 
-		then(AopUtils.isJdkDynamicProxy(wrappedExecutor)).isTrue();
-		then(AopUtils.isCglibProxy(wrappedExecutor)).isFalse();
+		BDDAssertions.then(AopUtils.isJdkDynamicProxy(wrappedExecutor)).isTrue();
+		BDDAssertions.then(AopUtils.isCglibProxy(wrappedExecutor)).isFalse();
 
 		AtomicBoolean wasCalled = new AtomicBoolean(false);
 		wrappedExecutor.execute(() -> {
 			wasCalled.set(true);
 		});
-		then(wasCalled).isTrue();
+		BDDAssertions.then(wasCalled).isTrue();
 	}
 
 	@Test
@@ -322,11 +310,11 @@ public class ExecutorBeanPostProcessorTests {
 		ScheduledThreadPoolExecutor wrappedExecutor = (ScheduledThreadPoolExecutor) beanPostProcessor
 				.postProcessAfterInitialization(executor, "executor");
 
-		then(AopUtils.isCglibProxy(wrappedExecutor)).isTrue();
+		BDDAssertions.then(AopUtils.isCglibProxy(wrappedExecutor)).isTrue();
 
 		AtomicBoolean wasCalled = new AtomicBoolean(false);
 		wrappedExecutor.execute(() -> wasCalled.set(true));
-		Awaitility.await().untilAsserted(() -> then(wasCalled).isTrue());
+		Awaitility.await().untilAsserted(() -> BDDAssertions.then(wasCalled).isTrue());
 	}
 
 	@Test
@@ -337,9 +325,9 @@ public class ExecutorBeanPostProcessorTests {
 		ExecutorService wrappedExecutor = (ExecutorService) beanPostProcessor
 				.postProcessAfterInitialization(executorService, "executorService");
 
-		then(AopUtils.isJdkDynamicProxy(wrappedExecutor)).isTrue();
-		then(AopUtils.isCglibProxy(wrappedExecutor)).isFalse();
-		then(wrappedExecutor.submit(() -> "done").get()).isEqualTo("done");
+		BDDAssertions.then(AopUtils.isJdkDynamicProxy(wrappedExecutor)).isTrue();
+		BDDAssertions.then(AopUtils.isCglibProxy(wrappedExecutor)).isFalse();
+		BDDAssertions.then(wrappedExecutor.submit(() -> "done").get()).isEqualTo("done");
 		wrappedExecutor.shutdownNow();
 	}
 
@@ -350,9 +338,9 @@ public class ExecutorBeanPostProcessorTests {
 		AsyncTaskExecutor wrappedExecutor = (AsyncTaskExecutor) beanPostProcessor
 				.postProcessAfterInitialization(new DirectTaskExecutor(), "taskExecutor");
 
-		then(AopUtils.isJdkDynamicProxy(wrappedExecutor)).isTrue();
-		then(AopUtils.isCglibProxy(wrappedExecutor)).isFalse();
-		then(wrappedExecutor.submit(() -> "done").get()).isEqualTo("done");
+		BDDAssertions.then(AopUtils.isJdkDynamicProxy(wrappedExecutor)).isTrue();
+		BDDAssertions.then(AopUtils.isCglibProxy(wrappedExecutor)).isFalse();
+		BDDAssertions.then(wrappedExecutor.submit(() -> "done").get()).isEqualTo("done");
 	}
 
 	@Test
@@ -363,9 +351,9 @@ public class ExecutorBeanPostProcessorTests {
 		ThreadPoolTaskExecutor wrappedTaskExecutor = (ThreadPoolTaskExecutor) postProcessor
 				.postProcessAfterInitialization(threadPoolTaskExecutor, "threadPoolTaskExecutor");
 
-		then(wrappedTaskExecutor).isInstanceOf(LazyTraceThreadPoolTaskExecutor.class);
-		then(AopUtils.isCglibProxy(wrappedTaskExecutor)).isFalse();
-		then(AopUtils.isJdkDynamicProxy(wrappedTaskExecutor)).isFalse();
+		BDDAssertions.then(wrappedTaskExecutor).isInstanceOf(LazyTraceThreadPoolTaskExecutor.class);
+		BDDAssertions.then(AopUtils.isCglibProxy(wrappedTaskExecutor)).isFalse();
+		BDDAssertions.then(AopUtils.isJdkDynamicProxy(wrappedTaskExecutor)).isFalse();
 		threadPoolTaskExecutor.shutdown();
 	}
 
@@ -375,14 +363,14 @@ public class ExecutorBeanPostProcessorTests {
 
 		boolean isProxyNeeded = new ExecutorBeanPostProcessor(this.beanFactory).isProxyNeeded("fooExecutor");
 
-		then(isProxyNeeded).isFalse();
+		BDDAssertions.then(isProxyNeeded).isFalse();
 	}
 
 	@Test
 	public void proxy_is_needed() throws Exception {
 		boolean isProxyNeeded = new ExecutorBeanPostProcessor(this.beanFactory).isProxyNeeded("fooExecutor");
 
-		then(isProxyNeeded).isTrue();
+		BDDAssertions.then(isProxyNeeded).isTrue();
 	}
 
 	@Test
@@ -392,8 +380,8 @@ public class ExecutorBeanPostProcessorTests {
 		Object o = new ExecutorBeanPostProcessor(this.beanFactory)
 				.postProcessAfterInitialization(new ThreadPoolTaskExecutor(), "fooExecutor");
 
-		then(o).isInstanceOf(ThreadPoolTaskExecutor.class);
-		then(AopUtils.isCglibProxy(o)).isFalse();
+		BDDAssertions.then(o).isInstanceOf(ThreadPoolTaskExecutor.class);
+		BDDAssertions.then(AopUtils.isCglibProxy(o)).isFalse();
 	}
 
 	@Test
@@ -401,9 +389,9 @@ public class ExecutorBeanPostProcessorTests {
 		Object o = new ExecutorBeanPostProcessor(this.beanFactory)
 				.postProcessAfterInitialization(new RejectedExecutionExecutor(), "fooExecutor");
 
-		then(o).isInstanceOf(RejectedExecutionExecutor.class);
-		then(AopUtils.isCglibProxy(o)).isTrue();
-		thenThrownBy(() -> ((RejectedExecutionExecutor) o).execute(() -> {
+		BDDAssertions.then(o).isInstanceOf(RejectedExecutionExecutor.class);
+		BDDAssertions.then(AopUtils.isCglibProxy(o)).isTrue();
+		BDDAssertions.thenThrownBy(() -> ((RejectedExecutionExecutor) o).execute(() -> {
 		})).isInstanceOf(RejectedExecutionException.class).hasMessage("rejected");
 	}
 
@@ -441,13 +429,13 @@ public class ExecutorBeanPostProcessorTests {
 		Executor wrappedExecutor = (Executor) beanPostProcessor
 				.postProcessAfterInitialization(new ExecutorWithFinalMethod(), "executorWithFinalMethod");
 
-		then(AopUtils.isJdkDynamicProxy(wrappedExecutor)).isTrue();
-		then(AopUtils.isCglibProxy(wrappedExecutor)).isFalse();
+		BDDAssertions.then(AopUtils.isJdkDynamicProxy(wrappedExecutor)).isTrue();
+		BDDAssertions.then(AopUtils.isCglibProxy(wrappedExecutor)).isFalse();
 		AtomicBoolean wasCalled = new AtomicBoolean(false);
 		wrappedExecutor.execute(() -> {
 			wasCalled.set(true);
 		});
-		then(wasCalled).isTrue();
+		BDDAssertions.then(wasCalled).isTrue();
 	}
 
 	// #1569
@@ -458,13 +446,13 @@ public class ExecutorBeanPostProcessorTests {
 		Executor wrappedExecutor = (Executor) beanPostProcessor
 				.postProcessAfterInitialization(new ExecutorWithInheritedFinalMethod(), "executorWithFinalMethod");
 
-		then(AopUtils.isJdkDynamicProxy(wrappedExecutor)).isTrue();
-		then(AopUtils.isCglibProxy(wrappedExecutor)).isFalse();
+		BDDAssertions.then(AopUtils.isJdkDynamicProxy(wrappedExecutor)).isTrue();
+		BDDAssertions.then(AopUtils.isCglibProxy(wrappedExecutor)).isFalse();
 		AtomicBoolean wasCalled = new AtomicBoolean(false);
 		wrappedExecutor.execute(() -> {
 			wasCalled.set(true);
 		});
-		then(wasCalled).isTrue();
+		BDDAssertions.then(wasCalled).isTrue();
 	}
 
 	class Foo implements Executor {

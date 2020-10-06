@@ -18,10 +18,12 @@ package org.springframework.cloud.sleuth.instrument.web.client;
 
 import java.util.concurrent.atomic.AtomicReference;
 
+import org.assertj.core.api.Assertions;
 import org.assertj.core.api.BDDAssertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.reactivestreams.Subscription;
 
@@ -29,9 +31,6 @@ import org.springframework.cloud.sleuth.api.Span;
 import org.springframework.cloud.sleuth.instrument.web.client.TraceExchangeFilterFunction.TraceWebClientSubscription;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.web.reactive.function.client.WebClient;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.verify;
 
 /**
  * @author Marcin Grzejszczak
@@ -84,11 +83,11 @@ public class TraceWebClientBeanPostProcessorTest {
 		traceSubscription.request(1);
 		traceSubscription.cancel();
 
-		verify(span).error(TraceWebClientSubscription.CANCELLED_ERROR);
-		verify(span).finish();
+		Mockito.verify(span).error(TraceWebClientSubscription.CANCELLED_ERROR);
+		Mockito.verify(span).finish();
 
 		// Check that the ref is clear following span completion
-		assertThat(traceSubscription.pendingSpan.get()).isNull();
+		Assertions.assertThat(traceSubscription.pendingSpan.get()).isNull();
 	}
 
 	@Test
@@ -99,8 +98,8 @@ public class TraceWebClientBeanPostProcessorTest {
 		traceSubscription.request(1);
 		traceSubscription.cancel();
 
-		verify(subscription).request(1);
-		verify(subscription).cancel();
+		Mockito.verify(subscription).request(1);
+		Mockito.verify(subscription).cancel();
 	}
 
 }
