@@ -19,13 +19,14 @@ package org.springframework.cloud.sleuth.autoconfig;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.cloud.sleuth.SpanNamer;
-import org.springframework.cloud.sleuth.api.SamplerFunction;
-import org.springframework.cloud.sleuth.api.SamplingFlags;
-import org.springframework.cloud.sleuth.api.ScopedSpan;
-import org.springframework.cloud.sleuth.api.Span;
-import org.springframework.cloud.sleuth.api.SpanCustomizer;
-import org.springframework.cloud.sleuth.api.TraceContext;
 import org.springframework.cloud.sleuth.api.Tracer;
+import org.springframework.cloud.sleuth.api.http.HttpClientHandler;
+import org.springframework.cloud.sleuth.api.http.HttpServerHandler;
+import org.springframework.cloud.sleuth.api.propagation.Propagator;
+import org.springframework.cloud.sleuth.autoconfig.noop.NoOpHttpClientHandler;
+import org.springframework.cloud.sleuth.autoconfig.noop.NoOpHttpServerHandler;
+import org.springframework.cloud.sleuth.autoconfig.noop.NoOpPropagator;
+import org.springframework.cloud.sleuth.autoconfig.noop.NoOpTracer;
 import org.springframework.cloud.sleuth.internal.DefaultSpanNamer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -46,88 +47,32 @@ public class TraceAutoConfiguration {
 	@Bean
 	@ConditionalOnMissingBean
 	Tracer defaultTracer() {
-		return new Tracer() {
-			@Override
-			public Span newTrace() {
-				return null;
-			}
-
-			@Override
-			public Span joinSpan(TraceContext context) {
-				return null;
-			}
-
-			@Override
-			public Span newChild(TraceContext parent) {
-				return null;
-			}
-
-			@Override
-			public Span nextSpan(TraceContext extracted) {
-				return null;
-			}
-
-			@Override
-			public Span nextSpan(SamplingFlags extracted) {
-				return null;
-			}
-
-			@Override
-			public Span toSpan(TraceContext context) {
-				return null;
-			}
-
-			@Override
-			public SpanInScope withSpanInScope(Span span) {
-				return null;
-			}
-
-			@Override
-			public SpanCustomizer currentSpanCustomizer() {
-				return null;
-			}
-
-			@Override
-			public Span currentSpan() {
-				return null;
-			}
-
-			@Override
-			public Span nextSpan() {
-				return null;
-			}
-
-			@Override
-			public ScopedSpan startScopedSpan(String name) {
-				return null;
-			}
-
-			@Override
-			public <T> ScopedSpan startScopedSpan(String name, SamplerFunction<T> samplerFunction, T arg) {
-				return null;
-			}
-
-			@Override
-			public <T> Span nextSpan(SamplerFunction<T> samplerFunction, T arg) {
-				return null;
-			}
-
-			@Override
-			public <T> Span nextSpanWithParent(SamplerFunction<T> samplerFunction, T arg, TraceContext parent) {
-				return null;
-			}
-
-			@Override
-			public ScopedSpan startScopedSpanWithParent(String name, TraceContext parent) {
-				return null;
-			}
-		};
+		return new NoOpTracer();
 	}
 
 	@Bean
 	@ConditionalOnMissingBean
-	SpanNamer sleuthSpanNamer() {
+	SpanNamer defaultSpanNamer() {
 		return new DefaultSpanNamer();
 	}
 
+	@Bean
+	@ConditionalOnMissingBean
+	Propagator defaultPropagator() {
+		return new NoOpPropagator();
+	}
+
+	@Bean
+	@ConditionalOnMissingBean
+	HttpClientHandler defaultHttpClientHandler() {
+		return new NoOpHttpClientHandler();
+	}
+
+	@Bean
+	@ConditionalOnMissingBean
+	HttpServerHandler defaultHttpServerHandler() {
+		return new NoOpHttpServerHandler();
+	}
 }
+
+
