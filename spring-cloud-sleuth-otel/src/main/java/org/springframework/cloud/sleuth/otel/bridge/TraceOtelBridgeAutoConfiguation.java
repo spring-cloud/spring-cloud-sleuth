@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-package org.springframework.cloud.sleuth.brave.bridge;
+package org.springframework.cloud.sleuth.otel.bridge;
 
-import brave.propagation.Propagation;
+import io.opentelemetry.context.propagation.ContextPropagators;
 
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.AutoConfigureBefore;
@@ -26,34 +26,34 @@ import org.springframework.cloud.sleuth.api.SpanCustomizer;
 import org.springframework.cloud.sleuth.api.Tracer;
 import org.springframework.cloud.sleuth.api.propagation.Propagator;
 import org.springframework.cloud.sleuth.autoconfig.TraceAutoConfiguration;
-import org.springframework.cloud.sleuth.brave.autoconfig.TraceBraveAutoConfiguration;
+import org.springframework.cloud.sleuth.otel.autoconfig.TraceOtelAutoConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 @Configuration(proxyBeanMethods = false)
 @ConditionalOnProperty(value = "spring.sleuth.enabled", matchIfMissing = true)
-@AutoConfigureAfter(TraceBraveAutoConfiguration.class)
+@AutoConfigureAfter(TraceOtelAutoConfiguration.class)
 @AutoConfigureBefore(TraceAutoConfiguration.class)
-public class TraceBraveBridgeAutoConfiguation {
+public class TraceOtelBridgeAutoConfiguation {
 
 	@Bean
-	Tracer braveTracer(brave.Tracer tracer) {
-		return new BraveTracer(tracer);
+	Tracer otelTracerBridge(io.opentelemetry.trace.Tracer tracer) {
+		return new OtelTracer(tracer);
 	}
 
 	@Bean
-	CurrentTraceContext braveCurrentTraceContext(brave.propagation.CurrentTraceContext currentTraceContext) {
-		return new BraveCurrentTraceContext(currentTraceContext);
+	CurrentTraceContext otelCurrentTraceContext(io.opentelemetry.trace.Tracer tracer) {
+		return new OtelCurrentTraceContext(tracer);
 	}
 
 	@Bean
-	SpanCustomizer braveSpanCustomizer(brave.SpanCustomizer spanCustomizer) {
-		return new BraveSpanCustomizer(spanCustomizer);
+	SpanCustomizer otelSpanCustomizer(io.opentelemetry.trace.Tracer tracer) {
+		return new OtelSpanCustomizer(tracer);
 	}
 
 	@Bean
-	Propagator bravePropagator(Propagation.Factory factory) {
-		return new BravePropagator(factory);
+	Propagator otelPropagator(ContextPropagators contextPropagators) {
+		return new OtelPropagator(contextPropagators);
 	}
 
 }

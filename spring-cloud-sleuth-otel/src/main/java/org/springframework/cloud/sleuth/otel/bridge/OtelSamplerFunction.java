@@ -14,17 +14,24 @@
  * limitations under the License.
  */
 
-package org.springframework.cloud.sleuth.brave.bridge;
+package org.springframework.cloud.sleuth.otel.bridge;
 
-import brave.propagation.TraceContextOrSamplingFlags;
+import io.opentelemetry.sdk.trace.Sampler;
 
-import org.springframework.cloud.sleuth.api.TraceContext;
+import org.springframework.cloud.sleuth.api.SamplerFunction;
 
-public class BraveTraceContextOrSamplingFlags {
+// TODO: [OTEL] Sampler is in the SDK. Also sampling takes place upon span creation. Currently let's defer the decision for OTel.
+public class OtelSamplerFunction<T> implements SamplerFunction<T> {
 
-	public static TraceContext create(TraceContext braveTraceContext) {
-		return new BraveTraceContext(
-				TraceContextOrSamplingFlags.create(((BraveTraceContext) braveTraceContext).traceContext).context());
+	final Sampler sampler;
+
+	public OtelSamplerFunction(Sampler sampler) {
+		this.sampler = sampler;
+	}
+
+	@Override
+	public Boolean trySample(T arg) {
+		return null;
 	}
 
 }

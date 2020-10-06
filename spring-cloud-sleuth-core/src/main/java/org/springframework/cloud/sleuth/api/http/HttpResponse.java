@@ -31,4 +31,8 @@ public interface HttpResponse extends Response {
 	 */
 	int statusCode();
 
+	default String header(String header) {
+		return null;
+	}
+
 }

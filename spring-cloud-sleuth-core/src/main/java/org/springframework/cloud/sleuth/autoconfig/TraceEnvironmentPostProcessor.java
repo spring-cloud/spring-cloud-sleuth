@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.springframework.cloud.sleuth.brave.autoconfig;
+package org.springframework.cloud.sleuth.autoconfig;
 
 import java.util.HashMap;
 import java.util.Map;

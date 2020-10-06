@@ -1,4 +1,4 @@
-package org.springframework.cloud.sleuth.brave.bridge.propagation;
+package org.springframework.cloud.sleuth.brave.bridge;
 
 import java.util.List;
 
@@ -8,7 +8,6 @@ import brave.propagation.TraceContextOrSamplingFlags;
 
 import org.springframework.cloud.sleuth.api.TraceContext;
 import org.springframework.cloud.sleuth.api.propagation.Propagator;
-import org.springframework.cloud.sleuth.brave.bridge.BraveTraceContext;
 
 public class BravePropagator implements Propagator {
 

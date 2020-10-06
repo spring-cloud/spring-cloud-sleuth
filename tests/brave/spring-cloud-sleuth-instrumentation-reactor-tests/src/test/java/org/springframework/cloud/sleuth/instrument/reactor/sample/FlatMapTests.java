@@ -247,15 +247,18 @@ public class FlatMapTests {
 		brave.Span spanInFoo;
 
 		@Bean
-		RouterFunction<ServerResponse> handlers(org.springframework.cloud.sleuth.api.Tracer tracing, CurrentTraceContext currentTraceContext, ManualRequestSender requestSender) {
+		RouterFunction<ServerResponse> handlers(org.springframework.cloud.sleuth.api.Tracer tracing,
+				CurrentTraceContext currentTraceContext, ManualRequestSender requestSender) {
 			return route(GET("/noFlatMap"), request -> {
 				ServerWebExchange exchange = request.exchange();
-				WebFluxSleuthOperators.withSpanInScope(tracing, currentTraceContext, exchange, () -> LOGGER.info("noFlatMap"));
+				WebFluxSleuthOperators.withSpanInScope(tracing, currentTraceContext, exchange,
+						() -> LOGGER.info("noFlatMap"));
 				Flux<Integer> one = requestSender.getAll().map(String::length);
 				return ServerResponse.ok().body(one, Integer.class);
 			}).andRoute(GET("/withFlatMap"), request -> {
 				ServerWebExchange exchange = request.exchange();
-				WebFluxSleuthOperators.withSpanInScope(tracing, currentTraceContext, exchange, () -> LOGGER.info("withFlatMap"));
+				WebFluxSleuthOperators.withSpanInScope(tracing, currentTraceContext, exchange,
+						() -> LOGGER.info("withFlatMap"));
 				Flux<Integer> one = requestSender.getAll().map(String::length);
 				Flux<Integer> response = one
 						.flatMap(size -> requestSender.getAll().doOnEach(sig -> WebFluxSleuthOperators

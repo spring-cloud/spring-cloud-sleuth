@@ -29,7 +29,7 @@ import org.springframework.cloud.sleuth.api.http.HttpClientHandler;
 import org.springframework.cloud.sleuth.brave.bridge.BraveSpan;
 import org.springframework.cloud.sleuth.brave.bridge.BraveTracer;
 import org.springframework.cloud.sleuth.brave.bridge.http.BraveHttpClientHandler;
-import org.springframework.cloud.sleuth.brave.bridge.propagation.BravePropagator;
+import org.springframework.cloud.sleuth.brave.bridge.BravePropagator;
 import org.springframework.http.HttpHeaders;
 import org.springframework.mock.http.server.reactive.MockServerHttpRequest;
 import org.springframework.mock.web.server.MockServerWebExchange;

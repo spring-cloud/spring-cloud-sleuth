@@ -329,6 +329,11 @@ class HttpClientBeanPostProcessor implements BeanPostProcessor {
 			return this.error;
 		}
 
+		@Override
+		public String header(String header) {
+			return delegate.responseHeaders().get(header);
+		}
+
 	}
 
 }

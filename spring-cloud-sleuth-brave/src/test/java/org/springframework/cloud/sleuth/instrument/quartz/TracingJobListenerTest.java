@@ -48,7 +48,7 @@ import org.quartz.listeners.TriggerListenerSupport;
 import org.quartz.utils.StringKeyDirtyFlagMap;
 
 import org.springframework.cloud.sleuth.brave.bridge.BraveTracer;
-import org.springframework.cloud.sleuth.brave.bridge.propagation.BravePropagator;
+import org.springframework.cloud.sleuth.brave.bridge.BravePropagator;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.quartz.JobBuilder.newJob;

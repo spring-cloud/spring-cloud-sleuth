@@ -259,7 +259,7 @@
 			</dependency>
 			<dependency>
 				<groupId>io.opentelemetry.instrumentation</groupId>
-				<artifactId>opentelemetry-spring-boot-autoconfigure</artifactId>
+				<artifactId>opentelemetry-instrumentation-api</artifactId>
 				<version>${opentelemetry.version}</version>
 			</dependency>
 			<dependency>

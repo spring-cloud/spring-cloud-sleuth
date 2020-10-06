@@ -25,4 +25,12 @@ public interface HttpServerRequest extends HttpRequest {
 		return Span.Kind.SERVER;
 	}
 
+	default Object getAttribute(String key) {
+		return null;
+	}
+
+	default void setAttribute(String key, Object value) {
+
+	}
+
 }

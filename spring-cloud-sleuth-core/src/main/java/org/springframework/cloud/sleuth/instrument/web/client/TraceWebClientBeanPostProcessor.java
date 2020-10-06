@@ -384,6 +384,15 @@ final class TraceExchangeFilterFunction implements ExchangeFilterFunction {
 			return Math.max(delegate.rawStatusCode(), 0);
 		}
 
+		@Override
+		public String header(String header) {
+			List<String> headers = delegate.headers().header(header);
+			if (headers.isEmpty()) {
+				return null;
+			}
+			return headers.get(0);
+		}
+
 	}
 
 }

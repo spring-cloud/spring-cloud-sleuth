@@ -234,6 +234,15 @@ abstract class AbstractHttpHeadersFilter implements HttpHeadersFilter {
 			return delegate.getStatusCode() != null ? delegate.getStatusCode().value() : 0;
 		}
 
+		@Override
+		public String header(String header) {
+			List<String> headers = delegate.getHeaders().get(header);
+			if (headers == null || headers.isEmpty()) {
+				return null;
+			}
+			return headers.get(0);
+		}
+
 	}
 
 }

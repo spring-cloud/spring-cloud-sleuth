@@ -210,6 +210,15 @@ final class TracingFeignClient implements Client {
 			return response.status();
 		}
 
+		@Override
+		public String header(String header) {
+			Collection<String> strings = response.headers().get(header);
+			if (strings.isEmpty()) {
+				return null;
+			}
+			return strings.iterator().next();
+		}
+
 	}
 
 }

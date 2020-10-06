@@ -63,9 +63,11 @@ public class ScopePassingSpanSubscriberTests {
 
 	CurrentTraceContext currentTraceContext = BraveCurrentTraceContext.fromBrave(traceContext);
 
-	TraceContext context = BraveTraceContext.fromBrave(brave.propagation.TraceContext.newBuilder().traceId(1).spanId(1).sampled(true).build());
+	TraceContext context = BraveTraceContext
+			.fromBrave(brave.propagation.TraceContext.newBuilder().traceId(1).spanId(1).sampled(true).build());
 
-	TraceContext context2 = BraveTraceContext.fromBrave(brave.propagation.TraceContext.newBuilder().traceId(1).spanId(2).sampled(true).build());
+	TraceContext context2 = BraveTraceContext
+			.fromBrave(brave.propagation.TraceContext.newBuilder().traceId(1).spanId(2).sampled(true).build());
 
 	Subscriber<Object> assertNotScopePassingSpanSubscriber = new CoreSubscriber<Object>() {
 		@Override

@@ -126,7 +126,7 @@ public class OtelTraceAsyncIntegrationTests {
 			log.info("Two last spans [" + span2 + "] and [" + span1 + "]");
 			span.set(span1 != null && name.equals(span1.getName()) ? span1
 					: span2 != null && name.equals(span2.getName()) ? span2 : null);
-			assertThat(span).as("No span with name <> was found", name).isNotNull();
+			assertThat(span.get()).as("No span with name <> was found", name).isNotNull();
 		});
 		return span.get();
 	}
@@ -191,12 +191,12 @@ class ArrayListSpanProcessor implements SpanProcessor, SpanExporter {
 
 	@Override
 	public void onEnd(ReadableSpan span) {
-
+		this.spans.add(span.toSpanData());
 	}
 
 	@Override
 	public boolean isEndRequired() {
-		return false;
+		return true;
 	}
 
 	@Override

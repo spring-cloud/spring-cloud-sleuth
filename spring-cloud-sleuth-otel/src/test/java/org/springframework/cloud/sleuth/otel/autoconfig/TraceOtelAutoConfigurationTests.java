@@ -19,10 +19,8 @@ package org.springframework.cloud.sleuth.otel.autoconfig;
 import io.opentelemetry.trace.Tracer;
 import org.junit.jupiter.api.Test;
 
-import org.springframework.boot.autoconfigure.AutoConfigurations;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
-import org.springframework.cloud.sleuth.autoconfig.TraceAutoConfiguration;
 import org.springframework.context.annotation.Configuration;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -30,22 +28,18 @@ import static org.assertj.core.api.Assertions.assertThat;
 class TraceOtelAutoConfigurationTests {
 
 	@Test
-	void should_start_context_with_otel_tracer() {
-		ApplicationContextRunner runner = new ApplicationContextRunner().withConfiguration(otelConfiguration());
+	void should_start_context_with_otel_tracer_when_sleuth_enabled() {
+		ApplicationContextRunner runner = new ApplicationContextRunner().withUserConfiguration(Config.class);
 
 		runner.run(context -> assertThat(context).hasNotFailed().hasSingleBean(Tracer.class));
 	}
 
 	@Test
-	void should_start_context_with_noop_tracer_when_property_set() {
-		ApplicationContextRunner runner = new ApplicationContextRunner().withConfiguration(otelConfiguration())
+	void should_start_context_without_tracer_when_sleuth_disabled() {
+		ApplicationContextRunner runner = new ApplicationContextRunner().withUserConfiguration(Config.class)
 				.withPropertyValues("spring.sleuth.enabled=false");
 
 		runner.run(context -> assertThat(context).hasNotFailed().doesNotHaveBean(Tracer.class));
-	}
-
-	private AutoConfigurations otelConfiguration() {
-		return AutoConfigurations.of(TraceAutoConfiguration.class, TraceOtelAutoConfiguration.class);
 	}
 
 	@Configuration

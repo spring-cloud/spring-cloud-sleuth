@@ -19,9 +19,8 @@ package org.springframework.cloud.sleuth.brave.bridge;
 import java.util.List;
 import java.util.Objects;
 
-import brave.internal.Nullable;
-
 import org.springframework.cloud.sleuth.api.TraceContext;
+import org.springframework.lang.Nullable;
 
 public class BraveTraceContext implements TraceContext {
 

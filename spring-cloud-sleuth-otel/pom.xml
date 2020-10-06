@@ -63,8 +63,37 @@
 			<artifactId>opentelemetry-sdk</artifactId>
 		</dependency>
 		<dependency>
+			<groupId>io.opentelemetry.instrumentation</groupId>
+			<artifactId>opentelemetry-instrumentation-api</artifactId>
+		</dependency>
+		<dependency>
 			<groupId>io.opentelemetry</groupId>
 			<artifactId>opentelemetry-extension-auto-annotations</artifactId>
+			<optional>true</optional>
+		</dependency>
+		<dependency>
+			<groupId>io.opentelemetry</groupId>
+			<artifactId>opentelemetry-exporters-logging</artifactId>
+			<optional>true</optional>
+		</dependency>
+		<dependency>
+			<groupId>io.opentelemetry</groupId>
+			<artifactId>opentelemetry-sdk-extension-jaeger-remote-sampler</artifactId>
+			<optional>true</optional>
+		</dependency>
+		<dependency>
+			<groupId>io.opentelemetry</groupId>
+			<artifactId>opentelemetry-sdk-extension-async-processor</artifactId>
+			<optional>true</optional>
+		</dependency>
+		<dependency>
+			<groupId>io.opentelemetry</groupId>
+			<artifactId>opentelemetry-exporters-zipkin</artifactId>
+			<optional>true</optional>
+		</dependency>
+		<dependency>
+			<groupId>io.opentelemetry</groupId>
+			<artifactId>opentelemetry-extension-trace-propagators</artifactId>
 			<optional>true</optional>
 		</dependency>
 

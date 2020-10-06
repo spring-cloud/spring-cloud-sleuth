@@ -108,7 +108,8 @@ public class TraceWebFluxTests {
 		then(spans.get(0).name()).isEqualTo("GET /api/c2/{id}");
 		then(spans.get(0).tags()).containsEntry("mvc.controller.method", "successful")
 				.containsEntry("mvc.controller.class", "Controller2");
-		// TODO: [OTEL] Removed this. Need to figure out how to do it with the current API.
+		// TODO: [OTEL] Removed this. Need to figure out how to do it with the current
+		// API.
 		then(spans.get(0).remoteIp()).isEqualTo("127.0.0.1");
 	}
 

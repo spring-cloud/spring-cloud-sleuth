@@ -16,9 +16,24 @@
 
 package org.springframework.cloud.sleuth.otel.autoconfig;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import io.opentelemetry.sdk.OpenTelemetrySdk;
+import io.opentelemetry.sdk.trace.Sampler;
+import io.opentelemetry.sdk.trace.Samplers;
+import io.opentelemetry.sdk.trace.SpanProcessor;
+import io.opentelemetry.sdk.trace.TracerSdkProvider;
+import io.opentelemetry.sdk.trace.config.TraceConfig;
+import io.opentelemetry.trace.Tracer;
+
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.AutoConfigureBefore;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.cloud.sleuth.autoconfig.TraceAutoConfiguration;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 /**
@@ -31,6 +46,40 @@ import org.springframework.context.annotation.Configuration;
 @Configuration(proxyBeanMethods = false)
 @ConditionalOnProperty(value = "spring.sleuth.enabled", havingValue = "true", matchIfMissing = true)
 @AutoConfigureBefore(TraceAutoConfiguration.class)
+@EnableConfigurationProperties(OtelProperties.class)
 public class TraceOtelAutoConfiguration {
+
+	@Bean
+	@ConditionalOnMissingBean
+	TracerSdkProvider otelTracerSdkProvider() {
+		return OpenTelemetrySdk.getTracerProvider();
+	}
+
+	@Bean
+	@ConditionalOnMissingBean
+	TraceConfig otelTracerConfig(OtelProperties otelProperties, Sampler sampler) {
+		return TraceConfig.getDefault().toBuilder().setMaxLengthOfAttributeValues(otelProperties.getMaxAttrLength())
+				.setMaxNumberOfAttributes(otelProperties.getMaxAttrs())
+				.setMaxNumberOfAttributesPerEvent(otelProperties.getMaxEventAttrs())
+				.setMaxNumberOfAttributesPerLink(otelProperties.getMaxLinkAttrs())
+				.setMaxNumberOfEvents(otelProperties.getMaxEvents()).setMaxNumberOfLinks(otelProperties.getMaxLinks())
+				.setSamplerProbability(otelProperties.getSamplerProbability()).setSampler(sampler).build();
+	}
+
+	@Bean
+	@ConditionalOnMissingBean
+	Tracer otelTracer(TracerSdkProvider tracerSdkProvider, TraceConfig traceConfig, OtelProperties otelProperties,
+			ObjectProvider<List<SpanProcessor>> spanProcessors) {
+		List<SpanProcessor> processors = spanProcessors.getIfAvailable(ArrayList::new);
+		processors.forEach(tracerSdkProvider::addSpanProcessor);
+		tracerSdkProvider.updateActiveTraceConfig(traceConfig);
+		return tracerSdkProvider.get(otelProperties.getInstrumentationName());
+	}
+
+	@Bean
+	@ConditionalOnMissingBean
+	Sampler otelSampler(OtelProperties otelProperties) {
+		return Samplers.probability(otelProperties.getSamplerProbability());
+	}
 
 }
