@@ -55,5 +55,4 @@ public class TraceOtelBridgeAutoConfiguation {
 	Propagator otelPropagator(ContextPropagators contextPropagators) {
 		return new OtelPropagator(contextPropagators);
 	}
-
 }

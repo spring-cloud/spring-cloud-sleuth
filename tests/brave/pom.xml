@@ -35,6 +35,7 @@
 	</parent>
 
 	<modules>
+		<module>spring-cloud-sleuth-instrumentation-common-tests</module>
 		<module>spring-cloud-sleuth-instrumentation-async-tests</module>
 		<module>spring-cloud-sleuth-instrumentation-grpc-tests</module>
 		<module>spring-cloud-sleuth-instrumentation-messaging-tests</module>

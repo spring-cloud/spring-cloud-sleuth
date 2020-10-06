@@ -95,7 +95,7 @@ public class GH1212Tests {
 	@SpringBootConfiguration
 	@EnableAutoConfiguration
 	@EnableAsync
-	static class App {
+	public static class App {
 
 		@Bean
 		AsyncComponent asyncComponent() {
@@ -104,7 +104,7 @@ public class GH1212Tests {
 
 	}
 
-	static class AsyncComponent {
+	public static class AsyncComponent {
 
 		@Async
 		public CompletableFuture<String> asyncMethod() {
@@ -118,7 +118,7 @@ public class GH1212Tests {
 	 * Configuration with a single Executor named `taskExecutor`
 	 */
 	@Configuration
-	static class DefaultTaskExecutorConfig {
+	public static class DefaultTaskExecutorConfig {
 
 		@Bean(name = AsyncExecutionAspectSupport.DEFAULT_TASK_EXECUTOR_BEAN_NAME)
 		public Executor taskExecutor() {
@@ -131,7 +131,7 @@ public class GH1212Tests {
 	 * Configuration with a single TaskExecutor
 	 */
 	@Configuration
-	static class SingleTaskExecutorConfig {
+	public static class SingleTaskExecutorConfig {
 
 		@Bean
 		// there's the task
@@ -147,7 +147,7 @@ public class GH1212Tests {
 	 * is @Primary
 	 */
 	@Configuration
-	static class MultipleTaskExecutorConfig {
+	public static class MultipleTaskExecutorConfig {
 
 		@Bean
 		public TaskExecutor multipleTaskExecutor1() {
@@ -165,7 +165,7 @@ public class GH1212Tests {
 	 * Configuration where a custom AsyncConfigurer is provided
 	 */
 	@Configuration
-	static class CustomAsyncConfigurerConfig {
+	public static class CustomAsyncConfigurerConfig {
 
 		@Bean
 		public AsyncConfigurer customAsyncConfigurer() {

@@ -19,10 +19,12 @@ package org.springframework.cloud.sleuth.autoconfig;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.cloud.sleuth.SpanNamer;
+import org.springframework.cloud.sleuth.api.CurrentTraceContext;
 import org.springframework.cloud.sleuth.api.Tracer;
 import org.springframework.cloud.sleuth.api.http.HttpClientHandler;
 import org.springframework.cloud.sleuth.api.http.HttpServerHandler;
 import org.springframework.cloud.sleuth.api.propagation.Propagator;
+import org.springframework.cloud.sleuth.autoconfig.noop.NoOpCurrentTraceContext;
 import org.springframework.cloud.sleuth.autoconfig.noop.NoOpHttpClientHandler;
 import org.springframework.cloud.sleuth.autoconfig.noop.NoOpHttpServerHandler;
 import org.springframework.cloud.sleuth.autoconfig.noop.NoOpPropagator;
@@ -60,6 +62,12 @@ public class TraceAutoConfiguration {
 	@ConditionalOnMissingBean
 	Propagator defaultPropagator() {
 		return new NoOpPropagator();
+	}
+
+	@Bean
+	@ConditionalOnMissingBean
+	CurrentTraceContext defaultCurrentTraceContext() {
+		return new NoOpCurrentTraceContext();
 	}
 
 	@Bean

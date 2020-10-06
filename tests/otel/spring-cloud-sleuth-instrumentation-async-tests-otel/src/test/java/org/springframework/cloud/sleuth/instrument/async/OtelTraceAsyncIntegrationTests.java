@@ -134,7 +134,7 @@ public class OtelTraceAsyncIntegrationTests {
 	@EnableAsync
 	@Configuration
 	@EnableAutoConfiguration
-	static class TraceAsyncITestConfiguration {
+	public static class TraceAsyncITestConfiguration {
 
 		@Bean
 		AsyncLogic asyncLogic(Tracer tracer) {
@@ -148,7 +148,7 @@ public class OtelTraceAsyncIntegrationTests {
 
 	}
 
-	static class AsyncLogic {
+	public static class AsyncLogic {
 
 		private static final Logger log = LoggerFactory.getLogger(AsyncLogic.class);
 

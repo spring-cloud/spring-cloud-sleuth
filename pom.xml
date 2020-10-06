@@ -221,6 +221,11 @@
 				<version>${objenesis.version}</version>
 				<!-- not test because we need it in stream -->
 			</dependency>
+			<dependency>
+				<groupId>com.squareup.okhttp3</groupId>
+				<artifactId>mockwebserver</artifactId>
+				<version>${mockwebserver.version}</version>
+			</dependency>
 			<!-- OpenTelemetry -->
 			<dependency>
 				<groupId>io.opentelemetry</groupId>
