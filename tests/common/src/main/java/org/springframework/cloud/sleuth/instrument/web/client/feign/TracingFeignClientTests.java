@@ -35,14 +35,14 @@ import org.mockito.stubbing.Answer;
 
 import org.springframework.cloud.sleuth.api.Span;
 import org.springframework.cloud.sleuth.api.Tracer;
-import org.springframework.cloud.sleuth.test.TestTracingAware;
+import org.springframework.cloud.sleuth.test.TestTracingAwareSupplier;
 
 /**
  * @author Marcin Grzejszczak
  * @author Hash.Jang
  */
 @ExtendWith(MockitoExtension.class)
-public abstract class TracingFeignClientTests implements TestTracingAware {
+public abstract class TracingFeignClientTests implements TestTracingAwareSupplier {
 
 	RequestTemplate requestTemplate = new RequestTemplate();
 
@@ -58,31 +58,31 @@ public abstract class TracingFeignClientTests implements TestTracingAware {
 
 	@BeforeEach
 	public void setup() {
-		this.traceFeignClient = TracingFeignClient.create(tracing().currentTraceContext(),
-				tracing().httpClientHandler(), this.client);
+		this.traceFeignClient = TracingFeignClient.create(tracerTest().tracing().currentTraceContext(),
+				tracerTest().tracing().httpClientHandler(), this.client);
 	}
 
 	@Test
 	public void should_log_cr_when_response_successful() throws IOException {
-		Span span = tracing().tracer().nextSpan().name("foo");
+		Span span = tracerTest().tracing().tracer().nextSpan().name("foo");
 
-		try (Tracer.SpanInScope ws = tracing().tracer().withSpanInScope(span.start())) {
+		try (Tracer.SpanInScope ws = tracerTest().tracing().tracer().withSpanInScope(span.start())) {
 			this.traceFeignClient.execute(this.request, this.options);
 		}
 		finally {
 			span.finish();
 		}
 
-		BDDAssertions.then(handler().reportedSpans().get(0).kind()).isEqualTo(Span.Kind.CLIENT);
+		BDDAssertions.then(tracerTest().handler().reportedSpans().get(0).kind()).isEqualTo(Span.Kind.CLIENT);
 	}
 
 	@Test
 	public void should_log_error_when_exception_thrown() throws IOException {
 		RuntimeException error = new RuntimeException("exception has occurred");
-		Span span = tracing().tracer().nextSpan().name("foo");
+		Span span = tracerTest().tracing().tracer().nextSpan().name("foo");
 		BDDMockito.given(this.client.execute(BDDMockito.any(), BDDMockito.any())).willThrow(error);
 
-		try (Tracer.SpanInScope ws = tracing().tracer().withSpanInScope(span.start())) {
+		try (Tracer.SpanInScope ws = tracerTest().tracing().tracer().withSpanInScope(span.start())) {
 			this.traceFeignClient.execute(this.request, this.options);
 			BDDAssertions.fail("Exception should have been thrown");
 		}
@@ -92,8 +92,8 @@ public abstract class TracingFeignClientTests implements TestTracingAware {
 			span.finish();
 		}
 
-		BDDAssertions.then(this.handler().reportedSpans().get(0).kind()).isEqualTo(Span.Kind.CLIENT);
-		BDDAssertions.then(this.handler().reportedSpans().get(0).error()).isSameAs(error);
+		BDDAssertions.then(this.tracerTest().handler().reportedSpans().get(0).kind()).isEqualTo(Span.Kind.CLIENT);
+		BDDAssertions.then(this.tracerTest().handler().reportedSpans().get(0).error()).isSameAs(error);
 	}
 
 	@Test

@@ -36,13 +36,13 @@ import org.springframework.beans.factory.BeanFactory;
 import org.springframework.cloud.sleuth.SpanNamer;
 import org.springframework.cloud.sleuth.api.Tracer;
 import org.springframework.cloud.sleuth.internal.DefaultSpanNamer;
-import org.springframework.cloud.sleuth.test.TestTracingAware;
+import org.springframework.cloud.sleuth.test.TestTracingAwareSupplier;
 
 /**
  * @author Marcin Grzejszczak
  */
 @ExtendWith(MockitoExtension.class)
-public abstract class TraceableScheduledExecutorServiceTest implements TestTracingAware {
+public abstract class TraceableScheduledExecutorServiceTest implements TestTracingAwareSupplier {
 
 	@Mock(lenient = true)
 	BeanFactory beanFactory;
@@ -152,7 +152,7 @@ public abstract class TraceableScheduledExecutorServiceTest implements TestTraci
 	}
 
 	BeanFactory beanFactory() {
-		BDDMockito.given(this.beanFactory.getBean(Tracer.class)).willReturn(tracing().tracer());
+		BDDMockito.given(this.beanFactory.getBean(Tracer.class)).willReturn(tracerTest().tracing().tracer());
 		BDDMockito.given(this.beanFactory.getBean(SpanNamer.class)).willReturn(new DefaultSpanNamer());
 		SleuthContextListenerAccessor.set(this.beanFactory, true);
 		return this.beanFactory;

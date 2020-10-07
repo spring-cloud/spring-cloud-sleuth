@@ -16,17 +16,14 @@
 
 package org.springframework.cloud.sleuth.test;
 
-import org.junit.jupiter.api.AfterEach;
+import java.io.Closeable;
 
-public interface TestTracingAware {
+public interface TestTracingAware extends Closeable {
 
 	TracerAware tracing();
 
 	TestSpanHandler handler();
 
-	@AfterEach
-	default void cleanUp() {
-		handler().reportedSpans().clear();
-	}
-
+	@Override
+	void close();
 }

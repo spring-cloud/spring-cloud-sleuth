@@ -22,6 +22,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import brave.handler.MutableSpan;
+import brave.test.IntegrationTestSpanHandler;
 
 import org.springframework.cloud.sleuth.api.Span;
 import org.springframework.cloud.sleuth.test.ReportedSpan;
@@ -31,8 +32,21 @@ public class BraveTestSpanHandler implements TestSpanHandler {
 
 	final brave.test.TestSpanHandler spans;
 
+	final IntegrationTestSpanHandler integrationSpans;
+
 	public BraveTestSpanHandler(brave.test.TestSpanHandler spans) {
 		this.spans = spans;
+		this.integrationSpans = null;
+	}
+
+	public BraveTestSpanHandler(IntegrationTestSpanHandler integrationSpans) {
+		this.spans = null;
+		this.integrationSpans = integrationSpans;
+	}
+
+	public BraveTestSpanHandler(brave.test.TestSpanHandler spans, IntegrationTestSpanHandler integrationSpans) {
+		this.spans = spans;
+		this.integrationSpans = integrationSpans;
 	}
 
 	@Override
@@ -42,25 +56,24 @@ public class BraveTestSpanHandler implements TestSpanHandler {
 
 	@Override
 	public ReportedSpan takeLocalSpan() {
-		// TODO: [OTEL] fix me
-		return null;
+		return new FromMutableSpan(this.integrationSpans.takeLocalSpan());
 	}
 
 	@Override
 	public void clear() {
-		this.spans.clear();
+		if (this.spans != null) {
+			this.spans.clear();
+		}
 	}
 
 	@Override
 	public ReportedSpan takeRemoteSpan(Span.Kind kind) {
-		// TODO: [OTEL] fix me
-		return null;
+		return new FromMutableSpan(this.integrationSpans.takeRemoteSpan(brave.Span.Kind.valueOf(kind.name())));
 	}
 
 	@Override
 	public ReportedSpan takeRemoteSpanWithError(Span.Kind kind) {
-		// TODO: [OTEL] fix me
-		return null;
+		return new FromMutableSpan(this.integrationSpans.takeRemoteSpanWithError(brave.Span.Kind.valueOf(kind.name())));
 	}
 
 	@Override

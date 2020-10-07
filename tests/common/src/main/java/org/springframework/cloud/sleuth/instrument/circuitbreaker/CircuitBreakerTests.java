@@ -26,20 +26,20 @@ import org.springframework.cloud.sleuth.api.ScopedSpan;
 import org.springframework.cloud.sleuth.api.Span;
 import org.springframework.cloud.sleuth.api.Tracer;
 import org.springframework.cloud.sleuth.test.ReportedSpan;
-import org.springframework.cloud.sleuth.test.TestTracingAware;
+import org.springframework.cloud.sleuth.test.TestTracingAwareSupplier;
 
-public abstract class CircuitBreakerTests implements TestTracingAware {
+public abstract class CircuitBreakerTests implements TestTracingAwareSupplier {
 
 	@Test
 	public void should_pass_tracing_information_when_using_circuit_breaker() {
 		// given
-		Tracer tracer = tracing().tracer();
+		Tracer tracer = tracerTest().tracing().tracer();
 		ScopedSpan scopedSpan = null;
 		try {
 			scopedSpan = tracer.startScopedSpan("start");
 			// when
 			Span span = new Resilience4JCircuitBreakerFactory().create("name")
-					.run(new TraceSupplier<>(tracing().tracer(), tracer::currentSpan));
+					.run(new TraceSupplier<>(tracerTest().tracing().tracer(), tracer::currentSpan));
 
 			BDDAssertions.then(span).isNotNull();
 			BDDAssertions.then(scopedSpan.context().traceIdString()).isEqualTo(span.context().traceIdString());
@@ -52,7 +52,7 @@ public abstract class CircuitBreakerTests implements TestTracingAware {
 	@Test
 	public void should_pass_tracing_information_when_using_circuit_breaker_with_fallback() {
 		// given
-		Tracer tracer = tracing().tracer();
+		Tracer tracer = tracerTest().tracing().tracer();
 		AtomicReference<Span> first = new AtomicReference<>();
 		AtomicReference<Span> second = new AtomicReference<>();
 		ScopedSpan scopedSpan = null;
@@ -60,15 +60,15 @@ public abstract class CircuitBreakerTests implements TestTracingAware {
 			scopedSpan = tracer.startScopedSpan("start");
 			// when
 			BDDAssertions.thenThrownBy(() -> new Resilience4JCircuitBreakerFactory().create("name")
-					.run(new TraceSupplier<>(tracing().tracer(), () -> {
+					.run(new TraceSupplier<>(tracerTest().tracing().tracer(), () -> {
 						first.set(tracer.currentSpan());
 						throw new IllegalStateException("boom");
-					}), new TraceFunction<>(tracing().tracer(), throwable -> {
+					}), new TraceFunction<>(tracerTest().tracing().tracer(), throwable -> {
 						second.set(tracer.currentSpan());
 						throw new IllegalStateException("boom2");
 					}))).isInstanceOf(IllegalStateException.class).hasMessageContaining("boom2");
 
-			BDDAssertions.then(handler().reportedSpans()).hasSize(2);
+			BDDAssertions.then(tracerTest().handler().reportedSpans()).hasSize(2);
 			BDDAssertions.then(first.get()).isNotNull();
 			BDDAssertions.then(second.get()).isNotNull();
 			BDDAssertions.then(scopedSpan.context().traceIdString()).isEqualTo(first.get().context().traceIdString());
@@ -76,7 +76,7 @@ public abstract class CircuitBreakerTests implements TestTracingAware {
 			BDDAssertions.then(first.get().context().spanIdString())
 					.isNotEqualTo(second.get().context().spanIdString());
 
-			ReportedSpan reportedSpan = handler().reportedSpans().get(1);
+			ReportedSpan reportedSpan = tracerTest().handler().reportedSpans().get(1);
 			BDDAssertions.then(reportedSpan.name()).contains("CircuitBreakerTests");
 			BDDAssertions.then(reportedSpan.tags().get("error")).contains("boom2");
 		}

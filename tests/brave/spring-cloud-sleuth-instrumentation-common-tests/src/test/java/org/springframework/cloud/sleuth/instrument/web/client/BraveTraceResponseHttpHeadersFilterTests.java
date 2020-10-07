@@ -14,12 +14,12 @@
  * limitations under the License.
  */
 
-package org.springframework.cloud.sleuth.instrument.async;
+package org.springframework.cloud.sleuth.instrument.web.client;
 
 import org.springframework.cloud.sleuth.brave.BraveTestTracing;
 import org.springframework.cloud.sleuth.test.TestTracingAware;
 
-public class BraveLazyTraceThreadPoolTaskSchedulerTests extends LazyTraceThreadPoolTaskSchedulerTests {
+public class BraveTraceResponseHttpHeadersFilterTests extends TraceResponseHttpHeadersFilterTests {
 
 	BraveTestTracing testTracing;
 
@@ -30,4 +30,5 @@ public class BraveLazyTraceThreadPoolTaskSchedulerTests extends LazyTraceThreadP
 		}
 		return this.testTracing;
 	}
+
 }

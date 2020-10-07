@@ -27,26 +27,26 @@ import org.junit.jupiter.api.Test;
 import org.springframework.cloud.sleuth.api.Span;
 import org.springframework.cloud.sleuth.api.Tracer;
 import org.springframework.cloud.sleuth.internal.DefaultSpanNamer;
-import org.springframework.cloud.sleuth.test.TestTracingAware;
+import org.springframework.cloud.sleuth.test.TestTracingAwareSupplier;
 import org.springframework.core.task.AsyncListenableTaskExecutor;
 import org.springframework.core.task.SimpleAsyncTaskExecutor;
 
 /**
  * @author Marcin Grzejszczak
  */
-public abstract class TraceAsyncListenableTaskExecutorTest implements TestTracingAware {
+public abstract class TraceAsyncListenableTaskExecutorTest implements TestTracingAwareSupplier {
 
 	AsyncListenableTaskExecutor delegate = new SimpleAsyncTaskExecutor();
 
 	TraceAsyncListenableTaskExecutor traceAsyncListenableTaskExecutor = new TraceAsyncListenableTaskExecutor(
-			this.delegate, tracing().tracer(), new DefaultSpanNamer());
+			this.delegate, tracerTest().tracing().tracer(), new DefaultSpanNamer());
 
 	@Test
 	public void should_submit_listenable_trace_runnable() throws Exception {
 		AtomicBoolean executed = new AtomicBoolean();
-		Span span = tracing().tracer().nextSpan().name("foo");
+		Span span = tracerTest().tracing().tracer().nextSpan().name("foo");
 
-		try (Tracer.SpanInScope ws = tracing().tracer().withSpanInScope(span.start())) {
+		try (Tracer.SpanInScope ws = tracerTest().tracing().tracer().withSpanInScope(span.start())) {
 			this.traceAsyncListenableTaskExecutor.submitListenable(aRunnable(executed)).get();
 		}
 		finally {
@@ -58,10 +58,10 @@ public abstract class TraceAsyncListenableTaskExecutorTest implements TestTracin
 
 	@Test
 	public void should_submit_listenable_trace_callable() throws Exception {
-		Span span = tracing().tracer().nextSpan().name("foo");
+		Span span = tracerTest().tracing().tracer().nextSpan().name("foo");
 		Span spanFromListenable;
 
-		try (Tracer.SpanInScope ws = tracing().tracer().withSpanInScope(span.start())) {
+		try (Tracer.SpanInScope ws = tracerTest().tracing().tracer().withSpanInScope(span.start())) {
 			spanFromListenable = this.traceAsyncListenableTaskExecutor.submitListenable(aCallable()).get();
 		}
 		finally {
@@ -74,9 +74,9 @@ public abstract class TraceAsyncListenableTaskExecutorTest implements TestTracin
 	@Test
 	public void should_execute_a_trace_runnable() throws Exception {
 		AtomicBoolean executed = new AtomicBoolean();
-		Span span = tracing().tracer().nextSpan().name("foo");
+		Span span = tracerTest().tracing().tracer().nextSpan().name("foo");
 
-		try (Tracer.SpanInScope ws = tracing().tracer().withSpanInScope(span.start())) {
+		try (Tracer.SpanInScope ws = tracerTest().tracing().tracer().withSpanInScope(span.start())) {
 			this.traceAsyncListenableTaskExecutor.execute(aRunnable(executed));
 		}
 		finally {
@@ -91,9 +91,9 @@ public abstract class TraceAsyncListenableTaskExecutorTest implements TestTracin
 	@Test
 	public void should_execute_with_timeout_a_trace_runnable() throws Exception {
 		AtomicBoolean executed = new AtomicBoolean();
-		Span span = tracing().tracer().nextSpan().name("foo");
+		Span span = tracerTest().tracing().tracer().nextSpan().name("foo");
 
-		try (Tracer.SpanInScope ws = tracing().tracer().withSpanInScope(span.start())) {
+		try (Tracer.SpanInScope ws = tracerTest().tracing().tracer().withSpanInScope(span.start())) {
 			this.traceAsyncListenableTaskExecutor.execute(aRunnable(executed), 1L);
 		}
 		finally {
@@ -107,10 +107,10 @@ public abstract class TraceAsyncListenableTaskExecutorTest implements TestTracin
 
 	@Test
 	public void should_submit_trace_callable() throws Exception {
-		Span span = tracing().tracer().nextSpan().name("foo");
+		Span span = tracerTest().tracing().tracer().nextSpan().name("foo");
 		Span spanFromListenable;
 
-		try (Tracer.SpanInScope ws = tracing().tracer().withSpanInScope(span.start())) {
+		try (Tracer.SpanInScope ws = tracerTest().tracing().tracer().withSpanInScope(span.start())) {
 			spanFromListenable = this.traceAsyncListenableTaskExecutor.submit(aCallable()).get();
 		}
 		finally {
@@ -123,9 +123,9 @@ public abstract class TraceAsyncListenableTaskExecutorTest implements TestTracin
 	@Test
 	public void should_submit_trace_runnable() throws Exception {
 		AtomicBoolean executed = new AtomicBoolean();
-		Span span = tracing().tracer().nextSpan().name("foo");
+		Span span = tracerTest().tracing().tracer().nextSpan().name("foo");
 
-		try (Tracer.SpanInScope ws = tracing().tracer().withSpanInScope(span.start())) {
+		try (Tracer.SpanInScope ws = tracerTest().tracing().tracer().withSpanInScope(span.start())) {
 			this.traceAsyncListenableTaskExecutor.submit(aRunnable(executed)).get();
 		}
 		finally {
@@ -139,13 +139,13 @@ public abstract class TraceAsyncListenableTaskExecutorTest implements TestTracin
 
 	Runnable aRunnable(AtomicBoolean executed) {
 		return () -> {
-			BDDAssertions.then(tracing().tracer().currentSpan()).isNotNull();
+			BDDAssertions.then(tracerTest().tracing().tracer().currentSpan()).isNotNull();
 			executed.set(true);
 		};
 	}
 
 	Callable<Span> aCallable() {
-		return () -> tracing().tracer().currentSpan();
+		return () -> tracerTest().tracing().tracer().currentSpan();
 	}
 
 }

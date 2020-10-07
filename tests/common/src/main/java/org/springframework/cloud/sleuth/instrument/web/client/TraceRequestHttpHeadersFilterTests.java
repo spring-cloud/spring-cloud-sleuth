@@ -23,18 +23,18 @@ import org.assertj.core.api.BDDAssertions;
 import org.junit.jupiter.api.Test;
 
 import org.springframework.cloud.gateway.filter.headers.HttpHeadersFilter;
-import org.springframework.cloud.sleuth.test.TestTracingAware;
+import org.springframework.cloud.sleuth.test.TestTracingAwareSupplier;
 import org.springframework.http.HttpHeaders;
 import org.springframework.mock.http.server.reactive.MockServerHttpRequest;
 import org.springframework.mock.web.server.MockServerWebExchange;
 
 // This test uses B3 multi format as it is the default for client propagation
-public abstract class TraceRequestHttpHeadersFilterTests implements TestTracingAware {
+public abstract class TraceRequestHttpHeadersFilterTests implements TestTracingAwareSupplier {
 
 	@Test
 	public void should_override_span_tracing_headers() {
-		HttpHeadersFilter filter = TraceRequestHttpHeadersFilter.create(tracing().tracer(),
-				tracing().httpClientHandler(), tracing().propagator());
+		HttpHeadersFilter filter = TraceRequestHttpHeadersFilter.create(tracerTest().tracing().tracer(),
+				tracerTest().tracing().httpClientHandler(), tracerTest().tracing().propagator());
 		HttpHeaders httpHeaders = new HttpHeaders();
 		httpHeaders.set("X-Hello", "World");
 		httpHeaders.set("X-B3-TraceId", "52f112af7472aff0");
@@ -57,8 +57,8 @@ public abstract class TraceRequestHttpHeadersFilterTests implements TestTracingA
 
 	@Test
 	public void should_override_span_tracing_headers_when_using_b3() {
-		HttpHeadersFilter filter = TraceRequestHttpHeadersFilter.create(tracing().tracer(),
-				tracing().httpClientHandler(), tracing().propagator());
+		HttpHeadersFilter filter = TraceRequestHttpHeadersFilter.create(tracerTest().tracing().tracer(),
+				tracerTest().tracing().httpClientHandler(), tracerTest().tracing().propagator());
 		HttpHeaders httpHeaders = new HttpHeaders();
 		httpHeaders.set("X-Hello", "World");
 		httpHeaders.set("B3", "1111111111111111-1111111111111111");
@@ -84,8 +84,8 @@ public abstract class TraceRequestHttpHeadersFilterTests implements TestTracingA
 
 	@Test
 	public void should_set_tracing_headers() {
-		HttpHeadersFilter filter = TraceRequestHttpHeadersFilter.create(tracing().tracer(),
-				tracing().httpClientHandler(), tracing().propagator());
+		HttpHeadersFilter filter = TraceRequestHttpHeadersFilter.create(tracerTest().tracing().tracer(),
+				tracerTest().tracing().httpClientHandler(), tracerTest().tracing().propagator());
 		HttpHeaders httpHeaders = new HttpHeaders();
 		httpHeaders.set("X-Hello", "World");
 		MockServerHttpRequest request = MockServerHttpRequest.post("foo/bar").headers(httpHeaders).build();
@@ -104,8 +104,8 @@ public abstract class TraceRequestHttpHeadersFilterTests implements TestTracingA
 	// #1469
 	@Test
 	public void should_reuse_headers_only_from_input_since_exchange_may_contain_already_ignored_headers() {
-		HttpHeadersFilter filter = TraceRequestHttpHeadersFilter.create(tracing().tracer(),
-				tracing().httpClientHandler(), tracing().propagator());
+		HttpHeadersFilter filter = TraceRequestHttpHeadersFilter.create(tracerTest().tracing().tracer(),
+				tracerTest().tracing().httpClientHandler(), tracerTest().tracing().propagator());
 		HttpHeaders httpHeaders = new HttpHeaders();
 		httpHeaders.set("X-Hello", "World");
 		MockServerHttpRequest request = MockServerHttpRequest.post("foo/bar").headers(httpHeaders).build();
@@ -122,8 +122,8 @@ public abstract class TraceRequestHttpHeadersFilterTests implements TestTracingA
 	// #1352
 	@Test
 	public void should_set_tracing_headers_with_multiple_values() {
-		HttpHeadersFilter filter = TraceRequestHttpHeadersFilter.create(tracing().tracer(),
-				tracing().httpClientHandler(), tracing().propagator());
+		HttpHeadersFilter filter = TraceRequestHttpHeadersFilter.create(tracerTest().tracing().tracer(),
+				tracerTest().tracing().httpClientHandler(), tracerTest().tracing().propagator());
 		HttpHeaders httpHeaders = new HttpHeaders();
 		httpHeaders.add("X-Hello-Request", "Request World");
 		httpHeaders.addAll("X-Hello", Arrays.asList("World1", "World2"));

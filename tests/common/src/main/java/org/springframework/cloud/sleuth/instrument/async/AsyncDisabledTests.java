@@ -28,6 +28,7 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.cloud.gateway.config.GatewayAutoConfiguration;
 import org.springframework.cloud.sleuth.api.CurrentTraceContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -36,7 +37,7 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 
 @SpringBootTest(classes = AsyncDisabledTests.ConfigureThreadPoolTaskScheduler.class,
 		webEnvironment = SpringBootTest.WebEnvironment.NONE, properties = "spring.sleuth.scheduled.enabled=false")
-public class AsyncDisabledTests {
+public abstract class AsyncDisabledTests {
 
 	@Autowired
 	CurrentTraceContext currentTraceContext;
@@ -57,7 +58,7 @@ public class AsyncDisabledTests {
 	}
 
 	@Configuration
-	@EnableAutoConfiguration
+	@EnableAutoConfiguration(exclude = GatewayAutoConfiguration.class)
 	@EnableAsync
 	static class ConfigureThreadPoolTaskScheduler {
 

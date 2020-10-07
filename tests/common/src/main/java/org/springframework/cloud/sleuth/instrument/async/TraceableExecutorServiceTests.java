@@ -46,12 +46,12 @@ import org.springframework.cloud.sleuth.api.ScopedSpan;
 import org.springframework.cloud.sleuth.api.TraceContext;
 import org.springframework.cloud.sleuth.api.Tracer;
 import org.springframework.cloud.sleuth.internal.DefaultSpanNamer;
-import org.springframework.cloud.sleuth.test.TestTracingAware;
+import org.springframework.cloud.sleuth.test.TestTracingAwareSupplier;
 
 import static java.util.stream.Collectors.toList;
 
 @ExtendWith(MockitoExtension.class)
-public abstract class TraceableExecutorServiceTests implements TestTracingAware {
+public abstract class TraceableExecutorServiceTests implements TestTracingAwareSupplier {
 
 	private static int TOTAL_THREADS = 10;
 
@@ -64,9 +64,9 @@ public abstract class TraceableExecutorServiceTests implements TestTracingAware 
 
 	SpanVerifyingRunnable spanVerifyingRunnable = new SpanVerifyingRunnable();
 
-	Tracer tracer = tracing().tracer();
+	Tracer tracer = tracerTest().tracing().tracer();
 
-	CurrentTraceContext currentTraceContext = tracing().currentTraceContext();
+	CurrentTraceContext currentTraceContext = tracerTest().tracing().currentTraceContext();
 
 	@BeforeEach
 	public void setup() {

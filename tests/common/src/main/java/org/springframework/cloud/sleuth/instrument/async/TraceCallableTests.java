@@ -30,10 +30,10 @@ import org.springframework.cloud.sleuth.SpanName;
 import org.springframework.cloud.sleuth.api.Span;
 import org.springframework.cloud.sleuth.api.Tracer;
 import org.springframework.cloud.sleuth.internal.DefaultSpanNamer;
-import org.springframework.cloud.sleuth.test.TestTracingAware;
+import org.springframework.cloud.sleuth.test.TestTracingAwareSupplier;
 
 @ExtendWith(MockitoExtension.class)
-public abstract class TraceCallableTests implements TestTracingAware {
+public abstract class TraceCallableTests implements TestTracingAwareSupplier {
 
 	ExecutorService executor = Executors.newSingleThreadExecutor();
 
@@ -62,13 +62,13 @@ public abstract class TraceCallableTests implements TestTracingAware {
 
 	@Test
 	public void should_remove_parent_span_from_thread_local_after_finishing_work() throws Exception {
-		Span parent = tracing().tracer().nextSpan().name("http:parent");
-		try (Tracer.SpanInScope ws = tracing().tracer().withSpanInScope(parent)) {
+		Span parent = tracerTest().tracing().tracer().nextSpan().name("http:parent");
+		try (Tracer.SpanInScope ws = tracerTest().tracing().tracer().withSpanInScope(parent)) {
 			Span child = givenCallableGetsSubmitted(thatRetrievesTraceFromThreadLocal());
 			BDDAssertions.then(parent).as("parent").isNotNull();
 			BDDAssertions.then(child.context().parentId()).isEqualTo(parent.context().spanId());
 		}
-		BDDAssertions.then(tracing().tracer().currentSpan()).isNull();
+		BDDAssertions.then(tracerTest().tracing().tracer().currentSpan()).isNull();
 
 		Span secondSpan = whenNonTraceableCallableGetsSubmitted(thatRetrievesTraceFromThreadLocal());
 
@@ -79,23 +79,23 @@ public abstract class TraceCallableTests implements TestTracingAware {
 	public void should_take_name_of_span_from_span_name_annotation() throws Exception {
 		whenATraceKeepingCallableGetsSubmitted();
 
-		BDDAssertions.then(handler().reportedSpans()).hasSize(1);
-		BDDAssertions.then(handler().reportedSpans().get(0).name()).isEqualTo("some-callable-name-from-annotation");
+		BDDAssertions.then(tracerTest().handler().reportedSpans()).hasSize(1);
+		BDDAssertions.then(tracerTest().handler().reportedSpans().get(0).name()).isEqualTo("some-callable-name-from-annotation");
 	}
 
 	@Test
 	public void should_take_name_of_span_from_to_string_if_span_name_annotation_is_missing() throws Exception {
 		whenCallableGetsSubmitted(thatRetrievesTraceFromThreadLocal());
 
-		BDDAssertions.then(handler().reportedSpans()).hasSize(1);
-		BDDAssertions.then(handler().reportedSpans().get(0).name()).isEqualTo("some-callable-name-from-to-string");
+		BDDAssertions.then(tracerTest().handler().reportedSpans()).hasSize(1);
+		BDDAssertions.then(tracerTest().handler().reportedSpans().get(0).name()).isEqualTo("some-callable-name-from-to-string");
 	}
 
 	private Callable<Span> thatRetrievesTraceFromThreadLocal() {
 		return new Callable<Span>() {
 			@Override
 			public Span call() throws Exception {
-				return tracing().tracer().currentSpan();
+				return tracerTest().tracing().tracer().currentSpan();
 			}
 
 			@Override
@@ -112,13 +112,13 @@ public abstract class TraceCallableTests implements TestTracingAware {
 
 	private Span whenCallableGetsSubmitted(Callable<Span> callable)
 			throws InterruptedException, java.util.concurrent.ExecutionException {
-		return this.executor.submit(new TraceCallable<>(tracing().tracer(), new DefaultSpanNamer(), callable)).get();
+		return this.executor.submit(new TraceCallable<>(tracerTest().tracing().tracer(), new DefaultSpanNamer(), callable)).get();
 	}
 
 	private Span whenATraceKeepingCallableGetsSubmitted()
 			throws InterruptedException, java.util.concurrent.ExecutionException {
-		return this.executor.submit(new TraceCallable<>(tracing().tracer(), new DefaultSpanNamer(),
-				new TraceKeepingCallable(tracing().tracer()))).get();
+		return this.executor.submit(new TraceCallable<>(tracerTest().tracing().tracer(), new DefaultSpanNamer(),
+				new TraceKeepingCallable(tracerTest().tracing().tracer()))).get();
 	}
 
 	private Span whenNonTraceableCallableGetsSubmitted(Callable<Span> callable)

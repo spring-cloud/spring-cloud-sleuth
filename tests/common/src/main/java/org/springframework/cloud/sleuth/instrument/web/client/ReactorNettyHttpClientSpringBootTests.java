@@ -16,6 +16,8 @@
 
 package org.springframework.cloud.sleuth.instrument.web.client;
 
+import java.util.function.Supplier;
+
 import io.netty.handler.codec.http.HttpResponseStatus;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.AfterEach;
@@ -31,6 +33,7 @@ import reactor.netty.http.server.HttpServer;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.cloud.gateway.config.GatewayAutoConfiguration;
 import org.springframework.cloud.sleuth.api.CurrentTraceContext;
 import org.springframework.cloud.sleuth.api.Span;
 import org.springframework.cloud.sleuth.api.TraceContext;
@@ -50,8 +53,7 @@ import org.springframework.web.reactive.function.client.WebClient;
  * create duplicate client spans for the same request.
  */
 @SpringBootTest(classes = ReactorNettyHttpClientSpringBootTests.TestConfiguration.class,
-		webEnvironment = SpringBootTest.WebEnvironment.NONE,
-		properties = { "spring.sleuth.otel.config.sampler-probability=1.0", "spring.sleuth.sampler.probability=1.0" })
+		webEnvironment = SpringBootTest.WebEnvironment.NONE)
 public abstract class ReactorNettyHttpClientSpringBootTests {
 
 	DisposableServer disposableServer;
@@ -74,7 +76,6 @@ public abstract class ReactorNettyHttpClientSpringBootTests {
 		}
 	}
 
-	// TraceContext.newBuilder().traceId(1).spanId(1).sampled(true).build();
 	public abstract TraceContext traceContext();
 
 	@Test
@@ -141,19 +142,12 @@ public abstract class ReactorNettyHttpClientSpringBootTests {
 	}
 
 	@Configuration
-	@EnableAutoConfiguration
+	@EnableAutoConfiguration(exclude = GatewayAutoConfiguration.class)
 	static class TestConfiguration {
 
-		// TODO: [OTEL] Figure this out
-		// @Bean
-		// Propagation.Factory propagationFactory() {
-		// return B3SinglePropagation.FACTORY;
-		// }
-
-		// TODO: [OTEL] Figure this out
 		@Bean
-		TestSpanHandler testSpanHandler() {
-			return null;
+		TestSpanHandler testSpanHandler(Supplier<TestSpanHandler> supplier) {
+			return supplier.get();
 		}
 
 		@Bean

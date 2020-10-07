@@ -30,10 +30,10 @@ import org.springframework.cloud.sleuth.SpanName;
 import org.springframework.cloud.sleuth.api.Span;
 import org.springframework.cloud.sleuth.api.Tracer;
 import org.springframework.cloud.sleuth.internal.DefaultSpanNamer;
-import org.springframework.cloud.sleuth.test.TestTracingAware;
+import org.springframework.cloud.sleuth.test.TestTracingAwareSupplier;
 
 @ExtendWith(MockitoExtension.class)
-public abstract class TraceRunnableTests implements TestTracingAware {
+public abstract class TraceRunnableTests implements TestTracingAwareSupplier {
 
 	ExecutorService executor = Executors.newSingleThreadExecutor();
 
@@ -84,8 +84,8 @@ public abstract class TraceRunnableTests implements TestTracingAware {
 
 		whenRunnableGetsSubmitted(traceKeepingRunnable);
 
-		BDDAssertions.then(handler().reportedSpans()).hasSize(1);
-		BDDAssertions.then(handler().reportedSpans().get(0).name()).isEqualTo("some-runnable-name-from-annotation");
+		BDDAssertions.then(tracerTest().handler().reportedSpans()).hasSize(1);
+		BDDAssertions.then(tracerTest().handler().reportedSpans().get(0).name()).isEqualTo("some-runnable-name-from-annotation");
 	}
 
 	@Test
@@ -95,12 +95,12 @@ public abstract class TraceRunnableTests implements TestTracingAware {
 
 		whenRunnableGetsSubmitted(runnable);
 
-		BDDAssertions.then(handler().reportedSpans()).hasSize(1);
-		BDDAssertions.then(handler().reportedSpans().get(0).name()).isEqualTo("some-runnable-name-from-to-string");
+		BDDAssertions.then(tracerTest().handler().reportedSpans()).hasSize(1);
+		BDDAssertions.then(tracerTest().handler().reportedSpans().get(0).name()).isEqualTo("some-runnable-name-from-to-string");
 	}
 
 	private TraceKeepingRunnable runnableThatRetrievesTraceFromThreadLocal() {
-		return new TraceKeepingRunnable(tracing().tracer());
+		return new TraceKeepingRunnable(tracerTest().tracing().tracer());
 	}
 
 	private void givenRunnableGetsSubmitted(Runnable runnable) throws Exception {
@@ -108,7 +108,7 @@ public abstract class TraceRunnableTests implements TestTracingAware {
 	}
 
 	private void whenRunnableGetsSubmitted(Runnable runnable) throws Exception {
-		this.executor.submit(new TraceRunnable(tracing().tracer(), new DefaultSpanNamer(), runnable)).get();
+		this.executor.submit(new TraceRunnable(tracerTest().tracing().tracer(), new DefaultSpanNamer(), runnable)).get();
 	}
 
 	private void whenNonTraceableRunnableGetsSubmitted(Runnable runnable) throws Exception {
@@ -119,7 +119,7 @@ public abstract class TraceRunnableTests implements TestTracingAware {
 		return new Runnable() {
 			@Override
 			public void run() {
-				span.set(tracing().tracer().currentSpan());
+				span.set(tracerTest().tracing().tracer().currentSpan());
 			}
 
 			@Override

@@ -25,12 +25,12 @@ import org.mockito.BDDMockito;
 import org.mockito.Mockito;
 
 import org.springframework.cloud.sleuth.internal.DefaultSpanNamer;
-import org.springframework.cloud.sleuth.test.TestTracingAware;
+import org.springframework.cloud.sleuth.test.TestTracingAwareSupplier;
 
 /**
  * @author Marcin Grzejszczak
  */
-public abstract class TraceAsyncAspectTest implements TestTracingAware {
+public abstract class TraceAsyncAspectTest implements TestTracingAwareSupplier {
 
 	ProceedingJoinPoint point = Mockito.mock(ProceedingJoinPoint.class);
 
@@ -46,7 +46,7 @@ public abstract class TraceAsyncAspectTest implements TestTracingAware {
 	// Issue#926
 	@Test
 	public void should_work() throws Throwable {
-		TraceAsyncAspect asyncAspect = new TraceAsyncAspect(tracing().tracer(), new DefaultSpanNamer()) {
+		TraceAsyncAspect asyncAspect = new TraceAsyncAspect(tracerTest().tracing().tracer(), new DefaultSpanNamer()) {
 			@Override
 			String name(ProceedingJoinPoint pjp) {
 				return "foo-bar";
@@ -55,9 +55,9 @@ public abstract class TraceAsyncAspectTest implements TestTracingAware {
 
 		asyncAspect.traceBackgroundThread(this.point);
 
-		BDDAssertions.then(handler().reportedSpans()).hasSize(1);
-		BDDAssertions.then(handler().reportedSpans().get(0).name()).isEqualTo("foo-bar");
-		BDDAssertions.then(handler().reportedSpans().get(0).finishTimestamp()).isPositive();
+		BDDAssertions.then(tracerTest().handler().reportedSpans()).hasSize(1);
+		BDDAssertions.then(tracerTest().handler().reportedSpans().get(0).name()).isEqualTo("foo-bar");
+		BDDAssertions.then(tracerTest().handler().reportedSpans().get(0).finishTimestamp()).isPositive();
 	}
 
 }

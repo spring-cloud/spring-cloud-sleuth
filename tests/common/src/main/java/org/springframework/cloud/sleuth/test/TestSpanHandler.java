@@ -22,25 +22,6 @@ import org.springframework.cloud.sleuth.api.Span;
 
 public interface TestSpanHandler extends Iterable<ReportedSpan> {
 
-	/*
-	 *
-	 *
-	 * StrictCurrentTraceContext currentTraceContext = StrictCurrentTraceContext.create();
-	 *
-	 * TestSpanHandler spans = new TestSpanHandler();
-	 *
-	 * Tracing tracing =
-	 * Tracing.newBuilder().currentTraceContext(this.currentTraceContext).addSpanHandler(
-	 * this.spans) .build();
-	 *
-	 * Tracer tracer = this.tracing.tracer();
-	 *
-	 *
-	 *
-	 * @AfterEach public void close() { this.tracing.close();
-	 * this.currentTraceContext.close(); }
-	 */
-
 	List<ReportedSpan> reportedSpans();
 
 	ReportedSpan takeLocalSpan();

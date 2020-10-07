@@ -16,18 +16,6 @@
 
 package org.springframework.cloud.sleuth.instrument.async;
 
-import org.springframework.cloud.sleuth.brave.BraveTestTracing;
-import org.springframework.cloud.sleuth.test.TestTracingAware;
+public class BraveAsyncDisabledTests extends AsyncDisabledTests {
 
-public class BraveLazyTraceThreadPoolTaskSchedulerTests extends LazyTraceThreadPoolTaskSchedulerTests {
-
-	BraveTestTracing testTracing;
-
-	@Override
-	public TestTracingAware tracerTest() {
-		if (this.testTracing == null) {
-			this.testTracing = new BraveTestTracing();
-		}
-		return this.testTracing;
-	}
 }

@@ -16,11 +16,15 @@
 
 package org.springframework.cloud.sleuth.brave;
 
+import java.io.Closeable;
+
 import brave.Tracing;
+import brave.handler.SpanHandler;
 import brave.http.HttpTracing;
 import brave.propagation.B3Propagation;
 import brave.propagation.StrictScopeDecorator;
 import brave.propagation.ThreadLocalCurrentTraceContext;
+import brave.sampler.Sampler;
 
 import org.springframework.cloud.sleuth.api.CurrentTraceContext;
 import org.springframework.cloud.sleuth.api.Tracer;
@@ -34,15 +38,22 @@ import org.springframework.cloud.sleuth.brave.bridge.http.BraveHttpClientHandler
 import org.springframework.cloud.sleuth.brave.bridge.http.BraveHttpServerHandler;
 import org.springframework.cloud.sleuth.test.TestSpanHandler;
 import org.springframework.cloud.sleuth.test.TestTracingAware;
+import org.springframework.cloud.sleuth.test.TestTracingAwareSupplier;
 import org.springframework.cloud.sleuth.test.TracerAware;
 
-public class BraveTestTracing implements TracerAware, TestTracingAware {
+public class BraveTestTracing implements TracerAware, TestTracingAware, TestTracingAwareSupplier, Closeable {
 
 	brave.test.TestSpanHandler spans = new brave.test.TestSpanHandler();
 
-	Tracing tracing = Tracing.newBuilder().currentTraceContext(
-			ThreadLocalCurrentTraceContext.newBuilder().addScopeDecorator(StrictScopeDecorator.create()).build())
-			.addSpanHandler(this.spans).build();
+	ThreadLocalCurrentTraceContext context = ThreadLocalCurrentTraceContext.newBuilder().addScopeDecorator(StrictScopeDecorator.create()).build();
+
+	Tracing tracing = tracingBuilder().build();
+
+	Tracing.Builder tracingBuilder() {
+		return Tracing.newBuilder().currentTraceContext(context)
+				.sampler(Sampler.ALWAYS_SAMPLE)
+				.addSpanHandler(spanHandler());
+	}
 
 	brave.Tracer tracer = this.tracing.tracer();
 
@@ -53,9 +64,13 @@ public class BraveTestTracing implements TracerAware, TestTracingAware {
 		return BraveTracer.fromBrave(this.tracer);
 	}
 
+	SpanHandler spanHandler() {
+		return this.spans;
+	}
+
 	@Override
 	public CurrentTraceContext currentTraceContext() {
-		return BraveCurrentTraceContext.fromBrave(this.tracing.currentTraceContext());
+		return BraveCurrentTraceContext.fromBrave(this.context);
 	}
 
 	@Override
@@ -83,4 +98,15 @@ public class BraveTestTracing implements TracerAware, TestTracingAware {
 		return new BraveTestSpanHandler(this.spans);
 	}
 
+	@Override
+	public TestTracingAware tracerTest() {
+		return this;
+	}
+
+	@Override
+	public void close() {
+		this.spans.clear();
+		this.context.clear();
+		handler().clear();
+	}
 }

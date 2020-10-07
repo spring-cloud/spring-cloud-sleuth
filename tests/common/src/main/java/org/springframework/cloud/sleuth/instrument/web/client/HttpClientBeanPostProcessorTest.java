@@ -46,7 +46,6 @@ public abstract class HttpClientBeanPostProcessorTest {
 
 	TraceContext traceContext = traceContext();
 
-	// TraceContext.newBuilder().traceId(1).spanId(2).sampled(true).build();
 	public abstract TraceContext traceContext();
 
 	@BeforeEach

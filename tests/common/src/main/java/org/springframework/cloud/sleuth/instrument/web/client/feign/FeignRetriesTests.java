@@ -43,13 +43,13 @@ import org.springframework.beans.factory.BeanFactory;
 import org.springframework.cloud.sleuth.api.CurrentTraceContext;
 import org.springframework.cloud.sleuth.api.Span;
 import org.springframework.cloud.sleuth.api.http.HttpClientHandler;
-import org.springframework.cloud.sleuth.test.TestTracingAware;
+import org.springframework.cloud.sleuth.test.TestTracingAwareSupplier;
 
 /**
  * @author Marcin Grzejszczak
  */
 @ExtendWith(MockitoExtension.class)
-public abstract class FeignRetriesTests implements TestTracingAware {
+public abstract class FeignRetriesTests implements TestTracingAwareSupplier {
 
 	public final MockWebServer server = new MockWebServer();
 
@@ -70,8 +70,8 @@ public abstract class FeignRetriesTests implements TestTracingAware {
 	@AfterEach
 	public void setup() {
 		BDDMockito.given(this.beanFactory.getBean(CurrentTraceContext.class))
-				.willReturn(tracing().currentTraceContext());
-		BDDMockito.given(this.beanFactory.getBean(HttpClientHandler.class)).willReturn(tracing().httpClientHandler());
+				.willReturn(tracerTest().tracing().currentTraceContext());
+		BDDMockito.given(this.beanFactory.getBean(HttpClientHandler.class)).willReturn(tracerTest().tracing().httpClientHandler());
 	}
 
 	@Test
@@ -82,7 +82,7 @@ public abstract class FeignRetriesTests implements TestTracingAware {
 		String url = "http://localhost:" + this.server.getPort();
 
 		TestInterface api = Feign.builder()
-				.client(new TracingFeignClient(tracing().currentTraceContext(), tracing().httpClientHandler(), client))
+				.client(new TracingFeignClient(tracerTest().tracing().currentTraceContext(), tracerTest().tracing().httpClientHandler(), client))
 				.target(TestInterface.class, url);
 
 		try {
@@ -111,8 +111,8 @@ public abstract class FeignRetriesTests implements TestTracingAware {
 						.build();
 			}
 		};
-		TestInterface api = Feign.builder().client(new TracingFeignClient(tracing().currentTraceContext(),
-				tracing().httpClientHandler(), (request, options) -> {
+		TestInterface api = Feign.builder().client(new TracingFeignClient(tracerTest().tracing().currentTraceContext(),
+				tracerTest().tracing().httpClientHandler(), (request, options) -> {
 					atomicInteger.incrementAndGet();
 					return client.execute(request, options);
 				})).target(TestInterface.class, url);
@@ -120,8 +120,8 @@ public abstract class FeignRetriesTests implements TestTracingAware {
 		BDDAssertions.then(api.decodedPost()).isEqualTo("OK");
 		// request interception should take place only twice (1st request & 2nd retry)
 		BDDAssertions.then(atomicInteger.get()).isEqualTo(2);
-		BDDAssertions.then(handler().reportedSpans().get(0).error()).isInstanceOf(IOException.class);
-		BDDAssertions.then(handler().reportedSpans().get(1).kind()).isEqualTo(Span.Kind.CLIENT);
+		BDDAssertions.then(tracerTest().handler().reportedSpans().get(0).error()).isInstanceOf(IOException.class);
+		BDDAssertions.then(tracerTest().handler().reportedSpans().get(1).kind()).isEqualTo(Span.Kind.CLIENT);
 	}
 
 	interface TestInterface {

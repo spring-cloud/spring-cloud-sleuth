@@ -20,17 +20,17 @@ import org.assertj.core.api.BDDAssertions;
 import org.junit.jupiter.api.Test;
 
 import org.springframework.cloud.gateway.filter.headers.HttpHeadersFilter;
-import org.springframework.cloud.sleuth.test.TestTracingAware;
+import org.springframework.cloud.sleuth.test.TestTracingAwareSupplier;
 import org.springframework.http.HttpHeaders;
 import org.springframework.mock.http.server.reactive.MockServerHttpRequest;
 import org.springframework.mock.web.server.MockServerWebExchange;
 
-public abstract class TraceResponseHttpHeadersFilterTests implements TestTracingAware {
+public abstract class TraceResponseHttpHeadersFilterTests implements TestTracingAwareSupplier {
 
 	@Test
 	public void should_not_report_span_when_no_span_was_present_in_attribute() {
-		HttpHeadersFilter filter = TraceResponseHttpHeadersFilter.create(tracing().tracer(),
-				tracing().httpClientHandler(), tracing().propagator());
+		HttpHeadersFilter filter = TraceResponseHttpHeadersFilter.create(tracerTest().tracing().tracer(),
+				tracerTest().tracing().httpClientHandler(), tracerTest().tracing().propagator());
 		HttpHeaders httpHeaders = new HttpHeaders();
 		httpHeaders.set("b3", "52f112af7472aff0-53e6ab6fc5dfee58");
 		MockServerHttpRequest request = MockServerHttpRequest.post("foo/bar").headers(httpHeaders).build();
@@ -38,22 +38,22 @@ public abstract class TraceResponseHttpHeadersFilterTests implements TestTracing
 
 		filter.filter(httpHeaders, exchange);
 
-		BDDAssertions.then(handler().reportedSpans()).isEmpty();
+		BDDAssertions.then(tracerTest().handler().reportedSpans()).isEmpty();
 	}
 
 	@Test
 	public void should_report_span_when_span_was_present_in_attribute() {
-		HttpHeadersFilter filter = TraceResponseHttpHeadersFilter.create(tracing().tracer(),
-				tracing().httpClientHandler(), tracing().propagator());
+		HttpHeadersFilter filter = TraceResponseHttpHeadersFilter.create(tracerTest().tracing().tracer(),
+				tracerTest().tracing().httpClientHandler(), tracerTest().tracing().propagator());
 		HttpHeaders httpHeaders = new HttpHeaders();
 		httpHeaders.set("b3", "52f112af7472aff0-53e6ab6fc5dfee58");
 		MockServerHttpRequest request = MockServerHttpRequest.post("foo/bar").headers(httpHeaders).build();
 		MockServerWebExchange exchange = MockServerWebExchange.builder(request).build();
-		exchange.getAttributes().put(TraceResponseHttpHeadersFilter.SPAN_ATTRIBUTE, tracing().tracer().nextSpan());
+		exchange.getAttributes().put(TraceResponseHttpHeadersFilter.SPAN_ATTRIBUTE, tracerTest().tracing().tracer().nextSpan());
 
 		filter.filter(httpHeaders, exchange);
 
-		BDDAssertions.then(handler().reportedSpans()).isNotEmpty();
+		BDDAssertions.then(tracerTest().handler().reportedSpans()).isNotEmpty();
 	}
 
 }

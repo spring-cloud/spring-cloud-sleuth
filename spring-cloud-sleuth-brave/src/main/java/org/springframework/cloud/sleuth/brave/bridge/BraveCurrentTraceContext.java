@@ -33,7 +33,11 @@ public class BraveCurrentTraceContext implements CurrentTraceContext {
 
 	@Override
 	public TraceContext get() {
-		return new BraveTraceContext(this.delegate.get());
+		brave.propagation.TraceContext context = this.delegate.get();
+		if (context == null) {
+			return null;
+		}
+		return new BraveTraceContext(context);
 	}
 
 	@Override

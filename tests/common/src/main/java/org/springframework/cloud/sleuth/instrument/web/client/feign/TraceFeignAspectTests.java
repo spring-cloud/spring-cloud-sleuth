@@ -27,13 +27,13 @@ import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import org.springframework.beans.factory.BeanFactory;
-import org.springframework.cloud.sleuth.test.TestTracingAware;
+import org.springframework.cloud.sleuth.test.TestTracingAwareSupplier;
 
 /**
  * @author Marcin Grzejszczak
  */
 @ExtendWith(MockitoExtension.class)
-public abstract class TraceFeignAspectTests implements TestTracingAware {
+public abstract class TraceFeignAspectTests implements TestTracingAwareSupplier {
 
 	@Mock
 	BeanFactory beanFactory;
@@ -68,7 +68,7 @@ public abstract class TraceFeignAspectTests implements TestTracingAware {
 	@Test
 	public void should_not_wrap_traced_feign_client_in_trace_representation() throws Throwable {
 		BDDMockito.given(this.pjp.getTarget()).willReturn(
-				new TracingFeignClient(tracing().currentTraceContext(), tracing().httpClientHandler(), this.client));
+				new TracingFeignClient(tracerTest().tracing().currentTraceContext(), tracerTest().tracing().httpClientHandler(), this.client));
 
 		this.traceFeignAspect.feignClientWasCalled(this.pjp);
 

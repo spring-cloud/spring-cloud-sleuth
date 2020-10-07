@@ -46,7 +46,7 @@ import org.quartz.utils.StringKeyDirtyFlagMap;
 import org.springframework.cloud.sleuth.api.Span;
 import org.springframework.cloud.sleuth.api.Tracer;
 import org.springframework.cloud.sleuth.test.ReportedSpan;
-import org.springframework.cloud.sleuth.test.TestTracingAware;
+import org.springframework.cloud.sleuth.test.TestTracingAwareSupplier;
 
 import static org.springframework.cloud.sleuth.instrument.quartz.TracingJobListener.CONTEXT_SPAN_IN_SCOPE_KEY;
 import static org.springframework.cloud.sleuth.instrument.quartz.TracingJobListener.CONTEXT_SPAN_KEY;
@@ -55,7 +55,7 @@ import static org.springframework.cloud.sleuth.instrument.quartz.TracingJobListe
 /**
  * @author Branden Cash
  */
-public abstract class TracingJobListenerTest implements TestTracingAware {
+public abstract class TracingJobListenerTest implements TestTracingAwareSupplier {
 
 	private static final JobKey SUCCESSFUL_JOB_KEY = new JobKey("SuccessfulJob");
 
@@ -71,7 +71,7 @@ public abstract class TracingJobListenerTest implements TestTracingAware {
 
 	@BeforeEach
 	public void setUp() throws Exception {
-		listener = new TracingJobListener(tracing().tracer(), tracing().propagator());
+		listener = new TracingJobListener(tracerTest().tracing().tracer(), tracerTest().tracing().propagator());
 		completableJob = new CompleteableTriggerListener();
 
 		scheduler = createScheduler(getClass().getSimpleName(), 1);
@@ -110,7 +110,7 @@ public abstract class TracingJobListenerTest implements TestTracingAware {
 		runJob(trigger);
 
 		// expect
-		handler().takeLocalSpan();
+		tracerTest().handler().takeLocalSpan();
 	}
 
 	@Test
@@ -123,7 +123,7 @@ public abstract class TracingJobListenerTest implements TestTracingAware {
 		runJob(trigger);
 
 		// expect
-		ReportedSpan span = handler().takeLocalSpan();
+		ReportedSpan span = tracerTest().handler().takeLocalSpan();
 		Assertions.assertThat(span.name()).isEqualToIgnoringCase(SUCCESSFUL_JOB_KEY.toString());
 		Assertions.assertThat(span.tags().get(TRIGGER_TAG_KEY)).isEqualToIgnoringCase(TRIGGER_KEY.toString());
 	}
@@ -137,7 +137,7 @@ public abstract class TracingJobListenerTest implements TestTracingAware {
 		runJob(trigger);
 
 		// expect
-		handler().takeLocalSpan();
+		tracerTest().handler().takeLocalSpan();
 	}
 
 	@Test
@@ -150,7 +150,7 @@ public abstract class TracingJobListenerTest implements TestTracingAware {
 		runJob(trigger);
 
 		// expect
-		handler().takeLocalSpan();
+		tracerTest().handler().takeLocalSpan();
 	}
 
 	@Test
@@ -176,8 +176,8 @@ public abstract class TracingJobListenerTest implements TestTracingAware {
 		runJob(trigger);
 
 		// expect
-		ReportedSpan parent = handler().takeLocalSpan();
-		ReportedSpan child = handler().takeLocalSpan();
+		ReportedSpan parent = tracerTest().handler().takeLocalSpan();
+		ReportedSpan child = tracerTest().handler().takeLocalSpan();
 		Assertions.assertThat(parent.parentId()).isNull();
 		Assertions.assertThat(child.parentId()).isEqualTo(parent.id());
 	}
@@ -194,8 +194,8 @@ public abstract class TracingJobListenerTest implements TestTracingAware {
 		runJob(trigger);
 
 		// expect
-		ReportedSpan parent = handler().takeLocalSpan();
-		ReportedSpan child = handler().takeLocalSpan();
+		ReportedSpan parent = tracerTest().handler().takeLocalSpan();
+		ReportedSpan child = tracerTest().handler().takeLocalSpan();
 		Assertions.assertThat(parent.parentId()).isNull();
 		Assertions.assertThat(child.parentId()).isEqualTo(parent.id());
 	}
@@ -215,9 +215,9 @@ public abstract class TracingJobListenerTest implements TestTracingAware {
 	}
 
 	void addSpanToJobData(JobDataMap data) {
-		Span span = tracing().tracer().nextSpan().start();
-		try (Tracer.SpanInScope spanInScope = tracing().tracer().withSpanInScope(span)) {
-			tracing().propagator().inject(tracing().currentTraceContext().get(), data, StringKeyDirtyFlagMap::put);
+		Span span = tracerTest().tracing().tracer().nextSpan().start();
+		try (Tracer.SpanInScope spanInScope = tracerTest().tracing().tracer().withSpanInScope(span)) {
+			tracerTest().tracing().propagator().inject(tracerTest().tracing().currentTraceContext().get(), data, StringKeyDirtyFlagMap::put);
 		}
 		finally {
 			span.finish();

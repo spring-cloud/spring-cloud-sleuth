@@ -17,6 +17,7 @@
 package org.springframework.cloud.sleuth.instrument.circuitbreaker;
 
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Supplier;
 
 import org.assertj.core.api.BDDAssertions;
 import org.junit.jupiter.api.BeforeEach;
@@ -27,6 +28,7 @@ import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.cloud.circuitbreaker.resilience4j.Resilience4JCircuitBreakerFactory;
 import org.springframework.cloud.client.circuitbreaker.CircuitBreakerFactory;
+import org.springframework.cloud.gateway.config.GatewayAutoConfiguration;
 import org.springframework.cloud.sleuth.api.ScopedSpan;
 import org.springframework.cloud.sleuth.api.Span;
 import org.springframework.cloud.sleuth.api.Tracer;
@@ -35,9 +37,8 @@ import org.springframework.cloud.sleuth.test.TestSpanHandler;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-@SpringBootTest(classes = CircuitBreakerIntegrationTests.Config.class,
-		properties = { "spring.sleuth.otel.config.sampler-probability=1.0", "spring.sleuth.sampler.probability=1.0" })
-public class CircuitBreakerIntegrationTests {
+@SpringBootTest(classes = CircuitBreakerIntegrationTests.Config.class)
+public abstract class CircuitBreakerIntegrationTests {
 
 	@Autowired
 	TestSpanHandler spans;
@@ -108,14 +109,13 @@ public class CircuitBreakerIntegrationTests {
 		}
 	}
 
-	@Configuration
-	@EnableAutoConfiguration
+	@Configuration(proxyBeanMethods = false)
+	@EnableAutoConfiguration(exclude = GatewayAutoConfiguration.class)
 	static class Config {
 
-		// TODO: [OTEL] Figure this out
 		@Bean
-		TestSpanHandler testSpanHandler() {
-			return null;
+		TestSpanHandler testSpanHandler(Supplier<TestSpanHandler> supplier) {
+			return supplier.get();
 		}
 
 		@Bean

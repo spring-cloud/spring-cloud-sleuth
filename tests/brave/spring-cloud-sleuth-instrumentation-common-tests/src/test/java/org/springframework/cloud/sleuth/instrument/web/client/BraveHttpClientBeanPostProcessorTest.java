@@ -14,20 +14,15 @@
  * limitations under the License.
  */
 
-package org.springframework.cloud.sleuth.instrument.async;
+package org.springframework.cloud.sleuth.instrument.web.client;
 
-import org.springframework.cloud.sleuth.brave.BraveTestTracing;
-import org.springframework.cloud.sleuth.test.TestTracingAware;
+import org.springframework.cloud.sleuth.api.TraceContext;
+import org.springframework.cloud.sleuth.brave.bridge.BraveTraceContext;
 
-public class BraveLazyTraceThreadPoolTaskSchedulerTests extends LazyTraceThreadPoolTaskSchedulerTests {
-
-	BraveTestTracing testTracing;
+public class BraveHttpClientBeanPostProcessorTest extends HttpClientBeanPostProcessorTest {
 
 	@Override
-	public TestTracingAware tracerTest() {
-		if (this.testTracing == null) {
-			this.testTracing = new BraveTestTracing();
-		}
-		return this.testTracing;
+	public TraceContext traceContext() {
+		return BraveTraceContext.fromBrave(brave.propagation.TraceContext.newBuilder().traceId(1).spanId(2).sampled(true).build());
 	}
 }
