@@ -72,6 +72,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest(classes = TraceFilterIntegrationTests.Config.class)
 public class TraceFilterIntegrationTests extends AbstractMvcIntegrationTest {
 
+	static final String MVC_CONTROLLER_CLASS_KEY = "mvc.controller.class";
+	static final String MVC_CONTROLLER_METHOD_KEY = "mvc.controller.method";
+
 	private static Span span;
 
 	@Autowired
@@ -98,8 +101,7 @@ public class TraceFilterIntegrationTests extends AbstractMvcIntegrationTest {
 
 		then(this.spans).hasSize(1);
 		MutableSpan span = this.spans.get(0);
-		then(span.tags()).containsKey(TraceWebFilter.MVC_CONTROLLER_CLASS_KEY)
-				.containsKey(TraceWebFilter.MVC_CONTROLLER_METHOD_KEY);
+		then(span.tags()).containsKey(MVC_CONTROLLER_CLASS_KEY).containsKey(MVC_CONTROLLER_METHOD_KEY);
 		then(this.tracer.currentSpan()).isNull();
 	}
 

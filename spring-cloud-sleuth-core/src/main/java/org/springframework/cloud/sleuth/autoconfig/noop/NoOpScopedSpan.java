@@ -55,4 +55,5 @@ class NoOpScopedSpan implements ScopedSpan {
 	public void finish() {
 
 	}
+
 }

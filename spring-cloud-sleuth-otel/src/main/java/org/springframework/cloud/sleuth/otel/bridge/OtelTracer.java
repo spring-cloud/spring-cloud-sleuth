@@ -16,9 +16,10 @@
 
 package org.springframework.cloud.sleuth.otel.bridge;
 
+import io.grpc.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.trace.DefaultSpan;
-import io.opentelemetry.trace.SpanContext;
+import io.opentelemetry.trace.TracingContextUtils;
 
 import org.springframework.cloud.sleuth.api.SamplerFunction;
 import org.springframework.cloud.sleuth.api.SamplingFlags;
@@ -44,34 +45,23 @@ public class OtelTracer implements Tracer {
 	@Override
 	public Span joinSpan(TraceContext context) {
 		// TODO: [OTEL] I think you can't join a span in Otel
-		return newChild(context);
+		return null;
 	}
 
 	@Override
 	public Span newChild(TraceContext parent) {
-		return new OtelSpan(this.tracer.spanBuilder("").setParent(((OtelTraceContext) parent).delegate).startSpan());
+		return null;
 	}
 
 	@Override
 	public Span nextSpan(TraceContext extracted) {
-		SpanContext context = extracted != null ? (((OtelTraceContext) extracted).delegate) : null;
-		if (context == null) {
-			return null;
-		}
-		return new OtelSpan(this.tracer.spanBuilder("").setParent(((OtelTraceContext) extracted).delegate).startSpan());
+		return null;
 	}
 
 	@Override
 	public Span nextSpan(SamplingFlags extracted) {
 		// TODO: [OTEL] will create a child span
-		if (extracted instanceof OtelTraceContext) {
-			return new OtelSpan(
-					this.tracer.spanBuilder("").setParent(((OtelTraceContext) extracted).delegate).startSpan());
-		}
-		io.opentelemetry.trace.Span startedSpan = this.tracer.spanBuilder("").startSpan();
-		OtelTraceContext context = (OtelTraceContext) new OtelTraceContextBuilder(startedSpan.getContext())
-				.sampled(extracted.sampled()).build();
-		return new OtelSpan(this.tracer.spanBuilder("").setParent(context.delegate).startSpan());
+		return null;
 	}
 
 	@Override
@@ -94,7 +84,7 @@ public class OtelTracer implements Tracer {
 	@Override
 	public Span currentSpan() {
 		io.opentelemetry.trace.Span currentSpan = this.tracer.getCurrentSpan();
-		if (currentSpan == null) {
+		if (currentSpan == null || currentSpan.equals(DefaultSpan.getInvalid())) {
 			return null;
 		}
 		return new OtelSpan(currentSpan);
@@ -130,9 +120,16 @@ public class OtelTracer implements Tracer {
 	}
 
 	@Override
-	public ScopedSpan startScopedSpanWithParent(String name, TraceContext parent) {
-		SpanContext context = parent != null ? (((OtelTraceContext) parent).delegate) : null;
-		io.opentelemetry.trace.Span span = this.tracer.spanBuilder(name).setParent(context).startSpan();
+	public ScopedSpan startScopedSpanWithParent(String name, Span parent) {
+		io.opentelemetry.trace.Span parentSpan = parent != null ? (((OtelSpan) parent).delegate) : null;
+		io.opentelemetry.trace.Span span;
+		if (parentSpan == null) {
+			span = this.tracer.spanBuilder(name).startSpan();
+		}
+		else {
+			span = this.tracer.spanBuilder(name).setParent(TracingContextUtils.withSpan(parentSpan, Context.current()))
+					.startSpan();
+		}
 		return new OtelScopedSpan(span, this.tracer.withSpan(span));
 	}
 

@@ -80,7 +80,8 @@ public abstract class TraceCallableTests implements TestTracingAwareSupplier {
 		whenATraceKeepingCallableGetsSubmitted();
 
 		BDDAssertions.then(tracerTest().handler().reportedSpans()).hasSize(1);
-		BDDAssertions.then(tracerTest().handler().reportedSpans().get(0).name()).isEqualTo("some-callable-name-from-annotation");
+		BDDAssertions.then(tracerTest().handler().reportedSpans().get(0).name())
+				.isEqualTo("some-callable-name-from-annotation");
 	}
 
 	@Test
@@ -88,7 +89,8 @@ public abstract class TraceCallableTests implements TestTracingAwareSupplier {
 		whenCallableGetsSubmitted(thatRetrievesTraceFromThreadLocal());
 
 		BDDAssertions.then(tracerTest().handler().reportedSpans()).hasSize(1);
-		BDDAssertions.then(tracerTest().handler().reportedSpans().get(0).name()).isEqualTo("some-callable-name-from-to-string");
+		BDDAssertions.then(tracerTest().handler().reportedSpans().get(0).name())
+				.isEqualTo("some-callable-name-from-to-string");
 	}
 
 	private Callable<Span> thatRetrievesTraceFromThreadLocal() {
@@ -112,7 +114,8 @@ public abstract class TraceCallableTests implements TestTracingAwareSupplier {
 
 	private Span whenCallableGetsSubmitted(Callable<Span> callable)
 			throws InterruptedException, java.util.concurrent.ExecutionException {
-		return this.executor.submit(new TraceCallable<>(tracerTest().tracing().tracer(), new DefaultSpanNamer(), callable)).get();
+		return this.executor
+				.submit(new TraceCallable<>(tracerTest().tracing().tracer(), new DefaultSpanNamer(), callable)).get();
 	}
 
 	private Span whenATraceKeepingCallableGetsSubmitted()

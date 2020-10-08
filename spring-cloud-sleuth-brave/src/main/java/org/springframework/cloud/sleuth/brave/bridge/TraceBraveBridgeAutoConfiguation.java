@@ -52,8 +52,8 @@ public class TraceBraveBridgeAutoConfiguation {
 	}
 
 	@Bean
-	Propagator bravePropagator(Propagation.Factory factory) {
-		return new BravePropagator(factory);
+	Propagator bravePropagator(Propagation.Factory factory, brave.Tracer tracer) {
+		return new BravePropagator(factory, tracer);
 	}
 
 }

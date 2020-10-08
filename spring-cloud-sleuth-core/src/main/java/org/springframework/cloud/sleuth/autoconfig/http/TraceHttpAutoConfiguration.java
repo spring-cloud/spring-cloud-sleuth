@@ -49,6 +49,5 @@ public class TraceHttpAutoConfiguration {
 	HttpServerHandler defaultHttpServerHandler() {
 		return new NoOpHttpServerHandler();
 	}
+
 }
-
-

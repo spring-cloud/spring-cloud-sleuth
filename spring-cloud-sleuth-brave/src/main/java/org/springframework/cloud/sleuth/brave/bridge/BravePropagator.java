@@ -2,10 +2,12 @@ package org.springframework.cloud.sleuth.brave.bridge;
 
 import java.util.List;
 
+import brave.Tracer;
 import brave.propagation.Propagation;
 import brave.propagation.SamplingFlags;
 import brave.propagation.TraceContextOrSamplingFlags;
 
+import org.springframework.cloud.sleuth.api.Span;
 import org.springframework.cloud.sleuth.api.TraceContext;
 import org.springframework.cloud.sleuth.api.propagation.Propagator;
 
@@ -13,12 +15,15 @@ public class BravePropagator implements Propagator {
 
 	private final Propagation<String> propagation;
 
-	public BravePropagator(Propagation.Factory factory) {
-		this(factory.get());
+	private final Tracer tracer;
+
+	public BravePropagator(Propagation.Factory factory, Tracer tracer) {
+		this(factory.get(), tracer);
 	}
 
-	public BravePropagator(Propagation<String> propagation) {
+	public BravePropagator(Propagation<String> propagation, Tracer tracer) {
 		this.propagation = propagation;
+		this.tracer = tracer;
 	}
 
 	@Override
@@ -32,12 +37,13 @@ public class BravePropagator implements Propagator {
 	}
 
 	@Override
-	public <C> TraceContext extract(C carrier, Getter<C> getter) {
+	public <C> Span extract(C carrier, Getter<C> getter) {
 		TraceContextOrSamplingFlags extract = propagation.extractor(getter::get).extract(carrier);
 		if (extract.samplingFlags() == SamplingFlags.EMPTY) {
-			return null;
+			return BraveSpan.fromBrave(this.tracer.nextSpan());
 		}
-		return BraveTraceContext.fromBrave(extract.context());
+		brave.Span nextSpan = this.tracer.nextSpan(extract);
+		return BraveSpan.fromBrave(nextSpan);
 	}
 
 }

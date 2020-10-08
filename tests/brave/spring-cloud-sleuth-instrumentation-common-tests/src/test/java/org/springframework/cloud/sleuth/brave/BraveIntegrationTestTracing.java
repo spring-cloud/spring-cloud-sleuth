@@ -41,4 +41,5 @@ public class BraveIntegrationTestTracing extends BraveTestTracing {
 		}
 		return this.spanHandler;
 	}
+
 }

@@ -106,4 +106,5 @@ class NoOpSpan implements Span {
 	public void flush() {
 
 	}
+
 }

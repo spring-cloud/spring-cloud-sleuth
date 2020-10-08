@@ -20,6 +20,7 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 
+import io.opentelemetry.trace.DefaultSpan;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.Tracer;
 
@@ -36,7 +37,11 @@ public class OtelCurrentTraceContext implements CurrentTraceContext {
 
 	@Override
 	public TraceContext get() {
-		return new OtelTraceContext(this.tracer.getCurrentSpan());
+		Span currentSpan = this.tracer.getCurrentSpan();
+		if (DefaultSpan.getInvalid().equals(currentSpan)) {
+			return null;
+		}
+		return new OtelTraceContext(currentSpan);
 	}
 
 	@Override

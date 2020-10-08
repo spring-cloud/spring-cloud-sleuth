@@ -34,12 +34,4 @@ public interface TracerAware {
 
 	HttpClientHandler httpClientHandler();
 
-	/*
-	 * public MutableSpan takeLocalSpan() { MutableSpan result = doTakeSpan(false);
-	 * assertThat(result.kind()) .withFailMessage("Expected %s to have no kind", result)
-	 * .isNull(); assertThat(result.remoteServiceName())
-	 * .withFailMessage("Expected %s to have no remote endpoint", result) .isNull();
-	 * return result; }
-	 */
-
 }

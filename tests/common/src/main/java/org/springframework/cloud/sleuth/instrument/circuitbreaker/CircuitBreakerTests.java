@@ -78,11 +78,15 @@ public abstract class CircuitBreakerTests implements TestTracingAwareSupplier {
 
 			ReportedSpan reportedSpan = tracerTest().handler().reportedSpans().get(1);
 			BDDAssertions.then(reportedSpan.name()).contains("CircuitBreakerTests");
-			BDDAssertions.then(reportedSpan.tags().get("error")).contains("boom2");
+			additionalAssertions(reportedSpan);
 		}
 		finally {
 			scopedSpan.finish();
 		}
+	}
+
+	public void additionalAssertions(ReportedSpan reportedSpan) {
+
 	}
 
 }

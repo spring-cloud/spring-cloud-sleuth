@@ -18,6 +18,7 @@ package org.springframework.cloud.sleuth.instrument.web.client;
 
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.List;
 
 import org.assertj.core.api.BDDAssertions;
 import org.junit.jupiter.api.Test;
@@ -45,9 +46,9 @@ public abstract class TraceRequestHttpHeadersFilterTests implements TestTracingA
 		HttpHeaders filteredHeaders = filter.filter(requestHeaders(httpHeaders), exchange);
 
 		// we want to continue the trace
-		BDDAssertions.then(filteredHeaders.get("X-B3-TraceId")).isEqualTo(httpHeaders.get("X-B3-TraceId"));
+		BDDAssertions.then(high(filteredHeaders.get("X-B3-TraceId"))).isEqualTo(high(httpHeaders.get("X-B3-TraceId")));
 		// but we want to have a new span id
-		BDDAssertions.then(filteredHeaders.get("X-B3-SpanId")).isNotEqualTo(httpHeaders.get("X-B3-SpanId"));
+		BDDAssertions.then(high(filteredHeaders.get("X-B3-SpanId"))).isNotEqualTo(high(httpHeaders.get("X-B3-SpanId")));
 		BDDAssertions.then(filteredHeaders.get("X-Hello")).isEqualTo(Collections.singletonList("World"));
 		BDDAssertions.then(filteredHeaders.get("X-Hello-Request"))
 				.isEqualTo(Collections.singletonList("Request World"));
@@ -68,11 +69,11 @@ public abstract class TraceRequestHttpHeadersFilterTests implements TestTracingA
 		HttpHeaders filteredHeaders = filter.filter(requestHeaders(httpHeaders), exchange);
 
 		// we want to continue the trace
-		BDDAssertions.then(filteredHeaders.get("X-B3-TraceId"))
-				.isEqualTo(Collections.singletonList("1111111111111111"));
+		BDDAssertions.then(high(filteredHeaders.get("X-B3-TraceId")))
+				.isEqualTo(high(Collections.singletonList("1111111111111111")));
 		// but we want to have a new span id
-		BDDAssertions.then(filteredHeaders.get("X-B3-SpanId"))
-				.isNotEqualTo(Collections.singletonList("1111111111111111"));
+		BDDAssertions.then(high(filteredHeaders.get("X-B3-SpanId")))
+				.isNotEqualTo(high(Collections.singletonList("1111111111111111")));
 		// we don't want to propagate b3
 		BDDAssertions.then(filteredHeaders.get("B3")).isNullOrEmpty();
 		BDDAssertions.then(filteredHeaders.get("X-Hello")).isEqualTo(Collections.singletonList("World"));
@@ -153,6 +154,15 @@ public abstract class TraceRequestHttpHeadersFilterTests implements TestTracingA
 		headers.add("X-Hello-Request", "Request World");
 		headers.add("X-Auth-User", "aaaa");
 		return headers;
+	}
+
+	private String high(List<String> ids) {
+		BDDAssertions.then(ids).isNotNull().isNotEmpty();
+		String id = ids.get(0);
+		if (id.length() == 32) {
+			return id.substring(16);
+		}
+		return id;
 	}
 
 }

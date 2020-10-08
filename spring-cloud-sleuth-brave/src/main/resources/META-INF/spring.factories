@@ -7,7 +7,6 @@ org.springframework.cloud.sleuth.brave.instrument.web.TraceHttpAutoConfiguration
 org.springframework.cloud.sleuth.brave.instrument.web.TraceWebServletAutoConfiguration,\
 org.springframework.cloud.sleuth.brave.instrument.web.client.TraceWebClientAutoConfiguration,\
 org.springframework.cloud.sleuth.brave.instrument.web.client.TraceWebAsyncClientAutoConfiguration,\
-org.springframework.cloud.sleuth.brave.instrument.web.TraceWebFluxAutoConfiguration,\
 org.springframework.cloud.sleuth.brave.instrument.rpc.TraceRpcAutoConfiguration,\
 org.springframework.cloud.sleuth.brave.instrument.grpc.TraceGrpcAutoConfiguration,\
 org.springframework.cloud.sleuth.brave.instrument.messaging.SleuthKafkaStreamsConfiguration,\

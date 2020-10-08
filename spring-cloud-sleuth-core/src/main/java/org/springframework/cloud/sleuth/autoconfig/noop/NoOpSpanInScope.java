@@ -24,4 +24,5 @@ class NoOpSpanInScope implements Tracer.SpanInScope {
 	public void close() {
 
 	}
+
 }

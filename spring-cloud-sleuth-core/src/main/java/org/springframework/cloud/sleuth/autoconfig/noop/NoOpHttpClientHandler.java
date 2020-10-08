@@ -43,4 +43,5 @@ public class NoOpHttpClientHandler implements HttpClientHandler {
 	public void handleReceive(HttpClientResponse response, Span span) {
 
 	}
+
 }

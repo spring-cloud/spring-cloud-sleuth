@@ -122,8 +122,8 @@ public class BraveTracer implements Tracer {
 	}
 
 	@Override
-	public ScopedSpan startScopedSpanWithParent(String name, TraceContext parent) {
-		brave.propagation.TraceContext context = parent != null ? (((BraveTraceContext) parent).traceContext) : null;
+	public ScopedSpan startScopedSpanWithParent(String name, Span parent) {
+		brave.propagation.TraceContext context = parent == null ? null : BraveTraceContext.toBrave(parent.context());
 		return new BraveScopedSpan(this.tracer.startScopedSpanWithParent(name, context));
 	}
 

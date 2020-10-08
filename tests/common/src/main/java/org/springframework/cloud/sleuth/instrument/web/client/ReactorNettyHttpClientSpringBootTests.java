@@ -67,13 +67,14 @@ public abstract class ReactorNettyHttpClientSpringBootTests {
 	@Autowired
 	TestSpanHandler handler;
 
-	TraceContext context = traceContext();
+	TraceContext parent = traceContext();
 
 	@AfterEach
 	public void tearDown() {
 		if (disposableServer != null) {
 			disposableServer.disposeNow();
 		}
+		this.handler.clear();
 	}
 
 	public abstract TraceContext traceContext();
@@ -99,16 +100,17 @@ public abstract class ReactorNettyHttpClientSpringBootTests {
 				.handle((in, out) -> out.sendString(Flux.just(in.requestHeaders().get("b3")))).bindNow();
 
 		String b3SingleHeaderReadByServer;
-		try (CurrentTraceContext.Scope ws = currentTraceContext.newScope(context)) {
+		try (CurrentTraceContext.Scope ws = currentTraceContext.newScope(parent)) {
 			b3SingleHeaderReadByServer = httpClient.port(disposableServer.port()).get().uri("/").responseContent()
 					.aggregate().asString().block();
 		}
 
 		ReportedSpan clientSpan = this.handler.takeRemoteSpan(Span.Kind.CLIENT);
-
-		Assertions.assertThat(b3SingleHeaderReadByServer)
-				.isEqualTo(context.traceIdString() + "-" + clientSpan.id() + "-1-" + context.spanIdString());
+		assertSingleB3Header(b3SingleHeaderReadByServer, clientSpan, parent);
 	}
+
+	public abstract void assertSingleB3Header(String b3SingleHeaderReadByServer, ReportedSpan clientSpan,
+			TraceContext parent);
 
 	@Test
 	public void shouldSendTraceContextToServer_rootSpan() throws Exception {
@@ -143,7 +145,7 @@ public abstract class ReactorNettyHttpClientSpringBootTests {
 
 	@Configuration
 	@EnableAutoConfiguration(exclude = GatewayAutoConfiguration.class)
-	static class TestConfiguration {
+	public static class TestConfiguration {
 
 		@Bean
 		TestSpanHandler testSpanHandler(Supplier<TestSpanHandler> supplier) {

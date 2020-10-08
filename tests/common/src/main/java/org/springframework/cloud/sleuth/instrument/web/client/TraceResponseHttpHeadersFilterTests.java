@@ -49,7 +49,8 @@ public abstract class TraceResponseHttpHeadersFilterTests implements TestTracing
 		httpHeaders.set("b3", "52f112af7472aff0-53e6ab6fc5dfee58");
 		MockServerHttpRequest request = MockServerHttpRequest.post("foo/bar").headers(httpHeaders).build();
 		MockServerWebExchange exchange = MockServerWebExchange.builder(request).build();
-		exchange.getAttributes().put(TraceResponseHttpHeadersFilter.SPAN_ATTRIBUTE, tracerTest().tracing().tracer().nextSpan());
+		exchange.getAttributes().put(TraceResponseHttpHeadersFilter.SPAN_ATTRIBUTE,
+				tracerTest().tracing().tracer().nextSpan());
 
 		filter.filter(httpHeaders, exchange);
 

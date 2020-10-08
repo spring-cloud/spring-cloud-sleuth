@@ -37,7 +37,7 @@ import org.springframework.cloud.sleuth.test.TestSpanHandler;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-@SpringBootTest(classes = CircuitBreakerIntegrationTests.Config.class)
+@SpringBootTest(classes = CircuitBreakerIntegrationTests.TestConfig.class)
 public abstract class CircuitBreakerIntegrationTests {
 
 	@Autowired
@@ -98,20 +98,22 @@ public abstract class CircuitBreakerIntegrationTests {
 
 			ReportedSpan reportedSpan = this.spans.get(0);
 			BDDAssertions.then(reportedSpan.name()).contains("CircuitBreakerIntegrationTests");
-			BDDAssertions.then(reportedSpan.tags().get("error")).contains("boom");
+			assertException(reportedSpan);
 
 			reportedSpan = this.spans.get(1);
 			BDDAssertions.then(reportedSpan.name()).contains("CircuitBreakerIntegrationTests");
-			BDDAssertions.then(reportedSpan.tags().get("error")).contains("boom2");
+			assertException(reportedSpan);
 		}
 		finally {
 			scopedSpan.finish();
 		}
 	}
 
+	public abstract void assertException(ReportedSpan reportedSpan);
+
 	@Configuration(proxyBeanMethods = false)
 	@EnableAutoConfiguration(exclude = GatewayAutoConfiguration.class)
-	static class Config {
+	public static class TestConfig {
 
 		@Bean
 		TestSpanHandler testSpanHandler(Supplier<TestSpanHandler> supplier) {

@@ -21,6 +21,7 @@ import java.net.URI;
 import io.grpc.Context;
 import io.opentelemetry.context.propagation.TextMapPropagator;
 import io.opentelemetry.instrumentation.api.tracer.HttpServerTracer;
+import io.opentelemetry.trace.Tracer;
 
 import org.springframework.cloud.sleuth.api.Span;
 import org.springframework.cloud.sleuth.api.http.HttpRequest;
@@ -32,6 +33,10 @@ import org.springframework.cloud.sleuth.otel.bridge.OtelSpan;
 public class OtelHttpServerHandler
 		extends HttpServerTracer<HttpServerRequest, HttpServerResponse, HttpServerRequest, HttpServerRequest>
 		implements HttpServerHandler {
+
+	public OtelHttpServerHandler(Tracer tracer) {
+		super(tracer);
+	}
 
 	@Override
 	public Span handleReceive(HttpServerRequest request) {
@@ -57,17 +62,17 @@ public class OtelHttpServerHandler
 
 	@Override
 	protected Integer peerPort(HttpServerRequest request) {
-		return url(request).getPort();
+		return toUri(request).getPort();
 	}
 
 	@Override
 	protected String peerHostIP(HttpServerRequest request) {
-		return url(request).getHost();
+		return toUri(request).getHost();
 	}
 
 	@Override
 	protected String flavor(HttpServerRequest request, HttpServerRequest request2) {
-		return url(request).getScheme();
+		return toUri(request).getScheme();
 	}
 
 	@Override
@@ -76,7 +81,11 @@ public class OtelHttpServerHandler
 	}
 
 	@Override
-	protected URI url(HttpServerRequest request) {
+	protected String url(HttpServerRequest request) {
+		return request.url();
+	}
+
+	protected URI toUri(HttpServerRequest request) {
 		return URI.create(request.url());
 	}
 

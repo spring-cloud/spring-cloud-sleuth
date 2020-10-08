@@ -177,4 +177,5 @@ class NoOpTraceContext implements TraceContext {
 	public boolean debug() {
 		return false;
 	}
+
 }

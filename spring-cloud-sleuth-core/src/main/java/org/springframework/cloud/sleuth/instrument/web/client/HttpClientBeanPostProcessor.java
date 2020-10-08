@@ -97,7 +97,7 @@ class HttpClientBeanPostProcessor implements BeanPostProcessor {
 			// This function is invoked once per-request. We keep a reference to the
 			// pending client span here, so that only one signal completes the span.
 			PendingSpan pendingSpan = new PendingSpan();
-			return mono.subscriberContext(context -> {
+			return mono.contextWrite(context -> {
 				TraceContext invocationContext = currentTraceContext.get();
 				if (invocationContext != null) {
 					// Read in this processor and also in ScopePassingSpanSubscriber
@@ -136,7 +136,7 @@ class HttpClientBeanPostProcessor implements BeanPostProcessor {
 
 		@Override
 		public void accept(HttpClientRequest req, Connection connection) {
-			PendingSpan pendingSpan = req.currentContext().getOrDefault(PendingSpan.class, null);
+			PendingSpan pendingSpan = req.currentContextView().getOrDefault(PendingSpan.class, null);
 			if (pendingSpan == null) {
 				return; // Somehow TracingMapConnect was not invoked.. skip out
 			}
@@ -151,7 +151,7 @@ class HttpClientBeanPostProcessor implements BeanPostProcessor {
 			}
 
 			// Start a new client span with the appropriate parent
-			TraceContext parent = req.currentContext().getOrDefault(TraceContext.class, null);
+			TraceContext parent = req.currentContextView().getOrDefault(TraceContext.class, null);
 			HttpClientRequestWrapper request = new HttpClientRequestWrapper(req);
 
 			span = handler().handleSendWithParent(request, parent);
@@ -290,13 +290,14 @@ class HttpClientBeanPostProcessor implements BeanPostProcessor {
 	static final class HttpClientResponseWrapper
 			implements org.springframework.cloud.sleuth.api.http.HttpClientResponse {
 
+		@Nullable
 		final HttpClientResponse delegate;
 
 		HttpClientRequestWrapper request;
 
 		final Throwable error;
 
-		HttpClientResponseWrapper(HttpClientResponse delegate, Throwable error) {
+		HttpClientResponseWrapper(@Nullable HttpClientResponse delegate, Throwable error) {
 			this.delegate = delegate;
 			this.error = error;
 		}
@@ -321,6 +322,9 @@ class HttpClientBeanPostProcessor implements BeanPostProcessor {
 
 		@Override
 		public int statusCode() {
+			if (delegate == null) {
+				return 0;
+			}
 			return delegate.status().code();
 		}
 
@@ -331,6 +335,9 @@ class HttpClientBeanPostProcessor implements BeanPostProcessor {
 
 		@Override
 		public String header(String header) {
+			if (delegate == null) {
+				return null;
+			}
 			return delegate.responseHeaders().get(header);
 		}
 

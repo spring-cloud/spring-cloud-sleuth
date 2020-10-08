@@ -19,6 +19,7 @@ package org.springframework.cloud.sleuth.autoconfig.noop;
 import java.util.Collections;
 import java.util.List;
 
+import org.springframework.cloud.sleuth.api.Span;
 import org.springframework.cloud.sleuth.api.TraceContext;
 import org.springframework.cloud.sleuth.api.propagation.Propagator;
 
@@ -35,7 +36,8 @@ public class NoOpPropagator implements Propagator {
 	}
 
 	@Override
-	public <C> TraceContext extract(C carrier, Getter<C> getter) {
-		return new NoOpTraceContext();
+	public <C> Span extract(C carrier, Getter<C> getter) {
+		return new NoOpSpan();
 	}
+
 }

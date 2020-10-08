@@ -35,6 +35,7 @@
 	</parent>
 
 	<modules>
+		<module>spring-cloud-sleuth-instrumentation-common-tests-otel</module>
 		<module>spring-cloud-sleuth-instrumentation-async-tests-otel</module>
 	</modules>
 

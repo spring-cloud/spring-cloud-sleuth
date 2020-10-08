@@ -191,6 +191,13 @@
 				<type>pom</type>
 				<scope>import</scope>
 			</dependency>
+			<dependency>
+				<groupId>io.opentelemetry</groupId>
+				<artifactId>opentelemetry-bom</artifactId>
+				<version>${opentelemetry.version}</version>
+				<type>pom</type>
+				<scope>import</scope>
+			</dependency>
 			<!-- Spock -->
 			<dependency>
 				<groupId>org.spockframework</groupId>
@@ -228,49 +235,9 @@
 			</dependency>
 			<!-- OpenTelemetry -->
 			<dependency>
-				<groupId>io.opentelemetry</groupId>
-				<artifactId>opentelemetry-api</artifactId>
-				<version>${opentelemetry.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>io.opentelemetry</groupId>
-				<artifactId>opentelemetry-sdk</artifactId>
-				<version>${opentelemetry.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>io.opentelemetry</groupId>
-				<artifactId>opentelemetry-exporters-logging</artifactId>
-				<version>${opentelemetry.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>io.opentelemetry</groupId>
-				<artifactId>opentelemetry-sdk-extension-jaeger-remote-sampler</artifactId>
-				<version>${opentelemetry.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>io.opentelemetry</groupId>
-				<artifactId>opentelemetry-sdk-extension-async-processor</artifactId>
-				<version>${opentelemetry.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>io.opentelemetry</groupId>
-				<artifactId>opentelemetry-exporters-zipkin</artifactId>
-				<version>${opentelemetry.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>io.opentelemetry</groupId>
-				<artifactId>opentelemetry-extension-trace-propagators</artifactId>
-				<version>${opentelemetry.version}</version>
-			</dependency>
-			<dependency>
 				<groupId>io.opentelemetry.instrumentation</groupId>
 				<artifactId>opentelemetry-instrumentation-api</artifactId>
-				<version>${opentelemetry.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>io.opentelemetry</groupId>
-				<artifactId>opentelemetry-extension-auto-annotations</artifactId>
-				<version>${opentelemetry.version}</version>
+				<version>${opentelemetry-instrumentation.version}</version>
 			</dependency>
 			<dependency>
 				<groupId>org.hamcrest</groupId>
@@ -306,7 +273,9 @@
 		<spring-cloud-netflix.version>3.0.0-SNAPSHOT</spring-cloud-netflix.version>
 		<spring-cloud-openfeign.version>3.0.0-SNAPSHOT</spring-cloud-openfeign.version>
 		<brave.version>5.12.3</brave.version>
-		<opentelemetry.version>0.8.0</opentelemetry.version>
+		<opentelemetry.version>0.9.1</opentelemetry.version>
+		<!-- From maven local -->
+		<opentelemetry-instrumentation.version>100.9.1-SNAPSHOT</opentelemetry-instrumentation.version>
 		<spring-security-boot-autoconfigure.version>2.3.3.RELEASE</spring-security-boot-autoconfigure.version>
 		<disable.nohttp.checks>false</disable.nohttp.checks>
 		<okhttp.version>4.8.0</okhttp.version>

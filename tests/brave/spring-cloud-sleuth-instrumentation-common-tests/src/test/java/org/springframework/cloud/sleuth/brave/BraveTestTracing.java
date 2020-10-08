@@ -37,6 +37,7 @@ import org.springframework.cloud.sleuth.brave.bridge.BraveTracer;
 import org.springframework.cloud.sleuth.brave.bridge.http.BraveHttpClientHandler;
 import org.springframework.cloud.sleuth.brave.bridge.http.BraveHttpServerHandler;
 import org.springframework.cloud.sleuth.test.TestSpanHandler;
+import org.springframework.cloud.sleuth.test.TestTracingAssertions;
 import org.springframework.cloud.sleuth.test.TestTracingAware;
 import org.springframework.cloud.sleuth.test.TestTracingAwareSupplier;
 import org.springframework.cloud.sleuth.test.TracerAware;
@@ -45,13 +46,13 @@ public class BraveTestTracing implements TracerAware, TestTracingAware, TestTrac
 
 	brave.test.TestSpanHandler spans = new brave.test.TestSpanHandler();
 
-	ThreadLocalCurrentTraceContext context = ThreadLocalCurrentTraceContext.newBuilder().addScopeDecorator(StrictScopeDecorator.create()).build();
+	ThreadLocalCurrentTraceContext context = ThreadLocalCurrentTraceContext.newBuilder()
+			.addScopeDecorator(StrictScopeDecorator.create()).build();
 
 	Tracing tracing = tracingBuilder().build();
 
 	Tracing.Builder tracingBuilder() {
-		return Tracing.newBuilder().currentTraceContext(context)
-				.sampler(Sampler.ALWAYS_SAMPLE)
+		return Tracing.newBuilder().currentTraceContext(context).sampler(Sampler.ALWAYS_SAMPLE)
 				.addSpanHandler(spanHandler());
 	}
 
@@ -75,7 +76,7 @@ public class BraveTestTracing implements TracerAware, TestTracingAware, TestTrac
 
 	@Override
 	public Propagator propagator() {
-		return new BravePropagator(B3Propagation.get());
+		return new BravePropagator(B3Propagation.get(), this.tracer);
 	}
 
 	@Override
@@ -99,6 +100,11 @@ public class BraveTestTracing implements TracerAware, TestTracingAware, TestTrac
 	}
 
 	@Override
+	public TestTracingAssertions assertions() {
+		return new BraveTestTracingAssertions();
+	}
+
+	@Override
 	public TestTracingAware tracerTest() {
 		return this;
 	}
@@ -109,4 +115,5 @@ public class BraveTestTracing implements TracerAware, TestTracingAware, TestTrac
 		this.context.clear();
 		handler().clear();
 	}
+
 }

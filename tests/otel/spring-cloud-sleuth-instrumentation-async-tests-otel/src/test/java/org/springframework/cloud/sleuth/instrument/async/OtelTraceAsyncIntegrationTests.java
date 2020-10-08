@@ -21,20 +21,20 @@ import java.util.Queue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.AtomicReference;
 
+import io.grpc.Context;
+import io.opentelemetry.common.AttributeKey;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.sdk.common.CompletableResultCode;
 import io.opentelemetry.sdk.trace.ReadWriteSpan;
 import io.opentelemetry.sdk.trace.ReadableSpan;
+import io.opentelemetry.sdk.trace.Sampler;
+import io.opentelemetry.sdk.trace.Samplers;
 import io.opentelemetry.sdk.trace.SpanProcessor;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import io.opentelemetry.sdk.trace.export.SpanExporter;
 import io.opentelemetry.trace.Span;
-import io.opentelemetry.trace.SpanContext;
-import io.opentelemetry.trace.SpanId;
-import io.opentelemetry.trace.TraceFlags;
-import io.opentelemetry.trace.TraceId;
-import io.opentelemetry.trace.TraceState;
 import io.opentelemetry.trace.Tracer;
+import io.opentelemetry.trace.TracingContextUtils;
 import org.awaitility.Awaitility;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
@@ -59,14 +59,9 @@ public class OtelTraceAsyncIntegrationTests {
 
 	private static final Logger log = LoggerFactory.getLogger(OtelTraceAsyncIntegrationTests.class);
 
-	SpanContext parent = SpanContext.create(new TraceId(1L, 0L), new SpanId(2L),
-			TraceFlags.builder().setIsSampled(true).build(), TraceState.builder().build());
-
 	@Autowired
 	AsyncLogic asyncLogic;
 
-	// TODO: [OTEL] Maybe scope doesn't work for some reason. A span is allocated by Brave
-	// even though I don't do it explicitly
 	@Autowired
 	Tracer tracer;
 
@@ -75,7 +70,8 @@ public class OtelTraceAsyncIntegrationTests {
 
 	@Test
 	public void should_set_span_on_an_async_annotated_method() {
-		Span parent = tracer.spanBuilder("child").setParent(this.parent).startSpan();
+		Span superParent = tracer.spanBuilder("parent").startSpan();
+		Span parent = tracer.spanBuilder("child").setParent(toContext(superParent)).startSpan();
 		try (Scope ws = tracer.withSpan(parent)) {
 			log.info("HELLO");
 			asyncLogic.invokeAsync();
@@ -83,11 +79,11 @@ public class OtelTraceAsyncIntegrationTests {
 			SpanData span = takeDesirableSpan("invoke-async");
 			assertThat(span.getName()).isEqualTo("invoke-async");
 			assertThat(span.getEvents()).extracting("name").containsOnly("@Async");
-			assertThat(span.getAttributes().get("class").getStringValue()).isEqualTo("AsyncLogic");
-			assertThat(span.getAttributes().get("method").getStringValue()).isEqualTo("invokeAsync");
+			assertThat(span.getAttributes().get(AttributeKey.stringKey("class"))).isEqualTo("AsyncLogic");
+			assertThat(span.getAttributes().get(AttributeKey.stringKey("method"))).isEqualTo("invokeAsync");
 
 			// continues the trace
-			assertThat(span.getTraceId().toLowerBase16()).isEqualTo(this.parent.getTraceId().toLowerBase16());
+			assertThat(span.getTraceId()).isEqualTo(superParent.getContext().getTraceIdAsHexString());
 		}
 		finally {
 			parent.end();
@@ -95,9 +91,14 @@ public class OtelTraceAsyncIntegrationTests {
 
 	}
 
+	private Context toContext(Span superParent) {
+		return TracingContextUtils.withSpan(superParent, Context.ROOT);
+	}
+
 	@Test
 	public void should_set_span_with_custom_method_on_an_async_annotated_method() {
-		Span parent = tracer.spanBuilder("child").setParent(this.parent).startSpan();
+		Span superParent = tracer.spanBuilder("parent").startSpan();
+		Span parent = tracer.spanBuilder("child").setParent(toContext(superParent)).startSpan();
 		try (Scope ws = tracer.withSpan(parent)) {
 			log.info("HELLO");
 			asyncLogic.invokeAsync_customName();
@@ -105,11 +106,11 @@ public class OtelTraceAsyncIntegrationTests {
 			SpanData span = takeDesirableSpan("foo");
 			assertThat(span.getName()).isEqualTo("foo");
 			assertThat(span.getEvents()).extracting("name").containsOnly("@Async");
-			assertThat(span.getAttributes().get("class").getStringValue()).isEqualTo("AsyncLogic");
-			assertThat(span.getAttributes().get("method").getStringValue()).isEqualTo("invokeAsync_customName");
+			assertThat(span.getAttributes().get(AttributeKey.stringKey("class"))).isEqualTo("AsyncLogic");
+			assertThat(span.getAttributes().get(AttributeKey.stringKey("method"))).isEqualTo("invokeAsync_customName");
 
 			// continues the trace
-			assertThat(span.getTraceId().toLowerBase16()).isEqualTo(this.parent.getTraceId().toLowerBase16());
+			assertThat(span.getTraceId()).isEqualTo(superParent.getContext().getTraceIdAsHexString());
 		}
 		finally {
 			parent.end();
@@ -144,6 +145,11 @@ public class OtelTraceAsyncIntegrationTests {
 		@Bean
 		ArrayListSpanProcessor testSpanHandler() {
 			return new ArrayListSpanProcessor();
+		}
+
+		@Bean
+		Sampler testSampler() {
+			return Samplers.alwaysOn();
 		}
 
 	}

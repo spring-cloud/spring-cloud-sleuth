@@ -52,7 +52,8 @@ public class TraceOtelBridgeAutoConfiguation {
 	}
 
 	@Bean
-	Propagator otelPropagator(ContextPropagators contextPropagators) {
-		return new OtelPropagator(contextPropagators);
+	Propagator otelPropagator(ContextPropagators contextPropagators, io.opentelemetry.trace.Tracer tracer) {
+		return new OtelPropagator(contextPropagators, tracer);
 	}
+
 }

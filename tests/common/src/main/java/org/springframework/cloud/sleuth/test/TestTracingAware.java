@@ -24,6 +24,9 @@ public interface TestTracingAware extends Closeable {
 
 	TestSpanHandler handler();
 
+	TestTracingAssertions assertions();
+
 	@Override
 	void close();
+
 }

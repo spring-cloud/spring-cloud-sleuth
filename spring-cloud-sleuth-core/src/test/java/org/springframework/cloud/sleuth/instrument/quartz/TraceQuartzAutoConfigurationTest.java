@@ -26,9 +26,11 @@ import org.springframework.boot.autoconfigure.AutoConfigurations;
 import org.springframework.boot.autoconfigure.AutoConfigureBefore;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
+import org.springframework.cloud.gateway.config.GatewayAutoConfiguration;
 import org.springframework.cloud.sleuth.api.Tracer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Primary;
 
 /**
  * @author Branden Cash
@@ -104,7 +106,7 @@ public class TraceQuartzAutoConfigurationTest {
 	}
 
 	@Configuration
-	@EnableAutoConfiguration
+	@EnableAutoConfiguration(exclude = GatewayAutoConfiguration.class)
 	public static class EnableAutoConfig {
 
 	}
@@ -114,6 +116,7 @@ public class TraceQuartzAutoConfigurationTest {
 	public static class SchedulerConfig {
 
 		@Bean
+		@Primary
 		public Scheduler scheduler() throws Exception {
 			Scheduler scheduler = Mockito.mock(Scheduler.class);
 			Mockito.when(scheduler.getListenerManager()).thenReturn(Mockito.mock(ListenerManager.class));

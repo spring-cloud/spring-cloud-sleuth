@@ -37,7 +37,7 @@ public interface Tracer {
 
 	// this api is needed to make tools such as executors which need to carry the
 	// invocation context
-	ScopedSpan startScopedSpanWithParent(String name, @Nullable TraceContext parent);
+	ScopedSpan startScopedSpanWithParent(String name, @Nullable Span parent);
 
 	interface SpanInScope extends Closeable {
 

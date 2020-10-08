@@ -32,4 +32,5 @@ public class NoOpHttpServerHandler implements HttpServerHandler {
 	public void handleSend(HttpServerResponse response, Span span) {
 
 	}
+
 }

@@ -30,7 +30,7 @@ class OtelPropagationProperties {
 	/**
 	 * Type of propagation.
 	 */
-	private PropagationType type;
+	private PropagationType type = PropagationType.B3;
 
 	public PropagationType getType() {
 		return this.type;
@@ -60,7 +60,12 @@ class OtelPropagationProperties {
 		/**
 		 * Lightstep propagation type.
 		 */
-		OT_TRACER
+		OT_TRACER,
+
+		/**
+		 * Custom propagation type/
+		 */
+		CUSTOM
 
 	}
 

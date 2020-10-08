@@ -26,6 +26,7 @@ import reactor.core.publisher.SignalType;
 import reactor.util.context.Context;
 
 import org.springframework.cloud.sleuth.api.CurrentTraceContext;
+import org.springframework.cloud.sleuth.api.Span;
 import org.springframework.cloud.sleuth.api.TraceContext;
 import org.springframework.cloud.sleuth.api.Tracer;
 import org.springframework.web.server.ServerWebExchange;
@@ -134,8 +135,8 @@ public final class WebFluxSleuthOperators {
 	 */
 	public static void withSpanInScope(Tracer tracer, CurrentTraceContext currentTraceContext,
 			ServerWebExchange exchange, Runnable runnable) {
-		TraceContext traceContext = traceContextFromExchangeOrNew(tracer, exchange);
-		try (CurrentTraceContext.Scope scope = currentTraceContext.maybeScope(traceContext)) {
+		Span span = spanFromExchangeOrNew(tracer, exchange);
+		try (CurrentTraceContext.Scope scope = currentTraceContext.maybeScope(span.context())) {
 			runnable.run();
 		}
 	}
@@ -152,8 +153,8 @@ public final class WebFluxSleuthOperators {
 	 */
 	public static <T> T withSpanInScope(Tracer tracer, CurrentTraceContext currentTraceContext,
 			ServerWebExchange exchange, Callable<T> callable) {
-		TraceContext traceContext = traceContextFromExchangeOrNew(tracer, exchange);
-		return withContext(callable, currentTraceContext, traceContext);
+		Span span = spanFromExchangeOrNew(tracer, exchange);
+		return withContext(callable, currentTraceContext, span.context());
 	}
 
 	/**
@@ -197,15 +198,15 @@ public final class WebFluxSleuthOperators {
 		}
 	}
 
-	private static TraceContext traceContextFromExchangeOrNew(Tracer tracer, ServerWebExchange exchange) {
-		TraceContext traceContext = exchange.getAttribute(TraceContext.class.getName());
-		if (traceContext == null) {
+	private static Span spanFromExchangeOrNew(Tracer tracer, ServerWebExchange exchange) {
+		Span span = exchange.getAttribute(Span.class.getName());
+		if (span == null) {
 			if (log.isDebugEnabled()) {
 				log.debug("No trace context found, will create a new span");
 			}
-			traceContext = tracer.nextSpan().context();
+			span = tracer.nextSpan();
 		}
-		return traceContext;
+		return span;
 	}
 
 }

@@ -71,7 +71,8 @@ public abstract class FeignRetriesTests implements TestTracingAwareSupplier {
 	public void setup() {
 		BDDMockito.given(this.beanFactory.getBean(CurrentTraceContext.class))
 				.willReturn(tracerTest().tracing().currentTraceContext());
-		BDDMockito.given(this.beanFactory.getBean(HttpClientHandler.class)).willReturn(tracerTest().tracing().httpClientHandler());
+		BDDMockito.given(this.beanFactory.getBean(HttpClientHandler.class))
+				.willReturn(tracerTest().tracing().httpClientHandler());
 	}
 
 	@Test
@@ -81,9 +82,8 @@ public abstract class FeignRetriesTests implements TestTracingAwareSupplier {
 		};
 		String url = "http://localhost:" + this.server.getPort();
 
-		TestInterface api = Feign.builder()
-				.client(new TracingFeignClient(tracerTest().tracing().currentTraceContext(), tracerTest().tracing().httpClientHandler(), client))
-				.target(TestInterface.class, url);
+		TestInterface api = Feign.builder().client(new TracingFeignClient(tracerTest().tracing().currentTraceContext(),
+				tracerTest().tracing().httpClientHandler(), client)).target(TestInterface.class, url);
 
 		try {
 			api.decodedPost();
@@ -120,9 +120,11 @@ public abstract class FeignRetriesTests implements TestTracingAwareSupplier {
 		BDDAssertions.then(api.decodedPost()).isEqualTo("OK");
 		// request interception should take place only twice (1st request & 2nd retry)
 		BDDAssertions.then(atomicInteger.get()).isEqualTo(2);
-		BDDAssertions.then(tracerTest().handler().reportedSpans().get(0).error()).isInstanceOf(IOException.class);
+		assertException();
 		BDDAssertions.then(tracerTest().handler().reportedSpans().get(1).kind()).isEqualTo(Span.Kind.CLIENT);
 	}
+
+	public abstract void assertException();
 
 	interface TestInterface {
 

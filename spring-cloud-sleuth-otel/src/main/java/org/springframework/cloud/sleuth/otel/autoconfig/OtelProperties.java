@@ -17,8 +17,6 @@
 package org.springframework.cloud.sleuth.otel.autoconfig;
 
 import io.opentelemetry.sdk.trace.config.TraceConfig;
-import io.opentelemetry.trace.Event;
-import io.opentelemetry.trace.Link;
 import io.opentelemetry.trace.Span;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
@@ -42,7 +40,10 @@ class OtelProperties {
 	 */
 	private String instrumentationVersion;
 
-	private int samplerProbability;
+	/**
+	 * Sets the global default {@code Sampler} value.
+	 */
+	private double traceIdRatioBased = 0.1;
 
 	/**
 	 * Returns the global default max number of attributes per {@link Span}.
@@ -50,22 +51,22 @@ class OtelProperties {
 	private int maxAttrs = TraceConfig.getDefault().getMaxNumberOfAttributes();
 
 	/**
-	 * Returns the global default max number of {@link Event}s per {@link Span}.
+	 * Returns the global default max number of events per {@link Span}.
 	 */
 	private int maxEvents = TraceConfig.getDefault().getMaxNumberOfEvents();
 
 	/**
-	 * Returns the global default max number of {@link Link} entries per {@link Span}.
+	 * Returns the global default max number of link entries per {@link Span}.
 	 */
 	private int maxLinks = TraceConfig.getDefault().getMaxNumberOfLinks();
 
 	/**
-	 * Returns the global default max number of attributes per {@link Event}.
+	 * Returns the global default max number of attributes per event.
 	 */
 	private int maxEventAttrs = TraceConfig.getDefault().getMaxNumberOfAttributesPerEvent();
 
 	/**
-	 * Returns the global default max number of attributes per {@link Link}.
+	 * Returns the global default max number of attributes per link.
 	 */
 	private int maxLinkAttrs = TraceConfig.getDefault().getMaxNumberOfAttributesPerLink();
 
@@ -82,20 +83,20 @@ class OtelProperties {
 		this.instrumentationName = instrumentationName;
 	}
 
-	String getInstrumentationVersion() {
+	public String getInstrumentationVersion() {
 		return instrumentationVersion;
 	}
 
-	void setInstrumentationVersion(String instrumentationVersion) {
+	public void setInstrumentationVersion(String instrumentationVersion) {
 		this.instrumentationVersion = instrumentationVersion;
 	}
 
-	public int getSamplerProbability() {
-		return this.samplerProbability;
+	public double getTraceIdRatioBased() {
+		return this.traceIdRatioBased;
 	}
 
-	public void setSamplerProbability(int samplerProbability) {
-		this.samplerProbability = samplerProbability;
+	public void setTraceIdRatioBased(int traceIdRatioBased) {
+		this.traceIdRatioBased = traceIdRatioBased;
 	}
 
 	public int getMaxAttrs() {

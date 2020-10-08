@@ -22,15 +22,15 @@ import org.springframework.cloud.sleuth.api.SamplingFlags;
 
 public class OtelSamplingFlags implements SamplingFlags {
 
-	final TraceFlags traceFlags;
+	final byte traceFlags;
 
-	public OtelSamplingFlags(TraceFlags traceFlags) {
+	public OtelSamplingFlags(byte traceFlags) {
 		this.traceFlags = traceFlags;
 	}
 
 	@Override
 	public Boolean sampled() {
-		return this.traceFlags.isSampled();
+		return TraceFlags.getSampled() == this.traceFlags;
 	}
 
 	@Override
@@ -45,7 +45,7 @@ public class OtelSamplingFlags implements SamplingFlags {
 		return false;
 	}
 
-	public static SamplingFlags fromOtel(TraceFlags samplingFlags) {
+	public static SamplingFlags fromOtel(byte samplingFlags) {
 		return new OtelSamplingFlags(samplingFlags);
 	}
 

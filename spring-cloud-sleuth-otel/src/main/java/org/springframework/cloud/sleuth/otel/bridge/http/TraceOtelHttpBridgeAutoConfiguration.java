@@ -36,13 +36,13 @@ import org.springframework.context.annotation.Configuration;
 public class TraceOtelHttpBridgeAutoConfiguration {
 
 	@Bean
-	HttpClientHandler braveHttpClientHandler() {
-		return new OtelHttpClientHandler();
+	HttpClientHandler braveHttpClientHandler(io.opentelemetry.trace.Tracer tracer) {
+		return new OtelHttpClientHandler(tracer);
 	}
 
 	@Bean
-	HttpServerHandler braveHttpServerHandler() {
-		return new OtelHttpServerHandler();
+	HttpServerHandler braveHttpServerHandler(io.opentelemetry.trace.Tracer tracer) {
+		return new OtelHttpServerHandler(tracer);
 	}
 
 }

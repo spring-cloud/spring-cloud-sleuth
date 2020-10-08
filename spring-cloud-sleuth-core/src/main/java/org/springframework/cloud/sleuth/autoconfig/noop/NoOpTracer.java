@@ -25,6 +25,7 @@ import org.springframework.cloud.sleuth.api.TraceContext;
 import org.springframework.cloud.sleuth.api.Tracer;
 
 public class NoOpTracer implements Tracer {
+
 	@Override
 	public Span newTrace() {
 		return new NoOpSpan();
@@ -96,7 +97,8 @@ public class NoOpTracer implements Tracer {
 	}
 
 	@Override
-	public ScopedSpan startScopedSpanWithParent(String name, TraceContext parent) {
+	public ScopedSpan startScopedSpanWithParent(String name, Span parent) {
 		return new NoOpScopedSpan();
 	}
+
 }

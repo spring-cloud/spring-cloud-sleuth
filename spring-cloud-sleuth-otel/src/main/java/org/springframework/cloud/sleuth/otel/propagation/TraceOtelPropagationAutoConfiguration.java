@@ -17,8 +17,10 @@
 package org.springframework.cloud.sleuth.otel.propagation;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
+import io.grpc.Context;
 import io.opentelemetry.OpenTelemetry;
 import io.opentelemetry.context.propagation.ContextPropagators;
 import io.opentelemetry.context.propagation.DefaultContextPropagators;
@@ -35,6 +37,7 @@ import org.springframework.boot.autoconfigure.AutoConfigureBefore;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.cloud.sleuth.autoconfig.TraceAutoConfiguration;
@@ -79,7 +82,7 @@ public class TraceOtelPropagationAutoConfiguration {
 
 			@Bean
 			TextMapPropagator otelTextMapPropagator() {
-				return new AwsXRayPropagator();
+				return AwsXRayPropagator.getInstance();
 			}
 
 		}
@@ -105,7 +108,7 @@ public class TraceOtelPropagationAutoConfiguration {
 
 			@Bean
 			TextMapPropagator otelTextMapPropagator() {
-				return new JaegerPropagator();
+				return JaegerPropagator.getInstance();
 			}
 
 		}
@@ -120,6 +123,50 @@ public class TraceOtelPropagationAutoConfiguration {
 				return OtTracerPropagator.getInstance();
 			}
 
+		}
+
+		@Configuration(proxyBeanMethods = false)
+		@ConditionalOnMissingClass(value = "io.opentelemetry.extensions.trace.propagation.TraceMultiPropagator")
+		static class NoExtraPropagatorsConfiguration {
+
+			@Bean
+			@ConditionalOnMissingBean
+			TextMapPropagator noOpTextMapPropagator() {
+				return NoopTextMapPropagator.INSTANCE;
+			}
+
+		}
+
+		@Configuration(proxyBeanMethods = false)
+		@ConditionalOnProperty(name = "spring.sleuth.otel.propagation.type", havingValue = "custom")
+		static class CustomPropagatorsConfiguration {
+
+			@Bean
+			@ConditionalOnMissingBean
+			TextMapPropagator noOpTextMapPropagator() {
+				return NoopTextMapPropagator.INSTANCE;
+			}
+
+		}
+
+	}
+
+	private static final class NoopTextMapPropagator implements TextMapPropagator {
+
+		private static final NoopTextMapPropagator INSTANCE = new NoopTextMapPropagator();
+
+		@Override
+		public List<String> fields() {
+			return Collections.emptyList();
+		}
+
+		@Override
+		public <C> void inject(Context context, C carrier, Setter<C> setter) {
+		}
+
+		@Override
+		public <C> Context extract(Context context, C carrier, Getter<C> getter) {
+			return context;
 		}
 
 	}

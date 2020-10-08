@@ -34,4 +34,5 @@ class NoOpSpanCustomizer implements SpanCustomizer {
 	public SpanCustomizer annotate(String value) {
 		return this;
 	}
+
 }

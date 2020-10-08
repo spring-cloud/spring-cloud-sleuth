@@ -163,8 +163,8 @@ public class SkipPatternProviderConfigTest {
 	public void should_return_endpoints_without_context_path_and_base_path_set_to_root() {
 		contextRunner.withConfiguration(UserConfigurations.of(ServerPropertiesConfig.class))
 				.withPropertyValues("management.endpoints.web.base-path=/").run(context -> {
-					BDDAssertions.then(extractAllPatterns(context)).containsExactlyInAnyOrder("/(health|health/.*|info|info/.*)",
-							SleuthWebProperties.DEFAULT_SKIP_PATTERN);
+					BDDAssertions.then(extractAllPatterns(context)).containsExactlyInAnyOrder(
+							"/(health|health/.*|info|info/.*)", SleuthWebProperties.DEFAULT_SKIP_PATTERN);
 				});
 	}
 
@@ -172,8 +172,8 @@ public class SkipPatternProviderConfigTest {
 	public void should_return_endpoints_without_context_path_and_base_path_set_to_root_with_placeholders() {
 		contextRunner.withConfiguration(UserConfigurations.of(ServerPropertiesConfig.class))
 				.withPropertyValues("management.endpoints.web.base-path=${test:/}").run(context -> {
-					BDDAssertions.then(extractAllPatterns(context)).containsExactlyInAnyOrder("/(health|health/.*|info|info/.*)",
-							SleuthWebProperties.DEFAULT_SKIP_PATTERN);
+					BDDAssertions.then(extractAllPatterns(context)).containsExactlyInAnyOrder(
+							"/(health|health/.*|info|info/.*)", SleuthWebProperties.DEFAULT_SKIP_PATTERN);
 				});
 	}
 
@@ -203,8 +203,8 @@ public class SkipPatternProviderConfigTest {
 				.withPropertyValues("management.endpoints.web.base-path=/", "management.server.port=0",
 						"server.servlet.context-path=foo")
 				.run(context -> {
-					BDDAssertions.then(extractAllPatterns(context)).containsExactlyInAnyOrder("/(health|health/.*|info|info/.*)",
-							SleuthWebProperties.DEFAULT_SKIP_PATTERN);
+					BDDAssertions.then(extractAllPatterns(context)).containsExactlyInAnyOrder(
+							"/(health|health/.*|info|info/.*)", SleuthWebProperties.DEFAULT_SKIP_PATTERN);
 				});
 	}
 
@@ -214,8 +214,8 @@ public class SkipPatternProviderConfigTest {
 				.withPropertyValues("management.endpoints.web.base-path=/", "management.server.port=${some-port:0}",
 						"server.servlet.context-path=${some-path:foo}")
 				.run(context -> {
-					BDDAssertions.then(extractAllPatterns(context)).containsExactlyInAnyOrder("/(health|health/.*|info|info/.*)",
-							SleuthWebProperties.DEFAULT_SKIP_PATTERN);
+					BDDAssertions.then(extractAllPatterns(context)).containsExactlyInAnyOrder(
+							"/(health|health/.*|info|info/.*)", SleuthWebProperties.DEFAULT_SKIP_PATTERN);
 				});
 	}
 

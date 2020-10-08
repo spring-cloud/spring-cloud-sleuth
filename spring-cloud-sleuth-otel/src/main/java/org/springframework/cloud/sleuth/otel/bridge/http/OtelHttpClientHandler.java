@@ -22,7 +22,7 @@ import java.net.URISyntaxException;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.context.propagation.TextMapPropagator;
 import io.opentelemetry.instrumentation.api.tracer.HttpClientTracer;
-import io.opentelemetry.trace.TracingContextUtils;
+import io.opentelemetry.trace.Tracer;
 
 import org.springframework.cloud.sleuth.api.Span;
 import org.springframework.cloud.sleuth.api.TraceContext;
@@ -35,29 +35,49 @@ import org.springframework.cloud.sleuth.otel.bridge.OtelTraceContext;
 public class OtelHttpClientHandler extends HttpClientTracer<HttpClientRequest, HttpClientRequest, HttpClientResponse>
 		implements HttpClientHandler {
 
+	public OtelHttpClientHandler(Tracer tracer) {
+		super(tracer);
+	}
+
 	@Override
 	public Span handleSend(HttpClientRequest request) {
-		return OtelSpan.fromOtel(startSpan(request));
+		io.opentelemetry.trace.Span span = startSpan(request);
+		return span(request, span);
 	}
 
 	@Override
 	public Span handleSendWithParent(HttpClientRequest request, TraceContext parent) {
-		io.opentelemetry.trace.Span span = ((OtelTraceContext) parent).span();
-		try (Scope scope = TracingContextUtils.currentContextWith(span)) {
-			return OtelSpan.fromOtel(startSpan(request));
+		io.opentelemetry.trace.Span span = parent != null ? ((OtelTraceContext) parent).span() : null;
+		if (span == null) {
+			return span(request, startSpan(request));
+		}
+		try (Scope scope = this.tracer.withSpan(span)) {
+			io.opentelemetry.trace.Span withParent = startSpan(request);
+			return span(request, withParent);
+		}
+	}
+
+	private Span span(HttpClientRequest request, io.opentelemetry.trace.Span span) {
+		try (Scope scope2 = startScope(span, request)) {
+			return OtelSpan.fromOtel(span);
 		}
 	}
 
 	@Override
 	public Span handleSend(HttpClientRequest request, Span span) {
-		try (Scope scope = TracingContextUtils.currentContextWith(OtelSpan.toOtel(span))) {
-			return OtelSpan.fromOtel(startSpan(request));
-		}
+		io.opentelemetry.trace.Span otelSpan = OtelSpan.toOtel(span);
+		return span(request, otelSpan);
 	}
 
 	@Override
 	public void handleReceive(HttpClientResponse response, Span span) {
-		end(OtelSpan.toOtel(span), response);
+		io.opentelemetry.trace.Span otel = OtelSpan.toOtel(span);
+		if (response.error() != null) {
+			endExceptionally(otel, response, response.error());
+		}
+		else {
+			end(otel, response);
+		}
 	}
 
 	@Override

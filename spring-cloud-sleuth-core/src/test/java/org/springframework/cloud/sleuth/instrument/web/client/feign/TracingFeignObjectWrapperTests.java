@@ -46,7 +46,8 @@ public class TracingFeignObjectWrapperTests {
 
 	@Test
 	public void should_wrap_a_client_into_lazy_trace_client() {
-		BDDAssertions.then(this.traceFeignObjectWrapper.wrap(Mockito.mock(Client.class))).isExactlyInstanceOf(LazyTracingFeignClient.class);
+		BDDAssertions.then(this.traceFeignObjectWrapper.wrap(Mockito.mock(Client.class)))
+				.isExactlyInstanceOf(LazyTracingFeignClient.class);
 	}
 
 	@Test

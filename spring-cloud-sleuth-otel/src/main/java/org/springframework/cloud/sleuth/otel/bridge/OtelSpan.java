@@ -16,12 +16,11 @@
 
 package org.springframework.cloud.sleuth.otel.bridge;
 
-import io.opentelemetry.common.AttributeValue;
+import io.opentelemetry.common.AttributeKey;
 import io.opentelemetry.common.Attributes;
 import io.opentelemetry.trace.EndSpanOptions;
-import io.opentelemetry.trace.Event;
 import io.opentelemetry.trace.SpanContext;
-import io.opentelemetry.trace.Status;
+import io.opentelemetry.trace.StatusCanonicalCode;
 
 import org.springframework.cloud.sleuth.api.Span;
 import org.springframework.cloud.sleuth.api.SpanCustomizer;
@@ -75,7 +74,7 @@ public class OtelSpan implements Span {
 	@Override
 	public Span kind(Kind kind) {
 		// TODO: Otel we'd need to go via builder
-		return null;
+		return new OtelSpan(this.delegate);
 	}
 
 	@Override
@@ -181,11 +180,6 @@ class SpanFromSpanContext implements io.opentelemetry.trace.Span {
 	}
 
 	@Override
-	public void setAttribute(String key, AttributeValue value) {
-		span.setAttribute(key, value);
-	}
-
-	@Override
 	public void addEvent(String name) {
 		span.addEvent(name);
 	}
@@ -206,18 +200,23 @@ class SpanFromSpanContext implements io.opentelemetry.trace.Span {
 	}
 
 	@Override
-	public void addEvent(Event event) {
-		span.addEvent(event);
+	public void setAttribute(AttributeKey<Long> key, int value) {
+		span.setAttribute(key, value);
 	}
 
 	@Override
-	public void addEvent(Event event, long timestamp) {
-		span.addEvent(event, timestamp);
+	public <T> void setAttribute(AttributeKey<T> key, T value) {
+		span.setAttribute(key, value);
 	}
 
 	@Override
-	public void setStatus(Status status) {
-		span.setStatus(status);
+	public void setStatus(StatusCanonicalCode canonicalCode) {
+		span.setStatus(canonicalCode);
+	}
+
+	@Override
+	public void setStatus(StatusCanonicalCode canonicalCode, String description) {
+		span.setStatus(canonicalCode, description);
 	}
 
 	@Override

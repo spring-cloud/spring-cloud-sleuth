@@ -18,6 +18,7 @@ package org.springframework.cloud.sleuth.api.propagation;
 
 import java.util.List;
 
+import org.springframework.cloud.sleuth.api.Span;
 import org.springframework.cloud.sleuth.api.TraceContext;
 import org.springframework.lang.Nullable;
 
@@ -83,7 +84,7 @@ public interface Propagator {
 	 * @return the {@code Context} containing the extracted value.
 	 * @since 0.1.0
 	 */
-	<C> TraceContext extract(C carrier, Getter<C> getter);
+	<C> Span extract(C carrier, Getter<C> getter);
 
 	/**
 	 * Interface that allows a {@code TextMapPropagator} to read propagated fields from a

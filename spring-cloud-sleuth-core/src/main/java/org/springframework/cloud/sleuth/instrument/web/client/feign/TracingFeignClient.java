@@ -183,7 +183,7 @@ final class TracingFeignClient implements Client {
 		@Nullable
 		final Throwable error;
 
-		ResponseWrapper(RequestWrapper request, Response response, @Nullable Throwable error) {
+		ResponseWrapper(RequestWrapper request, @Nullable Response response, @Nullable Throwable error) {
 			this.request = request;
 			this.response = response;
 			this.error = error;
@@ -207,11 +207,17 @@ final class TracingFeignClient implements Client {
 
 		@Override
 		public int statusCode() {
+			if (response == null) {
+				return 0;
+			}
 			return response.status();
 		}
 
 		@Override
 		public String header(String header) {
+			if (response == null) {
+				return null;
+			}
 			Collection<String> strings = response.headers().get(header);
 			if (strings.isEmpty()) {
 				return null;

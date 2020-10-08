@@ -93,8 +93,10 @@ public abstract class TracingFeignClientTests implements TestTracingAwareSupplie
 		}
 
 		BDDAssertions.then(this.tracerTest().handler().reportedSpans().get(0).kind()).isEqualTo(Span.Kind.CLIENT);
-		BDDAssertions.then(this.tracerTest().handler().reportedSpans().get(0).error()).isSameAs(error);
+		assertException(error);
 	}
+
+	public abstract void assertException(RuntimeException error);
 
 	@Test
 	public void keep_requestTemplate() throws IOException {

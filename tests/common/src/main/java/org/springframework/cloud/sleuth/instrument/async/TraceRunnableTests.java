@@ -85,7 +85,8 @@ public abstract class TraceRunnableTests implements TestTracingAwareSupplier {
 		whenRunnableGetsSubmitted(traceKeepingRunnable);
 
 		BDDAssertions.then(tracerTest().handler().reportedSpans()).hasSize(1);
-		BDDAssertions.then(tracerTest().handler().reportedSpans().get(0).name()).isEqualTo("some-runnable-name-from-annotation");
+		BDDAssertions.then(tracerTest().handler().reportedSpans().get(0).name())
+				.isEqualTo("some-runnable-name-from-annotation");
 	}
 
 	@Test
@@ -96,7 +97,8 @@ public abstract class TraceRunnableTests implements TestTracingAwareSupplier {
 		whenRunnableGetsSubmitted(runnable);
 
 		BDDAssertions.then(tracerTest().handler().reportedSpans()).hasSize(1);
-		BDDAssertions.then(tracerTest().handler().reportedSpans().get(0).name()).isEqualTo("some-runnable-name-from-to-string");
+		BDDAssertions.then(tracerTest().handler().reportedSpans().get(0).name())
+				.isEqualTo("some-runnable-name-from-to-string");
 	}
 
 	private TraceKeepingRunnable runnableThatRetrievesTraceFromThreadLocal() {
@@ -108,7 +110,8 @@ public abstract class TraceRunnableTests implements TestTracingAwareSupplier {
 	}
 
 	private void whenRunnableGetsSubmitted(Runnable runnable) throws Exception {
-		this.executor.submit(new TraceRunnable(tracerTest().tracing().tracer(), new DefaultSpanNamer(), runnable)).get();
+		this.executor.submit(new TraceRunnable(tracerTest().tracing().tracer(), new DefaultSpanNamer(), runnable))
+				.get();
 	}
 
 	private void whenNonTraceableRunnableGetsSubmitted(Runnable runnable) throws Exception {

@@ -19,7 +19,6 @@ package org.springframework.cloud.sleuth.otel.autoconfig;
 import java.util.ArrayList;
 import java.util.List;
 
-import io.opentelemetry.sdk.OpenTelemetrySdk;
 import io.opentelemetry.sdk.trace.Sampler;
 import io.opentelemetry.sdk.trace.Samplers;
 import io.opentelemetry.sdk.trace.SpanProcessor;
@@ -52,7 +51,7 @@ public class TraceOtelAutoConfiguration {
 	@Bean
 	@ConditionalOnMissingBean
 	TracerSdkProvider otelTracerSdkProvider() {
-		return OpenTelemetrySdk.getTracerProvider();
+		return TracerSdkProvider.builder().build();
 	}
 
 	@Bean
@@ -63,7 +62,7 @@ public class TraceOtelAutoConfiguration {
 				.setMaxNumberOfAttributesPerEvent(otelProperties.getMaxEventAttrs())
 				.setMaxNumberOfAttributesPerLink(otelProperties.getMaxLinkAttrs())
 				.setMaxNumberOfEvents(otelProperties.getMaxEvents()).setMaxNumberOfLinks(otelProperties.getMaxLinks())
-				.setSamplerProbability(otelProperties.getSamplerProbability()).setSampler(sampler).build();
+				.setSampler(sampler).build();
 	}
 
 	@Bean
@@ -79,7 +78,7 @@ public class TraceOtelAutoConfiguration {
 	@Bean
 	@ConditionalOnMissingBean
 	Sampler otelSampler(OtelProperties otelProperties) {
-		return Samplers.probability(otelProperties.getSamplerProbability());
+		return Samplers.traceIdRatioBased(otelProperties.getTraceIdRatioBased());
 	}
 
 }

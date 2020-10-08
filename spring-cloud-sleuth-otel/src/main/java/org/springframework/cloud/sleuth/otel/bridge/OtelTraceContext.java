@@ -21,6 +21,7 @@ import java.util.List;
 import java.util.Objects;
 
 import io.grpc.Context;
+import io.opentelemetry.sdk.trace.ReadableSpan;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.SpanContext;
 import io.opentelemetry.trace.SpanId;
@@ -49,14 +50,12 @@ public class OtelTraceContext implements TraceContext {
 
 	@Override
 	public long traceIdHigh() {
-		// TODO: [OTEL] Double check if this is fine
-		return Long.parseLong(this.delegate.getTraceId().toLowerBase16());
+		return BigendianEncoding.longFromBase16String(this.delegate.getTraceIdAsHexString(), 8);
 	}
 
 	@Override
 	public long traceId() {
-		// TODO: [OTEL] Double check if this is fine
-		return Long.parseLong(this.delegate.getTraceId().toLowerBase16());
+		return BigendianEncoding.longFromBase16String(this.delegate.getTraceIdAsHexString());
 	}
 
 	@Override
@@ -67,24 +66,30 @@ public class OtelTraceContext implements TraceContext {
 
 	@Override
 	public boolean isLocalRoot() {
-		return this.delegate.getTraceId().toLowerBase16().equalsIgnoreCase(this.delegate.getSpanId().toLowerBase16());
+		return this.delegate.getTraceIdAsHexString().equalsIgnoreCase(this.delegate.getSpanIdAsHexString());
 	}
 
 	@Override
 	public Long parentId() {
-		// TODO: [OTEL] Can't do it
-		return 0L;
+		if (this.span instanceof ReadableSpan) {
+			long id = BigendianEncoding.longFromBase16String(((ReadableSpan) this.span).toSpanData().getParentSpanId());
+			if (id == 0L) {
+				return null;
+			}
+			return id;
+		}
+		return null;
 	}
 
 	@Override
 	public long parentIdAsLong() {
-		// TODO: [OTEL] Can't do it
-		return 0L;
+		Long parent = parentId();
+		return parent != null ? parent : 0L;
 	}
 
 	@Override
 	public long spanId() {
-		return Long.parseLong(this.delegate.getSpanId().toLowerBase16());
+		return BigendianEncoding.longFromBase16String(this.delegate.getSpanIdAsHexString());
 	}
 
 	@Override
@@ -113,7 +118,7 @@ public class OtelTraceContext implements TraceContext {
 
 	@Override
 	public String traceIdString() {
-		return this.delegate.getTraceId().toLowerBase16();
+		return this.delegate.getTraceIdAsHexString();
 	}
 
 	@Override
@@ -132,7 +137,7 @@ public class OtelTraceContext implements TraceContext {
 
 	@Override
 	public String spanIdString() {
-		return this.delegate.getSpanId().toLowerBase16();
+		return this.delegate.getSpanIdAsHexString();
 	}
 
 	@Override
@@ -152,7 +157,7 @@ public class OtelTraceContext implements TraceContext {
 
 	@Nullable
 	public Boolean sampled() {
-		return this.delegate.getTraceFlags().isSampled();
+		return this.delegate.isSampled();
 	}
 
 	@Override
@@ -200,17 +205,17 @@ public class OtelTraceContext implements TraceContext {
 
 class OtelTraceContextBuilder implements TraceContext.Builder {
 
-	TraceId traceId;
+	String traceId;
 
-	SpanId spanId;
+	String spanId;
 
-	TraceFlags traceFlags;
+	byte traceFlags;
 
 	TraceState traceState;
 
 	OtelTraceContextBuilder(SpanContext delegate) {
-		this.traceId = delegate.getTraceId();
-		this.spanId = delegate.getSpanId();
+		this.traceId = delegate.getTraceIdAsHexString();
+		this.spanId = delegate.getSpanIdAsHexString();
 		this.traceFlags = delegate.getTraceFlags();
 		this.traceState = delegate.getTraceState();
 	}
@@ -218,14 +223,14 @@ class OtelTraceContextBuilder implements TraceContext.Builder {
 	@Override
 	public TraceContext.Builder traceIdHigh(long traceIdHigh) {
 		// TODO: [OTEL] Is this correct?
-		this.traceId = new TraceId(traceIdHigh, 0L);
+		this.traceId = TraceId.fromLongs(traceIdHigh, 0L);
 		return this;
 	}
 
 	@Override
 	public TraceContext.Builder traceId(long traceId) {
 		// TODO: [OTEL] Is this correct?
-		this.traceId = new TraceId(0L, traceId);
+		this.traceId = TraceId.fromLongs(0L, traceId);
 		return this;
 	}
 
@@ -243,7 +248,7 @@ class OtelTraceContextBuilder implements TraceContext.Builder {
 
 	@Override
 	public TraceContext.Builder spanId(long spanId) {
-		this.spanId = new SpanId(spanId);
+		this.spanId = SpanId.fromLong(spanId);
 		return this;
 	}
 
@@ -255,13 +260,13 @@ class OtelTraceContextBuilder implements TraceContext.Builder {
 
 	@Override
 	public TraceContext.Builder sampled(boolean sampled) {
-		this.traceFlags = TraceFlags.builder().setIsSampled(sampled).build();
+		this.traceFlags = sampled ? TraceFlags.getSampled() : TraceFlags.getDefault();
 		return this;
 	}
 
 	@Override
 	public TraceContext.Builder sampled(Boolean sampled) {
-		this.traceFlags = TraceFlags.builder().setIsSampled(sampled).build();
+		this.traceFlags = sampled ? TraceFlags.getSampled() : TraceFlags.getDefault();
 		return this;
 	}
 

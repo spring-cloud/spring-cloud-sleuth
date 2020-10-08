@@ -20,7 +20,6 @@ import java.util.HashMap;
 import java.util.Properties;
 import java.util.concurrent.CompletableFuture;
 
-import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -48,6 +47,7 @@ import org.springframework.cloud.sleuth.api.Tracer;
 import org.springframework.cloud.sleuth.test.ReportedSpan;
 import org.springframework.cloud.sleuth.test.TestTracingAwareSupplier;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.cloud.sleuth.instrument.quartz.TracingJobListener.CONTEXT_SPAN_IN_SCOPE_KEY;
 import static org.springframework.cloud.sleuth.instrument.quartz.TracingJobListener.CONTEXT_SPAN_KEY;
 import static org.springframework.cloud.sleuth.instrument.quartz.TracingJobListener.TRIGGER_TAG_KEY;
@@ -98,7 +98,7 @@ public abstract class TracingJobListenerTest implements TestTracingAwareSupplier
 		String name = listener.getName();
 
 		// expect
-		Assertions.assertThat(name).isEqualTo(TracingJobListener.class.getName());
+		assertThat(name).isEqualTo(TracingJobListener.class.getName());
 	}
 
 	@Test
@@ -124,8 +124,8 @@ public abstract class TracingJobListenerTest implements TestTracingAwareSupplier
 
 		// expect
 		ReportedSpan span = tracerTest().handler().takeLocalSpan();
-		Assertions.assertThat(span.name()).isEqualToIgnoringCase(SUCCESSFUL_JOB_KEY.toString());
-		Assertions.assertThat(span.tags().get(TRIGGER_TAG_KEY)).isEqualToIgnoringCase(TRIGGER_KEY.toString());
+		assertThat(span.name()).isEqualToIgnoringCase(SUCCESSFUL_JOB_KEY.toString());
+		assertThat(span.tags().get(TRIGGER_TAG_KEY)).isEqualToIgnoringCase(TRIGGER_KEY.toString());
 	}
 
 	@Test
@@ -178,8 +178,8 @@ public abstract class TracingJobListenerTest implements TestTracingAwareSupplier
 		// expect
 		ReportedSpan parent = tracerTest().handler().takeLocalSpan();
 		ReportedSpan child = tracerTest().handler().takeLocalSpan();
-		Assertions.assertThat(parent.parentId()).isNull();
-		Assertions.assertThat(child.parentId()).isEqualTo(parent.id());
+		tracerTest().assertions().assertThatNoParentPresent(parent);
+		assertThat(child.parentId()).isEqualTo(parent.id());
 	}
 
 	@Test
@@ -196,8 +196,9 @@ public abstract class TracingJobListenerTest implements TestTracingAwareSupplier
 		// expect
 		ReportedSpan parent = tracerTest().handler().takeLocalSpan();
 		ReportedSpan child = tracerTest().handler().takeLocalSpan();
-		Assertions.assertThat(parent.parentId()).isNull();
-		Assertions.assertThat(child.parentId()).isEqualTo(parent.id());
+		tracerTest().assertions().assertThatNoParentPresent(parent);
+		assertThat(child).isNotNull();
+		assertThat(child.parentId()).isEqualTo(parent.id());
 	}
 
 	void runJob(Trigger trigger) throws SchedulerException {
@@ -217,7 +218,8 @@ public abstract class TracingJobListenerTest implements TestTracingAwareSupplier
 	void addSpanToJobData(JobDataMap data) {
 		Span span = tracerTest().tracing().tracer().nextSpan().start();
 		try (Tracer.SpanInScope spanInScope = tracerTest().tracing().tracer().withSpanInScope(span)) {
-			tracerTest().tracing().propagator().inject(tracerTest().tracing().currentTraceContext().get(), data, StringKeyDirtyFlagMap::put);
+			tracerTest().tracing().propagator().inject(tracerTest().tracing().currentTraceContext().get(), data,
+					StringKeyDirtyFlagMap::put);
 		}
 		finally {
 			span.finish();

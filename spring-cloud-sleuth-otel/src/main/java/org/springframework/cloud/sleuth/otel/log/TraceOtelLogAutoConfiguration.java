@@ -45,7 +45,7 @@ public class TraceOtelLogAutoConfiguration {
 
 	@Configuration(proxyBeanMethods = false)
 	@ConditionalOnClass(MDC.class)
-	@ConditionalOnProperty("spring.sleuth.otel.log.slf4j.enabled")
+	@ConditionalOnProperty(value = "spring.sleuth.otel.log.slf4j.enabled", matchIfMissing = true)
 	static class Slf4jConfiguration {
 
 		@Bean

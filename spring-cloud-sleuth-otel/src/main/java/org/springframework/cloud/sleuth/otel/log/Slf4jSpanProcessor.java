@@ -26,8 +26,8 @@ class Slf4jSpanProcessor implements SpanProcessor {
 
 	@Override
 	public void onStart(ReadWriteSpan span) {
-		MDC.put("traceId", span.getContext().getTraceId().toString());
-		MDC.put("spanId", span.getContext().getSpanId().toString());
+		MDC.put("traceId", span.getContext().getTraceIdAsHexString());
+		MDC.put("spanId", span.getContext().getSpanIdAsHexString());
 	}
 
 	@Override
