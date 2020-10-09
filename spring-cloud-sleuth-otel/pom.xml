@@ -96,6 +96,11 @@
 			<artifactId>opentelemetry-extension-trace-propagators</artifactId>
 			<optional>true</optional>
 		</dependency>
+		<dependency>
+			<groupId>io.opentelemetry</groupId>
+			<artifactId>opentelemetry-opentracing-shim</artifactId>
+			<optional>true</optional>
+		</dependency>
 
 		<dependency>
 			<groupId>org.springframework.boot</groupId>

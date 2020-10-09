@@ -14,10 +14,11 @@
  * limitations under the License.
  */
 
-package org.springframework.cloud.sleuth.brave.instrument.opentracing;
+package org.springframework.cloud.sleuth.otel.opentracing;
 
-import brave.Tracing;
-import brave.opentracing.BraveTracer;
+import io.opentelemetry.baggage.BaggageManager;
+import io.opentelemetry.opentracingshim.TraceShim;
+import io.opentelemetry.trace.TracerProvider;
 import io.opentracing.Tracer;
 
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
@@ -26,8 +27,8 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
-import org.springframework.cloud.sleuth.brave.autoconfig.TraceBraveAutoConfiguration;
 import org.springframework.cloud.sleuth.opentracing.SleuthOpentracingProperties;
+import org.springframework.cloud.sleuth.otel.autoconfig.TraceOtelAutoConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -41,17 +42,16 @@ import org.springframework.context.annotation.Configuration;
  */
 @Configuration(proxyBeanMethods = false)
 @ConditionalOnProperty(value = "spring.sleuth.opentracing.enabled", matchIfMissing = true)
-@ConditionalOnBean(Tracing.class)
-@ConditionalOnClass(Tracer.class)
-@AutoConfigureAfter(TraceBraveAutoConfiguration.class)
+@ConditionalOnBean(io.opentelemetry.trace.Tracer.class)
+@ConditionalOnClass(TraceShim.class)
+@AutoConfigureAfter(TraceOtelAutoConfiguration.class)
 @EnableConfigurationProperties(SleuthOpentracingProperties.class)
 class OpentracingAutoConfiguration {
 
 	@Bean
 	@ConditionalOnMissingBean
-	@ConditionalOnClass(name = "brave.opentracing.BraveTracer")
-	Tracer sleuthOpenTracing(brave.Tracing braveTracing) {
-		return BraveTracer.create(braveTracing);
+	Tracer sleuthOpenTracing(TracerProvider tracerProvider, BaggageManager contextManager) {
+		return TraceShim.createTracerShim(tracerProvider, contextManager);
 	}
 
 }

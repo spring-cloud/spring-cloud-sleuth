@@ -19,12 +19,18 @@ package org.springframework.cloud.sleuth.otel.autoconfig;
 import java.util.ArrayList;
 import java.util.List;
 
+import io.opentelemetry.baggage.BaggageManager;
+import io.opentelemetry.baggage.spi.BaggageManagerFactory;
+import io.opentelemetry.sdk.baggage.spi.BaggageManagerFactorySdk;
 import io.opentelemetry.sdk.trace.Sampler;
 import io.opentelemetry.sdk.trace.Samplers;
 import io.opentelemetry.sdk.trace.SpanProcessor;
 import io.opentelemetry.sdk.trace.TracerSdkProvider;
 import io.opentelemetry.sdk.trace.config.TraceConfig;
+import io.opentelemetry.sdk.trace.spi.TracerProviderFactorySdk;
 import io.opentelemetry.trace.Tracer;
+import io.opentelemetry.trace.TracerProvider;
+import io.opentelemetry.trace.spi.TracerProviderFactory;
 
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.AutoConfigureBefore;
@@ -50,8 +56,26 @@ public class TraceOtelAutoConfiguration {
 
 	@Bean
 	@ConditionalOnMissingBean
-	TracerSdkProvider otelTracerSdkProvider() {
-		return TracerSdkProvider.builder().build();
+	TracerProviderFactory otelTracerProviderFactory() {
+		return new TracerProviderFactorySdk();
+	}
+
+	@Bean
+	@ConditionalOnMissingBean
+	TracerProvider otelTracerProvider(TracerProviderFactory tracerProviderFactory) {
+		return tracerProviderFactory.create();
+	}
+
+	@Bean
+	@ConditionalOnMissingBean
+	BaggageManagerFactory otelBaggageManagerFactory() {
+		return new BaggageManagerFactorySdk();
+	}
+
+	@Bean
+	@ConditionalOnMissingBean
+	BaggageManager otelBaggageManager(BaggageManagerFactory baggageManagerFactory) {
+		return baggageManagerFactory.create();
 	}
 
 	@Bean
@@ -67,12 +91,14 @@ public class TraceOtelAutoConfiguration {
 
 	@Bean
 	@ConditionalOnMissingBean
-	Tracer otelTracer(TracerSdkProvider tracerSdkProvider, TraceConfig traceConfig, OtelProperties otelProperties,
+	Tracer otelTracer(TracerProvider tracerProvider, ObjectProvider<TracerSdkProvider> tracerSdkObjectProvider, TraceConfig traceConfig, OtelProperties otelProperties,
 			ObjectProvider<List<SpanProcessor>> spanProcessors) {
-		List<SpanProcessor> processors = spanProcessors.getIfAvailable(ArrayList::new);
-		processors.forEach(tracerSdkProvider::addSpanProcessor);
-		tracerSdkProvider.updateActiveTraceConfig(traceConfig);
-		return tracerSdkProvider.get(otelProperties.getInstrumentationName());
+		tracerSdkObjectProvider.ifAvailable(tracerSdkProvider -> {
+			List<SpanProcessor> processors = spanProcessors.getIfAvailable(ArrayList::new);
+			processors.forEach(tracerSdkProvider::addSpanProcessor);
+			tracerSdkProvider.updateActiveTraceConfig(traceConfig);
+		});
+		return tracerProvider.get(otelProperties.getInstrumentationName());
 	}
 
 	@Bean

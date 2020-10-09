@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.springframework.cloud.sleuth.brave.instrument.opentracing;
+package org.springframework.cloud.sleuth.opentracing;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
@@ -25,7 +25,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * @since 2.0.0
  */
 @ConfigurationProperties("spring.sleuth.opentracing")
-class SleuthOpentracingProperties {
+public class SleuthOpentracingProperties {
 
 	private boolean enabled = true;
 

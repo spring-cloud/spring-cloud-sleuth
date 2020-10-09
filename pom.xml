@@ -278,6 +278,7 @@
 		<spring-cloud-netflix.version>3.0.0-SNAPSHOT</spring-cloud-netflix.version>
 		<spring-cloud-openfeign.version>3.0.0-SNAPSHOT</spring-cloud-openfeign.version>
 		<brave.version>5.12.3</brave.version>
+		<opentracing.version>0.32.0</opentracing.version>
 		<opentelemetry.version>0.9.1</opentelemetry.version>
 		<!-- From maven local -->
 		<opentelemetry-instrumentation.version>100.9.1-SNAPSHOT</opentelemetry-instrumentation.version>
