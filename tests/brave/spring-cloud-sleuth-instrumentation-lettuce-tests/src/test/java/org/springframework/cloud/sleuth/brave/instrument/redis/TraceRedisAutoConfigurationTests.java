@@ -48,7 +48,7 @@ public class TraceRedisAutoConfigurationTests {
 		then(this.clientResources.tracing().isEnabled()).isTrue();
 	}
 
-	@Configuration
+	@Configuration(proxyBeanMethods = false)
 	@EnableAutoConfiguration
 	protected static class Config {
 

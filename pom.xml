@@ -245,6 +245,11 @@
 				<version>${commons-lang3.version}</version>
 			</dependency>
 			<dependency>
+				<groupId>org.springframework.security.oauth</groupId>
+				<artifactId>spring-security-oauth2</artifactId>
+				<version>${spring-security-oauth2.version}</version>
+			</dependency>
+			<dependency>
 				<groupId>org.hamcrest</groupId>
 				<artifactId>hamcrest-core</artifactId>
 				<version>${hamcrest-core.version}</version>
@@ -281,7 +286,7 @@
 		<opentracing.version>0.32.0</opentracing.version>
 		<opentelemetry.version>0.9.1</opentelemetry.version>
 		<!-- From maven local -->
-		<opentelemetry-instrumentation.version>100.9.1-SNAPSHOT</opentelemetry-instrumentation.version>
+		<opentelemetry-instrumentation.version>0.9.0-SNAPSHOT</opentelemetry-instrumentation.version>
 		<spring-security-boot-autoconfigure.version>2.3.3.RELEASE</spring-security-boot-autoconfigure.version>
 		<disable.nohttp.checks>false</disable.nohttp.checks>
 		<okhttp.version>4.8.0</okhttp.version>
@@ -290,6 +295,7 @@
 		<javax.resource-api.version>1.7.1</javax.resource-api.version>
 		<cglib-nodep.version>3.3.0</cglib-nodep.version>
 		<objenesis.version>3.0.1</objenesis.version>
+		<spring-security-oauth2.version>2.2.0.RELEASE</spring-security-oauth2.version>
 
 		<!-- Until we switch it to true in sc-build -->
 		<javadoc.failOnError>true</javadoc.failOnError>
@@ -307,6 +313,14 @@
 			<id>bintray-open-telemetry-maven</id>
 			<name>bintray</name>
 			<url>https://dl.bintray.com/open-telemetry/maven</url>
+		</repository>
+		<repository>
+			<snapshots>
+				<enabled>true</enabled>
+			</snapshots>
+			<id>bintray-open-telemetry-maven-snapshot</id>
+			<name>bintray</name>
+			<url>https://oss.jfrog.org/oss-snapshot-local/</url>
 		</repository>
 	</repositories>
 	<pluginRepositories>

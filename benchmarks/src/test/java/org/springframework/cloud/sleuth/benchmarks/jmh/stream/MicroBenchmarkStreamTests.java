@@ -173,7 +173,7 @@ public class MicroBenchmarkStreamTests {
 
 	}
 
-	@Configuration
+	@Configuration(proxyBeanMethods = false)
 	@Import(TestChannelBinderConfiguration.class)
 	static class TestConfiguration {
 

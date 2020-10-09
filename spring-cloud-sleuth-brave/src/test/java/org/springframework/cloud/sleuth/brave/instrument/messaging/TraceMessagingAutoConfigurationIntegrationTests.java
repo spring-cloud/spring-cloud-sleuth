@@ -49,7 +49,7 @@ public class TraceMessagingAutoConfigurationIntegrationTests {
 	}
 
 	@EnableAutoConfiguration
-	@Configuration
+	@Configuration(proxyBeanMethods = false)
 	public static class Config {
 
 		@Bean

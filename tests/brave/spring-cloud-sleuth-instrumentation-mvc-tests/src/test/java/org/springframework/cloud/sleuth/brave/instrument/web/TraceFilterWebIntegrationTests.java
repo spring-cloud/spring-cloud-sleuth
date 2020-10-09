@@ -49,6 +49,8 @@ import org.springframework.boot.test.system.CapturedOutput;
 import org.springframework.boot.test.system.OutputCaptureExtension;
 import org.springframework.cloud.sleuth.annotation.ContinueSpan;
 import org.springframework.cloud.sleuth.annotation.SpanTag;
+import org.springframework.cloud.sleuth.instrument.web.HttpClientRequestParser;
+import org.springframework.cloud.sleuth.instrument.web.HttpServerRequestParser;
 import org.springframework.cloud.sleuth.instrument.web.HttpServerSampler;
 import org.springframework.cloud.sleuth.instrument.web.SkipPatternProvider;
 import org.springframework.context.annotation.Bean;
@@ -168,7 +170,7 @@ public class TraceFilterWebIntegrationTests {
 			// spring boot test will otherwise instrument the client and server with the
 			// same bean factory which isn't expected
 			excludeName = "org.springframework.cloud.sleuth.brave.instrument.web.client.TraceWebClientAutoConfiguration")
-	@Configuration
+	@Configuration(proxyBeanMethods = false)
 	public static class Config {
 
 		@Bean

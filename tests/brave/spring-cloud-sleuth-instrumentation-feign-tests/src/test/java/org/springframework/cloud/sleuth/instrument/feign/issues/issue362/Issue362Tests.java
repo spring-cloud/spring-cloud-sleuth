@@ -124,8 +124,8 @@ public class Issue362Tests {
 
 }
 
-@Configuration
-@EnableAutoConfiguration(
+@Configuration(proxyBeanMethods = false)
+	@EnableAutoConfiguration(
 		// spring boot test will otherwise instrument the client and server with the
 		// same bean factory which isn't expected
 		excludeName = "org.springframework.cloud.sleuth.brave.instrument.web.TraceWebServletAutoConfiguration")
@@ -170,8 +170,8 @@ class FeignComponentAsserter {
 
 }
 
-@Configuration
-class CustomConfig {
+@Configuration(proxyBeanMethods = false)
+	class CustomConfig {
 
 	@Bean
 	public ErrorDecoder errorDecoder(FeignComponentAsserter feignComponentAsserter) {

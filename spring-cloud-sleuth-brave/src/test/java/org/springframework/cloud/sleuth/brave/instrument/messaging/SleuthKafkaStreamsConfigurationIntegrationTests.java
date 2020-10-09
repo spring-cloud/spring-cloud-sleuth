@@ -92,7 +92,7 @@ class SleuthKafkaStreamsConfigurationIntegrationTests {
 		assertThat(output).doesNotContain("is not eligible for getting processed by all BeanPostProcessors");
 	}
 
-	@Configuration
+	@Configuration(proxyBeanMethods = false)
 	static class UserConfig {
 
 		static StreamsBuilderFactoryBean streamsBuilderFactoryBean;
@@ -105,7 +105,7 @@ class SleuthKafkaStreamsConfigurationIntegrationTests {
 
 	}
 
-	@Configuration
+	@Configuration(proxyBeanMethods = false)
 	static class EagerInitializationConfig {
 
 		@Bean

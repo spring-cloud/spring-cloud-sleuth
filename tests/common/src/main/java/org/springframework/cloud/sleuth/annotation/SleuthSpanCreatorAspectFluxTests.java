@@ -36,6 +36,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.cloud.gateway.config.GatewayAutoConfiguration;
+import org.springframework.cloud.gateway.config.GatewayClassPathWarningAutoConfiguration;
 import org.springframework.cloud.sleuth.api.CurrentTraceContext;
 import org.springframework.cloud.sleuth.api.Span;
 import org.springframework.cloud.sleuth.api.TraceContext;
@@ -612,8 +613,9 @@ public abstract class SleuthSpanCreatorAspectFluxTests {
 
 	}
 
-	@Configuration
-	@EnableAutoConfiguration(exclude = GatewayAutoConfiguration.class)
+	@Configuration(proxyBeanMethods = false)
+	@EnableAutoConfiguration(
+			exclude = { GatewayClassPathWarningAutoConfiguration.class, GatewayAutoConfiguration.class })
 	public static class TestConfiguration {
 
 		@Bean

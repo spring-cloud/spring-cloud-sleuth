@@ -149,7 +149,7 @@ public class TraceMessagingAutoConfigurationTests {
 						TraceAutoConfiguration.class, TraceMessagingAutoConfiguration.class));
 	}
 
-	@Configuration
+	@Configuration(proxyBeanMethods = false)
 	@EnableAutoConfiguration
 	protected static class Config {
 
@@ -251,7 +251,7 @@ class TestSleuthJmsBeanPostProcessor extends TracingConnectionFactoryBeanPostPro
 
 }
 
-@Configuration
+@Configuration(proxyBeanMethods = false)
 class ProducerSamplerConfig {
 
 	static final SamplerFunction<MessagingRequest> INSTANCE = request -> null;
@@ -263,7 +263,7 @@ class ProducerSamplerConfig {
 
 }
 
-@Configuration
+@Configuration(proxyBeanMethods = false)
 class ConsumerSamplerConfig {
 
 	static final SamplerFunction<MessagingRequest> INSTANCE = request -> null;

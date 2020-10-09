@@ -303,13 +303,13 @@ public class SkipPatternProviderConfigTest {
 				.filter(Optional::isPresent).map(Optional::get).map(Pattern::pattern).collect(Collectors.toList());
 	}
 
-	@Configuration
+	@Configuration(proxyBeanMethods = false)
 	@EnableConfigurationProperties(ServerProperties.class)
 	static class ServerPropertiesConfig {
 
 	}
 
-	@Configuration
+	@Configuration(proxyBeanMethods = false)
 	static class EmptyEndpoints {
 
 		@Bean

@@ -58,7 +58,7 @@ class TraceSpringIntegrationAutoConfigurationTests {
 				.run(context -> assertThat(context).hasSingleBean(TracingChannelInterceptor.class));
 	}
 
-	@Configuration
+	@Configuration(proxyBeanMethods = false)
 	@EnableBinding
 	static class WithEnabledBinding {
 

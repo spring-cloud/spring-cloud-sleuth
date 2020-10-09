@@ -149,6 +149,9 @@ class FromMutableSpan implements ReportedSpan {
 
 	@Override
 	public Span.Kind kind() {
+		if (this.mutableSpan.kind() == null) {
+			return null;
+		}
 		return Span.Kind.valueOf(this.mutableSpan.kind().name());
 	}
 

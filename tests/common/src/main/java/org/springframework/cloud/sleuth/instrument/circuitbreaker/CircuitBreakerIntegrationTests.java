@@ -17,7 +17,6 @@
 package org.springframework.cloud.sleuth.instrument.circuitbreaker;
 
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.function.Supplier;
 
 import org.assertj.core.api.BDDAssertions;
 import org.junit.jupiter.api.BeforeEach;
@@ -29,6 +28,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.cloud.circuitbreaker.resilience4j.Resilience4JCircuitBreakerFactory;
 import org.springframework.cloud.client.circuitbreaker.CircuitBreakerFactory;
 import org.springframework.cloud.gateway.config.GatewayAutoConfiguration;
+import org.springframework.cloud.gateway.config.GatewayClassPathWarningAutoConfiguration;
 import org.springframework.cloud.sleuth.api.ScopedSpan;
 import org.springframework.cloud.sleuth.api.Span;
 import org.springframework.cloud.sleuth.api.Tracer;
@@ -112,7 +112,8 @@ public abstract class CircuitBreakerIntegrationTests {
 	public abstract void assertException(ReportedSpan reportedSpan);
 
 	@Configuration(proxyBeanMethods = false)
-	@EnableAutoConfiguration(exclude = GatewayAutoConfiguration.class)
+	@EnableAutoConfiguration(
+			exclude = { GatewayClassPathWarningAutoConfiguration.class, GatewayAutoConfiguration.class })
 	public static class TestConfig {
 
 		@Bean

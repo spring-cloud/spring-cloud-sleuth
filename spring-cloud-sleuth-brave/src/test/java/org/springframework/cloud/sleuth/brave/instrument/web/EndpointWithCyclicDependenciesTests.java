@@ -44,7 +44,7 @@ public class EndpointWithCyclicDependenciesTests {
 	}
 
 	@EnableAutoConfiguration
-	@Configuration
+	@Configuration(proxyBeanMethods = false)
 	static class ClientConfig {
 
 		@Bean

@@ -402,7 +402,7 @@ public class ZipkinAutoConfigurationTests {
 		}, 200).error()).isInstanceOf(TimeoutException.class).hasMessage("FakeSender{} check() timed out after 200ms");
 	}
 
-	@Configuration
+	@Configuration(proxyBeanMethods = false)
 	protected static class Config {
 
 		@Bean
@@ -412,7 +412,7 @@ public class ZipkinAutoConfigurationTests {
 
 	}
 
-	@Configuration
+	@Configuration(proxyBeanMethods = false)
 	protected static class HandlersConfig {
 
 		@Bean
@@ -439,7 +439,7 @@ public class ZipkinAutoConfigurationTests {
 
 	}
 
-	@Configuration
+	@Configuration(proxyBeanMethods = false)
 	static class WithMeterRegistry {
 
 		@Bean
@@ -449,7 +449,7 @@ public class ZipkinAutoConfigurationTests {
 
 	}
 
-	@Configuration
+	@Configuration(proxyBeanMethods = false)
 	static class WithReporter {
 
 		@Bean
@@ -459,7 +459,7 @@ public class ZipkinAutoConfigurationTests {
 
 	}
 
-	@Configuration
+	@Configuration(proxyBeanMethods = false)
 	protected static class MultipleReportersConfig {
 
 		@Bean
@@ -507,7 +507,7 @@ public class ZipkinAutoConfigurationTests {
 
 	// tag::override_default_beans[]
 
-	@Configuration
+	@Configuration(proxyBeanMethods = false)
 	protected static class MyConfig {
 
 		@Bean(ZipkinAutoConfiguration.REPORTER_BEAN_NAME)

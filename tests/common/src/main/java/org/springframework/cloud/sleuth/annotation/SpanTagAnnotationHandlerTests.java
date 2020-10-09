@@ -27,6 +27,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.cloud.gateway.config.GatewayAutoConfiguration;
+import org.springframework.cloud.gateway.config.GatewayClassPathWarningAutoConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -89,8 +90,9 @@ public abstract class SpanTagAnnotationHandlerTests {
 		}
 	}
 
-	@Configuration
-	@EnableAutoConfiguration(exclude = GatewayAutoConfiguration.class)
+	@Configuration(proxyBeanMethods = false)
+	@EnableAutoConfiguration(
+			exclude = { GatewayClassPathWarningAutoConfiguration.class, GatewayAutoConfiguration.class })
 	public static class TestConfiguration {
 
 		// tag::custom_resolver[]

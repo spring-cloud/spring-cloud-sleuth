@@ -244,7 +244,7 @@ public class Issue410Tests {
 
 }
 
-@Configuration
+@Configuration(proxyBeanMethods = false)
 @EnableAsync
 class AppConfig {
 

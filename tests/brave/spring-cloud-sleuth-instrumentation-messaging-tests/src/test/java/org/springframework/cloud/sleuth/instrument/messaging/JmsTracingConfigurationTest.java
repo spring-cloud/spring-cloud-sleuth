@@ -132,7 +132,7 @@ public class JmsTracingConfigurationTest {
 
 	}
 
-	@Configuration
+	@Configuration(proxyBeanMethods = false)
 	@EnableJms
 	static class SimpleJmsListenerConfiguration implements JmsListenerConfigurer {
 
@@ -163,7 +163,7 @@ public class JmsTracingConfigurationTest {
 
 }
 
-@Configuration
+@Configuration(proxyBeanMethods = false)
 @EnableAutoConfiguration(exclude = KafkaAutoConfiguration.class)
 class JmsTestTracingConfiguration {
 

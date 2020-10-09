@@ -44,7 +44,7 @@ public class SleuthKafkaStreamsConfigurationTest {
 		then(streamsBuilderFactoryBean.clientSupplierInvoked).isTrue();
 	}
 
-	@Configuration
+	@Configuration(proxyBeanMethods = false)
 	@EnableAutoConfiguration
 	protected static class Config {
 

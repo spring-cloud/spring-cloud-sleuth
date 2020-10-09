@@ -133,7 +133,7 @@ public class OtelTraceAsyncIntegrationTests {
 	}
 
 	@EnableAsync
-	@Configuration
+	@Configuration(proxyBeanMethods = false)
 	@EnableAutoConfiguration
 	public static class TraceAsyncITestConfiguration {
 

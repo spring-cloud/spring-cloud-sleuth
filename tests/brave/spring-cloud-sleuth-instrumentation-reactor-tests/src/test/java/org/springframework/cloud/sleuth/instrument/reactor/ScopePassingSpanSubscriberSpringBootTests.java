@@ -176,7 +176,7 @@ public class ScopePassingSpanSubscriberSpringBootTests {
 	}
 
 	@EnableAutoConfiguration
-	@Configuration
+	@Configuration(proxyBeanMethods = false)
 	static class Config {
 
 		@Bean

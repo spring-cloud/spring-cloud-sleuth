@@ -92,7 +92,7 @@ public class TraceStreamChannelInterceptorTests {
 		assertThat(extracted.spanIdString()).as("spanId was equal to parent's id").isNotEqualTo(expectedSpanId);
 	}
 
-	@Configuration
+	@Configuration(proxyBeanMethods = false)
 	@EnableAutoConfiguration
 	@ImportAutoConfiguration(TestChannelBinderConfiguration.class)
 	static class App {

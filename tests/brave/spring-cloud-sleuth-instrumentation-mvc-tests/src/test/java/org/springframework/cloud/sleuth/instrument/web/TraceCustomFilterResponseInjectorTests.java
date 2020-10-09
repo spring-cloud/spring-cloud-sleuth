@@ -81,7 +81,7 @@ public class TraceCustomFilterResponseInjectorTests {
 		then(responseEntity.getHeaders()).containsKey("b3").as("Trace headers must be present in response headers");
 	}
 
-	@Configuration
+	@Configuration(proxyBeanMethods = false)
 	@EnableAutoConfiguration
 	static class Config implements ApplicationListener<ServletWebServerInitializedEvent> {
 

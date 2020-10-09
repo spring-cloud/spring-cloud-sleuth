@@ -20,4 +20,8 @@ public interface TestTracingAssertions {
 
 	void assertThatNoParentPresent(ReportedSpan reportedSpan);
 
+	default String or128Bit(String id) {
+		return id;
+	}
+
 }

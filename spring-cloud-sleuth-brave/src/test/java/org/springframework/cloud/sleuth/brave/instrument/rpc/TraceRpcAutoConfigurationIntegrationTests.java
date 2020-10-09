@@ -51,7 +51,7 @@ public class TraceRpcAutoConfigurationIntegrationTests {
 	}
 
 	@EnableAutoConfiguration
-	@Configuration
+	@Configuration(proxyBeanMethods = false)
 	public static class Config {
 
 		@Bean

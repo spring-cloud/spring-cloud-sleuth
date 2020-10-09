@@ -26,7 +26,7 @@ public class BraveIntegrationTestTracing extends BraveTestTracing {
 	IntegrationTestSpanHandler spanHandler;
 
 	@Override
-	Tracing.Builder tracingBuilder() {
+	public Tracing.Builder tracingBuilder() {
 		return super.tracingBuilder().addSpanHandler(initSpanHandler());
 	}
 

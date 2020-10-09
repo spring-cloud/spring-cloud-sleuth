@@ -19,6 +19,7 @@ package org.springframework.cloud.sleuth.test;
 import org.springframework.cloud.sleuth.api.CurrentTraceContext;
 import org.springframework.cloud.sleuth.api.Tracer;
 import org.springframework.cloud.sleuth.api.http.HttpClientHandler;
+import org.springframework.cloud.sleuth.api.http.HttpRequestParser;
 import org.springframework.cloud.sleuth.api.http.HttpServerHandler;
 import org.springframework.cloud.sleuth.api.propagation.Propagator;
 
@@ -26,12 +27,22 @@ public interface TracerAware {
 
 	Tracer tracer();
 
+	TracerAware sampler(TraceSampler sampler);
+
 	CurrentTraceContext currentTraceContext();
 
 	Propagator propagator();
 
 	HttpServerHandler httpServerHandler();
 
+	TracerAware clientRequestParser(HttpRequestParser httpRequestParser);
+
 	HttpClientHandler httpClientHandler();
+
+	enum TraceSampler {
+
+		ON, OFF
+
+	}
 
 }

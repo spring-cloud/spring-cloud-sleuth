@@ -410,8 +410,8 @@ or to  reference the bean names via their static String `NAME` fields.
 Here's an example adding the HTTP url in addition to defaults:
 [source,java]
 ----
-@Configuration
-class Config {
+@Configuration(proxyBeanMethods = false)
+	class Config {
 include::{project-root}/tests/spring-cloud-sleuth-instrumentation-mvc-tests/src/test/java/org/springframework/cloud/sleuth/instrument/web/TraceFilterWebIntegrationTests.java[tags=custom_parser,indent=2]
 }
 ----
@@ -436,8 +436,8 @@ an example of usage of `SkipPatternProvider` inside a server side, `Sampler<Http
 
 [source,java]
 ----
-@Configuration
-class Config {
+@Configuration(proxyBeanMethods = false)
+	class Config {
 include::{project-root}/tests/spring-cloud-sleuth-instrumentation-mvc-tests/src/test/java/org/springframework/cloud/sleuth/instrument/web/TraceFilterWebIntegrationTests.java[tags=custom_server_sampler,indent=2]
 }
 ----
@@ -474,8 +474,8 @@ the "alerts" channel. Other requests will use a global rate provided by the
 
 [source,java]
 ----
-@Configuration
-class Config {
+@Configuration(proxyBeanMethods = false)
+	class Config {
 include::{project-root}/spring-cloud-sleuth-core/src/test/java/org/springframework/cloud/sleuth/instrument/messaging/TraceMessagingAutoConfigurationIntegrationTests.java[tags=custom_messaging_server_sampler,indent=2]
 }
 ----
@@ -502,8 +502,8 @@ requests will use the global sampling configuration.
 
 [source,java]
 ----
-@Configuration
-class Config {
+@Configuration(proxyBeanMethods = false)
+	class Config {
 include::{project-root}/tests/spring-cloud-sleuth-instrumentation-rpc-tests/src/test/java/org/springframework/cloud/sleuth/instrument/rpc/TraceRpcAutoConfigurationIntegrationTests.java[tags=custom_rpc_server_sampler,indent=2]
 }
 ----
@@ -603,8 +603,8 @@ the `ZipkinRestTemplateCustomizer` bean.
 
 [source,java]
 ----
-@Configuration
-class MyConfig {
+@Configuration(proxyBeanMethods = false)
+	class MyConfig {
 	@Bean ZipkinRestTemplateCustomizer myCustomizer() {
 		return new ZipkinRestTemplateCustomizer() {
 			@Override

@@ -125,7 +125,7 @@ public class GrpcTracingIntegrationTests {
 
 	}
 
-	@Configuration
+	@Configuration(proxyBeanMethods = false)
 	@EnableAutoConfiguration
 	@Import(HelloGrpcService.class)
 	public static class TestConfiguration {

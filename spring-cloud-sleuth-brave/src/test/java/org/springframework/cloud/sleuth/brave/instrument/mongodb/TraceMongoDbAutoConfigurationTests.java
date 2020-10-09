@@ -47,7 +47,7 @@ class TraceMongoDbAutoConfigurationTests {
 		then(span.remoteServiceName()).contains("mongodb");
 	}
 
-	@Configuration
+	@Configuration(proxyBeanMethods = false)
 	@EnableAutoConfiguration
 	static class TestTraceMongoDbAutoConfiguration {
 

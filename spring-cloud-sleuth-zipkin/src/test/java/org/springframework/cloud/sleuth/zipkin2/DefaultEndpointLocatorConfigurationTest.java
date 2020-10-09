@@ -164,13 +164,13 @@ public class DefaultEndpointLocatorConfigurationTest {
 		return mocked;
 	}
 
-	@Configuration
+	@Configuration(proxyBeanMethods = false)
 	@EnableAutoConfiguration
 	public static class EmptyConfiguration {
 
 	}
 
-	@Configuration
+	@Configuration(proxyBeanMethods = false)
 	@EnableAutoConfiguration
 	public static class ConfigurationWithRegistration {
 
@@ -211,7 +211,7 @@ public class DefaultEndpointLocatorConfigurationTest {
 
 	}
 
-	@Configuration
+	@Configuration(proxyBeanMethods = false)
 	@EnableAutoConfiguration
 	public static class ConfigurationWithCustomLocator {
 

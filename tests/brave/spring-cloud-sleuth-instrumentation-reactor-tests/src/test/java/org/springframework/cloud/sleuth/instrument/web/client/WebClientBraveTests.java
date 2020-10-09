@@ -81,7 +81,7 @@ public class WebClientBraveTests extends ITSpringConfiguredReactorClient {
 	public void readsRequestAtResponseTime() {
 	}
 
-	@Configuration
+	@Configuration(proxyBeanMethods = false)
 	static class WebClientConfiguration {
 
 		/**

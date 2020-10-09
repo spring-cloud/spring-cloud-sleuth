@@ -119,7 +119,7 @@ public class TraceAsyncIntegrationTests {
 
 	@DefaultTestAutoConfiguration
 	@EnableAsync
-	@Configuration
+	@Configuration(proxyBeanMethods = false)
 	static class TraceAsyncITestConfiguration {
 
 		@Bean

@@ -142,7 +142,7 @@ public class ZipkinTests extends AbstractIntegrationTest {
 		return "random-sleep-millis";
 	}
 
-	@Configuration
+	@Configuration(proxyBeanMethods = false)
 	public static class WaitUntilZipkinIsUpConfig {
 
 		@Bean

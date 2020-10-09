@@ -31,11 +31,13 @@ class OpentracingAutoConfigurationTests {
 	void should_start_context_with_otel_tracer_when_sleuth_enabled() {
 		ApplicationContextRunner runner = withAutoConfiguration();
 
-		runner.run(context -> assertThat(context).hasNotFailed().hasSingleBean(Tracer.class).hasSingleBean(io.opentracing.Tracer.class));
+		runner.run(context -> assertThat(context).hasNotFailed().hasSingleBean(Tracer.class)
+				.hasSingleBean(io.opentracing.Tracer.class));
 	}
 
 	private ApplicationContextRunner withAutoConfiguration() {
-		return new ApplicationContextRunner().withConfiguration(AutoConfigurations.of(TraceOtelAutoConfiguration.class, OpentracingAutoConfiguration.class));
+		return new ApplicationContextRunner().withConfiguration(
+				AutoConfigurations.of(TraceOtelAutoConfiguration.class, OpentracingAutoConfiguration.class));
 	}
 
 	@Test
@@ -43,7 +45,8 @@ class OpentracingAutoConfigurationTests {
 		ApplicationContextRunner runner = withAutoConfiguration()
 				.withPropertyValues("spring.sleuth.opentracing.enabled=false");
 
-		runner.run(context -> assertThat(context).hasNotFailed().hasSingleBean(Tracer.class).doesNotHaveBean(io.opentracing.Tracer.class));
+		runner.run(context -> assertThat(context).hasNotFailed().hasSingleBean(Tracer.class)
+				.doesNotHaveBean(io.opentracing.Tracer.class));
 	}
 
 }

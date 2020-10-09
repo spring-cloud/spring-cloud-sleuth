@@ -117,7 +117,7 @@ public class GH1212Tests {
 	/*
 	 * Configuration with a single Executor named `taskExecutor`
 	 */
-	@Configuration
+	@Configuration(proxyBeanMethods = false)
 	public static class DefaultTaskExecutorConfig {
 
 		@Bean(name = AsyncExecutionAspectSupport.DEFAULT_TASK_EXECUTOR_BEAN_NAME)
@@ -130,7 +130,7 @@ public class GH1212Tests {
 	/*
 	 * Configuration with a single TaskExecutor
 	 */
-	@Configuration
+	@Configuration(proxyBeanMethods = false)
 	public static class SingleTaskExecutorConfig {
 
 		@Bean
@@ -146,7 +146,7 @@ public class GH1212Tests {
 	 * Configuration with a multiple TaskExecutors --> Spring won't pick any unless one
 	 * is @Primary
 	 */
-	@Configuration
+	@Configuration(proxyBeanMethods = false)
 	public static class MultipleTaskExecutorConfig {
 
 		@Bean
@@ -164,7 +164,7 @@ public class GH1212Tests {
 	/*
 	 * Configuration where a custom AsyncConfigurer is provided
 	 */
-	@Configuration
+	@Configuration(proxyBeanMethods = false)
 	public static class CustomAsyncConfigurerConfig {
 
 		@Bean

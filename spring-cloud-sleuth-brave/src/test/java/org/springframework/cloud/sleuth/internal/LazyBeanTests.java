@@ -54,7 +54,7 @@ public class LazyBeanTests {
 		then(provider.get()).isNull();
 	}
 
-	@Configuration
+	@Configuration(proxyBeanMethods = false)
 	static class BasicConfig {
 
 		@Bean

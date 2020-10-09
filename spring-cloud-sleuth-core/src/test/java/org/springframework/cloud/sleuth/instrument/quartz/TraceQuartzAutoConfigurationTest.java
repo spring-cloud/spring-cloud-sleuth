@@ -27,6 +27,7 @@ import org.springframework.boot.autoconfigure.AutoConfigureBefore;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
 import org.springframework.cloud.gateway.config.GatewayAutoConfiguration;
+import org.springframework.cloud.gateway.config.GatewayClassPathWarningAutoConfiguration;
 import org.springframework.cloud.sleuth.api.Tracer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -105,13 +106,14 @@ public class TraceQuartzAutoConfigurationTest {
 				});
 	}
 
-	@Configuration
-	@EnableAutoConfiguration(exclude = GatewayAutoConfiguration.class)
+	@Configuration(proxyBeanMethods = false)
+	@EnableAutoConfiguration(
+			exclude = { GatewayClassPathWarningAutoConfiguration.class, GatewayAutoConfiguration.class })
 	public static class EnableAutoConfig {
 
 	}
 
-	@Configuration
+	@Configuration(proxyBeanMethods = false)
 	@AutoConfigureBefore(TraceQuartzAutoConfiguration.class)
 	public static class SchedulerConfig {
 
@@ -125,7 +127,7 @@ public class TraceQuartzAutoConfigurationTest {
 
 	}
 
-	@Configuration
+	@Configuration(proxyBeanMethods = false)
 	@AutoConfigureBefore(TraceQuartzAutoConfiguration.class)
 	public static class TracingConfig {
 

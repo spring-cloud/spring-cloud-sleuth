@@ -2,7 +2,7 @@
 org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
 org.springframework.cloud.sleuth.annotation.SleuthAnnotationAutoConfiguration,\
 org.springframework.cloud.sleuth.autoconfig.TraceAutoConfiguration,\
-org.springframework.cloud.sleuth.autoconfig.http.TraceHttpAutoConfiguration,\
+org.springframework.cloud.sleuth.instrument.web.TraceHttpAutoConfiguration,\
 org.springframework.cloud.sleuth.instrument.async.AsyncAutoConfiguration,\
 org.springframework.cloud.sleuth.instrument.async.AsyncCustomAutoConfiguration,\
 org.springframework.cloud.sleuth.instrument.async.AsyncDefaultAutoConfiguration,\
@@ -12,6 +12,7 @@ org.springframework.cloud.sleuth.instrument.quartz.TraceQuartzAutoConfiguration,
 org.springframework.cloud.sleuth.instrument.web.TraceWebServletAutoConfiguration,\
 org.springframework.cloud.sleuth.instrument.web.TraceWebFluxAutoConfiguration,\
 org.springframework.cloud.sleuth.instrument.web.client.TraceWebClientAutoConfiguration,\
+org.springframework.cloud.sleuth.instrument.web.client.TraceWebAsyncClientAutoConfiguration,\
 org.springframework.cloud.sleuth.instrument.web.client.feign.TraceFeignClientAutoConfiguration,\
 org.springframework.cloud.sleuth.instrument.web.SkipPatternConfiguration,\
 org.springframework.cloud.sleuth.instrument.scheduling.TraceSchedulingAutoConfiguration,\

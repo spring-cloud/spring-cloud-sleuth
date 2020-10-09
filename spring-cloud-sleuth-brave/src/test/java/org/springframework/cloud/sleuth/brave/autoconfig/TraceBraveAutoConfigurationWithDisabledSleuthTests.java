@@ -71,7 +71,7 @@ public class TraceBraveAutoConfigurationWithDisabledSleuthTests {
 	}
 
 	@EnableAutoConfiguration
-	@Configuration
+	@Configuration(proxyBeanMethods = false)
 	static class Config {
 
 	}

@@ -29,12 +29,14 @@ import brave.sampler.Sampler;
 import org.springframework.cloud.sleuth.api.CurrentTraceContext;
 import org.springframework.cloud.sleuth.api.Tracer;
 import org.springframework.cloud.sleuth.api.http.HttpClientHandler;
+import org.springframework.cloud.sleuth.api.http.HttpRequestParser;
 import org.springframework.cloud.sleuth.api.http.HttpServerHandler;
 import org.springframework.cloud.sleuth.api.propagation.Propagator;
 import org.springframework.cloud.sleuth.brave.bridge.BraveCurrentTraceContext;
 import org.springframework.cloud.sleuth.brave.bridge.BravePropagator;
 import org.springframework.cloud.sleuth.brave.bridge.BraveTracer;
 import org.springframework.cloud.sleuth.brave.bridge.http.BraveHttpClientHandler;
+import org.springframework.cloud.sleuth.brave.bridge.http.BraveHttpRequestParser;
 import org.springframework.cloud.sleuth.brave.bridge.http.BraveHttpServerHandler;
 import org.springframework.cloud.sleuth.test.TestSpanHandler;
 import org.springframework.cloud.sleuth.test.TestTracingAssertions;
@@ -46,23 +48,52 @@ public class BraveTestTracing implements TracerAware, TestTracingAware, TestTrac
 
 	brave.test.TestSpanHandler spans = new brave.test.TestSpanHandler();
 
+	Sampler sampler = Sampler.ALWAYS_SAMPLE;
+
 	ThreadLocalCurrentTraceContext context = ThreadLocalCurrentTraceContext.newBuilder()
 			.addScopeDecorator(StrictScopeDecorator.create()).build();
 
-	Tracing tracing = tracingBuilder().build();
+	Tracing.Builder builder = tracingBuilder();
 
-	Tracing.Builder tracingBuilder() {
-		return Tracing.newBuilder().currentTraceContext(context).sampler(Sampler.ALWAYS_SAMPLE)
+	Tracing tracing = builder.build();
+
+	public Tracing.Builder tracingBuilder() {
+		Tracing.Builder builder = Tracing.newBuilder().currentTraceContext(context).sampler(this.sampler)
 				.addSpanHandler(spanHandler());
+		this.builder = builder;
+		return builder;
+	}
+
+	public BraveTestTracing tracingBuilder(Tracing.Builder builder) {
+		this.builder = builder;
+		return this;
 	}
 
 	brave.Tracer tracer = this.tracing.tracer();
 
-	HttpTracing httpTracing = HttpTracing.newBuilder(this.tracing).build();
+	HttpTracing httpTracing = httpTracingBuilder().build();
+
+	public HttpTracing.Builder httpTracingBuilder() {
+		return HttpTracing.newBuilder(this.tracing);
+	}
 
 	@Override
 	public Tracer tracer() {
 		return BraveTracer.fromBrave(this.tracer);
+	}
+
+	@Override
+	public TracerAware sampler(TraceSampler sampler) {
+		this.sampler = sampler == TraceSampler.ON ? Sampler.ALWAYS_SAMPLE : Sampler.NEVER_SAMPLE;
+		this.builder = tracingBuilder();
+		reset();
+		return this;
+	}
+
+	public void reset() {
+		this.tracing = this.builder.build();
+		this.tracer = this.tracing.tracer();
+		this.httpTracing = httpTracingBuilder().build();
 	}
 
 	SpanHandler spanHandler() {
@@ -82,6 +113,14 @@ public class BraveTestTracing implements TracerAware, TestTracingAware, TestTrac
 	@Override
 	public HttpServerHandler httpServerHandler() {
 		return new BraveHttpServerHandler(brave.http.HttpServerHandler.create(this.httpTracing));
+	}
+
+	@Override
+	public TracerAware clientRequestParser(HttpRequestParser httpRequestParser) {
+		reset();
+		this.httpTracing = this.httpTracing.toBuilder()
+				.clientRequestParser(BraveHttpRequestParser.toBrave(httpRequestParser)).build();
+		return this;
 	}
 
 	@Override
@@ -114,6 +153,7 @@ public class BraveTestTracing implements TracerAware, TestTracingAware, TestTrac
 		this.spans.clear();
 		this.context.clear();
 		handler().clear();
+		this.sampler = Sampler.ALWAYS_SAMPLE;
 	}
 
 }

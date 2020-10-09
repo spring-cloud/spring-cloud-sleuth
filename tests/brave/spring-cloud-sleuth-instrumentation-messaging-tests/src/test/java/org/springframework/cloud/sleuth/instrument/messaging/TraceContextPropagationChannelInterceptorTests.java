@@ -90,7 +90,7 @@ public class TraceContextPropagationChannelInterceptorTests {
 		assertThat(extracted.spanIdString()).as("spanId was equal to parent's id").isNotEqualTo(expectedSpanId);
 	}
 
-	@Configuration
+	@Configuration(proxyBeanMethods = false)
 	@EnableAutoConfiguration
 	static class App {
 

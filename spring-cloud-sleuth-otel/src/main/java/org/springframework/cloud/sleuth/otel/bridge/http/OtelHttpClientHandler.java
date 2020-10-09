@@ -29,14 +29,24 @@ import org.springframework.cloud.sleuth.api.TraceContext;
 import org.springframework.cloud.sleuth.api.http.HttpClientHandler;
 import org.springframework.cloud.sleuth.api.http.HttpClientRequest;
 import org.springframework.cloud.sleuth.api.http.HttpClientResponse;
+import org.springframework.cloud.sleuth.api.http.HttpRequestParser;
+import org.springframework.cloud.sleuth.api.http.HttpResponseParser;
 import org.springframework.cloud.sleuth.otel.bridge.OtelSpan;
 import org.springframework.cloud.sleuth.otel.bridge.OtelTraceContext;
+import org.springframework.lang.Nullable;
 
 public class OtelHttpClientHandler extends HttpClientTracer<HttpClientRequest, HttpClientRequest, HttpClientResponse>
 		implements HttpClientHandler {
 
-	public OtelHttpClientHandler(Tracer tracer) {
+	private final HttpRequestParser httpClientRequestParser;
+
+	private final HttpResponseParser httpClientResponseParser;
+
+	public OtelHttpClientHandler(Tracer tracer, @Nullable HttpRequestParser httpClientRequestParser,
+			@Nullable HttpResponseParser httpClientResponseParser) {
 		super(tracer);
+		this.httpClientRequestParser = httpClientRequestParser;
+		this.httpClientResponseParser = httpClientResponseParser;
 	}
 
 	@Override
@@ -61,6 +71,28 @@ public class OtelHttpClientHandler extends HttpClientTracer<HttpClientRequest, H
 		try (Scope scope2 = startScope(span, request)) {
 			return OtelSpan.fromOtel(span);
 		}
+	}
+
+	@Override
+	protected io.opentelemetry.trace.Span onRequest(io.opentelemetry.trace.Span span,
+			HttpClientRequest httpClientRequest) {
+		io.opentelemetry.trace.Span afterRequest = super.onRequest(span, httpClientRequest);
+		if (this.httpClientRequestParser != null) {
+			Span fromOtel = OtelSpan.fromOtel(afterRequest);
+			this.httpClientRequestParser.parse(httpClientRequest, fromOtel.context(), fromOtel.customizer());
+		}
+		return afterRequest;
+	}
+
+	@Override
+	protected io.opentelemetry.trace.Span onResponse(io.opentelemetry.trace.Span span,
+			HttpClientResponse httpClientResponse) {
+		io.opentelemetry.trace.Span afterResponse = super.onResponse(span, httpClientResponse);
+		if (this.httpClientResponseParser != null) {
+			Span fromOtel = OtelSpan.fromOtel(afterResponse);
+			this.httpClientResponseParser.parse(httpClientResponse, fromOtel.context(), fromOtel.customizer());
+		}
+		return afterResponse;
 	}
 
 	@Override

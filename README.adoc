@@ -349,8 +349,8 @@ To do this you can use respectively `ZipkinAutoConfiguration.REPORTER_BEAN_NAME`
 [source,java]
 ----
 
-@Configuration
-protected static class MyConfig {
+@Configuration(proxyBeanMethods = false)
+	protected static class MyConfig {
 
     @Bean(ZipkinAutoConfiguration.REPORTER_BEAN_NAME)
     Reporter<zipkin2.Span> myReporter() {

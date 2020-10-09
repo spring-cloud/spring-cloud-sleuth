@@ -91,7 +91,8 @@ public class TraceOtelAutoConfiguration {
 
 	@Bean
 	@ConditionalOnMissingBean
-	Tracer otelTracer(TracerProvider tracerProvider, ObjectProvider<TracerSdkProvider> tracerSdkObjectProvider, TraceConfig traceConfig, OtelProperties otelProperties,
+	Tracer otelTracer(TracerProvider tracerProvider, ObjectProvider<TracerSdkProvider> tracerSdkObjectProvider,
+			TraceConfig traceConfig, OtelProperties otelProperties,
 			ObjectProvider<List<SpanProcessor>> spanProcessors) {
 		tracerSdkObjectProvider.ifAvailable(tracerSdkProvider -> {
 			List<SpanProcessor> processors = spanProcessors.getIfAvailable(ArrayList::new);

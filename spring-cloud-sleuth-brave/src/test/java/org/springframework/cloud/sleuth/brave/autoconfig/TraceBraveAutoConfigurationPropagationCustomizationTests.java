@@ -65,7 +65,7 @@ public class TraceBraveAutoConfigurationPropagationCustomizationTests {
 						.isSameAs(B3SinglePropagation.FACTORY));
 	}
 
-	@Configuration
+	@Configuration(proxyBeanMethods = false)
 	static class CustomPropagationFactoryBuilderConfig {
 
 		@Bean

@@ -57,7 +57,7 @@ public class TraceMessagingAutoConfiguration1664Tests {
 		then(this.mySleuthKafka1664Aspect.adapterWrapped).isTrue();
 	}
 
-	@Configuration
+	@Configuration(proxyBeanMethods = false)
 	@EnableAutoConfiguration
 	protected static class Config {
 

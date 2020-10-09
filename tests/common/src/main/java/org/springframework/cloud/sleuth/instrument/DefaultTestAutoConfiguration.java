@@ -31,7 +31,7 @@ import org.springframework.context.annotation.Configuration;
 @EnableAutoConfiguration(exclude = { LoadBalancerAutoConfiguration.class, JmxAutoConfiguration.class })
 // ,TraceSpringIntegrationAutoConfiguration.class,
 // TraceWebSocketAutoConfiguration.class })
-@Configuration
+@Configuration(proxyBeanMethods = false)
 public @interface DefaultTestAutoConfiguration {
 
 }

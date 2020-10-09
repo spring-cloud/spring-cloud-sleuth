@@ -278,7 +278,7 @@ public class SpringCloudSleuthDocTests {
 		return "some logic";
 	}
 
-	@Configuration
+	@Configuration(proxyBeanMethods = false)
 	static class SamplingConfiguration {
 
 		// tag::always_sampler[]

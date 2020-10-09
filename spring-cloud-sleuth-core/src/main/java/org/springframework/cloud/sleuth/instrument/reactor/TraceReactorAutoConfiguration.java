@@ -87,7 +87,7 @@ class TraceReactorAutoConfiguration {
 			return new HookRegisteringBeanDefinitionRegistryPostProcessor(context);
 		}
 
-		@Configuration
+		@Configuration(proxyBeanMethods = false)
 		@ConditionalOnClass(RefreshScope.class)
 		static class HooksRefresherConfiguration {
 

@@ -168,7 +168,7 @@ public class TraceAsyncIntegrationTests {
 
 	@EnableAutoConfiguration
 	@EnableAsync
-	@Configuration
+	@Configuration(proxyBeanMethods = false)
 	static class TraceAsyncITestConfiguration {
 
 		@Bean

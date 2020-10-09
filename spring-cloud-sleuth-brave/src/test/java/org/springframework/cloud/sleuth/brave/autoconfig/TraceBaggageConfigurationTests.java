@@ -161,7 +161,7 @@ public class TraceBaggageConfigurationTests {
 						.extracting(SingleCorrelationField::dirty).containsExactly(true));
 	}
 
-	@Configuration
+	@Configuration(proxyBeanMethods = false)
 	static class DirtyCorrelationFieldConfiguration {
 
 		@Bean
@@ -184,7 +184,7 @@ public class TraceBaggageConfigurationTests {
 
 	}
 
-	@Configuration
+	@Configuration(proxyBeanMethods = false)
 	static class OldCorrelationFieldsForLogScrapingConfiguration {
 
 		@Bean
@@ -195,7 +195,7 @@ public class TraceBaggageConfigurationTests {
 
 	}
 
-	@Configuration
+	@Configuration(proxyBeanMethods = false)
 	static class CustomBaggageConfiguration {
 
 		@Bean

@@ -33,7 +33,7 @@ public class TraceWebDisabledTests {
 
 	}
 
-	@Configuration
+	@Configuration(proxyBeanMethods = false)
 	@EnableAutoConfiguration
 	public static class Config {
 

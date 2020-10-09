@@ -29,7 +29,11 @@ import org.springframework.boot.autoconfigure.AutoConfigurations;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
 import org.springframework.cloud.sleuth.autoconfig.TraceAutoConfiguration;
 import org.springframework.cloud.sleuth.brave.autoconfig.TraceBraveAutoConfiguration;
+import org.springframework.cloud.sleuth.instrument.web.HttpClientRequestParser;
+import org.springframework.cloud.sleuth.instrument.web.HttpClientResponseParser;
 import org.springframework.cloud.sleuth.instrument.web.HttpClientSampler;
+import org.springframework.cloud.sleuth.instrument.web.HttpServerRequestParser;
+import org.springframework.cloud.sleuth.instrument.web.HttpServerResponseParser;
 import org.springframework.cloud.sleuth.instrument.web.HttpServerSampler;
 import org.springframework.cloud.sleuth.instrument.web.SkipPatternConfiguration;
 import org.springframework.context.annotation.Bean;
@@ -176,7 +180,7 @@ public class TraceHttpAutoConfigurationTests {
 
 }
 
-@Configuration
+@Configuration(proxyBeanMethods = false)
 class HttpClientSamplerConfig {
 
 	static final org.springframework.cloud.sleuth.api.SamplerFunction<org.springframework.cloud.sleuth.api.http.HttpRequest> INSTANCE = request -> null;
@@ -188,7 +192,7 @@ class HttpClientSamplerConfig {
 
 }
 
-@Configuration
+@Configuration(proxyBeanMethods = false)
 class HttpServerSamplerConfig {
 
 	static final org.springframework.cloud.sleuth.api.SamplerFunction<org.springframework.cloud.sleuth.api.http.HttpRequest> INSTANCE = request -> null;
@@ -200,7 +204,7 @@ class HttpServerSamplerConfig {
 
 }
 
-@Configuration
+@Configuration(proxyBeanMethods = false)
 class HttpClientParserConfig {
 
 	static final HttpRequestParser REQUEST_PARSER = (r, c, s) -> {
@@ -220,7 +224,7 @@ class HttpClientParserConfig {
 
 }
 
-@Configuration
+@Configuration(proxyBeanMethods = false)
 class HttpServerParserConfig {
 
 	static final HttpRequestParser REQUEST_PARSER = (r, c, s) -> {
@@ -240,7 +244,7 @@ class HttpServerParserConfig {
 
 }
 
-@Configuration
+@Configuration(proxyBeanMethods = false)
 class HttpParserConfig {
 
 	static final HttpRequestParser REQUEST_PARSER = (r, c, s) -> {

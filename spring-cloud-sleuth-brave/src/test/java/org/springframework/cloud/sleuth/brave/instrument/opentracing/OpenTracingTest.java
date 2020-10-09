@@ -249,7 +249,7 @@ public class OpenTracingTest {
 		this.spans.clear();
 	}
 
-	@Configuration
+	@Configuration(proxyBeanMethods = false)
 	@EnableAutoConfiguration
 	static class Config {
 

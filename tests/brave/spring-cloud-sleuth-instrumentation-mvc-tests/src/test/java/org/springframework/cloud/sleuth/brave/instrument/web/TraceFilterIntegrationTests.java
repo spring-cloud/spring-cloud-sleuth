@@ -47,6 +47,7 @@ import org.springframework.boot.actuate.autoconfigure.web.server.ManagementServe
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.cloud.sleuth.instrument.web.AbstractMvcIntegrationTest;
+import org.springframework.cloud.sleuth.instrument.web.TraceWebServletAutoConfiguration;
 import org.springframework.cloud.sleuth.util.SpanUtil;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -283,7 +284,7 @@ public class TraceFilterIntegrationTests extends AbstractMvcIntegrationTest {
 	}
 
 	@EnableAutoConfiguration
-	@Configuration
+	@Configuration(proxyBeanMethods = false)
 	protected static class Config {
 
 		private static final Log log = LogFactory.getLog(Config.class);
@@ -340,8 +341,8 @@ public class TraceFilterIntegrationTests extends AbstractMvcIntegrationTest {
 
 		}
 
-		@Configuration
-		static class ManagementServer {
+		@Configuration(proxyBeanMethods = false)
+	static class ManagementServer {
 
 			@Bean
 			@Primary

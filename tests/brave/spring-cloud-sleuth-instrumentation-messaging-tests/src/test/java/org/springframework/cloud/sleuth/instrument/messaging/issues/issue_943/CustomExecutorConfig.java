@@ -27,7 +27,7 @@ import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 
 @EnableAsync
-@Configuration
+@Configuration(proxyBeanMethods = false)
 public class CustomExecutorConfig extends AsyncConfigurerSupport {
 
 	@Autowired

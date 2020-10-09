@@ -28,4 +28,8 @@ public class OtelTestTracingAssertions implements TestTracingAssertions {
 		BDDAssertions.then(Long.valueOf(reportedSpan.parentId())).isEqualTo(0L);
 	}
 
+	@Override
+	public String or128Bit(String id) {
+		return "0000000000000000" + id;
+	}
 }

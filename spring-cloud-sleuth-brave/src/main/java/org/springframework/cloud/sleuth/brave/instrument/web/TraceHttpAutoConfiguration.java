@@ -21,12 +21,11 @@ import java.util.regex.Pattern;
 
 import brave.Tracing;
 import brave.http.HttpRequest;
-import brave.http.HttpRequestParser;
-import brave.http.HttpResponseParser;
 import brave.http.HttpTracing;
 import brave.http.HttpTracingCustomizer;
 import brave.sampler.SamplerFunction;
 import brave.sampler.SamplerFunctions;
+import org.jetbrains.annotations.NotNull;
 
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
@@ -36,10 +35,18 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.cloud.sleuth.api.http.HttpRequestParser;
+import org.springframework.cloud.sleuth.api.http.HttpResponseParser;
 import org.springframework.cloud.sleuth.brave.autoconfig.TraceBraveAutoConfiguration;
 import org.springframework.cloud.sleuth.brave.bridge.BraveSamplerFunction;
+import org.springframework.cloud.sleuth.brave.bridge.http.BraveHttpRequestParser;
+import org.springframework.cloud.sleuth.brave.bridge.http.BraveHttpResponseParser;
 import org.springframework.cloud.sleuth.brave.bridge.http.TraceBraveHttpBridgeAutoConfiguration;
+import org.springframework.cloud.sleuth.instrument.web.HttpClientRequestParser;
+import org.springframework.cloud.sleuth.instrument.web.HttpClientResponseParser;
 import org.springframework.cloud.sleuth.instrument.web.HttpClientSampler;
+import org.springframework.cloud.sleuth.instrument.web.HttpServerRequestParser;
+import org.springframework.cloud.sleuth.instrument.web.HttpServerResponseParser;
 import org.springframework.cloud.sleuth.instrument.web.HttpServerSampler;
 import org.springframework.cloud.sleuth.instrument.web.SkipPatternConfiguration;
 import org.springframework.cloud.sleuth.instrument.web.SkipPatternProvider;
@@ -70,26 +77,21 @@ import org.springframework.lang.Nullable;
 @AutoConfigureBefore({ TraceFeignClientAutoConfiguration.class, TraceBraveHttpBridgeAutoConfiguration.class })
 public class TraceHttpAutoConfiguration {
 
-	static final int TRACING_FILTER_ORDER = Ordered.HIGHEST_PRECEDENCE + 5;
-
 	@Bean
 	@ConditionalOnMissingBean
 	// NOTE: stable bean name as might be used outside sleuth
 	HttpTracing httpTracing(Tracing tracing, @Nullable SkipPatternProvider provider,
-			@Nullable @HttpClientRequestParser HttpRequestParser httpClientRequestParser,
-			@Nullable @HttpClientResponseParser HttpResponseParser httpClientResponseParser,
-			@Nullable brave.http.HttpClientParser clientParser,
-			@Nullable @HttpServerRequestParser HttpRequestParser httpServerRequestParser,
-			@Nullable @HttpServerResponseParser HttpResponseParser httpServerResponseParser,
-			@Nullable brave.http.HttpServerParser serverParser, BeanFactory beanFactory,
-			@Nullable List<HttpTracingCustomizer> httpTracingCustomizers) {
-		SamplerFunction<HttpRequest> httpClientSampler = toBraveSampler(beanFactory, HttpClientSampler.NAME);
-		SamplerFunction<HttpRequest> httpServerSampler = beanFactory.containsBean(HttpServerSampler.NAME)
-				? toBraveSampler(beanFactory, HttpServerSampler.NAME) : null;
-		SamplerFunction<HttpRequest> combinedSampler = combineUserProvidedSamplerWithSkipPatternSampler(
-				httpServerSampler, provider);
-		HttpTracing.Builder builder = HttpTracing.newBuilder(tracing).clientSampler(httpClientSampler)
-				.serverSampler(combinedSampler);
+			@Nullable brave.http.HttpClientParser clientParser, @Nullable brave.http.HttpServerParser serverParser,
+			BeanFactory beanFactory, @Nullable List<HttpTracingCustomizer> httpTracingCustomizers) {
+		HttpTracing.Builder builder = httpTracingBuilder(tracing, provider, beanFactory);
+		brave.http.HttpRequestParser httpClientRequestParser = httpRequestParser(beanFactory,
+				HttpClientRequestParser.NAME);
+		brave.http.HttpResponseParser httpClientResponseParser = httpResponseParser(beanFactory,
+				HttpClientResponseParser.NAME);
+		brave.http.HttpRequestParser httpServerRequestParser = httpRequestParser(beanFactory,
+				HttpServerRequestParser.NAME);
+		brave.http.HttpResponseParser httpServerResponseParser = httpResponseParser(beanFactory,
+				HttpServerResponseParser.NAME);
 
 		if (httpClientRequestParser != null || httpClientResponseParser != null) {
 			if (httpClientRequestParser != null) {
@@ -123,26 +125,72 @@ public class TraceHttpAutoConfiguration {
 		return builder.build();
 	}
 
-	private SamplerFunction<HttpRequest> toBraveSampler(BeanFactory beanFactory, String beanName) {
+	private brave.http.HttpRequestParser httpRequestParser(BeanFactory beanFactory, String name) {
+		return beanFactory.containsBean(name) ? toBraveHttpRequestParser(beanFactory, name) : null;
+	}
+
+	private brave.http.HttpResponseParser httpResponseParser(BeanFactory beanFactory, String name) {
+		return beanFactory.containsBean(name) ? toBraveHttpResponseParser(beanFactory, name) : null;
+	}
+
+	@NotNull
+	private HttpTracing.Builder httpTracingBuilder(Tracing tracing, @Nullable SkipPatternProvider provider,
+			BeanFactory beanFactory) {
+		SamplerFunction<HttpRequest> httpClientSampler = toBraveSampler(beanFactory, HttpClientSampler.NAME);
+		SamplerFunction<HttpRequest> httpServerSampler = httpServerSampler(beanFactory);
+		SamplerFunction<HttpRequest> combinedSampler = combineUserProvidedSamplerWithSkipPatternSampler(
+				httpServerSampler, provider);
+		return HttpTracing.newBuilder(tracing).clientSampler(httpClientSampler).serverSampler(combinedSampler);
+	}
+
+	@org.jetbrains.annotations.Nullable
+	private SamplerFunction<HttpRequest> httpServerSampler(BeanFactory beanFactory) {
+		return beanFactory.containsBean(HttpServerSampler.NAME) ? toBraveSampler(beanFactory, HttpServerSampler.NAME)
+				: null;
+	}
+
+	private brave.http.HttpRequestParser toBraveHttpRequestParser(BeanFactory beanFactory, String beanName) {
 		Object bean = beanFactory.getBean(beanName);
-		SamplerFunction<HttpRequest> braveSampler = bean instanceof SamplerFunction
-				? (SamplerFunction<HttpRequest>) bean
+		brave.http.HttpRequestParser parser = bean instanceof brave.http.HttpRequestParser
+				? (brave.http.HttpRequestParser) bean
+				: bean instanceof HttpRequestParser ? BraveHttpRequestParser.toBrave((HttpRequestParser) bean) : null;
+		return returnOrThrow(bean, parser, beanName, brave.http.HttpRequestParser.class, HttpRequestParser.class);
+	}
+
+	private brave.http.HttpResponseParser toBraveHttpResponseParser(BeanFactory beanFactory, String beanName) {
+		Object bean = beanFactory.getBean(beanName);
+		brave.http.HttpResponseParser parser = bean instanceof brave.http.HttpResponseParser
+				? (brave.http.HttpResponseParser) bean : bean instanceof HttpResponseParser
+						? BraveHttpResponseParser.toBrave((HttpResponseParser) bean) : null;
+		return returnOrThrow(bean, parser, beanName, brave.http.HttpResponseParser.class, HttpResponseParser.class);
+	}
+
+	private SamplerFunction<brave.http.HttpRequest> toBraveSampler(BeanFactory beanFactory, String beanName) {
+		Object bean = beanFactory.getBean(beanName);
+		SamplerFunction<brave.http.HttpRequest> braveSampler = bean instanceof SamplerFunction
+				? (SamplerFunction<brave.http.HttpRequest>) bean
 				: bean instanceof org.springframework.cloud.sleuth.api.SamplerFunction
 						? BraveSamplerFunction.toHttpBrave(
 								(org.springframework.cloud.sleuth.api.SamplerFunction<org.springframework.cloud.sleuth.api.http.HttpRequest>) bean)
 						: null;
-		if (braveSampler == null) {
-			throw new IllegalStateException("Bean with name [" + HttpClientSampler.NAME + "] is of type ["
-					+ bean.getClass() + "] and only [" + SamplerFunction.class + "] and ["
-					+ org.springframework.cloud.sleuth.api.SamplerFunction.class + "] are supported");
-		}
-		return braveSampler;
+		return returnOrThrow(bean, braveSampler, beanName, SamplerFunction.class,
+				org.springframework.cloud.sleuth.api.SamplerFunction.class);
 	}
 
-	private SamplerFunction<HttpRequest> combineUserProvidedSamplerWithSkipPatternSampler(
-			@Nullable SamplerFunction<HttpRequest> serverSampler, @Nullable SkipPatternProvider provider) {
-		SamplerFunction<HttpRequest> skipPatternSampler = provider != null ? new SkipPatternHttpServerSampler(provider)
-				: null;
+	@NotNull
+	private <T> T returnOrThrow(Object bean, T convertedBean, String name, Class brave, Class sleuth) {
+		if (convertedBean == null) {
+			throw new IllegalStateException(
+					"Bean with name [" + name + "] is of type [" + bean.getClass() + "] and only ["
+							+ brave.getCanonicalName() + "] and [" + sleuth.getCanonicalName() + "] are supported");
+		}
+		return convertedBean;
+	}
+
+	private SamplerFunction<brave.http.HttpRequest> combineUserProvidedSamplerWithSkipPatternSampler(
+			@Nullable SamplerFunction<brave.http.HttpRequest> serverSampler, @Nullable SkipPatternProvider provider) {
+		SamplerFunction<brave.http.HttpRequest> skipPatternSampler = provider != null
+				? new SkipPatternHttpServerSampler(provider) : null;
 		if (serverSampler == null && skipPatternSampler == null) {
 			return SamplerFunctions.deferDecision();
 		}
@@ -157,7 +205,7 @@ public class TraceHttpAutoConfiguration {
 
 	@Bean
 	@ConditionalOnMissingBean(name = HttpClientSampler.NAME)
-	SamplerFunction<HttpRequest> sleuthHttpClientSampler(SleuthWebProperties sleuthWebProperties) {
+	SamplerFunction<brave.http.HttpRequest> sleuthHttpClientSampler(SleuthWebProperties sleuthWebProperties) {
 		String skipPattern = sleuthWebProperties.getClient().getSkipPattern();
 		if (skipPattern == null) {
 			return SamplerFunctions.deferDecision();
@@ -173,19 +221,19 @@ public class TraceHttpAutoConfiguration {
  *
  * @author Adrian Cole
  */
-final class CompositeHttpSampler implements SamplerFunction<HttpRequest> {
+final class CompositeHttpSampler implements SamplerFunction<brave.http.HttpRequest> {
 
-	final SamplerFunction<HttpRequest> left;
+	final SamplerFunction<brave.http.HttpRequest> left;
 
-	final SamplerFunction<HttpRequest> right;
+	final SamplerFunction<brave.http.HttpRequest> right;
 
-	CompositeHttpSampler(SamplerFunction<HttpRequest> left, SamplerFunction<HttpRequest> right) {
+	CompositeHttpSampler(SamplerFunction<brave.http.HttpRequest> left, SamplerFunction<brave.http.HttpRequest> right) {
 		this.left = left;
 		this.right = right;
 	}
 
 	@Override
-	public Boolean trySample(HttpRequest request) {
+	public Boolean trySample(brave.http.HttpRequest request) {
 		// If either decision is false, return false
 		Boolean leftDecision = this.left.trySample(request);
 		if (Boolean.FALSE.equals(leftDecision)) {

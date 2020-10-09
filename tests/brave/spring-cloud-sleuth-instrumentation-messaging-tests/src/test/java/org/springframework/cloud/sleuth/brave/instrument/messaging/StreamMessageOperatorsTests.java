@@ -76,7 +76,7 @@ public class StreamMessageOperatorsTests {
 				Span.Kind.PRODUCER);
 	}
 
-	@Configuration
+	@Configuration(proxyBeanMethods = false)
 	@EnableAutoConfiguration
 	@ImportAutoConfiguration(TestChannelBinderConfiguration.class)
 	static class Config {

@@ -102,7 +102,7 @@ public class TraceFilterWebIntegrationMultipleFiltersTests {
 	}
 
 	@EnableAutoConfiguration
-	@Configuration
+	@Configuration(proxyBeanMethods = false)
 	public static class Config {
 
 		// issue #550

@@ -76,7 +76,7 @@ public class GH1102Tests {
 	}
 
 	@EnableAutoConfiguration
-	@Configuration
+	@Configuration(proxyBeanMethods = false)
 	static class WebConfig {
 
 		@Bean

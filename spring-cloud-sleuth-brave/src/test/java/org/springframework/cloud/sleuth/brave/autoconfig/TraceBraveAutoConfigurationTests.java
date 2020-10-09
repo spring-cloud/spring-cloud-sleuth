@@ -130,7 +130,7 @@ public class TraceBraveAutoConfigurationTests {
 						.isSameAs(B3SinglePropagation.FACTORY)));
 	}
 
-	@Configuration
+	@Configuration(proxyBeanMethods = false)
 	static class Baggage {
 
 		List<BaggageField> fields;
@@ -146,7 +146,7 @@ public class TraceBraveAutoConfigurationTests {
 
 	}
 
-	@Configuration
+	@Configuration(proxyBeanMethods = false)
 	static class WithBaggageBeans {
 
 		@Bean
@@ -161,7 +161,7 @@ public class TraceBraveAutoConfigurationTests {
 
 	}
 
-	@Configuration
+	@Configuration(proxyBeanMethods = false)
 	static class WithSpanHandler {
 
 		@Bean
@@ -176,7 +176,7 @@ public class TraceBraveAutoConfigurationTests {
 
 	}
 
-	@Configuration
+	@Configuration(proxyBeanMethods = false)
 	static class WithSampler {
 
 		@Bean
@@ -186,7 +186,7 @@ public class TraceBraveAutoConfigurationTests {
 
 	}
 
-	@Configuration
+	@Configuration(proxyBeanMethods = false)
 	static class WithLocalKeys {
 
 		@Bean
@@ -196,7 +196,7 @@ public class TraceBraveAutoConfigurationTests {
 
 	}
 
-	@Configuration
+	@Configuration(proxyBeanMethods = false)
 	static class WithBaggagePropagationFactoryBuilderBean {
 
 		@Bean

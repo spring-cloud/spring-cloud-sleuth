@@ -64,7 +64,7 @@ public class SpanHandlerTests {
 		BDDAssertions.then(this.spans.get(0).name()).isEqualTo("foo bar");
 	}
 
-	@Configuration
+	@Configuration(proxyBeanMethods = false)
 	@ImportAutoConfiguration({ TraceAutoConfiguration.class, TraceBraveAutoConfiguration.class })
 	static class SpanHandlerAspectTestsConfig {
 

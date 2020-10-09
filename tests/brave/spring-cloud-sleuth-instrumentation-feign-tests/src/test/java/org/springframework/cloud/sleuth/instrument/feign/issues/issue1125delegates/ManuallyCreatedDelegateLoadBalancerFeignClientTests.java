@@ -102,8 +102,8 @@ public class ManuallyCreatedDelegateLoadBalancerFeignClientTests {
 
 }
 
-@Configuration
-@EnableAutoConfiguration
+@Configuration(proxyBeanMethods = false)
+	@EnableAutoConfiguration
 @Import(FeignClientsConfiguration.class)
 class Application {
 

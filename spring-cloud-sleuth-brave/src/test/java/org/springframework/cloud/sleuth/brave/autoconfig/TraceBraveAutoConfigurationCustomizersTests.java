@@ -79,7 +79,7 @@ public class TraceBraveAutoConfigurationCustomizersTests {
 	}
 
 	// SQS has a dependency on the getter and this is better than exposing things public
-	@Configuration
+	@Configuration(proxyBeanMethods = false)
 	static class FakeSpringMessagingAutoConfiguration {
 
 		@Bean
@@ -89,7 +89,7 @@ public class TraceBraveAutoConfigurationCustomizersTests {
 
 	}
 
-	@Configuration
+	@Configuration(proxyBeanMethods = false)
 	static class Customizers {
 
 		boolean tracingCustomizerApplied;

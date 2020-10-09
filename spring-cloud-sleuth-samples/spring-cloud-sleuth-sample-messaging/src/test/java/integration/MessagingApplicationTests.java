@@ -169,7 +169,7 @@ public class MessagingApplicationTests extends AbstractIntegrationTest {
 		then(lastHttpSpan.isPresent()).isTrue();
 	}
 
-	@Configuration
+	@Configuration(proxyBeanMethods = false)
 	public static class IntegrationSpanCollectorConfig {
 
 		@Bean

@@ -159,7 +159,7 @@ public class TraceWebFluxTests {
 		return exchange.block();
 	}
 
-	@Configuration
+	@Configuration(proxyBeanMethods = false)
 	@EnableAutoConfiguration
 	static class Config {
 

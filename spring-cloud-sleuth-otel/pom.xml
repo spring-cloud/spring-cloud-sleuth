@@ -24,9 +24,6 @@
 	<packaging>jar</packaging>
 	<name>Spring Cloud Sleuth OTel</name>
 	<description>Spring Cloud Sleuth OpenTelemetry</description>
-	<properties>
-		<spring-security-oauth2.version>2.2.0.RELEASE</spring-security-oauth2.version>
-	</properties>
 
 	<parent>
 		<groupId>org.springframework.cloud</groupId>

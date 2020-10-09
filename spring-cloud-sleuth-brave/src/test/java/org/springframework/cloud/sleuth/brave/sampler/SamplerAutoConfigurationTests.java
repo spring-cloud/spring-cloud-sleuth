@@ -138,7 +138,7 @@ public class SamplerAutoConfigurationTests {
 		BDDAssertions.then(sampler).isSameAs(Sampler.NEVER_SAMPLE);
 	}
 
-	@Configuration
+	@Configuration(proxyBeanMethods = false)
 	static class WithSpanHandler {
 
 		@Bean
@@ -153,7 +153,7 @@ public class SamplerAutoConfigurationTests {
 
 	}
 
-	@Configuration
+	@Configuration(proxyBeanMethods = false)
 	static class WithTracingCustomizer {
 
 		@Bean
@@ -163,7 +163,7 @@ public class SamplerAutoConfigurationTests {
 
 	}
 
-	@Configuration
+	@Configuration(proxyBeanMethods = false)
 	static class WithRefreshScope {
 
 		@Bean

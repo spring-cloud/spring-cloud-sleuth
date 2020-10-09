@@ -24,9 +24,6 @@
 	<packaging>jar</packaging>
 	<name>Spring Cloud Sleuth Core</name>
 	<description>Spring Cloud Sleuth Core</description>
-	<properties>
-		<spring-security-oauth2.version>2.2.0.RELEASE</spring-security-oauth2.version>
-	</properties>
 
 	<parent>
 		<groupId>org.springframework.cloud</groupId>
@@ -119,6 +116,16 @@
 			<artifactId>spring-boot-autoconfigure-processor</artifactId>
 			<optional>true</optional>
 		</dependency>
+		<dependency>
+			<groupId>org.springframework.security.oauth</groupId>
+			<artifactId>spring-security-oauth2</artifactId>
+			<optional>true</optional>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.security.oauth.boot</groupId>
+			<artifactId>spring-security-oauth2-autoconfigure</artifactId>
+			<optional>true</optional>
+		</dependency>
 
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
@@ -128,11 +135,6 @@
 		<dependency>
 			<groupId>org.awaitility</groupId>
 			<artifactId>awaitility</artifactId>
-			<scope>test</scope>
-		</dependency>
-		<dependency>
-			<groupId>org.springframework.security.oauth.boot</groupId>
-			<artifactId>spring-security-oauth2-autoconfigure</artifactId>
 			<scope>test</scope>
 		</dependency>
 	</dependencies>

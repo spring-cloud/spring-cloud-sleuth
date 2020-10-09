@@ -24,9 +24,6 @@
 	<packaging>jar</packaging>
 	<name>Spring Cloud Sleuth Brave</name>
 	<description>Spring Cloud Sleuth Brave</description>
-	<properties>
-		<spring-security-oauth2.version>2.2.0.RELEASE</spring-security-oauth2.version>
-	</properties>
 
 	<parent>
 		<groupId>org.springframework.cloud</groupId>
@@ -141,12 +138,6 @@
 		<dependency>
 			<groupId>org.apache.kafka</groupId>
 			<artifactId>kafka-streams</artifactId>
-			<optional>true</optional>
-		</dependency>
-		<dependency>
-			<groupId>org.springframework.security.oauth</groupId>
-			<artifactId>spring-security-oauth2</artifactId>
-			<version>${spring-security-oauth2.version}</version>
 			<optional>true</optional>
 		</dependency>
 		<dependency>
@@ -284,11 +275,6 @@
 		<dependency>
 			<groupId>org.apache.httpcomponents</groupId>
 			<artifactId>httpasyncclient</artifactId>
-			<optional>true</optional>
-		</dependency>
-		<dependency>
-			<groupId>org.springframework.security.oauth.boot</groupId>
-			<artifactId>spring-security-oauth2-autoconfigure</artifactId>
 			<optional>true</optional>
 		</dependency>
 		<dependency>

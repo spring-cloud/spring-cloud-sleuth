@@ -95,7 +95,7 @@ public class SleuthRxJavaTests {
 		then(this.spans.get(0).name()).isEqualTo("current_span");
 	}
 
-	@Configuration
+	@Configuration(proxyBeanMethods = false)
 	@EnableAutoConfiguration
 	public static class TestConfig {
 

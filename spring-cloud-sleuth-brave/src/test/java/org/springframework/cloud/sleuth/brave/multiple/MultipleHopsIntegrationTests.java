@@ -145,7 +145,7 @@ public class MultipleHopsIntegrationTests {
 				.allMatch(span -> "FO".equals(COUNTRY_CODE.getValue(span.context())));
 	}
 
-	@Configuration
+	@Configuration(proxyBeanMethods = false)
 	@SpringBootApplication(exclude = JmxAutoConfiguration.class)
 	public static class Config implements ApplicationListener<ServletWebServerInitializedEvent> {
 

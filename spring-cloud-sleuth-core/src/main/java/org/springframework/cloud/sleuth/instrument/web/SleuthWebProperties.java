@@ -18,8 +18,6 @@ package org.springframework.cloud.sleuth.instrument.web;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.context.properties.NestedConfigurationProperty;
-import org.springframework.cloud.sleuth.autoconfig.http.TraceHttpAutoConfiguration;
-import org.springframework.core.Ordered;
 
 /**
  * Configuration properties for web tracing.
@@ -59,12 +57,11 @@ public class SleuthWebProperties {
 	 */
 	private String additionalSkipPattern;
 
-	// TODO: [OTEL] Do sth about this?
 	/**
 	 * Order in which the tracing filters should be registered. Defaults to
-	 * {@link TraceHttpAutoConfiguration#TRACING_FILTER_ORDER}.
+	 * {@link TraceWebServletAutoConfiguration#TRACING_FILTER_ORDER}.
 	 */
-	private int filterOrder = Ordered.HIGHEST_PRECEDENCE + 5;
+	private int filterOrder = TraceWebServletAutoConfiguration.TRACING_FILTER_ORDER;
 
 	/**
 	 * If set to true, auto-configured skip patterns will be ignored.

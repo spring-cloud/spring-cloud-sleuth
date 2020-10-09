@@ -29,7 +29,7 @@ import org.springframework.context.annotation.Configuration;
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)
 @EnableAutoConfiguration(exclude = { LoadBalancerAutoConfiguration.class, JmxAutoConfiguration.class })
-@Configuration
+@Configuration(proxyBeanMethods = false)
 public @interface DefaultTestAutoConfiguration {
 
 }

@@ -131,8 +131,8 @@ public class TracingOnScheduledTests {
 
 }
 
-@Configuration
-@EnableAutoConfiguration
+@Configuration(proxyBeanMethods = false)
+	@EnableAutoConfiguration
 @EnableScheduling
 class ScheduledTestConfiguration {
 

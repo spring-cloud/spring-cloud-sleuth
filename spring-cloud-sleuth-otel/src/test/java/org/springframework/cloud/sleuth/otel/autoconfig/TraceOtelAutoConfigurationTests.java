@@ -42,7 +42,7 @@ class TraceOtelAutoConfigurationTests {
 		runner.run(context -> assertThat(context).hasNotFailed().doesNotHaveBean(Tracer.class));
 	}
 
-	@Configuration
+	@Configuration(proxyBeanMethods = false)
 	@EnableAutoConfiguration
 	static class Config {
 

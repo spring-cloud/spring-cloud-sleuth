@@ -31,10 +31,10 @@ import org.springframework.context.annotation.Primary;
 /**
  * @author Marcin Grzejszczak
  */
-@Configuration
+@Configuration(proxyBeanMethods = false)
 class SleuthTestAutoConfiguration {
 
-	@Configuration
+	@Configuration(proxyBeanMethods = false)
 	static class TestMongoConfiguration {
 
 		@Bean
@@ -52,7 +52,7 @@ class SleuthTestAutoConfiguration {
 
 	}
 
-	@Configuration
+	@Configuration(proxyBeanMethods = false)
 	@ConditionalOnWebApplication(type = ConditionalOnWebApplication.Type.REACTIVE)
 	static class ReactiveConfiguration {
 
@@ -63,7 +63,7 @@ class SleuthTestAutoConfiguration {
 
 	}
 
-	@Configuration
+	@Configuration(proxyBeanMethods = false)
 	@ConditionalOnWebApplication(type = ConditionalOnWebApplication.Type.SERVLET)
 	static class ServletConfiguration {
 

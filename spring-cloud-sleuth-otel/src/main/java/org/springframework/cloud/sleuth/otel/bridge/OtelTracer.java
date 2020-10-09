@@ -60,7 +60,6 @@ public class OtelTracer implements Tracer {
 
 	@Override
 	public Span nextSpan(SamplingFlags extracted) {
-		// TODO: [OTEL] will create a child span
 		return null;
 	}
 

@@ -76,7 +76,7 @@ public class SkipEndPointsIntegrationTestsWithContextPathWithBasePath {
 	}
 
 	@EnableAutoConfiguration(exclude = RabbitAutoConfiguration.class)
-	@Configuration
+	@Configuration(proxyBeanMethods = false)
 	@DisableSecurity
 	@RestController
 	public static class Config {

@@ -129,7 +129,7 @@ public class ITTracingChannelInterceptorTests implements MessageHandler {
 		assertThat(MessageHeaderAccessor.getAccessor(this.message, MessageHeaderAccessor.class)).isNull();
 	}
 
-	@Configuration
+	@Configuration(proxyBeanMethods = false)
 	@EnableAutoConfiguration
 	static class App {
 

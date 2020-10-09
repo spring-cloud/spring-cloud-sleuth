@@ -22,27 +22,42 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.cloud.sleuth.api.Tracer;
 import org.springframework.cloud.sleuth.api.http.HttpClientHandler;
+import org.springframework.cloud.sleuth.api.http.HttpRequestParser;
+import org.springframework.cloud.sleuth.api.http.HttpResponseParser;
 import org.springframework.cloud.sleuth.api.http.HttpServerHandler;
-import org.springframework.cloud.sleuth.autoconfig.http.TraceHttpAutoConfiguration;
+import org.springframework.cloud.sleuth.instrument.web.HttpClientRequestParser;
+import org.springframework.cloud.sleuth.instrument.web.HttpClientResponseParser;
+import org.springframework.cloud.sleuth.instrument.web.HttpServerRequestParser;
+import org.springframework.cloud.sleuth.instrument.web.HttpServerResponseParser;
+import org.springframework.cloud.sleuth.instrument.web.SkipPatternConfiguration;
+import org.springframework.cloud.sleuth.instrument.web.SkipPatternProvider;
+import org.springframework.cloud.sleuth.instrument.web.TraceHttpAutoConfiguration;
 import org.springframework.cloud.sleuth.otel.bridge.TraceOtelBridgeAutoConfiguation;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.lang.Nullable;
 
 @Configuration(proxyBeanMethods = false)
 @ConditionalOnProperty(value = "spring.sleuth.enabled", matchIfMissing = true)
 @ConditionalOnBean({ Tracer.class, io.opentelemetry.trace.Tracer.class })
 @AutoConfigureBefore(TraceHttpAutoConfiguration.class)
-@AutoConfigureAfter(TraceOtelBridgeAutoConfiguation.class)
+@AutoConfigureAfter({ TraceOtelBridgeAutoConfiguation.class, SkipPatternConfiguration.class })
 public class TraceOtelHttpBridgeAutoConfiguration {
 
 	@Bean
-	HttpClientHandler braveHttpClientHandler(io.opentelemetry.trace.Tracer tracer) {
-		return new OtelHttpClientHandler(tracer);
+	HttpClientHandler braveHttpClientHandler(io.opentelemetry.trace.Tracer tracer,
+			@Nullable @HttpClientRequestParser HttpRequestParser httpClientRequestParser,
+			@Nullable @HttpClientResponseParser HttpResponseParser httpClientResponseParser) {
+		return new OtelHttpClientHandler(tracer, httpClientRequestParser, httpClientResponseParser);
 	}
 
 	@Bean
-	HttpServerHandler braveHttpServerHandler(io.opentelemetry.trace.Tracer tracer) {
-		return new OtelHttpServerHandler(tracer);
+	HttpServerHandler braveHttpServerHandler(io.opentelemetry.trace.Tracer tracer,
+			@Nullable @HttpServerRequestParser HttpRequestParser httpServerRequestParser,
+			@Nullable @HttpServerResponseParser HttpResponseParser httpServerResponseParser,
+			SkipPatternProvider skipPatternProvider) {
+		return new OtelHttpServerHandler(tracer, httpServerRequestParser, httpServerResponseParser,
+				skipPatternProvider);
 	}
 
 }

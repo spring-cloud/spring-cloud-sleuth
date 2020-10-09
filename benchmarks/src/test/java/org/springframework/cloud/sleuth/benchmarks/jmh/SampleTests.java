@@ -151,7 +151,7 @@ public class SampleTests {
 
 	}
 
-	@Configuration
+	@Configuration(proxyBeanMethods = false)
 	@Import(TestChannelBinderConfiguration.class)
 	static class TestConfiguration {
 

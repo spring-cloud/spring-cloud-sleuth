@@ -85,8 +85,8 @@ public class Issue502Tests {
 
 }
 
-@Configuration
-@EnableAutoConfiguration
+@Configuration(proxyBeanMethods = false)
+	@EnableAutoConfiguration
 @EnableFeignClients
 class Application {
 
