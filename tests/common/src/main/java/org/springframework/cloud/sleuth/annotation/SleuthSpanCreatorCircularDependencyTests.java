@@ -16,18 +16,20 @@
 
 package org.springframework.cloud.sleuth.annotation;
 
-import brave.handler.SpanHandler;
-import brave.test.TestSpanHandler;
+import java.util.function.Supplier;
+
 import org.junit.jupiter.api.Test;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.cloud.gateway.config.GatewayAutoConfiguration;
+import org.springframework.cloud.sleuth.test.TestSpanHandler;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 @SpringBootTest(classes = SleuthSpanCreatorCircularDependencyTests.TestConfiguration.class)
-public class SleuthSpanCreatorCircularDependencyTests {
+public abstract class SleuthSpanCreatorCircularDependencyTests {
 
 	@Test
 	public void contextLoads() throws Exception {
@@ -56,21 +58,16 @@ public class SleuthSpanCreatorCircularDependencyTests {
 	}
 
 	@Configuration
-	@EnableAutoConfiguration
-	protected static class TestConfiguration {
+	@EnableAutoConfiguration(exclude = GatewayAutoConfiguration.class)
+	public static class TestConfiguration {
 
 		@Bean
-		SpanHandler testSpanHandler() {
-			return new TestSpanHandler();
-		}
-
-		@Bean
-		public Service1 service1() {
+		Service1 service1() {
 			return new Service1();
 		}
 
 		@Bean
-		public Service2 service2() {
+		Service2 service2() {
 			return new Service2();
 		}
 

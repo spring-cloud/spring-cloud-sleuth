@@ -16,6 +16,7 @@
 
 package org.springframework.cloud.sleuth.test;
 
+import java.util.Collection;
 import java.util.Map;
 
 import org.springframework.cloud.sleuth.api.Span;
@@ -27,6 +28,8 @@ public interface ReportedSpan {
 	long finishTimestamp();
 
 	Map<String, String> tags();
+
+	Collection<Map.Entry<Long, String>> annotations();
 
 	String id();
 

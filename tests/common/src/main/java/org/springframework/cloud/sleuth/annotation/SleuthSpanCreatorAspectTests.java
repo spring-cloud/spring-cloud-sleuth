@@ -19,28 +19,22 @@ package org.springframework.cloud.sleuth.annotation;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import brave.Span;
-import brave.Tracer;
-import brave.handler.SpanHandler;
-import brave.sampler.Sampler;
-import brave.test.TestSpanHandler;
+import org.assertj.core.api.BDDAssertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.cloud.gateway.config.GatewayAutoConfiguration;
+import org.springframework.cloud.sleuth.api.Span;
+import org.springframework.cloud.sleuth.api.Tracer;
+import org.springframework.cloud.sleuth.test.TestSpanHandler;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.test.annotation.DirtiesContext;
-
-import static org.assertj.core.api.BDDAssertions.then;
-import static org.springframework.test.annotation.DirtiesContext.MethodMode.BEFORE_METHOD;
 
 @SpringBootTest(classes = SleuthSpanCreatorAspectTests.TestConfiguration.class)
-
-@DirtiesContext(methodMode = BEFORE_METHOD)
-public class SleuthSpanCreatorAspectTests {
+public abstract class SleuthSpanCreatorAspectTests {
 
 	@Autowired
 	TestBeanInterface testBean;
@@ -60,40 +54,40 @@ public class SleuthSpanCreatorAspectTests {
 	public void shouldCreateSpanWhenAnnotationOnInterfaceMethod() {
 		this.testBean.testMethod();
 
-		then(this.spans).hasSize(1);
-		then(this.spans.get(0).name()).isEqualTo("test-method");
-		then(this.spans.get(0).finishTimestamp()).isNotZero();
-		then(this.tracer.currentSpan()).isNull();
+		BDDAssertions.then(this.spans).hasSize(1);
+		BDDAssertions.then(this.spans.get(0).name()).isEqualTo("test-method");
+		BDDAssertions.then(this.spans.get(0).finishTimestamp()).isNotZero();
+		BDDAssertions.then(this.tracer.currentSpan()).isNull();
 	}
 
 	@Test
 	public void shouldCreateSpanWhenAnnotationOnClassMethod() {
 		this.testBean.testMethod2();
 
-		then(this.spans).hasSize(1);
-		then(this.spans.get(0).name()).isEqualTo("test-method2");
-		then(this.spans.get(0).finishTimestamp()).isNotZero();
-		then(this.tracer.currentSpan()).isNull();
+		BDDAssertions.then(this.spans).hasSize(1);
+		BDDAssertions.then(this.spans.get(0).name()).isEqualTo("test-method2");
+		BDDAssertions.then(this.spans.get(0).finishTimestamp()).isNotZero();
+		BDDAssertions.then(this.tracer.currentSpan()).isNull();
 	}
 
 	@Test
 	public void shouldCreateSpanWithCustomNameWhenAnnotationOnClassMethod() {
 		this.testBean.testMethod3();
 
-		then(this.spans).hasSize(1);
-		then(this.spans.get(0).name()).isEqualTo("custom-name-on-test-method3");
-		then(this.spans.get(0).finishTimestamp()).isNotZero();
-		then(this.tracer.currentSpan()).isNull();
+		BDDAssertions.then(this.spans).hasSize(1);
+		BDDAssertions.then(this.spans.get(0).name()).isEqualTo("custom-name-on-test-method3");
+		BDDAssertions.then(this.spans.get(0).finishTimestamp()).isNotZero();
+		BDDAssertions.then(this.tracer.currentSpan()).isNull();
 	}
 
 	@Test
 	public void shouldCreateSpanWithCustomNameWhenAnnotationOnInterfaceMethod() {
 		this.testBean.testMethod4();
 
-		then(this.spans).hasSize(1);
-		then(this.spans.get(0).name()).isEqualTo("custom-name-on-test-method4");
-		then(this.spans.get(0).finishTimestamp()).isNotZero();
-		then(this.tracer.currentSpan()).isNull();
+		BDDAssertions.then(this.spans).hasSize(1);
+		BDDAssertions.then(this.spans.get(0).name()).isEqualTo("custom-name-on-test-method4");
+		BDDAssertions.then(this.spans.get(0).finishTimestamp()).isNotZero();
+		BDDAssertions.then(this.tracer.currentSpan()).isNull();
 	}
 
 	@Test
@@ -102,43 +96,44 @@ public class SleuthSpanCreatorAspectTests {
 		this.testBean.testMethod5("test");
 		// end::execution[]
 
-		then(this.spans).hasSize(1);
-		then(this.spans.get(0).name()).isEqualTo("custom-name-on-test-method5");
-		then(this.spans.get(0).tags()).containsEntry("testTag", "test");
-		then(this.spans.get(0).finishTimestamp()).isNotZero();
-		then(this.tracer.currentSpan()).isNull();
+		BDDAssertions.then(this.spans).hasSize(1);
+		BDDAssertions.then(this.spans.get(0).name()).isEqualTo("custom-name-on-test-method5");
+		BDDAssertions.then(this.spans.get(0).tags()).containsEntry("testTag", "test");
+		BDDAssertions.then(this.spans.get(0).finishTimestamp()).isNotZero();
+		BDDAssertions.then(this.tracer.currentSpan()).isNull();
 	}
 
 	@Test
 	public void shouldCreateSpanWithTagWhenAnnotationOnClassMethod() {
 		this.testBean.testMethod6("test");
 
-		then(this.spans).hasSize(1);
-		then(this.spans.get(0).name()).isEqualTo("custom-name-on-test-method6");
-		then(this.spans.get(0).tags()).containsEntry("testTag6", "test");
-		then(this.spans.get(0).finishTimestamp()).isNotZero();
-		then(this.tracer.currentSpan()).isNull();
+		BDDAssertions.then(this.spans).hasSize(1);
+		BDDAssertions.then(this.spans.get(0).name()).isEqualTo("custom-name-on-test-method6");
+		BDDAssertions.then(this.spans.get(0).tags()).containsEntry("testTag6", "test");
+		BDDAssertions.then(this.spans.get(0).finishTimestamp()).isNotZero();
+		BDDAssertions.then(this.tracer.currentSpan()).isNull();
 	}
 
 	@Test
 	public void shouldCreateSpanWithLogWhenAnnotationOnInterfaceMethod() {
 		this.testBean.testMethod8("test");
 
-		then(this.spans).hasSize(1);
-		then(this.spans.get(0).name()).isEqualTo("custom-name-on-test-method8");
-		then(this.spans.get(0).finishTimestamp()).isNotZero();
-		then(this.tracer.currentSpan()).isNull();
+		BDDAssertions.then(this.spans).hasSize(1);
+		BDDAssertions.then(this.spans.get(0).name()).isEqualTo("custom-name-on-test-method8");
+		BDDAssertions.then(this.spans.get(0).finishTimestamp()).isNotZero();
+		BDDAssertions.then(this.tracer.currentSpan()).isNull();
 	}
 
 	@Test
 	public void shouldCreateSpanWithLogWhenAnnotationOnClassMethod() {
 		this.testBean.testMethod9("test");
 
-		then(this.spans).hasSize(1);
-		then(this.spans.get(0).name()).isEqualTo("custom-name-on-test-method9");
-		then(this.spans.get(0).tags()).containsEntry("class", "TestBean").containsEntry("method", "testMethod9");
-		then(this.spans.get(0).finishTimestamp()).isNotZero();
-		then(this.tracer.currentSpan()).isNull();
+		BDDAssertions.then(this.spans).hasSize(1);
+		BDDAssertions.then(this.spans.get(0).name()).isEqualTo("custom-name-on-test-method9");
+		BDDAssertions.then(this.spans.get(0).tags()).containsEntry("class", "TestBean").containsEntry("method",
+				"testMethod9");
+		BDDAssertions.then(this.spans.get(0).finishTimestamp()).isNotZero();
+		BDDAssertions.then(this.tracer.currentSpan()).isNull();
 	}
 
 	@Test
@@ -152,26 +147,28 @@ public class SleuthSpanCreatorAspectTests {
 			span.finish();
 		}
 
-		then(this.spans).hasSize(1);
-		then(this.spans.get(0).name()).isEqualTo("foo");
-		then(this.spans.get(0).tags()).containsEntry("customTestTag10", "test");
-		then(this.spans.get(0).annotations().stream().map(Map.Entry::getValue).collect(Collectors.toList()))
+		BDDAssertions.then(this.spans).hasSize(1);
+		BDDAssertions.then(this.spans.get(0).name()).isEqualTo("foo");
+		BDDAssertions.then(this.spans.get(0).tags()).containsEntry("customTestTag10", "test");
+		BDDAssertions
+				.then(this.spans.get(0).annotations().stream().map(Map.Entry::getValue).collect(Collectors.toList()))
 				.contains("customTest.before", "customTest.after");
-		then(this.spans.get(0).finishTimestamp()).isNotZero();
-		then(this.tracer.currentSpan()).isNull();
+		BDDAssertions.then(this.spans.get(0).finishTimestamp()).isNotZero();
+		BDDAssertions.then(this.tracer.currentSpan()).isNull();
 	}
 
 	@Test
 	public void shouldStartAndCloseSpanOnContinueSpanIfSpanNotSet() {
 		this.testBean.testMethod10("test");
 
-		then(this.spans).hasSize(1);
-		then(this.spans.get(0).name()).isEqualTo("test-method10");
-		then(this.spans.get(0).tags()).containsEntry("customTestTag10", "test");
-		then(this.spans.get(0).annotations().stream().map(Map.Entry::getValue).collect(Collectors.toList()))
+		BDDAssertions.then(this.spans).hasSize(1);
+		BDDAssertions.then(this.spans.get(0).name()).isEqualTo("test-method10");
+		BDDAssertions.then(this.spans.get(0).tags()).containsEntry("customTestTag10", "test");
+		BDDAssertions
+				.then(this.spans.get(0).annotations().stream().map(Map.Entry::getValue).collect(Collectors.toList()))
 				.contains("customTest.before", "customTest.after");
-		then(this.spans.get(0).finishTimestamp()).isNotZero();
-		then(this.tracer.currentSpan()).isNull();
+		BDDAssertions.then(this.spans.get(0).finishTimestamp()).isNotZero();
+		BDDAssertions.then(this.tracer.currentSpan()).isNull();
 	}
 
 	@Test
@@ -185,13 +182,14 @@ public class SleuthSpanCreatorAspectTests {
 			span.finish();
 		}
 
-		then(this.spans).hasSize(1);
-		then(this.spans.get(0).name()).isEqualTo("foo");
-		then(this.spans.get(0).tags()).containsEntry("customTestTag10", "test");
-		then(this.spans.get(0).annotations().stream().map(Map.Entry::getValue).collect(Collectors.toList()))
+		BDDAssertions.then(this.spans).hasSize(1);
+		BDDAssertions.then(this.spans.get(0).name()).isEqualTo("foo");
+		BDDAssertions.then(this.spans.get(0).tags()).containsEntry("customTestTag10", "test");
+		BDDAssertions
+				.then(this.spans.get(0).annotations().stream().map(Map.Entry::getValue).collect(Collectors.toList()))
 				.contains("customTest.before", "customTest.after");
-		then(this.spans.get(0).finishTimestamp()).isNotZero();
-		then(this.tracer.currentSpan()).isNull();
+		BDDAssertions.then(this.spans.get(0).finishTimestamp()).isNotZero();
+		BDDAssertions.then(this.tracer.currentSpan()).isNull();
 	}
 
 	@Test
@@ -207,14 +205,15 @@ public class SleuthSpanCreatorAspectTests {
 			span.finish();
 		}
 
-		then(this.spans).hasSize(1);
-		then(this.spans.get(0).name()).isEqualTo("foo");
-		then(this.spans.get(0).tags()).containsEntry("class", "TestBean").containsEntry("method", "testMethod11")
-				.containsEntry("customTestTag11", "test");
-		then(this.spans.get(0).annotations().stream().map(Map.Entry::getValue).collect(Collectors.toList()))
+		BDDAssertions.then(this.spans).hasSize(1);
+		BDDAssertions.then(this.spans.get(0).name()).isEqualTo("foo");
+		BDDAssertions.then(this.spans.get(0).tags()).containsEntry("class", "TestBean")
+				.containsEntry("method", "testMethod11").containsEntry("customTestTag11", "test");
+		BDDAssertions
+				.then(this.spans.get(0).annotations().stream().map(Map.Entry::getValue).collect(Collectors.toList()))
 				.contains("customTest.before", "customTest.after");
-		then(this.spans.get(0).finishTimestamp()).isNotZero();
-		then(this.tracer.currentSpan()).isNull();
+		BDDAssertions.then(this.spans.get(0).finishTimestamp()).isNotZero();
+		BDDAssertions.then(this.tracer.currentSpan()).isNull();
 	}
 
 	@Test
@@ -225,12 +224,12 @@ public class SleuthSpanCreatorAspectTests {
 		catch (RuntimeException ignored) {
 		}
 
-		then(this.spans).hasSize(1);
-		then(this.spans.get(0).name()).isEqualTo("test-method12");
-		then(this.spans.get(0).tags()).containsEntry("testTag12", "test");
-		then(this.spans.get(0).error()).hasMessageContaining("test exception 12");
-		then(this.spans.get(0).finishTimestamp()).isNotZero();
-		then(this.tracer.currentSpan()).isNull();
+		BDDAssertions.then(this.spans).hasSize(1);
+		BDDAssertions.then(this.spans.get(0).name()).isEqualTo("test-method12");
+		BDDAssertions.then(this.spans.get(0).tags()).containsEntry("testTag12", "test");
+		BDDAssertions.then(this.spans.get(0).error()).hasMessageContaining("test exception 12");
+		BDDAssertions.then(this.spans.get(0).finishTimestamp()).isNotZero();
+		BDDAssertions.then(this.tracer.currentSpan()).isNull();
 	}
 
 	@Test
@@ -248,21 +247,22 @@ public class SleuthSpanCreatorAspectTests {
 			span.finish();
 		}
 
-		then(this.spans).hasSize(1);
-		then(this.spans.get(0).name()).isEqualTo("foo");
-		then(this.spans.get(0).error()).hasMessageContaining("test exception 13");
-		then(this.spans.get(0).annotations().stream().map(Map.Entry::getValue).collect(Collectors.toList()))
+		BDDAssertions.then(this.spans).hasSize(1);
+		BDDAssertions.then(this.spans.get(0).name()).isEqualTo("foo");
+		BDDAssertions.then(this.spans.get(0).error()).hasMessageContaining("test exception 13");
+		BDDAssertions
+				.then(this.spans.get(0).annotations().stream().map(Map.Entry::getValue).collect(Collectors.toList()))
 				.contains("testMethod13.before", "testMethod13.afterFailure", "testMethod13.after");
-		then(this.spans.get(0).finishTimestamp()).isNotZero();
-		then(this.tracer.currentSpan()).isNull();
+		BDDAssertions.then(this.spans.get(0).finishTimestamp()).isNotZero();
+		BDDAssertions.then(this.tracer.currentSpan()).isNull();
 	}
 
 	@Test
 	public void shouldNotCreateSpanWhenNotAnnotated() {
 		this.testBean.testMethod7();
 
-		then(this.spans).isEmpty();
-		then(this.tracer.currentSpan()).isNull();
+		BDDAssertions.then(this.spans).isEmpty();
+		BDDAssertions.then(this.tracer.currentSpan()).isNull();
 	}
 
 	protected interface TestBeanInterface {
@@ -392,22 +392,12 @@ public class SleuthSpanCreatorAspectTests {
 	}
 
 	@Configuration
-	@EnableAutoConfiguration
-	protected static class TestConfiguration {
+	@EnableAutoConfiguration(exclude = GatewayAutoConfiguration.class)
+	public static class TestConfiguration {
 
 		@Bean
-		public TestBeanInterface testBean() {
+		TestBeanInterface testBean() {
 			return new TestBean();
-		}
-
-		@Bean
-		SpanHandler testSpanHandler() {
-			return new TestSpanHandler();
-		}
-
-		@Bean
-		Sampler alwaysSampler() {
-			return Sampler.ALWAYS_SAMPLE;
 		}
 
 	}

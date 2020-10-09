@@ -16,6 +16,7 @@
 
 package org.springframework.cloud.sleuth.otel;
 
+import java.util.AbstractMap;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -157,6 +158,12 @@ class SpanDataToReportedSpan implements ReportedSpan {
 			});
 		}
 		return this.tags;
+	}
+
+	@Override
+	public Collection<Map.Entry<Long, String>> annotations() {
+		return this.spanData.getEvents().stream()
+				.map(e -> new AbstractMap.SimpleEntry<>(e.getEpochNanos(), e.getName())).collect(Collectors.toList());
 	}
 
 	@Override

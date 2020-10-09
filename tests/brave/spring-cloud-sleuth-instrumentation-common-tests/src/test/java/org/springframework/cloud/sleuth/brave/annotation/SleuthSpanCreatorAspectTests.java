@@ -14,24 +14,22 @@
  * limitations under the License.
  */
 
-package org.springframework.cloud.sleuth.brave.instrument.circuitbreaker;
+package org.springframework.cloud.sleuth.brave.annotation;
 
 import java.util.function.Supplier;
 
 import brave.sampler.Sampler;
-import org.assertj.core.api.BDDAssertions;
 
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.cloud.sleuth.brave.BraveTestSpanHandler;
-import org.springframework.cloud.sleuth.test.ReportedSpan;
 import org.springframework.cloud.sleuth.test.TestSpanHandler;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-@SpringBootTest(classes = { CircuitBreakerIntegrationTests.Config.class,
-		org.springframework.cloud.sleuth.instrument.circuitbreaker.CircuitBreakerIntegrationTests.TestConfig.class })
-public class CircuitBreakerIntegrationTests
-		extends org.springframework.cloud.sleuth.instrument.circuitbreaker.CircuitBreakerIntegrationTests {
+@SpringBootTest(classes = { SleuthSpanCreatorAspectTests.Config.class,
+		org.springframework.cloud.sleuth.annotation.SleuthSpanCreatorAspectTests.TestConfiguration.class })
+public class SleuthSpanCreatorAspectTests
+		extends org.springframework.cloud.sleuth.annotation.SleuthSpanCreatorAspectTests {
 
 	@Configuration(proxyBeanMethods = false)
 	static class Config {
@@ -51,11 +49,6 @@ public class CircuitBreakerIntegrationTests
 			return new brave.test.TestSpanHandler();
 		}
 
-	}
-
-	@Override
-	public void assertException(ReportedSpan reportedSpan) {
-		BDDAssertions.then(reportedSpan.tags().get("error")).contains("boom");
 	}
 
 }

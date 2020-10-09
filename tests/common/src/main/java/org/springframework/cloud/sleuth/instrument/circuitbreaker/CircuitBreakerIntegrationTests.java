@@ -116,11 +116,6 @@ public abstract class CircuitBreakerIntegrationTests {
 	public static class TestConfig {
 
 		@Bean
-		TestSpanHandler testSpanHandler(Supplier<TestSpanHandler> supplier) {
-			return supplier.get();
-		}
-
-		@Bean
 		Resilience4JCircuitBreakerFactory resilience4JCircuitBreakerFactory() {
 			return new Resilience4JCircuitBreakerFactory();
 		}

@@ -66,8 +66,8 @@ public class ReactorNettyHttpClientSpringBootTests
 		}
 
 		@Bean
-		Supplier<TestSpanHandler> testSpanHandlerSupplier() {
-			return () -> new OtelTestSpanHandler(new ArrayListSpanProcessor());
+		TestSpanHandler testSpanHandlerSupplier() {
+			return new OtelTestSpanHandler(new ArrayListSpanProcessor());
 		}
 
 		@Bean

@@ -14,26 +14,24 @@
  * limitations under the License.
  */
 
-package org.springframework.cloud.sleuth.otel.instrument.circuitbreaker;
+package org.springframework.cloud.sleuth.otel.annotation;
 
-import io.opentelemetry.common.AttributeKey;
+import java.util.function.Supplier;
+
 import io.opentelemetry.sdk.trace.Sampler;
 import io.opentelemetry.sdk.trace.Samplers;
-import org.assertj.core.api.BDDAssertions;
 
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.cloud.sleuth.otel.ArrayListSpanProcessor;
-import org.springframework.cloud.sleuth.otel.AssertingThrowable;
 import org.springframework.cloud.sleuth.otel.OtelTestSpanHandler;
-import org.springframework.cloud.sleuth.test.ReportedSpan;
 import org.springframework.cloud.sleuth.test.TestSpanHandler;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-@SpringBootTest(classes = { CircuitBreakerIntegrationTests.Config.class,
-		org.springframework.cloud.sleuth.instrument.circuitbreaker.CircuitBreakerIntegrationTests.TestConfig.class })
-public class CircuitBreakerIntegrationTests
-		extends org.springframework.cloud.sleuth.instrument.circuitbreaker.CircuitBreakerIntegrationTests {
+@SpringBootTest(classes = { SleuthSpanCreatorAspectNegativeTests.Config.class,
+		org.springframework.cloud.sleuth.annotation.SleuthSpanCreatorAspectNegativeTests.TestConfiguration.class })
+public class SleuthSpanCreatorAspectNegativeTests
+		extends org.springframework.cloud.sleuth.annotation.SleuthSpanCreatorAspectNegativeTests {
 
 	@Configuration(proxyBeanMethods = false)
 	static class Config {
@@ -48,13 +46,6 @@ public class CircuitBreakerIntegrationTests
 			return Samplers.alwaysOn();
 		}
 
-	}
-
-	@Override
-	public void assertException(ReportedSpan reportedSpan) {
-		AssertingThrowable throwable = (AssertingThrowable) reportedSpan.error();
-		String msg = throwable.attributes.get(AttributeKey.stringKey("exception.message"));
-		BDDAssertions.then(msg).contains("boom");
 	}
 
 }

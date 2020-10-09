@@ -16,6 +16,7 @@
 
 package org.springframework.cloud.sleuth.brave;
 
+import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -109,6 +110,11 @@ class FromMutableSpan implements ReportedSpan {
 	@Override
 	public Map<String, String> tags() {
 		return this.mutableSpan.tags();
+	}
+
+	@Override
+	public Collection<Map.Entry<Long, String>> annotations() {
+		return this.mutableSpan.annotations();
 	}
 
 	@Override

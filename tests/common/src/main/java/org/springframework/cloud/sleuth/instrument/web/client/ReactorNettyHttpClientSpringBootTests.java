@@ -148,11 +148,6 @@ public abstract class ReactorNettyHttpClientSpringBootTests {
 	public static class TestConfiguration {
 
 		@Bean
-		TestSpanHandler testSpanHandler(Supplier<TestSpanHandler> supplier) {
-			return supplier.get();
-		}
-
-		@Bean
 		HttpClient reactorHttpClient() {
 			return HttpClient.create();
 		}

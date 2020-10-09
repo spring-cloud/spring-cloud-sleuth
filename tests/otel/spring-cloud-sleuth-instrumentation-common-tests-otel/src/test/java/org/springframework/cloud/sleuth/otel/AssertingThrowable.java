@@ -16,6 +16,7 @@
 
 package org.springframework.cloud.sleuth.otel;
 
+import io.opentelemetry.common.AttributeKey;
 import io.opentelemetry.common.Attributes;
 
 public class AssertingThrowable extends Throwable {
@@ -23,6 +24,7 @@ public class AssertingThrowable extends Throwable {
 	public final Attributes attributes;
 
 	AssertingThrowable(Attributes attributes) {
+		super(attributes.get(AttributeKey.stringKey("exception.message")));
 		this.attributes = attributes;
 	}
 

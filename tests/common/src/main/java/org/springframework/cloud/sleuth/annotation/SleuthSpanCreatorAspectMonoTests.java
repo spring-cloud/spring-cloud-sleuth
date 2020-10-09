@@ -18,17 +18,11 @@ package org.springframework.cloud.sleuth.annotation;
 
 import java.util.Map;
 import java.util.Objects;
+import java.util.function.Supplier;
 import java.util.stream.Collector;
 import java.util.stream.Collectors;
 
-import javax.annotation.concurrent.NotThreadSafe;
-
-import brave.Span;
-import brave.Tracer;
-import brave.handler.MutableSpan;
-import brave.handler.SpanHandler;
-import brave.sampler.Sampler;
-import brave.test.TestSpanHandler;
+import org.assertj.core.api.BDDAssertions;
 import org.awaitility.Awaitility;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -37,6 +31,11 @@ import reactor.core.publisher.Mono;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.cloud.gateway.config.GatewayAutoConfiguration;
+import org.springframework.cloud.sleuth.api.Span;
+import org.springframework.cloud.sleuth.api.Tracer;
+import org.springframework.cloud.sleuth.test.ReportedSpan;
+import org.springframework.cloud.sleuth.test.TestSpanHandler;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.test.annotation.DirtiesContext;
@@ -47,9 +46,7 @@ import static org.springframework.test.annotation.DirtiesContext.MethodMode.BEFO
 import static reactor.core.publisher.Mono.just;
 
 @SpringBootTest(classes = SleuthSpanCreatorAspectMonoTests.TestConfiguration.class)
-@DirtiesContext(methodMode = BEFORE_METHOD)
-@NotThreadSafe
-public class SleuthSpanCreatorAspectMonoTests {
+public abstract class SleuthSpanCreatorAspectMonoTests {
 
 	@Autowired
 	TestBeanInterface testBean;
@@ -79,15 +76,15 @@ public class SleuthSpanCreatorAspectMonoTests {
 	public void shouldCreateSpanWhenAnnotationOnInterfaceMethod() {
 		Mono<String> mono = this.testBean.testMethod();
 
-		then(this.spans).isEmpty();
+		BDDAssertions.then(this.spans).isEmpty();
 
 		mono.block();
 
 		Awaitility.await().untilAsserted(() -> {
-			then(this.spans).hasSize(1);
-			then(this.spans.get(0).name()).isEqualTo("test-method");
-			then(this.spans.get(0).finishTimestamp()).isNotZero();
-			then(this.tracer.currentSpan()).isNull();
+			BDDAssertions.then(this.spans).hasSize(1);
+			BDDAssertions.then(this.spans.get(0).name()).isEqualTo("test-method");
+			BDDAssertions.then(this.spans.get(0).finishTimestamp()).isNotZero();
+			BDDAssertions.then(this.tracer.currentSpan()).isNull();
 		});
 	}
 
@@ -95,15 +92,15 @@ public class SleuthSpanCreatorAspectMonoTests {
 	public void shouldCreateSpanWhenAnnotationOnClassMethod() {
 		Mono<String> mono = this.testBean.testMethod2();
 
-		then(this.spans).isEmpty();
+		BDDAssertions.then(this.spans).isEmpty();
 
 		mono.block();
 
 		Awaitility.await().untilAsserted(() -> {
-			then(this.spans).hasSize(1);
-			then(this.spans.get(0).name()).isEqualTo("test-method2");
-			then(this.spans.get(0).finishTimestamp()).isNotZero();
-			then(this.tracer.currentSpan()).isNull();
+			BDDAssertions.then(this.spans).hasSize(1);
+			BDDAssertions.then(this.spans.get(0).name()).isEqualTo("test-method2");
+			BDDAssertions.then(this.spans.get(0).finishTimestamp()).isNotZero();
+			BDDAssertions.then(this.tracer.currentSpan()).isNull();
 		});
 	}
 
@@ -111,16 +108,16 @@ public class SleuthSpanCreatorAspectMonoTests {
 	public void shouldCreateSpanWithCustomNameWhenAnnotationOnClassMethod() {
 		Mono<String> mono = this.testBean.testMethod3();
 
-		then(this.spans).isEmpty();
+		BDDAssertions.then(this.spans).isEmpty();
 
 		String result = mono.block();
 
 		Awaitility.await().untilAsserted(() -> {
 			then(result).isEqualTo(TEST_STRING);
-			then(this.spans).hasSize(1);
-			then(this.spans.get(0).name()).isEqualTo("custom-name-on-test-method3");
-			then(this.spans.get(0).finishTimestamp()).isNotZero();
-			then(this.tracer.currentSpan()).isNull();
+			BDDAssertions.then(this.spans).hasSize(1);
+			BDDAssertions.then(this.spans.get(0).name()).isEqualTo("custom-name-on-test-method3");
+			BDDAssertions.then(this.spans.get(0).finishTimestamp()).isNotZero();
+			BDDAssertions.then(this.tracer.currentSpan()).isNull();
 		});
 	}
 
@@ -128,15 +125,15 @@ public class SleuthSpanCreatorAspectMonoTests {
 	public void shouldCreateSpanWithCustomNameWhenAnnotationOnInterfaceMethod() {
 		Mono<String> mono = this.testBean.testMethod4();
 
-		then(this.spans).isEmpty();
+		BDDAssertions.then(this.spans).isEmpty();
 
 		mono.block();
 
 		Awaitility.await().untilAsserted(() -> {
-			then(this.spans).hasSize(1);
-			then(this.spans.get(0).name()).isEqualTo("custom-name-on-test-method4");
-			then(this.spans.get(0).finishTimestamp()).isNotZero();
-			then(this.tracer.currentSpan()).isNull();
+			BDDAssertions.then(this.spans).hasSize(1);
+			BDDAssertions.then(this.spans.get(0).name()).isEqualTo("custom-name-on-test-method4");
+			BDDAssertions.then(this.spans.get(0).finishTimestamp()).isNotZero();
+			BDDAssertions.then(this.tracer.currentSpan()).isNull();
 		});
 	}
 
@@ -146,16 +143,16 @@ public class SleuthSpanCreatorAspectMonoTests {
 		Mono<String> mono = this.testBean.testMethod5("test");
 
 		// end::execution[]
-		then(this.spans).isEmpty();
+		BDDAssertions.then(this.spans).isEmpty();
 
 		mono.block();
 
 		Awaitility.await().untilAsserted(() -> {
-			then(this.spans).hasSize(1);
-			then(this.spans.get(0).name()).isEqualTo("custom-name-on-test-method5");
-			then(this.spans.get(0).tags()).containsEntry("testTag", "test");
-			then(this.spans.get(0).finishTimestamp()).isNotZero();
-			then(this.tracer.currentSpan()).isNull();
+			BDDAssertions.then(this.spans).hasSize(1);
+			BDDAssertions.then(this.spans.get(0).name()).isEqualTo("custom-name-on-test-method5");
+			BDDAssertions.then(this.spans.get(0).tags()).containsEntry("testTag", "test");
+			BDDAssertions.then(this.spans.get(0).finishTimestamp()).isNotZero();
+			BDDAssertions.then(this.tracer.currentSpan()).isNull();
 		});
 	}
 
@@ -163,16 +160,16 @@ public class SleuthSpanCreatorAspectMonoTests {
 	public void shouldCreateSpanWithTagWhenAnnotationOnClassMethod() {
 		Mono<String> mono = this.testBean.testMethod6("test");
 
-		then(this.spans).isEmpty();
+		BDDAssertions.then(this.spans).isEmpty();
 
 		mono.block();
 
 		Awaitility.await().untilAsserted(() -> {
-			then(this.spans).hasSize(1);
-			then(this.spans.get(0).name()).isEqualTo("custom-name-on-test-method6");
-			then(this.spans.get(0).tags()).containsEntry("testTag6", "test");
-			then(this.spans.get(0).finishTimestamp()).isNotZero();
-			then(this.tracer.currentSpan()).isNull();
+			BDDAssertions.then(this.spans).hasSize(1);
+			BDDAssertions.then(this.spans.get(0).name()).isEqualTo("custom-name-on-test-method6");
+			BDDAssertions.then(this.spans.get(0).tags()).containsEntry("testTag6", "test");
+			BDDAssertions.then(this.spans.get(0).finishTimestamp()).isNotZero();
+			BDDAssertions.then(this.tracer.currentSpan()).isNull();
 		});
 	}
 
@@ -180,15 +177,15 @@ public class SleuthSpanCreatorAspectMonoTests {
 	public void shouldCreateSpanWithLogWhenAnnotationOnInterfaceMethod() {
 		Mono<String> mono = this.testBean.testMethod8("test");
 
-		then(this.spans).isEmpty();
+		BDDAssertions.then(this.spans).isEmpty();
 
 		mono.block();
 
 		Awaitility.await().untilAsserted(() -> {
-			then(this.spans).hasSize(1);
-			then(this.spans.get(0).name()).isEqualTo("custom-name-on-test-method8");
-			then(this.spans.get(0).finishTimestamp()).isNotZero();
-			then(this.tracer.currentSpan()).isNull();
+			BDDAssertions.then(this.spans).hasSize(1);
+			BDDAssertions.then(this.spans.get(0).name()).isEqualTo("custom-name-on-test-method8");
+			BDDAssertions.then(this.spans.get(0).finishTimestamp()).isNotZero();
+			BDDAssertions.then(this.tracer.currentSpan()).isNull();
 		});
 	}
 
@@ -196,16 +193,17 @@ public class SleuthSpanCreatorAspectMonoTests {
 	public void shouldCreateSpanWithLogWhenAnnotationOnClassMethod() {
 		Mono<String> mono = this.testBean.testMethod9("test");
 
-		then(this.spans).isEmpty();
+		BDDAssertions.then(this.spans).isEmpty();
 
 		mono.block();
 
 		Awaitility.await().untilAsserted(() -> {
-			then(this.spans).hasSize(1);
-			then(this.spans.get(0).name()).isEqualTo("custom-name-on-test-method9");
-			then(this.spans.get(0).tags()).containsEntry("class", "TestBean").containsEntry("method", "testMethod9");
-			then(this.spans.get(0).finishTimestamp()).isNotZero();
-			then(this.tracer.currentSpan()).isNull();
+			BDDAssertions.then(this.spans).hasSize(1);
+			BDDAssertions.then(this.spans.get(0).name()).isEqualTo("custom-name-on-test-method9");
+			BDDAssertions.then(this.spans.get(0).tags()).containsEntry("class", "TestBean").containsEntry("method",
+					"testMethod9");
+			BDDAssertions.then(this.spans.get(0).finishTimestamp()).isNotZero();
+			BDDAssertions.then(this.tracer.currentSpan()).isNull();
 		});
 	}
 
@@ -216,7 +214,7 @@ public class SleuthSpanCreatorAspectMonoTests {
 		try (Tracer.SpanInScope ws = this.tracer.withSpanInScope(span.start())) {
 			Mono<String> mono = this.testBean.testMethod10("test");
 
-			then(this.spans).isEmpty();
+			BDDAssertions.then(this.spans).isEmpty();
 
 			mono.block();
 		}
@@ -225,13 +223,14 @@ public class SleuthSpanCreatorAspectMonoTests {
 		}
 
 		Awaitility.await().untilAsserted(() -> {
-			then(this.spans).hasSize(1);
-			then(this.spans.get(0).name()).isEqualTo("foo");
-			then(this.spans.get(0).tags()).containsEntry("customTestTag10", "test");
-			then(this.spans.get(0).annotations().stream().map(Map.Entry::getValue).collect(Collectors.toList()))
+			BDDAssertions.then(this.spans).hasSize(1);
+			BDDAssertions.then(this.spans.get(0).name()).isEqualTo("foo");
+			BDDAssertions.then(this.spans.get(0).tags()).containsEntry("customTestTag10", "test");
+			BDDAssertions.then(
+					this.spans.get(0).annotations().stream().map(Map.Entry::getValue).collect(Collectors.toList()))
 					.contains("customTest.before", "customTest.after");
-			then(this.spans.get(0).finishTimestamp()).isNotZero();
-			then(this.tracer.currentSpan()).isNull();
+			BDDAssertions.then(this.spans.get(0).finishTimestamp()).isNotZero();
+			BDDAssertions.then(this.tracer.currentSpan()).isNull();
 		});
 	}
 
@@ -240,13 +239,14 @@ public class SleuthSpanCreatorAspectMonoTests {
 		this.testBean.testMethod10("test").block();
 
 		Awaitility.await().untilAsserted(() -> {
-			then(this.spans).hasSize(1);
-			then(this.spans.get(0).name()).isEqualTo("test-method10");
-			then(this.spans.get(0).tags()).containsEntry("customTestTag10", "test");
-			then(this.spans.get(0).annotations().stream().map(Map.Entry::getValue).collect(Collectors.toList()))
+			BDDAssertions.then(this.spans).hasSize(1);
+			BDDAssertions.then(this.spans.get(0).name()).isEqualTo("test-method10");
+			BDDAssertions.then(this.spans.get(0).tags()).containsEntry("customTestTag10", "test");
+			BDDAssertions.then(
+					this.spans.get(0).annotations().stream().map(Map.Entry::getValue).collect(Collectors.toList()))
 					.contains("customTest.before", "customTest.after");
-			then(this.spans.get(0).finishTimestamp()).isNotZero();
-			then(this.tracer.currentSpan()).isNull();
+			BDDAssertions.then(this.spans.get(0).finishTimestamp()).isNotZero();
+			BDDAssertions.then(this.tracer.currentSpan()).isNull();
 		});
 	}
 
@@ -257,7 +257,7 @@ public class SleuthSpanCreatorAspectMonoTests {
 		try (Tracer.SpanInScope ws = this.tracer.withSpanInScope(span.start())) {
 			Mono<String> mono = this.testBean.testMethod10_v2("test");
 
-			then(this.spans).isEmpty();
+			BDDAssertions.then(this.spans).isEmpty();
 
 			mono.block();
 		}
@@ -266,13 +266,14 @@ public class SleuthSpanCreatorAspectMonoTests {
 		}
 
 		Awaitility.await().untilAsserted(() -> {
-			then(this.spans).hasSize(1);
-			then(this.spans.get(0).name()).isEqualTo("foo");
-			then(this.spans.get(0).tags()).containsEntry("customTestTag10", "test");
-			then(this.spans.get(0).annotations().stream().map(Map.Entry::getValue).collect(Collectors.toList()))
+			BDDAssertions.then(this.spans).hasSize(1);
+			BDDAssertions.then(this.spans.get(0).name()).isEqualTo("foo");
+			BDDAssertions.then(this.spans.get(0).tags()).containsEntry("customTestTag10", "test");
+			BDDAssertions.then(
+					this.spans.get(0).annotations().stream().map(Map.Entry::getValue).collect(Collectors.toList()))
 					.contains("customTest.before", "customTest.after");
-			then(this.spans.get(0).finishTimestamp()).isNotZero();
-			then(this.tracer.currentSpan()).isNull();
+			BDDAssertions.then(this.spans.get(0).finishTimestamp()).isNotZero();
+			BDDAssertions.then(this.tracer.currentSpan()).isNull();
 		});
 	}
 
@@ -284,7 +285,7 @@ public class SleuthSpanCreatorAspectMonoTests {
 			// tag::continue_span_execution[]
 			Mono<String> mono = this.testBean.testMethod11("test");
 			// end::continue_span_execution[]
-			then(this.spans).isEmpty();
+			BDDAssertions.then(this.spans).isEmpty();
 
 			mono.block();
 		}
@@ -293,14 +294,15 @@ public class SleuthSpanCreatorAspectMonoTests {
 		}
 
 		Awaitility.await().untilAsserted(() -> {
-			then(this.spans).hasSize(1);
-			then(this.spans.get(0).name()).isEqualTo("foo");
-			then(this.spans.get(0).tags()).containsEntry("class", "TestBean").containsEntry("method", "testMethod11")
-					.containsEntry("customTestTag11", "test");
-			then(this.spans.get(0).annotations().stream().map(Map.Entry::getValue).collect(Collectors.toList()))
+			BDDAssertions.then(this.spans).hasSize(1);
+			BDDAssertions.then(this.spans.get(0).name()).isEqualTo("foo");
+			BDDAssertions.then(this.spans.get(0).tags()).containsEntry("class", "TestBean")
+					.containsEntry("method", "testMethod11").containsEntry("customTestTag11", "test");
+			BDDAssertions.then(
+					this.spans.get(0).annotations().stream().map(Map.Entry::getValue).collect(Collectors.toList()))
 					.contains("customTest.before", "customTest.after");
-			then(this.spans.get(0).finishTimestamp()).isNotZero();
-			then(this.tracer.currentSpan()).isNull();
+			BDDAssertions.then(this.spans.get(0).finishTimestamp()).isNotZero();
+			BDDAssertions.then(this.tracer.currentSpan()).isNull();
 		});
 	}
 
@@ -309,7 +311,7 @@ public class SleuthSpanCreatorAspectMonoTests {
 		try {
 			Mono<String> mono = this.testBean.testMethod12("test");
 
-			then(this.spans).isEmpty();
+			BDDAssertions.then(this.spans).isEmpty();
 
 			mono.block();
 		}
@@ -317,12 +319,12 @@ public class SleuthSpanCreatorAspectMonoTests {
 		}
 
 		Awaitility.await().untilAsserted(() -> {
-			then(this.spans).hasSize(1);
-			then(this.spans.get(0).name()).isEqualTo("test-method12");
-			then(this.spans.get(0).tags()).containsEntry("testTag12", "test");
-			then(this.spans.get(0).error()).hasMessageContaining("test exception 12");
-			then(this.spans.get(0).finishTimestamp()).isNotZero();
-			then(this.tracer.currentSpan()).isNull();
+			BDDAssertions.then(this.spans).hasSize(1);
+			BDDAssertions.then(this.spans.get(0).name()).isEqualTo("test-method12");
+			BDDAssertions.then(this.spans.get(0).tags()).containsEntry("testTag12", "test");
+			BDDAssertions.then(this.spans.get(0).error()).hasMessageContaining("test exception 12");
+			BDDAssertions.then(this.spans.get(0).finishTimestamp()).isNotZero();
+			BDDAssertions.then(this.tracer.currentSpan()).isNull();
 		});
 	}
 
@@ -334,7 +336,7 @@ public class SleuthSpanCreatorAspectMonoTests {
 			// tag::continue_span_execution[]
 			Mono<String> mono = this.testBean.testMethod13();
 
-			then(this.spans).isEmpty();
+			BDDAssertions.then(this.spans).isEmpty();
 
 			mono.block();
 			// end::continue_span_execution[]
@@ -346,13 +348,15 @@ public class SleuthSpanCreatorAspectMonoTests {
 		}
 
 		Awaitility.await().untilAsserted(() -> {
-			then(this.spans).hasSize(1);
-			then(this.spans.get(0).name()).isEqualTo("foo");
-			then(this.spans.get(0).error()).hasMessageContaining("test exception 13");
-			then(this.spans.get(0).annotations().stream().map(Map.Entry::getValue).collect(Collectors.toList()))
+			BDDAssertions.then(this.spans).hasSize(1);
+			BDDAssertions.then(this.spans.get(0).name()).isEqualTo("foo");
+			BDDAssertions.then(this.spans.get(0).error()).hasMessageContaining("test exception 13");
+			BDDAssertions
+					.then(this.spans.get(0).annotations().stream().map(Map.Entry::getValue)
+							.collect(Collectors.toList()))
 					.contains("testMethod13.before", "testMethod13.afterFailure", "testMethod13.after");
-			then(this.spans.get(0).finishTimestamp()).isNotZero();
-			then(this.tracer.currentSpan()).isNull();
+			BDDAssertions.then(this.spans.get(0).finishTimestamp()).isNotZero();
+			BDDAssertions.then(this.tracer.currentSpan()).isNull();
 		});
 	}
 
@@ -362,8 +366,8 @@ public class SleuthSpanCreatorAspectMonoTests {
 		mono.block();
 
 		Awaitility.await().untilAsserted(() -> {
-			then(this.spans).isEmpty();
-			then(this.tracer.currentSpan()).isNull();
+			BDDAssertions.then(this.spans).isEmpty();
+			BDDAssertions.then(this.tracer.currentSpan()).isNull();
 		});
 	}
 
@@ -371,15 +375,15 @@ public class SleuthSpanCreatorAspectMonoTests {
 	public void shouldReturnNewSpanFromTraceContext() {
 		Mono<String> mono = this.testBean.newSpanInTraceContext();
 
-		then(this.spans).isEmpty();
+		BDDAssertions.then(this.spans).isEmpty();
 
 		String newSpanId = mono.block();
 
 		Awaitility.await().untilAsserted(() -> {
-			then(this.spans).hasSize(1);
-			then(this.spans.get(0).name()).isEqualTo("span-in-trace-context");
-			then(this.spans.get(0).id()).isEqualTo(newSpanId);
-			then(this.tracer.currentSpan()).isNull();
+			BDDAssertions.then(this.spans).hasSize(1);
+			BDDAssertions.then(this.spans.get(0).name()).isEqualTo("span-in-trace-context");
+			BDDAssertions.then(this.spans.get(0).id()).isEqualTo(newSpanId);
+			BDDAssertions.then(this.tracer.currentSpan()).isNull();
 		});
 	}
 
@@ -387,7 +391,7 @@ public class SleuthSpanCreatorAspectMonoTests {
 	public void shouldReturnNewSpanFromTraceContextOuter() {
 		Mono<Pair<Pair<String, String>, String>> mono = this.testBeanOuter.outerNewSpanInTraceContext();
 
-		then(this.spans).isEmpty();
+		BDDAssertions.then(this.spans).isEmpty();
 
 		Pair<Pair<String, String>, String> pair = mono.block();
 		String outerSpanIdBefore = pair.getFirst().getFirst();
@@ -396,17 +400,17 @@ public class SleuthSpanCreatorAspectMonoTests {
 		then(outerSpanIdBefore).isNotEqualTo(innerSpanId);
 
 		Awaitility.await().untilAsserted(() -> {
-			MutableSpan outerSpan = spans.spans().stream()
+			ReportedSpan outerSpan = spans.reportedSpans().stream()
 					.filter(span -> span.name().equals("outer-span-in-trace-context")).findFirst()
 					.orElseThrow(() -> new AssertionError("No span with name [outer-span-in-trace-context] found"));
-			then(outerSpan.name()).isEqualTo("outer-span-in-trace-context");
-			then(outerSpan.id()).isEqualTo(outerSpanIdBefore);
-			MutableSpan innerSpan = spans.spans().stream().filter(span -> span.name().equals("span-in-trace-context"))
-					.findFirst()
+			BDDAssertions.then(outerSpan.name()).isEqualTo("outer-span-in-trace-context");
+			BDDAssertions.then(outerSpan.id()).isEqualTo(outerSpanIdBefore);
+			ReportedSpan innerSpan = spans.reportedSpans().stream()
+					.filter(span -> span.name().equals("span-in-trace-context")).findFirst()
 					.orElseThrow(() -> new AssertionError("No span with name [span-in-trace-context] found"));
-			then(innerSpan.name()).isEqualTo("span-in-trace-context");
-			then(innerSpan.id()).isEqualTo(innerSpanId);
-			then(this.tracer.currentSpan()).isNull();
+			BDDAssertions.then(innerSpan.name()).isEqualTo("span-in-trace-context");
+			BDDAssertions.then(innerSpan.id()).isEqualTo(innerSpanId);
+			BDDAssertions.then(this.tracer.currentSpan()).isNull();
 		});
 	}
 
@@ -414,15 +418,15 @@ public class SleuthSpanCreatorAspectMonoTests {
 	public void shouldReturnNewSpanFromSubscriberContext() {
 		Mono<String> mono = this.testBean.newSpanInSubscriberContext();
 
-		then(this.spans).isEmpty();
+		BDDAssertions.then(this.spans).isEmpty();
 
 		String newSpanId = mono.block();
 
 		Awaitility.await().untilAsserted(() -> {
-			then(this.spans).hasSize(1);
-			then(this.spans.get(0).name()).isEqualTo("span-in-subscriber-context");
-			then(this.spans.get(0).id()).isEqualTo(newSpanId);
-			then(this.tracer.currentSpan()).isNull();
+			BDDAssertions.then(this.spans).hasSize(1);
+			BDDAssertions.then(this.spans.get(0).name()).isEqualTo("span-in-subscriber-context");
+			BDDAssertions.then(this.spans.get(0).id()).isEqualTo(newSpanId);
+			BDDAssertions.then(this.tracer.currentSpan()).isNull();
 		});
 	}
 
@@ -430,7 +434,7 @@ public class SleuthSpanCreatorAspectMonoTests {
 	public void shouldReturnNewSpanFromSubscriberContextOuter() {
 		Mono<Pair<Pair<String, String>, String>> mono = this.testBeanOuter.outerNewSpanInSubscriberContext();
 
-		then(this.spans).isEmpty();
+		BDDAssertions.then(this.spans).isEmpty();
 
 		Pair<Pair<String, String>, String> pair = mono.block();
 		String outerSpanIdBefore = pair.getFirst().getFirst();
@@ -439,17 +443,17 @@ public class SleuthSpanCreatorAspectMonoTests {
 		then(outerSpanIdBefore).isNotEqualTo(innerSpanId);
 
 		Awaitility.await().untilAsserted(() -> {
-			MutableSpan outerSpan = spans.spans().stream()
+			ReportedSpan outerSpan = spans.reportedSpans().stream()
 					.filter(span -> span.name().equals("outer-span-in-subscriber-context")).findFirst().orElseThrow(
 							() -> new AssertionError("No span with name [outer-span-in-subscriber-context] found"));
-			then(outerSpan.name()).isEqualTo("outer-span-in-subscriber-context");
-			then(outerSpan.id()).isEqualTo(outerSpanIdBefore);
-			MutableSpan innerSpan = spans.spans().stream()
+			BDDAssertions.then(outerSpan.name()).isEqualTo("outer-span-in-subscriber-context");
+			BDDAssertions.then(outerSpan.id()).isEqualTo(outerSpanIdBefore);
+			ReportedSpan innerSpan = spans.reportedSpans().stream()
 					.filter(span -> span.name().equals("span-in-subscriber-context")).findFirst()
 					.orElseThrow(() -> new AssertionError("No span with name [span-in-subscriber-context] found"));
-			then(innerSpan.name()).isEqualTo("span-in-subscriber-context");
-			then(innerSpan.id()).isEqualTo(innerSpanId);
-			then(this.tracer.currentSpan()).isNull();
+			BDDAssertions.then(innerSpan.name()).isEqualTo("span-in-subscriber-context");
+			BDDAssertions.then(innerSpan.id()).isEqualTo(innerSpanId);
+			BDDAssertions.then(this.tracer.currentSpan()).isNull();
 		});
 	}
 
@@ -639,27 +643,17 @@ public class SleuthSpanCreatorAspectMonoTests {
 	}
 
 	@Configuration
-	@EnableAutoConfiguration
-	protected static class TestConfiguration {
+	@EnableAutoConfiguration(exclude = GatewayAutoConfiguration.class)
+	public static class TestConfiguration {
 
 		@Bean
-		public TestBeanInterface testBean(Tracer tracer) {
+		TestBeanInterface testBean(Tracer tracer) {
 			return new TestBean(tracer);
 		}
 
 		@Bean
-		public TestBeanOuter testBeanOuter(Tracer tracer, TestBeanInterface testBean) {
+		TestBeanOuter testBeanOuter(Tracer tracer, TestBeanInterface testBean) {
 			return new TestBeanOuter(tracer, testBean);
-		}
-
-		@Bean
-		SpanHandler testSpanHandler() {
-			return new TestSpanHandler();
-		}
-
-		@Bean
-		Sampler alwaysSampler() {
-			return Sampler.ALWAYS_SAMPLE;
 		}
 
 	}

@@ -16,22 +16,22 @@
 
 package org.springframework.cloud.sleuth.annotation;
 
-import brave.handler.SpanHandler;
-import brave.sampler.Sampler;
-import brave.test.TestSpanHandler;
+import java.util.function.Supplier;
+
+import org.assertj.core.api.BDDAssertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.cloud.gateway.config.GatewayAutoConfiguration;
+import org.springframework.cloud.sleuth.test.TestSpanHandler;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-import static org.assertj.core.api.BDDAssertions.then;
-
 @SpringBootTest(classes = SleuthSpanCreatorAspectNegativeTests.TestConfiguration.class)
-public class SleuthSpanCreatorAspectNegativeTests {
+public abstract class SleuthSpanCreatorAspectNegativeTests {
 
 	@Autowired
 	NotAnnotatedTestBeanInterface testBean;
@@ -51,15 +51,15 @@ public class SleuthSpanCreatorAspectNegativeTests {
 	public void shouldNotCallAdviceForNotAnnotatedBean() {
 		this.testBean.testMethod();
 
-		then(this.spans).isEmpty();
+		BDDAssertions.then(this.spans).isEmpty();
 	}
 
 	@Test
 	public void shouldCallAdviceForAnnotatedBean() throws Throwable {
 		this.annotatedTestBean.testMethod();
 
-		then(this.spans).hasSize(1);
-		then(this.spans.get(0).name()).isEqualTo("test-method");
+		BDDAssertions.then(this.spans).hasSize(1);
+		BDDAssertions.then(this.spans.get(0).name()).isEqualTo("test-method");
 	}
 
 	protected interface NotAnnotatedTestBeanInterface {
@@ -134,27 +134,17 @@ public class SleuthSpanCreatorAspectNegativeTests {
 	}
 
 	@Configuration
-	@EnableAutoConfiguration
-	protected static class TestConfiguration {
+	@EnableAutoConfiguration(exclude = GatewayAutoConfiguration.class)
+	public static class TestConfiguration {
 
 		@Bean
-		SpanHandler testSpanHandler() {
-			return new TestSpanHandler();
-		}
-
-		@Bean
-		public NotAnnotatedTestBeanInterface testBean() {
+		NotAnnotatedTestBeanInterface testBean() {
 			return new NotAnnotatedTestBean();
 		}
 
 		@Bean
-		public TestBeanInterface annotatedTestBean() {
+		TestBeanInterface annotatedTestBean() {
 			return new TestBean();
-		}
-
-		@Bean
-		public Sampler sampler() {
-			return Sampler.ALWAYS_SAMPLE;
 		}
 
 	}

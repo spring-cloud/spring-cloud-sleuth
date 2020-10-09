@@ -240,15 +240,20 @@
 				<version>${opentelemetry-instrumentation.version}</version>
 			</dependency>
 			<dependency>
+				<groupId>org.apache.commons</groupId>
+				<artifactId>commons-lang3</artifactId>
+				<version>${commons-lang3.version}</version>
+			</dependency>
+			<dependency>
 				<groupId>org.hamcrest</groupId>
 				<artifactId>hamcrest-core</artifactId>
-				<version>2.2</version>
+				<version>${hamcrest-core.version}</version>
 				<scope>test</scope>
 			</dependency>
 			<dependency>
 				<groupId>org.awaitility</groupId>
 				<artifactId>awaitility</artifactId>
-				<version>3.0.0</version>
+				<version>${awaitility.version}</version>
 				<scope>test</scope>
 			</dependency>
 			<dependency>
@@ -288,6 +293,9 @@
 		<!-- Until we switch it to true in sc-build -->
 		<javadoc.failOnError>true</javadoc.failOnError>
 		<javadoc.failOnWarnings>false</javadoc.failOnWarnings>
+		<commons-lang3.version>3.8.1</commons-lang3.version>
+		<hamcrest-core.version>2.2</hamcrest-core.version>
+		<awaitility.version>3.0.0</awaitility.version>
 	</properties>
 
 	<repositories>

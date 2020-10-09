@@ -19,7 +19,6 @@ package org.springframework.cloud.sleuth.annotation;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 
-import brave.sampler.Sampler;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -27,14 +26,15 @@ import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.cloud.gateway.config.GatewayAutoConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.fail;
 
-@SpringBootTest(classes = NullSpanTagAnnotationHandlerTests.TestConfiguration.class)
-public class NullSpanTagAnnotationHandlerTests {
+@SpringBootTest(classes = SpanTagAnnotationHandlerTests.TestConfiguration.class)
+public abstract class SpanTagAnnotationHandlerTests {
 
 	@Autowired
 	BeanFactory beanFactory;
@@ -50,13 +50,12 @@ public class NullSpanTagAnnotationHandlerTests {
 	}
 
 	@Test
-	public void shouldUseEmptyStringWheCustomTagValueResolverReturnsNull()
-			throws NoSuchMethodException, SecurityException {
+	public void shouldUseCustomTagValueResolver() throws NoSuchMethodException, SecurityException {
 		Method method = AnnotationMockClass.class.getMethod("getAnnotationForTagValueResolver", String.class);
 		Annotation annotation = method.getParameterAnnotations()[0][0];
 		if (annotation instanceof SpanTag) {
 			String resolvedValue = this.handler.resolveTagValue((SpanTag) annotation, "test");
-			assertThat(resolvedValue).isEqualTo("");
+			assertThat(resolvedValue).isEqualTo("Value from myCustomTagValueResolver");
 		}
 		else {
 			fail("Annotation was not SleuthSpanTag");
@@ -64,13 +63,13 @@ public class NullSpanTagAnnotationHandlerTests {
 	}
 
 	@Test
-	public void shouldUseEmptyStringWhenTagValueExpressionReturnNull() throws NoSuchMethodException, SecurityException {
+	public void shouldUseTagValueExpression() throws NoSuchMethodException, SecurityException {
 		Method method = AnnotationMockClass.class.getMethod("getAnnotationForTagValueExpression", String.class);
 		Annotation annotation = method.getParameterAnnotations()[0][0];
 		if (annotation instanceof SpanTag) {
 			String resolvedValue = this.handler.resolveTagValue((SpanTag) annotation, "test");
 
-			assertThat(resolvedValue).isEqualTo("");
+			assertThat(resolvedValue).isEqualTo("hello characters");
 		}
 		else {
 			fail("Annotation was not SleuthSpanTag");
@@ -78,12 +77,12 @@ public class NullSpanTagAnnotationHandlerTests {
 	}
 
 	@Test
-	public void shouldUseEmptyStringWhenArgumentIsNull() throws NoSuchMethodException, SecurityException {
+	public void shouldReturnArgumentToString() throws NoSuchMethodException, SecurityException {
 		Method method = AnnotationMockClass.class.getMethod("getAnnotationForArgumentToString", Long.class);
 		Annotation annotation = method.getParameterAnnotations()[0][0];
 		if (annotation instanceof SpanTag) {
-			String resolvedValue = this.handler.resolveTagValue((SpanTag) annotation, null);
-			assertThat(resolvedValue).isEqualTo("");
+			String resolvedValue = this.handler.resolveTagValue((SpanTag) annotation, 15);
+			assertThat(resolvedValue).isEqualTo("15");
 		}
 		else {
 			fail("Annotation was not SleuthSpanTag");
@@ -91,35 +90,39 @@ public class NullSpanTagAnnotationHandlerTests {
 	}
 
 	@Configuration
-	@EnableAutoConfiguration
-	protected static class TestConfiguration {
+	@EnableAutoConfiguration(exclude = GatewayAutoConfiguration.class)
+	public static class TestConfiguration {
 
-		@Bean
+		// tag::custom_resolver[]
+		@Bean(name = "myCustomTagValueResolver")
 		public TagValueResolver tagValueResolver() {
-			return parameter -> null;
+			return parameter -> "Value from myCustomTagValueResolver";
 		}
-
-		@Bean
-		Sampler alwaysSampler() {
-			return Sampler.ALWAYS_SAMPLE;
-		}
+		// end::custom_resolver[]
 
 	}
 
 	protected class AnnotationMockClass {
 
+		// tag::resolver_bean[]
 		@NewSpan
 		public void getAnnotationForTagValueResolver(
 				@SpanTag(key = "test", resolver = TagValueResolver.class) String test) {
 		}
+		// end::resolver_bean[]
 
+		// tag::spel[]
 		@NewSpan
-		public void getAnnotationForTagValueExpression(@SpanTag(key = "test", expression = "null") String test) {
+		public void getAnnotationForTagValueExpression(
+				@SpanTag(key = "test", expression = "'hello' + ' characters'") String test) {
 		}
+		// end::spel[]
 
+		// tag::toString[]
 		@NewSpan
 		public void getAnnotationForArgumentToString(@SpanTag("test") Long param) {
 		}
+		// end::toString[]
 
 	}
 

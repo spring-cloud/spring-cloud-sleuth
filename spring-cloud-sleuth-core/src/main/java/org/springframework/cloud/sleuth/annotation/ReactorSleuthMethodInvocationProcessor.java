@@ -43,8 +43,6 @@ import org.springframework.util.StringUtils;
  */
 class ReactorSleuthMethodInvocationProcessor extends AbstractSleuthMethodInvocationProcessor {
 
-	Tracer tracer;
-
 	private NonReactorSleuthMethodInvocationProcessor nonReactorSleuthMethodInvocationProcessor;
 
 	@Override
