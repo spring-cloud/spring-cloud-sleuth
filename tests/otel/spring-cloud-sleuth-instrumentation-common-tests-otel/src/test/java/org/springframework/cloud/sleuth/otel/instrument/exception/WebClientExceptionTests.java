@@ -26,10 +26,12 @@ import org.springframework.cloud.sleuth.test.TestSpanHandler;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-@SpringBootTest(classes = { WebClientExceptionTests.Config.class, org.springframework.cloud.sleuth.instrument.web.client.exception.WebClientExceptionTests.TestConfiguration.class},
+@SpringBootTest(classes = { WebClientExceptionTests.Config.class,
+		org.springframework.cloud.sleuth.instrument.web.client.exception.WebClientExceptionTests.TestConfiguration.class },
 		properties = { "spring.application.name=exceptionservice" },
 		webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-public class WebClientExceptionTests extends org.springframework.cloud.sleuth.instrument.web.client.exception.WebClientExceptionTests {
+public class WebClientExceptionTests
+		extends org.springframework.cloud.sleuth.instrument.web.client.exception.WebClientExceptionTests {
 
 	@Configuration(proxyBeanMethods = false)
 	static class Config {

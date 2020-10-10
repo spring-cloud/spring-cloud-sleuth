@@ -39,4 +39,5 @@ public class TraceFilterTests extends org.springframework.cloud.sleuth.instrumen
 	public HttpServerHandler httpServerHandler() {
 		return tracerTest().tracing().httpServerHandler();
 	}
+
 }

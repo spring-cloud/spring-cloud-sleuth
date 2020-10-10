@@ -342,7 +342,7 @@ public class TraceFilterIntegrationTests extends AbstractMvcIntegrationTest {
 		}
 
 		@Configuration(proxyBeanMethods = false)
-	static class ManagementServer {
+		static class ManagementServer {
 
 			@Bean
 			@Primary

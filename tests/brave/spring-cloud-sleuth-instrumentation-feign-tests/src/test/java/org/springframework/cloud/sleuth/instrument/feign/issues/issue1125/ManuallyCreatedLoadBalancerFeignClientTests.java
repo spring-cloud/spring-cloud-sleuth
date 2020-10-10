@@ -96,7 +96,7 @@ public class ManuallyCreatedLoadBalancerFeignClientTests {
 }
 
 @Configuration(proxyBeanMethods = false)
-	@EnableAutoConfiguration
+@EnableAutoConfiguration
 @EnableFeignClients
 class Application {
 

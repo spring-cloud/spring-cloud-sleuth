@@ -28,6 +28,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.web.server.LocalServerPort;
 import org.springframework.cloud.gateway.config.GatewayAutoConfiguration;
 import org.springframework.cloud.gateway.config.GatewayClassPathWarningAutoConfiguration;
+import org.springframework.cloud.gateway.config.GatewayMetricsAutoConfiguration;
 import org.springframework.cloud.sleuth.api.Tracer;
 import org.springframework.cloud.sleuth.test.TestSpanHandler;
 import org.springframework.context.annotation.Configuration;
@@ -82,7 +83,7 @@ public abstract class IgnoreAutoConfiguredSkipPatternsIntegrationTests {
 	}
 
 	@EnableAutoConfiguration(exclude = { GatewayAutoConfiguration.class, GatewayClassPathWarningAutoConfiguration.class,
-			RabbitAutoConfiguration.class })
+			GatewayMetricsAutoConfiguration.class, RabbitAutoConfiguration.class })
 	@Configuration(proxyBeanMethods = false)
 	@RestController
 	public static class TestConfig {

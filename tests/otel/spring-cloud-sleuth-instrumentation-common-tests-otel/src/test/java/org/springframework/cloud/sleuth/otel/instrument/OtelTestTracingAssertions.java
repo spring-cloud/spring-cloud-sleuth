@@ -32,4 +32,5 @@ public class OtelTestTracingAssertions implements TestTracingAssertions {
 	public String or128Bit(String id) {
 		return "0000000000000000" + id;
 	}
+
 }

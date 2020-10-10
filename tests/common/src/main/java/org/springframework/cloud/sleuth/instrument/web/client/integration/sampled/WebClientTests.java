@@ -16,6 +16,7 @@
 
 package org.springframework.cloud.sleuth.instrument.web.client.integration.sampled;
 
+import java.time.Duration;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -52,6 +53,7 @@ import org.springframework.boot.web.servlet.error.ErrorAttributes;
 import org.springframework.cloud.client.loadbalancer.LoadBalanced;
 import org.springframework.cloud.gateway.config.GatewayAutoConfiguration;
 import org.springframework.cloud.gateway.config.GatewayClassPathWarningAutoConfiguration;
+import org.springframework.cloud.gateway.config.GatewayMetricsAutoConfiguration;
 import org.springframework.cloud.loadbalancer.annotation.LoadBalancerClient;
 import org.springframework.cloud.loadbalancer.core.ServiceInstanceListSupplier;
 import org.springframework.cloud.openfeign.EnableFeignClients;
@@ -204,7 +206,7 @@ public abstract class WebClientTests {
 
 		try (Tracer.SpanInScope ws = this.tracer.withSpanInScope(span)) {
 			this.webClient.get().uri("http://localhost:" + this.port + "/traceid").retrieve().bodyToMono(String.class)
-					.block();
+					.block(Duration.ofMillis(100));
 		}
 		finally {
 			span.finish();
@@ -221,7 +223,7 @@ public abstract class WebClientTests {
 
 		try (Tracer.SpanInScope ws = this.tracer.withSpanInScope(span)) {
 			this.webClient.get().uri("http://localhost:" + this.port + "/issue1462").retrieve().bodyToMono(String.class)
-					.block();
+					.block(Duration.ofMillis(100));
 		}
 		catch (UnknownHttpStatusCodeException ex) {
 
@@ -255,11 +257,12 @@ public abstract class WebClientTests {
 
 	@Test
 	public void shouldRespectSkipPattern() {
-		this.webClient.get().uri("http://localhost:" + this.port + "/skip").retrieve().bodyToMono(String.class).block();
+		this.webClient.get().uri("http://localhost:" + this.port + "/skip").retrieve().bodyToMono(String.class)
+				.block(Duration.ofMillis(100));
 		then(this.spans).isEmpty();
 
 		this.webClient.get().uri("http://localhost:" + this.port + "/doNotSkip").retrieve().bodyToMono(String.class)
-				.block();
+				.block(Duration.ofMillis(100));
 		then(this.spans).isNotEmpty();
 	}
 
@@ -352,7 +355,7 @@ public abstract class WebClientTests {
 
 				return exchange.exchange(request);
 			}).build().get().uri("http://localhost:" + this.port + "/traceid").retrieve().bodyToMono(String.class)
-					.block();
+					.block(Duration.ofMillis(100));
 		}
 		finally {
 			span.finish();
@@ -393,7 +396,7 @@ public abstract class WebClientTests {
 	@Configuration(proxyBeanMethods = false)
 	@EnableAutoConfiguration(
 			excludeName = "org.springframework.cloud.sleuth.brave.instrument.web.TraceWebServletAutoConfiguration",
-			exclude = { GatewayClassPathWarningAutoConfiguration.class, GatewayAutoConfiguration.class })
+			exclude = { GatewayClassPathWarningAutoConfiguration.class, GatewayAutoConfiguration.class, GatewayMetricsAutoConfiguration.class})
 	@EnableFeignClients
 	@LoadBalancerClient(value = "fooservice", configuration = SimpleLoadBalancerClientConfiguration.class)
 	public static class TestConfiguration {

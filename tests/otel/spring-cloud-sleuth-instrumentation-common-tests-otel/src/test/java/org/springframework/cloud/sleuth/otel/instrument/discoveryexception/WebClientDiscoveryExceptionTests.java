@@ -30,10 +30,13 @@ import org.springframework.test.context.TestPropertySource;
 
 import static org.springframework.boot.test.context.SpringBootTest.WebEnvironment.RANDOM_PORT;
 
-@SpringBootTest(classes = { WebClientDiscoveryExceptionTests.Config.class, org.springframework.cloud.sleuth.instrument.web.client.discoveryexception.WebClientDiscoveryExceptionTests.TestConfiguration.class }, webEnvironment = RANDOM_PORT)
+@SpringBootTest(classes = { WebClientDiscoveryExceptionTests.Config.class,
+		org.springframework.cloud.sleuth.instrument.web.client.discoveryexception.WebClientDiscoveryExceptionTests.TestConfiguration.class },
+		webEnvironment = RANDOM_PORT)
 @TestPropertySource(properties = { "spring.application.name=exceptionservice" })
 @DirtiesContext
-public class WebClientDiscoveryExceptionTests extends org.springframework.cloud.sleuth.instrument.web.client.discoveryexception.WebClientDiscoveryExceptionTests {
+public class WebClientDiscoveryExceptionTests extends
+		org.springframework.cloud.sleuth.instrument.web.client.discoveryexception.WebClientDiscoveryExceptionTests {
 
 	@Configuration(proxyBeanMethods = false)
 	static class Config {

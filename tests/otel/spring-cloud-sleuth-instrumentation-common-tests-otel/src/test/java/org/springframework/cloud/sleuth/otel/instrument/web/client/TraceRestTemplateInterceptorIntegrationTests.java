@@ -22,7 +22,8 @@ import org.springframework.cloud.sleuth.test.TestTracingAware;
 /**
  * @author Marcin Grzejszczak
  */
-public class TraceRestTemplateInterceptorIntegrationTests extends org.springframework.cloud.sleuth.instrument.web.client.TraceRestTemplateInterceptorIntegrationTests {
+public class TraceRestTemplateInterceptorIntegrationTests
+		extends org.springframework.cloud.sleuth.instrument.web.client.TraceRestTemplateInterceptorIntegrationTests {
 
 	OtelTestTracing testTracing;
 

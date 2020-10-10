@@ -106,7 +106,7 @@ public class ZipkinRestTemplateSenderConfigurationTest {
 	static class MyDiscoveryClientZipkinUrlExtractorConfiguration {
 
 		@Configuration(proxyBeanMethods = false)
-	@ConditionalOnProperty(value = "spring.zipkin.discovery-client-enabled", havingValue = "true",
+		@ConditionalOnProperty(value = "spring.zipkin.discovery-client-enabled", havingValue = "true",
 				matchIfMissing = true)
 		static class ZipkinClientLoadBalancedConfiguration {
 
@@ -122,7 +122,7 @@ public class ZipkinRestTemplateSenderConfigurationTest {
 		}
 
 		@Configuration(proxyBeanMethods = false)
-	@ConditionalOnProperty(value = "spring.zipkin.discovery-client-enabled", havingValue = "false")
+		@ConditionalOnProperty(value = "spring.zipkin.discovery-client-enabled", havingValue = "false")
 		static class ZipkinClientNoOpConfiguration {
 
 			@Bean

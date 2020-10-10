@@ -51,6 +51,7 @@ public class IgnoreAutoConfiguredSkipPatternsIntegrationTests
 		ArrayListSpanProcessor spanProcessor() {
 			return new ArrayListSpanProcessor();
 		}
+
 	}
 
 }

@@ -29,7 +29,7 @@ import org.springframework.context.annotation.Configuration;
  * @author Marcin Grzejszczak
  */
 @Configuration(proxyBeanMethods = false)
-	public class Issue866Configuration {
+public class Issue866Configuration {
 
 	private static final Log log = LogFactory.getLog(Issue866Configuration.class);
 

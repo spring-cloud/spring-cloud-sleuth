@@ -28,7 +28,7 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurerAdapter
 
 @EnableAutoConfiguration
 @Configuration(proxyBeanMethods = false)
-	public class Issue469 extends WebMvcConfigurerAdapter {
+public class Issue469 extends WebMvcConfigurerAdapter {
 
 	@Override
 	public void addViewControllers(ViewControllerRegistry registry) {

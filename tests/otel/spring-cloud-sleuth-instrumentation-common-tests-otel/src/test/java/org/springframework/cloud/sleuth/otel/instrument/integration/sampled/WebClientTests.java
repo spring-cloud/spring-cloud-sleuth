@@ -32,7 +32,8 @@ import org.springframework.test.annotation.DirtiesContext;
 		webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
 		properties = { "spring.application.name=fooservice", "spring.sleuth.web.client.skip-pattern=/skip.*" })
 @DirtiesContext
-public class WebClientTests extends org.springframework.cloud.sleuth.instrument.web.client.integration.sampled.WebClientTests {
+public class WebClientTests
+		extends org.springframework.cloud.sleuth.instrument.web.client.integration.sampled.WebClientTests {
 
 	@Configuration(proxyBeanMethods = false)
 	static class Config {
@@ -50,4 +51,3 @@ public class WebClientTests extends org.springframework.cloud.sleuth.instrument.
 	}
 
 }
-

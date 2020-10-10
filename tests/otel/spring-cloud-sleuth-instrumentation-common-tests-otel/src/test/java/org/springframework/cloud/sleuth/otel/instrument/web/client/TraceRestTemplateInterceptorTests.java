@@ -26,7 +26,8 @@ import org.springframework.cloud.sleuth.test.TestTracingAware;
  * @author Dave Syer
  *
  */
-public class TraceRestTemplateInterceptorTests extends org.springframework.cloud.sleuth.instrument.web.client.TraceRestTemplateInterceptorTests {
+public class TraceRestTemplateInterceptorTests
+		extends org.springframework.cloud.sleuth.instrument.web.client.TraceRestTemplateInterceptorTests {
 
 	OtelTestTracing testTracing;
 
@@ -42,4 +43,5 @@ public class TraceRestTemplateInterceptorTests extends org.springframework.cloud
 	public void assertThatParentSpanIdSet(Span span, Map<String, String> headers) {
 
 	}
+
 }
