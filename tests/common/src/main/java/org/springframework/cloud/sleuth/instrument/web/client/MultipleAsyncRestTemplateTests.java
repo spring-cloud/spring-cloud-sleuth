@@ -34,7 +34,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.web.server.LocalServerPort;
 import org.springframework.cloud.gateway.config.GatewayAutoConfiguration;
 import org.springframework.cloud.gateway.config.GatewayClassPathWarningAutoConfiguration;
@@ -56,6 +55,7 @@ import org.springframework.scheduling.annotation.AsyncConfigurerSupport;
 import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.test.annotation.DirtiesContext;
+import org.springframework.test.context.ContextConfiguration;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.AsyncRestTemplate;
@@ -65,11 +65,9 @@ import static org.assertj.core.api.BDDAssertions.then;
 /**
  * @author Marcin Grzejszczak
  */
-@SpringBootTest(
-		classes = { MultipleAsyncRestTemplateTests.TestConfig.class,
-				MultipleAsyncRestTemplateTests.CustomExecutorConfig.class,
-				MultipleAsyncRestTemplateTests.ControllerConfig.class },
-		webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@ContextConfiguration(classes = { MultipleAsyncRestTemplateTests.TestConfig.class,
+		MultipleAsyncRestTemplateTests.CustomExecutorConfig.class,
+		MultipleAsyncRestTemplateTests.ControllerConfig.class })
 @DirtiesContext
 public abstract class MultipleAsyncRestTemplateTests {
 

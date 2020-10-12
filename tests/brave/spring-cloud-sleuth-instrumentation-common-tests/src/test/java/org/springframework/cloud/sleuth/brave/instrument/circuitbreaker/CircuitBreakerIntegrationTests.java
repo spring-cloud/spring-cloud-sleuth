@@ -16,8 +16,6 @@
 
 package org.springframework.cloud.sleuth.brave.instrument.circuitbreaker;
 
-import java.util.function.Supplier;
-
 import brave.sampler.Sampler;
 import org.assertj.core.api.BDDAssertions;
 
@@ -27,9 +25,10 @@ import org.springframework.cloud.sleuth.test.ReportedSpan;
 import org.springframework.cloud.sleuth.test.TestSpanHandler;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.test.context.ContextConfiguration;
 
-@SpringBootTest(classes = { CircuitBreakerIntegrationTests.Config.class,
-		org.springframework.cloud.sleuth.instrument.circuitbreaker.CircuitBreakerIntegrationTests.TestConfig.class })
+@SpringBootTest
+@ContextConfiguration(classes = CircuitBreakerIntegrationTests.Config.class)
 public class CircuitBreakerIntegrationTests
 		extends org.springframework.cloud.sleuth.instrument.circuitbreaker.CircuitBreakerIntegrationTests {
 

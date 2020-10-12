@@ -32,6 +32,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
 import org.springframework.cloud.openfeign.EnableFeignClients;
 import org.springframework.cloud.openfeign.FeignClient;
+import org.springframework.cloud.sleuth.instrument.web.TraceWebServletAutoConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.ResponseEntity;
@@ -92,7 +93,7 @@ public class Issue393Tests {
 @EnableAutoConfiguration(
 		// spring boot test will otherwise instrument the client and server with the
 		// same bean factory which isn't expected
-		excludeName = "org.springframework.cloud.sleuth.brave.instrument.web.TraceWebServletAutoConfiguration")
+		exclude = TraceWebServletAutoConfiguration.class)
 @EnableFeignClients
 @EnableDiscoveryClient
 class Application {

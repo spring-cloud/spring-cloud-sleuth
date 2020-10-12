@@ -16,8 +16,6 @@
 
 package org.springframework.cloud.sleuth.brave.instrument.web.client;
 
-import java.util.function.Supplier;
-
 import brave.Span;
 import brave.propagation.B3Propagation;
 import brave.propagation.Propagation;
@@ -32,10 +30,10 @@ import org.springframework.cloud.sleuth.test.ReportedSpan;
 import org.springframework.cloud.sleuth.test.TestSpanHandler;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.test.context.ContextConfiguration;
 
-@SpringBootTest(classes = { ReactorNettyHttpClientSpringBootTests.Config.class,
-		org.springframework.cloud.sleuth.instrument.web.client.ReactorNettyHttpClientSpringBootTests.TestConfiguration.class },
-		webEnvironment = SpringBootTest.WebEnvironment.NONE)
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.NONE)
+@ContextConfiguration(classes = ReactorNettyHttpClientSpringBootTests.Config.class)
 public class ReactorNettyHttpClientSpringBootTests
 		extends org.springframework.cloud.sleuth.instrument.web.client.ReactorNettyHttpClientSpringBootTests {
 

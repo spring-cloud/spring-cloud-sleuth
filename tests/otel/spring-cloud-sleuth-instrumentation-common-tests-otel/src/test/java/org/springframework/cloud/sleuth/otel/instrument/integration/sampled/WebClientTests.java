@@ -22,16 +22,14 @@ import io.opentelemetry.sdk.trace.Samplers;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.cloud.sleuth.otel.ArrayListSpanProcessor;
 import org.springframework.cloud.sleuth.otel.OtelTestSpanHandler;
-import org.springframework.cloud.sleuth.test.TestSpanHandler;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.test.annotation.DirtiesContext;
+import org.springframework.test.context.ContextConfiguration;
 
-@SpringBootTest(classes = { WebClientTests.Config.class,
-		org.springframework.cloud.sleuth.instrument.web.client.integration.sampled.WebClientTests.TestConfiguration.class },
-		webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
-		properties = { "spring.application.name=fooservice", "spring.sleuth.web.client.skip-pattern=/skip.*" })
-@DirtiesContext
+import static org.springframework.boot.test.context.SpringBootTest.WebEnvironment.RANDOM_PORT;
+
+@SpringBootTest(webEnvironment = RANDOM_PORT)
+@ContextConfiguration(classes = WebClientTests.Config.class)
 public class WebClientTests
 		extends org.springframework.cloud.sleuth.instrument.web.client.integration.sampled.WebClientTests {
 
@@ -39,7 +37,7 @@ public class WebClientTests
 	static class Config {
 
 		@Bean
-		TestSpanHandler testSpanHandlerSupplier() {
+		OtelTestSpanHandler testSpanHandlerSupplier() {
 			return new OtelTestSpanHandler(new ArrayListSpanProcessor());
 		}
 

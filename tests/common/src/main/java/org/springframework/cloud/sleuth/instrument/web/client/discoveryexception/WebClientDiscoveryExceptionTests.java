@@ -29,7 +29,6 @@ import reactor.core.publisher.Flux;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.cloud.client.ServiceInstance;
 import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
 import org.springframework.cloud.client.loadbalancer.LoadBalanced;
@@ -41,21 +40,22 @@ import org.springframework.cloud.openfeign.EnableFeignClients;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.cloud.sleuth.api.Span;
 import org.springframework.cloud.sleuth.api.Tracer;
+import org.springframework.cloud.sleuth.instrument.web.TraceWebServletAutoConfiguration;
 import org.springframework.cloud.sleuth.test.TestSpanHandler;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.annotation.DirtiesContext;
+import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.client.RestTemplate;
 
 import static org.assertj.core.api.BDDAssertions.then;
-import static org.springframework.boot.test.context.SpringBootTest.WebEnvironment.RANDOM_PORT;
 
-@SpringBootTest(classes = { WebClientDiscoveryExceptionTests.TestConfiguration.class }, webEnvironment = RANDOM_PORT)
-@TestPropertySource(properties = { "spring.application.name=exceptionservice" })
+@ContextConfiguration(classes = WebClientDiscoveryExceptionTests.TestConfiguration.class)
+@TestPropertySource(properties = "spring.application.name=exceptionservice")
 @DirtiesContext
 public abstract class WebClientDiscoveryExceptionTests {
 
@@ -126,9 +126,8 @@ public abstract class WebClientDiscoveryExceptionTests {
 	}
 
 	@Configuration(proxyBeanMethods = false)
-	@EnableAutoConfiguration(
-			excludeName = "org.springframework.cloud.sleuth.brave.instrument.web.TraceWebServletAutoConfiguration",
-			exclude = { GatewayAutoConfiguration.class, GatewayClassPathWarningAutoConfiguration.class })
+	@EnableAutoConfiguration(exclude = { TraceWebServletAutoConfiguration.class, GatewayAutoConfiguration.class,
+			GatewayClassPathWarningAutoConfiguration.class })
 	@EnableDiscoveryClient
 	@EnableFeignClients
 	@LoadBalancerClient("exceptionservice")

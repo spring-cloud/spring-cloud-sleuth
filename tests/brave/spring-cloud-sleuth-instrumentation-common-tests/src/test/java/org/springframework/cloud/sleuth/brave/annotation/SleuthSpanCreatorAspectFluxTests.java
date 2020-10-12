@@ -16,8 +16,6 @@
 
 package org.springframework.cloud.sleuth.brave.annotation;
 
-import java.util.function.Supplier;
-
 import brave.sampler.Sampler;
 
 import org.springframework.boot.test.context.SpringBootTest;
@@ -27,9 +25,10 @@ import org.springframework.cloud.sleuth.brave.bridge.BraveTraceContext;
 import org.springframework.cloud.sleuth.test.TestSpanHandler;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.test.context.ContextConfiguration;
 
-@SpringBootTest(classes = { SleuthSpanCreatorAspectFluxTests.Config.class,
-		org.springframework.cloud.sleuth.annotation.SleuthSpanCreatorAspectFluxTests.TestConfiguration.class })
+@SpringBootTest
+@ContextConfiguration(classes = SleuthSpanCreatorAspectFluxTests.Config.class)
 public class SleuthSpanCreatorAspectFluxTests
 		extends org.springframework.cloud.sleuth.annotation.SleuthSpanCreatorAspectFluxTests {
 

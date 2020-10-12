@@ -22,15 +22,12 @@ import io.opentelemetry.sdk.trace.Samplers;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.cloud.sleuth.otel.ArrayListSpanProcessor;
 import org.springframework.cloud.sleuth.otel.OtelTestSpanHandler;
-import org.springframework.cloud.sleuth.test.TestSpanHandler;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.test.context.ContextConfiguration;
 
-@SpringBootTest(classes = { IgnoreAutoConfiguredSkipPatternsIntegrationTests.Config.class,
-		org.springframework.cloud.sleuth.instrument.web.IgnoreAutoConfiguredSkipPatternsIntegrationTests.TestConfig.class },
-		webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
-		properties = { "management.endpoints.web.exposure.include:*", "server.servlet.context-path:/context-path",
-				"spring.sleuth.web.ignoreAutoConfiguredSkipPatterns:true" })
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@ContextConfiguration(classes = IgnoreAutoConfiguredSkipPatternsIntegrationTests.Config.class)
 public class IgnoreAutoConfiguredSkipPatternsIntegrationTests
 		extends org.springframework.cloud.sleuth.instrument.web.IgnoreAutoConfiguredSkipPatternsIntegrationTests {
 
@@ -38,18 +35,13 @@ public class IgnoreAutoConfiguredSkipPatternsIntegrationTests
 	static class Config {
 
 		@Bean
-		TestSpanHandler testSpanHandlerSupplier(ArrayListSpanProcessor spanProcessor) {
-			return new OtelTestSpanHandler(spanProcessor);
+		OtelTestSpanHandler testSpanHandlerSupplier() {
+			return new OtelTestSpanHandler(new ArrayListSpanProcessor());
 		}
 
 		@Bean
 		Sampler alwaysSampler() {
 			return Samplers.alwaysOn();
-		}
-
-		@Bean
-		ArrayListSpanProcessor spanProcessor() {
-			return new ArrayListSpanProcessor();
 		}
 
 	}

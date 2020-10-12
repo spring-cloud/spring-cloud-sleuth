@@ -16,8 +16,6 @@
 
 package org.springframework.cloud.sleuth.otel.annotation;
 
-import java.util.function.Supplier;
-
 import io.opentelemetry.sdk.trace.Sampler;
 import io.opentelemetry.sdk.trace.Samplers;
 
@@ -27,9 +25,10 @@ import org.springframework.cloud.sleuth.otel.OtelTestSpanHandler;
 import org.springframework.cloud.sleuth.test.TestSpanHandler;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.test.context.ContextConfiguration;
 
-@SpringBootTest(classes = { SleuthSpanCreatorAspectNegativeTests.Config.class,
-		org.springframework.cloud.sleuth.annotation.SleuthSpanCreatorAspectNegativeTests.TestConfiguration.class })
+@SpringBootTest
+@ContextConfiguration(classes = SleuthSpanCreatorAspectNegativeTests.Config.class)
 public class SleuthSpanCreatorAspectNegativeTests
 		extends org.springframework.cloud.sleuth.annotation.SleuthSpanCreatorAspectNegativeTests {
 
@@ -37,7 +36,7 @@ public class SleuthSpanCreatorAspectNegativeTests
 	static class Config {
 
 		@Bean
-		TestSpanHandler testSpanHandlerSupplier() {
+		OtelTestSpanHandler testSpanHandlerSupplier() {
 			return new OtelTestSpanHandler(new ArrayListSpanProcessor());
 		}
 

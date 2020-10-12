@@ -34,7 +34,6 @@ import reactor.util.context.Context;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.cloud.gateway.config.GatewayAutoConfiguration;
 import org.springframework.cloud.gateway.config.GatewayClassPathWarningAutoConfiguration;
 import org.springframework.cloud.sleuth.api.CurrentTraceContext;
@@ -45,12 +44,13 @@ import org.springframework.cloud.sleuth.test.ReportedSpan;
 import org.springframework.cloud.sleuth.test.TestSpanHandler;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.test.context.ContextConfiguration;
 
 import static org.assertj.core.api.BDDAssertions.then;
 import static org.springframework.cloud.sleuth.annotation.SleuthSpanCreatorAspectFluxTests.TestBean.TEST_STRING1;
 import static org.springframework.cloud.sleuth.annotation.SleuthSpanCreatorAspectFluxTests.TestBean.TEST_STRING2;
 
-@SpringBootTest(classes = SleuthSpanCreatorAspectFluxTests.TestConfiguration.class)
+@ContextConfiguration(classes = SleuthSpanCreatorAspectFluxTests.TestConfiguration.class)
 public abstract class SleuthSpanCreatorAspectFluxTests {
 
 	@Autowired

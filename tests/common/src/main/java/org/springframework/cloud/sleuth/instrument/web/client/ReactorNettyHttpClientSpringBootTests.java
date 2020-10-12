@@ -30,7 +30,6 @@ import reactor.netty.http.server.HttpServer;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.cloud.gateway.config.GatewayAutoConfiguration;
 import org.springframework.cloud.gateway.config.GatewayClassPathWarningAutoConfiguration;
 import org.springframework.cloud.sleuth.api.CurrentTraceContext;
@@ -40,6 +39,7 @@ import org.springframework.cloud.sleuth.test.ReportedSpan;
 import org.springframework.cloud.sleuth.test.TestSpanHandler;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.test.context.ContextConfiguration;
 import org.springframework.web.reactive.function.client.WebClient;
 
 /**
@@ -51,8 +51,7 @@ import org.springframework.web.reactive.function.client.WebClient;
  * care should be taken to also test that integration. For example, it would be easy to
  * create duplicate client spans for the same request.
  */
-@SpringBootTest(classes = ReactorNettyHttpClientSpringBootTests.TestConfiguration.class,
-		webEnvironment = SpringBootTest.WebEnvironment.NONE)
+@ContextConfiguration(classes = ReactorNettyHttpClientSpringBootTests.TestConfiguration.class)
 public abstract class ReactorNettyHttpClientSpringBootTests {
 
 	DisposableServer disposableServer;

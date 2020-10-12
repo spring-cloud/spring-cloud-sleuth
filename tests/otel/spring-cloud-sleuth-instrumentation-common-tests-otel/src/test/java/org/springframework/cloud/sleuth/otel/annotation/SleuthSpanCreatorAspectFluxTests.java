@@ -32,9 +32,10 @@ import org.springframework.cloud.sleuth.otel.bridge.OtelTraceContext;
 import org.springframework.cloud.sleuth.test.TestSpanHandler;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.test.context.ContextConfiguration;
 
-@SpringBootTest(classes = { SleuthSpanCreatorAspectFluxTests.Config.class,
-		org.springframework.cloud.sleuth.annotation.SleuthSpanCreatorAspectFluxTests.TestConfiguration.class })
+@SpringBootTest
+@ContextConfiguration(classes = SleuthSpanCreatorAspectFluxTests.Config.class)
 public class SleuthSpanCreatorAspectFluxTests
 		extends org.springframework.cloud.sleuth.annotation.SleuthSpanCreatorAspectFluxTests {
 
@@ -48,7 +49,7 @@ public class SleuthSpanCreatorAspectFluxTests
 	static class Config {
 
 		@Bean
-		TestSpanHandler testSpanHandlerSupplier() {
+		OtelTestSpanHandler testSpanHandlerSupplier() {
 			return new OtelTestSpanHandler(new ArrayListSpanProcessor());
 		}
 

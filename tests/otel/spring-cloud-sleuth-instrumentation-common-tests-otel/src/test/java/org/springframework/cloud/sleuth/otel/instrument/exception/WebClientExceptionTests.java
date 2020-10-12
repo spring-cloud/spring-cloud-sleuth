@@ -37,7 +37,7 @@ public class WebClientExceptionTests
 	static class Config {
 
 		@Bean
-		TestSpanHandler testSpanHandlerSupplier() {
+		OtelTestSpanHandler testSpanHandlerSupplier() {
 			return new OtelTestSpanHandler(new ArrayListSpanProcessor());
 		}
 

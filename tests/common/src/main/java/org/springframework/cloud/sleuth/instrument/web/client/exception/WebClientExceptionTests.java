@@ -28,7 +28,6 @@ import org.junit.jupiter.params.provider.MethodSource;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.cloud.client.loadbalancer.LoadBalanced;
 import org.springframework.cloud.gateway.config.GatewayAutoConfiguration;
 import org.springframework.cloud.gateway.config.GatewayClassPathWarningAutoConfiguration;
@@ -44,6 +43,8 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.core.env.Environment;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.client.SimpleClientHttpRequestFactory;
+import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.TestPropertySource;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.client.RestTemplate;
@@ -51,9 +52,8 @@ import org.springframework.web.client.RestTemplate;
 import static org.assertj.core.api.Assertions.fail;
 import static org.assertj.core.api.BDDAssertions.then;
 
-@SpringBootTest(classes = { WebClientExceptionTests.TestConfiguration.class },
-		properties = { "spring.application.name=exceptionservice" },
-		webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@ContextConfiguration(classes = WebClientExceptionTests.TestConfiguration.class)
+@TestPropertySource(properties = "spring.application.name=exceptionservice")
 public class WebClientExceptionTests {
 
 	private static final Log log = LogFactory.getLog(WebClientExceptionTests.class);

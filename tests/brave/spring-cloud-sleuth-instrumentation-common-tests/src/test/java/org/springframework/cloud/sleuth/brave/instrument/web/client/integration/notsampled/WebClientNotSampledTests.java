@@ -28,15 +28,13 @@ import org.springframework.cloud.sleuth.test.TestSpanHandler;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.ResponseEntity;
-import org.springframework.test.annotation.DirtiesContext;
+import org.springframework.test.context.ContextConfiguration;
 
 import static org.assertj.core.api.BDDAssertions.then;
+import static org.springframework.boot.test.context.SpringBootTest.WebEnvironment.RANDOM_PORT;
 
-@SpringBootTest(classes = { WebClientNotSampledTests.Config.class,
-		org.springframework.cloud.sleuth.instrument.web.client.integration.notsampled.WebClientNotSampledTests.TestConfiguration.class },
-		webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
-		properties = { "spring.application.name=fooservice", "spring.sleuth.web.client.skip-pattern=/skip.*" })
-@DirtiesContext
+@SpringBootTest(webEnvironment = RANDOM_PORT)
+@ContextConfiguration(classes = WebClientNotSampledTests.Config.class)
 public class WebClientNotSampledTests
 		extends org.springframework.cloud.sleuth.instrument.web.client.integration.notsampled.WebClientNotSampledTests {
 

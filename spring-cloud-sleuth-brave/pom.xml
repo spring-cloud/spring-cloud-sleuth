@@ -228,10 +228,6 @@
 		</dependency>
 		<dependency>
 			<groupId>io.zipkin.brave</groupId>
-			<artifactId>brave-instrumentation-spring-web</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>io.zipkin.brave</groupId>
 			<artifactId>brave-instrumentation-spring-rabbit</artifactId>
 		</dependency>
 		<dependency>
@@ -249,10 +245,6 @@
 		<dependency>
 			<groupId>io.zipkin.brave</groupId>
 			<artifactId>brave-instrumentation-httpasyncclient</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>io.zipkin.brave</groupId>
-			<artifactId>brave-instrumentation-spring-webmvc</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>io.zipkin.brave</groupId>

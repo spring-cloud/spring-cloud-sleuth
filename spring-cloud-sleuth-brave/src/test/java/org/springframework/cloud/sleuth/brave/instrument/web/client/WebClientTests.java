@@ -44,6 +44,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.web.server.LocalServerPort;
 import org.springframework.cloud.gateway.config.GatewayAutoConfiguration;
 import org.springframework.cloud.gateway.config.GatewayClassPathWarningAutoConfiguration;
+import org.springframework.cloud.sleuth.instrument.web.TraceWebServletAutoConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpHeaders;
@@ -141,9 +142,8 @@ public class WebClientTests {
 	}
 
 	@Configuration(proxyBeanMethods = false)
-	@EnableAutoConfiguration(
-			excludeName = "org.springframework.cloud.sleuth.brave.instrument.web.TraceWebServletAutoConfiguration",
-			exclude = { GatewayClassPathWarningAutoConfiguration.class, GatewayAutoConfiguration.class })
+	@EnableAutoConfiguration(exclude = { TraceWebServletAutoConfiguration.class,
+			GatewayClassPathWarningAutoConfiguration.class, GatewayAutoConfiguration.class })
 	public static class TestConfiguration {
 
 		@Bean

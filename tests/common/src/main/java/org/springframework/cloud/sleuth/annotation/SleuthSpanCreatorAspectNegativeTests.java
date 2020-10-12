@@ -22,14 +22,14 @@ import org.junit.jupiter.api.Test;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.cloud.gateway.config.GatewayAutoConfiguration;
 import org.springframework.cloud.gateway.config.GatewayClassPathWarningAutoConfiguration;
 import org.springframework.cloud.sleuth.test.TestSpanHandler;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.test.context.ContextConfiguration;
 
-@SpringBootTest(classes = SleuthSpanCreatorAspectNegativeTests.TestConfiguration.class)
+@ContextConfiguration(classes = SleuthSpanCreatorAspectNegativeTests.TestConfiguration.class)
 public abstract class SleuthSpanCreatorAspectNegativeTests {
 
 	@Autowired

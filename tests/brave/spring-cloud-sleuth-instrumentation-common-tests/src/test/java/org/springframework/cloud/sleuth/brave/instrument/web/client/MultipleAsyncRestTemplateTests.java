@@ -23,17 +23,13 @@ import org.springframework.cloud.sleuth.brave.BraveTestSpanHandler;
 import org.springframework.cloud.sleuth.test.TestSpanHandler;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.test.annotation.DirtiesContext;
+import org.springframework.test.context.ContextConfiguration;
 
 /**
  * @author Marcin Grzejszczak
  */
-@SpringBootTest(classes = { MultipleAsyncRestTemplateTests.Config.class,
-		org.springframework.cloud.sleuth.instrument.web.client.MultipleAsyncRestTemplateTests.TestConfig.class,
-		org.springframework.cloud.sleuth.instrument.web.client.MultipleAsyncRestTemplateTests.CustomExecutorConfig.class,
-		org.springframework.cloud.sleuth.instrument.web.client.MultipleAsyncRestTemplateTests.ControllerConfig.class },
-		webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-@DirtiesContext
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@ContextConfiguration(classes = MultipleAsyncRestTemplateTests.Config.class)
 public class MultipleAsyncRestTemplateTests
 		extends org.springframework.cloud.sleuth.instrument.web.client.MultipleAsyncRestTemplateTests {
 

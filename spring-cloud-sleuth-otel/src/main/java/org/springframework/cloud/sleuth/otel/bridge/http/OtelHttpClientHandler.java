@@ -22,13 +22,18 @@ import java.net.URISyntaxException;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.context.propagation.TextMapPropagator;
 import io.opentelemetry.instrumentation.api.tracer.HttpClientTracer;
+import io.opentelemetry.trace.DefaultSpan;
 import io.opentelemetry.trace.Tracer;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
+import org.springframework.cloud.sleuth.api.SamplerFunction;
 import org.springframework.cloud.sleuth.api.Span;
 import org.springframework.cloud.sleuth.api.TraceContext;
 import org.springframework.cloud.sleuth.api.http.HttpClientHandler;
 import org.springframework.cloud.sleuth.api.http.HttpClientRequest;
 import org.springframework.cloud.sleuth.api.http.HttpClientResponse;
+import org.springframework.cloud.sleuth.api.http.HttpRequest;
 import org.springframework.cloud.sleuth.api.http.HttpRequestParser;
 import org.springframework.cloud.sleuth.api.http.HttpResponseParser;
 import org.springframework.cloud.sleuth.otel.bridge.OtelSpan;
@@ -38,25 +43,39 @@ import org.springframework.lang.Nullable;
 public class OtelHttpClientHandler extends HttpClientTracer<HttpClientRequest, HttpClientRequest, HttpClientResponse>
 		implements HttpClientHandler {
 
+	private static final Log log = LogFactory.getLog(OtelHttpClientHandler.class);
+
 	private final HttpRequestParser httpClientRequestParser;
 
 	private final HttpResponseParser httpClientResponseParser;
 
+	private final SamplerFunction<HttpRequest> samplerFunction;
+
 	public OtelHttpClientHandler(Tracer tracer, @Nullable HttpRequestParser httpClientRequestParser,
-			@Nullable HttpResponseParser httpClientResponseParser) {
+			@Nullable HttpResponseParser httpClientResponseParser, SamplerFunction<HttpRequest> samplerFunction) {
 		super(tracer);
 		this.httpClientRequestParser = httpClientRequestParser;
 		this.httpClientResponseParser = httpClientResponseParser;
+		this.samplerFunction = samplerFunction;
 	}
 
 	@Override
 	public Span handleSend(HttpClientRequest request) {
+		if (Boolean.FALSE.equals(this.samplerFunction.trySample(request))) {
+			return OtelSpan.fromOtel(DefaultSpan.getInvalid());
+		}
 		io.opentelemetry.trace.Span span = startSpan(request);
 		return span(request, span);
 	}
 
 	@Override
 	public Span handleSendWithParent(HttpClientRequest request, TraceContext parent) {
+		if (Boolean.FALSE.equals(this.samplerFunction.trySample(request))) {
+			if (log.isDebugEnabled()) {
+				log.debug("Returning an invalid span since url [" + request.path() + "] is on a list of urls to skip");
+			}
+			return OtelSpan.fromOtel(DefaultSpan.getInvalid());
+		}
 		io.opentelemetry.trace.Span span = parent != null ? ((OtelTraceContext) parent).span() : null;
 		if (span == null) {
 			return span(request, startSpan(request));
@@ -81,6 +100,10 @@ public class OtelHttpClientHandler extends HttpClientTracer<HttpClientRequest, H
 			Span fromOtel = OtelSpan.fromOtel(afterRequest);
 			this.httpClientRequestParser.parse(httpClientRequest, fromOtel.context(), fromOtel.customizer());
 		}
+		String path = httpClientRequest.path();
+		if (path != null) {
+			span.setAttribute("http.path", path);
+		}
 		return afterRequest;
 	}
 
@@ -103,11 +126,23 @@ public class OtelHttpClientHandler extends HttpClientTracer<HttpClientRequest, H
 
 	@Override
 	public void handleReceive(HttpClientResponse response, Span span) {
+		if (OtelSpan.toOtel(span).equals(DefaultSpan.getInvalid())) {
+			if (log.isDebugEnabled()) {
+				log.debug("Not doing anything cause the span is invalid");
+			}
+			return;
+		}
 		io.opentelemetry.trace.Span otel = OtelSpan.toOtel(span);
 		if (response.error() != null) {
+			if (log.isDebugEnabled()) {
+				log.debug("There was an error, will finish span [" + otel + "] exceptionally");
+			}
 			endExceptionally(otel, response, response.error());
 		}
 		else {
+			if (log.isDebugEnabled()) {
+				log.debug("There was no error, will finish span [" + otel + "] in a standard way");
+			}
 			end(otel, response);
 		}
 	}

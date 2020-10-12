@@ -29,6 +29,7 @@ import io.opentelemetry.sdk.trace.TracerSdkProvider;
 import io.opentelemetry.sdk.trace.config.TraceConfig;
 
 import org.springframework.cloud.sleuth.api.CurrentTraceContext;
+import org.springframework.cloud.sleuth.api.SamplerFunction;
 import org.springframework.cloud.sleuth.api.Tracer;
 import org.springframework.cloud.sleuth.api.http.HttpClientHandler;
 import org.springframework.cloud.sleuth.api.http.HttpRequestParser;
@@ -140,7 +141,7 @@ public class OtelTestTracing implements TracerAware, TestTracingAware, TestTraci
 	@Override
 	public HttpClientHandler httpClientHandler() {
 		reset();
-		return new OtelHttpClientHandler(this.tracer, this.clientRequestParser, null);
+		return new OtelHttpClientHandler(this.tracer, this.clientRequestParser, null, SamplerFunction.alwaysSample());
 	}
 
 }

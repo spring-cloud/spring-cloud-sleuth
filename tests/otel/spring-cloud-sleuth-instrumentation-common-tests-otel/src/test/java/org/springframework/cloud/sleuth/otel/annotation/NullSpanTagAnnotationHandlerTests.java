@@ -25,9 +25,10 @@ import org.springframework.cloud.sleuth.otel.OtelTestSpanHandler;
 import org.springframework.cloud.sleuth.test.TestSpanHandler;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.test.context.ContextConfiguration;
 
-@SpringBootTest(classes = { NullSpanTagAnnotationHandlerTests.Config.class,
-		org.springframework.cloud.sleuth.annotation.NullSpanTagAnnotationHandlerTests.TestConfiguration.class })
+@SpringBootTest
+@ContextConfiguration(classes = NullSpanTagAnnotationHandlerTests.Config.class)
 public class NullSpanTagAnnotationHandlerTests
 		extends org.springframework.cloud.sleuth.annotation.NullSpanTagAnnotationHandlerTests {
 
@@ -35,7 +36,7 @@ public class NullSpanTagAnnotationHandlerTests
 	static class Config {
 
 		@Bean
-		TestSpanHandler testSpanHandlerSupplier() {
+		OtelTestSpanHandler testSpanHandlerSupplier() {
 			return new OtelTestSpanHandler(new ArrayListSpanProcessor());
 		}
 

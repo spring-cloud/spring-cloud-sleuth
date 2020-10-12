@@ -24,11 +24,11 @@ import org.junit.jupiter.api.Test;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.cloud.circuitbreaker.resilience4j.Resilience4JCircuitBreakerFactory;
 import org.springframework.cloud.client.circuitbreaker.CircuitBreakerFactory;
 import org.springframework.cloud.gateway.config.GatewayAutoConfiguration;
 import org.springframework.cloud.gateway.config.GatewayClassPathWarningAutoConfiguration;
+import org.springframework.cloud.gateway.config.GatewayMetricsAutoConfiguration;
 import org.springframework.cloud.sleuth.api.ScopedSpan;
 import org.springframework.cloud.sleuth.api.Span;
 import org.springframework.cloud.sleuth.api.Tracer;
@@ -36,8 +36,9 @@ import org.springframework.cloud.sleuth.test.ReportedSpan;
 import org.springframework.cloud.sleuth.test.TestSpanHandler;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.test.context.ContextConfiguration;
 
-@SpringBootTest(classes = CircuitBreakerIntegrationTests.TestConfig.class)
+@ContextConfiguration(classes = CircuitBreakerIntegrationTests.TestConfig.class)
 public abstract class CircuitBreakerIntegrationTests {
 
 	@Autowired
@@ -112,8 +113,8 @@ public abstract class CircuitBreakerIntegrationTests {
 	public abstract void assertException(ReportedSpan reportedSpan);
 
 	@Configuration(proxyBeanMethods = false)
-	@EnableAutoConfiguration(
-			exclude = { GatewayClassPathWarningAutoConfiguration.class, GatewayAutoConfiguration.class })
+	@EnableAutoConfiguration(exclude = { GatewayMetricsAutoConfiguration.class,
+			GatewayClassPathWarningAutoConfiguration.class, GatewayAutoConfiguration.class })
 	public static class TestConfig {
 
 		@Bean

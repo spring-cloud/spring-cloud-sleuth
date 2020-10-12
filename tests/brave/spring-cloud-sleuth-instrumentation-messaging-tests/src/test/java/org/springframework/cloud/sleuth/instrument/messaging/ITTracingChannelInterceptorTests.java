@@ -24,7 +24,6 @@ import javax.annotation.PreDestroy;
 import brave.Span;
 import brave.Tracer;
 import brave.Tracing;
-import brave.handler.SpanHandler;
 import brave.propagation.StrictCurrentTraceContext;
 import brave.test.TestSpanHandler;
 import org.junit.jupiter.api.AfterEach;
@@ -136,7 +135,7 @@ public class ITTracingChannelInterceptorTests implements MessageHandler {
 		ExecutorService service = Executors.newSingleThreadExecutor();
 
 		@Bean
-		SpanHandler testSpanHandler() {
+		TestSpanHandler testSpanHandler() {
 			return new TestSpanHandler();
 		}
 
@@ -146,14 +145,13 @@ public class ITTracingChannelInterceptorTests implements MessageHandler {
 		}
 
 		@Bean
-		Tracing tracing() {
-			return Tracing.newBuilder().currentTraceContext(currentTraceContext()).addSpanHandler(testSpanHandler())
-					.build();
+		Tracing tracing(StrictCurrentTraceContext currentTraceContext, TestSpanHandler spanHandler) {
+			return Tracing.newBuilder().currentTraceContext(currentTraceContext).addSpanHandler(spanHandler).build();
 		}
 
 		@Bean
-		Tracer tracer() {
-			return tracing().tracer();
+		Tracer tracer(Tracing tracing) {
+			return tracing.tracer();
 		}
 
 		@Bean
@@ -172,8 +170,8 @@ public class ITTracingChannelInterceptorTests implements MessageHandler {
 		}
 
 		@Bean
-		public MessagingTemplate messagingTemplate() {
-			return new MessagingTemplate(directChannel());
+		public MessagingTemplate messagingTemplate(DirectChannel directChannel) {
+			return new MessagingTemplate(directChannel);
 		}
 
 	}

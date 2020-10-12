@@ -77,6 +77,22 @@ public interface SamplerFunction<T> {
 		return (SamplerFunction<T>) Constants.NEVER_SAMPLE;
 	}
 
+	/**
+	 * Ignores the argument and returns false. This means it will never start new traces.
+	 *
+	 * <p>
+	 * For example, you may wish to only capture traces if they originated from an inbound
+	 * server request. Such a policy would filter out client requests made during
+	 * bootstrap.
+	 *
+	 * @since 5.8
+	 */
+	// using a method instead of exposing a constant allows this to be used for any
+	// argument type
+	static <T> SamplerFunction<T> alwaysSample() {
+		return (SamplerFunction<T>) Constants.ALWAYS_SAMPLE;
+	}
+
 	enum Constants implements SamplerFunction<Object> {
 
 		DEFER_DECISION {
@@ -101,6 +117,18 @@ public interface SamplerFunction<T> {
 			@Override
 			public String toString() {
 				return "NeverSample";
+			}
+		},
+		ALWAYS_SAMPLE {
+			@Override
+			@Nullable
+			public Boolean trySample(Object request) {
+				return true;
+			}
+
+			@Override
+			public String toString() {
+				return "AlwaysSample";
 			}
 		}
 

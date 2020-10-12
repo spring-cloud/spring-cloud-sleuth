@@ -25,16 +25,12 @@ import org.springframework.cloud.sleuth.otel.OtelTestSpanHandler;
 import org.springframework.cloud.sleuth.test.TestSpanHandler;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.test.annotation.DirtiesContext;
-import org.springframework.test.context.TestPropertySource;
+import org.springframework.test.context.ContextConfiguration;
 
 import static org.springframework.boot.test.context.SpringBootTest.WebEnvironment.RANDOM_PORT;
 
-@SpringBootTest(classes = { WebClientDiscoveryExceptionTests.Config.class,
-		org.springframework.cloud.sleuth.instrument.web.client.discoveryexception.WebClientDiscoveryExceptionTests.TestConfiguration.class },
-		webEnvironment = RANDOM_PORT)
-@TestPropertySource(properties = { "spring.application.name=exceptionservice" })
-@DirtiesContext
+@SpringBootTest(webEnvironment = RANDOM_PORT)
+@ContextConfiguration(classes = WebClientDiscoveryExceptionTests.Config.class)
 public class WebClientDiscoveryExceptionTests extends
 		org.springframework.cloud.sleuth.instrument.web.client.discoveryexception.WebClientDiscoveryExceptionTests {
 
@@ -42,7 +38,7 @@ public class WebClientDiscoveryExceptionTests extends
 	static class Config {
 
 		@Bean
-		TestSpanHandler testSpanHandlerSupplier() {
+		OtelTestSpanHandler testSpanHandlerSupplier() {
 			return new OtelTestSpanHandler(new ArrayListSpanProcessor());
 		}
 

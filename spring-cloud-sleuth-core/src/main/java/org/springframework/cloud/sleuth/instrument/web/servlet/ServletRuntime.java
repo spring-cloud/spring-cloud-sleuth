@@ -120,7 +120,8 @@ abstract class ServletRuntime {
 				HttpServletRequest req = (HttpServletRequest) e.getSuppliedRequest();
 				// Use package-private attribute to check if this hook was called
 				// redundantly
-				Object sendHandled = req.getAttribute("brave.servlet.TracingFilter$SendHandled");
+				Object sendHandled = req.getAttribute(
+						"org.springframework.cloud.sleuth.instrument.web.servlet.TracingFilter$SendHandled");
 				if (sendHandled instanceof AtomicBoolean && ((AtomicBoolean) sendHandled).compareAndSet(false, true)) {
 					HttpServletResponse res = (HttpServletResponse) e.getSuppliedResponse();
 

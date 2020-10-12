@@ -43,9 +43,9 @@ import reactor.core.publisher.BaseSubscriber;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
+import org.springframework.boot.autoconfigure.quartz.QuartzAutoConfiguration;
 import org.springframework.boot.autoconfigure.web.ServerProperties;
 import org.springframework.boot.autoconfigure.web.servlet.error.BasicErrorController;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.boot.web.client.RestTemplateCustomizer;
 import org.springframework.boot.web.server.LocalServerPort;
@@ -60,6 +60,7 @@ import org.springframework.cloud.openfeign.EnableFeignClients;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.cloud.sleuth.api.Span;
 import org.springframework.cloud.sleuth.api.Tracer;
+import org.springframework.cloud.sleuth.instrument.web.TraceWebServletAutoConfiguration;
 import org.springframework.cloud.sleuth.test.ReportedSpan;
 import org.springframework.cloud.sleuth.test.TestSpanHandler;
 import org.springframework.context.annotation.Bean;
@@ -68,6 +69,8 @@ import org.springframework.core.env.Environment;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.annotation.DirtiesContext;
+import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.TestPropertySource;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -80,8 +83,8 @@ import org.springframework.web.reactive.function.client.WebClient;
 import static org.assertj.core.api.Assertions.fail;
 import static org.assertj.core.api.BDDAssertions.then;
 
-@SpringBootTest(classes = WebClientTests.TestConfiguration.class,
-		webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
+@ContextConfiguration(classes = WebClientTests.TestConfiguration.class)
+@TestPropertySource(
 		properties = { "spring.application.name=fooservice", "spring.sleuth.web.client.skip-pattern=/skip.*" })
 @DirtiesContext
 public abstract class WebClientTests {
@@ -139,8 +142,9 @@ public abstract class WebClientTests {
 		Awaitility.await().atMost(2, TimeUnit.SECONDS).untilAsserted(() -> {
 			then(getHeader(response, "b3")).isNull();
 			then(this.spans).isNotEmpty();
-			Optional<ReportedSpan> noTraceSpan = this.spans.reportedSpans().stream().filter(
-					span -> "GET".equals(span.name()) && !span.tags().isEmpty() && span.tags().containsKey("http.path"))
+			Optional<ReportedSpan> noTraceSpan = this.spans.reportedSpans().stream()
+					.filter(span -> span.name().contains("GET") && !span.tags().isEmpty()
+							&& span.tags().containsKey("http.path"))
 					.findFirst();
 			then(noTraceSpan.isPresent()).isTrue();
 			then(noTraceSpan.get().tags()).containsEntry("http.path", "/notrace").containsEntry("http.method", "GET");
@@ -258,11 +262,11 @@ public abstract class WebClientTests {
 	@Test
 	public void shouldRespectSkipPattern() {
 		this.webClient.get().uri("http://localhost:" + this.port + "/skip").retrieve().bodyToMono(String.class)
-				.block(Duration.ofMillis(100));
+				.block(Duration.ofSeconds(1));
 		then(this.spans).isEmpty();
 
 		this.webClient.get().uri("http://localhost:" + this.port + "/doNotSkip").retrieve().bodyToMono(String.class)
-				.block(Duration.ofMillis(100));
+				.block(Duration.ofSeconds(1));
 		then(this.spans).isNotEmpty();
 	}
 
@@ -394,9 +398,9 @@ public abstract class WebClientTests {
 	}
 
 	@Configuration(proxyBeanMethods = false)
-	@EnableAutoConfiguration(
-			excludeName = "org.springframework.cloud.sleuth.brave.instrument.web.TraceWebServletAutoConfiguration",
-			exclude = { GatewayClassPathWarningAutoConfiguration.class, GatewayAutoConfiguration.class, GatewayMetricsAutoConfiguration.class})
+	@EnableAutoConfiguration(exclude = { TraceWebServletAutoConfiguration.class,
+			GatewayClassPathWarningAutoConfiguration.class, GatewayAutoConfiguration.class,
+			GatewayMetricsAutoConfiguration.class, QuartzAutoConfiguration.class })
 	@EnableFeignClients
 	@LoadBalancerClient(value = "fooservice", configuration = SimpleLoadBalancerClientConfiguration.class)
 	public static class TestConfiguration {
@@ -529,7 +533,6 @@ public abstract class WebClientTests {
 
 		@RequestMapping(value = "/issue1462", method = RequestMethod.GET)
 		public ResponseEntity<String> issue1462() {
-			System.out.println("GOT IT");
 			return ResponseEntity.status(499).body("issue1462");
 		}
 

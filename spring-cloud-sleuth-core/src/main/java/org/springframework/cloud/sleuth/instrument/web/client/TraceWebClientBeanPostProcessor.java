@@ -20,11 +20,9 @@ import java.util.List;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
-import java.util.function.Function;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.reactivestreams.Publisher;
 import org.reactivestreams.Subscription;
 import reactor.core.CoreSubscriber;
 import reactor.core.publisher.Mono;
@@ -38,9 +36,7 @@ import org.springframework.cloud.sleuth.api.TraceContext;
 import org.springframework.cloud.sleuth.api.http.HttpClientHandler;
 import org.springframework.cloud.sleuth.api.http.HttpClientRequest;
 import org.springframework.cloud.sleuth.api.http.HttpClientResponse;
-import org.springframework.cloud.sleuth.instrument.reactor.ReactorSleuth;
 import org.springframework.context.ConfigurableApplicationContext;
-import org.springframework.core.io.buffer.DataBuffer;
 import org.springframework.web.reactive.function.client.ClientRequest;
 import org.springframework.web.reactive.function.client.ClientResponse;
 import org.springframework.web.reactive.function.client.ExchangeFilterFunction;
@@ -110,8 +106,6 @@ final class TraceExchangeFilterFunction implements ExchangeFilterFunction {
 
 	final ConfigurableApplicationContext springContext;
 
-	final Function<? super Publisher<DataBuffer>, ? extends Publisher<DataBuffer>> scopePassingTransformer;
-
 	// Lazy initialized fields
 	HttpClientHandler handler;
 
@@ -119,7 +113,6 @@ final class TraceExchangeFilterFunction implements ExchangeFilterFunction {
 
 	TraceExchangeFilterFunction(ConfigurableApplicationContext springContext) {
 		this.springContext = springContext;
-		this.scopePassingTransformer = ReactorSleuth.scopePassingSpanOperator(springContext);
 	}
 
 	public static ExchangeFilterFunction create(ConfigurableApplicationContext springContext) {
@@ -168,11 +161,11 @@ final class TraceExchangeFilterFunction implements ExchangeFilterFunction {
 			if (log.isTraceEnabled()) {
 				log.trace("Got the following context [" + context + "]");
 			}
-			ClientRequestWrapper wrapper = new ClientRequestWrapper(request);
+			ClientRequestWrapper wrapper = new ClientRequestWrapper(this.request);
 			TraceContext parent = context.hasKey(TraceContext.class) ? context.get(TraceContext.class) : null;
 			Span span = handler.handleSendWithParent(wrapper, parent);
-			if (log.isDebugEnabled()) {
-				log.debug("HttpClientHandler::handleSend: " + span);
+			if (log.isTraceEnabled()) {
+				log.trace("HttpClientHandler::handleSend: " + span);
 			}
 			// NOTE: We are starting the client span for the request here, but it could be
 			// canceled prior to actually being invoked. TraceWebClientSubscription will
@@ -215,13 +208,19 @@ final class TraceExchangeFilterFunction implements ExchangeFilterFunction {
 
 		@Override
 		public void onNext(ClientResponse response) {
-			try (CurrentTraceContext.Scope scope = currentTraceContext.maybeScope(parent)) {
+			try (CurrentTraceContext.Scope scope = this.currentTraceContext.maybeScope(parent)) {
+				if (log.isTraceEnabled()) {
+					log.trace("OnNext");
+				}
 				// decorate response body
 				this.actual.onNext(response);
 			}
 			finally {
 				Span span = getAndSet(null);
 				if (span != null) {
+					if (log.isTraceEnabled()) {
+						log.trace("OnNext finally");
+					}
 					// TODO: is there a way to read the request at response time?
 					this.handler.handleReceive(new ClientResponseWrapper(response), span);
 				}
@@ -230,12 +229,18 @@ final class TraceExchangeFilterFunction implements ExchangeFilterFunction {
 
 		@Override
 		public void onError(Throwable t) {
-			try (CurrentTraceContext.Scope scope = currentTraceContext.maybeScope(parent)) {
+			try (CurrentTraceContext.Scope scope = this.currentTraceContext.maybeScope(parent)) {
+				if (log.isTraceEnabled()) {
+					log.trace("OnError");
+				}
 				this.actual.onError(t);
 			}
 			finally {
 				Span span = getAndSet(null);
 				if (span != null) {
+					if (log.isTraceEnabled()) {
+						log.trace("OnError finally");
+					}
 					span.error(t);
 					span.finish();
 				}
@@ -244,7 +249,10 @@ final class TraceExchangeFilterFunction implements ExchangeFilterFunction {
 
 		@Override
 		public void onComplete() {
-			try (CurrentTraceContext.Scope scope = currentTraceContext.maybeScope(parent)) {
+			try (CurrentTraceContext.Scope scope = this.currentTraceContext.maybeScope(parent)) {
+				if (log.isTraceEnabled()) {
+					log.trace("OnComplete");
+				}
 				this.actual.onComplete();
 			}
 			finally {
@@ -252,8 +260,8 @@ final class TraceExchangeFilterFunction implements ExchangeFilterFunction {
 				if (span != null) {
 					// TODO: backfill empty test:
 					// https://github.com/spring-cloud/spring-cloud-sleuth/issues/1570
-					if (log.isDebugEnabled()) {
-						log.debug("Reached OnComplete without finishing [" + span + "]");
+					if (log.isTraceEnabled()) {
+						log.trace("Reached OnComplete without finishing [" + span + "]");
 					}
 					span.abandon();
 				}
@@ -301,8 +309,8 @@ final class TraceExchangeFilterFunction implements ExchangeFilterFunction {
 			// but before another signal (like onComplete) completed the span.
 			Span span = pendingSpan.getAndSet(null);
 			if (span != null) {
-				if (log.isDebugEnabled()) {
-					log.debug("Subscription was cancelled. TraceWebClientBeanPostProcessor Will close the span [" + span
+				if (log.isTraceEnabled()) {
+					log.trace("Subscription was cancelled. TraceWebClientBeanPostProcessor Will close the span [" + span
 							+ "]");
 				}
 

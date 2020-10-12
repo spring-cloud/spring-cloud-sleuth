@@ -16,8 +16,6 @@
 
 package org.springframework.cloud.sleuth.otel.instrument.web.client;
 
-import java.util.function.Supplier;
-
 import io.opentelemetry.context.propagation.TextMapPropagator;
 import io.opentelemetry.extensions.trace.propagation.B3Propagator;
 import io.opentelemetry.sdk.trace.Sampler;
@@ -38,10 +36,12 @@ import org.springframework.cloud.sleuth.test.ReportedSpan;
 import org.springframework.cloud.sleuth.test.TestSpanHandler;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.TestPropertySource;
 
-@SpringBootTest(classes = { ReactorNettyHttpClientSpringBootTests.Config.class,
-		org.springframework.cloud.sleuth.instrument.web.client.ReactorNettyHttpClientSpringBootTests.TestConfiguration.class },
-		webEnvironment = SpringBootTest.WebEnvironment.NONE, properties = "spring.sleuth.otel.propagation.type=custom")
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.NONE)
+@ContextConfiguration(classes = ReactorNettyHttpClientSpringBootTests.Config.class)
+@TestPropertySource(properties = "spring.sleuth.otel.propagation.type=custom")
 public class ReactorNettyHttpClientSpringBootTests
 		extends org.springframework.cloud.sleuth.instrument.web.client.ReactorNettyHttpClientSpringBootTests {
 
@@ -66,7 +66,7 @@ public class ReactorNettyHttpClientSpringBootTests
 		}
 
 		@Bean
-		TestSpanHandler testSpanHandlerSupplier() {
+		OtelTestSpanHandler testSpanHandlerSupplier() {
 			return new OtelTestSpanHandler(new ArrayListSpanProcessor());
 		}
 

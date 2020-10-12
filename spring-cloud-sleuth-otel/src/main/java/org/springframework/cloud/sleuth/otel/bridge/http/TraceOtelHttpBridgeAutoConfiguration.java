@@ -16,21 +16,28 @@
 
 package org.springframework.cloud.sleuth.otel.bridge.http;
 
+import java.util.regex.Pattern;
+
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.AutoConfigureBefore;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.cloud.sleuth.api.SamplerFunction;
 import org.springframework.cloud.sleuth.api.Tracer;
 import org.springframework.cloud.sleuth.api.http.HttpClientHandler;
+import org.springframework.cloud.sleuth.api.http.HttpRequest;
 import org.springframework.cloud.sleuth.api.http.HttpRequestParser;
 import org.springframework.cloud.sleuth.api.http.HttpResponseParser;
 import org.springframework.cloud.sleuth.api.http.HttpServerHandler;
 import org.springframework.cloud.sleuth.instrument.web.HttpClientRequestParser;
 import org.springframework.cloud.sleuth.instrument.web.HttpClientResponseParser;
+import org.springframework.cloud.sleuth.instrument.web.HttpClientSampler;
 import org.springframework.cloud.sleuth.instrument.web.HttpServerRequestParser;
 import org.springframework.cloud.sleuth.instrument.web.HttpServerResponseParser;
 import org.springframework.cloud.sleuth.instrument.web.SkipPatternConfiguration;
 import org.springframework.cloud.sleuth.instrument.web.SkipPatternProvider;
+import org.springframework.cloud.sleuth.instrument.web.SleuthWebProperties;
 import org.springframework.cloud.sleuth.instrument.web.TraceHttpAutoConfiguration;
 import org.springframework.cloud.sleuth.otel.bridge.TraceOtelBridgeAutoConfiguation;
 import org.springframework.context.annotation.Bean;
@@ -45,19 +52,50 @@ import org.springframework.lang.Nullable;
 public class TraceOtelHttpBridgeAutoConfiguration {
 
 	@Bean
-	HttpClientHandler braveHttpClientHandler(io.opentelemetry.trace.Tracer tracer,
+	HttpClientHandler otelHttpClientHandler(io.opentelemetry.trace.Tracer tracer,
 			@Nullable @HttpClientRequestParser HttpRequestParser httpClientRequestParser,
-			@Nullable @HttpClientResponseParser HttpResponseParser httpClientResponseParser) {
-		return new OtelHttpClientHandler(tracer, httpClientRequestParser, httpClientResponseParser);
+			@Nullable @HttpClientResponseParser HttpResponseParser httpClientResponseParser,
+			SamplerFunction<HttpRequest> samplerFunction) {
+		return new OtelHttpClientHandler(tracer, httpClientRequestParser, httpClientResponseParser, samplerFunction);
 	}
 
 	@Bean
-	HttpServerHandler braveHttpServerHandler(io.opentelemetry.trace.Tracer tracer,
+	HttpServerHandler otelHttpServerHandler(io.opentelemetry.trace.Tracer tracer,
 			@Nullable @HttpServerRequestParser HttpRequestParser httpServerRequestParser,
 			@Nullable @HttpServerResponseParser HttpResponseParser httpServerResponseParser,
 			SkipPatternProvider skipPatternProvider) {
 		return new OtelHttpServerHandler(tracer, httpServerRequestParser, httpServerResponseParser,
 				skipPatternProvider);
+	}
+
+	@Bean
+	@ConditionalOnMissingBean(name = HttpClientSampler.NAME)
+	SamplerFunction<HttpRequest> defaultHttpClientSampler(SleuthWebProperties sleuthWebProperties) {
+		String skipPattern = sleuthWebProperties.getClient().getSkipPattern();
+		if (skipPattern == null) {
+			return SamplerFunction.deferDecision();
+		}
+		return new SkipPatternSampler(Pattern.compile(skipPattern));
+	}
+
+}
+
+class SkipPatternSampler implements SamplerFunction<HttpRequest> {
+
+	private final Pattern pattern;
+
+	SkipPatternSampler(Pattern pattern) {
+		this.pattern = pattern;
+	}
+
+	@Override
+	public final Boolean trySample(HttpRequest request) {
+		String url = request.path();
+		boolean shouldSkip = this.pattern.matcher(url).matches();
+		if (shouldSkip) {
+			return false;
+		}
+		return null;
 	}
 
 }

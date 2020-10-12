@@ -27,7 +27,6 @@ import brave.handler.MutableSpan;
 import brave.handler.SpanHandler;
 import brave.propagation.CurrentTraceContext;
 import brave.sampler.Sampler;
-import brave.spring.web.TracingAsyncClientHttpRequestInterceptor;
 import brave.test.TestSpanHandler;
 import org.awaitility.Awaitility;
 import org.junit.jupiter.api.AfterEach;
@@ -37,6 +36,9 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.cloud.sleuth.api.http.HttpClientHandler;
+import org.springframework.cloud.sleuth.instrument.web.TraceWebServletAutoConfiguration;
+import org.springframework.cloud.sleuth.instrument.web.mvc.TracingAsyncClientHttpRequestInterceptor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
 import org.springframework.core.env.Environment;
@@ -176,7 +178,7 @@ public class RestTemplateTraceAspectIntegrationTests {
 	@EnableAutoConfiguration(
 			// spring boot test will otherwise instrument the client and server with the
 			// same bean factory which isn't expected
-			excludeName = "org.springframework.cloud.sleuth.brave.instrument.web.TraceWebServletAutoConfiguration")
+			exclude = TraceWebServletAutoConfiguration.class)
 	@Import(AspectTestingController.class)
 	public static class Config {
 
@@ -191,10 +193,12 @@ public class RestTemplateTraceAspectIntegrationTests {
 		}
 
 		@Bean
-		public AsyncRestTemplate asyncRestTemplate(Tracing tracing) {
+		public AsyncRestTemplate asyncRestTemplate(
+				org.springframework.cloud.sleuth.api.CurrentTraceContext currentTraceContext,
+				HttpClientHandler httpClientHandler) {
 			AsyncRestTemplate asyncRestTemplate = new AsyncRestTemplate();
-			asyncRestTemplate.setInterceptors(
-					Collections.singletonList(TracingAsyncClientHttpRequestInterceptor.create(tracing)));
+			asyncRestTemplate.setInterceptors(Collections.singletonList(
+					TracingAsyncClientHttpRequestInterceptor.create(currentTraceContext, httpClientHandler)));
 			return asyncRestTemplate;
 		}
 

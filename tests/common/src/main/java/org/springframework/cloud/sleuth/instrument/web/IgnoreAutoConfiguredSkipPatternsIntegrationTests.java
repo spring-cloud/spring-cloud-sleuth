@@ -24,7 +24,6 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.amqp.RabbitAutoConfiguration;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.web.server.LocalServerPort;
 import org.springframework.cloud.gateway.config.GatewayAutoConfiguration;
 import org.springframework.cloud.gateway.config.GatewayClassPathWarningAutoConfiguration;
@@ -32,14 +31,15 @@ import org.springframework.cloud.gateway.config.GatewayMetricsAutoConfiguration;
 import org.springframework.cloud.sleuth.api.Tracer;
 import org.springframework.cloud.sleuth.test.TestSpanHandler;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.TestPropertySource;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.RestTemplate;
 
-@SpringBootTest(classes = IgnoreAutoConfiguredSkipPatternsIntegrationTests.TestConfig.class,
-		webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
-		properties = { "management.endpoints.web.exposure.include:*", "server.servlet.context-path:/context-path",
-				"spring.sleuth.web.ignoreAutoConfiguredSkipPatterns:true" })
+@ContextConfiguration(classes = IgnoreAutoConfiguredSkipPatternsIntegrationTests.TestConfig.class)
+@TestPropertySource(properties = { "management.endpoints.web.exposure.include:*",
+		"server.servlet.context-path:/context-path", "spring.sleuth.web.ignoreAutoConfiguredSkipPatterns:true" })
 public abstract class IgnoreAutoConfiguredSkipPatternsIntegrationTests {
 
 	@Autowired

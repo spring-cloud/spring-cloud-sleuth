@@ -16,18 +16,24 @@
 
 package org.springframework.cloud.sleuth.otel.bridge;
 
+import java.util.Objects;
 import java.util.concurrent.Callable;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 
 import io.opentelemetry.trace.DefaultSpan;
 import io.opentelemetry.trace.Span;
+import io.opentelemetry.trace.SpanContext;
 import io.opentelemetry.trace.Tracer;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 import org.springframework.cloud.sleuth.api.CurrentTraceContext;
 import org.springframework.cloud.sleuth.api.TraceContext;
 
 public class OtelCurrentTraceContext implements CurrentTraceContext {
+
+	private static final Log log = LogFactory.getLog(OtelCurrentTraceContext.class);
 
 	final Tracer tracer;
 
@@ -54,10 +60,25 @@ public class OtelCurrentTraceContext implements CurrentTraceContext {
 
 	@Override
 	public Scope maybeScope(TraceContext context) {
+		if (log.isDebugEnabled()) {
+			log.debug("Will check if new scope should be created for context [" + context + "]");
+		}
+		if (context == null || SpanContext.getInvalid().equals(OtelTraceContext.toOtel(context))) {
+			if (log.isDebugEnabled()) {
+				log.debug("Invalid context - will return noop");
+			}
+			return OtelScope.NOOP;
+		}
 		Span fromContext = new SpanFromSpanContext(((OtelTraceContext) context).span,
 				((OtelTraceContext) context).delegate);
 		Span currentSpan = this.tracer.getCurrentSpan();
-		if (fromContext.equals(currentSpan)) {
+		if (log.isDebugEnabled()) {
+			log.debug("Span from context [" + fromContext + "], current span [" + currentSpan + "]");
+		}
+		if (Objects.equals(fromContext, currentSpan)) {
+			if (log.isDebugEnabled()) {
+				log.debug("Same context as the current one - will return noop");
+			}
 			return OtelScope.NOOP;
 		}
 		return newScope(context);

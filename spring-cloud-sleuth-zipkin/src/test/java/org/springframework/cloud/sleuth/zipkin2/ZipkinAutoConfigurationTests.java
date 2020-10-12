@@ -50,6 +50,7 @@ import zipkin2.reporter.brave.ZipkinSpanHandler;
 import zipkin2.reporter.kafka.KafkaSender;
 import zipkin2.reporter.metrics.micrometer.MicrometerReporterMetrics;
 
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.AutoConfigurations;
 import org.springframework.boot.autoconfigure.amqp.RabbitAutoConfiguration;
 import org.springframework.boot.autoconfigure.context.PropertyPlaceholderAutoConfiguration;
@@ -463,8 +464,8 @@ public class ZipkinAutoConfigurationTests {
 	protected static class MultipleReportersConfig {
 
 		@Bean
-		Reporter<zipkin2.Span> otherReporter() {
-			return AsyncReporter.create(otherSender());
+		Reporter<zipkin2.Span> otherReporter(OtherSender otherSender) {
+			return AsyncReporter.create(otherSender);
 		}
 
 		@Bean
@@ -511,8 +512,8 @@ public class ZipkinAutoConfigurationTests {
 	protected static class MyConfig {
 
 		@Bean(ZipkinAutoConfiguration.REPORTER_BEAN_NAME)
-		Reporter<zipkin2.Span> myReporter() {
-			return AsyncReporter.create(mySender());
+		Reporter<zipkin2.Span> myReporter(@Qualifier(ZipkinAutoConfiguration.SENDER_BEAN_NAME) MySender mySender) {
+			return AsyncReporter.create(mySender);
 		}
 
 		@Bean(ZipkinAutoConfiguration.SENDER_BEAN_NAME)

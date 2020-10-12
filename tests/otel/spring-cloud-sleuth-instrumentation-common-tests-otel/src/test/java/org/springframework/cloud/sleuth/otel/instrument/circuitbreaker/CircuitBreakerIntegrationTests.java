@@ -26,12 +26,12 @@ import org.springframework.cloud.sleuth.otel.ArrayListSpanProcessor;
 import org.springframework.cloud.sleuth.otel.AssertingThrowable;
 import org.springframework.cloud.sleuth.otel.OtelTestSpanHandler;
 import org.springframework.cloud.sleuth.test.ReportedSpan;
-import org.springframework.cloud.sleuth.test.TestSpanHandler;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.test.context.ContextConfiguration;
 
-@SpringBootTest(classes = { CircuitBreakerIntegrationTests.Config.class,
-		org.springframework.cloud.sleuth.instrument.circuitbreaker.CircuitBreakerIntegrationTests.TestConfig.class })
+@SpringBootTest
+@ContextConfiguration(classes = CircuitBreakerIntegrationTests.Config.class)
 public class CircuitBreakerIntegrationTests
 		extends org.springframework.cloud.sleuth.instrument.circuitbreaker.CircuitBreakerIntegrationTests {
 
@@ -39,7 +39,7 @@ public class CircuitBreakerIntegrationTests
 	static class Config {
 
 		@Bean
-		TestSpanHandler testSpanHandlerSupplier() {
+		OtelTestSpanHandler testSpanHandlerSupplier() {
 			return new OtelTestSpanHandler(new ArrayListSpanProcessor());
 		}
 
