@@ -27,17 +27,16 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.cloud.gateway.config.GatewayAutoConfiguration;
-import org.springframework.cloud.gateway.config.GatewayClassPathWarningAutoConfiguration;
 import org.springframework.cloud.sleuth.api.CurrentTraceContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
+import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.TestPropertySource;
 
-@SpringBootTest(classes = AsyncDisabledTests.ConfigureThreadPoolTaskScheduler.class,
-		webEnvironment = SpringBootTest.WebEnvironment.NONE, properties = "spring.sleuth.scheduled.enabled=false")
+@ContextConfiguration(classes = AsyncDisabledTests.ConfigureThreadPoolTaskScheduler.class)
+@TestPropertySource(properties = "spring.sleuth.scheduled.enabled=false")
 public abstract class AsyncDisabledTests {
 
 	@Autowired
@@ -59,8 +58,7 @@ public abstract class AsyncDisabledTests {
 	}
 
 	@Configuration(proxyBeanMethods = false)
-	@EnableAutoConfiguration(
-			exclude = { GatewayClassPathWarningAutoConfiguration.class, GatewayAutoConfiguration.class })
+	@EnableAutoConfiguration
 	@EnableAsync
 	static class ConfigureThreadPoolTaskScheduler {
 

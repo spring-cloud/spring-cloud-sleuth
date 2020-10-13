@@ -24,8 +24,8 @@
 
 	<artifactId>spring-cloud-sleuth-instrumentation-grpc-tests</artifactId>
 	<packaging>jar</packaging>
-	<name>Spring Cloud Sleuth Grpc Instrumentation Tests</name>
-	<description>Spring Cloud Sleuth Grpc Instrumentation Tests</description>
+	<name>Spring Cloud Sleuth Brave Grpc Instrumentation Tests</name>
+	<description>Spring Cloud Sleuth Brave Grpc Instrumentation Tests</description>
 
 	<parent>
 		<groupId>org.springframework.cloud</groupId>

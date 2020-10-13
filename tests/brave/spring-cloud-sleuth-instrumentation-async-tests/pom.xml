@@ -24,8 +24,8 @@
 
 	<artifactId>spring-cloud-sleuth-instrumentation-async-tests</artifactId>
 	<packaging>jar</packaging>
-	<name>Spring Cloud Sleuth Async Instrumentation Tests</name>
-	<description>Spring Cloud Sleuth Async Instrumentation Tests</description>
+	<name>Spring Cloud Sleuth Brave Async Instrumentation Tests</name>
+	<description>Spring Cloud Sleuth Brave Async Instrumentation Tests</description>
 
 	<parent>
 		<groupId>org.springframework.cloud</groupId>
@@ -51,6 +51,11 @@
 	</build>
 
 	<dependencies>
+		<dependency>
+			<groupId>${project.groupId}</groupId>
+			<artifactId>spring-cloud-sleuth-tests-common</artifactId>
+			<version>${project.version}</version>
+		</dependency>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-web</artifactId>

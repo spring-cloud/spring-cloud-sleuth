@@ -35,8 +35,6 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.web.server.LocalServerPort;
-import org.springframework.cloud.gateway.config.GatewayAutoConfiguration;
-import org.springframework.cloud.gateway.config.GatewayClassPathWarningAutoConfiguration;
 import org.springframework.cloud.sleuth.api.Span;
 import org.springframework.cloud.sleuth.api.Tracer;
 import org.springframework.cloud.sleuth.instrument.async.LazyTraceExecutor;
@@ -149,8 +147,7 @@ public abstract class MultipleAsyncRestTemplateTests {
 		BDDAssertions.then(this.tracer.currentSpan()).isNull();
 	}
 
-	@EnableAutoConfiguration(
-			exclude = { GatewayClassPathWarningAutoConfiguration.class, GatewayAutoConfiguration.class })
+	@EnableAutoConfiguration
 	// tag::custom_async_rest_template[]
 	@Configuration(proxyBeanMethods = false)
 	public static class TestConfig {

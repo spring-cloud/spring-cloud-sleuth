@@ -24,8 +24,8 @@
 
 	<artifactId>spring-cloud-sleuth-instrumentation-scheduling-tests</artifactId>
 	<packaging>jar</packaging>
-	<name>Spring Cloud Sleuth Scheduling Instrumentation Tests</name>
-	<description>Spring Cloud Sleuth Scheduling Instrumentation Tests</description>
+	<name>Spring Cloud Sleuth Brave Scheduling Instrumentation Tests</name>
+	<description>Spring Cloud Sleuth Brave Scheduling Instrumentation Tests</description>
 
 	<parent>
 		<groupId>org.springframework.cloud</groupId>

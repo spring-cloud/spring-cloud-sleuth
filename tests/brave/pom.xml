@@ -24,8 +24,8 @@
 
 	<artifactId>spring-cloud-sleuth-tests-brave</artifactId>
 	<packaging>pom</packaging>
-	<name>Spring Cloud Sleuth Tests</name>
-	<description>Spring Cloud Sleuth Tests</description>
+	<name>Spring Cloud Sleuth Brave Tests</name>
+	<description>Spring Cloud Sleuth Brave Tests</description>
 
 	<parent>
 		<groupId>org.springframework.cloud</groupId>
@@ -35,17 +35,20 @@
 	</parent>
 
 	<modules>
-		<module>spring-cloud-sleuth-instrumentation-common-tests</module>
+		<module>spring-cloud-sleuth-instrumentation-annotation-tests</module>
 		<module>spring-cloud-sleuth-instrumentation-async-tests</module>
+		<module>spring-cloud-sleuth-instrumentation-circuitbreaker-tests</module>
+		<module>spring-cloud-sleuth-instrumentation-feign-tests</module>
+		<module>spring-cloud-sleuth-instrumentation-gateway-tests</module>
 		<module>spring-cloud-sleuth-instrumentation-grpc-tests</module>
-		<module>spring-cloud-sleuth-instrumentation-messaging-tests</module>
-		<module>spring-cloud-sleuth-instrumentation-reactor-tests</module>
 		<module>spring-cloud-sleuth-instrumentation-lettuce-tests</module>
+		<module>spring-cloud-sleuth-instrumentation-messaging-tests</module>
+		<module>spring-cloud-sleuth-instrumentation-mvc-tests</module>
+		<module>spring-cloud-sleuth-instrumentation-quartz-tests</module>
+		<module>spring-cloud-sleuth-instrumentation-reactor-tests</module>
 		<module>spring-cloud-sleuth-instrumentation-rxjava-tests</module>
 		<module>spring-cloud-sleuth-instrumentation-scheduling-tests</module>
-		<module>spring-cloud-sleuth-instrumentation-mvc-tests</module>
 		<module>spring-cloud-sleuth-instrumentation-webflux-tests</module>
-		<module>spring-cloud-sleuth-instrumentation-feign-tests</module>
 	</modules>
 
 	<build>

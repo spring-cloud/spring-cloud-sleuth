@@ -32,6 +32,7 @@ import reactor.util.context.Context;
 
 import org.springframework.cloud.sleuth.api.CurrentTraceContext;
 import org.springframework.cloud.sleuth.api.Span;
+import org.springframework.cloud.sleuth.api.TraceContext;
 import org.springframework.cloud.sleuth.api.Tracer;
 import org.springframework.util.StringUtils;
 
@@ -216,7 +217,7 @@ class ReactorSleuthMethodInvocationProcessor extends AbstractSleuthMethodInvocat
 			this.log = log;
 			this.hasLog = hasLog;
 			this.processor = processor;
-			this.context = actual.currentContext().put(Span.class, span);
+			this.context = actual.currentContext().put(Span.class, span).put(TraceContext.class, span.context());
 			this.tracer = processor.tracer();
 			processor.before(invocation, this.span, this.log, this.hasLog);
 		}

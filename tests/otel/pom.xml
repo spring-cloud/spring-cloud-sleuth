@@ -22,10 +22,10 @@
 		 xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 
-	<artifactId>spring-cloud-sleuth-tests-otel</artifactId>
+	<artifactId>spring-cloud-sleuth-otel-tests</artifactId>
 	<packaging>pom</packaging>
-	<name>Spring Cloud Sleuth Tests Otel</name>
-	<description>Spring Cloud Sleuth Tests Otel</description>
+	<name>Spring Cloud Sleuth Otel Tests</name>
+	<description>Spring Cloud Sleuth Otel Tests</description>
 
 	<parent>
 		<groupId>org.springframework.cloud</groupId>
@@ -35,8 +35,18 @@
 	</parent>
 
 	<modules>
-		<module>spring-cloud-sleuth-instrumentation-common-tests-otel</module>
-		<module>spring-cloud-sleuth-instrumentation-async-tests-otel</module>
+		<module>spring-cloud-sleuth-instrumentation-annotation-tests</module>
+		<module>spring-cloud-sleuth-instrumentation-async-tests</module>
+		<module>spring-cloud-sleuth-instrumentation-circuitbreaker-tests</module>
+		<module>spring-cloud-sleuth-instrumentation-feign-tests</module>
+		<module>spring-cloud-sleuth-instrumentation-gateway-tests</module>
+		<module>spring-cloud-sleuth-instrumentation-messaging-tests</module>
+		<module>spring-cloud-sleuth-instrumentation-mvc-tests</module>
+		<module>spring-cloud-sleuth-instrumentation-quartz-tests</module>
+		<module>spring-cloud-sleuth-instrumentation-reactor-tests</module>
+		<module>spring-cloud-sleuth-instrumentation-rxjava-tests</module>
+		<module>spring-cloud-sleuth-instrumentation-scheduling-tests</module>
+		<module>spring-cloud-sleuth-instrumentation-webflux-tests</module>
 	</modules>
 
 	<build>

@@ -24,8 +24,8 @@
 
 	<artifactId>spring-cloud-sleuth-instrumentation-reactor-tests</artifactId>
 	<packaging>jar</packaging>
-	<name>Spring Cloud Sleuth Reactor Instrumentation Tests</name>
-	<description>Spring Cloud Sleuth Reactor Instrumentation Tests</description>
+	<name>Spring Cloud Sleuth Brave Reactor Instrumentation Tests</name>
+	<description>Spring Cloud Sleuth Brave Reactor Instrumentation Tests</description>
 
 	<parent>
 		<groupId>org.springframework.cloud</groupId>

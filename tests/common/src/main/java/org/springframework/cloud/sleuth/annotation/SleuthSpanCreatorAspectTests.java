@@ -393,8 +393,7 @@ public abstract class SleuthSpanCreatorAspectTests {
 	}
 
 	@Configuration(proxyBeanMethods = false)
-	@EnableAutoConfiguration(
-			exclude = { GatewayClassPathWarningAutoConfiguration.class, GatewayAutoConfiguration.class })
+	@EnableAutoConfiguration
 	public static class TestConfiguration {
 
 		@Bean

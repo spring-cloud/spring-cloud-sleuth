@@ -1,2 +1,0 @@
-logging.level.org.springframework.cloud: DEBUG
-logging.level.com.netflix.discovery.InstanceInfoReplicator: ERROR

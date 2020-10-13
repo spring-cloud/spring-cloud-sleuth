@@ -29,15 +29,9 @@ import reactor.core.publisher.Flux;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
-import org.springframework.boot.autoconfigure.amqp.RabbitAutoConfiguration;
-import org.springframework.boot.autoconfigure.jmx.JmxAutoConfiguration;
-import org.springframework.boot.autoconfigure.quartz.QuartzAutoConfiguration;
 import org.springframework.cloud.client.ServiceInstance;
 import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
 import org.springframework.cloud.client.loadbalancer.LoadBalanced;
-import org.springframework.cloud.gateway.config.GatewayAutoConfiguration;
-import org.springframework.cloud.gateway.config.GatewayClassPathWarningAutoConfiguration;
-import org.springframework.cloud.gateway.config.GatewayMetricsAutoConfiguration;
 import org.springframework.cloud.loadbalancer.annotation.LoadBalancerClient;
 import org.springframework.cloud.loadbalancer.core.ServiceInstanceListSupplier;
 import org.springframework.cloud.openfeign.EnableFeignClients;
@@ -130,9 +124,7 @@ public abstract class WebClientDiscoveryExceptionTests {
 	}
 
 	@Configuration(proxyBeanMethods = false)
-	@EnableAutoConfiguration(exclude = { TraceWebServletAutoConfiguration.class, JmxAutoConfiguration.class,
-			GatewayMetricsAutoConfiguration.class, GatewayClassPathWarningAutoConfiguration.class,
-			GatewayAutoConfiguration.class, QuartzAutoConfiguration.class, RabbitAutoConfiguration.class })
+	@EnableAutoConfiguration(exclude = TraceWebServletAutoConfiguration.class)
 	@EnableDiscoveryClient
 	@EnableFeignClients
 	@LoadBalancerClient("exceptionservice")

@@ -33,15 +33,6 @@
 	</parent>
 
 	<dependencies>
-		<!-- TODO: [OTEL] Why do I have to add this? -->
-		<!-- https://mvnrepository.com/artifact/com.google.auto.value/auto-value -->
-		<dependency>
-			<groupId>com.google.auto.value</groupId>
-			<artifactId>auto-value-annotations</artifactId>
-			<version>1.7.4</version>
-			<scope>compile</scope>
-		</dependency>
-
 		<dependency>
 			<groupId>org.springframework.cloud</groupId>
 			<artifactId>spring-cloud-sleuth-core</artifactId>

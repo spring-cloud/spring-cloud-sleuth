@@ -26,8 +26,8 @@
 		<relativePath>..</relativePath>
 	</parent>
 	<artifactId>spring-cloud-starter-sleuth</artifactId>
-	<name>spring-cloud-starter-sleuth</name>
-	<description>Spring Cloud Starter</description>
+	<name>Spring Cloud Starter Sleuth</name>
+	<description>Spring Cloud Starter Sleuth</description>
 	<properties>
 		<main.basedir>${basedir}/../..</main.basedir>
 	</properties>

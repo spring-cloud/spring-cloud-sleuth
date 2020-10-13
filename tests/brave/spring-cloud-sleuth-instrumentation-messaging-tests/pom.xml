@@ -25,8 +25,8 @@ https://www.w3.org/2001/XMLSchema-instance ">
 
 	<artifactId>spring-cloud-sleuth-instrumentation-messaging-tests</artifactId>
 	<packaging>jar</packaging>
-	<name>Spring Cloud Sleuth Messaging Instrumentation Tests</name>
-	<description>Spring Cloud Sleuth Messaging Instrumentation Tests</description>
+	<name>Spring Cloud Sleuth Brave Messaging Instrumentation Tests</name>
+	<description>Spring Cloud Sleuth Brave Messaging Instrumentation Tests</description>
 
 	<parent>
 		<groupId>org.springframework.cloud</groupId>
