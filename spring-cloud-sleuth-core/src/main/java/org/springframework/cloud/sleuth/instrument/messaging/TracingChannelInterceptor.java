@@ -14,21 +14,20 @@
  * limitations under the License.
  */
 
-package org.springframework.cloud.sleuth.brave.instrument.messaging;
+package org.springframework.cloud.sleuth.instrument.messaging;
 
-import brave.Span;
-import brave.SpanCustomizer;
-import brave.Tracer;
-import brave.Tracing;
-import brave.propagation.Propagation;
-import brave.propagation.ThreadLocalSpan;
-import brave.propagation.TraceContext;
-import brave.propagation.TraceContextOrSamplingFlags;
+import java.util.Queue;
+import java.util.concurrent.LinkedBlockingQueue;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import org.springframework.aop.support.AopUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cloud.sleuth.api.Span;
+import org.springframework.cloud.sleuth.api.SpanCustomizer;
+import org.springframework.cloud.sleuth.api.Tracer;
+import org.springframework.cloud.sleuth.api.propagation.Propagator;
 import org.springframework.cloud.sleuth.internal.SpanNameUtil;
 import org.springframework.integration.channel.AbstractMessageChannel;
 import org.springframework.integration.channel.DirectChannel;
@@ -50,10 +49,7 @@ import org.springframework.util.ClassUtils;
  * native headers. It also extracts or creates a {@link Span.Kind#CONSUMER} span for each
  * message received. This span is injected onto each message so it becomes the parent when
  * a handler later calls {@link MessageHandler#handleMessage(Message)}, or a another
- * processing library calls {@link #nextSpan(Message)}. This implementation uses
- * {@link ThreadLocalSpan} to propagate context between callbacks. This is an alternative
- * to {@code ThreadStatePropagationChannelInterceptor} which is less sensitive to message
- * manipulation by other interceptors.
+ * processing library calls {@link #nextSpan(Message)}.
  *
  * @author Marcin Grzejszczak
  */
@@ -87,17 +83,13 @@ final class TracingChannelInterceptor extends ChannelInterceptorAdapter implemen
 	 */
 	private static final String REMOTE_SERVICE_NAME = "broker";
 
-	final Tracing tracing;
-
 	final Tracer tracer;
 
-	final ThreadLocalSpan threadLocalSpan;
+	final Propagator.Setter<MessageHeaderAccessor> injector;
 
-	final TraceContext.Injector<MessageHeaderAccessor> injector;
+	final Propagator.Getter<MessageHeaderAccessor> extractor;
 
-	final TraceContext.Extractor<MessageHeaderAccessor> extractor;
-
-	final SleuthMessagingProperties properties;
+	final SleuthIntegrationMessagingProperties properties;
 
 	final boolean integrationObjectSupportPresent;
 
@@ -106,20 +98,22 @@ final class TracingChannelInterceptor extends ChannelInterceptorAdapter implemen
 	// special case of a Stream
 	private final Class<?> directWithAttributesChannelClass;
 
+	private final Propagator propagator;
+
+	private final ThreadLocalSpan threadLocalSpan = new ThreadLocalSpan();
+
 	@Autowired
-	TracingChannelInterceptor(Tracing tracing, SleuthMessagingProperties properties) {
-		this(tracing, properties, MessageHeaderPropagation.INSTANCE, MessageHeaderPropagation.INSTANCE);
+	TracingChannelInterceptor(Tracer tracer, Propagator propagator, SleuthIntegrationMessagingProperties properties) {
+		this(tracer, propagator, properties, MessageHeaderPropagation.INSTANCE, MessageHeaderPropagation.INSTANCE);
 	}
 
-	TracingChannelInterceptor(Tracing tracing, SleuthMessagingProperties properties,
-			Propagation.Setter<MessageHeaderAccessor, String> setter,
-			Propagation.Getter<MessageHeaderAccessor, String> getter) {
-		this.tracing = tracing;
+	TracingChannelInterceptor(Tracer tracer, Propagator propagator, SleuthIntegrationMessagingProperties properties,
+			Propagator.Setter<MessageHeaderAccessor> setter, Propagator.Getter<MessageHeaderAccessor> getter) {
 		this.properties = properties;
-		this.tracer = tracing.tracer();
-		this.threadLocalSpan = ThreadLocalSpan.create(this.tracer);
-		this.injector = tracing.propagation().injector(setter);
-		this.extractor = tracing.propagation().extractor(getter);
+		this.tracer = tracer;
+		this.propagator = propagator;
+		this.injector = setter;
+		this.extractor = getter;
 		this.integrationObjectSupportPresent = ClassUtils
 				.isPresent("org.springframework.integration.context.IntegrationObjectSupport", null);
 		this.hasDirectChannelClass = ClassUtils.isPresent("org.springframework.integration.channel.DirectChannel",
@@ -128,8 +122,9 @@ final class TracingChannelInterceptor extends ChannelInterceptorAdapter implemen
 				? ClassUtils.resolveClassName(STREAM_DIRECT_CHANNEL, null) : null;
 	}
 
-	public static TracingChannelInterceptor create(Tracing tracing, SleuthMessagingProperties properties) {
-		return new TracingChannelInterceptor(tracing, properties);
+	public static TracingChannelInterceptor create(Tracer tracing, Propagator propagator,
+			SleuthIntegrationMessagingProperties properties) {
+		return new TracingChannelInterceptor(tracing, propagator, properties);
 	}
 
 	/**
@@ -141,10 +136,9 @@ final class TracingChannelInterceptor extends ChannelInterceptorAdapter implemen
 	 */
 	public Span nextSpan(Message<?> message) {
 		MessageHeaderAccessor headers = mutableHeaderAccessor(message);
-		TraceContextOrSamplingFlags extracted = this.extractor.extract(headers);
+		Span result = this.propagator.extract(headers, this.extractor);
 		headers.setImmutable();
-		Span result = this.tracer.nextSpan(extracted);
-		if (extracted.context() == null && !result.isNoop()) {
+		if (!result.isNoop()) {
 			addTags(message, result, null);
 		}
 		if (log.isDebugEnabled()) {
@@ -162,18 +156,24 @@ final class TracingChannelInterceptor extends ChannelInterceptorAdapter implemen
 			return message;
 		}
 		Message<?> retrievedMessage = getMessage(message);
+		if (log.isDebugEnabled()) {
+			log.debug("Received a message in pre-send " + retrievedMessage);
+		}
 		MessageHeaderAccessor headers = mutableHeaderAccessor(retrievedMessage);
-		TraceContextOrSamplingFlags extracted = this.extractor.extract(headers);
-		Span span = this.threadLocalSpan.next(extracted);
-		MessageHeaderPropagation.removeAnyTraceHeaders(headers, this.tracing.propagation().keys());
-		this.injector.inject(span.context(), headers);
+		Span span = this.propagator.extract(headers, this.extractor);
+		if (log.isDebugEnabled()) {
+			log.debug("Extracted result from headers " + span);
+		}
+		setSpanInScope(span);
+		MessageHeaderPropagation.removeAnyTraceHeaders(headers, this.propagator.fields());
+		this.propagator.inject(span.context(), headers, this.injector);
 		if (!span.isNoop()) {
 			span.kind(Span.Kind.PRODUCER).name("send").start();
 			span.remoteServiceName(toRemoteServiceName(headers));
 			addTags(message, span, channel);
 		}
 		if (log.isDebugEnabled()) {
-			log.debug("Created a new span in pre send" + span);
+			log.debug("Created a new span in pre send " + span);
 		}
 		Message<?> outputMessage = outputMessage(message, retrievedMessage, headers);
 		if (isDirectChannel(channel)) {
@@ -182,13 +182,21 @@ final class TracingChannelInterceptor extends ChannelInterceptorAdapter implemen
 		return outputMessage;
 	}
 
+	private void setSpanInScope(Span span) {
+		Tracer.SpanInScope spanInScope = this.tracer.withSpanInScope(span);
+		this.threadLocalSpan.set(new SpanAndScope(span, spanInScope));
+		if (log.isDebugEnabled()) {
+			log.debug("Put span in scope " + span);
+		}
+	}
+
 	private String toRemoteServiceName(MessageHeaderAccessor headers) {
 		for (String key : headers.getMessageHeaders().keySet()) {
 			if (key.startsWith("kafka_")) {
-				return this.properties.getMessaging().getKafka().getRemoteServiceName();
+				return "kafka";
 			}
 			else if (key.startsWith("amqp_")) {
-				return this.properties.getMessaging().getRabbit().getRemoteServiceName();
+				return "rabbitmq";
 			}
 		}
 		return REMOTE_SERVICE_NAME;
@@ -200,7 +208,7 @@ final class TracingChannelInterceptor extends ChannelInterceptorAdapter implemen
 		if (originalMessage instanceof ErrorMessage) {
 			ErrorMessage errorMessage = (ErrorMessage) originalMessage;
 			headers.copyHeaders(MessageHeaderPropagation.propagationHeaders(additionalHeaders.getMessageHeaders(),
-					this.tracing.propagation().keys()));
+					this.propagator.fields()));
 			return new ErrorMessage(errorMessage.getPayload(), isWebSockets(headers) ? headers.getMessageHeaders()
 					: new MessageHeaders(headers.getMessageHeaders()), errorMessage.getOriginalMessage());
 		}
@@ -254,14 +262,27 @@ final class TracingChannelInterceptor extends ChannelInterceptorAdapter implemen
 			return message;
 		}
 		MessageHeaderAccessor headers = mutableHeaderAccessor(message);
-		TraceContextOrSamplingFlags extracted = this.extractor.extract(headers);
-		Span span = this.threadLocalSpan.next(extracted);
-		MessageHeaderPropagation.removeAnyTraceHeaders(headers, this.tracing.propagation().keys());
-		this.injector.inject(span.context(), headers);
+		if (log.isDebugEnabled()) {
+			log.debug("Received a message in post-receive " + message);
+		}
+		Span result = this.propagator.extract(headers, this.extractor);
+		if (log.isDebugEnabled()) {
+			log.debug("Extracted result from headers " + result);
+		}
+		Span span = this.tracer.nextSpan(result.context());
+		setSpanInScope(span);
+		if (log.isDebugEnabled()) {
+			log.debug("Created a new span thwt will be injected in the headers " + span);
+		}
+		MessageHeaderPropagation.removeAnyTraceHeaders(headers, this.propagator.fields());
+		this.propagator.inject(span.context(), headers, this.injector);
 		if (!span.isNoop()) {
 			span.kind(Span.Kind.CONSUMER).name("receive").start();
 			span.remoteServiceName(toRemoteServiceName(headers));
 			addTags(message, span, channel);
+			if (log.isDebugEnabled()) {
+				log.debug("Setting remote service name and consumer kind " + span);
+			}
 		}
 		if (log.isDebugEnabled()) {
 			log.debug("Created a new span in post receive " + span);
@@ -296,9 +317,14 @@ final class TracingChannelInterceptor extends ChannelInterceptorAdapter implemen
 			return message;
 		}
 		MessageHeaderAccessor headers = mutableHeaderAccessor(message);
-		TraceContextOrSamplingFlags extracted = this.extractor.extract(headers);
+		if (log.isDebugEnabled()) {
+			log.debug("Received a message in before handle " + message);
+		}
+		Span consumerSpan = this.propagator.extract(headers, this.extractor);
+		if (log.isDebugEnabled()) {
+			log.debug("Extracted result from headers - will finish it immediately " + consumerSpan);
+		}
 		// Start and finish a consumer span as we will immediately process it.
-		Span consumerSpan = this.tracer.nextSpan(extracted);
 		if (!consumerSpan.isNoop()) {
 			consumerSpan.kind(Span.Kind.CONSUMER).start();
 			consumerSpan.remoteServiceName(REMOTE_SERVICE_NAME);
@@ -306,13 +332,17 @@ final class TracingChannelInterceptor extends ChannelInterceptorAdapter implemen
 			consumerSpan.finish();
 		}
 		// create and scope a span for the message processor
-		this.threadLocalSpan.next(TraceContextOrSamplingFlags.create(consumerSpan.context())).name("handle").start();
+		Span handle = this.tracer.nextSpan(consumerSpan.context()).name("handle").start();
+		if (log.isDebugEnabled()) {
+			log.debug("Created consumer span " + handle);
+		}
+		setSpanInScope(handle);
 		// remove any trace headers, but don't re-inject as we are synchronously
 		// processing the
 		// message and can rely on scoping to access this span later.
-		MessageHeaderPropagation.removeAnyTraceHeaders(headers, this.tracing.propagation().keys());
+		MessageHeaderPropagation.removeAnyTraceHeaders(headers, this.propagator.fields());
 		if (log.isDebugEnabled()) {
-			log.debug("Created a new span in before handle" + consumerSpan);
+			log.debug("Created a new span in before handle " + handle);
 		}
 		if (message instanceof ErrorMessage) {
 			return new ErrorMessage((Throwable) message.getPayload(), headers.getMessageHeaders());
@@ -366,8 +396,17 @@ final class TracingChannelInterceptor extends ChannelInterceptorAdapter implemen
 	}
 
 	void finishSpan(Exception error) {
-		Span span = this.threadLocalSpan.remove();
-		if (span == null || span.isNoop()) {
+		SpanAndScope spanAndScope = getSpanFromThreadLocal();
+		if (spanAndScope == null) {
+			return;
+		}
+		Span span = spanAndScope.span;
+		Tracer.SpanInScope scope = spanAndScope.scope;
+		if (span.isNoop()) {
+			if (log.isDebugEnabled()) {
+				log.debug("Span " + span + " is noop - will stope the scope");
+			}
+			scope.close();
 			return;
 		}
 		if (error != null) { // an error occurred, adding error to span
@@ -377,7 +416,17 @@ final class TracingChannelInterceptor extends ChannelInterceptorAdapter implemen
 			}
 			span.tag("error", message);
 		}
+		if (log.isDebugEnabled()) {
+			log.debug("Will finish the and its corresponding scope " + span);
+		}
 		span.finish();
+		scope.close();
+	}
+
+	private SpanAndScope getSpanFromThreadLocal() {
+		SpanAndScope span = this.threadLocalSpan.get();
+		this.threadLocalSpan.remove();
+		return span;
 	}
 
 	private MessageHeaderAccessor mutableHeaderAccessor(Message<?> message) {
@@ -398,6 +447,44 @@ final class TracingChannelInterceptor extends ChannelInterceptorAdapter implemen
 
 	private boolean emptyMessage(Message<?> message) {
 		return message == null;
+	}
+
+}
+
+class SpanAndScope {
+
+	final Span span;
+
+	final Tracer.SpanInScope scope;
+
+	SpanAndScope(Span span, Tracer.SpanInScope scope) {
+		this.span = span;
+		this.scope = scope;
+	}
+
+}
+
+class ThreadLocalSpan {
+
+	final ThreadLocal<SpanAndScope> threadLocalSpan = new ThreadLocal<>();
+
+	final Queue<SpanAndScope> spans = new LinkedBlockingQueue<>();
+
+	void set(SpanAndScope spanAndScope) {
+		SpanAndScope scope = this.threadLocalSpan.get();
+		if (scope != null) {
+			this.spans.add(scope);
+		}
+		this.threadLocalSpan.set(spanAndScope);
+	}
+
+	SpanAndScope get() {
+		return this.threadLocalSpan.get();
+	}
+
+	void remove() {
+		this.threadLocalSpan.remove();
+		this.threadLocalSpan.set(this.spans.poll());
 	}
 
 }

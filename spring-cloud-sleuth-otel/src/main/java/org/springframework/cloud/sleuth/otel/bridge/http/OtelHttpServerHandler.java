@@ -75,7 +75,7 @@ public class OtelHttpServerHandler
 			endExceptionally(otel, throwable, response);
 		}
 		if (this.httpServerResponseParser != null) {
-			this.httpServerResponseParser.parse(response, span.context(), span.customizer());
+			this.httpServerResponseParser.parse(response, span.context(), span);
 		}
 	}
 
@@ -85,7 +85,7 @@ public class OtelHttpServerHandler
 		super.onConnectionAndRequest(span, connection, request);
 		if (this.httpServerRequestParser != null) {
 			Span fromOtel = OtelSpan.fromOtel(span);
-			this.httpServerRequestParser.parse(request, fromOtel.context(), fromOtel.customizer());
+			this.httpServerRequestParser.parse(request, fromOtel.context(), fromOtel);
 		}
 	}
 

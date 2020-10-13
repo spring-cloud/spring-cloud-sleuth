@@ -14,18 +14,17 @@
  * limitations under the License.
  */
 
-package org.springframework.cloud.sleuth.brave.instrument.messaging;
+package org.springframework.cloud.sleuth.instrument.messaging;
 
 import java.util.function.Consumer;
 import java.util.function.Function;
 
-import brave.Span;
-import brave.Tracer;
-import brave.Tracing;
-import brave.propagation.TraceContextOrSamplingFlags;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import org.springframework.beans.factory.BeanFactory;
+import org.springframework.cloud.sleuth.api.Span;
+import org.springframework.cloud.sleuth.api.Tracer;
 import org.springframework.messaging.Message;
 
 /**
@@ -34,7 +33,7 @@ import org.springframework.messaging.Message;
  *
  * IMPORTANT: This API is experimental and might change in the future.
  *
- * The {@code forInputMessage} factory methods will retrieve the tracing context from the
+ * The {@code forInputMessage} factory methods will retrieve the tracer context from the
  * message headers and set up a a child span in the header under key
  * {@link Span#getClass()} name. If you need to continue it or tag it, it's enough to
  * retrieve it from the headers.
@@ -55,23 +54,23 @@ public final class MessagingSleuthOperators {
 
 	/**
 	 * Executes a span wrapped operation for an input message.
-	 * @param tracing - tracing bean
+	 * @param beanFactory - bean factory
 	 * @param message - message to wrap
 	 * @param withSpanInScope - an operation that will be wrapped in a span and the span
 	 * will be reported at the end
 	 * @param <T> - type of payload
-	 * @return message with tracing context
+	 * @return message with tracer context
 	 */
-	public static <T> Message<T> forInputMessage(Tracing tracing, Message<T> message,
+	public static <T> Message<T> forInputMessage(BeanFactory beanFactory, Message<T> message,
 			Consumer<Message<T>> withSpanInScope) {
-		TraceMessageHandler traceMessageHandler = TraceMessageHandler.forNonSpringIntegration(tracing);
+		TraceMessageHandler traceMessageHandler = TraceMessageHandler.forNonSpringIntegration(beanFactory);
 		MessageAndSpans wrappedInputMessage = traceMessageHandler.wrapInputMessage(message, "");
 		if (log.isDebugEnabled()) {
 			log.debug("Wrapped input msg " + wrappedInputMessage);
 		}
-		Tracer tracer = tracing.tracer();
 		Throwable t = null;
-		try (Tracer.SpanInScope ws = tracer.withSpanInScope(wrappedInputMessage.childSpan.start())) {
+		try (Tracer.SpanInScope ws = traceMessageHandler.tracer
+				.withSpanInScope(wrappedInputMessage.childSpan.start())) {
 			withSpanInScope.accept(wrappedInputMessage.msg);
 		}
 		catch (Exception e) {
@@ -86,13 +85,13 @@ public final class MessagingSleuthOperators {
 
 	/**
 	 * Processes the input message and returns a message with a header containing a span.
-	 * @param tracing - tracing bean
+	 * @param beanFactory - bean factory
 	 * @param message - input message to process
 	 * @param <T> - payload type
-	 * @return message with tracing context
+	 * @return message with tracer context
 	 */
-	public static <T> Message<T> forInputMessage(Tracing tracing, Message<T> message) {
-		TraceMessageHandler traceMessageHandler = TraceMessageHandler.forNonSpringIntegration(tracing);
+	public static <T> Message<T> forInputMessage(BeanFactory beanFactory, Message<T> message) {
+		TraceMessageHandler traceMessageHandler = TraceMessageHandler.forNonSpringIntegration(beanFactory);
 		MessageAndSpans wrappedInputMessage = traceMessageHandler.wrapInputMessage(message, "");
 		if (log.isDebugEnabled()) {
 			log.debug("Wrapped input msg " + wrappedInputMessage);
@@ -101,25 +100,29 @@ public final class MessagingSleuthOperators {
 	}
 
 	/**
-	 * Function converting an input message to a message with tracing headers.
-	 * @param tracing - tracing bean
+	 * Function converting an input message to a message with tracer headers.
+	 * @param beanFactory - bean factory
 	 * @param inputMessage - input message to process
 	 * @param <T> input message type
-	 * @return function representation of input message with tracing context
+	 * @return function representation of input message with tracer context
 	 */
-	public static <T> Function<Message<T>, Message<T>> asFunction(Tracing tracing, Message<T> inputMessage) {
-		return stringMessage -> MessagingSleuthOperators.forInputMessage(tracing, inputMessage);
+	public static <T> Function<Message<T>, Message<T>> asFunction(BeanFactory beanFactory, Message<T> inputMessage) {
+		return stringMessage -> MessagingSleuthOperators.forInputMessage(beanFactory, inputMessage);
 	}
 
 	/**
-	 * Retrieves tracing information from message headers.
-	 * @param tracing - tracing bean
+	 * Retrieves tracer information from message headers.
+	 * @param beanFactory - bean factory
 	 * @param message - message to process
 	 * @param <T> - payload type
 	 * @return span retrieved from message or {@code null} if there was no span
 	 */
-	public static <T> Span spanFromMessage(Tracing tracing, Message<T> message) {
-		TraceMessageHandler traceMessageHandler = TraceMessageHandler.forNonSpringIntegration(tracing);
+	public static <T> Span spanFromMessage(BeanFactory beanFactory, Message<T> message) {
+		TraceMessageHandler traceMessageHandler = TraceMessageHandler.forNonSpringIntegration(beanFactory);
+		return spanFromMessage(traceMessageHandler, message);
+	}
+
+	private static <T> Span spanFromMessage(TraceMessageHandler traceMessageHandler, Message<T> message) {
 		Span span = traceMessageHandler.spanFromMessage(message);
 		if (log.isDebugEnabled()) {
 			log.debug("Found the following span in message " + span);
@@ -128,73 +131,73 @@ public final class MessagingSleuthOperators {
 	}
 
 	/**
-	 * Retrieves tracing information from message headers and applies the operation.
-	 * @param tracing - tracing bean
+	 * Retrieves tracer information from message headers and applies the operation.
+	 * @param beanFactory - bean factory
 	 * @param message - message to process
 	 * @param withSpanInScope - an operation that will be wrapped in a span but will not
 	 * be reported
 	 * @param <T> - payload type
 	 */
-	public static <T> void withSpanInScope(Tracing tracing, Message<T> message, Consumer<Message<T>> withSpanInScope) {
-		Span span = spanFromMessage(tracing, message);
-		Tracer tracer = tracing.tracer();
-		try (Tracer.SpanInScope ws = tracer.withSpanInScope(span)) {
+	public static <T> void withSpanInScope(BeanFactory beanFactory, Message<T> message,
+			Consumer<Message<T>> withSpanInScope) {
+		TraceMessageHandler traceMessageHandler = TraceMessageHandler.forNonSpringIntegration(beanFactory);
+		Span span = spanFromMessage(traceMessageHandler, message);
+		try (Tracer.SpanInScope ws = traceMessageHandler.tracer.withSpanInScope(span)) {
 			withSpanInScope.accept(message);
 		}
 	}
 
 	/**
-	 * Retrieves tracing information from message headers and applies the operation.
-	 * @param tracing - tracing bean
+	 * Retrieves tracer information from message headers and applies the operation.
+	 * @param beanFactory - bean factory
 	 * @param message - message to process
 	 * @param withSpanInScope - an operation that will be wrapped in a span but will not
 	 * be reported
 	 * @param <T> - payload type
-	 * @return a message with tracing headers.
+	 * @return a message with tracer headers.
 	 */
-	public static <T> Message<T> withSpanInScope(Tracing tracing, Message<T> message,
+	public static <T> Message<T> withSpanInScope(BeanFactory beanFactory, Message<T> message,
 			Function<Message<T>, Message<T>> withSpanInScope) {
-		Span span = spanFromMessage(tracing, message);
-		Tracer tracer = tracing.tracer();
-		try (Tracer.SpanInScope ws = tracer.withSpanInScope(span)) {
+		TraceMessageHandler traceMessageHandler = TraceMessageHandler.forNonSpringIntegration(beanFactory);
+		Span span = spanFromMessage(traceMessageHandler, message);
+		try (Tracer.SpanInScope ws = traceMessageHandler.tracer.withSpanInScope(span)) {
 			return withSpanInScope.apply(message);
 		}
 	}
 
 	/**
-	 * Creates an output message with tracing headers and reports the corresponding
+	 * Creates an output message with tracer headers and reports the corresponding
 	 * producer span. If the message contains a header called {@code destination} it will
 	 * be used to tag the span with destination name.
-	 * @param tracing - tracing bean
-	 * @param message - message to which tracing headers should be injected
+	 * @param beanFactory - bean factory
+	 * @param message - message to which tracer headers should be injected
 	 * @param <T> - message payload
 	 * @return instrumented message
 	 */
-	public static <T> Message<T> handleOutputMessage(Tracing tracing, Message<T> message) {
-		return handleOutputMessage(tracing, message, null);
+	public static <T> Message<T> handleOutputMessage(BeanFactory beanFactory, Message<T> message) {
+		return handleOutputMessage(beanFactory, message, null);
 	}
 
 	/**
-	 * Creates an output message with tracing headers and reports the corresponding
+	 * Creates an output message with tracer headers and reports the corresponding
 	 * producer span. If the message contains a header called {@code destination} it will
 	 * be used to tag the span with destination name.
-	 * @param tracing - tracing bean
-	 * @param message - message to which tracing headers should be injected
+	 * @param beanFactory - bean factory
+	 * @param message - message to which tracer headers should be injected
 	 * @param throwable - exception that took place while processing the message
 	 * @param <T> - message payload
 	 * @return instrumented message
 	 */
-	public static <T> Message<T> handleOutputMessage(Tracing tracing, Message<T> message, Throwable throwable) {
-		TraceMessageHandler traceMessageHandler = TraceMessageHandler.forNonSpringIntegration(tracing);
+	public static <T> Message<T> handleOutputMessage(BeanFactory beanFactory, Message<T> message, Throwable throwable) {
+		TraceMessageHandler traceMessageHandler = TraceMessageHandler.forNonSpringIntegration(beanFactory);
 		Span span = traceMessageHandler.parentSpan(message);
 		span = span != null ? span : traceMessageHandler.consumerSpan(message);
 		if (span == null) {
 			log.warn(
-					"Can't find neither parent nor consumer span. Will return the message with no tracing header changes");
+					"Can't find neither parent nor consumer span. Will return the message with no tracer header changes");
 			return message;
 		}
-		MessageAndSpan messageAndSpan = traceMessageHandler.wrapOutputMessage(message,
-				TraceContextOrSamplingFlags.create(span.context()),
+		MessageAndSpan messageAndSpan = traceMessageHandler.wrapOutputMessage(message, span,
 				String.valueOf(message.getHeaders().getOrDefault("destination", "")));
 		traceMessageHandler.afterMessageHandled(messageAndSpan.span, throwable);
 		return messageAndSpan.msg;
@@ -202,14 +205,14 @@ public final class MessagingSleuthOperators {
 
 	/**
 	 * Reports the span stored in the message.
-	 * @param tracing - tracing bean
-	 * @param message - message with tracing context
+	 * @param beanFactory - bean factory
+	 * @param message - message with tracer context
 	 * @param ex - potential exception that took place while processing
 	 * @param <T> - message payload
 	 * @return instrumented message
 	 */
-	public static <T> Message<T> afterMessageHandled(Tracing tracing, Message<T> message, Throwable ex) {
-		TraceMessageHandler traceMessageHandler = TraceMessageHandler.forNonSpringIntegration(tracing);
+	public static <T> Message<T> afterMessageHandled(BeanFactory beanFactory, Message<T> message, Throwable ex) {
+		TraceMessageHandler traceMessageHandler = TraceMessageHandler.forNonSpringIntegration(beanFactory);
 		Span span = traceMessageHandler.spanFromMessage(message);
 		traceMessageHandler.afterMessageHandled(span, ex);
 		return message;

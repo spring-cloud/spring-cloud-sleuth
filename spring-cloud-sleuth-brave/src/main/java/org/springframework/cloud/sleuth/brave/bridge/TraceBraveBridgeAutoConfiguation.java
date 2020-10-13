@@ -16,7 +16,7 @@
 
 package org.springframework.cloud.sleuth.brave.bridge;
 
-import brave.propagation.Propagation;
+import brave.Tracing;
 
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.AutoConfigureBefore;
@@ -52,8 +52,8 @@ public class TraceBraveBridgeAutoConfiguation {
 	}
 
 	@Bean
-	Propagator bravePropagator(Propagation.Factory factory, brave.Tracer tracer) {
-		return new BravePropagator(factory, tracer);
+	Propagator bravePropagator(Tracing tracing) {
+		return new BravePropagator(tracing);
 	}
 
 }

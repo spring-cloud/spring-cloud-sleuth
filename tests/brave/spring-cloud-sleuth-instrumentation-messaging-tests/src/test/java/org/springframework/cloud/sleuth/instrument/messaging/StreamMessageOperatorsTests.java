@@ -14,20 +14,20 @@
  * limitations under the License.
  */
 
-package org.springframework.cloud.sleuth.brave.instrument.messaging;
+package org.springframework.cloud.sleuth.instrument.messaging;
 
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Function;
 
 import brave.Span;
-import brave.Tracing;
 import brave.test.TestSpanHandler;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import reactor.core.publisher.Flux;
 
+import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.ImportAutoConfiguration;
@@ -87,8 +87,8 @@ public class StreamMessageOperatorsTests {
 		}
 
 		@Bean
-		SimpleReactiveManualFunction simpleFunction(Tracing tracing) {
-			return new SimpleReactiveManualFunction(tracing);
+		SimpleReactiveManualFunction simpleFunction(BeanFactory beanFactory) {
+			return new SimpleReactiveManualFunction(beanFactory);
 		}
 
 	}
@@ -99,27 +99,27 @@ class SimpleReactiveManualFunction implements Function<Flux<Message<String>>, Fl
 
 	private static final Logger log = LoggerFactory.getLogger(SimpleReactiveManualFunction.class);
 
-	private final Tracing tracing;
+	private final BeanFactory beanFactory;
 
-	SimpleReactiveManualFunction(Tracing tracing) {
-		this.tracing = tracing;
+	SimpleReactiveManualFunction(BeanFactory beanFactory) {
+		this.beanFactory = beanFactory;
 	}
 
 	@Override
 	public Flux<Message<String>> apply(Flux<Message<String>> input) {
-		return input.map(message -> (MessagingSleuthOperators.asFunction(this.tracing, message))
-				.andThen(msg -> MessagingSleuthOperators.withSpanInScope(this.tracing, msg, stringMessage -> {
+		return input.map(message -> (MessagingSleuthOperators.asFunction(this.beanFactory, message))
+				.andThen(msg -> MessagingSleuthOperators.withSpanInScope(this.beanFactory, msg, stringMessage -> {
 					log.info("Hello from simple manual [{}]", stringMessage.getPayload());
 					return stringMessage;
-				})).andThen(msg -> MessagingSleuthOperators.afterMessageHandled(this.tracing, msg, null))
+				})).andThen(msg -> MessagingSleuthOperators.afterMessageHandled(this.beanFactory, msg, null))
 				.andThen(msg -> {
-					MessagingSleuthOperators.withSpanInScope(this.tracing, msg, stringMessage -> {
+					MessagingSleuthOperators.withSpanInScope(this.beanFactory, msg, stringMessage -> {
 						log.info("Here we may do some processing");
 					});
 					Map<String, Object> headers = new HashMap<>(msg.getHeaders());
 					headers.put("destination", "specialDestination");
 					return MessageBuilder.createMessage(msg.getPayload().toUpperCase(), new MessageHeaders(headers));
-				}).andThen(msg -> MessagingSleuthOperators.handleOutputMessage(this.tracing, msg)).apply(message));
+				}).andThen(msg -> MessagingSleuthOperators.handleOutputMessage(this.beanFactory, msg)).apply(message));
 	}
 
 }

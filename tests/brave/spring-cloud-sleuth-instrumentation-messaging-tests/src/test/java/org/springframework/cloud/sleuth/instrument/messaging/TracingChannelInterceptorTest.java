@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.springframework.cloud.sleuth.brave.instrument.messaging;
+package org.springframework.cloud.sleuth.instrument.messaging;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -32,6 +32,8 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
 import org.springframework.amqp.support.AmqpHeaders;
+import org.springframework.cloud.sleuth.brave.bridge.BravePropagator;
+import org.springframework.cloud.sleuth.brave.bridge.BraveTracer;
 import org.springframework.integration.channel.DirectChannel;
 import org.springframework.integration.channel.QueueChannel;
 import org.springframework.kafka.support.KafkaHeaders;
@@ -65,7 +67,8 @@ public class TracingChannelInterceptorTest {
 			.propagationFactory(B3Propagation.newFactoryBuilder().injectFormat(SINGLE).build())
 			.addSpanHandler(this.spans).build();
 
-	ChannelInterceptor interceptor = TracingChannelInterceptor.create(tracing, new SleuthMessagingProperties());
+	ChannelInterceptor interceptor = TracingChannelInterceptor.create(BraveTracer.fromBrave(tracing.tracer()),
+			new BravePropagator(tracing), new SleuthIntegrationMessagingProperties());
 
 	QueueChannel channel = new QueueChannel();
 

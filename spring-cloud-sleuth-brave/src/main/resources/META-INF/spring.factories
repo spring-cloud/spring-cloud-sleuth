@@ -9,10 +9,6 @@ org.springframework.cloud.sleuth.brave.instrument.rpc.TraceRpcAutoConfiguration,
 org.springframework.cloud.sleuth.brave.instrument.grpc.TraceGrpcAutoConfiguration,\
 org.springframework.cloud.sleuth.brave.instrument.messaging.SleuthKafkaStreamsConfiguration,\
 org.springframework.cloud.sleuth.brave.instrument.messaging.TraceMessagingAutoConfiguration,\
-org.springframework.cloud.sleuth.brave.instrument.messaging.TraceSpringIntegrationAutoConfiguration,\
-org.springframework.cloud.sleuth.brave.instrument.messaging.TraceSpringMessagingAutoConfiguration,\
-org.springframework.cloud.sleuth.brave.instrument.messaging.TraceWebSocketAutoConfiguration,\
-org.springframework.cloud.sleuth.brave.instrument.messaging.TraceFunctionAutoConfiguration,\
 org.springframework.cloud.sleuth.brave.instrument.opentracing.OpentracingAutoConfiguration,\
 org.springframework.cloud.sleuth.brave.instrument.redis.TraceRedisAutoConfiguration,\
 org.springframework.cloud.sleuth.brave.instrument.mongodb.TraceMongoDbAutoConfiguration

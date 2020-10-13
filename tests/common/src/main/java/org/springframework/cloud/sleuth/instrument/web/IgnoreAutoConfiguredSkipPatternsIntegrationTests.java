@@ -22,13 +22,9 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
-import org.springframework.boot.autoconfigure.amqp.RabbitAutoConfiguration;
 import org.springframework.boot.web.server.LocalServerPort;
-import org.springframework.cloud.gateway.config.GatewayAutoConfiguration;
-import org.springframework.cloud.gateway.config.GatewayClassPathWarningAutoConfiguration;
-import org.springframework.cloud.gateway.config.GatewayMetricsAutoConfiguration;
 import org.springframework.cloud.sleuth.api.Tracer;
+import org.springframework.cloud.sleuth.instrument.DefaultTestAutoConfiguration;
 import org.springframework.cloud.sleuth.test.TestSpanHandler;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.test.context.ContextConfiguration;
@@ -82,8 +78,7 @@ public abstract class IgnoreAutoConfiguredSkipPatternsIntegrationTests {
 		BDDAssertions.then(this.spans).hasSize(0);
 	}
 
-	@EnableAutoConfiguration(exclude = { GatewayAutoConfiguration.class, GatewayClassPathWarningAutoConfiguration.class,
-			GatewayMetricsAutoConfiguration.class, RabbitAutoConfiguration.class })
+	@DefaultTestAutoConfiguration
 	@Configuration(proxyBeanMethods = false)
 	@RestController
 	public static class TestConfig {

@@ -14,14 +14,11 @@
  * limitations under the License.
  */
 
-package org.springframework.cloud.sleuth.brave.instrument.messaging;
+package org.springframework.cloud.sleuth.instrument.messaging;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-import brave.Tracer;
-import brave.Tracing;
-import brave.propagation.TraceContextOrSamplingFlags;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -32,6 +29,8 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.cloud.context.scope.refresh.RefreshScopeRefreshedEvent;
 import org.springframework.cloud.function.context.catalog.FunctionAroundWrapper;
 import org.springframework.cloud.function.context.catalog.SimpleFunctionRegistry;
+import org.springframework.cloud.sleuth.api.Tracer;
+import org.springframework.cloud.sleuth.api.propagation.Propagator;
 import org.springframework.cloud.sleuth.autoconfig.TraceAutoConfiguration;
 import org.springframework.context.ApplicationListener;
 import org.springframework.context.annotation.Bean;
@@ -39,6 +38,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.core.env.Environment;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.support.MessageBuilder;
+import org.springframework.messaging.support.MessageHeaderAccessor;
 
 /**
  * {@link org.springframework.boot.autoconfigure.EnableAutoConfiguration
@@ -50,14 +50,15 @@ import org.springframework.messaging.support.MessageBuilder;
  */
 @Configuration(proxyBeanMethods = false)
 @ConditionalOnProperty(value = "spring.sleuth.function.enabled", matchIfMissing = true)
-@ConditionalOnBean(Tracing.class)
-@ConditionalOnClass({ Tracer.class, FunctionAroundWrapper.class })
+@ConditionalOnBean(Tracer.class)
+@ConditionalOnClass(FunctionAroundWrapper.class)
 @AutoConfigureAfter(TraceAutoConfiguration.class)
 class TraceFunctionAutoConfiguration {
 
 	@Bean
-	TraceFunctionAroundWrapper traceFunctionAroundWrapper(Environment environment, Tracing tracing) {
-		return new TraceFunctionAroundWrapper(environment, tracing);
+	TraceFunctionAroundWrapper traceFunctionAroundWrapper(Environment environment, Tracer tracer, Propagator propagator,
+			Propagator.Setter<MessageHeaderAccessor> injector, Propagator.Getter<MessageHeaderAccessor> extractor) {
+		return new TraceFunctionAroundWrapper(environment, tracer, propagator, injector, extractor);
 	}
 
 }
@@ -69,18 +70,29 @@ class TraceFunctionAroundWrapper extends FunctionAroundWrapper
 
 	private final Environment environment;
 
-	private final Tracing tracing;
+	private final Tracer tracer;
+
+	private final Propagator propagator;
+
+	private final Propagator.Setter<MessageHeaderAccessor> injector;
+
+	private final Propagator.Getter<MessageHeaderAccessor> extractor;
 
 	final Map<String, String> functionToDestinationCache = new ConcurrentHashMap<>();
 
-	TraceFunctionAroundWrapper(Environment environment, Tracing tracing) {
+	TraceFunctionAroundWrapper(Environment environment, Tracer tracer, Propagator propagator,
+			Propagator.Setter<MessageHeaderAccessor> injector, Propagator.Getter<MessageHeaderAccessor> extractor) {
 		this.environment = environment;
-		this.tracing = tracing;
+		this.tracer = tracer;
+		this.propagator = propagator;
+		this.injector = injector;
+		this.extractor = extractor;
 	}
 
 	@Override
 	protected Object doApply(Message<byte[]> message, SimpleFunctionRegistry.FunctionInvocationWrapper targetFunction) {
-		TraceMessageHandler traceMessageHandler = TraceMessageHandler.forNonSpringIntegration(this.tracing);
+		TraceMessageHandler traceMessageHandler = TraceMessageHandler.forNonSpringIntegration(this.tracer,
+				this.propagator, this.injector, this.extractor);
 		if (log.isDebugEnabled()) {
 			log.debug("Will retrieve the tracing headers from the message");
 		}
@@ -89,7 +101,6 @@ class TraceFunctionAroundWrapper extends FunctionAroundWrapper
 		if (log.isDebugEnabled()) {
 			log.debug("Wrapped input msg " + wrappedInputMessage);
 		}
-		Tracer tracer = this.tracing.tracer();
 		Object result;
 		Throwable throwable = null;
 		try (Tracer.SpanInScope ws = tracer.withSpanInScope(wrappedInputMessage.childSpan.start())) {
@@ -110,8 +121,7 @@ class TraceFunctionAroundWrapper extends FunctionAroundWrapper
 		}
 		Message msgResult = toMessage(result);
 		MessageAndSpan wrappedOutputMessage = traceMessageHandler.wrapOutputMessage(msgResult,
-				TraceContextOrSamplingFlags.create(wrappedInputMessage.parentSpan.context()),
-				outputDestination(targetFunction));
+				wrappedInputMessage.parentSpan, outputDestination(targetFunction));
 		if (log.isDebugEnabled()) {
 			log.debug("Wrapped output msg " + wrappedOutputMessage);
 		}

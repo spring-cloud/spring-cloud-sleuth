@@ -22,15 +22,20 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
+import org.springframework.boot.autoconfigure.amqp.RabbitAutoConfiguration;
 import org.springframework.boot.autoconfigure.jmx.JmxAutoConfiguration;
+import org.springframework.boot.autoconfigure.quartz.QuartzAutoConfiguration;
 import org.springframework.cloud.client.loadbalancer.LoadBalancerAutoConfiguration;
+import org.springframework.cloud.gateway.config.GatewayAutoConfiguration;
+import org.springframework.cloud.gateway.config.GatewayClassPathWarningAutoConfiguration;
+import org.springframework.cloud.gateway.config.GatewayMetricsAutoConfiguration;
 import org.springframework.context.annotation.Configuration;
 
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)
-@EnableAutoConfiguration(exclude = { LoadBalancerAutoConfiguration.class, JmxAutoConfiguration.class })
-// ,TraceSpringIntegrationAutoConfiguration.class,
-// TraceWebSocketAutoConfiguration.class })
+@EnableAutoConfiguration(exclude = { LoadBalancerAutoConfiguration.class, JmxAutoConfiguration.class,
+		GatewayMetricsAutoConfiguration.class, GatewayClassPathWarningAutoConfiguration.class,
+		GatewayAutoConfiguration.class, QuartzAutoConfiguration.class, RabbitAutoConfiguration.class })
 @Configuration(proxyBeanMethods = false)
 public @interface DefaultTestAutoConfiguration {
 

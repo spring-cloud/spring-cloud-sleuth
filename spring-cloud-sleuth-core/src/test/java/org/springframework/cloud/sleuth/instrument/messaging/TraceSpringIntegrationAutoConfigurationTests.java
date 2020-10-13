@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.springframework.cloud.sleuth.brave.instrument.messaging;
+package org.springframework.cloud.sleuth.instrument.messaging;
 
 import org.junit.jupiter.api.Test;
 
@@ -23,7 +23,6 @@ import org.springframework.boot.test.context.FilteredClassLoader;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
 import org.springframework.cloud.function.context.FunctionCatalog;
 import org.springframework.cloud.sleuth.autoconfig.TraceAutoConfiguration;
-import org.springframework.cloud.sleuth.brave.autoconfig.TraceBraveAutoConfiguration;
 import org.springframework.cloud.stream.annotation.EnableBinding;
 import org.springframework.context.annotation.Configuration;
 
@@ -32,7 +31,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 class TraceSpringIntegrationAutoConfigurationTests {
 
 	private final ApplicationContextRunner contextRunner = new ApplicationContextRunner()
-			.withConfiguration(AutoConfigurations.of(TraceAutoConfiguration.class, TraceBraveAutoConfiguration.class,
+			.withConfiguration(AutoConfigurations.of(TraceAutoConfiguration.class,
 					TraceSpringMessagingAutoConfiguration.class, TraceSpringIntegrationAutoConfiguration.class));
 
 	@Test

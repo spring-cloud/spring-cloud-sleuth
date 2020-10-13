@@ -28,10 +28,14 @@ import org.junit.jupiter.params.provider.MethodSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
+import org.springframework.boot.autoconfigure.amqp.RabbitAutoConfiguration;
+import org.springframework.boot.autoconfigure.jmx.JmxAutoConfiguration;
+import org.springframework.boot.autoconfigure.quartz.QuartzAutoConfiguration;
 import org.springframework.boot.web.server.LocalServerPort;
 import org.springframework.cloud.client.loadbalancer.LoadBalanced;
 import org.springframework.cloud.gateway.config.GatewayAutoConfiguration;
 import org.springframework.cloud.gateway.config.GatewayClassPathWarningAutoConfiguration;
+import org.springframework.cloud.gateway.config.GatewayMetricsAutoConfiguration;
 import org.springframework.cloud.loadbalancer.annotation.LoadBalancerClient;
 import org.springframework.cloud.loadbalancer.core.ServiceInstanceListSupplier;
 import org.springframework.cloud.openfeign.EnableFeignClients;
@@ -131,8 +135,10 @@ public abstract class WebClientNotSampledTests {
 	}
 
 	@Configuration(proxyBeanMethods = false)
-	@EnableAutoConfiguration(exclude = { TraceWebServletAutoConfiguration.class,
-			GatewayClassPathWarningAutoConfiguration.class, GatewayAutoConfiguration.class })
+	@EnableAutoConfiguration(exclude = { TraceWebServletAutoConfiguration.class, GatewayAutoConfiguration.class,
+			JmxAutoConfiguration.class, GatewayMetricsAutoConfiguration.class,
+			GatewayClassPathWarningAutoConfiguration.class, GatewayAutoConfiguration.class,
+			QuartzAutoConfiguration.class, RabbitAutoConfiguration.class })
 	@EnableFeignClients
 	@LoadBalancerClient(value = "fooservice", configuration = SimpleLoadBalancerClientConfiguration.class)
 	public static class TestConfiguration {

@@ -98,7 +98,7 @@ public class OtelHttpClientHandler extends HttpClientTracer<HttpClientRequest, H
 		io.opentelemetry.trace.Span afterRequest = super.onRequest(span, httpClientRequest);
 		if (this.httpClientRequestParser != null) {
 			Span fromOtel = OtelSpan.fromOtel(afterRequest);
-			this.httpClientRequestParser.parse(httpClientRequest, fromOtel.context(), fromOtel.customizer());
+			this.httpClientRequestParser.parse(httpClientRequest, fromOtel.context(), fromOtel);
 		}
 		String path = httpClientRequest.path();
 		if (path != null) {
@@ -113,7 +113,7 @@ public class OtelHttpClientHandler extends HttpClientTracer<HttpClientRequest, H
 		io.opentelemetry.trace.Span afterResponse = super.onResponse(span, httpClientResponse);
 		if (this.httpClientResponseParser != null) {
 			Span fromOtel = OtelSpan.fromOtel(afterResponse);
-			this.httpClientResponseParser.parse(httpClientResponse, fromOtel.context(), fromOtel.customizer());
+			this.httpClientResponseParser.parse(httpClientResponse, fromOtel.context(), fromOtel);
 		}
 		return afterResponse;
 	}

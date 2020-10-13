@@ -14,23 +14,26 @@
  * limitations under the License.
  */
 
-package org.springframework.cloud.sleuth.brave.instrument.messaging;
+package org.springframework.cloud.sleuth.instrument.messaging;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.function.Function;
 
-import brave.Span;
-import brave.SpanCustomizer;
-import brave.Tracer;
-import brave.Tracing;
-import brave.propagation.TraceContext;
-import brave.propagation.TraceContextOrSamplingFlags;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import org.springframework.beans.factory.BeanFactory;
+import org.springframework.beans.factory.NoSuchBeanDefinitionException;
+import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.cloud.sleuth.api.Span;
+import org.springframework.cloud.sleuth.api.SpanCustomizer;
+import org.springframework.cloud.sleuth.api.TraceContext;
+import org.springframework.cloud.sleuth.api.Tracer;
+import org.springframework.cloud.sleuth.api.propagation.Propagator;
 import org.springframework.cloud.sleuth.internal.SpanNameUtil;
+import org.springframework.core.ResolvableType;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageHeaders;
 import org.springframework.messaging.MessagingException;
@@ -66,13 +69,13 @@ class TraceMessageHandler {
 
 	private static final String TRACE_HANDLER_PARENT_SPAN = "traceHandlerParentSpan";
 
-	private final Tracing tracing;
+	final Tracer tracer;
 
-	private final Tracer tracer;
+	private final Propagator propagator;
 
-	private final TraceContext.Injector<MessageHeaderAccessor> injector;
+	private final Propagator.Setter<MessageHeaderAccessor> injector;
 
-	private final TraceContext.Extractor<MessageHeaderAccessor> extractor;
+	private final Propagator.Getter<MessageHeaderAccessor> extractor;
 
 	private final Function<TraceContext, Span> preSendFunction;
 
@@ -80,30 +83,48 @@ class TraceMessageHandler {
 
 	private final Function<TraceContext, Span> outputMessageSpanFunction;
 
-	TraceMessageHandler(Tracing tracing, Function<TraceContext, Span> preSendFunction,
+	TraceMessageHandler(Tracer tracer, Propagator propagator, Propagator.Setter<MessageHeaderAccessor> injector,
+			Propagator.Getter<MessageHeaderAccessor> extractor, Function<TraceContext, Span> preSendFunction,
 			TriConsumer<MessageHeaderAccessor, Span, Span> preSendMessageManipulator,
 			Function<TraceContext, Span> outputMessageSpanFunction) {
-		this.tracing = tracing;
-		this.tracer = tracing.tracer();
-		this.injector = tracing.propagation().injector(MessageHeaderPropagation.INSTANCE);
-		this.extractor = tracing.propagation().extractor(MessageHeaderPropagation.INSTANCE);
+		this.tracer = tracer;
+		this.propagator = propagator;
+		this.injector = injector;
+		this.extractor = extractor;
 		// TODO: Abstractions to reuse in TraceChannelInterceptors?
 		this.preSendFunction = preSendFunction;
 		this.preSendMessageManipulator = preSendMessageManipulator;
 		this.outputMessageSpanFunction = outputMessageSpanFunction;
 	}
 
-	static TraceMessageHandler forNonSpringIntegration(Tracing tracing) {
-		Tracer tracer = tracing.tracer();
-		Function<TraceContext, Span> preSendFunction = ctx -> tracer.nextSpan(TraceContextOrSamplingFlags.create(ctx))
-				.name("handle").start();
+	static TraceMessageHandler forNonSpringIntegration(Tracer tracer, Propagator propagator,
+			Propagator.Setter<MessageHeaderAccessor> injector, Propagator.Getter<MessageHeaderAccessor> extractor) {
+		Function<TraceContext, Span> preSendFunction = ctx -> tracer.nextSpan(ctx).name("handle").start();
 		TriConsumer<MessageHeaderAccessor, Span, Span> preSendMessageManipulator = (headers, parentSpan, childSpan) -> {
 			headers.setHeader("traceHandlerParentSpan", parentSpan);
 			headers.setHeader(Span.class.getName(), childSpan);
 		};
-		Function<TraceContext, Span> postReceiveFunction = ctx -> tracer
-				.nextSpan(TraceContextOrSamplingFlags.create(ctx));
-		return new TraceMessageHandler(tracing, preSendFunction, preSendMessageManipulator, postReceiveFunction);
+		Function<TraceContext, Span> postReceiveFunction = tracer::nextSpan;
+		return new TraceMessageHandler(tracer, propagator, injector, extractor, preSendFunction,
+				preSendMessageManipulator, postReceiveFunction);
+	}
+
+	@SuppressWarnings("unchecked")
+	static TraceMessageHandler forNonSpringIntegration(BeanFactory beanFactory) {
+		Propagator.Setter<MessageHeaderAccessor> setter = firstBeanOrException(beanFactory, Propagator.Setter.class);
+		Propagator.Getter<MessageHeaderAccessor> getter = firstBeanOrException(beanFactory, Propagator.Getter.class);
+		return forNonSpringIntegration(beanFactory.getBean(Tracer.class), beanFactory.getBean(Propagator.class), setter,
+				getter);
+	}
+
+	private static <T> T firstBeanOrException(BeanFactory beanFactory, Class<T> clazz) {
+		ObjectProvider<T> setterObjectProvider = beanFactory
+				.getBeanProvider(ResolvableType.forClassWithGenerics(clazz, MessageHeaderAccessor.class));
+		T object = setterObjectProvider.iterator().hasNext() ? setterObjectProvider.iterator().next() : null;
+		if (object == null) {
+			throw new NoSuchBeanDefinitionException("No Propagator.Setter has been defined");
+		}
+		return object;
 	}
 
 	/**
@@ -115,9 +136,9 @@ class TraceMessageHandler {
 	 */
 	MessageAndSpans wrapInputMessage(Message<?> message, String destinationName) {
 		MessageHeaderAccessor headers = mutableHeaderAccessor(message);
-		TraceContextOrSamplingFlags extracted = this.extractor.extract(headers);
+		Span extracted = this.propagator.extract(headers, this.extractor);
 		// Start and finish a consumer span as we will immediately process it.
-		Span consumerSpan = this.tracer.nextSpan(extracted);
+		Span consumerSpan = this.tracer.nextSpan(extracted.context());
 		if (!consumerSpan.isNoop()) {
 			consumerSpan.kind(Span.Kind.CONSUMER).start();
 			consumerSpan.remoteServiceName(REMOTE_SERVICE_NAME);
@@ -153,11 +174,7 @@ class TraceMessageHandler {
 		if (span != null) {
 			return span;
 		}
-		TraceContextOrSamplingFlags extracted = this.extractor.extract(headers);
-		if (extracted == TraceContextOrSamplingFlags.EMPTY) {
-			return null;
-		}
-		return this.tracer.nextSpan(extracted);
+		return this.propagator.extract(headers, this.extractor);
 	}
 
 	private void addTags(SpanCustomizer result, String destinationName) {
@@ -197,13 +214,12 @@ class TraceMessageHandler {
 	 * @param destinationName - destination to which the message should be sent
 	 * @return a tuple with the wrapped message and a corresponding span
 	 */
-	MessageAndSpan wrapOutputMessage(Message<?> message, TraceContextOrSamplingFlags parentSpan,
-			String destinationName) {
+	MessageAndSpan wrapOutputMessage(Message<?> message, Span parentSpan, String destinationName) {
 		Message<?> retrievedMessage = getMessage(message);
 		MessageHeaderAccessor headers = mutableHeaderAccessor(retrievedMessage);
 		Span span = this.outputMessageSpanFunction.apply(parentSpan.context());
 		clearTracingHeaders(headers);
-		this.injector.inject(span.context(), headers);
+		this.propagator.inject(span.context(), headers, this.injector);
 		markProducerSpan(headers, span, destinationName);
 		if (log.isDebugEnabled()) {
 			log.debug("Created a new span output message " + span);
@@ -238,7 +254,7 @@ class TraceMessageHandler {
 		if (originalMessage instanceof ErrorMessage) {
 			ErrorMessage errorMessage = (ErrorMessage) originalMessage;
 			headers.copyHeaders(MessageHeaderPropagation.propagationHeaders(additionalHeaders.getMessageHeaders(),
-					this.tracing.propagation().keys()));
+					this.propagator.fields()));
 			return new ErrorMessage(errorMessage.getPayload(), isWebSockets(headers) ? headers.getMessageHeaders()
 					: new MessageHeaders(headers.getMessageHeaders()), errorMessage.getOriginalMessage());
 		}
@@ -269,7 +285,7 @@ class TraceMessageHandler {
 	}
 
 	private void clearTracingHeaders(MessageHeaderAccessor headers) {
-		List<String> keysToRemove = new ArrayList<>(this.tracing.propagation().keys());
+		List<String> keysToRemove = new ArrayList<>(this.propagator.fields());
 		keysToRemove.add(Span.class.getName());
 		keysToRemove.add("traceHandlerParentSpan");
 		MessageHeaderPropagation.removeAnyTraceHeaders(headers, keysToRemove);

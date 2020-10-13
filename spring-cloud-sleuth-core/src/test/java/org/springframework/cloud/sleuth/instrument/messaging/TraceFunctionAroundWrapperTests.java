@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.springframework.cloud.sleuth.brave.instrument.messaging;
+package org.springframework.cloud.sleuth.instrument.messaging;
 
 import org.junit.jupiter.api.Test;
 
@@ -24,7 +24,7 @@ class TraceFunctionAroundWrapperTests {
 
 	@Test
 	void should_clear_cache_on_refresh() {
-		TraceFunctionAroundWrapper wrapper = new TraceFunctionAroundWrapper(null, null);
+		TraceFunctionAroundWrapper wrapper = new TraceFunctionAroundWrapper(null, null, null, null, null);
 		wrapper.functionToDestinationCache.put("example", "entry");
 		then(wrapper.functionToDestinationCache).isNotEmpty();
 

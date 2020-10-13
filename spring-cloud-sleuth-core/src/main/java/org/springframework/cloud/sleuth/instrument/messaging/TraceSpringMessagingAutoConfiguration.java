@@ -14,32 +14,32 @@
  * limitations under the License.
  */
 
-package org.springframework.cloud.sleuth.brave.instrument.messaging;
-
-import brave.propagation.Propagation;
+package org.springframework.cloud.sleuth.instrument.messaging;
 
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.cloud.sleuth.api.propagation.Propagator;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.messaging.support.MessageHeaderAccessor;
 
 @Configuration(proxyBeanMethods = false)
 @ConditionalOnClass(MessageHeaderAccessor.class)
-@OnMessagingEnabled
-@EnableConfigurationProperties(SleuthMessagingProperties.class)
+@ConditionalOnProperty(value = "spring.sleuth.messaging.enabled", matchIfMissing = true)
+@EnableConfigurationProperties(SleuthIntegrationMessagingProperties.class)
 class TraceSpringMessagingAutoConfiguration {
 
 	@Bean
 	@ConditionalOnMissingBean
-	Propagation.Setter<MessageHeaderAccessor, String> traceMessagePropagationSetter() {
+	Propagator.Setter<MessageHeaderAccessor> traceMessagePropagationSetter() {
 		return MessageHeaderPropagation.INSTANCE;
 	}
 
 	@Bean
 	@ConditionalOnMissingBean
-	Propagation.Getter<MessageHeaderAccessor, String> traceMessagePropagationGetter() {
+	Propagator.Getter<MessageHeaderAccessor> traceMessagePropagationGetter() {
 		return MessageHeaderPropagation.INSTANCE;
 	}
 

@@ -23,7 +23,6 @@ import io.opentelemetry.trace.SpanContext;
 import io.opentelemetry.trace.StatusCanonicalCode;
 
 import org.springframework.cloud.sleuth.api.Span;
-import org.springframework.cloud.sleuth.api.SpanCustomizer;
 import org.springframework.cloud.sleuth.api.TraceContext;
 import org.springframework.lang.Nullable;
 
@@ -46,11 +45,6 @@ public class OtelSpan implements Span {
 			return null;
 		}
 		return new OtelTraceContext(this.delegate);
-	}
-
-	@Override
-	public SpanCustomizer customizer() {
-		return new OtelSpanCustomizer(this.delegate);
 	}
 
 	@Override
@@ -103,14 +97,15 @@ public class OtelSpan implements Span {
 
 	@Override
 	public Span remoteServiceName(String remoteServiceName) {
-		// TODO: [OTEL] doesn't seem to have this notion
-		return null;
+		this.delegate.setAttribute("peer.service", remoteServiceName);
+		return this;
 	}
 
 	@Override
-	public boolean remoteIpAndPort(String remoteIp, int remotePort) {
-		// TODO: [OTEL] doesn't seem to have this notion
-		return false;
+	public Span remoteIpAndPort(String remoteIp, int remotePort) {
+		this.delegate.setAttribute("net.peer.ip", remoteIp);
+		this.delegate.setAttribute("net.peer.port", remotePort);
+		return this;
 	}
 
 	@Override

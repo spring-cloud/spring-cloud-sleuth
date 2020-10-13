@@ -21,7 +21,6 @@ import java.io.Closeable;
 import brave.Tracing;
 import brave.handler.SpanHandler;
 import brave.http.HttpTracing;
-import brave.propagation.B3Propagation;
 import brave.propagation.StrictScopeDecorator;
 import brave.propagation.ThreadLocalCurrentTraceContext;
 import brave.sampler.Sampler;
@@ -107,7 +106,7 @@ public class BraveTestTracing implements TracerAware, TestTracingAware, TestTrac
 
 	@Override
 	public Propagator propagator() {
-		return new BravePropagator(B3Propagation.get(), this.tracer);
+		return new BravePropagator(this.tracing);
 	}
 
 	@Override

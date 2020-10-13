@@ -43,6 +43,8 @@ import reactor.core.publisher.BaseSubscriber;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
+import org.springframework.boot.autoconfigure.amqp.RabbitAutoConfiguration;
+import org.springframework.boot.autoconfigure.jmx.JmxAutoConfiguration;
 import org.springframework.boot.autoconfigure.quartz.QuartzAutoConfiguration;
 import org.springframework.boot.autoconfigure.web.ServerProperties;
 import org.springframework.boot.autoconfigure.web.servlet.error.BasicErrorController;
@@ -398,9 +400,10 @@ public abstract class WebClientTests {
 	}
 
 	@Configuration(proxyBeanMethods = false)
-	@EnableAutoConfiguration(exclude = { TraceWebServletAutoConfiguration.class,
+	@EnableAutoConfiguration(exclude = { TraceWebServletAutoConfiguration.class, GatewayAutoConfiguration.class,
+			JmxAutoConfiguration.class, GatewayMetricsAutoConfiguration.class,
 			GatewayClassPathWarningAutoConfiguration.class, GatewayAutoConfiguration.class,
-			GatewayMetricsAutoConfiguration.class, QuartzAutoConfiguration.class })
+			QuartzAutoConfiguration.class, RabbitAutoConfiguration.class })
 	@EnableFeignClients
 	@LoadBalancerClient(value = "fooservice", configuration = SimpleLoadBalancerClientConfiguration.class)
 	public static class TestConfiguration {

@@ -17,7 +17,6 @@
 package org.springframework.cloud.sleuth.brave.bridge;
 
 import org.springframework.cloud.sleuth.api.Span;
-import org.springframework.cloud.sleuth.api.SpanCustomizer;
 import org.springframework.cloud.sleuth.api.TraceContext;
 
 public class BraveSpan implements Span {
@@ -39,11 +38,6 @@ public class BraveSpan implements Span {
 			return null;
 		}
 		return new BraveTraceContext(this.delegate.context());
-	}
-
-	@Override
-	public SpanCustomizer customizer() {
-		return new BraveSpanCustomizer(this.delegate.customizer());
 	}
 
 	@Override
@@ -95,8 +89,9 @@ public class BraveSpan implements Span {
 	}
 
 	@Override
-	public boolean remoteIpAndPort(String remoteIp, int remotePort) {
-		return this.delegate.remoteIpAndPort(remoteIp, remotePort);
+	public Span remoteIpAndPort(String remoteIp, int remotePort) {
+		this.delegate.remoteIpAndPort(remoteIp, remotePort);
+		return this;
 	}
 
 	@Override

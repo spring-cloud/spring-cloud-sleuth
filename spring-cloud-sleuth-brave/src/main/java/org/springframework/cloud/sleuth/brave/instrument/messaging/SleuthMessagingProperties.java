@@ -24,20 +24,10 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * @author Marcin Grzejszczak
  * @since 2.0.0
  */
-@ConfigurationProperties("spring.sleuth")
+@ConfigurationProperties("spring.sleuth.messaging")
 class SleuthMessagingProperties {
 
-	private Integration integration = new Integration();
-
 	private Messaging messaging = new Messaging();
-
-	public Integration getIntegration() {
-		return this.integration;
-	}
-
-	public void setIntegration(Integration integration) {
-		this.integration = integration;
-	}
 
 	public Messaging getMessaging() {
 		return this.messaging;
@@ -45,44 +35,6 @@ class SleuthMessagingProperties {
 
 	public void setMessaging(Messaging messaging) {
 		this.messaging = messaging;
-	}
-
-	/**
-	 * Properties for Spring Integration.
-	 *
-	 * @author Marcin Grzejszczak
-	 */
-	public static class Integration {
-
-		/**
-		 * An array of patterns against which channel names will be matched.
-		 * @see org.springframework.integration.config.GlobalChannelInterceptor#patterns()
-		 * Defaults to any channel name not matching the Hystrix Stream and functional
-		 * Stream channel names.
-		 */
-		private String[] patterns = new String[] { "!hystrixStreamOutput*", "*", "!channel*" };
-
-		/**
-		 * Enable Spring Integration sleuth instrumentation.
-		 */
-		private boolean enabled;
-
-		public String[] getPatterns() {
-			return this.patterns;
-		}
-
-		public void setPatterns(String[] patterns) {
-			this.patterns = patterns;
-		}
-
-		public boolean isEnabled() {
-			return this.enabled;
-		}
-
-		public void setEnabled(boolean enabled) {
-			this.enabled = enabled;
-		}
-
 	}
 
 	/**

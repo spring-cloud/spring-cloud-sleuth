@@ -55,7 +55,8 @@ public class OtelTracer implements Tracer {
 
 	@Override
 	public Span nextSpan(TraceContext extracted) {
-		return null;
+		return OtelSpan
+				.fromOtel(this.tracer.spanBuilder("").setParent(OtelTraceContext.toOtelContext(extracted)).startSpan());
 	}
 
 	@Override

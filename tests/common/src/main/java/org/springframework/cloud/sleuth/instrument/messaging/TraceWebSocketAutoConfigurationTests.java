@@ -14,44 +14,41 @@
  * limitations under the License.
  */
 
-package org.springframework.cloud.sleuth.brave.instrument.messaging;
+package org.springframework.cloud.sleuth.instrument.messaging;
 
-import brave.sampler.Sampler;
+import org.assertj.core.api.BDDAssertions;
 import org.junit.jupiter.api.Test;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.context.annotation.Bean;
+import org.springframework.cloud.sleuth.instrument.DefaultTestAutoConfiguration;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.messaging.simp.config.MessageBrokerRegistry;
+import org.springframework.test.context.ContextConfiguration;
 import org.springframework.web.socket.config.annotation.AbstractWebSocketMessageBrokerConfigurer;
 import org.springframework.web.socket.config.annotation.DelegatingWebSocketMessageBrokerConfiguration;
 import org.springframework.web.socket.config.annotation.EnableWebSocketMessageBroker;
 import org.springframework.web.socket.config.annotation.StompEndpointRegistry;
 
-import static org.assertj.core.api.BDDAssertions.then;
-
 /**
  * @author Marcin Grzejszczak
  */
-@SpringBootTest(classes = TraceWebSocketAutoConfigurationTests.Config.class)
-public class TraceWebSocketAutoConfigurationTests {
+@ContextConfiguration(classes = TraceWebSocketAutoConfigurationTests.Config.class)
+public abstract class TraceWebSocketAutoConfigurationTests {
 
 	@Autowired
 	DelegatingWebSocketMessageBrokerConfiguration delegatingWebSocketMessageBrokerConfiguration;
 
 	@Test
 	public void should_register_interceptors_for_all_channels() {
-		then(this.delegatingWebSocketMessageBrokerConfiguration.clientInboundChannel().getInterceptors())
+		BDDAssertions.then(this.delegatingWebSocketMessageBrokerConfiguration.clientInboundChannel().getInterceptors())
 				.hasAtLeastOneElementOfType(TracingChannelInterceptor.class);
-		then(this.delegatingWebSocketMessageBrokerConfiguration.clientOutboundChannel().getInterceptors())
+		BDDAssertions.then(this.delegatingWebSocketMessageBrokerConfiguration.clientOutboundChannel().getInterceptors())
 				.hasAtLeastOneElementOfType(TracingChannelInterceptor.class);
-		then(this.delegatingWebSocketMessageBrokerConfiguration.brokerChannel().getInterceptors())
+		BDDAssertions.then(this.delegatingWebSocketMessageBrokerConfiguration.brokerChannel().getInterceptors())
 				.hasAtLeastOneElementOfType(TracingChannelInterceptor.class);
 	}
 
-	@EnableAutoConfiguration
+	@DefaultTestAutoConfiguration
 	@Configuration(proxyBeanMethods = false)
 	@EnableWebSocketMessageBroker
 	public static class Config extends AbstractWebSocketMessageBrokerConfigurer {
@@ -65,11 +62,6 @@ public class TraceWebSocketAutoConfigurationTests {
 		@Override
 		public void registerStompEndpoints(StompEndpointRegistry registry) {
 			registry.addEndpoint("/hello").withSockJS();
-		}
-
-		@Bean
-		Sampler testSampler() {
-			return Sampler.ALWAYS_SAMPLE;
 		}
 
 	}

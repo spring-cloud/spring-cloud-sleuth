@@ -17,7 +17,6 @@
 package org.springframework.cloud.sleuth.autoconfig.noop;
 
 import org.springframework.cloud.sleuth.api.Span;
-import org.springframework.cloud.sleuth.api.SpanCustomizer;
 import org.springframework.cloud.sleuth.api.TraceContext;
 
 class NoOpSpan implements Span {
@@ -30,11 +29,6 @@ class NoOpSpan implements Span {
 	@Override
 	public TraceContext context() {
 		return new NoOpTraceContext();
-	}
-
-	@Override
-	public SpanCustomizer customizer() {
-		return new NoOpSpanCustomizer();
 	}
 
 	@Override
@@ -83,8 +77,8 @@ class NoOpSpan implements Span {
 	}
 
 	@Override
-	public boolean remoteIpAndPort(String remoteIp, int remotePort) {
-		return false;
+	public Span remoteIpAndPort(String remoteIp, int remotePort) {
+		return this;
 	}
 
 	@Override

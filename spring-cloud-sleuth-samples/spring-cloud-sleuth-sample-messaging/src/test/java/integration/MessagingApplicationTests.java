@@ -121,11 +121,11 @@ public class MessagingApplicationTests extends AbstractIntegrationTest {
 		// "http:/parent/" -> "message:messages" -> "http:/foo" (CS + CR) -> "http:/foo"
 		// (SS)
 		thenAllSpansArePresent(firstHttpSpan, eventSpans, lastHttpSpansParent, eventSentSpan, producerSpan);
-		then(this.testSpanHandler.spans).as("There were 6 spans").hasSize(6);
+		List<MutableSpan> spans = this.testSpanHandler.spans;
+		then(spans).as("There were 6 spans").hasSize(6);
 		log.info("Checking the parent child structure");
-		List<Optional<MutableSpan>> parentChild = this.testSpanHandler.spans.stream()
-				.filter(span -> span.parentId() != null).map(span -> this.testSpanHandler.spans.stream()
-						.filter(span1 -> span1.id().equals(span.parentId())).findAny())
+		List<Optional<MutableSpan>> parentChild = spans.stream().filter(span -> span.parentId() != null)
+				.map(span -> spans.stream().filter(span1 -> span1.id().equals(span.parentId())).findAny())
 				.collect(Collectors.toList());
 		log.info("List of parents and children " + parentChild);
 		then(parentChild.stream().allMatch(Optional::isPresent)).isTrue();

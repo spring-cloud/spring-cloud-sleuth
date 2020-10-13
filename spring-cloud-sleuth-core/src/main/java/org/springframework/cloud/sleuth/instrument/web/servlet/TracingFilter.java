@@ -76,7 +76,7 @@ public final class TracingFilter implements Filter {
 		Span span = handler.handleReceive(new HttpServletRequestWrapper(req));
 
 		// Add attributes for explicit access to customization or span context
-		request.setAttribute(SpanCustomizer.class.getName(), span.customizer());
+		request.setAttribute(SpanCustomizer.class.getName(), span);
 		request.setAttribute(TraceContext.class.getName(), span.context());
 		SendHandled sendHandled = new SendHandled();
 		request.setAttribute(SendHandled.class.getName(), sendHandled);

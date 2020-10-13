@@ -16,7 +16,11 @@ org.springframework.cloud.sleuth.instrument.web.client.TraceWebAsyncClientAutoCo
 org.springframework.cloud.sleuth.instrument.web.client.feign.TraceFeignClientAutoConfiguration,\
 org.springframework.cloud.sleuth.instrument.web.SkipPatternConfiguration,\
 org.springframework.cloud.sleuth.instrument.scheduling.TraceSchedulingAutoConfiguration,\
-org.springframework.cloud.sleuth.instrument.reactor.TraceReactorAutoConfiguration
+org.springframework.cloud.sleuth.instrument.reactor.TraceReactorAutoConfiguration,\
+org.springframework.cloud.sleuth.instrument.messaging.TraceFunctionAutoConfiguration,\
+org.springframework.cloud.sleuth.instrument.messaging.TraceSpringIntegrationAutoConfiguration,\
+org.springframework.cloud.sleuth.instrument.messaging.TraceSpringMessagingAutoConfiguration,\
+org.springframework.cloud.sleuth.instrument.messaging.TraceWebSocketAutoConfiguration
 
 # Environment Post Processor
 org.springframework.boot.env.EnvironmentPostProcessor=\

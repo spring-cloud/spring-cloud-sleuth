@@ -18,7 +18,7 @@ package org.springframework.cloud.sleuth.api;
 
 import org.springframework.lang.Nullable;
 
-public interface Span {
+public interface Span extends SpanCustomizer {
 
 	/**
 	 * When true, no recording is done and nothing is reported to zipkin. However, this
@@ -28,12 +28,6 @@ public interface Span {
 	boolean isNoop();
 
 	TraceContext context();
-
-	/**
-	 * Returns a customizer appropriate for the current span. Prefer this when invoking
-	 * user code
-	 */
-	SpanCustomizer customizer();
 
 	/**
 	 * Starts the span with an implicit timestamp.
@@ -140,7 +134,7 @@ public interface Span {
 	// Parsing IP:port pairs on each request, including concerns like IPv6 bracketing,
 	// would add
 	// weight for little benefit. If this changes, we can overload it.
-	boolean remoteIpAndPort(@Nullable String remoteIp, int remotePort);
+	Span remoteIpAndPort(@Nullable String remoteIp, int remotePort);
 
 	/** Reports the span complete, assigning the most precise duration possible. */
 	void finish();
