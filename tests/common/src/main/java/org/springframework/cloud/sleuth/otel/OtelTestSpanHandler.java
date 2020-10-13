@@ -210,6 +210,11 @@ class SpanDataToReportedSpan implements ReportedSpan {
 	}
 
 	@Override
+	public String remoteServiceName() {
+		return this.spanData.getAttributes().get(AttributeKey.stringKey("peer.service"));
+	}
+
+	@Override
 	public String toString() {
 		return "SpanDataToReportedSpan{" + "spanData=" + spanData + ", tags=" + tags + '}';
 	}

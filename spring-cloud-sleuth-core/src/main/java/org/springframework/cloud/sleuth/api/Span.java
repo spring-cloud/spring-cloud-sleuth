@@ -216,4 +216,111 @@ public interface Span extends SpanCustomizer {
 
 	}
 
+	/**
+	 * Used by extractors / injectors.
+	 */
+	interface Builder {
+
+		/**
+		 * Sets the parent to use from the specified {@code Context}. If not set, the
+		 * value of {@code
+		 * Tracer.getCurrentSpan()} at {@link #start()} time will be used as parent.
+		 *
+		 * <p>
+		 * If no {@link Span} is available in the specified {@code Context}, the resulting
+		 * {@code
+		 * Span} will become a root instance, as if {@link #setNoParent()} had been
+		 * called.
+		 *
+		 * <p>
+		 * If called multiple times, only the last specified value will be used. Observe
+		 * that the state defined by a previous call to {@link #setNoParent()} will be
+		 * discarded.
+		 * @param context the {@code Context}.
+		 * @return this.
+		 * @throws NullPointerException if {@code context} is {@code null}.
+		 * @since 0.7.0
+		 */
+		Builder setParent(TraceContext context);
+
+		/**
+		 * Sets the option to become a root {@code Span} for a new trace. If not set, the
+		 * value of {@code Tracer.getCurrentSpan()} at {@link #start()} time will be used
+		 * as parent.
+		 *
+		 * <p>
+		 * Observe that any previously set parent will be discarded.
+		 * @return this.
+		 * @since 0.1.0
+		 */
+		Builder setNoParent();
+
+		/** {@inheritDoc} */
+		Builder name(String name);
+
+		/** {@inheritDoc} */
+		Builder annotate(String value);
+
+		/** {@inheritDoc} */
+		Builder tag(String key, String value);
+
+		Builder error(Throwable throwable);
+
+		/**
+		 * Sets the {@link Span.Kind} for the newly created {@code Span}.
+		 * @param spanKind the kind of the newly created {@code Span}.
+		 * @return this.
+		 * @since 0.1.0
+		 */
+		Builder kind(Span.Kind spanKind);
+
+		/**
+		 * Sets an explicit start timestamp for the newly created {@code Span}.
+		 *
+		 * <p>
+		 * Use this method to specify an explicit start timestamp. If not called, the
+		 * implementation will use the timestamp value at {@link #start()} time, which
+		 * should be the default case.
+		 *
+		 * <p>
+		 * Important this is NOT equivalent with System.nanoTime().
+		 * @param startTimestamp the explicit start timestamp of the newly created
+		 * {@code Span} in nanos since epoch.
+		 * @return this.
+		 * @since 0.1.0
+		 */
+		Builder startTimestamp(long startTimestamp);
+
+		/**
+		 * Lower-case label of the remote node in the service graph, such as "favstar". Do
+		 * not set if unknown. Avoid names with variables or unique identifiers embedded.
+		 *
+		 * <p>
+		 * This is a primary label for trace lookup and aggregation, so it should be
+		 * intuitive and consistent. Many use a name from service discovery.
+		 *
+		 * @see #remoteIpAndPort(String, int)
+		 */
+		Builder remoteServiceName(String remoteServiceName);
+
+		/**
+		 * Starts a new {@link Span}.
+		 *
+		 * <p>
+		 * Users <b>must</b> manually call {@link Span#finish()} to end this {@code Span}.
+		 *
+		 * <p>
+		 * Does not install the newly created {@code Span} to the current Context.
+		 *
+		 * <p>
+		 * IMPORTANT: This method can be called only once per {@link Builder} instance and
+		 * as the last method called. After this method is called calling any method is
+		 * undefined behavior.
+		 * @return the newly created {@code Span}.
+		 * @since 0.1.0
+		 */
+		Span start();
+
+	}
+
 }

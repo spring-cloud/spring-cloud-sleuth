@@ -155,4 +155,9 @@ class FromMutableSpan implements ReportedSpan {
 		return Span.Kind.valueOf(this.mutableSpan.kind().name());
 	}
 
+	@Override
+	public String remoteServiceName() {
+		return this.mutableSpan.remoteServiceName();
+	}
+
 }

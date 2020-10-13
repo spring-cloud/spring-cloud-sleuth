@@ -27,6 +27,7 @@ import io.opentelemetry.sdk.trace.Sampler;
 import io.opentelemetry.sdk.trace.Samplers;
 import io.opentelemetry.sdk.trace.TracerSdkProvider;
 import io.opentelemetry.sdk.trace.config.TraceConfig;
+import org.jetbrains.annotations.NotNull;
 
 import org.springframework.cloud.sleuth.api.CurrentTraceContext;
 import org.springframework.cloud.sleuth.api.SamplerFunction;
@@ -52,9 +53,7 @@ public class OtelTestTracing implements TracerAware, TestTracingAware, TestTraci
 
 	ContextPropagators defaultContextPropagators = OpenTelemetry.getPropagators();
 
-	ContextPropagators contextPropagators = DefaultContextPropagators.builder()
-			.addTextMapPropagator(B3Propagator.getMultipleHeaderPropagator())
-			.addTextMapPropagator(B3Propagator.getSingleHeaderPropagator()).build();
+	ContextPropagators contextPropagators = contextPropagators();
 
 	Sampler sampler = Samplers.alwaysOn();
 
@@ -68,6 +67,12 @@ public class OtelTestTracing implements TracerAware, TestTracingAware, TestTraci
 		OpenTelemetry.setPropagators(this.contextPropagators);
 		provider.updateActiveTraceConfig(TraceConfig.getDefault().toBuilder().setSampler(this.sampler).build());
 		return provider.get("org.springframework.cloud.sleuth");
+	}
+
+	@NotNull
+	protected ContextPropagators contextPropagators() {
+		return DefaultContextPropagators.builder().addTextMapPropagator(B3Propagator.getMultipleHeaderPropagator())
+				.addTextMapPropagator(B3Propagator.getSingleHeaderPropagator()).build();
 	}
 
 	private void reset() {

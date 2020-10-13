@@ -101,4 +101,9 @@ public class NoOpTracer implements Tracer {
 		return new NoOpScopedSpan();
 	}
 
+	@Override
+	public Span.Builder spanBuilder() {
+		return new NoOpSpanBuilder();
+	}
+
 }

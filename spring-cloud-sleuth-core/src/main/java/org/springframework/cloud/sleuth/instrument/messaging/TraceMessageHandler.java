@@ -28,7 +28,6 @@ import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.NoSuchBeanDefinitionException;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.cloud.sleuth.api.Span;
-import org.springframework.cloud.sleuth.api.SpanCustomizer;
 import org.springframework.cloud.sleuth.api.TraceContext;
 import org.springframework.cloud.sleuth.api.Tracer;
 import org.springframework.cloud.sleuth.api.propagation.Propagator;
@@ -81,12 +80,12 @@ class TraceMessageHandler {
 
 	private final TriConsumer<MessageHeaderAccessor, Span, Span> preSendMessageManipulator;
 
-	private final Function<TraceContext, Span> outputMessageSpanFunction;
+	private final Function<TraceContext, Span.Builder> outputMessageSpanFunction;
 
 	TraceMessageHandler(Tracer tracer, Propagator propagator, Propagator.Setter<MessageHeaderAccessor> injector,
 			Propagator.Getter<MessageHeaderAccessor> extractor, Function<TraceContext, Span> preSendFunction,
 			TriConsumer<MessageHeaderAccessor, Span, Span> preSendMessageManipulator,
-			Function<TraceContext, Span> outputMessageSpanFunction) {
+			Function<TraceContext, Span.Builder> outputMessageSpanFunction) {
 		this.tracer = tracer;
 		this.propagator = propagator;
 		this.injector = injector;
@@ -104,7 +103,7 @@ class TraceMessageHandler {
 			headers.setHeader("traceHandlerParentSpan", parentSpan);
 			headers.setHeader(Span.class.getName(), childSpan);
 		};
-		Function<TraceContext, Span> postReceiveFunction = tracer::nextSpan;
+		Function<TraceContext, Span.Builder> postReceiveFunction = ctx -> tracer.spanBuilder().setParent(ctx);
 		return new TraceMessageHandler(tracer, propagator, injector, extractor, preSendFunction,
 				preSendMessageManipulator, postReceiveFunction);
 	}
@@ -136,15 +135,10 @@ class TraceMessageHandler {
 	 */
 	MessageAndSpans wrapInputMessage(Message<?> message, String destinationName) {
 		MessageHeaderAccessor headers = mutableHeaderAccessor(message);
-		Span extracted = this.propagator.extract(headers, this.extractor);
+		Span extracted = this.propagator.extract(headers, this.extractor).start();
 		// Start and finish a consumer span as we will immediately process it.
-		Span consumerSpan = this.tracer.nextSpan(extracted.context());
-		if (!consumerSpan.isNoop()) {
-			consumerSpan.kind(Span.Kind.CONSUMER).start();
-			consumerSpan.remoteServiceName(REMOTE_SERVICE_NAME);
-			addTags(consumerSpan, destinationName);
-			consumerSpan.finish();
-		}
+		Span.Builder consumerSpanBuilder = this.tracer.spanBuilder().setParent(extracted.context());
+		Span consumerSpan = consumerSpan(destinationName, extracted, consumerSpanBuilder);
 		// create and scope a span for the message processor
 		Span span = this.preSendFunction.apply(consumerSpan.context());
 		// remove any trace headers, but don't re-inject as we are synchronously
@@ -153,7 +147,7 @@ class TraceMessageHandler {
 		clearTracingHeaders(headers);
 		this.preSendMessageManipulator.accept(headers, consumerSpan, span);
 		if (log.isDebugEnabled()) {
-			log.debug("Created a handle span after retrieving the message " + consumerSpan);
+			log.debug("Created a handle span after retrieving the message " + consumerSpanBuilder);
 		}
 		if (message instanceof ErrorMessage) {
 			return new MessageAndSpans(new ErrorMessage((Throwable) message.getPayload(), headers.getMessageHeaders()),
@@ -162,6 +156,21 @@ class TraceMessageHandler {
 		headers.setImmutable();
 		return new MessageAndSpans(new GenericMessage<>(message.getPayload(), headers.getMessageHeaders()),
 				consumerSpan, span);
+	}
+
+	private Span consumerSpan(String destinationName, Span extracted, Span.Builder consumerSpanBuilder) {
+		Span consumerSpan;
+		if (!extracted.isNoop()) {
+			consumerSpanBuilder.kind(Span.Kind.CONSUMER).start();
+			addTags(consumerSpanBuilder, destinationName);
+			consumerSpanBuilder.remoteServiceName(REMOTE_SERVICE_NAME);
+			consumerSpan = consumerSpanBuilder.start();
+			consumerSpan.finish();
+		}
+		else {
+			consumerSpan = consumerSpanBuilder.start();
+		}
+		return consumerSpan;
 	}
 
 	Span spanFromMessage(Message<?> message) {
@@ -174,10 +183,16 @@ class TraceMessageHandler {
 		if (span != null) {
 			return span;
 		}
-		return this.propagator.extract(headers, this.extractor);
+		return this.propagator.extract(headers, this.extractor).start();
 	}
 
-	private void addTags(SpanCustomizer result, String destinationName) {
+	private void addTags(Span.Builder result, String destinationName) {
+		if (StringUtils.hasText(destinationName)) {
+			result.tag("channel", SpanNameUtil.shorten(destinationName));
+		}
+	}
+
+	private void addTags(Span result, String destinationName) {
 		if (StringUtils.hasText(destinationName)) {
 			result.tag("channel", SpanNameUtil.shorten(destinationName));
 		}
@@ -217,22 +232,23 @@ class TraceMessageHandler {
 	MessageAndSpan wrapOutputMessage(Message<?> message, Span parentSpan, String destinationName) {
 		Message<?> retrievedMessage = getMessage(message);
 		MessageHeaderAccessor headers = mutableHeaderAccessor(retrievedMessage);
-		Span span = this.outputMessageSpanFunction.apply(parentSpan.context());
+		Span.Builder span = this.outputMessageSpanFunction.apply(parentSpan.context());
 		clearTracingHeaders(headers);
-		this.propagator.inject(span.context(), headers, this.injector);
-		markProducerSpan(headers, span, destinationName);
+		Span producerSpan = createProducerSpan(headers, span, destinationName);
+		this.propagator.inject(producerSpan.context(), headers, this.injector);
 		if (log.isDebugEnabled()) {
 			log.debug("Created a new span output message " + span);
 		}
-		return new MessageAndSpan(outputMessage(message, retrievedMessage, headers), span);
+		return new MessageAndSpan(outputMessage(message, retrievedMessage, headers), producerSpan);
 	}
 
-	private void markProducerSpan(MessageHeaderAccessor headers, Span span, String destinationName) {
+	private Span createProducerSpan(MessageHeaderAccessor headers, Span.Builder spanBuilder, String destinationName) {
+		spanBuilder.kind(Span.Kind.PRODUCER).name("send").remoteServiceName(toRemoteServiceName(headers));
+		Span span = spanBuilder.start();
 		if (!span.isNoop()) {
-			span.kind(Span.Kind.PRODUCER).name("send").start();
-			span.remoteServiceName(toRemoteServiceName(headers));
-			addTags(span, destinationName);
+			addTags(spanBuilder, destinationName);
 		}
+		return span;
 	}
 
 	private String toRemoteServiceName(MessageHeaderAccessor headers) {

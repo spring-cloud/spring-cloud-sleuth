@@ -21,22 +21,16 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import brave.Span;
-import brave.Tracing;
-import brave.handler.MutableSpan;
-import brave.propagation.B3Propagation;
-import brave.propagation.StrictCurrentTraceContext;
-import brave.propagation.TraceContext;
-import brave.test.TestSpanHandler;
+import org.assertj.core.api.BDDAssertions;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
-import org.springframework.amqp.support.AmqpHeaders;
-import org.springframework.cloud.sleuth.brave.bridge.BravePropagator;
-import org.springframework.cloud.sleuth.brave.bridge.BraveTracer;
+import org.springframework.cloud.sleuth.api.Span;
+import org.springframework.cloud.sleuth.test.ReportedSpan;
+import org.springframework.cloud.sleuth.test.TestSpanHandler;
+import org.springframework.cloud.sleuth.test.TestTracingAwareSupplier;
 import org.springframework.integration.channel.DirectChannel;
 import org.springframework.integration.channel.QueueChannel;
-import org.springframework.kafka.support.KafkaHeaders;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageChannel;
 import org.springframework.messaging.MessageHandler;
@@ -48,35 +42,24 @@ import org.springframework.messaging.support.ErrorMessage;
 import org.springframework.messaging.support.ExecutorChannelInterceptor;
 import org.springframework.messaging.support.ExecutorSubscribableChannel;
 import org.springframework.messaging.support.MessageBuilder;
-import org.springframework.messaging.support.NativeMessageHeaderAccessor;
 
-import static brave.propagation.B3Propagation.Format.SINGLE;
-import static brave.propagation.B3SingleFormat.parseB3SingleFormat;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.messaging.support.NativeMessageHeaderAccessor.NATIVE_HEADERS;
 
-public class TracingChannelInterceptorTest {
+public abstract class TracingChannelInterceptorTest implements TestTracingAwareSupplier {
 
-	StrictCurrentTraceContext currentTraceContext = StrictCurrentTraceContext.create();
+	protected ChannelInterceptor interceptor = TracingChannelInterceptor.create(tracerTest().tracing().tracer(),
+			tracerTest().tracing().propagator(), new SleuthIntegrationMessagingProperties());
 
-	TestSpanHandler spans = new TestSpanHandler();
+	protected TestSpanHandler spans = tracerTest().handler();
 
-	Tracing tracing = Tracing.newBuilder().currentTraceContext(this.currentTraceContext)
-			// SINGLE_NO_PARENT more appropriate for messaging, but we check parent
-			// hereTraceMessageHeaders
-			.propagationFactory(B3Propagation.newFactoryBuilder().injectFormat(SINGLE).build())
-			.addSpanHandler(this.spans).build();
+	protected QueueChannel channel = new QueueChannel();
 
-	ChannelInterceptor interceptor = TracingChannelInterceptor.create(BraveTracer.fromBrave(tracing.tracer()),
-			new BravePropagator(tracing), new SleuthIntegrationMessagingProperties());
+	protected DirectChannel directChannel = new DirectChannel();
 
-	QueueChannel channel = new QueueChannel();
+	protected Message message;
 
-	DirectChannel directChannel = new DirectChannel();
-
-	Message message;
-
-	MessageHandler handler = new MessageHandler() {
+	protected MessageHandler handler = new MessageHandler() {
 		@Override
 		public void handleMessage(Message<?> msg) throws MessagingException {
 			TracingChannelInterceptorTest.this.message = msg;
@@ -85,8 +68,7 @@ public class TracingChannelInterceptorTest {
 
 	@AfterEach
 	public void close() {
-		this.tracing.close();
-		this.currentTraceContext.close();
+		tracerTest().close();
 	}
 
 	@Test
@@ -104,7 +86,7 @@ public class TracingChannelInterceptorTest {
 		this.channel.send(MessageBuilder.withPayload("foo").build());
 
 		assertThat(this.channel.receive().getHeaders()).containsKey("b3");
-		assertThat(this.spans).hasSize(1).extracting(MutableSpan::kind).containsExactly(Span.Kind.PRODUCER);
+		assertThat(this.spans).hasSize(1).extracting(ReportedSpan::kind).containsExactly(Span.Kind.PRODUCER);
 	}
 
 	@Test
@@ -115,7 +97,7 @@ public class TracingChannelInterceptorTest {
 
 		assertThat(this.message).isNotNull();
 		assertThat(this.message.getHeaders()).containsKeys("b3", "nativeHeaders");
-		assertThat(this.spans).extracting(MutableSpan::kind).contains(Span.Kind.CONSUMER, Span.Kind.PRODUCER);
+		assertThat(this.spans).extracting(ReportedSpan::kind).contains(Span.Kind.CONSUMER, Span.Kind.PRODUCER);
 	}
 
 	@Test
@@ -125,40 +107,6 @@ public class TracingChannelInterceptorTest {
 		this.channel.send(MessageBuilder.withPayload("foo").build());
 
 		assertThat((Map) this.channel.receive().getHeaders().get(NATIVE_HEADERS)).containsOnlyKeys("b3");
-	}
-
-	/**
-	 * If the producer is acting on an un-processed message (ex via a polling consumer),
-	 * it should look at trace headers when there is no span in scope, and use that as the
-	 * parent context.
-	 */
-	@Test
-	public void producerConsidersOldSpanIds() {
-		this.channel.addInterceptor(producerSideOnly(this.interceptor));
-
-		this.channel
-				.send(MessageBuilder.withPayload("foo").setHeader("b3", "000000000000000a-000000000000000b-1").build());
-
-		TraceContext receiveContext = parseB3SingleFormat(this.channel.receive().getHeaders().get("b3", String.class))
-				.context();
-		assertThat(receiveContext.parentIdString()).isEqualTo("000000000000000b");
-	}
-
-	@Test
-	public void producerConsidersOldSpanIds_nativeHeaders() {
-		this.channel.addInterceptor(producerSideOnly(this.interceptor));
-
-		NativeMessageHeaderAccessor accessor = new NativeMessageHeaderAccessor() {
-		};
-
-		accessor.setNativeHeader("b3", "000000000000000a-000000000000000b-1-000000000000000a");
-
-		this.channel.send(MessageBuilder.withPayload("foo").copyHeaders(accessor.toMessageHeaders()).build());
-
-		TraceContext receiveContext = parseB3SingleFormat(
-				((List) ((Map) this.channel.receive().getHeaders().get(NATIVE_HEADERS)).get("b3")).get(0).toString())
-						.context();
-		assertThat(receiveContext.parentIdString()).isEqualTo("000000000000000b");
 	}
 
 	/**
@@ -172,7 +120,7 @@ public class TracingChannelInterceptorTest {
 		this.channel.send(MessageBuilder.withPayload("foo").build());
 
 		assertThat(this.channel.receive().getHeaders()).containsKeys("b3", "nativeHeaders");
-		assertThat(this.spans).hasSize(1).extracting(MutableSpan::kind).containsExactly(Span.Kind.CONSUMER);
+		assertThat(this.spans).hasSize(1).extracting(ReportedSpan::kind).containsExactly(Span.Kind.CONSUMER);
 	}
 
 	@Test
@@ -194,7 +142,7 @@ public class TracingChannelInterceptorTest {
 		channel.send(MessageBuilder.withPayload("foo").build());
 
 		assertThat(messages.get(0).getHeaders()).doesNotContainKeys("b3", "nativeHeaders");
-		assertThat(this.spans).extracting(MutableSpan::kind).containsExactly(Span.Kind.CONSUMER, null);
+		assertThat(this.spans).extracting(ReportedSpan::kind).containsExactly(Span.Kind.CONSUMER, null);
 	}
 
 	/**
@@ -233,7 +181,7 @@ public class TracingChannelInterceptorTest {
 		this.channel.send(MessageBuilder.withPayload("foo").build());
 		this.channel.receive();
 
-		assertThat(this.spans).extracting(MutableSpan::kind).containsExactlyInAnyOrder(Span.Kind.CONSUMER,
+		assertThat(this.spans).extracting(ReportedSpan::kind).containsExactlyInAnyOrder(Span.Kind.CONSUMER,
 				Span.Kind.PRODUCER);
 	}
 
@@ -246,7 +194,7 @@ public class TracingChannelInterceptorTest {
 
 		channel.send(MessageBuilder.withPayload("foo").build());
 
-		assertThat(this.spans).extracting(MutableSpan::kind).containsExactly(Span.Kind.CONSUMER, null,
+		assertThat(this.spans).extracting(ReportedSpan::kind).containsExactly(Span.Kind.CONSUMER, null,
 				Span.Kind.PRODUCER);
 	}
 
@@ -269,10 +217,12 @@ public class TracingChannelInterceptorTest {
 		assertThat(this.message).isNotNull();
 
 		// Parse fails if trace or span ID are missing
-		TraceContext context = parseB3SingleFormat(this.message.getHeaders().get("b3", String.class)).context();
-
-		assertThat(context.traceIdString()).isEqualTo("000000000000000a");
-		assertThat(context.spanIdString()).isNotEqualTo("000000000000000a");
+		String b3 = this.message.getHeaders().get("b3", String.class);
+		// b3 can be traceid-spanid-sampled(-parentid)
+		// the latter is not yet supported in otel
+		B3Context b3Context = new B3Context(b3);
+		assertThat(b3Context.traceId).endsWith("000000000000000a");
+		assertThat(b3Context.spanId).doesNotEndWith("000000000000000a");
 		assertThat(this.spans).hasSize(2);
 		assertThat(this.message.getHeaders().getReplyChannel()).isSameAs(errorsReplyChannel);
 		assertThat(this.message.getHeaders().getErrorChannel()).isSameAs(errorsReplyChannel);
@@ -304,9 +254,12 @@ public class TracingChannelInterceptorTest {
 
 		this.message = this.channel.receive();
 
-		TraceContext receiveContext = parseB3SingleFormat(this.message.getHeaders().get("b3", String.class)).context();
-		assertThat(receiveContext.traceIdString()).isEqualTo("000000000000000a");
-		assertThat(receiveContext.spanIdString()).isNotEqualTo("000000000000000a");
+		String b3 = this.message.getHeaders().get("b3", String.class);
+		// b3 can be traceid-spanid-sampled(-parentid)
+		// the latter is not yet supported in otel
+		B3Context b3Context = new B3Context(b3);
+		assertThat(b3Context.traceId).endsWith("000000000000000a");
+		assertThat(b3Context.spanId).doesNotEndWith("000000000000000a");
 		assertThat(this.spans).hasSize(2);
 	}
 
@@ -318,10 +271,10 @@ public class TracingChannelInterceptorTest {
 		channel.subscribe(messages::add);
 
 		Map<String, Object> headers = new HashMap<>();
-		headers.put(KafkaHeaders.MESSAGE_KEY, "hello");
+		headers.put("kafka_messageKey", "hello");
 		channel.send(MessageBuilder.createMessage("foo", new MessageHeaders(headers)));
 
-		assertThat(this.spans).extracting(MutableSpan::remoteServiceName).contains("kafka");
+		assertThat(this.spans).extracting(ReportedSpan::remoteServiceName).contains("kafka");
 	}
 
 	@Test
@@ -332,10 +285,10 @@ public class TracingChannelInterceptorTest {
 		channel.subscribe(messages::add);
 
 		Map<String, Object> headers = new HashMap<>();
-		headers.put(AmqpHeaders.RECEIVED_ROUTING_KEY, "hello");
+		headers.put("amqp_receivedRoutingKey", "hello");
 		channel.send(MessageBuilder.createMessage("foo", new MessageHeaders(headers)));
 
-		assertThat(this.spans).extracting(MutableSpan::remoteServiceName).contains("rabbitmq");
+		assertThat(this.spans).extracting(ReportedSpan::remoteServiceName).contains("rabbitmq");
 	}
 
 	@Test
@@ -348,10 +301,10 @@ public class TracingChannelInterceptorTest {
 		Map<String, Object> headers = new HashMap<>();
 		channel.send(MessageBuilder.createMessage("foo", new MessageHeaders(headers)));
 
-		assertThat(this.spans).extracting(MutableSpan::remoteServiceName).containsOnly("broker", null);
+		assertThat(this.spans).extracting(ReportedSpan::remoteServiceName).containsOnly("broker", null);
 	}
 
-	ChannelInterceptor producerSideOnly(ChannelInterceptor delegate) {
+	public ChannelInterceptor producerSideOnly(ChannelInterceptor delegate) {
 		return new ChannelInterceptorAdapter() {
 			@Override
 			public Message<?> preSend(Message<?> message, MessageChannel channel) {
@@ -395,6 +348,34 @@ public class TracingChannelInterceptorTest {
 
 		}
 		return new ExecutorSideOnly();
+	}
+
+}
+
+class B3Context {
+
+	public String traceId;
+
+	public String spanId;
+
+	public String sampled;
+
+	public String parentSpanId;
+
+	B3Context(String b3Header) {
+		BDDAssertions.then(b3Header).isNotEmpty();
+		String[] split = b3Header.split("-");
+		if (split.length == 4) {
+			this.traceId = split[0];
+			this.spanId = split[1];
+			this.sampled = split[2];
+			this.parentSpanId = split[3];
+		}
+		else {
+			this.traceId = split[0];
+			this.spanId = split[1];
+			this.sampled = split[2];
+		}
 	}
 
 }

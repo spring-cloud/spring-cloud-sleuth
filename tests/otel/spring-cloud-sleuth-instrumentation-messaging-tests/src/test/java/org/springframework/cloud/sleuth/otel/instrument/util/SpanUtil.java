@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.springframework.cloud.sleuth.instrument.util;
+package org.springframework.cloud.sleuth.otel.instrument.util;
 
 /**
  * @author Marcin Grzejszczak

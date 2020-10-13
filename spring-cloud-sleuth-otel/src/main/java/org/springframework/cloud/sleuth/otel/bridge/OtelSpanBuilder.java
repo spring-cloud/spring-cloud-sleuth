@@ -1,0 +1,130 @@
+/*
+ * Copyright 2013-2020 the original author or authors.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package org.springframework.cloud.sleuth.otel.bridge;
+
+import java.util.LinkedList;
+import java.util.List;
+
+import org.springframework.cloud.sleuth.api.Span;
+import org.springframework.cloud.sleuth.api.TraceContext;
+import org.springframework.util.StringUtils;
+
+public class OtelSpanBuilder implements Span.Builder {
+
+	private final io.opentelemetry.trace.Span.Builder delegate;
+
+	private String name;
+
+	private Throwable error;
+
+	private final List<String> annotations = new LinkedList<>();
+
+	public OtelSpanBuilder(io.opentelemetry.trace.Span.Builder delegate) {
+		this.delegate = delegate;
+	}
+
+	@Override
+	public Span.Builder setParent(TraceContext context) {
+		this.delegate.setParent(OtelTraceContext.toOtelContext(context));
+		return this;
+	}
+
+	@Override
+	public Span.Builder setNoParent() {
+		this.delegate.setNoParent();
+		return this;
+	}
+
+	@Override
+	public Span.Builder name(String name) {
+		this.name = name;
+		return this;
+	}
+
+	@Override
+	public Span.Builder annotate(String value) {
+		this.annotations.add(value);
+		return this;
+	}
+
+	@Override
+	public Span.Builder tag(String key, String value) {
+		this.delegate.setAttribute(key, value);
+		return this;
+	}
+
+	@Override
+	public Span.Builder error(Throwable throwable) {
+		this.error = throwable;
+		return this;
+	}
+
+	@Override
+	public Span.Builder kind(Span.Kind spanKind) {
+		if (spanKind == null) {
+			this.delegate.setSpanKind(io.opentelemetry.trace.Span.Kind.INTERNAL);
+			return this;
+		}
+		io.opentelemetry.trace.Span.Kind kind = io.opentelemetry.trace.Span.Kind.INTERNAL;
+		switch (spanKind) {
+		case CLIENT:
+			kind = io.opentelemetry.trace.Span.Kind.CLIENT;
+			break;
+		case SERVER:
+			kind = io.opentelemetry.trace.Span.Kind.SERVER;
+			break;
+		case PRODUCER:
+			kind = io.opentelemetry.trace.Span.Kind.PRODUCER;
+			break;
+		case CONSUMER:
+			kind = io.opentelemetry.trace.Span.Kind.CONSUMER;
+			break;
+		}
+		this.delegate.setSpanKind(kind);
+		return this;
+	}
+
+	@Override
+	public Span.Builder startTimestamp(long startTimestamp) {
+		this.delegate.setStartTimestamp(startTimestamp);
+		return this;
+	}
+
+	@Override
+	public Span.Builder remoteServiceName(String remoteServiceName) {
+		this.delegate.setAttribute("peer.service", remoteServiceName);
+		return this;
+	}
+
+	@Override
+	public Span start() {
+		io.opentelemetry.trace.Span span = this.delegate.startSpan();
+		if (StringUtils.hasText(this.name)) {
+			span.updateName(this.name);
+		}
+		if (this.error != null) {
+			span.recordException(error);
+		}
+		this.annotations.forEach(span::addEvent);
+		return OtelSpan.fromOtel(span);
+	}
+
+	public static Span.Builder fromOtel(io.opentelemetry.trace.Span.Builder builder) {
+		return new OtelSpanBuilder(builder);
+	}
+
+}

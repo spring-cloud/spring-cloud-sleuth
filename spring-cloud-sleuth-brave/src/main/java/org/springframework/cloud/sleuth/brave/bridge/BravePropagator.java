@@ -29,13 +29,13 @@ public class BravePropagator implements Propagator {
 	}
 
 	@Override
-	public <C> Span extract(C carrier, Getter<C> getter) {
+	public <C> Span.Builder extract(C carrier, Getter<C> getter) {
 		TraceContextOrSamplingFlags extract = this.tracing.propagation().extractor(getter::get).extract(carrier);
 		if (extract.samplingFlags() == SamplingFlags.EMPTY) {
-			return BraveSpan.fromBrave(this.tracing.tracer().nextSpan());
+			this.tracing.tracer().nextSpan();
+			return new BraveSpanBuilder(this.tracing.tracer());
 		}
-		brave.Span nextSpan = this.tracing.tracer().nextSpan(extract);
-		return BraveSpan.fromBrave(nextSpan);
+		return BraveSpanBuilder.toBuilder(this.tracing.tracer(), extract);
 	}
 
 }

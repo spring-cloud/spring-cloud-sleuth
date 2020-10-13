@@ -80,7 +80,7 @@ final class TraceRequestHttpHeadersFilter extends AbstractHttpHeadersFilter {
 		// Usually, an HTTP client would not attempt to resume a trace from headers, as a
 		// server would always place its span in scope. However, in commit 848442e,
 		// this behavior was added in support of gateway.
-		return this.propagator.extract(request, HttpClientRequest::header);
+		return this.propagator.extract(request, HttpClientRequest::header).start();
 	}
 
 	private Span currentSpan(ServerWebExchange exchange) {

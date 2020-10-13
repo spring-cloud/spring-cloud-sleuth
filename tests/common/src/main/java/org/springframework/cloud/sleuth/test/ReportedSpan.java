@@ -45,4 +45,6 @@ public interface ReportedSpan {
 
 	Span.Kind kind();
 
+	String remoteServiceName();
+
 }

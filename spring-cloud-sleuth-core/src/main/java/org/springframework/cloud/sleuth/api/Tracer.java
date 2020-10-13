@@ -39,6 +39,8 @@ public interface Tracer {
 	// invocation context
 	ScopedSpan startScopedSpanWithParent(String name, @Nullable Span parent);
 
+	Span.Builder spanBuilder();
+
 	interface SpanInScope extends Closeable {
 
 		@Override

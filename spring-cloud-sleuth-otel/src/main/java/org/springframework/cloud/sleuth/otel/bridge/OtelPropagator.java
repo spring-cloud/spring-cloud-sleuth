@@ -52,13 +52,13 @@ public class OtelPropagator implements Propagator {
 	}
 
 	@Override
-	public <C> Span extract(C carrier, Getter<C> getter) {
+	public <C> Span.Builder extract(C carrier, Getter<C> getter) {
 		Context extracted = this.propagator.extract(Context.current(), carrier, getter::get);
 		io.opentelemetry.trace.Span span = TracingContextUtils.getSpanWithoutDefault(extracted);
 		if (span == null || span.equals(DefaultSpan.getInvalid())) {
-			return OtelSpan.fromOtel(tracer.spanBuilder("").startSpan());
+			return OtelSpanBuilder.fromOtel(tracer.spanBuilder(""));
 		}
-		return OtelSpan.fromOtel(this.tracer.spanBuilder("").setParent(extracted).startSpan());
+		return OtelSpanBuilder.fromOtel(this.tracer.spanBuilder("").setParent(extracted));
 	}
 
 }

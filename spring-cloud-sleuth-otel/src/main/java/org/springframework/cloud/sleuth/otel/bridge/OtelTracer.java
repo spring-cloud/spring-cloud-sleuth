@@ -133,6 +133,11 @@ public class OtelTracer implements Tracer {
 		return new OtelScopedSpan(span, this.tracer.withSpan(span));
 	}
 
+	@Override
+	public Span.Builder spanBuilder() {
+		return new OtelSpanBuilder(this.tracer.spanBuilder(""));
+	}
+
 	public static Tracer fromOtel(io.opentelemetry.trace.Tracer tracer) {
 		return new OtelTracer(tracer);
 	}

@@ -127,6 +127,11 @@ public class BraveTracer implements Tracer {
 		return new BraveScopedSpan(this.tracer.startScopedSpanWithParent(name, context));
 	}
 
+	@Override
+	public Span.Builder spanBuilder() {
+		return new BraveSpanBuilder(this.tracer);
+	}
+
 	public static Tracer fromBrave(brave.Tracer tracer) {
 		return new BraveTracer(tracer);
 	}
