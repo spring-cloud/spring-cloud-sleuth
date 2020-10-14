@@ -29,7 +29,7 @@ import org.assertj.core.api.Assertions;
 
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.cloud.sleuth.api.TraceContext;
-import org.springframework.cloud.sleuth.otel.ArrayListSpanProcessor;
+import org.springframework.cloud.sleuth.otel.exporter.ArrayListSpanProcessor;
 import org.springframework.cloud.sleuth.otel.OtelTestSpanHandler;
 import org.springframework.cloud.sleuth.otel.bridge.OtelTraceContext;
 import org.springframework.cloud.sleuth.test.ReportedSpan;

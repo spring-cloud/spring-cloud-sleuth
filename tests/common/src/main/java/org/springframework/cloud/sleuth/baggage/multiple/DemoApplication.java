@@ -14,18 +14,18 @@
  * limitations under the License.
  */
 
-package org.springframework.cloud.sleuth.brave.multiple;
+package org.springframework.cloud.sleuth.baggage.multiple;
 
 import java.util.Arrays;
 import java.util.List;
 
-import brave.Span;
-import brave.Tags;
-import brave.Tracer;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cloud.sleuth.api.Baggage;
+import org.springframework.cloud.sleuth.api.Span;
+import org.springframework.cloud.sleuth.api.Tracer;
 import org.springframework.http.HttpHeaders;
 import org.springframework.integration.annotation.Aggregator;
 import org.springframework.integration.annotation.Gateway;
@@ -40,7 +40,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import static org.springframework.cloud.sleuth.brave.multiple.MultipleHopsIntegrationTests.COUNTRY_CODE;
+import static org.springframework.cloud.sleuth.baggage.multiple.MultipleHopsIntegrationTests.COUNTRY_CODE;
 
 @MessagingGateway(name = "greeter")
 interface Sender {
@@ -78,7 +78,10 @@ public class DemoApplication {
 		this.httpSpan = this.tracer.currentSpan();
 
 		// tag what was propagated
-		Tags.BAGGAGE_FIELD.tag(COUNTRY_CODE, httpSpan);
+		Baggage baggage = this.tracer.getBaggage(COUNTRY_CODE);
+		if (baggage != null && baggage.getValue() != null) {
+			this.httpSpan.tag(COUNTRY_CODE, baggage.getValue());
+		}
 
 		return new Greeting(message);
 	}

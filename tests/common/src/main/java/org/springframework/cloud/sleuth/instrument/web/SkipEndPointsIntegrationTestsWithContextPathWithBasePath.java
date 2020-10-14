@@ -14,34 +14,30 @@
  * limitations under the License.
  */
 
-package org.springframework.cloud.sleuth.brave.instrument.web;
+package org.springframework.cloud.sleuth.instrument.web;
 
-import brave.Tracer;
-import brave.handler.SpanHandler;
-import brave.sampler.Sampler;
-import brave.test.TestSpanHandler;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
-import org.springframework.boot.autoconfigure.amqp.RabbitAutoConfiguration;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.web.server.LocalServerPort;
-import org.springframework.cloud.sleuth.DisableSecurity;
-import org.springframework.context.annotation.Bean;
+import org.springframework.cloud.sleuth.api.Tracer;
+import org.springframework.cloud.sleuth.test.TestSpanHandler;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.TestPropertySource;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.RestTemplate;
 
 import static org.assertj.core.api.BDDAssertions.then;
 
-@SpringBootTest(classes = SkipEndPointsIntegrationTestsWithContextPathWithBasePath.Config.class,
-		webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
+@ContextConfiguration(classes = SkipEndPointsIntegrationTestsWithContextPathWithBasePath.TestConfig.class)
+@TestPropertySource(
 		properties = { "management.endpoints.web.exposure.include:*", "server.servlet.context-path:/context-path" })
-public class SkipEndPointsIntegrationTestsWithContextPathWithBasePath {
+public abstract class SkipEndPointsIntegrationTestsWithContextPathWithBasePath {
 
 	@Autowired
 	TestSpanHandler spans;
@@ -75,24 +71,13 @@ public class SkipEndPointsIntegrationTestsWithContextPathWithBasePath {
 		then(this.spans).hasSize(1);
 	}
 
-	@EnableAutoConfiguration(exclude = RabbitAutoConfiguration.class)
+	@EnableAutoConfiguration
 	@Configuration(proxyBeanMethods = false)
-	@DisableSecurity
 	@RestController
-	public static class Config {
+	public static class TestConfig {
 
 		@GetMapping("something")
 		void doNothing() {
-		}
-
-		@Bean
-		SpanHandler testSpanHandler() {
-			return new TestSpanHandler();
-		}
-
-		@Bean
-		Sampler sampler() {
-			return Sampler.ALWAYS_SAMPLE;
 		}
 
 	}

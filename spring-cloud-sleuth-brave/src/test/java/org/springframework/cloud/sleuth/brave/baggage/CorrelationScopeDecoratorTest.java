@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.springframework.cloud.sleuth.baggage;
+package org.springframework.cloud.sleuth.brave.baggage;
 
 import brave.Span;
 import brave.Tracer;

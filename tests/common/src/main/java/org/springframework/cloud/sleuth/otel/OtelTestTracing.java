@@ -36,16 +36,20 @@ import org.springframework.cloud.sleuth.api.http.HttpClientHandler;
 import org.springframework.cloud.sleuth.api.http.HttpRequestParser;
 import org.springframework.cloud.sleuth.api.http.HttpServerHandler;
 import org.springframework.cloud.sleuth.api.propagation.Propagator;
+import org.springframework.cloud.sleuth.autoconfig.SleuthBaggageProperties;
+import org.springframework.cloud.sleuth.otel.bridge.OtelBaggageManager;
 import org.springframework.cloud.sleuth.otel.bridge.OtelCurrentTraceContext;
 import org.springframework.cloud.sleuth.otel.bridge.OtelPropagator;
 import org.springframework.cloud.sleuth.otel.bridge.OtelTracer;
 import org.springframework.cloud.sleuth.otel.bridge.http.OtelHttpClientHandler;
 import org.springframework.cloud.sleuth.otel.bridge.http.OtelHttpServerHandler;
+import org.springframework.cloud.sleuth.otel.exporter.ArrayListSpanProcessor;
 import org.springframework.cloud.sleuth.test.TestSpanHandler;
 import org.springframework.cloud.sleuth.test.TestTracingAssertions;
 import org.springframework.cloud.sleuth.test.TestTracingAware;
 import org.springframework.cloud.sleuth.test.TestTracingAwareSupplier;
 import org.springframework.cloud.sleuth.test.TracerAware;
+import org.springframework.context.ApplicationEventPublisher;
 
 public class OtelTestTracing implements TracerAware, TestTracingAware, TestTracingAwareSupplier, Closeable {
 
@@ -60,6 +64,9 @@ public class OtelTestTracing implements TracerAware, TestTracingAware, TestTraci
 	HttpRequestParser clientRequestParser;
 
 	io.opentelemetry.trace.Tracer tracer = otelTracer();
+
+	OtelBaggageManager otelBaggageManager = new OtelBaggageManager(this.tracer, OpenTelemetry.getBaggageManager(),
+			new SleuthBaggageProperties(), publisher());
 
 	io.opentelemetry.trace.Tracer otelTracer() {
 		TracerSdkProvider provider = TracerSdkProvider.builder().build();
@@ -115,7 +122,7 @@ public class OtelTestTracing implements TracerAware, TestTracingAware, TestTraci
 	@Override
 	public Tracer tracer() {
 		reset();
-		return OtelTracer.fromOtel(this.tracer);
+		return OtelTracer.fromOtel(this.tracer, this.otelBaggageManager);
 	}
 
 	@Override
@@ -146,6 +153,12 @@ public class OtelTestTracing implements TracerAware, TestTracingAware, TestTraci
 	public HttpClientHandler httpClientHandler() {
 		reset();
 		return new OtelHttpClientHandler(this.tracer, this.clientRequestParser, null, SamplerFunction.alwaysSample());
+	}
+
+	ApplicationEventPublisher publisher() {
+		return event -> {
+
+		};
 	}
 
 }

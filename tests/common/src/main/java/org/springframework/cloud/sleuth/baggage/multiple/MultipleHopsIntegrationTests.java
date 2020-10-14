@@ -14,38 +14,36 @@
  * limitations under the License.
  */
 
-package org.springframework.cloud.sleuth.brave.multiple;
+package org.springframework.cloud.sleuth.baggage.multiple;
 
 import java.net.URI;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
+import java.util.stream.Collectors;
 
-import brave.Span;
-import brave.Tags;
-import brave.Tracer;
-import brave.Tracer.SpanInScope;
-import brave.baggage.BaggageField;
-import brave.baggage.BaggagePropagationConfig;
-import brave.baggage.BaggagePropagationConfig.SingleBaggageField;
-import brave.handler.MutableSpan;
-import brave.handler.SpanHandler;
-import brave.sampler.Sampler;
-import brave.test.TestSpanHandler;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.jmx.JmxAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.web.servlet.context.ServletWebServerInitializedEvent;
+import org.springframework.cloud.sleuth.api.Span;
+import org.springframework.cloud.sleuth.api.Tracer;
+import org.springframework.cloud.sleuth.test.ReportedSpan;
+import org.springframework.cloud.sleuth.test.TestSpanHandler;
 import org.springframework.context.ApplicationListener;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Import;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.RequestEntity;
+import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.TestPropertySource;
 import org.springframework.web.client.RestTemplate;
 
 import static java.util.Arrays.asList;
@@ -56,29 +54,32 @@ import static org.assertj.core.api.BDDAssertions.then;
 import static org.awaitility.Awaitility.await;
 import static org.springframework.boot.test.context.SpringBootTest.WebEnvironment.RANDOM_PORT;
 
-@SpringBootTest(classes = MultipleHopsIntegrationTests.Config.class, webEnvironment = RANDOM_PORT,
-		properties = { "spring.sleuth.baggage.remote-fields=x-vcap-request-id,country-code",
-				"spring.sleuth.baggage.local-fields=bp", "spring.sleuth.integration.enabled=true" })
-public class MultipleHopsIntegrationTests {
+@SpringBootTest(webEnvironment = RANDOM_PORT)
+@ContextConfiguration(classes = MultipleHopsIntegrationTests.TestConfig.class)
+@TestPropertySource(properties = { "spring.sleuth.baggage.remote-fields=x-vcap-request-id,country-code",
+		"spring.sleuth.baggage.local-fields=bp", "spring.sleuth.integration.enabled=true" })
+public abstract class MultipleHopsIntegrationTests {
 
-	static final BaggageField REQUEST_ID = BaggageField.create("x-vcap-request-id");
-	static final BaggageField BUSINESS_PROCESS = BaggageField.create("bp");
-	static final BaggageField COUNTRY_CODE = BaggageField.create("country-code");
+	protected static final String REQUEST_ID = "x-vcap-request-id";
+
+	protected static final String BUSINESS_PROCESS = "bp";
+
+	protected static final String COUNTRY_CODE = "country-code";
 
 	@Autowired
 	Tracer tracer;
 
 	@Autowired
-	TestSpanHandler spans;
+	protected TestSpanHandler spans;
 
 	@Autowired
 	RestTemplate restTemplate;
 
 	@Autowired
-	Config config;
+	TestConfig testConfig;
 
 	@Autowired
-	DemoApplication application;
+	protected DemoApplication application;
 
 	@BeforeEach
 	public void setup() {
@@ -87,37 +88,39 @@ public class MultipleHopsIntegrationTests {
 
 	@Test
 	public void should_prepare_spans_for_export() {
-		this.restTemplate.getForObject("http://localhost:" + this.config.port + "/greeting", String.class);
+		this.restTemplate.getForObject("http://localhost:" + this.testConfig.port + "/greeting", String.class);
 
 		await().atMost(5, SECONDS).untilAsserted(() -> {
 			then(this.spans).hasSize(14);
 		});
-		then(this.spans).extracting(MutableSpan::name).containsAll(asList("GET /greeting", "send"));
-		then(this.spans).extracting(MutableSpan::kind)
+		assertSpanNames();
+		then(this.spans).extracting(ReportedSpan::kind)
 				// no server kind due to test constraints
 				.containsAll(asList(Span.Kind.CONSUMER, Span.Kind.PRODUCER, Span.Kind.SERVER));
-		then(this.spans.spans().stream().map(span -> span.tags().get("channel")).filter(Objects::nonNull).distinct()
-				.collect(toList())).hasSize(3).containsAll(asList("words", "counts", "greetings"));
+		then(this.spans.reportedSpans().stream().map(span -> span.tags().get("channel")).filter(Objects::nonNull)
+				.distinct().collect(toList())).hasSize(3).containsAll(asList("words", "counts", "greetings"));
 	}
+
+	protected abstract void assertSpanNames();
 
 	@Test
 	public void should_propagate_the_baggage() {
-		// tag::baggage[]
 		Span initialSpan = this.tracer.nextSpan().name("span").start();
-		BUSINESS_PROCESS.updateValue(initialSpan.context(), "ALM");
-		COUNTRY_CODE.updateValue(initialSpan.context(), "FO");
-		// end::baggage[]
-
-		try (SpanInScope ws = this.tracer.withSpanInScope(initialSpan)) {
+		System.out.println("FOO: " + initialSpan.context().traceIdString());
+		// tag::baggage[]
+		try (Tracer.SpanInScope ws = this.tracer.withSpanInScope(initialSpan)) {
+			this.tracer.createBaggage(BUSINESS_PROCESS).updateValue("ALM");
+			this.tracer.createBaggage(COUNTRY_CODE).updateValue("FO");
+			// end::baggage[]
 			// tag::baggage_tag[]
-			Tags.BAGGAGE_FIELD.tag(BUSINESS_PROCESS, initialSpan);
+			initialSpan.tag(BUSINESS_PROCESS, "ALM");
 			// end::baggage_tag[]
 
 			// set request ID in a header not with the api explicitly
 			HttpHeaders headers = new HttpHeaders();
-			headers.put(REQUEST_ID.name(), Collections.singletonList("f4308d05-2228-4468-80f6-92a8377ba193"));
+			headers.put(REQUEST_ID, Collections.singletonList("f4308d05-2228-4468-80f6-92a8377ba193"));
 			RequestEntity requestEntity = new RequestEntity(headers, HttpMethod.GET,
-					URI.create("http://localhost:" + this.config.port + "/greeting"));
+					URI.create("http://localhost:" + this.testConfig.port + "/greeting"));
 			this.restTemplate.exchange(requestEntity, String.class);
 		}
 		finally {
@@ -128,26 +131,28 @@ public class MultipleHopsIntegrationTests {
 			then(this.spans).isNotEmpty();
 		});
 
-		List<MutableSpan> withBagTags = this.spans.spans().stream()
-				.filter(s -> s.tags().containsKey(BUSINESS_PROCESS.name())).collect(toList());
+		List<ReportedSpan> withBagTags = this.spans.reportedSpans().stream()
+				.filter(s -> s.tags().containsKey(BUSINESS_PROCESS)).collect(toList());
 
 		// set with tag api
 		then(withBagTags).as("only initialSpan was bag tagged").hasSize(1);
-		assertThat(withBagTags.get(0).tags()).containsEntry(BUSINESS_PROCESS.name(), "ALM");
+		assertThat(withBagTags.get(0).tags()).containsEntry(BUSINESS_PROCESS, "ALM");
 
-		// set with baggage api
-		then(this.application.allSpans()).as("All have request ID")
-				.allMatch(span -> "f4308d05-2228-4468-80f6-92a8377ba193".equals(REQUEST_ID.getValue(span.context())));
+		// TODO: Sth wrong with trace id propagation
+		Set<String> traceIds = this.application.allSpans().stream().map(s -> s.context().traceIdString())
+				.collect(Collectors.toSet());
+		then(traceIds).hasSize(1);
+		then(traceIds.iterator().next()).as("All have same trace ID").isEqualTo(initialSpan.context().traceIdString());
+		assertBaggage(initialSpan);
 
-		// baz is not tagged in the initial span, only downstream!
-		then(this.application.allSpans()).as("All downstream have country-code")
-				.filteredOn(span -> !span.equals(initialSpan))
-				.allMatch(span -> "FO".equals(COUNTRY_CODE.getValue(span.context())));
 	}
 
+	protected abstract void assertBaggage(Span initialSpan);
+
 	@Configuration(proxyBeanMethods = false)
-	@SpringBootApplication(exclude = JmxAutoConfiguration.class)
-	public static class Config implements ApplicationListener<ServletWebServerInitializedEvent> {
+	@EnableAutoConfiguration(exclude = JmxAutoConfiguration.class)
+	@Import(DemoApplication.class)
+	public static class TestConfig implements ApplicationListener<ServletWebServerInitializedEvent> {
 
 		int port;
 
@@ -157,23 +162,8 @@ public class MultipleHopsIntegrationTests {
 		}
 
 		@Bean
-		BaggagePropagationConfig notInProperties() {
-			return SingleBaggageField.remote(BaggageField.create("bar"));
-		}
-
-		@Bean
 		RestTemplate restTemplate() {
 			return new RestTemplate();
-		}
-
-		@Bean
-		SpanHandler testSpanHandler() {
-			return new TestSpanHandler();
-		}
-
-		@Bean
-		Sampler defaultTraceSampler() {
-			return Sampler.ALWAYS_SAMPLE;
 		}
 
 	}

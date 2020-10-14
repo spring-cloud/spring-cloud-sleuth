@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.springframework.cloud.sleuth.otel;
+package org.springframework.cloud.sleuth.otel.exporter;
 
 import java.util.Collection;
 import java.util.Queue;
@@ -74,6 +74,10 @@ public class ArrayListSpanProcessor implements SpanProcessor, SpanExporter {
 
 	public SpanData takeLocalSpan() {
 		return this.spans.poll();
+	}
+
+	public Queue<SpanData> spans() {
+		return this.spans;
 	}
 
 	public void clear() {

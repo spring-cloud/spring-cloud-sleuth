@@ -4,7 +4,7 @@ import java.io.Closeable;
 
 import org.springframework.lang.Nullable;
 
-public interface Tracer {
+public interface Tracer extends BaggageManager {
 
 	Span newTrace();
 

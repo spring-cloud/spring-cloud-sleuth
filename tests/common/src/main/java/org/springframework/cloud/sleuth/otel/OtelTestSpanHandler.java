@@ -36,6 +36,7 @@ import io.opentelemetry.sdk.trace.export.SpanExporter;
 import org.jetbrains.annotations.NotNull;
 
 import org.springframework.cloud.sleuth.api.Span;
+import org.springframework.cloud.sleuth.otel.exporter.ArrayListSpanProcessor;
 import org.springframework.cloud.sleuth.test.ReportedSpan;
 import org.springframework.cloud.sleuth.test.TestSpanHandler;
 
@@ -49,7 +50,7 @@ public class OtelTestSpanHandler implements TestSpanHandler, SpanProcessor, Span
 
 	@Override
 	public List<ReportedSpan> reportedSpans() {
-		return spanProcessor.spans.stream().map(SpanDataToReportedSpan::new).collect(Collectors.toList());
+		return spanProcessor.spans().stream().map(SpanDataToReportedSpan::new).collect(Collectors.toList());
 	}
 
 	@Override

@@ -16,6 +16,10 @@
 
 package org.springframework.cloud.sleuth.autoconfig.noop;
 
+import java.util.HashMap;
+import java.util.Map;
+
+import org.springframework.cloud.sleuth.api.Baggage;
 import org.springframework.cloud.sleuth.api.SamplerFunction;
 import org.springframework.cloud.sleuth.api.SamplingFlags;
 import org.springframework.cloud.sleuth.api.ScopedSpan;
@@ -104,6 +108,21 @@ public class NoOpTracer implements Tracer {
 	@Override
 	public Span.Builder spanBuilder() {
 		return new NoOpSpanBuilder();
+	}
+
+	@Override
+	public Map<String, String> getAllBaggage() {
+		return new HashMap<>();
+	}
+
+	@Override
+	public Baggage getBaggage(String name) {
+		return new NoOpBaggage();
+	}
+
+	@Override
+	public Baggage createBaggage(String name) {
+		return new NoOpBaggage();
 	}
 
 }

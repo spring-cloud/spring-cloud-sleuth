@@ -1,0 +1,5 @@
+logging.level.org.springframework.cloud: DEBUG
+logging.level.com.netflix.discovery.InstanceInfoReplicator: ERROR
+logging.level.org.springframework.cloud.sleuth.brave.instrument.web.client.feign: TRACE
+
+spring.autoconfigure.exclude: org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration, org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfiguration, org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration, org.springframework.boot.autoconfigure.data.web.SpringDataWebAutoConfiguration, org.springframework.cloud.gateway.config.GatewayAutoConfiguration, org.springframework.cloud.gateway.config.GatewayClassPathWarningAutoConfiguration, org.springframework.cloud.gateway.config.GatewayMetricsAutoConfiguration

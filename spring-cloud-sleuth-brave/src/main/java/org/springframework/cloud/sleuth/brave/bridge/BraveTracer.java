@@ -16,8 +16,11 @@
 
 package org.springframework.cloud.sleuth.brave.bridge;
 
+import java.util.Map;
+
 import brave.propagation.TraceContextOrSamplingFlags;
 
+import org.springframework.cloud.sleuth.api.Baggage;
 import org.springframework.cloud.sleuth.api.SamplerFunction;
 import org.springframework.cloud.sleuth.api.SamplingFlags;
 import org.springframework.cloud.sleuth.api.ScopedSpan;
@@ -29,6 +32,8 @@ import org.springframework.cloud.sleuth.api.Tracer;
 public class BraveTracer implements Tracer {
 
 	private final brave.Tracer tracer;
+
+	private final BraveBaggageManager braveBaggageManager = new BraveBaggageManager();
 
 	public BraveTracer(brave.Tracer tracer) {
 		this.tracer = tracer;
@@ -134,6 +139,21 @@ public class BraveTracer implements Tracer {
 
 	public static Tracer fromBrave(brave.Tracer tracer) {
 		return new BraveTracer(tracer);
+	}
+
+	@Override
+	public Map<String, String> getAllBaggage() {
+		return this.braveBaggageManager.getAllBaggage();
+	}
+
+	@Override
+	public Baggage getBaggage(String name) {
+		return this.braveBaggageManager.getBaggage(name);
+	}
+
+	@Override
+	public Baggage createBaggage(String name) {
+		return this.braveBaggageManager.createBaggage(name);
 	}
 
 }

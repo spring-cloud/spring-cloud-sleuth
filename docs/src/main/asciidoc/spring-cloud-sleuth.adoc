@@ -99,7 +99,7 @@ properties to define fields that have no special configuration such as name mapp
 
 No prefixing applies with these keys. What you set is literally what is used.
 
-A name set in either of these properties will result in a `BaggageField` of the same name.
+A name set in either of these properties will result in a `Baggage` of the same name.
 
 In order to automatically set the baggage values to Slf4j's MDC, you have to set
 the `spring.sleuth.baggage.correlation-fields` property with a list of allowed
@@ -117,9 +117,9 @@ If you need to do anything more advanced than above, do not define properties an
 `@Bean` config for the baggage fields you use.
 
  * `BaggagePropagationCustomizer` sets up baggage fields
-   * Add a `SingleBaggageField` to control header names for a `BaggageField`.
+   * Add a `SingleBaggageField` to control header names for a `Baggage`.
  * `CorrelationScopeCustomizer` sets up MDC fields
-   * Add a `SingleCorrelationField` to change the MDC name of a `BaggageField` or if updates flush.
+   * Add a `SingleCorrelationField` to change the MDC name of a `Baggage` or if updates flush.
 
 == Instrumentation
 

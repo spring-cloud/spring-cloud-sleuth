@@ -62,6 +62,9 @@ public class OtelHttpClientHandler extends HttpClientTracer<HttpClientRequest, H
 	@Override
 	public Span handleSend(HttpClientRequest request) {
 		if (Boolean.FALSE.equals(this.samplerFunction.trySample(request))) {
+			if (log.isDebugEnabled()) {
+				log.debug("The sampler function filtered this request, will return an invalid span");
+			}
 			return OtelSpan.fromOtel(DefaultSpan.getInvalid());
 		}
 		io.opentelemetry.trace.Span span = startSpan(request);

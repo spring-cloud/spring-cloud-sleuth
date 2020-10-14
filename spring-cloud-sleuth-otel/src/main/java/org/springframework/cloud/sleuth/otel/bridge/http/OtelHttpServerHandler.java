@@ -56,7 +56,7 @@ public class OtelHttpServerHandler
 
 	@Override
 	public Span handleReceive(HttpServerRequest request) {
-		String url = request.url();
+		String url = request.path();
 		boolean shouldSkip = !StringUtils.isEmpty(url) && this.pattern.matcher(url).matches();
 		if (shouldSkip) {
 			return OtelSpan.fromOtel(DefaultSpan.getInvalid());

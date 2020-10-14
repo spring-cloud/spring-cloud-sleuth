@@ -16,6 +16,7 @@
 
 package org.springframework.cloud.sleuth.otel.bridge;
 
+import io.opentelemetry.baggage.BaggageManager;
 import io.opentelemetry.context.propagation.ContextPropagators;
 
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
@@ -26,7 +27,9 @@ import org.springframework.cloud.sleuth.api.SpanCustomizer;
 import org.springframework.cloud.sleuth.api.Tracer;
 import org.springframework.cloud.sleuth.api.propagation.Propagator;
 import org.springframework.cloud.sleuth.autoconfig.TraceAutoConfiguration;
+import org.springframework.cloud.sleuth.autoconfig.SleuthBaggageProperties;
 import org.springframework.cloud.sleuth.otel.autoconfig.TraceOtelAutoConfiguration;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -37,8 +40,16 @@ import org.springframework.context.annotation.Configuration;
 public class TraceOtelBridgeAutoConfiguation {
 
 	@Bean
-	Tracer otelTracerBridge(io.opentelemetry.trace.Tracer tracer) {
-		return new OtelTracer(tracer);
+	Tracer otelTracerBridge(io.opentelemetry.trace.Tracer tracer, BaggageManager baggageManager,
+			SleuthBaggageProperties sleuthBaggageProperties, ApplicationEventPublisher publisher) {
+		return new OtelTracer(tracer,
+				otelBaggageManagerBridge(tracer, baggageManager, sleuthBaggageProperties, publisher));
+	}
+
+	private OtelBaggageManager otelBaggageManagerBridge(io.opentelemetry.trace.Tracer tracer,
+			BaggageManager baggageManager, SleuthBaggageProperties sleuthBaggageProperties,
+			ApplicationEventPublisher publisher) {
+		return new OtelBaggageManager(tracer, baggageManager, sleuthBaggageProperties, publisher);
 	}
 
 	@Bean

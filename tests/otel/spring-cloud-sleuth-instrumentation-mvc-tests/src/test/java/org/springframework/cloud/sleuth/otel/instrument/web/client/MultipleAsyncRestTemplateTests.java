@@ -20,7 +20,7 @@ import io.opentelemetry.sdk.trace.Sampler;
 import io.opentelemetry.sdk.trace.Samplers;
 
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.cloud.sleuth.otel.ArrayListSpanProcessor;
+import org.springframework.cloud.sleuth.otel.exporter.ArrayListSpanProcessor;
 import org.springframework.cloud.sleuth.otel.OtelTestSpanHandler;
 import org.springframework.cloud.sleuth.test.TestSpanHandler;
 import org.springframework.context.annotation.Bean;

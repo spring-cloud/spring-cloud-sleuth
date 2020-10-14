@@ -16,13 +16,34 @@
 
 package org.springframework.cloud.sleuth.otel.log;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
+import io.opentelemetry.baggage.BaggageManager;
 import io.opentelemetry.sdk.common.CompletableResultCode;
 import io.opentelemetry.sdk.trace.ReadWriteSpan;
 import io.opentelemetry.sdk.trace.ReadableSpan;
 import io.opentelemetry.sdk.trace.SpanProcessor;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.slf4j.MDC;
 
-class Slf4jSpanProcessor implements SpanProcessor {
+import org.springframework.cloud.sleuth.autoconfig.SleuthBaggageProperties;
+import org.springframework.cloud.sleuth.otel.bridge.OtelBaggage;
+import org.springframework.context.ApplicationListener;
+
+class Slf4jSpanProcessor implements SpanProcessor, ApplicationListener<OtelBaggage.BaggageChanged> {
+
+	private static final Log log = LogFactory.getLog(Slf4jSpanProcessor.class);
+
+	private final SleuthBaggageProperties sleuthBaggageProperties;
+
+	private final BaggageManager baggageManager;
+
+	Slf4jSpanProcessor(SleuthBaggageProperties sleuthBaggageProperties, BaggageManager baggageManager) {
+		this.sleuthBaggageProperties = sleuthBaggageProperties;
+		this.baggageManager = baggageManager;
+	}
 
 	@Override
 	public void onStart(ReadWriteSpan span) {
@@ -54,8 +75,33 @@ class Slf4jSpanProcessor implements SpanProcessor {
 
 	@Override
 	public CompletableResultCode forceFlush() {
-		onEnd(null);
+		if (this.sleuthBaggageProperties.isCorrelationEnabled()) {
+			List<String> correlationFields = lowerCaseCorrelationFields();
+			this.baggageManager.getCurrentBaggage().getEntries().stream()
+					.filter(e -> correlationFields.contains(e.getKey().toLowerCase()))
+					.forEach(e -> MDC.put(e.getKey(), e.getValue()));
+		}
 		return CompletableResultCode.ofSuccess();
+	}
+
+	private List<String> lowerCaseCorrelationFields() {
+		return this.sleuthBaggageProperties.getCorrelationFields().stream().map(String::toLowerCase)
+				.collect(Collectors.toList());
+	}
+
+	@Override
+	public void onApplicationEvent(OtelBaggage.BaggageChanged event) {
+		if (log.isDebugEnabled()) {
+			log.debug("Got baggage changed event [" + event + "]");
+		}
+		if (this.sleuthBaggageProperties.isCorrelationEnabled()
+				&& lowerCaseCorrelationFields().contains(event.name.toLowerCase())) {
+			if (log.isDebugEnabled()) {
+				log.debug("Correlation enabled and baggage with name [" + event.name
+						+ "] is present on the list of correlated fields");
+			}
+			MDC.put(event.name, event.value);
+		}
 	}
 
 }

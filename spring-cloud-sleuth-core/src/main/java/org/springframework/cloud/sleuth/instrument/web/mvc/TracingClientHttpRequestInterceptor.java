@@ -15,6 +15,9 @@ package org.springframework.cloud.sleuth.instrument.web.mvc;
 
 import java.io.IOException;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cloud.sleuth.api.CurrentTraceContext;
 import org.springframework.cloud.sleuth.api.Span;
@@ -29,6 +32,8 @@ import org.springframework.lang.Nullable;
 import org.springframework.web.client.HttpStatusCodeException;
 
 public final class TracingClientHttpRequestInterceptor implements ClientHttpRequestInterceptor {
+
+	private static final Log log = LogFactory.getLog(TracingClientHttpRequestInterceptor.class);
 
 	public static ClientHttpRequestInterceptor create(CurrentTraceContext currentTraceContext,
 			HttpClientHandler httpClientHandler) {
@@ -48,6 +53,9 @@ public final class TracingClientHttpRequestInterceptor implements ClientHttpRequ
 	@Override
 	public ClientHttpResponse intercept(HttpRequest req, byte[] body, ClientHttpRequestExecution execution)
 			throws IOException {
+		if (log.isDebugEnabled()) {
+			log.debug("Wrapping an outbound http call");
+		}
 		HttpRequestWrapper request = new HttpRequestWrapper(req);
 		Span span = handler.handleSend(request);
 		ClientHttpResponse response = null;

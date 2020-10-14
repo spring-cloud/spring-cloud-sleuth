@@ -16,35 +16,30 @@
 
 package org.springframework.cloud.sleuth.baggage;
 
-import brave.ScopedSpan;
-import brave.Tracer;
-import brave.baggage.BaggageField;
-import brave.handler.SpanHandler;
-import brave.propagation.TraceContext;
-import brave.test.TestSpanHandler;
+import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.context.annotation.Bean;
+import org.springframework.cloud.sleuth.api.Baggage;
+import org.springframework.cloud.sleuth.api.ScopedSpan;
+import org.springframework.cloud.sleuth.api.Tracer;
+import org.springframework.cloud.sleuth.test.TestSpanHandler;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.test.context.ActiveProfiles;
-
-import static org.assertj.core.api.Assertions.assertThat;
+import org.springframework.test.context.ContextConfiguration;
 
 /**
  * @author Taras Danylchuk
  */
-@SpringBootTest(
-		// WebEnvironment.NONE will not read a Yaml profile
-		webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT, classes = BaggageTagSpanHandlerTest.Config.class)
+@ContextConfiguration(classes = BaggageTagSpanHandlerTest.TestConfig.class)
 @ActiveProfiles("baggage") // application-baggage.yml
-public class BaggageTagSpanHandlerTest {
+public abstract class BaggageTagSpanHandlerTest {
 
-	static final BaggageField COUNTRY_CODE = BaggageField.create("country-code");
-	static final BaggageField REQUEST_ID = BaggageField.create("x-vcap-request-id");
+	Baggage countryCode;
+
+	Baggage requestId;
 
 	@Autowired
 	private Tracer tracer;
@@ -58,29 +53,26 @@ public class BaggageTagSpanHandlerTest {
 	public void setUp() {
 		this.spans.clear();
 		this.span = this.tracer.startScopedSpan("my-scoped-span");
-		TraceContext context = this.span.context();
-		COUNTRY_CODE.updateValue(context, "FO");
-		REQUEST_ID.updateValue(context, "f4308d05-2228-4468-80f6-92a8377ba193");
+		this.countryCode = this.tracer.createBaggage("country-code");
+		this.countryCode.updateValue("FO");
+		this.requestId = this.tracer.createBaggage("x-vcap-request-id");
+		this.requestId.updateValue("f4308d05-2228-4468-80f6-92a8377ba193");
 	}
 
 	@Test
 	public void shouldReportWithBaggageInTags() {
 		this.span.finish();
 
-		assertThat(this.spans).hasSize(1);
-		assertThat(this.spans.get(0).tags()).hasSize(1) // REQUEST_ID is not in the
-														// tag-fields
-				.containsEntry(COUNTRY_CODE.name(), "FO");
+		Assertions.assertThat(this.spans).hasSize(1);
+		Assertions.assertThat(this.spans.get(0).tags()).hasSize(1) // REQUEST_ID is not in
+																	// the
+				// tag-fields
+				.containsEntry(countryCode.name(), "FO");
 	}
 
 	@EnableAutoConfiguration
 	@Configuration(proxyBeanMethods = false)
-	static class Config {
-
-		@Bean
-		public SpanHandler testSpanHandler() {
-			return new TestSpanHandler();
-		}
+	static class TestConfig {
 
 	}
 

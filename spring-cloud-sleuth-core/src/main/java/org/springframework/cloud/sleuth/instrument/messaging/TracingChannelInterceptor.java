@@ -16,8 +16,7 @@
 
 package org.springframework.cloud.sleuth.instrument.messaging;
 
-import java.util.Queue;
-import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.LinkedBlockingDeque;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -435,6 +434,9 @@ final class TracingChannelInterceptor extends ChannelInterceptorAdapter implemen
 
 	private SpanAndScope getSpanFromThreadLocal() {
 		SpanAndScope span = this.threadLocalSpan.get();
+		if (log.isDebugEnabled()) {
+			log.debug("Took span [" + span + "] from thread local");
+		}
 		this.threadLocalSpan.remove();
 		return span;
 	}
@@ -476,14 +478,16 @@ class SpanAndScope {
 
 class ThreadLocalSpan {
 
+	private static final Log log = LogFactory.getLog(ThreadLocalSpan.class);
+
 	final ThreadLocal<SpanAndScope> threadLocalSpan = new ThreadLocal<>();
 
-	final Queue<SpanAndScope> spans = new LinkedBlockingQueue<>();
+	final LinkedBlockingDeque<SpanAndScope> spans = new LinkedBlockingDeque<>();
 
 	void set(SpanAndScope spanAndScope) {
 		SpanAndScope scope = this.threadLocalSpan.get();
 		if (scope != null) {
-			this.spans.add(scope);
+			this.spans.addFirst(scope);
 		}
 		this.threadLocalSpan.set(spanAndScope);
 	}
@@ -494,7 +498,14 @@ class ThreadLocalSpan {
 
 	void remove() {
 		this.threadLocalSpan.remove();
-		this.threadLocalSpan.set(this.spans.poll());
+		if (this.spans.isEmpty()) {
+			return;
+		}
+		SpanAndScope span = this.spans.removeFirst();
+		if (log.isDebugEnabled()) {
+			log.debug("Took span [" + span + "] from thread local");
+		}
+		this.threadLocalSpan.set(span);
 	}
 
 }
