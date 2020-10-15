@@ -42,7 +42,7 @@ class NoOpScopedSpan implements ScopedSpan {
 	}
 
 	@Override
-	public ScopedSpan annotate(String value) {
+	public ScopedSpan event(String value) {
 		return this;
 	}
 
@@ -52,7 +52,7 @@ class NoOpScopedSpan implements ScopedSpan {
 	}
 
 	@Override
-	public void finish() {
+	public void end() {
 
 	}
 

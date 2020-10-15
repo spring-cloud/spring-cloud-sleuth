@@ -71,7 +71,7 @@ public class TraceCallable<V> implements Callable<V> {
 			throw ex;
 		}
 		finally {
-			span.finish();
+			span.end();
 		}
 	}
 

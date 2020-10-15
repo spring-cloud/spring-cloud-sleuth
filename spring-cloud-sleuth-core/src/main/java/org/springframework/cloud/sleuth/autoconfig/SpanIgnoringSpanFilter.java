@@ -27,25 +27,25 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import org.springframework.cloud.sleuth.api.exporter.ReportedSpan;
-import org.springframework.cloud.sleuth.api.exporter.SpanExporter;
+import org.springframework.cloud.sleuth.api.exporter.SpanFilter;
 import org.springframework.util.StringUtils;
 
 /**
- * {@link SpanExporter} that ignores spans via names.
+ * {@link SpanFilter} that ignores spans via names.
  *
  * @author Marcin Grzejszczak
  * @since 3.0.0
  */
-class SpanIgnoringSpanExporter implements SpanExporter {
+class SpanIgnoringSpanFilter implements SpanFilter {
 
-	private static final Log log = LogFactory.getLog(SpanIgnoringSpanExporter.class);
+	private static final Log log = LogFactory.getLog(SpanIgnoringSpanFilter.class);
 
-	private final SleuthSpanExporterProperties sleuthSpanExporterProperties;
+	private final SleuthSpanFilterProperties sleuthSpanFilterProperties;
 
 	static final Map<String, Pattern> cache = new ConcurrentHashMap<>();
 
-	SpanIgnoringSpanExporter(SleuthSpanExporterProperties sleuthSpanExporterProperties) {
-		this.sleuthSpanExporterProperties = sleuthSpanExporterProperties;
+	SpanIgnoringSpanFilter(SleuthSpanFilterProperties sleuthSpanFilterProperties) {
+		this.sleuthSpanFilterProperties = sleuthSpanFilterProperties;
 	}
 
 	private List<Pattern> spanNamesToIgnore() {
@@ -54,13 +54,13 @@ class SpanIgnoringSpanExporter implements SpanExporter {
 	}
 
 	private List<String> spanNames() {
-		List<String> spanNamesToIgnore = new ArrayList<>(this.sleuthSpanExporterProperties.getSpanNamePatternsToSkip());
-		spanNamesToIgnore.addAll(this.sleuthSpanExporterProperties.getAdditionalSpanNamePatternsToIgnore());
+		List<String> spanNamesToIgnore = new ArrayList<>(this.sleuthSpanFilterProperties.getSpanNamePatternsToSkip());
+		spanNamesToIgnore.addAll(this.sleuthSpanFilterProperties.getAdditionalSpanNamePatternsToIgnore());
 		return spanNamesToIgnore;
 	}
 
 	@Override
-	public boolean export(ReportedSpan span) {
+	public boolean isExportable(ReportedSpan span) {
 		List<Pattern> spanNamesToIgnore = spanNamesToIgnore();
 		String name = span.name();
 		if (StringUtils.hasText(name) && spanNamesToIgnore.stream().anyMatch(p -> p.matcher(name).matches())) {

@@ -17,7 +17,6 @@
 package org.springframework.cloud.sleuth.instrument.web.client;
 
 import java.net.InetSocketAddress;
-import java.net.SocketAddress;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.BiConsumer;
@@ -152,22 +151,10 @@ class HttpClientBeanPostProcessor implements BeanPostProcessor {
 
 			// Start a new client span with the appropriate parent
 			TraceContext parent = req.currentContextView().getOrDefault(TraceContext.class, null);
-			HttpClientRequestWrapper request = new HttpClientRequestWrapper(req);
+			HttpClientRequestWrapper request = new HttpClientRequestWrapper(req, connection);
 
 			span = handler().handleSend(request, parent);
-			parseConnectionAddress(connection, span);
 			pendingSpan.set(span);
-		}
-
-		static void parseConnectionAddress(Connection connection, Span span) {
-			if (span.isNoop()) {
-				return;
-			}
-			SocketAddress socketAddress = connection.address();
-			if (socketAddress instanceof InetSocketAddress) {
-				InetSocketAddress inetSocketAddress = (InetSocketAddress) socketAddress;
-				span.remoteIpAndPort(inetSocketAddress.getHostString(), inetSocketAddress.getPort());
-			}
 		}
 
 	}
@@ -251,8 +238,29 @@ class HttpClientBeanPostProcessor implements BeanPostProcessor {
 
 		final HttpClientRequest delegate;
 
-		HttpClientRequestWrapper(HttpClientRequest delegate) {
+		final Connection connection;
+
+		Boolean inetSocketAddress;
+
+		InetSocketAddress address;
+
+		HttpClientRequestWrapper(HttpClientRequest delegate, Connection connection) {
 			this.delegate = delegate;
+			this.connection = connection;
+		}
+
+		InetSocketAddress address() {
+			this.inetSocketAddress = this.inetSocketAddress != null ? this.inetSocketAddress
+					: connection.address() instanceof InetSocketAddress;
+			if (this.address != null && this.inetSocketAddress) {
+				return this.address;
+			}
+			else if (this.address == null && this.inetSocketAddress) {
+				this.address = (InetSocketAddress) connection.address();
+				this.inetSocketAddress = true;
+				return this.address;
+			}
+			return null;
 		}
 
 		@Override
@@ -285,6 +293,18 @@ class HttpClientBeanPostProcessor implements BeanPostProcessor {
 			delegate.header(name, value);
 		}
 
+		@Override
+		public String remoteIp() {
+			InetSocketAddress address = address();
+			return address != null ? address.getHostString() : null;
+		}
+
+		@Override
+		public int remotePort() {
+			InetSocketAddress address = address();
+			return address != null ? address.getPort() : 0;
+		}
+
 	}
 
 	static final class HttpClientResponseWrapper
@@ -304,28 +324,25 @@ class HttpClientBeanPostProcessor implements BeanPostProcessor {
 
 		@Override
 		public Object unwrap() {
-			return delegate;
+			return this.delegate;
 		}
 
 		@Override
 		public HttpClientRequestWrapper request() {
 			if (request == null) {
 				if (delegate instanceof HttpClientRequest) {
-					request = new HttpClientRequestWrapper((HttpClientRequest) delegate);
-				}
-				else {
-					assert false : "We expect the response to be the same reference as the request";
+					this.request = new HttpClientRequestWrapper((HttpClientRequest) delegate, null);
 				}
 			}
-			return request;
+			return this.request;
 		}
 
 		@Override
 		public int statusCode() {
-			if (delegate == null) {
+			if (this.delegate == null) {
 				return 0;
 			}
-			return delegate.status().code();
+			return this.delegate.status().code();
 		}
 
 		@Override
@@ -335,10 +352,10 @@ class HttpClientBeanPostProcessor implements BeanPostProcessor {
 
 		@Override
 		public String header(String header) {
-			if (delegate == null) {
+			if (this.delegate == null) {
 				return null;
 			}
-			return delegate.responseHeaders().get(header);
+			return this.delegate.responseHeaders().get(header);
 		}
 
 	}

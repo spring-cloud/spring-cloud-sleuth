@@ -23,14 +23,14 @@ import brave.handler.MutableSpan;
 import brave.handler.SpanHandler;
 import brave.propagation.TraceContext;
 
-import org.springframework.cloud.sleuth.api.exporter.SpanExporter;
+import org.springframework.cloud.sleuth.api.exporter.SpanFilter;
 import org.springframework.cloud.sleuth.brave.bridge.BraveReportedSpan;
 
 class CompositeSpanHandler extends SpanHandler {
 
-	private final List<SpanExporter> exporters;
+	private final List<SpanFilter> exporters;
 
-	CompositeSpanHandler(List<SpanExporter> exporters) {
+	CompositeSpanHandler(List<SpanFilter> exporters) {
 		this.exporters = exporters == null ? Collections.emptyList() : exporters;
 	}
 
@@ -47,8 +47,8 @@ class CompositeSpanHandler extends SpanHandler {
 	}
 
 	private boolean shouldProcess(MutableSpan span) {
-		for (SpanExporter exporter : this.exporters) {
-			if (!exporter.export(BraveReportedSpan.fromBrave(span))) {
+		for (SpanFilter exporter : this.exporters) {
+			if (!exporter.isExportable(BraveReportedSpan.fromBrave(span))) {
 				return false;
 			}
 		}

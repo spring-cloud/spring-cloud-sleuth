@@ -48,7 +48,7 @@ public class BraveScopedSpan implements ScopedSpan {
 	}
 
 	@Override
-	public ScopedSpan annotate(String value) {
+	public ScopedSpan event(String value) {
 		return new BraveScopedSpan(this.span.annotate(value));
 	}
 
@@ -58,7 +58,7 @@ public class BraveScopedSpan implements ScopedSpan {
 	}
 
 	@Override
-	public void finish() {
+	public void end() {
 		this.span.finish();
 	}
 

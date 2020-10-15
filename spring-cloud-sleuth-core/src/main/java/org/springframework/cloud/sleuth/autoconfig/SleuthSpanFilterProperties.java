@@ -28,8 +28,8 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * @author Marcin Grzejszczak
  * @since 1.0.11
  */
-@ConfigurationProperties("spring.sleuth.span-exporter")
-class SleuthSpanExporterProperties {
+@ConfigurationProperties("spring.sleuth.span-filter")
+class SleuthSpanFilterProperties {
 
 	/**
 	 * Will turn on the default Sleuth handler mechanism. Might ignore exporting of

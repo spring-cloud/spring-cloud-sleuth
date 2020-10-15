@@ -58,8 +58,6 @@ public class TraceAsyncIntegrationTests {
 	@Autowired
 	CurrentTraceContext currentTraceContext;
 
-	// TODO: [OTEL] Maybe scope doesn't work for some reason. A span is allocated by Brave
-	// even though I don't do it explicitly
 	@Autowired
 	Tracer tracer;
 

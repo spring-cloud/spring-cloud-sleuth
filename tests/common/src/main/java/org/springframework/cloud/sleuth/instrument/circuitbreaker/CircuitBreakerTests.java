@@ -45,7 +45,7 @@ public abstract class CircuitBreakerTests implements TestTracingAwareSupplier {
 			BDDAssertions.then(scopedSpan.context().traceId()).isEqualTo(span.context().traceId());
 		}
 		finally {
-			scopedSpan.finish();
+			scopedSpan.end();
 		}
 	}
 
@@ -80,7 +80,7 @@ public abstract class CircuitBreakerTests implements TestTracingAwareSupplier {
 			additionalAssertions(reportedSpan);
 		}
 		finally {
-			scopedSpan.finish();
+			scopedSpan.end();
 		}
 	}
 

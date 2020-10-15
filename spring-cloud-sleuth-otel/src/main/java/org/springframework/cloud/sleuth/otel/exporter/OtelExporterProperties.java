@@ -27,18 +27,18 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * @since 3.0.0
  */
 @ConfigurationProperties("spring.sleuth.otel.exporter")
-class OtelExporterProperties {
+public class OtelExporterProperties {
 
-	private SleuthSpanHandler sleuthSpanHandler = new SleuthSpanHandler();
+	private SleuthSpanFilter sleuthSpanFilter = new SleuthSpanFilter();
 
 	private Zipkin zipkin = new Zipkin();
 
-	public SleuthSpanHandler getSleuthSpanHandler() {
-		return this.sleuthSpanHandler;
+	public SleuthSpanFilter getSleuthSpanFilter() {
+		return this.sleuthSpanFilter;
 	}
 
-	public void setSleuthSpanHandler(SleuthSpanHandler sleuthSpanHandler) {
-		this.sleuthSpanHandler = sleuthSpanHandler;
+	public void setSleuthSpanFilter(SleuthSpanFilter sleuthSpanFilter) {
+		this.sleuthSpanFilter = sleuthSpanFilter;
 	}
 
 	public Zipkin getZipkin() {
@@ -52,7 +52,7 @@ class OtelExporterProperties {
 	/**
 	 * Integrations with core Sleuth handler mechanism.
 	 */
-	public static class SleuthSpanHandler {
+	public static class SleuthSpanFilter {
 
 		/**
 		 * This application service name.

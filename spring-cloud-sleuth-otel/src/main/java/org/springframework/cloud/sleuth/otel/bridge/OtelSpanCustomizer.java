@@ -55,7 +55,7 @@ public class OtelSpanCustomizer implements SpanCustomizer {
 	}
 
 	@Override
-	public SpanCustomizer annotate(String value) {
+	public SpanCustomizer event(String value) {
 		currentSpan().addEvent(value);
 		return this;
 	}

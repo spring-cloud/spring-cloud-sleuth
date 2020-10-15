@@ -18,58 +18,18 @@ package org.springframework.cloud.sleuth.api;
 
 public interface ScopedSpan {
 
-	/**
-	 * When true, no recording will take place, so no data is reported on finish. However,
-	 * the trace context is in scope until {@link #finish()} is called.
-	 *
-	 * @since 4.19
-	 */
 	boolean isNoop();
 
-	/**
-	 * Returns the trace context associated with this span
-	 *
-	 * @since 4.19
-	 */
 	TraceContext context();
 
-	/**
-	 * {@inheritDoc}
-	 *
-	 * @since 5.11
-	 */
 	ScopedSpan name(String name);
 
-	/**
-	 * {@inheritDoc}
-	 *
-	 * @since 4.19
-	 */
 	ScopedSpan tag(String key, String value);
 
-	/**
-	 * {@inheritDoc}
-	 *
-	 * @since 4.19
-	 */
-	ScopedSpan annotate(String value);
+	ScopedSpan event(String value);
 
-	/**
-	 * Records an error that impacted this operation.
-	 *
-	 * <p>
-	 * <em>Note:</em> Calling this does not {@linkplain #finish() finish} the span.
-	 *
-	 * @since 4.19
-	 */
 	ScopedSpan error(Throwable throwable);
 
-	/**
-	 * Closes the scope associated with this span, then reports the span complete,
-	 * assigning the most precise duration possible.
-	 *
-	 * @since 4.19
-	 */
-	void finish();
+	void end();
 
 }

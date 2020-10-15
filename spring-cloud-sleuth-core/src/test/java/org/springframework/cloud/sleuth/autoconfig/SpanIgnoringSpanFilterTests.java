@@ -29,7 +29,7 @@ import org.springframework.cloud.sleuth.api.exporter.ReportedSpan;
 
 import static org.assertj.core.api.BDDAssertions.then;
 
-class SpanIgnoringSpanExporterTests {
+class SpanIgnoringSpanFilterTests {
 
 	private ReportedSpan namedSpan() {
 		ReportedSpan span = BDDMockito.mock(ReportedSpan.class);
@@ -39,19 +39,19 @@ class SpanIgnoringSpanExporterTests {
 
 	@Test
 	void should_not_handle_span_when_present_in_main_list_of_spans_to_skip() {
-		SleuthSpanExporterProperties SleuthSpanExporterProperties = new SleuthSpanExporterProperties();
-		SleuthSpanExporterProperties.setSpanNamePatternsToSkip(Collections.singletonList("someName"));
-		SpanIgnoringSpanExporter handler = new SpanIgnoringSpanExporter(SleuthSpanExporterProperties);
+		SleuthSpanFilterProperties SleuthSpanFilterProperties = new SleuthSpanFilterProperties();
+		SleuthSpanFilterProperties.setSpanNamePatternsToSkip(Collections.singletonList("someName"));
+		SpanIgnoringSpanFilter handler = new SpanIgnoringSpanFilter(SleuthSpanFilterProperties);
 
-		then(handler.export(namedSpan())).isFalse();
+		then(handler.isExportable(namedSpan())).isFalse();
 	}
 
 	@Test
 	void should_not_handle_span_when_present_in_additional_list_of_spans_to_skip() {
-		SleuthSpanExporterProperties SleuthSpanExporterProperties = SleuthSpanExporterPropertiesWithAdditionalEntries();
-		SpanIgnoringSpanExporter handler = new SpanIgnoringSpanExporter(SleuthSpanExporterProperties);
+		SleuthSpanFilterProperties SleuthSpanFilterProperties = SleuthSpanExporterPropertiesWithAdditionalEntries();
+		SpanIgnoringSpanFilter handler = new SpanIgnoringSpanFilter(SleuthSpanFilterProperties);
 
-		then(handler.export(namedSpan())).isFalse();
+		then(handler.isExportable(namedSpan())).isFalse();
 	}
 
 	@Test
@@ -60,13 +60,13 @@ class SpanIgnoringSpanExporterTests {
 		export(handler(SleuthSpanExporterPropertiesWithAdditionalEntries("someOtherName")));
 		export(handler(SleuthSpanExporterPropertiesWithAdditionalEntries("someOtherName")));
 
-		then(SpanIgnoringSpanExporter.cache).containsKey("someOtherName");
+		then(SpanIgnoringSpanFilter.cache).containsKey("someOtherName");
 
 		export(handler(SleuthSpanExporterPropertiesWithAdditionalEntries("a")));
 		export(handler(SleuthSpanExporterPropertiesWithAdditionalEntries("b")));
 		export(handler(SleuthSpanExporterPropertiesWithAdditionalEntries("c")));
 
-		then(SpanIgnoringSpanExporter.cache).containsKey("someOtherName").containsKey("a").containsKey("b")
+		then(SpanIgnoringSpanFilter.cache).containsKey("someOtherName").containsKey("a").containsKey("b")
 				.containsKey("c");
 	}
 
@@ -75,32 +75,32 @@ class SpanIgnoringSpanExporterTests {
 
 	@Test
 	void should_not_register_span_handler_when_property_passed() {
-		this.contextRunner.withPropertyValues("spring.sleuth.span-exporter.enabled=false")
-				.run((context) -> BDDAssertions.thenThrownBy(() -> context.getBean(SpanIgnoringSpanExporter.class))
+		this.contextRunner.withPropertyValues("spring.sleuth.span-filter.enabled=false")
+				.run((context) -> BDDAssertions.thenThrownBy(() -> context.getBean(SpanIgnoringSpanFilter.class))
 						.isInstanceOf(NoSuchBeanDefinitionException.class));
 	}
 
 	@Test
 	void should_register_span_handler_by_default() {
-		this.contextRunner.run((context) -> context.getBean(SpanIgnoringSpanExporter.class));
+		this.contextRunner.run((context) -> context.getBean(SpanIgnoringSpanFilter.class));
 	}
 
-	private SleuthSpanExporterProperties SleuthSpanExporterPropertiesWithAdditionalEntries() {
+	private SleuthSpanFilterProperties SleuthSpanExporterPropertiesWithAdditionalEntries() {
 		return SleuthSpanExporterPropertiesWithAdditionalEntries("someName");
 	}
 
-	private SleuthSpanExporterProperties SleuthSpanExporterPropertiesWithAdditionalEntries(String name) {
-		SleuthSpanExporterProperties SleuthSpanExporterProperties = new SleuthSpanExporterProperties();
-		SleuthSpanExporterProperties.setAdditionalSpanNamePatternsToIgnore(Collections.singletonList(name));
-		return SleuthSpanExporterProperties;
+	private SleuthSpanFilterProperties SleuthSpanExporterPropertiesWithAdditionalEntries(String name) {
+		SleuthSpanFilterProperties SleuthSpanFilterProperties = new SleuthSpanFilterProperties();
+		SleuthSpanFilterProperties.setAdditionalSpanNamePatternsToIgnore(Collections.singletonList(name));
+		return SleuthSpanFilterProperties;
 	}
 
-	private void export(SpanIgnoringSpanExporter handler) {
-		handler.export(namedSpan());
+	private void export(SpanIgnoringSpanFilter handler) {
+		handler.isExportable(namedSpan());
 	}
 
-	private SpanIgnoringSpanExporter handler(SleuthSpanExporterProperties SleuthSpanExporterProperties) {
-		return new SpanIgnoringSpanExporter(SleuthSpanExporterProperties);
+	private SpanIgnoringSpanFilter handler(SleuthSpanFilterProperties SleuthSpanFilterProperties) {
+		return new SpanIgnoringSpanFilter(SleuthSpanFilterProperties);
 	}
 
 }

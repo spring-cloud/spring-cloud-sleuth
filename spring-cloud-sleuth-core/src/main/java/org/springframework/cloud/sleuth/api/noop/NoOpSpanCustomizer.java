@@ -18,7 +18,7 @@ package org.springframework.cloud.sleuth.api.noop;
 
 import org.springframework.cloud.sleuth.api.SpanCustomizer;
 
-class NoOpSpanCustomizer implements SpanCustomizer {
+public class NoOpSpanCustomizer implements SpanCustomizer {
 
 	@Override
 	public SpanCustomizer name(String name) {
@@ -31,7 +31,7 @@ class NoOpSpanCustomizer implements SpanCustomizer {
 	}
 
 	@Override
-	public SpanCustomizer annotate(String value) {
+	public SpanCustomizer event(String value) {
 		return this;
 	}
 

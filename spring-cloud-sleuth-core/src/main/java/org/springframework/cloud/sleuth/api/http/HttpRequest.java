@@ -36,4 +36,12 @@ public interface HttpRequest extends Request {
 	@Nullable
 	String header(String name);
 
+	default String remoteIp() {
+		return null;
+	}
+
+	default int remotePort() {
+		return 0;
+	}
+
 }

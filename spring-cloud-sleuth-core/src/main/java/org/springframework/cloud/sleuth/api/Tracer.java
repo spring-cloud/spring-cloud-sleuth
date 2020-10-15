@@ -4,6 +4,9 @@ import java.io.Closeable;
 
 import org.springframework.lang.Nullable;
 
+/*
+ * Taken mostly from Brave.
+ */
 public interface Tracer extends BaggageManager {
 
 	Span nextSpan();

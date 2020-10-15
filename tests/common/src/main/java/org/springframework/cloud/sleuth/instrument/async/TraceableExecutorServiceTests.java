@@ -89,7 +89,7 @@ public abstract class TraceableExecutorServiceTests implements TestTracingAwareS
 			CompletableFuture.allOf(runnablesExecutedViaTraceManagerableExecutorService()).get();
 		}
 		finally {
-			span.finish();
+			span.end();
 		}
 
 		BDDAssertions.then(this.spanVerifyingRunnable.traceIds.stream().distinct().collect(toList())).hasSize(1);

@@ -49,7 +49,6 @@ public class OtelCurrentTraceContext implements CurrentTraceContext {
 
 	@Override
 	public Scope newScope(TraceContext context) {
-		// TODO: [OTEL] Maybe that's not necessary
 		Span fromContext = new SpanFromSpanContext(((OtelTraceContext) context).span,
 				((OtelTraceContext) context).delegate);
 		return new OtelScope(new OtelSpanInScope(this.tracer.withSpan(fromContext)));

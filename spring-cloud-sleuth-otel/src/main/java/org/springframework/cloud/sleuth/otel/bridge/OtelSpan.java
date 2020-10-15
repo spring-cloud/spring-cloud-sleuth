@@ -66,7 +66,7 @@ public class OtelSpan implements Span {
 	}
 
 	@Override
-	public Span annotate(String value) {
+	public Span event(String value) {
 		this.delegate.addEvent(value);
 		return new OtelSpan(this.delegate);
 	}
@@ -84,20 +84,13 @@ public class OtelSpan implements Span {
 	}
 
 	@Override
-	public Span remoteIpAndPort(String remoteIp, int remotePort) {
-		this.delegate.setAttribute("net.peer.ip", remoteIp);
-		this.delegate.setAttribute("net.peer.port", remotePort);
-		return this;
-	}
-
-	@Override
 	public void end() {
 		this.delegate.end();
 	}
 
 	@Override
 	public void abandon() {
-		// TODO: [OTEL] doesn't seem to have this notion
+		// TODO: [OTEL] doesn't seem to have this notion yet
 	}
 
 	@Override

@@ -16,18 +16,19 @@
 
 package org.springframework.cloud.sleuth.otel.exporter;
 
+import java.util.List;
+
 import io.opentelemetry.exporters.zipkin.ZipkinSpanExporter;
 import io.opentelemetry.sdk.extensions.trace.export.DisruptorAsyncSpanProcessor;
-import io.opentelemetry.trace.Tracer;
+import io.opentelemetry.sdk.trace.export.SpanExporter;
 
-import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.AutoConfigureBefore;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.cloud.sleuth.api.exporter.SpanFilter;
 import org.springframework.cloud.sleuth.otel.autoconfig.TraceOtelAutoConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -42,18 +43,23 @@ import org.springframework.util.StringUtils;
  * @since 3.0.0
  */
 @Configuration(proxyBeanMethods = false)
-@ConditionalOnBean(Tracer.class)
+@ConditionalOnProperty(value = "spring.sleuth.enabled", matchIfMissing = true)
 @AutoConfigureBefore(TraceOtelAutoConfiguration.class)
 @EnableConfigurationProperties(OtelExporterProperties.class)
 public class TraceOtelExporterAutoConfiguration {
 
 	@Configuration(proxyBeanMethods = false)
-	@ConditionalOnProperty(value = "spring.sleuth.otel.exporter.sleuth-span-handler", matchIfMissing = true)
 	static class SleuthExporterConfiguration {
 
 		@Bean
-		CompositeSpanExporterBeanPostProcessor compositeSpanExporterBeanPostProcessor(BeanFactory beanFactory) {
-			return new CompositeSpanExporterBeanPostProcessor(beanFactory);
+		@ConditionalOnProperty(value = "spring.sleuth.otel.exporter.sleuth-span-filter.enabled", matchIfMissing = true)
+		SpanExporterConverter sleuthSpanFilterConverter(List<SpanFilter> spanFilters) {
+			return new SpanExporterConverter() {
+				@Override
+				public SpanExporter get(SpanExporter spanExporter) {
+					return new CompositeSpanExporter(spanExporter, spanFilters);
+				}
+			};
 		}
 
 	}

@@ -40,7 +40,6 @@ public class BraveSamplerFunction<T> implements SamplerFunction<T> {
 		if (sleuthInput.equals(HttpRequest.class) && braveInput.equals(brave.http.HttpRequest.class)) {
 			return arg -> samplerFunction.trySample((T) BraveHttpRequest.fromBrave((brave.http.HttpRequest) arg));
 		}
-		// TODO: [OTEL] come back to this
 		return SamplerFunctions.deferDecision();
 	}
 

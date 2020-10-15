@@ -89,7 +89,7 @@ abstract class AbstractSleuthMethodInvocationProcessor implements SleuthMethodIn
 					+ "the same class then the aspect will not be properly resolved");
 			return;
 		}
-		span.annotate(name);
+		span.event(name);
 	}
 
 	String log(ContinueSpan continueSpan) {

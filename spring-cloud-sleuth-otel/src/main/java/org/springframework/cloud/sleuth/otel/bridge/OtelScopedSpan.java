@@ -56,7 +56,7 @@ public class OtelScopedSpan implements ScopedSpan {
 	}
 
 	@Override
-	public ScopedSpan annotate(String value) {
+	public ScopedSpan event(String value) {
 		this.span.addEvent(value);
 		return this;
 	}
@@ -68,7 +68,7 @@ public class OtelScopedSpan implements ScopedSpan {
 	}
 
 	@Override
-	public void finish() {
+	public void end() {
 		this.scope.close();
 		this.span.end();
 	}

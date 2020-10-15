@@ -61,7 +61,7 @@ public abstract class BaggageTagSpanHandlerTest {
 
 	@Test
 	public void shouldReportWithBaggageInTags() {
-		this.span.finish();
+		this.span.end();
 
 		Assertions.assertThat(this.spans).hasSize(1);
 		Assertions.assertThat(this.spans.get(0).tags()).hasSize(1) // REQUEST_ID is not in

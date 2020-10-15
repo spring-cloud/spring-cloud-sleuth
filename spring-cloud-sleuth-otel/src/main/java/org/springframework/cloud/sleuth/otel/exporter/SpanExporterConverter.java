@@ -14,24 +14,14 @@
  * limitations under the License.
  */
 
-package org.springframework.cloud.sleuth.otel.bridge;
+package org.springframework.cloud.sleuth.otel.exporter;
 
-import io.opentelemetry.sdk.trace.Sampler;
+import io.opentelemetry.sdk.trace.export.SpanExporter;
 
-import org.springframework.cloud.sleuth.api.SamplerFunction;
+public interface SpanExporterConverter {
 
-// TODO: [OTEL] Sampler is in the SDK. Also sampling takes place upon span creation. Currently let's defer the decision for OTel.
-public class OtelSamplerFunction<T> implements SamplerFunction<T> {
-
-	final Sampler sampler;
-
-	public OtelSamplerFunction(Sampler sampler) {
-		this.sampler = sampler;
-	}
-
-	@Override
-	public Boolean trySample(T arg) {
-		return null;
+	default SpanExporter get(SpanExporter spanExporter) {
+		return spanExporter;
 	}
 
 }

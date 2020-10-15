@@ -47,7 +47,7 @@ class NoOpSpan implements Span {
 	}
 
 	@Override
-	public Span annotate(String value) {
+	public Span event(String value) {
 		return this;
 	}
 
@@ -58,11 +58,6 @@ class NoOpSpan implements Span {
 
 	@Override
 	public Span error(Throwable throwable) {
-		return this;
-	}
-
-	@Override
-	public Span remoteIpAndPort(String remoteIp, int remotePort) {
 		return this;
 	}
 

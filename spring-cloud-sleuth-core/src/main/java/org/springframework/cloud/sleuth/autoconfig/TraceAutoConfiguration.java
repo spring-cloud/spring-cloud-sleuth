@@ -21,10 +21,12 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.cloud.sleuth.SpanNamer;
 import org.springframework.cloud.sleuth.api.CurrentTraceContext;
+import org.springframework.cloud.sleuth.api.SpanCustomizer;
 import org.springframework.cloud.sleuth.api.Tracer;
-import org.springframework.cloud.sleuth.api.exporter.SpanExporter;
+import org.springframework.cloud.sleuth.api.exporter.SpanFilter;
 import org.springframework.cloud.sleuth.api.noop.NoOpCurrentTraceContext;
 import org.springframework.cloud.sleuth.api.noop.NoOpPropagator;
+import org.springframework.cloud.sleuth.api.noop.NoOpSpanCustomizer;
 import org.springframework.cloud.sleuth.api.noop.NoOpTracer;
 import org.springframework.cloud.sleuth.api.propagation.Propagator;
 import org.springframework.cloud.sleuth.internal.DefaultSpanNamer;
@@ -42,7 +44,7 @@ import org.springframework.context.annotation.Configuration;
  */
 @Configuration(proxyBeanMethods = false)
 @ConditionalOnProperty(value = "spring.sleuth.enabled", matchIfMissing = true)
-@EnableConfigurationProperties({ SleuthSpanExporterProperties.class, SleuthBaggageProperties.class })
+@EnableConfigurationProperties({ SleuthSpanFilterProperties.class, SleuthBaggageProperties.class })
 public class TraceAutoConfiguration {
 
 	@Bean
@@ -70,9 +72,15 @@ public class TraceAutoConfiguration {
 	}
 
 	@Bean
-	@ConditionalOnProperty(value = "spring.sleuth.span-exporter.enabled", matchIfMissing = true)
-	SpanExporter spanIgnoringSpanExporter(SleuthSpanExporterProperties sleuthSpanExporterProperties) {
-		return new SpanIgnoringSpanExporter(sleuthSpanExporterProperties);
+	@ConditionalOnMissingBean
+	SpanCustomizer defaultSpanCustomizer() {
+		return new NoOpSpanCustomizer();
+	}
+
+	@Bean
+	@ConditionalOnProperty(value = "spring.sleuth.span-filter.enabled", matchIfMissing = true)
+	SpanFilter spanIgnoringSpanExporter(SleuthSpanFilterProperties sleuthSpanFilterProperties) {
+		return new SpanIgnoringSpanFilter(sleuthSpanFilterProperties);
 	}
 
 }

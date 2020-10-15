@@ -68,7 +68,7 @@ public class TraceRunnable implements Runnable {
 			throw e;
 		}
 		finally {
-			span.finish();
+			span.end();
 		}
 	}
 

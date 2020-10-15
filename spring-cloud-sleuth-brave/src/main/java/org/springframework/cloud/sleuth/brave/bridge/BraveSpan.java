@@ -56,7 +56,7 @@ public class BraveSpan implements Span {
 	}
 
 	@Override
-	public Span annotate(String value) {
+	public Span event(String value) {
 		return new BraveSpan(this.delegate.annotate(value));
 	}
 
@@ -71,12 +71,6 @@ public class BraveSpan implements Span {
 		this.delegate.tag("error", message);
 		this.delegate.error(throwable);
 		return new BraveSpan(this.delegate);
-	}
-
-	@Override
-	public Span remoteIpAndPort(String remoteIp, int remotePort) {
-		this.delegate.remoteIpAndPort(remoteIp, remotePort);
-		return this;
 	}
 
 	@Override

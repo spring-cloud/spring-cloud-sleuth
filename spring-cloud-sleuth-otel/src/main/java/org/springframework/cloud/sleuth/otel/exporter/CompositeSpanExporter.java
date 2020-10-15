@@ -17,42 +17,24 @@
 package org.springframework.cloud.sleuth.otel.exporter;
 
 import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
 import io.opentelemetry.sdk.common.CompletableResultCode;
 import io.opentelemetry.sdk.trace.data.SpanData;
 
-import org.springframework.beans.BeansException;
-import org.springframework.beans.factory.BeanFactory;
-import org.springframework.beans.factory.config.BeanPostProcessor;
-import org.springframework.cloud.sleuth.api.exporter.SpanExporter;
+import org.springframework.cloud.sleuth.api.exporter.SpanFilter;
 import org.springframework.cloud.sleuth.otel.bridge.OtelReportedSpan;
-import org.springframework.core.ParameterizedTypeReference;
-import org.springframework.core.ResolvableType;
 
 class CompositeSpanExporter implements io.opentelemetry.sdk.trace.export.SpanExporter {
 
-	private List<SpanExporter> exporters;
-
 	private final io.opentelemetry.sdk.trace.export.SpanExporter delegate;
 
-	private final BeanFactory beanFactory;
+	private final List<SpanFilter> filters;
 
-	CompositeSpanExporter(io.opentelemetry.sdk.trace.export.SpanExporter delegate, BeanFactory beanFactory) {
+	CompositeSpanExporter(io.opentelemetry.sdk.trace.export.SpanExporter delegate, List<SpanFilter> filters) {
 		this.delegate = delegate;
-		this.beanFactory = beanFactory;
-	}
-
-	@SuppressWarnings("unchecked")
-	private List<SpanExporter> exporters() {
-		if (this.exporters == null) {
-			this.exporters = (List<SpanExporter>) this.beanFactory
-					.getBeanProvider(ResolvableType.forType(new ParameterizedTypeReference<List<SpanExporter>>() {
-					})).getIfAvailable(Collections::emptyList);
-		}
-		return this.exporters;
+		this.filters = filters;
 	}
 
 	@Override
@@ -61,8 +43,8 @@ class CompositeSpanExporter implements io.opentelemetry.sdk.trace.export.SpanExp
 	}
 
 	private boolean shouldProcess(SpanData span) {
-		for (SpanExporter exporter : exporters()) {
-			if (!exporter.export(OtelReportedSpan.fromOtel(span))) {
+		for (SpanFilter exporter : this.filters) {
+			if (!exporter.isExportable(OtelReportedSpan.fromOtel(span))) {
 				return false;
 			}
 		}
@@ -77,24 +59,6 @@ class CompositeSpanExporter implements io.opentelemetry.sdk.trace.export.SpanExp
 	@Override
 	public CompletableResultCode shutdown() {
 		return this.delegate.shutdown();
-	}
-
-}
-
-class CompositeSpanExporterBeanPostProcessor implements BeanPostProcessor {
-
-	private final BeanFactory beanFactory;
-
-	CompositeSpanExporterBeanPostProcessor(BeanFactory beanFactory) {
-		this.beanFactory = beanFactory;
-	}
-
-	@Override
-	public Object postProcessAfterInitialization(Object bean, String beanName) throws BeansException {
-		if (bean instanceof io.opentelemetry.sdk.trace.export.SpanExporter) {
-			return new CompositeSpanExporter((io.opentelemetry.sdk.trace.export.SpanExporter) bean, this.beanFactory);
-		}
-		return bean;
 	}
 
 }

@@ -39,6 +39,7 @@ import org.springframework.cloud.sleuth.api.http.HttpResponseParser;
 import org.springframework.cloud.sleuth.otel.bridge.OtelSpan;
 import org.springframework.cloud.sleuth.otel.bridge.OtelTraceContext;
 import org.springframework.lang.Nullable;
+import org.springframework.util.StringUtils;
 
 public class OtelHttpClientHandler extends HttpClientTracer<HttpClientRequest, HttpClientRequest, HttpClientResponse>
 		implements HttpClientHandler {
@@ -91,6 +92,13 @@ public class OtelHttpClientHandler extends HttpClientTracer<HttpClientRequest, H
 
 	private Span span(HttpClientRequest request, io.opentelemetry.trace.Span span) {
 		try (Scope scope2 = startScope(span, request)) {
+			if (span.isRecording()) {
+				String remoteIp = request.remoteIp();
+				if (StringUtils.hasText(remoteIp)) {
+					span.setAttribute("net.peer.ip", remoteIp);
+				}
+				span.setAttribute("net.peer.port", request.remotePort());
+			}
 			return OtelSpan.fromOtel(span);
 		}
 	}

@@ -66,7 +66,7 @@ public abstract class CircuitBreakerIntegrationTests {
 			BDDAssertions.then(scopedSpan.context().traceId()).isEqualTo(span.context().traceId());
 		}
 		finally {
-			scopedSpan.finish();
+			scopedSpan.end();
 		}
 	}
 
@@ -102,7 +102,7 @@ public abstract class CircuitBreakerIntegrationTests {
 			assertException(reportedSpan);
 		}
 		finally {
-			scopedSpan.finish();
+			scopedSpan.end();
 		}
 	}
 

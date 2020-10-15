@@ -18,6 +18,7 @@ package org.springframework.cloud.sleuth.otel.autoconfig;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import io.opentelemetry.baggage.BaggageManager;
 import io.opentelemetry.baggage.spi.BaggageManagerFactory;
@@ -27,6 +28,8 @@ import io.opentelemetry.sdk.trace.Samplers;
 import io.opentelemetry.sdk.trace.SpanProcessor;
 import io.opentelemetry.sdk.trace.TracerSdkProvider;
 import io.opentelemetry.sdk.trace.config.TraceConfig;
+import io.opentelemetry.sdk.trace.export.SimpleSpanProcessor;
+import io.opentelemetry.sdk.trace.export.SpanExporter;
 import io.opentelemetry.sdk.trace.spi.TracerProviderFactorySdk;
 import io.opentelemetry.trace.Tracer;
 import io.opentelemetry.trace.TracerProvider;
@@ -38,6 +41,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.cloud.sleuth.autoconfig.TraceAutoConfiguration;
+import org.springframework.cloud.sleuth.otel.exporter.SpanExporterConverter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -92,10 +96,13 @@ public class TraceOtelAutoConfiguration {
 	@Bean
 	@ConditionalOnMissingBean
 	Tracer otelTracer(TracerProvider tracerProvider, ObjectProvider<TracerSdkProvider> tracerSdkObjectProvider,
-			TraceConfig traceConfig, OtelProperties otelProperties,
-			ObjectProvider<List<SpanProcessor>> spanProcessors) {
+			TraceConfig traceConfig, OtelProperties otelProperties, ObjectProvider<List<SpanProcessor>> spanProcessors,
+			ObjectProvider<List<SpanExporter>> spanExporters, SpanExporterConverter spanExporterConverter) {
 		tracerSdkObjectProvider.ifAvailable(tracerSdkProvider -> {
 			List<SpanProcessor> processors = spanProcessors.getIfAvailable(ArrayList::new);
+			processors.addAll(spanExporters.getIfAvailable(ArrayList::new).stream()
+					.map(e -> SimpleSpanProcessor.newBuilder(spanExporterConverter.get(e)).build())
+					.collect(Collectors.toList()));
 			processors.forEach(tracerSdkProvider::addSpanProcessor);
 			tracerSdkProvider.updateActiveTraceConfig(traceConfig);
 		});
@@ -106,6 +113,14 @@ public class TraceOtelAutoConfiguration {
 	@ConditionalOnMissingBean
 	Sampler otelSampler(OtelProperties otelProperties) {
 		return Samplers.traceIdRatioBased(otelProperties.getTraceIdRatioBased());
+	}
+
+	@Bean
+	@ConditionalOnMissingBean
+	SpanExporterConverter noOpSleuthSpanFilterConverter() {
+		return new SpanExporterConverter() {
+
+		};
 	}
 
 }

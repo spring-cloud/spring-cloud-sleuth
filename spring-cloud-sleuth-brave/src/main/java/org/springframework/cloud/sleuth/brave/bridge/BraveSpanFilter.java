@@ -14,19 +14,25 @@
  * limitations under the License.
  */
 
-package org.springframework.cloud.sleuth.api.exporter;
+package org.springframework.cloud.sleuth.brave.bridge;
 
-/**
- * An interface that allows different tracing services to export recorded data for sampled
- * spans in their own format.
- */
-public interface SpanExporter {
+import brave.handler.MutableSpan;
+import brave.handler.SpanHandler;
+import brave.propagation.TraceContext;
 
-	/**
-	 * Called to export sampled {@code Span}s.
-	 * @param span the collection of sampled Spans to be exported.
-	 * @return whether should export spans
-	 */
-	boolean export(ReportedSpan span);
+import org.springframework.cloud.sleuth.api.exporter.ReportedSpan;
+import org.springframework.cloud.sleuth.api.exporter.SpanFilter;
+
+public class BraveSpanFilter extends SpanHandler implements SpanFilter {
+
+	@Override
+	public boolean isExportable(ReportedSpan span) {
+		return false;
+	}
+
+	@Override
+	public boolean end(TraceContext context, MutableSpan span, Cause cause) {
+		return super.end(context, span, cause);
+	}
 
 }

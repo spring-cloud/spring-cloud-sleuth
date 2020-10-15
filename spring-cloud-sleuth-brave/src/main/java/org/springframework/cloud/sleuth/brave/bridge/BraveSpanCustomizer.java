@@ -37,7 +37,7 @@ public class BraveSpanCustomizer implements SpanCustomizer {
 	}
 
 	@Override
-	public SpanCustomizer annotate(String value) {
+	public SpanCustomizer event(String value) {
 		return new BraveSpanCustomizer(this.spanCustomizer.annotate(value));
 	}
 
