@@ -165,7 +165,7 @@ class TraceMessageHandler {
 			addTags(consumerSpanBuilder, destinationName);
 			consumerSpanBuilder.remoteServiceName(REMOTE_SERVICE_NAME);
 			consumerSpan = consumerSpanBuilder.start();
-			consumerSpan.finish();
+			consumerSpan.end();
 		}
 		else {
 			consumerSpan = consumerSpanBuilder.start();
@@ -323,7 +323,7 @@ class TraceMessageHandler {
 			}
 			span.tag("error", message);
 		}
-		span.finish();
+		span.end();
 	}
 
 }

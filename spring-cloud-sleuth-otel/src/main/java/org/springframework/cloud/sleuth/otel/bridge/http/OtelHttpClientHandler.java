@@ -72,7 +72,7 @@ public class OtelHttpClientHandler extends HttpClientTracer<HttpClientRequest, H
 	}
 
 	@Override
-	public Span handleSendWithParent(HttpClientRequest request, TraceContext parent) {
+	public Span handleSend(HttpClientRequest request, TraceContext parent) {
 		if (Boolean.FALSE.equals(this.samplerFunction.trySample(request))) {
 			if (log.isDebugEnabled()) {
 				log.debug("Returning an invalid span since url [" + request.path() + "] is on a list of urls to skip");
@@ -119,12 +119,6 @@ public class OtelHttpClientHandler extends HttpClientTracer<HttpClientRequest, H
 			this.httpClientResponseParser.parse(httpClientResponse, fromOtel.context(), fromOtel);
 		}
 		return afterResponse;
-	}
-
-	@Override
-	public Span handleSend(HttpClientRequest request, Span span) {
-		io.opentelemetry.trace.Span otelSpan = OtelSpan.toOtel(span);
-		return span(request, otelSpan);
 	}
 
 	@Override

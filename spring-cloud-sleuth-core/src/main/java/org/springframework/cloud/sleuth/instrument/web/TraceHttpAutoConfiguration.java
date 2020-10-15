@@ -16,16 +16,12 @@
 
 package org.springframework.cloud.sleuth.instrument.web;
 
-import java.util.regex.Pattern;
-
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.cloud.sleuth.api.SamplerFunction;
 import org.springframework.cloud.sleuth.api.http.HttpClientHandler;
-import org.springframework.cloud.sleuth.api.http.HttpRequest;
 import org.springframework.cloud.sleuth.api.http.HttpServerHandler;
-import org.springframework.cloud.sleuth.autoconfig.noop.NoOpHttpClientHandler;
-import org.springframework.cloud.sleuth.autoconfig.noop.NoOpHttpServerHandler;
+import org.springframework.cloud.sleuth.api.noop.NoOpHttpClientHandler;
+import org.springframework.cloud.sleuth.api.noop.NoOpHttpServerHandler;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.springframework.cloud.sleuth.autoconfig.noop;
+package org.springframework.cloud.sleuth.api.noop;
 
 import java.util.HashMap;
 import java.util.Map;

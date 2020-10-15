@@ -26,7 +26,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * @author Marcin Grzejszczak
  * @since 3.0.0
  */
-@ConfigurationProperties("spring.sleuth.otel.zipkin")
+@ConfigurationProperties("spring.sleuth.otel.exporter.zipkin")
 class OtelZipkinProperties {
 
 	/**

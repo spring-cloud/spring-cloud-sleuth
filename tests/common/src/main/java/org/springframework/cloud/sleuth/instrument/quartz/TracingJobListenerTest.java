@@ -44,7 +44,7 @@ import org.quartz.utils.StringKeyDirtyFlagMap;
 
 import org.springframework.cloud.sleuth.api.Span;
 import org.springframework.cloud.sleuth.api.Tracer;
-import org.springframework.cloud.sleuth.test.ReportedSpan;
+import org.springframework.cloud.sleuth.api.exporter.ReportedSpan;
 import org.springframework.cloud.sleuth.test.TestTracingAwareSupplier;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -222,7 +222,7 @@ public abstract class TracingJobListenerTest implements TestTracingAwareSupplier
 					StringKeyDirtyFlagMap::put);
 		}
 		finally {
-			span.finish();
+			span.end();
 		}
 	}
 

@@ -277,7 +277,7 @@ dependencies { <2>
 === Sleuth with Zipkin over RabbitMQ or Kafka
 
 If you want to use RabbitMQ or Kafka instead of HTTP, add the `spring-rabbit` or `spring-kafka` dependency.
-The default destination name is `zipkin`.
+The default destination name is `Zipkin`.
 
 If using Kafka, you must set the property `spring.zipkin.sender.type` property accordingly:
 

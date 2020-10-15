@@ -18,7 +18,7 @@ package org.springframework.cloud.sleuth.otel;
 
 import org.assertj.core.api.BDDAssertions;
 
-import org.springframework.cloud.sleuth.test.ReportedSpan;
+import org.springframework.cloud.sleuth.api.exporter.ReportedSpan;
 import org.springframework.cloud.sleuth.test.TestTracingAssertions;
 
 public class OtelTestTracingAssertions implements TestTracingAssertions {

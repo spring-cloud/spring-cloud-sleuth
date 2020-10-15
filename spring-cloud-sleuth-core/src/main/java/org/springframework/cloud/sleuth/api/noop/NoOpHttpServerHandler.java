@@ -14,25 +14,23 @@
  * limitations under the License.
  */
 
-package org.springframework.cloud.sleuth.autoconfig.noop;
+package org.springframework.cloud.sleuth.api.noop;
 
-import org.springframework.cloud.sleuth.api.SpanCustomizer;
+import org.springframework.cloud.sleuth.api.Span;
+import org.springframework.cloud.sleuth.api.http.HttpServerHandler;
+import org.springframework.cloud.sleuth.api.http.HttpServerRequest;
+import org.springframework.cloud.sleuth.api.http.HttpServerResponse;
 
-class NoOpSpanCustomizer implements SpanCustomizer {
+public class NoOpHttpServerHandler implements HttpServerHandler {
 
 	@Override
-	public SpanCustomizer name(String name) {
-		return this;
+	public Span handleReceive(HttpServerRequest request) {
+		return new NoOpSpan();
 	}
 
 	@Override
-	public SpanCustomizer tag(String key, String value) {
-		return this;
-	}
+	public void handleSend(HttpServerResponse response, Span span) {
 
-	@Override
-	public SpanCustomizer annotate(String value) {
-		return this;
 	}
 
 }

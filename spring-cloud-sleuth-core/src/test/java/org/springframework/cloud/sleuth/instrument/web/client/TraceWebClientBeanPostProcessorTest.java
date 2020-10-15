@@ -84,7 +84,7 @@ public class TraceWebClientBeanPostProcessorTest {
 		traceSubscription.cancel();
 
 		Mockito.verify(span).error(TraceWebClientSubscription.CANCELLED_ERROR);
-		Mockito.verify(span).finish();
+		Mockito.verify(span).end();
 
 		// Check that the ref is clear following span completion
 		Assertions.assertThat(traceSubscription.pendingSpan.get()).isNull();

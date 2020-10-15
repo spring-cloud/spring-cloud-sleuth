@@ -14,56 +14,30 @@
  * limitations under the License.
  */
 
-package org.springframework.cloud.sleuth.autoconfig.noop;
+package org.springframework.cloud.sleuth.api.noop;
+
+import java.util.Collections;
+import java.util.List;
 
 import org.springframework.cloud.sleuth.api.Span;
 import org.springframework.cloud.sleuth.api.TraceContext;
+import org.springframework.cloud.sleuth.api.propagation.Propagator;
 
-class NoOpSpanBuilder implements Span.Builder {
+public class NoOpPropagator implements Propagator {
 
 	@Override
-	public Span.Builder setParent(TraceContext context) {
-		return this;
+	public List<String> fields() {
+		return Collections.emptyList();
 	}
 
 	@Override
-	public Span.Builder setNoParent() {
-		return this;
+	public <C> void inject(TraceContext context, C carrier, Setter<C> setter) {
+
 	}
 
 	@Override
-	public Span.Builder name(String name) {
-		return this;
-	}
-
-	@Override
-	public Span.Builder annotate(String value) {
-		return this;
-	}
-
-	@Override
-	public Span.Builder tag(String key, String value) {
-		return this;
-	}
-
-	@Override
-	public Span.Builder error(Throwable throwable) {
-		return this;
-	}
-
-	@Override
-	public Span.Builder kind(Span.Kind spanKind) {
-		return this;
-	}
-
-	@Override
-	public Span.Builder remoteServiceName(String remoteServiceName) {
-		return this;
-	}
-
-	@Override
-	public Span start() {
-		return new NoOpSpan();
+	public <C> Span.Builder extract(C carrier, Getter<C> getter) {
+		return new NoOpSpanBuilder();
 	}
 
 }

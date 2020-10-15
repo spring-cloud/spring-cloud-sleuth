@@ -58,7 +58,7 @@ import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.cloud.sleuth.api.Span;
 import org.springframework.cloud.sleuth.api.Tracer;
 import org.springframework.cloud.sleuth.instrument.web.TraceWebServletAutoConfiguration;
-import org.springframework.cloud.sleuth.test.ReportedSpan;
+import org.springframework.cloud.sleuth.api.exporter.ReportedSpan;
 import org.springframework.cloud.sleuth.test.TestSpanHandler;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -193,7 +193,7 @@ public abstract class WebClientTests {
 			then(getHeader(response, "b3")).isNull();
 		}
 		finally {
-			span.finish();
+			span.end();
 		}
 
 		then(this.tracer.currentSpan()).isNull();
@@ -210,7 +210,7 @@ public abstract class WebClientTests {
 					.block(Duration.ofMillis(100));
 		}
 		finally {
-			span.finish();
+			span.end();
 		}
 		then(this.tracer.currentSpan()).isNull();
 		then(this.spans.reportedSpans().stream().filter(r -> r.kind() != null).map(r -> r.kind().name())
@@ -230,7 +230,7 @@ public abstract class WebClientTests {
 
 		}
 		finally {
-			span.finish();
+			span.end();
 		}
 
 		then(this.tracer.currentSpan()).isNull();
@@ -282,7 +282,7 @@ public abstract class WebClientTests {
 			provider.get(this);
 		}
 		finally {
-			span.finish();
+			span.end();
 		}
 
 		then(this.tracer.currentSpan()).isNull();
@@ -338,7 +338,7 @@ public abstract class WebClientTests {
 			template.getForObject("http://localhost:" + this.port + "/traceid", String.class);
 		}
 		finally {
-			span.finish();
+			span.end();
 		}
 		then(this.tracer.currentSpan()).isNull();
 		then(this.customizer.isExecuted()).isTrue();
@@ -359,7 +359,7 @@ public abstract class WebClientTests {
 					.block(Duration.ofMillis(100));
 		}
 		finally {
-			span.finish();
+			span.end();
 		}
 		then(traceId).doesNotHaveValue(null);
 	}

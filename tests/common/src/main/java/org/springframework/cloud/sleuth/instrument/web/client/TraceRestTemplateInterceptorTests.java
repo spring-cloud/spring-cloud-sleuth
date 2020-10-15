@@ -95,7 +95,7 @@ public abstract class TraceRestTemplateInterceptorTests implements TestTracingAw
 			headers = this.template.getForEntity("/", Map.class).getBody();
 		}
 		finally {
-			span.finish();
+			span.end();
 		}
 
 		// Default inject format for client spans is B3 multi
@@ -121,7 +121,7 @@ public abstract class TraceRestTemplateInterceptorTests implements TestTracingAw
 			this.template.getForEntity("/foo?a=b", Map.class);
 		}
 		finally {
-			span.finish();
+			span.end();
 		}
 
 		BDDAssertions.then(this.spans).isNotEmpty();
@@ -142,7 +142,7 @@ public abstract class TraceRestTemplateInterceptorTests implements TestTracingAw
 			this.template.getForEntity("/", Map.class).getBody();
 		}
 		finally {
-			span.finish();
+			span.end();
 		}
 
 		BDDAssertions.then(this.spans).isEmpty();
@@ -161,7 +161,7 @@ public abstract class TraceRestTemplateInterceptorTests implements TestTracingAw
 			then(e).hasMessageStartingWith("500 Internal Server Error");
 		}
 		finally {
-			span.finish();
+			span.end();
 		}
 
 		BDDAssertions.then(this.tracer.currentSpan()).isNull();
@@ -178,7 +178,7 @@ public abstract class TraceRestTemplateInterceptorTests implements TestTracingAw
 
 		}
 		finally {
-			span.finish();
+			span.end();
 		}
 
 		BDDAssertions.then(this.spans).hasSize(2);

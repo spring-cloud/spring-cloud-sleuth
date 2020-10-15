@@ -16,9 +16,6 @@
 
 package sample;
 
-import brave.handler.MutableSpan;
-import brave.handler.SpanHandler;
-import brave.propagation.TraceContext;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -26,6 +23,7 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.cloud.openfeign.EnableFeignClients;
+import org.springframework.cloud.sleuth.api.exporter.SpanExporter;
 import org.springframework.context.annotation.Bean;
 
 /**
@@ -44,13 +42,10 @@ public class SampleFeignApplication {
 	// Use this for debugging (or if there is no Zipkin server running on port 9411)
 	@Bean
 	@ConditionalOnProperty(value = "sample.zipkin.enabled", havingValue = "false")
-	public SpanHandler spanHandler() {
-		return new SpanHandler() {
-			@Override
-			public boolean end(TraceContext context, MutableSpan span, Cause cause) {
-				logger.info(span);
-				return true;
-			}
+	public SpanExporter spanHandler() {
+		return span -> {
+			logger.info(span);
+			return true;
 		};
 	}
 

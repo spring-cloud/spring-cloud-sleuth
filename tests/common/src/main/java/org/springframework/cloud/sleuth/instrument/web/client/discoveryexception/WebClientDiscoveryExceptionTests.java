@@ -87,7 +87,7 @@ public abstract class WebClientDiscoveryExceptionTests {
 		catch (RuntimeException e) {
 		}
 		finally {
-			span.finish();
+			span.end();
 		}
 
 		// hystrix commands should finish at this point

@@ -35,6 +35,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.cloud.sleuth.SpanNamer;
+import org.springframework.cloud.sleuth.api.exporter.SpanExporter;
 import org.springframework.cloud.sleuth.autoconfig.TraceAutoConfiguration;
 import org.springframework.cloud.sleuth.brave.LocalServiceName;
 import org.springframework.cloud.sleuth.brave.sampler.SamplerAutoConfiguration;
@@ -148,9 +149,8 @@ public class TraceBraveAutoConfiguration {
 	}
 
 	@Bean
-	@ConditionalOnProperty(value = "spring.sleuth.span-handler.enabled", matchIfMissing = true)
-	SpanHandler spanIgnoringSpanHandler(SleuthProperties sleuthProperties) {
-		return new SpanIgnoringSpanHandler(sleuthProperties);
+	SpanHandler compositeSpanHandler(@Nullable List<SpanExporter> exporters) {
+		return new CompositeSpanHandler(exporters);
 	}
 
 }

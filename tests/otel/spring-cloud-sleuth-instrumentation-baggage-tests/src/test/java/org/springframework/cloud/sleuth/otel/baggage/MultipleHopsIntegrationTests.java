@@ -28,7 +28,7 @@ import org.springframework.cloud.sleuth.api.Span;
 import org.springframework.cloud.sleuth.otel.OtelTestSpanHandler;
 import org.springframework.cloud.sleuth.otel.bridge.OtelBaggage;
 import org.springframework.cloud.sleuth.otel.exporter.ArrayListSpanProcessor;
-import org.springframework.cloud.sleuth.test.ReportedSpan;
+import org.springframework.cloud.sleuth.api.exporter.ReportedSpan;
 import org.springframework.context.ApplicationListener;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

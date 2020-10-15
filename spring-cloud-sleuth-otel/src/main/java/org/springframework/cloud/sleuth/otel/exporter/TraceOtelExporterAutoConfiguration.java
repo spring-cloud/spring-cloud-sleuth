@@ -20,11 +20,13 @@ import io.opentelemetry.exporters.zipkin.ZipkinSpanExporter;
 import io.opentelemetry.sdk.extensions.trace.export.DisruptorAsyncSpanProcessor;
 import io.opentelemetry.trace.Tracer;
 
+import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.AutoConfigureBefore;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.cloud.sleuth.otel.autoconfig.TraceOtelAutoConfiguration;
 import org.springframework.context.annotation.Bean;
@@ -42,7 +44,19 @@ import org.springframework.util.StringUtils;
 @Configuration(proxyBeanMethods = false)
 @ConditionalOnBean(Tracer.class)
 @AutoConfigureBefore(TraceOtelAutoConfiguration.class)
+@EnableConfigurationProperties(OtelExporterProperties.class)
 public class TraceOtelExporterAutoConfiguration {
+
+	@Configuration(proxyBeanMethods = false)
+	@ConditionalOnProperty(value = "spring.sleuth.otel.exporter.sleuth-span-handler", matchIfMissing = true)
+	static class SleuthExporterConfiguration {
+
+		@Bean
+		CompositeSpanExporterBeanPostProcessor compositeSpanExporterBeanPostProcessor(BeanFactory beanFactory) {
+			return new CompositeSpanExporterBeanPostProcessor(beanFactory);
+		}
+
+	}
 
 	// TODO: [OTEL] Move it to `spring-cloud-sleuth-zipkin` module
 	@Configuration(proxyBeanMethods = false)

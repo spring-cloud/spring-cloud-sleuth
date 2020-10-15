@@ -14,46 +14,25 @@
  * limitations under the License.
  */
 
-package org.springframework.cloud.sleuth.autoconfig.noop;
+package org.springframework.cloud.sleuth.api.noop;
 
-import org.springframework.cloud.sleuth.api.ScopedSpan;
 import org.springframework.cloud.sleuth.api.TraceContext;
 
-class NoOpScopedSpan implements ScopedSpan {
+class NoOpTraceContext implements TraceContext {
 
 	@Override
-	public boolean isNoop() {
-		return false;
+	public String traceId() {
+		return "";
 	}
 
 	@Override
-	public TraceContext context() {
-		return new NoOpTraceContext();
+	public String parentId() {
+		return "";
 	}
 
 	@Override
-	public ScopedSpan name(String name) {
-		return this;
-	}
-
-	@Override
-	public ScopedSpan tag(String key, String value) {
-		return this;
-	}
-
-	@Override
-	public ScopedSpan annotate(String value) {
-		return this;
-	}
-
-	@Override
-	public ScopedSpan error(Throwable throwable) {
-		return this;
-	}
-
-	@Override
-	public void finish() {
-
+	public String spanId() {
+		return "";
 	}
 
 }

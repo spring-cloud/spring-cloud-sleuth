@@ -24,9 +24,7 @@ public interface HttpClientHandler {
 
 	Span handleSend(HttpClientRequest request);
 
-	Span handleSendWithParent(HttpClientRequest request, @Nullable TraceContext parent);
-
-	Span handleSend(HttpClientRequest request, Span span);
+	Span handleSend(HttpClientRequest request, @Nullable TraceContext parent);
 
 	void handleReceive(HttpClientResponse response, Span span);
 

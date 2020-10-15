@@ -58,7 +58,7 @@ class TraceFunction<T> implements Function<Throwable, T> {
 			if (tr != null) {
 				span.error(tr);
 			}
-			span.finish();
+			span.end();
 			this.span.set(null);
 		}
 	}

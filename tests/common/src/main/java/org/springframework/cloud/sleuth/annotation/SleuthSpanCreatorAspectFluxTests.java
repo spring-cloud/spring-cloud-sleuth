@@ -37,7 +37,7 @@ import org.springframework.cloud.sleuth.api.CurrentTraceContext;
 import org.springframework.cloud.sleuth.api.Span;
 import org.springframework.cloud.sleuth.api.TraceContext;
 import org.springframework.cloud.sleuth.api.Tracer;
-import org.springframework.cloud.sleuth.test.ReportedSpan;
+import org.springframework.cloud.sleuth.api.exporter.ReportedSpan;
 import org.springframework.cloud.sleuth.test.TestSpanHandler;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -228,7 +228,7 @@ public abstract class SleuthSpanCreatorAspectFluxTests {
 			verifyNoSpansUntilFluxComplete(flux);
 		}
 		finally {
-			span.finish();
+			span.end();
 		}
 
 		Awaitility.await().atMost(1, TimeUnit.SECONDS).untilAsserted(() -> {
@@ -270,7 +270,7 @@ public abstract class SleuthSpanCreatorAspectFluxTests {
 			verifyNoSpansUntilFluxComplete(flux);
 		}
 		finally {
-			span.finish();
+			span.end();
 		}
 
 		Awaitility.await().atMost(1, TimeUnit.SECONDS).untilAsserted(() -> {
@@ -296,7 +296,7 @@ public abstract class SleuthSpanCreatorAspectFluxTests {
 			verifyNoSpansUntilFluxComplete(flux);
 		}
 		finally {
-			span.finish();
+			span.end();
 		}
 
 		Awaitility.await().atMost(1, TimeUnit.SECONDS).untilAsserted(() -> {
@@ -351,7 +351,7 @@ public abstract class SleuthSpanCreatorAspectFluxTests {
 		catch (RuntimeException ignored) {
 		}
 		finally {
-			span.finish();
+			span.end();
 		}
 
 		Awaitility.await().atMost(1, TimeUnit.SECONDS).untilAsserted(() -> {

@@ -14,65 +14,28 @@
  * limitations under the License.
  */
 
-package org.springframework.cloud.sleuth.autoconfig.noop;
+package org.springframework.cloud.sleuth.api.noop;
 
 import org.springframework.cloud.sleuth.api.Span;
 import org.springframework.cloud.sleuth.api.TraceContext;
+import org.springframework.cloud.sleuth.api.http.HttpClientHandler;
+import org.springframework.cloud.sleuth.api.http.HttpClientRequest;
+import org.springframework.cloud.sleuth.api.http.HttpClientResponse;
 
-class NoOpSpan implements Span {
+public class NoOpHttpClientHandler implements HttpClientHandler {
 
 	@Override
-	public boolean isNoop() {
-		return true;
+	public Span handleSend(HttpClientRequest request) {
+		return new NoOpSpan();
 	}
 
 	@Override
-	public TraceContext context() {
-		return new NoOpTraceContext();
+	public Span handleSend(HttpClientRequest request, TraceContext parent) {
+		return new NoOpSpan();
 	}
 
 	@Override
-	public Span start() {
-		return this;
-	}
-
-	@Override
-	public Span name(String name) {
-		return this;
-	}
-
-	@Override
-	public Span kind(Kind kind) {
-		return this;
-	}
-
-	@Override
-	public Span annotate(String value) {
-		return this;
-	}
-
-	@Override
-	public Span tag(String key, String value) {
-		return this;
-	}
-
-	@Override
-	public Span error(Throwable throwable) {
-		return this;
-	}
-
-	@Override
-	public Span remoteIpAndPort(String remoteIp, int remotePort) {
-		return this;
-	}
-
-	@Override
-	public void finish() {
-
-	}
-
-	@Override
-	public void abandon() {
+	public void handleReceive(HttpClientResponse response, Span span) {
 
 	}
 

@@ -98,7 +98,7 @@ final class TracingFeignClient implements Client {
 
 	void handleSendAndReceive(Span span, Request req, @Nullable Response res, @Nullable Throwable error) {
 		RequestWrapper request = new RequestWrapper(req);
-		this.handler.handleSend(request, span);
+		this.handler.handleSend(request, span.context());
 		ResponseWrapper response = res != null ? new ResponseWrapper(request, res, error) : null;
 		this.handler.handleReceive(response, span);
 	}

@@ -21,8 +21,8 @@ import java.io.IOException;
 import io.opentelemetry.common.AttributeKey;
 import org.assertj.core.api.BDDAssertions;
 
-import org.springframework.cloud.sleuth.otel.AssertingThrowable;
 import org.springframework.cloud.sleuth.otel.OtelTestTracing;
+import org.springframework.cloud.sleuth.otel.bridge.OtelReportedSpan;
 import org.springframework.cloud.sleuth.test.TestTracingAware;
 
 public class FeignRetriesTests extends org.springframework.cloud.sleuth.instrument.web.client.feign.FeignRetriesTests {
@@ -39,7 +39,8 @@ public class FeignRetriesTests extends org.springframework.cloud.sleuth.instrume
 
 	@Override
 	public void assertException() {
-		AssertingThrowable throwable = (AssertingThrowable) this.tracerTest().handler().reportedSpans().get(0).error();
+		OtelReportedSpan.AssertingThrowable throwable = (OtelReportedSpan.AssertingThrowable) this.tracerTest()
+				.handler().reportedSpans().get(0).error();
 		String type = throwable.attributes.get(AttributeKey.stringKey("exception.type"));
 		BDDAssertions.then(type).contains(IOException.class.getSimpleName());
 	}

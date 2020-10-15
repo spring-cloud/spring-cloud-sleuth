@@ -61,7 +61,7 @@ public interface Span extends SpanCustomizer {
 	 * Records an error that impacted this operation.
 	 *
 	 * <p>
-	 * <em>Note:</em> Calling this does not {@linkplain #finish() finish} the span.
+	 * <em>Note:</em> Calling this does not {@linkplain #end() finish} the span.
 	 *
 	 * @since 4.19
 	 */
@@ -105,7 +105,7 @@ public interface Span extends SpanCustomizer {
 	Span remoteIpAndPort(@Nullable String remoteIp, int remotePort);
 
 	/** Reports the span complete, assigning the most precise duration possible. */
-	void finish();
+	void end();
 
 	/** Throws away the current span without reporting it. */
 	void abandon();
@@ -115,8 +115,8 @@ public interface Span extends SpanCustomizer {
 		CLIENT, SERVER,
 		/**
 		 * When present, {@link #start()} is the moment a producer sent a message to a
-		 * destination. A duration between {@link #start()} and {@link #finish()} may
-		 * imply batching delay.
+		 * destination. A duration between {@link #start()} and {@link #end()} may imply
+		 * batching delay.
 		 *
 		 * <p>
 		 * Unlike {@link #CLIENT}, messaging spans never share a span ID. For example, the
@@ -126,8 +126,8 @@ public interface Span extends SpanCustomizer {
 		PRODUCER,
 		/**
 		 * When present, {@link #start()} is the moment a consumer received a message from
-		 * an origin. A duration between {@link #start()} and {@link #finish()} may imply
-		 * a processing backlog.
+		 * an origin. A duration between {@link #start()} and {@link #end()} may imply a
+		 * processing backlog.
 		 *
 		 * <p>
 		 * Unlike {@link #SERVER}, messaging spans never share a span ID. For example, the
@@ -212,7 +212,7 @@ public interface Span extends SpanCustomizer {
 		 * Starts a new {@link Span}.
 		 *
 		 * <p>
-		 * Users <b>must</b> manually call {@link Span#finish()} to end this {@code Span}.
+		 * Users <b>must</b> manually call {@link Span#end()} to end this {@code Span}.
 		 *
 		 * <p>
 		 * Does not install the newly created {@code Span} to the current Context.

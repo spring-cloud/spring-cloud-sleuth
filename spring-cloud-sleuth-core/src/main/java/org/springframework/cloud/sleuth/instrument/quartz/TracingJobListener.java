@@ -111,7 +111,7 @@ class TracingJobListener implements JobListener, TriggerListener {
 			((Tracer.SpanInScope) spanInScope).close();
 		}
 		if (span instanceof Span) {
-			((Span) span).finish();
+			((Span) span).end();
 		}
 	}
 

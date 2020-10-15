@@ -16,17 +16,15 @@
 
 package org.springframework.cloud.sleuth.brave;
 
-import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 
-import brave.handler.MutableSpan;
 import brave.test.IntegrationTestSpanHandler;
 
 import org.springframework.cloud.sleuth.api.Span;
-import org.springframework.cloud.sleuth.test.ReportedSpan;
+import org.springframework.cloud.sleuth.api.exporter.ReportedSpan;
+import org.springframework.cloud.sleuth.brave.bridge.BraveReportedSpan;
 import org.springframework.cloud.sleuth.test.TestSpanHandler;
 
 public class BraveTestSpanHandler implements TestSpanHandler {
@@ -52,12 +50,12 @@ public class BraveTestSpanHandler implements TestSpanHandler {
 
 	@Override
 	public List<ReportedSpan> reportedSpans() {
-		return this.spans.spans().stream().map(FromMutableSpan::new).collect(Collectors.toList());
+		return this.spans.spans().stream().map(BraveReportedSpan::new).collect(Collectors.toList());
 	}
 
 	@Override
 	public ReportedSpan takeLocalSpan() {
-		return new FromMutableSpan(this.integrationSpans.takeLocalSpan());
+		return new BraveReportedSpan(this.integrationSpans.takeLocalSpan());
 	}
 
 	@Override
@@ -69,95 +67,23 @@ public class BraveTestSpanHandler implements TestSpanHandler {
 
 	@Override
 	public ReportedSpan takeRemoteSpan(Span.Kind kind) {
-		return new FromMutableSpan(this.integrationSpans.takeRemoteSpan(brave.Span.Kind.valueOf(kind.name())));
+		return new BraveReportedSpan(this.integrationSpans.takeRemoteSpan(brave.Span.Kind.valueOf(kind.name())));
 	}
 
 	@Override
 	public ReportedSpan takeRemoteSpanWithError(Span.Kind kind) {
-		return new FromMutableSpan(this.integrationSpans.takeRemoteSpanWithError(brave.Span.Kind.valueOf(kind.name())));
+		return new BraveReportedSpan(
+				this.integrationSpans.takeRemoteSpanWithError(brave.Span.Kind.valueOf(kind.name())));
 	}
 
 	@Override
 	public ReportedSpan get(int index) {
-		return new FromMutableSpan(this.spans.get(index));
+		return new BraveReportedSpan(this.spans.get(index));
 	}
 
 	@Override
 	public Iterator<ReportedSpan> iterator() {
 		return reportedSpans().iterator();
-	}
-
-}
-
-class FromMutableSpan implements ReportedSpan {
-
-	final MutableSpan mutableSpan;
-
-	FromMutableSpan(MutableSpan mutableSpan) {
-		this.mutableSpan = mutableSpan;
-	}
-
-	@Override
-	public String name() {
-		return this.mutableSpan.name();
-	}
-
-	@Override
-	public long finishTimestamp() {
-		return this.mutableSpan.finishTimestamp();
-	}
-
-	@Override
-	public Map<String, String> tags() {
-		return this.mutableSpan.tags();
-	}
-
-	@Override
-	public Collection<Map.Entry<Long, String>> annotations() {
-		return this.mutableSpan.annotations();
-	}
-
-	@Override
-	public String id() {
-		return this.mutableSpan.id();
-	}
-
-	@Override
-	public String parentId() {
-		return this.mutableSpan.parentId();
-	}
-
-	@Override
-	public String remoteIp() {
-		return this.mutableSpan.remoteIp();
-	}
-
-	@Override
-	public int remotePort() {
-		return this.mutableSpan.remotePort();
-	}
-
-	@Override
-	public String traceId() {
-		return this.mutableSpan.traceId();
-	}
-
-	@Override
-	public Throwable error() {
-		return this.mutableSpan.error();
-	}
-
-	@Override
-	public Span.Kind kind() {
-		if (this.mutableSpan.kind() == null) {
-			return null;
-		}
-		return Span.Kind.valueOf(this.mutableSpan.kind().name());
-	}
-
-	@Override
-	public String remoteServiceName() {
-		return this.mutableSpan.remoteServiceName();
 	}
 
 }

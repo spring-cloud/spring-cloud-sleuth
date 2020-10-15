@@ -16,6 +16,8 @@
 
 package org.springframework.cloud.sleuth.test;
 
+import org.springframework.cloud.sleuth.api.exporter.ReportedSpan;
+
 public interface TestTracingAssertions {
 
 	void assertThatNoParentPresent(ReportedSpan reportedSpan);

@@ -77,7 +77,7 @@ class TraceSchedulingAspect {
 			throw ex;
 		}
 		finally {
-			span.finish();
+			span.end();
 		}
 	}
 

@@ -19,13 +19,13 @@ package sample;
 import java.util.Random;
 import java.util.concurrent.Callable;
 
-import brave.Span;
-import brave.Tracer;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.web.servlet.context.ServletWebServerInitializedEvent;
+import org.springframework.cloud.sleuth.api.Span;
+import org.springframework.cloud.sleuth.api.Tracer;
 import org.springframework.context.ApplicationListener;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -99,7 +99,7 @@ public class SampleController implements ApplicationListener<ServletWebServerIni
 		this.tracer.currentSpan().tag("random-sleep-millis", String.valueOf(millis));
 
 		String s = this.restTemplate.getForObject("http://localhost:" + this.port + "/call", String.class);
-		span.finish();
+		span.end();
 		return "traced/" + s;
 	}
 

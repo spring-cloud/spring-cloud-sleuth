@@ -14,28 +14,19 @@
  * limitations under the License.
  */
 
-package org.springframework.cloud.sleuth.autoconfig.noop;
+package org.springframework.cloud.sleuth.api.exporter;
 
-import org.springframework.cloud.sleuth.api.CurrentTraceContext;
-import org.springframework.cloud.sleuth.api.TraceContext;
+/**
+ * An interface that allows different tracing services to export recorded data for sampled
+ * spans in their own format.
+ */
+public interface SpanExporter {
 
-public class NoOpCurrentTraceContext implements CurrentTraceContext {
-
-	@Override
-	public TraceContext get() {
-		return new NoOpTraceContext();
-	}
-
-	@Override
-	public Scope newScope(TraceContext context) {
-		return () -> {
-		};
-	}
-
-	@Override
-	public Scope maybeScope(TraceContext context) {
-		return () -> {
-		};
-	}
+	/**
+	 * Called to export sampled {@code Span}s.
+	 * @param span the collection of sampled Spans to be exported.
+	 * @return whether should export spans
+	 */
+	boolean export(ReportedSpan span);
 
 }

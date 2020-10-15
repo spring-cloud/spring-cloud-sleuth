@@ -100,7 +100,7 @@ final class TraceRequestHttpHeadersFilter extends AbstractHttpHeadersFilter {
 		}
 		try (Tracer.SpanInScope ws = this.tracer.withSpan(currentSpan)) {
 			Span clientSpan = this.tracer.nextSpan();
-			return this.handler.handleSend(request, clientSpan);
+			return this.handler.handleSend(request, clientSpan.context());
 		}
 	}
 

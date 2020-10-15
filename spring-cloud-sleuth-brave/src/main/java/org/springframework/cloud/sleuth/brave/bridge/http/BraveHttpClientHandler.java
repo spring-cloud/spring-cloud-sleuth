@@ -39,15 +39,9 @@ public class BraveHttpClientHandler implements HttpClientHandler {
 	}
 
 	@Override
-	public Span handleSendWithParent(HttpClientRequest request, TraceContext parent) {
+	public Span handleSend(HttpClientRequest request, TraceContext parent) {
 		return BraveSpan.fromBrave(this.delegate.handleSendWithParent(BraveHttpClientRequest.toBrave(request),
 				BraveTraceContext.toBrave(parent)));
-	}
-
-	@Override
-	public Span handleSend(HttpClientRequest request, Span span) {
-		return BraveSpan
-				.fromBrave(this.delegate.handleSend(BraveHttpClientRequest.toBrave(request), BraveSpan.toBrave(span)));
 	}
 
 	@Override

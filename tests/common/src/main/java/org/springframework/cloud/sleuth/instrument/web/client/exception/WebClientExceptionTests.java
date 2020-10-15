@@ -89,7 +89,7 @@ public class WebClientExceptionTests {
 			// SleuthAssertions.then(e).hasRootCauseInstanceOf(IOException.class);
 		}
 		finally {
-			span.finish();
+			span.end();
 		}
 
 		then(this.tracer.currentSpan()).isNull();

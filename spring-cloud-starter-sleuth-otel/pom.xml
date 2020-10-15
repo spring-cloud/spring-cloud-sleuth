@@ -26,8 +26,8 @@
 		<relativePath>..</relativePath>
 	</parent>
 	<artifactId>spring-cloud-starter-sleuth-otel</artifactId>
-	<name>spring-cloud-starter-sleuth-otel</name>
-	<description>Spring Cloud Starter for Sleuth OpenTelemetry</description>
+	<name>Spring Cloud Starter Sleuth with OpenTelemetry</name>
+	<description>Spring Cloud Starter Sleuth with OpenTelemetry</description>
 	<properties>
 		<main.basedir>${basedir}/../..</main.basedir>
 	</properties>
@@ -43,6 +43,14 @@
 		<dependency>
 			<groupId>org.springframework.cloud</groupId>
 			<artifactId>spring-cloud-sleuth-otel</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>io.opentelemetry</groupId>
+			<artifactId>opentelemetry-extension-auto-annotations</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>io.opentelemetry</groupId>
+			<artifactId>opentelemetry-extension-trace-propagators</artifactId>
 		</dependency>
 	</dependencies>
 </project>

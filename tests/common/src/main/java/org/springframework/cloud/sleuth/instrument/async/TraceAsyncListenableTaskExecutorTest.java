@@ -50,7 +50,7 @@ public abstract class TraceAsyncListenableTaskExecutorTest implements TestTracin
 			this.traceAsyncListenableTaskExecutor.submitListenable(aRunnable(executed)).get();
 		}
 		finally {
-			span.finish();
+			span.end();
 		}
 
 		BDDAssertions.then(executed.get()).isTrue();
@@ -65,7 +65,7 @@ public abstract class TraceAsyncListenableTaskExecutorTest implements TestTracin
 			spanFromListenable = this.traceAsyncListenableTaskExecutor.submitListenable(aCallable()).get();
 		}
 		finally {
-			span.finish();
+			span.end();
 		}
 
 		BDDAssertions.then(spanFromListenable).isNotNull();
@@ -80,7 +80,7 @@ public abstract class TraceAsyncListenableTaskExecutorTest implements TestTracin
 			this.traceAsyncListenableTaskExecutor.execute(aRunnable(executed));
 		}
 		finally {
-			span.finish();
+			span.end();
 		}
 
 		Awaitility.await().atMost(5, TimeUnit.SECONDS).untilAsserted(() -> {
@@ -97,7 +97,7 @@ public abstract class TraceAsyncListenableTaskExecutorTest implements TestTracin
 			this.traceAsyncListenableTaskExecutor.execute(aRunnable(executed), 1L);
 		}
 		finally {
-			span.finish();
+			span.end();
 		}
 
 		Awaitility.await().atMost(5, TimeUnit.SECONDS).untilAsserted(() -> {
@@ -114,7 +114,7 @@ public abstract class TraceAsyncListenableTaskExecutorTest implements TestTracin
 			spanFromListenable = this.traceAsyncListenableTaskExecutor.submit(aCallable()).get();
 		}
 		finally {
-			span.finish();
+			span.end();
 		}
 
 		BDDAssertions.then(spanFromListenable).isNotNull();
@@ -129,7 +129,7 @@ public abstract class TraceAsyncListenableTaskExecutorTest implements TestTracin
 			this.traceAsyncListenableTaskExecutor.submit(aRunnable(executed)).get();
 		}
 		finally {
-			span.finish();
+			span.end();
 		}
 
 		Awaitility.await().atMost(5, TimeUnit.SECONDS).untilAsserted(() -> {

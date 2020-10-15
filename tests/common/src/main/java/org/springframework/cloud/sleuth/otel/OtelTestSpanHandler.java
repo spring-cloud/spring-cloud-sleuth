@@ -16,17 +16,11 @@
 
 package org.springframework.cloud.sleuth.otel;
 
-import java.util.AbstractMap;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 
-import io.opentelemetry.common.AttributeConsumer;
-import io.opentelemetry.common.AttributeKey;
-import io.opentelemetry.common.Attributes;
 import io.opentelemetry.sdk.common.CompletableResultCode;
 import io.opentelemetry.sdk.trace.ReadWriteSpan;
 import io.opentelemetry.sdk.trace.ReadableSpan;
@@ -36,8 +30,9 @@ import io.opentelemetry.sdk.trace.export.SpanExporter;
 import org.jetbrains.annotations.NotNull;
 
 import org.springframework.cloud.sleuth.api.Span;
+import org.springframework.cloud.sleuth.api.exporter.ReportedSpan;
+import org.springframework.cloud.sleuth.otel.bridge.OtelReportedSpan;
 import org.springframework.cloud.sleuth.otel.exporter.ArrayListSpanProcessor;
-import org.springframework.cloud.sleuth.test.ReportedSpan;
 import org.springframework.cloud.sleuth.test.TestSpanHandler;
 
 public class OtelTestSpanHandler implements TestSpanHandler, SpanProcessor, SpanExporter {
@@ -50,12 +45,12 @@ public class OtelTestSpanHandler implements TestSpanHandler, SpanProcessor, Span
 
 	@Override
 	public List<ReportedSpan> reportedSpans() {
-		return spanProcessor.spans().stream().map(SpanDataToReportedSpan::new).collect(Collectors.toList());
+		return spanProcessor.spans().stream().map(OtelReportedSpan::new).collect(Collectors.toList());
 	}
 
 	@Override
 	public ReportedSpan takeLocalSpan() {
-		return new SpanDataToReportedSpan(spanProcessor.takeLocalSpan());
+		return new OtelReportedSpan(spanProcessor.takeLocalSpan());
 	}
 
 	@Override
@@ -124,100 +119,6 @@ public class OtelTestSpanHandler implements TestSpanHandler, SpanProcessor, Span
 	@Override
 	public CompletableResultCode forceFlush() {
 		return spanProcessor.forceFlush();
-	}
-
-}
-
-class SpanDataToReportedSpan implements ReportedSpan {
-
-	private final SpanData spanData;
-
-	private final Map<String, String> tags = new HashMap<>();
-
-	SpanDataToReportedSpan(SpanData spanData) {
-		this.spanData = spanData;
-	}
-
-	@Override
-	public String name() {
-		return this.spanData.getName();
-	}
-
-	@Override
-	public long finishTimestamp() {
-		return this.spanData.getEndEpochNanos();
-	}
-
-	@Override
-	public Map<String, String> tags() {
-		if (this.tags.isEmpty()) {
-			this.spanData.getAttributes().forEach(new AttributeConsumer() {
-				@Override
-				public <T> void consume(AttributeKey<T> key, T value) {
-					tags.put(key.getKey(), String.valueOf(value));
-				}
-			});
-		}
-		return this.tags;
-	}
-
-	@Override
-	public Collection<Map.Entry<Long, String>> annotations() {
-		return this.spanData.getEvents().stream()
-				.map(e -> new AbstractMap.SimpleEntry<>(e.getEpochNanos(), e.getName())).collect(Collectors.toList());
-	}
-
-	@Override
-	public String id() {
-		return this.spanData.getSpanId();
-	}
-
-	@Override
-	public String parentId() {
-		return this.spanData.getParentSpanId();
-	}
-
-	@Override
-	public String remoteIp() {
-		return tags().get("net.peer.name");
-	}
-
-	@Override
-	public int remotePort() {
-		return Integer.valueOf(tags().get("net.peer.port"));
-	}
-
-	@Override
-	public String traceId() {
-		return this.spanData.getTraceId();
-	}
-
-	@Override
-	public Throwable error() {
-		Attributes attributes = this.spanData.getEvents().stream().filter(e -> e.getName().equals("exception"))
-				.findFirst().map(e -> e.getAttributes()).orElse(null);
-		if (attributes != null) {
-			return new AssertingThrowable(attributes);
-		}
-		return null;
-	}
-
-	@Override
-	public Span.Kind kind() {
-		if (this.spanData.getKind() == io.opentelemetry.trace.Span.Kind.INTERNAL) {
-			return null;
-		}
-		return Span.Kind.valueOf(this.spanData.getKind().name());
-	}
-
-	@Override
-	public String remoteServiceName() {
-		return this.spanData.getAttributes().get(AttributeKey.stringKey("peer.service"));
-	}
-
-	@Override
-	public String toString() {
-		return "SpanDataToReportedSpan{" + "spanData=" + spanData + ", tags=" + tags + '}';
 	}
 
 }

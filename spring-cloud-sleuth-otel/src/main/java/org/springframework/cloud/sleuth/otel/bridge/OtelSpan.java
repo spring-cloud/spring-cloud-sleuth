@@ -91,7 +91,7 @@ public class OtelSpan implements Span {
 	}
 
 	@Override
-	public void finish() {
+	public void end() {
 		this.delegate.end();
 	}
 

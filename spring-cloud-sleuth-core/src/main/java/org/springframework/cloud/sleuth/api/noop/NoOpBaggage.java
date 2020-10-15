@@ -14,14 +14,24 @@
  * limitations under the License.
  */
 
-package org.springframework.cloud.sleuth.autoconfig.noop;
+package org.springframework.cloud.sleuth.api.noop;
 
-import org.springframework.cloud.sleuth.api.Tracer;
+import org.springframework.cloud.sleuth.api.Baggage;
 
-class NoOpSpanInScope implements Tracer.SpanInScope {
+class NoOpBaggage implements Baggage {
 
 	@Override
-	public void close() {
+	public String name() {
+		return "";
+	}
+
+	@Override
+	public String getValue() {
+		return "";
+	}
+
+	@Override
+	public void updateValue(String value) {
 
 	}
 

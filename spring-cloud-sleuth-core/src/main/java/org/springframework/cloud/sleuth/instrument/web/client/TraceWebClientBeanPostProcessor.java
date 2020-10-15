@@ -163,7 +163,7 @@ final class TraceExchangeFilterFunction implements ExchangeFilterFunction {
 			}
 			ClientRequestWrapper wrapper = new ClientRequestWrapper(this.request);
 			TraceContext parent = context.hasKey(TraceContext.class) ? context.get(TraceContext.class) : null;
-			Span span = handler.handleSendWithParent(wrapper, parent);
+			Span span = handler.handleSend(wrapper, parent);
 			if (log.isTraceEnabled()) {
 				log.trace("HttpClientHandler::handleSend: " + span);
 			}
@@ -242,7 +242,7 @@ final class TraceExchangeFilterFunction implements ExchangeFilterFunction {
 						log.trace("OnError finally");
 					}
 					span.error(t);
-					span.finish();
+					span.end();
 				}
 			}
 		}
@@ -319,7 +319,7 @@ final class TraceExchangeFilterFunction implements ExchangeFilterFunction {
 				}
 				else { // Request was canceled in-flight
 					span.error(CANCELLED_ERROR);
-					span.finish();
+					span.end();
 				}
 			}
 		}

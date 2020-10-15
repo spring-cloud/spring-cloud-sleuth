@@ -144,7 +144,7 @@ class SleuthRxJavaSchedulersHook extends RxJavaSchedulersHook {
 			}
 			finally {
 				if (created) {
-					span.finish();
+					span.end();
 				}
 			}
 		}

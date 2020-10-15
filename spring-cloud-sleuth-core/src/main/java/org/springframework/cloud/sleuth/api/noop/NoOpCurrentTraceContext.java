@@ -14,30 +14,28 @@
  * limitations under the License.
  */
 
-package org.springframework.cloud.sleuth.autoconfig.noop;
+package org.springframework.cloud.sleuth.api.noop;
 
-import java.util.Collections;
-import java.util.List;
-
-import org.springframework.cloud.sleuth.api.Span;
+import org.springframework.cloud.sleuth.api.CurrentTraceContext;
 import org.springframework.cloud.sleuth.api.TraceContext;
-import org.springframework.cloud.sleuth.api.propagation.Propagator;
 
-public class NoOpPropagator implements Propagator {
+public class NoOpCurrentTraceContext implements CurrentTraceContext {
 
 	@Override
-	public List<String> fields() {
-		return Collections.emptyList();
+	public TraceContext get() {
+		return new NoOpTraceContext();
 	}
 
 	@Override
-	public <C> void inject(TraceContext context, C carrier, Setter<C> setter) {
-
+	public Scope newScope(TraceContext context) {
+		return () -> {
+		};
 	}
 
 	@Override
-	public <C> Span.Builder extract(C carrier, Getter<C> getter) {
-		return new NoOpSpanBuilder();
+	public Scope maybeScope(TraceContext context) {
+		return () -> {
+		};
 	}
 
 }

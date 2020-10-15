@@ -14,22 +14,14 @@
  * limitations under the License.
  */
 
-package org.springframework.cloud.sleuth.autoconfig.noop;
+package org.springframework.cloud.sleuth.api.noop;
 
-import org.springframework.cloud.sleuth.api.Span;
-import org.springframework.cloud.sleuth.api.http.HttpServerHandler;
-import org.springframework.cloud.sleuth.api.http.HttpServerRequest;
-import org.springframework.cloud.sleuth.api.http.HttpServerResponse;
+import org.springframework.cloud.sleuth.api.Tracer;
 
-public class NoOpHttpServerHandler implements HttpServerHandler {
+class NoOpSpanInScope implements Tracer.SpanInScope {
 
 	@Override
-	public Span handleReceive(HttpServerRequest request) {
-		return new NoOpSpan();
-	}
-
-	@Override
-	public void handleSend(HttpServerResponse response, Span span) {
+	public void close() {
 
 	}
 

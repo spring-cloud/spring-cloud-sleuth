@@ -99,7 +99,7 @@ public abstract class WebClientNotSampledTests {
 			assertB3SingleNotSampled(response);
 		}
 		finally {
-			span.finish();
+			span.end();
 		}
 
 		then(this.spans).isEmpty();

@@ -63,7 +63,7 @@ abstract class AbstractSleuthMethodInvocationProcessor implements SleuthMethodIn
 			logEvent(span, log + ".after");
 		}
 		if (isNewSpan) {
-			span.finish();
+			span.end();
 		}
 	}
 

@@ -143,7 +143,7 @@ public abstract class SleuthSpanCreatorAspectTests {
 			this.testBean.testMethod10("test");
 		}
 		finally {
-			span.finish();
+			span.end();
 		}
 
 		BDDAssertions.then(this.spans).hasSize(1);
@@ -178,7 +178,7 @@ public abstract class SleuthSpanCreatorAspectTests {
 			this.testBean.testMethod10_v2("test");
 		}
 		finally {
-			span.finish();
+			span.end();
 		}
 
 		BDDAssertions.then(this.spans).hasSize(1);
@@ -201,7 +201,7 @@ public abstract class SleuthSpanCreatorAspectTests {
 			// end::continue_span_execution[]
 		}
 		finally {
-			span.finish();
+			span.end();
 		}
 
 		BDDAssertions.then(this.spans).hasSize(1);
@@ -243,7 +243,7 @@ public abstract class SleuthSpanCreatorAspectTests {
 		catch (RuntimeException ignored) {
 		}
 		finally {
-			span.finish();
+			span.end();
 		}
 
 		BDDAssertions.then(this.spans).hasSize(1);

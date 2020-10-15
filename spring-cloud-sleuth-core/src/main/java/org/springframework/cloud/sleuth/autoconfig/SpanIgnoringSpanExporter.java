@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.springframework.cloud.sleuth.brave.autoconfig;
+package org.springframework.cloud.sleuth.autoconfig;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -23,46 +23,29 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-import brave.handler.MutableSpan;
-import brave.handler.SpanHandler;
-import brave.propagation.TraceContext;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import org.springframework.cloud.sleuth.api.exporter.ReportedSpan;
+import org.springframework.cloud.sleuth.api.exporter.SpanExporter;
 import org.springframework.util.StringUtils;
 
 /**
- * {@link SpanHandler} that ignores spans via names.
+ * {@link SpanExporter} that ignores spans via names.
  *
  * @author Marcin Grzejszczak
  * @since 3.0.0
  */
-class SpanIgnoringSpanHandler extends SpanHandler {
+class SpanIgnoringSpanExporter implements SpanExporter {
 
-	private static final Log log = LogFactory.getLog(SpanIgnoringSpanHandler.class);
+	private static final Log log = LogFactory.getLog(SpanIgnoringSpanExporter.class);
 
-	private final SleuthProperties sleuthProperties;
+	private final SleuthSpanExporterProperties sleuthSpanExporterProperties;
 
 	static final Map<String, Pattern> cache = new ConcurrentHashMap<>();
 
-	SpanIgnoringSpanHandler(SleuthProperties sleuthProperties) {
-		this.sleuthProperties = sleuthProperties;
-	}
-
-	@Override
-	public boolean end(TraceContext context, MutableSpan span, Cause cause) {
-		if (cause != Cause.FINISHED) {
-			return true;
-		}
-		List<Pattern> spanNamesToIgnore = spanNamesToIgnore();
-		String name = span.name();
-		if (StringUtils.hasText(name) && spanNamesToIgnore.stream().anyMatch(p -> p.matcher(name).matches())) {
-			if (log.isDebugEnabled()) {
-				log.debug("Will ignore a span with name [" + name + "]");
-			}
-			return false;
-		}
-		return super.end(context, span, cause);
+	SpanIgnoringSpanExporter(SleuthSpanExporterProperties sleuthSpanExporterProperties) {
+		this.sleuthSpanExporterProperties = sleuthSpanExporterProperties;
 	}
 
 	private List<Pattern> spanNamesToIgnore() {
@@ -71,10 +54,22 @@ class SpanIgnoringSpanHandler extends SpanHandler {
 	}
 
 	private List<String> spanNames() {
-		List<String> spanNamesToIgnore = new ArrayList<>(
-				this.sleuthProperties.getSpanHandler().getSpanNamePatternsToSkip());
-		spanNamesToIgnore.addAll(this.sleuthProperties.getSpanHandler().getAdditionalSpanNamePatternsToIgnore());
+		List<String> spanNamesToIgnore = new ArrayList<>(this.sleuthSpanExporterProperties.getSpanNamePatternsToSkip());
+		spanNamesToIgnore.addAll(this.sleuthSpanExporterProperties.getAdditionalSpanNamePatternsToIgnore());
 		return spanNamesToIgnore;
+	}
+
+	@Override
+	public boolean export(ReportedSpan span) {
+		List<Pattern> spanNamesToIgnore = spanNamesToIgnore();
+		String name = span.name();
+		if (StringUtils.hasText(name) && spanNamesToIgnore.stream().anyMatch(p -> p.matcher(name).matches())) {
+			if (log.isDebugEnabled()) {
+				log.debug("Will ignore a span with name [" + name + "]");
+			}
+			return false;
+		}
+		return true;
 	}
 
 }

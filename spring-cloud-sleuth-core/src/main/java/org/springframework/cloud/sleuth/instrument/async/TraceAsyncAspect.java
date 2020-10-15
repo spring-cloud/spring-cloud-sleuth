@@ -67,7 +67,7 @@ class TraceAsyncAspect {
 			return pjp.proceed();
 		}
 		finally {
-			span.finish();
+			span.end();
 		}
 	}
 

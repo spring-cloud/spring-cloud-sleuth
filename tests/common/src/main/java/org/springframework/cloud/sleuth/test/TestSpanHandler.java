@@ -19,6 +19,7 @@ package org.springframework.cloud.sleuth.test;
 import java.util.List;
 
 import org.springframework.cloud.sleuth.api.Span;
+import org.springframework.cloud.sleuth.api.exporter.ReportedSpan;
 
 public interface TestSpanHandler extends Iterable<ReportedSpan> {
 

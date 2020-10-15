@@ -31,7 +31,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.cloud.sleuth.api.Span;
 import org.springframework.cloud.sleuth.api.Tracer;
-import org.springframework.cloud.sleuth.test.ReportedSpan;
+import org.springframework.cloud.sleuth.api.exporter.ReportedSpan;
 import org.springframework.cloud.sleuth.test.TestSpanHandler;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -215,7 +215,7 @@ public abstract class SleuthSpanCreatorAspectMonoTests {
 			mono.block();
 		}
 		finally {
-			span.finish();
+			span.end();
 		}
 
 		Awaitility.await().untilAsserted(() -> {
@@ -258,7 +258,7 @@ public abstract class SleuthSpanCreatorAspectMonoTests {
 			mono.block();
 		}
 		finally {
-			span.finish();
+			span.end();
 		}
 
 		Awaitility.await().untilAsserted(() -> {
@@ -286,7 +286,7 @@ public abstract class SleuthSpanCreatorAspectMonoTests {
 			mono.block();
 		}
 		finally {
-			span.finish();
+			span.end();
 		}
 
 		Awaitility.await().untilAsserted(() -> {
@@ -340,7 +340,7 @@ public abstract class SleuthSpanCreatorAspectMonoTests {
 		catch (RuntimeException ignored) {
 		}
 		finally {
-			span.finish();
+			span.end();
 		}
 
 		Awaitility.await().untilAsserted(() -> {

@@ -14,25 +14,25 @@
  * limitations under the License.
  */
 
-package org.springframework.cloud.sleuth.autoconfig.noop;
+package org.springframework.cloud.sleuth.api.noop;
 
-import org.springframework.cloud.sleuth.api.Baggage;
+import org.springframework.cloud.sleuth.api.SpanCustomizer;
 
-class NoOpBaggage implements Baggage {
+class NoOpSpanCustomizer implements SpanCustomizer {
 
 	@Override
-	public String name() {
-		return "";
+	public SpanCustomizer name(String name) {
+		return this;
 	}
 
 	@Override
-	public String getValue() {
-		return "";
+	public SpanCustomizer tag(String key, String value) {
+		return this;
 	}
 
 	@Override
-	public void updateValue(String value) {
-
+	public SpanCustomizer annotate(String value) {
+		return this;
 	}
 
 }

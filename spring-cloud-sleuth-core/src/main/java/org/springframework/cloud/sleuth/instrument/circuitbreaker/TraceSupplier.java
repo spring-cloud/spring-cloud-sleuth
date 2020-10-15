@@ -58,7 +58,7 @@ class TraceSupplier<T> implements Supplier<T> {
 			if (tr != null) {
 				span.error(tr);
 			}
-			span.finish();
+			span.end();
 			this.span.set(null);
 		}
 	}

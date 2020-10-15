@@ -14,25 +14,25 @@
  * limitations under the License.
  */
 
-package org.springframework.cloud.sleuth.autoconfig.noop;
+package org.springframework.cloud.sleuth.brave.bridge;
 
-import org.springframework.cloud.sleuth.api.TraceContext;
+import brave.handler.MutableSpan;
+import brave.handler.SpanHandler;
+import brave.propagation.TraceContext;
 
-class NoOpTraceContext implements TraceContext {
+import org.springframework.cloud.sleuth.api.exporter.ReportedSpan;
+import org.springframework.cloud.sleuth.api.exporter.SpanExporter;
+
+public class BraveSpanExporter extends SpanHandler implements SpanExporter {
 
 	@Override
-	public String traceId() {
-		return "";
+	public boolean export(ReportedSpan span) {
+		return false;
 	}
 
 	@Override
-	public String parentId() {
-		return "";
-	}
-
-	@Override
-	public String spanId() {
-		return "";
+	public boolean end(TraceContext context, MutableSpan span, Cause cause) {
+		return super.end(context, span, cause);
 	}
 
 }

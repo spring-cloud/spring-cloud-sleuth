@@ -80,7 +80,7 @@ public class BraveSpan implements Span {
 	}
 
 	@Override
-	public void finish() {
+	public void end() {
 		this.delegate.finish();
 	}
 

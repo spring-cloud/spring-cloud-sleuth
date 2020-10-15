@@ -70,7 +70,7 @@ public abstract class TracingFeignClientTests implements TestTracingAwareSupplie
 			this.traceFeignClient.execute(this.request, this.options);
 		}
 		finally {
-			span.finish();
+			span.end();
 		}
 
 		BDDAssertions.then(tracerTest().handler().reportedSpans().get(0).kind()).isEqualTo(Span.Kind.CLIENT);
@@ -89,7 +89,7 @@ public abstract class TracingFeignClientTests implements TestTracingAwareSupplie
 		catch (Exception e) {
 		}
 		finally {
-			span.finish();
+			span.end();
 		}
 
 		BDDAssertions.then(this.tracerTest().handler().reportedSpans().get(0).kind()).isEqualTo(Span.Kind.CLIENT);

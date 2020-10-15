@@ -349,7 +349,7 @@ final class TracingChannelInterceptor extends ChannelInterceptorAdapter implemen
 		consumerSpanBuilder.remoteServiceName(REMOTE_SERVICE_NAME);
 		addTags(message, consumerSpanBuilder, channel);
 		Span consumerSpan = consumerSpanBuilder.start();
-		consumerSpan.finish();
+		consumerSpan.end();
 		return consumerSpan;
 	}
 
@@ -428,7 +428,7 @@ final class TracingChannelInterceptor extends ChannelInterceptorAdapter implemen
 		if (log.isDebugEnabled()) {
 			log.debug("Will finish the and its corresponding scope " + span);
 		}
-		span.finish();
+		span.end();
 		scope.close();
 	}
 

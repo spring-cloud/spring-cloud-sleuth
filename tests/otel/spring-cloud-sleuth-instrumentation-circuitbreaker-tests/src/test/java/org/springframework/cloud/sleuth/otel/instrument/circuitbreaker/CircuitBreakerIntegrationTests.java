@@ -22,10 +22,10 @@ import io.opentelemetry.sdk.trace.Samplers;
 import org.assertj.core.api.BDDAssertions;
 
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.cloud.sleuth.otel.bridge.OtelReportedSpan;
 import org.springframework.cloud.sleuth.otel.exporter.ArrayListSpanProcessor;
-import org.springframework.cloud.sleuth.otel.AssertingThrowable;
 import org.springframework.cloud.sleuth.otel.OtelTestSpanHandler;
-import org.springframework.cloud.sleuth.test.ReportedSpan;
+import org.springframework.cloud.sleuth.api.exporter.ReportedSpan;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.test.context.ContextConfiguration;
@@ -52,7 +52,7 @@ public class CircuitBreakerIntegrationTests
 
 	@Override
 	public void assertException(ReportedSpan reportedSpan) {
-		AssertingThrowable throwable = (AssertingThrowable) reportedSpan.error();
+		OtelReportedSpan.AssertingThrowable throwable = (OtelReportedSpan.AssertingThrowable) reportedSpan.error();
 		String msg = throwable.attributes.get(AttributeKey.stringKey("exception.message"));
 		BDDAssertions.then(msg).contains("boom");
 	}

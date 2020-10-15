@@ -14,18 +14,37 @@
  * limitations under the License.
  */
 
-package org.springframework.cloud.sleuth.otel;
+package org.springframework.cloud.sleuth.api.exporter;
 
-import io.opentelemetry.common.AttributeKey;
-import io.opentelemetry.common.Attributes;
+import java.util.Collection;
+import java.util.Map;
 
-public class AssertingThrowable extends Throwable {
+import org.springframework.cloud.sleuth.api.Span;
 
-	public final Attributes attributes;
+public interface ReportedSpan {
 
-	AssertingThrowable(Attributes attributes) {
-		super(attributes.get(AttributeKey.stringKey("exception.message")));
-		this.attributes = attributes;
-	}
+	String name();
+
+	long finishTimestamp();
+
+	Map<String, String> tags();
+
+	Collection<Map.Entry<Long, String>> annotations();
+
+	String id();
+
+	String parentId();
+
+	String remoteIp();
+
+	int remotePort();
+
+	String traceId();
+
+	Throwable error();
+
+	Span.Kind kind();
+
+	String remoteServiceName();
 
 }

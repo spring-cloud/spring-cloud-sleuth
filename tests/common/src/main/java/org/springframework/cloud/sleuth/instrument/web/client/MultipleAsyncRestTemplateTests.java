@@ -105,7 +105,7 @@ public abstract class MultipleAsyncRestTemplateTests {
 			BDDAssertions.then(span.context().traceId()).isEqualTo(result);
 		}
 		finally {
-			span.finish();
+			span.end();
 		}
 
 		BDDAssertions.then(this.tracer.currentSpan()).isNull();
@@ -138,7 +138,7 @@ public abstract class MultipleAsyncRestTemplateTests {
 			});
 		}
 		finally {
-			span.finish();
+			span.end();
 		}
 
 		Awaitility.await().atMost(10L, TimeUnit.SECONDS).untilAsserted(() -> {

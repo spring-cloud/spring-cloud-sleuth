@@ -33,7 +33,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.web.servlet.context.ServletWebServerInitializedEvent;
 import org.springframework.cloud.sleuth.api.Span;
 import org.springframework.cloud.sleuth.api.Tracer;
-import org.springframework.cloud.sleuth.test.ReportedSpan;
+import org.springframework.cloud.sleuth.api.exporter.ReportedSpan;
 import org.springframework.cloud.sleuth.test.TestSpanHandler;
 import org.springframework.context.ApplicationListener;
 import org.springframework.context.annotation.Bean;
@@ -126,7 +126,7 @@ public abstract class MultipleHopsIntegrationTests {
 			this.restTemplate.exchange(requestEntity, String.class);
 		}
 		finally {
-			initialSpan.finish();
+			initialSpan.end();
 		}
 
 		await().atMost(5, SECONDS).untilAsserted(() -> {

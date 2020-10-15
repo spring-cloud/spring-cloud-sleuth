@@ -22,10 +22,11 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.cloud.sleuth.SpanNamer;
 import org.springframework.cloud.sleuth.api.CurrentTraceContext;
 import org.springframework.cloud.sleuth.api.Tracer;
+import org.springframework.cloud.sleuth.api.exporter.SpanExporter;
+import org.springframework.cloud.sleuth.api.noop.NoOpCurrentTraceContext;
+import org.springframework.cloud.sleuth.api.noop.NoOpPropagator;
+import org.springframework.cloud.sleuth.api.noop.NoOpTracer;
 import org.springframework.cloud.sleuth.api.propagation.Propagator;
-import org.springframework.cloud.sleuth.autoconfig.noop.NoOpCurrentTraceContext;
-import org.springframework.cloud.sleuth.autoconfig.noop.NoOpPropagator;
-import org.springframework.cloud.sleuth.autoconfig.noop.NoOpTracer;
 import org.springframework.cloud.sleuth.internal.DefaultSpanNamer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -41,7 +42,7 @@ import org.springframework.context.annotation.Configuration;
  */
 @Configuration(proxyBeanMethods = false)
 @ConditionalOnProperty(value = "spring.sleuth.enabled", matchIfMissing = true)
-@EnableConfigurationProperties(SleuthBaggageProperties.class)
+@EnableConfigurationProperties({ SleuthSpanExporterProperties.class, SleuthBaggageProperties.class })
 public class TraceAutoConfiguration {
 
 	@Bean
@@ -66,6 +67,12 @@ public class TraceAutoConfiguration {
 	@ConditionalOnMissingBean
 	CurrentTraceContext defaultCurrentTraceContext() {
 		return new NoOpCurrentTraceContext();
+	}
+
+	@Bean
+	@ConditionalOnProperty(value = "spring.sleuth.span-exporter.enabled", matchIfMissing = true)
+	SpanExporter spanIgnoringSpanExporter(SleuthSpanExporterProperties sleuthSpanExporterProperties) {
+		return new SpanIgnoringSpanExporter(sleuthSpanExporterProperties);
 	}
 
 }

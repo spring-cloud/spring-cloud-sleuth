@@ -110,7 +110,7 @@ class HttpClientBeanPostProcessor implements BeanPostProcessor {
 				Span span = pendingSpan.getAndSet(null);
 				if (span != null) {
 					span.error(CANCELLED_ERROR);
-					span.finish();
+					span.end();
 				}
 			});
 		}
@@ -154,7 +154,7 @@ class HttpClientBeanPostProcessor implements BeanPostProcessor {
 			TraceContext parent = req.currentContextView().getOrDefault(TraceContext.class, null);
 			HttpClientRequestWrapper request = new HttpClientRequestWrapper(req);
 
-			span = handler().handleSendWithParent(request, parent);
+			span = handler().handleSend(request, parent);
 			parseConnectionAddress(connection, span);
 			pendingSpan.set(span);
 		}
