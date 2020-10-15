@@ -66,7 +66,7 @@ public abstract class TracingFeignClientTests implements TestTracingAwareSupplie
 	public void should_log_cr_when_response_successful() throws IOException {
 		Span span = tracerTest().tracing().tracer().nextSpan().name("foo");
 
-		try (Tracer.SpanInScope ws = tracerTest().tracing().tracer().withSpanInScope(span.start())) {
+		try (Tracer.SpanInScope ws = tracerTest().tracing().tracer().withSpan(span.start())) {
 			this.traceFeignClient.execute(this.request, this.options);
 		}
 		finally {
@@ -82,7 +82,7 @@ public abstract class TracingFeignClientTests implements TestTracingAwareSupplie
 		Span span = tracerTest().tracing().tracer().nextSpan().name("foo");
 		BDDMockito.given(this.client.execute(BDDMockito.any(), BDDMockito.any())).willThrow(error);
 
-		try (Tracer.SpanInScope ws = tracerTest().tracing().tracer().withSpanInScope(span.start())) {
+		try (Tracer.SpanInScope ws = tracerTest().tracing().tracer().withSpan(span.start())) {
 			this.traceFeignClient.execute(this.request, this.options);
 			BDDAssertions.fail("Exception should have been thrown");
 		}
@@ -96,7 +96,9 @@ public abstract class TracingFeignClientTests implements TestTracingAwareSupplie
 		assertException(error);
 	}
 
-	public abstract void assertException(RuntimeException error);
+	public void assertException(RuntimeException error) {
+		throw new UnsupportedOperationException("Implement this assertion");
+	}
 
 	@Test
 	public void keep_requestTemplate() throws IOException {

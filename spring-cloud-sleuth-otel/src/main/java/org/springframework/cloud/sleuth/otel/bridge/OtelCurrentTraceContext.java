@@ -17,9 +17,6 @@
 package org.springframework.cloud.sleuth.otel.bridge;
 
 import java.util.Objects;
-import java.util.concurrent.Callable;
-import java.util.concurrent.Executor;
-import java.util.concurrent.ExecutorService;
 
 import io.opentelemetry.trace.DefaultSpan;
 import io.opentelemetry.trace.Span;
@@ -82,30 +79,6 @@ public class OtelCurrentTraceContext implements CurrentTraceContext {
 			return OtelScope.NOOP;
 		}
 		return newScope(context);
-	}
-
-	@Override
-	public <C> Callable<C> wrap(Callable<C> task) {
-		// TODO: [OTEL] Not related. Shouldn't be here
-		return null;
-	}
-
-	@Override
-	public Runnable wrap(Runnable task) {
-		// TODO: [OTEL] Not related. Shouldn't be here
-		return null;
-	}
-
-	@Override
-	public Executor executor(Executor delegate) {
-		// TODO: [OTEL] Not related. Shouldn't be here
-		return null;
-	}
-
-	@Override
-	public ExecutorService executorService(ExecutorService delegate) {
-		// TODO: [OTEL] Not related. Shouldn't be here
-		return null;
 	}
 
 }

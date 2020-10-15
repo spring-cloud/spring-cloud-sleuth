@@ -69,8 +69,7 @@ public final class MessagingSleuthOperators {
 			log.debug("Wrapped input msg " + wrappedInputMessage);
 		}
 		Throwable t = null;
-		try (Tracer.SpanInScope ws = traceMessageHandler.tracer
-				.withSpanInScope(wrappedInputMessage.childSpan.start())) {
+		try (Tracer.SpanInScope ws = traceMessageHandler.tracer.withSpan(wrappedInputMessage.childSpan.start())) {
 			withSpanInScope.accept(wrappedInputMessage.msg);
 		}
 		catch (Exception e) {
@@ -142,7 +141,7 @@ public final class MessagingSleuthOperators {
 			Consumer<Message<T>> withSpanInScope) {
 		TraceMessageHandler traceMessageHandler = TraceMessageHandler.forNonSpringIntegration(beanFactory);
 		Span span = spanFromMessage(traceMessageHandler, message);
-		try (Tracer.SpanInScope ws = traceMessageHandler.tracer.withSpanInScope(span)) {
+		try (Tracer.SpanInScope ws = traceMessageHandler.tracer.withSpan(span)) {
 			withSpanInScope.accept(message);
 		}
 	}
@@ -160,7 +159,7 @@ public final class MessagingSleuthOperators {
 			Function<Message<T>, Message<T>> withSpanInScope) {
 		TraceMessageHandler traceMessageHandler = TraceMessageHandler.forNonSpringIntegration(beanFactory);
 		Span span = spanFromMessage(traceMessageHandler, message);
-		try (Tracer.SpanInScope ws = traceMessageHandler.tracer.withSpanInScope(span)) {
+		try (Tracer.SpanInScope ws = traceMessageHandler.tracer.withSpan(span)) {
 			return withSpanInScope.apply(message);
 		}
 	}

@@ -101,14 +101,16 @@ public abstract class MultipleHopsIntegrationTests {
 				.distinct().collect(toList())).hasSize(3).containsAll(asList("words", "counts", "greetings"));
 	}
 
-	protected abstract void assertSpanNames();
+	protected void assertSpanNames() {
+		throw new UnsupportedOperationException("Implement this assertion");
+	}
 
 	@Test
 	public void should_propagate_the_baggage() {
 		Span initialSpan = this.tracer.nextSpan().name("span").start();
-		System.out.println("FOO: " + initialSpan.context().traceIdString());
+		System.out.println("FOO: " + initialSpan.context().traceId());
 		// tag::baggage[]
-		try (Tracer.SpanInScope ws = this.tracer.withSpanInScope(initialSpan)) {
+		try (Tracer.SpanInScope ws = this.tracer.withSpan(initialSpan)) {
 			this.tracer.createBaggage(BUSINESS_PROCESS).updateValue("ALM");
 			this.tracer.createBaggage(COUNTRY_CODE).updateValue("FO");
 			// end::baggage[]
@@ -139,15 +141,17 @@ public abstract class MultipleHopsIntegrationTests {
 		assertThat(withBagTags.get(0).tags()).containsEntry(BUSINESS_PROCESS, "ALM");
 
 		// TODO: Sth wrong with trace id propagation
-		Set<String> traceIds = this.application.allSpans().stream().map(s -> s.context().traceIdString())
+		Set<String> traceIds = this.application.allSpans().stream().map(s -> s.context().traceId())
 				.collect(Collectors.toSet());
 		then(traceIds).hasSize(1);
-		then(traceIds.iterator().next()).as("All have same trace ID").isEqualTo(initialSpan.context().traceIdString());
+		then(traceIds.iterator().next()).as("All have same trace ID").isEqualTo(initialSpan.context().traceId());
 		assertBaggage(initialSpan);
 
 	}
 
-	protected abstract void assertBaggage(Span initialSpan);
+	protected void assertBaggage(Span initialSpan) {
+		throw new UnsupportedOperationException("Implement this assertion");
+	}
 
 	@Configuration(proxyBeanMethods = false)
 	@EnableAutoConfiguration(exclude = JmxAutoConfiguration.class)

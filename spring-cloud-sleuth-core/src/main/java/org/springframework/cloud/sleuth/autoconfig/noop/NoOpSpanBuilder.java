@@ -57,11 +57,6 @@ class NoOpSpanBuilder implements Span.Builder {
 	}
 
 	@Override
-	public Span.Builder startTimestamp(long startTimestamp) {
-		return this;
-	}
-
-	@Override
 	public Span.Builder remoteServiceName(String remoteServiceName) {
 		return this;
 	}

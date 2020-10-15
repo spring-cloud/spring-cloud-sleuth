@@ -43,7 +43,7 @@ public class TraceRestTemplateInterceptorTests
 
 	@Override
 	public void assertThatParentSpanIdSet(Span span, Map<String, String> headers) {
-		then(headers.get("X-B3-ParentSpanId")).isEqualTo(span.context().spanIdString());
+		then(headers.get("X-B3-ParentSpanId")).isEqualTo(span.context().spanId());
 	}
 
 }

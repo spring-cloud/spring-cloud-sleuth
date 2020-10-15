@@ -215,9 +215,9 @@ public abstract class TraceableExecutorServiceTests implements TestTracingAwareS
 
 	class SpanVerifyingRunnable implements Runnable {
 
-		Queue<Long> traceIds = new ConcurrentLinkedQueue<>();
+		Queue<String> traceIds = new ConcurrentLinkedQueue<>();
 
-		Queue<Long> spanIds = new ConcurrentLinkedQueue<>();
+		Queue<String> spanIds = new ConcurrentLinkedQueue<>();
 
 		@Override
 		public void run() {

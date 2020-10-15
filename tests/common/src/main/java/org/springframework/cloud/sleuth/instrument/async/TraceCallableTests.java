@@ -63,7 +63,7 @@ public abstract class TraceCallableTests implements TestTracingAwareSupplier {
 	@Test
 	public void should_remove_parent_span_from_thread_local_after_finishing_work() throws Exception {
 		Span parent = tracerTest().tracing().tracer().nextSpan().name("http:parent");
-		try (Tracer.SpanInScope ws = tracerTest().tracing().tracer().withSpanInScope(parent)) {
+		try (Tracer.SpanInScope ws = tracerTest().tracing().tracer().withSpan(parent)) {
 			Span child = givenCallableGetsSubmitted(thatRetrievesTraceFromThreadLocal());
 			BDDAssertions.then(parent).as("parent").isNotNull();
 			BDDAssertions.then(child.context().parentId()).isEqualTo(parent.context().spanId());

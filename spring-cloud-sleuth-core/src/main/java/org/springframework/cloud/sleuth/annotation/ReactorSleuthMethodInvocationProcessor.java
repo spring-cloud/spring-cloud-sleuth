@@ -224,14 +224,14 @@ class ReactorSleuthMethodInvocationProcessor extends AbstractSleuthMethodInvocat
 
 		@Override
 		public void request(long n) {
-			try (Tracer.SpanInScope scope = this.tracer.withSpanInScope(this.span)) {
+			try (Tracer.SpanInScope scope = this.tracer.withSpan(this.span)) {
 				this.parent.request(n);
 			}
 		}
 
 		@Override
 		public void cancel() {
-			try (Tracer.SpanInScope scope = this.tracer.withSpanInScope(this.span)) {
+			try (Tracer.SpanInScope scope = this.tracer.withSpan(this.span)) {
 				this.parent.cancel();
 			}
 			finally {
@@ -247,21 +247,21 @@ class ReactorSleuthMethodInvocationProcessor extends AbstractSleuthMethodInvocat
 		@Override
 		public void onSubscribe(Subscription subscription) {
 			this.parent = subscription;
-			try (Tracer.SpanInScope scope = this.tracer.withSpanInScope(this.span)) {
+			try (Tracer.SpanInScope scope = this.tracer.withSpan(this.span)) {
 				this.actual.onSubscribe(this);
 			}
 		}
 
 		@Override
 		public void onNext(Object o) {
-			try (Tracer.SpanInScope scope = this.tracer.withSpanInScope(this.span)) {
+			try (Tracer.SpanInScope scope = this.tracer.withSpan(this.span)) {
 				this.actual.onNext(o);
 			}
 		}
 
 		@Override
 		public void onError(Throwable error) {
-			try (Tracer.SpanInScope scope = this.tracer.withSpanInScope(this.span)) {
+			try (Tracer.SpanInScope scope = this.tracer.withSpan(this.span)) {
 				this.processor.onFailure(this.span, this.log, this.hasLog, error);
 				this.actual.onError(error);
 			}
@@ -272,7 +272,7 @@ class ReactorSleuthMethodInvocationProcessor extends AbstractSleuthMethodInvocat
 
 		@Override
 		public void onComplete() {
-			try (Tracer.SpanInScope scope = this.tracer.withSpanInScope(this.span)) {
+			try (Tracer.SpanInScope scope = this.tracer.withSpan(this.span)) {
 				this.actual.onComplete();
 			}
 			finally {

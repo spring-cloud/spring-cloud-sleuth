@@ -6,40 +6,23 @@ import org.springframework.lang.Nullable;
 
 public interface Tracer extends BaggageManager {
 
-	Span newTrace();
+	Span nextSpan();
 
-	Span joinSpan(TraceContext context);
+	Span nextSpan(TraceContext parent);
 
-	Span newChild(TraceContext parent);
+	Tracer.SpanInScope withSpan(@Nullable Span span);
 
-	Span nextSpan(TraceContext extracted);
+	ScopedSpan startScopedSpan(String name);
 
-	Span nextSpan(SamplingFlags extracted);
+	ScopedSpan startScopedSpan(String name, @Nullable Span parent);
 
-	Span toSpan(TraceContext context);
+	Span.Builder spanBuilder();
 
-	Tracer.SpanInScope withSpanInScope(@Nullable Span span);
-
+	@Nullable
 	SpanCustomizer currentSpanCustomizer();
 
 	@Nullable
 	Span currentSpan();
-
-	Span nextSpan();
-
-	ScopedSpan startScopedSpan(String name);
-
-	<T> ScopedSpan startScopedSpan(String name, SamplerFunction<T> samplerFunction, T arg);
-
-	<T> Span nextSpan(SamplerFunction<T> samplerFunction, T arg);
-
-	<T> Span nextSpanWithParent(SamplerFunction<T> samplerFunction, T arg, @Nullable TraceContext parent);
-
-	// this api is needed to make tools such as executors which need to carry the
-	// invocation context
-	ScopedSpan startScopedSpanWithParent(String name, @Nullable Span parent);
-
-	Span.Builder spanBuilder();
 
 	interface SpanInScope extends Closeable {
 

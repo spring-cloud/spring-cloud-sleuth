@@ -91,7 +91,7 @@ public abstract class TraceRestTemplateInterceptorTests implements TestTracingAw
 		Span span = this.tracer.nextSpan().name("new trace");
 		Map<String, String> headers;
 
-		try (Tracer.SpanInScope ws = this.tracer.withSpanInScope(span.start())) {
+		try (Tracer.SpanInScope ws = this.tracer.withSpan(span.start())) {
 			headers = this.template.getForEntity("/", Map.class).getBody();
 		}
 		finally {
@@ -99,12 +99,14 @@ public abstract class TraceRestTemplateInterceptorTests implements TestTracingAw
 		}
 
 		// Default inject format for client spans is B3 multi
-		then(headers.get("X-B3-TraceId")).isEqualTo(span.context().traceIdString());
-		then(headers.get("X-B3-SpanId")).isNotEqualTo(span.context().spanIdString());
+		then(headers.get("X-B3-TraceId")).isEqualTo(span.context().traceId());
+		then(headers.get("X-B3-SpanId")).isNotEqualTo(span.context().spanId());
 		assertThatParentSpanIdSet(span, headers);
 	}
 
-	public abstract void assertThatParentSpanIdSet(Span span, Map<String, String> headers);
+	public void assertThatParentSpanIdSet(Span span, Map<String, String> headers) {
+		throw new UnsupportedOperationException("Implement this assertion");
+	}
 
 	// Issue #290
 	@Test
@@ -115,7 +117,7 @@ public abstract class TraceRestTemplateInterceptorTests implements TestTracingAw
 				.httpClientHandler());
 		Span span = this.tracer.nextSpan().name("new trace");
 
-		try (Tracer.SpanInScope ws = this.tracer.withSpanInScope(span.start())) {
+		try (Tracer.SpanInScope ws = this.tracer.withSpan(span.start())) {
 			this.template.getForEntity("/foo?a=b", Map.class);
 		}
 		finally {
@@ -136,7 +138,7 @@ public abstract class TraceRestTemplateInterceptorTests implements TestTracingAw
 
 		Span span = tracerTest().tracing().tracer().nextSpan().name("new trace");
 
-		try (Tracer.SpanInScope ws = tracerTest().tracing().tracer().withSpanInScope(span.start())) {
+		try (Tracer.SpanInScope ws = tracerTest().tracing().tracer().withSpan(span.start())) {
 			this.template.getForEntity("/", Map.class).getBody();
 		}
 		finally {
@@ -151,7 +153,7 @@ public abstract class TraceRestTemplateInterceptorTests implements TestTracingAw
 	public void spanRemovedFromThreadUponException() {
 		Span span = this.tracer.nextSpan().name("new trace");
 
-		try (Tracer.SpanInScope ws = this.tracer.withSpanInScope(span.start())) {
+		try (Tracer.SpanInScope ws = this.tracer.withSpan(span.start())) {
 			this.template.getForEntity("/exception", Map.class).getBody();
 			fail("should throw an exception");
 		}
@@ -169,7 +171,7 @@ public abstract class TraceRestTemplateInterceptorTests implements TestTracingAw
 	public void createdSpanNameHasOnlyPrintableAsciiCharactersForNonEncodedURIWithNonAsciiChars() {
 		Span span = this.tracer.nextSpan().name("new trace");
 
-		try (Tracer.SpanInScope ws = this.tracer.withSpanInScope(span.start())) {
+		try (Tracer.SpanInScope ws = this.tracer.withSpan(span.start())) {
 			this.template.getForEntity("/cas~fs~åˆ’", Map.class).getBody();
 		}
 		catch (Exception e) {

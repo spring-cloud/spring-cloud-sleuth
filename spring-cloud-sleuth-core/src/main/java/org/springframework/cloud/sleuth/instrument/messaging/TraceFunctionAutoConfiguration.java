@@ -103,7 +103,7 @@ class TraceFunctionAroundWrapper extends FunctionAroundWrapper
 		}
 		Object result;
 		Throwable throwable = null;
-		try (Tracer.SpanInScope ws = tracer.withSpanInScope(wrappedInputMessage.childSpan.start())) {
+		try (Tracer.SpanInScope ws = tracer.withSpan(wrappedInputMessage.childSpan.start())) {
 			result = targetFunction.apply(wrappedInputMessage.msg);
 		}
 		catch (Exception e) {

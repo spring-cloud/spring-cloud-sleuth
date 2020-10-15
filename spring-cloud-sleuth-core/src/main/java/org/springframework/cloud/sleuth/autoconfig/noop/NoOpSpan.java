@@ -37,11 +37,6 @@ class NoOpSpan implements Span {
 	}
 
 	@Override
-	public Span start(long timestamp) {
-		return this;
-	}
-
-	@Override
 	public Span name(String name) {
 		return this;
 	}
@@ -57,22 +52,12 @@ class NoOpSpan implements Span {
 	}
 
 	@Override
-	public Span annotate(long timestamp, String value) {
-		return this;
-	}
-
-	@Override
 	public Span tag(String key, String value) {
 		return this;
 	}
 
 	@Override
 	public Span error(Throwable throwable) {
-		return this;
-	}
-
-	@Override
-	public Span remoteServiceName(String remoteServiceName) {
 		return this;
 	}
 
@@ -88,16 +73,6 @@ class NoOpSpan implements Span {
 
 	@Override
 	public void abandon() {
-
-	}
-
-	@Override
-	public void finish(long timestamp) {
-
-	}
-
-	@Override
-	public void flush() {
 
 	}
 

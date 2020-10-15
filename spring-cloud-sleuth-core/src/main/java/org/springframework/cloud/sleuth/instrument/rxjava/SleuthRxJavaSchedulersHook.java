@@ -134,15 +134,12 @@ class SleuthRxJavaSchedulersHook extends RxJavaSchedulersHook {
 			}
 			Span span = this.parent;
 			boolean created = false;
-			if (span != null) {
-				span = this.tracer.toSpan(this.parent.context());
-			}
-			else {
+			if (span == null) {
 				span = this.tracer.nextSpan().name(RXJAVA_COMPONENT).start();
 				span.tag(THREAD_NAME_KEY, Thread.currentThread().getName());
 				created = true;
 			}
-			try (Tracer.SpanInScope ws = this.tracer.withSpanInScope(span)) {
+			try (Tracer.SpanInScope ws = this.tracer.withSpan(span)) {
 				this.actual.call();
 			}
 			finally {

@@ -49,14 +49,8 @@ public class OtelSpan implements Span {
 
 	@Override
 	public Span start() {
-		// TODO: [OTEL] they are already started via the builder
+		// they are already started via the builder
 		return this;
-	}
-
-	@Override
-	public Span start(long timestamp) {
-		// TODO: Otel we'd need to go via builder
-		return null;
 	}
 
 	@Override
@@ -78,12 +72,6 @@ public class OtelSpan implements Span {
 	}
 
 	@Override
-	public Span annotate(long timestamp, String value) {
-		this.delegate.addEvent(value, timestamp);
-		return new OtelSpan(this.delegate);
-	}
-
-	@Override
 	public Span tag(String key, String value) {
 		this.delegate.setAttribute(key, value);
 		return new OtelSpan(this.delegate);
@@ -93,12 +81,6 @@ public class OtelSpan implements Span {
 	public Span error(Throwable throwable) {
 		this.delegate.recordException(throwable);
 		return new OtelSpan(this.delegate);
-	}
-
-	@Override
-	public Span remoteServiceName(String remoteServiceName) {
-		this.delegate.setAttribute("peer.service", remoteServiceName);
-		return this;
 	}
 
 	@Override
@@ -115,16 +97,6 @@ public class OtelSpan implements Span {
 
 	@Override
 	public void abandon() {
-		// TODO: [OTEL] doesn't seem to have this notion
-	}
-
-	@Override
-	public void finish(long timestamp) {
-		this.delegate.end(EndSpanOptions.builder().setEndTimestamp(timestamp).build());
-	}
-
-	@Override
-	public void flush() {
 		// TODO: [OTEL] doesn't seem to have this notion
 	}
 

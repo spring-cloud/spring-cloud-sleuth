@@ -24,8 +24,6 @@ import io.opentelemetry.trace.DefaultSpan;
 import io.opentelemetry.trace.TracingContextUtils;
 
 import org.springframework.cloud.sleuth.api.Baggage;
-import org.springframework.cloud.sleuth.api.SamplerFunction;
-import org.springframework.cloud.sleuth.api.SamplingFlags;
 import org.springframework.cloud.sleuth.api.ScopedSpan;
 import org.springframework.cloud.sleuth.api.Span;
 import org.springframework.cloud.sleuth.api.SpanCustomizer;
@@ -44,40 +42,13 @@ public class OtelTracer implements Tracer {
 	}
 
 	@Override
-	public Span newTrace() {
-		return new OtelSpan(this.tracer.spanBuilder("").setNoParent().startSpan());
-	}
-
-	@Override
-	public Span joinSpan(TraceContext context) {
-		// TODO: [OTEL] I think you can't join a span in Otel
-		return null;
-	}
-
-	@Override
-	public Span newChild(TraceContext parent) {
-		return null;
-	}
-
-	@Override
-	public Span nextSpan(TraceContext extracted) {
+	public Span nextSpan(TraceContext parent) {
 		return OtelSpan
-				.fromOtel(this.tracer.spanBuilder("").setParent(OtelTraceContext.toOtelContext(extracted)).startSpan());
+				.fromOtel(this.tracer.spanBuilder("").setParent(OtelTraceContext.toOtelContext(parent)).startSpan());
 	}
 
 	@Override
-	public Span nextSpan(SamplingFlags extracted) {
-		return null;
-	}
-
-	@Override
-	public Span toSpan(TraceContext context) {
-		// TODO: [OTEL] Not advised to be used by Brave
-		return null;
-	}
-
-	@Override
-	public SpanInScope withSpanInScope(Span span) {
+	public SpanInScope withSpan(Span span) {
 		return new OtelSpanInScope(
 				tracer.withSpan(span == null ? DefaultSpan.getInvalid() : ((OtelSpan) span).delegate));
 	}
@@ -108,25 +79,7 @@ public class OtelTracer implements Tracer {
 	}
 
 	@Override
-	public <T> ScopedSpan startScopedSpan(String name, SamplerFunction<T> samplerFunction, T arg) {
-		// TODO: [OTEL] No sampling on the level of the API
-		return null;
-	}
-
-	@Override
-	public <T> Span nextSpan(SamplerFunction<T> samplerFunction, T arg) {
-		// TODO: [OTEL] No sampling on the level of the API
-		return null;
-	}
-
-	@Override
-	public <T> Span nextSpanWithParent(SamplerFunction<T> samplerFunction, T arg, TraceContext parent) {
-		// TODO: [OTEL] No sampling on the level of the API
-		return null;
-	}
-
-	@Override
-	public ScopedSpan startScopedSpanWithParent(String name, Span parent) {
+	public ScopedSpan startScopedSpan(String name, Span parent) {
 		io.opentelemetry.trace.Span parentSpan = parent != null ? (((OtelSpan) parent).delegate) : null;
 		io.opentelemetry.trace.Span span;
 		if (parentSpan == null) {

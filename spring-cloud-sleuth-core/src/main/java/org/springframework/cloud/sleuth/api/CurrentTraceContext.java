@@ -17,9 +17,6 @@
 package org.springframework.cloud.sleuth.api;
 
 import java.io.Closeable;
-import java.util.concurrent.Callable;
-import java.util.concurrent.Executor;
-import java.util.concurrent.ExecutorService;
 
 import org.springframework.lang.Nullable;
 
@@ -38,14 +35,6 @@ public interface CurrentTraceContext {
 	CurrentTraceContext.Scope newScope(@Nullable TraceContext context);
 
 	CurrentTraceContext.Scope maybeScope(@Nullable TraceContext context);
-
-	<C> Callable<C> wrap(Callable<C> task);
-
-	Runnable wrap(Runnable task);
-
-	Executor executor(Executor delegate);
-
-	ExecutorService executorService(ExecutorService delegate);
 
 	interface Scope extends Closeable {
 

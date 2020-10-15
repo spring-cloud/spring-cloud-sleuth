@@ -16,6 +16,10 @@
 
 package org.springframework.cloud.sleuth.otel.instrument.async;
 
+import io.opentelemetry.trace.DefaultSpan;
+import org.assertj.core.api.BDDAssertions;
+
+import org.springframework.cloud.sleuth.api.Span;
 import org.springframework.cloud.sleuth.otel.OtelTestTracing;
 import org.springframework.cloud.sleuth.test.TestTracingAware;
 
@@ -29,6 +33,12 @@ public class TraceRunnableTests extends org.springframework.cloud.sleuth.instrum
 			this.testTracing = new OtelTestTracing();
 		}
 		return this.testTracing;
+	}
+
+	@Override
+	protected void assertThatThereIsNoParentId(Span secondSpan) {
+		BDDAssertions.then(secondSpan.context().parentId()).as("saved span as remnant of first span")
+				.isEqualTo(DefaultSpan.getInvalid().getContext().getSpanIdAsHexString());
 	}
 
 }

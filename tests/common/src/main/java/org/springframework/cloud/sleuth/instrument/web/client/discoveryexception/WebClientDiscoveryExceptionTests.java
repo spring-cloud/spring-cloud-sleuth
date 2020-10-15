@@ -80,7 +80,7 @@ public abstract class WebClientDiscoveryExceptionTests {
 			throws IOException, InterruptedException {
 		Span span = this.tracer.nextSpan().name("new trace");
 
-		try (Tracer.SpanInScope ws = this.tracer.withSpanInScope(span.start())) {
+		try (Tracer.SpanInScope ws = this.tracer.withSpan(span.start())) {
 			provider.get(this);
 			Assertions.fail("should throw an exception");
 		}

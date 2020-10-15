@@ -42,7 +42,7 @@ public abstract class CircuitBreakerTests implements TestTracingAwareSupplier {
 					.run(new TraceSupplier<>(tracerTest().tracing().tracer(), tracer::currentSpan));
 
 			BDDAssertions.then(span).isNotNull();
-			BDDAssertions.then(scopedSpan.context().traceIdString()).isEqualTo(span.context().traceIdString());
+			BDDAssertions.then(scopedSpan.context().traceId()).isEqualTo(span.context().traceId());
 		}
 		finally {
 			scopedSpan.finish();
@@ -71,10 +71,9 @@ public abstract class CircuitBreakerTests implements TestTracingAwareSupplier {
 			BDDAssertions.then(tracerTest().handler().reportedSpans()).hasSize(2);
 			BDDAssertions.then(first.get()).isNotNull();
 			BDDAssertions.then(second.get()).isNotNull();
-			BDDAssertions.then(scopedSpan.context().traceIdString()).isEqualTo(first.get().context().traceIdString());
-			BDDAssertions.then(scopedSpan.context().traceIdString()).isEqualTo(second.get().context().traceIdString());
-			BDDAssertions.then(first.get().context().spanIdString())
-					.isNotEqualTo(second.get().context().spanIdString());
+			BDDAssertions.then(scopedSpan.context().traceId()).isEqualTo(first.get().context().traceId());
+			BDDAssertions.then(scopedSpan.context().traceId()).isEqualTo(second.get().context().traceId());
+			BDDAssertions.then(first.get().context().spanId()).isNotEqualTo(second.get().context().spanId());
 
 			ReportedSpan reportedSpan = tracerTest().handler().reportedSpans().get(1);
 			BDDAssertions.then(reportedSpan.name()).contains("CircuitBreakerTests");

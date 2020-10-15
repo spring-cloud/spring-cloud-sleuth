@@ -62,7 +62,7 @@ public class TraceCallable<V> implements Callable<V> {
 
 	@Override
 	public V call() throws Exception {
-		ScopedSpan span = this.tracer.startScopedSpanWithParent(this.spanName, this.parent);
+		ScopedSpan span = this.tracer.startScopedSpan(this.spanName, this.parent);
 		try {
 			return this.delegate.call();
 		}

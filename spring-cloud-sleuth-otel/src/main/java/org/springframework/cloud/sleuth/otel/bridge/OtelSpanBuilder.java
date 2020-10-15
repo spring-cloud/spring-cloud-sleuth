@@ -99,12 +99,6 @@ public class OtelSpanBuilder implements Span.Builder {
 	}
 
 	@Override
-	public Span.Builder startTimestamp(long startTimestamp) {
-		this.delegate.setStartTimestamp(startTimestamp);
-		return this;
-	}
-
-	@Override
 	public Span.Builder remoteServiceName(String remoteServiceName) {
 		this.delegate.setAttribute("peer.service", remoteServiceName);
 		return this;

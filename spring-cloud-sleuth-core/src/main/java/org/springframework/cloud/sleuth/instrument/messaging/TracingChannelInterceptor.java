@@ -180,7 +180,7 @@ final class TracingChannelInterceptor extends ChannelInterceptorAdapter implemen
 	}
 
 	private void setSpanInScope(Span span) {
-		Tracer.SpanInScope spanInScope = this.tracer.withSpanInScope(span);
+		Tracer.SpanInScope spanInScope = this.tracer.withSpan(span);
 		this.threadLocalSpan.set(new SpanAndScope(span, spanInScope));
 		if (log.isDebugEnabled()) {
 			log.debug("Put span in scope " + span);

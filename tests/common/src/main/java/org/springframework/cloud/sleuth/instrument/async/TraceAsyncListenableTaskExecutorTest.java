@@ -46,7 +46,7 @@ public abstract class TraceAsyncListenableTaskExecutorTest implements TestTracin
 		AtomicBoolean executed = new AtomicBoolean();
 		Span span = tracerTest().tracing().tracer().nextSpan().name("foo");
 
-		try (Tracer.SpanInScope ws = tracerTest().tracing().tracer().withSpanInScope(span.start())) {
+		try (Tracer.SpanInScope ws = tracerTest().tracing().tracer().withSpan(span.start())) {
 			this.traceAsyncListenableTaskExecutor.submitListenable(aRunnable(executed)).get();
 		}
 		finally {
@@ -61,7 +61,7 @@ public abstract class TraceAsyncListenableTaskExecutorTest implements TestTracin
 		Span span = tracerTest().tracing().tracer().nextSpan().name("foo");
 		Span spanFromListenable;
 
-		try (Tracer.SpanInScope ws = tracerTest().tracing().tracer().withSpanInScope(span.start())) {
+		try (Tracer.SpanInScope ws = tracerTest().tracing().tracer().withSpan(span.start())) {
 			spanFromListenable = this.traceAsyncListenableTaskExecutor.submitListenable(aCallable()).get();
 		}
 		finally {
@@ -76,7 +76,7 @@ public abstract class TraceAsyncListenableTaskExecutorTest implements TestTracin
 		AtomicBoolean executed = new AtomicBoolean();
 		Span span = tracerTest().tracing().tracer().nextSpan().name("foo");
 
-		try (Tracer.SpanInScope ws = tracerTest().tracing().tracer().withSpanInScope(span.start())) {
+		try (Tracer.SpanInScope ws = tracerTest().tracing().tracer().withSpan(span.start())) {
 			this.traceAsyncListenableTaskExecutor.execute(aRunnable(executed));
 		}
 		finally {
@@ -93,7 +93,7 @@ public abstract class TraceAsyncListenableTaskExecutorTest implements TestTracin
 		AtomicBoolean executed = new AtomicBoolean();
 		Span span = tracerTest().tracing().tracer().nextSpan().name("foo");
 
-		try (Tracer.SpanInScope ws = tracerTest().tracing().tracer().withSpanInScope(span.start())) {
+		try (Tracer.SpanInScope ws = tracerTest().tracing().tracer().withSpan(span.start())) {
 			this.traceAsyncListenableTaskExecutor.execute(aRunnable(executed), 1L);
 		}
 		finally {
@@ -110,7 +110,7 @@ public abstract class TraceAsyncListenableTaskExecutorTest implements TestTracin
 		Span span = tracerTest().tracing().tracer().nextSpan().name("foo");
 		Span spanFromListenable;
 
-		try (Tracer.SpanInScope ws = tracerTest().tracing().tracer().withSpanInScope(span.start())) {
+		try (Tracer.SpanInScope ws = tracerTest().tracing().tracer().withSpan(span.start())) {
 			spanFromListenable = this.traceAsyncListenableTaskExecutor.submit(aCallable()).get();
 		}
 		finally {
@@ -125,7 +125,7 @@ public abstract class TraceAsyncListenableTaskExecutorTest implements TestTracin
 		AtomicBoolean executed = new AtomicBoolean();
 		Span span = tracerTest().tracing().tracer().nextSpan().name("foo");
 
-		try (Tracer.SpanInScope ws = tracerTest().tracing().tracer().withSpanInScope(span.start())) {
+		try (Tracer.SpanInScope ws = tracerTest().tracing().tracer().withSpan(span.start())) {
 			this.traceAsyncListenableTaskExecutor.submit(aRunnable(executed)).get();
 		}
 		finally {

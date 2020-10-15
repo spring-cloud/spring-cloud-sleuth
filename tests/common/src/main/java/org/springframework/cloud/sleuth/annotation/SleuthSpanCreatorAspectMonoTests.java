@@ -60,7 +60,7 @@ public abstract class SleuthSpanCreatorAspectMonoTests {
 		if (tracer.currentSpan() == null) {
 			throw new IllegalStateException("Current Span is supposed to have a value!");
 		}
-		return tracer.currentSpan().context().spanIdString();
+		return tracer.currentSpan().context().spanId();
 	}
 
 	@BeforeEach
@@ -207,7 +207,7 @@ public abstract class SleuthSpanCreatorAspectMonoTests {
 	public void shouldContinueSpanWithLogWhenAnnotationOnInterfaceMethod() {
 		Span span = this.tracer.nextSpan().name("foo");
 
-		try (Tracer.SpanInScope ws = this.tracer.withSpanInScope(span.start())) {
+		try (Tracer.SpanInScope ws = this.tracer.withSpan(span.start())) {
 			Mono<String> mono = this.testBean.testMethod10("test");
 
 			BDDAssertions.then(this.spans).isEmpty();
@@ -250,7 +250,7 @@ public abstract class SleuthSpanCreatorAspectMonoTests {
 	public void shouldContinueSpanWhenKeyIsUsedOnSpanTagWhenAnnotationOnInterfaceMethod() {
 		Span span = this.tracer.nextSpan().name("foo");
 
-		try (Tracer.SpanInScope ws = this.tracer.withSpanInScope(span.start())) {
+		try (Tracer.SpanInScope ws = this.tracer.withSpan(span.start())) {
 			Mono<String> mono = this.testBean.testMethod10_v2("test");
 
 			BDDAssertions.then(this.spans).isEmpty();
@@ -277,7 +277,7 @@ public abstract class SleuthSpanCreatorAspectMonoTests {
 	public void shouldContinueSpanWithLogWhenAnnotationOnClassMethod() {
 		Span span = this.tracer.nextSpan().name("foo");
 
-		try (Tracer.SpanInScope ws = this.tracer.withSpanInScope(span.start())) {
+		try (Tracer.SpanInScope ws = this.tracer.withSpan(span.start())) {
 			// tag::continue_span_execution[]
 			Mono<String> mono = this.testBean.testMethod11("test");
 			// end::continue_span_execution[]
@@ -328,7 +328,7 @@ public abstract class SleuthSpanCreatorAspectMonoTests {
 	public void shouldAddErrorTagWhenExceptionOccurredInContinueSpan() {
 		Span span = this.tracer.nextSpan().name("foo");
 
-		try (Tracer.SpanInScope ws = this.tracer.withSpanInScope(span.start())) {
+		try (Tracer.SpanInScope ws = this.tracer.withSpan(span.start())) {
 			// tag::continue_span_execution[]
 			Mono<String> mono = this.testBean.testMethod13();
 

@@ -185,7 +185,7 @@ public abstract class WebClientTests {
 	public void shouldAttachTraceIdWhenCallingAnotherService(ResponseEntityProvider provider) {
 		Span span = this.tracer.nextSpan().name("foo").start();
 
-		try (Tracer.SpanInScope ws = this.tracer.withSpanInScope(span)) {
+		try (Tracer.SpanInScope ws = this.tracer.withSpan(span)) {
 			ResponseEntity<String> response = provider.get(this);
 
 			// https://github.com/spring-cloud/spring-cloud-sleuth/issues/327
@@ -205,7 +205,7 @@ public abstract class WebClientTests {
 	public void shouldAttachTraceIdWhenCallingAnotherServiceViaWebClient() {
 		Span span = this.tracer.nextSpan().name("foo").start();
 
-		try (Tracer.SpanInScope ws = this.tracer.withSpanInScope(span)) {
+		try (Tracer.SpanInScope ws = this.tracer.withSpan(span)) {
 			this.webClient.get().uri("http://localhost:" + this.port + "/traceid").retrieve().bodyToMono(String.class)
 					.block(Duration.ofMillis(100));
 		}
@@ -222,7 +222,7 @@ public abstract class WebClientTests {
 	public void shouldWorkWhenCustomStatusCodeIsReturned() {
 		Span span = this.tracer.nextSpan().name("foo").start();
 
-		try (Tracer.SpanInScope ws = this.tracer.withSpanInScope(span)) {
+		try (Tracer.SpanInScope ws = this.tracer.withSpan(span)) {
 			this.webClient.get().uri("http://localhost:" + this.port + "/issue1462").retrieve().bodyToMono(String.class)
 					.block(Duration.ofMillis(100));
 		}
@@ -278,7 +278,7 @@ public abstract class WebClientTests {
 	public void shouldAttachTraceIdWhenUsingFeignClientWithoutResponseBody(ResponseEntityProvider provider) {
 		Span span = this.tracer.nextSpan().name("foo").start();
 
-		try (Tracer.SpanInScope ws = this.tracer.withSpanInScope(span)) {
+		try (Tracer.SpanInScope ws = this.tracer.withSpan(span)) {
 			provider.get(this);
 		}
 		finally {
@@ -332,7 +332,7 @@ public abstract class WebClientTests {
 	public void should_wrap_rest_template_builders() {
 		Span span = this.tracer.nextSpan().name("foo").start();
 
-		try (Tracer.SpanInScope ws = this.tracer.withSpanInScope(span)) {
+		try (Tracer.SpanInScope ws = this.tracer.withSpan(span)) {
 			RestTemplate template = this.restTemplateBuilder.build();
 
 			template.getForObject("http://localhost:" + this.port + "/traceid", String.class);
@@ -350,7 +350,7 @@ public abstract class WebClientTests {
 		Span span = this.tracer.nextSpan().name("foo").start();
 
 		AtomicReference<String> traceId = new AtomicReference<>();
-		try (Tracer.SpanInScope ws = this.tracer.withSpanInScope(span)) {
+		try (Tracer.SpanInScope ws = this.tracer.withSpan(span)) {
 			this.webClientBuilder.filter((request, exchange) -> {
 				traceId.set(request.headers().getFirst("b3"));
 

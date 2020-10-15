@@ -63,7 +63,7 @@ public abstract class CircuitBreakerIntegrationTests {
 			Span span = this.factory.create("name").run(tracer::currentSpan);
 
 			BDDAssertions.then(span).isNotNull();
-			BDDAssertions.then(scopedSpan.context().traceIdString()).isEqualTo(span.context().traceIdString());
+			BDDAssertions.then(scopedSpan.context().traceId()).isEqualTo(span.context().traceId());
 		}
 		finally {
 			scopedSpan.finish();
@@ -89,10 +89,9 @@ public abstract class CircuitBreakerIntegrationTests {
 			})).isInstanceOf(IllegalStateException.class).hasMessageContaining("boom2");
 
 			BDDAssertions.then(this.spans).hasSize(2);
-			BDDAssertions.then(scopedSpan.context().traceIdString()).isEqualTo(first.get().context().traceIdString());
-			BDDAssertions.then(scopedSpan.context().traceIdString()).isEqualTo(second.get().context().traceIdString());
-			BDDAssertions.then(first.get().context().spanIdString())
-					.isNotEqualTo(second.get().context().spanIdString());
+			BDDAssertions.then(scopedSpan.context().traceId()).isEqualTo(first.get().context().traceId());
+			BDDAssertions.then(scopedSpan.context().traceId()).isEqualTo(second.get().context().traceId());
+			BDDAssertions.then(first.get().context().spanId()).isNotEqualTo(second.get().context().spanId());
 
 			ReportedSpan reportedSpan = this.spans.get(0);
 			BDDAssertions.then(reportedSpan.name()).contains("CircuitBreakerIntegrationTests");
@@ -107,7 +106,9 @@ public abstract class CircuitBreakerIntegrationTests {
 		}
 	}
 
-	public abstract void assertException(ReportedSpan reportedSpan);
+	public void assertException(ReportedSpan reportedSpan) {
+		throw new UnsupportedOperationException("Implement this assertion");
+	}
 
 	@Configuration(proxyBeanMethods = false)
 	@EnableAutoConfiguration

@@ -33,7 +33,6 @@ import org.springframework.cloud.sleuth.otel.exporter.ArrayListSpanProcessor;
 import org.springframework.cloud.sleuth.otel.OtelTestSpanHandler;
 import org.springframework.cloud.sleuth.otel.bridge.OtelTraceContext;
 import org.springframework.cloud.sleuth.test.ReportedSpan;
-import org.springframework.cloud.sleuth.test.TestSpanHandler;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.test.context.ContextConfiguration;
@@ -53,8 +52,7 @@ public class ReactorNettyHttpClientSpringBootTests
 
 	@Override
 	public void assertSingleB3Header(String b3SingleHeaderReadByServer, ReportedSpan clientSpan, TraceContext parent) {
-		Assertions.assertThat(b3SingleHeaderReadByServer)
-				.isEqualTo(parent.traceIdString() + "-" + clientSpan.id() + "-1");
+		Assertions.assertThat(b3SingleHeaderReadByServer).isEqualTo(parent.traceId() + "-" + clientSpan.id() + "-1");
 	}
 
 	@Configuration(proxyBeanMethods = false)

@@ -23,7 +23,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
-import org.apache.commons.lang3.StringUtils;
 import org.assertj.core.api.BDDAssertions;
 import org.awaitility.Awaitility;
 import org.junit.jupiter.api.BeforeEach;
@@ -67,19 +66,14 @@ public abstract class SleuthSpanCreatorAspectFluxTests {
 
 	public abstract TraceContext traceContext();
 
-	private static String toHexString(Long value) {
-		then(value).isNotNull();
-		return StringUtils.leftPad(Long.toHexString(value), 16, '0');
-	}
-
-	protected static Long id(Tracer tracer) {
+	protected static String id(Tracer tracer) {
 		if (tracer.currentSpan() == null) {
 			throw new IllegalStateException("Current Span is supposed to have a value!");
 		}
 		return tracer.currentSpan().context().spanId();
 	}
 
-	protected static Long id(Context context, Tracer tracer) {
+	protected static String id(Context context, Tracer tracer) {
 		if (context.hasKey(TraceContext.class)) {
 			return context.get(TraceContext.class).spanId();
 		}
@@ -101,8 +95,8 @@ public abstract class SleuthSpanCreatorAspectFluxTests {
 
 		Awaitility.await().atMost(1, TimeUnit.SECONDS).untilAsserted(() -> {
 			BDDAssertions.then(this.spans).hasSize(1);
-			BDDAssertions.then(this.spans.get(0).traceId()).isEqualTo(context.traceIdString());
-			BDDAssertions.then(this.spans.get(0).parentId()).isEqualTo(context.spanIdString());
+			BDDAssertions.then(this.spans.get(0).traceId()).isEqualTo(context.traceId());
+			BDDAssertions.then(this.spans.get(0).parentId()).isEqualTo(context.spanId());
 		});
 	}
 
@@ -228,7 +222,7 @@ public abstract class SleuthSpanCreatorAspectFluxTests {
 	public void shouldContinueSpanWithLogWhenAnnotationOnInterfaceMethod() {
 		Span span = this.tracer.nextSpan().name("foo");
 
-		try (Tracer.SpanInScope ws = this.tracer.withSpanInScope(span.start())) {
+		try (Tracer.SpanInScope ws = this.tracer.withSpan(span.start())) {
 			Flux<String> flux = this.testBean.testMethod10("test");
 
 			verifyNoSpansUntilFluxComplete(flux);
@@ -270,7 +264,7 @@ public abstract class SleuthSpanCreatorAspectFluxTests {
 	public void shouldContinueSpanWhenKeyIsUsedOnSpanTagWhenAnnotationOnInterfaceMethod() {
 		Span span = this.tracer.nextSpan().name("foo");
 
-		try (Tracer.SpanInScope ws = this.tracer.withSpanInScope(span.start())) {
+		try (Tracer.SpanInScope ws = this.tracer.withSpan(span.start())) {
 			Flux<String> flux = this.testBean.testMethod10_v2("test");
 
 			verifyNoSpansUntilFluxComplete(flux);
@@ -295,7 +289,7 @@ public abstract class SleuthSpanCreatorAspectFluxTests {
 	public void shouldContinueSpanWithLogWhenAnnotationOnClassMethod() {
 		Span span = this.tracer.nextSpan().name("foo");
 
-		try (Tracer.SpanInScope ws = this.tracer.withSpanInScope(span.start())) {
+		try (Tracer.SpanInScope ws = this.tracer.withSpan(span.start())) {
 			// tag::continue_span_execution[]
 			Flux<String> flux = this.testBean.testMethod11("test");
 			// end::continue_span_execution[]
@@ -345,7 +339,7 @@ public abstract class SleuthSpanCreatorAspectFluxTests {
 	public void shouldAddErrorTagWhenExceptionOccurredInContinueSpan() {
 		Span span = this.tracer.nextSpan().name("foo");
 
-		try (Tracer.SpanInScope ws = this.tracer.withSpanInScope(span.start())) {
+		try (Tracer.SpanInScope ws = this.tracer.withSpan(span.start())) {
 			// tag::continue_span_execution[]
 			Flux<String> flux = this.testBean.testMethod13();
 
@@ -386,26 +380,26 @@ public abstract class SleuthSpanCreatorAspectFluxTests {
 
 	@Test
 	public void shouldReturnNewSpanFromTraceContext() {
-		Flux<Long> flux = this.testBean.newSpanInTraceContext();
-		Long newSpanId = flux.blockFirst();
+		Flux<String> flux = this.testBean.newSpanInTraceContext();
+		String newSpanId = flux.blockFirst();
 
 		Awaitility.await().atMost(1, TimeUnit.SECONDS).untilAsserted(() -> {
 			BDDAssertions.then(this.spans).hasSize(1);
 			BDDAssertions.then(this.spans.get(0).name()).isEqualTo("span-in-trace-context");
-			BDDAssertions.then(this.spans.get(0).id()).isEqualTo(toHexString(newSpanId));
+			BDDAssertions.then(this.spans.get(0).id()).isEqualTo(newSpanId);
 			BDDAssertions.then(this.tracer.currentSpan()).isNull();
 		});
 	}
 
 	@Test
 	public void shouldReturnNewSpanFromSubscriberContext() {
-		Flux<Long> flux = this.testBean.newSpanInSubscriberContext();
-		Long newSpanId = flux.blockFirst();
+		Flux<String> flux = this.testBean.newSpanInSubscriberContext();
+		String newSpanId = flux.blockFirst();
 
 		Awaitility.await().atMost(1, TimeUnit.SECONDS).untilAsserted(() -> {
 			BDDAssertions.then(this.spans).hasSize(1);
 			BDDAssertions.then(this.spans.get(0).name()).isEqualTo("span-in-subscriber-context");
-			BDDAssertions.then(this.spans.get(0).id()).isEqualTo(toHexString(newSpanId));
+			BDDAssertions.then(this.spans.get(0).id()).isEqualTo(newSpanId);
 			BDDAssertions.then(this.tracer.currentSpan()).isNull();
 		});
 	}
@@ -479,10 +473,10 @@ public abstract class SleuthSpanCreatorAspectFluxTests {
 		Flux<String> testMethod14(String param);
 
 		@NewSpan(name = "spanInTraceContext")
-		Flux<Long> newSpanInTraceContext();
+		Flux<String> newSpanInTraceContext();
 
 		@NewSpan(name = "spanInSubscriberContext")
-		Flux<Long> newSpanInSubscriberContext();
+		Flux<String> newSpanInSubscriberContext();
 
 		void proceed();
 
@@ -600,12 +594,12 @@ public abstract class SleuthSpanCreatorAspectFluxTests {
 		}
 
 		@Override
-		public Flux<Long> newSpanInTraceContext() {
+		public Flux<String> newSpanInTraceContext() {
 			return Flux.defer(() -> Flux.just(id(this.tracer)));
 		}
 
 		@Override
-		public Flux<Long> newSpanInSubscriberContext() {
+		public Flux<String> newSpanInSubscriberContext() {
 			return Mono.subscriberContext().flatMapMany(context -> Flux.just(id(context, this.tracer)));
 		}
 

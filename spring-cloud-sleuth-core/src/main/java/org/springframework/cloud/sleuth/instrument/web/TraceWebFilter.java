@@ -138,7 +138,7 @@ final class TraceWebFilter implements WebFilter, Ordered {
 		boolean tracePresent = tracer().currentSpan() != null;
 		if (tracePresent) {
 			// clear any previous trace
-			tracer().withSpanInScope(null); // TODO: dangerous and also allocates stuff
+			tracer().withSpan(null); // TODO: dangerous and also allocates stuff
 		}
 		return tracePresent;
 	}
@@ -190,7 +190,7 @@ final class TraceWebFilter implements WebFilter, Ordered {
 			Span span;
 			if (c.hasKey(Span.class)) {
 				Span parent = c.get(Span.class);
-				try (Tracer.SpanInScope spanInScope = this.tracer.withSpanInScope(parent)) {
+				try (Tracer.SpanInScope spanInScope = this.tracer.withSpan(parent)) {
 					span = this.tracer.nextSpan();
 				}
 				if (log.isDebugEnabled()) {
@@ -199,7 +199,7 @@ final class TraceWebFilter implements WebFilter, Ordered {
 			}
 			else {
 				if (this.span != null) {
-					try (Tracer.SpanInScope spanInScope = this.tracer.withSpanInScope(this.span)) {
+					try (Tracer.SpanInScope spanInScope = this.tracer.withSpan(this.span)) {
 						span = this.tracer.nextSpan();
 					}
 					if (log.isDebugEnabled()) {

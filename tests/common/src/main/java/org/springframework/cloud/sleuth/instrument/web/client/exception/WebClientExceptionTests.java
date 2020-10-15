@@ -80,7 +80,7 @@ public class WebClientExceptionTests {
 	public void shouldCloseSpanUponException(ResponseEntityProvider provider) throws IOException {
 		Span span = this.tracer.nextSpan().name("new trace").start();
 
-		try (Tracer.SpanInScope ws = this.tracer.withSpanInScope(span)) {
+		try (Tracer.SpanInScope ws = this.tracer.withSpan(span)) {
 			log.info("Started new span " + span);
 			provider.get(this);
 			fail("should throw an exception");

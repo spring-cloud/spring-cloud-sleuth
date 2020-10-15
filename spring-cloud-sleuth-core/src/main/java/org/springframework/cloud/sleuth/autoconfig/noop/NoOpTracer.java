@@ -20,8 +20,6 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.springframework.cloud.sleuth.api.Baggage;
-import org.springframework.cloud.sleuth.api.SamplerFunction;
-import org.springframework.cloud.sleuth.api.SamplingFlags;
 import org.springframework.cloud.sleuth.api.ScopedSpan;
 import org.springframework.cloud.sleuth.api.Span;
 import org.springframework.cloud.sleuth.api.SpanCustomizer;
@@ -31,37 +29,12 @@ import org.springframework.cloud.sleuth.api.Tracer;
 public class NoOpTracer implements Tracer {
 
 	@Override
-	public Span newTrace() {
+	public Span nextSpan(TraceContext parent) {
 		return new NoOpSpan();
 	}
 
 	@Override
-	public Span joinSpan(TraceContext context) {
-		return new NoOpSpan();
-	}
-
-	@Override
-	public Span newChild(TraceContext parent) {
-		return new NoOpSpan();
-	}
-
-	@Override
-	public Span nextSpan(TraceContext extracted) {
-		return new NoOpSpan();
-	}
-
-	@Override
-	public Span nextSpan(SamplingFlags extracted) {
-		return new NoOpSpan();
-	}
-
-	@Override
-	public Span toSpan(TraceContext context) {
-		return new NoOpSpan();
-	}
-
-	@Override
-	public SpanInScope withSpanInScope(Span span) {
+	public SpanInScope withSpan(Span span) {
 		return new NoOpSpanInScope();
 	}
 
@@ -86,22 +59,7 @@ public class NoOpTracer implements Tracer {
 	}
 
 	@Override
-	public <T> ScopedSpan startScopedSpan(String name, SamplerFunction<T> samplerFunction, T arg) {
-		return new NoOpScopedSpan();
-	}
-
-	@Override
-	public <T> Span nextSpan(SamplerFunction<T> samplerFunction, T arg) {
-		return new NoOpSpan();
-	}
-
-	@Override
-	public <T> Span nextSpanWithParent(SamplerFunction<T> samplerFunction, T arg, TraceContext parent) {
-		return new NoOpSpan();
-	}
-
-	@Override
-	public ScopedSpan startScopedSpanWithParent(String name, Span parent) {
+	public ScopedSpan startScopedSpan(String name, Span parent) {
 		return new NoOpScopedSpan();
 	}
 

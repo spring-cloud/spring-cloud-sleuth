@@ -59,7 +59,11 @@ public abstract class TraceRunnableTests implements TestTracingAwareSupplier {
 				.isNotEqualTo(firstSpan.context().traceId()).as("first span id");
 
 		// and
-		BDDAssertions.then(secondSpan.context().parentId()).as("saved span as remnant of first span").isNull();
+		assertThatThereIsNoParentId(secondSpan);
+	}
+
+	protected void assertThatThereIsNoParentId(Span secondSpan) {
+		throw new UnsupportedOperationException("Implement this assertion");
 	}
 
 	@Test

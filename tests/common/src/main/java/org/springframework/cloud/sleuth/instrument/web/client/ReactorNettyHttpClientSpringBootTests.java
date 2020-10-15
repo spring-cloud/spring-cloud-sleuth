@@ -105,8 +105,9 @@ public abstract class ReactorNettyHttpClientSpringBootTests {
 		assertSingleB3Header(b3SingleHeaderReadByServer, clientSpan, parent);
 	}
 
-	public abstract void assertSingleB3Header(String b3SingleHeaderReadByServer, ReportedSpan clientSpan,
-			TraceContext parent);
+	public void assertSingleB3Header(String b3SingleHeaderReadByServer, ReportedSpan clientSpan, TraceContext parent) {
+		throw new UnsupportedOperationException("Implement this assertion");
+	}
 
 	@Test
 	public void shouldSendTraceContextToServer_rootSpan() throws Exception {

@@ -33,9 +33,7 @@ import org.springframework.lang.Nullable;
  * @param <T> type of the input, for example a request or method
  * @since 5.8
  */
-// interface, not abstract type, to allow backporting of existing samplers.
-// This implies we cannot add new methods later, as the bytecode level of Brave core is
-// 1.6
+// TODO: Not yet used in Brave
 public interface SamplerFunction<T> {
 
 	/**
@@ -55,8 +53,6 @@ public interface SamplerFunction<T> {
 	 *
 	 * @since 5.8
 	 */
-	// using a method instead of exposing a constant allows this to be used for any
-	// argument type
 	static <T> SamplerFunction<T> deferDecision() {
 		return (SamplerFunction<T>) Constants.DEFER_DECISION;
 	}
@@ -71,8 +67,6 @@ public interface SamplerFunction<T> {
 	 *
 	 * @since 5.8
 	 */
-	// using a method instead of exposing a constant allows this to be used for any
-	// argument type
 	static <T> SamplerFunction<T> neverSample() {
 		return (SamplerFunction<T>) Constants.NEVER_SAMPLE;
 	}
@@ -87,8 +81,6 @@ public interface SamplerFunction<T> {
 	 *
 	 * @since 5.8
 	 */
-	// using a method instead of exposing a constant allows this to be used for any
-	// argument type
 	static <T> SamplerFunction<T> alwaysSample() {
 		return (SamplerFunction<T>) Constants.ALWAYS_SAMPLE;
 	}
@@ -97,7 +89,6 @@ public interface SamplerFunction<T> {
 
 		DEFER_DECISION {
 			@Override
-			@Nullable
 			public Boolean trySample(Object request) {
 				return null;
 			}
@@ -109,7 +100,6 @@ public interface SamplerFunction<T> {
 		},
 		NEVER_SAMPLE {
 			@Override
-			@Nullable
 			public Boolean trySample(Object request) {
 				return false;
 			}
@@ -121,7 +111,6 @@ public interface SamplerFunction<T> {
 		},
 		ALWAYS_SAMPLE {
 			@Override
-			@Nullable
 			public Boolean trySample(Object request) {
 				return true;
 			}

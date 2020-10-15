@@ -99,10 +99,10 @@ public abstract class MultipleAsyncRestTemplateTests {
 	@Test
 	public void should_pass_tracing_context_with_custom_async_client() throws Exception {
 		Span span = this.tracer.nextSpan().name("foo");
-		try (Tracer.SpanInScope ws = this.tracer.withSpanInScope(span.start())) {
+		try (Tracer.SpanInScope ws = this.tracer.withSpan(span.start())) {
 			String result = this.asyncRestTemplate.getForEntity("http://localhost:" + this.port + "/foo", String.class)
 					.get().getBody();
-			BDDAssertions.then(span.context().traceIdString()).isEqualTo(result);
+			BDDAssertions.then(span.context().traceId()).isEqualTo(result);
 		}
 		finally {
 			span.finish();
@@ -123,13 +123,13 @@ public abstract class MultipleAsyncRestTemplateTests {
 	public void should_inject_traced_executor_that_passes_tracing_context() throws Exception {
 		Span span = this.tracer.nextSpan().name("foo");
 		AtomicBoolean executed = new AtomicBoolean(false);
-		try (Tracer.SpanInScope ws = this.tracer.withSpanInScope(span.start())) {
+		try (Tracer.SpanInScope ws = this.tracer.withSpan(span.start())) {
 			this.wrappedExecutor.execute(() -> {
 				Span currentSpan = this.tracer.currentSpan();
 				log.info("Current span " + currentSpan);
 				BDDAssertions.then(currentSpan).isNotNull();
-				long currentTraceId = currentSpan.context().traceId();
-				long initialTraceId = span.context().traceId();
+				String currentTraceId = currentSpan.context().traceId();
+				String initialTraceId = span.context().traceId();
 				log.info("Hello from runnable before trace id check. Initial [" + initialTraceId + "] current ["
 						+ currentTraceId + "]");
 				then(currentTraceId).isEqualTo(initialTraceId);
@@ -248,7 +248,7 @@ class MyRestController {
 
 	@RequestMapping("/foo")
 	String foo() {
-		return this.tracer.currentSpan().context().traceIdString();
+		return this.tracer.currentSpan().context().traceId();
 	}
 
 }

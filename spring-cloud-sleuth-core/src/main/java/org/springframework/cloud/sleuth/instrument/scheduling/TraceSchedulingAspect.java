@@ -62,12 +62,12 @@ class TraceSchedulingAspect {
 		if (this.skipPattern != null && this.skipPattern.matcher(pjp.getTarget().getClass().getName()).matches()) {
 			// we might have a span in context due to wrapping of runnables
 			// we want to clear that context
-			this.tracer.withSpanInScope(null);
+			this.tracer.withSpan(null);
 			return pjp.proceed();
 		}
 		String spanName = SpanNameUtil.toLowerHyphen(pjp.getSignature().getName());
 		Span span = startOrContinueRenamedSpan(spanName);
-		try (Tracer.SpanInScope ws = this.tracer.withSpanInScope(span.start())) {
+		try (Tracer.SpanInScope ws = this.tracer.withSpan(span.start())) {
 			span.tag(CLASS_KEY, pjp.getTarget().getClass().getSimpleName());
 			span.tag(METHOD_KEY, pjp.getSignature().getName());
 			return pjp.proceed();

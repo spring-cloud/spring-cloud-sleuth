@@ -80,7 +80,7 @@ public abstract class TraceRestTemplateInterceptorIntegrationTests implements Te
 		this.mockWebServer.enqueue(new MockResponse().setSocketPolicy(SocketPolicy.DISCONNECT_AT_START));
 		Span span = tracerTest().tracing().tracer().nextSpan().name("new trace");
 
-		try (Tracer.SpanInScope ws = tracerTest().tracing().tracer().withSpanInScope(span.start())) {
+		try (Tracer.SpanInScope ws = tracerTest().tracing().tracer().withSpan(span.start())) {
 			this.template.getForEntity("http://localhost:" + this.mockWebServer.getPort() + "/exception", Map.class)
 					.getBody();
 			fail("should throw an exception");

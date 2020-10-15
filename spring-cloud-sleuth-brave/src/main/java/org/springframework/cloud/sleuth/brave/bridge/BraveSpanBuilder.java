@@ -96,12 +96,6 @@ public class BraveSpanBuilder implements Span.Builder {
 	}
 
 	@Override
-	public Span.Builder startTimestamp(long startTimestamp) {
-		this.startTimestamp = startTimestamp;
-		return this;
-	}
-
-	@Override
 	public Span.Builder remoteServiceName(String remoteServiceName) {
 		span().remoteServiceName(remoteServiceName);
 		return this;

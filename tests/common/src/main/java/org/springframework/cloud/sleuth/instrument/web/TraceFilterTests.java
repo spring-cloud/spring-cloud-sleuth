@@ -121,7 +121,7 @@ public abstract class TraceFilterTests implements TestTracingAwareSupplier {
 		});
 
 		BDDAssertions.then(this.tracer.currentSpan()).isNull();
-		BDDAssertions.then(span.get().context().traceIdString())
+		BDDAssertions.then(span.get().context().traceId())
 				.isEqualTo(tracerTest().assertions().or128Bit("0000000000000014"));
 	}
 

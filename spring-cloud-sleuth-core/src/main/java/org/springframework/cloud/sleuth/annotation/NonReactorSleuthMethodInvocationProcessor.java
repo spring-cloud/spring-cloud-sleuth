@@ -48,7 +48,7 @@ class NonReactorSleuthMethodInvocationProcessor extends AbstractSleuthMethodInvo
 		}
 		String log = log(continueSpan);
 		boolean hasLog = StringUtils.hasText(log);
-		try (Tracer.SpanInScope scope = tracer().withSpanInScope(span)) {
+		try (Tracer.SpanInScope scope = tracer().withSpan(span)) {
 			before(invocation, span, log, hasLog);
 			return invocation.proceed();
 		}

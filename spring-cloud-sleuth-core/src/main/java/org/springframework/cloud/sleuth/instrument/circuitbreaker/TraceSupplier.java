@@ -47,7 +47,7 @@ class TraceSupplier<T> implements Supplier<T> {
 		String name = this.delegate.getClass().getSimpleName();
 		Span span = this.span.get().name(name);
 		Throwable tr = null;
-		try (Tracer.SpanInScope ws = this.tracer.withSpanInScope(span.start())) {
+		try (Tracer.SpanInScope ws = this.tracer.withSpan(span.start())) {
 			return this.delegate.get();
 		}
 		catch (Throwable t) {

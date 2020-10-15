@@ -124,7 +124,9 @@ public abstract class FeignRetriesTests implements TestTracingAwareSupplier {
 		BDDAssertions.then(tracerTest().handler().reportedSpans().get(1).kind()).isEqualTo(Span.Kind.CLIENT);
 	}
 
-	public abstract void assertException();
+	public void assertException() {
+		throw new UnsupportedOperationException("Implement this assertion");
+	}
 
 	interface TestInterface {
 

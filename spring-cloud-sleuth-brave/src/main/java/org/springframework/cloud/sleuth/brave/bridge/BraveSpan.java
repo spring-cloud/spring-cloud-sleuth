@@ -46,11 +46,6 @@ public class BraveSpan implements Span {
 	}
 
 	@Override
-	public Span start(long timestamp) {
-		return new BraveSpan(this.delegate.start(timestamp));
-	}
-
-	@Override
 	public Span name(String name) {
 		return new BraveSpan(this.delegate.name(name));
 	}
@@ -63,11 +58,6 @@ public class BraveSpan implements Span {
 	@Override
 	public Span annotate(String value) {
 		return new BraveSpan(this.delegate.annotate(value));
-	}
-
-	@Override
-	public Span annotate(long timestamp, String value) {
-		return new BraveSpan(this.delegate.annotate(timestamp, value));
 	}
 
 	@Override
@@ -84,11 +74,6 @@ public class BraveSpan implements Span {
 	}
 
 	@Override
-	public Span remoteServiceName(String remoteServiceName) {
-		return new BraveSpan(this.delegate.remoteServiceName(remoteServiceName));
-	}
-
-	@Override
 	public Span remoteIpAndPort(String remoteIp, int remotePort) {
 		this.delegate.remoteIpAndPort(remoteIp, remotePort);
 		return this;
@@ -102,16 +87,6 @@ public class BraveSpan implements Span {
 	@Override
 	public void abandon() {
 		this.delegate.abandon();
-	}
-
-	@Override
-	public void finish(long timestamp) {
-		this.delegate.finish(timestamp);
-	}
-
-	@Override
-	public void flush() {
-		this.delegate.flush();
 	}
 
 	@Override

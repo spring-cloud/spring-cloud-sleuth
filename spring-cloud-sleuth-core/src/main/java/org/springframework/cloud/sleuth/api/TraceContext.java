@@ -16,75 +16,15 @@
 
 package org.springframework.cloud.sleuth.api;
 
-import java.util.List;
-
 import org.springframework.lang.Nullable;
 
-public interface TraceContext extends SamplingFlags {
+public interface TraceContext {
 
-	long traceIdHigh();
-
-	long traceId();
-
-	// This is the first span ID that became a Span or ScopedSpan
-	long localRootId();
-
-	boolean isLocalRoot();
+	String traceId();
 
 	@Nullable
-	Long parentId();
+	String parentId();
 
-	long parentIdAsLong();
-
-	long spanId();
-
-	boolean shared();
-
-	List<Object> extra();
-
-	@Nullable
-	<T> T findExtra(Class<T> type);
-
-	TraceContext.Builder toBuilder();
-
-	String traceIdString();
-
-	@Nullable
-	String parentIdString();
-
-	@Nullable
-	String localRootIdString();
-
-	String spanIdString();
-
-	interface Builder {
-
-		Builder traceIdHigh(long traceIdHigh);
-
-		Builder traceId(long traceId);
-
-		Builder parentId(long parentId);
-
-		Builder parentId(@Nullable Long parentId);
-
-		Builder spanId(long spanId);
-
-		Builder sampledLocal(boolean sampledLocal);
-
-		Builder sampled(boolean sampled);
-
-		Builder sampled(@Nullable Boolean sampled);
-
-		Builder debug(boolean debug);
-
-		Builder shared(boolean shared);
-
-		Builder clearExtra();
-
-		Builder addExtra(Object extra);
-
-		TraceContext build();
-
-	}
+	String spanId();
 
 }

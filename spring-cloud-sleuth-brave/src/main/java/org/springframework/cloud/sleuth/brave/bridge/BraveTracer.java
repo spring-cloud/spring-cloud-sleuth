@@ -21,8 +21,6 @@ import java.util.Map;
 import brave.propagation.TraceContextOrSamplingFlags;
 
 import org.springframework.cloud.sleuth.api.Baggage;
-import org.springframework.cloud.sleuth.api.SamplerFunction;
-import org.springframework.cloud.sleuth.api.SamplingFlags;
 import org.springframework.cloud.sleuth.api.ScopedSpan;
 import org.springframework.cloud.sleuth.api.Span;
 import org.springframework.cloud.sleuth.api.SpanCustomizer;
@@ -40,24 +38,8 @@ public class BraveTracer implements Tracer {
 	}
 
 	@Override
-	public Span newTrace() {
-		return new BraveSpan(this.tracer.newTrace());
-	}
-
-	@Override
-	public Span joinSpan(TraceContext context) {
-		return new BraveSpan(this.tracer.joinSpan(((BraveTraceContext) context).traceContext));
-	}
-
-	@Override
-	public Span newChild(TraceContext parent) {
-		return new BraveSpan(this.tracer.newChild(((BraveTraceContext) parent).traceContext));
-	}
-
-	@Override
-	public Span nextSpan(TraceContext extracted) {
-		brave.propagation.TraceContext context = extracted != null ? (((BraveTraceContext) extracted).traceContext)
-				: null;
+	public Span nextSpan(TraceContext parent) {
+		brave.propagation.TraceContext context = parent != null ? (((BraveTraceContext) parent).traceContext) : null;
 		if (context == null) {
 			return null;
 		}
@@ -65,22 +47,7 @@ public class BraveTracer implements Tracer {
 	}
 
 	@Override
-	public Span nextSpan(SamplingFlags extracted) {
-		if (extracted instanceof BraveTraceContext) {
-			return new BraveSpan(this.tracer
-					.nextSpan(TraceContextOrSamplingFlags.create(((BraveTraceContext) extracted).traceContext)));
-		}
-		return new BraveSpan(this.tracer
-				.nextSpan(TraceContextOrSamplingFlags.create(((BraveSamplingFlags) extracted).samplingFlags)));
-	}
-
-	@Override
-	public Span toSpan(TraceContext context) {
-		return new BraveSpan(this.tracer.toSpan(((BraveTraceContext) context).traceContext));
-	}
-
-	@Override
-	public SpanInScope withSpanInScope(Span span) {
+	public SpanInScope withSpan(Span span) {
 		return new BraveSpanInScope(tracer.withSpanInScope(span == null ? null : ((BraveSpan) span).delegate));
 	}
 
@@ -109,25 +76,7 @@ public class BraveTracer implements Tracer {
 	}
 
 	@Override
-	public <T> ScopedSpan startScopedSpan(String name, SamplerFunction<T> samplerFunction, T arg) {
-		return new BraveScopedSpan(
-				this.tracer.startScopedSpan(name, ((BraveSamplerFunction) samplerFunction).samplerFunction, arg));
-	}
-
-	@Override
-	public <T> Span nextSpan(SamplerFunction<T> samplerFunction, T arg) {
-		return new BraveSpan(this.tracer.nextSpan(((BraveSamplerFunction) samplerFunction).samplerFunction, arg));
-	}
-
-	@Override
-	public <T> Span nextSpanWithParent(SamplerFunction<T> samplerFunction, T arg, TraceContext parent) {
-		brave.propagation.TraceContext context = parent != null ? (((BraveTraceContext) parent).traceContext) : null;
-		return new BraveSpan(
-				this.tracer.nextSpanWithParent(((BraveSamplerFunction) samplerFunction).samplerFunction, arg, context));
-	}
-
-	@Override
-	public ScopedSpan startScopedSpanWithParent(String name, Span parent) {
+	public ScopedSpan startScopedSpan(String name, Span parent) {
 		brave.propagation.TraceContext context = parent == null ? null : BraveTraceContext.toBrave(parent.context());
 		return new BraveScopedSpan(this.tracer.startScopedSpanWithParent(name, context));
 	}

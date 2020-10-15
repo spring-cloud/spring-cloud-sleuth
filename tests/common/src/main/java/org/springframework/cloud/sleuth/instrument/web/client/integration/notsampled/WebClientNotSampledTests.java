@@ -93,7 +93,7 @@ public abstract class WebClientNotSampledTests {
 	public void shouldPropagateNotSamplingHeader(ResponseEntityProvider provider) {
 		Span span = this.tracer.nextSpan().name("foo").start();
 
-		try (Tracer.SpanInScope ws = this.tracer.withSpanInScope(span)) {
+		try (Tracer.SpanInScope ws = this.tracer.withSpan(span)) {
 			ResponseEntity<Map<String, String>> response = provider.get(this);
 
 			assertB3SingleNotSampled(response);
@@ -106,7 +106,9 @@ public abstract class WebClientNotSampledTests {
 		then(this.tracer.currentSpan()).isNull();
 	}
 
-	public abstract void assertB3SingleNotSampled(ResponseEntity<Map<String, String>> response);
+	public void assertB3SingleNotSampled(ResponseEntity<Map<String, String>> response) {
+		throw new UnsupportedOperationException("Implement this assertion");
+	}
 
 	static Stream parametersForShouldPropagateNotSamplingHeader() throws Exception {
 		return Stream.of((ResponseEntityProvider) (tests) -> tests.testFeignInterface.headers(),

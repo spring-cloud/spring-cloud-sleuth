@@ -25,7 +25,6 @@ package org.springframework.cloud.sleuth.api;
  *
  * @see Tag
  */
-// Java language level 6. Do not add methods as it will break API!
 public interface SpanCustomizer {
 
 	/**

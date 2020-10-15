@@ -16,166 +16,23 @@
 
 package org.springframework.cloud.sleuth.autoconfig.noop;
 
-import java.util.Collections;
-import java.util.List;
-
 import org.springframework.cloud.sleuth.api.TraceContext;
 
 class NoOpTraceContext implements TraceContext {
 
 	@Override
-	public long traceIdHigh() {
-		return 0;
-	}
-
-	@Override
-	public long traceId() {
-		return 0;
-	}
-
-	@Override
-	public long localRootId() {
-		return 0;
-	}
-
-	@Override
-	public boolean isLocalRoot() {
-		return false;
-	}
-
-	@Override
-	public Long parentId() {
-		return 0L;
-	}
-
-	@Override
-	public long parentIdAsLong() {
-		return 0;
-	}
-
-	@Override
-	public long spanId() {
-		return 0;
-	}
-
-	@Override
-	public boolean shared() {
-		return false;
-	}
-
-	@Override
-	public List<Object> extra() {
-		return Collections.emptyList();
-	}
-
-	@Override
-	public <T> T findExtra(Class<T> type) {
-		return null;
-	}
-
-	@Override
-	public Builder toBuilder() {
-		return new Builder() {
-			@Override
-			public Builder traceIdHigh(long traceIdHigh) {
-				return this;
-			}
-
-			@Override
-			public Builder traceId(long traceId) {
-				return this;
-			}
-
-			@Override
-			public Builder parentId(long parentId) {
-				return this;
-			}
-
-			@Override
-			public Builder parentId(Long parentId) {
-				return this;
-			}
-
-			@Override
-			public Builder spanId(long spanId) {
-				return this;
-			}
-
-			@Override
-			public Builder sampledLocal(boolean sampledLocal) {
-				return this;
-			}
-
-			@Override
-			public Builder sampled(boolean sampled) {
-				return this;
-			}
-
-			@Override
-			public Builder sampled(Boolean sampled) {
-				return this;
-			}
-
-			@Override
-			public Builder debug(boolean debug) {
-				return this;
-			}
-
-			@Override
-			public Builder shared(boolean shared) {
-				return this;
-			}
-
-			@Override
-			public Builder clearExtra() {
-				return this;
-			}
-
-			@Override
-			public Builder addExtra(Object extra) {
-				return this;
-			}
-
-			@Override
-			public TraceContext build() {
-				return new NoOpTraceContext();
-			}
-		};
-	}
-
-	@Override
-	public String traceIdString() {
+	public String traceId() {
 		return "";
 	}
 
 	@Override
-	public String parentIdString() {
+	public String parentId() {
 		return "";
 	}
 
 	@Override
-	public String localRootIdString() {
+	public String spanId() {
 		return "";
-	}
-
-	@Override
-	public String spanIdString() {
-		return "";
-	}
-
-	@Override
-	public Boolean sampled() {
-		return null;
-	}
-
-	@Override
-	public boolean sampledLocal() {
-		return false;
-	}
-
-	@Override
-	public boolean debug() {
-		return false;
 	}
 
 }

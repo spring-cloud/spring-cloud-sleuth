@@ -16,6 +16,9 @@
 
 package org.springframework.cloud.sleuth.brave.instrument.async;
 
+import org.assertj.core.api.BDDAssertions;
+
+import org.springframework.cloud.sleuth.api.Span;
 import org.springframework.cloud.sleuth.brave.BraveTestTracing;
 import org.springframework.cloud.sleuth.test.TestTracingAware;
 
@@ -29,6 +32,11 @@ public class TraceRunnableTests extends org.springframework.cloud.sleuth.instrum
 			this.testTracing = new BraveTestTracing();
 		}
 		return this.testTracing;
+	}
+
+	@Override
+	protected void assertThatThereIsNoParentId(Span secondSpan) {
+		BDDAssertions.then(secondSpan.context().parentId()).as("saved span as remnant of first span").isNull();
 	}
 
 }
