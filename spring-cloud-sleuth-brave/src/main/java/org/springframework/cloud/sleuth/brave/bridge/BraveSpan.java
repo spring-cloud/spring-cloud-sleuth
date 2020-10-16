@@ -51,11 +51,6 @@ public class BraveSpan implements Span {
 	}
 
 	@Override
-	public Span kind(Kind kind) {
-		return new BraveSpan(this.delegate.kind(kind != null ? brave.Span.Kind.valueOf(kind.toString()) : null));
-	}
-
-	@Override
 	public Span event(String value) {
 		return new BraveSpan(this.delegate.annotate(value));
 	}

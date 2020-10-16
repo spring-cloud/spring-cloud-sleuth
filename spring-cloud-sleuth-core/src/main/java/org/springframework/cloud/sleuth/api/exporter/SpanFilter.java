@@ -17,8 +17,8 @@
 package org.springframework.cloud.sleuth.api.exporter;
 
 /**
- * An interface that allows different tracing services to export recorded data for sampled
- * spans in their own format.
+ * An interface that allows to filter whether a given reported span should be exported or
+ * not.
  */
 public interface SpanFilter {
 

@@ -37,7 +37,7 @@ class NoOpSpanBuilder implements Span.Builder {
 	}
 
 	@Override
-	public Span.Builder annotate(String value) {
+	public Span.Builder event(String value) {
 		return this;
 	}
 

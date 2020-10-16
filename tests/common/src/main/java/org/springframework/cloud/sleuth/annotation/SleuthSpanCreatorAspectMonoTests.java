@@ -79,7 +79,7 @@ public abstract class SleuthSpanCreatorAspectMonoTests {
 		Awaitility.await().untilAsserted(() -> {
 			BDDAssertions.then(this.spans).hasSize(1);
 			BDDAssertions.then(this.spans.get(0).name()).isEqualTo("test-method");
-			BDDAssertions.then(this.spans.get(0).finishTimestamp()).isNotZero();
+			BDDAssertions.then(this.spans.get(0).endTimestamp()).isNotZero();
 			BDDAssertions.then(this.tracer.currentSpan()).isNull();
 		});
 	}
@@ -95,7 +95,7 @@ public abstract class SleuthSpanCreatorAspectMonoTests {
 		Awaitility.await().untilAsserted(() -> {
 			BDDAssertions.then(this.spans).hasSize(1);
 			BDDAssertions.then(this.spans.get(0).name()).isEqualTo("test-method2");
-			BDDAssertions.then(this.spans.get(0).finishTimestamp()).isNotZero();
+			BDDAssertions.then(this.spans.get(0).endTimestamp()).isNotZero();
 			BDDAssertions.then(this.tracer.currentSpan()).isNull();
 		});
 	}
@@ -112,7 +112,7 @@ public abstract class SleuthSpanCreatorAspectMonoTests {
 			then(result).isEqualTo(TEST_STRING);
 			BDDAssertions.then(this.spans).hasSize(1);
 			BDDAssertions.then(this.spans.get(0).name()).isEqualTo("custom-name-on-test-method3");
-			BDDAssertions.then(this.spans.get(0).finishTimestamp()).isNotZero();
+			BDDAssertions.then(this.spans.get(0).endTimestamp()).isNotZero();
 			BDDAssertions.then(this.tracer.currentSpan()).isNull();
 		});
 	}
@@ -128,7 +128,7 @@ public abstract class SleuthSpanCreatorAspectMonoTests {
 		Awaitility.await().untilAsserted(() -> {
 			BDDAssertions.then(this.spans).hasSize(1);
 			BDDAssertions.then(this.spans.get(0).name()).isEqualTo("custom-name-on-test-method4");
-			BDDAssertions.then(this.spans.get(0).finishTimestamp()).isNotZero();
+			BDDAssertions.then(this.spans.get(0).endTimestamp()).isNotZero();
 			BDDAssertions.then(this.tracer.currentSpan()).isNull();
 		});
 	}
@@ -147,7 +147,7 @@ public abstract class SleuthSpanCreatorAspectMonoTests {
 			BDDAssertions.then(this.spans).hasSize(1);
 			BDDAssertions.then(this.spans.get(0).name()).isEqualTo("custom-name-on-test-method5");
 			BDDAssertions.then(this.spans.get(0).tags()).containsEntry("testTag", "test");
-			BDDAssertions.then(this.spans.get(0).finishTimestamp()).isNotZero();
+			BDDAssertions.then(this.spans.get(0).endTimestamp()).isNotZero();
 			BDDAssertions.then(this.tracer.currentSpan()).isNull();
 		});
 	}
@@ -164,7 +164,7 @@ public abstract class SleuthSpanCreatorAspectMonoTests {
 			BDDAssertions.then(this.spans).hasSize(1);
 			BDDAssertions.then(this.spans.get(0).name()).isEqualTo("custom-name-on-test-method6");
 			BDDAssertions.then(this.spans.get(0).tags()).containsEntry("testTag6", "test");
-			BDDAssertions.then(this.spans.get(0).finishTimestamp()).isNotZero();
+			BDDAssertions.then(this.spans.get(0).endTimestamp()).isNotZero();
 			BDDAssertions.then(this.tracer.currentSpan()).isNull();
 		});
 	}
@@ -180,7 +180,7 @@ public abstract class SleuthSpanCreatorAspectMonoTests {
 		Awaitility.await().untilAsserted(() -> {
 			BDDAssertions.then(this.spans).hasSize(1);
 			BDDAssertions.then(this.spans.get(0).name()).isEqualTo("custom-name-on-test-method8");
-			BDDAssertions.then(this.spans.get(0).finishTimestamp()).isNotZero();
+			BDDAssertions.then(this.spans.get(0).endTimestamp()).isNotZero();
 			BDDAssertions.then(this.tracer.currentSpan()).isNull();
 		});
 	}
@@ -198,7 +198,7 @@ public abstract class SleuthSpanCreatorAspectMonoTests {
 			BDDAssertions.then(this.spans.get(0).name()).isEqualTo("custom-name-on-test-method9");
 			BDDAssertions.then(this.spans.get(0).tags()).containsEntry("class", "TestBean").containsEntry("method",
 					"testMethod9");
-			BDDAssertions.then(this.spans.get(0).finishTimestamp()).isNotZero();
+			BDDAssertions.then(this.spans.get(0).endTimestamp()).isNotZero();
 			BDDAssertions.then(this.tracer.currentSpan()).isNull();
 		});
 	}
@@ -225,7 +225,7 @@ public abstract class SleuthSpanCreatorAspectMonoTests {
 			BDDAssertions.then(
 					this.spans.get(0).annotations().stream().map(Map.Entry::getValue).collect(Collectors.toList()))
 					.contains("customTest.before", "customTest.after");
-			BDDAssertions.then(this.spans.get(0).finishTimestamp()).isNotZero();
+			BDDAssertions.then(this.spans.get(0).endTimestamp()).isNotZero();
 			BDDAssertions.then(this.tracer.currentSpan()).isNull();
 		});
 	}
@@ -241,7 +241,7 @@ public abstract class SleuthSpanCreatorAspectMonoTests {
 			BDDAssertions.then(
 					this.spans.get(0).annotations().stream().map(Map.Entry::getValue).collect(Collectors.toList()))
 					.contains("customTest.before", "customTest.after");
-			BDDAssertions.then(this.spans.get(0).finishTimestamp()).isNotZero();
+			BDDAssertions.then(this.spans.get(0).endTimestamp()).isNotZero();
 			BDDAssertions.then(this.tracer.currentSpan()).isNull();
 		});
 	}
@@ -268,7 +268,7 @@ public abstract class SleuthSpanCreatorAspectMonoTests {
 			BDDAssertions.then(
 					this.spans.get(0).annotations().stream().map(Map.Entry::getValue).collect(Collectors.toList()))
 					.contains("customTest.before", "customTest.after");
-			BDDAssertions.then(this.spans.get(0).finishTimestamp()).isNotZero();
+			BDDAssertions.then(this.spans.get(0).endTimestamp()).isNotZero();
 			BDDAssertions.then(this.tracer.currentSpan()).isNull();
 		});
 	}
@@ -297,7 +297,7 @@ public abstract class SleuthSpanCreatorAspectMonoTests {
 			BDDAssertions.then(
 					this.spans.get(0).annotations().stream().map(Map.Entry::getValue).collect(Collectors.toList()))
 					.contains("customTest.before", "customTest.after");
-			BDDAssertions.then(this.spans.get(0).finishTimestamp()).isNotZero();
+			BDDAssertions.then(this.spans.get(0).endTimestamp()).isNotZero();
 			BDDAssertions.then(this.tracer.currentSpan()).isNull();
 		});
 	}
@@ -319,7 +319,7 @@ public abstract class SleuthSpanCreatorAspectMonoTests {
 			BDDAssertions.then(this.spans.get(0).name()).isEqualTo("test-method12");
 			BDDAssertions.then(this.spans.get(0).tags()).containsEntry("testTag12", "test");
 			BDDAssertions.then(this.spans.get(0).error()).hasMessageContaining("test exception 12");
-			BDDAssertions.then(this.spans.get(0).finishTimestamp()).isNotZero();
+			BDDAssertions.then(this.spans.get(0).endTimestamp()).isNotZero();
 			BDDAssertions.then(this.tracer.currentSpan()).isNull();
 		});
 	}
@@ -351,7 +351,7 @@ public abstract class SleuthSpanCreatorAspectMonoTests {
 					.then(this.spans.get(0).annotations().stream().map(Map.Entry::getValue)
 							.collect(Collectors.toList()))
 					.contains("testMethod13.before", "testMethod13.afterFailure", "testMethod13.after");
-			BDDAssertions.then(this.spans.get(0).finishTimestamp()).isNotZero();
+			BDDAssertions.then(this.spans.get(0).endTimestamp()).isNotZero();
 			BDDAssertions.then(this.tracer.currentSpan()).isNull();
 		});
 	}

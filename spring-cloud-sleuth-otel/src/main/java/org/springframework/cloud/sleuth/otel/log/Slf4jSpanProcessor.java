@@ -17,9 +17,11 @@
 package org.springframework.cloud.sleuth.otel.log;
 
 import java.util.List;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 import io.opentelemetry.baggage.BaggageManager;
+import io.opentelemetry.baggage.Entry;
 import io.opentelemetry.sdk.common.CompletableResultCode;
 import io.opentelemetry.sdk.trace.ReadWriteSpan;
 import io.opentelemetry.sdk.trace.ReadableSpan;
@@ -30,9 +32,11 @@ import org.slf4j.MDC;
 
 import org.springframework.cloud.sleuth.autoconfig.SleuthBaggageProperties;
 import org.springframework.cloud.sleuth.otel.bridge.OtelBaggage;
+import org.springframework.cloud.sleuth.otel.bridge.OtelCurrentTraceContext;
+import org.springframework.context.ApplicationEvent;
 import org.springframework.context.ApplicationListener;
 
-class Slf4jSpanProcessor implements SpanProcessor, ApplicationListener<OtelBaggage.BaggageChanged> {
+class Slf4jSpanProcessor implements SpanProcessor, ApplicationListener {
 
 	private static final Log log = LogFactory.getLog(Slf4jSpanProcessor.class);
 
@@ -47,8 +51,13 @@ class Slf4jSpanProcessor implements SpanProcessor, ApplicationListener<OtelBagga
 
 	@Override
 	public void onStart(ReadWriteSpan span) {
-		MDC.put("traceId", span.getContext().getTraceIdAsHexString());
-		MDC.put("spanId", span.getContext().getSpanIdAsHexString());
+		onStart(span.getContext().getTraceIdAsHexString(), span.getContext().getSpanIdAsHexString());
+	}
+
+	private void onStart(String traceId, String spanId) {
+		MDC.put("traceId", traceId);
+		MDC.put("spanId", spanId);
+		flushAllBaggageEntries();
 	}
 
 	@Override
@@ -60,6 +69,7 @@ class Slf4jSpanProcessor implements SpanProcessor, ApplicationListener<OtelBagga
 	public void onEnd(ReadableSpan span) {
 		MDC.remove("traceId");
 		MDC.remove("spanId");
+		removeAllBaggageEntries();
 	}
 
 	@Override
@@ -75,13 +85,24 @@ class Slf4jSpanProcessor implements SpanProcessor, ApplicationListener<OtelBagga
 
 	@Override
 	public CompletableResultCode forceFlush() {
+		flushAllBaggageEntries();
+		return CompletableResultCode.ofSuccess();
+	}
+
+	private void flushAllBaggageEntries() {
+		onEachCorrelatedBaggageEntry(e -> MDC.put(e.getKey(), e.getValue()));
+	}
+
+	private void onEachCorrelatedBaggageEntry(Consumer<Entry> consumer) {
 		if (this.sleuthBaggageProperties.isCorrelationEnabled()) {
 			List<String> correlationFields = lowerCaseCorrelationFields();
 			this.baggageManager.getCurrentBaggage().getEntries().stream()
-					.filter(e -> correlationFields.contains(e.getKey().toLowerCase()))
-					.forEach(e -> MDC.put(e.getKey(), e.getValue()));
+					.filter(e -> correlationFields.contains(e.getKey().toLowerCase())).forEach(consumer);
 		}
-		return CompletableResultCode.ofSuccess();
+	}
+
+	private void removeAllBaggageEntries() {
+		onEachCorrelatedBaggageEntry(e -> MDC.remove(e.getKey()));
 	}
 
 	private List<String> lowerCaseCorrelationFields() {
@@ -89,18 +110,49 @@ class Slf4jSpanProcessor implements SpanProcessor, ApplicationListener<OtelBagga
 				.collect(Collectors.toList());
 	}
 
-	@Override
-	public void onApplicationEvent(OtelBaggage.BaggageChanged event) {
-		if (log.isDebugEnabled()) {
-			log.debug("Got baggage changed event [" + event + "]");
+	private void onBaggageChanged(OtelBaggage.BaggageChanged event) {
+		if (log.isTraceEnabled()) {
+			log.trace("Got baggage changed event [" + event + "]");
 		}
 		if (this.sleuthBaggageProperties.isCorrelationEnabled()
 				&& lowerCaseCorrelationFields().contains(event.name.toLowerCase())) {
-			if (log.isDebugEnabled()) {
-				log.debug("Correlation enabled and baggage with name [" + event.name
+			if (log.isTraceEnabled()) {
+				log.trace("Correlation enabled and baggage with name [" + event.name
 						+ "] is present on the list of correlated fields");
 			}
 			MDC.put(event.name, event.value);
+		}
+	}
+
+	private void onScopeChanged(OtelCurrentTraceContext.ScopeChanged event) {
+		if (log.isTraceEnabled()) {
+			log.trace("Got scope changed event [" + event + "]");
+		}
+		if (event.context != null) {
+			onStart(event.context.traceId(), event.context.spanId());
+		}
+	}
+
+	private void onScopeClosed(OtelCurrentTraceContext.ScopeClosed event) {
+		if (log.isTraceEnabled()) {
+			log.trace("Got scope closed event [" + event + "]");
+		}
+		onEnd(null);
+	}
+
+	@Override
+	public void onApplicationEvent(ApplicationEvent event) {
+		if (event instanceof OtelBaggage.BaggageChanged) {
+			onBaggageChanged((OtelBaggage.BaggageChanged) event);
+		}
+		else if (event instanceof OtelCurrentTraceContext.ScopeChanged) {
+			onScopeChanged((OtelCurrentTraceContext.ScopeChanged) event);
+		}
+		else if (event instanceof OtelCurrentTraceContext.ScopeClosed) {
+			onScopeClosed((OtelCurrentTraceContext.ScopeClosed) event);
+		}
+		else if (event instanceof OtelBaggage.BaggageScopeEnded) {
+			removeAllBaggageEntries();
 		}
 	}
 

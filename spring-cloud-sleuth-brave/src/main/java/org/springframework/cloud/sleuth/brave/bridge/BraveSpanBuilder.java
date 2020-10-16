@@ -72,7 +72,7 @@ public class BraveSpanBuilder implements Span.Builder {
 	}
 
 	@Override
-	public Span.Builder annotate(String value) {
+	public Span.Builder event(String value) {
 		span().annotate(value);
 		return this;
 	}

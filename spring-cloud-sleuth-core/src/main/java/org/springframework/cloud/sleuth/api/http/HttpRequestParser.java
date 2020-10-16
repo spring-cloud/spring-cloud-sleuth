@@ -17,8 +17,7 @@ import org.springframework.cloud.sleuth.api.SpanCustomizer;
 import org.springframework.cloud.sleuth.api.TraceContext;
 
 /**
- * Use this to control the request data recorded for an {@link TraceContext#sampledLocal()
- * sampled HTTP client or server span}.
+ * Use this to control the request data recorded.
  *
  * <p>
  * Here's an example that changes the span name and records the HTTP url instead of the
@@ -39,8 +38,6 @@ import org.springframework.cloud.sleuth.api.TraceContext;
  * @see HttpResponseParser
  * @since 5.10
  */
-// @FunctionalInterface, except Java language level 6. Do not add methods as it will break
-// API!
 public interface HttpRequestParser {
 
 	/**

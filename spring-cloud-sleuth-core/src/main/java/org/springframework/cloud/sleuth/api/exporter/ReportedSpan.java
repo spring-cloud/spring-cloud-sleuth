@@ -21,11 +21,14 @@ import java.util.Map;
 
 import org.springframework.cloud.sleuth.api.Span;
 
+/**
+ * Taken from Brave.
+ */
 public interface ReportedSpan {
 
 	String name();
 
-	long finishTimestamp();
+	long endTimestamp();
 
 	Map<String, String> tags();
 

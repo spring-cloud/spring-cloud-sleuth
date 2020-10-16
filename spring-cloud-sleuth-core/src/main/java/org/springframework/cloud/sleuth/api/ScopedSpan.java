@@ -16,6 +16,9 @@
 
 package org.springframework.cloud.sleuth.api;
 
+/**
+ * Taken from Brave.
+ */
 public interface ScopedSpan {
 
 	boolean isNoop();

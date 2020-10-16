@@ -128,7 +128,7 @@ public class OtelTestTracing implements TracerAware, TestTracingAware, TestTraci
 	@Override
 	public CurrentTraceContext currentTraceContext() {
 		reset();
-		return new OtelCurrentTraceContext(this.tracer);
+		return new OtelCurrentTraceContext(this.tracer, publisher());
 	}
 
 	@Override

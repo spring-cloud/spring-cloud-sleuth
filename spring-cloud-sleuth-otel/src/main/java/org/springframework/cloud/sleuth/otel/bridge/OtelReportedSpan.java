@@ -30,7 +30,7 @@ public class OtelReportedSpan implements ReportedSpan {
 	}
 
 	@Override
-	public long finishTimestamp() {
+	public long endTimestamp() {
 		return this.spanData.getEndEpochNanos();
 	}
 

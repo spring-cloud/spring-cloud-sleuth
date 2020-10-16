@@ -54,9 +54,9 @@ public abstract class BaggageTagSpanHandlerTest {
 		this.spans.clear();
 		this.span = this.tracer.startScopedSpan("my-scoped-span");
 		this.countryCode = this.tracer.createBaggage("country-code");
-		this.countryCode.updateValue("FO");
+		this.countryCode.set("FO");
 		this.requestId = this.tracer.createBaggage("x-vcap-request-id");
-		this.requestId.updateValue("f4308d05-2228-4468-80f6-92a8377ba193");
+		this.requestId.set("f4308d05-2228-4468-80f6-92a8377ba193");
 	}
 
 	@Test

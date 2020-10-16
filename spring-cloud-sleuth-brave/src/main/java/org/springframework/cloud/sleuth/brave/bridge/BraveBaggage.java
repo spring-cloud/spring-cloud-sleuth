@@ -34,12 +34,12 @@ public class BraveBaggage implements Baggage {
 	}
 
 	@Override
-	public String getValue() {
+	public String get() {
 		return this.delegate.getValue();
 	}
 
 	@Override
-	public void updateValue(String value) {
+	public void set(String value) {
 		this.delegate.updateValue(value);
 	}
 

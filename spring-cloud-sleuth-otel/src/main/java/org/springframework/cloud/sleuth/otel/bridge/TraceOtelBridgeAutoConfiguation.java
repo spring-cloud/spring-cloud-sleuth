@@ -53,8 +53,9 @@ public class TraceOtelBridgeAutoConfiguation {
 	}
 
 	@Bean
-	CurrentTraceContext otelCurrentTraceContext(io.opentelemetry.trace.Tracer tracer) {
-		return new OtelCurrentTraceContext(tracer);
+	CurrentTraceContext otelCurrentTraceContext(io.opentelemetry.trace.Tracer tracer,
+			ApplicationEventPublisher publisher) {
+		return new OtelCurrentTraceContext(tracer, publisher);
 	}
 
 	@Bean

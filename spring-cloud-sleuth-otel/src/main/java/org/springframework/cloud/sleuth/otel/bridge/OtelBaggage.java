@@ -16,7 +16,11 @@
 
 package org.springframework.cloud.sleuth.otel.bridge;
 
+import java.util.concurrent.atomic.AtomicReference;
+
+import io.grpc.Context;
 import io.opentelemetry.baggage.BaggageManager;
+import io.opentelemetry.baggage.BaggageUtils;
 import io.opentelemetry.baggage.EntryMetadata;
 import io.opentelemetry.trace.Tracer;
 
@@ -41,9 +45,11 @@ public class OtelBaggage implements Baggage {
 
 	private final EntryMetadata entryMetadata;
 
+	private final AtomicReference<Context> context;
+
 	public OtelBaggage(Tracer tracer, ApplicationEventPublisher publisher,
 			SleuthBaggageProperties sleuthBaggageProperties, io.opentelemetry.baggage.Baggage delegate,
-			BaggageManager manager, String name, EntryMetadata entryMetadata) {
+			BaggageManager manager, AtomicReference<Context> context, String name, EntryMetadata entryMetadata) {
 		this.tracer = tracer;
 		this.publisher = publisher;
 		this.sleuthBaggageProperties = sleuthBaggageProperties;
@@ -51,6 +57,7 @@ public class OtelBaggage implements Baggage {
 		this.manager = manager;
 		this.name = name;
 		this.entryMetadata = entryMetadata;
+		this.context = context;
 	}
 
 	@Override
@@ -59,13 +66,15 @@ public class OtelBaggage implements Baggage {
 	}
 
 	@Override
-	public String getValue() {
-		return this.delegate.getEntryValue(this.name);
+	public String get() {
+		return BaggageUtils.getBaggage(this.context.get()).getEntryValue(this.name);
 	}
 
 	@Override
-	public void updateValue(String value) {
-		this.manager.baggageBuilder().put(this.name, value, this.entryMetadata);
+	public void set(String value) {
+		io.opentelemetry.baggage.Baggage baggage = this.manager.baggageBuilder().setParent(this.delegate)
+				.put(this.name, value, this.entryMetadata).build();
+		this.context.set(BaggageUtils.withBaggage(baggage, this.context.get()));
 		if (this.sleuthBaggageProperties.getTagFields().stream().map(String::toLowerCase)
 				.anyMatch(s -> s.equals(this.name))) {
 			this.tracer.getCurrentSpan().setAttribute(this.name, value);
@@ -88,6 +97,14 @@ public class OtelBaggage implements Baggage {
 		@Override
 		public String toString() {
 			return "BaggageChanged{" + "name='" + name + '\'' + ", value='" + value + '\'' + '}';
+		}
+
+	}
+
+	public static class BaggageScopeEnded extends ApplicationEvent {
+
+		public BaggageScopeEnded(Object source) {
+			super(source);
 		}
 
 	}

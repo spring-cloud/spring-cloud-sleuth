@@ -79,8 +79,8 @@ public class DemoApplication {
 
 		// tag what was propagated
 		Baggage baggage = this.tracer.getBaggage(COUNTRY_CODE);
-		if (baggage != null && baggage.getValue() != null) {
-			this.httpSpan.tag(COUNTRY_CODE, baggage.getValue());
+		if (baggage != null && baggage.get() != null) {
+			this.httpSpan.tag(COUNTRY_CODE, baggage.get());
 		}
 
 		return new Greeting(message);

@@ -38,7 +38,7 @@ public class BraveReportedSpan implements ReportedSpan {
 	}
 
 	@Override
-	public long finishTimestamp() {
+	public long endTimestamp() {
 		return this.mutableSpan.finishTimestamp();
 	}
 

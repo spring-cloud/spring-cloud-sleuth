@@ -31,8 +31,6 @@ public interface Span extends SpanCustomizer {
 
 	Span name(String name);
 
-	Span kind(@Nullable Span.Kind kind);
-
 	Span event(String value);
 
 	Span tag(String key, String value);
@@ -60,7 +58,7 @@ public interface Span extends SpanCustomizer {
 
 		Builder name(String name);
 
-		Builder annotate(String value);
+		Builder event(String value);
 
 		Builder tag(String key, String value);
 

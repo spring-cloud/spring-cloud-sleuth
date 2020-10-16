@@ -20,18 +20,16 @@ import java.io.Closeable;
 
 import org.springframework.lang.Nullable;
 
+/**
+ * Taken from Brave. The idea is such that you can operate on a {@link TraceContext}
+ * instead of a Span. Brave will not create a span (thus won't report it) however you will
+ * have span data in thread local.
+ */
 public interface CurrentTraceContext {
 
-	/** Returns the current span in scope or null if there isn't one. */
 	@Nullable
 	TraceContext get();
 
-	/**
-	 * Sets the current span in scope until the returned object is closed. It is a
-	 * programming error to drop or never close the result. Using try-with-resources is
-	 * preferred for this reason.
-	 * @param context span to place into scope or null to clear the scope
-	 */
 	CurrentTraceContext.Scope newScope(@Nullable TraceContext context);
 
 	CurrentTraceContext.Scope maybeScope(@Nullable TraceContext context);

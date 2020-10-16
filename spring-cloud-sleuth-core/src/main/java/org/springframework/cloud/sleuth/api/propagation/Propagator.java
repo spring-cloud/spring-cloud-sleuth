@@ -22,6 +22,9 @@ import org.springframework.cloud.sleuth.api.Span;
 import org.springframework.cloud.sleuth.api.TraceContext;
 import org.springframework.lang.Nullable;
 
+/**
+ * Taken from Brave & OTel.
+ */
 public interface Propagator {
 
 	List<String> fields();

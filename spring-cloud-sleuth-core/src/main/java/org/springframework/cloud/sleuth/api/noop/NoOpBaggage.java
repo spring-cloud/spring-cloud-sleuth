@@ -18,20 +18,20 @@ package org.springframework.cloud.sleuth.api.noop;
 
 import org.springframework.cloud.sleuth.api.Baggage;
 
-class NoOpBaggage implements Baggage {
+public class NoOpBaggage implements Baggage {
 
 	@Override
 	public String name() {
-		return "";
+		return null;
 	}
 
 	@Override
-	public String getValue() {
-		return "";
+	public String get() {
+		return null;
 	}
 
 	@Override
-	public void updateValue(String value) {
+	public void set(String value) {
 
 	}
 

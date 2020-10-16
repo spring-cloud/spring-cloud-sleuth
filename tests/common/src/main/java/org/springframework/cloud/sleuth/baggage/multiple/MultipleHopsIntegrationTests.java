@@ -111,8 +111,8 @@ public abstract class MultipleHopsIntegrationTests {
 		System.out.println("FOO: " + initialSpan.context().traceId());
 		// tag::baggage[]
 		try (Tracer.SpanInScope ws = this.tracer.withSpan(initialSpan)) {
-			this.tracer.createBaggage(BUSINESS_PROCESS).updateValue("ALM");
-			this.tracer.createBaggage(COUNTRY_CODE).updateValue("FO");
+			this.tracer.createBaggage(BUSINESS_PROCESS).set("ALM");
+			this.tracer.createBaggage(COUNTRY_CODE).set("FO");
 			// end::baggage[]
 			// tag::baggage_tag[]
 			initialSpan.tag(BUSINESS_PROCESS, "ALM");

@@ -21,7 +21,10 @@ import java.util.Map;
 import io.grpc.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.trace.DefaultSpan;
+import io.opentelemetry.trace.SpanContext;
 import io.opentelemetry.trace.TracingContextUtils;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 import org.springframework.cloud.sleuth.api.Baggage;
 import org.springframework.cloud.sleuth.api.ScopedSpan;
@@ -50,7 +53,8 @@ public class OtelTracer implements Tracer {
 	@Override
 	public SpanInScope withSpan(Span span) {
 		return new OtelSpanInScope(
-				tracer.withSpan(span == null ? DefaultSpan.getInvalid() : ((OtelSpan) span).delegate));
+				tracer.withSpan(span == null ? DefaultSpan.getInvalid() : ((OtelSpan) span).delegate),
+				((OtelSpan) span).delegate.getContext());
 	}
 
 	@Override
@@ -120,14 +124,22 @@ public class OtelTracer implements Tracer {
 
 class OtelSpanInScope implements Tracer.SpanInScope {
 
+	private static final Log log = LogFactory.getLog(OtelSpanInScope.class);
+
 	final Scope delegate;
 
-	OtelSpanInScope(Scope delegate) {
+	final SpanContext spanContext;
+
+	OtelSpanInScope(Scope delegate, SpanContext spanContext) {
 		this.delegate = delegate;
+		this.spanContext = spanContext;
 	}
 
 	@Override
 	public void close() {
+		if (log.isTraceEnabled()) {
+			log.trace("Will close scope for trace context [" + this.spanContext + "]");
+		}
 		this.delegate.close();
 	}
 

@@ -18,26 +18,16 @@ package org.springframework.cloud.sleuth.api;
 
 import org.springframework.lang.Nullable;
 
+/**
+ * Taken from Brave.
+ */
 public interface Baggage {
 
-	/**
-	 * The non-empty name of the field. Ex "userId".
-	 *
-	 * @since 5.11
-	 */
 	String name();
 
-	/**
-	 *
-	 * @since 5.11
-	 */
 	@Nullable
-	String getValue();
+	String get();
 
-	/**
-	 *
-	 * @since 5.11
-	 */
-	void updateValue(String value);
+	void set(String value);
 
 }

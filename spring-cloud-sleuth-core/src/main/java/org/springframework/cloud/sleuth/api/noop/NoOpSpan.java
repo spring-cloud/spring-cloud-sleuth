@@ -42,11 +42,6 @@ class NoOpSpan implements Span {
 	}
 
 	@Override
-	public Span kind(Kind kind) {
-		return this;
-	}
-
-	@Override
 	public Span event(String value) {
 		return this;
 	}

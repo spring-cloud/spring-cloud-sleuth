@@ -16,6 +16,8 @@
 
 package org.springframework.cloud.sleuth.otel.bridge;
 
+import java.util.Objects;
+
 import io.opentelemetry.common.AttributeKey;
 import io.opentelemetry.common.Attributes;
 import io.opentelemetry.trace.EndSpanOptions;
@@ -56,12 +58,6 @@ public class OtelSpan implements Span {
 	@Override
 	public Span name(String name) {
 		this.delegate.updateName(name);
-		return new OtelSpan(this.delegate);
-	}
-
-	@Override
-	public Span kind(Kind kind) {
-		// TODO: Otel we'd need to go via builder
 		return new OtelSpan(this.delegate);
 	}
 
@@ -212,6 +208,28 @@ class SpanFromSpanContext implements io.opentelemetry.trace.Span {
 	@Override
 	public boolean isRecording() {
 		return span.isRecording();
+	}
+
+	@Override
+	public String toString() {
+		return "SpanFromSpanContext{" + "span=" + span + ", newSpanContext=" + newSpanContext + '}';
+	}
+
+	@Override
+	public boolean equals(Object o) {
+		if (this == o) {
+			return true;
+		}
+		if (o == null || getClass() != o.getClass()) {
+			return false;
+		}
+		SpanFromSpanContext that = (SpanFromSpanContext) o;
+		return Objects.equals(span, that.span) && Objects.equals(this.newSpanContext, that.newSpanContext);
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hash(this.span, this.newSpanContext);
 	}
 
 }
