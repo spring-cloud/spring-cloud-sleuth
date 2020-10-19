@@ -30,7 +30,7 @@ https://www.w3.org/2001/XMLSchema-instance ">
 
 	<parent>
 		<groupId>org.springframework.cloud</groupId>
-		<artifactId>spring-cloud-sleuth-tests</artifactId>
+		<artifactId>spring-cloud-sleuth-tests-brave</artifactId>
 		<version>3.0.0-SNAPSHOT</version>
 		<relativePath>..</relativePath>
 	</parent>
