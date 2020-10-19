@@ -22,7 +22,7 @@ import brave.sampler.Sampler;
 
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.cloud.sleuth.api.Span;
-import org.springframework.cloud.sleuth.api.exporter.ReportedSpan;
+import org.springframework.cloud.sleuth.api.exporter.FinishedSpan;
 import org.springframework.cloud.sleuth.brave.BraveTestSpanHandler;
 import org.springframework.cloud.sleuth.brave.bridge.BraveTraceContext;
 import org.springframework.cloud.sleuth.test.TestSpanHandler;
@@ -44,7 +44,7 @@ public class MultipleHopsIntegrationTests
 
 	@Override
 	protected void assertSpanNames() {
-		then(this.spans).extracting(ReportedSpan::name).containsAll(asList("GET /greeting", "send"));
+		then(this.spans).extracting(FinishedSpan::name).containsAll(asList("GET /greeting", "send"));
 	}
 
 	@Override

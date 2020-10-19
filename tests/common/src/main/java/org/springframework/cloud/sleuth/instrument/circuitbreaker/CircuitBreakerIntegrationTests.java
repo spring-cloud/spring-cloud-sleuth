@@ -29,7 +29,7 @@ import org.springframework.cloud.client.circuitbreaker.CircuitBreakerFactory;
 import org.springframework.cloud.sleuth.api.ScopedSpan;
 import org.springframework.cloud.sleuth.api.Span;
 import org.springframework.cloud.sleuth.api.Tracer;
-import org.springframework.cloud.sleuth.api.exporter.ReportedSpan;
+import org.springframework.cloud.sleuth.api.exporter.FinishedSpan;
 import org.springframework.cloud.sleuth.test.TestSpanHandler;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -93,20 +93,20 @@ public abstract class CircuitBreakerIntegrationTests {
 			BDDAssertions.then(scopedSpan.context().traceId()).isEqualTo(second.get().context().traceId());
 			BDDAssertions.then(first.get().context().spanId()).isNotEqualTo(second.get().context().spanId());
 
-			ReportedSpan reportedSpan = this.spans.get(0);
-			BDDAssertions.then(reportedSpan.name()).contains("CircuitBreakerIntegrationTests");
-			assertException(reportedSpan);
+			FinishedSpan finishedSpan = this.spans.get(0);
+			BDDAssertions.then(finishedSpan.name()).contains("CircuitBreakerIntegrationTests");
+			assertException(finishedSpan);
 
-			reportedSpan = this.spans.get(1);
-			BDDAssertions.then(reportedSpan.name()).contains("CircuitBreakerIntegrationTests");
-			assertException(reportedSpan);
+			finishedSpan = this.spans.get(1);
+			BDDAssertions.then(finishedSpan.name()).contains("CircuitBreakerIntegrationTests");
+			assertException(finishedSpan);
 		}
 		finally {
 			scopedSpan.end();
 		}
 	}
 
-	public void assertException(ReportedSpan reportedSpan) {
+	public void assertException(FinishedSpan finishedSpan) {
 		throw new UnsupportedOperationException("Implement this assertion");
 	}
 

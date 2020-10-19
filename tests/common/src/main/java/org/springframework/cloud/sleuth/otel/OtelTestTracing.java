@@ -65,6 +65,8 @@ public class OtelTestTracing implements TracerAware, TestTracingAware, TestTraci
 
 	io.opentelemetry.trace.Tracer tracer = otelTracer();
 
+	CurrentTraceContext currentTraceContext = new OtelCurrentTraceContext(this.tracer, publisher());
+
 	OtelBaggageManager otelBaggageManager = new OtelBaggageManager(this.tracer, OpenTelemetry.getBaggageManager(),
 			new SleuthBaggageProperties(), publisher());
 
@@ -84,6 +86,7 @@ public class OtelTestTracing implements TracerAware, TestTracingAware, TestTraci
 
 	private void reset() {
 		this.tracer = otelTracer();
+		this.currentTraceContext = new OtelCurrentTraceContext(this.tracer, publisher());
 	}
 
 	@Override

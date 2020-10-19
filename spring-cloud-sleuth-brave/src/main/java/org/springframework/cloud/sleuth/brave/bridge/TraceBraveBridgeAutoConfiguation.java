@@ -20,6 +20,7 @@ import brave.Tracing;
 
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.AutoConfigureBefore;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.cloud.sleuth.api.CurrentTraceContext;
 import org.springframework.cloud.sleuth.api.SpanCustomizer;
@@ -32,6 +33,7 @@ import org.springframework.context.annotation.Configuration;
 
 @Configuration(proxyBeanMethods = false)
 @ConditionalOnProperty(value = "spring.sleuth.enabled", matchIfMissing = true)
+@ConditionalOnBean(brave.Tracer.class)
 @AutoConfigureAfter(TraceBraveAutoConfiguration.class)
 @AutoConfigureBefore(TraceAutoConfiguration.class)
 public class TraceBraveBridgeAutoConfiguation {

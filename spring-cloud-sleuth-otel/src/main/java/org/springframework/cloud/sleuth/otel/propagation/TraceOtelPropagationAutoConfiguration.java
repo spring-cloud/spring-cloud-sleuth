@@ -40,7 +40,10 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.cloud.sleuth.api.BaggageManager;
+import org.springframework.cloud.sleuth.autoconfig.SleuthBaggageProperties;
 import org.springframework.cloud.sleuth.autoconfig.TraceAutoConfiguration;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -72,7 +75,6 @@ public class TraceOtelPropagationAutoConfiguration {
 	}
 
 	@Configuration(proxyBeanMethods = false)
-	@ConditionalOnMissingBean(TextMapPropagator.class)
 	@ConditionalOnClass(AwsXRayPropagator.class)
 	static class PropagatorsConfiguration {
 
@@ -87,7 +89,6 @@ public class TraceOtelPropagationAutoConfiguration {
 
 		}
 
-		// TODO: [OTEL] Making B3 a default
 		@Configuration(proxyBeanMethods = false)
 		@ConditionalOnProperty(name = "spring.sleuth.otel.propagation.type", havingValue = "B3", matchIfMissing = true)
 		@ConditionalOnClass(B3Propagator.class)
@@ -107,7 +108,7 @@ public class TraceOtelPropagationAutoConfiguration {
 		static class JaegerPropagatorConfiguration {
 
 			@Bean
-			TextMapPropagator otelTextMapPropagator() {
+			JaegerPropagator otelTextMapPropagator() {
 				return JaegerPropagator.getInstance();
 			}
 
@@ -119,7 +120,7 @@ public class TraceOtelPropagationAutoConfiguration {
 		static class OtTracerPropagatorConfiguration {
 
 			@Bean
-			TextMapPropagator otelTextMapPropagator() {
+			OtTracerPropagator otelTextMapPropagator() {
 				return OtTracerPropagator.getInstance();
 			}
 
@@ -131,7 +132,7 @@ public class TraceOtelPropagationAutoConfiguration {
 
 			@Bean
 			@ConditionalOnMissingBean
-			TextMapPropagator noOpTextMapPropagator() {
+			NoopTextMapPropagator noOpTextMapPropagator() {
 				return NoopTextMapPropagator.INSTANCE;
 			}
 
@@ -143,10 +144,23 @@ public class TraceOtelPropagationAutoConfiguration {
 
 			@Bean
 			@ConditionalOnMissingBean
-			TextMapPropagator noOpTextMapPropagator() {
+			NoopTextMapPropagator noOpTextMapPropagator() {
 				return NoopTextMapPropagator.INSTANCE;
 			}
 
+		}
+
+	}
+
+	@Configuration(proxyBeanMethods = false)
+	@ConditionalOnProperty(name = "spring.sleuth.otel.propagation.sleuth-baggage.enabled", matchIfMissing = true)
+	static class BaggagePropagatorConfiguration {
+
+		@Bean
+		TextMapPropagator baggageTextMapPropagator(SleuthBaggageProperties properties,
+				io.opentelemetry.baggage.BaggageManager otelBaggageManager, BaggageManager baggageManager,
+				ApplicationEventPublisher publisher) {
+			return new BaggageTextMapPropagator(properties, otelBaggageManager, baggageManager, publisher);
 		}
 
 	}

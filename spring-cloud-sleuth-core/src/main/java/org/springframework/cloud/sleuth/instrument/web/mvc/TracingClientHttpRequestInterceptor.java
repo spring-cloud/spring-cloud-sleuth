@@ -53,11 +53,11 @@ public final class TracingClientHttpRequestInterceptor implements ClientHttpRequ
 	@Override
 	public ClientHttpResponse intercept(HttpRequest req, byte[] body, ClientHttpRequestExecution execution)
 			throws IOException {
-		if (log.isDebugEnabled()) {
-			log.debug("Wrapping an outbound http call");
-		}
 		HttpRequestWrapper request = new HttpRequestWrapper(req);
 		Span span = handler.handleSend(request);
+		if (log.isDebugEnabled()) {
+			log.debug("Wrapping an outbound http call with span [" + span + "]");
+		}
 		ClientHttpResponse response = null;
 		Throwable error = null;
 		try (CurrentTraceContext.Scope ws = currentTraceContext.newScope(span.context())) {

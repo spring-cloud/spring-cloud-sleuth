@@ -19,6 +19,7 @@ package org.springframework.cloud.sleuth.brave.bridge;
 import brave.baggage.BaggageField;
 
 import org.springframework.cloud.sleuth.api.Baggage;
+import org.springframework.cloud.sleuth.api.TraceContext;
 
 public class BraveBaggage implements Baggage {
 
@@ -39,8 +40,18 @@ public class BraveBaggage implements Baggage {
 	}
 
 	@Override
+	public String get(TraceContext traceContext) {
+		return this.delegate.getValue(BraveTraceContext.toBrave(traceContext));
+	}
+
+	@Override
 	public void set(String value) {
 		this.delegate.updateValue(value);
+	}
+
+	@Override
+	public void set(TraceContext traceContext, String value) {
+		this.delegate.updateValue(BraveTraceContext.toBrave(traceContext), value);
 	}
 
 }

@@ -33,7 +33,7 @@ import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.cloud.sleuth.api.CurrentTraceContext;
 import org.springframework.cloud.sleuth.api.Span;
 import org.springframework.cloud.sleuth.api.TraceContext;
-import org.springframework.cloud.sleuth.api.exporter.ReportedSpan;
+import org.springframework.cloud.sleuth.api.exporter.FinishedSpan;
 import org.springframework.cloud.sleuth.test.TestSpanHandler;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -83,7 +83,7 @@ public abstract class ReactorNettyHttpClientSpringBootTests {
 
 		Assertions.assertThat(response.status()).isEqualTo(HttpResponseStatus.OK);
 
-		ReportedSpan clientSpan = this.handler.takeRemoteSpan(Span.Kind.CLIENT);
+		FinishedSpan clientSpan = this.handler.takeRemoteSpan(Span.Kind.CLIENT);
 
 		Assertions.assertThat(clientSpan.remoteIp()).isNotNull();
 		Assertions.assertThat(clientSpan.remotePort()).isNotZero();
@@ -101,11 +101,11 @@ public abstract class ReactorNettyHttpClientSpringBootTests {
 					.aggregate().asString().block();
 		}
 
-		ReportedSpan clientSpan = this.handler.takeRemoteSpan(Span.Kind.CLIENT);
+		FinishedSpan clientSpan = this.handler.takeRemoteSpan(Span.Kind.CLIENT);
 		assertSingleB3Header(b3SingleHeaderReadByServer, clientSpan, parent);
 	}
 
-	public void assertSingleB3Header(String b3SingleHeaderReadByServer, ReportedSpan clientSpan, TraceContext parent) {
+	public void assertSingleB3Header(String b3SingleHeaderReadByServer, FinishedSpan clientSpan, TraceContext parent) {
 		throw new UnsupportedOperationException("Implement this assertion");
 	}
 
@@ -120,10 +120,10 @@ public abstract class ReactorNettyHttpClientSpringBootTests {
 
 		String b3SingleHeaderReadByServer = request.block();
 
-		ReportedSpan clientSpan = this.handler.takeRemoteSpan(Span.Kind.CLIENT);
+		FinishedSpan clientSpan = this.handler.takeRemoteSpan(Span.Kind.CLIENT);
 
 		Assertions.assertThat(b3SingleHeaderReadByServer)
-				.isEqualTo(clientSpan.traceId() + "-" + clientSpan.id() + "-1");
+				.isEqualTo(clientSpan.traceId() + "-" + clientSpan.spanId() + "-1");
 	}
 
 	@Test

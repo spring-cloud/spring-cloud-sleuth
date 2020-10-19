@@ -109,7 +109,7 @@ public class TraceFilterTests extends org.springframework.cloud.sleuth.instrumen
 
 		BDDAssertions.then(this.tracer.currentSpan()).isNull();
 		BDDAssertions.then(this.spans).hasSize(1);
-		BDDAssertions.then(this.spans.get(0).id()).isEqualTo("0000000000000003");
+		BDDAssertions.then(this.spans.get(0).spanId()).isEqualTo("0000000000000003");
 		BDDAssertions.then(this.spans.get(0).tags()).containsEntry("http.path", "/").containsEntry("http.method",
 				HttpMethod.GET.toString());
 	}

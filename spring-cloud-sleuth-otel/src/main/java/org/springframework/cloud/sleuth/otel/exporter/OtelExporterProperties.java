@@ -16,8 +16,6 @@
 
 package org.springframework.cloud.sleuth.otel.exporter;
 
-import io.opentelemetry.exporters.zipkin.ZipkinSpanExporter;
-
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 /**
@@ -31,22 +29,12 @@ public class OtelExporterProperties {
 
 	private SleuthSpanFilter sleuthSpanFilter = new SleuthSpanFilter();
 
-	private Zipkin zipkin = new Zipkin();
-
 	public SleuthSpanFilter getSleuthSpanFilter() {
 		return this.sleuthSpanFilter;
 	}
 
 	public void setSleuthSpanFilter(SleuthSpanFilter sleuthSpanFilter) {
 		this.sleuthSpanFilter = sleuthSpanFilter;
-	}
-
-	public Zipkin getZipkin() {
-		return this.zipkin;
-	}
-
-	public void setZipkin(Zipkin zipkin) {
-		this.zipkin = zipkin;
 	}
 
 	/**
@@ -65,39 +53,6 @@ public class OtelExporterProperties {
 
 		public void setEnabled(boolean enabled) {
 			this.enabled = enabled;
-		}
-
-	}
-
-	/**
-	 * Zipkin exporter related properties.
-	 */
-	public static class Zipkin {
-
-		/**
-		 * This application service name.
-		 */
-		private String serviceName;
-
-		/**
-		 * Instrumentation version to be used to find a Tracer.
-		 */
-		private String zipkinEndpoint = ZipkinSpanExporter.DEFAULT_ENDPOINT;
-
-		public String getServiceName() {
-			return this.serviceName;
-		}
-
-		public void setServiceName(String serviceName) {
-			this.serviceName = serviceName;
-		}
-
-		public String getZipkinEndpoint() {
-			return this.zipkinEndpoint;
-		}
-
-		public void setZipkinEndpoint(String zipkinEndpoint) {
-			this.zipkinEndpoint = zipkinEndpoint;
 		}
 
 	}

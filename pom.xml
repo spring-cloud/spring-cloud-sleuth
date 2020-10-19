@@ -53,7 +53,6 @@
 		<module>spring-cloud-sleuth-zipkin</module>
 		<module>spring-cloud-starter-sleuth</module>
 		<module>spring-cloud-starter-sleuth-otel</module>
-		<module>spring-cloud-starter-zipkin</module>
 		<module>spring-cloud-sleuth-samples</module>
 		<module>docs</module>
 	</modules>

@@ -31,7 +31,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.cloud.sleuth.api.Span;
 import org.springframework.cloud.sleuth.api.Tracer;
 import org.springframework.cloud.sleuth.instrument.web.mvc.TracingClientHttpRequestInterceptor;
-import org.springframework.cloud.sleuth.api.exporter.ReportedSpan;
+import org.springframework.cloud.sleuth.api.exporter.FinishedSpan;
 import org.springframework.cloud.sleuth.test.TestSpanHandler;
 import org.springframework.cloud.sleuth.test.TestTracingAwareSupplier;
 import org.springframework.http.client.ClientHttpRequestFactory;
@@ -94,7 +94,7 @@ public abstract class TraceRestTemplateInterceptorIntegrationTests implements Te
 
 		// 1 span "new race", 1 span "rest template"
 		BDDAssertions.then(this.spans).hasSize(2);
-		ReportedSpan span1 = this.spans.get(0);
+		FinishedSpan span1 = this.spans.get(0);
 		BDDAssertions.then(span1.error()).hasMessage("Read timed out");
 		BDDAssertions.then(span1.kind()).isEqualTo(Span.Kind.CLIENT);
 	}

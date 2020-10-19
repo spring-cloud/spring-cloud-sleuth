@@ -24,17 +24,19 @@ import org.springframework.cloud.sleuth.api.Span;
 /**
  * Taken from Brave.
  */
-public interface ReportedSpan {
+public interface FinishedSpan {
 
 	String name();
+
+	long startTimestamp();
 
 	long endTimestamp();
 
 	Map<String, String> tags();
 
-	Collection<Map.Entry<Long, String>> annotations();
+	Collection<Map.Entry<Long, String>> events();
 
-	String id();
+	String spanId();
 
 	String parentId();
 

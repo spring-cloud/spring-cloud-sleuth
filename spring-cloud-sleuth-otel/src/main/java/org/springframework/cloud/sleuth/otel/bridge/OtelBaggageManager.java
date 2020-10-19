@@ -57,7 +57,6 @@ public class OtelBaggageManager implements BaggageManager, ApplicationListener<O
 		this.publisher = publisher;
 	}
 
-	@Override
 	public Map<String, String> getAllBaggage() {
 		Map<String, String> baggage = new HashMap<>();
 		currentBaggage().getEntries().forEach(entry -> baggage.put(entry.getKey(), entry.getValue()));
@@ -65,10 +64,9 @@ public class OtelBaggageManager implements BaggageManager, ApplicationListener<O
 	}
 
 	private io.opentelemetry.baggage.Baggage currentBaggage() {
-		return BaggageUtils.getBaggage(this.context.get());
+		return BaggageUtils.getBaggage(Context.current());
 	}
 
-	@Override
 	public Baggage getBaggage(String name) {
 		io.opentelemetry.baggage.Baggage baggage = currentBaggage();
 		Entry entry = entryForName(name, baggage);
@@ -88,7 +86,6 @@ public class OtelBaggageManager implements BaggageManager, ApplicationListener<O
 				this.context, name, entry.getEntryMetadata());
 	}
 
-	@Override
 	public Baggage createBaggage(String name) {
 		return baggageWithValue(name, "");
 	}

@@ -30,8 +30,8 @@ import io.opentelemetry.sdk.trace.export.SpanExporter;
 import org.jetbrains.annotations.NotNull;
 
 import org.springframework.cloud.sleuth.api.Span;
-import org.springframework.cloud.sleuth.api.exporter.ReportedSpan;
-import org.springframework.cloud.sleuth.otel.bridge.OtelReportedSpan;
+import org.springframework.cloud.sleuth.api.exporter.FinishedSpan;
+import org.springframework.cloud.sleuth.otel.bridge.OtelFinishedSpan;
 import org.springframework.cloud.sleuth.otel.exporter.ArrayListSpanProcessor;
 import org.springframework.cloud.sleuth.test.TestSpanHandler;
 
@@ -44,13 +44,13 @@ public class OtelTestSpanHandler implements TestSpanHandler, SpanProcessor, Span
 	}
 
 	@Override
-	public List<ReportedSpan> reportedSpans() {
-		return spanProcessor.spans().stream().map(OtelReportedSpan::new).collect(Collectors.toList());
+	public List<FinishedSpan> reportedSpans() {
+		return spanProcessor.spans().stream().map(OtelFinishedSpan::new).collect(Collectors.toList());
 	}
 
 	@Override
-	public ReportedSpan takeLocalSpan() {
-		return new OtelReportedSpan(spanProcessor.takeLocalSpan());
+	public FinishedSpan takeLocalSpan() {
+		return new OtelFinishedSpan(spanProcessor.takeLocalSpan());
 	}
 
 	@Override
@@ -59,25 +59,26 @@ public class OtelTestSpanHandler implements TestSpanHandler, SpanProcessor, Span
 	}
 
 	@Override
-	public ReportedSpan takeRemoteSpan(Span.Kind kind) {
+	public FinishedSpan takeRemoteSpan(Span.Kind kind) {
 		return reportedSpans().stream().filter(s -> s.kind().name().equals(kind.name())).findFirst()
 				.orElseThrow(() -> new AssertionError("No span with kind [" + kind.name() + "] found."));
 	}
 
 	@Override
-	public ReportedSpan takeRemoteSpanWithError(Span.Kind kind) {
-		// TODO: [OTEL] What does it mean?
-		return null;
+	public FinishedSpan takeRemoteSpanWithError(Span.Kind kind) {
+		return reportedSpans().stream().filter(s -> s.kind().name().equals(kind.name()) && s.error() != null)
+				.findFirst()
+				.orElseThrow(() -> new AssertionError("No span with kind [" + kind.name() + "] and error found."));
 	}
 
 	@Override
-	public ReportedSpan get(int index) {
+	public FinishedSpan get(int index) {
 		return reportedSpans().get(index);
 	}
 
 	@NotNull
 	@Override
-	public Iterator<ReportedSpan> iterator() {
+	public Iterator<FinishedSpan> iterator() {
 		return reportedSpans().iterator();
 	}
 

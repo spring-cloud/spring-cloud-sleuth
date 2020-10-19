@@ -19,7 +19,7 @@ package org.springframework.cloud.sleuth.brave.instrument.circuitbreaker;
 import org.assertj.core.api.BDDAssertions;
 
 import org.springframework.cloud.sleuth.brave.BraveTestTracing;
-import org.springframework.cloud.sleuth.api.exporter.ReportedSpan;
+import org.springframework.cloud.sleuth.api.exporter.FinishedSpan;
 import org.springframework.cloud.sleuth.test.TestTracingAware;
 
 public class CircuitBreakerTests
@@ -36,8 +36,8 @@ public class CircuitBreakerTests
 	}
 
 	@Override
-	public void additionalAssertions(ReportedSpan reportedSpan) {
-		BDDAssertions.then(reportedSpan.tags().get("error")).contains("boom2");
+	public void additionalAssertions(FinishedSpan finishedSpan) {
+		BDDAssertions.then(finishedSpan.tags().get("error")).contains("boom2");
 	}
 
 }

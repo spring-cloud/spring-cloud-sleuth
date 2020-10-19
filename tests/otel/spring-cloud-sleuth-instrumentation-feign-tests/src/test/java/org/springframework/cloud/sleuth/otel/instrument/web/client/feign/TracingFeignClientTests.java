@@ -20,7 +20,7 @@ import io.opentelemetry.common.AttributeKey;
 import org.assertj.core.api.BDDAssertions;
 
 import org.springframework.cloud.sleuth.otel.OtelTestTracing;
-import org.springframework.cloud.sleuth.otel.bridge.OtelReportedSpan;
+import org.springframework.cloud.sleuth.otel.bridge.OtelFinishedSpan;
 import org.springframework.cloud.sleuth.test.TestTracingAware;
 
 public class TracingFeignClientTests
@@ -38,7 +38,7 @@ public class TracingFeignClientTests
 
 	@Override
 	public void assertException(RuntimeException error) {
-		OtelReportedSpan.AssertingThrowable throwable = (OtelReportedSpan.AssertingThrowable) this.tracerTest()
+		OtelFinishedSpan.AssertingThrowable throwable = (OtelFinishedSpan.AssertingThrowable) this.tracerTest()
 				.handler().reportedSpans().get(0).error();
 		String message = throwable.attributes.get(AttributeKey.stringKey("exception.message"));
 		BDDAssertions.then(message).isEqualTo(error.getMessage());

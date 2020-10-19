@@ -18,14 +18,14 @@ package org.springframework.cloud.sleuth.otel;
 
 import org.assertj.core.api.BDDAssertions;
 
-import org.springframework.cloud.sleuth.api.exporter.ReportedSpan;
+import org.springframework.cloud.sleuth.api.exporter.FinishedSpan;
 import org.springframework.cloud.sleuth.test.TestTracingAssertions;
 
 public class OtelTestTracingAssertions implements TestTracingAssertions {
 
 	@Override
-	public void assertThatNoParentPresent(ReportedSpan reportedSpan) {
-		BDDAssertions.then(Long.valueOf(reportedSpan.parentId())).isEqualTo(0L);
+	public void assertThatNoParentPresent(FinishedSpan finishedSpan) {
+		BDDAssertions.then(Long.valueOf(finishedSpan.parentId())).isEqualTo(0L);
 	}
 
 	@Override

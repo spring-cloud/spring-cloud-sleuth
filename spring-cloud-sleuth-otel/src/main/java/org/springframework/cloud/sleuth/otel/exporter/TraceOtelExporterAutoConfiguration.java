@@ -18,22 +18,15 @@ package org.springframework.cloud.sleuth.otel.exporter;
 
 import java.util.List;
 
-import io.opentelemetry.exporters.zipkin.ZipkinSpanExporter;
-import io.opentelemetry.sdk.extensions.trace.export.DisruptorAsyncSpanProcessor;
 import io.opentelemetry.sdk.trace.export.SpanExporter;
 
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.AutoConfigureBefore;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.cloud.sleuth.api.exporter.SpanFilter;
 import org.springframework.cloud.sleuth.otel.autoconfig.TraceOtelAutoConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.core.env.Environment;
-import org.springframework.util.StringUtils;
 
 /**
  * {@link org.springframework.boot.autoconfigure.EnableAutoConfiguration
@@ -60,42 +53,6 @@ public class TraceOtelExporterAutoConfiguration {
 					return new CompositeSpanExporter(spanExporter, spanFilters);
 				}
 			};
-		}
-
-	}
-
-	// TODO: [OTEL] Move it to `spring-cloud-sleuth-zipkin` module
-	@Configuration(proxyBeanMethods = false)
-	@ConditionalOnClass(ZipkinSpanExporter.class)
-	@EnableConfigurationProperties(OtelZipkinProperties.class)
-	static class ZipkinConfiguration {
-
-		@Value("${spring.application.name:" + ZipkinSpanExporter.DEFAULT_SERVICE_NAME + "}")
-		String defaultServiceName;
-
-		@Bean
-		@ConditionalOnMissingBean
-		ZipkinSpanExporter otelZipkinSpanExporter(OtelZipkinProperties otelZipkinProperties, Environment env) {
-			return ZipkinSpanExporter.newBuilder().setEndpoint(otelZipkinProperties.getZipkinEndpoint())
-					.setServiceName(StringUtils.hasText(otelZipkinProperties.getServiceName())
-							? otelZipkinProperties.getServiceName()
-							: env.getProperty("spring.application.name",
-									env.getProperty("spring.zipkin.service.name",
-											ZipkinSpanExporter.DEFAULT_SERVICE_NAME)))
-					// TODO: add sender and encoder
-					.build();
-		}
-
-	}
-
-	@Configuration(proxyBeanMethods = false)
-	@ConditionalOnClass(DisruptorAsyncSpanProcessor.class)
-	static class DisruptorAsyncSpanProcessorConfiguration {
-
-		// TODO: [OTEL] how to use this? A BPP or what?
-		// @Bean
-		DisruptorAsyncSpanProcessor otelDisruptorAsyncSpanProcessor() {
-			return DisruptorAsyncSpanProcessor.newBuilder(null).build();
 		}
 
 	}

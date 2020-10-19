@@ -149,8 +149,7 @@ public abstract class SleuthSpanCreatorAspectTests {
 		BDDAssertions.then(this.spans).hasSize(1);
 		BDDAssertions.then(this.spans.get(0).name()).isEqualTo("foo");
 		BDDAssertions.then(this.spans.get(0).tags()).containsEntry("customTestTag10", "test");
-		BDDAssertions
-				.then(this.spans.get(0).annotations().stream().map(Map.Entry::getValue).collect(Collectors.toList()))
+		BDDAssertions.then(this.spans.get(0).events().stream().map(Map.Entry::getValue).collect(Collectors.toList()))
 				.contains("customTest.before", "customTest.after");
 		BDDAssertions.then(this.spans.get(0).endTimestamp()).isNotZero();
 		BDDAssertions.then(this.tracer.currentSpan()).isNull();
@@ -163,8 +162,7 @@ public abstract class SleuthSpanCreatorAspectTests {
 		BDDAssertions.then(this.spans).hasSize(1);
 		BDDAssertions.then(this.spans.get(0).name()).isEqualTo("test-method10");
 		BDDAssertions.then(this.spans.get(0).tags()).containsEntry("customTestTag10", "test");
-		BDDAssertions
-				.then(this.spans.get(0).annotations().stream().map(Map.Entry::getValue).collect(Collectors.toList()))
+		BDDAssertions.then(this.spans.get(0).events().stream().map(Map.Entry::getValue).collect(Collectors.toList()))
 				.contains("customTest.before", "customTest.after");
 		BDDAssertions.then(this.spans.get(0).endTimestamp()).isNotZero();
 		BDDAssertions.then(this.tracer.currentSpan()).isNull();
@@ -184,8 +182,7 @@ public abstract class SleuthSpanCreatorAspectTests {
 		BDDAssertions.then(this.spans).hasSize(1);
 		BDDAssertions.then(this.spans.get(0).name()).isEqualTo("foo");
 		BDDAssertions.then(this.spans.get(0).tags()).containsEntry("customTestTag10", "test");
-		BDDAssertions
-				.then(this.spans.get(0).annotations().stream().map(Map.Entry::getValue).collect(Collectors.toList()))
+		BDDAssertions.then(this.spans.get(0).events().stream().map(Map.Entry::getValue).collect(Collectors.toList()))
 				.contains("customTest.before", "customTest.after");
 		BDDAssertions.then(this.spans.get(0).endTimestamp()).isNotZero();
 		BDDAssertions.then(this.tracer.currentSpan()).isNull();
@@ -208,8 +205,7 @@ public abstract class SleuthSpanCreatorAspectTests {
 		BDDAssertions.then(this.spans.get(0).name()).isEqualTo("foo");
 		BDDAssertions.then(this.spans.get(0).tags()).containsEntry("class", "TestBean")
 				.containsEntry("method", "testMethod11").containsEntry("customTestTag11", "test");
-		BDDAssertions
-				.then(this.spans.get(0).annotations().stream().map(Map.Entry::getValue).collect(Collectors.toList()))
+		BDDAssertions.then(this.spans.get(0).events().stream().map(Map.Entry::getValue).collect(Collectors.toList()))
 				.contains("customTest.before", "customTest.after");
 		BDDAssertions.then(this.spans.get(0).endTimestamp()).isNotZero();
 		BDDAssertions.then(this.tracer.currentSpan()).isNull();
@@ -249,8 +245,7 @@ public abstract class SleuthSpanCreatorAspectTests {
 		BDDAssertions.then(this.spans).hasSize(1);
 		BDDAssertions.then(this.spans.get(0).name()).isEqualTo("foo");
 		BDDAssertions.then(this.spans.get(0).error()).hasMessageContaining("test exception 13");
-		BDDAssertions
-				.then(this.spans.get(0).annotations().stream().map(Map.Entry::getValue).collect(Collectors.toList()))
+		BDDAssertions.then(this.spans.get(0).events().stream().map(Map.Entry::getValue).collect(Collectors.toList()))
 				.contains("testMethod13.before", "testMethod13.afterFailure", "testMethod13.after");
 		BDDAssertions.then(this.spans.get(0).endTimestamp()).isNotZero();
 		BDDAssertions.then(this.tracer.currentSpan()).isNull();

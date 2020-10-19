@@ -12,21 +12,26 @@ import io.opentelemetry.common.Attributes;
 import io.opentelemetry.sdk.trace.data.SpanData;
 
 import org.springframework.cloud.sleuth.api.Span;
-import org.springframework.cloud.sleuth.api.exporter.ReportedSpan;
+import org.springframework.cloud.sleuth.api.exporter.FinishedSpan;
 
-public class OtelReportedSpan implements ReportedSpan {
+public class OtelFinishedSpan implements FinishedSpan {
 
 	private final SpanData spanData;
 
 	private final Map<String, String> tags = new HashMap<>();
 
-	public OtelReportedSpan(SpanData spanData) {
+	public OtelFinishedSpan(SpanData spanData) {
 		this.spanData = spanData;
 	}
 
 	@Override
 	public String name() {
 		return this.spanData.getName();
+	}
+
+	@Override
+	public long startTimestamp() {
+		return this.spanData.getStartEpochNanos();
 	}
 
 	@Override
@@ -48,13 +53,13 @@ public class OtelReportedSpan implements ReportedSpan {
 	}
 
 	@Override
-	public Collection<Map.Entry<Long, String>> annotations() {
+	public Collection<Map.Entry<Long, String>> events() {
 		return this.spanData.getEvents().stream()
 				.map(e -> new AbstractMap.SimpleEntry<>(e.getEpochNanos(), e.getName())).collect(Collectors.toList());
 	}
 
 	@Override
-	public String id() {
+	public String spanId() {
 		return this.spanData.getSpanId();
 	}
 
@@ -106,8 +111,8 @@ public class OtelReportedSpan implements ReportedSpan {
 		return "SpanDataToReportedSpan{" + "spanData=" + spanData + ", tags=" + tags + '}';
 	}
 
-	public static ReportedSpan fromOtel(SpanData span) {
-		return new OtelReportedSpan(span);
+	public static FinishedSpan fromOtel(SpanData span) {
+		return new OtelFinishedSpan(span);
 	}
 
 	public static class AssertingThrowable extends Throwable {

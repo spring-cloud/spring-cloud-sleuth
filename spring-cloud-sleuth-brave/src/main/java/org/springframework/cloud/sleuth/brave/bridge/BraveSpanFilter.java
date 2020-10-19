@@ -20,13 +20,13 @@ import brave.handler.MutableSpan;
 import brave.handler.SpanHandler;
 import brave.propagation.TraceContext;
 
-import org.springframework.cloud.sleuth.api.exporter.ReportedSpan;
+import org.springframework.cloud.sleuth.api.exporter.FinishedSpan;
 import org.springframework.cloud.sleuth.api.exporter.SpanFilter;
 
 public class BraveSpanFilter extends SpanHandler implements SpanFilter {
 
 	@Override
-	public boolean isExportable(ReportedSpan span) {
+	public boolean isExportable(FinishedSpan span) {
 		return false;
 	}
 

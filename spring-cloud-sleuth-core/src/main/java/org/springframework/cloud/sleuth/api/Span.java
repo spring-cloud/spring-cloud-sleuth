@@ -16,8 +16,6 @@
 
 package org.springframework.cloud.sleuth.api;
 
-import org.springframework.lang.Nullable;
-
 /**
  * Taken mostly from Brave.
  */

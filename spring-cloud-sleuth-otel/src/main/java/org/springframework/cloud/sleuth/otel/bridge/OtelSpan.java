@@ -17,7 +17,9 @@
 package org.springframework.cloud.sleuth.otel.bridge;
 
 import java.util.Objects;
+import java.util.concurrent.atomic.AtomicReference;
 
+import io.grpc.Context;
 import io.opentelemetry.common.AttributeKey;
 import io.opentelemetry.common.Attributes;
 import io.opentelemetry.trace.EndSpanOptions;
@@ -46,7 +48,7 @@ public class OtelSpan implements Span {
 		if (this.delegate == null) {
 			return null;
 		}
-		return new OtelTraceContext(this.delegate);
+		return new OtelTraceContext(this.delegate.getContext(), this.delegate);
 	}
 
 	@Override
@@ -110,9 +112,13 @@ class SpanFromSpanContext implements io.opentelemetry.trace.Span {
 
 	final SpanContext newSpanContext;
 
-	SpanFromSpanContext(io.opentelemetry.trace.Span span, SpanContext newSpanContext) {
+	final OtelTraceContext otelTraceContext;
+
+	SpanFromSpanContext(io.opentelemetry.trace.Span span, SpanContext newSpanContext,
+			OtelTraceContext otelTraceContext) {
 		this.span = span;
 		this.newSpanContext = newSpanContext;
+		this.otelTraceContext = otelTraceContext;
 	}
 
 	@Override

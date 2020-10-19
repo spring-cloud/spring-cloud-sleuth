@@ -14,36 +14,31 @@
  * limitations under the License.
  */
 
-package org.springframework.cloud.sleuth.api.noop;
+package org.springframework.cloud.sleuth.zipkin2;
 
-import org.springframework.cloud.sleuth.api.Baggage;
-import org.springframework.cloud.sleuth.api.TraceContext;
-
-public class NoOpBaggage implements Baggage {
+/**
+ * @author Matcin Wielgus
+ */
+public class BraveDefaultEndpointLocatorConfigurationTest extends DefaultEndpointLocatorConfigurationTest {
 
 	@Override
-	public String name() {
-		return null;
+	protected Class emptyConfiguration() {
+		return BraveEmptyConfiguration.class;
 	}
 
 	@Override
-	public String get() {
-		return null;
+	protected Class configurationWithRegistrationClass() {
+		return BraveConfigurationWithRegistration.class;
 	}
 
 	@Override
-	public String get(TraceContext traceContext) {
-		return null;
+	protected Class configurationWithCustomLocatorClass() {
+		return BraveConfigurationWithCustomLocator.class;
 	}
 
 	@Override
-	public void set(String value) {
-
-	}
-
-	@Override
-	public void set(TraceContext traceContext, String value) {
-
+	protected EndpointLocator locatorFromConfiguration() {
+		return BraveConfigurationWithCustomLocator.locator;
 	}
 
 }

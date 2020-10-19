@@ -58,7 +58,7 @@ import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.cloud.sleuth.api.Span;
 import org.springframework.cloud.sleuth.api.Tracer;
 import org.springframework.cloud.sleuth.instrument.web.TraceWebServletAutoConfiguration;
-import org.springframework.cloud.sleuth.api.exporter.ReportedSpan;
+import org.springframework.cloud.sleuth.api.exporter.FinishedSpan;
 import org.springframework.cloud.sleuth.test.TestSpanHandler;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -139,7 +139,7 @@ public abstract class WebClientTests {
 		Awaitility.await().atMost(2, TimeUnit.SECONDS).untilAsserted(() -> {
 			then(getHeader(response, "b3")).isNull();
 			then(this.spans).isNotEmpty();
-			Optional<ReportedSpan> noTraceSpan = this.spans.reportedSpans().stream()
+			Optional<FinishedSpan> noTraceSpan = this.spans.reportedSpans().stream()
 					.filter(span -> span.name().contains("GET") && !span.tags().isEmpty()
 							&& span.tags().containsKey("http.path"))
 					.findFirst();
@@ -305,14 +305,14 @@ public abstract class WebClientTests {
 		}
 
 		then(this.tracer.currentSpan()).isNull();
-		Optional<ReportedSpan> storedSpan = this.spans.reportedSpans().stream()
+		Optional<FinishedSpan> storedSpan = this.spans.reportedSpans().stream()
 				.filter(span -> "404".equals(span.tags().get("http.status_code"))).findFirst();
 		then(storedSpan.isPresent()).isTrue();
 		this.spans.reportedSpans().stream().forEach(span -> {
-			int initialSize = span.annotations().size();
-			int distinctSize = span.annotations().stream().map(Map.Entry::getValue).distinct()
-					.collect(Collectors.toList()).size();
-			log.info("logs " + span.annotations());
+			int initialSize = span.events().size();
+			int distinctSize = span.events().stream().map(Map.Entry::getValue).distinct().collect(Collectors.toList())
+					.size();
+			log.info("logs " + span.events());
 			then(initialSize).as("there are no duplicate log entries").isEqualTo(distinctSize);
 		});
 
@@ -493,7 +493,6 @@ public abstract class WebClientTests {
 
 		@RequestMapping(value = "/traceid", method = RequestMethod.GET)
 		public String traceId(@RequestHeader("b3") String b3Single) {
-			// TODO: [OTEL] Is it enough?
 			then(b3Single).isNotEmpty();
 			return b3Single;
 		}
@@ -509,7 +508,6 @@ public abstract class WebClientTests {
 
 		@RequestMapping("/noresponse")
 		public void noResponse(@RequestHeader("b3") String b3Single) {
-			// TODO: [OTEL] Is it enough?
 			then(b3Single).isNotEmpty();
 		}
 

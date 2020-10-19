@@ -18,14 +18,14 @@ package org.springframework.cloud.sleuth.brave;
 
 import org.assertj.core.api.BDDAssertions;
 
-import org.springframework.cloud.sleuth.api.exporter.ReportedSpan;
+import org.springframework.cloud.sleuth.api.exporter.FinishedSpan;
 import org.springframework.cloud.sleuth.test.TestTracingAssertions;
 
 public class BraveTestTracingAssertions implements TestTracingAssertions {
 
 	@Override
-	public void assertThatNoParentPresent(ReportedSpan reportedSpan) {
-		BDDAssertions.then(reportedSpan.parentId()).isNull();
+	public void assertThatNoParentPresent(FinishedSpan finishedSpan) {
+		BDDAssertions.then(finishedSpan.parentId()).isNull();
 	}
 
 }

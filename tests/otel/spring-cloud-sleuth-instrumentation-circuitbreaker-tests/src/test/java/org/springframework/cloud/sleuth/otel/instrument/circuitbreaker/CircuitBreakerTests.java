@@ -16,7 +16,12 @@
 
 package org.springframework.cloud.sleuth.otel.instrument.circuitbreaker;
 
+import io.opentelemetry.common.AttributeKey;
+import org.assertj.core.api.BDDAssertions;
+
+import org.springframework.cloud.sleuth.api.exporter.FinishedSpan;
 import org.springframework.cloud.sleuth.otel.OtelTestTracing;
+import org.springframework.cloud.sleuth.otel.bridge.OtelFinishedSpan;
 import org.springframework.cloud.sleuth.test.TestTracingAware;
 
 public class CircuitBreakerTests
@@ -30,6 +35,13 @@ public class CircuitBreakerTests
 			this.testTracing = new OtelTestTracing();
 		}
 		return this.testTracing;
+	}
+
+	@Override
+	public void additionalAssertions(FinishedSpan finishedSpan) {
+		OtelFinishedSpan.AssertingThrowable throwable = (OtelFinishedSpan.AssertingThrowable) finishedSpan.error();
+		String msg = throwable.attributes.get(AttributeKey.stringKey("exception.message"));
+		BDDAssertions.then(msg).contains("boom2");
 	}
 
 }

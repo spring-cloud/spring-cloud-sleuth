@@ -33,7 +33,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.web.servlet.context.ServletWebServerInitializedEvent;
 import org.springframework.cloud.sleuth.api.Span;
 import org.springframework.cloud.sleuth.api.Tracer;
-import org.springframework.cloud.sleuth.api.exporter.ReportedSpan;
+import org.springframework.cloud.sleuth.api.exporter.FinishedSpan;
 import org.springframework.cloud.sleuth.test.TestSpanHandler;
 import org.springframework.context.ApplicationListener;
 import org.springframework.context.annotation.Bean;
@@ -94,7 +94,7 @@ public abstract class MultipleHopsIntegrationTests {
 			then(this.spans).hasSize(14);
 		});
 		assertSpanNames();
-		then(this.spans).extracting(ReportedSpan::kind)
+		then(this.spans).extracting(FinishedSpan::kind)
 				// no server kind due to test constraints
 				.containsAll(asList(Span.Kind.CONSUMER, Span.Kind.PRODUCER, Span.Kind.SERVER));
 		then(this.spans.reportedSpans().stream().map(span -> span.tags().get("channel")).filter(Objects::nonNull)
@@ -133,14 +133,13 @@ public abstract class MultipleHopsIntegrationTests {
 			then(this.spans).isNotEmpty();
 		});
 
-		List<ReportedSpan> withBagTags = this.spans.reportedSpans().stream()
+		List<FinishedSpan> withBagTags = this.spans.reportedSpans().stream()
 				.filter(s -> s.tags().containsKey(BUSINESS_PROCESS)).collect(toList());
 
 		// set with tag api
 		then(withBagTags).as("only initialSpan was bag tagged").hasSize(1);
 		assertThat(withBagTags.get(0).tags()).containsEntry(BUSINESS_PROCESS, "ALM");
 
-		// TODO: Sth wrong with trace id propagation
 		Set<String> traceIds = this.application.allSpans().stream().map(s -> s.context().traceId())
 				.collect(Collectors.toSet());
 		then(traceIds).hasSize(1);

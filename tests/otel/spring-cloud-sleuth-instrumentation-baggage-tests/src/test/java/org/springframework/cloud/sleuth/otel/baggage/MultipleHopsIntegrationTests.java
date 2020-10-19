@@ -28,7 +28,7 @@ import org.springframework.cloud.sleuth.api.Span;
 import org.springframework.cloud.sleuth.otel.OtelTestSpanHandler;
 import org.springframework.cloud.sleuth.otel.bridge.OtelBaggage;
 import org.springframework.cloud.sleuth.otel.exporter.ArrayListSpanProcessor;
-import org.springframework.cloud.sleuth.api.exporter.ReportedSpan;
+import org.springframework.cloud.sleuth.api.exporter.FinishedSpan;
 import org.springframework.context.ApplicationListener;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -46,7 +46,7 @@ public class MultipleHopsIntegrationTests
 	// TODO: Why do we have empty names here
 	@Override
 	protected void assertSpanNames() {
-		then(this.spans).extracting(ReportedSpan::name).containsAll(asList("HTTP GET", "handle", "send"));
+		then(this.spans).extracting(FinishedSpan::name).containsAll(asList("HTTP GET", "handle", "send"));
 	}
 
 	@Autowired

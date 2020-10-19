@@ -23,8 +23,8 @@ import java.util.stream.Collectors;
 import brave.test.IntegrationTestSpanHandler;
 
 import org.springframework.cloud.sleuth.api.Span;
-import org.springframework.cloud.sleuth.api.exporter.ReportedSpan;
-import org.springframework.cloud.sleuth.brave.bridge.BraveReportedSpan;
+import org.springframework.cloud.sleuth.api.exporter.FinishedSpan;
+import org.springframework.cloud.sleuth.brave.bridge.BraveFinishedSpan;
 import org.springframework.cloud.sleuth.test.TestSpanHandler;
 
 public class BraveTestSpanHandler implements TestSpanHandler {
@@ -49,13 +49,13 @@ public class BraveTestSpanHandler implements TestSpanHandler {
 	}
 
 	@Override
-	public List<ReportedSpan> reportedSpans() {
-		return this.spans.spans().stream().map(BraveReportedSpan::new).collect(Collectors.toList());
+	public List<FinishedSpan> reportedSpans() {
+		return this.spans.spans().stream().map(BraveFinishedSpan::new).collect(Collectors.toList());
 	}
 
 	@Override
-	public ReportedSpan takeLocalSpan() {
-		return new BraveReportedSpan(this.integrationSpans.takeLocalSpan());
+	public FinishedSpan takeLocalSpan() {
+		return new BraveFinishedSpan(this.integrationSpans.takeLocalSpan());
 	}
 
 	@Override
@@ -66,23 +66,23 @@ public class BraveTestSpanHandler implements TestSpanHandler {
 	}
 
 	@Override
-	public ReportedSpan takeRemoteSpan(Span.Kind kind) {
-		return new BraveReportedSpan(this.integrationSpans.takeRemoteSpan(brave.Span.Kind.valueOf(kind.name())));
+	public FinishedSpan takeRemoteSpan(Span.Kind kind) {
+		return new BraveFinishedSpan(this.integrationSpans.takeRemoteSpan(brave.Span.Kind.valueOf(kind.name())));
 	}
 
 	@Override
-	public ReportedSpan takeRemoteSpanWithError(Span.Kind kind) {
-		return new BraveReportedSpan(
+	public FinishedSpan takeRemoteSpanWithError(Span.Kind kind) {
+		return new BraveFinishedSpan(
 				this.integrationSpans.takeRemoteSpanWithError(brave.Span.Kind.valueOf(kind.name())));
 	}
 
 	@Override
-	public ReportedSpan get(int index) {
-		return new BraveReportedSpan(this.spans.get(index));
+	public FinishedSpan get(int index) {
+		return new BraveFinishedSpan(this.spans.get(index));
 	}
 
 	@Override
-	public Iterator<ReportedSpan> iterator() {
+	public Iterator<FinishedSpan> iterator() {
 		return reportedSpans().iterator();
 	}
 

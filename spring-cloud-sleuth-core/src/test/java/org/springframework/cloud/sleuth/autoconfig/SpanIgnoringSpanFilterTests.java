@@ -25,14 +25,14 @@ import org.mockito.BDDMockito;
 import org.springframework.beans.factory.NoSuchBeanDefinitionException;
 import org.springframework.boot.autoconfigure.AutoConfigurations;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
-import org.springframework.cloud.sleuth.api.exporter.ReportedSpan;
+import org.springframework.cloud.sleuth.api.exporter.FinishedSpan;
 
 import static org.assertj.core.api.BDDAssertions.then;
 
 class SpanIgnoringSpanFilterTests {
 
-	private ReportedSpan namedSpan() {
-		ReportedSpan span = BDDMockito.mock(ReportedSpan.class);
+	private FinishedSpan namedSpan() {
+		FinishedSpan span = BDDMockito.mock(FinishedSpan.class);
 		BDDMockito.given(span.name()).willReturn("someName");
 		return span;
 	}

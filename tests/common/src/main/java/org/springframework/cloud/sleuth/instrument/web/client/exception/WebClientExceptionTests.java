@@ -18,10 +18,12 @@ package org.springframework.cloud.sleuth.instrument.web.client.exception;
 
 import java.io.IOException;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Stream;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.awaitility.Awaitility;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
@@ -93,8 +95,10 @@ public class WebClientExceptionTests {
 		}
 
 		then(this.tracer.currentSpan()).isNull();
-		then(this.spans).isNotEmpty();
-		then(this.spans.get(0).error()).isNotNull();
+		Awaitility.await().atMost(1, TimeUnit.SECONDS).untilAsserted(() -> {
+			then(this.spans).isNotEmpty();
+			then(this.spans.get(0).error()).isNotNull();
+		});
 	}
 
 	static Stream<Object> parametersForShouldCloseSpanUponException() {

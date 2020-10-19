@@ -28,6 +28,11 @@ public interface Baggage {
 	@Nullable
 	String get();
 
+	@Nullable
+	String get(TraceContext traceContext);
+
 	void set(String value);
+
+	void set(TraceContext traceContext, String value);
 
 }

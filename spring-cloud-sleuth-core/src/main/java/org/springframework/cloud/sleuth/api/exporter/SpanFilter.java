@@ -27,6 +27,6 @@ public interface SpanFilter {
 	 * @param span the collection of sampled Spans to be exported.
 	 * @return whether should export spans
 	 */
-	boolean isExportable(ReportedSpan span);
+	boolean isExportable(FinishedSpan span);
 
 }

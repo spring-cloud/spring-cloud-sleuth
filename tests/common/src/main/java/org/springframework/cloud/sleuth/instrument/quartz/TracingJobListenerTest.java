@@ -44,7 +44,7 @@ import org.quartz.utils.StringKeyDirtyFlagMap;
 
 import org.springframework.cloud.sleuth.api.Span;
 import org.springframework.cloud.sleuth.api.Tracer;
-import org.springframework.cloud.sleuth.api.exporter.ReportedSpan;
+import org.springframework.cloud.sleuth.api.exporter.FinishedSpan;
 import org.springframework.cloud.sleuth.test.TestTracingAwareSupplier;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -123,7 +123,7 @@ public abstract class TracingJobListenerTest implements TestTracingAwareSupplier
 		runJob(trigger);
 
 		// expect
-		ReportedSpan span = tracerTest().handler().takeLocalSpan();
+		FinishedSpan span = tracerTest().handler().takeLocalSpan();
 		assertThat(span.name()).isEqualToIgnoringCase(SUCCESSFUL_JOB_KEY.toString());
 		assertThat(span.tags().get(TRIGGER_TAG_KEY)).isEqualToIgnoringCase(TRIGGER_KEY.toString());
 	}
@@ -176,10 +176,10 @@ public abstract class TracingJobListenerTest implements TestTracingAwareSupplier
 		runJob(trigger);
 
 		// expect
-		ReportedSpan parent = tracerTest().handler().takeLocalSpan();
-		ReportedSpan child = tracerTest().handler().takeLocalSpan();
+		FinishedSpan parent = tracerTest().handler().takeLocalSpan();
+		FinishedSpan child = tracerTest().handler().takeLocalSpan();
 		tracerTest().assertions().assertThatNoParentPresent(parent);
-		assertThat(child.parentId()).isEqualTo(parent.id());
+		assertThat(child.parentId()).isEqualTo(parent.spanId());
 	}
 
 	@Test
@@ -194,11 +194,11 @@ public abstract class TracingJobListenerTest implements TestTracingAwareSupplier
 		runJob(trigger);
 
 		// expect
-		ReportedSpan parent = tracerTest().handler().takeLocalSpan();
-		ReportedSpan child = tracerTest().handler().takeLocalSpan();
+		FinishedSpan parent = tracerTest().handler().takeLocalSpan();
+		FinishedSpan child = tracerTest().handler().takeLocalSpan();
 		tracerTest().assertions().assertThatNoParentPresent(parent);
 		assertThat(child).isNotNull();
-		assertThat(child.parentId()).isEqualTo(parent.id());
+		assertThat(child.parentId()).isEqualTo(parent.spanId());
 	}
 
 	void runJob(Trigger trigger) throws SchedulerException {

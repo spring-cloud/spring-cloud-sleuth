@@ -25,7 +25,7 @@ import org.springframework.cloud.circuitbreaker.resilience4j.Resilience4JCircuit
 import org.springframework.cloud.sleuth.api.ScopedSpan;
 import org.springframework.cloud.sleuth.api.Span;
 import org.springframework.cloud.sleuth.api.Tracer;
-import org.springframework.cloud.sleuth.api.exporter.ReportedSpan;
+import org.springframework.cloud.sleuth.api.exporter.FinishedSpan;
 import org.springframework.cloud.sleuth.test.TestTracingAwareSupplier;
 
 public abstract class CircuitBreakerTests implements TestTracingAwareSupplier {
@@ -75,17 +75,17 @@ public abstract class CircuitBreakerTests implements TestTracingAwareSupplier {
 			BDDAssertions.then(scopedSpan.context().traceId()).isEqualTo(second.get().context().traceId());
 			BDDAssertions.then(first.get().context().spanId()).isNotEqualTo(second.get().context().spanId());
 
-			ReportedSpan reportedSpan = tracerTest().handler().reportedSpans().get(1);
-			BDDAssertions.then(reportedSpan.name()).contains("CircuitBreakerTests");
-			additionalAssertions(reportedSpan);
+			FinishedSpan finishedSpan = tracerTest().handler().reportedSpans().get(1);
+			BDDAssertions.then(finishedSpan.name()).contains("CircuitBreakerTests");
+			additionalAssertions(finishedSpan);
 		}
 		finally {
 			scopedSpan.end();
 		}
 	}
 
-	public void additionalAssertions(ReportedSpan reportedSpan) {
-
+	public void additionalAssertions(FinishedSpan finishedSpan) {
+		throw new UnsupportedOperationException("Assert errors");
 	}
 
 }

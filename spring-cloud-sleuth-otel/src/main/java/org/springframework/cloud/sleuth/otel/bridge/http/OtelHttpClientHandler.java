@@ -91,7 +91,7 @@ public class OtelHttpClientHandler extends HttpClientTracer<HttpClientRequest, H
 	}
 
 	private Span span(HttpClientRequest request, io.opentelemetry.trace.Span span) {
-		try (Scope scope2 = startScope(span, request)) {
+		try (Scope scope = startScope(span, request)) {
 			if (span.isRecording()) {
 				String remoteIp = request.remoteIp();
 				if (StringUtils.hasText(remoteIp)) {

@@ -26,7 +26,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.cloud.sleuth.api.TraceContext;
 import org.springframework.cloud.sleuth.brave.BraveTestSpanHandler;
 import org.springframework.cloud.sleuth.brave.bridge.BraveTraceContext;
-import org.springframework.cloud.sleuth.api.exporter.ReportedSpan;
+import org.springframework.cloud.sleuth.api.exporter.FinishedSpan;
 import org.springframework.cloud.sleuth.test.TestSpanHandler;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -44,9 +44,9 @@ public class ReactorNettyHttpClientSpringBootTests
 	}
 
 	@Override
-	public void assertSingleB3Header(String b3SingleHeaderReadByServer, ReportedSpan clientSpan, TraceContext parent) {
+	public void assertSingleB3Header(String b3SingleHeaderReadByServer, FinishedSpan clientSpan, TraceContext parent) {
 		Assertions.assertThat(b3SingleHeaderReadByServer)
-				.isEqualTo(parent.traceId() + "-" + clientSpan.id() + "-1-" + parent.spanId());
+				.isEqualTo(parent.traceId() + "-" + clientSpan.spanId() + "-1-" + parent.spanId());
 	}
 
 	@Configuration(proxyBeanMethods = false)

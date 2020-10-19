@@ -26,7 +26,7 @@ import java.util.stream.Collectors;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import org.springframework.cloud.sleuth.api.exporter.ReportedSpan;
+import org.springframework.cloud.sleuth.api.exporter.FinishedSpan;
 import org.springframework.cloud.sleuth.api.exporter.SpanFilter;
 import org.springframework.util.StringUtils;
 
@@ -60,7 +60,7 @@ class SpanIgnoringSpanFilter implements SpanFilter {
 	}
 
 	@Override
-	public boolean isExportable(ReportedSpan span) {
+	public boolean isExportable(FinishedSpan span) {
 		List<Pattern> spanNamesToIgnore = spanNamesToIgnore();
 		String name = span.name();
 		if (StringUtils.hasText(name) && spanNamesToIgnore.stream().anyMatch(p -> p.matcher(name).matches())) {

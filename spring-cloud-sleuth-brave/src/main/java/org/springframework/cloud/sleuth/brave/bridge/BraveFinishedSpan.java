@@ -22,19 +22,24 @@ import java.util.Map;
 import brave.handler.MutableSpan;
 
 import org.springframework.cloud.sleuth.api.Span;
-import org.springframework.cloud.sleuth.api.exporter.ReportedSpan;
+import org.springframework.cloud.sleuth.api.exporter.FinishedSpan;
 
-public class BraveReportedSpan implements ReportedSpan {
+public class BraveFinishedSpan implements FinishedSpan {
 
 	private final MutableSpan mutableSpan;
 
-	public BraveReportedSpan(MutableSpan mutableSpan) {
+	public BraveFinishedSpan(MutableSpan mutableSpan) {
 		this.mutableSpan = mutableSpan;
 	}
 
 	@Override
 	public String name() {
 		return this.mutableSpan.name();
+	}
+
+	@Override
+	public long startTimestamp() {
+		return this.mutableSpan.startTimestamp();
 	}
 
 	@Override
@@ -48,12 +53,12 @@ public class BraveReportedSpan implements ReportedSpan {
 	}
 
 	@Override
-	public Collection<Map.Entry<Long, String>> annotations() {
+	public Collection<Map.Entry<Long, String>> events() {
 		return this.mutableSpan.annotations();
 	}
 
 	@Override
-	public String id() {
+	public String spanId() {
 		return this.mutableSpan.id();
 	}
 
@@ -95,8 +100,13 @@ public class BraveReportedSpan implements ReportedSpan {
 		return this.mutableSpan.remoteServiceName();
 	}
 
-	public static ReportedSpan fromBrave(MutableSpan mutableSpan) {
-		return new BraveReportedSpan(mutableSpan);
+	public static FinishedSpan fromBrave(MutableSpan mutableSpan) {
+		return new BraveFinishedSpan(mutableSpan);
+	}
+
+	@Override
+	public String toString() {
+		return "BraveFinishedSpan{" + "mutableSpan=" + mutableSpan + '}';
 	}
 
 }

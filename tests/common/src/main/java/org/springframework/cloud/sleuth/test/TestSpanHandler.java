@@ -19,20 +19,20 @@ package org.springframework.cloud.sleuth.test;
 import java.util.List;
 
 import org.springframework.cloud.sleuth.api.Span;
-import org.springframework.cloud.sleuth.api.exporter.ReportedSpan;
+import org.springframework.cloud.sleuth.api.exporter.FinishedSpan;
 
-public interface TestSpanHandler extends Iterable<ReportedSpan> {
+public interface TestSpanHandler extends Iterable<FinishedSpan> {
 
-	List<ReportedSpan> reportedSpans();
+	List<FinishedSpan> reportedSpans();
 
-	ReportedSpan takeLocalSpan();
+	FinishedSpan takeLocalSpan();
 
 	void clear();
 
-	ReportedSpan takeRemoteSpan(Span.Kind kind);
+	FinishedSpan takeRemoteSpan(Span.Kind kind);
 
-	ReportedSpan takeRemoteSpanWithError(Span.Kind kind);
+	FinishedSpan takeRemoteSpanWithError(Span.Kind kind);
 
-	ReportedSpan get(int index);
+	FinishedSpan get(int index);
 
 }

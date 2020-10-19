@@ -16,14 +16,11 @@
 
 package org.springframework.cloud.sleuth.otel.sampler;
 
-import io.opentelemetry.sdk.extensions.trace.jaeger.sampler.JaegerRemoteSampler;
 import io.opentelemetry.trace.Tracer;
 
 import org.springframework.boot.autoconfigure.AutoConfigureBefore;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.cloud.sleuth.otel.autoconfig.TraceOtelAutoConfiguration;
-import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 /**
@@ -39,19 +36,17 @@ import org.springframework.context.annotation.Configuration;
 @AutoConfigureBefore(TraceOtelAutoConfiguration.class)
 public class TraceOtelSamplerAutoConfiguration {
 
-	@Configuration(proxyBeanMethods = false)
-	@ConditionalOnClass(JaegerRemoteSampler.class)
-	static class JaegerRemoteSamplerConfiguration {
-
-		@Bean
-		JaegerRemoteSampler.Builder otelJaegerRemoteSampler() {
-			return JaegerRemoteSampler.newBuilder();
-			// TODO: a BPP around an existing sampler?
-			// .setChannel()
-			// .setServiceName()
-			// .withInitialSampler();
-		}
-
-	}
+	/*
+	 * @Configuration(proxyBeanMethods = false)
+	 *
+	 * @ConditionalOnClass(JaegerRemoteSampler.class) static class
+	 * JaegerRemoteSamplerConfiguration {
+	 *
+	 * @Bean JaegerRemoteSampler.Builder otelJaegerRemoteSampler() { return
+	 * JaegerRemoteSampler.newBuilder(); // TODO: a BPP around an existing sampler? //
+	 * .setChannel() // .setServiceName() // .withInitialSampler(); }
+	 *
+	 * }
+	 */
 
 }

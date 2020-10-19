@@ -24,7 +24,7 @@ import io.opentelemetry.sdk.common.CompletableResultCode;
 import io.opentelemetry.sdk.trace.data.SpanData;
 
 import org.springframework.cloud.sleuth.api.exporter.SpanFilter;
-import org.springframework.cloud.sleuth.otel.bridge.OtelReportedSpan;
+import org.springframework.cloud.sleuth.otel.bridge.OtelFinishedSpan;
 
 class CompositeSpanExporter implements io.opentelemetry.sdk.trace.export.SpanExporter {
 
@@ -44,7 +44,7 @@ class CompositeSpanExporter implements io.opentelemetry.sdk.trace.export.SpanExp
 
 	private boolean shouldProcess(SpanData span) {
 		for (SpanFilter exporter : this.filters) {
-			if (!exporter.isExportable(OtelReportedSpan.fromOtel(span))) {
+			if (!exporter.isExportable(OtelFinishedSpan.fromOtel(span))) {
 				return false;
 			}
 		}

@@ -30,7 +30,11 @@ class OtelPropagationProperties {
 	/**
 	 * Type of propagation.
 	 */
+	// TODO: [OTEL] Allow this to be a list (same for Brave, maybe even push this property
+	// up)
 	private PropagationType type = PropagationType.B3;
+
+	private SleuthBaggage sleuthBaggage = new SleuthBaggage();
 
 	public PropagationType getType() {
 		return this.type;
@@ -38,6 +42,14 @@ class OtelPropagationProperties {
 
 	public void setType(PropagationType type) {
 		this.type = type;
+	}
+
+	public SleuthBaggage getSleuthBaggage() {
+		return this.sleuthBaggage;
+	}
+
+	public void setSleuthBaggage(SleuthBaggage sleuthBaggage) {
+		this.sleuthBaggage = sleuthBaggage;
 	}
 
 	enum PropagationType {
@@ -66,6 +78,20 @@ class OtelPropagationProperties {
 		 * Custom propagation type/
 		 */
 		CUSTOM
+
+	}
+
+	public static class SleuthBaggage {
+
+		private boolean enabled = true;
+
+		public boolean isEnabled() {
+			return this.enabled;
+		}
+
+		public void setEnabled(boolean enabled) {
+			this.enabled = enabled;
+		}
 
 	}
 

@@ -16,11 +16,11 @@
 
 package org.springframework.cloud.sleuth.test;
 
-import org.springframework.cloud.sleuth.api.exporter.ReportedSpan;
+import org.springframework.cloud.sleuth.api.exporter.FinishedSpan;
 
 public interface TestTracingAssertions {
 
-	void assertThatNoParentPresent(ReportedSpan reportedSpan);
+	void assertThatNoParentPresent(FinishedSpan finishedSpan);
 
 	default String or128Bit(String id) {
 		return id;

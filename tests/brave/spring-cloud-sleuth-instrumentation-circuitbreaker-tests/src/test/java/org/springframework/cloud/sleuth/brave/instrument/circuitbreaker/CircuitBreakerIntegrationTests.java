@@ -21,7 +21,7 @@ import org.assertj.core.api.BDDAssertions;
 
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.cloud.sleuth.brave.BraveTestSpanHandler;
-import org.springframework.cloud.sleuth.api.exporter.ReportedSpan;
+import org.springframework.cloud.sleuth.api.exporter.FinishedSpan;
 import org.springframework.cloud.sleuth.test.TestSpanHandler;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -53,8 +53,8 @@ public class CircuitBreakerIntegrationTests
 	}
 
 	@Override
-	public void assertException(ReportedSpan reportedSpan) {
-		BDDAssertions.then(reportedSpan.tags().get("error")).contains("boom");
+	public void assertException(FinishedSpan finishedSpan) {
+		BDDAssertions.then(finishedSpan.tags().get("error")).contains("boom");
 	}
 
 }

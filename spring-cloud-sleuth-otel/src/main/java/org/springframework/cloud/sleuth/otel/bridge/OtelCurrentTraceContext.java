@@ -55,8 +55,9 @@ public class OtelCurrentTraceContext implements CurrentTraceContext {
 
 	@Override
 	public Scope newScope(TraceContext context) {
-		SpanContext spanContext = ((OtelTraceContext) context).delegate;
-		Span fromContext = new SpanFromSpanContext(((OtelTraceContext) context).span, spanContext);
+		OtelTraceContext otelTraceContext = (OtelTraceContext) context;
+		SpanContext spanContext = otelTraceContext.delegate;
+		Span fromContext = new SpanFromSpanContext(((OtelTraceContext) context).span, spanContext, otelTraceContext);
 		this.publisher.publishEvent(new ScopeChanged(this, context));
 		return new OtelScope(new OtelSpanInScope(this.tracer.withSpan(fromContext), spanContext), publisher);
 	}
@@ -72,8 +73,8 @@ public class OtelCurrentTraceContext implements CurrentTraceContext {
 			}
 			return new OtelScope.RevertToPrevious(this.publisher, null);
 		}
-		Span fromContext = new SpanFromSpanContext(((OtelTraceContext) context).span,
-				((OtelTraceContext) context).delegate);
+		OtelTraceContext otelTraceContext = (OtelTraceContext) context;
+		Span fromContext = new SpanFromSpanContext(otelTraceContext.span, otelTraceContext.delegate, otelTraceContext);
 		Span currentSpan = this.tracer.getCurrentSpan();
 		if (log.isTraceEnabled()) {
 			log.trace("Span from context [" + fromContext + "], current span [" + currentSpan + "]");
@@ -145,9 +146,11 @@ class OtelScope implements CurrentTraceContext.Scope {
 
 	static class RevertToPrevious implements CurrentTraceContext.Scope {
 
-		private final ApplicationEventPublisher publisher;
+		private static final Log log = LogFactory.getLog(RevertToPrevious.class);
 
 		private static final LinkedBlockingDeque<TraceContext> CONTEXTS = new LinkedBlockingDeque<>();
+
+		private final ApplicationEventPublisher publisher;
 
 		RevertToPrevious(ApplicationEventPublisher publisher, TraceContext previous) {
 			this.publisher = publisher;
@@ -159,7 +162,11 @@ class OtelScope implements CurrentTraceContext.Scope {
 		@Override
 		public void close() {
 			publisher.publishEvent(new OtelCurrentTraceContext.ScopeClosed(this));
-			publisher.publishEvent(new OtelCurrentTraceContext.ScopeChanged(this, CONTEXTS.pollFirst()));
+			TraceContext context = CONTEXTS.pollFirst();
+			if (log.isTraceEnabled()) {
+				log.trace("Reverting scope to [" + context + "]");
+			}
+			publisher.publishEvent(new OtelCurrentTraceContext.ScopeChanged(this, context));
 		}
 
 	}
