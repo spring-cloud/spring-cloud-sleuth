@@ -31,6 +31,12 @@ import org.springframework.context.ApplicationEvent;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.lang.Nullable;
 
+/**
+ * OpenTelemetry implementation of a {@link CurrentTraceContext}.
+ *
+ * @author Marcin Grzejszczak
+ * @since 3.0.0
+ */
 public class OtelCurrentTraceContext implements CurrentTraceContext {
 
 	private static final Log log = LogFactory.getLog(OtelCurrentTraceContext.class);
@@ -96,13 +102,16 @@ public class OtelCurrentTraceContext implements CurrentTraceContext {
 
 	public static class ScopeChanged extends ApplicationEvent {
 
+		/**
+		 * Trace context corresponding to the changed scope. Might be {@code null}.
+		 */
 		public final TraceContext context;
 
 		/**
 		 * Create a new {@code ApplicationEvent}.
 		 * @param source the object on which the event initially occurred or with which
 		 * the event is associated (never {@code null})
-		 * @param context
+		 * @param context corresponding trace context
 		 */
 		public ScopeChanged(Object source, @Nullable TraceContext context) {
 			super(source);

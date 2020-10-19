@@ -22,6 +22,12 @@ import io.opentelemetry.trace.Span;
 import org.springframework.cloud.sleuth.api.ScopedSpan;
 import org.springframework.cloud.sleuth.api.TraceContext;
 
+/**
+ * OpenTelemetry implementation of a {@link ScopedSpan}.
+ *
+ * @author Marcin Grzejszczak
+ * @since 3.0.0
+ */
 public class OtelScopedSpan implements ScopedSpan {
 
 	final Span span;

@@ -22,11 +22,11 @@ package org.springframework.cloud.sleuth.brave.util;
  */
 public final class SpanUtil {
 
+	static final char[] HEX_DIGITS = { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f' };
+
 	private SpanUtil() {
 		throw new IllegalStateException("Can't instantiate a utility class");
 	}
-
-	static final char[] HEX_DIGITS = { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f' };
 
 	// Represents given long id as 16-character lower-hex string
 	public static String idToHex(long id) {

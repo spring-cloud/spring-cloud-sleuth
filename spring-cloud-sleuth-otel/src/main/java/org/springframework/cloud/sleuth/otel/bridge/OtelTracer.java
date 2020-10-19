@@ -18,11 +18,9 @@ package org.springframework.cloud.sleuth.otel.bridge;
 
 import java.util.Map;
 
-import io.grpc.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.trace.DefaultSpan;
 import io.opentelemetry.trace.SpanContext;
-import io.opentelemetry.trace.TracingContextUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -32,6 +30,12 @@ import org.springframework.cloud.sleuth.api.Span;
 import org.springframework.cloud.sleuth.api.SpanCustomizer;
 import org.springframework.cloud.sleuth.api.Tracer;
 
+/**
+ * OpenTelemetry implementation of a {@link Tracer}.
+ *
+ * @author Marcin Grzejszczak
+ * @since 3.0.0
+ */
 public class OtelTracer implements Tracer {
 
 	private final io.opentelemetry.trace.Tracer tracer;
@@ -48,8 +52,8 @@ public class OtelTracer implements Tracer {
 		if (parent == null) {
 			return nextSpan();
 		}
-		return OtelSpan
-				.fromOtel(this.tracer.spanBuilder("").setParent(OtelTraceContext.toOtelContext(parent.context())).startSpan());
+		return OtelSpan.fromOtel(
+				this.tracer.spanBuilder("").setParent(OtelTraceContext.toOtelContext(parent.context())).startSpan());
 	}
 
 	@Override
@@ -81,20 +85,6 @@ public class OtelTracer implements Tracer {
 	@Override
 	public ScopedSpan startScopedSpan(String name) {
 		io.opentelemetry.trace.Span span = this.tracer.spanBuilder(name).startSpan();
-		return new OtelScopedSpan(span, this.tracer.withSpan(span));
-	}
-
-	@Override
-	public ScopedSpan startScopedSpan(String name, Span parent) {
-		io.opentelemetry.trace.Span parentSpan = parent != null ? (((OtelSpan) parent).delegate) : null;
-		io.opentelemetry.trace.Span span;
-		if (parentSpan == null) {
-			span = this.tracer.spanBuilder(name).startSpan();
-		}
-		else {
-			span = this.tracer.spanBuilder(name).setParent(TracingContextUtils.withSpan(parentSpan, Context.current()))
-					.startSpan();
-		}
 		return new OtelScopedSpan(span, this.tracer.withSpan(span));
 	}
 

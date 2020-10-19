@@ -27,6 +27,12 @@ import io.opentelemetry.trace.TracingContextUtils;
 import org.springframework.cloud.sleuth.api.TraceContext;
 import org.springframework.lang.Nullable;
 
+/**
+ * OpenTelemetry implementation of a {@link TraceContext}.
+ *
+ * @author Marcin Grzejszczak
+ * @since 3.0.0
+ */
 public class OtelTraceContext implements TraceContext {
 
 	final SpanContext delegate;

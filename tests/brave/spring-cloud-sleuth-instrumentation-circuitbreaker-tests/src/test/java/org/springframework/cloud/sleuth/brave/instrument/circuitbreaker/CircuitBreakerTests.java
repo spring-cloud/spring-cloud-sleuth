@@ -18,8 +18,8 @@ package org.springframework.cloud.sleuth.brave.instrument.circuitbreaker;
 
 import org.assertj.core.api.BDDAssertions;
 
-import org.springframework.cloud.sleuth.brave.BraveTestTracing;
 import org.springframework.cloud.sleuth.api.exporter.FinishedSpan;
+import org.springframework.cloud.sleuth.brave.BraveTestTracing;
 import org.springframework.cloud.sleuth.test.TestTracingAware;
 
 public class CircuitBreakerTests

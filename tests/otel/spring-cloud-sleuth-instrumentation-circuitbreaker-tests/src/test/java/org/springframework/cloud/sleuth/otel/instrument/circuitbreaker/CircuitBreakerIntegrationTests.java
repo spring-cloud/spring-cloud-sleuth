@@ -23,9 +23,9 @@ import org.assertj.core.api.BDDAssertions;
 
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.cloud.sleuth.api.exporter.FinishedSpan;
+import org.springframework.cloud.sleuth.otel.OtelTestSpanHandler;
 import org.springframework.cloud.sleuth.otel.bridge.OtelFinishedSpan;
 import org.springframework.cloud.sleuth.otel.exporter.ArrayListSpanProcessor;
-import org.springframework.cloud.sleuth.otel.OtelTestSpanHandler;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.test.context.ContextConfiguration;
@@ -34,6 +34,13 @@ import org.springframework.test.context.ContextConfiguration;
 @ContextConfiguration(classes = CircuitBreakerIntegrationTests.Config.class)
 public class CircuitBreakerIntegrationTests
 		extends org.springframework.cloud.sleuth.instrument.circuitbreaker.CircuitBreakerIntegrationTests {
+
+	@Override
+	public void assertException(FinishedSpan finishedSpan) {
+		OtelFinishedSpan.AssertingThrowable throwable = (OtelFinishedSpan.AssertingThrowable) finishedSpan.error();
+		String msg = throwable.attributes.get(AttributeKey.stringKey("exception.message"));
+		BDDAssertions.then(msg).contains("boom");
+	}
 
 	@Configuration(proxyBeanMethods = false)
 	static class Config {
@@ -48,13 +55,6 @@ public class CircuitBreakerIntegrationTests
 			return Samplers.alwaysOn();
 		}
 
-	}
-
-	@Override
-	public void assertException(FinishedSpan finishedSpan) {
-		OtelFinishedSpan.AssertingThrowable throwable = (OtelFinishedSpan.AssertingThrowable) finishedSpan.error();
-		String msg = throwable.attributes.get(AttributeKey.stringKey("exception.message"));
-		BDDAssertions.then(msg).contains("boom");
 	}
 
 }

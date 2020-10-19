@@ -75,7 +75,7 @@ class OtelPropagationProperties {
 		OT_TRACER,
 
 		/**
-		 * Custom propagation type/
+		 * Custom propagation type.
 		 */
 		CUSTOM
 

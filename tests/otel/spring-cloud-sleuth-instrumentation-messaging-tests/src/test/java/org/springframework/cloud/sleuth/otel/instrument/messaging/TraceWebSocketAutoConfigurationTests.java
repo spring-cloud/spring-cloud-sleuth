@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.springframework.cloud.sleuth.otel.annotation;
+package org.springframework.cloud.sleuth.otel.instrument.messaging;
 
 import io.opentelemetry.sdk.trace.Sampler;
 import io.opentelemetry.sdk.trace.Samplers;
@@ -26,10 +26,13 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.test.context.ContextConfiguration;
 
+/**
+ * @author Marcin Grzejszczak
+ */
 @SpringBootTest
-@ContextConfiguration(classes = SleuthSpanCreatorAspectTests.Config.class)
-public class SleuthSpanCreatorAspectTests
-		extends org.springframework.cloud.sleuth.annotation.SleuthSpanCreatorAspectTests {
+@ContextConfiguration(classes = TraceWebSocketAutoConfigurationTests.Config.class)
+public class TraceWebSocketAutoConfigurationTests
+		extends org.springframework.cloud.sleuth.instrument.messaging.TraceWebSocketAutoConfigurationTests {
 
 	@Configuration(proxyBeanMethods = false)
 	static class Config {

@@ -18,9 +18,20 @@ package org.springframework.cloud.sleuth.otel.exporter;
 
 import io.opentelemetry.sdk.trace.export.SpanExporter;
 
-public interface SpanExporterConverter {
+/**
+ * Allows customization of a {@link SpanExporter}.
+ *
+ * @author Marcin Grzejszczak
+ * @since 3.0.0
+ */
+public interface SpanExporterCustomizer {
 
-	default SpanExporter get(SpanExporter spanExporter) {
+	/**
+	 * Customizes a span exporter.
+	 * @param spanExporter to customize
+	 * @return customized span exporter
+	 */
+	default SpanExporter customize(SpanExporter spanExporter) {
 		return spanExporter;
 	}
 

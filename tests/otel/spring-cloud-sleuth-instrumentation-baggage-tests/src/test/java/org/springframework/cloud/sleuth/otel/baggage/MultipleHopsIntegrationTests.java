@@ -25,10 +25,10 @@ import io.opentelemetry.sdk.trace.Samplers;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.cloud.sleuth.api.Span;
+import org.springframework.cloud.sleuth.api.exporter.FinishedSpan;
 import org.springframework.cloud.sleuth.otel.OtelTestSpanHandler;
 import org.springframework.cloud.sleuth.otel.bridge.OtelBaggageEntry;
 import org.springframework.cloud.sleuth.otel.exporter.ArrayListSpanProcessor;
-import org.springframework.cloud.sleuth.api.exporter.FinishedSpan;
 import org.springframework.context.ApplicationListener;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -43,14 +43,14 @@ import static org.springframework.boot.test.context.SpringBootTest.WebEnvironmen
 public class MultipleHopsIntegrationTests
 		extends org.springframework.cloud.sleuth.baggage.multiple.MultipleHopsIntegrationTests {
 
+	@Autowired
+	MyBaggageChangedListener myBaggageChangedListener;
+
 	// TODO: Why do we have empty names here
 	@Override
 	protected void assertSpanNames() {
 		then(this.spans).extracting(FinishedSpan::name).containsAll(asList("HTTP GET", "handle", "send"));
 	}
-
-	@Autowired
-	MyBaggageChangedListener myBaggageChangedListener;
 
 	@Override
 	protected void assertBaggage(Span initialSpan) {

@@ -51,7 +51,7 @@ import org.springframework.messaging.support.MessageHeaderAccessor;
 @Configuration(proxyBeanMethods = false)
 @ConditionalOnProperty(value = "spring.sleuth.function.enabled", matchIfMissing = true)
 @ConditionalOnBean(Tracer.class)
-@ConditionalOnClass(FunctionAroundWrapper.class)
+@ConditionalOnClass({ FunctionAroundWrapper.class, RefreshScopeRefreshedEvent.class })
 @AutoConfigureAfter(TraceAutoConfiguration.class)
 class TraceFunctionAutoConfiguration {
 

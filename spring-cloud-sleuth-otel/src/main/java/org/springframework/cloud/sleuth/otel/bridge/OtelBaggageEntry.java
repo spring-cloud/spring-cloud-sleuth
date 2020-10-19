@@ -30,6 +30,12 @@ import org.springframework.cloud.sleuth.autoconfig.SleuthBaggageProperties;
 import org.springframework.context.ApplicationEvent;
 import org.springframework.context.ApplicationEventPublisher;
 
+/**
+ * OpenTelemetry implementation of a {@link BaggageEntry}.
+ *
+ * @author Marcin Grzejszczak
+ * @since 3.0.0
+ */
 // TODO: [OTEL] Experimental - doesn't really work
 public class OtelBaggageEntry implements BaggageEntry {
 
@@ -97,8 +103,14 @@ public class OtelBaggageEntry implements BaggageEntry {
 
 	public static class BaggageChanged extends ApplicationEvent {
 
+		/**
+		 * Baggage entry name.
+		 */
 		public String name;
 
+		/**
+		 * Baggage entry value.
+		 */
 		public String value;
 
 		public BaggageChanged(OtelBaggageEntry source, String name, String value) {

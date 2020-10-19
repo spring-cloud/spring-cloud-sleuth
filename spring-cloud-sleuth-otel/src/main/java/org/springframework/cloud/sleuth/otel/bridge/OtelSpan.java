@@ -17,9 +17,7 @@
 package org.springframework.cloud.sleuth.otel.bridge;
 
 import java.util.Objects;
-import java.util.concurrent.atomic.AtomicReference;
 
-import io.grpc.Context;
 import io.opentelemetry.common.AttributeKey;
 import io.opentelemetry.common.Attributes;
 import io.opentelemetry.trace.EndSpanOptions;
@@ -30,6 +28,12 @@ import org.springframework.cloud.sleuth.api.Span;
 import org.springframework.cloud.sleuth.api.TraceContext;
 import org.springframework.lang.Nullable;
 
+/**
+ * OpenTelemetry implementation of a {@link Span}.
+ *
+ * @author Marcin Grzejszczak
+ * @since 3.0.0
+ */
 public class OtelSpan implements Span {
 
 	final io.opentelemetry.trace.Span delegate;

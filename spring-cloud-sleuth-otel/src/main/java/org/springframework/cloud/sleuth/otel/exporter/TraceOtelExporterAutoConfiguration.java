@@ -30,7 +30,7 @@ import org.springframework.context.annotation.Configuration;
 
 /**
  * {@link org.springframework.boot.autoconfigure.EnableAutoConfiguration
- * Auto-configuration} to enable OTel exporters.
+ * Auto-configuration} to enable OpenTelemetry exporters.
  *
  * @author Marcin Grzejszczak
  * @since 3.0.0
@@ -46,10 +46,10 @@ public class TraceOtelExporterAutoConfiguration {
 
 		@Bean
 		@ConditionalOnProperty(value = "spring.sleuth.otel.exporter.sleuth-span-filter.enabled", matchIfMissing = true)
-		SpanExporterConverter sleuthSpanFilterConverter(List<SpanFilter> spanFilters) {
-			return new SpanExporterConverter() {
+		SpanExporterCustomizer sleuthSpanFilterConverter(List<SpanFilter> spanFilters) {
+			return new SpanExporterCustomizer() {
 				@Override
-				public SpanExporter get(SpanExporter spanExporter) {
+				public SpanExporter customize(SpanExporter spanExporter) {
 					return new CompositeSpanExporter(spanExporter, spanFilters);
 				}
 			};

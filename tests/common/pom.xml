@@ -34,6 +34,13 @@
 		<relativePath>..</relativePath>
 	</parent>
 
+	<properties>
+		<skip.check>true</skip.check>
+		<check.skip>true</check.skip>
+		<disable.checks>true</disable.checks>
+		<maven.javadoc.skip>true</maven.javadoc.skip>
+	</properties>
+
 	<build>
 		<pluginManagement>
 			<plugins>

@@ -148,6 +148,12 @@ public class ZipkinAutoConfiguration {
 		return new DefaultZipkinRestTemplateCustomizer(zipkinProperties);
 	}
 
+	@Bean
+	@ConditionalOnMissingBean
+	ReporterMetrics sleuthReporterMetrics() {
+		return new InMemoryReporterMetrics();
+	}
+
 	@Configuration(proxyBeanMethods = false)
 	@ConditionalOnMissingBean(EndpointLocator.class)
 	@ConditionalOnProperty(value = "spring.zipkin.locator.discovery.enabled", havingValue = "false",
@@ -238,12 +244,6 @@ public class ZipkinAutoConfiguration {
 
 		}
 
-	}
-
-	@Bean
-	@ConditionalOnMissingBean
-	ReporterMetrics sleuthReporterMetrics() {
-		return new InMemoryReporterMetrics();
 	}
 
 }

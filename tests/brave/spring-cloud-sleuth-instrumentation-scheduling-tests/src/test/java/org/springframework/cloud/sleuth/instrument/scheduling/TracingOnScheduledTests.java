@@ -212,11 +212,9 @@ class TestBeanWithScheduledMethodThatThrowsAnException {
 		this.tracing = tracing;
 	}
 
-	@Scheduled(fixedDelay = 1L)
+	@Scheduled(fixedDelay = 100L)
 	public void scheduledMethod() {
-		log.info("Running the scheduled method");
 		this.span = this.tracing.tracer().currentSpan();
-		log.info("Stored the span " + this.span + " as current span");
 		this.executed.set(true);
 		throw new RuntimeException("HELLO");
 	}
@@ -248,7 +246,7 @@ class TestBeanWithScheduledMethodToBeIgnored {
 		this.tracing = tracing;
 	}
 
-	@Scheduled(fixedDelay = 1000L)
+	@Scheduled(fixedDelay = 100L)
 	public void scheduledMethodToIgnore() {
 		this.span = this.tracing.tracer().currentSpan();
 		this.executed.set(true);

@@ -127,7 +127,7 @@ public class TraceOtelPropagationAutoConfiguration {
 		}
 
 		@Configuration(proxyBeanMethods = false)
-		@ConditionalOnMissingClass(value = "io.opentelemetry.extensions.trace.propagation.TraceMultiPropagator")
+		@ConditionalOnMissingClass("io.opentelemetry.extensions.trace.propagation.TraceMultiPropagator")
 		static class NoExtraPropagatorsConfiguration {
 
 			@Bean

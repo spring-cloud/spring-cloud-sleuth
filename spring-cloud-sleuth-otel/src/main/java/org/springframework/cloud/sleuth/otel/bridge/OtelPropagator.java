@@ -29,6 +29,12 @@ import org.springframework.cloud.sleuth.api.Span;
 import org.springframework.cloud.sleuth.api.TraceContext;
 import org.springframework.cloud.sleuth.api.propagation.Propagator;
 
+/**
+ * OpenTelemetry implementation of a {@link Propagator}.
+ *
+ * @author Marcin Grzejszczak
+ * @since 3.0.0
+ */
 public class OtelPropagator implements Propagator {
 
 	private final TextMapPropagator propagator;

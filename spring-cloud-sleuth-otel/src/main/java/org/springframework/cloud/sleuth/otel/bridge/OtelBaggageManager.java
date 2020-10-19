@@ -35,6 +35,12 @@ import org.springframework.cloud.sleuth.autoconfig.SleuthBaggageProperties;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.ApplicationListener;
 
+/**
+ * OpenTelemetry implementation of a {@link BaggageManager}.
+ *
+ * @author Marcin Grzejszczak
+ * @since 3.0.0
+ */
 public class OtelBaggageManager implements BaggageManager, ApplicationListener<OtelBaggageEntry.BaggageScopeEnded> {
 
 	private static final Log log = LogFactory.getLog(OtelBaggageManager.class);

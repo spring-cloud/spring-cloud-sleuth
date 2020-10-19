@@ -20,7 +20,7 @@ import org.assertj.core.api.BDDAssertions;
 import org.junit.jupiter.api.Test;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.cloud.sleuth.instrument.DefaultTestAutoConfiguration;
+import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.messaging.simp.config.MessageBrokerRegistry;
 import org.springframework.test.context.ContextConfiguration;
@@ -32,7 +32,7 @@ import org.springframework.web.socket.config.annotation.StompEndpointRegistry;
 /**
  * @author Marcin Grzejszczak
  */
-@ContextConfiguration(classes = TraceWebSocketAutoConfigurationTests.Config.class)
+@ContextConfiguration(classes = TraceWebSocketAutoConfigurationTests.TestConfig.class)
 public abstract class TraceWebSocketAutoConfigurationTests {
 
 	@Autowired
@@ -48,10 +48,10 @@ public abstract class TraceWebSocketAutoConfigurationTests {
 				.hasAtLeastOneElementOfType(TracingChannelInterceptor.class);
 	}
 
-	@DefaultTestAutoConfiguration
+	@EnableAutoConfiguration
 	@Configuration(proxyBeanMethods = false)
 	@EnableWebSocketMessageBroker
-	public static class Config extends AbstractWebSocketMessageBrokerConfigurer {
+	public static class TestConfig extends AbstractWebSocketMessageBrokerConfigurer {
 
 		@Override
 		public void configureMessageBroker(MessageBrokerRegistry config) {

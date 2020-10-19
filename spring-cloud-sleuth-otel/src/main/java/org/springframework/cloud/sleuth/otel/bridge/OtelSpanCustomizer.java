@@ -22,6 +22,12 @@ import io.opentelemetry.trace.Tracer;
 import org.springframework.cloud.sleuth.api.SpanCustomizer;
 import org.springframework.lang.NonNull;
 
+/**
+ * OpenTelemetry implementation of a {@link SpanCustomizer}.
+ *
+ * @author Marcin Grzejszczak
+ * @since 3.0.0
+ */
 public class OtelSpanCustomizer implements SpanCustomizer {
 
 	private final Tracer tracer;
