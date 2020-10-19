@@ -47,7 +47,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.tuple;
 import static org.assertj.core.api.InstanceOfAssertFactories.array;
 
-public class TraceBaggageConfigurationTests {
+public class TraceBaggageEntryConfigurationTests {
 
 	static final String[] EMPTY_ARRAY = {};
 

@@ -19,13 +19,13 @@ package org.springframework.cloud.sleuth.instrument.async;
 import java.util.concurrent.Callable;
 import java.util.concurrent.Future;
 
-import org.springframework.cloud.sleuth.api.Tracer;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.NoSuchBeanDefinitionException;
 import org.springframework.cloud.sleuth.SpanNamer;
+import org.springframework.cloud.sleuth.api.Tracer;
 import org.springframework.cloud.sleuth.internal.DefaultSpanNamer;
 import org.springframework.core.task.AsyncTaskExecutor;
 

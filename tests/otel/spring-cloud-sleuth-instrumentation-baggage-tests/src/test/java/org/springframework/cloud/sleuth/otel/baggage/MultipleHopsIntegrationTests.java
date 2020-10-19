@@ -26,7 +26,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.cloud.sleuth.api.Span;
 import org.springframework.cloud.sleuth.otel.OtelTestSpanHandler;
-import org.springframework.cloud.sleuth.otel.bridge.OtelBaggage;
+import org.springframework.cloud.sleuth.otel.bridge.OtelBaggageEntry;
 import org.springframework.cloud.sleuth.otel.exporter.ArrayListSpanProcessor;
 import org.springframework.cloud.sleuth.api.exporter.FinishedSpan;
 import org.springframework.context.ApplicationListener;
@@ -83,12 +83,12 @@ public class MultipleHopsIntegrationTests
 
 }
 
-class MyBaggageChangedListener implements ApplicationListener<OtelBaggage.BaggageChanged> {
+class MyBaggageChangedListener implements ApplicationListener<OtelBaggageEntry.BaggageChanged> {
 
-	Queue<OtelBaggage.BaggageChanged> baggageChanged = new LinkedBlockingQueue<>();
+	Queue<OtelBaggageEntry.BaggageChanged> baggageChanged = new LinkedBlockingQueue<>();
 
 	@Override
-	public void onApplicationEvent(OtelBaggage.BaggageChanged event) {
+	public void onApplicationEvent(OtelBaggageEntry.BaggageChanged event) {
 		this.baggageChanged.add(event);
 	}
 

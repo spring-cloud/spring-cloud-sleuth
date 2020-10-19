@@ -22,12 +22,12 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import brave.baggage.BaggageField;
 
-import org.springframework.cloud.sleuth.api.Baggage;
+import org.springframework.cloud.sleuth.api.BaggageEntry;
 import org.springframework.cloud.sleuth.api.BaggageManager;
 
 public class BraveBaggageManager implements BaggageManager, Closeable {
 
-	private static Map<String, Baggage> CACHE = new ConcurrentHashMap<>();
+	private static Map<String, BaggageEntry> CACHE = new ConcurrentHashMap<>();
 
 	@Override
 	public Map<String, String> getAllBaggage() {
@@ -35,13 +35,13 @@ public class BraveBaggageManager implements BaggageManager, Closeable {
 	}
 
 	@Override
-	public Baggage getBaggage(String name) {
+	public BaggageEntry getBaggage(String name) {
 		return createBaggage(name);
 	}
 
 	@Override
-	public Baggage createBaggage(String name) {
-		return CACHE.computeIfAbsent(name, s -> new BraveBaggage(BaggageField.create(s)));
+	public BaggageEntry createBaggage(String name) {
+		return CACHE.computeIfAbsent(name, s -> new BraveBaggageEntry(BaggageField.create(s)));
 	}
 
 	@Override

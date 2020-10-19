@@ -29,28 +29,29 @@ import org.springframework.lang.Nullable;
  * @since 5.10
  */
 // Public for use in sparkjava or other frameworks that re-use servlet types
-final class HttpServletRequestWrapper implements HttpServerRequest {
+class HttpServletRequestWrapper implements HttpServerRequest {
 
 	/** @since 5.10 */
 	public static HttpServerRequest create(HttpServletRequest request) {
 		return new HttpServletRequestWrapper(request);
 	}
 
-	final HttpServletRequest delegate;
+	HttpServletRequest delegate;
 
 	HttpServletRequestWrapper(HttpServletRequest delegate) {
-		if (delegate == null)
+		if (delegate == null) {
 			throw new NullPointerException("delegate == null");
+		}
 		this.delegate = delegate;
 	}
 
 	@Override
-	public final Object unwrap() {
+	public Object unwrap() {
 		return delegate;
 	}
 
 	@Override
-	public final String method() {
+	public String method() {
 		return delegate.getMethod();
 	}
 
@@ -61,11 +62,11 @@ final class HttpServletRequestWrapper implements HttpServerRequest {
 	}
 
 	@Override
-	public final String path() {
+	public String path() {
 		return delegate.getRequestURI();
 	}
 
-	// not final as some implementations may be able to do this more efficiently
+	// not as some implementations may be able to do this more efficiently
 	@Override
 	public String url() {
 		StringBuffer url = delegate.getRequestURL();
@@ -76,19 +77,21 @@ final class HttpServletRequestWrapper implements HttpServerRequest {
 	}
 
 	@Override
-	public final String header(String name) {
+	public String header(String name) {
 		return delegate.getHeader(name);
 	}
 
-	/** Looks for a valid request attribute "error" */
+	/** Looks for a valid request attribute "error". */
 	@Nullable
 	Throwable maybeError() {
 		Object maybeError = delegate.getAttribute("error");
-		if (maybeError instanceof Throwable)
+		if (maybeError instanceof Throwable) {
 			return (Throwable) maybeError;
+		}
 		maybeError = delegate.getAttribute(RequestDispatcher.ERROR_EXCEPTION);
-		if (maybeError instanceof Throwable)
+		if (maybeError instanceof Throwable) {
 			return (Throwable) maybeError;
+		}
 		return null;
 	}
 

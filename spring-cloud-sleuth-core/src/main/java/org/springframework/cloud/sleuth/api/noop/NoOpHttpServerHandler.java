@@ -21,6 +21,12 @@ import org.springframework.cloud.sleuth.api.http.HttpServerHandler;
 import org.springframework.cloud.sleuth.api.http.HttpServerRequest;
 import org.springframework.cloud.sleuth.api.http.HttpServerResponse;
 
+/**
+ * A noop implementation. Does nothing.
+ *
+ * @author Marcin Grzejszczak
+ * @since 3.0.0
+ */
 public class NoOpHttpServerHandler implements HttpServerHandler {
 
 	@Override

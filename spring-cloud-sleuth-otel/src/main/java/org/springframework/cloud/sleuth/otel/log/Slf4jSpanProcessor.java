@@ -31,7 +31,7 @@ import org.apache.commons.logging.LogFactory;
 import org.slf4j.MDC;
 
 import org.springframework.cloud.sleuth.autoconfig.SleuthBaggageProperties;
-import org.springframework.cloud.sleuth.otel.bridge.OtelBaggage;
+import org.springframework.cloud.sleuth.otel.bridge.OtelBaggageEntry;
 import org.springframework.cloud.sleuth.otel.bridge.OtelCurrentTraceContext;
 import org.springframework.context.ApplicationEvent;
 import org.springframework.context.ApplicationListener;
@@ -110,7 +110,7 @@ class Slf4jSpanProcessor implements SpanProcessor, ApplicationListener {
 				.collect(Collectors.toList());
 	}
 
-	private void onBaggageChanged(OtelBaggage.BaggageChanged event) {
+	private void onBaggageChanged(OtelBaggageEntry.BaggageChanged event) {
 		if (log.isTraceEnabled()) {
 			log.trace("Got baggage changed event [" + event + "]");
 		}
@@ -142,8 +142,8 @@ class Slf4jSpanProcessor implements SpanProcessor, ApplicationListener {
 
 	@Override
 	public void onApplicationEvent(ApplicationEvent event) {
-		if (event instanceof OtelBaggage.BaggageChanged) {
-			onBaggageChanged((OtelBaggage.BaggageChanged) event);
+		if (event instanceof OtelBaggageEntry.BaggageChanged) {
+			onBaggageChanged((OtelBaggageEntry.BaggageChanged) event);
 		}
 		else if (event instanceof OtelCurrentTraceContext.ScopeChanged) {
 			onScopeChanged((OtelCurrentTraceContext.ScopeChanged) event);
@@ -151,7 +151,7 @@ class Slf4jSpanProcessor implements SpanProcessor, ApplicationListener {
 		else if (event instanceof OtelCurrentTraceContext.ScopeClosed) {
 			onScopeClosed((OtelCurrentTraceContext.ScopeClosed) event);
 		}
-		else if (event instanceof OtelBaggage.BaggageScopeEnded) {
+		else if (event instanceof OtelBaggageEntry.BaggageScopeEnded) {
 			removeAllBaggageEntries();
 		}
 	}

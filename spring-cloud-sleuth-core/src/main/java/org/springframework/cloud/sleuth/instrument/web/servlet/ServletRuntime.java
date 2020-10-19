@@ -32,7 +32,7 @@ import org.springframework.cloud.sleuth.api.http.HttpServerHandler;
 import org.springframework.cloud.sleuth.api.http.HttpServerResponse;
 
 /**
- * Access to servlet version-specific features
+ * Access to servlet version-specific features.
  *
  * <p>
  * Originally designed by OkHttp team, derived from
@@ -83,6 +83,19 @@ abstract class ServletRuntime {
 		throw new UnsupportedOperationException("Unsupported Servlet type");
 	}
 
+	// Taken from RxJava throwIfFatal, which was taken from scala
+	public static void propagateIfFatal(Throwable t) {
+		if (t instanceof VirtualMachineError) {
+			throw (VirtualMachineError) t;
+		}
+		else if (t instanceof ThreadDeath) {
+			throw (ThreadDeath) t;
+		}
+		else if (t instanceof LinkageError) {
+			throw (LinkageError) t;
+		}
+	}
+
 	static final class Servlet3 extends ServletRuntime {
 
 		@Override
@@ -98,8 +111,9 @@ abstract class ServletRuntime {
 		@Override
 		public void handleAsync(HttpServerHandler handler, HttpServletRequest request, HttpServletResponse response,
 				Span span) {
-			if (span.isNoop())
+			if (span.isNoop()) {
 				return; // don't add overhead when we aren't httpTracing
+			}
 			TracingAsyncListener listener = new TracingAsyncListener(handler, span);
 			request.getAsyncContext().addListener(listener, request, response);
 		}
@@ -160,7 +174,7 @@ abstract class ServletRuntime {
 
 			/**
 			 * If another async is created (ex via asyncContext.dispatch), this needs to
-			 * be re-attached
+			 * be re-attached.
 			 */
 			@Override
 			public void onStartAsync(AsyncEvent e) {
@@ -177,6 +191,9 @@ abstract class ServletRuntime {
 
 		}
 
+		/**
+		 * Async timeout exception.
+		 */
 		static final class AsyncTimeoutException extends TimeoutException {
 
 			AsyncTimeoutException(AsyncEvent e) {
@@ -191,19 +208,6 @@ abstract class ServletRuntime {
 
 		}
 
-	}
-
-	// Taken from RxJava throwIfFatal, which was taken from scala
-	public static void propagateIfFatal(Throwable t) {
-		if (t instanceof VirtualMachineError) {
-			throw (VirtualMachineError) t;
-		}
-		else if (t instanceof ThreadDeath) {
-			throw (ThreadDeath) t;
-		}
-		else if (t instanceof LinkageError) {
-			throw (LinkageError) t;
-		}
 	}
 
 }

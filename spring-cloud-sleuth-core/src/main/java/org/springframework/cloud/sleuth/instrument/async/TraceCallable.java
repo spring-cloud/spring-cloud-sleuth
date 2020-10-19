@@ -19,7 +19,6 @@ package org.springframework.cloud.sleuth.instrument.async;
 import java.util.concurrent.Callable;
 
 import org.springframework.cloud.sleuth.SpanNamer;
-import org.springframework.cloud.sleuth.api.ScopedSpan;
 import org.springframework.cloud.sleuth.api.Span;
 import org.springframework.cloud.sleuth.api.Tracer;
 
@@ -62,16 +61,16 @@ public class TraceCallable<V> implements Callable<V> {
 
 	@Override
 	public V call() throws Exception {
-		ScopedSpan span = this.tracer.startScopedSpan(this.spanName, this.parent);
-		try {
+		Span childSpan = this.tracer.nextSpan(this.parent).name(this.spanName);
+		try (Tracer.SpanInScope ws = this.tracer.withSpan(childSpan)) {
 			return this.delegate.call();
 		}
 		catch (Exception | Error ex) {
-			span.error(ex);
+			childSpan.error(ex);
 			throw ex;
 		}
 		finally {
-			span.end();
+			childSpan.end();
 		}
 	}
 

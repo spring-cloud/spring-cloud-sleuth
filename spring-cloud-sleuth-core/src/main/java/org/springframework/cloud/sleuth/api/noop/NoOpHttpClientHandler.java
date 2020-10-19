@@ -22,6 +22,12 @@ import org.springframework.cloud.sleuth.api.http.HttpClientHandler;
 import org.springframework.cloud.sleuth.api.http.HttpClientRequest;
 import org.springframework.cloud.sleuth.api.http.HttpClientResponse;
 
+/**
+ * A noop implementation. Does nothing.
+ *
+ * @author Marcin Grzejszczak
+ * @since 3.0.0
+ */
 public class NoOpHttpClientHandler implements HttpClientHandler {
 
 	@Override

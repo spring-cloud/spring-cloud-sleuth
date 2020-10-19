@@ -34,9 +34,9 @@ import org.springframework.messaging.Message;
  * IMPORTANT: This API is experimental and might change in the future.
  *
  * The {@code forInputMessage} factory methods will retrieve the tracer context from the
- * message headers and set up a a child span in the header under key
- * {@link Span#getClass()} name. If you need to continue it or tag it, it's enough to
- * retrieve it from the headers.
+ * message headers and set up a a child span in the header under key {@code Span.class}
+ * name. If you need to continue it or tag it, it's enough to retrieve it from the
+ * headers.
  *
  * The first messaging span (the one that was first found in the input message) is present
  * under the {@code traceHandlerParentSpan} header key.

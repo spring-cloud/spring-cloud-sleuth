@@ -18,14 +18,14 @@ package org.springframework.cloud.sleuth.brave.bridge;
 
 import brave.baggage.BaggageField;
 
-import org.springframework.cloud.sleuth.api.Baggage;
+import org.springframework.cloud.sleuth.api.BaggageEntry;
 import org.springframework.cloud.sleuth.api.TraceContext;
 
-public class BraveBaggage implements Baggage {
+public class BraveBaggageEntry implements BaggageEntry {
 
 	private final BaggageField delegate;
 
-	public BraveBaggage(BaggageField delegate) {
+	public BraveBaggageEntry(BaggageField delegate) {
 		this.delegate = delegate;
 	}
 

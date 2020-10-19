@@ -18,6 +18,15 @@ package org.springframework.cloud.sleuth.api.http;
 
 import org.springframework.cloud.sleuth.api.Span;
 
+/**
+ * This API is taken from OpenZipkin Brave.
+ *
+ * Abstract request type used for parsing and sampling. Represents an HTTP Client request.
+ *
+ * @author OpenZipkin Brave Authors
+ * @author Marcin Grzejszczak
+ * @since 3.0.0
+ */
 public interface HttpClientRequest extends HttpRequest {
 
 	@Override
@@ -25,6 +34,10 @@ public interface HttpClientRequest extends HttpRequest {
 		return Span.Kind.CLIENT;
 	}
 
+	/**
+	 * @param name header name
+	 * @param value header value
+	 */
 	void header(String name, String value);
 
 }

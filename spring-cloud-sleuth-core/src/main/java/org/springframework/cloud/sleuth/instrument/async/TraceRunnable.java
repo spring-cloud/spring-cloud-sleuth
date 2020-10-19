@@ -17,7 +17,6 @@
 package org.springframework.cloud.sleuth.instrument.async;
 
 import org.springframework.cloud.sleuth.SpanNamer;
-import org.springframework.cloud.sleuth.api.ScopedSpan;
 import org.springframework.cloud.sleuth.api.Span;
 import org.springframework.cloud.sleuth.api.Tracer;
 
@@ -59,16 +58,16 @@ public class TraceRunnable implements Runnable {
 
 	@Override
 	public void run() {
-		ScopedSpan span = this.tracer.startScopedSpan(this.spanName, this.parent);
-		try {
+		Span childSpan = this.tracer.nextSpan(this.parent).name(this.spanName);
+		try (Tracer.SpanInScope ws = this.tracer.withSpan(childSpan)) {
 			this.delegate.run();
 		}
 		catch (Exception | Error e) {
-			span.error(e);
+			childSpan.error(e);
 			throw e;
 		}
 		finally {
-			span.end();
+			childSpan.end();
 		}
 	}
 

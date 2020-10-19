@@ -16,11 +16,10 @@
 
 package org.springframework.cloud.sleuth.instrument.async;
 
-import org.springframework.cloud.sleuth.api.Tracer;
-
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.cloud.sleuth.api.Tracer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 

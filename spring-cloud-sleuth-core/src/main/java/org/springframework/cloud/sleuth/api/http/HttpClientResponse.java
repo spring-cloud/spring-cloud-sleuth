@@ -19,6 +19,16 @@ package org.springframework.cloud.sleuth.api.http;
 import org.springframework.cloud.sleuth.api.Span;
 import org.springframework.lang.Nullable;
 
+/**
+ * This API is taken from OpenZipkin Brave.
+ *
+ * Abstract response type used for parsing and sampling. Represents an HTTP Client
+ * response.
+ *
+ * @author OpenZipkin Brave Authors
+ * @author Marcin Grzejszczak
+ * @since 3.0.0
+ */
 public interface HttpClientResponse extends HttpResponse {
 
 	@Override

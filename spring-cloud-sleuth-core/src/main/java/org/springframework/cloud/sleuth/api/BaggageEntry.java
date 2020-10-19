@@ -19,20 +19,45 @@ package org.springframework.cloud.sleuth.api;
 import org.springframework.lang.Nullable;
 
 /**
- * Taken from Brave.
+ * Inspired by OpenZipkin Brave's {@code BaggageField}.
+ *
+ * Represents a single baggage entry.
+ *
+ * @author Marcin Grzejszczak
+ * @since 3.0.0
  */
-public interface Baggage {
+public interface BaggageEntry {
 
+	/**
+	 * @return name of the baggage entry
+	 */
 	String name();
 
+	/**
+	 * @return value of the baggage entry or {@code null} if not set.
+	 */
 	@Nullable
 	String get();
 
+	/**
+	 * Retrieves baggage from the given {@link TraceContext}.
+	 * @param traceContext context containing baggage
+	 * @return value of the baggage entry or {@code null} if not set.
+	 */
 	@Nullable
 	String get(TraceContext traceContext);
 
+	/**
+	 * Sets the baggage value.
+	 * @param value to set
+	 */
 	void set(String value);
 
+	/**
+	 * Sets the baggage value for the given {@link TraceContext}.
+	 * @param traceContext context containing baggage
+	 * @param value to set
+	 */
 	void set(TraceContext traceContext, String value);
 
 }

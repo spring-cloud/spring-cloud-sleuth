@@ -1,16 +1,19 @@
 /*
- * Copyright 2013-2019 The OpenZipkin Authors
+ * Copyright 2013-2020 the original author or authors.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
- * in compliance with the License. You may obtain a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing, software distributed under the License
- * is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express
- * or implied. See the License for the specific language governing permissions and limitations under
- * the License.
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
+
 package org.springframework.cloud.sleuth.instrument.web.mvc;
 
 import javax.servlet.http.HttpServletRequest;
@@ -52,6 +55,9 @@ public class HandlerParser {
 	 * <p>
 	 * Adds the tags {@link #CONTROLLER_CLASS} and {@link #CONTROLLER_METHOD}. Override or
 	 * use {@link #NOOP} to change this behavior.
+	 * @param request request
+	 * @param handler handler
+	 * @param customizer span customizer
 	 */
 	protected void preHandle(HttpServletRequest request, Object handler, SpanCustomizer customizer) {
 		if (WebMvcRuntime.get().isHandlerMethod(handler)) {
@@ -64,8 +70,10 @@ public class HandlerParser {
 		}
 	}
 
-	public HandlerParser() { // intentionally public for @Autowired to work without
-								// explicit binding
+	/*
+	 * Intentionally public for @Autowired to work without explicit binding
+	 */
+	public HandlerParser() {
 	}
 
 }

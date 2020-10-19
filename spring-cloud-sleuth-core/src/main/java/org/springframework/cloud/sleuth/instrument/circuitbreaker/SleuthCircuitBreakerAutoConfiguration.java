@@ -19,7 +19,6 @@ package org.springframework.cloud.sleuth.instrument.circuitbreaker;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
-import org.springframework.cloud.sleuth.api.Tracer;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
@@ -31,6 +30,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.cloud.client.circuitbreaker.CircuitBreaker;
+import org.springframework.cloud.sleuth.api.Tracer;
 import org.springframework.cloud.sleuth.autoconfig.TraceAutoConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

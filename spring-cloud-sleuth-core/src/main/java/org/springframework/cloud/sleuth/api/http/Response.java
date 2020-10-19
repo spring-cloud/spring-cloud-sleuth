@@ -19,31 +19,37 @@ package org.springframework.cloud.sleuth.api.http;
 import org.springframework.cloud.sleuth.api.Span;
 import org.springframework.lang.Nullable;
 
+/**
+ * This API is taken from OpenZipkin Brave.
+ *
+ * Abstract response type used for parsing and sampling.
+ *
+ * @author OpenZipkin Brave Authors
+ * @author Marcin Grzejszczak
+ * @since 3.0.0
+ */
 public interface Response {
 
-	/** The remote {@link Span.Kind} describing the direction and type of the response. */
+	/**
+	 * @return The remote {@link Span.Kind} describing the direction and type of the
+	 * request.
+	 */
 	Span.Kind spanKind();
 
+	/**
+	 * @return corresponding request
+	 */
 	@Nullable
 	Request request();
 
+	/**
+	 * @return exception that occurred or {@code null} if there was none.
+	 */
 	@Nullable
 	Throwable error();
 
 	/**
-	 * Returns the underlying response object or {@code null} if there is none. Here are
-	 * some response objects: {@code org.apache.http.HttpResponse},
-	 * {@code org.apache.dubbo.rpc.Result}, {@code
-	 * org.apache.kafka.clients.producer.RecordMetadata}.
-	 *
-	 * <p>
-	 * Note: Some implementations are composed of multiple types, such as a response and
-	 * matched route of the server. Moreover, an implementation may change the type
-	 * returned due to refactoring. Unless you control the implementation, cast carefully
-	 * (ex using {@code
-	 * instanceof}) instead of presuming a specific type will always be returned.
-	 *
-	 * @since 5.10
+	 * @return the underlying request object or {@code null} if there is none.
 	 */
 	Object unwrap();
 

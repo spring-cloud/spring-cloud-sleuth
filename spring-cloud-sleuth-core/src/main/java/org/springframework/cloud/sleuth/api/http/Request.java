@@ -18,25 +18,25 @@ package org.springframework.cloud.sleuth.api.http;
 
 import org.springframework.cloud.sleuth.api.Span;
 
+/**
+ * This API is taken from OpenZipkin Brave.
+ *
+ * Abstract request type used for parsing and sampling.
+ *
+ * @author OpenZipkin Brave Authors
+ * @author Marcin Grzejszczak
+ * @since 3.0.0
+ */
 public interface Request {
 
-	/** The remote {@link Span.Kind} describing the direction and type of the request. */
+	/**
+	 * @return The remote {@link Span.Kind} describing the direction and type of the
+	 * request.
+	 */
 	Span.Kind spanKind();
 
 	/**
-	 * Returns the underlying request object or {@code null} if there is none. Here are
-	 * some request objects: {@code org.apache.http.HttpRequest},
-	 * {@code org.apache.dubbo.rpc.Invocation}, {@code
-	 * org.apache.kafka.clients.consumer.ConsumerRecord}.
-	 *
-	 * <p>
-	 * Note: Some implementations are composed of multiple types, such as a request and a
-	 * socket address of the client. Moreover, an implementation may change the type
-	 * returned due to refactoring. Unless you control the implementation, cast carefully
-	 * (ex using {@code
-	 * instanceof}) instead of presuming a specific type will always be returned.
-	 *
-	 * @since 5.9
+	 * @return the underlying request object or {@code null} if there is none.
 	 */
 	Object unwrap();
 

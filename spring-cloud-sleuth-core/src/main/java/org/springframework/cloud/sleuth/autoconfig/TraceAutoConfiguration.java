@@ -16,6 +16,9 @@
 
 package org.springframework.cloud.sleuth.autoconfig;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -47,9 +50,15 @@ import org.springframework.context.annotation.Configuration;
 @EnableConfigurationProperties({ SleuthSpanFilterProperties.class, SleuthBaggageProperties.class })
 public class TraceAutoConfiguration {
 
+	private static final Log log = LogFactory.getLog(TraceAutoConfiguration.class);
+
 	@Bean
 	@ConditionalOnMissingBean
 	Tracer defaultTracer() {
+		if (log.isWarnEnabled()) {
+			log.warn(
+					"You have not provided a tracer implementation. A default, noop one will be set up. You will not see any spans get reported to external systems (e.g. Zipkin) nor will any context get propagated.");
+		}
 		return new NoOpTracer();
 	}
 

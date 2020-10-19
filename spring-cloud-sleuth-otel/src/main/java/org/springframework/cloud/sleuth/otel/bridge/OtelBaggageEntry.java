@@ -24,14 +24,14 @@ import io.opentelemetry.baggage.BaggageUtils;
 import io.opentelemetry.baggage.EntryMetadata;
 import io.opentelemetry.trace.Tracer;
 
-import org.springframework.cloud.sleuth.api.Baggage;
+import org.springframework.cloud.sleuth.api.BaggageEntry;
 import org.springframework.cloud.sleuth.api.TraceContext;
 import org.springframework.cloud.sleuth.autoconfig.SleuthBaggageProperties;
 import org.springframework.context.ApplicationEvent;
 import org.springframework.context.ApplicationEventPublisher;
 
 // TODO: [OTEL] Experimental - doesn't really work
-public class OtelBaggage implements Baggage {
+public class OtelBaggageEntry implements BaggageEntry {
 
 	private final Tracer tracer;
 
@@ -49,7 +49,7 @@ public class OtelBaggage implements Baggage {
 
 	private final AtomicReference<Context> context;
 
-	public OtelBaggage(Tracer tracer, ApplicationEventPublisher publisher,
+	public OtelBaggageEntry(Tracer tracer, ApplicationEventPublisher publisher,
 			SleuthBaggageProperties sleuthBaggageProperties, io.opentelemetry.baggage.Baggage delegate,
 			BaggageManager manager, AtomicReference<Context> context, String name, EntryMetadata entryMetadata) {
 		this.tracer = tracer;
@@ -101,7 +101,7 @@ public class OtelBaggage implements Baggage {
 
 		public String value;
 
-		public BaggageChanged(OtelBaggage source, String name, String value) {
+		public BaggageChanged(OtelBaggageEntry source, String name, String value) {
 			super(source);
 			this.name = name;
 			this.value = value;

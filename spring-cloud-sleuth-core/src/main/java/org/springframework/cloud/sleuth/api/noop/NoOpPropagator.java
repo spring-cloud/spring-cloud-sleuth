@@ -23,6 +23,12 @@ import org.springframework.cloud.sleuth.api.Span;
 import org.springframework.cloud.sleuth.api.TraceContext;
 import org.springframework.cloud.sleuth.api.propagation.Propagator;
 
+/**
+ * A noop implementation. Does nothing.
+ *
+ * @author Marcin Grzejszczak
+ * @since 3.0.0
+ */
 public class NoOpPropagator implements Propagator {
 
 	@Override

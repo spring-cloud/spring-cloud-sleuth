@@ -18,6 +18,12 @@ package org.springframework.cloud.sleuth.api.noop;
 
 import org.springframework.cloud.sleuth.api.Tracer;
 
+/**
+ * A noop implementation. Does nothing.
+ *
+ * @author Marcin Grzejszczak
+ * @since 3.0.0
+ */
 class NoOpSpanInScope implements Tracer.SpanInScope {
 
 	@Override

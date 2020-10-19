@@ -18,28 +18,63 @@ package org.springframework.cloud.sleuth.api.http;
 
 import org.springframework.lang.Nullable;
 
+/**
+ * This API is taken from OpenZipkin Brave.
+ *
+ * Abstract response type used for parsing and sampling. Represents an HTTP request.
+ *
+ * @author OpenZipkin Brave Authors
+ * @author Marcin Grzejszczak
+ * @since 3.0.0
+ */
 public interface HttpRequest extends Request {
 
+	/**
+	 * @return HTTP method.
+	 */
 	String method();
 
+	/**
+	 * @return HTTP path or {@code null} if not set.
+	 */
 	@Nullable
 	String path();
 
+	/**
+	 * Returns an expression such as "/items/:itemId" representing an application
+	 * endpoint, conventionally associated with the tag key "http.route". If no route
+	 * matched, "" (empty string) is returned. {@code null} indicates this instrumentation
+	 * doesn't understand http routes.
+	 * @return HTTP route or {@code null} if not set.
+	 */
 	@Nullable
 	default String route() {
 		return null;
 	}
 
+	/**
+	 * @return HTTP URL or {@code null} if not set.
+	 */
 	@Nullable
 	String url();
 
+	/**
+	 * @param name header name
+	 * @return HTTP header or {@code null} if not set.
+	 */
 	@Nullable
 	String header(String name);
 
+	/**
+	 * @return remote IP for the given connection.
+	 */
 	default String remoteIp() {
 		return null;
 	}
 
+	/**
+	 * @return remote port for the given connection.
+	 */
 	default int remotePort() {
 		return 0;
 	}

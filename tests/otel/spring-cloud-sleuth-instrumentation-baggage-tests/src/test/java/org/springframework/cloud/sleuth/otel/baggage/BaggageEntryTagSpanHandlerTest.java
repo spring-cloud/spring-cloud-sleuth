@@ -31,8 +31,8 @@ import org.springframework.test.context.ContextConfiguration;
  */
 @SpringBootTest(// WebEnvironment.NONE will not read a Yaml profile
 		webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-@ContextConfiguration(classes = BaggageTagSpanHandlerTest.Config.class)
-public class BaggageTagSpanHandlerTest extends org.springframework.cloud.sleuth.baggage.BaggageTagSpanHandlerTest {
+@ContextConfiguration(classes = BaggageEntryTagSpanHandlerTest.Config.class)
+public class BaggageEntryTagSpanHandlerTest extends org.springframework.cloud.sleuth.baggage.BaggageEntryTagSpanHandlerTest {
 
 	@Configuration(proxyBeanMethods = false)
 	static class Config {

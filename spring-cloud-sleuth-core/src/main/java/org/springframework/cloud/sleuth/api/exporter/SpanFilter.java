@@ -19,6 +19,9 @@ package org.springframework.cloud.sleuth.api.exporter;
 /**
  * An interface that allows to filter whether a given reported span should be exported or
  * not.
+ *
+ * @author Marcin Grzejszczak
+ * @since 3.0.0
  */
 public interface SpanFilter {
 

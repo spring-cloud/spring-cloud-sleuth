@@ -23,10 +23,23 @@ import org.springframework.cloud.sleuth.api.TraceContext;
 import org.springframework.lang.Nullable;
 
 /**
- * Taken from Brave & OTel.
+ * Inspired by OpenZipkin Brave and OpenTelemetry. Most of the documentation is taken
+ * directly from OpenTelemetry.
+ *
+ * Injects and extracts a value as text into carriers that travel in-band across process
+ * boundaries. Encoding is expected to conform to the HTTP Header Field semantics. Values
+ * are often encoded as RPC/HTTP request headers.
+ *
+ * @author OpenZipkin Brave Authors
+ * @author OpenTelemetry Authors
+ * @author Marcin Grzejszczak
+ * @since 3.0.0
  */
 public interface Propagator {
 
+	/**
+	 * @return collection of headers that contain tracing information
+	 */
 	List<String> fields();
 
 	/**
@@ -38,9 +51,23 @@ public interface Propagator {
 	 * request.
 	 * @param setter invoked for each propagation key to add or remove.
 	 * @param <C> carrier of propagation fields, such as an http request
-	 * @since 0.1.0
 	 */
 	<C> void inject(TraceContext context, @Nullable C carrier, Setter<C> setter);
+
+	/**
+	 * Extracts the value from upstream. For example, as http headers.
+	 *
+	 * <p>
+	 * If the value could not be parsed, the underlying implementation will decide to set
+	 * an object representing either an empty value, an invalid value, or a valid value.
+	 * Implementation must not set {@code null}.
+	 * @param carrier holds propagation fields. For example, an outgoing message or http
+	 * request.
+	 * @param getter invoked for each propagation key to get.
+	 * @param <C> carrier of propagation fields, such as an http request.
+	 * @return the {@code Context} containing the extracted value.
+	 */
+	<C> Span.Builder extract(C carrier, Getter<C> getter);
 
 	/**
 	 * Class that allows a {@code TextMapPropagator} to set propagated fields into a
@@ -67,27 +94,10 @@ public interface Propagator {
 		 * be null.
 		 * @param key the key of the field.
 		 * @param value the value of the field.
-		 * @since 0.1.0
 		 */
 		void set(@Nullable C carrier, String key, String value);
 
 	}
-
-	/**
-	 * Extracts the value from upstream. For example, as http headers.
-	 *
-	 * <p>
-	 * If the value could not be parsed, the underlying implementation will decide to set
-	 * an object representing either an empty value, an invalid value, or a valid value.
-	 * Implementation must not set {@code null}.
-	 * @param carrier holds propagation fields. For example, an outgoing message or http
-	 * request.
-	 * @param getter invoked for each propagation key to get.
-	 * @param <C> carrier of propagation fields, such as an http request.
-	 * @return the {@code Context} containing the extracted value.
-	 * @since 0.1.0
-	 */
-	<C> Span.Builder extract(C carrier, Getter<C> getter);
 
 	/**
 	 * Interface that allows a {@code TextMapPropagator} to read propagated fields from a
@@ -98,7 +108,6 @@ public interface Propagator {
 	 * allocations.
 	 *
 	 * @param <C> carrier of propagation fields, such as an http request.
-	 * @since 0.1.0
 	 */
 	interface Getter<C> {
 
@@ -109,7 +118,6 @@ public interface Propagator {
 		 * @param key the key of the field.
 		 * @return the first value of the given propagation {@code key} or returns
 		 * {@code null}.
-		 * @since 0.1.0
 		 */
 		@Nullable
 		String get(C carrier, String key);

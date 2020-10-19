@@ -26,11 +26,10 @@ import io.opentelemetry.trace.TracingContextUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import org.springframework.cloud.sleuth.api.Baggage;
+import org.springframework.cloud.sleuth.api.BaggageEntry;
 import org.springframework.cloud.sleuth.api.ScopedSpan;
 import org.springframework.cloud.sleuth.api.Span;
 import org.springframework.cloud.sleuth.api.SpanCustomizer;
-import org.springframework.cloud.sleuth.api.TraceContext;
 import org.springframework.cloud.sleuth.api.Tracer;
 
 public class OtelTracer implements Tracer {
@@ -45,9 +44,12 @@ public class OtelTracer implements Tracer {
 	}
 
 	@Override
-	public Span nextSpan(TraceContext parent) {
+	public Span nextSpan(Span parent) {
+		if (parent == null) {
+			return nextSpan();
+		}
 		return OtelSpan
-				.fromOtel(this.tracer.spanBuilder("").setParent(OtelTraceContext.toOtelContext(parent)).startSpan());
+				.fromOtel(this.tracer.spanBuilder("").setParent(OtelTraceContext.toOtelContext(parent.context())).startSpan());
 	}
 
 	@Override
@@ -111,12 +113,12 @@ public class OtelTracer implements Tracer {
 	}
 
 	@Override
-	public Baggage getBaggage(String name) {
+	public BaggageEntry getBaggage(String name) {
 		return this.otelBaggageManager.getBaggage(name);
 	}
 
 	@Override
-	public Baggage createBaggage(String name) {
+	public BaggageEntry createBaggage(String name) {
 		return this.otelBaggageManager.createBaggage(name);
 	}
 

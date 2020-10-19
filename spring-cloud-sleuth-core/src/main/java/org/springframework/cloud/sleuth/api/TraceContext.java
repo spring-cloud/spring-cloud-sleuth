@@ -18,13 +18,31 @@ package org.springframework.cloud.sleuth.api;
 
 import org.springframework.lang.Nullable;
 
+/**
+ * Contains trace and span data.
+ *
+ * @author Marcin Grzejszczak
+ * @since 3.0.0
+ */
 public interface TraceContext {
 
+	/**
+	 * Trace id.
+	 * @return trace id of a span
+	 */
 	String traceId();
 
+	/**
+	 * Parent span id.
+	 * @return parent span id or {@code null} if one is not set
+	 */
 	@Nullable
 	String parentId();
 
+	/**
+	 * Span id.
+	 * @return span id
+	 */
 	String spanId();
 
 }

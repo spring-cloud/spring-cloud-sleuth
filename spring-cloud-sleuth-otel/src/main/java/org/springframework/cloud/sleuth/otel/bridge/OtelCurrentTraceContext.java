@@ -141,7 +141,7 @@ class OtelScope implements CurrentTraceContext.Scope {
 	public void close() {
 		this.delegate.close();
 		this.publisher.publishEvent(new OtelCurrentTraceContext.ScopeClosed(this));
-		this.publisher.publishEvent(new OtelBaggage.BaggageScopeEnded(this));
+		this.publisher.publishEvent(new OtelBaggageEntry.BaggageScopeEnded(this));
 	}
 
 	static class RevertToPrevious implements CurrentTraceContext.Scope {

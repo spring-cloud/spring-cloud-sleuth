@@ -28,7 +28,6 @@ import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.NoSuchBeanDefinitionException;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.cloud.sleuth.api.Span;
-import org.springframework.cloud.sleuth.api.TraceContext;
 import org.springframework.cloud.sleuth.api.Tracer;
 import org.springframework.cloud.sleuth.api.propagation.Propagator;
 import org.springframework.cloud.sleuth.internal.SpanNameUtil;
@@ -76,16 +75,16 @@ class TraceMessageHandler {
 
 	private final Propagator.Getter<MessageHeaderAccessor> extractor;
 
-	private final Function<TraceContext, Span> preSendFunction;
+	private final Function<Span, Span> preSendFunction;
 
 	private final TriConsumer<MessageHeaderAccessor, Span, Span> preSendMessageManipulator;
 
-	private final Function<TraceContext, Span.Builder> outputMessageSpanFunction;
+	private final Function<Span, Span.Builder> outputMessageSpanFunction;
 
 	TraceMessageHandler(Tracer tracer, Propagator propagator, Propagator.Setter<MessageHeaderAccessor> injector,
-			Propagator.Getter<MessageHeaderAccessor> extractor, Function<TraceContext, Span> preSendFunction,
+			Propagator.Getter<MessageHeaderAccessor> extractor, Function<Span, Span> preSendFunction,
 			TriConsumer<MessageHeaderAccessor, Span, Span> preSendMessageManipulator,
-			Function<TraceContext, Span.Builder> outputMessageSpanFunction) {
+			Function<Span, Span.Builder> outputMessageSpanFunction) {
 		this.tracer = tracer;
 		this.propagator = propagator;
 		this.injector = injector;
@@ -98,12 +97,12 @@ class TraceMessageHandler {
 
 	static TraceMessageHandler forNonSpringIntegration(Tracer tracer, Propagator propagator,
 			Propagator.Setter<MessageHeaderAccessor> injector, Propagator.Getter<MessageHeaderAccessor> extractor) {
-		Function<TraceContext, Span> preSendFunction = ctx -> tracer.nextSpan(ctx).name("handle").start();
+		Function<Span, Span> preSendFunction = span -> tracer.nextSpan(span).name("handle").start();
 		TriConsumer<MessageHeaderAccessor, Span, Span> preSendMessageManipulator = (headers, parentSpan, childSpan) -> {
 			headers.setHeader("traceHandlerParentSpan", parentSpan);
 			headers.setHeader(Span.class.getName(), childSpan);
 		};
-		Function<TraceContext, Span.Builder> postReceiveFunction = ctx -> tracer.spanBuilder().setParent(ctx);
+		Function<Span, Span.Builder> postReceiveFunction = span -> tracer.spanBuilder().setParent(span.context());
 		return new TraceMessageHandler(tracer, propagator, injector, extractor, preSendFunction,
 				preSendMessageManipulator, postReceiveFunction);
 	}
@@ -140,7 +139,7 @@ class TraceMessageHandler {
 		Span.Builder consumerSpanBuilder = this.tracer.spanBuilder().setParent(extracted.context());
 		Span consumerSpan = consumerSpan(destinationName, extracted, consumerSpanBuilder);
 		// create and scope a span for the message processor
-		Span span = this.preSendFunction.apply(consumerSpan.context());
+		Span span = this.preSendFunction.apply(consumerSpan);
 		// remove any trace headers, but don't re-inject as we are synchronously
 		// processing the
 		// message and can rely on scoping to access this span later.
@@ -232,7 +231,7 @@ class TraceMessageHandler {
 	MessageAndSpan wrapOutputMessage(Message<?> message, Span parentSpan, String destinationName) {
 		Message<?> retrievedMessage = getMessage(message);
 		MessageHeaderAccessor headers = mutableHeaderAccessor(retrievedMessage);
-		Span.Builder span = this.outputMessageSpanFunction.apply(parentSpan.context());
+		Span.Builder span = this.outputMessageSpanFunction.apply(parentSpan);
 		clearTracingHeaders(headers);
 		Span producerSpan = createProducerSpan(headers, span, destinationName);
 		this.propagator.inject(producerSpan.context(), headers, this.injector);

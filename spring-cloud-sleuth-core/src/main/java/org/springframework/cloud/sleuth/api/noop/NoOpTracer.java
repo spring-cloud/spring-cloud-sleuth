@@ -19,17 +19,22 @@ package org.springframework.cloud.sleuth.api.noop;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.springframework.cloud.sleuth.api.Baggage;
+import org.springframework.cloud.sleuth.api.BaggageEntry;
 import org.springframework.cloud.sleuth.api.ScopedSpan;
 import org.springframework.cloud.sleuth.api.Span;
 import org.springframework.cloud.sleuth.api.SpanCustomizer;
-import org.springframework.cloud.sleuth.api.TraceContext;
 import org.springframework.cloud.sleuth.api.Tracer;
 
+/**
+ * A noop implementation. Does nothing.
+ *
+ * @author Marcin Grzejszczak
+ * @since 3.0.0
+ */
 public class NoOpTracer implements Tracer {
 
 	@Override
-	public Span nextSpan(TraceContext parent) {
+	public Span nextSpan(Span parent) {
 		return new NoOpSpan();
 	}
 
@@ -59,11 +64,6 @@ public class NoOpTracer implements Tracer {
 	}
 
 	@Override
-	public ScopedSpan startScopedSpan(String name, Span parent) {
-		return new NoOpScopedSpan();
-	}
-
-	@Override
 	public Span.Builder spanBuilder() {
 		return new NoOpSpanBuilder();
 	}
@@ -74,13 +74,13 @@ public class NoOpTracer implements Tracer {
 	}
 
 	@Override
-	public Baggage getBaggage(String name) {
-		return new NoOpBaggage();
+	public BaggageEntry getBaggage(String name) {
+		return new NoOpBaggageEntry();
 	}
 
 	@Override
-	public Baggage createBaggage(String name) {
-		return new NoOpBaggage();
+	public BaggageEntry createBaggage(String name) {
+		return new NoOpBaggageEntry();
 	}
 
 }

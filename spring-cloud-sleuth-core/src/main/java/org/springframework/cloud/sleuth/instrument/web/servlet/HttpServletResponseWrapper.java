@@ -53,8 +53,9 @@ class HttpServletResponseWrapper implements HttpServerResponse {
 
 	HttpServletResponseWrapper(@Nullable HttpServletRequest request, HttpServletResponse response,
 			@Nullable Throwable caught) {
-		if (response == null)
+		if (response == null) {
 			throw new NullPointerException("response == null");
+		}
 		this.request = request != null ? new HttpServletRequestWrapper(request) : null;
 		this.response = response;
 		this.caught = caught;
@@ -73,10 +74,12 @@ class HttpServletResponseWrapper implements HttpServerResponse {
 
 	@Override
 	public Throwable error() {
-		if (caught != null)
+		if (caught != null) {
 			return caught;
-		if (request == null)
+		}
+		if (request == null) {
 			return null;
+		}
 		return request.maybeError();
 	}
 

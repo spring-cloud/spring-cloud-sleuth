@@ -176,6 +176,9 @@ final class TraceExchangeFilterFunction implements ExchangeFilterFunction {
 
 	}
 
+	/**
+	 * Subscriber for WebClient.
+	 */
 	static final class TraceWebClientSubscriber extends AtomicReference<Span>
 			implements CoreSubscriber<ClientResponse> {
 

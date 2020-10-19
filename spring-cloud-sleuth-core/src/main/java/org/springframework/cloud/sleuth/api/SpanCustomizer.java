@@ -17,14 +17,34 @@
 package org.springframework.cloud.sleuth.api;
 
 /**
- * Taken from Brave.
+ * Allows to customize the current span in scope.
+ *
+ * @author OpenZipkin Brave Authors
+ * @author Marcin Grzejszczak
+ * @since 3.0.0
  */
 public interface SpanCustomizer {
 
+	/**
+	 * Sets a name on a span.
+	 * @param name name to set on a span
+	 * @return this, for chaining
+	 */
 	SpanCustomizer name(String name);
 
+	/**
+	 * Sets a tag on a span.
+	 * @param key tag key
+	 * @param value tag value
+	 * @return this, for chaining
+	 */
 	SpanCustomizer tag(String key, String value);
 
+	/**
+	 * Sets an event on a span.
+	 * @param value event name
+	 * @return this, for chaining
+	 */
 	SpanCustomizer event(String value);
 
 }

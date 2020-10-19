@@ -319,7 +319,7 @@ final class TracingChannelInterceptor extends ChannelInterceptorAdapter implemen
 		}
 		Span consumerSpan = consumerSpan(message, channel, headers);
 		// create and scope a span for the message processor
-		Span handle = this.tracer.nextSpan(consumerSpan.context()).name("handle").start();
+		Span handle = this.tracer.nextSpan(consumerSpan).name("handle").start();
 		if (log.isDebugEnabled()) {
 			log.debug("Created consumer span " + handle);
 		}

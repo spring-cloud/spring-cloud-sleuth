@@ -16,10 +16,16 @@
 
 package org.springframework.cloud.sleuth.api.noop;
 
-import org.springframework.cloud.sleuth.api.Baggage;
+import org.springframework.cloud.sleuth.api.BaggageEntry;
 import org.springframework.cloud.sleuth.api.TraceContext;
 
-public class NoOpBaggage implements Baggage {
+/**
+ * A noop implementation. Does nothing.
+ *
+ * @author Marcin Grzejszczak
+ * @since 3.0.0
+ */
+public class NoOpBaggageEntry implements BaggageEntry {
 
 	@Override
 	public String name() {

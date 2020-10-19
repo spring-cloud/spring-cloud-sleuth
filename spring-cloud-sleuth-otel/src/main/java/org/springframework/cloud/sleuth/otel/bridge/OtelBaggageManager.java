@@ -29,13 +29,13 @@ import io.opentelemetry.trace.Tracer;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import org.springframework.cloud.sleuth.api.Baggage;
+import org.springframework.cloud.sleuth.api.BaggageEntry;
 import org.springframework.cloud.sleuth.api.BaggageManager;
 import org.springframework.cloud.sleuth.autoconfig.SleuthBaggageProperties;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.ApplicationListener;
 
-public class OtelBaggageManager implements BaggageManager, ApplicationListener<OtelBaggage.BaggageScopeEnded> {
+public class OtelBaggageManager implements BaggageManager, ApplicationListener<OtelBaggageEntry.BaggageScopeEnded> {
 
 	private static final Log log = LogFactory.getLog(OtelBaggageManager.class);
 
@@ -67,7 +67,7 @@ public class OtelBaggageManager implements BaggageManager, ApplicationListener<O
 		return BaggageUtils.getBaggage(Context.current());
 	}
 
-	public Baggage getBaggage(String name) {
+	public BaggageEntry getBaggage(String name) {
 		io.opentelemetry.baggage.Baggage baggage = currentBaggage();
 		Entry entry = entryForName(name, baggage);
 		if (entry == null) {
@@ -81,16 +81,16 @@ public class OtelBaggageManager implements BaggageManager, ApplicationListener<O
 				.findFirst().orElse(null);
 	}
 
-	private Baggage otelBaggage(String name, io.opentelemetry.baggage.Baggage baggage, Entry entry) {
-		return new OtelBaggage(this.tracer, this.publisher, this.sleuthBaggageProperties, baggage, this.delegate,
+	private BaggageEntry otelBaggage(String name, io.opentelemetry.baggage.Baggage baggage, Entry entry) {
+		return new OtelBaggageEntry(this.tracer, this.publisher, this.sleuthBaggageProperties, baggage, this.delegate,
 				this.context, name, entry.getEntryMetadata());
 	}
 
-	public Baggage createBaggage(String name) {
+	public BaggageEntry createBaggage(String name) {
 		return baggageWithValue(name, "");
 	}
 
-	private Baggage baggageWithValue(String name, String value) {
+	private BaggageEntry baggageWithValue(String name, String value) {
 		List<String> remoteFieldsFields = this.sleuthBaggageProperties.getRemoteFields();
 		boolean remoteField = remoteFieldsFields.stream().map(String::toLowerCase)
 				.anyMatch(s -> s.equals(name.toLowerCase()));
@@ -102,12 +102,12 @@ public class OtelBaggageManager implements BaggageManager, ApplicationListener<O
 		io.opentelemetry.baggage.Baggage baggage = this.delegate.baggageBuilder().put(name, value, entryMetadata)
 				.build();
 		this.context.set(BaggageUtils.withBaggage(baggage, this.context.get()));
-		return new OtelBaggage(this.tracer, this.publisher, this.sleuthBaggageProperties, baggage, this.delegate,
+		return new OtelBaggageEntry(this.tracer, this.publisher, this.sleuthBaggageProperties, baggage, this.delegate,
 				this.context, name, entryMetadata);
 	}
 
 	@Override
-	public void onApplicationEvent(OtelBaggage.BaggageScopeEnded event) {
+	public void onApplicationEvent(OtelBaggageEntry.BaggageScopeEnded event) {
 		if (log.isTraceEnabled()) {
 			log.trace("Baggage scope ended");
 		}

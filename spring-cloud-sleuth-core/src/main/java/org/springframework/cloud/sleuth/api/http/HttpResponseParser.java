@@ -1,44 +1,42 @@
 /*
- * Copyright 2013-2020 The OpenZipkin Authors
+ * Copyright 2013-2020 the original author or authors.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
- * in compliance with the License. You may obtain a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing, software distributed under the License
- * is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express
- * or implied. See the License for the specific language governing permissions and limitations under
- * the License.
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
+
 package org.springframework.cloud.sleuth.api.http;
 
 import org.springframework.cloud.sleuth.api.SpanCustomizer;
 import org.springframework.cloud.sleuth.api.TraceContext;
 
 /**
- * Use this to control the response data recorded for an
- * {@link TraceContext#sampledLocal() sampled HTTP client or server span}.
+ * This API is taken from OpenZipkin Brave.
  *
- * <p>
- * Here's an example that adds all HTTP status codes, not just the error ones. <pre>{@code
- * httpTracing = httpTracing.toBuilder()
- *   .clientResponseParser((response, context, span) -> {
- *     HttpResponseParser.DEFAULT.parse(response, context, span);
- *     HttpTags.STATUS_CODE.tag(response, context, span);
- *   }).build();
- * }</pre>
+ * Use this to control the response data recorded.
  *
- * <p>
- * <em>Note</em>: This type is safe to implement as a lambda, or use as a method reference
- * as it is effectively a {@code FunctionalInterface}. It isn't annotated as such because
- * the project has a minimum Java language level 6.
- *
- * @see HttpRequestParser
- * @since 5.10
+ * @author OpenZipkin Brave Authors
+ * @author Marcin Grzejszczak
+ * @since 3.0.0
  */
 public interface HttpResponseParser {
 
+	/**
+	 * Implement to choose what data from the http response are parsed into the span
+	 * representing it.
+	 * @param response current response
+	 * @param context corresponding trace context
+	 * @param span customizer for the current span
+	 */
 	void parse(HttpResponse response, TraceContext context, SpanCustomizer span);
 
 }

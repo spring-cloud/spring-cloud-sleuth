@@ -18,7 +18,6 @@ package org.springframework.cloud.sleuth.instrument.async;
 
 import java.util.concurrent.Executor;
 
-import org.springframework.cloud.sleuth.api.Tracer;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -33,6 +32,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.cloud.sleuth.SpanNamer;
+import org.springframework.cloud.sleuth.api.Tracer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Role;

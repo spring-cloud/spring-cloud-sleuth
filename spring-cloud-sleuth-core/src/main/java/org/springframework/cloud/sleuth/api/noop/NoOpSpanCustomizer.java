@@ -18,6 +18,12 @@ package org.springframework.cloud.sleuth.api.noop;
 
 import org.springframework.cloud.sleuth.api.SpanCustomizer;
 
+/**
+ * A noop implementation. Does nothing.
+ *
+ * @author Marcin Grzejszczak
+ * @since 3.0.0
+ */
 public class NoOpSpanCustomizer implements SpanCustomizer {
 
 	@Override

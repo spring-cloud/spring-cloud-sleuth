@@ -26,10 +26,9 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-import org.springframework.cloud.sleuth.api.Tracer;
-
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.cloud.sleuth.SpanNamer;
+import org.springframework.cloud.sleuth.api.Tracer;
 
 /**
  * A decorator class for {@link ExecutorService} to support tracing in Executors.

@@ -107,17 +107,19 @@ public final class TracingFilter implements Filter {
 		}
 	}
 
-	// Special type used to ensure handleSend is only called once
-	static final class SendHandled extends AtomicBoolean {
-
-	}
-
 	@Override
 	public void destroy() {
 	}
 
 	@Override
 	public void init(FilterConfig filterConfig) {
+	}
+
+	/**
+	 * Special type used to ensure handleSend is only called once.
+	 */
+	static final class SendHandled extends AtomicBoolean {
+
 	}
 
 }

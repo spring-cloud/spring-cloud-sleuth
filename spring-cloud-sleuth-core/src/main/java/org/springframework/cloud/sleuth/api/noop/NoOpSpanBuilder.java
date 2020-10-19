@@ -19,6 +19,12 @@ package org.springframework.cloud.sleuth.api.noop;
 import org.springframework.cloud.sleuth.api.Span;
 import org.springframework.cloud.sleuth.api.TraceContext;
 
+/**
+ * A noop implementation. Does nothing.
+ *
+ * @author Marcin Grzejszczak
+ * @since 3.0.0
+ */
 class NoOpSpanBuilder implements Span.Builder {
 
 	@Override

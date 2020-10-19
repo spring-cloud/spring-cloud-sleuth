@@ -20,11 +20,10 @@ import java.util.Map;
 
 import brave.propagation.TraceContextOrSamplingFlags;
 
-import org.springframework.cloud.sleuth.api.Baggage;
+import org.springframework.cloud.sleuth.api.BaggageEntry;
 import org.springframework.cloud.sleuth.api.ScopedSpan;
 import org.springframework.cloud.sleuth.api.Span;
 import org.springframework.cloud.sleuth.api.SpanCustomizer;
-import org.springframework.cloud.sleuth.api.TraceContext;
 import org.springframework.cloud.sleuth.api.Tracer;
 
 public class BraveTracer implements Tracer {
@@ -38,8 +37,11 @@ public class BraveTracer implements Tracer {
 	}
 
 	@Override
-	public Span nextSpan(TraceContext parent) {
-		brave.propagation.TraceContext context = parent != null ? (((BraveTraceContext) parent).traceContext) : null;
+	public Span nextSpan(Span parent) {
+		if (parent == null) {
+			throw new IllegalStateException("Parent must not be null");
+		}
+		brave.propagation.TraceContext context = (((BraveTraceContext) parent.context()).traceContext);
 		if (context == null) {
 			return null;
 		}
@@ -96,12 +98,12 @@ public class BraveTracer implements Tracer {
 	}
 
 	@Override
-	public Baggage getBaggage(String name) {
+	public BaggageEntry getBaggage(String name) {
 		return this.braveBaggageManager.getBaggage(name);
 	}
 
 	@Override
-	public Baggage createBaggage(String name) {
+	public BaggageEntry createBaggage(String name) {
 		return this.braveBaggageManager.createBaggage(name);
 	}
 

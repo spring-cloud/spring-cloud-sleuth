@@ -16,8 +16,9 @@
 
 package org.springframework.cloud.sleuth.annotation;
 
-import org.springframework.cloud.sleuth.api.Span;
 import org.aopalliance.intercept.MethodInvocation;
+
+import org.springframework.cloud.sleuth.api.Span;
 
 /**
  * Parses data for a span created via a {@link NewSpan} annotation.
