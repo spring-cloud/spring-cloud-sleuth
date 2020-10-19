@@ -136,7 +136,7 @@ public abstract class TraceCallableTests implements TestTracingAwareSupplier {
 
 		private final Tracer tracer;
 
-		public TraceKeepingCallable(Tracer tracer) {
+		TraceKeepingCallable(Tracer tracer) {
 			this.tracer = tracer;
 		}
 
