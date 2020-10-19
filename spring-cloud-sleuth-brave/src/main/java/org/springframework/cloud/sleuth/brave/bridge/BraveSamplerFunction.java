@@ -22,6 +22,13 @@ import org.springframework.cloud.sleuth.api.SamplerFunction;
 import org.springframework.cloud.sleuth.api.http.HttpRequest;
 import org.springframework.cloud.sleuth.brave.bridge.http.BraveHttpRequest;
 
+/**
+ * Brave implementation of a {@link SamplerFunction}.
+ *
+ * @param <T> type of the input, for example a request or method
+ * @author Marcin Grzejszczak
+ * @since 3.0.0
+ */
 public class BraveSamplerFunction<T> implements SamplerFunction<T> {
 
 	final brave.sampler.SamplerFunction<T> samplerFunction;

@@ -24,6 +24,12 @@ import org.springframework.cloud.sleuth.api.http.HttpClientResponse;
 import org.springframework.cloud.sleuth.brave.bridge.BraveSpan;
 import org.springframework.cloud.sleuth.brave.bridge.BraveTraceContext;
 
+/**
+ * Brave implementation of a {@link HttpClientHandler}.
+ *
+ * @author Marcin Grzejszczak
+ * @since 3.0.0
+ */
 public class BraveHttpClientHandler implements HttpClientHandler {
 
 	final brave.http.HttpClientHandler<brave.http.HttpClientRequest, brave.http.HttpClientResponse> delegate;

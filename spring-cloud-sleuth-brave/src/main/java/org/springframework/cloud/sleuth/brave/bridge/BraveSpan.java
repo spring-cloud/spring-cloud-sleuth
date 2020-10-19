@@ -19,6 +19,12 @@ package org.springframework.cloud.sleuth.brave.bridge;
 import org.springframework.cloud.sleuth.api.Span;
 import org.springframework.cloud.sleuth.api.TraceContext;
 
+/**
+ * Brave implementation of a {@link Span}.
+ *
+ * @author Marcin Grzejszczak
+ * @since 3.0.0
+ */
 public class BraveSpan implements Span {
 
 	final brave.Span delegate;

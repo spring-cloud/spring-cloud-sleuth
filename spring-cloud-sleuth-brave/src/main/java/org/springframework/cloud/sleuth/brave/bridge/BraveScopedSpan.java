@@ -19,6 +19,12 @@ package org.springframework.cloud.sleuth.brave.bridge;
 import org.springframework.cloud.sleuth.api.ScopedSpan;
 import org.springframework.cloud.sleuth.api.TraceContext;
 
+/**
+ * Brave implementation of a {@link ScopedSpan}.
+ *
+ * @author Marcin Grzejszczak
+ * @since 3.0.0
+ */
 public class BraveScopedSpan implements ScopedSpan {
 
 	final brave.ScopedSpan span;

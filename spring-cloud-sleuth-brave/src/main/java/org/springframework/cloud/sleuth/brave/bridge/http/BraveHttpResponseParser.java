@@ -23,6 +23,12 @@ import org.springframework.cloud.sleuth.api.http.HttpResponseParser;
 import org.springframework.cloud.sleuth.brave.bridge.BraveSpanCustomizer;
 import org.springframework.cloud.sleuth.brave.bridge.BraveTraceContext;
 
+/**
+ * Brave implementation of a {@link HttpResponseParser}.
+ *
+ * @author Marcin Grzejszczak
+ * @since 3.0.0
+ */
 public class BraveHttpResponseParser implements HttpResponseParser {
 
 	final brave.http.HttpResponseParser delegate;

@@ -19,6 +19,12 @@ package org.springframework.cloud.sleuth.brave.bridge.http;
 import org.springframework.cloud.sleuth.api.Span;
 import org.springframework.cloud.sleuth.api.http.HttpRequest;
 
+/**
+ * Brave implementation of a {@link HttpRequest}.
+ *
+ * @author Marcin Grzejszczak
+ * @since 3.0.0
+ */
 public class BraveHttpRequest implements HttpRequest {
 
 	final brave.http.HttpRequest delegate;

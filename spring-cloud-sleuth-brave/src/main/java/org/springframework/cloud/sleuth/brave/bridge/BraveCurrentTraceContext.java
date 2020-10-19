@@ -19,6 +19,12 @@ package org.springframework.cloud.sleuth.brave.bridge;
 import org.springframework.cloud.sleuth.api.CurrentTraceContext;
 import org.springframework.cloud.sleuth.api.TraceContext;
 
+/**
+ * Brave implementation of a {@link CurrentTraceContext}.
+ *
+ * @author Marcin Grzejszczak
+ * @since 3.0.0
+ */
 public class BraveCurrentTraceContext implements CurrentTraceContext {
 
 	final brave.propagation.CurrentTraceContext delegate;

@@ -25,6 +25,12 @@ import brave.baggage.BaggageField;
 import org.springframework.cloud.sleuth.api.BaggageEntry;
 import org.springframework.cloud.sleuth.api.BaggageManager;
 
+/**
+ * Brave implementation of a {@link BaggageManager}.
+ *
+ * @author Marcin Grzejszczak
+ * @since 3.0.0
+ */
 public class BraveBaggageManager implements BaggageManager, Closeable {
 
 	private static Map<String, BaggageEntry> CACHE = new ConcurrentHashMap<>();

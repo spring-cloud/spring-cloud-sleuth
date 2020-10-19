@@ -22,6 +22,12 @@ import org.springframework.cloud.sleuth.api.http.HttpServerRequest;
 import org.springframework.cloud.sleuth.api.http.HttpServerResponse;
 import org.springframework.cloud.sleuth.brave.bridge.BraveSpan;
 
+/**
+ * Brave implementation of a {@link HttpServerHandler}.
+ *
+ * @author Marcin Grzejszczak
+ * @since 3.0.0
+ */
 public class BraveHttpServerHandler implements HttpServerHandler {
 
 	final brave.http.HttpServerHandler<brave.http.HttpServerRequest, brave.http.HttpServerResponse> delegate;

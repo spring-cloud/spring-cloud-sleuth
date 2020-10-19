@@ -48,7 +48,7 @@ import org.springframework.util.StringUtils;
 
 /**
  * {@link org.springframework.boot.autoconfigure.EnableAutoConfiguration
- * Auto-configuration} to enable tracing via Spring Cloud Sleuth.
+ * Auto-configuration} to enable tracing via Spring Cloud Sleuth with Brave.
  *
  * @author Spencer Gibb
  * @author Marcin Grzejszczak

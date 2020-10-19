@@ -31,6 +31,15 @@ import org.springframework.cloud.sleuth.brave.autoconfig.TraceBraveAutoConfigura
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+/**
+ * {@link org.springframework.boot.autoconfigure.EnableAutoConfiguration
+ * Auto-configuration} to enable the bridge between Sleuth API and Brave.
+ *
+ * @author Spencer Gibb
+ * @author Marcin Grzejszczak
+ * @author Tim Ysewyn
+ * @since 3.0.0
+ */
 @Configuration(proxyBeanMethods = false)
 @ConditionalOnProperty(value = "spring.sleuth.enabled", matchIfMissing = true)
 @ConditionalOnBean(brave.Tracer.class)

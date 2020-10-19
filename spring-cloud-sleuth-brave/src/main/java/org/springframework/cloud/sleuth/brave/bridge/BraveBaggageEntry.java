@@ -21,6 +21,12 @@ import brave.baggage.BaggageField;
 import org.springframework.cloud.sleuth.api.BaggageEntry;
 import org.springframework.cloud.sleuth.api.TraceContext;
 
+/**
+ * Brave implementation of a {@link BaggageEntry}.
+ *
+ * @author Marcin Grzejszczak
+ * @since 3.0.0
+ */
 public class BraveBaggageEntry implements BaggageEntry {
 
 	private final BaggageField delegate;

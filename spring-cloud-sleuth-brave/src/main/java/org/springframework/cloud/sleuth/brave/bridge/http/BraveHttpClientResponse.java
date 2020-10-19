@@ -20,6 +20,12 @@ import org.springframework.cloud.sleuth.api.Span;
 import org.springframework.cloud.sleuth.api.http.HttpClientRequest;
 import org.springframework.cloud.sleuth.api.http.HttpClientResponse;
 
+/**
+ * Brave implementation of a {@link HttpClientResponse}.
+ *
+ * @author Marcin Grzejszczak
+ * @since 3.0.0
+ */
 public class BraveHttpClientResponse implements HttpClientResponse {
 
 	final brave.http.HttpClientResponse delegate;

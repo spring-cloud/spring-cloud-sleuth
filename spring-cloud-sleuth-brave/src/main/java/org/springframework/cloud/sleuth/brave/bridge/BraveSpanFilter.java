@@ -23,6 +23,12 @@ import brave.propagation.TraceContext;
 import org.springframework.cloud.sleuth.api.exporter.FinishedSpan;
 import org.springframework.cloud.sleuth.api.exporter.SpanFilter;
 
+/**
+ * Brave implementation of a {@link SpanFilter}.
+ *
+ * @author Marcin Grzejszczak
+ * @since 3.0.0
+ */
 public class BraveSpanFilter extends SpanHandler implements SpanFilter {
 
 	@Override

@@ -26,6 +26,12 @@ import org.springframework.cloud.sleuth.api.Span;
 import org.springframework.cloud.sleuth.api.SpanCustomizer;
 import org.springframework.cloud.sleuth.api.Tracer;
 
+/**
+ * Brave implementation of a {@link Tracer}.
+ *
+ * @author Marcin Grzejszczak
+ * @since 3.0.0
+ */
 public class BraveTracer implements Tracer {
 
 	private final brave.Tracer tracer;
@@ -39,7 +45,7 @@ public class BraveTracer implements Tracer {
 	@Override
 	public Span nextSpan(Span parent) {
 		if (parent == null) {
-			throw new IllegalStateException("Parent must not be null");
+			return nextSpan();
 		}
 		brave.propagation.TraceContext context = (((BraveTraceContext) parent.context()).traceContext);
 		if (context == null) {
@@ -75,12 +81,6 @@ public class BraveTracer implements Tracer {
 	@Override
 	public ScopedSpan startScopedSpan(String name) {
 		return new BraveScopedSpan(this.tracer.startScopedSpan(name));
-	}
-
-	@Override
-	public ScopedSpan startScopedSpan(String name, Span parent) {
-		brave.propagation.TraceContext context = parent == null ? null : BraveTraceContext.toBrave(parent.context());
-		return new BraveScopedSpan(this.tracer.startScopedSpanWithParent(name, context));
 	}
 
 	@Override

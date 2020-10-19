@@ -22,6 +22,12 @@ import brave.propagation.TraceContextOrSamplingFlags;
 import org.springframework.cloud.sleuth.api.Span;
 import org.springframework.cloud.sleuth.api.TraceContext;
 
+/**
+ * Brave implementation of a {@link Span.Builder}.
+ *
+ * @author Marcin Grzejszczak
+ * @since 3.0.0
+ */
 public class BraveSpanBuilder implements Span.Builder {
 
 	brave.Span delegate;

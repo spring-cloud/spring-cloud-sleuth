@@ -24,6 +24,12 @@ import brave.handler.MutableSpan;
 import org.springframework.cloud.sleuth.api.Span;
 import org.springframework.cloud.sleuth.api.exporter.FinishedSpan;
 
+/**
+ * Brave implementation of a {@link FinishedSpan}.
+ *
+ * @author Marcin Grzejszczak
+ * @since 3.0.0
+ */
 public class BraveFinishedSpan implements FinishedSpan {
 
 	private final MutableSpan mutableSpan;

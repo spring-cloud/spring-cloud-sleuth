@@ -18,6 +18,12 @@ package org.springframework.cloud.sleuth.brave.bridge;
 
 import org.springframework.cloud.sleuth.api.SpanCustomizer;
 
+/**
+ * Brave implementation of a {@link SpanCustomizer}.
+ *
+ * @author Marcin Grzejszczak
+ * @since 3.0.0
+ */
 public class BraveSpanCustomizer implements SpanCustomizer {
 
 	private final brave.SpanCustomizer spanCustomizer;
