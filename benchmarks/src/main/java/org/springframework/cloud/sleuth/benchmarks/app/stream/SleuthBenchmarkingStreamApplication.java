@@ -23,7 +23,6 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 
-import brave.Tracing;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import reactor.core.publisher.Flux;
@@ -31,6 +30,7 @@ import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Scheduler;
 import reactor.core.scheduler.Schedulers;
 
+import org.springframework.beans.factory.BeanFactory;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -106,16 +106,16 @@ public class SleuthBenchmarkingStreamApplication {
 
 	@Bean(name = "myFlux")
 	@ConditionalOnProperty(value = "spring.sleuth.function.type", havingValue = "simple_manual")
-	public Function<Message<String>, Message<String>> simpleManual(Tracing tracing) {
+	public Function<Message<String>, Message<String>> simpleManual(BeanFactory beanFactory) {
 		System.out.println("simple_manual_function");
-		return new SimpleManualFunction(tracing);
+		return new SimpleManualFunction(beanFactory);
 	}
 
 	@Bean(name = "myFlux")
 	@ConditionalOnProperty(value = "spring.sleuth.function.type", havingValue = "reactive_simple_manual")
-	public Function<Flux<Message<String>>, Flux<Message<String>>> reactiveSimpleManual(Tracing tracing) {
+	public Function<Flux<Message<String>>, Flux<Message<String>>> reactiveSimpleManual(BeanFactory beanFactory) {
 		System.out.println("simple_reactive_manual_function");
-		return new SimpleReactiveManualFunction(tracing);
+		return new SimpleReactiveManualFunction(beanFactory);
 	}
 
 	@Bean(name = "myFlux")
@@ -170,22 +170,22 @@ class SimpleManualFunction implements Function<Message<String>, Message<String>>
 
 	private static final Logger log = LoggerFactory.getLogger(SimpleFunction.class);
 
-	private final Tracing tracing;
+	private final BeanFactory beanFactory;
 
-	SimpleManualFunction(Tracing tracing) {
-		this.tracing = tracing;
+	SimpleManualFunction(BeanFactory beanFactory) {
+		this.beanFactory = beanFactory;
 	}
 
 	@Override
 	public Message<String> apply(Message<String> input) {
-		return (MessagingSleuthOperators.asFunction(this.tracing, input)
-				.andThen(msg -> MessagingSleuthOperators.withSpanInScope(this.tracing, msg, stringMessage -> {
+		return (MessagingSleuthOperators.asFunction(this.beanFactory, input)
+				.andThen(msg -> MessagingSleuthOperators.withSpanInScope(this.beanFactory, msg, stringMessage -> {
 					log.info("Hello from simple manual [{}]", stringMessage.getPayload());
 					return stringMessage;
-				})).andThen(msg -> MessagingSleuthOperators.afterMessageHandled(this.tracing, msg, null))
-				.andThen(msg -> MessagingSleuthOperators.handleOutputMessage(this.tracing, msg))
+				})).andThen(msg -> MessagingSleuthOperators.afterMessageHandled(this.beanFactory, msg, null))
+				.andThen(msg -> MessagingSleuthOperators.handleOutputMessage(this.beanFactory, msg))
 				.andThen(msg -> MessageBuilder.createMessage(msg.getPayload().toUpperCase(), msg.getHeaders()))
-				.andThen(msg -> MessagingSleuthOperators.afterMessageHandled(this.tracing, msg, null)).apply(input));
+				.andThen(msg -> MessagingSleuthOperators.afterMessageHandled(this.beanFactory, msg, null)).apply(input));
 	}
 
 }
@@ -207,21 +207,21 @@ class SimpleReactiveManualFunction implements Function<Flux<Message<String>>, Fl
 
 	private static final Logger log = LoggerFactory.getLogger(SimpleReactiveFunction.class);
 
-	private final Tracing tracing;
+	private final BeanFactory beanFactory;
 
-	SimpleReactiveManualFunction(Tracing tracing) {
-		this.tracing = tracing;
+	SimpleReactiveManualFunction(BeanFactory beanFactory) {
+		this.beanFactory = beanFactory;
 	}
 
 	@Override
 	public Flux<Message<String>> apply(Flux<Message<String>> input) {
-		return input.map(message -> (MessagingSleuthOperators.asFunction(this.tracing, message))
-				.andThen(msg -> MessagingSleuthOperators.withSpanInScope(this.tracing, msg, stringMessage -> {
+		return input.map(message -> (MessagingSleuthOperators.asFunction(this.beanFactory, message))
+				.andThen(msg -> MessagingSleuthOperators.withSpanInScope(this.beanFactory, msg, stringMessage -> {
 					log.info("Hello from simple manual [{}]", stringMessage.getPayload());
 					return stringMessage;
-				})).andThen(msg -> MessagingSleuthOperators.afterMessageHandled(this.tracing, msg, null))
+				})).andThen(msg -> MessagingSleuthOperators.afterMessageHandled(this.beanFactory, msg, null))
 				.andThen(msg -> MessageBuilder.createMessage(msg.getPayload().toUpperCase(), msg.getHeaders()))
-				.andThen(msg -> MessagingSleuthOperators.handleOutputMessage(this.tracing, msg)).apply(message));
+				.andThen(msg -> MessagingSleuthOperators.handleOutputMessage(this.beanFactory, msg)).apply(message));
 	}
 
 }

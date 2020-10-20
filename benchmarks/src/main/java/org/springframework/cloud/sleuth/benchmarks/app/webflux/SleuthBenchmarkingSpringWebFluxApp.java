@@ -20,9 +20,6 @@ import java.time.Duration;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-import brave.handler.SpanHandler;
-import brave.propagation.TraceContext;
-import brave.sampler.Sampler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import reactor.core.publisher.Flux;
@@ -37,6 +34,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.boot.web.embedded.netty.NettyReactiveWebServerFactory;
 import org.springframework.boot.web.reactive.context.ReactiveWebServerInitializedEvent;
+import org.springframework.cloud.sleuth.api.TraceContext;
 import org.springframework.cloud.sleuth.instrument.web.SkipPatternProvider;
 import org.springframework.cloud.sleuth.instrument.web.WebFluxSleuthOperators;
 import org.springframework.context.ApplicationListener;
@@ -74,11 +72,6 @@ public class SleuthBenchmarkingSpringWebFluxApp implements ApplicationListener<R
 	}
 
 	@Bean
-	Sampler alwaysSampler() {
-		return Sampler.ALWAYS_SAMPLE;
-	}
-
-	@Bean
 	SkipPatternProvider patternProvider() {
 		return () -> Pattern.compile("");
 	}
@@ -87,13 +80,6 @@ public class SleuthBenchmarkingSpringWebFluxApp implements ApplicationListener<R
 	NettyReactiveWebServerFactory nettyReactiveWebServerFactory(@Value("${server.port:0}") int serverPort) {
 		log.info("Starting container at port [" + serverPort + "]");
 		return new NettyReactiveWebServerFactory(serverPort == 0 ? SocketUtils.findAvailableTcpPort() : serverPort);
-	}
-
-	@Bean
-	public SpanHandler spanHandler() {
-		return new SpanHandler() {
-			// intentionally anonymous to prevent logging fallback on NOOP
-		};
 	}
 
 	@Override
@@ -135,7 +121,7 @@ public class SleuthBenchmarkingSpringWebFluxApp implements ApplicationListener<R
 					log.info("Doing assertions");
 					TraceContext traceContext = signal.getContext().get(TraceContext.class);
 					Assert.notNull(traceContext, "Context must be set by Sleuth instrumentation");
-					Assert.state(traceContext.traceIdString().equals("4883117762eb9420"), "TraceId must be propagated");
+					Assert.state(traceContext.traceId().equals("4883117762eb9420"), "TraceId must be propagated");
 					log.info("Assertions passed");
 				});
 	}
@@ -151,7 +137,7 @@ public class SleuthBenchmarkingSpringWebFluxApp implements ApplicationListener<R
 					WebFluxSleuthOperators.withSpanInScope(signal.getContext(), () -> log.info("Doing assertions"));
 					TraceContext traceContext = signal.getContext().get(TraceContext.class);
 					Assert.notNull(traceContext, "Context must be set by Sleuth instrumentation");
-					Assert.state(traceContext.traceIdString().equals("4883117762eb9420"), "TraceId must be propagated");
+					Assert.state(traceContext.traceId().equals("4883117762eb9420"), "TraceId must be propagated");
 					log.info("Assertions passed");
 				});
 	}

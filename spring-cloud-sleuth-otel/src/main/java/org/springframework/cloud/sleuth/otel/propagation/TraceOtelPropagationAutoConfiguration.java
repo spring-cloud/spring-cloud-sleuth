@@ -47,6 +47,7 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.cloud.sleuth.api.BaggageManager;
 import org.springframework.cloud.sleuth.autoconfig.SleuthBaggageProperties;
 import org.springframework.cloud.sleuth.autoconfig.TraceAutoConfiguration;
+import org.springframework.cloud.sleuth.otel.bridge.TraceOtelBridgeAutoConfiguation;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -61,7 +62,7 @@ import org.springframework.context.annotation.Configuration;
  */
 @Configuration(proxyBeanMethods = false)
 @ConditionalOnBean(Tracer.class)
-@AutoConfigureBefore(TraceAutoConfiguration.class)
+@AutoConfigureBefore({ TraceAutoConfiguration.class, TraceOtelBridgeAutoConfiguation.class })
 @EnableConfigurationProperties({ SleuthPropagationProperties.class, OtelPropagationProperties.class })
 public class TraceOtelPropagationAutoConfiguration {
 

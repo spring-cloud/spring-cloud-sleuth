@@ -52,6 +52,7 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.WebApplicationType;
 import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.cloud.sleuth.benchmarks.app.webflux.SleuthBenchmarkingSpringWebFluxApp;
+import org.springframework.cloud.sleuth.benchmarks.jmh.TracerImplementation;
 import org.springframework.context.ConfigurableApplicationContext;
 
 @Measurement(iterations = 5, time = 1)
@@ -137,7 +138,7 @@ public class SpringWebFluxBenchmarksTests {
 	}
 
 	protected String[] runArgs() {
-		return new String[] { "--spring.jmx.enabled=false", "--spring.application.name=defaultTraceContext",
+		return new String[] { "--spring.jmx.enabled=false", "--spring.application.name=defaultTraceContext", TracerImplementation.brave.toString(),
 				"--spring.sleuth.enabled=true" };
 	}
 
