@@ -18,7 +18,10 @@ package org.springframework.cloud.sleuth.otel.propagation;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 import io.grpc.Context;
 import io.opentelemetry.OpenTelemetry;
@@ -30,14 +33,15 @@ import io.opentelemetry.extensions.trace.propagation.B3Propagator;
 import io.opentelemetry.extensions.trace.propagation.JaegerPropagator;
 import io.opentelemetry.extensions.trace.propagation.OtTracerPropagator;
 import io.opentelemetry.extensions.trace.propagation.TraceMultiPropagator;
+import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.Tracer;
+import io.opentelemetry.trace.TracingContextUtils;
+import io.opentelemetry.trace.propagation.HttpTraceContext;
 
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.AutoConfigureBefore;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.cloud.sleuth.api.BaggageManager;
@@ -58,7 +62,7 @@ import org.springframework.context.annotation.Configuration;
 @Configuration(proxyBeanMethods = false)
 @ConditionalOnBean(Tracer.class)
 @AutoConfigureBefore(TraceAutoConfiguration.class)
-@EnableConfigurationProperties(OtelPropagationProperties.class)
+@EnableConfigurationProperties({ SleuthPropagationProperties.class, OtelPropagationProperties.class })
 public class TraceOtelPropagationAutoConfiguration {
 
 	@Bean
@@ -75,79 +79,11 @@ public class TraceOtelPropagationAutoConfiguration {
 	}
 
 	@Configuration(proxyBeanMethods = false)
-	@ConditionalOnClass(AwsXRayPropagator.class)
 	static class PropagatorsConfiguration {
 
-		@Configuration(proxyBeanMethods = false)
-		@ConditionalOnProperty(name = "spring.sleuth.otel.propagation.type", havingValue = "AWS")
-		static class AwsPropagatorConfiguration {
-
-			@Bean
-			TextMapPropagator otelTextMapPropagator() {
-				return AwsXRayPropagator.getInstance();
-			}
-
-		}
-
-		@Configuration(proxyBeanMethods = false)
-		@ConditionalOnProperty(name = "spring.sleuth.otel.propagation.type", havingValue = "B3", matchIfMissing = true)
-		@ConditionalOnClass(B3Propagator.class)
-		static class B3PropagatorConfiguration {
-
-			@Bean
-			TextMapPropagator otelTextMapPropagator() {
-				return TraceMultiPropagator.builder().addPropagator(B3Propagator.getSingleHeaderPropagator())
-						.addPropagator(B3Propagator.getMultipleHeaderPropagator()).build();
-			}
-
-		}
-
-		@Configuration(proxyBeanMethods = false)
-		@ConditionalOnProperty(name = "spring.sleuth.otel.propagation.type", havingValue = "JAEGER")
-		@ConditionalOnClass(JaegerPropagator.class)
-		static class JaegerPropagatorConfiguration {
-
-			@Bean
-			JaegerPropagator otelTextMapPropagator() {
-				return JaegerPropagator.getInstance();
-			}
-
-		}
-
-		@Configuration(proxyBeanMethods = false)
-		@ConditionalOnProperty(name = "spring.sleuth.otel.propagation.type", havingValue = "OT_TRACER")
-		@ConditionalOnClass(OtTracerPropagator.class)
-		static class OtTracerPropagatorConfiguration {
-
-			@Bean
-			OtTracerPropagator otelTextMapPropagator() {
-				return OtTracerPropagator.getInstance();
-			}
-
-		}
-
-		@Configuration(proxyBeanMethods = false)
-		@ConditionalOnMissingClass("io.opentelemetry.extensions.trace.propagation.TraceMultiPropagator")
-		static class NoExtraPropagatorsConfiguration {
-
-			@Bean
-			@ConditionalOnMissingBean
-			NoopTextMapPropagator noOpTextMapPropagator() {
-				return NoopTextMapPropagator.INSTANCE;
-			}
-
-		}
-
-		@Configuration(proxyBeanMethods = false)
-		@ConditionalOnProperty(name = "spring.sleuth.otel.propagation.type", havingValue = "custom")
-		static class CustomPropagatorsConfiguration {
-
-			@Bean
-			@ConditionalOnMissingBean
-			NoopTextMapPropagator noOpTextMapPropagator() {
-				return NoopTextMapPropagator.INSTANCE;
-			}
-
+		@Bean
+		CompositeTextMapPropagator compositeTextMapPropagator(SleuthPropagationProperties properties) {
+			return new CompositeTextMapPropagator(properties);
 		}
 
 	}
@@ -163,6 +99,53 @@ public class TraceOtelPropagationAutoConfiguration {
 			return new BaggageTextMapPropagator(properties, otelBaggageManager, baggageManager, publisher);
 		}
 
+	}
+
+}
+
+class CompositeTextMapPropagator implements TextMapPropagator {
+
+	private final Map<SleuthPropagationProperties.PropagationType, TextMapPropagator> mapping = new HashMap<>();
+
+	private final SleuthPropagationProperties properties;
+
+	CompositeTextMapPropagator(SleuthPropagationProperties properties) {
+		this.properties = properties;
+		this.mapping.put(SleuthPropagationProperties.PropagationType.AWS, AwsXRayPropagator.getInstance());
+		this.mapping.put(SleuthPropagationProperties.PropagationType.B3,
+				TraceMultiPropagator.builder().addPropagator(B3Propagator.getSingleHeaderPropagator())
+						.addPropagator(B3Propagator.getMultipleHeaderPropagator()).build());
+		this.mapping.put(SleuthPropagationProperties.PropagationType.JAEGER, JaegerPropagator.getInstance());
+		this.mapping.put(SleuthPropagationProperties.PropagationType.OT_TRACER, OtTracerPropagator.getInstance());
+		this.mapping.put(SleuthPropagationProperties.PropagationType.W3C, HttpTraceContext.getInstance());
+		this.mapping.put(SleuthPropagationProperties.PropagationType.CUSTOM, NoopTextMapPropagator.INSTANCE);
+	}
+
+	@Override
+	public List<String> fields() {
+		return this.properties.getType().stream().map(this.mapping::get).flatMap(p -> p.fields().stream())
+				.collect(Collectors.toList());
+	}
+
+	@Override
+	public <C> void inject(Context context, C carrier, Setter<C> setter) {
+		this.properties.getType().stream().map(this.mapping::get).forEach(p -> p.inject(context, carrier, setter));
+	}
+
+	@Override
+	public <C> Context extract(Context context, C carrier, Getter<C> getter) {
+		for (SleuthPropagationProperties.PropagationType type : this.properties.getType()) {
+			TextMapPropagator propagator = this.mapping.get(type);
+			if (propagator == null || propagator == NoopTextMapPropagator.INSTANCE) {
+				continue;
+			}
+			Context extractedContext = propagator.extract(context, carrier, getter);
+			Span span = TracingContextUtils.getSpanWithoutDefault(extractedContext);
+			if (span != null) {
+				return extractedContext;
+			}
+		}
+		return context;
 	}
 
 	private static final class NoopTextMapPropagator implements TextMapPropagator {

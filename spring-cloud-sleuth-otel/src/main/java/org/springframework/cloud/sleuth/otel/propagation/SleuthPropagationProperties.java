@@ -16,6 +16,9 @@
 
 package org.springframework.cloud.sleuth.otel.propagation;
 
+import java.util.Collections;
+import java.util.List;
+
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 /**
@@ -24,30 +27,53 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * @author Marcin Grzejszczak
  * @since 3.0.0
  */
-@ConfigurationProperties("spring.sleuth.otel.propagation")
-class OtelPropagationProperties {
+@ConfigurationProperties("spring.sleuth.propagation")
+public class SleuthPropagationProperties {
 
-	private SleuthBaggage sleuthBaggage = new SleuthBaggage();
+	/**
+	 * Type of propagation.
+	 */
+	private List<PropagationType> type = Collections.singletonList(PropagationType.B3);
 
-	public SleuthBaggage getSleuthBaggage() {
-		return this.sleuthBaggage;
+	public List<PropagationType> getType() {
+		return this.type;
 	}
 
-	public void setSleuthBaggage(SleuthBaggage sleuthBaggage) {
-		this.sleuthBaggage = sleuthBaggage;
+	public void setType(List<PropagationType> type) {
+		this.type = type;
 	}
 
-	public static class SleuthBaggage {
+	public enum PropagationType {
 
-		private boolean enabled = true;
+		/**
+		 * AWS propagation type.
+		 */
+		AWS,
 
-		public boolean isEnabled() {
-			return this.enabled;
-		}
+		/**
+		 * B3 propagation type.
+		 */
+		B3,
 
-		public void setEnabled(boolean enabled) {
-			this.enabled = enabled;
-		}
+		/**
+		 * Jaeger propagation type.
+		 */
+		JAEGER,
+
+		/**
+		 * Lightstep propagation type.
+		 */
+		OT_TRACER,
+
+		/**
+		 * W3C propagation type.
+		 */
+		W3C,
+
+		/**
+		 * Custom propagation type.
+		 */
+		CUSTOM
 
 	}
 

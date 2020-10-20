@@ -33,7 +33,7 @@ class OtelProperties {
 	/**
 	 * Instrumentation name to be used to find a Tracer.
 	 */
-	private String instrumentationName = "org.springframework.cloud.sleuth";
+	private String instrumentationName = "org.springframework.cloud.spring-cloud-sleuth";
 
 	/**
 	 * Instrumentation version to be used to find a Tracer.

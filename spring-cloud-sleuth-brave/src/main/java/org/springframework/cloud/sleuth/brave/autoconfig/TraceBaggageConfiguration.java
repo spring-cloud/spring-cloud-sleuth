@@ -49,6 +49,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.cloud.sleuth.autoconfig.SleuthBaggageProperties;
+import org.springframework.cloud.sleuth.brave.propagation.PropagationFactorySupplier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Conditional;
 import org.springframework.context.annotation.Configuration;
@@ -73,11 +74,6 @@ class TraceBaggageConfiguration {
 	static final String PROPAGATION_KEYS = "spring.sleuth.propagation-keys";
 	static final String WHITELISTED_KEYS = "spring.sleuth.propagation.tag.whitelisted-keys";
 	static final String WHITELISTED_MDC_KEYS = "spring.sleuth.log.slf4j.whitelisted-mdc-keys";
-
-	// Note: Versions <2.2.3 use injectFormat(MULTI) for non-remote (ex spring-messaging)
-	// See #1643
-	static final Propagation.Factory B3_FACTORY = B3Propagation.newFactoryBuilder()
-			.injectFormat(B3Propagation.Format.SINGLE_NO_PARENT).build();
 
 	// These List<String> beans allow us to get deprecated property values, regardless of
 	// if they were comma or yaml encoded. This keeps them out of SleuthBaggageProperties
@@ -106,6 +102,14 @@ class TraceBaggageConfiguration {
 		return new ArrayList<>();
 	}
 
+	// Note: Versions <2.2.3 use injectFormat(MULTI) for non-remote (ex spring-messaging)
+	// See #1643
+	@Bean
+	@ConditionalOnMissingBean
+	PropagationFactorySupplier defaultPropagationFactorySupplier() {
+		return () -> B3Propagation.newFactoryBuilder().injectFormat(B3Propagation.Format.SINGLE_NO_PARENT).build();
+	}
+
 	/**
 	 * To override the underlying context format, override this bean and set the delegate
 	 * to what you need. {@link BaggagePropagation.FactoryBuilder} will unwrap itself if
@@ -117,8 +121,8 @@ class TraceBaggageConfiguration {
 	 */
 	@Bean
 	@ConditionalOnMissingBean
-	BaggagePropagation.FactoryBuilder baggagePropagationFactoryBuilder() {
-		return BaggagePropagation.newFactoryBuilder(B3_FACTORY);
+	BaggagePropagation.FactoryBuilder baggagePropagationFactoryBuilder(PropagationFactorySupplier supplier) {
+		return BaggagePropagation.newFactoryBuilder(supplier.get());
 	}
 
 	@Bean

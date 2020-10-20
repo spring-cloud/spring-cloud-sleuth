@@ -17,6 +17,7 @@
 package org.springframework.cloud.sleuth.brave.autoconfig;
 
 import brave.baggage.BaggagePropagation;
+import brave.propagation.B3Propagation;
 import brave.propagation.B3SinglePropagation;
 import brave.propagation.Propagation;
 import org.assertj.core.api.BDDAssertions;
@@ -30,30 +31,30 @@ import org.springframework.context.annotation.Configuration;
 
 public class TraceBraveAutoConfigurationPropagationCustomizationTests {
 
+	private static final Propagation.Factory B3_FACTORY = B3Propagation.newFactoryBuilder()
+			.injectFormat(B3Propagation.Format.SINGLE_NO_PARENT).build();
+
 	private final ApplicationContextRunner contextRunner = new ApplicationContextRunner()
 			.withConfiguration(AutoConfigurations.of(TraceAutoConfiguration.class, TraceBraveAutoConfiguration.class));
 
 	@Test
 	public void stillCreatesDefault() {
 		this.contextRunner.run((context) -> {
-			BDDAssertions.then(context.getBean(Propagation.Factory.class))
-					.isEqualTo(TraceBaggageConfiguration.B3_FACTORY);
+			BDDAssertions.then(context.getBean(Propagation.Factory.class)).isEqualTo(B3_FACTORY);
 		});
 	}
 
 	@Test
 	public void allowsCustomization() {
 		this.contextRunner.withPropertyValues("spring.sleuth.baggage.remote-fields=country-code").run((context) -> {
-			BDDAssertions.then(context.getBean(Propagation.Factory.class)).extracting("delegate")
-					.isEqualTo(TraceBaggageConfiguration.B3_FACTORY);
+			BDDAssertions.then(context.getBean(Propagation.Factory.class)).extracting("delegate").isEqualTo(B3_FACTORY);
 		});
 	}
 
 	@Test
 	public void defaultValueUsedWhenApplicationNameNotSet() {
 		this.contextRunner.withPropertyValues("spring.application.name=").run((context) -> {
-			BDDAssertions.then(context.getBean(Propagation.Factory.class))
-					.isEqualTo(TraceBaggageConfiguration.B3_FACTORY);
+			BDDAssertions.then(context.getBean(Propagation.Factory.class)).isEqualTo(B3_FACTORY);
 		});
 	}
 

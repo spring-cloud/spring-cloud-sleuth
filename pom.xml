@@ -249,6 +249,11 @@
 				<version>${spring-security-oauth2.version}</version>
 			</dependency>
 			<dependency>
+				<groupId>io.zipkin.aws</groupId>
+				<artifactId>brave-propagation-aws</artifactId>
+				<version>${brave-propagation-aws.version}</version>
+			</dependency>
+			<dependency>
 				<groupId>org.hamcrest</groupId>
 				<artifactId>hamcrest-core</artifactId>
 				<version>${hamcrest-core.version}</version>
@@ -302,6 +307,7 @@
 		<commons-lang3.version>3.8.1</commons-lang3.version>
 		<hamcrest-core.version>2.2</hamcrest-core.version>
 		<awaitility.version>3.0.0</awaitility.version>
+		<brave-propagation-aws.version>0.21.3</brave-propagation-aws.version>
 	</properties>
 
 	<repositories>

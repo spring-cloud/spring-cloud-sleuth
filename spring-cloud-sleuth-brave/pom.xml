@@ -246,6 +246,10 @@
 			<artifactId>brave-instrumentation-mongodb</artifactId>
 		</dependency>
 		<dependency>
+			<groupId>io.zipkin.aws</groupId>
+			<artifactId>brave-propagation-aws</artifactId>
+		</dependency>
+		<dependency>
 			<groupId>javax.jms</groupId>
 			<artifactId>javax.jms-api</artifactId>
 			<optional>true</optional>
