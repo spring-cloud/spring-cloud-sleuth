@@ -17,8 +17,6 @@
 package org.springframework.cloud.sleuth.instrument.web;
 
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
 import javax.servlet.http.HttpServletRequest;
@@ -43,7 +41,6 @@ import org.springframework.cloud.sleuth.test.TestSpanHandler;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
-import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -53,7 +50,6 @@ import org.springframework.web.client.RestTemplate;
 import static org.assertj.core.api.BDDAssertions.then;
 
 @ContextConfiguration(classes = HttpServerParserTests.TestConfiguration.class)
-@DirtiesContext
 public abstract class HttpServerParserTests {
 
 	@Autowired
@@ -80,10 +76,10 @@ public abstract class HttpServerParserTests {
 		BDDAssertions.then(new RestTemplate().getForObject("http://localhost:" + this.port + "/hello", String.class))
 				.isEqualTo("hello");
 
-		Awaitility.await().atMost(1, TimeUnit.SECONDS)
-				.untilFalse(new AtomicBoolean(spans.reportedSpans().isEmpty()));
-		then(serverSideTags()).containsEntry("ServerRequest", "Tag").containsEntry("ServerRequestServlet", "GET")
-				.containsEntry("ServerResponse", "Tag").containsEntry("ServerResponseServlet", "200");
+		Awaitility.await()
+				.untilAsserted(() -> then(serverSideTags()).containsEntry("ServerRequest", "Tag")
+						.containsEntry("ServerRequestServlet", "GET").containsEntry("ServerResponse", "Tag")
+						.containsEntry("ServerResponseServlet", "200"));
 	}
 
 	@NotNull

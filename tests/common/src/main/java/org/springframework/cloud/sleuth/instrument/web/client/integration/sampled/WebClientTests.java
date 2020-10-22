@@ -140,7 +140,7 @@ public abstract class WebClientTests {
 			then(getHeader(response, "b3")).isNull();
 			then(this.spans).isNotEmpty();
 			Optional<FinishedSpan> noTraceSpan = this.spans.reportedSpans().stream()
-					.filter(span ->span.name().contains("GET") && !span.tags().isEmpty()
+					.filter(span -> span.name().contains("GET") && !span.tags().isEmpty()
 							&& span.tags().containsKey("http.path"))
 					.findFirst();
 			then(noTraceSpan.isPresent()).isTrue();
