@@ -43,7 +43,6 @@ import org.springframework.cloud.sleuth.otel.autoconfig.TraceOtelAutoConfigurati
 import org.springframework.cloud.sleuth.otel.bridge.TraceOtelBridgeAutoConfiguation;
 import org.springframework.cloud.sleuth.otel.log.TraceOtelLogAutoConfiguration;
 import org.springframework.cloud.sleuth.otel.propagation.TraceOtelPropagationAutoConfiguration;
-import org.springframework.cloud.sleuth.otel.sampler.TraceOtelSamplerAutoConfiguration;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.Configuration;
 
@@ -126,7 +125,7 @@ public class BridgeTests {
 				TraceBraveBridgeAutoConfiguation.class, TraceBravePropagationAutoConfiguration.class,
 				TraceOtelAutoConfiguration.class, TraceOtelBridgeAutoConfiguation.class,
 				TraceOtelPropagationAutoConfiguration.class, TraceOtelLogAutoConfiguration.class,
-				TraceOtelSamplerAutoConfiguration.class, TraceOtelLogAutoConfiguration.class })
+				 TraceOtelLogAutoConfiguration.class })
 		static class TestConfiguration {
 
 		}
