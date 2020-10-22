@@ -133,15 +133,14 @@ public class MessagingApplicationTests extends AbstractIntegrationTest {
 		List<MutableSpan> spans = this.testSpanHandler.spans;
 		then(spans).as("There were 7 spans").hasSize(7);
 		log.info("Checking the parent child structure");
-		List<Optional<MutableSpan>> parentChild = spans.stream().filter(span -> span.parentId() != null)
-				.map(span -> {
-					Optional<MutableSpan> any = spans.stream().filter(span1 -> span1.id().equals(span.parentId())).findAny();
-					if (!any.isPresent()) {
-						log.warn("Span with id [" + span.id() + "] and parent span id [" + span.parentId() + "] doesn't have a corresponding span with id equal to parent id");
-					}
-					return any;
-				})
-				.collect(Collectors.toList());
+		List<Optional<MutableSpan>> parentChild = spans.stream().filter(span -> span.parentId() != null).map(span -> {
+			Optional<MutableSpan> any = spans.stream().filter(span1 -> span1.id().equals(span.parentId())).findAny();
+			if (!any.isPresent()) {
+				log.warn("Span with id [" + span.id() + "] and parent span id [" + span.parentId()
+						+ "] doesn't have a corresponding span with id equal to parent id");
+			}
+			return any;
+		}).collect(Collectors.toList());
 		log.info("List of parents and children " + parentChild);
 		then(parentChild.stream().allMatch(Optional::isPresent)).isTrue();
 	}

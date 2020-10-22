@@ -43,6 +43,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.core.env.Environment;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.client.SimpleClientHttpRequestFactory;
+import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -54,6 +55,7 @@ import static org.assertj.core.api.BDDAssertions.then;
 
 @ContextConfiguration(classes = WebClientExceptionTests.TestConfiguration.class)
 @TestPropertySource(properties = "spring.application.name=exceptionservice")
+@DirtiesContext
 public class WebClientExceptionTests {
 
 	private static final Log log = LogFactory.getLog(WebClientExceptionTests.class);
