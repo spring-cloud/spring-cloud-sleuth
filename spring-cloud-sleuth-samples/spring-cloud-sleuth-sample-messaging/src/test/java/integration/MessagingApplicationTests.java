@@ -18,10 +18,10 @@ package integration;
 
 import java.util.List;
 import java.util.Optional;
-import java.util.Random;
 import java.util.stream.Collectors;
 
 import brave.Span;
+import brave.Tracer;
 import brave.handler.MutableSpan;
 import brave.handler.SpanHandler;
 import brave.sampler.Sampler;
@@ -55,6 +55,9 @@ public class MessagingApplicationTests extends AbstractIntegrationTest {
 	@Autowired
 	IntegrationTestZipkinSpanHandler testSpanHandler;
 
+	@Autowired
+	Tracer tracer;
+
 	@AfterEach
 	public void cleanup() {
 		this.testSpanHandler.spans.clear();
@@ -62,23 +65,27 @@ public class MessagingApplicationTests extends AbstractIntegrationTest {
 
 	@Test
 	public void should_have_passed_trace_id_when_message_is_about_to_be_sent() {
-		long traceId = new Random().nextLong();
+		Span span = tracer.nextSpan().start();
+		long traceId = span.context().traceId();
 
-		await().atMost(15, SECONDS).untilAsserted(
+		await().atMost(3, SECONDS).untilAsserted(
 				() -> httpMessageWithTraceIdInHeadersIsSuccessfullySent(sampleAppUrl + "/", traceId).run());
 
-		await().atMost(15, SECONDS).untilAsserted(() -> thenAllSpansHaveTraceIdEqualTo(traceId));
+		span.finish();
+		await().atMost(3, SECONDS).untilAsserted(() -> thenAllSpansHaveTraceIdEqualTo(traceId));
 	}
 
 	@Test
 	public void should_have_passed_trace_id_and_generate_new_span_id_when_message_is_about_to_be_sent() {
-		long traceId = new Random().nextLong();
-		long spanId = new Random().nextLong();
+		Span span = tracer.nextSpan().start();
+		long traceId = span.context().traceId();
+		long spanId = span.context().spanId();
 
-		await().atMost(15, SECONDS).untilAsserted(
+		await().atMost(3, SECONDS).untilAsserted(
 				() -> httpMessageWithTraceIdInHeadersIsSuccessfullySent(sampleAppUrl + "/", traceId, spanId).run());
 
-		await().atMost(15, SECONDS).untilAsserted(() -> {
+		span.finish();
+		await().atMost(3, SECONDS).untilAsserted(() -> {
 			thenAllSpansHaveTraceIdEqualTo(traceId);
 			thenTheSpansHaveProperParentStructure();
 		});
@@ -86,12 +93,14 @@ public class MessagingApplicationTests extends AbstractIntegrationTest {
 
 	@Test
 	public void should_have_passed_trace_id_with_annotations_in_async_thread_when_message_is_about_to_be_sent() {
-		long traceId = new Random().nextLong();
+		Span span = tracer.nextSpan().start();
+		long traceId = span.context().traceId();
 
-		await().atMost(15, SECONDS).untilAsserted(
+		await().atMost(3, SECONDS).untilAsserted(
 				() -> httpMessageWithTraceIdInHeadersIsSuccessfullySent(sampleAppUrl + "/xform", traceId).run());
 
-		await().atMost(15, SECONDS).untilAsserted(() -> {
+		span.finish();
+		await().atMost(3, SECONDS).untilAsserted(() -> {
 			thenAllSpansHaveTraceIdEqualTo(traceId);
 			thenThereIsAtLeastOneTagWithKey("background-sleep-millis");
 		});
@@ -122,10 +131,16 @@ public class MessagingApplicationTests extends AbstractIntegrationTest {
 		// (SS)
 		thenAllSpansArePresent(firstHttpSpan, eventSpans, lastHttpSpansParent, eventSentSpan, producerSpan);
 		List<MutableSpan> spans = this.testSpanHandler.spans;
-		then(spans).as("There were 6 spans").hasSize(6);
+		then(spans).as("There were 7 spans").hasSize(7);
 		log.info("Checking the parent child structure");
 		List<Optional<MutableSpan>> parentChild = spans.stream().filter(span -> span.parentId() != null)
-				.map(span -> spans.stream().filter(span1 -> span1.id().equals(span.parentId())).findAny())
+				.map(span -> {
+					Optional<MutableSpan> any = spans.stream().filter(span1 -> span1.id().equals(span.parentId())).findAny();
+					if (!any.isPresent()) {
+						log.warn("Span with id [" + span.id() + "] and parent span id [" + span.parentId() + "] doesn't have a corresponding span with id equal to parent id");
+					}
+					return any;
+				})
 				.collect(Collectors.toList());
 		log.info("List of parents and children " + parentChild);
 		then(parentChild.stream().allMatch(Optional::isPresent)).isTrue();

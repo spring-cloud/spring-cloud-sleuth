@@ -16,6 +16,9 @@
 
 package sample;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -30,11 +33,12 @@ import org.springframework.web.client.RestTemplate;
  * @author Spencer Gibb
  */
 @SpringBootApplication
-
 @EnableAsync
 @IntegrationComponentScan
 @RestController
 public class SampleMessagingApplication {
+
+	private static final Log log = LogFactory.getLog(SampleMessagingApplication.class);
 
 	@Autowired
 	private SampleSink gateway;
@@ -48,6 +52,7 @@ public class SampleMessagingApplication {
 
 	@RequestMapping("/")
 	public String home() {
+		log.info("Got request");
 		String msg = "Hello";
 		this.gateway.send(msg);
 		return msg;
