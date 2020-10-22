@@ -293,7 +293,7 @@
 		<opentelemetry-instrumentation.version>0.9.0-SNAPSHOT</opentelemetry-instrumentation.version>
 		<spring-security-boot-autoconfigure.version>2.3.3.RELEASE</spring-security-boot-autoconfigure.version>
 		<disable.nohttp.checks>false</disable.nohttp.checks>
-		<okhttp.version>4.8.0</okhttp.version>
+		<okhttp.version>4.9.0</okhttp.version>
 		<mockwebserver.version>4.8.0</mockwebserver.version>
 		<guava.version>20.0</guava.version>
 		<javax.resource-api.version>1.7.1</javax.resource-api.version>
@@ -306,7 +306,7 @@
 		<javadoc.failOnWarnings>false</javadoc.failOnWarnings>
 		<commons-lang3.version>3.8.1</commons-lang3.version>
 		<hamcrest-core.version>2.2</hamcrest-core.version>
-		<awaitility.version>3.0.0</awaitility.version>
+		<awaitility.version>4.0.3</awaitility.version>
 		<brave-propagation-aws.version>0.21.3</brave-propagation-aws.version>
 	</properties>
 

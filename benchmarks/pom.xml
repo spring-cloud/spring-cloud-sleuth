@@ -28,7 +28,7 @@
 	<parent>
 		<groupId>org.springframework.boot</groupId>
 		<artifactId>spring-boot-starter-parent</artifactId>
-		<version>2.4.0-SNAPSHOT</version>
+		<version>2.4.0-M4</version>
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
 
@@ -38,7 +38,7 @@
 		<sonar.skip>true</sonar.skip>
 		<maven.compiler.target>1.8</maven.compiler.target>
 		<maven.compiler.source>1.8</maven.compiler.source>
-		<okhttp.version>4.8.0</okhttp.version>
+		<okhttp.version>4.9.0</okhttp.version>
 		<microbenchmark-runner.version>0.2.0.RELEASE</microbenchmark-runner.version>
 		<jmh.version>1.21</jmh.version>
 		<spring-cloud-stream.version>3.1.0-SNAPSHOT</spring-cloud-stream.version>
