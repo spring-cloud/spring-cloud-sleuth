@@ -74,12 +74,16 @@ public class OtelHttpServerHandler
 	public void handleSend(HttpServerResponse response, Span span) {
 		Throwable throwable = response.error();
 		io.opentelemetry.trace.Span otel = OtelSpan.toOtel(span);
+		parseResponse(span, response);
 		if (throwable == null) {
 			end(otel, response);
 		}
 		else {
 			endExceptionally(otel, throwable, response);
 		}
+	}
+
+	private void parseResponse(Span span, HttpServerResponse response) {
 		if (this.httpServerResponseParser != null) {
 			this.httpServerResponseParser.parse(response, span.context(), span);
 		}

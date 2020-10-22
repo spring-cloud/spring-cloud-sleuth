@@ -30,6 +30,16 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 @ConfigurationProperties(prefix = "spring.sleuth.async")
 class SleuthAsyncProperties {
 
+	private boolean enabled;
+
+	public boolean isEnabled() {
+		return this.enabled;
+	}
+
+	public void setEnabled(boolean enabled) {
+		this.enabled = enabled;
+	}
+
 	/**
 	 * List of {@link java.util.concurrent.Executor} bean names that should be ignored and
 	 * not wrapped in a trace representation.

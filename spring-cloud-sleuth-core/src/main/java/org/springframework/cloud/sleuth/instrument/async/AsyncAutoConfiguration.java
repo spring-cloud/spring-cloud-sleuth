@@ -32,7 +32,7 @@ import org.springframework.context.annotation.Configuration;
  */
 @Configuration(proxyBeanMethods = false)
 @ConditionalOnBean(Tracer.class)
-@ConditionalOnProperty(value = "spring.sleuth.scheduled.enabled", matchIfMissing = true)
+@ConditionalOnProperty(value = "spring.sleuth.async.enabled", matchIfMissing = true)
 @EnableConfigurationProperties(SleuthAsyncProperties.class)
 class AsyncAutoConfiguration {
 

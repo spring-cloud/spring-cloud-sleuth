@@ -140,7 +140,7 @@ public abstract class WebClientTests {
 			then(getHeader(response, "b3")).isNull();
 			then(this.spans).isNotEmpty();
 			Optional<FinishedSpan> noTraceSpan = this.spans.reportedSpans().stream()
-					.filter(span -> span.name().contains("GET") && !span.tags().isEmpty()
+					.filter(span ->span.name().contains("GET") && !span.tags().isEmpty()
 							&& span.tags().containsKey("http.path"))
 					.findFirst();
 			then(noTraceSpan.isPresent()).isTrue();
@@ -224,7 +224,7 @@ public abstract class WebClientTests {
 
 		try (Tracer.SpanInScope ws = this.tracer.withSpan(span)) {
 			this.webClient.get().uri("http://localhost:" + this.port + "/issue1462").retrieve().bodyToMono(String.class)
-					.block(Duration.ofMillis(100));
+					.block(Duration.ofSeconds(1));
 		}
 		catch (UnknownHttpStatusCodeException ex) {
 

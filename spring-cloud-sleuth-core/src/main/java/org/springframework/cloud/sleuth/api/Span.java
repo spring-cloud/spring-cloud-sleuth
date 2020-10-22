@@ -19,11 +19,12 @@ package org.springframework.cloud.sleuth.api;
 import org.springframework.cloud.sleuth.api.propagation.Propagator;
 
 /**
- * Span is a single unit of work that needs to be started and stopped. Contains timing
- * information and events and tags.
  *
  * This API was heavily influenced by Brave. Parts of its documentation were taken
  * directly from Brave.
+ *
+ * Span is a single unit of work that needs to be started and stopped. Contains timing
+ * information and events and tags.
  *
  * @author OpenZipkin Brave Authors
  * @author Marcin Grzejszczak

@@ -1,0 +1,14 @@
+[[spring-cloud-sleuth-reference-documentation]]
+= Spring Cloud Sleuth Reference Documentation
+Adrian Cole, Spencer Gibb, Marcin Grzejszczak, Dave Syer, Jay Bryant
+
+:docinfo: shared
+include::_attributes.adoc[]
+
+include::legal.adoc[leveloffset=+1]
+include::getting-started.adoc[leveloffset=+1]
+include::using.adoc[leveloffset=+1]
+include::project-features.adoc[leveloffset=+1]
+include::howto.adoc[leveloffset=+1]
+include::integrations.adoc[leveloffset=+1]
+include::appendix.adoc[leveloffset=+1]

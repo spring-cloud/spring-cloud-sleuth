@@ -37,6 +37,8 @@ import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.Tracer;
 import io.opentelemetry.trace.TracingContextUtils;
 import io.opentelemetry.trace.propagation.HttpTraceContext;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.AutoConfigureBefore;
@@ -51,6 +53,7 @@ import org.springframework.cloud.sleuth.otel.bridge.TraceOtelBridgeAutoConfiguat
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.util.ClassUtils;
 
 /**
  * {@link org.springframework.boot.autoconfigure.EnableAutoConfiguration
@@ -106,31 +109,48 @@ public class TraceOtelPropagationAutoConfiguration {
 
 class CompositeTextMapPropagator implements TextMapPropagator {
 
+	private static final Log log = LogFactory.getLog(CompositeTextMapPropagator.class);
+
 	private final Map<SleuthPropagationProperties.PropagationType, TextMapPropagator> mapping = new HashMap<>();
 
 	private final SleuthPropagationProperties properties;
 
 	CompositeTextMapPropagator(SleuthPropagationProperties properties) {
 		this.properties = properties;
-		this.mapping.put(SleuthPropagationProperties.PropagationType.AWS, AwsXRayPropagator.getInstance());
-		this.mapping.put(SleuthPropagationProperties.PropagationType.B3,
-				TraceMultiPropagator.builder().addPropagator(B3Propagator.getSingleHeaderPropagator())
-						.addPropagator(B3Propagator.getMultipleHeaderPropagator()).build());
-		this.mapping.put(SleuthPropagationProperties.PropagationType.JAEGER, JaegerPropagator.getInstance());
-		this.mapping.put(SleuthPropagationProperties.PropagationType.OT_TRACER, OtTracerPropagator.getInstance());
+		if (isOnClasspath("io.opentelemetry.extensions.trace.propagation.AwsXRayPropagator")) {
+			this.mapping.put(SleuthPropagationProperties.PropagationType.AWS, AwsXRayPropagator.getInstance());
+		}
+		if (isOnClasspath("io.opentelemetry.extensions.trace.propagation.B3Propagator")) {
+			this.mapping.put(SleuthPropagationProperties.PropagationType.B3,
+					TraceMultiPropagator.builder().addPropagator(B3Propagator.getSingleHeaderPropagator())
+							.addPropagator(B3Propagator.getMultipleHeaderPropagator()).build());
+		}
+		if (isOnClasspath("io.opentelemetry.extensions.trace.propagation.JaegerPropagator")) {
+			this.mapping.put(SleuthPropagationProperties.PropagationType.JAEGER, JaegerPropagator.getInstance());
+		}
+		if (isOnClasspath("io.opentelemetry.extensions.trace.propagation.OtTracerPropagator")) {
+			this.mapping.put(SleuthPropagationProperties.PropagationType.OT_TRACER, OtTracerPropagator.getInstance());
+		}
 		this.mapping.put(SleuthPropagationProperties.PropagationType.W3C, HttpTraceContext.getInstance());
 		this.mapping.put(SleuthPropagationProperties.PropagationType.CUSTOM, NoopTextMapPropagator.INSTANCE);
+		log.info("Registered the following context propagation types " + this.mapping.keySet());
+	}
+
+	private boolean isOnClasspath(String clazz) {
+		return ClassUtils.isPresent(clazz, null);
 	}
 
 	@Override
 	public List<String> fields() {
-		return this.properties.getType().stream().map(this.mapping::get).flatMap(p -> p.fields().stream())
-				.collect(Collectors.toList());
+		return this.properties.getType().stream()
+				.map(key -> this.mapping.getOrDefault(key, NoopTextMapPropagator.INSTANCE))
+				.flatMap(p -> p.fields().stream()).collect(Collectors.toList());
 	}
 
 	@Override
 	public <C> void inject(Context context, C carrier, Setter<C> setter) {
-		this.properties.getType().stream().map(this.mapping::get).forEach(p -> p.inject(context, carrier, setter));
+		this.properties.getType().stream().map(key -> this.mapping.getOrDefault(key, NoopTextMapPropagator.INSTANCE))
+				.forEach(p -> p.inject(context, carrier, setter));
 	}
 
 	@Override

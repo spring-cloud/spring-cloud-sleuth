@@ -17,8 +17,11 @@
 package org.springframework.cloud.sleuth.brave.propagation;
 
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
+import brave.internal.codec.HexCodec;
 import brave.internal.propagation.StringPropagationAdapter;
 import brave.propagation.Propagation;
 import brave.propagation.TraceContext;
@@ -83,8 +86,34 @@ class TraceBravePropagationAutoConfigurationTests {
 		runner.run(context -> {
 			assertThat(context).hasNotFailed().doesNotHaveBean(CompositePropagationFactorySupplier.class);
 			Propagation<String> propagator = context.getBean(PropagationFactorySupplier.class).get().get();
-			assertThat(propagator.keys()).contains("foo", "bar");
+			assertThat(propagator.keys()).contains("myCustomTraceId", "myCustomSpanId");
 		});
+	}
+
+	@Test
+	void should_inject_and_extract_from_custom_propagator() {
+		CustomPropagator customPropagator = new CustomPropagator();
+		Map<String, String> carrier = carrierWithTracingData();
+
+		// Extraction
+		TraceContextOrSamplingFlags extract = customPropagator
+				.extractor((Propagation.Getter<Map<String, String>, String>) Map::get).extract(carrier);
+		assertThat(extract.context().traceIdString()).isEqualTo("ff00000000000041");
+		assertThat(extract.context().spanIdString()).isEqualTo("ff00000000000041");
+
+		// Injection
+		Map<String, String> emptyMap = new HashMap<>();
+		customPropagator.injector((Propagation.Setter<Map<String, String>, String>) Map::put).inject(extract.context(),
+				emptyMap);
+		assertThat(emptyMap).containsEntry("myCustomTraceId", "ff00000000000041").containsEntry("myCustomSpanId",
+				"ff00000000000041");
+	}
+
+	private Map<String, String> carrierWithTracingData() {
+		Map<String, String> carrier = new HashMap<>();
+		carrier.put("myCustomTraceId", "ff00000000000041");
+		carrier.put("myCustomSpanId", "ff00000000000041");
+		return carrier;
 	}
 
 	@Configuration(proxyBeanMethods = false)
@@ -104,23 +133,27 @@ class TraceBravePropagationAutoConfigurationTests {
 
 }
 
+// tag::custom_propagator[]
 class CustomPropagator extends Propagation.Factory implements Propagation<String> {
 
 	@Override
 	public List<String> keys() {
-		return Arrays.asList("foo", "bar");
+		return Arrays.asList("myCustomTraceId", "myCustomSpanId");
 	}
 
 	@Override
 	public <R> TraceContext.Injector<R> injector(Setter<R, String> setter) {
 		return (traceContext, request) -> {
-
+			setter.put(request, "myCustomTraceId", traceContext.traceIdString());
+			setter.put(request, "myCustomSpanId", traceContext.spanIdString());
 		};
 	}
 
 	@Override
 	public <R> TraceContext.Extractor<R> extractor(Getter<R, String> getter) {
-		return request -> TraceContextOrSamplingFlags.EMPTY;
+		return request -> TraceContextOrSamplingFlags.create(TraceContext.newBuilder()
+				.traceId(HexCodec.lowerHexToUnsignedLong(getter.get(request, "myCustomTraceId")))
+				.spanId(HexCodec.lowerHexToUnsignedLong(getter.get(request, "myCustomSpanId"))).build());
 	}
 
 	@Override
@@ -129,3 +162,4 @@ class CustomPropagator extends Propagation.Factory implements Propagation<String
 	}
 
 }
+// end::custom_propagator[]

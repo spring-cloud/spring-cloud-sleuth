@@ -1,70 +1,93 @@
 :jdkversion: 1.8
-:github-tag: master
-:github-repo: spring-cloud/spring-cloud-sleuth
 
-:github-raw: https://raw.githubusercontent.com/{github-repo}/{github-tag}
-:github-code: https://github.com/{github-repo}/tree/{github-tag}
-
-image::https://circleci.com/gh/spring-cloud/spring-cloud-sleuth.svg?style=svg["CircleCI", link="https://circleci.com/gh/spring-cloud/spring-cloud-sleuth"]
-image::https://codecov.io/gh/spring-cloud/spring-cloud-sleuth/branch/{github-tag}/graph/badge.svg["codecov", link="https://codecov.io/gh/spring-cloud/spring-cloud-sleuth"]
-image::https://badges.gitter.im/spring-cloud/spring-cloud-sleuth.svg[Gitter, link="https://gitter.im/spring-cloud/spring-cloud-sleuth?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge"]
+image::https://circleci.com/gh/spring-cloud/spring-cloud-sleuth.svg?style=svg["CircleCI",link="https://circleci.com/gh/spring-cloud/spring-cloud-sleuth"]
+image::https://codecov.io/gh/spring-cloud/spring-cloud-sleuth/branch/{branch}/graph/badge.svg["codecov",link="https://codecov.io/gh/spring-cloud/spring-cloud-sleuth"]
+image::https://badges.gitter.im/spring-cloud/spring-cloud-sleuth.svg[Gitter,link="https://gitter.im/spring-cloud/spring-cloud-sleuth?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge"]
 
 == Spring Cloud Sleuth
 
-Spring Cloud Sleuth provides Spring Boot auto-configuration for distributed
-tracing. Underneath, Spring Cloud Sleuth is a layer over a tracer library named
-https://github.com/openzipkin/brave[Brave].
+Spring Cloud Sleuth provides Spring Boot auto-configuration for distributed tracing.
 
-Sleuth configures everything you need to get started. This includes where trace
-data (spans) are reported to, how many traces to keep (sampling), if remote
-fields (baggage) are sent, and which libraries are traced.
+Sleuth configures everything you need to get started.
+This includes where trace data (spans) are reported to, how many traces to keep (sampling), if remote fields (baggage) are sent, and which libraries are traced.
 
 === Quick Start
 
-Add sleuth to the classpath of a Spring Boot application
-(see "`<<sleuth-adding-project>>`" for Maven and Gradle examples), and you will
-see trace IDs in logs.
+Add Spring Cloud Sleuth to the classpath of a Spring Boot application (together with a Tracer implementation) and you will see trace IDs in logs.
+Example of Sleuth with Brave tracer:
 
-For example, consider the following HTTP handler:
+[source,xml,indent=0,subs="verbatim,quotes,attributes"]
+----
+	<!-- Spring Cloud Sleuth requires a Spring Cloud BOM -->
+	<dependencyManagement>
+		<dependencies>
+			<dependency>
+				<groupId>org.springframework.cloud</groupId>
+				<artifactId>spring-cloud-dependencies</artifactId>
+				<!-- Provide the latest stable Spring Cloud release train version (e.g. 2020.0.0) -->
+				<version>${release.train.version}</version>
+				<type>pom</type>
+				<scope>import</scope>
+			</dependency>
+		</dependencies>
+	</dependencyManagement>
 
-[source,java]
+	<dependencies>
+		<!-- Boot's Web support -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-web</artifactId>
+		</dependency>
+		<!-- Sleuth with Brave tracer implementation -->
+		<dependency>
+			<groupId>org.springframework.cloud</groupId>
+			<artifactId>spring-cloud-starter-sleuth</artifactId>
+		</dependency>
+		<!-- Sleuth with OpenTelemetry tracer implementation -->
+		<!--
+		<dependency>
+			<groupId>org.springframework.cloud</groupId>
+			<artifactId>spring-cloud-starter-sleuth-otel</artifactId>
+		</dependency>
+		-->
+	</dependencies>
+----
+
+Consider the following HTTP handler:
+
+[source,java,indent=0]
 ----
 @RestController
 public class DemoController {
-  private static Logger log = LoggerFactory.getLogger(DemoController.class);
+	private static Logger log = LoggerFactory.getLogger(DemoController.class);
 
-  @RequestMapping("/")
-  public String home() {
-    log.info("Handling home");
-    ...
-    return "Hello World";
-  }
+	@RequestMapping("/")
+	public String home() {
+		log.info("Handling home");
+		return "Hello World";
+	}
 }
 ----
 
 If you add that handler to a controller, you can see the calls to `home()`
-being traced in the logs as well in https://zipkin.io/[Zipkin], if configured.
+being traced in the logs (notice the `0b6aaf642574edd3` ids).
 
-NOTE: Instead of logging the request in the handler explicitly, you
-could set `logging.level.org.springframework.web.servlet.DispatcherServlet=DEBUG`.
+[indent=0]
+----
+2020-10-21 12:01:16.285  INFO [,0b6aaf642574edd3,0b6aaf642574edd3,true] 289589 --- [nio-9000-exec-1] DemoController              : Handling home!
+----
 
-NOTE: Set `spring.application.name=myService` (for instance) to see the service
-name as well as the trace and span IDs.
+NOTE: Instead of logging the request in the handler explicitly, you could set `logging.level.org.springframework.web.servlet.DispatcherServlet=DEBUG`.
 
-include::overview.adoc[]
+NOTE: Set `spring.application.name=myService` (for instance) to see the service name as well as the trace and span IDs.
 
-include::features.adoc[]
+== Documentation
 
-include::setup.adoc[]
+Please visit the https://docs.spring.io/spring-cloud-sleuth/docs/[documentation page] to read more about the project.
 
 == Building
 
 include::https://raw.githubusercontent.com/spring-cloud/spring-cloud-build/master/docs/src/main/asciidoc/building.adoc[]
-
-IMPORTANT: Spring Cloud Sleuth uses two different versions of language level. Java 1.7 is used for main sources, and
-Java 1.8 is used for tests. When importing your project to an IDE, you should activate the `ide` Maven profile to turn on
-Java 1.8 for both main and test sources. You MUST NOT use Java 1.8 features in the main sources. If you do
-so, your app breaks during the Maven build.
 
 == Contributing
 

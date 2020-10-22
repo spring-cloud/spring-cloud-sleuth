@@ -17,12 +17,18 @@
 package org.springframework.cloud.sleuth.otel.propagation;
 
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
-
-import javax.annotation.Nullable;
+import java.util.Map;
 
 import io.grpc.Context;
 import io.opentelemetry.context.propagation.TextMapPropagator;
+import io.opentelemetry.trace.DefaultSpan;
+import io.opentelemetry.trace.Span;
+import io.opentelemetry.trace.SpanContext;
+import io.opentelemetry.trace.TraceFlags;
+import io.opentelemetry.trace.TraceState;
+import io.opentelemetry.trace.TracingContextUtils;
 import org.junit.jupiter.api.Test;
 
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
@@ -78,9 +84,34 @@ class TraceOtelPropagationAutoConfigurationTests {
 		runner.run(context -> {
 			assertThat(context).hasNotFailed();
 			CompositeTextMapPropagator propagator = context.getBean(CompositeTextMapPropagator.class);
-			assertThat(propagator.fields()).doesNotContain("foo", "bar", "X-B3-TraceId", "traceparent");
-			assertThat(context.getBean(CustomPropagator.class).fields()).contains("foo", "bar");
+			assertThat(propagator.fields()).doesNotContain("myCustomTraceId", "myCustomSpanId", "X-B3-TraceId",
+					"traceparent");
 		});
+	}
+
+	@Test
+	void should_inject_and_extract_from_custom_propagator() {
+		CustomPropagator customPropagator = new CustomPropagator();
+		Map<String, String> carrier = carrierWithTracingData();
+
+		// Extraction
+		Context extract = customPropagator.extract(Context.current(), carrier, Map::get);
+		Span spanFromContext = TracingContextUtils.getSpan(extract);
+		assertThat(spanFromContext.getContext().getTraceIdAsHexString()).isEqualTo("ff000000000000000000000000000041");
+		assertThat(spanFromContext.getContext().getSpanIdAsHexString()).isEqualTo("ff00000000000041");
+
+		// Injection
+		Map<String, String> emptyMap = new HashMap<>();
+		customPropagator.inject(extract, emptyMap, Map::put);
+		assertThat(emptyMap).containsEntry("myCustomTraceId", "ff000000000000000000000000000041")
+				.containsEntry("myCustomSpanId", "ff00000000000041");
+	}
+
+	private Map<String, String> carrierWithTracingData() {
+		Map<String, String> carrier = new HashMap<>();
+		carrier.put("myCustomTraceId", "ff000000000000000000000000000041");
+		carrier.put("myCustomSpanId", "ff00000000000041");
+		return carrier;
 	}
 
 	@Configuration(proxyBeanMethods = false)
@@ -102,21 +133,34 @@ class TraceOtelPropagationAutoConfigurationTests {
 
 }
 
+// tag::custom_propagator[]
 class CustomPropagator implements TextMapPropagator {
 
 	@Override
 	public List<String> fields() {
-		return Arrays.asList("foo", "bar");
+		return Arrays.asList("myCustomTraceId", "myCustomSpanId");
 	}
 
 	@Override
-	public <C> void inject(Context context, @Nullable C carrier, Setter<C> setter) {
-
+	public <C> void inject(Context context, C carrier, Setter<C> setter) {
+		SpanContext spanContext = TracingContextUtils.getSpan(context).getContext();
+		if (!spanContext.isValid()) {
+			return;
+		}
+		setter.set(carrier, "myCustomTraceId", spanContext.getTraceIdAsHexString());
+		setter.set(carrier, "myCustomSpanId", spanContext.getSpanIdAsHexString());
 	}
 
 	@Override
 	public <C> Context extract(Context context, C carrier, Getter<C> getter) {
-		return context;
+		String traceParent = getter.get(carrier, "myCustomTraceId");
+		if (traceParent == null) {
+			return TracingContextUtils.withSpan(DefaultSpan.create(SpanContext.getInvalid()), context);
+		}
+		String spanId = getter.get(carrier, "myCustomSpanId");
+		return TracingContextUtils.withSpan(DefaultSpan.create(SpanContext.createFromRemoteParent(traceParent, spanId,
+				TraceFlags.getSampled(), TraceState.builder().build())), context);
 	}
 
 }
+// end::custom_propagator[]

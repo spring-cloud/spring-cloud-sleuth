@@ -6,443 +6,91 @@ Edit the files in the src/main/asciidoc/ directory instead.
 
 
 :jdkversion: 1.8
-:github-tag: master
-:github-repo: spring-cloud/spring-cloud-sleuth
 
-:github-raw: https://raw.githubusercontent.com/{github-repo}/{github-tag}
-:github-code: https://github.com/{github-repo}/tree/{github-tag}
-
-image::https://circleci.com/gh/spring-cloud/spring-cloud-sleuth.svg?style=svg["CircleCI", link="https://circleci.com/gh/spring-cloud/spring-cloud-sleuth"]
-image::https://codecov.io/gh/spring-cloud/spring-cloud-sleuth/branch/{github-tag}/graph/badge.svg["codecov", link="https://codecov.io/gh/spring-cloud/spring-cloud-sleuth"]
-image::https://badges.gitter.im/spring-cloud/spring-cloud-sleuth.svg[Gitter, link="https://gitter.im/spring-cloud/spring-cloud-sleuth?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge"]
+image::https://circleci.com/gh/spring-cloud/spring-cloud-sleuth.svg?style=svg["CircleCI",link="https://circleci.com/gh/spring-cloud/spring-cloud-sleuth"]
+image::https://codecov.io/gh/spring-cloud/spring-cloud-sleuth/branch/{branch}/graph/badge.svg["codecov",link="https://codecov.io/gh/spring-cloud/spring-cloud-sleuth"]
+image::https://badges.gitter.im/spring-cloud/spring-cloud-sleuth.svg[Gitter,link="https://gitter.im/spring-cloud/spring-cloud-sleuth?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge"]
 
 == Spring Cloud Sleuth
 
-Spring Cloud Sleuth provides Spring Boot auto-configuration for distributed
-tracing. Underneath, Spring Cloud Sleuth is a layer over a tracer library named
-https://github.com/openzipkin/brave[Brave].
+Spring Cloud Sleuth provides Spring Boot auto-configuration for distributed tracing.
 
-Sleuth configures everything you need to get started. This includes where trace
-data (spans) are reported to, how many traces to keep (sampling), if remote
-fields (baggage) are sent, and which libraries are traced.
+Sleuth configures everything you need to get started.
+This includes where trace data (spans) are reported to, how many traces to keep (sampling), if remote fields (baggage) are sent, and which libraries are traced.
 
 === Quick Start
 
-Add sleuth to the classpath of a Spring Boot application
-(see "`<<sleuth-adding-project>>`" for Maven and Gradle examples), and you will
-see trace IDs in logs.
+Add Spring Cloud Sleuth to the classpath of a Spring Boot application (together with a Tracer implementation) and you will see trace IDs in logs.
+Example of Sleuth with Brave tracer:
 
-For example, consider the following HTTP handler:
+[source,xml,indent=0,subs="verbatim,quotes,attributes"]
+----
+    <!-- Spring Cloud Sleuth requires a Spring Cloud BOM -->
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>org.springframework.cloud</groupId>
+                <artifactId>spring-cloud-dependencies</artifactId>
+                <!-- Provide the latest stable Spring Cloud release train version (e.g. 2020.0.0) -->
+                <version>${release.train.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
 
-[source,java]
+    <dependencies>
+        <!-- Boot's Web support -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-web</artifactId>
+        </dependency>
+        <!-- Sleuth with Brave tracer implementation -->
+        <dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-starter-sleuth</artifactId>
+        </dependency>
+        <!-- Sleuth with OpenTelemetry tracer implementation -->
+        <!--
+        <dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-starter-sleuth-otel</artifactId>
+        </dependency>
+        -->
+    </dependencies>
+----
+
+Consider the following HTTP handler:
+
+[source,java,indent=0]
 ----
 @RestController
 public class DemoController {
-  private static Logger log = LoggerFactory.getLogger(DemoController.class);
+    private static Logger log = LoggerFactory.getLogger(DemoController.class);
 
-  @RequestMapping("/")
-  public String home() {
-    log.info("Handling home");
-    ...
-    return "Hello World";
-  }
+    @RequestMapping("/")
+    public String home() {
+        log.info("Handling home");
+        return "Hello World";
+    }
 }
 ----
 
 If you add that handler to a controller, you can see the calls to `home()`
-being traced in the logs as well in https://zipkin.io/[Zipkin], if configured.
+being traced in the logs (notice the `0b6aaf642574edd3` ids).
 
-NOTE: Instead of logging the request in the handler explicitly, you
-could set `logging.level.org.springframework.web.servlet.DispatcherServlet=DEBUG`.
-
-NOTE: Set `spring.application.name=myService` (for instance) to see the service
-name as well as the trace and span IDs.
-
-:branch: master
-
-== Overview
-Spring Cloud Sleuth provides Spring Boot auto-configuration for distributed
-tracing. Underneath, Spring Cloud Sleuth is a layer over a Tracer library named
-https://github.com/openzipkin/brave[Brave].
-
-Sleuth configures everything you need to get started. This includes where trace
-data (spans) are reported to, how many traces to keep (sampling), if remote
-fields (baggage) are sent, and which libraries are traced.
-
-We maintain an https://github.com/openzipkin/sleuth-webmvc-example[example app] where two Spring Boot services collaborate on an
-HTTP request. Sleuth configures these apps, so that timing of these requests are
-recorded into https://zipkin.io[Zipkin], a distributed tracing system. Tracing
-UIs visualize latency, such as time in one service vs waiting for other
-services.
-
-Here's an example of what it looks like:
-
-image::{github-raw}/src/main/asciidoc/images/zipkin-trace-screenshot.png[Zipkin Trace]
-
-The https://github.com/openzipkin/sleuth-webmvc-example[source repository] of this
-example includes demonstrations of many things, including WebFlux and messaging.
-Most features require only a property or dependency change to work. These
-snippets showcase the value of Spring Cloud Sleuth: Through auto-configuration,
-Sleuth make getting started with distributed tracing easy!
-
-To keep things simple, the same example is used throughout documentation using
-basic HTTP communication.
-
-:branch: master
-
-:doctype: book
-:idprefix:
-:idseparator: -
-:toc: left
-:toclevels: 4
-:tabsize: 4
-:numbered:
-:sectanchors:
-:sectnums:
-:icons: font
-:hide-uri-scheme:
-:docinfo: shared,private
-
-:sc-ext: java
-:project-full-name: Spring Cloud Sleuth
-
-== Features
-Sleuth sets up instrumentation not only to track timing, but also to catch
-errors so that they can be analyzed or correlated with logs. This works the
-same way regardless of if the error came from a common instrumented library,
-such as `RestTemplate`, or your own code annotated with `@NewSpan` or similar.
-
-Below, we'll use the word Zipkin to describe the tracing system, and include
-Zipkin screenshots. However, most services accepting https://zipkin.io/zipkin-api/#/default/post_spans[Zipkin format]
-have similar base features. Sleuth can also be configured to send data in other
-formats, something detailed later.
-
-=== Contextualizing errors
-Without distributed tracing, it can be difficult to understand the impact of a
-an exception. For example, it can be hard to know if a specific request caused
-the caller to fail or not.
-
-Zipkin reduces time in triage by contextualizing errors and delays.
-
-Requests colored red in the search screen failed:
-
-image::{github-raw}/src/main/asciidoc/images/zipkin-error-traces.png[Error Traces]
-
-If you then click on one of the traces, you can understand if the failure
-happened before the request hit another service or not:
-
-image::{github-raw}/src/main/asciidoc/images/zipkin-error-trace-screenshot.png[Error Traces Info propagation]
-
-For example, the above error happened in the "backend" service, and caused the
-"frontend" service to fail.
-
-=== Log correlation
-Sleuth configures the logging context with variables including the service name
-(`%{spring.zipkin.service.name}`) and the trace ID (`%{traceId}`). These help
-you connect logs with distributed traces and allow you choice in what tools you
-use to troubleshoot your services.
-
-Once you find any log with an error, you can look for the trace ID in the
-message. Paste that into Zipkin to visualize the entire trace, regardless of
-how many services the first request ended up hitting.
-
-[source]
+[indent=0]
 ----
-backend.log:  2020-04-09 17:45:40.516 ERROR [backend,5e8eeec48b08e26882aba313eb08f0a4,dcc1df555b5777b3,true] 97203 --- [nio-9000-exec-1] o.s.c.s.i.web.ExceptionLoggingFilter     : Uncaught exception thrown
-frontend.log:2020-04-09 17:45:40.574 ERROR [frontend,5e8eeec48b08e26882aba313eb08f0a4,82aba313eb08f0a4,true] 97192 --- [nio-8081-exec-2] o.s.c.s.i.web.ExceptionLoggingFilter     : Uncaught exception thrown
+2020-10-21 12:01:16.285  INFO [,0b6aaf642574edd3,0b6aaf642574edd3,true] 289589 --- [nio-9000-exec-1] DemoController              : Handling home!
 ----
 
-Above, you'll notice the trace ID is `5e8eeec48b08e26882aba313eb08f0a4`, for
-example. This log configuration was automatically setup by Sleuth.
+NOTE: Instead of logging the request in the handler explicitly, you could set `logging.level.org.springframework.web.servlet.DispatcherServlet=DEBUG`.
 
-=== Service Dependency Graph
-When you consider distributed tracing tracks requests, it makes sense that
-trace data can paint a picture of your architecture.
+NOTE: Set `spring.application.name=myService` (for instance) to see the service name as well as the trace and span IDs.
 
-Zipkin includes a tool to build service dependency diagrams from traces,
-including the count of calls and how many errors exist.
+== Documentation
 
-The example application will make a simple diagram like this, but your real
-environment diagram may be more complex.
-
-image::{github-raw}/docs/src/main/asciidoc/images/zipkin-dependencies.png[Zipkin Dependencies]
-
-*Note*: Production environments will generate a lot of data. You will likely
-need to run a separate service to aggregate the dependency graph. You can learn
-more https://github.com/openzipkin/zipkin-dependencies/[here].
-
-=== Request scoped properties (Baggage)
-Distributed tracing works by propagating fields inside and across services that
-connect the trace together: traceId and spanId notably. The context that holds
-these fields can optionally push other fields that need to be consistent
-regardless of many services are touched. The simple name for these extra fields
-is "Baggage".
-
-Sleuth allows you to define which baggage are permitted to exist in the trace
-context, including what header names are used.
-
-The following example shows setting baggage values:
-
-[source,java]
-----
-Span initialSpan = this.tracer.nextSpan().name("span").start();
-BUSINESS_PROCESS.updateValue(initialSpan.context(), "ALM");
-COUNTRY_CODE.updateValue(initialSpan.context(), "FO");
-----
-
-IMPORTANT: There is currently no limitation of the count or size of baggage
-items. Keep in mind that too many can decrease system throughput or increase
-RPC latency. In extreme cases, too much baggage can crash the application, due
-to exceeding transport-level message or header capacity.
-
-
-==== Baggage versus Tags
-
-Like trace IDs, Baggage is attached to messages or requests, usually as
-headers. Tags are key value pairs sent in a Span to Zipkin. Baggage values are
-not added spans by default, which means you can't search based on Baggage
-unless  you opt-in.
-
-To make baggage also tags, use the property `spring.sleuth.baggageEntry.tag-fields`
-like so:
-[source,yml]
-----
-spring:
-  sleuth:
-    baggage:
-      foo: bar
-      remoteFields:
-        - country-code
-        - x-vcap-request-id
-      tagFields:
-        - country-code
-----
-
-:branch: master
-
-[[sleuth-adding-project]]
-== Adding Sleuth to your Project
-
-This section addresses how to add Sleuth to your project with either Maven or Gradle.
-
-IMPORTANT: To ensure that your application name is properly displayed in Zipkin, set the `spring.application.name` property in `bootstrap.yml`.
-
-=== Sleuth with Zipkin via HTTP
-
-If you want both Sleuth and Zipkin, add the `spring-cloud-starter-zipkin` dependency.
-
-The following example shows how to do so for Maven:
-
-.Maven
-[source,xml,indent=0,subs="verbatim,attributes",role="primary"]
-----
-    <dependencyManagement> <1>
-          <dependencies>
-              <dependency>
-                  <groupId>org.springframework.cloud</groupId>
-                  <artifactId>spring-cloud-dependencies</artifactId>
-                  <version>${release.train.version}</version>
-                  <type>pom</type>
-                  <scope>import</scope>
-              </dependency>
-          </dependencies>
-    </dependencyManagement>
-
-    <dependency> <2>
-        <groupId>org.springframework.cloud</groupId>
-        <artifactId>spring-cloud-starter-zipkin</artifactId>
-    </dependency>
-----
-<1> We recommend that you add the dependency management through the Spring BOM so that you need not manage versions yourself.
-<2> Add the dependency to `spring-cloud-starter-zipkin`.
-
-The following example shows how to do so for Gradle:
-
-.Gradle
-[source,groovy,indent=0,subs="verbatim,attributes",role="secondary"]
-----
-dependencyManagement { <1>
-    imports {
-        mavenBom "org.springframework.cloud:spring-cloud-dependencies:${releaseTrainVersion}"
-    }
-}
-
-dependencies { <2>
-    compile "org.springframework.cloud:spring-cloud-starter-zipkin"
-}
-----
-<1> We recommend that you add the dependency management through the Spring BOM so that you need not manage versions yourself.
-<2> Add the dependency to `spring-cloud-starter-zipkin`.
-
-=== Sleuth with Zipkin over RabbitMQ or Kafka
-
-If you want to use RabbitMQ or Kafka instead of HTTP, add the `spring-rabbit` or `spring-kafka` dependency.
-The default destination name is `Zipkin`.
-
-If using Kafka, you must set the property `spring.zipkin.sender.type` property accordingly:
-
-[source,yaml]
-----
-spring.zipkin.sender.type: kafka
-----
-
-CAUTION: `spring-cloud-sleuth-stream` is deprecated and incompatible with these destinations.
-
-If you want Sleuth over RabbitMQ, add the `spring-cloud-starter-zipkin` and `spring-rabbit`
-dependencies.
-
-The following example shows how to do so for Gradle:
-
-.Maven
-[source,xml,indent=0,subs="verbatim,attributes",role="primary"]
-----
-    <dependencyManagement> <1>
-          <dependencies>
-              <dependency>
-                  <groupId>org.springframework.cloud</groupId>
-                  <artifactId>spring-cloud-dependencies</artifactId>
-                  <version>${release.train.version}</version>
-                  <type>pom</type>
-                  <scope>import</scope>
-              </dependency>
-          </dependencies>
-    </dependencyManagement>
-
-    <dependency> <2>
-        <groupId>org.springframework.cloud</groupId>
-        <artifactId>spring-cloud-starter-zipkin</artifactId>
-    </dependency>
-    <dependency> <3>
-        <groupId>org.springframework.amqp</groupId>
-        <artifactId>spring-rabbit</artifactId>
-    </dependency>
-----
-<1> We recommend that you add the dependency management through the Spring BOM so that you need not manage versions yourself.
-<2> Add the dependency to `spring-cloud-starter-zipkin`. That way, all nested dependencies get downloaded.
-<3> To automatically configure RabbitMQ, add the `spring-rabbit` dependency.
-
-.Gradle
-[source,groovy,indent=0,subs="verbatim,attributes",role="secondary"]
-----
-dependencyManagement { <1>
-    imports {
-        mavenBom "org.springframework.cloud:spring-cloud-dependencies:${releaseTrainVersion}"
-    }
-}
-
-dependencies {
-    compile "org.springframework.cloud:spring-cloud-starter-zipkin" <2>
-    compile "org.springframework.amqp:spring-rabbit" <3>
-}
-----
-<1> We recommend that you add the dependency management through the Spring BOM so that you need not manage versions yourself.
-<2> Add the dependency to `spring-cloud-starter-zipkin`. That way, all nested dependencies get downloaded.
-<3> To automatically configure RabbitMQ, add the `spring-rabbit` dependency.
-
-=== Overriding the auto-configuration of Zipkin
-
-Spring Cloud Sleuth supports sending traces to multiple tracing systems as of version 2.1.0.
-In order to get this to work, every tracing system needs to have a `Reporter<Span>` and `Sender`.
-If you want to override the provided beans you need to give them a specific name.
-To do this you can use respectively `ZipkinAutoConfiguration.REPORTER_BEAN_NAME` and `ZipkinAutoConfiguration.SENDER_BEAN_NAME`.
-
-[source,java]
-----
-
-@Configuration(proxyBeanMethods = false)
-	protected static class MyConfig {
-
-    @Bean(ZipkinAutoConfiguration.REPORTER_BEAN_NAME)
-    Reporter<zipkin2.Span> myReporter() {
-        return AsyncReporter.create(mySender());
-    }
-
-    @Bean(ZipkinAutoConfiguration.SENDER_BEAN_NAME)
-    MySender mySender() {
-        return new MySender();
-    }
-
-    static class MySender extends Sender {
-
-        private boolean spanSent = false;
-
-        boolean isSpanSent() {
-            return this.spanSent;
-        }
-
-        @Override
-        public Encoding encoding() {
-            return Encoding.JSON;
-        }
-
-        @Override
-        public int messageMaxBytes() {
-            return Integer.MAX_VALUE;
-        }
-
-        @Override
-        public int messageSizeInBytes(List<byte[]> encodedSpans) {
-            return encoding().listSizeInBytes(encodedSpans);
-        }
-
-        @Override
-        public Call<Void> sendSpans(List<byte[]> encodedSpans) {
-            this.spanSent = true;
-            return Call.create(null);
-        }
-
-    }
-
-}
-
-----
-
-=== Only Sleuth (log correlation)
-
-If you want to use only Spring Cloud Sleuth without the Zipkin integration, add the `spring-cloud-starter-sleuth` module to your project.
-
-The following example shows how to add Sleuth with Maven:
-
-[source,xml,indent=0,subs="verbatim,attributes",role="primary"]
-.Maven
-----
-    <dependencyManagement> <1>
-          <dependencies>
-              <dependency>
-                  <groupId>org.springframework.cloud</groupId>
-                  <artifactId>spring-cloud-dependencies</artifactId>
-                  <version>${release.train.version}</version>
-                  <type>pom</type>
-                  <scope>import</scope>
-              </dependency>
-          </dependencies>
-    </dependencyManagement>
-
-    <dependency> <2>
-        <groupId>org.springframework.cloud</groupId>
-        <artifactId>spring-cloud-starter-sleuth</artifactId>
-    </dependency>
-----
-<1> We recommend that you add the dependency management through the Spring BOM so that you need not manage versions yourself.
-<2> Add the dependency to `spring-cloud-starter-sleuth`.
-
-The following example shows how to add Sleuth with Gradle:
-
-.Gradle
-[source,groovy,indent=0,subs="verbatim,attributes",role="secondary"]
-----
-dependencyManagement { <1>
-    imports {
-        mavenBom "org.springframework.cloud:spring-cloud-dependencies:${releaseTrainVersion}"
-    }
-}
-
-dependencies { <2>
-    compile "org.springframework.cloud:spring-cloud-starter-sleuth"
-}
-----
-<1> We recommend that you add the dependency management through the Spring BOM so that you need not manage versions yourself.
-<2> Add the dependency to `spring-cloud-starter-sleuth`.
+Please visit the https://docs.spring.io/spring-cloud-sleuth/docs/[documentation page] to read more about the project.
 
 == Building
 
@@ -539,11 +187,6 @@ following command:
 The generated eclipse projects can be imported by selecting `import existing projects`
 from the `file` menu.
 
-
-IMPORTANT: Spring Cloud Sleuth uses two different versions of language level. Java 1.7 is used for main sources, and
-Java 1.8 is used for tests. When importing your project to an IDE, you should activate the `ide` Maven profile to turn on
-Java 1.8 for both main and test sources. You MUST NOT use Java 1.8 features in the main sources. If you do
-so, your app breaks during the Maven build.
 
 == Contributing
 

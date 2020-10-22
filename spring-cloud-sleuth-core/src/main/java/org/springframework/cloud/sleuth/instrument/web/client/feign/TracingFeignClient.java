@@ -120,7 +120,7 @@ final class TracingFeignClient implements Client {
 
 		@Override
 		public String method() {
-			return delegate.method();
+			return delegate.httpMethod().name();
 		}
 
 		@Override

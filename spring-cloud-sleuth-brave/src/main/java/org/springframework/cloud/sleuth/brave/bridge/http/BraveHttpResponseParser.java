@@ -44,7 +44,11 @@ public class BraveHttpResponseParser implements HttpResponseParser {
 	}
 
 	public static brave.http.HttpResponseParser toBrave(HttpResponseParser parser) {
-		return ((BraveHttpResponseParser) parser).delegate;
+		if (parser instanceof BraveHttpResponseParser) {
+			return ((BraveHttpResponseParser) parser).delegate;
+		}
+		return (response, context, span) -> parser.parse(BraveHttpResponse.fromBrave(response),
+				BraveTraceContext.fromBrave(context), BraveSpanCustomizer.fromBrave(span));
 	}
 
 }
