@@ -16,8 +16,9 @@
 
 package org.springframework.cloud.sleuth.annotation;
 
-import brave.SpanCustomizer;
 import org.aopalliance.intercept.MethodInvocation;
+
+import org.springframework.cloud.sleuth.api.Span;
 
 /**
  * Parses data for a span created via a {@link NewSpan} annotation.
@@ -33,6 +34,6 @@ public interface NewSpanParser {
 	 * @param newSpan meta data of the new span
 	 * @param span span to customize
 	 */
-	void parse(MethodInvocation methodInvocation, NewSpan newSpan, SpanCustomizer span);
+	void parse(MethodInvocation methodInvocation, NewSpan newSpan, Span span);
 
 }

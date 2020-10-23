@@ -26,10 +26,9 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-import brave.Tracing;
-
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.cloud.sleuth.SpanNamer;
+import org.springframework.cloud.sleuth.api.Tracer;
 
 /**
  * A decorator class for {@link ExecutorService} to support tracing in Executors.
@@ -44,7 +43,7 @@ public class TraceableExecutorService implements ExecutorService {
 
 	final String spanName;
 
-	Tracing tracing;
+	Tracer tracer;
 
 	SpanNamer spanNamer;
 
@@ -63,7 +62,7 @@ public class TraceableExecutorService implements ExecutorService {
 	@Override
 	public void execute(Runnable command) {
 		this.delegate.execute(ContextUtil.isContextUnusable(this.beanFactory) ? command
-				: new TraceRunnable(tracing(), spanNamer(), command, this.spanName));
+				: new TraceRunnable(tracer(), spanNamer(), command, this.spanName));
 	}
 
 	@Override
@@ -94,19 +93,19 @@ public class TraceableExecutorService implements ExecutorService {
 	@Override
 	public <T> Future<T> submit(Callable<T> task) {
 		return this.delegate.submit(ContextUtil.isContextUnusable(this.beanFactory) ? task
-				: new TraceCallable<>(tracing(), spanNamer(), task, this.spanName));
+				: new TraceCallable<>(tracer(), spanNamer(), task, this.spanName));
 	}
 
 	@Override
 	public <T> Future<T> submit(Runnable task, T result) {
 		return this.delegate.submit(ContextUtil.isContextUnusable(this.beanFactory) ? task
-				: new TraceRunnable(tracing(), spanNamer(), task, this.spanName), result);
+				: new TraceRunnable(tracer(), spanNamer(), task, this.spanName), result);
 	}
 
 	@Override
 	public Future<?> submit(Runnable task) {
 		return this.delegate.submit(ContextUtil.isContextUnusable(this.beanFactory) ? task
-				: new TraceRunnable(tracing(), spanNamer(), task, this.spanName));
+				: new TraceRunnable(tracer(), spanNamer(), task, this.spanName));
 	}
 
 	@Override
@@ -139,17 +138,17 @@ public class TraceableExecutorService implements ExecutorService {
 		List<Callable<T>> ts = new ArrayList<>();
 		for (Callable<T> task : tasks) {
 			if (!(task instanceof TraceCallable)) {
-				ts.add(new TraceCallable<>(tracing(), spanNamer(), task, this.spanName));
+				ts.add(new TraceCallable<>(tracer(), spanNamer(), task, this.spanName));
 			}
 		}
 		return ts;
 	}
 
-	Tracing tracing() {
-		if (this.tracing == null && this.beanFactory != null) {
-			this.tracing = this.beanFactory.getBean(Tracing.class);
+	Tracer tracer() {
+		if (this.tracer == null && this.beanFactory != null) {
+			this.tracer = this.beanFactory.getBean(Tracer.class);
 		}
-		return this.tracing;
+		return this.tracer;
 	}
 
 	SpanNamer spanNamer() {

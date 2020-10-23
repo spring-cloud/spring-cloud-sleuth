@@ -16,17 +16,9 @@
 
 package org.springframework.cloud.sleuth.zipkin2;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Comparator;
-import java.util.LinkedHashSet;
-import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-import brave.Tag;
-import brave.TracingCustomizer;
-import brave.handler.SpanHandler;
 import io.micrometer.core.instrument.MeterRegistry;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -37,7 +29,6 @@ import zipkin2.reporter.InMemoryReporterMetrics;
 import zipkin2.reporter.Reporter;
 import zipkin2.reporter.ReporterMetrics;
 import zipkin2.reporter.Sender;
-import zipkin2.reporter.brave.ZipkinSpanHandler;
 import zipkin2.reporter.metrics.micrometer.MicrometerReporterMetrics;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -59,7 +50,6 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 import org.springframework.core.env.Environment;
-import org.springframework.lang.Nullable;
 import org.springframework.web.client.RestTemplate;
 
 /**
@@ -82,26 +72,9 @@ import org.springframework.web.client.RestTemplate;
 @AutoConfigureBefore(TraceAutoConfiguration.class)
 @AutoConfigureAfter(name = "org.springframework.cloud.autoconfigure.RefreshAutoConfiguration")
 @Import(ZipkinSenderConfigurationImportSelector.class)
-// public because the constant REPORTER_BEAN_NAME was documented
 public class ZipkinAutoConfiguration {
 
 	private static final Log log = LogFactory.getLog(ZipkinAutoConfiguration.class);
-
-	/**
-	 * Sort Zipkin Handlers last, so that redactions etc happen prior.
-	 */
-	static final Comparator<SpanHandler> SPAN_HANDLER_COMPARATOR = (o1, o2) -> {
-		if (o1 instanceof ZipkinSpanHandler) {
-			if (o2 instanceof ZipkinSpanHandler) {
-				return 0;
-			}
-			return 1;
-		}
-		else if (o2 instanceof ZipkinSpanHandler) {
-			return -1;
-		}
-		return 0;
-	};
 
 	/**
 	 * Zipkin reporter bean name. Name of the bean matters for supporting multiple tracing
@@ -169,46 +142,16 @@ public class ZipkinAutoConfiguration {
 		}
 	}
 
-	/** Returns one handler for as many reporters as exist. */
-	@Bean
-	SpanHandler zipkinSpanHandler(@Nullable List<Reporter<Span>> spanReporters, @Nullable Tag<Throwable> errorTag) {
-		if (spanReporters == null) {
-			return SpanHandler.NOOP;
-		}
-
-		LinkedHashSet<Reporter<Span>> reporters = new LinkedHashSet<>(spanReporters);
-		reporters.remove(Reporter.NOOP);
-		if (spanReporters.isEmpty()) {
-			return SpanHandler.NOOP;
-		}
-
-		Reporter<Span> spanReporter = reporters.size() == 1 ? reporters.iterator().next()
-				: new CompositeSpanReporter(reporters.toArray(new Reporter[0]));
-
-		ZipkinSpanHandler.Builder builder = ZipkinSpanHandler.newBuilder(spanReporter);
-		if (errorTag != null) {
-			builder.errorTag(errorTag);
-		}
-		return builder.build();
-	}
-
-	/** This ensures Zipkin reporters end up after redaction, etc. */
-	@Bean
-	TracingCustomizer reorderZipkinHandlersLast() {
-		return builder -> {
-			List<SpanHandler> configuredSpanHandlers = new ArrayList<>(builder.spanHandlers());
-			configuredSpanHandlers.sort(SPAN_HANDLER_COMPARATOR);
-			builder.clearSpanHandlers();
-			for (SpanHandler spanHandler : configuredSpanHandlers) {
-				builder.addSpanHandler(spanHandler);
-			}
-		};
-	}
-
 	@Bean
 	@ConditionalOnMissingBean
 	public ZipkinRestTemplateCustomizer zipkinRestTemplateCustomizer(ZipkinProperties zipkinProperties) {
 		return new DefaultZipkinRestTemplateCustomizer(zipkinProperties);
+	}
+
+	@Bean
+	@ConditionalOnMissingBean
+	ReporterMetrics sleuthReporterMetrics() {
+		return new InMemoryReporterMetrics();
 	}
 
 	@Configuration(proxyBeanMethods = false)
@@ -288,59 +231,17 @@ public class ZipkinAutoConfiguration {
 
 			@Bean
 			@ConditionalOnBean(MeterRegistry.class)
+			@ConditionalOnClass(name = "zipkin2.reporter.metrics.micrometer.MicrometerReporterMetrics")
 			ReporterMetrics sleuthMicrometerReporterMetrics(MeterRegistry meterRegistry) {
 				return MicrometerReporterMetrics.create(meterRegistry);
 			}
 
 			@Bean
-			@ConditionalOnMissingBean(MeterRegistry.class)
+			@ConditionalOnMissingClass("zipkin2.reporter.metrics.micrometer.MicrometerReporterMetrics")
 			ReporterMetrics sleuthReporterMetrics() {
 				return new InMemoryReporterMetrics();
 			}
 
-		}
-
-	}
-
-	// Zipkin conversion only happens once per mutable span
-	static final class CompositeSpanReporter implements Reporter<Span> {
-
-		final Reporter<Span>[] reporters;
-
-		CompositeSpanReporter(Reporter<Span>[] reporters) {
-			this.reporters = reporters;
-		}
-
-		@Override
-		public void report(Span span) {
-			for (Reporter<Span> reporter : reporters) {
-				try {
-					reporter.report(span);
-				}
-				catch (RuntimeException ex) {
-					// TODO: message lifted from ListReporter: this is probably too much
-					// for warn level
-					log.warn("Exception occurred while trying to report the span " + span, ex);
-				}
-			}
-		}
-
-		@Override
-		public int hashCode() {
-			return Arrays.hashCode(reporters);
-		}
-
-		@Override
-		public boolean equals(Object obj) {
-			if (!(obj instanceof CompositeSpanReporter)) {
-				return false;
-			}
-			return Arrays.equals(((CompositeSpanReporter) obj).reporters, reporters);
-		}
-
-		@Override
-		public String toString() {
-			return Arrays.toString(reporters);
 		}
 
 	}

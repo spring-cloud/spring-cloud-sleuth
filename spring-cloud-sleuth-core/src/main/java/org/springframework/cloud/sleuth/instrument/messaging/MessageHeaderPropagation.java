@@ -22,10 +22,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import brave.propagation.Propagation;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import org.springframework.cloud.sleuth.api.propagation.Propagator;
 import org.springframework.messaging.support.MessageHeaderAccessor;
 import org.springframework.messaging.support.NativeMessageHeaderAccessor;
 import org.springframework.util.LinkedMultiValueMap;
@@ -37,8 +37,8 @@ import org.springframework.util.StringUtils;
  *
  * @author Marcin Grzejszczak
  */
-enum MessageHeaderPropagation implements Propagation.Setter<MessageHeaderAccessor, String>,
-		Propagation.Getter<MessageHeaderAccessor, String> {
+enum MessageHeaderPropagation
+		implements Propagator.Setter<MessageHeaderAccessor>, Propagator.Getter<MessageHeaderAccessor> {
 
 	INSTANCE;
 
@@ -93,7 +93,7 @@ enum MessageHeaderPropagation implements Propagation.Setter<MessageHeaderAccesso
 	}
 
 	@Override
-	public void put(MessageHeaderAccessor accessor, String key, String value) {
+	public void set(MessageHeaderAccessor accessor, String key, String value) {
 		try {
 			doPut(accessor, key, value);
 		}

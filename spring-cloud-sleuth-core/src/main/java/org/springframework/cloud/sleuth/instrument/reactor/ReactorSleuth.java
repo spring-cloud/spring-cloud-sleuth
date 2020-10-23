@@ -18,9 +18,6 @@ package org.springframework.cloud.sleuth.instrument.reactor;
 
 import java.util.function.Function;
 
-import brave.Tracing;
-import brave.propagation.CurrentTraceContext;
-import brave.propagation.TraceContext;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.reactivestreams.Publisher;
@@ -32,6 +29,9 @@ import reactor.core.Scannable;
 import reactor.core.publisher.Operators;
 import reactor.util.context.Context;
 
+import org.springframework.cloud.sleuth.api.CurrentTraceContext;
+import org.springframework.cloud.sleuth.api.TraceContext;
+import org.springframework.cloud.sleuth.api.Tracer;
 import org.springframework.cloud.sleuth.internal.LazyBean;
 import org.springframework.context.ConfigurableApplicationContext;
 
@@ -51,8 +51,8 @@ public abstract class ReactorSleuth {
 	}
 
 	/**
-	 * Return a span operator pointcut given a {@link Tracing}. This can be used in
-	 * reactor via {@link reactor.core.publisher.Flux#transform(Function)},
+	 * Return a span operator pointcut given a Tracing. This can be used in reactor via
+	 * {@link reactor.core.publisher.Flux#transform(Function)},
 	 * {@link reactor.core.publisher.Mono#transform(Function)},
 	 * {@link reactor.core.publisher.Hooks#onLastOperator(Function)} or
 	 * {@link reactor.core.publisher.Hooks#onLastOperator(Function)}. The Span operator
@@ -138,8 +138,8 @@ public abstract class ReactorSleuth {
 	private static <T> Context contextWithBeans(ConfigurableApplicationContext springContext,
 			CoreSubscriber<? super T> sub) {
 		Context context = sub.currentContext();
-		if (!context.hasKey(Tracing.class)) {
-			context = context.put(Tracing.class, springContext.getBean(Tracing.class));
+		if (!context.hasKey(Tracer.class)) {
+			context = context.put(Tracer.class, springContext.getBean(Tracer.class));
 		}
 		if (!context.hasKey(CurrentTraceContext.class)) {
 			context = context.put(CurrentTraceContext.class, springContext.getBean(CurrentTraceContext.class));

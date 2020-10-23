@@ -19,8 +19,8 @@ package org.springframework.cloud.sleuth.instrument.async;
 import java.util.concurrent.Callable;
 import java.util.concurrent.Future;
 
-import brave.Tracing;
-
+import org.springframework.cloud.sleuth.SpanNamer;
+import org.springframework.cloud.sleuth.api.Tracer;
 import org.springframework.core.task.AsyncListenableTaskExecutor;
 import org.springframework.util.concurrent.ListenableFuture;
 
@@ -30,49 +30,50 @@ import org.springframework.util.concurrent.ListenableFuture;
  *
  * @author Marcin Grzejszczak
  * @since 1.0.0
- * @see brave.propagation.CurrentTraceContext#wrap(Runnable)
- * @see brave.propagation.CurrentTraceContext#wrap(Callable)
  */
 // public as most types in this package were documented for use
 public class TraceAsyncListenableTaskExecutor implements AsyncListenableTaskExecutor {
 
 	private final AsyncListenableTaskExecutor delegate;
 
-	private final Tracing tracing;
+	private final Tracer tracer;
 
-	TraceAsyncListenableTaskExecutor(AsyncListenableTaskExecutor delegate, Tracing tracing) {
+	private final SpanNamer spanNamer;
+
+	TraceAsyncListenableTaskExecutor(AsyncListenableTaskExecutor delegate, Tracer tracer, SpanNamer spanNamer) {
 		this.delegate = delegate;
-		this.tracing = tracing;
+		this.tracer = tracer;
+		this.spanNamer = spanNamer;
 	}
 
 	@Override
 	public ListenableFuture<?> submitListenable(Runnable task) {
-		return this.delegate.submitListenable(this.tracing.currentTraceContext().wrap(task));
+		return this.delegate.submitListenable(new TraceRunnable(this.tracer, this.spanNamer, task));
 	}
 
 	@Override
 	public <T> ListenableFuture<T> submitListenable(Callable<T> task) {
-		return this.delegate.submitListenable(this.tracing.currentTraceContext().wrap(task));
+		return this.delegate.submitListenable(new TraceCallable<>(this.tracer, this.spanNamer, task));
 	}
 
 	@Override
 	public void execute(Runnable task, long startTimeout) {
-		this.delegate.execute(this.tracing.currentTraceContext().wrap(task), startTimeout);
+		this.delegate.execute(new TraceRunnable(this.tracer, this.spanNamer, task), startTimeout);
 	}
 
 	@Override
 	public Future<?> submit(Runnable task) {
-		return this.delegate.submit(this.tracing.currentTraceContext().wrap(task));
+		return this.delegate.submit(new TraceRunnable(this.tracer, this.spanNamer, task));
 	}
 
 	@Override
 	public <T> Future<T> submit(Callable<T> task) {
-		return this.delegate.submit(this.tracing.currentTraceContext().wrap(task));
+		return this.delegate.submit(new TraceCallable<>(this.tracer, this.spanNamer, task));
 	}
 
 	@Override
 	public void execute(Runnable task) {
-		this.delegate.execute(this.tracing.currentTraceContext().wrap(task));
+		this.delegate.execute(new TraceRunnable(this.tracer, this.spanNamer, task));
 	}
 
 }

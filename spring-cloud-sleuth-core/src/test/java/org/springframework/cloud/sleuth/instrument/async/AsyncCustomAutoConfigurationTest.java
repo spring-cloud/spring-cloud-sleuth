@@ -16,12 +16,11 @@
 
 package org.springframework.cloud.sleuth.instrument.async;
 
+import org.assertj.core.api.BDDAssertions;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
 
 import org.springframework.scheduling.annotation.AsyncConfigurer;
-
-import static org.assertj.core.api.BDDAssertions.then;
-import static org.mockito.Mockito.mock;
 
 /**
  * @author Marcin Grzejszczak
@@ -34,16 +33,16 @@ public class AsyncCustomAutoConfigurationTest {
 
 		Object bean = configuration.postProcessAfterInitialization(new Object(), "someName");
 
-		then(bean).isNotInstanceOf(LazyTraceAsyncCustomizer.class);
+		BDDAssertions.then(bean).isNotInstanceOf(LazyTraceAsyncCustomizer.class);
 	}
 
 	@Test
 	public void should_return_lazy_async_configurer_when_bean_is_async_configurer() throws Exception {
 		AsyncCustomAutoConfiguration configuration = new AsyncCustomAutoConfiguration();
 
-		Object bean = configuration.postProcessAfterInitialization(mock(AsyncConfigurer.class), "someName");
+		Object bean = configuration.postProcessAfterInitialization(Mockito.mock(AsyncConfigurer.class), "someName");
 
-		then(bean).isInstanceOf(LazyTraceAsyncCustomizer.class);
+		BDDAssertions.then(bean).isInstanceOf(LazyTraceAsyncCustomizer.class);
 	}
 
 }

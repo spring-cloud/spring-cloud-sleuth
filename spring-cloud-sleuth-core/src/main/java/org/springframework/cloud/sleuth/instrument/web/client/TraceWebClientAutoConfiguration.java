@@ -20,12 +20,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-import brave.http.HttpTracing;
-import brave.httpasyncclient.TracingHttpAsyncClientBuilder;
-import brave.httpclient.TracingHttpClientBuilder;
-import brave.spring.web.TracingClientHttpRequestInterceptor;
-import org.apache.http.impl.client.HttpClientBuilder;
-import org.apache.http.impl.nio.client.HttpAsyncClientBuilder;
 import reactor.netty.http.client.HttpClient;
 
 import org.springframework.beans.BeansException;
@@ -43,7 +37,12 @@ import org.springframework.boot.autoconfigure.security.oauth2.resource.UserInfoR
 import org.springframework.boot.web.client.RestTemplateCustomizer;
 import org.springframework.cloud.commons.httpclient.HttpClientConfiguration;
 import org.springframework.cloud.gateway.filter.headers.HttpHeadersFilter;
-import org.springframework.cloud.sleuth.instrument.web.TraceHttpAutoConfiguration;
+import org.springframework.cloud.sleuth.api.CurrentTraceContext;
+import org.springframework.cloud.sleuth.api.Tracer;
+import org.springframework.cloud.sleuth.api.http.HttpClientHandler;
+import org.springframework.cloud.sleuth.api.propagation.Propagator;
+import org.springframework.cloud.sleuth.autoconfig.TraceAutoConfiguration;
+import org.springframework.cloud.sleuth.instrument.web.mvc.TracingClientHttpRequestInterceptor;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -65,9 +64,9 @@ import org.springframework.web.reactive.function.client.WebClient;
  * @since 1.0.0
  */
 @Configuration(proxyBeanMethods = false)
-@SleuthWebClientEnabled
-@ConditionalOnBean(HttpTracing.class)
-@AutoConfigureAfter(TraceHttpAutoConfiguration.class)
+@ConditionalOnProperty(value = "spring.sleuth.web.client.enabled", matchIfMissing = true)
+@ConditionalOnBean(Tracer.class)
+@AutoConfigureAfter(TraceAutoConfiguration.class)
 @AutoConfigureBefore(HttpClientConfiguration.class)
 class TraceWebClientAutoConfiguration {
 
@@ -76,8 +75,10 @@ class TraceWebClientAutoConfiguration {
 	static class RestTemplateConfig {
 
 		@Bean
-		public TracingClientHttpRequestInterceptor tracingClientHttpRequestInterceptor(HttpTracing httpTracing) {
-			return (TracingClientHttpRequestInterceptor) TracingClientHttpRequestInterceptor.create(httpTracing);
+		public TracingClientHttpRequestInterceptor tracingClientHttpRequestInterceptor(
+				CurrentTraceContext currentTraceContext, HttpClientHandler httpClientHandler) {
+			return (TracingClientHttpRequestInterceptor) TracingClientHttpRequestInterceptor.create(currentTraceContext,
+					httpClientHandler);
 		}
 
 		@Configuration(proxyBeanMethods = false)
@@ -103,25 +104,30 @@ class TraceWebClientAutoConfiguration {
 	}
 
 	@Configuration(proxyBeanMethods = false)
-	@ConditionalOnClass(HttpClientBuilder.class)
-	static class HttpClientBuilderConfig {
+	@ConditionalOnClass(HttpHeadersFilter.class)
+	static class HttpHeadersFilterConfig {
 
 		@Bean
-		@ConditionalOnMissingBean
-		HttpClientBuilder traceHttpClientBuilder(HttpTracing httpTracing) {
-			return TracingHttpClientBuilder.create(httpTracing);
+		HttpHeadersFilter traceRequestHttpHeadersFilter(Tracer tracer, HttpClientHandler handler,
+				Propagator propagator) {
+			return TraceRequestHttpHeadersFilter.create(tracer, handler, propagator);
+		}
+
+		@Bean
+		HttpHeadersFilter traceResponseHttpHeadersFilter(Tracer tracer, HttpClientHandler handler,
+				Propagator propagator) {
+			return TraceResponseHttpHeadersFilter.create(tracer, handler, propagator);
 		}
 
 	}
 
 	@Configuration(proxyBeanMethods = false)
-	@ConditionalOnClass(HttpAsyncClientBuilder.class)
-	static class HttpAsyncClientBuilderConfig {
+	@ConditionalOnClass(HttpClient.class)
+	static class NettyConfiguration {
 
 		@Bean
-		@ConditionalOnMissingBean
-		HttpAsyncClientBuilder traceHttpAsyncClientBuilder(HttpTracing httpTracing) {
-			return TracingHttpAsyncClientBuilder.create(httpTracing);
+		static HttpClientBeanPostProcessor httpClientBeanPostProcessor(ConfigurableApplicationContext springContext) {
+			return new HttpClientBeanPostProcessor(springContext);
 		}
 
 	}
@@ -135,33 +141,6 @@ class TraceWebClientAutoConfiguration {
 		static TraceWebClientBeanPostProcessor traceWebClientBeanPostProcessor(
 				ConfigurableApplicationContext springContext) {
 			return new TraceWebClientBeanPostProcessor(springContext);
-		}
-
-	}
-
-	@Configuration(proxyBeanMethods = false)
-	@ConditionalOnClass(HttpHeadersFilter.class)
-	static class HttpHeadersFilterConfig {
-
-		@Bean
-		HttpHeadersFilter traceRequestHttpHeadersFilter(HttpTracing httpTracing) {
-			return TraceRequestHttpHeadersFilter.create(httpTracing);
-		}
-
-		@Bean
-		HttpHeadersFilter traceResponseHttpHeadersFilter(HttpTracing httpTracing) {
-			return TraceResponseHttpHeadersFilter.create(httpTracing);
-		}
-
-	}
-
-	@Configuration(proxyBeanMethods = false)
-	@ConditionalOnClass(HttpClient.class)
-	static class NettyConfiguration {
-
-		@Bean
-		static HttpClientBeanPostProcessor httpClientBeanPostProcessor(ConfigurableApplicationContext springContext) {
-			return new HttpClientBeanPostProcessor(springContext);
 		}
 
 	}
@@ -211,6 +190,34 @@ class TraceWebClientAutoConfiguration {
 
 }
 
+class TraceRestTemplateBeanPostProcessor implements BeanPostProcessor {
+
+	private final BeanFactory beanFactory;
+
+	TraceRestTemplateBeanPostProcessor(BeanFactory beanFactory) {
+		this.beanFactory = beanFactory;
+	}
+
+	@Override
+	public Object postProcessBeforeInitialization(Object bean, String beanName) throws BeansException {
+		return bean;
+	}
+
+	@Override
+	public Object postProcessAfterInitialization(Object bean, String beanName) throws BeansException {
+		if (bean instanceof RestTemplate) {
+			RestTemplate rt = (RestTemplate) bean;
+			new RestTemplateInterceptorInjector(interceptor()).inject(rt);
+		}
+		return bean;
+	}
+
+	private LazyTracingClientHttpRequestInterceptor interceptor() {
+		return new LazyTracingClientHttpRequestInterceptor(this.beanFactory);
+	}
+
+}
+
 class RestTemplateInterceptorInjector {
 
 	private final ClientHttpRequestInterceptor interceptor;
@@ -252,34 +259,6 @@ class TraceRestTemplateCustomizer implements RestTemplateCustomizer {
 	@Override
 	public void customize(RestTemplate restTemplate) {
 		new RestTemplateInterceptorInjector(this.interceptor).inject(restTemplate);
-	}
-
-}
-
-class TraceRestTemplateBeanPostProcessor implements BeanPostProcessor {
-
-	private final BeanFactory beanFactory;
-
-	TraceRestTemplateBeanPostProcessor(BeanFactory beanFactory) {
-		this.beanFactory = beanFactory;
-	}
-
-	@Override
-	public Object postProcessBeforeInitialization(Object bean, String beanName) throws BeansException {
-		return bean;
-	}
-
-	@Override
-	public Object postProcessAfterInitialization(Object bean, String beanName) throws BeansException {
-		if (bean instanceof RestTemplate) {
-			RestTemplate rt = (RestTemplate) bean;
-			new RestTemplateInterceptorInjector(interceptor()).inject(rt);
-		}
-		return bean;
-	}
-
-	private LazyTracingClientHttpRequestInterceptor interceptor() {
-		return new LazyTracingClientHttpRequestInterceptor(this.beanFactory);
 	}
 
 }

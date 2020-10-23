@@ -101,11 +101,11 @@ public class ZipkinRestTemplateSenderConfigurationTest {
 		assertThat(uri.toString()).isEqualTo(URI.create(zipkinProperties.getBaseUrl()).toString());
 	}
 
-	@Configuration
+	@Configuration(proxyBeanMethods = false)
 	@ConditionalOnClass(LoadBalancerClient.class)
 	static class MyDiscoveryClientZipkinUrlExtractorConfiguration {
 
-		@Configuration
+		@Configuration(proxyBeanMethods = false)
 		@ConditionalOnProperty(value = "spring.zipkin.discovery-client-enabled", havingValue = "true",
 				matchIfMissing = true)
 		static class ZipkinClientLoadBalancedConfiguration {
@@ -121,7 +121,7 @@ public class ZipkinRestTemplateSenderConfigurationTest {
 
 		}
 
-		@Configuration
+		@Configuration(proxyBeanMethods = false)
 		@ConditionalOnProperty(value = "spring.zipkin.discovery-client-enabled", havingValue = "false")
 		static class ZipkinClientNoOpConfiguration {
 

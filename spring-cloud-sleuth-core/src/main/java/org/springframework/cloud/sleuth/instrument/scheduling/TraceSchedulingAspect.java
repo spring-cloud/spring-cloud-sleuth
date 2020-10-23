@@ -18,13 +18,12 @@ package org.springframework.cloud.sleuth.instrument.scheduling;
 
 import java.util.regex.Pattern;
 
-import brave.Span;
-import brave.Tracer;
-import brave.Tracing;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 
+import org.springframework.cloud.sleuth.api.Span;
+import org.springframework.cloud.sleuth.api.Tracer;
 import org.springframework.cloud.sleuth.internal.SpanNameUtil;
 import org.springframework.lang.Nullable;
 
@@ -40,7 +39,6 @@ import org.springframework.lang.Nullable;
  * @author Marcin Grzejszczak
  * @author Spencer Gibb
  * @since 1.0.0
- * @see Tracing
  */
 @Aspect
 class TraceSchedulingAspect {
@@ -64,23 +62,22 @@ class TraceSchedulingAspect {
 		if (this.skipPattern != null && this.skipPattern.matcher(pjp.getTarget().getClass().getName()).matches()) {
 			// we might have a span in context due to wrapping of runnables
 			// we want to clear that context
-			this.tracer.withSpanInScope(null);
+			this.tracer.withSpan(null);
 			return pjp.proceed();
 		}
 		String spanName = SpanNameUtil.toLowerHyphen(pjp.getSignature().getName());
 		Span span = startOrContinueRenamedSpan(spanName);
-		try (Tracer.SpanInScope ws = this.tracer.withSpanInScope(span.start())) {
+		try (Tracer.SpanInScope ws = this.tracer.withSpan(span.start())) {
 			span.tag(CLASS_KEY, pjp.getTarget().getClass().getSimpleName());
 			span.tag(METHOD_KEY, pjp.getSignature().getName());
 			return pjp.proceed();
 		}
 		catch (Throwable ex) {
-			String message = ex.getMessage() == null ? ex.getClass().getSimpleName() : ex.getMessage();
-			span.tag("error", message);
+			span.error(ex);
 			throw ex;
 		}
 		finally {
-			span.finish();
+			span.end();
 		}
 	}
 

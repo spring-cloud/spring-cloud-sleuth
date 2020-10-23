@@ -16,17 +16,8 @@
 
 package org.springframework.cloud.sleuth.instrument.web;
 
-import java.net.InetSocketAddress;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import brave.Span;
-import brave.Tracer;
-import brave.http.HttpServerHandler;
-import brave.http.HttpServerRequest;
-import brave.http.HttpServerResponse;
-import brave.http.HttpTracing;
-import brave.propagation.TraceContext;
-import brave.propagation.TraceContextOrSamplingFlags;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.reactivestreams.Subscription;
@@ -37,6 +28,12 @@ import reactor.util.annotation.Nullable;
 import reactor.util.context.Context;
 
 import org.springframework.beans.factory.BeanFactory;
+import org.springframework.cloud.sleuth.api.Span;
+import org.springframework.cloud.sleuth.api.TraceContext;
+import org.springframework.cloud.sleuth.api.Tracer;
+import org.springframework.cloud.sleuth.api.http.HttpServerHandler;
+import org.springframework.cloud.sleuth.api.http.HttpServerRequest;
+import org.springframework.cloud.sleuth.api.http.HttpServerResponse;
 import org.springframework.cloud.sleuth.instrument.reactor.SleuthReactorProperties;
 import org.springframework.core.Ordered;
 import org.springframework.http.HttpStatus;
@@ -62,10 +59,10 @@ final class TraceWebFilter implements WebFilter, Ordered {
 	 * have the tracing context passed for you out of the box. That means that e.g. your
 	 * logs will not get correlated.
 	 */
-	public static final int ORDER = TraceHttpAutoConfiguration.TRACING_FILTER_ORDER;
+	public static final int ORDER = SleuthWebProperties.TRACING_FILTER_ORDER;
 
 	// Remember that this can be used in other packages
-	protected static final String TRACE_REQUEST_ATTR = TraceContext.class.getName();
+	protected static final String TRACE_REQUEST_ATTR = Span.class.getName();
 
 	static final String MVC_CONTROLLER_CLASS_KEY = "mvc.controller.class";
 	static final String MVC_CONTROLLER_METHOD_KEY = "mvc.controller.method";
@@ -80,7 +77,7 @@ final class TraceWebFilter implements WebFilter, Ordered {
 
 	Tracer tracer;
 
-	HttpServerHandler<HttpServerRequest, HttpServerResponse> handler;
+	HttpServerHandler handler;
 
 	SleuthWebProperties webProperties;
 
@@ -95,16 +92,16 @@ final class TraceWebFilter implements WebFilter, Ordered {
 	}
 
 	@SuppressWarnings("unchecked")
-	HttpServerHandler<HttpServerRequest, HttpServerResponse> handler() {
+	HttpServerHandler handler() {
 		if (this.handler == null) {
-			this.handler = HttpServerHandler.create(this.beanFactory.getBean(HttpTracing.class));
+			this.handler = this.beanFactory.getBean(HttpServerHandler.class);
 		}
 		return this.handler;
 	}
 
 	Tracer tracer() {
 		if (this.tracer == null) {
-			this.tracer = this.beanFactory.getBean(HttpTracing.class).tracing().tracer();
+			this.tracer = this.beanFactory.getBean(Tracer.class);
 		}
 		return this.tracer;
 	}
@@ -141,7 +138,7 @@ final class TraceWebFilter implements WebFilter, Ordered {
 		boolean tracePresent = tracer().currentSpan() != null;
 		if (tracePresent) {
 			// clear any previous trace
-			tracer().withSpanInScope(null); // TODO: dangerous and also allocates stuff
+			tracer().withSpan(null); // TODO: dangerous and also allocates stuff
 		}
 		return tracePresent;
 	}
@@ -157,9 +154,9 @@ final class TraceWebFilter implements WebFilter, Ordered {
 
 		final Tracer tracer;
 
-		final TraceContext traceContext;
+		final Span span;
 
-		final HttpServerHandler<HttpServerRequest, HttpServerResponse> handler;
+		final HttpServerHandler handler;
 
 		final AtomicBoolean initialSpanAlreadyRemoved = new AtomicBoolean();
 
@@ -171,7 +168,7 @@ final class TraceWebFilter implements WebFilter, Ordered {
 			this.tracer = parent.tracer();
 			this.handler = parent.handler();
 			this.exchange = exchange;
-			this.traceContext = exchange.getAttribute(TRACE_REQUEST_ATTR);
+			this.span = exchange.getAttribute(TRACE_REQUEST_ATTR);
 			this.initialTracePresent = initialTracePresent;
 		}
 
@@ -183,7 +180,7 @@ final class TraceWebFilter implements WebFilter, Ordered {
 
 		private Context contextWithoutInitialSpan(Context context) {
 			if (this.initialTracePresent && !this.initialSpanAlreadyRemoved.get()) {
-				context = context.delete(TraceContext.class);
+				context = context.delete(Span.class);
 				this.initialSpanAlreadyRemoved.set(true);
 			}
 			return context;
@@ -191,16 +188,20 @@ final class TraceWebFilter implements WebFilter, Ordered {
 
 		private Span findOrCreateSpan(Context c) {
 			Span span;
-			if (c.hasKey(TraceContext.class)) {
-				TraceContext parent = c.get(TraceContext.class);
-				span = this.tracer.newChild(parent).start();
+			if (c.hasKey(Span.class)) {
+				Span parent = c.get(Span.class);
+				try (Tracer.SpanInScope spanInScope = this.tracer.withSpan(parent)) {
+					span = this.tracer.nextSpan();
+				}
 				if (log.isDebugEnabled()) {
 					log.debug("Found span in reactor context" + span);
 				}
 			}
 			else {
-				if (this.traceContext != null) {
-					span = this.tracer.nextSpan(TraceContextOrSamplingFlags.create(this.traceContext));
+				if (this.span != null) {
+					try (Tracer.SpanInScope spanInScope = this.tracer.withSpan(this.span)) {
+						span = this.tracer.nextSpan();
+					}
 					if (log.isDebugEnabled()) {
 						log.debug("Found span in attribute " + span);
 					}
@@ -211,7 +212,7 @@ final class TraceWebFilter implements WebFilter, Ordered {
 						log.debug("Handled receive of span " + span);
 					}
 				}
-				this.exchange.getAttributes().put(TRACE_REQUEST_ATTR, span.context());
+				this.exchange.getAttributes().put(TRACE_REQUEST_ATTR, span);
 			}
 			return span;
 		}
@@ -226,7 +227,7 @@ final class TraceWebFilter implements WebFilter, Ordered {
 
 			final ServerWebExchange exchange;
 
-			final HttpServerHandler<HttpServerRequest, HttpServerResponse> handler;
+			final HttpServerHandler handler;
 
 			WebFilterTraceSubscriber(CoreSubscriber<? super Void> actual, Context context, Span span,
 					MonoWebFilterTrace parent) {
@@ -272,8 +273,8 @@ final class TraceWebFilter implements WebFilter, Ordered {
 				String httpRoute = pattern != null ? pattern.toString() : "";
 				addResponseTagsForSpanWithoutParent(this.exchange, this.exchange.getResponse(), this.span);
 				WrappedResponse response = new WrappedResponse(this.exchange.getResponse(),
-						this.exchange.getRequest().getMethodValue(), httpRoute);
-				this.handler.handleSend(response, t, this.span);
+						this.exchange.getRequest().getMethodValue(), httpRoute, t);
+				this.handler.handleSend(response, this.span);
 				if (log.isDebugEnabled()) {
 					log.debug("Handled send of " + this.span);
 				}
@@ -321,7 +322,7 @@ final class TraceWebFilter implements WebFilter, Ordered {
 
 	}
 
-	static final class WrappedRequest extends HttpServerRequest {
+	static final class WrappedRequest implements HttpServerRequest {
 
 		final ServerHttpRequest delegate;
 
@@ -332,23 +333,6 @@ final class TraceWebFilter implements WebFilter, Ordered {
 		@Override
 		public ServerHttpRequest unwrap() {
 			return delegate;
-		}
-
-		@Override
-		public boolean parseClientIpAndPort(Span span) {
-			boolean clientIpAndPortParsed = super.parseClientIpAndPort(span);
-			if (clientIpAndPortParsed) {
-				return true;
-			}
-			return resolveFromInetAddress(span);
-		}
-
-		private boolean resolveFromInetAddress(Span span) {
-			InetSocketAddress addr = delegate.getRemoteAddress();
-			if (addr == null) {
-				return false;
-			}
-			return span.remoteIpAndPort(addr.getAddress().getHostAddress(), addr.getPort());
 		}
 
 		@Override
@@ -373,7 +357,7 @@ final class TraceWebFilter implements WebFilter, Ordered {
 
 	}
 
-	static final class WrappedResponse extends HttpServerResponse {
+	static final class WrappedResponse implements HttpServerResponse {
 
 		final ServerHttpResponse delegate;
 
@@ -381,10 +365,13 @@ final class TraceWebFilter implements WebFilter, Ordered {
 
 		final String httpRoute;
 
-		WrappedResponse(ServerHttpResponse resp, String method, String httpRoute) {
+		final Throwable throwable;
+
+		WrappedResponse(ServerHttpResponse resp, String method, String httpRoute, Throwable throwable) {
 			this.delegate = resp;
 			this.method = method;
 			this.httpRoute = httpRoute;
+			this.throwable = throwable;
 		}
 
 		@Override
@@ -406,6 +393,11 @@ final class TraceWebFilter implements WebFilter, Ordered {
 		public int statusCode() {
 			HttpStatus statusCode = delegate.getStatusCode();
 			return statusCode != null ? statusCode.value() : 0;
+		}
+
+		@Override
+		public Throwable error() {
+			return this.throwable;
 		}
 
 	}

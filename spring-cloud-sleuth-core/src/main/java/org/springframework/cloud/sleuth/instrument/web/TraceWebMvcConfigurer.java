@@ -16,9 +16,8 @@
 
 package org.springframework.cloud.sleuth.instrument.web;
 
-import brave.spring.webmvc.SpanCustomizingAsyncHandlerInterceptor;
-
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cloud.sleuth.instrument.web.mvc.SpanCustomizingAsyncHandlerInterceptor;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;

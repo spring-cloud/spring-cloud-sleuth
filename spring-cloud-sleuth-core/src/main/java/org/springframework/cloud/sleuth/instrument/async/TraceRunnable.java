@@ -16,12 +16,9 @@
 
 package org.springframework.cloud.sleuth.instrument.async;
 
-import brave.ScopedSpan;
-import brave.Tracer;
-import brave.Tracing;
-import brave.propagation.TraceContext;
-
 import org.springframework.cloud.sleuth.SpanNamer;
+import org.springframework.cloud.sleuth.api.Span;
+import org.springframework.cloud.sleuth.api.Tracer;
 
 /**
  * Runnable that passes Span between threads. The Span name is taken either from the
@@ -44,33 +41,33 @@ public class TraceRunnable implements Runnable {
 
 	private final Runnable delegate;
 
-	private final TraceContext parent;
+	private final Span parent;
 
 	private final String spanName;
 
-	public TraceRunnable(Tracing tracing, SpanNamer spanNamer, Runnable delegate) {
-		this(tracing, spanNamer, delegate, null);
+	public TraceRunnable(Tracer tracer, SpanNamer spanNamer, Runnable delegate) {
+		this(tracer, spanNamer, delegate, null);
 	}
 
-	public TraceRunnable(Tracing tracing, SpanNamer spanNamer, Runnable delegate, String name) {
-		this.tracer = tracing.tracer();
+	public TraceRunnable(Tracer tracer, SpanNamer spanNamer, Runnable delegate, String name) {
+		this.tracer = tracer;
 		this.delegate = delegate;
-		this.parent = tracing.currentTraceContext().get();
+		this.parent = tracer.currentSpan();
 		this.spanName = name != null ? name : spanNamer.name(delegate, DEFAULT_SPAN_NAME);
 	}
 
 	@Override
 	public void run() {
-		ScopedSpan span = this.tracer.startScopedSpanWithParent(this.spanName, this.parent);
-		try {
+		Span childSpan = this.tracer.nextSpan(this.parent).name(this.spanName);
+		try (Tracer.SpanInScope ws = this.tracer.withSpan(childSpan.start())) {
 			this.delegate.run();
 		}
 		catch (Exception | Error e) {
-			span.error(e);
+			childSpan.error(e);
 			throw e;
 		}
 		finally {
-			span.finish();
+			childSpan.end();
 		}
 	}
 

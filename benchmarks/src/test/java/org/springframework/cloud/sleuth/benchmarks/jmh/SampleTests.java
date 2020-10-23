@@ -96,6 +96,7 @@ public class SampleTests {
 		protected String[] runArgs() {
 			List<String> strings = new ArrayList<>();
 			strings.addAll(Arrays.asList("--spring.jmx.enabled=false",
+					"--spring.autoconfigure.exclude=org.springframework.cloud.sleuth.otel.autoconfig.TraceOtelAutoConfiguration",
 					"--spring.application.name=defaultTraceContextForStream" + instrumentation.name()));
 			strings.addAll(instrumentation.entires.stream().map(s -> "--" + s).collect(Collectors.toList()));
 			return strings.toArray(new String[0]);
@@ -151,7 +152,7 @@ public class SampleTests {
 
 	}
 
-	@Configuration
+	@Configuration(proxyBeanMethods = false)
 	@Import(TestChannelBinderConfiguration.class)
 	static class TestConfiguration {
 

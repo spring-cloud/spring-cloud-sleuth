@@ -24,19 +24,17 @@ import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-import brave.Span;
-import brave.http.HttpClientHandler;
-import brave.http.HttpClientRequest;
-import brave.http.HttpClientResponse;
-import brave.http.HttpTracing;
-import brave.propagation.CurrentTraceContext;
-import brave.propagation.CurrentTraceContext.Scope;
 import feign.Client;
 import feign.Request;
 import feign.Response;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import org.springframework.cloud.sleuth.api.CurrentTraceContext;
+import org.springframework.cloud.sleuth.api.Span;
+import org.springframework.cloud.sleuth.api.http.HttpClientHandler;
+import org.springframework.cloud.sleuth.api.http.HttpClientRequest;
+import org.springframework.cloud.sleuth.api.http.HttpClientResponse;
 import org.springframework.cloud.util.ProxyUtils;
 import org.springframework.lang.Nullable;
 
@@ -54,18 +52,18 @@ final class TracingFeignClient implements Client {
 
 	final Client delegate;
 
-	final HttpClientHandler<HttpClientRequest, HttpClientResponse> handler;
+	final HttpClientHandler handler;
 
-	TracingFeignClient(HttpTracing httpTracing, Client delegate) {
-		this.currentTraceContext = httpTracing.tracing().currentTraceContext();
-		this.handler = HttpClientHandler.create(httpTracing);
+	TracingFeignClient(CurrentTraceContext currentTraceContext, HttpClientHandler handler, Client delegate) {
+		this.currentTraceContext = currentTraceContext;
+		this.handler = handler;
 		Client delegateTarget = ProxyUtils.getTargetObject(delegate);
 		this.delegate = delegateTarget instanceof TracingFeignClient ? ((TracingFeignClient) delegateTarget).delegate
 				: delegateTarget;
 	}
 
-	static Client create(HttpTracing httpTracing, Client delegate) {
-		return new TracingFeignClient(httpTracing, delegate);
+	static Client create(CurrentTraceContext currentTraceContext, HttpClientHandler handler, Client delegate) {
+		return new TracingFeignClient(currentTraceContext, handler, delegate);
 	}
 
 	@Override
@@ -77,7 +75,7 @@ final class TracingFeignClient implements Client {
 		}
 		Response res = null;
 		Throwable error = null;
-		try (Scope ws = this.currentTraceContext.newScope(span.context())) {
+		try (CurrentTraceContext.Scope ws = this.currentTraceContext.newScope(span.context())) {
 			res = this.delegate.execute(request.build(), options);
 			if (res == null) { // possibly null on bad implementation or mocks
 				res = Response.builder().request(req).build();
@@ -89,8 +87,8 @@ final class TracingFeignClient implements Client {
 			throw e;
 		}
 		finally {
-			ResponseWrapper response = res != null ? new ResponseWrapper(request, res, error) : null;
-			this.handler.handleReceive(response, error, span);
+			ResponseWrapper response = new ResponseWrapper(request, res, error);
+			this.handler.handleReceive(response, span);
 
 			if (log.isDebugEnabled()) {
 				log.debug("Handled receive of " + span);
@@ -100,12 +98,12 @@ final class TracingFeignClient implements Client {
 
 	void handleSendAndReceive(Span span, Request req, @Nullable Response res, @Nullable Throwable error) {
 		RequestWrapper request = new RequestWrapper(req);
-		this.handler.handleSend(request, span);
+		this.handler.handleSend(request, span.context());
 		ResponseWrapper response = res != null ? new ResponseWrapper(request, res, error) : null;
-		this.handler.handleReceive(response, error, span);
+		this.handler.handleReceive(response, span);
 	}
 
-	static final class RequestWrapper extends HttpClientRequest {
+	static final class RequestWrapper implements HttpClientRequest {
 
 		final Request delegate;
 
@@ -122,7 +120,7 @@ final class TracingFeignClient implements Client {
 
 		@Override
 		public String method() {
-			return delegate.method();
+			return delegate.httpMethod().name();
 		}
 
 		@Override
@@ -176,7 +174,7 @@ final class TracingFeignClient implements Client {
 
 	}
 
-	static final class ResponseWrapper extends HttpClientResponse {
+	static final class ResponseWrapper implements HttpClientResponse {
 
 		final RequestWrapper request;
 
@@ -185,7 +183,7 @@ final class TracingFeignClient implements Client {
 		@Nullable
 		final Throwable error;
 
-		ResponseWrapper(RequestWrapper request, Response response, @Nullable Throwable error) {
+		ResponseWrapper(RequestWrapper request, @Nullable Response response, @Nullable Throwable error) {
 			this.request = request;
 			this.response = response;
 			this.error = error;
@@ -209,7 +207,22 @@ final class TracingFeignClient implements Client {
 
 		@Override
 		public int statusCode() {
+			if (response == null) {
+				return 0;
+			}
 			return response.status();
+		}
+
+		@Override
+		public String header(String header) {
+			if (response == null) {
+				return null;
+			}
+			Collection<String> strings = response.headers().get(header);
+			if (strings.isEmpty()) {
+				return null;
+			}
+			return strings.iterator().next();
 		}
 
 	}

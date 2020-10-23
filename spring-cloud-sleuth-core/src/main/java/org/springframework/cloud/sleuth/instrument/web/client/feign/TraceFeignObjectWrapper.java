@@ -58,7 +58,7 @@ final class TraceFeignObjectWrapper {
 
 	private Object loadBalancerClient;
 
-	private Object loadBalancerProperties;
+	private LoadBalancerProperties loadBalancerProperties;
 
 	TraceFeignObjectWrapper(BeanFactory beanFactory) {
 		this.beanFactory = beanFactory;
@@ -80,8 +80,7 @@ final class TraceFeignObjectWrapper {
 			FeignBlockingLoadBalancerClient client = ProxyUtils.getTargetObject(bean);
 			return new TraceFeignBlockingLoadBalancerClient(
 					(Client) new TraceFeignObjectWrapper(this.beanFactory).wrap(client.getDelegate()),
-					(LoadBalancerClient) loadBalancerClient(), this.beanFactory,
-					(LoadBalancerProperties) loadBalancerProperties());
+					(LoadBalancerClient) loadBalancerClient(), this.beanFactory, loadBalancerProperties());
 		}
 		else {
 			FeignBlockingLoadBalancerClient client = ProxyUtils.getTargetObject(bean);
@@ -94,7 +93,7 @@ final class TraceFeignObjectWrapper {
 				log.warn(EXCEPTION_WARNING, e);
 			}
 			return new TraceFeignBlockingLoadBalancerClient(client, (LoadBalancerClient) loadBalancerClient(),
-					this.beanFactory, (LoadBalancerProperties) loadBalancerProperties());
+					this.beanFactory, loadBalancerProperties());
 		}
 	}
 
@@ -105,7 +104,7 @@ final class TraceFeignObjectWrapper {
 		return loadBalancerClient;
 	}
 
-	private Object loadBalancerProperties() {
+	private LoadBalancerProperties loadBalancerProperties() {
 		if (loadBalancerProperties == null) {
 			loadBalancerProperties = beanFactory.getBean(LoadBalancerProperties.class);
 		}

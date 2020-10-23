@@ -19,12 +19,6 @@ package org.springframework.cloud.sleuth.autoconfig;
 import java.util.ArrayList;
 import java.util.List;
 
-import brave.Tags;
-import brave.baggage.BaggageField;
-import brave.baggage.BaggagePropagationConfig;
-import brave.baggage.CorrelationScopeConfig;
-import brave.baggage.CorrelationScopeDecorator;
-
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 /**
@@ -34,42 +28,27 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * @since 3.0
  */
 @ConfigurationProperties("spring.sleuth.baggage")
-class SleuthBaggageProperties {
+public class SleuthBaggageProperties {
 
 	/**
-	 * Adds a {@link CorrelationScopeDecorator} to put baggage values into the correlation
 	 * context.
 	 */
 	private boolean correlationEnabled = true;
 
 	/**
-	 * A list of {@link BaggageField#name() fields} to add to correlation (MDC) context.
-	 *
-	 * @see CorrelationScopeConfig.SingleCorrelationField#create(BaggageField)
 	 */
 	private List<String> correlationFields = new ArrayList<>();
 
-	/**
-	 * Same as {@link #remoteFields} except that this field is not propagated to remote
-	 * services.
-	 *
-	 * @see BaggagePropagationConfig.SingleBaggageField#local(BaggageField)
-	 */
 	private List<String> localFields = new ArrayList<>();
 
 	/**
 	 * List of fields that are referenced the same in-process as it is on the wire. For
 	 * example, the field "x-vcap-request-id" would be set as-is including the prefix.
 	 *
-	 * @see BaggagePropagationConfig.SingleBaggageField#remote(BaggageField)
-	 * @see BaggagePropagationConfig.SingleBaggageField.Builder#addKeyName(String)
 	 */
 	private List<String> remoteFields = new ArrayList<>();
 
 	/**
-	 * A list of {@link BaggageField#name() fields} to tag into the span.
-	 *
-	 * @see Tags#BAGGAGE_FIELD
 	 */
 	private List<String> tagFields = new ArrayList<>();
 

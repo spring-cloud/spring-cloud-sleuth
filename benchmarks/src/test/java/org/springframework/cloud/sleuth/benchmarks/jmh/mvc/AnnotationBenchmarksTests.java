@@ -25,6 +25,7 @@ import org.openjdk.jmh.annotations.Fork;
 import org.openjdk.jmh.annotations.Measurement;
 import org.openjdk.jmh.annotations.Mode;
 import org.openjdk.jmh.annotations.OutputTimeUnit;
+import org.openjdk.jmh.annotations.Param;
 import org.openjdk.jmh.annotations.Scope;
 import org.openjdk.jmh.annotations.Setup;
 import org.openjdk.jmh.annotations.State;
@@ -34,6 +35,7 @@ import org.openjdk.jmh.annotations.Warmup;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.cloud.sleuth.benchmarks.app.mvc.SleuthBenchmarkingSpringApp;
+import org.springframework.cloud.sleuth.benchmarks.jmh.TracerImplementation;
 import org.springframework.context.ConfigurableApplicationContext;
 
 import static org.assertj.core.api.BDDAssertions.then;
@@ -64,10 +66,14 @@ public class AnnotationBenchmarksTests {
 
 		volatile SleuthBenchmarkingSpringApp sleuth;
 
+		@Param
+		private TracerImplementation tracerImplementation;
+
 		@Setup
 		public void setup() {
 			this.withSleuth = new SpringApplication(SleuthBenchmarkingSpringApp.class).run("--spring.jmx.enabled=false",
-					"--spring.application.name=withSleuth");
+					this.tracerImplementation.property(),
+					"--spring.application.name=withSleuth_" + this.tracerImplementation.name());
 			this.sleuth = this.withSleuth.getBean(SleuthBenchmarkingSpringApp.class);
 		}
 

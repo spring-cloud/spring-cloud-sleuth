@@ -22,15 +22,17 @@ import java.util.List;
 
 import javax.annotation.PostConstruct;
 
-import brave.http.HttpTracing;
-import brave.spring.web.TracingAsyncClientHttpRequestInterceptor;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.cloud.sleuth.api.CurrentTraceContext;
+import org.springframework.cloud.sleuth.api.Tracer;
+import org.springframework.cloud.sleuth.api.http.HttpClientHandler;
+import org.springframework.cloud.sleuth.autoconfig.TraceAutoConfiguration;
 import org.springframework.cloud.sleuth.instrument.web.TraceHttpAutoConfiguration;
+import org.springframework.cloud.sleuth.instrument.web.mvc.TracingAsyncClientHttpRequestInterceptor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.client.AsyncClientHttpRequestFactory;
@@ -49,8 +51,8 @@ import org.springframework.web.client.AsyncRestTemplate;
 @SleuthWebClientEnabled
 @ConditionalOnProperty(value = "spring.sleuth.web.async.client.enabled", matchIfMissing = true)
 @ConditionalOnClass(AsyncRestTemplate.class)
-@ConditionalOnBean(HttpTracing.class)
-@AutoConfigureAfter(TraceHttpAutoConfiguration.class)
+@ConditionalOnBean(Tracer.class)
+@AutoConfigureAfter({ TraceAutoConfiguration.class, TraceHttpAutoConfiguration.class })
 class TraceWebAsyncClientAutoConfiguration {
 
 	@Configuration(proxyBeanMethods = false)
@@ -59,9 +61,9 @@ class TraceWebAsyncClientAutoConfiguration {
 
 		@Bean
 		public TracingAsyncClientHttpRequestInterceptor asyncTracingClientHttpRequestInterceptor(
-				HttpTracing httpTracing) {
+				CurrentTraceContext currentTraceContext, HttpClientHandler httpClientHandler) {
 			return (TracingAsyncClientHttpRequestInterceptor) TracingAsyncClientHttpRequestInterceptor
-					.create(httpTracing);
+					.create(currentTraceContext, httpClientHandler);
 		}
 
 		@Configuration(proxyBeanMethods = false)

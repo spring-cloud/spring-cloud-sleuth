@@ -16,17 +16,16 @@
 
 package org.springframework.cloud.sleuth.instrument.reactor;
 
-import javax.annotation.Nullable;
-
-import brave.propagation.CurrentTraceContext;
-import brave.propagation.CurrentTraceContext.Scope;
-import brave.propagation.TraceContext;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.reactivestreams.Subscriber;
 import org.reactivestreams.Subscription;
 import reactor.core.Scannable;
 import reactor.util.context.Context;
+
+import org.springframework.cloud.sleuth.api.CurrentTraceContext;
+import org.springframework.cloud.sleuth.api.TraceContext;
+import org.springframework.lang.Nullable;
 
 /**
  * A trace representation of the {@link Subscriber} that always continues a span.
@@ -64,42 +63,42 @@ final class ScopePassingSpanSubscriber<T> implements SpanSubscription<T>, Scanna
 	@Override
 	public void onSubscribe(Subscription subscription) {
 		this.s = subscription;
-		try (Scope scope = this.currentTraceContext.maybeScope(this.parent)) {
+		try (CurrentTraceContext.Scope scope = this.currentTraceContext.maybeScope(this.parent)) {
 			this.subscriber.onSubscribe(this);
 		}
 	}
 
 	@Override
 	public void request(long n) {
-		try (Scope scope = this.currentTraceContext.maybeScope(this.parent)) {
+		try (CurrentTraceContext.Scope scope = this.currentTraceContext.maybeScope(this.parent)) {
 			this.s.request(n);
 		}
 	}
 
 	@Override
 	public void cancel() {
-		try (Scope scope = this.currentTraceContext.maybeScope(this.parent)) {
+		try (CurrentTraceContext.Scope scope = this.currentTraceContext.maybeScope(this.parent)) {
 			this.s.cancel();
 		}
 	}
 
 	@Override
 	public void onNext(T o) {
-		try (Scope scope = this.currentTraceContext.maybeScope(this.parent)) {
+		try (CurrentTraceContext.Scope scope = this.currentTraceContext.maybeScope(this.parent)) {
 			this.subscriber.onNext(o);
 		}
 	}
 
 	@Override
 	public void onError(Throwable throwable) {
-		try (Scope scope = this.currentTraceContext.maybeScope(this.parent)) {
+		try (CurrentTraceContext.Scope scope = this.currentTraceContext.maybeScope(this.parent)) {
 			this.subscriber.onError(throwable);
 		}
 	}
 
 	@Override
 	public void onComplete() {
-		try (Scope scope = this.currentTraceContext.maybeScope(this.parent)) {
+		try (CurrentTraceContext.Scope scope = this.currentTraceContext.maybeScope(this.parent)) {
 			this.subscriber.onComplete();
 		}
 	}

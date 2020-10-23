@@ -16,11 +16,12 @@
 
 package org.springframework.cloud.sleuth.annotation;
 
-import brave.Tracing;
+import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.cloud.sleuth.api.Tracer;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -31,12 +32,12 @@ public class SleuthNewSpanParserAnnotationNoSleuthTests {
 	NewSpanParser newSpanParser;
 
 	@Autowired(required = false)
-	Tracing tracing;
+	Tracer tracer;
 
 	@Test
 	public void shouldNotAutowireBecauseConfigIsDisabled() {
 		assertThat(this.newSpanParser).isNull();
-		assertThat(this.tracing).isNull();
+		Assertions.assertThat(this.tracer).isNull();
 	}
 
 }

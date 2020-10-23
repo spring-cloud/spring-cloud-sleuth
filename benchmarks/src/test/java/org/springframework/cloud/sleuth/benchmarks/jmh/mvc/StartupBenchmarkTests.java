@@ -24,12 +24,14 @@ import org.openjdk.jmh.annotations.Fork;
 import org.openjdk.jmh.annotations.Level;
 import org.openjdk.jmh.annotations.Measurement;
 import org.openjdk.jmh.annotations.Mode;
+import org.openjdk.jmh.annotations.Param;
 import org.openjdk.jmh.annotations.Scope;
 import org.openjdk.jmh.annotations.State;
 import org.openjdk.jmh.annotations.TearDown;
 import org.openjdk.jmh.annotations.Warmup;
 
 import org.springframework.cloud.sleuth.benchmarks.jmh.ProcessLauncherState;
+import org.springframework.cloud.sleuth.benchmarks.jmh.TracerImplementation;
 
 @Measurement(iterations = 5)
 @Warmup(iterations = 1)
@@ -46,32 +48,35 @@ public class StartupBenchmarkTests {
 
 	@Benchmark
 	public void withoutAnnotations(ApplicationState state) throws Exception {
-		state.setExtraArgs("--spring.sleuth.annotation.enabled=false");
+		state.setExtraArgs("--spring.sleuth.annotation.enabled=false", state.tracerImplementation.property());
 		state.run();
 	}
 
 	@Benchmark
 	public void withoutAsync(ApplicationState state) throws Exception {
-		state.setExtraArgs("--spring.sleuth.async.enabled=false", "--spring.sleuth.annotation.enabled=false");
+		state.setExtraArgs("--spring.sleuth.async.enabled=false", "--spring.sleuth.annotation.enabled=false", state.tracerImplementation.property());
 		state.run();
 	}
 
 	@Benchmark
 	public void withoutScheduled(ApplicationState state) throws Exception {
 		state.setExtraArgs("--spring.sleuth.scheduled.enabled=false", "--spring.sleuth.async.enabled=false",
-				"--spring.sleuth.annotation.enabled=false");
+				"--spring.sleuth.annotation.enabled=false", state.tracerImplementation.property());
 		state.run();
 	}
 
 	@Benchmark
 	public void withoutWeb(ApplicationState state) throws Exception {
 		state.setExtraArgs("--spring.sleuth.web.enabled=false", "--spring.sleuth.scheduled.enabled=false",
-				"--spring.sleuth.async.enabled=false", "--spring.sleuth.annotation.enabled=false");
+				"--spring.sleuth.async.enabled=false", "--spring.sleuth.annotation.enabled=false", state.tracerImplementation.property());
 		state.run();
 	}
 
 	@State(Scope.Benchmark)
 	public static class ApplicationState extends ProcessLauncherState {
+
+		@Param
+		private TracerImplementation tracerImplementation;
 
 		public ApplicationState() {
 			super("target", "--server.port=0");

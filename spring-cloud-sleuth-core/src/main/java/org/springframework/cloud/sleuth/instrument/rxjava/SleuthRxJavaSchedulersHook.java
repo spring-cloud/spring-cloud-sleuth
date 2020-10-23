@@ -18,8 +18,6 @@ package org.springframework.cloud.sleuth.instrument.rxjava;
 
 import java.util.List;
 
-import brave.Span;
-import brave.Tracer;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import rx.functions.Action0;
@@ -27,6 +25,9 @@ import rx.plugins.RxJavaErrorHandler;
 import rx.plugins.RxJavaObservableExecutionHook;
 import rx.plugins.RxJavaPlugins;
 import rx.plugins.RxJavaSchedulersHook;
+
+import org.springframework.cloud.sleuth.api.Span;
+import org.springframework.cloud.sleuth.api.Tracer;
 
 /**
  * {@link RxJavaSchedulersHook} that wraps an {@link Action0} into its tracing
@@ -133,20 +134,17 @@ class SleuthRxJavaSchedulersHook extends RxJavaSchedulersHook {
 			}
 			Span span = this.parent;
 			boolean created = false;
-			if (span != null) {
-				span = this.tracer.toSpan(this.parent.context());
-			}
-			else {
+			if (span == null) {
 				span = this.tracer.nextSpan().name(RXJAVA_COMPONENT).start();
 				span.tag(THREAD_NAME_KEY, Thread.currentThread().getName());
 				created = true;
 			}
-			try (Tracer.SpanInScope ws = this.tracer.withSpanInScope(span)) {
+			try (Tracer.SpanInScope ws = this.tracer.withSpan(span)) {
 				this.actual.call();
 			}
 			finally {
 				if (created) {
-					span.finish();
+					span.end();
 				}
 			}
 		}

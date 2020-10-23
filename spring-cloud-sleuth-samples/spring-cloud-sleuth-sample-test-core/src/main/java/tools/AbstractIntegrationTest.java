@@ -47,6 +47,8 @@ public abstract class AbstractIntegrationTest {
 	}
 
 	protected Runnable httpMessageWithTraceIdInHeadersIsSuccessfullySent(String endpoint, long traceId, Long spanId) {
+		log.info("Sending a request with trace id [" + SpanUtil.idToHex(traceId) + "] and span id ["
+				+ SpanUtil.idToHex(spanId) + "]");
 		return new RequestSendingRunnable(this.restTemplate, endpoint, traceId, spanId);
 	}
 

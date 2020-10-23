@@ -38,6 +38,7 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.WebApplicationType;
 import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.cloud.sleuth.benchmarks.app.webflux.SleuthBenchmarkingSpringWebFluxApp;
+import org.springframework.cloud.sleuth.benchmarks.jmh.TracerImplementation;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.test.web.reactive.server.WebTestClient;
 
@@ -65,6 +66,9 @@ public class MicroBenchmarkHttpTests {
 		@Param
 		private Instrumentation instrumentation;
 
+		@Param
+		private TracerImplementation tracerImplementation;
+
 		@Setup
 		public void setup() {
 			this.applicationContext = initContext();
@@ -79,12 +83,13 @@ public class MicroBenchmarkHttpTests {
 
 		protected String[] runArgs() {
 			return new String[] { "--spring.jmx.enabled=false",
-					"--spring.application.name=defaultTraceContext" + instrumentation.name(),
+					tracerImplementation.property(),
+					"--spring.application.name=defaultTraceContext" + instrumentation.name() + "_" + tracerImplementation.name(),
 					"--" + instrumentation.key + "=" + instrumentation.value };
 		}
 
 		void run() {
-			this.webTestClient.get().uri(this.instrumentation.url).header("X-B3-TraceId", "4883117762eb9420")
+			this.webTestClient.get().uri(instrumentation.url).header("X-B3-TraceId", "4883117762eb9420")
 					.header("X-B3-SpanId", "4883117762eb9420").exchange().expectStatus().isOk();
 		}
 

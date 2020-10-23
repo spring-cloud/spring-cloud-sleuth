@@ -16,7 +16,6 @@
 
 package org.springframework.cloud.sleuth.instrument.quartz;
 
-import brave.Tracing;
 import org.quartz.Scheduler;
 
 import org.springframework.beans.factory.BeanFactory;
@@ -26,6 +25,8 @@ import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.autoconfigure.quartz.QuartzAutoConfiguration;
+import org.springframework.cloud.sleuth.api.Tracer;
+import org.springframework.cloud.sleuth.api.propagation.Propagator;
 import org.springframework.cloud.sleuth.autoconfig.TraceAutoConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -38,18 +39,21 @@ import org.springframework.context.annotation.Configuration;
  * @since 2.2.0
  */
 @Configuration(proxyBeanMethods = false)
-@ConditionalOnBean({ Tracing.class, Scheduler.class })
+@ConditionalOnBean({ Tracer.class, Scheduler.class })
 @AutoConfigureAfter({ TraceAutoConfiguration.class, QuartzAutoConfiguration.class })
 @ConditionalOnProperty(value = "spring.sleuth.quartz.enabled", matchIfMissing = true)
 class TraceQuartzAutoConfiguration implements InitializingBean {
 
-	private Scheduler scheduler;
+	private final Scheduler scheduler;
 
-	private Tracing tracing;
+	private final Tracer tracer;
 
-	TraceQuartzAutoConfiguration(Scheduler scheduler, Tracing tracing) {
+	private final Propagator propagator;
+
+	TraceQuartzAutoConfiguration(Scheduler scheduler, Tracer tracer, Propagator propagator) {
 		this.scheduler = scheduler;
-		this.tracing = tracing;
+		this.tracer = tracer;
+		this.propagator = propagator;
 	}
 
 	@Autowired
@@ -57,14 +61,14 @@ class TraceQuartzAutoConfiguration implements InitializingBean {
 
 	@Bean
 	public TracingJobListener tracingJobListener() {
-		return new TracingJobListener(tracing);
+		return new TracingJobListener(this.tracer, this.propagator);
 	}
 
 	@Override
 	public void afterPropertiesSet() throws Exception {
-		TracingJobListener tracingJobListener = beanFactory.getBean(TracingJobListener.class);
-		scheduler.getListenerManager().addTriggerListener(tracingJobListener);
-		scheduler.getListenerManager().addJobListener(tracingJobListener);
+		TracingJobListener tracingJobListener = this.beanFactory.getBean(TracingJobListener.class);
+		this.scheduler.getListenerManager().addTriggerListener(tracingJobListener);
+		this.scheduler.getListenerManager().addJobListener(tracingJobListener);
 	}
 
 }

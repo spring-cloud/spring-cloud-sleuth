@@ -26,11 +26,6 @@ import javax.servlet.ServletException;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 
-import brave.Tracing;
-import brave.http.HttpTracing;
-import brave.servlet.TracingFilter;
-import brave.spring.webmvc.SpanCustomizingAsyncHandlerInterceptor;
-
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
@@ -38,12 +33,18 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
-import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.cloud.sleuth.SpanNamer;
+import org.springframework.cloud.sleuth.api.CurrentTraceContext;
+import org.springframework.cloud.sleuth.api.Tracer;
+import org.springframework.cloud.sleuth.api.http.HttpServerHandler;
+import org.springframework.cloud.sleuth.autoconfig.TraceAutoConfiguration;
+import org.springframework.cloud.sleuth.instrument.web.mvc.SpanCustomizingAsyncHandlerInterceptor;
+import org.springframework.cloud.sleuth.instrument.web.servlet.TracingFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
+import org.springframework.core.Ordered;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 /**
@@ -57,20 +58,19 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 @Configuration(proxyBeanMethods = false)
 @ConditionalOnProperty(value = "spring.sleuth.web.enabled", matchIfMissing = true)
 @ConditionalOnWebApplication(type = ConditionalOnWebApplication.Type.SERVLET)
-@ConditionalOnBean(HttpTracing.class)
-@AutoConfigureAfter(TraceHttpAutoConfiguration.class)
-@EnableConfigurationProperties(SleuthWebProperties.class)
+@ConditionalOnBean(Tracer.class)
+@AutoConfigureAfter(TraceAutoConfiguration.class)
 @Import(SpanCustomizingAsyncHandlerInterceptor.class)
-class TraceWebServletAutoConfiguration {
+public class TraceWebServletAutoConfiguration {
 
 	/**
 	 * Default filter order for the Http tracing filter.
 	 */
-	public static final int TRACING_FILTER_ORDER = TraceHttpAutoConfiguration.TRACING_FILTER_ORDER;
+	public static final int TRACING_FILTER_ORDER = Ordered.HIGHEST_PRECEDENCE + 5;
 
 	@Bean
-	TraceWebAspect traceWebAspect(Tracing tracing, SpanNamer spanNamer) {
-		return new TraceWebAspect(tracing, spanNamer);
+	TraceWebAspect traceWebAspect(Tracer tracer, CurrentTraceContext currentTraceContext, SpanNamer spanNamer) {
+		return new TraceWebAspect(tracer, currentTraceContext, spanNamer);
 	}
 
 	@Bean
@@ -84,8 +84,8 @@ class TraceWebServletAutoConfiguration {
 
 	@Bean
 	@ConditionalOnMissingBean
-	public TracingFilter tracingFilter(HttpTracing tracing) {
-		return (TracingFilter) TracingFilter.create(tracing);
+	public TracingFilter tracingFilter(CurrentTraceContext currentTraceContext, HttpServerHandler httpServerHandler) {
+		return TracingFilter.create(currentTraceContext, httpServerHandler);
 	}
 
 	/**

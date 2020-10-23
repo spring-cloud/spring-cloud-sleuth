@@ -20,7 +20,6 @@ import java.io.Closeable;
 import java.io.IOException;
 import java.util.function.Function;
 
-import brave.Tracing;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.reactivestreams.Publisher;
@@ -40,6 +39,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.cloud.context.scope.refresh.RefreshScope;
 import org.springframework.cloud.context.scope.refresh.RefreshScopeRefreshedEvent;
+import org.springframework.cloud.sleuth.api.Tracer;
 import org.springframework.cloud.sleuth.instrument.async.TraceableScheduledExecutorService;
 import org.springframework.context.ApplicationListener;
 import org.springframework.context.ConfigurableApplicationContext;
@@ -47,8 +47,6 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.env.ConfigurableEnvironment;
 
-import static org.springframework.cloud.sleuth.instrument.reactor.ReactorSleuth.scopePassingSpanOperator;
-import static org.springframework.cloud.sleuth.instrument.reactor.ReactorSleuth.springContextSpanOperator;
 import static org.springframework.cloud.sleuth.instrument.reactor.TraceReactorAutoConfiguration.TraceReactorConfiguration.SLEUTH_TRACE_REACTOR_KEY;
 
 /**
@@ -69,7 +67,7 @@ class TraceReactorAutoConfiguration {
 	static final String SLEUTH_REACTOR_EXECUTOR_SERVICE_KEY = "sleuth";
 
 	@Configuration(proxyBeanMethods = false)
-	@ConditionalOnBean(Tracing.class)
+	@ConditionalOnBean(Tracer.class)
 	static class TraceReactorConfiguration {
 
 		static final String SLEUTH_TRACE_REACTOR_KEY = TraceReactorConfiguration.class.getName();
@@ -89,7 +87,7 @@ class TraceReactorAutoConfiguration {
 			return new HookRegisteringBeanDefinitionRegistryPostProcessor(context);
 		}
 
-		@Configuration
+		@Configuration(proxyBeanMethods = false)
 		@ConditionalOnClass(RefreshScope.class)
 		static class HooksRefresherConfiguration {
 
@@ -130,16 +128,16 @@ class HooksRefresher implements ApplicationListener<RefreshScopeRefreshedEvent> 
 			if (log.isTraceEnabled()) {
 				log.trace("Decorating onEach operator instrumentation");
 			}
-			Hooks.onEachOperator(SLEUTH_TRACE_REACTOR_KEY, scopePassingSpanOperator(this.context));
+			Hooks.onEachOperator(SLEUTH_TRACE_REACTOR_KEY, ReactorSleuth.scopePassingSpanOperator(this.context));
 			break;
 		case DECORATE_ON_LAST:
 			if (log.isTraceEnabled()) {
 				log.trace("Decorating onLast operator instrumentation");
 			}
-			Hooks.onLastOperator(SLEUTH_TRACE_REACTOR_KEY, scopePassingSpanOperator(this.context));
+			Hooks.onLastOperator(SLEUTH_TRACE_REACTOR_KEY, ReactorSleuth.scopePassingSpanOperator(this.context));
 			break;
 		case MANUAL:
-			Hooks.onLastOperator(SLEUTH_TRACE_REACTOR_KEY, springContextSpanOperator(this.context));
+			Hooks.onLastOperator(SLEUTH_TRACE_REACTOR_KEY, ReactorSleuth.springContextSpanOperator(this.context));
 			break;
 		}
 	}
@@ -174,16 +172,16 @@ class HookRegisteringBeanDefinitionRegistryPostProcessor implements BeanDefiniti
 		if (!decorateOnEach) {
 			log.warn(
 					"You're using the deprecated [spring.sleuth.reactor.decorate-on-each] property. Please use the [spring.sleuth.reactor.instrumentation-type] one instead.");
-			decorateOnLast(scopePassingSpanOperator(springContext));
+			decorateOnLast(ReactorSleuth.scopePassingSpanOperator(springContext));
 		}
 		else if (property == SleuthReactorProperties.InstrumentationType.DECORATE_ON_EACH) {
 			decorateOnEach(springContext);
 		}
 		else if (property == SleuthReactorProperties.InstrumentationType.DECORATE_ON_LAST) {
-			decorateOnLast(scopePassingSpanOperator(springContext));
+			decorateOnLast(ReactorSleuth.scopePassingSpanOperator(springContext));
 		}
 		else if (property == SleuthReactorProperties.InstrumentationType.MANUAL) {
-			decorateOnLast(springContextSpanOperator(springContext));
+			decorateOnLast(ReactorSleuth.springContextSpanOperator(springContext));
 		}
 		Schedulers.setExecutorServiceDecorator(TraceReactorAutoConfiguration.SLEUTH_REACTOR_EXECUTOR_SERVICE_KEY,
 				(scheduler, scheduledExecutorService) -> new TraceableScheduledExecutorService(springContext,
@@ -201,7 +199,7 @@ class HookRegisteringBeanDefinitionRegistryPostProcessor implements BeanDefiniti
 		if (log.isTraceEnabled()) {
 			log.trace("Decorating onEach operator instrumentation");
 		}
-		Hooks.onEachOperator(SLEUTH_TRACE_REACTOR_KEY, scopePassingSpanOperator(springContext));
+		Hooks.onEachOperator(SLEUTH_TRACE_REACTOR_KEY, ReactorSleuth.scopePassingSpanOperator(springContext));
 	}
 
 	@Override

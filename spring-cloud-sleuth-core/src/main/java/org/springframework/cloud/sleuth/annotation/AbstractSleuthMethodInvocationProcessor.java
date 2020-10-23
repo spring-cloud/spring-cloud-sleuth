@@ -16,9 +16,6 @@
 
 package org.springframework.cloud.sleuth.annotation;
 
-import brave.Span;
-import brave.Tracer;
-import brave.propagation.CurrentTraceContext;
 import org.aopalliance.intercept.MethodInvocation;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -26,6 +23,9 @@ import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.BeanFactoryAware;
+import org.springframework.cloud.sleuth.api.CurrentTraceContext;
+import org.springframework.cloud.sleuth.api.Span;
+import org.springframework.cloud.sleuth.api.Tracer;
 
 /**
  * Sleuth annotation processor.
@@ -63,7 +63,7 @@ abstract class AbstractSleuthMethodInvocationProcessor implements SleuthMethodIn
 			logEvent(span, log + ".after");
 		}
 		if (isNewSpan) {
-			span.finish();
+			span.end();
 		}
 	}
 
@@ -89,7 +89,7 @@ abstract class AbstractSleuthMethodInvocationProcessor implements SleuthMethodIn
 					+ "the same class then the aspect will not be properly resolved");
 			return;
 		}
-		span.annotate(name);
+		span.event(name);
 	}
 
 	String log(ContinueSpan continueSpan) {

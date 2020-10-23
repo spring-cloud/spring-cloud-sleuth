@@ -20,75 +20,55 @@ import java.io.IOException;
 import java.net.URI;
 import java.util.Map;
 
-import brave.Span;
-import brave.Tracing;
-import brave.sampler.Sampler;
 import okhttp3.mockwebserver.MockWebServer;
 import org.awaitility.Awaitility;
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.cloud.client.ServiceInstance;
 import org.springframework.cloud.client.loadbalancer.LoadBalancerClient;
 import org.springframework.cloud.client.loadbalancer.LoadBalancerRequest;
 import org.springframework.cloud.client.loadbalancer.Request;
+import org.springframework.cloud.sleuth.api.Span;
+import org.springframework.cloud.sleuth.api.Tracer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.TestPropertySource;
 
 import static org.assertj.core.api.BDDAssertions.then;
 
-@SpringBootTest(classes = ZipkinDiscoveryClientTests.Config.class,
-		properties = { "spring.zipkin.baseUrl=https://zipkin/", "spring.zipkin.sender.type=web" // override
-																								// default
-																								// priority
-																								// which
-																								// picks
-																								// rabbit
-																								// due
-																								// to
-																								// classpath
-		})
-public class ZipkinDiscoveryClientTests {
-
-	public static MockWebServer ZIPKIN_RULE = new MockWebServer();
-
-	@BeforeAll
-	static void setup() throws IOException {
-		ZIPKIN_RULE.start();
-	}
-
-	@AfterAll
-	static void clean() throws IOException {
-		ZIPKIN_RULE.close();
-	}
+@ContextConfiguration(classes = ZipkinDiscoveryClientTests.Config.class)
+@TestPropertySource(properties = { "spring.zipkin.baseUrl=https://zipkin/", "spring.zipkin.sender.type=web" })
+public abstract class ZipkinDiscoveryClientTests {
 
 	@Autowired
-	Tracing tracing;
+	MockWebServer mockWebServer;
+
+	@Autowired
+	Tracer tracer;
 
 	@Test
 	public void shouldUseDiscoveryClientToFindZipkinUrlIfPresent() throws Exception {
-		Span span = this.tracing.tracer().nextSpan().name("foo").start();
+		Span span = this.tracer.nextSpan().name("foo").start();
 
-		span.finish();
+		span.end();
 
-		Awaitility.await().untilAsserted(() -> then(ZIPKIN_RULE.getRequestCount()).isGreaterThan(0));
+		Awaitility.await().untilAsserted(() -> then(mockWebServer.getRequestCount()).isGreaterThan(0));
 	}
 
-	@Configuration
+	@Configuration(proxyBeanMethods = false)
 	@EnableAutoConfiguration
 	static class Config {
 
-		@Bean
-		Sampler sampler() {
-			return Sampler.ALWAYS_SAMPLE;
+		@Bean(initMethod = "start", destroyMethod = "close")
+		MockWebServer mockWebServer() {
+			return new MockWebServer();
 		}
 
 		@Bean
-		LoadBalancerClient loadBalancerClient() {
+		LoadBalancerClient loadBalancerClient(MockWebServer mockWebServer) {
 			return new LoadBalancerClient() {
 				@Override
 				public <T> T execute(String serviceId, LoadBalancerRequest<T> request) throws IOException {
@@ -125,7 +105,7 @@ public class ZipkinDiscoveryClientTests {
 
 						@Override
 						public int getPort() {
-							return ZIPKIN_RULE.url("/").port();
+							return mockWebServer.url("/").port();
 						}
 
 						@Override
@@ -135,7 +115,7 @@ public class ZipkinDiscoveryClientTests {
 
 						@Override
 						public URI getUri() {
-							return ZIPKIN_RULE.url("/").uri();
+							return mockWebServer.url("/").uri();
 						}
 
 						@Override

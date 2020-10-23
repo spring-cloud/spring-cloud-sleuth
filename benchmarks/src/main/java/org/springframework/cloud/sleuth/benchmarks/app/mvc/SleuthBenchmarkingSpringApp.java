@@ -25,9 +25,6 @@ import java.util.regex.Pattern;
 
 import javax.annotation.PreDestroy;
 
-import brave.Span;
-import brave.Tracer;
-import brave.sampler.Sampler;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -41,6 +38,8 @@ import org.springframework.boot.web.servlet.server.ServletWebServerFactory;
 import org.springframework.cloud.sleuth.annotation.ContinueSpan;
 import org.springframework.cloud.sleuth.annotation.NewSpan;
 import org.springframework.cloud.sleuth.annotation.SpanTag;
+import org.springframework.cloud.sleuth.api.Span;
+import org.springframework.cloud.sleuth.api.Tracer;
 import org.springframework.cloud.sleuth.instrument.web.SkipPatternProvider;
 import org.springframework.context.ApplicationListener;
 import org.springframework.context.annotation.Bean;
@@ -122,11 +121,6 @@ public class SleuthBenchmarkingSpringApp implements ApplicationListener<ServletW
 	}
 
 	@Bean
-	Sampler alwaysSampler() {
-		return Sampler.ALWAYS_SAMPLE;
-	}
-
-	@Bean
 	AnotherClass anotherClass() {
 		return new AnotherClass(this.tracer);
 	}
@@ -165,11 +159,11 @@ class AClass {
 
 	public String manualSpan() {
 		Span manual = this.tracer.nextSpan().name("span-name");
-		try (Tracer.SpanInScope ws = this.tracer.withSpanInScope(manual.start())) {
+		try (Tracer.SpanInScope ws = this.tracer.withSpan(manual.start())) {
 			return this.anotherClass.continuedSpan();
 		}
 		finally {
-			manual.finish();
+			manual.end();
 		}
 	}
 
@@ -196,9 +190,9 @@ class AnotherClass {
 	public String continuedSpan() {
 		Span span = this.tracer.currentSpan();
 		span.tag("foo", "bar");
-		span.annotate("continuedspan.before");
+		span.event("continuedspan.before");
 		String response = "continued";
-		span.annotate("continuedspan.after");
+		span.event("continuedspan.after");
 		return response;
 	}
 

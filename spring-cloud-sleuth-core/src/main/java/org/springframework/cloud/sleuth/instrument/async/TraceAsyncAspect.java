@@ -18,14 +18,14 @@ package org.springframework.cloud.sleuth.instrument.async;
 
 import java.lang.reflect.Method;
 
-import brave.Span;
-import brave.Tracer;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.reflect.MethodSignature;
 
 import org.springframework.cloud.sleuth.SpanNamer;
+import org.springframework.cloud.sleuth.api.Span;
+import org.springframework.cloud.sleuth.api.Tracer;
 import org.springframework.cloud.sleuth.internal.SpanNameUtil;
 import org.springframework.util.ReflectionUtils;
 
@@ -61,13 +61,13 @@ class TraceAsyncAspect {
 			span = this.tracer.nextSpan();
 		}
 		span = span.name(spanName);
-		try (Tracer.SpanInScope ws = this.tracer.withSpanInScope(span.start())) {
+		try (Tracer.SpanInScope ws = this.tracer.withSpan(span.start())) {
 			span.tag(CLASS_KEY, pjp.getTarget().getClass().getSimpleName());
 			span.tag(METHOD_KEY, pjp.getSignature().getName());
 			return pjp.proceed();
 		}
 		finally {
-			span.finish();
+			span.end();
 		}
 	}
 

@@ -16,10 +16,10 @@
 
 package org.springframework.cloud.sleuth.annotation;
 
-import brave.Span;
-import brave.Tracer;
 import org.aopalliance.intercept.MethodInvocation;
 
+import org.springframework.cloud.sleuth.api.Span;
+import org.springframework.cloud.sleuth.api.Tracer;
 import org.springframework.util.StringUtils;
 
 /**
@@ -48,7 +48,7 @@ class NonReactorSleuthMethodInvocationProcessor extends AbstractSleuthMethodInvo
 		}
 		String log = log(continueSpan);
 		boolean hasLog = StringUtils.hasText(log);
-		try (Tracer.SpanInScope ws = tracer().withSpanInScope(span)) {
+		try (Tracer.SpanInScope scope = tracer().withSpan(span)) {
 			before(invocation, span, log, hasLog);
 			return invocation.proceed();
 		}

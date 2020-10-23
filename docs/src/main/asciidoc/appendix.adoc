@@ -1,5 +1,5 @@
 :numbered!:
-[appendix]
+[[appendix]]
 [[common-application-properties]]
 == Common application properties
 

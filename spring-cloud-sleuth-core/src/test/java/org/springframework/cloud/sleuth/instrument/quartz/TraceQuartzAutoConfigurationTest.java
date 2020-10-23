@@ -16,22 +16,23 @@
 
 package org.springframework.cloud.sleuth.instrument.quartz;
 
-import brave.Tracer;
-import brave.Tracing;
+import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
 import org.quartz.ListenerManager;
 import org.quartz.Scheduler;
 
 import org.springframework.boot.autoconfigure.AutoConfigurations;
 import org.springframework.boot.autoconfigure.AutoConfigureBefore;
+import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
+import org.springframework.cloud.gateway.config.GatewayAutoConfiguration;
+import org.springframework.cloud.gateway.config.GatewayClassPathWarningAutoConfiguration;
+import org.springframework.cloud.gateway.config.GatewayMetricsAutoConfiguration;
+import org.springframework.cloud.sleuth.api.Tracer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import org.springframework.context.annotation.Primary;
 
 /**
  * @author Branden Cash
@@ -39,14 +40,14 @@ import static org.mockito.Mockito.when;
 public class TraceQuartzAutoConfigurationTest {
 
 	private final ApplicationContextRunner contextRunner = new ApplicationContextRunner().withConfiguration(
-			AutoConfigurations.of(SchedulerConfig.class, TracingConfig.class, TraceQuartzAutoConfiguration.class));
+			AutoConfigurations.of(SchedulerConfig.class, TracingConfig.class, EnableAutoConfig.class));
 
 	@Test
 	public void should_create_job_listener_bean_when_all_conditions_are_met() {
 		// when
 		this.contextRunner.run(context -> {
 			// expect
-			assertThat(context).hasSingleBean(TracingJobListener.class);
+			Assertions.assertThat(context).hasSingleBean(TracingJobListener.class);
 		});
 	}
 
@@ -55,7 +56,7 @@ public class TraceQuartzAutoConfigurationTest {
 		// when
 		this.contextRunner.run(context -> {
 			// expect
-			verify(context.getBean(Scheduler.class).getListenerManager())
+			Mockito.verify(context.getBean(Scheduler.class).getListenerManager())
 					.addTriggerListener(context.getBean(TracingJobListener.class));
 		});
 	}
@@ -65,7 +66,7 @@ public class TraceQuartzAutoConfigurationTest {
 		// when
 		this.contextRunner.run(context -> {
 			// expect
-			verify(context.getBean(Scheduler.class).getListenerManager())
+			Mockito.verify(context.getBean(Scheduler.class).getListenerManager())
 					.addJobListener(context.getBean(TracingJobListener.class));
 		});
 	}
@@ -79,7 +80,7 @@ public class TraceQuartzAutoConfigurationTest {
 				// when
 				.run(context -> {
 					// expect
-					assertThat(context).doesNotHaveBean(TracingJobListener.class);
+					Assertions.assertThat(context).doesNotHaveBean(TracingJobListener.class);
 				});
 	}
 
@@ -92,7 +93,7 @@ public class TraceQuartzAutoConfigurationTest {
 				// when
 				.run(context -> {
 					// expect
-					assertThat(context).doesNotHaveBean(TracingJobListener.class);
+					Assertions.assertThat(context).doesNotHaveBean(TracingJobListener.class);
 				});
 	}
 
@@ -102,35 +103,38 @@ public class TraceQuartzAutoConfigurationTest {
 		this.contextRunner.withPropertyValues("spring.sleuth.quartz.enabled=false")
 				// expect
 				.run(context -> {
-					assertThat(context).doesNotHaveBean(TracingJobListener.class);
+					Assertions.assertThat(context).doesNotHaveBean(TracingJobListener.class);
 				});
 	}
 
-	@Configuration
+	@Configuration(proxyBeanMethods = false)
+	@EnableAutoConfiguration(exclude = { GatewayClassPathWarningAutoConfiguration.class, GatewayAutoConfiguration.class,
+			GatewayMetricsAutoConfiguration.class })
+	public static class EnableAutoConfig {
+
+	}
+
+	@Configuration(proxyBeanMethods = false)
 	@AutoConfigureBefore(TraceQuartzAutoConfiguration.class)
 	public static class SchedulerConfig {
 
 		@Bean
+		@Primary
 		public Scheduler scheduler() throws Exception {
-			Scheduler scheduler = mock(Scheduler.class);
-			when(scheduler.getListenerManager()).thenReturn(mock(ListenerManager.class));
+			Scheduler scheduler = Mockito.mock(Scheduler.class);
+			Mockito.when(scheduler.getListenerManager()).thenReturn(Mockito.mock(ListenerManager.class));
 			return scheduler;
 		}
 
 	}
 
-	@Configuration
+	@Configuration(proxyBeanMethods = false)
 	@AutoConfigureBefore(TraceQuartzAutoConfiguration.class)
 	public static class TracingConfig {
 
 		@Bean
-		public Tracing tracing() {
-			return mock(Tracing.class);
-		}
-
-		@Bean
-		public Tracer tracer() {
-			return mock(Tracer.class);
+		public Tracer testTracer() {
+			return Mockito.mock(Tracer.class);
 		}
 
 	}

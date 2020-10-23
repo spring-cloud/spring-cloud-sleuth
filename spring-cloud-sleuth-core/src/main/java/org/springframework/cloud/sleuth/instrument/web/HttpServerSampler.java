@@ -23,13 +23,11 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-import brave.sampler.SamplerFunction;
-
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.cloud.sleuth.api.SamplerFunction;
 
 /**
- * Annotate a client {@link brave.sampler.SamplerFunction} that should be injected to
- * {@link brave.http.HttpTracing.Builder#serverSampler(SamplerFunction)}.
+ * Annotate a server {@link SamplerFunction}.
  *
  * @since 2.2.0
  * @see Qualifier

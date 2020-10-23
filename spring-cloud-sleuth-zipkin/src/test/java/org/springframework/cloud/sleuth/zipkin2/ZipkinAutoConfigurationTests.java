@@ -19,6 +19,7 @@ package org.springframework.cloud.sleuth.zipkin2;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 import brave.Span;
@@ -50,6 +51,7 @@ import zipkin2.reporter.brave.ZipkinSpanHandler;
 import zipkin2.reporter.kafka.KafkaSender;
 import zipkin2.reporter.metrics.micrometer.MicrometerReporterMetrics;
 
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.AutoConfigurations;
 import org.springframework.boot.autoconfigure.amqp.RabbitAutoConfiguration;
 import org.springframework.boot.autoconfigure.context.PropertyPlaceholderAutoConfiguration;
@@ -59,6 +61,7 @@ import org.springframework.boot.test.context.FilteredClassLoader;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
 import org.springframework.cloud.sleuth.autoconfig.TraceAutoConfiguration;
+import org.springframework.cloud.sleuth.brave.autoconfig.TraceBraveAutoConfiguration;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -68,7 +71,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.BDDAssertions.then;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
-import static org.springframework.cloud.sleuth.zipkin2.ZipkinAutoConfiguration.SPAN_HANDLER_COMPARATOR;
+import static org.springframework.cloud.sleuth.zipkin2.ZipkinBraveAutoConfiguration.SPAN_HANDLER_COMPARATOR;
 
 /**
  * Not using {@linkplain SpringBootTest} as we need to change properties per test.
@@ -77,8 +80,8 @@ import static org.springframework.cloud.sleuth.zipkin2.ZipkinAutoConfiguration.S
  */
 public class ZipkinAutoConfigurationTests {
 
-	private final ApplicationContextRunner contextRunner = new ApplicationContextRunner()
-			.withConfiguration(AutoConfigurations.of(ZipkinAutoConfiguration.class));
+	private final ApplicationContextRunner contextRunner = new ApplicationContextRunner().withConfiguration(
+			AutoConfigurations.of(ZipkinAutoConfiguration.class, ZipkinBraveAutoConfiguration.class));
 
 	public MockWebServer server = new MockWebServer();
 
@@ -152,20 +155,23 @@ public class ZipkinAutoConfigurationTests {
 	void defaultsToV2Endpoint() throws Exception {
 		this.context = new AnnotationConfigApplicationContext();
 		environment().setProperty("spring.zipkin.base-url", this.server.url("/").toString());
-		this.context.register(ZipkinAutoConfiguration.class, PropertyPlaceholderAutoConfiguration.class,
-				TraceAutoConfiguration.class, Config.class);
+		this.context.register(ZipkinAutoConfiguration.class, ZipkinBraveAutoConfiguration.class,
+				PropertyPlaceholderAutoConfiguration.class, TraceAutoConfiguration.class,
+				TraceBraveAutoConfiguration.class, Config.class);
 		this.context.refresh();
 		Span span = this.context.getBean(Tracing.class).tracer().nextSpan().name("foo").tag("foo", "bar").start();
 
 		span.finish();
 
-		Awaitility.await().untilAsserted(() -> then(this.server.getRequestCount()).isGreaterThan(1));
-		// first request is for health check
-		this.server.takeRequest();
-		// second request is the span one
-		RecordedRequest request = this.server.takeRequest();
-		then(request.getPath()).isEqualTo("/api/v2/spans");
-		then(request.getBody().readUtf8()).contains("localEndpoint");
+		this.context.getBean(ZipkinAutoConfiguration.REPORTER_BEAN_NAME, AsyncReporter.class).flush();
+		Awaitility.await().atMost(250, TimeUnit.MILLISECONDS)
+				.untilAsserted(() -> then(this.server.getRequestCount()).isGreaterThan(1));
+
+		Awaitility.await().atMost(1, TimeUnit.SECONDS).untilAsserted(() -> {
+			RecordedRequest request = this.server.takeRequest(1, TimeUnit.SECONDS);
+			then(request.getPath()).isEqualTo("/api/v2/spans");
+			then(request.getBody().readUtf8()).contains("localEndpoint");
+		});
 	}
 
 	private MockEnvironment environment() {
@@ -178,20 +184,22 @@ public class ZipkinAutoConfigurationTests {
 		this.context = new AnnotationConfigApplicationContext();
 		environment().setProperty("spring.zipkin.base-url", this.server.url("/").toString());
 		environment().setProperty("spring.zipkin.encoder", "JSON_V1");
-		this.context.register(ZipkinAutoConfiguration.class, PropertyPlaceholderAutoConfiguration.class,
-				TraceAutoConfiguration.class, Config.class);
+		this.context.register(ZipkinAutoConfiguration.class, ZipkinBraveAutoConfiguration.class,
+				PropertyPlaceholderAutoConfiguration.class, TraceAutoConfiguration.class,
+				TraceBraveAutoConfiguration.class, Config.class);
 		this.context.refresh();
 		Span span = this.context.getBean(Tracing.class).tracer().nextSpan().name("foo").tag("foo", "bar").start();
 
 		span.finish();
 
-		Awaitility.await().untilAsserted(() -> then(this.server.getRequestCount()).isGreaterThan(0));
-		// first request is for health check
-		this.server.takeRequest();
-		// second request is the span one
-		RecordedRequest request = this.server.takeRequest();
-		then(request.getPath()).isEqualTo("/api/v1/spans");
-		then(request.getBody().readUtf8()).contains("binaryAnnotations");
+		Awaitility.await().atMost(250, TimeUnit.MILLISECONDS)
+				.untilAsserted(() -> then(this.server.getRequestCount()).isGreaterThan(0));
+
+		Awaitility.await().atMost(1, TimeUnit.SECONDS).untilAsserted(() -> {
+			RecordedRequest request = this.server.takeRequest(1, TimeUnit.SECONDS);
+			then(request.getPath()).isEqualTo("/api/v1/spans");
+			then(request.getBody().readUtf8()).contains("binaryAnnotations");
+		});
 	}
 
 	@Test
@@ -281,8 +289,9 @@ public class ZipkinAutoConfigurationTests {
 	public void supportsMultipleReporters() throws Exception {
 		this.context = new AnnotationConfigApplicationContext();
 		environment().setProperty("spring.zipkin.base-url", this.server.url("/").toString());
-		this.context.register(ZipkinAutoConfiguration.class, PropertyPlaceholderAutoConfiguration.class,
-				TraceAutoConfiguration.class, Config.class, MultipleReportersConfig.class);
+		this.context.register(ZipkinAutoConfiguration.class, ZipkinBraveAutoConfiguration.class,
+				PropertyPlaceholderAutoConfiguration.class, TraceAutoConfiguration.class,
+				TraceBraveAutoConfiguration.class, Config.class, MultipleReportersConfig.class);
 		this.context.refresh();
 
 		then(this.context.getBeansOfType(Sender.class)).hasSize(2);
@@ -297,23 +306,26 @@ public class ZipkinAutoConfigurationTests {
 
 		span.finish();
 
-		Awaitility.await().untilAsserted(() -> then(this.server.getRequestCount()).isGreaterThan(1));
-		// first request is for health check
-		this.server.takeRequest();
-		// second request is the span one
-		RecordedRequest request = this.server.takeRequest();
-		then(request.getPath()).isEqualTo("/api/v2/spans");
-		then(request.getBody().readUtf8()).contains("localEndpoint");
+		this.context.getBean(ZipkinAutoConfiguration.REPORTER_BEAN_NAME, AsyncReporter.class).flush();
+		Awaitility.await().atMost(250, TimeUnit.MILLISECONDS)
+				.untilAsserted(() -> then(this.server.getRequestCount()).isGreaterThan(1));
+
+		Awaitility.await().atMost(1, TimeUnit.SECONDS).untilAsserted(() -> {
+			RecordedRequest request = this.server.takeRequest(1, TimeUnit.SECONDS);
+			then(request.getPath()).isEqualTo("/api/v2/spans");
+			then(request.getBody().readUtf8()).contains("localEndpoint");
+		});
 
 		MultipleReportersConfig.OtherSender sender = this.context.getBean(MultipleReportersConfig.OtherSender.class);
-		Awaitility.await().untilAsserted(() -> then(sender.isSpanSent()).isTrue());
+		Awaitility.await().atMost(250, TimeUnit.MILLISECONDS).untilAsserted(() -> then(sender.isSpanSent()).isTrue());
 	}
 
 	@Test
 	public void shouldOverrideDefaultBeans() {
 		this.context = new AnnotationConfigApplicationContext();
-		this.context.register(ZipkinAutoConfiguration.class, PropertyPlaceholderAutoConfiguration.class,
-				TraceAutoConfiguration.class, Config.class, MyConfig.class);
+		this.context.register(ZipkinAutoConfiguration.class, ZipkinBraveAutoConfiguration.class,
+				PropertyPlaceholderAutoConfiguration.class, TraceAutoConfiguration.class,
+				TraceBraveAutoConfiguration.class, Config.class, MyConfig.class);
 		this.context.refresh();
 
 		then(this.context.getBeansOfType(Sender.class)).hasSize(1);
@@ -326,10 +338,12 @@ public class ZipkinAutoConfigurationTests {
 
 		span.finish();
 
-		Awaitility.await().untilAsserted(() -> then(this.server.getRequestCount()).isEqualTo(0));
+		Awaitility.await().atMost(250, TimeUnit.MILLISECONDS)
+				.untilAsserted(() -> then(this.server.getRequestCount()).isEqualTo(0));
 
+		this.context.getBean(ZipkinAutoConfiguration.REPORTER_BEAN_NAME, AsyncReporter.class).flush();
 		MyConfig.MySender sender = this.context.getBean(MyConfig.MySender.class);
-		Awaitility.await().untilAsserted(() -> then(sender.isSpanSent()).isTrue());
+		Awaitility.await().atMost(250, TimeUnit.MILLISECONDS).untilAsserted(() -> then(sender.isSpanSent()).isTrue());
 	}
 
 	@Test
@@ -400,7 +414,7 @@ public class ZipkinAutoConfigurationTests {
 		}, 200).error()).isInstanceOf(TimeoutException.class).hasMessage("FakeSender{} check() timed out after 200ms");
 	}
 
-	@Configuration
+	@Configuration(proxyBeanMethods = false)
 	protected static class Config {
 
 		@Bean
@@ -410,7 +424,7 @@ public class ZipkinAutoConfigurationTests {
 
 	}
 
-	@Configuration
+	@Configuration(proxyBeanMethods = false)
 	protected static class HandlersConfig {
 
 		@Bean
@@ -437,7 +451,7 @@ public class ZipkinAutoConfigurationTests {
 
 	}
 
-	@Configuration
+	@Configuration(proxyBeanMethods = false)
 	static class WithMeterRegistry {
 
 		@Bean
@@ -447,7 +461,7 @@ public class ZipkinAutoConfigurationTests {
 
 	}
 
-	@Configuration
+	@Configuration(proxyBeanMethods = false)
 	static class WithReporter {
 
 		@Bean
@@ -457,12 +471,12 @@ public class ZipkinAutoConfigurationTests {
 
 	}
 
-	@Configuration
+	@Configuration(proxyBeanMethods = false)
 	protected static class MultipleReportersConfig {
 
 		@Bean
-		Reporter<zipkin2.Span> otherReporter() {
-			return AsyncReporter.create(otherSender());
+		Reporter<zipkin2.Span> otherReporter(OtherSender otherSender) {
+			return AsyncReporter.create(otherSender);
 		}
 
 		@Bean
@@ -505,12 +519,12 @@ public class ZipkinAutoConfigurationTests {
 
 	// tag::override_default_beans[]
 
-	@Configuration
+	@Configuration(proxyBeanMethods = false)
 	protected static class MyConfig {
 
 		@Bean(ZipkinAutoConfiguration.REPORTER_BEAN_NAME)
-		Reporter<zipkin2.Span> myReporter() {
-			return AsyncReporter.create(mySender());
+		Reporter<zipkin2.Span> myReporter(@Qualifier(ZipkinAutoConfiguration.SENDER_BEAN_NAME) MySender mySender) {
+			return AsyncReporter.create(mySender);
 		}
 
 		@Bean(ZipkinAutoConfiguration.SENDER_BEAN_NAME)

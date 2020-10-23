@@ -22,6 +22,8 @@ import org.openjdk.jmh.runner.RunnerException;
 import org.openjdk.jmh.runner.options.Options;
 import org.openjdk.jmh.runner.options.OptionsBuilder;
 
+import org.springframework.cloud.sleuth.benchmarks.jmh.TracerImplementation;
+
 /**
  * @author alvin
  */
@@ -38,6 +40,7 @@ public class WithOutReactorSleuthSpringWebFluxBenchmarksTests extends SpringWebF
 	@Override
 	protected String[] runArgs() {
 		return new String[] { "--spring.jmx.enabled=false", "--spring.application.name=defaultTraceContext",
+				TracerImplementation.brave.toString(),
 				"--spring.sleuth.enabled=true", "--spring.sleuth.reactor.enabled=false"
 
 		};

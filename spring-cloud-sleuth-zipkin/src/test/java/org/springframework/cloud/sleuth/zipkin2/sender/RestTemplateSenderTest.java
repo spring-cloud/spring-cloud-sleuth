@@ -17,6 +17,7 @@
 package org.springframework.cloud.sleuth.zipkin2.sender;
 
 import java.io.IOException;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Stream;
 
 import okhttp3.mockwebserver.MockResponse;
@@ -77,7 +78,7 @@ public class RestTemplateSenderTest {
 
 		send(SPAN).execute();
 
-		RecordedRequest request = this.server.takeRequest();
+		RecordedRequest request = this.server.takeRequest(1, TimeUnit.SECONDS);
 		assertThat(request.getHeader("Content-Type")).isEqualTo("application/x-protobuf");
 
 		// proto3 encoding of ListOfSpan is simply a repeated span entry

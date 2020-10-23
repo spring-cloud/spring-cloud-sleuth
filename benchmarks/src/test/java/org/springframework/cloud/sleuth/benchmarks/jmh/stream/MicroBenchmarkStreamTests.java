@@ -44,6 +44,7 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.WebApplicationType;
 import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.cloud.sleuth.benchmarks.app.stream.SleuthBenchmarkingStreamApplication;
+import org.springframework.cloud.sleuth.benchmarks.jmh.TracerImplementation;
 import org.springframework.cloud.stream.binder.test.InputDestination;
 import org.springframework.cloud.stream.binder.test.OutputDestination;
 import org.springframework.cloud.stream.binder.test.TestChannelBinderConfiguration;
@@ -82,6 +83,9 @@ public class MicroBenchmarkStreamTests {
 		@Param
 		private Instrumentation instrumentation;
 
+		@Param
+		private TracerImplementation tracerImplementation;
+
 		@Setup
 		public void setup() {
 			this.applicationContext = initContext();
@@ -104,7 +108,8 @@ public class MicroBenchmarkStreamTests {
 		protected String[] runArgs() {
 			List<String> strings = new ArrayList<>();
 			strings.addAll(Arrays.asList("--spring.jmx.enabled=false",
-					"--spring.application.name=defaultTraceContextForStream" + instrumentation.name()));
+					this.tracerImplementation.property(),
+					"--spring.application.name=defaultTraceContextForStream" + instrumentation.name() + "_" + tracerImplementation.name()));
 			strings.addAll(instrumentation.entires.stream().map(s -> "--" + s).collect(Collectors.toList()));
 			return strings.toArray(new String[0]);
 		}
@@ -173,7 +178,7 @@ public class MicroBenchmarkStreamTests {
 
 	}
 
-	@Configuration
+	@Configuration(proxyBeanMethods = false)
 	@Import(TestChannelBinderConfiguration.class)
 	static class TestConfiguration {
 

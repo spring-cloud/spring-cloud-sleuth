@@ -16,9 +16,6 @@
 
 package org.springframework.cloud.sleuth.instrument.messaging;
 
-import brave.Tracing;
-import brave.propagation.Propagation;
-
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.AnyNestedCondition;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
@@ -27,6 +24,8 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingClas
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.cloud.function.context.FunctionCatalog;
+import org.springframework.cloud.sleuth.api.Tracer;
+import org.springframework.cloud.sleuth.api.propagation.Propagator;
 import org.springframework.cloud.sleuth.autoconfig.TraceAutoConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ConditionContext;
@@ -50,26 +49,27 @@ import org.springframework.util.ObjectUtils;
  */
 @Configuration(proxyBeanMethods = false)
 @ConditionalOnClass(GlobalChannelInterceptor.class)
-@ConditionalOnBean(Tracing.class)
+@ConditionalOnBean(Tracer.class)
 @AutoConfigureAfter({ TraceAutoConfiguration.class, TraceSpringMessagingAutoConfiguration.class })
-@OnMessagingEnabled
-@EnableConfigurationProperties(SleuthMessagingProperties.class)
+@ConditionalOnProperty(value = "spring.sleuth.messaging.enabled", matchIfMissing = true)
+@EnableConfigurationProperties(SleuthIntegrationMessagingProperties.class)
 @Conditional(TracingChannelInterceptorCondition.class)
 class TraceSpringIntegrationAutoConfiguration {
 
 	@Bean
 	public GlobalChannelInterceptorWrapper tracingGlobalChannelInterceptorWrapper(TracingChannelInterceptor interceptor,
-			SleuthMessagingProperties properties) {
+			SleuthIntegrationMessagingProperties properties) {
 		GlobalChannelInterceptorWrapper wrapper = new GlobalChannelInterceptorWrapper(interceptor);
-		wrapper.setPatterns(properties.getIntegration().getPatterns());
+		wrapper.setPatterns(properties.getPatterns());
 		return wrapper;
 	}
 
 	@Bean
-	TracingChannelInterceptor traceChannelInterceptor(Tracing tracing, SleuthMessagingProperties properties,
-			Propagation.Setter<MessageHeaderAccessor, String> traceMessagePropagationSetter,
-			Propagation.Getter<MessageHeaderAccessor, String> traceMessagePropagationGetter) {
-		return new TracingChannelInterceptor(tracing, properties, traceMessagePropagationSetter,
+	TracingChannelInterceptor traceChannelInterceptor(Tracer tracer, Propagator propagator,
+			SleuthIntegrationMessagingProperties properties,
+			Propagator.Setter<MessageHeaderAccessor> traceMessagePropagationSetter,
+			Propagator.Getter<MessageHeaderAccessor> traceMessagePropagationGetter) {
+		return new TracingChannelInterceptor(tracer, propagator, properties, traceMessagePropagationSetter,
 				traceMessagePropagationGetter);
 	}
 

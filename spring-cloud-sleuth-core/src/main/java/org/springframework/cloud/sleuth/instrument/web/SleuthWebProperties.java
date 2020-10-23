@@ -26,7 +26,14 @@ import org.springframework.boot.context.properties.NestedConfigurationProperty;
  * @since 1.0.12
  */
 @ConfigurationProperties("spring.sleuth.web")
-class SleuthWebProperties {
+public class SleuthWebProperties {
+
+	/**
+	 * If you register your filter before the {@link TraceWebFilter} then you will not
+	 * have the tracing context passed for you out of the box. That means that e.g. your
+	 * logs will not get correlated.
+	 */
+	public static final int TRACING_FILTER_ORDER = 5;
 
 	/**
 	 * Default set of skip patterns.
@@ -52,9 +59,9 @@ class SleuthWebProperties {
 
 	/**
 	 * Order in which the tracing filters should be registered. Defaults to
-	 * {@link TraceHttpAutoConfiguration#TRACING_FILTER_ORDER}.
+	 * {@link TraceWebServletAutoConfiguration#TRACING_FILTER_ORDER}.
 	 */
-	private int filterOrder = TraceHttpAutoConfiguration.TRACING_FILTER_ORDER;
+	private int filterOrder = TraceWebServletAutoConfiguration.TRACING_FILTER_ORDER;
 
 	/**
 	 * If set to true, auto-configured skip patterns will be ignored.

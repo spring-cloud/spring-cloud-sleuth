@@ -23,15 +23,9 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-import brave.http.HttpRequestParser;
-import brave.http.HttpTracing;
-
 import org.springframework.beans.factory.annotation.Qualifier;
 
 /**
- * Annotate a server {@link HttpRequestParser} that should be injected to
- * {@link HttpTracing.Builder#serverRequestParser(HttpRequestParser)}.
- *
  * @see Qualifier
  * @since 2.2.2
  */

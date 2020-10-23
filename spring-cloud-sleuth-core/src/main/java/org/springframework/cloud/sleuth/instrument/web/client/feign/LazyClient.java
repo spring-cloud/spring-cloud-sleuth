@@ -18,13 +18,14 @@ package org.springframework.cloud.sleuth.instrument.web.client.feign;
 
 import java.io.IOException;
 
-import brave.http.HttpTracing;
 import feign.Client;
 import feign.Request;
 import feign.Response;
 
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.BeanFactory;
+import org.springframework.cloud.sleuth.api.CurrentTraceContext;
+import org.springframework.cloud.sleuth.api.http.HttpClientHandler;
 
 /**
  * Lazy implementation of the Feign Client.
@@ -59,8 +60,8 @@ class LazyClient implements Client {
 				this.delegate = this.beanFactory.getBean(Client.class);
 			}
 			catch (BeansException ex) {
-				this.delegate = TracingFeignClient.create(beanFactory.getBean(HttpTracing.class),
-						new Client.Default(null, null));
+				this.delegate = TracingFeignClient.create(this.beanFactory.getBean(CurrentTraceContext.class),
+						this.beanFactory.getBean(HttpClientHandler.class), new Client.Default(null, null));
 			}
 		}
 		return this.delegate;

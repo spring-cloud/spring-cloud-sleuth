@@ -17,14 +17,13 @@
 package org.springframework.cloud.sleuth.instrument.scheduling;
 
 import org.aspectj.lang.ProceedingJoinPoint;
+import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 import org.springframework.boot.autoconfigure.AutoConfigurations;
 import org.springframework.boot.test.context.FilteredClassLoader;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
 import org.springframework.cloud.sleuth.autoconfig.TraceAutoConfiguration;
-
-import static org.assertj.core.api.Assertions.assertThat;
 
 class TraceSchedulingAutoConfigurationTest {
 
@@ -33,13 +32,13 @@ class TraceSchedulingAutoConfigurationTest {
 
 	@Test
 	void shoud_create_TraceSchedulingAspect() {
-		this.contextRunner.run(context -> assertThat(context).hasSingleBean(TraceSchedulingAspect.class));
+		this.contextRunner.run(context -> Assertions.assertThat(context).hasSingleBean(TraceSchedulingAspect.class));
 	}
 
 	@Test
 	void shoud_not_create_TraceSchedulingAspect_without_aspectJ() {
 		this.contextRunner.withClassLoader(new FilteredClassLoader(ProceedingJoinPoint.class))
-				.run(context -> assertThat(context).doesNotHaveBean(TraceSchedulingAspect.class));
+				.run(context -> Assertions.assertThat(context).doesNotHaveBean(TraceSchedulingAspect.class));
 	}
 
 }

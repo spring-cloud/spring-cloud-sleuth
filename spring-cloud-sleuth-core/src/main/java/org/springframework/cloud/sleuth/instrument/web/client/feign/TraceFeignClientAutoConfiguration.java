@@ -16,13 +16,11 @@
 
 package org.springframework.cloud.sleuth.instrument.web.client.feign;
 
-import brave.http.HttpTracing;
 import feign.Client;
 import feign.Feign;
 import feign.okhttp.OkHttpClient;
 
 import org.springframework.beans.factory.BeanFactory;
-import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.AutoConfigureBefore;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
@@ -30,7 +28,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.cloud.openfeign.FeignAutoConfiguration;
 import org.springframework.cloud.openfeign.FeignContext;
-import org.springframework.cloud.sleuth.instrument.web.TraceHttpAutoConfiguration;
+import org.springframework.cloud.sleuth.api.Tracer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Scope;
@@ -45,10 +43,9 @@ import org.springframework.context.annotation.Scope;
 @Configuration(proxyBeanMethods = false)
 @ConditionalOnProperty(value = "spring.sleuth.feign.enabled", matchIfMissing = true)
 @ConditionalOnClass({ Client.class, FeignContext.class })
-@ConditionalOnBean(HttpTracing.class)
+@ConditionalOnBean(Tracer.class)
 @AutoConfigureBefore(FeignAutoConfiguration.class)
-@AutoConfigureAfter(TraceHttpAutoConfiguration.class)
-class TraceFeignClientAutoConfiguration {
+public class TraceFeignClientAutoConfiguration {
 
 	@Bean
 	@ConditionalOnMissingBean

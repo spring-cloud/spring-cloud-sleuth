@@ -18,9 +18,6 @@ package org.springframework.cloud.sleuth.instrument.web.client.feign;
 
 import java.io.IOException;
 
-import brave.Span;
-import brave.Tracer;
-import brave.http.HttpTracing;
 import feign.Client;
 import feign.Request;
 import feign.Response;
@@ -31,6 +28,10 @@ import org.springframework.beans.factory.BeanFactory;
 import org.springframework.cloud.client.loadbalancer.LoadBalancerClient;
 import org.springframework.cloud.client.loadbalancer.reactive.LoadBalancerProperties;
 import org.springframework.cloud.openfeign.loadbalancer.FeignBlockingLoadBalancerClient;
+import org.springframework.cloud.sleuth.api.CurrentTraceContext;
+import org.springframework.cloud.sleuth.api.Span;
+import org.springframework.cloud.sleuth.api.Tracer;
+import org.springframework.cloud.sleuth.api.http.HttpClientHandler;
 
 /**
  * A trace representation of {@link FeignBlockingLoadBalancerClient}.
@@ -47,7 +48,9 @@ class TraceFeignBlockingLoadBalancerClient extends FeignBlockingLoadBalancerClie
 
 	Tracer tracer;
 
-	HttpTracing httpTracing;
+	CurrentTraceContext currentTraceContext;
+
+	HttpClientHandler httpClientHandler;
 
 	TracingFeignClient tracingFeignClient;
 
@@ -111,16 +114,24 @@ class TraceFeignBlockingLoadBalancerClient extends FeignBlockingLoadBalancerClie
 		return tracer;
 	}
 
-	private HttpTracing httpTracing() {
-		if (httpTracing == null) {
-			httpTracing = beanFactory.getBean(HttpTracing.class);
+	private CurrentTraceContext currentTraceContext() {
+		if (currentTraceContext == null) {
+			currentTraceContext = beanFactory.getBean(CurrentTraceContext.class);
 		}
-		return httpTracing;
+		return currentTraceContext;
+	}
+
+	private HttpClientHandler httpClientHandler() {
+		if (httpClientHandler == null) {
+			httpClientHandler = beanFactory.getBean(HttpClientHandler.class);
+		}
+		return httpClientHandler;
 	}
 
 	private TracingFeignClient tracingFeignClient() {
 		if (tracingFeignClient == null) {
-			tracingFeignClient = (TracingFeignClient) TracingFeignClient.create(httpTracing(), getDelegate());
+			tracingFeignClient = (TracingFeignClient) TracingFeignClient.create(currentTraceContext(),
+					httpClientHandler(), getDelegate());
 		}
 		return tracingFeignClient;
 	}

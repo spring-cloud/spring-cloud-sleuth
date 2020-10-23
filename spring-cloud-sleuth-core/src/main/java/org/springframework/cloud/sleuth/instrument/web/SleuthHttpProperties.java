@@ -25,11 +25,9 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * @since 2.0.0
  */
 @ConfigurationProperties("spring.sleuth.http")
-class SleuthHttpProperties {
+public class SleuthHttpProperties {
 
 	private boolean enabled = true;
-
-	private Legacy legacy = new Legacy();
 
 	public boolean isEnabled() {
 		return this.enabled;
@@ -37,31 +35,6 @@ class SleuthHttpProperties {
 
 	public void setEnabled(boolean enabled) {
 		this.enabled = enabled;
-	}
-
-	public Legacy getLegacy() {
-		return this.legacy;
-	}
-
-	public void setLegacy(Legacy legacy) {
-		this.legacy = legacy;
-	}
-
-	/**
-	 * Legacy Sleuth support. Related to the way headers are parsed and tags are set
-	 */
-	public static class Legacy {
-
-		private boolean enabled = false;
-
-		public boolean isEnabled() {
-			return this.enabled;
-		}
-
-		public void setEnabled(boolean enabled) {
-			this.enabled = enabled;
-		}
-
 	}
 
 }

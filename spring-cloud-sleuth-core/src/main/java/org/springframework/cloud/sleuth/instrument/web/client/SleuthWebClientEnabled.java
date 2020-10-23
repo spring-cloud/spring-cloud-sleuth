@@ -34,6 +34,6 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 @Target({ ElementType.TYPE, ElementType.METHOD })
 @Documented
 @ConditionalOnProperty(value = "spring.sleuth.web.client.enabled", matchIfMissing = true)
-@interface SleuthWebClientEnabled {
+public @interface SleuthWebClientEnabled {
 
 }
