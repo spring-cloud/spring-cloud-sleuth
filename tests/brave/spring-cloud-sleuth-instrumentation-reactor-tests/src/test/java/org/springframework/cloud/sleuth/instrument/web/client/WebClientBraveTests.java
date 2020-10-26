@@ -52,15 +52,21 @@ public class WebClientBraveTests extends ITSpringConfiguredReactorClient {
 	}
 
 	@Override
-	Mono<Integer> postMono(AnnotationConfigApplicationContext context, String pathIncludingQuery, String body) {
-		return context.getBean(WebClient.Builder.class).build().post().uri(pathIncludingQuery)
-				.body(BodyInserters.fromValue(body)).exchange().map(ClientResponse::rawStatusCode);
-	}
-
-	@Override
 	Mono<Integer> getMono(AnnotationConfigApplicationContext context, String pathIncludingQuery) {
 		return context.getBean(WebClient.Builder.class).build().get().uri(pathIncludingQuery).exchange()
 				.map(ClientResponse::rawStatusCode);
+	}
+
+	@Override
+	Mono<Integer> optionsMono(AnnotationConfigApplicationContext context, String path) {
+		return context.getBean(WebClient.Builder.class).build().options().uri(path).exchange()
+				.map(ClientResponse::rawStatusCode);
+	}
+
+	@Override
+	Mono<Integer> postMono(AnnotationConfigApplicationContext context, String pathIncludingQuery, String body) {
+		return context.getBean(WebClient.Builder.class).build().post().uri(pathIncludingQuery)
+				.body(BodyInserters.fromValue(body)).exchange().map(ClientResponse::rawStatusCode);
 	}
 
 	@Test

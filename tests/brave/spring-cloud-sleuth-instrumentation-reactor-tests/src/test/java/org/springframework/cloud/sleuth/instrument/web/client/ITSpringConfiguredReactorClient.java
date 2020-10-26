@@ -98,6 +98,11 @@ abstract class ITSpringConfiguredReactorClient extends ITHttpAsyncClient<Annotat
 	}
 
 	@Override
+	final protected void options(AnnotationConfigApplicationContext context, String path) {
+		optionsMono(context, path).block();
+	}
+
+	@Override
 	final protected void post(AnnotationConfigApplicationContext context, String pathIncludingQuery, String body) {
 		postMono(context, pathIncludingQuery, body).block();
 	}
@@ -108,11 +113,16 @@ abstract class ITSpringConfiguredReactorClient extends ITHttpAsyncClient<Annotat
 		TestHttpCallbackSubscriber.subscribe(getMono(context, path), callback);
 	}
 
-	/** Returns a {@link Mono} of the HTTP status code from the given "POST" request. */
-	abstract Mono<Integer> postMono(AnnotationConfigApplicationContext context, String pathIncludingQuery, String body);
-
 	/** Returns a {@link Mono} of the HTTP status code. */
 	abstract Mono<Integer> getMono(AnnotationConfigApplicationContext context, String pathIncludingQuery);
+
+	/**
+	 * Returns a {@link Mono} of the HTTP status code from the given "OPTIONS" request.
+	 */
+	abstract Mono<Integer> optionsMono(AnnotationConfigApplicationContext context, String path);
+
+	/** Returns a {@link Mono} of the HTTP status code from the given "POST" request. */
+	abstract Mono<Integer> postMono(AnnotationConfigApplicationContext context, String pathIncludingQuery, String body);
 
 	/**
 	 * This assumes that implementations do not issue an HTTP request until
