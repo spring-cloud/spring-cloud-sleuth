@@ -65,7 +65,7 @@ public class SleuthWebProperties {
 
 	/**
 	 * If set to true, auto-configured skip patterns will be ignored.
-	 * @see SkipPatternConfiguration
+	 * @see SkipPatternAutoConfiguration
 	 */
 	private boolean ignoreAutoConfiguredSkipPatterns = false;
 

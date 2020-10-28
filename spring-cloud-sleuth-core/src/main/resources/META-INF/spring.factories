@@ -14,7 +14,7 @@ org.springframework.cloud.sleuth.instrument.web.TraceWebFluxAutoConfiguration,\
 org.springframework.cloud.sleuth.instrument.web.client.TraceWebClientAutoConfiguration,\
 org.springframework.cloud.sleuth.instrument.web.client.TraceWebAsyncClientAutoConfiguration,\
 org.springframework.cloud.sleuth.instrument.web.client.feign.TraceFeignClientAutoConfiguration,\
-org.springframework.cloud.sleuth.instrument.web.SkipPatternConfiguration,\
+org.springframework.cloud.sleuth.instrument.web.SkipPatternAutoConfiguration,\
 org.springframework.cloud.sleuth.instrument.scheduling.TraceSchedulingAutoConfiguration,\
 org.springframework.cloud.sleuth.instrument.reactor.TraceReactorAutoConfiguration,\
 org.springframework.cloud.sleuth.instrument.messaging.TraceFunctionAutoConfiguration,\

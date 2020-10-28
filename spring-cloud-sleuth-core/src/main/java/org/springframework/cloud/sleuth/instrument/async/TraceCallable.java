@@ -18,6 +18,9 @@ package org.springframework.cloud.sleuth.instrument.async;
 
 import java.util.concurrent.Callable;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 import org.springframework.cloud.sleuth.SpanNamer;
 import org.springframework.cloud.sleuth.api.Span;
 import org.springframework.cloud.sleuth.api.Tracer;
@@ -33,6 +36,8 @@ import org.springframework.cloud.sleuth.api.Tracer;
  */
 // public as most types in this package were documented for use
 public class TraceCallable<V> implements Callable<V> {
+
+	private static final Log log = LogFactory.getLog(TraceRunnable.class);
 
 	/**
 	 * Since we don't know the exact operation name we provide a default name for the
@@ -63,6 +68,9 @@ public class TraceCallable<V> implements Callable<V> {
 	public V call() throws Exception {
 		Span childSpan = this.tracer.nextSpan(this.parent).name(this.spanName);
 		try (Tracer.SpanInScope ws = this.tracer.withSpan(childSpan.start())) {
+			if (log.isDebugEnabled()) {
+				log.debug("Running a trace task");
+			}
 			return this.delegate.call();
 		}
 		catch (Exception | Error ex) {

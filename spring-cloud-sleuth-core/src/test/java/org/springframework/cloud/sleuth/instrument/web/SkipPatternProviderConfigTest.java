@@ -54,10 +54,11 @@ import org.springframework.mock.env.MockEnvironment;
  */
 public class SkipPatternProviderConfigTest {
 
-	private final WebApplicationContextRunner contextRunner = new WebApplicationContextRunner().withConfiguration(
-			AutoConfigurations.of(DispatcherServletAutoConfiguration.class, InfoEndpointAutoConfiguration.class,
-					HealthEndpointAutoConfiguration.class, EndpointAutoConfiguration.class,
-					WebEndpointAutoConfiguration.class, TraceAutoConfiguration.class, SkipPatternConfiguration.class));
+	private final WebApplicationContextRunner contextRunner = new WebApplicationContextRunner()
+			.withConfiguration(AutoConfigurations.of(DispatcherServletAutoConfiguration.class,
+					InfoEndpointAutoConfiguration.class, HealthEndpointAutoConfiguration.class,
+					EndpointAutoConfiguration.class, WebEndpointAutoConfiguration.class, TraceAutoConfiguration.class,
+					SkipPatternAutoConfiguration.class));
 
 	@Test
 	public void should_return_null_when_cleared() throws Exception {
@@ -90,7 +91,7 @@ public class SkipPatternProviderConfigTest {
 
 	@Test
 	public void should_return_empty_when_management_context_has_no_context_path() throws Exception {
-		Optional<Pattern> pattern = new SkipPatternConfiguration.ManagementSkipPatternProviderConfig()
+		Optional<Pattern> pattern = new SkipPatternAutoConfiguration.ManagementSkipPatternProviderConfig()
 				.skipPatternForManagementServerProperties(environment(), new ManagementServerProperties())
 				.skipPattern();
 
@@ -123,7 +124,7 @@ public class SkipPatternProviderConfigTest {
 
 	@Test
 	public void should_return_empty_when_no_endpoints() {
-		Optional<Pattern> pattern = new SkipPatternConfiguration.ActuatorSkipPatternProviderConfig()
+		Optional<Pattern> pattern = new SkipPatternAutoConfiguration.ActuatorSkipPatternProviderConfig()
 				.skipPatternForActuatorEndpointsSamePort(environment(), new ServerProperties(),
 						new WebEndpointProperties(), Collections::emptyList)
 				.skipPattern();
@@ -271,7 +272,7 @@ public class SkipPatternProviderConfigTest {
 
 	@Test
 	public void should_combine_skip_patterns_from_list() throws Exception {
-		SkipPatternConfiguration configuration = new SkipPatternConfiguration();
+		SkipPatternAutoConfiguration configuration = new SkipPatternAutoConfiguration();
 		List<SingleSkipPattern> patterns = Arrays.asList(foo(), bar());
 
 		Pattern pattern = configuration.sleuthSkipPatternProvider(patterns).skipPattern();

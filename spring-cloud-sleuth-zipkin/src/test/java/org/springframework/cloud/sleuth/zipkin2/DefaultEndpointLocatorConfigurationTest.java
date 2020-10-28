@@ -31,7 +31,6 @@ import org.springframework.cloud.client.serviceregistry.Registration;
 import org.springframework.cloud.commons.util.InetUtils;
 import org.springframework.cloud.commons.util.InetUtilsProperties;
 import org.springframework.cloud.sleuth.brave.autoconfig.TraceBraveAutoConfiguration;
-import org.springframework.cloud.sleuth.otel.autoconfig.TraceOtelAutoConfiguration;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -183,13 +182,13 @@ public abstract class DefaultEndpointLocatorConfigurationTest {
 	}
 
 	@Configuration(proxyBeanMethods = false)
-	@EnableAutoConfiguration(exclude = TraceOtelAutoConfiguration.class)
+	@EnableAutoConfiguration(exclude = TraceBraveAutoConfiguration.class)
 	public static class BraveEmptyConfiguration {
 
 	}
 
 	@Configuration(proxyBeanMethods = false)
-	@EnableAutoConfiguration(exclude = TraceOtelAutoConfiguration.class)
+	@EnableAutoConfiguration(exclude = TraceBraveAutoConfiguration.class)
 	public static class BraveConfigurationWithRegistration {
 
 		@Bean
@@ -230,7 +229,7 @@ public abstract class DefaultEndpointLocatorConfigurationTest {
 	}
 
 	@Configuration(proxyBeanMethods = false)
-	@EnableAutoConfiguration(exclude = TraceOtelAutoConfiguration.class)
+	@EnableAutoConfiguration(exclude = TraceBraveAutoConfiguration.class)
 	public static class BraveConfigurationWithCustomLocator {
 
 		static EndpointLocator locator = Mockito.mock(EndpointLocator.class);

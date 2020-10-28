@@ -32,7 +32,7 @@ import org.springframework.context.annotation.Configuration;
 @Configuration(proxyBeanMethods = false)
 @ConditionalOnProperty(value = "spring.sleuth.enabled", matchIfMissing = true)
 @EnableConfigurationProperties(SleuthPropagationProperties.class)
-public class TraceBravePropagationAutoConfiguration {
+public class TraceBravePropagationConfiguration {
 
 	@Bean
 	@ConditionalOnMissingBean

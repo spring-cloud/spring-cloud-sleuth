@@ -20,11 +20,9 @@ import java.util.regex.Pattern;
 
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.AutoConfigureBefore;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.cloud.sleuth.api.SamplerFunction;
-import org.springframework.cloud.sleuth.api.Tracer;
 import org.springframework.cloud.sleuth.api.http.HttpClientHandler;
 import org.springframework.cloud.sleuth.api.http.HttpRequest;
 import org.springframework.cloud.sleuth.api.http.HttpRequestParser;
@@ -35,20 +33,18 @@ import org.springframework.cloud.sleuth.instrument.web.HttpClientResponseParser;
 import org.springframework.cloud.sleuth.instrument.web.HttpClientSampler;
 import org.springframework.cloud.sleuth.instrument.web.HttpServerRequestParser;
 import org.springframework.cloud.sleuth.instrument.web.HttpServerResponseParser;
-import org.springframework.cloud.sleuth.instrument.web.SkipPatternConfiguration;
+import org.springframework.cloud.sleuth.instrument.web.SkipPatternAutoConfiguration;
 import org.springframework.cloud.sleuth.instrument.web.SkipPatternProvider;
 import org.springframework.cloud.sleuth.instrument.web.SleuthWebProperties;
 import org.springframework.cloud.sleuth.instrument.web.TraceHttpAutoConfiguration;
-import org.springframework.cloud.sleuth.otel.bridge.TraceOtelBridgeAutoConfiguation;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.lang.Nullable;
 
 @Configuration(proxyBeanMethods = false)
 @ConditionalOnProperty(value = "spring.sleuth.enabled", matchIfMissing = true)
-@ConditionalOnBean({ Tracer.class, io.opentelemetry.trace.Tracer.class })
 @AutoConfigureBefore(TraceHttpAutoConfiguration.class)
-@AutoConfigureAfter({ TraceOtelBridgeAutoConfiguation.class, SkipPatternConfiguration.class })
+@AutoConfigureAfter(SkipPatternAutoConfiguration.class)
 public class TraceOtelHttpBridgeAutoConfiguration {
 
 	@Bean

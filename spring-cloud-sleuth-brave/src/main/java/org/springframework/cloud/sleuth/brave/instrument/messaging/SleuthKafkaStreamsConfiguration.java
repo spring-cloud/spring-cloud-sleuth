@@ -30,7 +30,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.cloud.sleuth.autoconfig.TraceAutoConfiguration;
+import org.springframework.cloud.sleuth.brave.autoconfig.TraceBraveAutoConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.kafka.config.StreamsBuilderFactoryBean;
@@ -43,7 +43,7 @@ import org.springframework.kafka.config.StreamsBuilderFactoryBean;
  */
 @Configuration(proxyBeanMethods = false)
 @ConditionalOnBean(Tracing.class)
-@AutoConfigureAfter({ TraceAutoConfiguration.class })
+@AutoConfigureAfter({ TraceBraveAutoConfiguration.class })
 @OnMessagingEnabled
 @ConditionalOnProperty(value = "spring.sleuth.messaging.kafka.streams.enabled", matchIfMissing = true)
 @ConditionalOnClass(KafkaStreams.class)

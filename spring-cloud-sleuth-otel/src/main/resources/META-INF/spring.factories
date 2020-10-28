@@ -1,9 +1,6 @@
 # Auto Configuration
 org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
 org.springframework.cloud.sleuth.otel.autoconfig.TraceOtelAutoConfiguration,\
-org.springframework.cloud.sleuth.otel.bridge.TraceOtelBridgeAutoConfiguation,\
 org.springframework.cloud.sleuth.otel.bridge.http.TraceOtelHttpBridgeAutoConfiguration,\
-org.springframework.cloud.sleuth.otel.propagation.TraceOtelPropagationAutoConfiguration,\
 org.springframework.cloud.sleuth.otel.opentracing.OpentracingAutoConfiguration,\
-org.springframework.cloud.sleuth.otel.log.TraceOtelLogAutoConfiguration,\
 org.springframework.cloud.sleuth.otel.exporter.TraceOtelExporterAutoConfiguration

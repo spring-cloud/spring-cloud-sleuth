@@ -37,10 +37,10 @@ import org.springframework.context.annotation.Configuration;
  * @since
  */
 // TODO: missing spring cloud context tests
-public class SamplerAutoConfigurationTests {
+public class SamplerConfigurationTests {
 
 	private final ApplicationContextRunner contextRunner = new ApplicationContextRunner()
-			.withConfiguration(AutoConfigurations.of(SamplerAutoConfiguration.class));
+			.withConfiguration(AutoConfigurations.of(SamplerConfiguration.class));
 
 	@Test
 	void should_use_NEVER_SAMPLER_when_only_logging() {
@@ -92,7 +92,7 @@ public class SamplerAutoConfigurationTests {
 		SamplerProperties properties = new SamplerProperties();
 		properties.setProbability(0.01f);
 
-		Sampler sampler = SamplerAutoConfiguration.samplerFromProps(properties);
+		Sampler sampler = SamplerConfiguration.samplerFromProps(properties);
 
 		BDDAssertions.then(sampler).isInstanceOf(brave.sampler.CountingSampler.class);
 	}
@@ -101,7 +101,7 @@ public class SamplerAutoConfigurationTests {
 	void samplerFromProps_rateLimit() {
 		SamplerProperties properties = new SamplerProperties();
 
-		Sampler sampler = SamplerAutoConfiguration.samplerFromProps(properties);
+		Sampler sampler = SamplerConfiguration.samplerFromProps(properties);
 
 		BDDAssertions.then(sampler).isInstanceOf(brave.sampler.RateLimitingSampler.class);
 	}
@@ -111,7 +111,7 @@ public class SamplerAutoConfigurationTests {
 		SamplerProperties properties = new SamplerProperties();
 		properties.setRate(0);
 
-		Sampler sampler = SamplerAutoConfiguration.samplerFromProps(properties);
+		Sampler sampler = SamplerConfiguration.samplerFromProps(properties);
 
 		BDDAssertions.then(sampler).isSameAs(Sampler.NEVER_SAMPLE);
 	}
@@ -122,7 +122,7 @@ public class SamplerAutoConfigurationTests {
 		properties.setProbability(0.01f);
 		properties.setRate(20);
 
-		Sampler sampler = SamplerAutoConfiguration.samplerFromProps(properties);
+		Sampler sampler = SamplerConfiguration.samplerFromProps(properties);
 
 		BDDAssertions.then(sampler).isInstanceOf(brave.sampler.CountingSampler.class);
 	}
@@ -133,7 +133,7 @@ public class SamplerAutoConfigurationTests {
 		properties.setProbability(0.0f);
 		properties.setRate(20);
 
-		Sampler sampler = SamplerAutoConfiguration.samplerFromProps(properties);
+		Sampler sampler = SamplerConfiguration.samplerFromProps(properties);
 
 		BDDAssertions.then(sampler).isSameAs(Sampler.NEVER_SAMPLE);
 	}

@@ -31,15 +31,16 @@ import org.springframework.boot.actuate.autoconfigure.web.server.ManagementServe
 import org.springframework.boot.actuate.endpoint.EndpointsSupplier;
 import org.springframework.boot.actuate.endpoint.web.ExposableWebEndpoint;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
+import org.springframework.boot.autoconfigure.condition.AnyNestedCondition;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.autoconfigure.web.ServerProperties;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
-import org.springframework.cloud.sleuth.api.Tracer;
 import org.springframework.cloud.sleuth.autoconfig.TraceAutoConfiguration;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Conditional;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.env.Environment;
 import org.springframework.lang.Nullable;
@@ -56,10 +57,10 @@ import org.springframework.util.StringUtils;
  */
 @Configuration(proxyBeanMethods = false)
 @ConditionalOnProperty(value = "spring.sleuth.web.enabled", matchIfMissing = true)
-@ConditionalOnBean(Tracer.class)
 @AutoConfigureAfter(TraceAutoConfiguration.class)
 @EnableConfigurationProperties(SleuthWebProperties.class)
-public class SkipPatternConfiguration {
+@Conditional(SkipPatternAutoConfiguration.SleuthEnabledCondition.class)
+public class SkipPatternAutoConfiguration {
 
 	@Bean
 	@ConditionalOnMissingBean
@@ -246,6 +247,24 @@ public class SkipPatternConfiguration {
 				return Pattern.compile(left);
 			}
 			return Pattern.compile(left + "|" + right);
+		}
+
+	}
+
+	static class SleuthEnabledCondition extends AnyNestedCondition {
+
+		private SleuthEnabledCondition() {
+			super(ConfigurationPhase.REGISTER_BEAN);
+		}
+
+		@ConditionalOnProperty(value = "spring.sleuth.enabled", matchIfMissing = true)
+		static class OnSleuthEnabled {
+
+		}
+
+		@ConditionalOnProperty(value = "spring.sleuth.web.enabled", matchIfMissing = true)
+		static class OnSleuthWebEnabled {
+
 		}
 
 	}

@@ -30,6 +30,7 @@ import org.springframework.context.annotation.Configuration;
  * @author Jesus Alonso
  * @since 2.1.0
  */
+@SuppressWarnings("ALL")
 @Configuration(proxyBeanMethods = false)
 @ConditionalOnBean(Tracer.class)
 @ConditionalOnProperty(value = "spring.sleuth.async.enabled", matchIfMissing = true)

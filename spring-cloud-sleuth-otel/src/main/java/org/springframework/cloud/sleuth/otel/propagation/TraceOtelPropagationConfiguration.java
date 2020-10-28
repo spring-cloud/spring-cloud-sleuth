@@ -34,22 +34,21 @@ import io.opentelemetry.extensions.trace.propagation.JaegerPropagator;
 import io.opentelemetry.extensions.trace.propagation.OtTracerPropagator;
 import io.opentelemetry.extensions.trace.propagation.TraceMultiPropagator;
 import io.opentelemetry.trace.Span;
-import io.opentelemetry.trace.Tracer;
 import io.opentelemetry.trace.TracingContextUtils;
 import io.opentelemetry.trace.propagation.HttpTraceContext;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import org.springframework.beans.factory.ObjectProvider;
-import org.springframework.boot.autoconfigure.AutoConfigureBefore;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
+import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.cloud.sleuth.api.BaggageManager;
+import org.springframework.cloud.sleuth.api.propagation.Propagator;
 import org.springframework.cloud.sleuth.autoconfig.SleuthBaggageProperties;
-import org.springframework.cloud.sleuth.autoconfig.TraceAutoConfiguration;
-import org.springframework.cloud.sleuth.otel.bridge.TraceOtelBridgeAutoConfiguation;
+import org.springframework.cloud.sleuth.otel.autoconfig.TraceOtelAutoConfiguration;
+import org.springframework.cloud.sleuth.otel.bridge.OtelPropagator;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -64,10 +63,14 @@ import org.springframework.util.ClassUtils;
  * @since 3.0.0
  */
 @Configuration(proxyBeanMethods = false)
-@ConditionalOnBean(Tracer.class)
-@AutoConfigureBefore({ TraceAutoConfiguration.class, TraceOtelBridgeAutoConfiguation.class })
+@AutoConfigureAfter(TraceOtelAutoConfiguration.class)
 @EnableConfigurationProperties({ SleuthPropagationProperties.class, OtelPropagationProperties.class })
-public class TraceOtelPropagationAutoConfiguration {
+public class TraceOtelPropagationConfiguration {
+
+	@Bean
+	Propagator otelPropagator(ContextPropagators contextPropagators, io.opentelemetry.trace.Tracer tracer) {
+		return new OtelPropagator(contextPropagators, tracer);
+	}
 
 	@Bean
 	@ConditionalOnMissingBean

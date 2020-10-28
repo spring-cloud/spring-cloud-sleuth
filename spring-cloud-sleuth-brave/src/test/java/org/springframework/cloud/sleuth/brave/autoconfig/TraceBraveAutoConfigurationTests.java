@@ -39,18 +39,17 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.AutoConfigurations;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
-import org.springframework.cloud.sleuth.autoconfig.TraceAutoConfiguration;
-import org.springframework.cloud.sleuth.brave.sampler.SamplerAutoConfigurationTests;
+import org.springframework.cloud.sleuth.brave.sampler.SamplerConfigurationTests;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 public class TraceBraveAutoConfigurationTests {
 
 	private final ApplicationContextRunner contextRunner = new ApplicationContextRunner()
-			.withConfiguration(AutoConfigurations.of(TraceAutoConfiguration.class, TraceBraveAutoConfiguration.class));
+			.withConfiguration(AutoConfigurations.of(TraceBraveAutoConfiguration.class));
 
 	/**
-	 * Duplicates {@link SamplerAutoConfigurationTests} intentionally, to ensure
+	 * Duplicates {@link SamplerConfigurationTests} intentionally, to ensure
 	 * configuration condition bugs do not exist.
 	 */
 	@Test
@@ -62,7 +61,7 @@ public class TraceBraveAutoConfigurationTests {
 	}
 
 	/**
-	 * Duplicates {@link SamplerAutoConfigurationTests} intentionally, to ensure
+	 * Duplicates {@link SamplerConfigurationTests} intentionally, to ensure
 	 * configuration condition bugs do not exist.
 	 */
 	@Test
@@ -74,7 +73,7 @@ public class TraceBraveAutoConfigurationTests {
 	}
 
 	/**
-	 * Duplicates {@link SamplerAutoConfigurationTests} intentionally, to ensure
+	 * Duplicates {@link SamplerConfigurationTests} intentionally, to ensure
 	 * configuration condition bugs do not exist.
 	 */
 	@Test

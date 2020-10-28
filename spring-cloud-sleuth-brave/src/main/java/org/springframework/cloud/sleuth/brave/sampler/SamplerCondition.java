@@ -30,13 +30,13 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
  *
  * <p>
  * "spring-cloud-sleuth-zipkin" obviated the {@link Sampler#NEVER_SAMPLE} default by
- * importing {@link SamplerAutoConfiguration}. Nothing else did, so sampling properties
+ * importing {@link SamplerConfiguration}. Nothing else did, so sampling properties
  * were effectively ignored unless "spring-cloud-sleuth-zipkin" was in use, or something
- * else similarly imported {@link SamplerAutoConfiguration}.
+ * else similarly imported {@link SamplerConfiguration}.
  *
  * <p>
  * During a review of Wavefront integration, it was considered not correct to have other
- * code import {@link SamplerAutoConfiguration}. To avoid that, retain the old behaviour
+ * code import {@link SamplerConfiguration}. To avoid that, retain the old behaviour
  * about log only nodes, and also not pin configuration to Zipkin involves a more complex
  * condition.
  *
@@ -55,7 +55,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
  * <p>
  * An integrated test that shows {@link Sampler#NEVER_SAMPLE} is default on fail exists in
  * {@code TraceAutoConfigurationTests} intentionally, as users now needn't import
- * {@link SamplerAutoConfiguration} directly.
+ * {@link SamplerConfiguration} directly.
  */
 final class SamplerCondition extends AnyNestedCondition {
 

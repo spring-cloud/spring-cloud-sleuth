@@ -36,7 +36,7 @@ import org.springframework.context.annotation.Configuration;
 @ConditionalOnProperty(value = "spring.sleuth.web.enabled", matchIfMissing = true)
 @ConditionalOnWebApplication(type = ConditionalOnWebApplication.Type.REACTIVE)
 @ConditionalOnBean(Tracer.class)
-@AutoConfigureAfter(SkipPatternConfiguration.class)
+@AutoConfigureAfter(SkipPatternAutoConfiguration.class)
 class TraceWebFluxAutoConfiguration {
 
 	@Bean

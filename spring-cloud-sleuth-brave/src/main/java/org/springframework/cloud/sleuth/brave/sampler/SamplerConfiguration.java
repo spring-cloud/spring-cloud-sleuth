@@ -38,10 +38,7 @@ import org.springframework.context.annotation.Configuration;
  */
 @Configuration(proxyBeanMethods = false)
 @EnableConfigurationProperties(SamplerProperties.class)
-// This is not auto-configuration, but it was in the past. Leaving the name as
-// SamplerAutoConfiguration because those not using Zipkin formerly had to
-// import this directly. A less precise name is better than rev-locking code.
-public class SamplerAutoConfiguration {
+public class SamplerConfiguration {
 
 	@Bean
 	@ConditionalOnMissingBean

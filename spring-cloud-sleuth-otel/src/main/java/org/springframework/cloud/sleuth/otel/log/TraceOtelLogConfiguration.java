@@ -18,16 +18,12 @@ package org.springframework.cloud.sleuth.otel.log;
 
 import io.opentelemetry.baggage.BaggageManager;
 import io.opentelemetry.exporters.logging.LoggingSpanExporter;
-import io.opentelemetry.trace.Tracer;
 import org.slf4j.MDC;
 
-import org.springframework.boot.autoconfigure.AutoConfigureBefore;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.cloud.sleuth.autoconfig.SleuthBaggageProperties;
-import org.springframework.cloud.sleuth.autoconfig.TraceAutoConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -40,10 +36,8 @@ import org.springframework.context.annotation.Configuration;
  * @since 3.0.0
  */
 @Configuration(proxyBeanMethods = false)
-@ConditionalOnBean(Tracer.class)
-@AutoConfigureBefore(TraceAutoConfiguration.class)
 @EnableConfigurationProperties(OtelLogProperties.class)
-public class TraceOtelLogAutoConfiguration {
+public class TraceOtelLogConfiguration {
 
 	@Configuration(proxyBeanMethods = false)
 	@ConditionalOnClass(MDC.class)

@@ -71,7 +71,7 @@ import org.springframework.web.client.RestTemplate;
 @ConditionalOnProperty(value = { "spring.sleuth.enabled", "spring.zipkin.enabled" }, matchIfMissing = true)
 @AutoConfigureBefore(TraceAutoConfiguration.class)
 @AutoConfigureAfter(name = "org.springframework.cloud.autoconfigure.RefreshAutoConfiguration")
-@Import(ZipkinSenderConfigurationImportSelector.class)
+@Import({ TraceAutoConfiguration.PropertiesConfiguration.class, ZipkinSenderConfigurationImportSelector.class })
 public class ZipkinAutoConfiguration {
 
 	private static final Log log = LogFactory.getLog(ZipkinAutoConfiguration.class);

@@ -37,12 +37,12 @@ import org.springframework.cloud.sleuth.api.Tracer;
 import org.springframework.cloud.sleuth.autoconfig.TraceAutoConfiguration;
 import org.springframework.cloud.sleuth.benchmarks.jmh.TracerImplementation;
 import org.springframework.cloud.sleuth.brave.autoconfig.TraceBraveAutoConfiguration;
-import org.springframework.cloud.sleuth.brave.bridge.TraceBraveBridgeAutoConfiguation;
-import org.springframework.cloud.sleuth.brave.propagation.TraceBravePropagationAutoConfiguration;
+import org.springframework.cloud.sleuth.brave.bridge.TraceBraveBridgeConfiguation;
+import org.springframework.cloud.sleuth.brave.propagation.TraceBravePropagationConfiguration;
 import org.springframework.cloud.sleuth.otel.autoconfig.TraceOtelAutoConfiguration;
-import org.springframework.cloud.sleuth.otel.bridge.TraceOtelBridgeAutoConfiguation;
-import org.springframework.cloud.sleuth.otel.log.TraceOtelLogAutoConfiguration;
-import org.springframework.cloud.sleuth.otel.propagation.TraceOtelPropagationAutoConfiguration;
+import org.springframework.cloud.sleuth.otel.bridge.TraceOtelBridgeConfiguation;
+import org.springframework.cloud.sleuth.otel.log.TraceOtelLogConfiguration;
+import org.springframework.cloud.sleuth.otel.propagation.TraceOtelPropagationConfiguration;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.Configuration;
 
@@ -121,11 +121,12 @@ public class BridgeTests {
 		}
 
 		@Configuration(proxyBeanMethods = false)
-		@ImportAutoConfiguration({ TraceAutoConfiguration.class, TraceBraveAutoConfiguration.class,
-				TraceBraveBridgeAutoConfiguation.class, TraceBravePropagationAutoConfiguration.class,
-				TraceOtelAutoConfiguration.class, TraceOtelBridgeAutoConfiguation.class,
-				TraceOtelPropagationAutoConfiguration.class, TraceOtelLogAutoConfiguration.class,
-				 TraceOtelLogAutoConfiguration.class })
+		@ImportAutoConfiguration({ TraceAutoConfiguration.class,
+				TraceBraveAutoConfiguration.class,
+				TraceBraveBridgeConfiguation.class, TraceBravePropagationConfiguration.class,
+				TraceOtelAutoConfiguration.class,
+				TraceOtelBridgeConfiguation.class, TraceOtelPropagationConfiguration.class,
+				TraceOtelLogConfiguration.class, TraceOtelLogConfiguration.class })
 		static class TestConfiguration {
 
 		}

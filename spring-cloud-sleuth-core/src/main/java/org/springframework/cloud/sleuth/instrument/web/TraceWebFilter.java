@@ -180,7 +180,7 @@ final class TraceWebFilter implements WebFilter, Ordered {
 
 		private Context contextWithoutInitialSpan(Context context) {
 			if (this.initialTracePresent && !this.initialSpanAlreadyRemoved.get()) {
-				context = context.delete(Span.class);
+				context = context.delete(Span.class).delete(TraceContext.class);
 				this.initialSpanAlreadyRemoved.set(true);
 			}
 			return context;
@@ -233,7 +233,7 @@ final class TraceWebFilter implements WebFilter, Ordered {
 					MonoWebFilterTrace parent) {
 				this.actual = actual;
 				this.span = span;
-				this.context = context.put(TraceContext.class, span.context());
+				this.context = context.put(TraceContext.class, span.context()).put(Span.class, span);
 				this.exchange = parent.exchange;
 				this.handler = parent.handler;
 			}

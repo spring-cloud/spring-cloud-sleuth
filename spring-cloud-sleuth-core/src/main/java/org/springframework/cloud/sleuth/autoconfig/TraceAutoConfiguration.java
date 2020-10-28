@@ -38,7 +38,7 @@ import org.springframework.context.annotation.Configuration;
 
 /**
  * {@link org.springframework.boot.autoconfigure.EnableAutoConfiguration
- * Auto-configuration} to enable tracing via Spring Cloud Sleuth.
+ * Auto-configuration} that registers NoOp implementation.
  *
  * @author Spencer Gibb
  * @author Marcin Grzejszczak
@@ -47,7 +47,6 @@ import org.springframework.context.annotation.Configuration;
  */
 @Configuration(proxyBeanMethods = false)
 @ConditionalOnProperty(value = "spring.sleuth.enabled", matchIfMissing = true)
-@EnableConfigurationProperties({ SleuthSpanFilterProperties.class, SleuthBaggageProperties.class })
 public class TraceAutoConfiguration {
 
 	private static final Log log = LogFactory.getLog(TraceAutoConfiguration.class);
@@ -90,6 +89,13 @@ public class TraceAutoConfiguration {
 	@ConditionalOnProperty(value = "spring.sleuth.span-filter.enabled", matchIfMissing = true)
 	SpanFilter spanIgnoringSpanExporter(SleuthSpanFilterProperties sleuthSpanFilterProperties) {
 		return new SpanIgnoringSpanFilter(sleuthSpanFilterProperties);
+	}
+
+	@Configuration
+	@EnableConfigurationProperties({ SleuthSpanFilterProperties.class, SleuthBaggageProperties.class,
+			SleuthTracerProperties.class })
+	public static class PropertiesConfiguration {
+
 	}
 
 }

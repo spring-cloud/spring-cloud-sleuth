@@ -27,15 +27,15 @@ import org.mockito.BDDMockito;
 
 import org.springframework.boot.autoconfigure.AutoConfigurations;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
-import org.springframework.cloud.sleuth.autoconfig.TraceAutoConfiguration;
 import org.springframework.cloud.sleuth.brave.autoconfig.TraceBraveAutoConfiguration;
+import org.springframework.cloud.sleuth.brave.bridge.http.TraceBraveHttpBridgeAutoConfiguration;
 import org.springframework.cloud.sleuth.instrument.web.HttpClientRequestParser;
 import org.springframework.cloud.sleuth.instrument.web.HttpClientResponseParser;
 import org.springframework.cloud.sleuth.instrument.web.HttpClientSampler;
 import org.springframework.cloud.sleuth.instrument.web.HttpServerRequestParser;
 import org.springframework.cloud.sleuth.instrument.web.HttpServerResponseParser;
 import org.springframework.cloud.sleuth.instrument.web.HttpServerSampler;
-import org.springframework.cloud.sleuth.instrument.web.SkipPatternConfiguration;
+import org.springframework.cloud.sleuth.instrument.web.SkipPatternAutoConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.support.GenericApplicationContext;
@@ -165,7 +165,7 @@ public class TraceHttpAutoConfigurationTests {
 	public void hasNoCycles() {
 		contextRunner()
 				.withConfiguration(
-						AutoConfigurations.of(SkipPatternConfiguration.class, TraceHttpAutoConfiguration.class))
+						AutoConfigurations.of(SkipPatternAutoConfiguration.class, TraceHttpAutoConfiguration.class))
 				.withInitializer(c -> ((GenericApplicationContext) c).setAllowCircularReferences(false))
 				.run((context) -> {
 					BDDAssertions.then(context.isRunning()).isEqualTo(true);
@@ -173,9 +173,10 @@ public class TraceHttpAutoConfigurationTests {
 	}
 
 	private ApplicationContextRunner contextRunner(String... propertyValues) {
-		return new ApplicationContextRunner().withPropertyValues(propertyValues).withConfiguration(
-				AutoConfigurations.of(TraceAutoConfiguration.class, TraceBraveAutoConfiguration.class,
-						TraceHttpAutoConfiguration.class, SkipPatternConfiguration.class));
+		return new ApplicationContextRunner().withPropertyValues(propertyValues)
+				.withConfiguration(AutoConfigurations.of(TraceBraveAutoConfiguration.class,
+						TraceBraveHttpBridgeAutoConfiguration.class, TraceHttpAutoConfiguration.class,
+						SkipPatternAutoConfiguration.class));
 	}
 
 }

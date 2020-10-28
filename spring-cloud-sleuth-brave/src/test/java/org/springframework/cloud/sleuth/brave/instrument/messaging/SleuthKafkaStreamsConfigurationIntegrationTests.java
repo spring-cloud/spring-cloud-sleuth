@@ -32,7 +32,6 @@ import org.springframework.boot.test.context.FilteredClassLoader;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
 import org.springframework.boot.test.system.CapturedOutput;
 import org.springframework.boot.test.system.OutputCaptureExtension;
-import org.springframework.cloud.sleuth.autoconfig.TraceAutoConfiguration;
 import org.springframework.cloud.sleuth.brave.autoconfig.TraceBraveAutoConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -47,8 +46,8 @@ import static org.mockito.Mockito.verify;
 class SleuthKafkaStreamsConfigurationIntegrationTests {
 
 	private final ApplicationContextRunner contextRunner = new ApplicationContextRunner()
-			.withConfiguration(AutoConfigurations.of(TraceAutoConfiguration.class, TraceBraveAutoConfiguration.class,
-					SleuthKafkaStreamsConfiguration.class))
+			.withConfiguration(
+					AutoConfigurations.of(TraceBraveAutoConfiguration.class, SleuthKafkaStreamsConfiguration.class))
 			.withUserConfiguration(UserConfig.class);
 
 	@Test

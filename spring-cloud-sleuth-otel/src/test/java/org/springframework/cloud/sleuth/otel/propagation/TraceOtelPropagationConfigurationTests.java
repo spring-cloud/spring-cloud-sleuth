@@ -38,7 +38,7 @@ import org.springframework.context.annotation.Configuration;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-class TraceOtelPropagationAutoConfigurationTests {
+class TraceOtelPropagationConfigurationTests {
 
 	@Test
 	void should_start_a_composite_text_map_propagator_with_b3_as_default() {

@@ -35,12 +35,12 @@ import org.springframework.context.annotation.Configuration;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-class TraceBravePropagationAutoConfigurationTests {
+class TraceBravePropagationConfigurationTests {
 
 	@Test
 	void should_start_a_composite_propagation_factory_supplier_with_b3_as_default() {
 		ApplicationContextRunner runner = new ApplicationContextRunner()
-				.withConfiguration(AutoConfigurations.of(TraceBravePropagationAutoConfiguration.class))
+				.withConfiguration(AutoConfigurations.of(TraceBravePropagationConfiguration.class))
 				.withUserConfiguration(Config.class);
 
 		runner.run(context -> {
@@ -53,7 +53,7 @@ class TraceBravePropagationAutoConfigurationTests {
 	@Test
 	void should_start_a_composite_propagation_factory_supplier_with_a_single_propagation_type() {
 		ApplicationContextRunner runner = new ApplicationContextRunner()
-				.withConfiguration(AutoConfigurations.of(TraceBravePropagationAutoConfiguration.class))
+				.withConfiguration(AutoConfigurations.of(TraceBravePropagationConfiguration.class))
 				.withUserConfiguration(Config.class).withPropertyValues("spring.sleuth.propagation.type=w3c");
 
 		runner.run(context -> {
@@ -66,7 +66,7 @@ class TraceBravePropagationAutoConfigurationTests {
 	@Test
 	void should_start_a_composite_propagation_factory_supplier_with_multiple_propagation_types() {
 		ApplicationContextRunner runner = new ApplicationContextRunner()
-				.withConfiguration(AutoConfigurations.of(TraceBravePropagationAutoConfiguration.class))
+				.withConfiguration(AutoConfigurations.of(TraceBravePropagationConfiguration.class))
 				.withUserConfiguration(Config.class).withPropertyValues("spring.sleuth.propagation.type=b3,w3c");
 
 		runner.run(context -> {
@@ -79,7 +79,7 @@ class TraceBravePropagationAutoConfigurationTests {
 	@Test
 	void should_start_a_composite_propagation_factory_supplier_with_custom_propagation_types() {
 		ApplicationContextRunner runner = new ApplicationContextRunner()
-				.withConfiguration(AutoConfigurations.of(TraceBravePropagationAutoConfiguration.class))
+				.withConfiguration(AutoConfigurations.of(TraceBravePropagationConfiguration.class))
 				.withUserConfiguration(CustomPropagatorConfig.class)
 				.withPropertyValues("spring.sleuth.propagation.type=custom");
 

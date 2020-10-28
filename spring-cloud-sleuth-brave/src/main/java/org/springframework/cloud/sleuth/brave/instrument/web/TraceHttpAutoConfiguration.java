@@ -48,7 +48,7 @@ import org.springframework.cloud.sleuth.instrument.web.HttpClientSampler;
 import org.springframework.cloud.sleuth.instrument.web.HttpServerRequestParser;
 import org.springframework.cloud.sleuth.instrument.web.HttpServerResponseParser;
 import org.springframework.cloud.sleuth.instrument.web.HttpServerSampler;
-import org.springframework.cloud.sleuth.instrument.web.SkipPatternConfiguration;
+import org.springframework.cloud.sleuth.instrument.web.SkipPatternAutoConfiguration;
 import org.springframework.cloud.sleuth.instrument.web.SkipPatternProvider;
 import org.springframework.cloud.sleuth.instrument.web.SleuthHttpProperties;
 import org.springframework.cloud.sleuth.instrument.web.SleuthWebProperties;
@@ -69,7 +69,7 @@ import org.springframework.lang.Nullable;
 		matchIfMissing = true)
 @ConditionalOnBean(Tracing.class)
 @ConditionalOnClass(HttpTracing.class)
-@AutoConfigureAfter({ TraceBraveAutoConfiguration.class, SkipPatternConfiguration.class })
+@AutoConfigureAfter({ TraceBraveAutoConfiguration.class, SkipPatternAutoConfiguration.class })
 @EnableConfigurationProperties({ SleuthWebProperties.class, SleuthHttpProperties.class })
 // public allows @AutoConfigureAfter(TraceHttpAutoConfiguration)
 // for components needing HttpTracing

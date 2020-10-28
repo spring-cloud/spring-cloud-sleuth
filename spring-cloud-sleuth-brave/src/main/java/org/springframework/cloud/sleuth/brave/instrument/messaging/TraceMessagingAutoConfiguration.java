@@ -54,7 +54,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
-import org.springframework.cloud.sleuth.autoconfig.TraceAutoConfiguration;
+import org.springframework.cloud.sleuth.brave.autoconfig.TraceBraveAutoConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Role;
@@ -82,7 +82,7 @@ import org.springframework.util.ReflectionUtils;
 @Configuration(proxyBeanMethods = false)
 @ConditionalOnBean(Tracing.class)
 @ConditionalOnClass(MessagingTracing.class)
-@AutoConfigureAfter(TraceAutoConfiguration.class)
+@AutoConfigureAfter(TraceBraveAutoConfiguration.class)
 @OnMessagingEnabled
 @EnableConfigurationProperties(SleuthMessagingProperties.class)
 // public allows @AutoConfigureAfter(TraceMessagingAutoConfiguration)

@@ -29,7 +29,6 @@ import org.junit.jupiter.api.Test;
 import org.springframework.boot.autoconfigure.AutoConfigurations;
 import org.springframework.boot.test.context.assertj.AssertableApplicationContext;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
-import org.springframework.cloud.sleuth.autoconfig.TraceAutoConfiguration;
 import org.springframework.cloud.sleuth.brave.instrument.messaging.TraceMessagingAutoConfiguration;
 import org.springframework.cloud.sleuth.brave.instrument.rpc.TraceRpcAutoConfiguration;
 import org.springframework.cloud.sleuth.brave.instrument.web.TraceHttpAutoConfiguration;
@@ -42,7 +41,7 @@ import static org.assertj.core.api.BDDAssertions.then;
 public class TraceBraveAutoConfigurationCustomizersTests {
 
 	private final ApplicationContextRunner contextRunner = new ApplicationContextRunner()
-			.withConfiguration(AutoConfigurations.of(TraceAutoConfiguration.class, TraceBraveAutoConfiguration.class,
+			.withConfiguration(AutoConfigurations.of(TraceBraveAutoConfiguration.class,
 					TraceHttpAutoConfiguration.class, TraceRpcAutoConfiguration.class,
 					TraceMessagingAutoConfiguration.class, FakeSpringMessagingAutoConfiguration.class))
 			.withUserConfiguration(Customizers.class);

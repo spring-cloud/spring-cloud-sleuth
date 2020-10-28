@@ -17,19 +17,12 @@
 package org.springframework.cloud.sleuth.otel.bridge;
 
 import io.opentelemetry.baggage.BaggageManager;
-import io.opentelemetry.context.propagation.ContextPropagators;
 
-import org.springframework.boot.autoconfigure.AutoConfigureAfter;
-import org.springframework.boot.autoconfigure.AutoConfigureBefore;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.cloud.sleuth.api.CurrentTraceContext;
 import org.springframework.cloud.sleuth.api.SpanCustomizer;
 import org.springframework.cloud.sleuth.api.Tracer;
-import org.springframework.cloud.sleuth.api.propagation.Propagator;
 import org.springframework.cloud.sleuth.autoconfig.SleuthBaggageProperties;
-import org.springframework.cloud.sleuth.autoconfig.TraceAutoConfiguration;
-import org.springframework.cloud.sleuth.otel.autoconfig.TraceOtelAutoConfiguration;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -43,10 +36,7 @@ import org.springframework.context.annotation.Configuration;
  */
 @Configuration(proxyBeanMethods = true)
 @ConditionalOnProperty(value = "spring.sleuth.enabled", matchIfMissing = true)
-@ConditionalOnBean(io.opentelemetry.trace.Tracer.class)
-@AutoConfigureAfter(TraceOtelAutoConfiguration.class)
-@AutoConfigureBefore(TraceAutoConfiguration.class)
-public class TraceOtelBridgeAutoConfiguation {
+public class TraceOtelBridgeConfiguation {
 
 	@Bean
 	Tracer otelTracerBridge(io.opentelemetry.trace.Tracer tracer, BaggageManager baggageManager,
@@ -70,11 +60,6 @@ public class TraceOtelBridgeAutoConfiguation {
 	@Bean
 	SpanCustomizer otelSpanCustomizer(io.opentelemetry.trace.Tracer tracer) {
 		return new OtelSpanCustomizer(tracer);
-	}
-
-	@Bean
-	Propagator otelPropagator(ContextPropagators contextPropagators, io.opentelemetry.trace.Tracer tracer) {
-		return new OtelPropagator(contextPropagators, tracer);
 	}
 
 }
