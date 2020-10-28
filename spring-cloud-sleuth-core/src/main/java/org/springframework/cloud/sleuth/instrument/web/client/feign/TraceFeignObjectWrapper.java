@@ -24,9 +24,13 @@ import org.apache.commons.logging.LogFactory;
 
 import org.springframework.aop.support.AopUtils;
 import org.springframework.beans.factory.BeanFactory;
+import org.springframework.cloud.client.loadbalancer.LoadBalancedRetryFactory;
 import org.springframework.cloud.client.loadbalancer.LoadBalancerClient;
 import org.springframework.cloud.client.loadbalancer.reactive.LoadBalancerProperties;
+import org.springframework.cloud.loadbalancer.blocking.client.BlockingLoadBalancerClient;
+import org.springframework.cloud.loadbalancer.support.LoadBalancerClientFactory;
 import org.springframework.cloud.openfeign.loadbalancer.FeignBlockingLoadBalancerClient;
+import org.springframework.cloud.openfeign.loadbalancer.RetryableFeignBlockingLoadBalancerClient;
 import org.springframework.cloud.util.ProxyUtils;
 import org.springframework.util.ClassUtils;
 
@@ -51,7 +55,9 @@ final class TraceFeignObjectWrapper {
 		loadBalancerPresent = ClassUtils
 				.isPresent("org.springframework.cloud.openfeign.loadbalancer.FeignBlockingLoadBalancerClient", null)
 				&& ClassUtils.isPresent(
-						"org.springframework.cloud.loadbalancer.blocking.client.BlockingLoadBalancerClient", null);
+						"org.springframework.cloud.loadbalancer.blocking.client.BlockingLoadBalancerClient", null)
+				&& ClassUtils.isPresent("org.springframework.cloud.loadbalancer.support.LoadBalancerClientFactory",
+						null);
 	}
 
 	private final BeanFactory beanFactory;
@@ -59,6 +65,10 @@ final class TraceFeignObjectWrapper {
 	private Object loadBalancerClient;
 
 	private LoadBalancerProperties loadBalancerProperties;
+
+	private Object loadBalancerRetryFactory;
+
+	private Object loadBalancerClientFactory;
 
 	TraceFeignObjectWrapper(BeanFactory beanFactory) {
 		this.beanFactory = beanFactory;
@@ -70,6 +80,10 @@ final class TraceFeignObjectWrapper {
 					&& !(bean instanceof TraceFeignBlockingLoadBalancerClient)) {
 				return instrumentedFeignLoadBalancerClient(bean);
 			}
+			if (loadBalancerPresent && bean instanceof RetryableFeignBlockingLoadBalancerClient
+					&& !(bean instanceof TraceRetryableFeignBlockingLoadBalancerClient)) {
+				return instrumentedRetryableFeignLoadBalancerClient(bean);
+			}
 			return new LazyTracingFeignClient(this.beanFactory, (Client) bean);
 		}
 		return bean;
@@ -80,7 +94,8 @@ final class TraceFeignObjectWrapper {
 			FeignBlockingLoadBalancerClient client = ProxyUtils.getTargetObject(bean);
 			return new TraceFeignBlockingLoadBalancerClient(
 					(Client) new TraceFeignObjectWrapper(this.beanFactory).wrap(client.getDelegate()),
-					(LoadBalancerClient) loadBalancerClient(), this.beanFactory, loadBalancerProperties());
+					(LoadBalancerClient) loadBalancerClient(), loadBalancerProperties(),
+					(LoadBalancerClientFactory) loadBalancerClientFactory(), this.beanFactory);
 		}
 		else {
 			FeignBlockingLoadBalancerClient client = ProxyUtils.getTargetObject(bean);
@@ -93,7 +108,34 @@ final class TraceFeignObjectWrapper {
 				log.warn(EXCEPTION_WARNING, e);
 			}
 			return new TraceFeignBlockingLoadBalancerClient(client, (LoadBalancerClient) loadBalancerClient(),
-					this.beanFactory, loadBalancerProperties());
+					loadBalancerProperties(), (LoadBalancerClientFactory) loadBalancerClientFactory(),
+					this.beanFactory);
+		}
+	}
+
+	private Object instrumentedRetryableFeignLoadBalancerClient(Object bean) {
+		if (AopUtils.getTargetClass(bean).equals(RetryableFeignBlockingLoadBalancerClient.class)) {
+			RetryableFeignBlockingLoadBalancerClient client = ProxyUtils.getTargetObject(bean);
+			return new TraceRetryableFeignBlockingLoadBalancerClient(
+					(Client) new TraceFeignObjectWrapper(beanFactory).wrap(client.getDelegate()),
+					(BlockingLoadBalancerClient) loadBalancerClient(),
+					(LoadBalancedRetryFactory) loadBalancerRetryFactory(), loadBalancerProperties(),
+					(LoadBalancerClientFactory) loadBalancerClientFactory(), beanFactory);
+		}
+		else {
+			RetryableFeignBlockingLoadBalancerClient client = ((RetryableFeignBlockingLoadBalancerClient) bean);
+			try {
+				Field delegate = RetryableFeignBlockingLoadBalancerClient.class.getDeclaredField(DELEGATE);
+				delegate.setAccessible(true);
+				delegate.set(client, new TraceFeignObjectWrapper(beanFactory).wrap(client.getDelegate()));
+			}
+			catch (NoSuchFieldException | IllegalArgumentException | IllegalAccessException | SecurityException e) {
+				log.warn(EXCEPTION_WARNING, e);
+			}
+			return new TraceRetryableFeignBlockingLoadBalancerClient(client,
+					(BlockingLoadBalancerClient) loadBalancerClient(),
+					(LoadBalancedRetryFactory) loadBalancerRetryFactory(), loadBalancerProperties(),
+					(LoadBalancerClientFactory) loadBalancerClientFactory(), beanFactory);
 		}
 	}
 
@@ -109,6 +151,20 @@ final class TraceFeignObjectWrapper {
 			loadBalancerProperties = beanFactory.getBean(LoadBalancerProperties.class);
 		}
 		return loadBalancerProperties;
+	}
+
+	private Object loadBalancerRetryFactory() {
+		if (loadBalancerRetryFactory == null) {
+			loadBalancerRetryFactory = beanFactory.getBean(LoadBalancedRetryFactory.class);
+		}
+		return loadBalancerRetryFactory;
+	}
+
+	private Object loadBalancerClientFactory() {
+		if (loadBalancerClientFactory == null) {
+			loadBalancerClientFactory = beanFactory.getBean(LoadBalancerClientFactory.class);
+		}
+		return loadBalancerClientFactory;
 	}
 
 }

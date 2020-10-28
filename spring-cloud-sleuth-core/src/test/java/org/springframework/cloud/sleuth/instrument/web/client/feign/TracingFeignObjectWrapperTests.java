@@ -30,7 +30,10 @@ import org.springframework.beans.factory.BeanFactory;
 import org.springframework.cloud.client.loadbalancer.LoadBalancerClient;
 import org.springframework.cloud.client.loadbalancer.reactive.LoadBalancerProperties;
 import org.springframework.cloud.loadbalancer.blocking.client.BlockingLoadBalancerClient;
+import org.springframework.cloud.loadbalancer.support.LoadBalancerClientFactory;
 import org.springframework.cloud.openfeign.loadbalancer.FeignBlockingLoadBalancerClient;
+
+import static org.mockito.Mockito.mock;
 
 /**
  * @author Marcin Grzejszczak
@@ -46,7 +49,7 @@ public class TracingFeignObjectWrapperTests {
 
 	@Test
 	public void should_wrap_a_client_into_lazy_trace_client() {
-		BDDAssertions.then(this.traceFeignObjectWrapper.wrap(Mockito.mock(Client.class)))
+		BDDAssertions.then(this.traceFeignObjectWrapper.wrap(mock(Client.class)))
 				.isExactlyInstanceOf(LazyTracingFeignClient.class);
 	}
 
@@ -59,12 +62,13 @@ public class TracingFeignObjectWrapperTests {
 	// gh-1528
 	@Test
 	public void should_wrap_feign_loadbalancer_client() {
-		Client delegate = Mockito.mock(Client.class);
-		BlockingLoadBalancerClient loadBalancerClient = Mockito.mock(BlockingLoadBalancerClient.class);
+		Client delegate = mock(Client.class);
+		BlockingLoadBalancerClient loadBalancerClient = mock(BlockingLoadBalancerClient.class);
+		LoadBalancerClientFactory loadBalancerClientFactory = mock(LoadBalancerClientFactory.class);
 		Mockito.when(beanFactory.getBean(LoadBalancerClient.class)).thenReturn(loadBalancerClient);
 
-		Object wrapped = traceFeignObjectWrapper
-				.wrap(new FeignBlockingLoadBalancerClient(delegate, loadBalancerClient, new LoadBalancerProperties()));
+		Object wrapped = traceFeignObjectWrapper.wrap(new FeignBlockingLoadBalancerClient(delegate, loadBalancerClient,
+				new LoadBalancerProperties(), loadBalancerClientFactory));
 
 		Assertions.assertThat(wrapped).isInstanceOf(TraceFeignBlockingLoadBalancerClient.class);
 	}
@@ -72,21 +76,22 @@ public class TracingFeignObjectWrapperTests {
 	// gh-1528, gh-1125
 	@Test
 	public void should_wrap_subclass_of_feign_loadbalancer_client() {
-		Client delegate = Mockito.mock(Client.class);
-		BlockingLoadBalancerClient loadBalancerClient = Mockito.mock(BlockingLoadBalancerClient.class);
+		Client delegate = mock(Client.class);
+		BlockingLoadBalancerClient loadBalancerClient = mock(BlockingLoadBalancerClient.class);
+		LoadBalancerClientFactory loadBalancerClientFactory = mock(LoadBalancerClientFactory.class);
 		Mockito.when(beanFactory.getBean(LoadBalancerClient.class)).thenReturn(loadBalancerClient);
 
 		Object wrapped = traceFeignObjectWrapper
-				.wrap(new TestFeignBlockingLoadBalancerClient(delegate, loadBalancerClient));
+				.wrap(new TestFeignBlockingLoadBalancerClient(delegate, loadBalancerClient, loadBalancerClientFactory));
 
 		Assertions.assertThat(wrapped).isInstanceOf(TraceFeignBlockingLoadBalancerClient.class);
-
 	}
 
 	static class TestFeignBlockingLoadBalancerClient extends FeignBlockingLoadBalancerClient {
 
-		TestFeignBlockingLoadBalancerClient(Client delegate, BlockingLoadBalancerClient loadBalancerClient) {
-			super(delegate, loadBalancerClient, new LoadBalancerProperties());
+		TestFeignBlockingLoadBalancerClient(Client delegate, BlockingLoadBalancerClient loadBalancerClient,
+				LoadBalancerClientFactory loadBalancerClientFactory) {
+			super(delegate, loadBalancerClient, new LoadBalancerProperties(), loadBalancerClientFactory);
 		}
 
 	}
