@@ -16,7 +16,10 @@
 
 package org.springframework.cloud.sleuth.instrument.rxjava;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.regex.Pattern;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -44,13 +47,13 @@ class SleuthRxJavaSchedulersHook extends RxJavaSchedulersHook {
 
 	private final Tracer tracer;
 
-	private final List<String> threadsToSample;
+	private final List<Pattern> threadsToIgnore;
 
 	private RxJavaSchedulersHook delegate;
 
-	SleuthRxJavaSchedulersHook(Tracer tracer, List<String> threadsToSample) {
+	SleuthRxJavaSchedulersHook(Tracer tracer, List<String> threadsToIgnore) {
 		this.tracer = tracer;
-		this.threadsToSample = threadsToSample;
+		this.threadsToIgnore = toPatternList(threadsToIgnore);
 		try {
 			this.delegate = RxJavaPlugins.getInstance().getSchedulersHook();
 			if (this.delegate instanceof SleuthRxJavaSchedulersHook) {
@@ -68,6 +71,17 @@ class SleuthRxJavaSchedulersHook extends RxJavaSchedulersHook {
 		catch (Exception ex) {
 			log.error("Failed to register Sleuth RxJava SchedulersHook", ex);
 		}
+	}
+
+	private List<Pattern> toPatternList(List<String> threadsToIgnore) {
+		if (threadsToIgnore == null || threadsToIgnore.size() == 0) {
+			return Collections.emptyList();
+		}
+		List<Pattern> patterns = new ArrayList<>(threadsToIgnore.size());
+		for (String thread : threadsToIgnore) {
+			patterns.add(Pattern.compile(thread));
+		}
+		return Collections.unmodifiableList(patterns);
 	}
 
 	private void logCurrentStateOfRxJavaPlugins(RxJavaErrorHandler errorHandler,
@@ -89,7 +103,7 @@ class SleuthRxJavaSchedulersHook extends RxJavaSchedulersHook {
 		if (wrappedAction instanceof TraceAction) {
 			return action;
 		}
-		return super.onSchedule(new TraceAction(this.tracer, wrappedAction, this.threadsToSample));
+		return super.onSchedule(new TraceAction(this.tracer, wrappedAction, this.threadsToIgnore));
 	}
 
 	/**
@@ -107,9 +121,9 @@ class SleuthRxJavaSchedulersHook extends RxJavaSchedulersHook {
 
 		private final Span parent;
 
-		private final List<String> threadsToIgnore;
+		private final List<Pattern> threadsToIgnore;
 
-		TraceAction(Tracer tracer, Action0 actual, List<String> threadsToIgnore) {
+		TraceAction(Tracer tracer, Action0 actual, List<Pattern> threadsToIgnore) {
 			this.tracer = tracer;
 			this.threadsToIgnore = threadsToIgnore;
 			this.parent = this.tracer.currentSpan();
@@ -120,9 +134,9 @@ class SleuthRxJavaSchedulersHook extends RxJavaSchedulersHook {
 		@Override
 		public void call() {
 			// don't create a span if the thread name is on a list of threads to ignore
-			for (String threadToIgnore : this.threadsToIgnore) {
-				String threadName = Thread.currentThread().getName();
-				if (threadName.matches(threadToIgnore)) {
+			String threadName = Thread.currentThread().getName();
+			for (Pattern threadToIgnore : this.threadsToIgnore) {
+				if (threadToIgnore.matcher(threadName).matches()) {
 					if (log.isTraceEnabled()) {
 						log.trace(String.format(
 								"Thread with name [%s] matches the regex [%s]. A span will not be created for this Thread.",
