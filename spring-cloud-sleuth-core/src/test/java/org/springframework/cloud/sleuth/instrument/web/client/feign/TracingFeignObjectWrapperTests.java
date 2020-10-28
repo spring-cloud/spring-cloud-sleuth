@@ -27,16 +27,19 @@ import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import org.springframework.beans.factory.BeanFactory;
+import org.springframework.cloud.client.loadbalancer.LoadBalancedRetryFactory;
 import org.springframework.cloud.client.loadbalancer.LoadBalancerClient;
 import org.springframework.cloud.client.loadbalancer.reactive.LoadBalancerProperties;
 import org.springframework.cloud.loadbalancer.blocking.client.BlockingLoadBalancerClient;
 import org.springframework.cloud.loadbalancer.support.LoadBalancerClientFactory;
 import org.springframework.cloud.openfeign.loadbalancer.FeignBlockingLoadBalancerClient;
+import org.springframework.cloud.openfeign.loadbalancer.RetryableFeignBlockingLoadBalancerClient;
 
 import static org.mockito.Mockito.mock;
 
 /**
  * @author Marcin Grzejszczak
+ * @author Olga Maciaszek-Sharma
  */
 @ExtendWith(MockitoExtension.class)
 public class TracingFeignObjectWrapperTests {
@@ -73,6 +76,21 @@ public class TracingFeignObjectWrapperTests {
 		Assertions.assertThat(wrapped).isInstanceOf(TraceFeignBlockingLoadBalancerClient.class);
 	}
 
+	// gh-1528
+	@Test
+	public void should_wrap_feign_retryable_loadbalancer_client() {
+		Client delegate = mock(Client.class);
+		BlockingLoadBalancerClient loadBalancerClient = mock(BlockingLoadBalancerClient.class);
+		LoadBalancerClientFactory loadBalancerClientFactory = mock(LoadBalancerClientFactory.class);
+		LoadBalancedRetryFactory retryFactory = mock(LoadBalancedRetryFactory.class);
+		Mockito.when(beanFactory.getBean(LoadBalancerClient.class)).thenReturn(loadBalancerClient);
+
+		Object wrapped = traceFeignObjectWrapper.wrap(new RetryableFeignBlockingLoadBalancerClient(delegate,
+				loadBalancerClient, retryFactory, new LoadBalancerProperties(), loadBalancerClientFactory));
+
+		Assertions.assertThat(wrapped).isInstanceOf(TraceRetryableFeignBlockingLoadBalancerClient.class);
+	}
+
 	// gh-1528, gh-1125
 	@Test
 	public void should_wrap_subclass_of_feign_loadbalancer_client() {
@@ -81,10 +99,27 @@ public class TracingFeignObjectWrapperTests {
 		LoadBalancerClientFactory loadBalancerClientFactory = mock(LoadBalancerClientFactory.class);
 		Mockito.when(beanFactory.getBean(LoadBalancerClient.class)).thenReturn(loadBalancerClient);
 
-		Object wrapped = traceFeignObjectWrapper
-				.wrap(new TestFeignBlockingLoadBalancerClient(delegate, loadBalancerClient, loadBalancerClientFactory));
+		Object wrapped = traceFeignObjectWrapper.wrap(
+				new org.springframework.cloud.sleuth.instrument.web.client.feign.TracingFeignObjectWrapperTests.TestFeignBlockingLoadBalancerClient(
+						delegate, loadBalancerClient, loadBalancerClientFactory));
 
 		Assertions.assertThat(wrapped).isInstanceOf(TraceFeignBlockingLoadBalancerClient.class);
+	}
+
+	// gh-1528, gh-1125
+	@Test
+	public void should_wrap_subclass_of_retryable_feign_loadbalancer_client() {
+		Client delegate = mock(Client.class);
+		BlockingLoadBalancerClient loadBalancerClient = mock(BlockingLoadBalancerClient.class);
+		LoadBalancerClientFactory loadBalancerClientFactory = mock(LoadBalancerClientFactory.class);
+		LoadBalancedRetryFactory retryFactory = mock(LoadBalancedRetryFactory.class);
+		Mockito.when(beanFactory.getBean(LoadBalancerClient.class)).thenReturn(loadBalancerClient);
+
+		Object wrapped = traceFeignObjectWrapper.wrap(
+				new org.springframework.cloud.sleuth.instrument.web.client.feign.TracingFeignObjectWrapperTests.TestRetryableFeignBlockingLoadBalancerClient(
+						delegate, loadBalancerClient, retryFactory, loadBalancerClientFactory));
+
+		Assertions.assertThat(wrapped).isInstanceOf(TraceRetryableFeignBlockingLoadBalancerClient.class);
 	}
 
 	static class TestFeignBlockingLoadBalancerClient extends FeignBlockingLoadBalancerClient {
@@ -92,6 +127,15 @@ public class TracingFeignObjectWrapperTests {
 		TestFeignBlockingLoadBalancerClient(Client delegate, BlockingLoadBalancerClient loadBalancerClient,
 				LoadBalancerClientFactory loadBalancerClientFactory) {
 			super(delegate, loadBalancerClient, new LoadBalancerProperties(), loadBalancerClientFactory);
+		}
+
+	}
+
+	static class TestRetryableFeignBlockingLoadBalancerClient extends RetryableFeignBlockingLoadBalancerClient {
+
+		TestRetryableFeignBlockingLoadBalancerClient(Client delegate, BlockingLoadBalancerClient loadBalancerClient,
+				LoadBalancedRetryFactory retryFactory, LoadBalancerClientFactory loadBalancerClientFactory) {
+			super(delegate, loadBalancerClient, retryFactory, new LoadBalancerProperties(), loadBalancerClientFactory);
 		}
 
 	}

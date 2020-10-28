@@ -160,10 +160,6 @@ class MyDelegateClient implements Client {
 				.headers(new HashMap<>()).status(200).build();
 	}
 
-	boolean wasCalled() {
-		return wasCalled;
-	}
-
 }
 
 @FeignClient(name = "foo", url = "http://foo")
