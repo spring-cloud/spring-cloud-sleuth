@@ -21,7 +21,6 @@ import java.util.regex.Pattern;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.AutoConfigureBefore;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.cloud.sleuth.api.SamplerFunction;
 import org.springframework.cloud.sleuth.api.http.HttpClientHandler;
 import org.springframework.cloud.sleuth.api.http.HttpRequest;
@@ -37,14 +36,15 @@ import org.springframework.cloud.sleuth.instrument.web.SkipPatternAutoConfigurat
 import org.springframework.cloud.sleuth.instrument.web.SkipPatternProvider;
 import org.springframework.cloud.sleuth.instrument.web.SleuthWebProperties;
 import org.springframework.cloud.sleuth.instrument.web.TraceHttpAutoConfiguration;
+import org.springframework.cloud.sleuth.otel.autoconfig.OnOtelEnabled;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.lang.Nullable;
 
 @Configuration(proxyBeanMethods = false)
-@ConditionalOnProperty(value = "spring.sleuth.enabled", matchIfMissing = true)
 @AutoConfigureBefore(TraceHttpAutoConfiguration.class)
 @AutoConfigureAfter(SkipPatternAutoConfiguration.class)
+@OnOtelEnabled
 public class TraceOtelHttpBridgeAutoConfiguration {
 
 	@Bean

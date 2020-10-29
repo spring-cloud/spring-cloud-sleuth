@@ -37,9 +37,7 @@ import io.opentelemetry.trace.spi.TracerProviderFactory;
 
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.AutoConfigureBefore;
-import org.springframework.boot.autoconfigure.condition.AnyNestedCondition;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.cloud.sleuth.autoconfig.TraceAutoConfiguration;
 import org.springframework.cloud.sleuth.otel.bridge.TraceOtelBridgeConfiguation;
@@ -47,7 +45,6 @@ import org.springframework.cloud.sleuth.otel.exporter.SpanExporterCustomizer;
 import org.springframework.cloud.sleuth.otel.log.TraceOtelLogConfiguration;
 import org.springframework.cloud.sleuth.otel.propagation.TraceOtelPropagationConfiguration;
 import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Conditional;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 
@@ -59,12 +56,11 @@ import org.springframework.context.annotation.Import;
  * @since 3.0.0
  */
 @Configuration(proxyBeanMethods = false)
-@ConditionalOnProperty(value = "spring.sleuth.enabled", havingValue = "true", matchIfMissing = true)
 @AutoConfigureBefore(TraceAutoConfiguration.class)
 @EnableConfigurationProperties(OtelProperties.class)
 @Import({ TraceAutoConfiguration.PropertiesConfiguration.class, TraceOtelBridgeConfiguation.class,
 		TraceOtelPropagationConfiguration.class, TraceOtelLogConfiguration.class })
-@Conditional(TraceOtelAutoConfiguration.AnyTracerModePropertySetCondition.class)
+@OnOtelEnabled
 public class TraceOtelAutoConfiguration {
 
 	@Bean
@@ -130,24 +126,6 @@ public class TraceOtelAutoConfiguration {
 		return new SpanExporterCustomizer() {
 
 		};
-	}
-
-	static final class AnyTracerModePropertySetCondition extends AnyNestedCondition {
-
-		private AnyTracerModePropertySetCondition() {
-			super(ConfigurationPhase.REGISTER_BEAN);
-		}
-
-		@ConditionalOnProperty(value = "spring.sleuth.tracer.mode", havingValue = "AUTO", matchIfMissing = true)
-		static class OnAutoTracerMode {
-
-		}
-
-		@ConditionalOnProperty(value = "spring.sleuth.tracer.mode", havingValue = "OTEL")
-		static class OnOtelTracerMode {
-
-		}
-
 	}
 
 }

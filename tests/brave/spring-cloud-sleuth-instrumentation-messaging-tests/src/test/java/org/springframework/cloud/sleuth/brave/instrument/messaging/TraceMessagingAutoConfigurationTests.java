@@ -143,9 +143,8 @@ public class TraceMessagingAutoConfigurationTests {
 	}
 
 	private ApplicationContextRunner contextRunner(String... propertyValues) {
-		return new ApplicationContextRunner().withPropertyValues(propertyValues)
-				.withConfiguration(AutoConfigurations.of(TraceBraveAutoConfiguration.class,
-						TraceMessagingAutoConfiguration.class));
+		return new ApplicationContextRunner().withPropertyValues(propertyValues).withConfiguration(
+				AutoConfigurations.of(TraceBraveAutoConfiguration.class, TraceMessagingAutoConfiguration.class));
 	}
 
 	@Configuration(proxyBeanMethods = false)

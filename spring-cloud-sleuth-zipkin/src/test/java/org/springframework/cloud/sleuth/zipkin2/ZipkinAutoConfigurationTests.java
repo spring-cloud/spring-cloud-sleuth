@@ -80,8 +80,9 @@ import static org.springframework.cloud.sleuth.zipkin2.ZipkinBraveAutoConfigurat
  */
 public class ZipkinAutoConfigurationTests {
 
-	private final ApplicationContextRunner contextRunner = new ApplicationContextRunner().withConfiguration(
-			AutoConfigurations.of(ZipkinAutoConfiguration.class, ZipkinBraveAutoConfiguration.class));
+	private final ApplicationContextRunner contextRunner = new ApplicationContextRunner()
+			.withConfiguration(AutoConfigurations.of(ZipkinAutoConfiguration.class, ZipkinBraveAutoConfiguration.class))
+			.withPropertyValues("spring.sleuth.tracer.mode=NOOP");
 
 	public MockWebServer server = new MockWebServer();
 

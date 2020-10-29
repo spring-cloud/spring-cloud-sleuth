@@ -43,7 +43,7 @@ import org.springframework.kafka.config.StreamsBuilderFactoryBean;
  */
 @Configuration(proxyBeanMethods = false)
 @ConditionalOnBean(Tracing.class)
-@AutoConfigureAfter({ TraceBraveAutoConfiguration.class })
+@AutoConfigureAfter(TraceBraveAutoConfiguration.class)
 @OnMessagingEnabled
 @ConditionalOnProperty(value = "spring.sleuth.messaging.kafka.streams.enabled", matchIfMissing = true)
 @ConditionalOnClass(KafkaStreams.class)

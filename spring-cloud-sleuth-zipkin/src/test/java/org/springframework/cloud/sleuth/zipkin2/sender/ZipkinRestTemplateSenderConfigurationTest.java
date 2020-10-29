@@ -44,7 +44,8 @@ public class ZipkinRestTemplateSenderConfigurationTest {
 	public void disableZipkinDiscoveryClient() {
 		ConfigurableApplicationContext ctxt = new SpringApplication(
 				ZipkinRestTemplateSenderConfigurationTest.MyDiscoveryClientZipkinUrlExtractorConfiguration.class,
-				ZipkinProperties.class).run("--spring.zipkin.discovery-client-enabled=false");
+				ZipkinProperties.class).run("--spring.zipkin.discovery-client-enabled=false",
+						"--spring.sleuth.tracer.mode=NOOP");
 		assertThat(ctxt.getBean(ZipkinLoadBalancer.class)).isInstanceOf(NoOpZipkinLoadBalancer.class);
 		ctxt.close();
 	}

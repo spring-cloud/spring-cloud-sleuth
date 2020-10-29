@@ -18,7 +18,6 @@ package org.springframework.cloud.sleuth.brave.bridge;
 
 import brave.Tracing;
 
-import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.cloud.sleuth.api.CurrentTraceContext;
 import org.springframework.cloud.sleuth.api.SpanCustomizer;
@@ -38,7 +37,6 @@ import org.springframework.context.annotation.Configuration;
  */
 @Configuration(proxyBeanMethods = false)
 @ConditionalOnProperty(value = "spring.sleuth.enabled", matchIfMissing = true)
-@ConditionalOnBean(brave.Tracer.class)
 public class TraceBraveBridgeConfiguation {
 
 	@Bean

@@ -51,6 +51,11 @@ public class SleuthTracerProperties {
 		AUTO,
 
 		/**
+		 * Picks the NoOp tracer implementation.
+		 */
+		NOOP,
+
+		/**
 		 * Picks the OpenZipkin Brave tracer implementation.
 		 */
 		BRAVE,

@@ -58,7 +58,8 @@ public class SkipPatternProviderConfigTest {
 			.withConfiguration(AutoConfigurations.of(DispatcherServletAutoConfiguration.class,
 					InfoEndpointAutoConfiguration.class, HealthEndpointAutoConfiguration.class,
 					EndpointAutoConfiguration.class, WebEndpointAutoConfiguration.class, TraceAutoConfiguration.class,
-					SkipPatternAutoConfiguration.class));
+					SkipPatternAutoConfiguration.class))
+			.withPropertyValues("spring.sleuth.tracer.mode=noop");
 
 	@Test
 	public void should_return_null_when_cleared() throws Exception {

@@ -32,7 +32,8 @@ class TraceSpringIntegrationAutoConfigurationTests {
 
 	private final ApplicationContextRunner contextRunner = new ApplicationContextRunner()
 			.withConfiguration(AutoConfigurations.of(TraceAutoConfiguration.class,
-					TraceSpringMessagingAutoConfiguration.class, TraceSpringIntegrationAutoConfiguration.class));
+					TraceSpringMessagingAutoConfiguration.class, TraceSpringIntegrationAutoConfiguration.class))
+			.withPropertyValues("spring.sleuth.tracer.mode=noop");
 
 	@Test
 	void should_not_create_tracing_channel_interceptor_when_function_on_the_classpath() {

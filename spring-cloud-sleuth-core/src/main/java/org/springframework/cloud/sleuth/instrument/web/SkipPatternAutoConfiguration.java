@@ -251,7 +251,7 @@ public class SkipPatternAutoConfiguration {
 
 	}
 
-	static class SleuthEnabledCondition extends AnyNestedCondition {
+	static final class SleuthEnabledCondition extends AnyNestedCondition {
 
 		private SleuthEnabledCondition() {
 			super(ConfigurationPhase.REGISTER_BEAN);

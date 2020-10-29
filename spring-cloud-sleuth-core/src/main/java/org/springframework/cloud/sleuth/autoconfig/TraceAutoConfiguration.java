@@ -47,16 +47,21 @@ import org.springframework.context.annotation.Configuration;
  */
 @Configuration(proxyBeanMethods = false)
 @ConditionalOnProperty(value = "spring.sleuth.enabled", matchIfMissing = true)
+@EnableConfigurationProperties(SleuthTracerProperties.class)
 public class TraceAutoConfiguration {
 
 	private static final Log log = LogFactory.getLog(TraceAutoConfiguration.class);
 
 	@Bean
 	@ConditionalOnMissingBean
-	Tracer defaultTracer() {
-		if (log.isWarnEnabled()) {
-			log.warn(
-					"You have not provided a tracer implementation. A default, noop one will be set up. You will not see any spans get reported to external systems (e.g. Zipkin) nor will any context get propagated.");
+	Tracer defaultTracer(SleuthTracerProperties sleuthTracerProperties) {
+		if (sleuthTracerProperties.getMode() != SleuthTracerProperties.TracerMode.NOOP) {
+			throw new IllegalStateException(
+					"You have not provided a tracer implementation and the [spring.sleuth.tracer.mode] was not set to [NOOP]");
+		}
+		else if (log.isDebugEnabled()) {
+			log.debug(
+					"You have not provided a tracer implementation but you have switched the [spring.sleuth.tracer.mode] to [NOOP]. A default, noop tracer will be set up. You will not see any spans get reported to external systems (e.g. Zipkin) nor will any context get propagated.");
 		}
 		return new NoOpTracer();
 	}

@@ -24,8 +24,10 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.cloud.sleuth.brave.autoconfig.TraceBraveAutoConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.test.context.TestPropertySource;
 
 @SpringBootTest(classes = OtelZipkinDiscoveryClientTests.TestConfig.class)
+@TestPropertySource(properties = "spring.sleuth.tracer.mode=OTEL")
 public class OtelZipkinDiscoveryClientTests extends ZipkinDiscoveryClientTests {
 
 	@Configuration(proxyBeanMethods = false)

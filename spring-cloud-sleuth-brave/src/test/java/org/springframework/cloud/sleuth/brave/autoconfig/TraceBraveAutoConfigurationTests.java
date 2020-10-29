@@ -49,8 +49,8 @@ public class TraceBraveAutoConfigurationTests {
 			.withConfiguration(AutoConfigurations.of(TraceBraveAutoConfiguration.class));
 
 	/**
-	 * Duplicates {@link SamplerConfigurationTests} intentionally, to ensure
-	 * configuration condition bugs do not exist.
+	 * Duplicates {@link SamplerConfigurationTests} intentionally, to ensure configuration
+	 * condition bugs do not exist.
 	 */
 	@Test
 	void should_use_NEVER_SAMPLER_when_only_logging() {
@@ -61,8 +61,8 @@ public class TraceBraveAutoConfigurationTests {
 	}
 
 	/**
-	 * Duplicates {@link SamplerConfigurationTests} intentionally, to ensure
-	 * configuration condition bugs do not exist.
+	 * Duplicates {@link SamplerConfigurationTests} intentionally, to ensure configuration
+	 * condition bugs do not exist.
 	 */
 	@Test
 	void should_use_RateLimitedSampler_withSpanHandler() {
@@ -73,8 +73,8 @@ public class TraceBraveAutoConfigurationTests {
 	}
 
 	/**
-	 * Duplicates {@link SamplerConfigurationTests} intentionally, to ensure
-	 * configuration condition bugs do not exist.
+	 * Duplicates {@link SamplerConfigurationTests} intentionally, to ensure configuration
+	 * condition bugs do not exist.
 	 */
 	@Test
 	void should_override_sampler() {

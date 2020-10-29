@@ -39,8 +39,10 @@ import org.springframework.context.annotation.Primary;
  */
 public class TraceQuartzAutoConfigurationTest {
 
-	private final ApplicationContextRunner contextRunner = new ApplicationContextRunner().withConfiguration(
-			AutoConfigurations.of(SchedulerConfig.class, TracingConfig.class, EnableAutoConfig.class));
+	private final ApplicationContextRunner contextRunner = new ApplicationContextRunner()
+			.withConfiguration(
+					AutoConfigurations.of(SchedulerConfig.class, TracingConfig.class, EnableAutoConfig.class))
+			.withPropertyValues("spring.sleuth.tracer.mode=noop");
 
 	@Test
 	public void should_create_job_listener_bean_when_all_conditions_are_met() {

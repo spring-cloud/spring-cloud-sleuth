@@ -27,8 +27,10 @@ import org.springframework.cloud.sleuth.autoconfig.TraceAutoConfiguration;
 
 class TraceSchedulingAutoConfigurationTest {
 
-	private final ApplicationContextRunner contextRunner = new ApplicationContextRunner().withConfiguration(
-			AutoConfigurations.of(TraceAutoConfiguration.class, TraceSchedulingAutoConfiguration.class));
+	private final ApplicationContextRunner contextRunner = new ApplicationContextRunner()
+			.withConfiguration(
+					AutoConfigurations.of(TraceAutoConfiguration.class, TraceSchedulingAutoConfiguration.class))
+			.withPropertyValues("spring.sleuth.tracer.mode=noop");
 
 	@Test
 	void shoud_create_TraceSchedulingAspect() {
