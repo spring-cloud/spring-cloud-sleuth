@@ -25,25 +25,27 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import org.springframework.beans.factory.BeanFactory;
-import org.springframework.cloud.client.loadbalancer.LoadBalancerClient;
+import org.springframework.cloud.client.loadbalancer.LoadBalancedRetryFactory;
 import org.springframework.cloud.client.loadbalancer.reactive.LoadBalancerProperties;
+import org.springframework.cloud.loadbalancer.blocking.client.BlockingLoadBalancerClient;
 import org.springframework.cloud.loadbalancer.support.LoadBalancerClientFactory;
-import org.springframework.cloud.openfeign.loadbalancer.FeignBlockingLoadBalancerClient;
+import org.springframework.cloud.openfeign.loadbalancer.RetryableFeignBlockingLoadBalancerClient;
 import org.springframework.cloud.sleuth.api.CurrentTraceContext;
 import org.springframework.cloud.sleuth.api.Span;
 import org.springframework.cloud.sleuth.api.Tracer;
 import org.springframework.cloud.sleuth.api.http.HttpClientHandler;
 
 /**
- * A trace representation of {@link FeignBlockingLoadBalancerClient}.
+ * A trace representation of {@link RetryableFeignBlockingLoadBalancerClient}. Needed due
+ * to casts in {@link org.springframework.cloud.openfeign.FeignClientFactoryBean}.
  *
  * @author Olga Maciaszek-Sharma
  * @since 2.2.0
- * @see FeignBlockingLoadBalancerClient
+ * @see RetryableFeignBlockingLoadBalancerClient
  */
-class TraceFeignBlockingLoadBalancerClient extends FeignBlockingLoadBalancerClient {
+class TraceRetryableFeignBlockingLoadBalancerClient extends RetryableFeignBlockingLoadBalancerClient {
 
-	private static final Log LOG = LogFactory.getLog(TraceFeignBlockingLoadBalancerClient.class);
+	private static final Log LOG = LogFactory.getLog(TraceRetryableFeignBlockingLoadBalancerClient.class);
 
 	private final BeanFactory beanFactory;
 
@@ -55,10 +57,10 @@ class TraceFeignBlockingLoadBalancerClient extends FeignBlockingLoadBalancerClie
 
 	TracingFeignClient tracingFeignClient;
 
-	TraceFeignBlockingLoadBalancerClient(Client delegate, LoadBalancerClient loadBalancerClient,
-			LoadBalancerProperties loadBalancerProperties, LoadBalancerClientFactory loadBalancerClientFactory,
-			BeanFactory beanFactory) {
-		super(delegate, loadBalancerClient, loadBalancerProperties, loadBalancerClientFactory);
+	TraceRetryableFeignBlockingLoadBalancerClient(Client delegate, BlockingLoadBalancerClient loadBalancerClient,
+			LoadBalancedRetryFactory retryFactory, LoadBalancerProperties properties,
+			LoadBalancerClientFactory loadBalancerClientFactory, BeanFactory beanFactory) {
+		super(delegate, loadBalancerClient, retryFactory, properties, loadBalancerClientFactory);
 		this.beanFactory = beanFactory;
 	}
 
@@ -85,16 +87,10 @@ class TraceFeignBlockingLoadBalancerClient extends FeignBlockingLoadBalancerClie
 			if (LOG.isDebugEnabled()) {
 				LOG.debug("Exception thrown", e);
 			}
-			if (e instanceof IOException/*
-										 * || e.getCause() != null && e.getCause()
-										 * instanceof ClientException &&
-										 * ((ClientException) e.getCause())
-										 * .getErrorType() ==
-										 * ClientException.ErrorType.GENERAL
-										 */) {
+			if (e instanceof IOException) {
 				if (LOG.isDebugEnabled()) {
 					LOG.debug(
-							"General exception was thrown, so most likely the traced client wasn't called. Falling back to a manual span");
+							"IOException was thrown, so most likely the traced client wasn't called. Falling back to a manual span.");
 				}
 				tracingFeignClient().handleSendAndReceive(fallbackSpan, request, response, e);
 			}
@@ -106,7 +102,7 @@ class TraceFeignBlockingLoadBalancerClient extends FeignBlockingLoadBalancerClie
 	}
 
 	private boolean delegateIsALoadBalancer() {
-		return getDelegate() instanceof FeignBlockingLoadBalancerClient;
+		return getDelegate() instanceof RetryableFeignBlockingLoadBalancerClient;
 	}
 
 	private Tracer tracer() {
