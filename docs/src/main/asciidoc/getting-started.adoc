@@ -54,7 +54,7 @@ Subtracting the `cs` timestamp from this timestamp reveals the whole time needed
 
 The following image shows how *Span* and *Trace* look in a system.
 
-image::{github-raw}/src/main/asciidoc/images/trace-id.png[Trace Info propagation]
+image::{github-raw}/docs/src/main/asciidoc/images/trace-id.png[Trace Info propagation]
 
 Each color of a note signifies a span (there are seven spans - from *A* to *G*).
 Consider the following note:

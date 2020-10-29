@@ -404,7 +404,7 @@ example. This log configuration was automatically setup by Sleuth. You can disab
 If you use a log aggregating tool (such as https://www.elastic.co/products/kibana[Kibana], https://www.splunk.com/[Splunk], and others), you can order the events that took place.
 An example from Kibana would resemble the following image:
 
-image::{github-raw}/src/main/asciidoc/images/kibana.png[Log correlation with Kibana]
+image::{github-raw}/docs/src/main/asciidoc/images/kibana.png[Log correlation with Kibana]
 
 If you want to use https://www.elastic.co/guide/en/logstash/current/index.html[Logstash], the following listing shows the Grok pattern for Logstash:
 
