@@ -40,7 +40,7 @@
 		<maven.compiler.source>1.8</maven.compiler.source>
 		<okhttp.version>4.9.0</okhttp.version>
 		<microbenchmark-runner.version>0.2.0.RELEASE</microbenchmark-runner.version>
-		<jmh.version>1.21</jmh.version>
+		<jmh.version>1.26</jmh.version>
 		<spring-cloud-stream.version>3.1.0-SNAPSHOT</spring-cloud-stream.version>
 	</properties>
 
