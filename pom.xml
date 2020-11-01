@@ -286,7 +286,7 @@
 		<opentelemetry.version>0.9.1</opentelemetry.version>
 		<!-- From maven local -->
 		<opentelemetry-instrumentation.version>0.9.0-SNAPSHOT</opentelemetry-instrumentation.version>
-		<spring-security-boot-autoconfigure.version>2.3.3.RELEASE</spring-security-boot-autoconfigure.version>
+		<spring-security-boot-autoconfigure.version>2.3.4.RELEASE</spring-security-boot-autoconfigure.version>
 		<disable.nohttp.checks>false</disable.nohttp.checks>
 		<okhttp.version>4.9.0</okhttp.version>
 		<mockwebserver.version>4.8.0</mockwebserver.version>
