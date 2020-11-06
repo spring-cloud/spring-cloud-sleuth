@@ -16,6 +16,7 @@
 
 package org.springframework.cloud.sleuth.instrument.web;
 
+import java.util.Collection;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.commons.logging.Log;
@@ -331,6 +332,11 @@ final class TraceWebFilter implements WebFilter, Ordered {
 		}
 
 		@Override
+		public Collection<String> headerNames() {
+			return this.delegate.getHeaders().keySet();
+		}
+
+		@Override
 		public ServerHttpRequest unwrap() {
 			return delegate;
 		}
@@ -393,6 +399,11 @@ final class TraceWebFilter implements WebFilter, Ordered {
 		public int statusCode() {
 			HttpStatus statusCode = delegate.getStatusCode();
 			return statusCode != null ? statusCode.value() : 0;
+		}
+
+		@Override
+		public Collection<String> headerNames() {
+			return this.delegate.getHeaders().keySet();
 		}
 
 		@Override

@@ -29,17 +29,30 @@ import brave.propagation.TraceContext;
 import brave.propagation.TraceContextOrSamplingFlags;
 import brave.propagation.aws.AWSPropagation;
 
+import org.springframework.beans.factory.BeanFactory;
+import org.springframework.cloud.sleuth.autoconfig.SleuthBaggageProperties;
+import org.springframework.cloud.sleuth.brave.bridge.BraveBaggageManager;
+
 class CompositePropagationFactorySupplier implements PropagationFactorySupplier {
+
+	private final BeanFactory beanFactory;
+
+	private final SleuthBaggageProperties baggageProperties;
 
 	private final SleuthPropagationProperties properties;
 
-	CompositePropagationFactorySupplier(SleuthPropagationProperties properties) {
+	CompositePropagationFactorySupplier(BeanFactory beanFactory, SleuthBaggageProperties baggageProperties,
+			SleuthPropagationProperties properties) {
+		this.beanFactory = beanFactory;
+		this.baggageProperties = baggageProperties;
 		this.properties = properties;
 	}
 
 	@Override
 	public Propagation.Factory get() {
-		return new CompositePropagationFactory(this.properties);
+		return new CompositePropagationFactory(
+				this.beanFactory.getBeanProvider(BraveBaggageManager.class).getIfAvailable(BraveBaggageManager::new),
+				this.baggageProperties, this.properties);
 	}
 
 }
@@ -50,7 +63,8 @@ class CompositePropagationFactory extends Propagation.Factory implements Propaga
 
 	private final SleuthPropagationProperties properties;
 
-	CompositePropagationFactory(SleuthPropagationProperties properties) {
+	CompositePropagationFactory(BraveBaggageManager braveBaggageManager, SleuthBaggageProperties baggageProperties,
+			SleuthPropagationProperties properties) {
 		this.properties = properties;
 		this.mapping.put(SleuthPropagationProperties.PropagationType.AWS, AWSPropagation.FACTORY.get());
 		// Note: Versions <2.2.3 use injectFormat(MULTI) for non-remote (ex
@@ -58,7 +72,8 @@ class CompositePropagationFactory extends Propagation.Factory implements Propaga
 		// See #1643
 		this.mapping.put(SleuthPropagationProperties.PropagationType.B3,
 				B3Propagation.newFactoryBuilder().injectFormat(B3Propagation.Format.SINGLE_NO_PARENT).build().get());
-		this.mapping.put(SleuthPropagationProperties.PropagationType.W3C, W3CPropagation.getInstance());
+		this.mapping.put(SleuthPropagationProperties.PropagationType.W3C,
+				new W3CPropagation(braveBaggageManager, baggageProperties));
 		this.mapping.put(SleuthPropagationProperties.PropagationType.CUSTOM, NoOpPropagation.INSTANCE);
 	}
 

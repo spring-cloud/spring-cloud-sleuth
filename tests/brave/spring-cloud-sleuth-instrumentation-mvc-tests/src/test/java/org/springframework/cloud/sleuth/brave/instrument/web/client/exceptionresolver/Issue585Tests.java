@@ -27,6 +27,7 @@ import brave.propagation.CurrentTraceContext;
 import brave.sampler.Sampler;
 import brave.test.TestSpanHandler;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import org.awaitility.Awaitility;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -68,9 +69,11 @@ public class Issue585Tests {
 		ResponseEntity<String> entity = this.testRestTemplate
 				.getForEntity("http://localhost:" + this.port + "/sleuthtest?greeting=foo", String.class);
 
-		then(this.currentTraceContext.get()).isNull();
-		then(entity.getStatusCode().value()).isEqualTo(500);
-		then(this.spans.get(0).tags()).containsEntry("custom", "tag").containsKeys("error");
+		Awaitility.await().untilAsserted(() -> {
+			then(this.currentTraceContext.get()).isNull();
+			then(entity.getStatusCode().value()).isEqualTo(500);
+			then(this.spans.get(0).tags()).containsEntry("custom", "tag").containsKeys("error");
+		});
 	}
 
 }

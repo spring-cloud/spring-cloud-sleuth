@@ -86,7 +86,7 @@ public abstract class TracingChannelInterceptorTest implements TestTracingAwareS
 		this.channel.send(MessageBuilder.withPayload("foo").build());
 
 		assertThat(this.channel.receive().getHeaders()).containsKey("b3");
-		assertThat(this.spans).hasSize(1).extracting(FinishedSpan::kind).containsExactly(Span.Kind.PRODUCER);
+		assertThat(this.spans).hasSize(1).extracting(FinishedSpan::getKind).containsExactly(Span.Kind.PRODUCER);
 	}
 
 	@Test
@@ -97,7 +97,7 @@ public abstract class TracingChannelInterceptorTest implements TestTracingAwareS
 
 		assertThat(this.message).isNotNull();
 		assertThat(this.message.getHeaders()).containsKeys("b3", "nativeHeaders");
-		assertThat(this.spans).extracting(FinishedSpan::kind).contains(Span.Kind.CONSUMER, Span.Kind.PRODUCER);
+		assertThat(this.spans).extracting(FinishedSpan::getKind).contains(Span.Kind.CONSUMER, Span.Kind.PRODUCER);
 	}
 
 	@Test
@@ -120,7 +120,7 @@ public abstract class TracingChannelInterceptorTest implements TestTracingAwareS
 		this.channel.send(MessageBuilder.withPayload("foo").build());
 
 		assertThat(this.channel.receive().getHeaders()).containsKeys("b3", "nativeHeaders");
-		assertThat(this.spans).hasSize(1).extracting(FinishedSpan::kind).containsExactly(Span.Kind.CONSUMER);
+		assertThat(this.spans).hasSize(1).extracting(FinishedSpan::getKind).containsExactly(Span.Kind.CONSUMER);
 	}
 
 	@Test
@@ -142,7 +142,7 @@ public abstract class TracingChannelInterceptorTest implements TestTracingAwareS
 		channel.send(MessageBuilder.withPayload("foo").build());
 
 		assertThat(messages.get(0).getHeaders()).doesNotContainKeys("b3", "nativeHeaders");
-		assertThat(this.spans).extracting(FinishedSpan::kind).containsExactly(Span.Kind.CONSUMER, null);
+		assertThat(this.spans).extracting(FinishedSpan::getKind).containsExactly(Span.Kind.CONSUMER, null);
 	}
 
 	/**
@@ -181,7 +181,7 @@ public abstract class TracingChannelInterceptorTest implements TestTracingAwareS
 		this.channel.send(MessageBuilder.withPayload("foo").build());
 		this.channel.receive();
 
-		assertThat(this.spans).extracting(FinishedSpan::kind).containsExactlyInAnyOrder(Span.Kind.CONSUMER,
+		assertThat(this.spans).extracting(FinishedSpan::getKind).containsExactlyInAnyOrder(Span.Kind.CONSUMER,
 				Span.Kind.PRODUCER);
 	}
 
@@ -194,7 +194,7 @@ public abstract class TracingChannelInterceptorTest implements TestTracingAwareS
 
 		channel.send(MessageBuilder.withPayload("foo").build());
 
-		assertThat(this.spans).extracting(FinishedSpan::kind).containsExactly(Span.Kind.CONSUMER, null,
+		assertThat(this.spans).extracting(FinishedSpan::getKind).containsExactly(Span.Kind.CONSUMER, null,
 				Span.Kind.PRODUCER);
 	}
 
@@ -274,7 +274,7 @@ public abstract class TracingChannelInterceptorTest implements TestTracingAwareS
 		headers.put("kafka_messageKey", "hello");
 		channel.send(MessageBuilder.createMessage("foo", new MessageHeaders(headers)));
 
-		assertThat(this.spans).extracting(FinishedSpan::remoteServiceName).contains("kafka");
+		assertThat(this.spans).extracting(FinishedSpan::getRemoteServiceName).contains("kafka");
 	}
 
 	@Test
@@ -288,7 +288,7 @@ public abstract class TracingChannelInterceptorTest implements TestTracingAwareS
 		headers.put("amqp_receivedRoutingKey", "hello");
 		channel.send(MessageBuilder.createMessage("foo", new MessageHeaders(headers)));
 
-		assertThat(this.spans).extracting(FinishedSpan::remoteServiceName).contains("rabbitmq");
+		assertThat(this.spans).extracting(FinishedSpan::getRemoteServiceName).contains("rabbitmq");
 	}
 
 	@Test
@@ -301,7 +301,7 @@ public abstract class TracingChannelInterceptorTest implements TestTracingAwareS
 		Map<String, Object> headers = new HashMap<>();
 		channel.send(MessageBuilder.createMessage("foo", new MessageHeaders(headers)));
 
-		assertThat(this.spans).extracting(FinishedSpan::remoteServiceName).containsOnly("broker", null);
+		assertThat(this.spans).extracting(FinishedSpan::getRemoteServiceName).containsOnly("broker", null);
 	}
 
 	public ChannelInterceptor producerSideOnly(ChannelInterceptor delegate) {

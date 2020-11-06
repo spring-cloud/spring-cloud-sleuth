@@ -16,6 +16,7 @@
 
 package org.springframework.cloud.sleuth.instrument.web.client;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.atomic.AtomicReference;
@@ -341,6 +342,11 @@ final class TraceExchangeFilterFunction implements ExchangeFilterFunction {
 		}
 
 		@Override
+		public Collection<String> headerNames() {
+			return this.delegate.headers().keySet();
+		}
+
+		@Override
 		public Object unwrap() {
 			return delegate;
 		}
@@ -382,6 +388,11 @@ final class TraceExchangeFilterFunction implements ExchangeFilterFunction {
 
 		ClientResponseWrapper(ClientResponse delegate) {
 			this.delegate = delegate;
+		}
+
+		@Override
+		public Collection<String> headerNames() {
+			return this.delegate.headers().asHttpHeaders().keySet();
 		}
 
 		@Override

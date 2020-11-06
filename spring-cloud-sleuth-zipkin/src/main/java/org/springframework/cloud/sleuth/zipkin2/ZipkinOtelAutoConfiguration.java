@@ -16,8 +16,8 @@
 
 package org.springframework.cloud.sleuth.zipkin2;
 
-import io.opentelemetry.exporters.zipkin.ZipkinSpanExporter;
-import io.opentelemetry.trace.Tracer;
+import io.opentelemetry.api.trace.Tracer;
+import io.opentelemetry.exporter.zipkin.ZipkinSpanExporter;
 import zipkin2.reporter.Sender;
 
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -62,7 +62,7 @@ public class ZipkinOtelAutoConfiguration {
 		@ConditionalOnMissingBean
 		ZipkinSpanExporter otelZipkinSpanExporter(ZipkinProperties zipkinProperties,
 				@Qualifier(ZipkinAutoConfiguration.SENDER_BEAN_NAME) Sender sender, Environment env) {
-			return ZipkinSpanExporter.newBuilder().setEndpoint(zipkinProperties.getBaseUrl() + "api/v2/spans")
+			return ZipkinSpanExporter.builder().setEndpoint(zipkinProperties.getBaseUrl() + "api/v2/spans")
 					.setSender(sender).setEncoder(zipkinProperties.getEncoder())
 					.setServiceName(
 							StringUtils.hasText(zipkinProperties.getService().getName())

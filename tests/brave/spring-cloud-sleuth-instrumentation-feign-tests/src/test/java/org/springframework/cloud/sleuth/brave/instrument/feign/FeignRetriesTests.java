@@ -38,7 +38,7 @@ public class FeignRetriesTests extends org.springframework.cloud.sleuth.instrume
 
 	@Override
 	public void assertException() {
-		BDDAssertions.then(tracerTest().handler().reportedSpans().get(0).error()).isInstanceOf(IOException.class);
+		BDDAssertions.then(tracerTest().handler().reportedSpans().get(0).getError()).isInstanceOf(IOException.class);
 	}
 
 }

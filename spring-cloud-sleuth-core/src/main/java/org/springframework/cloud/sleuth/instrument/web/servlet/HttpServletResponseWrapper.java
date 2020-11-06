@@ -16,6 +16,8 @@
 
 package org.springframework.cloud.sleuth.instrument.web.servlet;
 
+import java.util.Collection;
+
 import javax.servlet.UnavailableException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -64,6 +66,11 @@ class HttpServletResponseWrapper implements HttpServerResponse {
 	@Override
 	public final Object unwrap() {
 		return response;
+	}
+
+	@Override
+	public Collection<String> headerNames() {
+		return this.response.getHeaderNames();
 	}
 
 	@Override

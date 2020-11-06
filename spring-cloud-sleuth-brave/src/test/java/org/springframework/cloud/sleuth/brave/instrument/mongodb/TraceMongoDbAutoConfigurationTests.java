@@ -30,6 +30,7 @@ import org.mockito.BDDMockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.cloud.sleuth.DisableSecurity;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -49,6 +50,7 @@ class TraceMongoDbAutoConfigurationTests {
 
 	@Configuration(proxyBeanMethods = false)
 	@EnableAutoConfiguration
+	@DisableSecurity
 	static class TestTraceMongoDbAutoConfiguration {
 
 		@Bean

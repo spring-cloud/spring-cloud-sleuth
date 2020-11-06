@@ -23,6 +23,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.actuate.endpoint.web.annotation.RestControllerEndpoint;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.cloud.sleuth.DisableSecurity;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.stereotype.Service;
@@ -45,6 +46,7 @@ public class EndpointWithCyclicDependenciesTests {
 
 	@EnableAutoConfiguration
 	@Configuration(proxyBeanMethods = false)
+	@DisableSecurity
 	static class ClientConfig {
 
 		@Bean

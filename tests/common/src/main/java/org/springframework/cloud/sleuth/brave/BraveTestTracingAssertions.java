@@ -25,7 +25,7 @@ public class BraveTestTracingAssertions implements TestTracingAssertions {
 
 	@Override
 	public void assertThatNoParentPresent(FinishedSpan finishedSpan) {
-		BDDAssertions.then(finishedSpan.parentId()).isNull();
+		BDDAssertions.then(finishedSpan.getParentId()).isNull();
 	}
 
 }

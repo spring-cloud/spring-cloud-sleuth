@@ -17,6 +17,8 @@
 package org.springframework.cloud.sleuth.instrument.web.client;
 
 import java.net.InetSocketAddress;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.BiConsumer;
@@ -65,7 +67,7 @@ class HttpClientBeanPostProcessor implements BeanPostProcessor {
 					.doOnRequestError(new TracingDoOnErrorRequest(springContext))
 					.doOnRequest(new TracingDoOnRequest(springContext)).mapConnect(new TracingMapConnect(() -> {
 						CurrentTraceContext ref = currentContext.get();
-						return ref != null ? ref.get() : null;
+						return ref != null ? ref.context() : null;
 					}));
 		}
 		return bean;
@@ -264,6 +266,11 @@ class HttpClientBeanPostProcessor implements BeanPostProcessor {
 		}
 
 		@Override
+		public Collection<String> headerNames() {
+			return this.delegate.requestHeaders().names();
+		}
+
+		@Override
 		public Object unwrap() {
 			return delegate;
 		}
@@ -325,6 +332,11 @@ class HttpClientBeanPostProcessor implements BeanPostProcessor {
 		@Override
 		public Object unwrap() {
 			return this.delegate;
+		}
+
+		@Override
+		public Collection<String> headerNames() {
+			return this.delegate != null ? this.delegate.responseHeaders().names() : Collections.emptyList();
 		}
 
 		@Override

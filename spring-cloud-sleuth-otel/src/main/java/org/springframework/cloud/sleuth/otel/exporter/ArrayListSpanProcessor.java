@@ -20,6 +20,7 @@ import java.util.Collection;
 import java.util.Queue;
 import java.util.concurrent.LinkedBlockingQueue;
 
+import io.opentelemetry.context.Context;
 import io.opentelemetry.sdk.common.CompletableResultCode;
 import io.opentelemetry.sdk.trace.ReadWriteSpan;
 import io.opentelemetry.sdk.trace.ReadableSpan;
@@ -32,7 +33,7 @@ public class ArrayListSpanProcessor implements SpanProcessor, SpanExporter {
 	Queue<SpanData> spans = new LinkedBlockingQueue<>();
 
 	@Override
-	public void onStart(ReadWriteSpan span) {
+	public void onStart(Context parent, ReadWriteSpan span) {
 
 	}
 

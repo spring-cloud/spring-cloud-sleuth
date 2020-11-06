@@ -25,7 +25,7 @@ public class OtelTestTracingAssertions implements TestTracingAssertions {
 
 	@Override
 	public void assertThatNoParentPresent(FinishedSpan finishedSpan) {
-		BDDAssertions.then(Long.valueOf(finishedSpan.parentId())).isEqualTo(0L);
+		BDDAssertions.then(Long.valueOf(finishedSpan.getParentId())).isEqualTo(0L);
 	}
 
 	@Override

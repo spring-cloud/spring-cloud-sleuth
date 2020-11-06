@@ -17,11 +17,11 @@
 package org.springframework.cloud.sleuth.otel.log;
 
 import java.util.List;
+import java.util.Map;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
-import io.opentelemetry.baggage.BaggageManager;
-import io.opentelemetry.baggage.Entry;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.sdk.common.CompletableResultCode;
 import io.opentelemetry.sdk.trace.ReadWriteSpan;
 import io.opentelemetry.sdk.trace.ReadableSpan;
@@ -31,7 +31,8 @@ import org.apache.commons.logging.LogFactory;
 import org.slf4j.MDC;
 
 import org.springframework.cloud.sleuth.autoconfig.SleuthBaggageProperties;
-import org.springframework.cloud.sleuth.otel.bridge.OtelBaggageEntry;
+import org.springframework.cloud.sleuth.otel.bridge.OtelBaggageInScope;
+import org.springframework.cloud.sleuth.otel.bridge.OtelBaggageManager;
 import org.springframework.cloud.sleuth.otel.bridge.OtelCurrentTraceContext;
 import org.springframework.context.ApplicationEvent;
 import org.springframework.context.ApplicationListener;
@@ -42,16 +43,16 @@ class Slf4jSpanProcessor implements SpanProcessor, ApplicationListener {
 
 	private final SleuthBaggageProperties sleuthBaggageProperties;
 
-	private final BaggageManager baggageManager;
+	private final OtelBaggageManager baggageManager;
 
-	Slf4jSpanProcessor(SleuthBaggageProperties sleuthBaggageProperties, BaggageManager baggageManager) {
+	Slf4jSpanProcessor(SleuthBaggageProperties sleuthBaggageProperties, OtelBaggageManager baggageManager) {
 		this.sleuthBaggageProperties = sleuthBaggageProperties;
 		this.baggageManager = baggageManager;
 	}
 
 	@Override
-	public void onStart(ReadWriteSpan span) {
-		onStart(span.getContext().getTraceIdAsHexString(), span.getContext().getSpanIdAsHexString());
+	public void onStart(Context parent, ReadWriteSpan span) {
+		onStart(span.getSpanContext().getTraceIdAsHexString(), span.getSpanContext().getSpanIdAsHexString());
 	}
 
 	private void onStart(String traceId, String spanId) {
@@ -93,10 +94,10 @@ class Slf4jSpanProcessor implements SpanProcessor, ApplicationListener {
 		onEachCorrelatedBaggageEntry(e -> MDC.put(e.getKey(), e.getValue()));
 	}
 
-	private void onEachCorrelatedBaggageEntry(Consumer<Entry> consumer) {
+	private void onEachCorrelatedBaggageEntry(Consumer<Map.Entry<String, String>> consumer) {
 		if (this.sleuthBaggageProperties.isCorrelationEnabled()) {
 			List<String> correlationFields = lowerCaseCorrelationFields();
-			this.baggageManager.getCurrentBaggage().getEntries().stream()
+			this.baggageManager.getAllBaggage().entrySet().stream()
 					.filter(e -> correlationFields.contains(e.getKey().toLowerCase())).forEach(consumer);
 		}
 	}
@@ -110,7 +111,7 @@ class Slf4jSpanProcessor implements SpanProcessor, ApplicationListener {
 				.collect(Collectors.toList());
 	}
 
-	private void onBaggageChanged(OtelBaggageEntry.BaggageChanged event) {
+	private void onBaggageChanged(OtelBaggageInScope.BaggageChanged event) {
 		if (log.isTraceEnabled()) {
 			log.trace("Got baggage changed event [" + event + "]");
 		}
@@ -128,8 +129,9 @@ class Slf4jSpanProcessor implements SpanProcessor, ApplicationListener {
 		if (log.isTraceEnabled()) {
 			log.trace("Got scope changed event [" + event + "]");
 		}
-		if (event.context != null) {
-			onStart(event.context.traceId(), event.context.spanId());
+		if (event.span != null) {
+			onStart(event.span.getSpanContext().getTraceIdAsHexString(),
+					event.span.getSpanContext().getSpanIdAsHexString());
 		}
 	}
 
@@ -142,17 +144,14 @@ class Slf4jSpanProcessor implements SpanProcessor, ApplicationListener {
 
 	@Override
 	public void onApplicationEvent(ApplicationEvent event) {
-		if (event instanceof OtelBaggageEntry.BaggageChanged) {
-			onBaggageChanged((OtelBaggageEntry.BaggageChanged) event);
+		if (event instanceof OtelBaggageInScope.BaggageChanged) {
+			onBaggageChanged((OtelBaggageInScope.BaggageChanged) event);
 		}
 		else if (event instanceof OtelCurrentTraceContext.ScopeChanged) {
 			onScopeChanged((OtelCurrentTraceContext.ScopeChanged) event);
 		}
 		else if (event instanceof OtelCurrentTraceContext.ScopeClosed) {
 			onScopeClosed((OtelCurrentTraceContext.ScopeClosed) event);
-		}
-		else if (event instanceof OtelBaggageEntry.BaggageScopeEnded) {
-			removeAllBaggageEntries();
 		}
 	}
 

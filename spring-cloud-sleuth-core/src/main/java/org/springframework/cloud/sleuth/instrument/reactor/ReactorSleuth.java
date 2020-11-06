@@ -171,13 +171,14 @@ public abstract class ReactorSleuth {
 	}
 
 	/**
-	 * Like {@link CurrentTraceContext#get()}, except it first checks the reactor context.
+	 * Like {@link CurrentTraceContext#context()}, except it first checks the reactor
+	 * context.
 	 */
 	static TraceContext traceContext(Context context, CurrentTraceContext fallback) {
 		if (context.hasKey(TraceContext.class)) {
 			return context.get(TraceContext.class);
 		}
-		return fallback.get();
+		return fallback.context();
 	}
 
 }

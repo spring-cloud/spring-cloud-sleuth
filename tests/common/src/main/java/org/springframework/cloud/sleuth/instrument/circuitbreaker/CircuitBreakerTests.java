@@ -76,7 +76,7 @@ public abstract class CircuitBreakerTests implements TestTracingAwareSupplier {
 			BDDAssertions.then(first.get().context().spanId()).isNotEqualTo(second.get().context().spanId());
 
 			FinishedSpan finishedSpan = tracerTest().handler().reportedSpans().get(1);
-			BDDAssertions.then(finishedSpan.name()).contains("CircuitBreakerTests");
+			BDDAssertions.then(finishedSpan.getName()).contains("CircuitBreakerTests");
 			additionalAssertions(finishedSpan);
 		}
 		finally {

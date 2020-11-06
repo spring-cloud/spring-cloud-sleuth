@@ -17,6 +17,9 @@
 package org.springframework.cloud.sleuth.api;
 
 import java.io.Closeable;
+import java.util.concurrent.Callable;
+import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
 
 import org.springframework.lang.Nullable;
 
@@ -37,7 +40,7 @@ public interface CurrentTraceContext {
 	 * @return current {@link TraceContext} or {@code null} if not set.
 	 */
 	@Nullable
-	TraceContext get();
+	TraceContext context();
 
 	/**
 	 * Sets the current span in scope until the returned object is closed. It is a
@@ -55,6 +58,35 @@ public interface CurrentTraceContext {
 	 * @return the scope with the span set
 	 */
 	CurrentTraceContext.Scope maybeScope(@Nullable TraceContext context);
+
+	/**
+	 * Wraps a task in a trace representation.
+	 * @param task task to wrap
+	 * @param <C> task return type
+	 * @return wrapped task
+	 */
+	<C> Callable<C> wrap(Callable<C> task);
+
+	/**
+	 * Wraps a task in a trace representation.
+	 * @param task task to wrap
+	 * @return wrapped task
+	 */
+	Runnable wrap(Runnable task);
+
+	/**
+	 * Wraps an executor in a trace representation.
+	 * @param delegate executor to wrap
+	 * @return wrapped executor
+	 */
+	Executor wrap(Executor delegate);
+
+	/**
+	 * Wraps an executor service in a trace representation.
+	 * @param delegate executor service to wrap
+	 * @return wrapped executor service
+	 */
+	ExecutorService wrap(ExecutorService delegate);
 
 	/**
 	 * Scope of a span. Needs to be closed so that resources are let go (e.g. MDC is

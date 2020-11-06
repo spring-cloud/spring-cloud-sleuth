@@ -19,7 +19,8 @@ package org.springframework.cloud.sleuth.api;
 import java.util.Map;
 
 /**
- * Manages {@link BaggageEntry} entries.
+ * Manages {@link BaggageInScope} entries. Upon retrieval / creation of a baggage entry
+ * puts it in scope. Scope must be closed.
  *
  * @author OpenTelemetry Authors
  * @author Marcin Grzejszczak
@@ -28,23 +29,40 @@ import java.util.Map;
 public interface BaggageManager {
 
 	/**
-	 * @return mapping of all baggage entries
+	 * @return mapping of all baggage entries from the given scope
 	 */
 	Map<String, String> getAllBaggage();
 
 	/**
-	 * Retrieves {@link BaggageEntry} for the given name.
+	 * Retrieves {@link BaggageInScope} for the given name.
 	 * @param name baggage name
 	 * @return baggage or {@code null} if not present
 	 */
-	BaggageEntry getBaggage(String name);
+	BaggageInScope getBaggage(String name);
 
 	/**
-	 * Creates a new {@link BaggageEntry} entry for the given name or returns an existing
-	 * one if it's already present.
+	 * Retrieves {@link BaggageInScope} for the given name.
+	 * @param traceContext trace context with baggage attached to it
+	 * @param name baggage name
+	 * @return baggage or {@code null} if not present
+	 */
+	BaggageInScope getBaggage(TraceContext traceContext, String name);
+
+	/**
+	 * Creates a new {@link BaggageInScope} entry for the given name or returns an
+	 * existing one if it's already present.
 	 * @param name baggage name
 	 * @return new or already created baggage
 	 */
-	BaggageEntry createBaggage(String name);
+	BaggageInScope createBaggage(String name);
+
+	/**
+	 * Creates a new {@link BaggageInScope} entry for the given name or returns an
+	 * existing one if it's already present.
+	 * @param name baggage name
+	 * @param value baggage value
+	 * @return new or already created baggage
+	 */
+	BaggageInScope createBaggage(String name, String value);
 
 }

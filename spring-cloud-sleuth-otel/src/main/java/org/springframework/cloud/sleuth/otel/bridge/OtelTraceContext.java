@@ -17,12 +17,12 @@
 package org.springframework.cloud.sleuth.otel.bridge;
 
 import java.util.Objects;
+import java.util.concurrent.atomic.AtomicReference;
 
-import io.grpc.Context;
+import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.api.trace.SpanContext;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.sdk.trace.ReadableSpan;
-import io.opentelemetry.trace.Span;
-import io.opentelemetry.trace.SpanContext;
-import io.opentelemetry.trace.TracingContextUtils;
 
 import org.springframework.cloud.sleuth.api.TraceContext;
 import org.springframework.lang.Nullable;
@@ -35,17 +35,48 @@ import org.springframework.lang.Nullable;
  */
 public class OtelTraceContext implements TraceContext {
 
+	final AtomicReference<Context> context;
+
 	final SpanContext delegate;
 
 	final Span span;
 
+	public OtelTraceContext(Context context, SpanContext delegate, @Nullable Span span) {
+		this(new AtomicReference<>(context), delegate, span);
+	}
+
+	OtelTraceContext(AtomicReference<Context> context, SpanContext delegate, @Nullable Span span) {
+		this.context = context;
+		this.delegate = delegate;
+		this.span = span;
+	}
+
 	public OtelTraceContext(SpanContext delegate, @Nullable Span span) {
+		this.context = new AtomicReference<>(Context.current());
 		this.delegate = delegate;
 		this.span = span;
 	}
 
 	public OtelTraceContext(Span span) {
-		this(span.getContext(), span);
+		this(Context.current(), span.getSpanContext(), span);
+	}
+
+	public OtelTraceContext(SpanFromSpanContext span) {
+		this(span.otelTraceContext.context.get(), span.getSpanContext(), span);
+	}
+
+	public static TraceContext fromOtel(SpanContext traceContext) {
+		return new OtelTraceContext(traceContext, null);
+	}
+
+	public static Context toOtelContext(TraceContext context) {
+		if (context instanceof OtelTraceContext) {
+			Span span = ((OtelTraceContext) context).span;
+			if (span != null) {
+				return span.storeInContext(Context.current());
+			}
+		}
+		return Context.current();
 	}
 
 	@Override
@@ -92,29 +123,12 @@ public class OtelTraceContext implements TraceContext {
 		return this.span;
 	}
 
-	public SpanContext spanContext() {
-		return this.delegate;
+	public Context context() {
+		return this.context.get();
 	}
 
-	public static SpanContext toOtel(TraceContext traceContext) {
-		if (traceContext == null) {
-			return null;
-		}
-		return ((OtelTraceContext) traceContext).delegate;
-	}
-
-	public static TraceContext fromOtel(SpanContext traceContext) {
-		return new OtelTraceContext(traceContext, null);
-	}
-
-	public static Context toOtelContext(TraceContext context) {
-		if (context instanceof OtelTraceContext) {
-			Span span = ((OtelTraceContext) context).span;
-			if (span != null) {
-				return TracingContextUtils.withSpan(span, Context.current());
-			}
-		}
-		return Context.current();
+	public void updateContext(Context context) {
+		this.context.set(context);
 	}
 
 }

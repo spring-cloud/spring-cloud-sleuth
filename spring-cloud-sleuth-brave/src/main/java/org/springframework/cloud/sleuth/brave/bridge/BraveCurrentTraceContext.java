@@ -16,6 +16,10 @@
 
 package org.springframework.cloud.sleuth.brave.bridge;
 
+import java.util.concurrent.Callable;
+import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
+
 import org.springframework.cloud.sleuth.api.CurrentTraceContext;
 import org.springframework.cloud.sleuth.api.TraceContext;
 
@@ -34,7 +38,7 @@ public class BraveCurrentTraceContext implements CurrentTraceContext {
 	}
 
 	@Override
-	public TraceContext get() {
+	public TraceContext context() {
 		brave.propagation.TraceContext context = this.delegate.get();
 		if (context == null) {
 			return null;
@@ -50,6 +54,26 @@ public class BraveCurrentTraceContext implements CurrentTraceContext {
 	@Override
 	public Scope maybeScope(TraceContext context) {
 		return new BraveScope(this.delegate.maybeScope(BraveTraceContext.toBrave(context)));
+	}
+
+	@Override
+	public <C> Callable<C> wrap(Callable<C> task) {
+		return this.delegate.wrap(task);
+	}
+
+	@Override
+	public Runnable wrap(Runnable task) {
+		return this.delegate.wrap(task);
+	}
+
+	@Override
+	public Executor wrap(Executor delegate) {
+		return this.delegate.executor(delegate);
+	}
+
+	@Override
+	public ExecutorService wrap(ExecutorService delegate) {
+		return this.delegate.executorService(delegate);
 	}
 
 	public static brave.propagation.CurrentTraceContext toBrave(CurrentTraceContext context) {

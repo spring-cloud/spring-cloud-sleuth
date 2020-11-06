@@ -44,7 +44,7 @@ public class MultipleHopsIntegrationTests
 
 	@Override
 	protected void assertSpanNames() {
-		then(this.spans).extracting(FinishedSpan::name).containsAll(asList("GET /greeting", "send"));
+		then(this.spans).extracting(FinishedSpan::getName).containsAll(asList("GET /greeting", "send"));
 	}
 
 	@Override

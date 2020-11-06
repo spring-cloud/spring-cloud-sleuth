@@ -80,7 +80,7 @@ public abstract class TraceCallableTests implements TestTracingAwareSupplier {
 		whenATraceKeepingCallableGetsSubmitted();
 
 		BDDAssertions.then(tracerTest().handler().reportedSpans()).hasSize(1);
-		BDDAssertions.then(tracerTest().handler().reportedSpans().get(0).name())
+		BDDAssertions.then(tracerTest().handler().reportedSpans().get(0).getName())
 				.isEqualTo("some-callable-name-from-annotation");
 	}
 
@@ -89,7 +89,7 @@ public abstract class TraceCallableTests implements TestTracingAwareSupplier {
 		whenCallableGetsSubmitted(thatRetrievesTraceFromThreadLocal());
 
 		BDDAssertions.then(tracerTest().handler().reportedSpans()).hasSize(1);
-		BDDAssertions.then(tracerTest().handler().reportedSpans().get(0).name())
+		BDDAssertions.then(tracerTest().handler().reportedSpans().get(0).getName())
 				.isEqualTo("some-callable-name-from-to-string");
 	}
 

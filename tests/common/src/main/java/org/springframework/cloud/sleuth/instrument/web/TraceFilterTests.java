@@ -103,7 +103,7 @@ public abstract class TraceFilterTests implements TestTracingAwareSupplier {
 		this.filter.doFilter(this.request, this.response, this.filterChain);
 
 		BDDAssertions.then(this.spans).hasSize(1);
-		BDDAssertions.then(this.spans.get(0).tags()).containsEntry("http.path", "/").containsEntry("http.method",
+		BDDAssertions.then(this.spans.get(0).getTags()).containsEntry("http.path", "/").containsEntry("http.method",
 				HttpMethod.GET.toString());
 		// we don't check for status_code anymore cause Brave doesn't support it oob
 		// .containsEntry("http.status_code", "200")
@@ -189,7 +189,7 @@ public abstract class TraceFilterTests implements TestTracingAwareSupplier {
 		BDDAssertions.then(this.tracer.currentSpan()).isNull();
 		verifyParentSpanHttpTags();
 		BDDAssertions.then(this.spans).hasSize(1);
-		BDDAssertions.then(this.spans.get(0).error()).hasMessageContaining("Planned");
+		BDDAssertions.then(this.spans.get(0).getError()).hasMessageContaining("Planned");
 	}
 
 	@Test
@@ -269,7 +269,7 @@ public abstract class TraceFilterTests implements TestTracingAwareSupplier {
 
 		BDDAssertions.then(this.tracer.currentSpan()).isNull();
 		BDDAssertions.then(this.spans).hasSize(1);
-		BDDAssertions.then(this.spans.get(0).tags()).containsEntry("http.path", "/").containsEntry("http.method",
+		BDDAssertions.then(this.spans.get(0).getTags()).containsEntry("http.path", "/").containsEntry("http.method",
 				HttpMethod.GET.toString());
 		// we don't check for status_code anymore cause Brave doesn't support it oob
 		// .containsEntry("http.status_code", "295")
@@ -277,7 +277,7 @@ public abstract class TraceFilterTests implements TestTracingAwareSupplier {
 
 	public void verifyParentSpanHttpTags() {
 		BDDAssertions.then(this.spans).isNotEmpty();
-		BDDAssertions.then(this.spans.get(0).tags()).containsEntry("http.path", "/").containsEntry("http.method",
+		BDDAssertions.then(this.spans.get(0).getTags()).containsEntry("http.path", "/").containsEntry("http.method",
 				HttpMethod.GET.toString());
 	}
 

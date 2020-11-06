@@ -99,7 +99,7 @@ class TraceWebAspect {
 	@SuppressWarnings("unchecked")
 	public Object wrapWithCorrelationId(ProceedingJoinPoint pjp) throws Throwable {
 		Callable<Object> callable = (Callable<Object>) pjp.proceed();
-		TraceContext currentSpan = this.currentTraceContext.get();
+		TraceContext currentSpan = this.currentTraceContext.context();
 		if (currentSpan == null) {
 			return callable;
 		}
@@ -112,7 +112,7 @@ class TraceWebAspect {
 	@Around("anyControllerOrRestControllerWithPublicWebAsyncTaskMethod()")
 	public Object wrapWebAsyncTaskWithCorrelationId(ProceedingJoinPoint pjp) throws Throwable {
 		final WebAsyncTask<?> webAsyncTask = (WebAsyncTask<?>) pjp.proceed();
-		TraceContext currentSpan = this.currentTraceContext.get();
+		TraceContext currentSpan = this.currentTraceContext.context();
 		if (currentSpan == null) {
 			return webAsyncTask;
 		}

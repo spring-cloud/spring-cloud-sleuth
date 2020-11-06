@@ -16,7 +16,7 @@
 
 package org.springframework.cloud.sleuth.otel.instrument.web.client.feign;
 
-import io.opentelemetry.common.AttributeKey;
+import io.opentelemetry.api.common.AttributeKey;
 import org.assertj.core.api.BDDAssertions;
 
 import org.springframework.cloud.sleuth.otel.OtelTestTracing;
@@ -39,7 +39,7 @@ public class TracingFeignClientTests
 	@Override
 	public void assertException(RuntimeException error) {
 		OtelFinishedSpan.AssertingThrowable throwable = (OtelFinishedSpan.AssertingThrowable) this.tracerTest()
-				.handler().reportedSpans().get(0).error();
+				.handler().reportedSpans().get(0).getError();
 		String message = throwable.attributes.get(AttributeKey.stringKey("exception.message"));
 		BDDAssertions.then(message).isEqualTo(error.getMessage());
 	}

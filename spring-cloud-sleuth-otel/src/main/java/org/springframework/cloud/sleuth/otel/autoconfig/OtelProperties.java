@@ -16,8 +16,8 @@
 
 package org.springframework.cloud.sleuth.otel.autoconfig;
 
+import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.sdk.trace.config.TraceConfig;
-import io.opentelemetry.trace.Span;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 

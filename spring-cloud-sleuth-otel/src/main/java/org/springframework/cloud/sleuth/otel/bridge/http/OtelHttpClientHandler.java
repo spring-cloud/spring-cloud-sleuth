@@ -19,11 +19,10 @@ package org.springframework.cloud.sleuth.otel.bridge.http;
 import java.net.URI;
 import java.net.URISyntaxException;
 
+import io.opentelemetry.api.trace.Tracer;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.context.propagation.TextMapPropagator;
 import io.opentelemetry.instrumentation.api.tracer.HttpClientTracer;
-import io.opentelemetry.trace.DefaultSpan;
-import io.opentelemetry.trace.Tracer;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -72,9 +71,9 @@ public class OtelHttpClientHandler extends HttpClientTracer<HttpClientRequest, H
 			if (log.isDebugEnabled()) {
 				log.debug("The sampler function filtered this request, will return an invalid span");
 			}
-			return OtelSpan.fromOtel(DefaultSpan.getInvalid());
+			return OtelSpan.fromOtel(io.opentelemetry.api.trace.Span.getInvalid());
 		}
-		io.opentelemetry.trace.Span span = startSpan(request);
+		io.opentelemetry.api.trace.Span span = startSpan(request);
 		return span(request, span);
 	}
 
@@ -84,19 +83,19 @@ public class OtelHttpClientHandler extends HttpClientTracer<HttpClientRequest, H
 			if (log.isDebugEnabled()) {
 				log.debug("Returning an invalid span since url [" + request.path() + "] is on a list of urls to skip");
 			}
-			return OtelSpan.fromOtel(DefaultSpan.getInvalid());
+			return OtelSpan.fromOtel(io.opentelemetry.api.trace.Span.getInvalid());
 		}
-		io.opentelemetry.trace.Span span = parent != null ? ((OtelTraceContext) parent).span() : null;
+		io.opentelemetry.api.trace.Span span = parent != null ? ((OtelTraceContext) parent).span() : null;
 		if (span == null) {
 			return span(request, startSpan(request));
 		}
-		try (Scope scope = this.tracer.withSpan(span)) {
-			io.opentelemetry.trace.Span withParent = startSpan(request);
+		try (Scope scope = span.makeCurrent()) {
+			io.opentelemetry.api.trace.Span withParent = startSpan(request);
 			return span(request, withParent);
 		}
 	}
 
-	private Span span(HttpClientRequest request, io.opentelemetry.trace.Span span) {
+	private Span span(HttpClientRequest request, io.opentelemetry.api.trace.Span span) {
 		try (Scope scope = startScope(span, request)) {
 			if (span.isRecording()) {
 				String remoteIp = request.remoteIp();
@@ -110,9 +109,9 @@ public class OtelHttpClientHandler extends HttpClientTracer<HttpClientRequest, H
 	}
 
 	@Override
-	protected io.opentelemetry.trace.Span onRequest(io.opentelemetry.trace.Span span,
+	protected io.opentelemetry.api.trace.Span onRequest(io.opentelemetry.api.trace.Span span,
 			HttpClientRequest httpClientRequest) {
-		io.opentelemetry.trace.Span afterRequest = super.onRequest(span, httpClientRequest);
+		io.opentelemetry.api.trace.Span afterRequest = super.onRequest(span, httpClientRequest);
 		if (this.httpClientRequestParser != null) {
 			Span fromOtel = OtelSpan.fromOtel(afterRequest);
 			this.httpClientRequestParser.parse(httpClientRequest, fromOtel.context(), fromOtel);
@@ -125,9 +124,9 @@ public class OtelHttpClientHandler extends HttpClientTracer<HttpClientRequest, H
 	}
 
 	@Override
-	protected io.opentelemetry.trace.Span onResponse(io.opentelemetry.trace.Span span,
+	protected io.opentelemetry.api.trace.Span onResponse(io.opentelemetry.api.trace.Span span,
 			HttpClientResponse httpClientResponse) {
-		io.opentelemetry.trace.Span afterResponse = super.onResponse(span, httpClientResponse);
+		io.opentelemetry.api.trace.Span afterResponse = super.onResponse(span, httpClientResponse);
 		if (this.httpClientResponseParser != null) {
 			Span fromOtel = OtelSpan.fromOtel(afterResponse);
 			this.httpClientResponseParser.parse(httpClientResponse, fromOtel.context(), fromOtel);
@@ -137,13 +136,13 @@ public class OtelHttpClientHandler extends HttpClientTracer<HttpClientRequest, H
 
 	@Override
 	public void handleReceive(HttpClientResponse response, Span span) {
-		if (OtelSpan.toOtel(span).equals(DefaultSpan.getInvalid())) {
+		if (OtelSpan.toOtel(span).equals(io.opentelemetry.api.trace.Span.getInvalid())) {
 			if (log.isDebugEnabled()) {
 				log.debug("Not doing anything cause the span is invalid");
 			}
 			return;
 		}
-		io.opentelemetry.trace.Span otel = OtelSpan.toOtel(span);
+		io.opentelemetry.api.trace.Span otel = OtelSpan.toOtel(span);
 		if (response.error() != null) {
 			if (log.isDebugEnabled()) {
 				log.debug("There was an error, will finish span [" + otel + "] exceptionally");

@@ -16,6 +16,10 @@
 
 package org.springframework.cloud.sleuth.api.noop;
 
+import java.util.concurrent.Callable;
+import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
+
 import org.springframework.cloud.sleuth.api.CurrentTraceContext;
 import org.springframework.cloud.sleuth.api.TraceContext;
 
@@ -28,7 +32,7 @@ import org.springframework.cloud.sleuth.api.TraceContext;
 public class NoOpCurrentTraceContext implements CurrentTraceContext {
 
 	@Override
-	public TraceContext get() {
+	public TraceContext context() {
 		return new NoOpTraceContext();
 	}
 
@@ -42,6 +46,26 @@ public class NoOpCurrentTraceContext implements CurrentTraceContext {
 	public Scope maybeScope(TraceContext context) {
 		return () -> {
 		};
+	}
+
+	@Override
+	public <C> Callable<C> wrap(Callable<C> task) {
+		return task;
+	}
+
+	@Override
+	public Runnable wrap(Runnable task) {
+		return task;
+	}
+
+	@Override
+	public Executor wrap(Executor delegate) {
+		return delegate;
+	}
+
+	@Override
+	public ExecutorService wrap(ExecutorService delegate) {
+		return delegate;
 	}
 
 }

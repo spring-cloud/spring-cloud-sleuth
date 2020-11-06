@@ -31,6 +31,7 @@ import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.jmx.JmxAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.web.servlet.context.ServletWebServerInitializedEvent;
+import org.springframework.cloud.sleuth.api.BaggageInScope;
 import org.springframework.cloud.sleuth.api.Span;
 import org.springframework.cloud.sleuth.api.Tracer;
 import org.springframework.cloud.sleuth.api.exporter.FinishedSpan;
@@ -94,10 +95,10 @@ public abstract class MultipleHopsIntegrationTests {
 			then(this.spans).hasSize(14);
 		});
 		assertSpanNames();
-		then(this.spans).extracting(FinishedSpan::kind)
+		then(this.spans).extracting(FinishedSpan::getKind)
 				// no server kind due to test constraints
 				.containsAll(asList(Span.Kind.CONSUMER, Span.Kind.PRODUCER, Span.Kind.SERVER));
-		then(this.spans.reportedSpans().stream().map(span -> span.tags().get("channel")).filter(Objects::nonNull)
+		then(this.spans.reportedSpans().stream().map(span -> span.getTags().get("channel")).filter(Objects::nonNull)
 				.distinct().collect(toList())).hasSize(3).containsAll(asList("words", "counts", "greetings"));
 	}
 
@@ -111,19 +112,25 @@ public abstract class MultipleHopsIntegrationTests {
 		System.out.println("FOO: " + initialSpan.context().traceId());
 		// tag::baggage[]
 		try (Tracer.SpanInScope ws = this.tracer.withSpan(initialSpan)) {
-			this.tracer.createBaggage(BUSINESS_PROCESS).set("ALM");
-			this.tracer.createBaggage(COUNTRY_CODE).set("FO");
-			// end::baggage[]
-			// tag::baggage_tag[]
-			initialSpan.tag(BUSINESS_PROCESS, "ALM");
-			// end::baggage_tag[]
+			BaggageInScope businessProcess = this.tracer.createBaggage(BUSINESS_PROCESS).set("ALM");
+			BaggageInScope countryCode = this.tracer.createBaggage(COUNTRY_CODE).set("FO");
+			try {
+				// end::baggage[]
+				// tag::baggage_tag[]
+				initialSpan.tag(BUSINESS_PROCESS, "ALM");
+				// end::baggage_tag[]
 
-			// set request ID in a header not with the api explicitly
-			HttpHeaders headers = new HttpHeaders();
-			headers.put(REQUEST_ID, Collections.singletonList("f4308d05-2228-4468-80f6-92a8377ba193"));
-			RequestEntity requestEntity = new RequestEntity(headers, HttpMethod.GET,
-					URI.create("http://localhost:" + this.testConfig.port + "/greeting"));
-			this.restTemplate.exchange(requestEntity, String.class);
+				// set request ID in a header not with the api explicitly
+				HttpHeaders headers = new HttpHeaders();
+				headers.put(REQUEST_ID, Collections.singletonList("f4308d05-2228-4468-80f6-92a8377ba193"));
+				RequestEntity requestEntity = new RequestEntity(headers, HttpMethod.GET,
+						URI.create("http://localhost:" + this.testConfig.port + "/greeting"));
+				this.restTemplate.exchange(requestEntity, String.class);
+			}
+			finally {
+				countryCode.close();
+				businessProcess.close();
+			}
 		}
 		finally {
 			initialSpan.end();
@@ -134,18 +141,17 @@ public abstract class MultipleHopsIntegrationTests {
 		});
 
 		List<FinishedSpan> withBagTags = this.spans.reportedSpans().stream()
-				.filter(s -> s.tags().containsKey(BUSINESS_PROCESS)).collect(toList());
+				.filter(s -> s.getTags().containsKey(BUSINESS_PROCESS)).collect(toList());
 
 		// set with tag api
 		then(withBagTags).as("only initialSpan was bag tagged").hasSize(1);
-		assertThat(withBagTags.get(0).tags()).containsEntry(BUSINESS_PROCESS, "ALM");
+		assertThat(withBagTags.get(0).getTags()).containsEntry(BUSINESS_PROCESS, "ALM");
 
 		Set<String> traceIds = this.application.allSpans().stream().map(s -> s.context().traceId())
 				.collect(Collectors.toSet());
 		then(traceIds).hasSize(1);
 		then(traceIds.iterator().next()).as("All have same trace ID").isEqualTo(initialSpan.context().traceId());
 		assertBaggage(initialSpan);
-
 	}
 
 	protected void assertBaggage(Span initialSpan) {

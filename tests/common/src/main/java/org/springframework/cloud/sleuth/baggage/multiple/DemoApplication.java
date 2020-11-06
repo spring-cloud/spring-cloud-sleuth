@@ -23,7 +23,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.cloud.sleuth.api.BaggageEntry;
+import org.springframework.cloud.sleuth.api.BaggageInScope;
 import org.springframework.cloud.sleuth.api.Span;
 import org.springframework.cloud.sleuth.api.Tracer;
 import org.springframework.http.HttpHeaders;
@@ -71,6 +71,8 @@ public class DemoApplication {
 	@Autowired
 	Tracer tracer;
 
+	String baggageValue;
+
 	@RequestMapping("/greeting")
 	public Greeting greeting(@RequestParam(defaultValue = "Hello World!") String message,
 			@RequestHeader HttpHeaders headers) {
@@ -78,12 +80,17 @@ public class DemoApplication {
 		this.httpSpan = this.tracer.currentSpan();
 
 		// tag what was propagated
-		BaggageEntry baggageEntry = this.tracer.getBaggage(COUNTRY_CODE);
-		if (baggageEntry != null && baggageEntry.get() != null) {
-			this.httpSpan.tag(COUNTRY_CODE, baggageEntry.get());
-		}
+		try (BaggageInScope baggageInScope = this.tracer.getBaggage(COUNTRY_CODE)) {
+			if (baggageInScope != null) {
+				String baggage = baggageInScope.get();
+				if (baggage != null) {
+					this.baggageValue = baggage;
+					this.httpSpan.tag(COUNTRY_CODE, baggage);
+				}
+			}
 
-		return new Greeting(message);
+			return new Greeting(message);
+		}
 	}
 
 	@Splitter(inputChannel = "greetings", outputChannel = "words")
@@ -118,6 +125,10 @@ public class DemoApplication {
 
 	public Span getServiceActivatorSpan() {
 		return this.serviceActivatorSpan;
+	}
+
+	public String getBaggageValue() {
+		return this.baggageValue;
 	}
 
 	public List<Span> allSpans() {

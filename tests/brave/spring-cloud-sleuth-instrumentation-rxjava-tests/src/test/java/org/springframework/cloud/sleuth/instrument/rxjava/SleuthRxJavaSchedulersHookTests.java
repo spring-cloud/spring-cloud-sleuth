@@ -39,6 +39,7 @@ import rx.plugins.RxJavaPlugins;
 import rx.plugins.RxJavaSchedulersHook;
 
 import org.springframework.cloud.sleuth.api.Tracer;
+import org.springframework.cloud.sleuth.brave.bridge.BraveBaggageManager;
 import org.springframework.cloud.sleuth.brave.bridge.BraveTracer;
 
 import static org.assertj.core.api.BDDAssertions.then;
@@ -59,7 +60,9 @@ public class SleuthRxJavaSchedulersHookTests {
 	Tracing tracing = Tracing.newBuilder().currentTraceContext(this.currentTraceContext).addSpanHandler(this.spans)
 			.build();
 
-	Tracer tracer = BraveTracer.fromBrave(this.tracing.tracer());
+	BraveBaggageManager braveBaggageManager = new BraveBaggageManager();
+
+	Tracer tracer = BraveTracer.fromBrave(this.tracing.tracer(), this.braveBaggageManager);
 
 	@AfterEach
 	public void clean() {

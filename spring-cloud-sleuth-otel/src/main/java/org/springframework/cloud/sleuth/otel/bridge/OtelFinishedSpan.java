@@ -22,9 +22,9 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import io.opentelemetry.common.AttributeConsumer;
-import io.opentelemetry.common.AttributeKey;
-import io.opentelemetry.common.Attributes;
+import io.opentelemetry.api.common.AttributeConsumer;
+import io.opentelemetry.api.common.AttributeKey;
+import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.sdk.trace.data.SpanData;
 
 import org.springframework.cloud.sleuth.api.Span;
@@ -46,27 +46,31 @@ public class OtelFinishedSpan implements FinishedSpan {
 		this.spanData = spanData;
 	}
 
+	public static FinishedSpan fromOtel(SpanData span) {
+		return new OtelFinishedSpan(span);
+	}
+
 	@Override
-	public String name() {
+	public String getName() {
 		return this.spanData.getName();
 	}
 
 	@Override
-	public long startTimestamp() {
+	public long getStartTimestamp() {
 		return this.spanData.getStartEpochNanos();
 	}
 
 	@Override
-	public long endTimestamp() {
+	public long getEndTimestamp() {
 		return this.spanData.getEndEpochNanos();
 	}
 
 	@Override
-	public Map<String, String> tags() {
+	public Map<String, String> getTags() {
 		if (this.tags.isEmpty()) {
 			this.spanData.getAttributes().forEach(new AttributeConsumer() {
 				@Override
-				public <T> void consume(AttributeKey<T> key, T value) {
+				public <T> void accept(AttributeKey<T> key, T value) {
 					tags.put(key.getKey(), String.valueOf(value));
 				}
 			});
@@ -75,38 +79,38 @@ public class OtelFinishedSpan implements FinishedSpan {
 	}
 
 	@Override
-	public Collection<Map.Entry<Long, String>> events() {
+	public Collection<Map.Entry<Long, String>> getEvents() {
 		return this.spanData.getEvents().stream()
 				.map(e -> new AbstractMap.SimpleEntry<>(e.getEpochNanos(), e.getName())).collect(Collectors.toList());
 	}
 
 	@Override
-	public String spanId() {
+	public String getSpanId() {
 		return this.spanData.getSpanId();
 	}
 
 	@Override
-	public String parentId() {
+	public String getParentId() {
 		return this.spanData.getParentSpanId();
 	}
 
 	@Override
-	public String remoteIp() {
-		return tags().get("net.peer.name");
+	public String getRemoteIp() {
+		return getTags().get("net.peer.name");
 	}
 
 	@Override
-	public int remotePort() {
-		return Integer.valueOf(tags().get("net.peer.port"));
+	public int getRemotePort() {
+		return Integer.valueOf(getTags().get("net.peer.port"));
 	}
 
 	@Override
-	public String traceId() {
+	public String getTraceId() {
 		return this.spanData.getTraceId();
 	}
 
 	@Override
-	public Throwable error() {
+	public Throwable getError() {
 		Attributes attributes = this.spanData.getEvents().stream().filter(e -> e.getName().equals("exception"))
 				.findFirst().map(e -> e.getAttributes()).orElse(null);
 		if (attributes != null) {
@@ -116,25 +120,21 @@ public class OtelFinishedSpan implements FinishedSpan {
 	}
 
 	@Override
-	public Span.Kind kind() {
-		if (this.spanData.getKind() == io.opentelemetry.trace.Span.Kind.INTERNAL) {
+	public Span.Kind getKind() {
+		if (this.spanData.getKind() == io.opentelemetry.api.trace.Span.Kind.INTERNAL) {
 			return null;
 		}
 		return Span.Kind.valueOf(this.spanData.getKind().name());
 	}
 
 	@Override
-	public String remoteServiceName() {
+	public String getRemoteServiceName() {
 		return this.spanData.getAttributes().get(AttributeKey.stringKey("peer.service"));
 	}
 
 	@Override
 	public String toString() {
 		return "SpanDataToReportedSpan{" + "spanData=" + spanData + ", tags=" + tags + '}';
-	}
-
-	public static FinishedSpan fromOtel(SpanData span) {
-		return new OtelFinishedSpan(span);
 	}
 
 	public static class AssertingThrowable extends Throwable {

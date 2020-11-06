@@ -89,7 +89,7 @@ public abstract class TraceRunnableTests implements TestTracingAwareSupplier {
 		whenRunnableGetsSubmitted(traceKeepingRunnable);
 
 		BDDAssertions.then(tracerTest().handler().reportedSpans()).hasSize(1);
-		BDDAssertions.then(tracerTest().handler().reportedSpans().get(0).name())
+		BDDAssertions.then(tracerTest().handler().reportedSpans().get(0).getName())
 				.isEqualTo("some-runnable-name-from-annotation");
 	}
 
@@ -101,7 +101,7 @@ public abstract class TraceRunnableTests implements TestTracingAwareSupplier {
 		whenRunnableGetsSubmitted(runnable);
 
 		BDDAssertions.then(tracerTest().handler().reportedSpans()).hasSize(1);
-		BDDAssertions.then(tracerTest().handler().reportedSpans().get(0).name())
+		BDDAssertions.then(tracerTest().handler().reportedSpans().get(0).getName())
 				.isEqualTo("some-runnable-name-from-to-string");
 	}
 

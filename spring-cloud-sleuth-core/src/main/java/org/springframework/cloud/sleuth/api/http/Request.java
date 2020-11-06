@@ -16,6 +16,8 @@
 
 package org.springframework.cloud.sleuth.api.http;
 
+import java.util.Collection;
+
 import org.springframework.cloud.sleuth.api.Span;
 
 /**
@@ -28,6 +30,11 @@ import org.springframework.cloud.sleuth.api.Span;
  * @since 3.0.0
  */
 public interface Request {
+
+	/**
+	 * @return list of header names.
+	 */
+	Collection<String> headerNames();
 
 	/**
 	 * @return The remote {@link Span.Kind} describing the direction and type of the

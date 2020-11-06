@@ -48,8 +48,8 @@ import org.springframework.context.annotation.Configuration;
 public class TraceBraveBridgeAutoConfiguation {
 
 	@Bean
-	Tracer braveTracer(brave.Tracer tracer) {
-		return new BraveTracer(tracer);
+	Tracer braveTracer(brave.Tracer tracer, BraveBaggageManager braveBaggageManager) {
+		return new BraveTracer(tracer, braveBaggageManager);
 	}
 
 	@Bean

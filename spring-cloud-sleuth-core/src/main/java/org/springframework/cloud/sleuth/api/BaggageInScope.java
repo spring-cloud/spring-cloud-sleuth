@@ -16,17 +16,23 @@
 
 package org.springframework.cloud.sleuth.api;
 
+import java.io.Closeable;
+
 import org.springframework.lang.Nullable;
 
 /**
- * Inspired by OpenZipkin Brave's {@code BaggageField}.
+ * Inspired by OpenZipkin Brave's {@code BaggageField}. Since some tracer implementations
+ * require a scope to be wrapped around baggage, baggage must be closed so that the scope
+ * does not leak. Some tracer implementations make baggage immutable (e.g. OpenTelemetry),
+ * so when the value gets updated they might create new scope (others will return the same
+ * one - e.g. OpenZipkin Brave).
  *
  * Represents a single baggage entry.
  *
  * @author Marcin Grzejszczak
  * @since 3.0.0
  */
-public interface BaggageEntry {
+public interface BaggageInScope extends Closeable {
 
 	/**
 	 * @return name of the baggage entry
@@ -50,14 +56,19 @@ public interface BaggageEntry {
 	/**
 	 * Sets the baggage value.
 	 * @param value to set
+	 * @return new scope
 	 */
-	void set(String value);
+	BaggageInScope set(String value);
 
 	/**
 	 * Sets the baggage value for the given {@link TraceContext}.
 	 * @param traceContext context containing baggage
 	 * @param value to set
+	 * @return new scope
 	 */
-	void set(TraceContext traceContext, String value);
+	BaggageInScope set(TraceContext traceContext, String value);
+
+	@Override
+	void close();
 
 }

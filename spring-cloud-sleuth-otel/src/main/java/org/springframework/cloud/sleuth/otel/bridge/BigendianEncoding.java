@@ -18,10 +18,10 @@ package org.springframework.cloud.sleuth.otel.bridge;
 
 import java.util.Arrays;
 
-import io.opentelemetry.internal.Utils;
+import io.opentelemetry.api.internal.Utils;
 
 /**
- * Copied from io.opentelemetry.trace.BigendianEncoding.
+ * Copied from io.opentelemetry.api.trace.BigendianEncoding.
  */
 final class BigendianEncoding {
 
@@ -34,6 +34,9 @@ final class BigendianEncoding {
 	private static final int ASCII_CHARACTERS = 128;
 
 	private static final byte[] DECODING = buildDecodingArray();
+
+	private BigendianEncoding() {
+	}
 
 	private static byte[] buildDecodingArray() {
 		byte[] decoding = new byte[ASCII_CHARACTERS];
@@ -76,9 +79,6 @@ final class BigendianEncoding {
 		Utils.checkArgument(hi < ASCII_CHARACTERS && DECODING[hi] != -1, "invalid character " + hi);
 		int decoded = DECODING[hi] << 4 | DECODING[lo];
 		return (byte) decoded;
-	}
-
-	private BigendianEncoding() {
 	}
 
 }

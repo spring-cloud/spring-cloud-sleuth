@@ -66,7 +66,7 @@ public class TraceFilterTests extends org.springframework.cloud.sleuth.instrumen
 
 		BDDAssertions.then(tracerTest().tracing().tracer().currentSpan()).isNull();
 		BDDAssertions.then(tracerTest().handler()).hasSize(1);
-		BDDAssertions.then(tracerTest().handler().get(0).parentId()).isEqualTo("000000000000000a");
+		BDDAssertions.then(tracerTest().handler().get(0).getParentId()).isEqualTo("000000000000000a");
 	}
 
 	@Test
@@ -77,7 +77,7 @@ public class TraceFilterTests extends org.springframework.cloud.sleuth.instrumen
 
 		BDDAssertions.then(this.tracer.currentSpan()).isNull();
 		BDDAssertions.then(this.spans).hasSize(1);
-		BDDAssertions.then(this.spans.get(0).name()).isEqualTo("GET");
+		BDDAssertions.then(this.spans.get(0).getName()).isEqualTo("GET");
 	}
 
 	@Test
@@ -87,7 +87,7 @@ public class TraceFilterTests extends org.springframework.cloud.sleuth.instrumen
 
 		BDDAssertions.then(this.tracer.currentSpan()).isNull();
 		BDDAssertions.then(this.spans).hasSize(1);
-		BDDAssertions.then(this.spans.get(0).tags()).doesNotContainKey("http.status_code");
+		BDDAssertions.then(this.spans.get(0).getTags()).doesNotContainKey("http.status_code");
 	}
 
 	@Test
@@ -109,8 +109,8 @@ public class TraceFilterTests extends org.springframework.cloud.sleuth.instrumen
 
 		BDDAssertions.then(this.tracer.currentSpan()).isNull();
 		BDDAssertions.then(this.spans).hasSize(1);
-		BDDAssertions.then(this.spans.get(0).spanId()).isEqualTo("0000000000000003");
-		BDDAssertions.then(this.spans.get(0).tags()).containsEntry("http.path", "/").containsEntry("http.method",
+		BDDAssertions.then(this.spans.get(0).getSpanId()).isEqualTo("0000000000000003");
+		BDDAssertions.then(this.spans.get(0).getTags()).containsEntry("http.path", "/").containsEntry("http.method",
 				HttpMethod.GET.toString());
 	}
 

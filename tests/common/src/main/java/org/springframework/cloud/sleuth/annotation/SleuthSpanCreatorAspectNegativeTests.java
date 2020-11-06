@@ -56,7 +56,7 @@ public abstract class SleuthSpanCreatorAspectNegativeTests {
 		this.annotatedTestBean.testMethod();
 
 		BDDAssertions.then(this.spans).hasSize(1);
-		BDDAssertions.then(this.spans.get(0).name()).isEqualTo("test-method");
+		BDDAssertions.then(this.spans.get(0).getName()).isEqualTo("test-method");
 	}
 
 	protected interface NotAnnotatedTestBeanInterface {

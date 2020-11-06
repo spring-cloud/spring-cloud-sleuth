@@ -30,6 +30,7 @@ import org.junit.jupiter.api.Test;
 
 import org.springframework.boot.autoconfigure.AutoConfigurations;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
+import org.springframework.cloud.sleuth.brave.autoconfig.TraceBraveAutoConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -39,8 +40,8 @@ class TraceBravePropagationAutoConfigurationTests {
 
 	@Test
 	void should_start_a_composite_propagation_factory_supplier_with_b3_as_default() {
-		ApplicationContextRunner runner = new ApplicationContextRunner()
-				.withConfiguration(AutoConfigurations.of(TraceBravePropagationAutoConfiguration.class))
+		ApplicationContextRunner runner = new ApplicationContextRunner().withConfiguration(
+				AutoConfigurations.of(TraceBraveAutoConfiguration.class, TraceBravePropagationAutoConfiguration.class))
 				.withUserConfiguration(Config.class);
 
 		runner.run(context -> {
@@ -53,7 +54,8 @@ class TraceBravePropagationAutoConfigurationTests {
 	@Test
 	void should_start_a_composite_propagation_factory_supplier_with_a_single_propagation_type() {
 		ApplicationContextRunner runner = new ApplicationContextRunner()
-				.withConfiguration(AutoConfigurations.of(TraceBravePropagationAutoConfiguration.class))
+				.withConfiguration(AutoConfigurations.of(TraceBraveAutoConfiguration.class,
+						TraceBravePropagationAutoConfiguration.class))
 				.withUserConfiguration(Config.class).withPropertyValues("spring.sleuth.propagation.type=w3c");
 
 		runner.run(context -> {
@@ -66,7 +68,8 @@ class TraceBravePropagationAutoConfigurationTests {
 	@Test
 	void should_start_a_composite_propagation_factory_supplier_with_multiple_propagation_types() {
 		ApplicationContextRunner runner = new ApplicationContextRunner()
-				.withConfiguration(AutoConfigurations.of(TraceBravePropagationAutoConfiguration.class))
+				.withConfiguration(AutoConfigurations.of(TraceBraveAutoConfiguration.class,
+						TraceBravePropagationAutoConfiguration.class))
 				.withUserConfiguration(Config.class).withPropertyValues("spring.sleuth.propagation.type=b3,w3c");
 
 		runner.run(context -> {

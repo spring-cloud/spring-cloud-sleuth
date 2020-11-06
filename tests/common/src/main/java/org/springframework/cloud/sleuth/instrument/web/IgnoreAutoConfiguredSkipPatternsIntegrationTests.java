@@ -17,6 +17,7 @@
 package org.springframework.cloud.sleuth.instrument.web;
 
 import org.assertj.core.api.BDDAssertions;
+import org.awaitility.Awaitility;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -59,24 +60,30 @@ public abstract class IgnoreAutoConfiguredSkipPatternsIntegrationTests {
 		new RestTemplate().getForObject("http://localhost:" + this.port + "/context-path/actuator/health",
 				String.class);
 
-		BDDAssertions.then(this.tracer.currentSpan()).isNull();
-		BDDAssertions.then(this.spans).hasSize(1);
+		Awaitility.await().untilAsserted(() -> {
+			BDDAssertions.then(this.tracer.currentSpan()).isNull();
+			BDDAssertions.then(this.spans).hasSize(1);
+		});
 	}
 
 	@Test
 	public void should_sample_non_actuator_endpoint_when_override_pattern_is_true() {
 		new RestTemplate().getForObject("http://localhost:" + this.port + "/context-path/something", String.class);
 
-		BDDAssertions.then(this.tracer.currentSpan()).isNull();
-		BDDAssertions.then(this.spans).hasSize(1);
+		Awaitility.await().untilAsserted(() -> {
+			BDDAssertions.then(this.tracer.currentSpan()).isNull();
+			BDDAssertions.then(this.spans).hasSize(1);
+		});
 	}
 
 	@Test
 	public void should_not_sample_default_skip_patterns_when_override_pattern_is_true() {
 		new RestTemplate().getForObject("http://localhost:" + this.port + "/context-path/index.html", String.class);
 
-		BDDAssertions.then(this.tracer.currentSpan()).isNull();
-		BDDAssertions.then(this.spans).hasSize(0);
+		Awaitility.await().untilAsserted(() -> {
+			BDDAssertions.then(this.tracer.currentSpan()).isNull();
+			BDDAssertions.then(this.spans).hasSize(0);
+		});
 	}
 
 	@EnableAutoConfiguration

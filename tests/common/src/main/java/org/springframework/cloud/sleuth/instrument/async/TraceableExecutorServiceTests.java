@@ -221,7 +221,7 @@ public abstract class TraceableExecutorServiceTests implements TestTracingAwareS
 
 		@Override
 		public void run() {
-			TraceContext context = currentTraceContext.get();
+			TraceContext context = currentTraceContext.context();
 			this.traceIds.add(context.traceId());
 			this.spanIds.add(context.spanId());
 		}

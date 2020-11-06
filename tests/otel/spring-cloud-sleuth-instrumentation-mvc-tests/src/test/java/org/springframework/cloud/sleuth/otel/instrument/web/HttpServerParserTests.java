@@ -16,8 +16,7 @@
 
 package org.springframework.cloud.sleuth.otel.instrument.web;
 
-import io.opentelemetry.sdk.trace.Sampler;
-import io.opentelemetry.sdk.trace.Samplers;
+import io.opentelemetry.sdk.trace.samplers.Sampler;
 
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.cloud.sleuth.otel.OtelTestSpanHandler;
@@ -40,7 +39,7 @@ public class HttpServerParserTests extends org.springframework.cloud.sleuth.inst
 
 		@Bean
 		Sampler alwaysSampler() {
-			return Samplers.alwaysOn();
+			return Sampler.alwaysOn();
 		}
 
 	}

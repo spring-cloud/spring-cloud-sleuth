@@ -16,13 +16,12 @@
 
 package org.springframework.cloud.sleuth.otel.annotation;
 
-import io.opentelemetry.sdk.trace.Sampler;
-import io.opentelemetry.sdk.trace.Samplers;
-import io.opentelemetry.trace.SpanContext;
-import io.opentelemetry.trace.SpanId;
-import io.opentelemetry.trace.TraceFlags;
-import io.opentelemetry.trace.TraceId;
-import io.opentelemetry.trace.TraceState;
+import io.opentelemetry.api.trace.SpanContext;
+import io.opentelemetry.api.trace.SpanId;
+import io.opentelemetry.api.trace.TraceFlags;
+import io.opentelemetry.api.trace.TraceId;
+import io.opentelemetry.api.trace.TraceState;
+import io.opentelemetry.sdk.trace.samplers.Sampler;
 
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.cloud.sleuth.api.TraceContext;
@@ -54,7 +53,7 @@ public class SleuthSpanCreatorAspectFluxTests
 
 		@Bean
 		Sampler alwaysSampler() {
-			return Samplers.alwaysOn();
+			return Sampler.alwaysOn();
 		}
 
 	}

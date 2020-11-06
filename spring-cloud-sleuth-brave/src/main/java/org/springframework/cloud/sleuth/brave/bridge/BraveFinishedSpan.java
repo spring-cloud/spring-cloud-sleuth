@@ -39,62 +39,62 @@ public class BraveFinishedSpan implements FinishedSpan {
 	}
 
 	@Override
-	public String name() {
+	public String getName() {
 		return this.mutableSpan.name();
 	}
 
 	@Override
-	public long startTimestamp() {
+	public long getStartTimestamp() {
 		return this.mutableSpan.startTimestamp();
 	}
 
 	@Override
-	public long endTimestamp() {
+	public long getEndTimestamp() {
 		return this.mutableSpan.finishTimestamp();
 	}
 
 	@Override
-	public Map<String, String> tags() {
+	public Map<String, String> getTags() {
 		return this.mutableSpan.tags();
 	}
 
 	@Override
-	public Collection<Map.Entry<Long, String>> events() {
+	public Collection<Map.Entry<Long, String>> getEvents() {
 		return this.mutableSpan.annotations();
 	}
 
 	@Override
-	public String spanId() {
+	public String getSpanId() {
 		return this.mutableSpan.id();
 	}
 
 	@Override
-	public String parentId() {
+	public String getParentId() {
 		return this.mutableSpan.parentId();
 	}
 
 	@Override
-	public String remoteIp() {
+	public String getRemoteIp() {
 		return this.mutableSpan.remoteIp();
 	}
 
 	@Override
-	public int remotePort() {
+	public int getRemotePort() {
 		return this.mutableSpan.remotePort();
 	}
 
 	@Override
-	public String traceId() {
+	public String getTraceId() {
 		return this.mutableSpan.traceId();
 	}
 
 	@Override
-	public Throwable error() {
+	public Throwable getError() {
 		return this.mutableSpan.error();
 	}
 
 	@Override
-	public Span.Kind kind() {
+	public Span.Kind getKind() {
 		if (this.mutableSpan.kind() == null) {
 			return null;
 		}
@@ -102,7 +102,7 @@ public class BraveFinishedSpan implements FinishedSpan {
 	}
 
 	@Override
-	public String remoteServiceName() {
+	public String getRemoteServiceName() {
 		return this.mutableSpan.remoteServiceName();
 	}
 

@@ -16,6 +16,9 @@
 
 package org.springframework.cloud.sleuth.brave.bridge.http;
 
+import java.util.Collection;
+import java.util.Collections;
+
 import org.springframework.cloud.sleuth.api.Span;
 import org.springframework.cloud.sleuth.api.http.HttpServerRequest;
 import org.springframework.cloud.sleuth.api.http.HttpServerResponse;
@@ -52,6 +55,12 @@ public class BraveHttpServerResponse implements HttpServerResponse {
 	@Override
 	public Object unwrap() {
 		return this.delegate.unwrap();
+	}
+
+	@Override
+	public Collection<String> headerNames() {
+		// this is unused by Brave
+		return Collections.emptyList();
 	}
 
 	@Override

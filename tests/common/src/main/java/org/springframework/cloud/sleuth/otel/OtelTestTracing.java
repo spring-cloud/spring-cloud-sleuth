@@ -19,14 +19,13 @@ package org.springframework.cloud.sleuth.otel;
 import java.io.Closeable;
 import java.util.regex.Pattern;
 
-import io.opentelemetry.OpenTelemetry;
+import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.context.propagation.ContextPropagators;
 import io.opentelemetry.context.propagation.DefaultContextPropagators;
-import io.opentelemetry.extensions.trace.propagation.B3Propagator;
-import io.opentelemetry.sdk.trace.Sampler;
-import io.opentelemetry.sdk.trace.Samplers;
+import io.opentelemetry.extension.trace.propagation.B3Propagator;
 import io.opentelemetry.sdk.trace.TracerSdkProvider;
 import io.opentelemetry.sdk.trace.config.TraceConfig;
+import io.opentelemetry.sdk.trace.samplers.Sampler;
 import org.jetbrains.annotations.NotNull;
 
 import org.springframework.cloud.sleuth.api.CurrentTraceContext;
@@ -55,43 +54,44 @@ public class OtelTestTracing implements TracerAware, TestTracingAware, TestTraci
 
 	ArrayListSpanProcessor spanProcessor = new ArrayListSpanProcessor();
 
-	ContextPropagators defaultContextPropagators = OpenTelemetry.getPropagators();
+	ContextPropagators defaultContextPropagators = OpenTelemetry.getGlobalPropagators();
 
 	ContextPropagators contextPropagators = contextPropagators();
 
-	Sampler sampler = Samplers.alwaysOn();
+	Sampler sampler = Sampler.alwaysOn();
 
 	HttpRequestParser clientRequestParser;
 
-	io.opentelemetry.trace.Tracer tracer = otelTracer();
+	io.opentelemetry.api.trace.Tracer tracer = otelTracer();
 
-	CurrentTraceContext currentTraceContext = new OtelCurrentTraceContext(this.tracer, publisher());
+	OtelCurrentTraceContext currentTraceContext = new OtelCurrentTraceContext(publisher());
 
-	OtelBaggageManager otelBaggageManager = new OtelBaggageManager(this.tracer, OpenTelemetry.getBaggageManager(),
+	OtelBaggageManager otelBaggageManager = new OtelBaggageManager(this.currentTraceContext,
 			new SleuthBaggageProperties(), publisher());
 
-	io.opentelemetry.trace.Tracer otelTracer() {
+	io.opentelemetry.api.trace.Tracer otelTracer() {
 		TracerSdkProvider provider = TracerSdkProvider.builder().build();
 		provider.addSpanProcessor(this.spanProcessor);
-		OpenTelemetry.setPropagators(this.contextPropagators);
+		OpenTelemetry.setGlobalPropagators(this.contextPropagators);
 		provider.updateActiveTraceConfig(TraceConfig.getDefault().toBuilder().setSampler(this.sampler).build());
 		return provider.get("org.springframework.cloud.sleuth");
 	}
 
 	@NotNull
 	protected ContextPropagators contextPropagators() {
-		return DefaultContextPropagators.builder().addTextMapPropagator(B3Propagator.getMultipleHeaderPropagator())
-				.addTextMapPropagator(B3Propagator.getSingleHeaderPropagator()).build();
+		return DefaultContextPropagators.builder()
+				.addTextMapPropagator(B3Propagator.builder().injectMultipleHeaders().build()).build();
 	}
 
 	private void reset() {
+		this.contextPropagators = contextPropagators();
 		this.tracer = otelTracer();
-		this.currentTraceContext = new OtelCurrentTraceContext(this.tracer, publisher());
+		this.currentTraceContext = new OtelCurrentTraceContext(publisher());
 	}
 
 	@Override
 	public TracerAware sampler(TraceSampler sampler) {
-		this.sampler = sampler == TraceSampler.ON ? Samplers.alwaysOn() : Samplers.alwaysOff();
+		this.sampler = sampler == TraceSampler.ON ? Sampler.alwaysOn() : Sampler.alwaysOff();
 		return this;
 	}
 
@@ -113,8 +113,8 @@ public class OtelTestTracing implements TracerAware, TestTracingAware, TestTraci
 	@Override
 	public void close() {
 		this.spanProcessor.clear();
-		OpenTelemetry.setPropagators(this.defaultContextPropagators);
-		this.sampler = Samplers.alwaysOn();
+		OpenTelemetry.setGlobalPropagators(this.defaultContextPropagators);
+		this.sampler = Sampler.alwaysOn();
 	}
 
 	@Override
@@ -131,7 +131,7 @@ public class OtelTestTracing implements TracerAware, TestTracingAware, TestTraci
 	@Override
 	public CurrentTraceContext currentTraceContext() {
 		reset();
-		return new OtelCurrentTraceContext(this.tracer, publisher());
+		return new OtelCurrentTraceContext(publisher());
 	}
 
 	@Override

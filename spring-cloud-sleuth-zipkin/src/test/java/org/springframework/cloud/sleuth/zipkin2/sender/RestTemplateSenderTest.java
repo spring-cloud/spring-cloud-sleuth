@@ -48,14 +48,14 @@ public class RestTemplateSenderTest {
 
 	public MockWebServer server = new MockWebServer();
 
+	String endpoint = this.server.url("/api/v2/spans").toString();
+
+	RestTemplateSender sender = new RestTemplateSender(new RestTemplate(), this.endpoint, JSON_V2);
+
 	@AfterEach
 	void clean() throws IOException {
 		server.close();
 	}
-
-	String endpoint = this.server.url("/api/v2/spans").toString();
-
-	RestTemplateSender sender = new RestTemplateSender(new RestTemplate(), this.endpoint, JSON_V2);
 
 	/**
 	 * Tests that json is not manipulated as a side-effect of using rest template.

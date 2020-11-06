@@ -16,18 +16,33 @@
 
 package org.springframework.cloud.sleuth.brave.propagation;
 
+import java.util.AbstractMap;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
+import brave.baggage.BaggageField;
+import brave.internal.baggage.BaggageFields;
 import brave.internal.propagation.StringPropagationAdapter;
 import brave.propagation.Propagation;
 import brave.propagation.TraceContext;
 import brave.propagation.TraceContextOrSamplingFlags;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.jetbrains.annotations.NotNull;
+
+import org.springframework.cloud.sleuth.api.BaggageInScope;
+import org.springframework.cloud.sleuth.autoconfig.SleuthBaggageProperties;
+import org.springframework.cloud.sleuth.brave.bridge.BraveBaggageInScope;
+import org.springframework.cloud.sleuth.brave.bridge.BraveBaggageManager;
+
+import static java.util.Collections.singletonList;
 
 /**
  * Adopted from OpenTelemetry API.
@@ -41,7 +56,7 @@ import brave.propagation.TraceContextOrSamplingFlags;
  */
 public final class W3CPropagation extends Propagation.Factory implements Propagation<String> {
 
-	private static final Logger logger = Logger.getLogger(W3CPropagation.class.getName());
+	private static final Log logger = LogFactory.getLog(W3CPropagation.class.getName());
 
 	static final String TRACE_PARENT = "traceparent";
 	static final String TRACE_STATE = "tracestate";
@@ -90,8 +105,6 @@ public final class W3CPropagation extends Propagation.Factory implements Propaga
 
 	private static final String VERSION_00 = "00";
 
-	private static final W3CPropagation INSTANCE = new W3CPropagation();
-
 	static {
 		// A valid version is 1 byte representing an 8-bit unsigned integer, version ff is
 		// invalid.
@@ -105,17 +118,15 @@ public final class W3CPropagation extends Propagation.Factory implements Propaga
 		}
 	}
 
-	private W3CPropagation() {
-		// singleton
+	private final W3CBaggagePropagator baggagePropagator;
+
+	public W3CPropagation(BraveBaggageManager braveBaggageManager, SleuthBaggageProperties sleuthBaggageProperties) {
+		this.baggagePropagator = new W3CBaggagePropagator(braveBaggageManager, sleuthBaggageProperties);
 	}
 
 	@Override
 	public <K> Propagation<K> create(KeyFactory<K> keyFactory) {
 		return StringPropagationAdapter.create(this, keyFactory);
-	}
-
-	public static W3CPropagation getInstance() {
-		return INSTANCE;
 	}
 
 	@Override
@@ -144,7 +155,8 @@ public final class W3CPropagation extends Propagation.Factory implements Propaga
 			chars[TRACE_OPTION_OFFSET - 1] = TRACEPARENT_DELIMITER;
 			copyTraceFlagsHexTo(chars, TRACE_OPTION_OFFSET, context);
 			setter.put(carrier, TRACE_PARENT, new String(chars, 0, TRACEPARENT_HEADER_SIZE));
-			// Does not inject trace state
+			// Add baggage
+			this.baggagePropagator.injector(setter).inject(context, carrier);
 		};
 	}
 
@@ -159,27 +171,40 @@ public final class W3CPropagation extends Propagation.Factory implements Propaga
 		return carrier -> {
 			String traceParent = getter.get(carrier, TRACE_PARENT);
 			if (traceParent == null) {
-				return TraceContextOrSamplingFlags.EMPTY;
+				return withBaggage(TraceContextOrSamplingFlags.EMPTY, carrier, getter);
 			}
 			TraceContext contextFromParentHeader = extractContextFromTraceParent(traceParent);
 			if (contextFromParentHeader == null) {
-				return TraceContextOrSamplingFlags.EMPTY;
+				return withBaggage(TraceContextOrSamplingFlags.EMPTY, carrier, getter);
 			}
 			String traceStateHeader = getter.get(carrier, TRACE_STATE);
-			if (traceStateHeader == null || traceStateHeader.isEmpty()) {
-				return TraceContextOrSamplingFlags.create(contextFromParentHeader);
-			}
-			try {
-				return TraceContextOrSamplingFlags.create(TraceContext.newBuilder()
-						.traceId(contextFromParentHeader.traceId()).traceIdHigh(contextFromParentHeader.traceIdHigh())
-						.spanId(contextFromParentHeader.spanId()).sampled(contextFromParentHeader.sampled())
-						.shared(true).build());
-			}
-			catch (IllegalArgumentException e) {
-				logger.info("Unparseable tracestate header. Returning span context without state.");
-				return TraceContextOrSamplingFlags.create(contextFromParentHeader);
-			}
+			return withBaggage(context(contextFromParentHeader, traceStateHeader), carrier, getter);
 		};
+	}
+
+	private <R> TraceContextOrSamplingFlags withBaggage(TraceContextOrSamplingFlags context, R carrier,
+			Getter<R, String> getter) {
+		if (context.context() == null) {
+			return context;
+		}
+		return this.baggagePropagator.contextWithBaggage(carrier, context, getter);
+	}
+
+	@NotNull
+	protected TraceContextOrSamplingFlags context(TraceContext contextFromParentHeader, String traceStateHeader) {
+		if (traceStateHeader == null || traceStateHeader.isEmpty()) {
+			return TraceContextOrSamplingFlags.create(contextFromParentHeader);
+		}
+		try {
+			return TraceContextOrSamplingFlags
+					.create(TraceContext.newBuilder().traceId(contextFromParentHeader.traceId())
+							.traceIdHigh(contextFromParentHeader.traceIdHigh()).spanId(contextFromParentHeader.spanId())
+							.sampled(contextFromParentHeader.sampled()).shared(true).build());
+		}
+		catch (IllegalArgumentException e) {
+			logger.info("Unparseable tracestate header. Returning span context without state.");
+			return TraceContextOrSamplingFlags.create(contextFromParentHeader);
+		}
 	}
 
 	private static boolean isTraceIdValid(CharSequence traceId) {
@@ -233,6 +258,112 @@ public final class W3CPropagation extends Propagation.Factory implements Propaga
 			logger.info("Unparseable traceparent header. Returning INVALID span context.");
 			return null;
 		}
+	}
+
+}
+
+/**
+ * Taken from OpenTelemetry API.
+ */
+class W3CBaggagePropagator {
+
+	private static final Log log = LogFactory.getLog(W3CBaggagePropagator.class);
+
+	private static final String FIELD = "baggage";
+
+	private static final List<String> FIELDS = singletonList(FIELD);
+
+	private final BraveBaggageManager braveBaggageManager;
+
+	private final SleuthBaggageProperties properties;
+
+	W3CBaggagePropagator(BraveBaggageManager braveBaggageManager, SleuthBaggageProperties properties) {
+		this.braveBaggageManager = braveBaggageManager;
+		this.properties = properties;
+	}
+
+	public List<String> keys() {
+		return FIELDS;
+	}
+
+	public <R> TraceContext.Injector<R> injector(Propagation.Setter<R, String> setter) {
+		return (context, carrier) -> {
+			BaggageFields extra = context.findExtra(BaggageFields.class);
+			if (extra == null || extra.getAllFields().isEmpty()) {
+				return;
+			}
+			StringBuilder headerContent = new StringBuilder();
+			// We ignore local keys - they won't get propagated
+			String[] strings = this.properties.getLocalFields().toArray(new String[0]);
+			Map<String, String> filtered = extra.toMapFilteringFieldNames(strings);
+			for (Map.Entry<String, String> entry : filtered.entrySet()) {
+				headerContent.append(entry.getKey()).append("=").append(entry.getValue());
+				// TODO: [OTEL] No metadata support
+				// String metadataValue = entry.getEntryMetadata().getValue();
+				// if (metadataValue != null && !metadataValue.isEmpty()) {
+				// headerContent.append(";").append(metadataValue);
+				// }
+				headerContent.append(",");
+			}
+			if (headerContent.length() > 0) {
+				headerContent.setLength(headerContent.length() - 1);
+				setter.put(carrier, FIELD, headerContent.toString());
+			}
+		};
+	}
+
+	<R> TraceContextOrSamplingFlags contextWithBaggage(R carrier, TraceContextOrSamplingFlags context,
+			Propagation.Getter<R, String> getter) {
+		String baggageHeader = getter.get(carrier, FIELD);
+		if (baggageHeader == null) {
+			return context;
+		}
+		if (baggageHeader.isEmpty()) {
+			return context;
+		}
+		TraceContextOrSamplingFlags.Builder builder = context.toBuilder();
+		List<AbstractMap.SimpleEntry<BaggageField, String>> pairs = addBaggageToContext(baggageHeader, builder);
+		TraceContextOrSamplingFlags built = builder.build();
+		pairs.forEach(e -> {
+			BaggageField baggage = e.getKey();
+			baggage.updateValue(built, e.getValue());
+		});
+		return built;
+	}
+
+	@SuppressWarnings("StringSplitter")
+	List<AbstractMap.SimpleEntry<BaggageField, String>> addBaggageToContext(String baggageHeader,
+			TraceContextOrSamplingFlags.Builder builder) {
+		List<AbstractMap.SimpleEntry<BaggageField, String>> pairs = new ArrayList<>();
+		String[] entries = baggageHeader.split(",");
+		for (String entry : entries) {
+			int beginningOfMetadata = entry.indexOf(";");
+			if (beginningOfMetadata > 0) {
+				entry = entry.substring(0, beginningOfMetadata);
+			}
+			String[] keyAndValue = entry.split("=");
+			for (int i = 0; i < keyAndValue.length; i += 2) {
+				try {
+					String key = keyAndValue[i].trim();
+					String value = keyAndValue[i + 1].trim();
+					BaggageInScope baggage = this.braveBaggageManager.createBaggage(key);
+					BaggageField field = ((BraveBaggageInScope) baggage).unwrap();
+					pairs.add(new AbstractMap.SimpleEntry<>(field, value));
+				}
+				catch (Exception e) {
+					if (log.isDebugEnabled()) {
+						log.debug("Exception occurred while trying to parse baggage with key value ["
+								+ Arrays.toString(keyAndValue) + "]. Will ignore that entry.", e);
+					}
+				}
+			}
+		}
+		// TODO: [OTEL] Magic number for max dynamic entries
+		builder.addExtra(BaggageFields
+				.newFactory(pairs.stream().map(AbstractMap.SimpleEntry::getKey).collect(Collectors.toList()),
+						pairs.size() * 2)
+				.create());
+		return pairs;
 	}
 
 }

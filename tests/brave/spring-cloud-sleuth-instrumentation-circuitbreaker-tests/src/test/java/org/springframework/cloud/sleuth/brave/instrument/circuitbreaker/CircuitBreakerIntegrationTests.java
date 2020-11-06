@@ -34,7 +34,7 @@ public class CircuitBreakerIntegrationTests
 
 	@Override
 	public void assertException(FinishedSpan finishedSpan) {
-		BDDAssertions.then(finishedSpan.tags().get("error")).contains("boom");
+		BDDAssertions.then(finishedSpan.getTags().get("error")).contains("boom");
 	}
 
 	@Configuration(proxyBeanMethods = false)

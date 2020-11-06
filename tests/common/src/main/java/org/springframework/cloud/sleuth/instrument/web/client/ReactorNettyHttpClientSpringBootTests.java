@@ -85,8 +85,8 @@ public abstract class ReactorNettyHttpClientSpringBootTests {
 
 		FinishedSpan clientSpan = this.handler.takeRemoteSpan(Span.Kind.CLIENT);
 
-		Assertions.assertThat(clientSpan.remoteIp()).isNotNull();
-		Assertions.assertThat(clientSpan.remotePort()).isNotZero();
+		Assertions.assertThat(clientSpan.getRemoteIp()).isNotNull();
+		Assertions.assertThat(clientSpan.getRemotePort()).isNotZero();
 	}
 
 	@Test
@@ -123,7 +123,7 @@ public abstract class ReactorNettyHttpClientSpringBootTests {
 		FinishedSpan clientSpan = this.handler.takeRemoteSpan(Span.Kind.CLIENT);
 
 		Assertions.assertThat(b3SingleHeaderReadByServer)
-				.isEqualTo(clientSpan.traceId() + "-" + clientSpan.spanId() + "-1");
+				.isEqualTo(clientSpan.getTraceId() + "-" + clientSpan.getSpanId() + "-1");
 	}
 
 	@Test

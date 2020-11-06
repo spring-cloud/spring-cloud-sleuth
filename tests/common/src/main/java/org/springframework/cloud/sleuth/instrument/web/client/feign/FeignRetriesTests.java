@@ -121,7 +121,7 @@ public abstract class FeignRetriesTests implements TestTracingAwareSupplier {
 		// request interception should take place only twice (1st request & 2nd retry)
 		BDDAssertions.then(atomicInteger.get()).isEqualTo(2);
 		assertException();
-		BDDAssertions.then(tracerTest().handler().reportedSpans().get(1).kind()).isEqualTo(Span.Kind.CLIENT);
+		BDDAssertions.then(tracerTest().handler().reportedSpans().get(1).getKind()).isEqualTo(Span.Kind.CLIENT);
 	}
 
 	public void assertException() {

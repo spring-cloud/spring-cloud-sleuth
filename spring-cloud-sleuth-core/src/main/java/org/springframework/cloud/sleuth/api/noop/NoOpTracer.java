@@ -19,10 +19,11 @@ package org.springframework.cloud.sleuth.api.noop;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.springframework.cloud.sleuth.api.BaggageEntry;
+import org.springframework.cloud.sleuth.api.BaggageInScope;
 import org.springframework.cloud.sleuth.api.ScopedSpan;
 import org.springframework.cloud.sleuth.api.Span;
 import org.springframework.cloud.sleuth.api.SpanCustomizer;
+import org.springframework.cloud.sleuth.api.TraceContext;
 import org.springframework.cloud.sleuth.api.Tracer;
 
 /**
@@ -74,13 +75,23 @@ public class NoOpTracer implements Tracer {
 	}
 
 	@Override
-	public BaggageEntry getBaggage(String name) {
-		return new NoOpBaggageEntry();
+	public BaggageInScope getBaggage(String name) {
+		return new NoOpBaggageInScope();
 	}
 
 	@Override
-	public BaggageEntry createBaggage(String name) {
-		return new NoOpBaggageEntry();
+	public BaggageInScope getBaggage(TraceContext traceContext, String name) {
+		return new NoOpBaggageInScope();
+	}
+
+	@Override
+	public BaggageInScope createBaggage(String name) {
+		return new NoOpBaggageInScope();
+	}
+
+	@Override
+	public BaggageInScope createBaggage(String name, String value) {
+		return new NoOpBaggageInScope();
 	}
 
 }

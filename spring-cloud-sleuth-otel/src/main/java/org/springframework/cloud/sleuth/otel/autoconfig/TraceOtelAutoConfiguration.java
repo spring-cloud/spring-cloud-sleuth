@@ -20,20 +20,20 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import io.opentelemetry.baggage.BaggageManager;
-import io.opentelemetry.baggage.spi.BaggageManagerFactory;
-import io.opentelemetry.sdk.baggage.spi.BaggageManagerFactorySdk;
-import io.opentelemetry.sdk.trace.Sampler;
-import io.opentelemetry.sdk.trace.Samplers;
+import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.api.metrics.MeterProvider;
+import io.opentelemetry.api.metrics.spi.MeterProviderFactory;
+import io.opentelemetry.api.trace.Tracer;
+import io.opentelemetry.api.trace.TracerProvider;
+import io.opentelemetry.api.trace.spi.TracerProviderFactory;
+import io.opentelemetry.context.propagation.ContextPropagators;
 import io.opentelemetry.sdk.trace.SpanProcessor;
 import io.opentelemetry.sdk.trace.TracerSdkProvider;
 import io.opentelemetry.sdk.trace.config.TraceConfig;
 import io.opentelemetry.sdk.trace.export.SimpleSpanProcessor;
 import io.opentelemetry.sdk.trace.export.SpanExporter;
+import io.opentelemetry.sdk.trace.samplers.Sampler;
 import io.opentelemetry.sdk.trace.spi.TracerProviderFactorySdk;
-import io.opentelemetry.trace.Tracer;
-import io.opentelemetry.trace.TracerProvider;
-import io.opentelemetry.trace.spi.TracerProviderFactory;
 
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.AutoConfigureBefore;
@@ -41,6 +41,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.cloud.sleuth.autoconfig.TraceAutoConfiguration;
+import org.springframework.cloud.sleuth.otel.bridge.OtelOpenTelemetry;
 import org.springframework.cloud.sleuth.otel.exporter.SpanExporterCustomizer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -60,6 +61,14 @@ public class TraceOtelAutoConfiguration {
 
 	@Bean
 	@ConditionalOnMissingBean
+	OpenTelemetry otel(TracerProviderFactory tracerProviderFactory, MeterProviderFactory meterProviderFactory,
+			TracerProvider tracerProvider, MeterProvider meterProvider, ContextPropagators contextPropagators) {
+		return new OtelOpenTelemetry(tracerProviderFactory, meterProviderFactory, tracerProvider, meterProvider,
+				contextPropagators);
+	}
+
+	@Bean
+	@ConditionalOnMissingBean
 	TracerProviderFactory otelTracerProviderFactory() {
 		return new TracerProviderFactorySdk();
 	}
@@ -72,14 +81,14 @@ public class TraceOtelAutoConfiguration {
 
 	@Bean
 	@ConditionalOnMissingBean
-	BaggageManagerFactory otelBaggageManagerFactory() {
-		return new BaggageManagerFactorySdk();
+	MeterProviderFactory otelMeterProviderFactory() {
+		return OpenTelemetry::getGlobalMeterProvider;
 	}
 
 	@Bean
 	@ConditionalOnMissingBean
-	BaggageManager otelBaggageManager(BaggageManagerFactory baggageManagerFactory) {
-		return baggageManagerFactory.create();
+	MeterProvider otelMeterProvider(MeterProviderFactory meterProviderFactory) {
+		return meterProviderFactory.create();
 	}
 
 	@Bean
@@ -101,7 +110,7 @@ public class TraceOtelAutoConfiguration {
 		tracerSdkObjectProvider.ifAvailable(tracerSdkProvider -> {
 			List<SpanProcessor> processors = spanProcessors.getIfAvailable(ArrayList::new);
 			processors.addAll(spanExporters.getIfAvailable(ArrayList::new).stream()
-					.map(e -> SimpleSpanProcessor.newBuilder(spanExporterCustomizer.customize(e)).build())
+					.map(e -> SimpleSpanProcessor.builder(spanExporterCustomizer.customize(e)).build())
 					.collect(Collectors.toList()));
 			processors.forEach(tracerSdkProvider::addSpanProcessor);
 			tracerSdkProvider.updateActiveTraceConfig(traceConfig);
@@ -112,7 +121,7 @@ public class TraceOtelAutoConfiguration {
 	@Bean
 	@ConditionalOnMissingBean
 	Sampler otelSampler(OtelProperties otelProperties) {
-		return Samplers.traceIdRatioBased(otelProperties.getTraceIdRatioBased());
+		return Sampler.traceIdRatioBased(otelProperties.getTraceIdRatioBased());
 	}
 
 	@Bean

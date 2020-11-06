@@ -31,16 +31,20 @@ import org.springframework.util.StringUtils;
  */
 public class OtelSpanBuilder implements Span.Builder {
 
-	private final io.opentelemetry.trace.Span.Builder delegate;
+	private final io.opentelemetry.api.trace.Span.Builder delegate;
+
+	private final List<String> annotations = new LinkedList<>();
 
 	private String name;
 
 	private Throwable error;
 
-	private final List<String> annotations = new LinkedList<>();
-
-	public OtelSpanBuilder(io.opentelemetry.trace.Span.Builder delegate) {
+	public OtelSpanBuilder(io.opentelemetry.api.trace.Span.Builder delegate) {
 		this.delegate = delegate;
+	}
+
+	public static Span.Builder fromOtel(io.opentelemetry.api.trace.Span.Builder builder) {
+		return new OtelSpanBuilder(builder);
 	}
 
 	@Override
@@ -82,22 +86,22 @@ public class OtelSpanBuilder implements Span.Builder {
 	@Override
 	public Span.Builder kind(Span.Kind spanKind) {
 		if (spanKind == null) {
-			this.delegate.setSpanKind(io.opentelemetry.trace.Span.Kind.INTERNAL);
+			this.delegate.setSpanKind(io.opentelemetry.api.trace.Span.Kind.INTERNAL);
 			return this;
 		}
-		io.opentelemetry.trace.Span.Kind kind = io.opentelemetry.trace.Span.Kind.INTERNAL;
+		io.opentelemetry.api.trace.Span.Kind kind = io.opentelemetry.api.trace.Span.Kind.INTERNAL;
 		switch (spanKind) {
 		case CLIENT:
-			kind = io.opentelemetry.trace.Span.Kind.CLIENT;
+			kind = io.opentelemetry.api.trace.Span.Kind.CLIENT;
 			break;
 		case SERVER:
-			kind = io.opentelemetry.trace.Span.Kind.SERVER;
+			kind = io.opentelemetry.api.trace.Span.Kind.SERVER;
 			break;
 		case PRODUCER:
-			kind = io.opentelemetry.trace.Span.Kind.PRODUCER;
+			kind = io.opentelemetry.api.trace.Span.Kind.PRODUCER;
 			break;
 		case CONSUMER:
-			kind = io.opentelemetry.trace.Span.Kind.CONSUMER;
+			kind = io.opentelemetry.api.trace.Span.Kind.CONSUMER;
 			break;
 		}
 		this.delegate.setSpanKind(kind);
@@ -112,7 +116,7 @@ public class OtelSpanBuilder implements Span.Builder {
 
 	@Override
 	public Span start() {
-		io.opentelemetry.trace.Span span = this.delegate.startSpan();
+		io.opentelemetry.api.trace.Span span = this.delegate.startSpan();
 		if (StringUtils.hasText(this.name)) {
 			span.updateName(this.name);
 		}
@@ -121,10 +125,6 @@ public class OtelSpanBuilder implements Span.Builder {
 		}
 		this.annotations.forEach(span::addEvent);
 		return OtelSpan.fromOtel(span);
-	}
-
-	public static Span.Builder fromOtel(io.opentelemetry.trace.Span.Builder builder) {
-		return new OtelSpanBuilder(builder);
 	}
 
 }

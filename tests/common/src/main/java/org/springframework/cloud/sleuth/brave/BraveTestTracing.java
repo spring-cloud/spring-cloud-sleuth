@@ -31,6 +31,7 @@ import org.springframework.cloud.sleuth.api.http.HttpClientHandler;
 import org.springframework.cloud.sleuth.api.http.HttpRequestParser;
 import org.springframework.cloud.sleuth.api.http.HttpServerHandler;
 import org.springframework.cloud.sleuth.api.propagation.Propagator;
+import org.springframework.cloud.sleuth.brave.bridge.BraveBaggageManager;
 import org.springframework.cloud.sleuth.brave.bridge.BraveCurrentTraceContext;
 import org.springframework.cloud.sleuth.brave.bridge.BravePropagator;
 import org.springframework.cloud.sleuth.brave.bridge.BraveTracer;
@@ -70,6 +71,8 @@ public class BraveTestTracing implements TracerAware, TestTracingAware, TestTrac
 
 	brave.Tracer tracer = this.tracing.tracer();
 
+	BraveBaggageManager braveBaggageManager = new BraveBaggageManager();
+
 	HttpTracing httpTracing = httpTracingBuilder().build();
 
 	public HttpTracing.Builder httpTracingBuilder() {
@@ -78,7 +81,7 @@ public class BraveTestTracing implements TracerAware, TestTracingAware, TestTrac
 
 	@Override
 	public Tracer tracer() {
-		return BraveTracer.fromBrave(this.tracer);
+		return BraveTracer.fromBrave(this.tracer, this.braveBaggageManager);
 	}
 
 	@Override

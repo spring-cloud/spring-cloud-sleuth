@@ -73,7 +73,7 @@ public abstract class TracingFeignClientTests implements TestTracingAwareSupplie
 			span.end();
 		}
 
-		BDDAssertions.then(tracerTest().handler().reportedSpans().get(0).kind()).isEqualTo(Span.Kind.CLIENT);
+		BDDAssertions.then(tracerTest().handler().reportedSpans().get(0).getKind()).isEqualTo(Span.Kind.CLIENT);
 	}
 
 	@Test
@@ -92,7 +92,7 @@ public abstract class TracingFeignClientTests implements TestTracingAwareSupplie
 			span.end();
 		}
 
-		BDDAssertions.then(this.tracerTest().handler().reportedSpans().get(0).kind()).isEqualTo(Span.Kind.CLIENT);
+		BDDAssertions.then(this.tracerTest().handler().reportedSpans().get(0).getKind()).isEqualTo(Span.Kind.CLIENT);
 		assertException(error);
 	}
 

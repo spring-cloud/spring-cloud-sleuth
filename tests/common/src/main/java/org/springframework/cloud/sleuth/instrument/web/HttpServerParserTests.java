@@ -84,8 +84,8 @@ public abstract class HttpServerParserTests {
 
 	@NotNull
 	protected Map<String, String> serverSideTags() {
-		return spans.reportedSpans().stream().filter(f -> f.kind().equals(Span.Kind.SERVER))
-				.flatMap(f -> f.tags().entrySet().stream())
+		return spans.reportedSpans().stream().filter(f -> f.getKind().equals(Span.Kind.SERVER))
+				.flatMap(f -> f.getTags().entrySet().stream())
 				.collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
 	}
 

@@ -62,7 +62,7 @@ class SpanIgnoringSpanFilter implements SpanFilter {
 	@Override
 	public boolean isExportable(FinishedSpan span) {
 		List<Pattern> spanNamesToIgnore = spanNamesToIgnore();
-		String name = span.name();
+		String name = span.getName();
 		if (StringUtils.hasText(name) && spanNamesToIgnore.stream().anyMatch(p -> p.matcher(name).matches())) {
 			if (log.isDebugEnabled()) {
 				log.debug("Will ignore a span with name [" + name + "]");

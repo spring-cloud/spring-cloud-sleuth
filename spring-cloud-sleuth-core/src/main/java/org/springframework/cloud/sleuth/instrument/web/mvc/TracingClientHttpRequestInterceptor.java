@@ -17,6 +17,8 @@
 package org.springframework.cloud.sleuth.instrument.web.mvc;
 
 import java.io.IOException;
+import java.util.Collection;
+import java.util.Collections;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -85,6 +87,11 @@ public final class TracingClientHttpRequestInterceptor implements ClientHttpRequ
 		}
 
 		@Override
+		public Collection<String> headerNames() {
+			return this.delegate.getHeaders().keySet();
+		}
+
+		@Override
 		public Object unwrap() {
 			return delegate;
 		}
@@ -137,6 +144,11 @@ public final class TracingClientHttpRequestInterceptor implements ClientHttpRequ
 		@Override
 		public Object unwrap() {
 			return response;
+		}
+
+		@Override
+		public Collection<String> headerNames() {
+			return this.response != null ? this.response.getHeaders().keySet() : Collections.emptyList();
 		}
 
 		@Override

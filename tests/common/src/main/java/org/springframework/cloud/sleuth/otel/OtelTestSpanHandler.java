@@ -21,6 +21,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import io.opentelemetry.context.Context;
 import io.opentelemetry.sdk.common.CompletableResultCode;
 import io.opentelemetry.sdk.trace.ReadWriteSpan;
 import io.opentelemetry.sdk.trace.ReadableSpan;
@@ -60,13 +61,13 @@ public class OtelTestSpanHandler implements TestSpanHandler, SpanProcessor, Span
 
 	@Override
 	public FinishedSpan takeRemoteSpan(Span.Kind kind) {
-		return reportedSpans().stream().filter(s -> s.kind().name().equals(kind.name())).findFirst()
+		return reportedSpans().stream().filter(s -> s.getKind().name().equals(kind.name())).findFirst()
 				.orElseThrow(() -> new AssertionError("No span with kind [" + kind.name() + "] found."));
 	}
 
 	@Override
 	public FinishedSpan takeRemoteSpanWithError(Span.Kind kind) {
-		return reportedSpans().stream().filter(s -> s.kind().name().equals(kind.name()) && s.error() != null)
+		return reportedSpans().stream().filter(s -> s.getKind().name().equals(kind.name()) && s.getError() != null)
 				.findFirst()
 				.orElseThrow(() -> new AssertionError("No span with kind [" + kind.name() + "] and error found."));
 	}
@@ -83,8 +84,8 @@ public class OtelTestSpanHandler implements TestSpanHandler, SpanProcessor, Span
 	}
 
 	@Override
-	public void onStart(ReadWriteSpan span) {
-		spanProcessor.onStart(span);
+	public void onStart(Context parentContext, ReadWriteSpan span) {
+		spanProcessor.onStart(parentContext, span);
 	}
 
 	@Override

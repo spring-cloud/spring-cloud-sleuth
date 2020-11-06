@@ -22,32 +22,35 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import brave.baggage.BaggageField;
 
-import org.springframework.cloud.sleuth.api.BaggageEntry;
+import org.springframework.cloud.sleuth.api.BaggageInScope;
 import org.springframework.cloud.sleuth.api.BaggageManager;
+import org.springframework.cloud.sleuth.api.TraceContext;
 
 /**
- * Brave implementation of a {@link BaggageManager}.
+ * Brave implementation of a {@link BaggageManager}. Not implementing the interface
+ * directly cause {@link BraveTracer} will already implement it.
  *
  * @author Marcin Grzejszczak
  * @since 3.0.0
  */
-public class BraveBaggageManager implements BaggageManager, Closeable {
+public class BraveBaggageManager implements Closeable {
 
-	private static Map<String, BaggageEntry> CACHE = new ConcurrentHashMap<>();
+	private static final Map<String, BaggageInScope> CACHE = new ConcurrentHashMap<>();
 
-	@Override
 	public Map<String, String> getAllBaggage() {
 		return BaggageField.getAllValues();
 	}
 
-	@Override
-	public BaggageEntry getBaggage(String name) {
+	public BaggageInScope getBaggage(String name) {
 		return createBaggage(name);
 	}
 
-	@Override
-	public BaggageEntry createBaggage(String name) {
-		return CACHE.computeIfAbsent(name, s -> new BraveBaggageEntry(BaggageField.create(s)));
+	public BaggageInScope getBaggage(TraceContext traceContext, String name) {
+		return new BraveBaggageInScope(BaggageField.getByName(BraveTraceContext.toBrave(traceContext), name));
+	}
+
+	public BaggageInScope createBaggage(String name) {
+		return CACHE.computeIfAbsent(name, s -> new BraveBaggageInScope(BaggageField.create(s)));
 	}
 
 	@Override

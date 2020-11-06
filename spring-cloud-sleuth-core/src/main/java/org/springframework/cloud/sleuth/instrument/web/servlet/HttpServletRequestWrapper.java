@@ -16,6 +16,9 @@
 
 package org.springframework.cloud.sleuth.instrument.web.servlet;
 
+import java.util.Collection;
+import java.util.Collections;
+
 import javax.servlet.RequestDispatcher;
 import javax.servlet.http.HttpServletRequest;
 
@@ -43,6 +46,11 @@ class HttpServletRequestWrapper implements HttpServerRequest {
 			throw new NullPointerException("delegate == null");
 		}
 		this.delegate = delegate;
+	}
+
+	@Override
+	public Collection<String> headerNames() {
+		return Collections.list(this.delegate.getHeaderNames());
 	}
 
 	@Override

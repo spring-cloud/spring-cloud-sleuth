@@ -16,16 +16,16 @@
 
 package org.springframework.cloud.sleuth.otel.instrument.messaging;
 
-import java.util.Collections;
+import java.util.ArrayList;
 import java.util.List;
 
 import javax.annotation.Nullable;
 
-import io.grpc.Context;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.context.propagation.ContextPropagators;
 import io.opentelemetry.context.propagation.DefaultContextPropagators;
 import io.opentelemetry.context.propagation.TextMapPropagator;
-import io.opentelemetry.extensions.trace.propagation.B3Propagator;
+import io.opentelemetry.extension.trace.propagation.B3Propagator;
 
 import org.springframework.cloud.sleuth.otel.OtelTestTracing;
 import org.springframework.cloud.sleuth.test.TestTracingAware;
@@ -41,22 +41,28 @@ public class TracingChannelInterceptorTest
 			this.testTracing = new OtelTestTracing() {
 				@Override
 				protected ContextPropagators contextPropagators() {
-					return DefaultContextPropagators.builder().addTextMapPropagator(new TextMapPropagator() {
+					return DefaultContextPropagators.builder().addTextMapPropagator(b3()).build();
+				}
+
+				TextMapPropagator b3() {
+					return new TextMapPropagator() {
 						@Override
 						public List<String> fields() {
-							return Collections.singletonList("b3");
+							List<String> fields = new ArrayList<>(B3Propagator.getInstance().fields());
+							fields.add("b3");
+							return fields;
 						}
 
 						@Override
 						public <C> void inject(Context context, @Nullable C c, Setter<C> setter) {
-							B3Propagator.getSingleHeaderPropagator().inject(context, c, setter);
+							B3Propagator.getInstance().inject(context, c, setter);
 						}
 
 						@Override
-						public <C> Context extract(Context context, C c, Getter<C> getter) {
-							return B3Propagator.getSingleHeaderPropagator().extract(context, c, getter);
+						public <C> Context extract(Context context, @Nullable C c, Getter<C> getter) {
+							return B3Propagator.getInstance().extract(context, c, getter);
 						}
-					}).build();
+					};
 				}
 			};
 		}

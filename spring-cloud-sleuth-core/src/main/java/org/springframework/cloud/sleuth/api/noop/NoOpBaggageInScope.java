@@ -16,7 +16,7 @@
 
 package org.springframework.cloud.sleuth.api.noop;
 
-import org.springframework.cloud.sleuth.api.BaggageEntry;
+import org.springframework.cloud.sleuth.api.BaggageInScope;
 import org.springframework.cloud.sleuth.api.TraceContext;
 
 /**
@@ -25,7 +25,7 @@ import org.springframework.cloud.sleuth.api.TraceContext;
  * @author Marcin Grzejszczak
  * @since 3.0.0
  */
-public class NoOpBaggageEntry implements BaggageEntry {
+public class NoOpBaggageInScope implements BaggageInScope {
 
 	@Override
 	public String name() {
@@ -43,12 +43,17 @@ public class NoOpBaggageEntry implements BaggageEntry {
 	}
 
 	@Override
-	public void set(String value) {
-
+	public BaggageInScope set(String value) {
+		return this;
 	}
 
 	@Override
-	public void set(TraceContext traceContext, String value) {
+	public BaggageInScope set(TraceContext traceContext, String value) {
+		return this;
+	}
+
+	@Override
+	public void close() {
 
 	}
 

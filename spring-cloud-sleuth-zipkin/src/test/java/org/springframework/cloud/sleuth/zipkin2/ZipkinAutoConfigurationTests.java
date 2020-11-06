@@ -85,6 +85,10 @@ public class ZipkinAutoConfigurationTests {
 
 	public MockWebServer server = new MockWebServer();
 
+	MockEnvironment environment = new MockEnvironment();
+
+	AnnotationConfigApplicationContext context;
+
 	@BeforeEach
 	void setup() throws IOException {
 		server.start();
@@ -94,10 +98,6 @@ public class ZipkinAutoConfigurationTests {
 	void clean() throws IOException {
 		server.close();
 	}
-
-	MockEnvironment environment = new MockEnvironment();
-
-	AnnotationConfigApplicationContext context;
 
 	@AfterEach
 	public void close() {
@@ -167,7 +167,7 @@ public class ZipkinAutoConfigurationTests {
 		Awaitility.await().atMost(250, TimeUnit.MILLISECONDS)
 				.untilAsserted(() -> then(this.server.getRequestCount()).isGreaterThan(1));
 
-		Awaitility.await().atMost(1, TimeUnit.SECONDS).untilAsserted(() -> {
+		Awaitility.await().atMost(5, TimeUnit.SECONDS).untilAsserted(() -> {
 			RecordedRequest request = this.server.takeRequest(1, TimeUnit.SECONDS);
 			then(request.getPath()).isEqualTo("/api/v2/spans");
 			then(request.getBody().readUtf8()).contains("localEndpoint");
@@ -195,7 +195,7 @@ public class ZipkinAutoConfigurationTests {
 		Awaitility.await().atMost(250, TimeUnit.MILLISECONDS)
 				.untilAsserted(() -> then(this.server.getRequestCount()).isGreaterThan(0));
 
-		Awaitility.await().atMost(1, TimeUnit.SECONDS).untilAsserted(() -> {
+		Awaitility.await().atMost(5, TimeUnit.SECONDS).untilAsserted(() -> {
 			RecordedRequest request = this.server.takeRequest(1, TimeUnit.SECONDS);
 			then(request.getPath()).isEqualTo("/api/v1/spans");
 			then(request.getBody().readUtf8()).contains("binaryAnnotations");
@@ -310,7 +310,7 @@ public class ZipkinAutoConfigurationTests {
 		Awaitility.await().atMost(250, TimeUnit.MILLISECONDS)
 				.untilAsserted(() -> then(this.server.getRequestCount()).isGreaterThan(1));
 
-		Awaitility.await().atMost(1, TimeUnit.SECONDS).untilAsserted(() -> {
+		Awaitility.await().atMost(5, TimeUnit.SECONDS).untilAsserted(() -> {
 			RecordedRequest request = this.server.takeRequest(1, TimeUnit.SECONDS);
 			then(request.getPath()).isEqualTo("/api/v2/spans");
 			then(request.getBody().readUtf8()).contains("localEndpoint");

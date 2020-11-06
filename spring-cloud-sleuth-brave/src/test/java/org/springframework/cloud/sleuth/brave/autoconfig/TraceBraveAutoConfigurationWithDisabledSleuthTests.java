@@ -29,6 +29,7 @@ import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.system.CapturedOutput;
 import org.springframework.boot.test.system.OutputCaptureExtension;
+import org.springframework.cloud.sleuth.DisableSecurity;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.test.context.ActiveProfiles;
 
@@ -72,6 +73,7 @@ public class TraceBraveAutoConfigurationWithDisabledSleuthTests {
 
 	@EnableAutoConfiguration
 	@Configuration(proxyBeanMethods = false)
+	@DisableSecurity
 	static class Config {
 
 	}

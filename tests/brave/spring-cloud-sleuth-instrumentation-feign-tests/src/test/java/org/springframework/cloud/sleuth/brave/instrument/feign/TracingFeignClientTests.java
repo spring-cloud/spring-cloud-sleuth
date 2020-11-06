@@ -36,7 +36,7 @@ public class TracingFeignClientTests
 
 	@Override
 	public void assertException(RuntimeException error) {
-		BDDAssertions.then(this.tracerTest().handler().reportedSpans().get(0).error()).isSameAs(error);
+		BDDAssertions.then(this.tracerTest().handler().reportedSpans().get(0).getError()).isSameAs(error);
 	}
 
 }

@@ -16,8 +16,7 @@
 
 package org.springframework.cloud.sleuth.zipkin2;
 
-import io.opentelemetry.sdk.trace.Sampler;
-import io.opentelemetry.sdk.trace.Samplers;
+import io.opentelemetry.sdk.trace.samplers.Sampler;
 
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -34,7 +33,7 @@ public class OtelZipkinDiscoveryClientTests extends ZipkinDiscoveryClientTests {
 
 		@Bean
 		Sampler alwaysSampler() {
-			return Samplers.alwaysOn();
+			return Sampler.alwaysOn();
 		}
 
 	}

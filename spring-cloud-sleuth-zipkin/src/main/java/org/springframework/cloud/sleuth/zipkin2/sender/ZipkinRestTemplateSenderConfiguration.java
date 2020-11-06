@@ -175,17 +175,6 @@ class ZipkinRestTemplateSenderConfiguration {
 }
 
 /**
- * Internal interface to provide a way to retrieve Zipkin URI. If there's no discovery
- * client then this value will be taken from the properties. Otherwise host will be
- * assumed to be a service id.
- */
-interface ZipkinUrlExtractor {
-
-	URI zipkinUrl(ZipkinProperties zipkinProperties);
-
-}
-
-/**
  * Resolves at runtime where the Zipkin server is. If there's no discovery client then
  * {@link URI} from the properties is taken. Otherwise service discovery is pinged for
  * current Zipkin address.
@@ -235,6 +224,17 @@ class ZipkinRestTemplateWrapper extends RestTemplate {
 			return originalUrl;
 		}
 	}
+
+}
+
+/**
+ * Internal interface to provide a way to retrieve Zipkin URI. If there's no discovery
+ * client then this value will be taken from the properties. Otherwise host will be
+ * assumed to be a service id.
+ */
+interface ZipkinUrlExtractor {
+
+	URI zipkinUrl(ZipkinProperties zipkinProperties);
 
 }
 

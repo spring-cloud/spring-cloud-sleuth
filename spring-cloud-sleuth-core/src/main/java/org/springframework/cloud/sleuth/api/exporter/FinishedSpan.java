@@ -37,70 +37,70 @@ public interface FinishedSpan {
 	/**
 	 * @return span's name
 	 */
-	String name();
+	String getName();
 
 	/**
 	 * @return span's start timestamp
 	 */
-	long startTimestamp();
+	long getStartTimestamp();
 
 	/**
 	 * @return span's end timestamp
 	 */
-	long endTimestamp();
+	long getEndTimestamp();
 
 	/**
 	 * @return span's tags
 	 */
-	Map<String, String> tags();
+	Map<String, String> getTags();
 
 	/**
 	 * @return span's events as timestamp to value mapping
 	 */
-	Collection<Map.Entry<Long, String>> events();
+	Collection<Map.Entry<Long, String>> getEvents();
 
 	/**
 	 * @return span's span id
 	 */
-	String spanId();
+	String getSpanId();
 
 	/**
 	 * @return span's parent id or {@code null} if not set
 	 */
 	@Nullable
-	String parentId();
+	String getParentId();
 
 	/**
 	 * @return span's remote ip
 	 */
 	@Nullable
-	String remoteIp();
+	String getRemoteIp();
 
 	/**
 	 * @return span's remote port
 	 */
-	int remotePort();
+	int getRemotePort();
 
 	/**
 	 * @return span's trace id
 	 */
-	String traceId();
+	String getTraceId();
 
 	/**
 	 * @return corresponding error or {@code null} if one was not thrown
 	 */
 	@Nullable
-	Throwable error();
+	Throwable getError();
 
 	/**
 	 * @return span's kind
 	 */
-	Span.Kind kind();
+	Span.Kind getKind();
 
 	/**
 	 * @return remote service name or {@code null} if not set
 	 */
 	@Nullable
-	String remoteServiceName();
+	String getRemoteServiceName();
 
 }

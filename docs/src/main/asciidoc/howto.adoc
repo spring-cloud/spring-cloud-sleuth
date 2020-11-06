@@ -562,7 +562,7 @@ For example if you want to use the OpenTelemetry Zipkin Exporter just add a depe
 ----
     <dependency>
       <groupId>io.opentelemetry</groupId>
-      <artifactId>opentelemetry-exporters-zipkin</artifactId>
+      <artifactId>opentelemetry-exporter-zipkin</artifactId>
     </dependency>
 ----
 
@@ -570,7 +570,7 @@ For example if you want to use the OpenTelemetry Zipkin Exporter just add a depe
 .Gradle
 ----
 dependencies {
-    compile "io.opentelemetry:opentelemetry-exporters-zipkin"
+    compile "io.opentelemetry:opentelemetry-exporter-zipkin"
 }
 ----
 ====

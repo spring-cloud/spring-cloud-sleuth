@@ -16,9 +16,11 @@
 
 package org.springframework.cloud.sleuth.brave.propagation;
 
+import org.springframework.beans.factory.BeanFactory;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.cloud.sleuth.autoconfig.SleuthBaggageProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -36,8 +38,9 @@ public class TraceBravePropagationAutoConfiguration {
 
 	@Bean
 	@ConditionalOnMissingBean
-	PropagationFactorySupplier compositePropagationFactorySupplier(SleuthPropagationProperties properties) {
-		return new CompositePropagationFactorySupplier(properties);
+	PropagationFactorySupplier compositePropagationFactorySupplier(BeanFactory beanFactory,
+			SleuthBaggageProperties baggageProperties, SleuthPropagationProperties properties) {
+		return new CompositePropagationFactorySupplier(beanFactory, baggageProperties, properties);
 	}
 
 }

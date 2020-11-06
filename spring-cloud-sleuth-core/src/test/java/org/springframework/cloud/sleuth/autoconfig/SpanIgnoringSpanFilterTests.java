@@ -33,7 +33,7 @@ class SpanIgnoringSpanFilterTests {
 
 	private FinishedSpan namedSpan() {
 		FinishedSpan span = BDDMockito.mock(FinishedSpan.class);
-		BDDMockito.given(span.name()).willReturn("someName");
+		BDDMockito.given(span.getName()).willReturn("someName");
 		return span;
 	}
 

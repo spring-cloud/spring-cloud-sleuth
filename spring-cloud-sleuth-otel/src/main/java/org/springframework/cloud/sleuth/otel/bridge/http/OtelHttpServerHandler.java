@@ -19,14 +19,12 @@ package org.springframework.cloud.sleuth.otel.bridge.http;
 import java.net.URI;
 import java.util.regex.Pattern;
 
-import io.grpc.Context;
+import io.opentelemetry.api.trace.Tracer;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.context.propagation.TextMapPropagator;
 import io.opentelemetry.instrumentation.api.tracer.HttpServerTracer;
-import io.opentelemetry.trace.DefaultSpan;
-import io.opentelemetry.trace.Tracer;
 
 import org.springframework.cloud.sleuth.api.Span;
-import org.springframework.cloud.sleuth.api.http.HttpRequest;
 import org.springframework.cloud.sleuth.api.http.HttpRequestParser;
 import org.springframework.cloud.sleuth.api.http.HttpResponseParser;
 import org.springframework.cloud.sleuth.api.http.HttpServerHandler;
@@ -65,15 +63,16 @@ public class OtelHttpServerHandler
 		String url = request.path();
 		boolean shouldSkip = !StringUtils.isEmpty(url) && this.pattern.matcher(url).matches();
 		if (shouldSkip) {
-			return OtelSpan.fromOtel(DefaultSpan.getInvalid());
+			return OtelSpan.fromOtel(io.opentelemetry.api.trace.Span.getInvalid());
 		}
-		return OtelSpan.fromOtel(startSpan(request, request, request.method()));
+		Context context = startSpan(request, request, request.method());
+		return OtelSpan.fromOtel(io.opentelemetry.api.trace.Span.fromContext(context), context);
 	}
 
 	@Override
 	public void handleSend(HttpServerResponse response, Span span) {
 		Throwable throwable = response.error();
-		io.opentelemetry.trace.Span otel = OtelSpan.toOtel(span);
+		io.opentelemetry.api.trace.Span otel = OtelSpan.toOtel(span);
 		parseResponse(span, response);
 		if (throwable == null) {
 			end(otel, response);
@@ -90,7 +89,7 @@ public class OtelHttpServerHandler
 	}
 
 	@Override
-	protected void onConnectionAndRequest(io.opentelemetry.trace.Span span, HttpServerRequest connection,
+	protected void onConnectionAndRequest(io.opentelemetry.api.trace.Span span, HttpServerRequest connection,
 			HttpServerRequest request) {
 		super.onConnectionAndRequest(span, connection, request);
 		if (this.httpServerRequestParser != null) {
@@ -100,7 +99,7 @@ public class OtelHttpServerHandler
 	}
 
 	@Override
-	protected void onRequest(io.opentelemetry.trace.Span span, HttpServerRequest request) {
+	protected void onRequest(io.opentelemetry.api.trace.Span span, HttpServerRequest request) {
 		super.onRequest(span, request);
 		String path = request.path();
 		if (StringUtils.hasText(path)) {
@@ -131,7 +130,17 @@ public class OtelHttpServerHandler
 
 	@Override
 	protected TextMapPropagator.Getter<HttpServerRequest> getGetter() {
-		return HttpRequest::header;
+		return new TextMapPropagator.Getter<HttpServerRequest>() {
+			@Override
+			public Iterable<String> keys(HttpServerRequest carrier) {
+				return carrier.headerNames();
+			}
+
+			@Override
+			public String get(HttpServerRequest carrier, String key) {
+				return carrier.header(key);
+			}
+		};
 	}
 
 	@Override

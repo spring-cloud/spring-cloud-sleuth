@@ -16,12 +16,14 @@
 
 package org.springframework.cloud.sleuth.otel.opentracing;
 
-import io.opentelemetry.trace.Tracer;
+import io.opentelemetry.api.trace.Tracer;
 import org.junit.jupiter.api.Test;
 
 import org.springframework.boot.autoconfigure.AutoConfigurations;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
+import org.springframework.cloud.sleuth.autoconfig.TraceAutoConfiguration;
 import org.springframework.cloud.sleuth.otel.autoconfig.TraceOtelAutoConfiguration;
+import org.springframework.cloud.sleuth.otel.propagation.TraceOtelPropagationAutoConfiguration;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -36,8 +38,9 @@ class OpentracingAutoConfigurationTests {
 	}
 
 	private ApplicationContextRunner withAutoConfiguration() {
-		return new ApplicationContextRunner().withConfiguration(
-				AutoConfigurations.of(TraceOtelAutoConfiguration.class, OpentracingAutoConfiguration.class));
+		return new ApplicationContextRunner()
+				.withConfiguration(AutoConfigurations.of(TraceAutoConfiguration.class, TraceOtelAutoConfiguration.class,
+						TraceOtelPropagationAutoConfiguration.class, OpentracingAutoConfiguration.class));
 	}
 
 	@Test

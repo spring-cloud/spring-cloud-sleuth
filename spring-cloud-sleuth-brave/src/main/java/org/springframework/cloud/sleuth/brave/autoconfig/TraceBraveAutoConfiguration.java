@@ -39,6 +39,7 @@ import org.springframework.cloud.sleuth.SpanNamer;
 import org.springframework.cloud.sleuth.api.exporter.SpanFilter;
 import org.springframework.cloud.sleuth.autoconfig.TraceAutoConfiguration;
 import org.springframework.cloud.sleuth.brave.LocalServiceName;
+import org.springframework.cloud.sleuth.brave.bridge.BraveBaggageManager;
 import org.springframework.cloud.sleuth.brave.propagation.TraceBravePropagationAutoConfiguration;
 import org.springframework.cloud.sleuth.brave.sampler.SamplerAutoConfiguration;
 import org.springframework.cloud.sleuth.internal.DefaultSpanNamer;
@@ -81,6 +82,12 @@ public class TraceBraveAutoConfiguration {
 	 * Default value used for service name if none provided.
 	 */
 	public static final String DEFAULT_SERVICE_NAME = "default";
+
+	@Bean
+	@ConditionalOnMissingBean
+	BraveBaggageManager braveBaggageManager() {
+		return new BraveBaggageManager();
+	}
 
 	@Bean(name = TRACING_BEAN_NAME)
 	@ConditionalOnMissingBean

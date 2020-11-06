@@ -63,8 +63,6 @@ import org.springframework.web.client.RestTemplate;
 @AutoConfigureAfter(ZipkinAutoConfiguration.class)
 public class ZipkinBraveAutoConfiguration {
 
-	private static final Log log = LogFactory.getLog(ZipkinBraveAutoConfiguration.class);
-
 	/**
 	 *
 	 * Sort Zipkin Handlers last, so that redactions etc happen prior.
@@ -81,6 +79,8 @@ public class ZipkinBraveAutoConfiguration {
 		}
 		return 0;
 	};
+
+	private static final Log log = LogFactory.getLog(ZipkinBraveAutoConfiguration.class);
 
 	/** Returns one handler for as many reporters as exist. */
 	@Bean

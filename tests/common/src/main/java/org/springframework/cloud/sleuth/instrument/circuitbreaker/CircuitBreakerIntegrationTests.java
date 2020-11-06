@@ -94,11 +94,11 @@ public abstract class CircuitBreakerIntegrationTests {
 			BDDAssertions.then(first.get().context().spanId()).isNotEqualTo(second.get().context().spanId());
 
 			FinishedSpan finishedSpan = this.spans.get(0);
-			BDDAssertions.then(finishedSpan.name()).contains("CircuitBreakerIntegrationTests");
+			BDDAssertions.then(finishedSpan.getName()).contains("CircuitBreakerIntegrationTests");
 			assertException(finishedSpan);
 
 			finishedSpan = this.spans.get(1);
-			BDDAssertions.then(finishedSpan.name()).contains("CircuitBreakerIntegrationTests");
+			BDDAssertions.then(finishedSpan.getName()).contains("CircuitBreakerIntegrationTests");
 			assertException(finishedSpan);
 		}
 		finally {

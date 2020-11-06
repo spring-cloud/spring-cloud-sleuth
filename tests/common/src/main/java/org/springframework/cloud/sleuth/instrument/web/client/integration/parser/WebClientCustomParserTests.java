@@ -87,7 +87,7 @@ public abstract class WebClientCustomParserTests {
 	public void should_set_tags_via_server_and_client_parsers() {
 		this.testFeignInterface.getTraceId();
 		Map<String, String> clientSideTags = spans.reportedSpans().stream()
-				.filter(f -> f.kind().equals(Span.Kind.CLIENT)).flatMap(f -> f.tags().entrySet().stream())
+				.filter(f -> f.getKind().equals(Span.Kind.CLIENT)).flatMap(f -> f.getTags().entrySet().stream())
 				.collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
 
 		then(clientSideTags).containsEntry("ClientRequest", "Tag").containsEntry("ClientRequestFeign", "GET")

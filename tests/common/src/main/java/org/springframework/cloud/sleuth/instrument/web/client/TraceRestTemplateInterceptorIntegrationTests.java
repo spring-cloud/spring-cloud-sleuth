@@ -95,8 +95,8 @@ public abstract class TraceRestTemplateInterceptorIntegrationTests implements Te
 		// 1 span "new race", 1 span "rest template"
 		BDDAssertions.then(this.spans).hasSize(2);
 		FinishedSpan span1 = this.spans.get(0);
-		BDDAssertions.then(span1.error()).hasMessage("Read timed out");
-		BDDAssertions.then(span1.kind()).isEqualTo(Span.Kind.CLIENT);
+		BDDAssertions.then(span1.getError()).hasMessage("Read timed out");
+		BDDAssertions.then(span1.getKind()).isEqualTo(Span.Kind.CLIENT);
 	}
 
 	private ClientHttpRequestFactory clientHttpRequestFactory() {

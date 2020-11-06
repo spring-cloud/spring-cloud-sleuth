@@ -114,6 +114,11 @@ final class TracingFeignClient implements Client {
 		}
 
 		@Override
+		public Collection<String> headerNames() {
+			return this.delegate.headers().keySet();
+		}
+
+		@Override
 		public Object unwrap() {
 			return delegate;
 		}
@@ -192,6 +197,11 @@ final class TracingFeignClient implements Client {
 		@Override
 		public Object unwrap() {
 			return response;
+		}
+
+		@Override
+		public Collection<String> headerNames() {
+			return this.response != null ? this.response.headers().keySet() : Collections.emptyList();
 		}
 
 		@Override

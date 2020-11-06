@@ -1,0 +1,14 @@
+spring:
+  application:
+    name: service1
+  sleuth:
+    propagation:
+      type:
+        - b3
+    baggage:
+      remote-fields:
+        - baggage
+        - key
+    otel:
+      config:
+        trace-id-ratio-based: 1.0

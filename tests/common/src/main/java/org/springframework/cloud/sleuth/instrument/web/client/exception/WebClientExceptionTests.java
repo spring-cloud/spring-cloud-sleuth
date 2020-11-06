@@ -97,9 +97,9 @@ public class WebClientExceptionTests {
 		}
 
 		then(this.tracer.currentSpan()).isNull();
-		Awaitility.await().atMost(1, TimeUnit.SECONDS).untilAsserted(() -> {
+		Awaitility.await().atMost(5, TimeUnit.SECONDS).untilAsserted(() -> {
 			then(this.spans).isNotEmpty();
-			then(this.spans.get(0).error()).isNotNull();
+			then(this.spans.get(0).getError()).isNotNull();
 		});
 	}
 

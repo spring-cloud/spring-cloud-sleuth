@@ -140,14 +140,15 @@ public abstract class WebClientTests {
 			then(getHeader(response, "b3")).isNull();
 			then(this.spans).isNotEmpty();
 			Optional<FinishedSpan> noTraceSpan = this.spans.reportedSpans().stream()
-					.filter(span -> span.name().contains("GET") && !span.tags().isEmpty()
-							&& span.tags().containsKey("http.path"))
+					.filter(span -> span.getName().contains("GET") && !span.getTags().isEmpty()
+							&& span.getTags().containsKey("http.path"))
 					.findFirst();
 			then(noTraceSpan.isPresent()).isTrue();
-			then(noTraceSpan.get().tags()).containsEntry("http.path", "/notrace").containsEntry("http.method", "GET");
+			then(noTraceSpan.get().getTags()).containsEntry("http.path", "/notrace").containsEntry("http.method",
+					"GET");
 			// TODO: matches cause there is an issue with Feign not providing the full URL
 			// at the interceptor level
-			then(noTraceSpan.get().tags().get("http.path")).matches(".*/notrace");
+			then(noTraceSpan.get().getTags().get("http.path")).matches(".*/notrace");
 		});
 		then(this.tracer.currentSpan()).isNull();
 	}
@@ -213,7 +214,7 @@ public abstract class WebClientTests {
 			span.end();
 		}
 		then(this.tracer.currentSpan()).isNull();
-		then(this.spans.reportedSpans().stream().filter(r -> r.kind() != null).map(r -> r.kind().name())
+		then(this.spans.reportedSpans().stream().filter(r -> r.getKind() != null).map(r -> r.getKind().name())
 				.collect(Collectors.toList())).isNotEmpty().contains("CLIENT");
 	}
 
@@ -224,7 +225,7 @@ public abstract class WebClientTests {
 
 		try (Tracer.SpanInScope ws = this.tracer.withSpan(span)) {
 			this.webClient.get().uri("http://localhost:" + this.port + "/issue1462").retrieve().bodyToMono(String.class)
-					.block(Duration.ofSeconds(1));
+					.block(Duration.ofSeconds(5));
 		}
 		catch (UnknownHttpStatusCodeException ex) {
 
@@ -234,7 +235,7 @@ public abstract class WebClientTests {
 		}
 
 		then(this.tracer.currentSpan()).isNull();
-		then(this.spans.reportedSpans().stream().filter(r -> r.kind() != null).map(r -> r.kind().name())
+		then(this.spans.reportedSpans().stream().filter(r -> r.getKind() != null).map(r -> r.getKind().name())
 				.collect(Collectors.toList())).isNotEmpty().contains("CLIENT");
 	}
 
@@ -259,11 +260,11 @@ public abstract class WebClientTests {
 	@Test
 	public void shouldRespectSkipPattern() {
 		this.webClient.get().uri("http://localhost:" + this.port + "/skip").retrieve().bodyToMono(String.class)
-				.block(Duration.ofSeconds(1));
+				.block(Duration.ofSeconds(5));
 		then(this.spans).isEmpty();
 
 		this.webClient.get().uri("http://localhost:" + this.port + "/doNotSkip").retrieve().bodyToMono(String.class)
-				.block(Duration.ofSeconds(1));
+				.block(Duration.ofSeconds(5));
 		then(this.spans).isNotEmpty();
 	}
 
@@ -306,17 +307,17 @@ public abstract class WebClientTests {
 
 		then(this.tracer.currentSpan()).isNull();
 		Optional<FinishedSpan> storedSpan = this.spans.reportedSpans().stream()
-				.filter(span -> "404".equals(span.tags().get("http.status_code"))).findFirst();
+				.filter(span -> "404".equals(span.getTags().get("http.status_code"))).findFirst();
 		then(storedSpan.isPresent()).isTrue();
 		this.spans.reportedSpans().stream().forEach(span -> {
-			int initialSize = span.events().size();
-			int distinctSize = span.events().stream().map(Map.Entry::getValue).distinct().collect(Collectors.toList())
-					.size();
-			log.info("logs " + span.events());
+			int initialSize = span.getEvents().size();
+			int distinctSize = span.getEvents().stream().map(Map.Entry::getValue).distinct()
+					.collect(Collectors.toList()).size();
+			log.info("logs " + span.getEvents());
 			then(initialSize).as("there are no duplicate log entries").isEqualTo(distinctSize);
 		});
 
-		then(this.spans.reportedSpans().stream().filter(r -> r.kind() != null).map(r -> r.kind().name())
+		then(this.spans.reportedSpans().stream().filter(r -> r.getKind() != null).map(r -> r.getKind().name())
 				.collect(Collectors.toList())).isNotEmpty().contains("CLIENT");
 	}
 

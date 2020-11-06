@@ -33,15 +33,6 @@
 	</parent>
 
 	<dependencies>
-		<!-- TODO: [OTEL] Why do I have to add this? -->
-		<!-- https://mvnrepository.com/artifact/com.google.auto.value/auto-value -->
-		<dependency>
-			<groupId>com.google.auto.value</groupId>
-			<artifactId>auto-value-annotations</artifactId>
-			<version>1.7.4</version>
-			<scope>compile</scope>
-		</dependency>
-
 		<dependency>
 			<groupId>org.springframework.cloud</groupId>
 			<artifactId>spring-cloud-sleuth-core</artifactId>
@@ -57,11 +48,27 @@
 		</dependency>
 		<dependency>
 			<groupId>io.opentelemetry</groupId>
-			<artifactId>opentelemetry-sdk-tracing</artifactId>
+			<artifactId>opentelemetry-api</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>io.opentelemetry</groupId>
-			<artifactId>opentelemetry-sdk-baggage</artifactId>
+			<artifactId>opentelemetry-sdk-common</artifactId>
+			<exclusions>
+				<exclusion>
+					<groupId>io.opentelemetry</groupId>
+					<artifactId>*</artifactId>
+				</exclusion>
+			</exclusions>
+		</dependency>
+		<dependency>
+			<groupId>io.opentelemetry</groupId>
+			<artifactId>opentelemetry-sdk-tracing</artifactId>
+			<exclusions>
+				<exclusion>
+					<groupId>io.opentelemetry</groupId>
+					<artifactId>*</artifactId>
+				</exclusion>
+			</exclusions>
 		</dependency>
 		<dependency>
 			<groupId>io.opentelemetry.instrumentation</groupId>
@@ -81,21 +88,45 @@
 			<groupId>io.opentelemetry</groupId>
 			<artifactId>opentelemetry-extension-auto-annotations</artifactId>
 			<optional>true</optional>
+			<exclusions>
+				<exclusion>
+					<groupId>io.opentelemetry</groupId>
+					<artifactId>*</artifactId>
+				</exclusion>
+			</exclusions>
 		</dependency>
 		<dependency>
 			<groupId>io.opentelemetry</groupId>
-			<artifactId>opentelemetry-exporters-logging</artifactId>
+			<artifactId>opentelemetry-exporter-logging</artifactId>
 			<optional>true</optional>
+			<exclusions>
+				<exclusion>
+					<groupId>io.opentelemetry</groupId>
+					<artifactId>*</artifactId>
+				</exclusion>
+			</exclusions>
 		</dependency>
 		<dependency>
 			<groupId>io.opentelemetry</groupId>
 			<artifactId>opentelemetry-extension-trace-propagators</artifactId>
 			<optional>true</optional>
+			<exclusions>
+				<exclusion>
+					<groupId>io.opentelemetry</groupId>
+					<artifactId>*</artifactId>
+				</exclusion>
+			</exclusions>
 		</dependency>
 		<dependency>
 			<groupId>io.opentelemetry</groupId>
 			<artifactId>opentelemetry-opentracing-shim</artifactId>
 			<optional>true</optional>
+			<exclusions>
+				<exclusion>
+					<groupId>io.opentelemetry</groupId>
+					<artifactId>*</artifactId>
+				</exclusion>
+			</exclusions>
 		</dependency>
 
 		<dependency>

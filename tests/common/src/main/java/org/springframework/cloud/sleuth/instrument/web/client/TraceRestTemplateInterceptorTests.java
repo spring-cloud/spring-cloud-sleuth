@@ -125,7 +125,7 @@ public abstract class TraceRestTemplateInterceptorTests implements TestTracingAw
 		}
 
 		BDDAssertions.then(this.spans).isNotEmpty();
-		BDDAssertions.then(this.spans.get(0).tags()).containsEntry("http.url", "/foo?a=b")
+		BDDAssertions.then(this.spans.get(0).getTags()).containsEntry("http.url", "/foo?a=b")
 				.containsEntry("http.path", "/foo").containsEntry("http.method", "GET");
 	}
 

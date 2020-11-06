@@ -34,7 +34,7 @@
 		<brave.version>5.12.7</brave.version>
 		<brave.opentracing.version>0.37.2</brave.opentracing.version>
 		<grpc.spring.boot.version>4.2.1</grpc.spring.boot.version>
-		<opentelemetry.version>0.9.1</opentelemetry.version>
+		<opentelemetry.version>0.10.0</opentelemetry.version>
 	</properties>
 	<dependencyManagement>
 		<dependencies>
@@ -163,4 +163,22 @@
 			</pluginRepositories>
 		</profile>
 	</profiles>
+	<repositories>
+		<repository>
+			<snapshots>
+				<enabled>false</enabled>
+			</snapshots>
+			<id>bintray-open-telemetry-maven</id>
+			<name>bintray</name>
+			<url>https://dl.bintray.com/open-telemetry/maven</url>
+		</repository>
+		<repository>
+			<snapshots>
+				<enabled>true</enabled>
+			</snapshots>
+			<id>bintray-open-telemetry-maven-snapshot</id>
+			<name>bintray</name>
+			<url>https://oss.jfrog.org/oss-snapshot-local/</url>
+		</repository>
+	</repositories>
 </project>

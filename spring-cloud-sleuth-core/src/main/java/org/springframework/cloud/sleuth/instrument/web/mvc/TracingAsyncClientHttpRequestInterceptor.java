@@ -58,7 +58,7 @@ public final class TracingAsyncClientHttpRequestInterceptor implements AsyncClie
 
 		// avoid context sync overhead when we are the root span
 		String parentId = span.context().parentId();
-		TraceContext invocationContext = parentId != null ? currentTraceContext.get() : null;
+		TraceContext invocationContext = parentId != null ? currentTraceContext.context() : null;
 
 		try (CurrentTraceContext.Scope ws = currentTraceContext.maybeScope(span.context())) {
 			ListenableFuture<ClientHttpResponse> result = execution.executeAsync(req, body);

@@ -20,10 +20,11 @@ import java.util.Map;
 
 import brave.propagation.TraceContextOrSamplingFlags;
 
-import org.springframework.cloud.sleuth.api.BaggageEntry;
+import org.springframework.cloud.sleuth.api.BaggageInScope;
 import org.springframework.cloud.sleuth.api.ScopedSpan;
 import org.springframework.cloud.sleuth.api.Span;
 import org.springframework.cloud.sleuth.api.SpanCustomizer;
+import org.springframework.cloud.sleuth.api.TraceContext;
 import org.springframework.cloud.sleuth.api.Tracer;
 
 /**
@@ -36,10 +37,11 @@ public class BraveTracer implements Tracer {
 
 	private final brave.Tracer tracer;
 
-	private final BraveBaggageManager braveBaggageManager = new BraveBaggageManager();
+	private final BraveBaggageManager braveBaggageManager;
 
-	public BraveTracer(brave.Tracer tracer) {
+	public BraveTracer(brave.Tracer tracer, BraveBaggageManager braveBaggageManager) {
 		this.tracer = tracer;
+		this.braveBaggageManager = braveBaggageManager;
 	}
 
 	@Override
@@ -88,8 +90,8 @@ public class BraveTracer implements Tracer {
 		return new BraveSpanBuilder(this.tracer);
 	}
 
-	public static Tracer fromBrave(brave.Tracer tracer) {
-		return new BraveTracer(tracer);
+	public static Tracer fromBrave(brave.Tracer tracer, BraveBaggageManager braveBaggageManager) {
+		return new BraveTracer(tracer, braveBaggageManager);
 	}
 
 	@Override
@@ -98,13 +100,23 @@ public class BraveTracer implements Tracer {
 	}
 
 	@Override
-	public BaggageEntry getBaggage(String name) {
+	public BaggageInScope getBaggage(String name) {
 		return this.braveBaggageManager.getBaggage(name);
 	}
 
 	@Override
-	public BaggageEntry createBaggage(String name) {
+	public BaggageInScope getBaggage(TraceContext traceContext, String name) {
+		return this.braveBaggageManager.getBaggage(traceContext, name);
+	}
+
+	@Override
+	public BaggageInScope createBaggage(String name) {
 		return this.braveBaggageManager.createBaggage(name);
+	}
+
+	@Override
+	public BaggageInScope createBaggage(String name, String value) {
+		return this.braveBaggageManager.createBaggage(name).set(value);
 	}
 
 }

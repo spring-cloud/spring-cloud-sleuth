@@ -46,13 +46,13 @@ import org.springframework.lang.Nullable;
 
 @Configuration(proxyBeanMethods = false)
 @ConditionalOnProperty(value = "spring.sleuth.enabled", matchIfMissing = true)
-@ConditionalOnBean({ Tracer.class, io.opentelemetry.trace.Tracer.class })
+@ConditionalOnBean({ Tracer.class, io.opentelemetry.api.trace.Tracer.class })
 @AutoConfigureBefore(TraceHttpAutoConfiguration.class)
 @AutoConfigureAfter({ TraceOtelBridgeAutoConfiguation.class, SkipPatternConfiguration.class })
 public class TraceOtelHttpBridgeAutoConfiguration {
 
 	@Bean
-	HttpClientHandler otelHttpClientHandler(io.opentelemetry.trace.Tracer tracer,
+	HttpClientHandler otelHttpClientHandler(io.opentelemetry.api.trace.Tracer tracer,
 			@Nullable @HttpClientRequestParser HttpRequestParser httpClientRequestParser,
 			@Nullable @HttpClientResponseParser HttpResponseParser httpClientResponseParser,
 			SamplerFunction<HttpRequest> samplerFunction) {
@@ -60,7 +60,7 @@ public class TraceOtelHttpBridgeAutoConfiguration {
 	}
 
 	@Bean
-	HttpServerHandler otelHttpServerHandler(io.opentelemetry.trace.Tracer tracer,
+	HttpServerHandler otelHttpServerHandler(io.opentelemetry.api.trace.Tracer tracer,
 			@Nullable @HttpServerRequestParser HttpRequestParser httpServerRequestParser,
 			@Nullable @HttpServerResponseParser HttpResponseParser httpServerResponseParser,
 			SkipPatternProvider skipPatternProvider) {

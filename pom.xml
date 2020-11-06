@@ -57,6 +57,43 @@
 		<module>docs</module>
 	</modules>
 
+	<properties>
+		<maven.compiler.target>1.8</maven.compiler.target>
+		<maven.compiler.source>1.8</maven.compiler.source>
+		<maven.compiler.testTarget>1.8</maven.compiler.testTarget>
+		<maven.compiler.testSource>1.8</maven.compiler.testSource>
+		<spring-cloud-build.version>3.0.0-SNAPSHOT</spring-cloud-build.version>
+		<spring-cloud-commons.version>3.0.0-SNAPSHOT</spring-cloud-commons.version>
+		<spring-cloud-gateway.version>3.0.0-SNAPSHOT</spring-cloud-gateway.version>
+		<spring-cloud-circuitbreaker.version>2.0.0-SNAPSHOT</spring-cloud-circuitbreaker.version>
+		<spring-cloud-stream.version>3.1.0-SNAPSHOT</spring-cloud-stream.version>
+		<spring-cloud-function.version>3.1.0-SNAPSHOT</spring-cloud-function.version>
+		<spring-cloud-netflix.version>3.0.0-SNAPSHOT</spring-cloud-netflix.version>
+		<spring-cloud-openfeign.version>3.0.0-SNAPSHOT</spring-cloud-openfeign.version>
+		<brave.version>5.12.7</brave.version>
+		<opentracing.version>0.32.0</opentracing.version>
+		<opentelemetry.version>0.10.0</opentelemetry.version>
+		<!-- From maven local -->
+		<opentelemetry-instrumentation.version>0.10.0</opentelemetry-instrumentation.version>
+		<spring-security-boot-autoconfigure.version>2.3.4.RELEASE</spring-security-boot-autoconfigure.version>
+		<disable.nohttp.checks>false</disable.nohttp.checks>
+		<okhttp.version>4.9.0</okhttp.version>
+		<mockwebserver.version>4.8.0</mockwebserver.version>
+		<guava.version>20.0</guava.version>
+		<javax.resource-api.version>1.7.1</javax.resource-api.version>
+		<cglib-nodep.version>3.3.0</cglib-nodep.version>
+		<objenesis.version>3.0.1</objenesis.version>
+		<spring-security-oauth2.version>2.2.0.RELEASE</spring-security-oauth2.version>
+
+		<!-- Until we switch it to true in sc-build -->
+		<javadoc.failOnError>true</javadoc.failOnError>
+		<javadoc.failOnWarnings>false</javadoc.failOnWarnings>
+		<commons-lang3.version>3.8.1</commons-lang3.version>
+		<hamcrest-core.version>2.2</hamcrest-core.version>
+		<awaitility.version>4.0.3</awaitility.version>
+		<brave-propagation-aws.version>0.21.3</brave-propagation-aws.version>
+	</properties>
+
 	<build>
 		<pluginManagement>
 			<plugins>
@@ -129,6 +166,9 @@
 			<plugin>
 				<artifactId>maven-checkstyle-plugin</artifactId>
 			</plugin>
+			<plugin>
+				<artifactId>maven-surefire-report-plugin</artifactId>
+			</plugin>
 		</plugins>
 	</reporting>
 
@@ -197,19 +237,6 @@
 				<type>pom</type>
 				<scope>import</scope>
 			</dependency>
-			<!-- Spock -->
-			<dependency>
-				<groupId>org.spockframework</groupId>
-				<artifactId>spock-core</artifactId>
-				<version>${spock.version}</version>
-				<scope>test</scope>
-			</dependency>
-			<dependency>
-				<groupId>org.spockframework</groupId>
-				<artifactId>spock-spring</artifactId>
-				<version>${spock.version}</version>
-				<scope>test</scope>
-			</dependency>
 			<dependency>
 				<groupId>org.springframework.security.oauth.boot</groupId>
 				<artifactId>spring-security-oauth2-autoconfigure</artifactId>
@@ -260,50 +287,8 @@
 				<version>${awaitility.version}</version>
 				<scope>test</scope>
 			</dependency>
-			<dependency>
-				<groupId>org.assertj</groupId>
-				<artifactId>assertj-core-java8</artifactId>
-				<scope>test</scope>
-			</dependency>
 		</dependencies>
 	</dependencyManagement>
-
-	<properties>
-		<maven.compiler.target>1.8</maven.compiler.target>
-		<maven.compiler.source>1.8</maven.compiler.source>
-		<maven.compiler.testTarget>1.8</maven.compiler.testTarget>
-		<maven.compiler.testSource>1.8</maven.compiler.testSource>
-		<spring-cloud-build.version>3.0.0-SNAPSHOT</spring-cloud-build.version>
-		<spring-cloud-commons.version>3.0.0-SNAPSHOT</spring-cloud-commons.version>
-		<spring-cloud-gateway.version>3.0.0-SNAPSHOT</spring-cloud-gateway.version>
-		<spring-cloud-circuitbreaker.version>2.0.0-SNAPSHOT</spring-cloud-circuitbreaker.version>
-		<spring-cloud-stream.version>3.1.0-SNAPSHOT</spring-cloud-stream.version>
-		<spring-cloud-function.version>3.1.0-SNAPSHOT</spring-cloud-function.version>
-		<spring-cloud-netflix.version>3.0.0-SNAPSHOT</spring-cloud-netflix.version>
-		<spring-cloud-openfeign.version>3.0.0-SNAPSHOT</spring-cloud-openfeign.version>
-		<brave.version>5.12.7</brave.version>
-		<opentracing.version>0.32.0</opentracing.version>
-		<opentelemetry.version>0.9.1</opentelemetry.version>
-		<!-- From maven local -->
-		<opentelemetry-instrumentation.version>0.9.0-SNAPSHOT</opentelemetry-instrumentation.version>
-		<spring-security-boot-autoconfigure.version>2.3.4.RELEASE</spring-security-boot-autoconfigure.version>
-		<disable.nohttp.checks>false</disable.nohttp.checks>
-		<okhttp.version>4.9.0</okhttp.version>
-		<mockwebserver.version>4.8.0</mockwebserver.version>
-		<guava.version>20.0</guava.version>
-		<javax.resource-api.version>1.7.1</javax.resource-api.version>
-		<cglib-nodep.version>3.3.0</cglib-nodep.version>
-		<objenesis.version>3.0.1</objenesis.version>
-		<spring-security-oauth2.version>2.2.0.RELEASE</spring-security-oauth2.version>
-
-		<!-- Until we switch it to true in sc-build -->
-		<javadoc.failOnError>true</javadoc.failOnError>
-		<javadoc.failOnWarnings>false</javadoc.failOnWarnings>
-		<commons-lang3.version>3.8.1</commons-lang3.version>
-		<hamcrest-core.version>2.2</hamcrest-core.version>
-		<awaitility.version>4.0.3</awaitility.version>
-		<brave-propagation-aws.version>0.21.3</brave-propagation-aws.version>
-	</properties>
 
 	<repositories>
 		<repository>
@@ -349,7 +334,7 @@
 						<enabled>false</enabled>
 					</releases>
 				</repository>
-				<!-- ONLY FOR BRAVE -->
+				<!-- BRAVE & OTEL -->
 				<repository>
 					<id>jfrog-snapshots</id>
 					<name>JFrog Snapshots</name>

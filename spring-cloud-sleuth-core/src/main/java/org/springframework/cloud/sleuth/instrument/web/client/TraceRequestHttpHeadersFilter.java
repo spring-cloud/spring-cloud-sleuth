@@ -16,6 +16,7 @@
 
 package org.springframework.cloud.sleuth.instrument.web.client;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
@@ -183,6 +184,11 @@ abstract class AbstractHttpHeadersFilter implements HttpHeadersFilter {
 		}
 
 		@Override
+		public Collection<String> headerNames() {
+			return this.delegate.getHeaders().keySet();
+		}
+
+		@Override
 		public Object unwrap() {
 			return delegate;
 		}
@@ -220,6 +226,11 @@ abstract class AbstractHttpHeadersFilter implements HttpHeadersFilter {
 
 		ServerHttpClientResponse(ServerHttpResponse delegate) {
 			this.delegate = delegate;
+		}
+
+		@Override
+		public Collection<String> headerNames() {
+			return this.delegate.getHeaders().keySet();
 		}
 
 		@Override

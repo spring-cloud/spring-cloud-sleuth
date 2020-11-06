@@ -16,8 +16,8 @@
 
 package org.springframework.cloud.sleuth.otel.bridge;
 
+import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.trace.Span;
 
 import org.springframework.cloud.sleuth.api.ScopedSpan;
 import org.springframework.cloud.sleuth.api.TraceContext;

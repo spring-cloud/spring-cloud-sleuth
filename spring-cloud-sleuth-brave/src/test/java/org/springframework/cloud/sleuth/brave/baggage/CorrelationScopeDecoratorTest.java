@@ -137,12 +137,7 @@ public class CorrelationScopeDecoratorTest {
 	public void should_only_include_whitelist() {
 		assertThat(this.scopeDecorator).extracting("fields")
 				.asInstanceOf(InstanceOfAssertFactories.array(SingleCorrelationField[].class))
-				.extracting(SingleCorrelationField::name).containsOnly("traceId", "spanId", "bp", COUNTRY_CODE.name()); // x-vcap-request-id
-																														// is
-																														// not
-																														// in
-																														// the
-																														// whitelist
+				.extracting(SingleCorrelationField::name).containsOnly("traceId", "spanId", "bp", COUNTRY_CODE.name());
 	}
 
 	@Test

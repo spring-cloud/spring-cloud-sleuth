@@ -16,7 +16,7 @@
 
 package org.springframework.cloud.sleuth.otel.instrument.circuitbreaker;
 
-import io.opentelemetry.common.AttributeKey;
+import io.opentelemetry.api.common.AttributeKey;
 import org.assertj.core.api.BDDAssertions;
 
 import org.springframework.cloud.sleuth.api.exporter.FinishedSpan;
@@ -39,7 +39,7 @@ public class CircuitBreakerTests
 
 	@Override
 	public void additionalAssertions(FinishedSpan finishedSpan) {
-		OtelFinishedSpan.AssertingThrowable throwable = (OtelFinishedSpan.AssertingThrowable) finishedSpan.error();
+		OtelFinishedSpan.AssertingThrowable throwable = (OtelFinishedSpan.AssertingThrowable) finishedSpan.getError();
 		String msg = throwable.attributes.get(AttributeKey.stringKey("exception.message"));
 		BDDAssertions.then(msg).contains("boom2");
 	}

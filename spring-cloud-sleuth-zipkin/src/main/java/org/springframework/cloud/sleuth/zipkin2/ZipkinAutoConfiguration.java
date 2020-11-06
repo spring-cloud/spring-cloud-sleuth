@@ -74,8 +74,6 @@ import org.springframework.web.client.RestTemplate;
 @Import(ZipkinSenderConfigurationImportSelector.class)
 public class ZipkinAutoConfiguration {
 
-	private static final Log log = LogFactory.getLog(ZipkinAutoConfiguration.class);
-
 	/**
 	 * Zipkin reporter bean name. Name of the bean matters for supporting multiple tracing
 	 * systems.
@@ -88,29 +86,7 @@ public class ZipkinAutoConfiguration {
 	 */
 	public static final String SENDER_BEAN_NAME = "zipkinSender";
 
-	@Bean(REPORTER_BEAN_NAME)
-	@ConditionalOnMissingBean(name = REPORTER_BEAN_NAME)
-	public Reporter<Span> reporter(ReporterMetrics reporterMetrics, ZipkinProperties zipkin,
-			@Qualifier(SENDER_BEAN_NAME) Sender sender) {
-		CheckResult checkResult = checkResult(sender, 1_000L);
-		logCheckResult(sender, checkResult);
-
-		// historical constraint. Note: AsyncReporter supports memory bounds
-		AsyncReporter<Span> asyncReporter = AsyncReporter.builder(sender).queuedMaxSpans(1000)
-				.messageTimeout(zipkin.getMessageTimeout(), TimeUnit.SECONDS).metrics(reporterMetrics)
-				.build(zipkin.getEncoder());
-
-		return asyncReporter;
-	}
-
-	private void logCheckResult(Sender sender, CheckResult checkResult) {
-		if (log.isDebugEnabled() && checkResult != null && checkResult.ok()) {
-			log.debug("Check result of the [" + sender.toString() + "] is [" + checkResult + "]");
-		}
-		else if (checkResult != null && !checkResult.ok()) {
-			log.warn("Check result of the [" + sender.toString() + "] contains an error [" + checkResult + "]");
-		}
-	}
+	private static final Log log = LogFactory.getLog(ZipkinAutoConfiguration.class);
 
 	/** Limits {@link Sender#check()} to {@code deadlineMillis}. */
 	static CheckResult checkResult(Sender sender, long deadlineMillis) {
@@ -139,6 +115,30 @@ public class ZipkinAutoConfiguration {
 		catch (InterruptedException e) {
 			Thread.currentThread().interrupt();
 			return CheckResult.failed(e);
+		}
+	}
+
+	@Bean(REPORTER_BEAN_NAME)
+	@ConditionalOnMissingBean(name = REPORTER_BEAN_NAME)
+	public Reporter<Span> reporter(ReporterMetrics reporterMetrics, ZipkinProperties zipkin,
+			@Qualifier(SENDER_BEAN_NAME) Sender sender) {
+		CheckResult checkResult = checkResult(sender, 1_000L);
+		logCheckResult(sender, checkResult);
+
+		// historical constraint. Note: AsyncReporter supports memory bounds
+		AsyncReporter<Span> asyncReporter = AsyncReporter.builder(sender).queuedMaxSpans(1000)
+				.messageTimeout(zipkin.getMessageTimeout(), TimeUnit.SECONDS).metrics(reporterMetrics)
+				.build(zipkin.getEncoder());
+
+		return asyncReporter;
+	}
+
+	private void logCheckResult(Sender sender, CheckResult checkResult) {
+		if (log.isDebugEnabled() && checkResult != null && checkResult.ok()) {
+			log.debug("Check result of the [" + sender.toString() + "] is [" + checkResult + "]");
+		}
+		else if (checkResult != null && !checkResult.ok()) {
+			log.warn("Check result of the [" + sender.toString() + "] contains an error [" + checkResult + "]");
 		}
 	}
 

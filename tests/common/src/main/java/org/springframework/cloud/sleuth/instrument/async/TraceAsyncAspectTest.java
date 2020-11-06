@@ -56,8 +56,8 @@ public abstract class TraceAsyncAspectTest implements TestTracingAwareSupplier {
 		asyncAspect.traceBackgroundThread(this.point);
 
 		BDDAssertions.then(tracerTest().handler().reportedSpans()).hasSize(1);
-		BDDAssertions.then(tracerTest().handler().reportedSpans().get(0).name()).isEqualTo("foo-bar");
-		BDDAssertions.then(tracerTest().handler().reportedSpans().get(0).endTimestamp()).isPositive();
+		BDDAssertions.then(tracerTest().handler().reportedSpans().get(0).getName()).isEqualTo("foo-bar");
+		BDDAssertions.then(tracerTest().handler().reportedSpans().get(0).getEndTimestamp()).isPositive();
 	}
 
 }

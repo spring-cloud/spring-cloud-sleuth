@@ -18,8 +18,7 @@ package org.springframework.cloud.sleuth.otel.instrument.web.client;
 
 import java.util.Map;
 
-import io.opentelemetry.sdk.trace.Sampler;
-import io.opentelemetry.sdk.trace.Samplers;
+import io.opentelemetry.sdk.trace.samplers.Sampler;
 
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.cloud.sleuth.otel.OtelTestSpanHandler;
@@ -52,7 +51,7 @@ public class WebClientNotSampledTests
 
 		@Bean
 		Sampler alwaysSampler() {
-			return Samplers.alwaysOff();
+			return Sampler.alwaysOff();
 		}
 
 	}

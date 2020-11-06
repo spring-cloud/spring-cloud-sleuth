@@ -17,12 +17,13 @@
 package org.springframework.cloud.sleuth.otel.bridge;
 
 import java.util.Objects;
+import java.util.concurrent.atomic.AtomicReference;
 
-import io.opentelemetry.common.AttributeKey;
-import io.opentelemetry.common.Attributes;
-import io.opentelemetry.trace.EndSpanOptions;
-import io.opentelemetry.trace.SpanContext;
-import io.opentelemetry.trace.StatusCanonicalCode;
+import io.opentelemetry.api.common.AttributeKey;
+import io.opentelemetry.api.common.Attributes;
+import io.opentelemetry.api.trace.SpanContext;
+import io.opentelemetry.api.trace.StatusCode;
+import io.opentelemetry.context.Context;
 
 import org.springframework.cloud.sleuth.api.Span;
 import org.springframework.cloud.sleuth.api.TraceContext;
@@ -36,10 +37,36 @@ import org.springframework.lang.Nullable;
  */
 public class OtelSpan implements Span {
 
-	final io.opentelemetry.trace.Span delegate;
+	final io.opentelemetry.api.trace.Span delegate;
 
-	public OtelSpan(io.opentelemetry.trace.Span delegate) {
+	private final AtomicReference<Context> context;
+
+	public OtelSpan(io.opentelemetry.api.trace.Span delegate) {
 		this.delegate = delegate;
+		if (delegate instanceof SpanFromSpanContext) {
+			SpanFromSpanContext fromSpanContext = (SpanFromSpanContext) delegate;
+			this.context = fromSpanContext.otelTraceContext.context;
+		}
+		else {
+			this.context = new AtomicReference<>(Context.current());
+		}
+	}
+
+	public OtelSpan(io.opentelemetry.api.trace.Span delegate, Context context) {
+		this.delegate = delegate;
+		this.context = new AtomicReference<>(context);
+	}
+
+	public static io.opentelemetry.api.trace.Span toOtel(Span span) {
+		return ((OtelSpan) span).delegate;
+	}
+
+	public static Span fromOtel(io.opentelemetry.api.trace.Span span) {
+		return new OtelSpan(span);
+	}
+
+	public static Span fromOtel(io.opentelemetry.api.trace.Span span, Context context) {
+		return new OtelSpan(span, context);
 	}
 
 	@Override
@@ -52,7 +79,7 @@ public class OtelSpan implements Span {
 		if (this.delegate == null) {
 			return null;
 		}
-		return new OtelTraceContext(this.delegate.getContext(), this.delegate);
+		return new OtelTraceContext(this.context, this.delegate.getSpanContext(), this.delegate);
 	}
 
 	@Override
@@ -100,25 +127,17 @@ public class OtelSpan implements Span {
 		return this.delegate != null ? this.delegate.toString() : "null";
 	}
 
-	public static io.opentelemetry.trace.Span toOtel(Span span) {
-		return ((OtelSpan) span).delegate;
-	}
-
-	public static Span fromOtel(io.opentelemetry.trace.Span span) {
-		return new OtelSpan(span);
-	}
-
 }
 
-class SpanFromSpanContext implements io.opentelemetry.trace.Span {
+class SpanFromSpanContext implements io.opentelemetry.api.trace.Span {
 
-	final io.opentelemetry.trace.Span span;
+	final io.opentelemetry.api.trace.Span span;
 
 	final SpanContext newSpanContext;
 
 	final OtelTraceContext otelTraceContext;
 
-	SpanFromSpanContext(io.opentelemetry.trace.Span span, SpanContext newSpanContext,
+	SpanFromSpanContext(io.opentelemetry.api.trace.Span span, SpanContext newSpanContext,
 			OtelTraceContext otelTraceContext) {
 		this.span = span;
 		this.newSpanContext = newSpanContext;
@@ -126,78 +145,78 @@ class SpanFromSpanContext implements io.opentelemetry.trace.Span {
 	}
 
 	@Override
-	public void setAttribute(String key, @Nullable String value) {
-		span.setAttribute(key, value);
+	public io.opentelemetry.api.trace.Span setAttribute(String key, @Nullable String value) {
+		return span.setAttribute(key, value);
 	}
 
 	@Override
-	public void setAttribute(String key, long value) {
-		span.setAttribute(key, value);
+	public io.opentelemetry.api.trace.Span setAttribute(String key, long value) {
+		return span.setAttribute(key, value);
 	}
 
 	@Override
-	public void setAttribute(String key, double value) {
-		span.setAttribute(key, value);
+	public io.opentelemetry.api.trace.Span setAttribute(String key, double value) {
+		return span.setAttribute(key, value);
 	}
 
 	@Override
-	public void setAttribute(String key, boolean value) {
-		span.setAttribute(key, value);
+	public io.opentelemetry.api.trace.Span setAttribute(String key, boolean value) {
+		return span.setAttribute(key, value);
 	}
 
 	@Override
-	public void addEvent(String name) {
-		span.addEvent(name);
+	public io.opentelemetry.api.trace.Span addEvent(String name) {
+		return span.addEvent(name);
 	}
 
 	@Override
-	public void addEvent(String name, long timestamp) {
-		span.addEvent(name, timestamp);
+	public io.opentelemetry.api.trace.Span addEvent(String name, long timestamp) {
+		return span.addEvent(name, timestamp);
 	}
 
 	@Override
-	public void addEvent(String name, Attributes attributes) {
-		span.addEvent(name, attributes);
+	public io.opentelemetry.api.trace.Span addEvent(String name, Attributes attributes) {
+		return span.addEvent(name, attributes);
 	}
 
 	@Override
-	public void addEvent(String name, Attributes attributes, long timestamp) {
-		span.addEvent(name, attributes, timestamp);
+	public io.opentelemetry.api.trace.Span addEvent(String name, Attributes attributes, long timestamp) {
+		return span.addEvent(name, attributes, timestamp);
 	}
 
 	@Override
-	public void setAttribute(AttributeKey<Long> key, int value) {
-		span.setAttribute(key, value);
+	public io.opentelemetry.api.trace.Span setStatus(StatusCode canonicalCode) {
+		return span.setStatus(canonicalCode);
 	}
 
 	@Override
-	public <T> void setAttribute(AttributeKey<T> key, T value) {
-		span.setAttribute(key, value);
+	public io.opentelemetry.api.trace.Span setStatus(StatusCode canonicalCode, String description) {
+		return span.setStatus(canonicalCode, description);
 	}
 
 	@Override
-	public void setStatus(StatusCanonicalCode canonicalCode) {
-		span.setStatus(canonicalCode);
+	public io.opentelemetry.api.trace.Span setAttribute(AttributeKey<Long> key, int value) {
+		return span.setAttribute(key, value);
 	}
 
 	@Override
-	public void setStatus(StatusCanonicalCode canonicalCode, String description) {
-		span.setStatus(canonicalCode, description);
+	public <T> io.opentelemetry.api.trace.Span setAttribute(AttributeKey<T> key, T value) {
+		return span.setAttribute(key, value);
 	}
 
 	@Override
-	public void recordException(Throwable exception) {
-		span.recordException(exception);
+	public io.opentelemetry.api.trace.Span recordException(Throwable exception) {
+		return span.recordException(exception);
 	}
 
 	@Override
-	public void recordException(Throwable exception, Attributes additionalAttributes) {
-		span.recordException(exception, additionalAttributes);
+	public io.opentelemetry.api.trace.Span recordException(Throwable exception, Attributes additionalAttributes) {
+		return span.recordException(exception, additionalAttributes);
 	}
 
 	@Override
-	public void updateName(String name) {
-		span.updateName(name);
+	public io.opentelemetry.api.trace.Span updateName(String name) {
+		return span.updateName(name);
 	}
 
 	@Override
@@ -206,12 +225,12 @@ class SpanFromSpanContext implements io.opentelemetry.trace.Span {
 	}
 
 	@Override
-	public void end(EndSpanOptions endOptions) {
-		span.end(endOptions);
+	public void end(long l) {
+		span.end(l);
 	}
 
 	@Override
-	public SpanContext getContext() {
+	public SpanContext getSpanContext() {
 		return newSpanContext;
 	}
 

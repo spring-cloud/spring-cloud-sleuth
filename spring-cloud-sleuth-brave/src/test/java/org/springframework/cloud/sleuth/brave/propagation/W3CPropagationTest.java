@@ -27,6 +27,9 @@ import brave.propagation.TraceContextOrSamplingFlags;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.Test;
 
+import org.springframework.cloud.sleuth.autoconfig.SleuthBaggageProperties;
+import org.springframework.cloud.sleuth.brave.bridge.BraveBaggageManager;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.entry;
 import static org.springframework.cloud.sleuth.brave.propagation.W3CPropagation.TRACE_PARENT;
@@ -52,7 +55,8 @@ class W3CPropagationTest {
 
 	private static final String TRACESTATE_NOT_DEFAULT_ENCODING_WITH_SPACES = "bar=baz   ,    foo=bar";
 
-	private final W3CPropagation w3CPropagation = W3CPropagation.getInstance();
+	private final W3CPropagation w3CPropagation = new W3CPropagation(new BraveBaggageManager(),
+			new SleuthBaggageProperties());
 
 	@Test
 	void inject_NullCarrierUsage() {

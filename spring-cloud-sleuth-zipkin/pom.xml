@@ -51,7 +51,7 @@
 		</dependency>
 		<dependency>
 			<groupId>io.opentelemetry</groupId>
-			<artifactId>opentelemetry-exporters-zipkin</artifactId>
+			<artifactId>opentelemetry-exporter-zipkin</artifactId>
 			<optional>true</optional>
 		</dependency>
 		<dependency>

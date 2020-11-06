@@ -53,7 +53,7 @@ public abstract class AsyncDisabledTests {
 	@Test
 	public void should_not_wrap_scheduler() throws InterruptedException {
 		BlockingQueue<Boolean> spans = new LinkedBlockingQueue<>();
-		this.executor.execute(() -> spans.add(this.currentTraceContext.get() != null));
+		this.executor.execute(() -> spans.add(this.currentTraceContext.context() != null));
 		BDDAssertions.then(spans.take()).isFalse();
 	}
 

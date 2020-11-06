@@ -44,6 +44,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.web.server.LocalServerPort;
 import org.springframework.cloud.gateway.config.GatewayAutoConfiguration;
 import org.springframework.cloud.gateway.config.GatewayClassPathWarningAutoConfiguration;
+import org.springframework.cloud.sleuth.DisableSecurity;
 import org.springframework.cloud.sleuth.instrument.web.TraceWebServletAutoConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -91,6 +92,7 @@ public class WebClientTests {
 	@Test
 	@SuppressWarnings("unchecked")
 	public void shouldAttachTraceIdWhenCallingAnotherServiceForHttpClient() throws Exception {
+		then(this.spans).isEmpty();
 		Span span = this.tracer.nextSpan().name("foo").start();
 
 		try (Tracer.SpanInScope ws = this.tracer.withSpanInScope(span)) {
@@ -144,6 +146,7 @@ public class WebClientTests {
 	@Configuration(proxyBeanMethods = false)
 	@EnableAutoConfiguration(exclude = { TraceWebServletAutoConfiguration.class,
 			GatewayClassPathWarningAutoConfiguration.class, GatewayAutoConfiguration.class })
+	@DisableSecurity
 	public static class TestConfiguration {
 
 		@Bean

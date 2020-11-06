@@ -37,7 +37,7 @@ public class CircuitBreakerTests
 
 	@Override
 	public void additionalAssertions(FinishedSpan finishedSpan) {
-		BDDAssertions.then(finishedSpan.tags().get("error")).contains("boom2");
+		BDDAssertions.then(finishedSpan.getTags().get("error")).contains("boom2");
 	}
 
 }

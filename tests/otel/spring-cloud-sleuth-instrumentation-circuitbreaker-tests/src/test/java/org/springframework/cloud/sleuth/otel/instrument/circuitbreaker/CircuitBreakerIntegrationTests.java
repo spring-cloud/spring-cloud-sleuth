@@ -16,9 +16,8 @@
 
 package org.springframework.cloud.sleuth.otel.instrument.circuitbreaker;
 
-import io.opentelemetry.common.AttributeKey;
-import io.opentelemetry.sdk.trace.Sampler;
-import io.opentelemetry.sdk.trace.Samplers;
+import io.opentelemetry.api.common.AttributeKey;
+import io.opentelemetry.sdk.trace.samplers.Sampler;
 import org.assertj.core.api.BDDAssertions;
 
 import org.springframework.boot.test.context.SpringBootTest;
@@ -37,7 +36,7 @@ public class CircuitBreakerIntegrationTests
 
 	@Override
 	public void assertException(FinishedSpan finishedSpan) {
-		OtelFinishedSpan.AssertingThrowable throwable = (OtelFinishedSpan.AssertingThrowable) finishedSpan.error();
+		OtelFinishedSpan.AssertingThrowable throwable = (OtelFinishedSpan.AssertingThrowable) finishedSpan.getError();
 		String msg = throwable.attributes.get(AttributeKey.stringKey("exception.message"));
 		BDDAssertions.then(msg).contains("boom");
 	}
@@ -52,7 +51,7 @@ public class CircuitBreakerIntegrationTests
 
 		@Bean
 		Sampler alwaysSampler() {
-			return Samplers.alwaysOn();
+			return Sampler.alwaysOn();
 		}
 
 	}
