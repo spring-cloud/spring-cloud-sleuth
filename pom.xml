@@ -74,7 +74,7 @@
 		<opentracing.version>0.32.0</opentracing.version>
 		<opentelemetry.version>0.10.0</opentelemetry.version>
 		<!-- From maven local -->
-		<opentelemetry-instrumentation.version>0.10.0</opentelemetry-instrumentation.version>
+		<opentelemetry-instrumentation.version>0.10.1</opentelemetry-instrumentation.version>
 		<spring-security-boot-autoconfigure.version>2.3.4.RELEASE</spring-security-boot-autoconfigure.version>
 		<disable.nohttp.checks>false</disable.nohttp.checks>
 		<okhttp.version>4.9.0</okhttp.version>
