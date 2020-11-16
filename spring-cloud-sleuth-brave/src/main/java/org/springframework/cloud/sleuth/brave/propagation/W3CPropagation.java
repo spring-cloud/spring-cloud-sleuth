@@ -35,7 +35,6 @@ import brave.propagation.TraceContext;
 import brave.propagation.TraceContextOrSamplingFlags;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.jetbrains.annotations.NotNull;
 
 import org.springframework.cloud.sleuth.api.BaggageInScope;
 import org.springframework.cloud.sleuth.autoconfig.SleuthBaggageProperties;
@@ -190,7 +189,6 @@ public final class W3CPropagation extends Propagation.Factory implements Propaga
 		return this.baggagePropagator.contextWithBaggage(carrier, context, getter);
 	}
 
-	@NotNull
 	protected TraceContextOrSamplingFlags context(TraceContext contextFromParentHeader, String traceStateHeader) {
 		if (traceStateHeader == null || traceStateHeader.isEmpty()) {
 			return TraceContextOrSamplingFlags.create(contextFromParentHeader);

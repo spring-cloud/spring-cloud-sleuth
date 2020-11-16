@@ -24,7 +24,6 @@ import java.util.Map;
 import brave.propagation.Propagation;
 import brave.propagation.TraceContext;
 import brave.propagation.TraceContextOrSamplingFlags;
-import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.Test;
 
 import org.springframework.cloud.sleuth.autoconfig.SleuthBaggageProperties;
@@ -136,7 +135,6 @@ class W3CPropagationTest {
 				.isEqualTo(notSampledTraceContext().shared(true).build());
 	}
 
-	@NotNull
 	private TraceContext.Builder notSampledTraceContext() {
 		return sampledTraceContext().sampled(false);
 	}
@@ -215,7 +213,6 @@ class W3CPropagationTest {
 				.isEqualTo(sharedTraceContext().build());
 	}
 
-	@NotNull
 	private TraceContext.Builder sharedTraceContext() {
 		return sampledTraceContext().shared(true);
 	}

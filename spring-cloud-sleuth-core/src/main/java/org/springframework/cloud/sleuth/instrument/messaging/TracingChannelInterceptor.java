@@ -20,7 +20,6 @@ import java.util.concurrent.LinkedBlockingDeque;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.jetbrains.annotations.NotNull;
 
 import org.springframework.aop.support.AopUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -338,7 +337,6 @@ final class TracingChannelInterceptor extends ChannelInterceptorAdapter implemen
 		return new GenericMessage<>(message.getPayload(), headers.getMessageHeaders());
 	}
 
-	@NotNull
 	private Span consumerSpan(Message<?> message, MessageChannel channel, MessageHeaderAccessor headers) {
 		Span.Builder consumerSpanBuilder = this.propagator.extract(headers, this.extractor);
 		if (log.isDebugEnabled()) {

@@ -28,7 +28,6 @@ import io.opentelemetry.sdk.trace.ReadableSpan;
 import io.opentelemetry.sdk.trace.SpanProcessor;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import io.opentelemetry.sdk.trace.export.SpanExporter;
-import org.jetbrains.annotations.NotNull;
 
 import org.springframework.cloud.sleuth.api.Span;
 import org.springframework.cloud.sleuth.api.exporter.FinishedSpan;
@@ -77,7 +76,6 @@ public class OtelTestSpanHandler implements TestSpanHandler, SpanProcessor, Span
 		return reportedSpans().get(index);
 	}
 
-	@NotNull
 	@Override
 	public Iterator<FinishedSpan> iterator() {
 		return reportedSpans().iterator();

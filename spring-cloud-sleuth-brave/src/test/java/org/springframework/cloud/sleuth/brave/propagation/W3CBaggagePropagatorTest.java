@@ -25,7 +25,6 @@ import brave.internal.baggage.BaggageFields;
 import brave.propagation.Propagation;
 import brave.propagation.TraceContext;
 import brave.propagation.TraceContextOrSamplingFlags;
-import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
@@ -86,13 +85,11 @@ class W3CBaggagePropagatorTest {
 		assertThat(baggageEntries).hasSize(1).containsEntry("key", "value");
 	}
 
-	@NotNull
 	private TraceContextOrSamplingFlags context() {
 		return TraceContextOrSamplingFlags
 				.create(TraceContext.newBuilder().traceId(1L).spanId(2L).sampled(true).build());
 	}
 
-	@NotNull
 	private TraceContext.Builder contextBuilder() {
 		return TraceContext.newBuilder().traceId(1L).spanId(2L).sampled(true);
 	}

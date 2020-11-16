@@ -18,7 +18,6 @@ package org.springframework.cloud.sleuth.brave.sampler;
 
 import brave.sampler.CountingSampler;
 import brave.sampler.Sampler;
-import org.jetbrains.annotations.NotNull;
 
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -78,7 +77,6 @@ public class SamplerAutoConfiguration {
 			return sampler(config);
 		}
 
-		@NotNull
 		private Sampler sampler(SamplerProperties config) {
 			// TODO: Rewrite: refresh should replace the sampler, not change its state
 			// internally

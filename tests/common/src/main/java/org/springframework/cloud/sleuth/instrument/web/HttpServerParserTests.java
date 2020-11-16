@@ -24,7 +24,6 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.assertj.core.api.BDDAssertions;
 import org.awaitility.Awaitility;
-import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -82,7 +81,6 @@ public abstract class HttpServerParserTests {
 						.containsEntry("ServerResponseServlet", "200"));
 	}
 
-	@NotNull
 	protected Map<String, String> serverSideTags() {
 		return spans.reportedSpans().stream().filter(f -> f.getKind().equals(Span.Kind.SERVER))
 				.flatMap(f -> f.getTags().entrySet().stream())

@@ -19,13 +19,14 @@ package org.springframework.cloud.sleuth.brave.instrument.web;
 import java.util.List;
 import java.util.regex.Pattern;
 
+import javax.validation.constraints.NotNull;
+
 import brave.Tracing;
 import brave.http.HttpRequest;
 import brave.http.HttpTracing;
 import brave.http.HttpTracingCustomizer;
 import brave.sampler.SamplerFunction;
 import brave.sampler.SamplerFunctions;
-import org.jetbrains.annotations.NotNull;
 
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
@@ -142,7 +143,6 @@ public class TraceHttpAutoConfiguration {
 		return HttpTracing.newBuilder(tracing).clientSampler(httpClientSampler).serverSampler(combinedSampler);
 	}
 
-	@org.jetbrains.annotations.Nullable
 	private SamplerFunction<HttpRequest> httpServerSampler(BeanFactory beanFactory) {
 		return beanFactory.containsBean(HttpServerSampler.NAME) ? toBraveSampler(beanFactory, HttpServerSampler.NAME)
 				: null;
@@ -176,7 +176,6 @@ public class TraceHttpAutoConfiguration {
 				org.springframework.cloud.sleuth.api.SamplerFunction.class);
 	}
 
-	@NotNull
 	private <T> T returnOrThrow(Object bean, T convertedBean, String name, Class brave, Class sleuth) {
 		if (convertedBean == null) {
 			throw new IllegalStateException(

@@ -26,7 +26,6 @@ import io.opentelemetry.extension.trace.propagation.B3Propagator;
 import io.opentelemetry.sdk.trace.TracerSdkProvider;
 import io.opentelemetry.sdk.trace.config.TraceConfig;
 import io.opentelemetry.sdk.trace.samplers.Sampler;
-import org.jetbrains.annotations.NotNull;
 
 import org.springframework.cloud.sleuth.api.CurrentTraceContext;
 import org.springframework.cloud.sleuth.api.SamplerFunction;
@@ -77,7 +76,6 @@ public class OtelTestTracing implements TracerAware, TestTracingAware, TestTraci
 		return provider.get("org.springframework.cloud.sleuth");
 	}
 
-	@NotNull
 	protected ContextPropagators contextPropagators() {
 		return DefaultContextPropagators.builder()
 				.addTextMapPropagator(B3Propagator.builder().injectMultipleHeaders().build()).build();
