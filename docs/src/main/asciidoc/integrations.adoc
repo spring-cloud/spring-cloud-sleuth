@@ -1,5 +1,6 @@
 [[sleuth-integration]]
 = Spring Cloud Sleuth customization
+
 include::_attributes.adoc[]
 
 In this section, we describe how to customize various parts of Spring Cloud Sleuth.
@@ -43,7 +44,8 @@ If you want to skip span creation for some `@Scheduled` annotated classes, you c
 
 This feature is available for both Brave and OpenTelemetry tracer implementation.
 
-We provide `LazyTraceExecutor`, `TraceableExecutorService`, and `TraceableScheduledExecutorService`. Those implementations create spans each time a new task is submitted, invoked, or scheduled.
+We provide `LazyTraceExecutor`, `TraceableExecutorService`, and `TraceableScheduledExecutorService`.
+Those implementations create spans each time a new task is submitted, invoked, or scheduled.
 
 The following example shows how to pass tracing information with `TraceableExecutorService` when working with `CompletableFuture`:
 
@@ -56,8 +58,7 @@ include::{common_tests_path}/src/main/java/org/springframework/cloud/sleuth/inst
 IMPORTANT: Sleuth does not work with `parallelStream()` out of the box.
 If you want to have the tracing information propagated through the stream, you have to use the approach with `supplyAsync(...)`, as shown earlier.
 
-If there are beans that implement the `Executor` interface that you would like
-to exclude from span creation, you can use the `spring.sleuth.async.ignored-beans`
+If there are beans that implement the `Executor` interface that you would like to exclude from span creation, you can use the `spring.sleuth.async.ignored-beans`
 property where you can provide a list of bean names.
 
 You can disable this behavior by setting the value of `spring.sleuth.async.enabled` to `false`.
@@ -73,10 +74,8 @@ The following example shows how to set up such a custom `Executor`:
 include::{common_tests_path}/src/main/java/org/springframework/cloud/sleuth/instrument/web/client/MultipleAsyncRestTemplateTests.java[tags=custom_executor,indent=0]
 ----
 
-TIP: To ensure that your configuration gets post processed, remember
-to add the `@Role(BeanDefinition.ROLE_INFRASTRUCTURE)` on your
+TIP: To ensure that your configuration gets post processed, remember to add the `@Role(BeanDefinition.ROLE_INFRASTRUCTURE)` on your
 `@Configuration` class
-
 
 [[sleuth-http-client-integration]]
 == HTTP Client Integration
@@ -101,7 +100,9 @@ If you create a `RestTemplate` instance with a `new` keyword, the instrumentatio
 
 This feature is available for both Brave and OpenTelemetry tracer implementation.
 
-IMPORTANT: Starting with Sleuth `2.0.0`, we no longer register a bean of `AsyncRestTemplate` type. It is up to you to create such a bean. Then we instrument it.
+IMPORTANT: Starting with Sleuth `2.0.0`, we no longer register a bean of `AsyncRestTemplate` type.
+It is up to you to create such a bean.
+Then we instrument it.
 
 To block the `AsyncRestTemplate` features, set `spring.sleuth.web.async.client.enabled` to `false`.
 To disable creation of the default `TraceAsyncClientHttpRequestFactoryWrapper`, set `spring.sleuth.web.async.client.factory.enabled`
@@ -129,7 +130,7 @@ We inject a `ExchangeFilterFunction` implementation that creates a span and, thr
 To block this feature, set `spring.sleuth.web.client.enabled` to `false`.
 
 IMPORTANT: You have to register `WebClient` as a bean so that the tracing instrumentation gets applied.
-If you create a `WebClient` instance with a `new` keyword,  the instrumentation does NOT work.
+If you create a `WebClient` instance with a `new` keyword, the instrumentation does NOT work.
 
 [[sleuth-http-client-traverson-integration]]
 ==== Traverson
@@ -137,8 +138,8 @@ If you create a `WebClient` instance with a `new` keyword,  the instrumentation 
 This feature is available for both Brave and OpenTelemetry tracer implementation.
 
 If you use the https://docs.spring.io/spring-hateoas/docs/current/reference/html/#client.traverson[Traverson] library, you can inject a `RestTemplate` as a bean into your Traverson object.
-Since `RestTemplate` is already intercepted, you get full support for tracing in your client. The following pseudo code
-shows how to do that:
+Since `RestTemplate` is already intercepted, you get full support for tracing in your client.
+The following pseudo code shows how to do that:
 
 [source,java,indent=0]
 ----
@@ -154,8 +155,7 @@ Traverson traverson = new Traverson(URI.create("https://some/address"),
 
 This feature is available for Brave tracer implementation.
 
-We instrument the `HttpClientBuilder` and `HttpAsyncClientBuilder` so that
-tracing context gets injected to the sent requests.
+We instrument the `HttpClientBuilder` and `HttpAsyncClientBuilder` so that tracing context gets injected to the sent requests.
 
 To block these features, set `spring.sleuth.web.client.enabled` to `false`.
 
@@ -235,7 +235,9 @@ You can configure which URIs you would like to skip by using the `spring.sleuth.
 If you have `ManagementServerProperties` on the classpath, its value of `contextPath` gets appended to the provided skip pattern.
 If you want to reuse Sleuth's default skip patterns and append your own, pass those patterns by using the `spring.sleuth.web.additionalSkipPattern`.
 
-In order to achieve best results in terms of performance and context propagation we suggest that you switch the `spring.sleuth.reactor.instrumentation-type` to `MANUAL`. In order to execute code with the span in scope you can call `WebFluxSleuthOperators.withSpanInScope`. Example:
+In order to achieve best results in terms of performance and context propagation we suggest that you switch the `spring.sleuth.reactor.instrumentation-type` to `MANUAL`.
+In order to execute code with the span in scope you can call `WebFluxSleuthOperators.withSpanInScope`.
+Example:
 
 [source,java,indent=0]
 -----
@@ -265,8 +267,7 @@ By default, all channels but `hystrixStreamOutput` channel are included.
 IMPORTANT: When using the `Executor` to build a Spring Integration `IntegrationFlow`, you must use the untraced version of the `Executor`.
 Decorating the Spring Integration Executor Channel with `TraceableExecutorService` causes the spans to be improperly closed.
 
-If you want to customize the way tracing context is read from and written to message headers,
-it's enough for you to register beans of types:
+If you want to customize the way tracing context is read from and written to message headers, it's enough for you to register beans of types:
 
 * `Propagator.Setter<MessageHeaderAccessor>` - for writing headers to the message
 * `Propagator.Getter<MessageHeaderAccessor>` - for reading headers from the message
@@ -276,7 +277,10 @@ it's enough for you to register beans of types:
 
 This feature is available for both Brave and OpenTelemetry tracer implementation.
 
-Spring Cloud Sleuth can instrument Spring Cloud Function. The way to achieve it is to provide a `Function` or `Consumer` or `Supplier` that takes in a `Message` as a parameter e.g. `Function<Message<String>, Message<Integer>>`. If the type is not `Message` then instrumentation will not take place. Out of the box instrumentation will not take place when dealing with Reactor based streams - e.g. `Function<Flux<Message<String>>, Flux<Message<Integer>>>`.
+Spring Cloud Sleuth can instrument Spring Cloud Function.
+The way to achieve it is to provide a `Function` or `Consumer` or `Supplier` that takes in a `Message` as a parameter e.g. `Function<Message<String>, Message<Integer>>`.
+If the type is not `Message` then instrumentation will not take place.
+Out of the box instrumentation will not take place when dealing with Reactor based streams - e.g. `Function<Flux<Message<String>>, Flux<Message<Integer>>>`.
 
 Since Spring Cloud Stream reuses Spring Cloud Function, you'll get the instrumentation out of the box.
 
@@ -294,8 +298,7 @@ include::{project-root}/benchmarks/src/main/java/org/springframework/cloud/sleut
 
 This feature is available for Brave tracer implementation.
 
-We instrument the `RabbitTemplate` so that tracing headers get injected
-into the message.
+We instrument the `RabbitTemplate` so that tracing headers get injected into the message.
 
 To block this feature, set `spring.sleuth.messaging.rabbit.enabled` to `false`.
 
@@ -315,9 +318,7 @@ To block this feature, set `spring.sleuth.messaging.kafka.enabled` to `false`.
 
 This feature is available for Brave tracer implementation.
 
-We instrument the `KafkaStreams` `KafkaClientSupplier` so that tracing headers
-get injected into the `Producer` and `Consumer`s. A `KafkaStreamsTracing` bean
-allows for further instrumentation through additional `TransformerSupplier` and
+We instrument the `KafkaStreams` `KafkaClientSupplier` so that tracing headers get injected into the `Producer` and `Consumer`s. A `KafkaStreamsTracing` bean allows for further instrumentation through additional `TransformerSupplier` and
 `ProcessorSupplier` methods.
 
 To block this feature, set `spring.sleuth.messaging.kafka.streams.enabled` to `false`.
@@ -327,8 +328,8 @@ To block this feature, set `spring.sleuth.messaging.kafka.streams.enabled` to `f
 
 This feature is available for Brave tracer implementation.
 
-We instrument the `JmsTemplate` so that tracing headers get injected
-into the message. We also support `@JmsListener` annotated methods on the consumer side.
+We instrument the `JmsTemplate` so that tracing headers get injected into the message.
+We also support `@JmsListener` annotated methods on the consumer side.
 
 To block this feature, set `spring.sleuth.messaging.jms.enabled` to `false`.
 
@@ -347,7 +348,6 @@ Part of Feign instrumentation is done through a `FeignBeanPostProcessor`.
 You can disable it by setting `spring.sleuth.feign.processor.enabled` to `false`.
 If you set it to `false`, Spring Cloud Sleuth does not instrument any of your custom Feign components.
 However, all the default instrumentation is still there.
-
 
 [[sleuth-opentracing-integration]]
 == OpenTracing
@@ -372,14 +372,20 @@ To turn off this feature, set the `spring.sleuth.quartz.enabled` property to `fa
 
 This feature is available for both Brave and OpenTelemetry tracer implementation.
 
-We have three modes of instrumenting reactor based applications that can
-be set via `spring.sleuth.reactor.instrumentation-type` property:
+We have three modes of instrumenting reactor based applications that can be set via `spring.sleuth.reactor.instrumentation-type` property:
 
-* `ON_EACH` - wraps every Reactor operator in a trace representation. Passes the tracing context in most cases. This mode might lead to drastic performance degradation.
-* `ON_LAST` - wraps last Reactor operator in a trace representation. Passes the tracing context in some cases thus accessing MDC context might not work. This mode might lead to medium performance degradation.
-* `MANUAL` - wraps every Reactor in the least invasive way without passing of tracing context. It's up to the user to do it.
+* `ON_EACH` - wraps every Reactor operator in a trace representation.
+Passes the tracing context in most cases.
+This mode might lead to drastic performance degradation.
+* `ON_LAST` - wraps last Reactor operator in a trace representation.
+Passes the tracing context in some cases thus accessing MDC context might not work.
+This mode might lead to medium performance degradation.
+* `MANUAL` - wraps every Reactor in the least invasive way without passing of tracing context.
+It's up to the user to do it.
 
-Current default is `ON_EACH` for backward compatibility reasons, however we encourage the users to migrate to the `MANUAL` instrumentation and profit from `WebFluxSleuthOperators` and `MessagingSleuthOperators`. The performance improvement can be substantial. Example:
+Current default is `ON_EACH` for backward compatibility reasons, however we encourage the users to migrate to the `MANUAL` instrumentation and profit from `WebFluxSleuthOperators` and `MessagingSleuthOperators`.
+The performance improvement can be substantial.
+Example:
 
 [source,java,indent=0]
 -----
@@ -415,27 +421,23 @@ include::{brave_path}/src/test/java/org/springframework/cloud/sleuth/documentati
 
 That way, you ensure that a new span is created and closed for each execution.
 
-
 [[sleuth-rpc-integration]]
 == RPC
 
 This feature is available for Brave tracer implementation.
 
-Sleuth automatically configures the `RpcTracing` bean which serves as a
-foundation for RPC instrumentation such as gRPC or Dubbo.
+Sleuth automatically configures the `RpcTracing` bean which serves as a foundation for RPC instrumentation such as gRPC or Dubbo.
 
-If a customization of client / server sampling of the RPC traces is required,
-just register a bean of type `brave.sampler.SamplerFunction<RpcRequest>` and
-name the bean `sleuthRpcClientSampler` for client sampler and
+If a customization of client / server sampling of the RPC traces is required, just register a bean of type `brave.sampler.SamplerFunction<RpcRequest>` and name the bean `sleuthRpcClientSampler` for client sampler and
 `sleuthRpcServerSampler` for server sampler.
 
 For your convenience the `@RpcClientSampler` and `@RpcServerSampler`
-annotations can  be used to inject the proper beans or to reference the bean
-names via their  static String `NAME` fields.
+annotations can be used to inject the proper beans or to reference the bean names via their static String `NAME` fields.
 
-Ex. Here's a sampler that traces 100 "GetUserToken" server requests per second.
-This  doesn't start new traces for requests to the health check service. Other
-requests will use the global sampling configuration.
+Ex.
+Here's a sampler that traces 100 "GetUserToken" server requests per second.
+This doesn't start new traces for requests to the health check service.
+Other requests will use the global sampling configuration.
 
 [source,java,indent=0]
 ----
@@ -474,16 +476,19 @@ An example of Spring Cloud Sleuth and Dubbo can be found https://github.com/open
 [[sleuth-rpc-grpc-integration]]
 === gRPC
 
-Spring Cloud Sleuth provides instrumentation for https://grpc.io/[gRPC] through `TraceGrpcAutoConfiguration` via the Brave tracer. You can disable it entirely by setting `spring.sleuth.grpc.enabled` to `false`.
+Spring Cloud Sleuth provides instrumentation for https://grpc.io/[gRPC] through `TraceGrpcAutoConfiguration` via the Brave tracer.
+You can disable it entirely by setting `spring.sleuth.grpc.enabled` to `false`.
 
 [[sleuth-rpc-grpc-variant1-integration]]
 ==== Variant 1
 
 [[sleuth-rpc-grpc-variant1-dependencies-integration]]
 ===== Dependencies
+
 IMPORTANT: The gRPC integration relies on two external libraries to instrument clients and servers and both of those libraries must be on the class path to enable the instrumentation.
 
 Maven:
+
 ```
 		<dependency>
 			<groupId>io.github.lognet</groupId>
@@ -494,7 +499,9 @@ Maven:
 			<artifactId>brave-instrumentation-grpc</artifactId>
 		</dependency>
 ```
+
 Gradle:
+
 ```
     compile("io.github.lognet:grpc-spring-boot-starter")
     compile("io.zipkin.brave:brave-instrumentation-grpc")
@@ -508,9 +515,11 @@ Spring Cloud Sleuth leverages grpc-spring-boot-starter to register Brave's gRPC 
 [[sleuth-rpc-grpc-variant1-client-integration]]
 ===== Client Instrumentation
 
-gRPC clients leverage a `ManagedChannelBuilder` to construct a `ManagedChannel` used to communicate to the gRPC server. The native `ManagedChannelBuilder` provides static methods as entry points for construction of `ManagedChannel` instances, however, this mechanism is outside the influence of the Spring application context.
+gRPC clients leverage a `ManagedChannelBuilder` to construct a `ManagedChannel` used to communicate to the gRPC server.
+The native `ManagedChannelBuilder` provides static methods as entry points for construction of `ManagedChannel` instances, however, this mechanism is outside the influence of the Spring application context.
 
-IMPORTANT: Spring Cloud Sleuth provides a `SpringAwareManagedChannelBuilder` that can be customized through the Spring application context and injected by gRPC clients. *This builder must be used when creating `ManagedChannel` instances.*
+IMPORTANT: Spring Cloud Sleuth provides a `SpringAwareManagedChannelBuilder` that can be customized through the Spring application context and injected by gRPC clients.
+*This builder must be used when creating `ManagedChannel` instances.*
 
 Sleuth creates a `TracingManagedChannelBuilderCustomizer` which inject Brave's client interceptor into the `SpringAwareManagedChannelBuilder`.
 
@@ -531,12 +540,12 @@ To disable the custom `RxJavaSchedulersHook`, set the `spring.sleuth.rxjava.sche
 You can define a list of regular expressions for thread names for which you do not want spans to be created.
 To do so, provide a comma-separated list of regular expressions in the `spring.sleuth.rxjava.schedulers.ignoredthreads` property.
 
-IMPORTANT: The suggested approach to reactive programming and Sleuth is to use
-the Reactor support.
+IMPORTANT: The suggested approach to reactive programming and Sleuth is to use the Reactor support.
 
 [[sleuth-circuitbreaker-integration]]
 == Spring Cloud CircuitBreaker
 
 This feature is available for both Brave and OpenTelemetry tracer implementation.
 
-If you have Spring Cloud CircuitBreaker on the classpath, we will wrap the passed command `Supplier` and the fallback `Function` in its trace representations. In order to disable this instrumentation set `spring.sleuth.circuitbreaker.enabled` to `false`.
+If you have Spring Cloud CircuitBreaker on the classpath, we will wrap the passed command `Supplier` and the fallback `Function` in its trace representations.
+In order to disable this instrumentation set `spring.sleuth.circuitbreaker.enabled` to `false`.

@@ -31,6 +31,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 class TraceSpringIntegrationAutoConfigurationTests {
 
 	private final ApplicationContextRunner contextRunner = new ApplicationContextRunner()
+			.withPropertyValues("spring.sleuth.tracer.mode=noop")
 			.withConfiguration(AutoConfigurations.of(TraceAutoConfiguration.class,
 					TraceSpringMessagingAutoConfiguration.class, TraceSpringIntegrationAutoConfiguration.class));
 

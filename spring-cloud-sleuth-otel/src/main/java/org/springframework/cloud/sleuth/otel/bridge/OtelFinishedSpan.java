@@ -36,17 +36,17 @@ import org.springframework.cloud.sleuth.api.exporter.FinishedSpan;
  * @author Marcin Grzejszczak
  * @since 3.0.0
  */
-public class OtelFinishedSpan implements FinishedSpan {
+class OtelFinishedSpan implements FinishedSpan {
 
 	private final SpanData spanData;
 
 	private final Map<String, String> tags = new HashMap<>();
 
-	public OtelFinishedSpan(SpanData spanData) {
+	OtelFinishedSpan(SpanData spanData) {
 		this.spanData = spanData;
 	}
 
-	public static FinishedSpan fromOtel(SpanData span) {
+	static FinishedSpan fromOtel(SpanData span) {
 		return new OtelFinishedSpan(span);
 	}
 
@@ -137,7 +137,7 @@ public class OtelFinishedSpan implements FinishedSpan {
 		return "SpanDataToReportedSpan{" + "spanData=" + spanData + ", tags=" + tags + '}';
 	}
 
-	public static class AssertingThrowable extends Throwable {
+	static class AssertingThrowable extends Throwable {
 
 		/**
 		 * Attritbues set on the span.

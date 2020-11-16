@@ -43,7 +43,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.boot.autoconfigure.AutoConfigurations;
 import org.springframework.boot.test.context.assertj.AssertableApplicationContext;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
-import org.springframework.cloud.sleuth.brave.autoconfig.TraceBaggageConfiguration.BaggageTagSpanHandler;
+import org.springframework.cloud.sleuth.brave.autoconfig.BraveBaggageConfiguration.BaggageTagSpanHandler;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -56,7 +56,7 @@ public class TraceBaggageEntryConfigurationTests {
 	static final Set EMPTY_ARRAY = new HashSet();
 
 	private final ApplicationContextRunner contextRunner = new ApplicationContextRunner()
-			.withConfiguration(AutoConfigurations.of(TraceBaggageConfiguration.class));
+			.withConfiguration(AutoConfigurations.of(TraceBraveAutoConfiguration.class));
 
 	@Test
 	public void shouldCreateLocalFields() {
@@ -139,14 +139,14 @@ public class TraceBaggageEntryConfigurationTests {
 
 	static AbstractListAssert<?, List<? extends String>, String, ObjectAssert<String>> assertThatFieldNamesToTag(
 			AssertableApplicationContext context) {
-		return assertThat(context.getBean(SpanHandler.class)).isInstanceOf(BaggageTagSpanHandler.class)
-				.extracting("fieldsToTag").asInstanceOf(array(BaggageField[].class)).extracting(BaggageField::name);
+		return assertThat(context.getBean(BaggageTagSpanHandler.class)).extracting("fieldsToTag")
+				.asInstanceOf(array(BaggageField[].class)).extracting(BaggageField::name);
 	}
 
 	@Test
 	public void noopOnNoTagFields() {
 		this.contextRunner.withPropertyValues("spring.sleuth.baggage.tag-fields=").run((context) -> {
-			assertThat(context.getBean(SpanHandler.class)).isSameAs(SpanHandler.NOOP);
+			assertThat(context.getBean("baggageTagSpanHandler", SpanHandler.class)).isSameAs(SpanHandler.NOOP);
 		});
 	}
 

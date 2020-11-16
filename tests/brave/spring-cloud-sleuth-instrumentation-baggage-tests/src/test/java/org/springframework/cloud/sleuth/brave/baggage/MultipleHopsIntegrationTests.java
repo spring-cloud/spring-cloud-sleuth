@@ -24,7 +24,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.cloud.sleuth.api.Span;
 import org.springframework.cloud.sleuth.api.exporter.FinishedSpan;
 import org.springframework.cloud.sleuth.brave.BraveTestSpanHandler;
-import org.springframework.cloud.sleuth.brave.bridge.BraveTraceContext;
+import org.springframework.cloud.sleuth.brave.bridge.BraveAccessor;
 import org.springframework.cloud.sleuth.test.TestSpanHandler;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -52,12 +52,12 @@ public class MultipleHopsIntegrationTests
 		// set with baggage api
 		then(this.application.allSpans()).as("All have request ID")
 				.allMatch(span -> "f4308d05-2228-4468-80f6-92a8377ba193"
-						.equals(REQUEST_ID.getValue(BraveTraceContext.toBrave(span.context()))));
+						.equals(REQUEST_ID.getValue(BraveAccessor.traceContext(span.context()))));
 
 		// baz is not tagged in the initial span, only downstream!
 		then(this.application.allSpans()).as("All downstream have country-code")
 				.filteredOn(span -> !span.equals(initialSpan))
-				.allMatch(span -> "FO".equals(COUNTRY_CODE.getValue(BraveTraceContext.toBrave(span.context()))));
+				.allMatch(span -> "FO".equals(COUNTRY_CODE.getValue(BraveAccessor.traceContext(span.context()))));
 	}
 
 	@Configuration(proxyBeanMethods = false)

@@ -45,7 +45,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.actuate.autoconfigure.web.server.ManagementServerProperties;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.cloud.sleuth.instrument.web.TraceWebServletAutoConfiguration;
+import org.springframework.cloud.sleuth.instrument.web.TraceWebServletConfiguration;
 import org.springframework.cloud.sleuth.instrument.web.servlet.TracingFilter;
 import org.springframework.cloud.sleuth.util.SpanUtil;
 import org.springframework.context.annotation.Bean;
@@ -299,7 +299,7 @@ public class TraceFilterIntegrationTests extends AbstractMvcIntegrationTest {
 		}
 
 		@Bean
-		@Order(TraceWebServletAutoConfiguration.TRACING_FILTER_ORDER + 1)
+		@Order(TraceWebServletConfiguration.TRACING_FILTER_ORDER + 1)
 		Filter myFilter(Tracer tracer) {
 			return new MyFilter(tracer);
 		}
@@ -359,7 +359,7 @@ public class TraceFilterIntegrationTests extends AbstractMvcIntegrationTest {
 
 // tag::response_headers[]
 @Component
-@Order(TraceWebServletAutoConfiguration.TRACING_FILTER_ORDER + 1)
+@Order(TraceWebServletConfiguration.TRACING_FILTER_ORDER + 1)
 class MyFilter extends GenericFilterBean {
 
 	private final Tracer tracer;

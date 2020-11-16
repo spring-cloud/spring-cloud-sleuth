@@ -31,7 +31,6 @@ import org.springframework.cloud.sleuth.api.CurrentTraceContext;
 import org.springframework.cloud.sleuth.api.Tracer;
 import org.springframework.cloud.sleuth.api.http.HttpClientHandler;
 import org.springframework.cloud.sleuth.autoconfig.TraceAutoConfiguration;
-import org.springframework.cloud.sleuth.instrument.web.TraceHttpAutoConfiguration;
 import org.springframework.cloud.sleuth.instrument.web.mvc.TracingAsyncClientHttpRequestInterceptor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -52,7 +51,7 @@ import org.springframework.web.client.AsyncRestTemplate;
 @ConditionalOnProperty(value = "spring.sleuth.web.async.client.enabled", matchIfMissing = true)
 @ConditionalOnClass(AsyncRestTemplate.class)
 @ConditionalOnBean(Tracer.class)
-@AutoConfigureAfter({ TraceAutoConfiguration.class, TraceHttpAutoConfiguration.class })
+@AutoConfigureAfter(TraceAutoConfiguration.class)
 class TraceWebAsyncClientAutoConfiguration {
 
 	@Configuration(proxyBeanMethods = false)

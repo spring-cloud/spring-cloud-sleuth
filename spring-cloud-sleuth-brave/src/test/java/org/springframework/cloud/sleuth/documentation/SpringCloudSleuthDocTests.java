@@ -39,8 +39,7 @@ import org.springframework.cloud.sleuth.SpanName;
 import org.springframework.cloud.sleuth.SpanNamer;
 import org.springframework.cloud.sleuth.api.Span;
 import org.springframework.cloud.sleuth.api.Tracer;
-import org.springframework.cloud.sleuth.brave.bridge.BraveBaggageManager;
-import org.springframework.cloud.sleuth.brave.bridge.BraveTracer;
+import org.springframework.cloud.sleuth.brave.bridge.BraveTracerAccessor;
 import org.springframework.cloud.sleuth.instrument.async.TraceCallable;
 import org.springframework.cloud.sleuth.instrument.async.TraceRunnable;
 import org.springframework.cloud.sleuth.internal.DefaultSpanNamer;
@@ -67,10 +66,7 @@ public class SpringCloudSleuthDocTests {
 
 	brave.Tracer braveTracer = this.tracing.tracer();
 
-	BraveBaggageManager braveBaggageManager = new BraveBaggageManager();
-
-	org.springframework.cloud.sleuth.api.Tracer tracer = BraveTracer.fromBrave(this.braveTracer,
-			this.braveBaggageManager);
+	org.springframework.cloud.sleuth.api.Tracer tracer = BraveTracerAccessor.braveTracer(this.braveTracer);
 
 	@BeforeEach
 	public void setup() {

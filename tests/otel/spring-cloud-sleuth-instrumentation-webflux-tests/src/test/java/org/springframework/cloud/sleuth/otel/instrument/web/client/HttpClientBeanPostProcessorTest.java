@@ -23,14 +23,14 @@ import io.opentelemetry.api.trace.TraceId;
 import io.opentelemetry.api.trace.TraceState;
 
 import org.springframework.cloud.sleuth.api.TraceContext;
-import org.springframework.cloud.sleuth.otel.bridge.OtelTraceContext;
+import org.springframework.cloud.sleuth.otel.bridge.OtelAccessor;
 
 public class HttpClientBeanPostProcessorTest
 		extends org.springframework.cloud.sleuth.instrument.web.client.HttpClientBeanPostProcessorTest {
 
 	@Override
 	public TraceContext traceContext() {
-		return OtelTraceContext.fromOtel(SpanContext.create(TraceId.fromLongs(1L, 0L), SpanId.fromLong(2L),
+		return OtelAccessor.traceContext(SpanContext.create(TraceId.fromLongs(1L, 0L), SpanId.fromLong(2L),
 				TraceFlags.getSampled(), TraceState.builder().build()));
 	}
 

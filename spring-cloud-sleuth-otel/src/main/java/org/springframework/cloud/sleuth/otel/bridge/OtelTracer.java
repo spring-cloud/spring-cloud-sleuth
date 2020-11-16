@@ -36,18 +36,18 @@ import org.springframework.cloud.sleuth.api.Tracer;
  * @author Marcin Grzejszczak
  * @since 3.0.0
  */
-public class OtelTracer implements Tracer {
+class OtelTracer implements Tracer {
 
 	private final io.opentelemetry.api.trace.Tracer tracer;
 
 	private final OtelBaggageManager otelBaggageManager;
 
-	public OtelTracer(io.opentelemetry.api.trace.Tracer tracer, OtelBaggageManager otelBaggageManager) {
+	OtelTracer(io.opentelemetry.api.trace.Tracer tracer, OtelBaggageManager otelBaggageManager) {
 		this.tracer = tracer;
 		this.otelBaggageManager = otelBaggageManager;
 	}
 
-	public static Tracer fromOtel(io.opentelemetry.api.trace.Tracer tracer, OtelBaggageManager otelBaggageManager) {
+	static Tracer fromOtel(io.opentelemetry.api.trace.Tracer tracer, OtelBaggageManager otelBaggageManager) {
 		return new OtelTracer(tracer, otelBaggageManager);
 	}
 

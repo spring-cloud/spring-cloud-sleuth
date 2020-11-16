@@ -40,7 +40,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.AutoConfigurations;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
 import org.springframework.cloud.sleuth.autoconfig.TraceAutoConfiguration;
-import org.springframework.cloud.sleuth.brave.sampler.SamplerAutoConfigurationTests;
+import org.springframework.cloud.sleuth.brave.sampler.SamplerConfigurationTests;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -50,8 +50,8 @@ public class TraceBraveAutoConfigurationTests {
 			.withConfiguration(AutoConfigurations.of(TraceAutoConfiguration.class, TraceBraveAutoConfiguration.class));
 
 	/**
-	 * Duplicates {@link SamplerAutoConfigurationTests} intentionally, to ensure
-	 * configuration condition bugs do not exist.
+	 * Duplicates {@link SamplerConfigurationTests} intentionally, to ensure configuration
+	 * condition bugs do not exist.
 	 */
 	@Test
 	void should_use_NEVER_SAMPLER_when_only_logging() {
@@ -62,8 +62,8 @@ public class TraceBraveAutoConfigurationTests {
 	}
 
 	/**
-	 * Duplicates {@link SamplerAutoConfigurationTests} intentionally, to ensure
-	 * configuration condition bugs do not exist.
+	 * Duplicates {@link SamplerConfigurationTests} intentionally, to ensure configuration
+	 * condition bugs do not exist.
 	 */
 	@Test
 	void should_use_RateLimitedSampler_withSpanHandler() {
@@ -74,8 +74,8 @@ public class TraceBraveAutoConfigurationTests {
 	}
 
 	/**
-	 * Duplicates {@link SamplerAutoConfigurationTests} intentionally, to ensure
-	 * configuration condition bugs do not exist.
+	 * Duplicates {@link SamplerConfigurationTests} intentionally, to ensure configuration
+	 * condition bugs do not exist.
 	 */
 	@Test
 	void should_override_sampler() {

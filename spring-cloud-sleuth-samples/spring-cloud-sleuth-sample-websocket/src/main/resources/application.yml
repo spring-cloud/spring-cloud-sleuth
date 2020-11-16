@@ -4,6 +4,10 @@ server:
 spring:
   application:
     name: testSleuthWebsocket
+  sleuth:
+    tracer:
+      mode: noop
+
 
 sample:
   zipkin:

@@ -148,7 +148,8 @@ class SimpleFunction implements Function<String, String> {
 
 	@Override
 	public String apply(String input) {
-		// tracing works cause headers from the input message get propagated to the output message
+		// tracing works cause headers from the input message get propagated to the output
+		// message
 		log.info("Hello from simple [{}]", input);
 		return input.toUpperCase();
 	}
@@ -185,7 +186,8 @@ class SimpleManualFunction implements Function<Message<String>, Message<String>>
 				})).andThen(msg -> MessagingSleuthOperators.afterMessageHandled(this.beanFactory, msg, null))
 				.andThen(msg -> MessagingSleuthOperators.handleOutputMessage(this.beanFactory, msg))
 				.andThen(msg -> MessageBuilder.createMessage(msg.getPayload().toUpperCase(), msg.getHeaders()))
-				.andThen(msg -> MessagingSleuthOperators.afterMessageHandled(this.beanFactory, msg, null)).apply(input));
+				.andThen(msg -> MessagingSleuthOperators.afterMessageHandled(this.beanFactory, msg, null))
+				.apply(input));
 	}
 
 }

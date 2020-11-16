@@ -27,11 +27,11 @@ import org.springframework.cloud.sleuth.api.TraceContext;
  * @author Marcin Grzejszczak
  * @since 3.0.0
  */
-public class BraveBaggageInScope implements BaggageInScope {
+class BraveBaggageInScope implements BaggageInScope {
 
 	private final BaggageField delegate;
 
-	public BraveBaggageInScope(BaggageField delegate) {
+	BraveBaggageInScope(BaggageField delegate) {
 		this.delegate = delegate;
 	}
 

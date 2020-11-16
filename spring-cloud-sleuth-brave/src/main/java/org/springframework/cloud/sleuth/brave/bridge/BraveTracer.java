@@ -33,13 +33,13 @@ import org.springframework.cloud.sleuth.api.Tracer;
  * @author Marcin Grzejszczak
  * @since 3.0.0
  */
-public class BraveTracer implements Tracer {
+class BraveTracer implements Tracer {
 
 	private final brave.Tracer tracer;
 
 	private final BraveBaggageManager braveBaggageManager;
 
-	public BraveTracer(brave.Tracer tracer, BraveBaggageManager braveBaggageManager) {
+	BraveTracer(brave.Tracer tracer, BraveBaggageManager braveBaggageManager) {
 		this.tracer = tracer;
 		this.braveBaggageManager = braveBaggageManager;
 	}

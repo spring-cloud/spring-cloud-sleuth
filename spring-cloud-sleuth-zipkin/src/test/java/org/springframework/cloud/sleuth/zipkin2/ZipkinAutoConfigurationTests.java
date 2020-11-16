@@ -62,10 +62,8 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
 import org.springframework.cloud.sleuth.autoconfig.TraceAutoConfiguration;
 import org.springframework.cloud.sleuth.brave.autoconfig.TraceBraveAutoConfiguration;
-import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.mock.env.MockEnvironment;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.BDDAssertions.then;
@@ -85,10 +83,6 @@ public class ZipkinAutoConfigurationTests {
 
 	public MockWebServer server = new MockWebServer();
 
-	MockEnvironment environment = new MockEnvironment();
-
-	AnnotationConfigApplicationContext context;
-
 	@BeforeEach
 	void setup() throws IOException {
 		server.start();
@@ -97,13 +91,6 @@ public class ZipkinAutoConfigurationTests {
 	@AfterEach
 	void clean() throws IOException {
 		server.close();
-	}
-
-	@AfterEach
-	public void close() {
-		if (this.context != null) {
-			this.context.close();
-		}
 	}
 
 	@Test
@@ -153,197 +140,151 @@ public class ZipkinAutoConfigurationTests {
 
 	@Test
 	void defaultsToV2Endpoint() throws Exception {
-		this.context = new AnnotationConfigApplicationContext();
-		environment().setProperty("spring.zipkin.base-url", this.server.url("/").toString());
-		this.context.register(ZipkinAutoConfiguration.class, ZipkinBraveAutoConfiguration.class,
-				PropertyPlaceholderAutoConfiguration.class, TraceAutoConfiguration.class,
-				TraceBraveAutoConfiguration.class, Config.class);
-		this.context.refresh();
-		Span span = this.context.getBean(Tracing.class).tracer().nextSpan().name("foo").tag("foo", "bar").start();
+		zipkinBraveRunner().withPropertyValues("spring.zipkin.base-url=" + this.server.url("/").toString())
+				.run(context -> {
+					Span span = context.getBean(Tracing.class).tracer().nextSpan().name("foo").tag("foo", "bar")
+							.start();
 
-		span.finish();
+					span.finish();
 
-		this.context.getBean(ZipkinAutoConfiguration.REPORTER_BEAN_NAME, AsyncReporter.class).flush();
-		Awaitility.await().atMost(250, TimeUnit.MILLISECONDS)
-				.untilAsserted(() -> then(this.server.getRequestCount()).isGreaterThan(1));
+					context.getBean(ZipkinAutoConfiguration.REPORTER_BEAN_NAME, AsyncReporter.class).flush();
+					Awaitility.await().atMost(250, TimeUnit.MILLISECONDS)
+							.untilAsserted(() -> then(this.server.getRequestCount()).isGreaterThan(1));
 
-		Awaitility.await().atMost(5, TimeUnit.SECONDS).untilAsserted(() -> {
-			RecordedRequest request = this.server.takeRequest(1, TimeUnit.SECONDS);
-			then(request.getPath()).isEqualTo("/api/v2/spans");
-			then(request.getBody().readUtf8()).contains("localEndpoint");
-		});
+					Awaitility.await().atMost(5, TimeUnit.SECONDS).untilAsserted(() -> {
+						RecordedRequest request = this.server.takeRequest(1, TimeUnit.SECONDS);
+						then(request.getPath()).isEqualTo("/api/v2/spans");
+						then(request.getBody().readUtf8()).contains("localEndpoint");
+					});
+				});
 	}
 
-	private MockEnvironment environment() {
-		this.context.setEnvironment(this.environment);
-		return this.environment;
+	private ApplicationContextRunner zipkinBraveRunner() {
+		return new ApplicationContextRunner()
+				.withConfiguration(AutoConfigurations.of(ZipkinAutoConfiguration.class,
+						ZipkinBraveAutoConfiguration.class, PropertyPlaceholderAutoConfiguration.class,
+						TraceAutoConfiguration.class, TraceBraveAutoConfiguration.class, KafkaAutoConfiguration.class,
+						RabbitAutoConfiguration.class, ActiveMQAutoConfiguration.class))
+				.withUserConfiguration(Config.class);
 	}
 
 	@Test
 	public void encoderDirectsEndpoint() throws Exception {
-		this.context = new AnnotationConfigApplicationContext();
-		environment().setProperty("spring.zipkin.base-url", this.server.url("/").toString());
-		environment().setProperty("spring.zipkin.encoder", "JSON_V1");
-		this.context.register(ZipkinAutoConfiguration.class, ZipkinBraveAutoConfiguration.class,
-				PropertyPlaceholderAutoConfiguration.class, TraceAutoConfiguration.class,
-				TraceBraveAutoConfiguration.class, Config.class);
-		this.context.refresh();
-		Span span = this.context.getBean(Tracing.class).tracer().nextSpan().name("foo").tag("foo", "bar").start();
+		zipkinBraveRunner().withPropertyValues("spring.zipkin.base-url=" + this.server.url("/").toString(),
+				"spring.zipkin.encoder=JSON_V1").run(context -> {
+					Span span = context.getBean(Tracing.class).tracer().nextSpan().name("foo").tag("foo", "bar")
+							.start();
 
-		span.finish();
+					span.finish();
 
-		Awaitility.await().atMost(250, TimeUnit.MILLISECONDS)
-				.untilAsserted(() -> then(this.server.getRequestCount()).isGreaterThan(0));
+					Awaitility.await().atMost(250, TimeUnit.MILLISECONDS)
+							.untilAsserted(() -> then(this.server.getRequestCount()).isGreaterThan(0));
 
-		Awaitility.await().atMost(5, TimeUnit.SECONDS).untilAsserted(() -> {
-			RecordedRequest request = this.server.takeRequest(1, TimeUnit.SECONDS);
-			then(request.getPath()).isEqualTo("/api/v1/spans");
-			then(request.getBody().readUtf8()).contains("binaryAnnotations");
-		});
+					Awaitility.await().atMost(5, TimeUnit.SECONDS).untilAsserted(() -> {
+						RecordedRequest request = this.server.takeRequest(1, TimeUnit.SECONDS);
+						then(request.getPath()).isEqualTo("/api/v1/spans");
+						then(request.getBody().readUtf8()).contains("binaryAnnotations");
+					});
+				});
 	}
 
 	@Test
 	public void overrideRabbitMQQueue() throws Exception {
-		this.context = new AnnotationConfigApplicationContext();
-		environment().setProperty("spring.zipkin.rabbitmq.queue", "zipkin2");
-		environment().setProperty("spring.zipkin.sender.type", "rabbit");
-		this.context.register(PropertyPlaceholderAutoConfiguration.class, RabbitAutoConfiguration.class,
-				ZipkinAutoConfiguration.class, TraceAutoConfiguration.class);
-		this.context.refresh();
-
-		then(this.context.getBean(Sender.class)).isInstanceOf(RabbitMQSender.class);
-
-		this.context.close();
+		zipkinBraveRunner()
+				.withPropertyValues("spring.zipkin.rabbitmq.queue=zipkin2", "spring.zipkin.sender.type=rabbit")
+				.run(context -> then(context.getBean(Sender.class)).isInstanceOf(RabbitMQSender.class));
 	}
 
 	@Test
 	public void overrideKafkaTopic() throws Exception {
-		this.context = new AnnotationConfigApplicationContext();
-		environment().setProperty("spring.zipkin.kafka.topic", "zipkin2");
-		environment().setProperty("spring.zipkin.sender.type", "kafka");
-		this.context.register(PropertyPlaceholderAutoConfiguration.class, KafkaAutoConfiguration.class,
-				ZipkinAutoConfiguration.class, TraceAutoConfiguration.class);
-		this.context.refresh();
-
-		then(this.context.getBean(Sender.class)).isInstanceOf(KafkaSender.class);
-
-		this.context.close();
+		zipkinBraveRunner().withPropertyValues("spring.zipkin.kafka.topic=zipkin2", "spring.zipkin.sender.type=kafka")
+				.run(context -> then(context.getBean(Sender.class)).isInstanceOf(KafkaSender.class));
 	}
 
 	@Test
 	public void overrideActiveMqQueue() throws Exception {
-		this.context = new AnnotationConfigApplicationContext();
-		environment().setProperty("spring.jms.cache.enabled", "false");
-		environment().setProperty("spring.zipkin.activemq.queue", "zipkin2");
-		environment().setProperty("spring.zipkin.activemq.message-max-bytes", "50");
-		environment().setProperty("spring.zipkin.sender.type", "activemq");
-		this.context.register(PropertyPlaceholderAutoConfiguration.class, ActiveMQAutoConfiguration.class,
-				ZipkinAutoConfiguration.class, TraceAutoConfiguration.class);
-		this.context.refresh();
-
-		then(this.context.getBean(Sender.class)).isInstanceOf(ActiveMQSender.class);
-
-		this.context.close();
+		zipkinBraveRunner()
+				.withPropertyValues("spring.jms.cache.enabled=false", "spring.zipkin.activemq.queue=zipkin2",
+						"spring.zipkin.activemq.message-max-bytes=50", "spring.zipkin.sender.type=activemq")
+				.run(context -> then(context.getBean(Sender.class)).isInstanceOf(ActiveMQSender.class));
 	}
 
 	@Test
 	public void canOverrideBySender() throws Exception {
-		this.context = new AnnotationConfigApplicationContext();
-		environment().setProperty("spring.zipkin.sender.type", "web");
-		this.context.register(PropertyPlaceholderAutoConfiguration.class, RabbitAutoConfiguration.class,
-				KafkaAutoConfiguration.class, ZipkinAutoConfiguration.class, TraceAutoConfiguration.class);
-		this.context.refresh();
-
-		then(this.context.getBean(Sender.class).getClass().getName()).contains("RestTemplateSender");
-
-		this.context.close();
+		zipkinBraveRunner().withPropertyValues("spring.zipkin.sender.type=web").run(
+				context -> then(context.getBean(Sender.class).getClass().getName()).contains("RestTemplateSender"));
 	}
 
 	@Test
 	public void canOverrideBySenderAndIsCaseInsensitive() throws Exception {
-		this.context = new AnnotationConfigApplicationContext();
-		environment().setProperty("spring.zipkin.sender.type", "WEB");
-		this.context.register(PropertyPlaceholderAutoConfiguration.class, RabbitAutoConfiguration.class,
-				KafkaAutoConfiguration.class, ZipkinAutoConfiguration.class, TraceAutoConfiguration.class);
-		this.context.refresh();
-
-		then(this.context.getBean(Sender.class).getClass().getName()).contains("RestTemplateSender");
-
-		this.context.close();
+		zipkinBraveRunner().withPropertyValues("spring.zipkin.sender.type=WEB").run(
+				context -> then(context.getBean(Sender.class).getClass().getName()).contains("RestTemplateSender"));
 	}
 
 	@Test
 	public void rabbitWinsWhenKafkaPresent() throws Exception {
-		this.context = new AnnotationConfigApplicationContext();
-		environment().setProperty("spring.zipkin.sender.type", "rabbit");
-		this.context.register(PropertyPlaceholderAutoConfiguration.class, RabbitAutoConfiguration.class,
-				KafkaAutoConfiguration.class, ZipkinAutoConfiguration.class, TraceAutoConfiguration.class);
-		this.context.refresh();
-
-		then(this.context.getBean(Sender.class)).isInstanceOf(RabbitMQSender.class);
-
-		this.context.close();
+		zipkinBraveRunner().withPropertyValues("spring.zipkin.sender.type=rabbit")
+				.run(context -> then(context.getBean(Sender.class)).isInstanceOf(RabbitMQSender.class));
 	}
 
 	@Test
 	public void supportsMultipleReporters() throws Exception {
-		this.context = new AnnotationConfigApplicationContext();
-		environment().setProperty("spring.zipkin.base-url", this.server.url("/").toString());
-		this.context.register(ZipkinAutoConfiguration.class, ZipkinBraveAutoConfiguration.class,
-				PropertyPlaceholderAutoConfiguration.class, TraceAutoConfiguration.class,
-				TraceBraveAutoConfiguration.class, Config.class, MultipleReportersConfig.class);
-		this.context.refresh();
+		zipkinBraveRunner().withUserConfiguration(MultipleReportersConfig.class)
+				.withPropertyValues("spring.zipkin.base-url=" + this.server.url("/").toString()).run(context -> {
+					then(context.getBeansOfType(Sender.class)).hasSize(2);
+					then(context.getBeansOfType(Sender.class)).containsKeys(ZipkinAutoConfiguration.SENDER_BEAN_NAME,
+							"otherSender");
 
-		then(this.context.getBeansOfType(Sender.class)).hasSize(2);
-		then(this.context.getBeansOfType(Sender.class)).containsKeys(ZipkinAutoConfiguration.SENDER_BEAN_NAME,
-				"otherSender");
+					then(context.getBeansOfType(Reporter.class)).hasSize(2);
+					then(context.getBeansOfType(Reporter.class))
+							.containsKeys(ZipkinAutoConfiguration.REPORTER_BEAN_NAME, "otherReporter");
 
-		then(this.context.getBeansOfType(Reporter.class)).hasSize(2);
-		then(this.context.getBeansOfType(Reporter.class)).containsKeys(ZipkinAutoConfiguration.REPORTER_BEAN_NAME,
-				"otherReporter");
+					Span span = context.getBean(Tracing.class).tracer().nextSpan().name("foo").tag("foo", "bar")
+							.start();
 
-		Span span = this.context.getBean(Tracing.class).tracer().nextSpan().name("foo").tag("foo", "bar").start();
+					span.finish();
 
-		span.finish();
+					context.getBean(ZipkinAutoConfiguration.REPORTER_BEAN_NAME, AsyncReporter.class).flush();
+					Awaitility.await().atMost(250, TimeUnit.MILLISECONDS)
+							.untilAsserted(() -> then(this.server.getRequestCount()).isGreaterThan(1));
 
-		this.context.getBean(ZipkinAutoConfiguration.REPORTER_BEAN_NAME, AsyncReporter.class).flush();
-		Awaitility.await().atMost(250, TimeUnit.MILLISECONDS)
-				.untilAsserted(() -> then(this.server.getRequestCount()).isGreaterThan(1));
+					Awaitility.await().atMost(5, TimeUnit.SECONDS).untilAsserted(() -> {
+						RecordedRequest request = this.server.takeRequest(1, TimeUnit.SECONDS);
+						then(request.getPath()).isEqualTo("/api/v2/spans");
+						then(request.getBody().readUtf8()).contains("localEndpoint");
+					});
 
-		Awaitility.await().atMost(5, TimeUnit.SECONDS).untilAsserted(() -> {
-			RecordedRequest request = this.server.takeRequest(1, TimeUnit.SECONDS);
-			then(request.getPath()).isEqualTo("/api/v2/spans");
-			then(request.getBody().readUtf8()).contains("localEndpoint");
-		});
-
-		MultipleReportersConfig.OtherSender sender = this.context.getBean(MultipleReportersConfig.OtherSender.class);
-		Awaitility.await().atMost(250, TimeUnit.MILLISECONDS).untilAsserted(() -> then(sender.isSpanSent()).isTrue());
+					MultipleReportersConfig.OtherSender sender = context
+							.getBean(MultipleReportersConfig.OtherSender.class);
+					Awaitility.await().atMost(250, TimeUnit.MILLISECONDS)
+							.untilAsserted(() -> then(sender.isSpanSent()).isTrue());
+				});
 	}
 
 	@Test
 	public void shouldOverrideDefaultBeans() {
-		this.context = new AnnotationConfigApplicationContext();
-		this.context.register(ZipkinAutoConfiguration.class, ZipkinBraveAutoConfiguration.class,
-				PropertyPlaceholderAutoConfiguration.class, TraceAutoConfiguration.class,
-				TraceBraveAutoConfiguration.class, Config.class, MyConfig.class);
-		this.context.refresh();
+		zipkinBraveRunner().withUserConfiguration(MyConfig.class).withPropertyValues("spring.zipkin.sender.type=rabbit",
+				"spring.zipkin.base-url=" + this.server.url("/").toString()).run(context -> {
+					then(context.getBeansOfType(Sender.class)).hasSize(1);
+					then(context.getBeansOfType(Sender.class)).containsKeys(ZipkinAutoConfiguration.SENDER_BEAN_NAME);
 
-		then(this.context.getBeansOfType(Sender.class)).hasSize(1);
-		then(this.context.getBeansOfType(Sender.class)).containsKeys(ZipkinAutoConfiguration.SENDER_BEAN_NAME);
+					then(context.getBeansOfType(Reporter.class)).hasSize(1);
+					then(context.getBeansOfType(Reporter.class))
+							.containsKeys(ZipkinAutoConfiguration.REPORTER_BEAN_NAME);
 
-		then(this.context.getBeansOfType(Reporter.class)).hasSize(1);
-		then(this.context.getBeansOfType(Reporter.class)).containsKeys(ZipkinAutoConfiguration.REPORTER_BEAN_NAME);
+					Span span = context.getBean(Tracing.class).tracer().nextSpan().name("foo").tag("foo", "bar")
+							.start();
 
-		Span span = this.context.getBean(Tracing.class).tracer().nextSpan().name("foo").tag("foo", "bar").start();
+					span.finish();
 
-		span.finish();
+					Awaitility.await().atMost(250, TimeUnit.MILLISECONDS)
+							.untilAsserted(() -> then(this.server.getRequestCount()).isEqualTo(0));
 
-		Awaitility.await().atMost(250, TimeUnit.MILLISECONDS)
-				.untilAsserted(() -> then(this.server.getRequestCount()).isEqualTo(0));
-
-		this.context.getBean(ZipkinAutoConfiguration.REPORTER_BEAN_NAME, AsyncReporter.class).flush();
-		MyConfig.MySender sender = this.context.getBean(MyConfig.MySender.class);
-		Awaitility.await().atMost(250, TimeUnit.MILLISECONDS).untilAsserted(() -> then(sender.isSpanSent()).isTrue());
+					context.getBean(ZipkinAutoConfiguration.REPORTER_BEAN_NAME, AsyncReporter.class).flush();
+					MyConfig.MySender sender = context.getBean(MyConfig.MySender.class);
+					Awaitility.await().atMost(250, TimeUnit.MILLISECONDS)
+							.untilAsserted(() -> then(sender.isSpanSent()).isTrue());
+				});
 	}
 
 	@Test

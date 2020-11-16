@@ -43,7 +43,7 @@ import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.boot.test.system.CapturedOutput;
 import org.springframework.boot.test.system.OutputCaptureExtension;
 import org.springframework.cloud.sleuth.api.CurrentTraceContext;
-import org.springframework.cloud.sleuth.brave.bridge.BraveSpan;
+import org.springframework.cloud.sleuth.brave.bridge.BraveAccessor;
 import org.springframework.cloud.sleuth.instrument.reactor.Issue866Configuration;
 import org.springframework.cloud.sleuth.instrument.reactor.TraceReactorAutoConfigurationAccessorConfiguration;
 import org.springframework.cloud.sleuth.instrument.web.WebFluxSleuthOperators;
@@ -273,7 +273,7 @@ public class FlatMapTests {
 				ServerWebExchange exchange = request.exchange();
 				WebFluxSleuthOperators.withSpanInScope(tracing, currentTraceContext, exchange, () -> {
 					LOGGER.info("foo");
-					this.spanInFoo = BraveSpan.toBrave(tracing.currentSpan());
+					this.spanInFoo = BraveAccessor.braveSpan(tracing.currentSpan());
 				});
 				return ServerResponse.ok().body(Flux.just(1), Integer.class);
 			});

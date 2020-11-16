@@ -59,13 +59,12 @@ public class SleuthWebProperties {
 
 	/**
 	 * Order in which the tracing filters should be registered. Defaults to
-	 * {@link TraceWebServletAutoConfiguration#TRACING_FILTER_ORDER}.
+	 * {@link TraceWebServletConfiguration#TRACING_FILTER_ORDER}.
 	 */
-	private int filterOrder = TraceWebServletAutoConfiguration.TRACING_FILTER_ORDER;
+	private int filterOrder = TraceWebServletConfiguration.TRACING_FILTER_ORDER;
 
 	/**
 	 * If set to true, auto-configured skip patterns will be ignored.
-	 * @see SkipPatternConfiguration
 	 */
 	private boolean ignoreAutoConfiguredSkipPatterns = false;
 
@@ -73,6 +72,11 @@ public class SleuthWebProperties {
 	 * Properties related to HTTP clients.
 	 */
 	private Client client = new Client();
+
+	/**
+	 * Properties related to servlets.
+	 */
+	private Servlet servlet = new Servlet();
 
 	public static String getDefaultSkipPattern() {
 		return DEFAULT_SKIP_PATTERN;
@@ -126,6 +130,14 @@ public class SleuthWebProperties {
 		this.client = client;
 	}
 
+	public Servlet getServlet() {
+		return this.servlet;
+	}
+
+	public void setServlet(Servlet servlet) {
+		this.servlet = servlet;
+	}
+
 	static String emptyToNull(String skipPattern) {
 		if (skipPattern != null && skipPattern.isEmpty()) {
 			skipPattern = null; // otherwise this would skip paths named ""!
@@ -165,6 +177,28 @@ public class SleuthWebProperties {
 
 		public void setSkipPattern(String skipPattern) {
 			this.skipPattern = emptyToNull(skipPattern);
+		}
+
+	}
+
+	/**
+	 * Web client properties.
+	 *
+	 * @author Marcin Grzejszczak
+	 */
+	public static class Servlet {
+
+		/**
+		 * Enable servlet instrumentation.
+		 */
+		private boolean enabled = true;
+
+		public boolean isEnabled() {
+			return this.enabled;
+		}
+
+		public void setEnabled(boolean enabled) {
+			this.enabled = enabled;
 		}
 
 	}

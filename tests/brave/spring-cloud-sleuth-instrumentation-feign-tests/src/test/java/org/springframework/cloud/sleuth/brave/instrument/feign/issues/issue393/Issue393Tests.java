@@ -32,7 +32,6 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
 import org.springframework.cloud.openfeign.EnableFeignClients;
 import org.springframework.cloud.openfeign.FeignClient;
-import org.springframework.cloud.sleuth.instrument.web.TraceWebServletAutoConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.ResponseEntity;
@@ -58,7 +57,8 @@ interface MyNameRemote {
  */
 
 @SpringBootTest(classes = Application.class, webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT)
-@TestPropertySource(properties = { "spring.application.name=demo-feign-uri", "server.port=9978" })
+@TestPropertySource(properties = { "spring.application.name=demo-feign-uri", "server.port=9978",
+		"spring.sleuth.web.servlet.enabled=false" })
 public class Issue393Tests {
 
 	RestTemplate template = new RestTemplate();
@@ -90,10 +90,7 @@ public class Issue393Tests {
 }
 
 @Configuration(proxyBeanMethods = false)
-@EnableAutoConfiguration(
-		// spring boot test will otherwise instrument the client and server with the
-		// same bean factory which isn't expected
-		exclude = TraceWebServletAutoConfiguration.class)
+@EnableAutoConfiguration
 @EnableFeignClients
 @EnableDiscoveryClient
 class Application {

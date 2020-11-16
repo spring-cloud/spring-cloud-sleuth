@@ -75,8 +75,11 @@ public class SampleTests {
 	public static class BenchmarkContext {
 
 		volatile ConfigurableApplicationContext applicationContext;
+
 		volatile InputDestination input;
+
 		volatile OutputDestination output;
+
 		@Param
 		private Instrumentation instrumentation;
 

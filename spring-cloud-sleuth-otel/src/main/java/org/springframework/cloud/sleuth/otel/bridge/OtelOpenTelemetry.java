@@ -31,7 +31,7 @@ import io.opentelemetry.context.propagation.ContextPropagators;
  * @author Marcin Grzejszczak
  * @since 3.0.0
  */
-public class OtelOpenTelemetry implements OpenTelemetry {
+class OtelOpenTelemetry implements OpenTelemetry {
 
 	private final TracerProviderFactory tracerProviderFactory;
 
@@ -43,7 +43,7 @@ public class OtelOpenTelemetry implements OpenTelemetry {
 
 	private final ContextPropagators contextPropagators;
 
-	public OtelOpenTelemetry(TracerProviderFactory tracerProviderFactory, MeterProviderFactory meterProviderFactory,
+	OtelOpenTelemetry(TracerProviderFactory tracerProviderFactory, MeterProviderFactory meterProviderFactory,
 			TracerProvider tracerProvider, MeterProvider meterProvider, ContextPropagators contextPropagators) {
 		this.tracerProviderFactory = tracerProviderFactory;
 		this.meterProviderFactory = meterProviderFactory;

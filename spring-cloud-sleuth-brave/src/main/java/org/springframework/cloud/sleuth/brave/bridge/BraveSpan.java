@@ -25,11 +25,11 @@ import org.springframework.cloud.sleuth.api.TraceContext;
  * @author Marcin Grzejszczak
  * @since 3.0.0
  */
-public class BraveSpan implements Span {
+class BraveSpan implements Span {
 
 	final brave.Span delegate;
 
-	public BraveSpan(brave.Span delegate) {
+	BraveSpan(brave.Span delegate) {
 		this.delegate = delegate;
 	}
 

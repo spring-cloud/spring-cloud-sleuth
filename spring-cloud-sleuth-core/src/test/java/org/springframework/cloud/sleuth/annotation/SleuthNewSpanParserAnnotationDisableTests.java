@@ -24,7 +24,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest(classes = SleuthAnnotationAutoConfiguration.class,
-		properties = "spring.sleuth.annotation.enabled=false")
+		properties = { "spring.sleuth.annotation.enabled=false", "spring.sleuth.tracer.mode=noop" })
 public class SleuthNewSpanParserAnnotationDisableTests {
 
 	@Autowired(required = false)

@@ -28,13 +28,13 @@ import org.springframework.cloud.sleuth.api.TraceContext;
  * @author Marcin Grzejszczak
  * @since 3.0.0
  */
-public class OtelScopedSpan implements ScopedSpan {
+class OtelScopedSpan implements ScopedSpan {
 
 	final Span span;
 
 	final Scope scope;
 
-	public OtelScopedSpan(Span span, Scope scope) {
+	OtelScopedSpan(Span span, Scope scope) {
 		this.span = span;
 		this.scope = scope;
 	}

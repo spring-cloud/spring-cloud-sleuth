@@ -45,7 +45,6 @@ import org.springframework.boot.web.server.LocalServerPort;
 import org.springframework.cloud.gateway.config.GatewayAutoConfiguration;
 import org.springframework.cloud.gateway.config.GatewayClassPathWarningAutoConfiguration;
 import org.springframework.cloud.sleuth.DisableSecurity;
-import org.springframework.cloud.sleuth.instrument.web.TraceWebServletAutoConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpHeaders;
@@ -60,7 +59,8 @@ import static org.assertj.core.api.BDDAssertions.then;
 
 @SpringBootTest(classes = WebClientTests.TestConfiguration.class,
 		webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
-		properties = { "spring.application.name=fooservice", "spring.sleuth.web.client.skip-pattern=/skip.*" })
+		properties = { "spring.sleuth.web.servlet.enabled=false", "spring.application.name=fooservice",
+				"spring.sleuth.web.client.skip-pattern=/skip.*" })
 @DirtiesContext
 public class WebClientTests {
 
@@ -144,8 +144,8 @@ public class WebClientTests {
 	}
 
 	@Configuration(proxyBeanMethods = false)
-	@EnableAutoConfiguration(exclude = { TraceWebServletAutoConfiguration.class,
-			GatewayClassPathWarningAutoConfiguration.class, GatewayAutoConfiguration.class })
+	@EnableAutoConfiguration(
+			exclude = { GatewayClassPathWarningAutoConfiguration.class, GatewayAutoConfiguration.class })
 	@DisableSecurity
 	public static class TestConfiguration {
 

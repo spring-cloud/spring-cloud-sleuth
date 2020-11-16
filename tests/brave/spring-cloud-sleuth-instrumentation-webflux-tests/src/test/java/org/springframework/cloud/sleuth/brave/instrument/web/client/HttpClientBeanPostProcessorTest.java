@@ -17,15 +17,15 @@
 package org.springframework.cloud.sleuth.brave.instrument.web.client;
 
 import org.springframework.cloud.sleuth.api.TraceContext;
-import org.springframework.cloud.sleuth.brave.bridge.BraveTraceContext;
+import org.springframework.cloud.sleuth.brave.bridge.BraveAccessor;
 
 public class HttpClientBeanPostProcessorTest
 		extends org.springframework.cloud.sleuth.instrument.web.client.HttpClientBeanPostProcessorTest {
 
 	@Override
 	public TraceContext traceContext() {
-		return BraveTraceContext
-				.fromBrave(brave.propagation.TraceContext.newBuilder().traceId(1).spanId(2).sampled(true).build());
+		return BraveAccessor
+				.traceContext(brave.propagation.TraceContext.newBuilder().traceId(1).spanId(2).sampled(true).build());
 	}
 
 }

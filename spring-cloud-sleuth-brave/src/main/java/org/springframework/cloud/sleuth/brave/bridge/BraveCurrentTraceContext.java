@@ -29,11 +29,11 @@ import org.springframework.cloud.sleuth.api.TraceContext;
  * @author Marcin Grzejszczak
  * @since 3.0.0
  */
-public class BraveCurrentTraceContext implements CurrentTraceContext {
+class BraveCurrentTraceContext implements CurrentTraceContext {
 
 	final brave.propagation.CurrentTraceContext delegate;
 
-	public BraveCurrentTraceContext(brave.propagation.CurrentTraceContext delegate) {
+	BraveCurrentTraceContext(brave.propagation.CurrentTraceContext delegate) {
 		this.delegate = delegate;
 	}
 

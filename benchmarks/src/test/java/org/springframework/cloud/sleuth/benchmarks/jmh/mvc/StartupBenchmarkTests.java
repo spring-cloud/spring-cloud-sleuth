@@ -54,7 +54,8 @@ public class StartupBenchmarkTests {
 
 	@Benchmark
 	public void withoutAsync(ApplicationState state) throws Exception {
-		state.setExtraArgs("--spring.sleuth.async.enabled=false", "--spring.sleuth.annotation.enabled=false", state.tracerImplementation.property());
+		state.setExtraArgs("--spring.sleuth.async.enabled=false", "--spring.sleuth.annotation.enabled=false",
+				state.tracerImplementation.property());
 		state.run();
 	}
 
@@ -68,7 +69,8 @@ public class StartupBenchmarkTests {
 	@Benchmark
 	public void withoutWeb(ApplicationState state) throws Exception {
 		state.setExtraArgs("--spring.sleuth.web.enabled=false", "--spring.sleuth.scheduled.enabled=false",
-				"--spring.sleuth.async.enabled=false", "--spring.sleuth.annotation.enabled=false", state.tracerImplementation.property());
+				"--spring.sleuth.async.enabled=false", "--spring.sleuth.annotation.enabled=false",
+				state.tracerImplementation.property());
 		state.run();
 	}
 
