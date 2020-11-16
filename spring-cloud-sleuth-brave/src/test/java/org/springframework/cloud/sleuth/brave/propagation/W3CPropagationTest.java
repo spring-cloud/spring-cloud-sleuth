@@ -65,7 +65,6 @@ class W3CPropagationTest {
 		assertThat(carrier).containsExactly(entry(TRACE_PARENT, TRACEPARENT_HEADER_SAMPLED));
 	}
 
-	@NotNull
 	private TraceContext.Builder sampledTraceContext() {
 		return TraceContext.newBuilder().sampled(SAMPLED_TRACE_OPTIONS)
 				.spanId(BigendianEncoding.longFromBase16String("ff00000000000041"))
