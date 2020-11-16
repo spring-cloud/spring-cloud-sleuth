@@ -1,7 +1,7 @@
 #!/bin/bash
 
 echo "Running JMH Benchmarks"
-ROOT="$( pwd )"
+ROOT="$(pwd)"
 JMH_RESULT_FILE_PARENT="${ROOT}"
 mkdir -p "${JMH_RESULT_FILE_PARENT}"
 JMH_RESULT_FILE="${JMH_RESULT_FILE_PARENT}/jmh-result.csv"

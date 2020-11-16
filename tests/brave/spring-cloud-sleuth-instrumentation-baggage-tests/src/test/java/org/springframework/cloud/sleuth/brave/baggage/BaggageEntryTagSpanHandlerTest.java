@@ -23,13 +23,13 @@ import org.springframework.cloud.sleuth.brave.BraveTestSpanHandler;
 import org.springframework.cloud.sleuth.test.TestSpanHandler;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.env.Environment;
 import org.springframework.test.context.ContextConfiguration;
 
 /**
  * @author Taras Danylchuk
  */
-@SpringBootTest(// WebEnvironment.NONE will not read a Yaml profile
-		webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.NONE)
 @ContextConfiguration(classes = BaggageEntryTagSpanHandlerTest.Config.class)
 public class BaggageEntryTagSpanHandlerTest
 		extends org.springframework.cloud.sleuth.baggage.BaggageEntryTagSpanHandlerTest {
@@ -38,7 +38,7 @@ public class BaggageEntryTagSpanHandlerTest
 	static class Config {
 
 		@Bean
-		TestSpanHandler testSpanHandlerSupplier(brave.test.TestSpanHandler testSpanHandler) {
+		TestSpanHandler testSpanHandlerSupplier(brave.test.TestSpanHandler testSpanHandler, Environment environment) {
 			return new BraveTestSpanHandler(testSpanHandler);
 		}
 

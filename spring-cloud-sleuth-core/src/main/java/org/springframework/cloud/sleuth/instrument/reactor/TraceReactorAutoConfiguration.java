@@ -60,7 +60,7 @@ import static org.springframework.cloud.sleuth.instrument.reactor.TraceReactorAu
 @Configuration(proxyBeanMethods = false)
 @ConditionalOnProperty(value = "spring.sleuth.reactor.enabled", matchIfMissing = true)
 @ConditionalOnClass(Mono.class)
-@AutoConfigureAfter(name = "org.springframework.cloud.sleuth.instrument.web.TraceWebFluxAutoConfiguration")
+@AutoConfigureAfter(name = "org.springframework.cloud.sleuth.instrument.web.TraceWebFluxConfiguration")
 @EnableConfigurationProperties(SleuthReactorProperties.class)
 class TraceReactorAutoConfiguration {
 

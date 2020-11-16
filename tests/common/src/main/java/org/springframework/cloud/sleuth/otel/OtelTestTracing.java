@@ -35,13 +35,8 @@ import org.springframework.cloud.sleuth.api.http.HttpRequestParser;
 import org.springframework.cloud.sleuth.api.http.HttpServerHandler;
 import org.springframework.cloud.sleuth.api.propagation.Propagator;
 import org.springframework.cloud.sleuth.autoconfig.SleuthBaggageProperties;
-import org.springframework.cloud.sleuth.otel.bridge.OtelBaggageManager;
-import org.springframework.cloud.sleuth.otel.bridge.OtelCurrentTraceContext;
-import org.springframework.cloud.sleuth.otel.bridge.OtelPropagator;
-import org.springframework.cloud.sleuth.otel.bridge.OtelTracer;
-import org.springframework.cloud.sleuth.otel.bridge.http.OtelHttpClientHandler;
-import org.springframework.cloud.sleuth.otel.bridge.http.OtelHttpServerHandler;
-import org.springframework.cloud.sleuth.otel.exporter.ArrayListSpanProcessor;
+import org.springframework.cloud.sleuth.otel.bridge.ArrayListSpanProcessor;
+import org.springframework.cloud.sleuth.otel.bridge.OtelAccessor;
 import org.springframework.cloud.sleuth.test.TestSpanHandler;
 import org.springframework.cloud.sleuth.test.TestTracingAssertions;
 import org.springframework.cloud.sleuth.test.TestTracingAware;
@@ -63,10 +58,11 @@ public class OtelTestTracing implements TracerAware, TestTracingAware, TestTraci
 
 	io.opentelemetry.api.trace.Tracer tracer = otelTracer();
 
-	OtelCurrentTraceContext currentTraceContext = new OtelCurrentTraceContext(publisher());
+	CurrentTraceContext currentTraceContext = OtelAccessor.currentTraceContext(publisher());
 
-	OtelBaggageManager otelBaggageManager = new OtelBaggageManager(this.currentTraceContext,
-			new SleuthBaggageProperties(), publisher());
+	// OtelBaggageManager otelBaggageManager = new
+	// OtelBaggageManager(this.currentTraceContext,
+	// new SleuthBaggageProperties(), publisher());
 
 	io.opentelemetry.api.trace.Tracer otelTracer() {
 		TracerSdkProvider provider = TracerSdkProvider.builder().build();
@@ -84,7 +80,7 @@ public class OtelTestTracing implements TracerAware, TestTracingAware, TestTraci
 	private void reset() {
 		this.contextPropagators = contextPropagators();
 		this.tracer = otelTracer();
-		this.currentTraceContext = new OtelCurrentTraceContext(publisher());
+		this.currentTraceContext = OtelAccessor.currentTraceContext(publisher());
 	}
 
 	@Override
@@ -123,25 +119,25 @@ public class OtelTestTracing implements TracerAware, TestTracingAware, TestTraci
 	@Override
 	public Tracer tracer() {
 		reset();
-		return OtelTracer.fromOtel(this.tracer, this.otelBaggageManager);
+		return OtelAccessor.tracer(this.tracer, this.currentTraceContext, new SleuthBaggageProperties(), publisher());
 	}
 
 	@Override
 	public CurrentTraceContext currentTraceContext() {
 		reset();
-		return new OtelCurrentTraceContext(publisher());
+		return OtelAccessor.currentTraceContext(publisher());
 	}
 
 	@Override
 	public Propagator propagator() {
 		reset();
-		return new OtelPropagator(this.contextPropagators, this.tracer);
+		return OtelAccessor.propagator(this.contextPropagators, this.tracer);
 	}
 
 	@Override
 	public HttpServerHandler httpServerHandler() {
 		reset();
-		return new OtelHttpServerHandler(this.tracer, null, null, () -> Pattern.compile(""));
+		return OtelAccessor.httpServerHandler(this.tracer, null, null, () -> Pattern.compile(""));
 	}
 
 	@Override
@@ -153,7 +149,8 @@ public class OtelTestTracing implements TracerAware, TestTracingAware, TestTraci
 	@Override
 	public HttpClientHandler httpClientHandler() {
 		reset();
-		return new OtelHttpClientHandler(this.tracer, this.clientRequestParser, null, SamplerFunction.alwaysSample());
+		return OtelAccessor.httpClientHandler(this.tracer, this.clientRequestParser, null,
+				SamplerFunction.alwaysSample());
 	}
 
 	ApplicationEventPublisher publisher() {

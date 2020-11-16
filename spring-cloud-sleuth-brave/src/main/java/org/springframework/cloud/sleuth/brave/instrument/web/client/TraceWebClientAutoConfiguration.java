@@ -22,13 +22,11 @@ import brave.httpclient.TracingHttpClientBuilder;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.impl.nio.client.HttpAsyncClientBuilder;
 
-import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.AutoConfigureBefore;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.cloud.commons.httpclient.HttpClientConfiguration;
-import org.springframework.cloud.sleuth.brave.instrument.web.TraceHttpAutoConfiguration;
 import org.springframework.cloud.sleuth.instrument.web.client.SleuthWebClientEnabled;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -45,7 +43,6 @@ import org.springframework.web.client.RestTemplate;
 @Configuration(proxyBeanMethods = false)
 @SleuthWebClientEnabled
 @ConditionalOnBean(HttpTracing.class)
-@AutoConfigureAfter(TraceHttpAutoConfiguration.class)
 @AutoConfigureBefore(HttpClientConfiguration.class)
 class TraceWebClientAutoConfiguration {
 

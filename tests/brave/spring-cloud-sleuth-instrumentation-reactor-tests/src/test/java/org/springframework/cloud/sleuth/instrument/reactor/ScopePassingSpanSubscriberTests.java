@@ -36,8 +36,7 @@ import reactor.util.context.Context;
 
 import org.springframework.cloud.sleuth.api.CurrentTraceContext;
 import org.springframework.cloud.sleuth.api.TraceContext;
-import org.springframework.cloud.sleuth.brave.bridge.BraveCurrentTraceContext;
-import org.springframework.cloud.sleuth.brave.bridge.BraveTraceContext;
+import org.springframework.cloud.sleuth.brave.bridge.BraveAccessor;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -61,13 +60,13 @@ public class ScopePassingSpanSubscriberTests {
 
 	StrictCurrentTraceContext traceContext = StrictCurrentTraceContext.create();
 
-	CurrentTraceContext currentTraceContext = BraveCurrentTraceContext.fromBrave(traceContext);
+	CurrentTraceContext currentTraceContext = BraveAccessor.currentTraceContext(traceContext);
 
-	TraceContext context = BraveTraceContext
-			.fromBrave(brave.propagation.TraceContext.newBuilder().traceId(1).spanId(1).sampled(true).build());
+	TraceContext context = BraveAccessor
+			.traceContext(brave.propagation.TraceContext.newBuilder().traceId(1).spanId(1).sampled(true).build());
 
-	TraceContext context2 = BraveTraceContext
-			.fromBrave(brave.propagation.TraceContext.newBuilder().traceId(1).spanId(2).sampled(true).build());
+	TraceContext context2 = BraveAccessor
+			.traceContext(brave.propagation.TraceContext.newBuilder().traceId(1).spanId(2).sampled(true).build());
 
 	Subscriber<Object> assertNotScopePassingSpanSubscriber = new CoreSubscriber<Object>() {
 		@Override

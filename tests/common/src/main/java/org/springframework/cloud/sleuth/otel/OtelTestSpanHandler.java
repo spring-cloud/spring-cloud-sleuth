@@ -31,8 +31,8 @@ import io.opentelemetry.sdk.trace.export.SpanExporter;
 
 import org.springframework.cloud.sleuth.api.Span;
 import org.springframework.cloud.sleuth.api.exporter.FinishedSpan;
-import org.springframework.cloud.sleuth.otel.bridge.OtelFinishedSpan;
-import org.springframework.cloud.sleuth.otel.exporter.ArrayListSpanProcessor;
+import org.springframework.cloud.sleuth.otel.bridge.ArrayListSpanProcessor;
+import org.springframework.cloud.sleuth.otel.bridge.OtelAccessor;
 import org.springframework.cloud.sleuth.test.TestSpanHandler;
 
 public class OtelTestSpanHandler implements TestSpanHandler, SpanProcessor, SpanExporter {
@@ -45,12 +45,12 @@ public class OtelTestSpanHandler implements TestSpanHandler, SpanProcessor, Span
 
 	@Override
 	public List<FinishedSpan> reportedSpans() {
-		return spanProcessor.spans().stream().map(OtelFinishedSpan::new).collect(Collectors.toList());
+		return spanProcessor.spans().stream().map(OtelAccessor::finishedSpan).collect(Collectors.toList());
 	}
 
 	@Override
 	public FinishedSpan takeLocalSpan() {
-		return new OtelFinishedSpan(spanProcessor.takeLocalSpan());
+		return OtelAccessor.finishedSpan(spanProcessor.takeLocalSpan());
 	}
 
 	@Override

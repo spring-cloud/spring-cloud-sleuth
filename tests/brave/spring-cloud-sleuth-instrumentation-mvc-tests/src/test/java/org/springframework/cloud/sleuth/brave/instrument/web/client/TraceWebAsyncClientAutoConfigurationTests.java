@@ -35,7 +35,6 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.cloud.sleuth.instrument.web.TraceWebServletAutoConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.env.Environment;
@@ -53,7 +52,7 @@ import static org.springframework.boot.test.context.SpringBootTest.WebEnvironmen
  */
 
 @SpringBootTest(classes = { TraceWebAsyncClientAutoConfigurationTests.TestConfiguration.class },
-		webEnvironment = RANDOM_PORT)
+		webEnvironment = RANDOM_PORT, properties = "spring.sleuth.web.servlet.enabled=false")
 public class TraceWebAsyncClientAutoConfigurationTests {
 
 	@Autowired
@@ -120,10 +119,7 @@ public class TraceWebAsyncClientAutoConfigurationTests {
 		return this.environment.getProperty("local.server.port", Integer.class);
 	}
 
-	@EnableAutoConfiguration(
-			// spring boot test will otherwise instrument the client and server with the
-			// same bean factory which isn't expected
-			exclude = TraceWebServletAutoConfiguration.class)
+	@EnableAutoConfiguration
 	@Configuration(proxyBeanMethods = false)
 	public static class TestConfiguration {
 

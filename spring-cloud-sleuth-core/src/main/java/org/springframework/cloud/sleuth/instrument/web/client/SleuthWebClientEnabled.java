@@ -23,6 +23,7 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.cloud.sleuth.instrument.web.SleuthHttpEnabled;
 
 /**
  * Helper annotation to enable Sleuth web client.
@@ -34,6 +35,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 @Target({ ElementType.TYPE, ElementType.METHOD })
 @Documented
 @ConditionalOnProperty(value = "spring.sleuth.web.client.enabled", matchIfMissing = true)
+@SleuthHttpEnabled
 public @interface SleuthWebClientEnabled {
 
 }

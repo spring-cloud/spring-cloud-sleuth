@@ -10,11 +10,11 @@
 |spring.sleuth.baggage.remote-fields |  | List of fields that are referenced the same in-process as it is on the wire. For example, the field "x-vcap-request-id" would be set as-is including the prefix.
 |spring.sleuth.baggage.tag-fields |  | 
 |spring.sleuth.circuitbreaker.enabled | `true` | Enable Spring Cloud CircuitBreaker instrumentation.
-|spring.sleuth.enabled | `true` | 
+|spring.sleuth.enabled | `true` |
 |spring.sleuth.feign.enabled | `true` | Enable span information propagation when using Feign.
 |spring.sleuth.feign.processor.enabled | `true` | Enable post processor that wraps Feign Context in its tracing representations.
 |spring.sleuth.grpc.enabled | `true` | Enable span information propagation when using GRPC.
-|spring.sleuth.http.enabled | `true` | 
+|spring.sleuth.http.enabled | `true` |
 |spring.sleuth.integration.enabled | `true` | Enable Spring Integration sleuth instrumentation.
 |spring.sleuth.integration.patterns | `[!hystrixStreamOutput*, *, !channel*]` | An array of patterns against which channel names will be matched. @see org.springframework.integration.config.GlobalChannelInterceptor#patterns() Defaults to any channel name not matching the Hystrix Stream and functional Stream channel names.
 |spring.sleuth.integration.websockets.enabled | `true` | Enable tracing for WebSockets.
@@ -22,20 +22,20 @@
 |spring.sleuth.messaging.kafka.enabled | `true` | Enable tracing of Kafka.
 |spring.sleuth.messaging.kafka.mapper.enabled | `true` | Enable DefaultKafkaHeaderMapper tracing for Kafka.
 |spring.sleuth.messaging.messaging.enabled | `false` | Should messaging be turned on.
-|spring.sleuth.messaging.messaging.jms.enabled | `false` | 
-|spring.sleuth.messaging.messaging.jms.remote-service-name | `jms` | 
-|spring.sleuth.messaging.messaging.kafka.enabled | `false` | 
-|spring.sleuth.messaging.messaging.kafka.remote-service-name | `kafka` | 
-|spring.sleuth.messaging.messaging.rabbit.enabled | `false` | 
-|spring.sleuth.messaging.messaging.rabbit.remote-service-name | `rabbitmq` | 
+|spring.sleuth.messaging.messaging.jms.enabled | `false` |
+|spring.sleuth.messaging.messaging.jms.remote-service-name | `jms` |
+|spring.sleuth.messaging.messaging.kafka.enabled | `false` |
+|spring.sleuth.messaging.messaging.kafka.remote-service-name | `kafka` |
+|spring.sleuth.messaging.messaging.rabbit.enabled | `false` |
+|spring.sleuth.messaging.messaging.rabbit.remote-service-name | `rabbitmq` |
 |spring.sleuth.messaging.rabbit.enabled | `true` | Enable tracing of RabbitMQ.
 |spring.sleuth.mongodb.enabled | `true` | Enable tracing for MongoDb.
-|spring.sleuth.opentracing.enabled | `true` | 
+|spring.sleuth.opentracing.enabled | `true` |
 |spring.sleuth.propagation.type |  | Type of propagation.
 |spring.sleuth.quartz.enabled | `true` | Enable tracing for Quartz.
 |spring.sleuth.reactor.decorate-on-each | `true` | When true decorates on each operator, will be less performing, but logging will always contain the tracing entries in each operator. When false decorates on last operator, will be more performing, but logging might not always contain the tracing entries. @deprecated use explicit value via {@link SleuthReactorProperties#instrumentationType}
 |spring.sleuth.reactor.enabled | `true` | When true enables instrumentation for reactor.
-|spring.sleuth.reactor.instrumentation-type |  | 
+|spring.sleuth.reactor.instrumentation-type |  |
 |spring.sleuth.redis.enabled | `true` | Enable span information propagation when using Redis.
 |spring.sleuth.redis.remote-service-name | `redis` | Service name for the remote Redis endpoint.
 |spring.sleuth.rpc.enabled | `true` | Enable tracing of RPC.
@@ -62,7 +62,7 @@
 |spring.zipkin.activemq.message-max-bytes | `100000` | Maximum number of bytes for a given message with spans sent to Zipkin over ActiveMQ.
 |spring.zipkin.activemq.queue | `zipkin` | Name of the ActiveMQ queue where spans should be sent to Zipkin.
 |spring.zipkin.base-url | `http://localhost:9411/` | URL of the zipkin query server instance. You can also provide the service id of the Zipkin server if Zipkin's registered in service discovery (e.g. https://zipkinserver/).
-|spring.zipkin.compression.enabled | `false` | 
+|spring.zipkin.compression.enabled | `false` |
 |spring.zipkin.discovery-client-enabled |  | If set to {@code false}, will treat the {@link ZipkinProperties#baseUrl} as a URL always.
 |spring.zipkin.enabled | `true` | Enables sending spans to Zipkin.
 |spring.zipkin.encoder |  | Encoding type of spans sent to Zipkin. Set to {@link SpanBytesEncoder#JSON_V1} if your server is not recent.

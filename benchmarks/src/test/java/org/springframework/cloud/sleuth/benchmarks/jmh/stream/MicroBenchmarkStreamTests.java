@@ -107,9 +107,9 @@ public class MicroBenchmarkStreamTests {
 
 		protected String[] runArgs() {
 			List<String> strings = new ArrayList<>();
-			strings.addAll(Arrays.asList("--spring.jmx.enabled=false",
-					this.tracerImplementation.property(),
-					"--spring.application.name=defaultTraceContextForStream" + instrumentation.name() + "_" + tracerImplementation.name()));
+			strings.addAll(Arrays.asList("--spring.jmx.enabled=false", this.tracerImplementation.property(),
+					"--spring.application.name=defaultTraceContextForStream" + instrumentation.name() + "_"
+							+ tracerImplementation.name()));
 			strings.addAll(instrumentation.entires.stream().map(s -> "--" + s).collect(Collectors.toList()));
 			return strings.toArray(new String[0]);
 		}

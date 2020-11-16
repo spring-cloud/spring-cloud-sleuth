@@ -58,7 +58,6 @@ import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.cloud.sleuth.api.Span;
 import org.springframework.cloud.sleuth.api.Tracer;
 import org.springframework.cloud.sleuth.api.exporter.FinishedSpan;
-import org.springframework.cloud.sleuth.instrument.web.TraceWebServletAutoConfiguration;
 import org.springframework.cloud.sleuth.test.TestSpanHandler;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -81,8 +80,8 @@ import static org.assertj.core.api.Assertions.fail;
 import static org.assertj.core.api.BDDAssertions.then;
 
 @ContextConfiguration(classes = WebClientTests.TestConfiguration.class)
-@TestPropertySource(
-		properties = { "spring.application.name=fooservice", "spring.sleuth.web.client.skip-pattern=/skip.*" })
+@TestPropertySource(properties = { "spring.sleuth.web.servlet.enabled=false", "spring.application.name=fooservice",
+		"spring.sleuth.web.client.skip-pattern=/skip.*" })
 @DirtiesContext
 public abstract class WebClientTests {
 
@@ -396,7 +395,7 @@ public abstract class WebClientTests {
 	}
 
 	@Configuration(proxyBeanMethods = false)
-	@EnableAutoConfiguration(exclude = { TraceWebServletAutoConfiguration.class, JmxAutoConfiguration.class })
+	@EnableAutoConfiguration(exclude = JmxAutoConfiguration.class)
 	@EnableFeignClients
 	@LoadBalancerClient(value = "fooservice", configuration = SimpleLoadBalancerClientConfiguration.class)
 	public static class TestConfiguration {

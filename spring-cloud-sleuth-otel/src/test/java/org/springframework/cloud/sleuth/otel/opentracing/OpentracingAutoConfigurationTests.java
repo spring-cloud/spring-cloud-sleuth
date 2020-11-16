@@ -23,7 +23,6 @@ import org.springframework.boot.autoconfigure.AutoConfigurations;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
 import org.springframework.cloud.sleuth.autoconfig.TraceAutoConfiguration;
 import org.springframework.cloud.sleuth.otel.autoconfig.TraceOtelAutoConfiguration;
-import org.springframework.cloud.sleuth.otel.propagation.TraceOtelPropagationAutoConfiguration;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -38,9 +37,8 @@ class OpentracingAutoConfigurationTests {
 	}
 
 	private ApplicationContextRunner withAutoConfiguration() {
-		return new ApplicationContextRunner()
-				.withConfiguration(AutoConfigurations.of(TraceAutoConfiguration.class, TraceOtelAutoConfiguration.class,
-						TraceOtelPropagationAutoConfiguration.class, OpentracingAutoConfiguration.class));
+		return new ApplicationContextRunner().withConfiguration(AutoConfigurations.of(TraceAutoConfiguration.class,
+				TraceOtelAutoConfiguration.class, OpentracingAutoConfiguration.class));
 	}
 
 	@Test

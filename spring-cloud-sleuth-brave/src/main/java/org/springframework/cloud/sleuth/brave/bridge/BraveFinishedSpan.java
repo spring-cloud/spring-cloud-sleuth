@@ -30,11 +30,11 @@ import org.springframework.cloud.sleuth.api.exporter.FinishedSpan;
  * @author Marcin Grzejszczak
  * @since 3.0.0
  */
-public class BraveFinishedSpan implements FinishedSpan {
+class BraveFinishedSpan implements FinishedSpan {
 
 	private final MutableSpan mutableSpan;
 
-	public BraveFinishedSpan(MutableSpan mutableSpan) {
+	BraveFinishedSpan(MutableSpan mutableSpan) {
 		this.mutableSpan = mutableSpan;
 	}
 

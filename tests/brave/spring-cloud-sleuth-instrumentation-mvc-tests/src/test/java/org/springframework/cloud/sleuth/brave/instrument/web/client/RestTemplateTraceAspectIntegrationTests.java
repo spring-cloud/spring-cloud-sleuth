@@ -37,7 +37,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.cloud.sleuth.api.http.HttpClientHandler;
-import org.springframework.cloud.sleuth.instrument.web.TraceWebServletAutoConfiguration;
 import org.springframework.cloud.sleuth.instrument.web.mvc.TracingAsyncClientHttpRequestInterceptor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
@@ -67,7 +66,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @SpringBootTest(classes = RestTemplateTraceAspectIntegrationTests.Config.class,
 		webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
-		properties = "spring.sleuth.web.client.skipPattern=/issue.*")
+		properties = { "spring.sleuth.web.client.skipPattern=/issue.*", "spring.sleuth.web.servlet.enabled=false" })
 @DirtiesContext
 public class RestTemplateTraceAspectIntegrationTests {
 
@@ -175,10 +174,7 @@ public class RestTemplateTraceAspectIntegrationTests {
 		this.mockMvc.perform(asyncDispatch(mvcResult)).andDo(print()).andExpect(status().isOk());
 	}
 
-	@EnableAutoConfiguration(
-			// spring boot test will otherwise instrument the client and server with the
-			// same bean factory which isn't expected
-			exclude = TraceWebServletAutoConfiguration.class)
+	@EnableAutoConfiguration
 	@Import(AspectTestingController.class)
 	public static class Config {
 

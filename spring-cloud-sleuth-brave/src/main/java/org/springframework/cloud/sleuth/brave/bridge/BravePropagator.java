@@ -32,11 +32,11 @@ import org.springframework.cloud.sleuth.api.propagation.Propagator;
  * @author Marcin Grzejszczak
  * @since 3.0.0
  */
-public class BravePropagator implements Propagator {
+class BravePropagator implements Propagator {
 
 	private final Tracing tracing;
 
-	public BravePropagator(Tracing tracing) {
+	BravePropagator(Tracing tracing) {
 		this.tracing = tracing;
 	}
 

@@ -20,8 +20,15 @@ import brave.TracingCustomizer;
 import brave.handler.SpanHandler;
 import brave.sampler.Sampler;
 
+import org.springframework.beans.factory.ListableBeanFactory;
 import org.springframework.boot.autoconfigure.condition.AnyNestedCondition;
+import org.springframework.boot.autoconfigure.condition.ConditionOutcome;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
+import org.springframework.boot.autoconfigure.condition.SpringBootCondition;
+import org.springframework.context.annotation.ConditionContext;
+import org.springframework.context.annotation.Conditional;
+import org.springframework.context.annotation.ConfigurationCondition;
+import org.springframework.core.type.AnnotatedTypeMetadata;
 
 /**
  * Sleuth 1.x optimized for log-correlation only. Unless "spring-cloud-sleuth-zipkin" was
@@ -30,14 +37,14 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
  *
  * <p>
  * "spring-cloud-sleuth-zipkin" obviated the {@link Sampler#NEVER_SAMPLE} default by
- * importing {@link SamplerAutoConfiguration}. Nothing else did, so sampling properties
- * were effectively ignored unless "spring-cloud-sleuth-zipkin" was in use, or something
- * else similarly imported {@link SamplerAutoConfiguration}.
+ * importing {@link SamplerConfiguration}. Nothing else did, so sampling properties were
+ * effectively ignored unless "spring-cloud-sleuth-zipkin" was in use, or something else
+ * similarly imported {@link SamplerConfiguration}.
  *
  * <p>
  * During a review of Wavefront integration, it was considered not correct to have other
- * code import {@link SamplerAutoConfiguration}. To avoid that, retain the old behaviour
- * about log only nodes, and also not pin configuration to Zipkin involves a more complex
+ * code import {@link SamplerConfiguration}. To avoid that, retain the old behaviour about
+ * log only nodes, and also not pin configuration to Zipkin involves a more complex
  * condition.
  *
  * <p>
@@ -55,7 +62,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
  * <p>
  * An integrated test that shows {@link Sampler#NEVER_SAMPLE} is default on fail exists in
  * {@code TraceAutoConfigurationTests} intentionally, as users now needn't import
- * {@link SamplerAutoConfiguration} directly.
+ * {@link SamplerConfiguration} directly.
  */
 final class SamplerCondition extends AnyNestedCondition {
 
@@ -69,13 +76,40 @@ final class SamplerCondition extends AnyNestedCondition {
 
 	}
 
-	@ConditionalOnBean(SpanHandler.class)
+	@Conditional(SpanHandlerOtherThanCompositePresent.class)
 	static final class SpanHandlerAvailable {
 
 	}
 
 	@ConditionalOnBean(TracingCustomizer.class)
 	static final class TracingCustomizerAvailable {
+
+	}
+
+	static class SpanHandlerOtherThanCompositePresent extends SpringBootCondition implements ConfigurationCondition {
+
+		@Override
+		public ConditionOutcome getMatchOutcome(ConditionContext context, AnnotatedTypeMetadata metadata) {
+			String[] spanHandlers = ((ListableBeanFactory) context.getBeanFactory())
+					.getBeanNamesForType(SpanHandler.class);
+			boolean moreThanSingleHandler = spanHandlers.length > 1;
+			if (moreThanSingleHandler) {
+				return ConditionOutcome.match("More than one handler present");
+			}
+			if (spanHandlers.length == 0) {
+				return ConditionOutcome.noMatch("No span handler is available");
+			}
+			// bean name is set in Brave bridge configuration
+			boolean singleCompositeSpanHandler = spanHandlers.length == 1
+					&& spanHandlers[0].equals("traceCompositeSpanHandler");
+			return singleCompositeSpanHandler ? ConditionOutcome.noMatch("Composite handler found")
+					: ConditionOutcome.match("Composite handler not found");
+		}
+
+		@Override
+		public ConfigurationPhase getConfigurationPhase() {
+			return ConfigurationPhase.REGISTER_BEAN;
+		}
 
 	}
 

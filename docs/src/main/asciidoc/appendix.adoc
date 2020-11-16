@@ -1,4 +1,5 @@
 :numbered!:
+
 [[appendix]]
 [[common-application-properties]]
 == Common application properties

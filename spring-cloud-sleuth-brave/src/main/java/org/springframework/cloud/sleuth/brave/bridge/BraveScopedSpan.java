@@ -25,11 +25,11 @@ import org.springframework.cloud.sleuth.api.TraceContext;
  * @author Marcin Grzejszczak
  * @since 3.0.0
  */
-public class BraveScopedSpan implements ScopedSpan {
+class BraveScopedSpan implements ScopedSpan {
 
 	final brave.ScopedSpan span;
 
-	public BraveScopedSpan(brave.ScopedSpan span) {
+	BraveScopedSpan(brave.ScopedSpan span) {
 		this.span = span;
 	}
 

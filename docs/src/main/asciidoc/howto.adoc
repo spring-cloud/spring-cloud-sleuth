@@ -615,7 +615,7 @@ Example where instrumentation will work:
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.client.RestTemplate;
 
-@Configuration
+@Configuration(proxyBeanMethods = false)
 class MyConfiguration {
     @Bean RestTemplate myRestTemplate() {
         return new RestTemplate();
@@ -670,7 +670,7 @@ import org.springframework.cloud.sleuth.instrument.web.HttpServerResponseParser;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-@Configuration
+@Configuration(proxyBeanMethods = false)
 class MyConfig {
 
 	@Bean(name = HttpServerResponseParser.NAME)
@@ -753,4 +753,6 @@ include::{otel_path}/src/test/java/org/springframework/cloud/sleuth/otel/propaga
 [[how-to-implement-own-tracer]]
 == How to Implement My Own Tracer?
 
-Spring Cloud Sleuth Core in its `api` module contains all necessary interfaces to be implemented by a tracer. The project comes with OpenZipkin Brave and OpenTelemetry implementations. You can check how both tracers are bridged to the Sleuth's API by looking at the `org.springframework.cloud.sleuth.brave.bridge` and `org.springframework.cloud.sleuth.otel.bridge` modules respectively.
+Spring Cloud Sleuth Core in its `api` module contains all necessary interfaces to be implemented by a tracer.
+The project comes with OpenZipkin Brave and OpenTelemetry implementations.
+You can check how both tracers are bridged to the Sleuth's API by looking at the `org.springframework.cloud.sleuth.brave.bridge` and `org.springframework.cloud.sleuth.otel.bridge` modules respectively.

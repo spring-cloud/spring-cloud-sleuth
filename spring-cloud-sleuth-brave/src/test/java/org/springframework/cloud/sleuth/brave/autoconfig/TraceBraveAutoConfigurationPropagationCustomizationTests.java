@@ -40,21 +40,24 @@ public class TraceBraveAutoConfigurationPropagationCustomizationTests {
 	@Test
 	public void stillCreatesDefault() {
 		this.contextRunner.run((context) -> {
-			BDDAssertions.then(context.getBean(Propagation.Factory.class)).isEqualTo(B3_FACTORY);
+			BDDAssertions.then(context.getBean(Propagation.Factory.class).get().keys())
+					.isEqualTo(B3_FACTORY.get().keys());
 		});
 	}
 
 	@Test
 	public void allowsCustomization() {
 		this.contextRunner.withPropertyValues("spring.sleuth.baggage.remote-fields=country-code").run((context) -> {
-			BDDAssertions.then(context.getBean(Propagation.Factory.class)).extracting("delegate").isEqualTo(B3_FACTORY);
+			BDDAssertions.then(context.getBean(Propagation.Factory.class).get().keys())
+					.isEqualTo(B3_FACTORY.get().keys());
 		});
 	}
 
 	@Test
 	public void defaultValueUsedWhenApplicationNameNotSet() {
 		this.contextRunner.withPropertyValues("spring.application.name=").run((context) -> {
-			BDDAssertions.then(context.getBean(Propagation.Factory.class)).isEqualTo(B3_FACTORY);
+			BDDAssertions.then(context.getBean(Propagation.Factory.class).get().keys())
+					.isEqualTo(B3_FACTORY.get().keys());
 		});
 	}
 

@@ -24,11 +24,11 @@ import org.springframework.cloud.sleuth.api.SpanCustomizer;
  * @author Marcin Grzejszczak
  * @since 3.0.0
  */
-public class BraveSpanCustomizer implements SpanCustomizer {
+class BraveSpanCustomizer implements SpanCustomizer {
 
 	private final brave.SpanCustomizer spanCustomizer;
 
-	public BraveSpanCustomizer(brave.SpanCustomizer spanCustomizer) {
+	BraveSpanCustomizer(brave.SpanCustomizer spanCustomizer) {
 		this.spanCustomizer = spanCustomizer;
 	}
 

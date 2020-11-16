@@ -35,13 +35,13 @@ import org.springframework.lang.Nullable;
  * @author Marcin Grzejszczak
  * @since 3.0.0
  */
-public class OtelSpan implements Span {
+class OtelSpan implements Span {
 
 	final io.opentelemetry.api.trace.Span delegate;
 
 	private final AtomicReference<Context> context;
 
-	public OtelSpan(io.opentelemetry.api.trace.Span delegate) {
+	OtelSpan(io.opentelemetry.api.trace.Span delegate) {
 		this.delegate = delegate;
 		if (delegate instanceof SpanFromSpanContext) {
 			SpanFromSpanContext fromSpanContext = (SpanFromSpanContext) delegate;
@@ -52,20 +52,20 @@ public class OtelSpan implements Span {
 		}
 	}
 
-	public OtelSpan(io.opentelemetry.api.trace.Span delegate, Context context) {
+	OtelSpan(io.opentelemetry.api.trace.Span delegate, Context context) {
 		this.delegate = delegate;
 		this.context = new AtomicReference<>(context);
 	}
 
-	public static io.opentelemetry.api.trace.Span toOtel(Span span) {
+	static io.opentelemetry.api.trace.Span toOtel(Span span) {
 		return ((OtelSpan) span).delegate;
 	}
 
-	public static Span fromOtel(io.opentelemetry.api.trace.Span span) {
+	static Span fromOtel(io.opentelemetry.api.trace.Span span) {
 		return new OtelSpan(span);
 	}
 
-	public static Span fromOtel(io.opentelemetry.api.trace.Span span, Context context) {
+	static Span fromOtel(io.opentelemetry.api.trace.Span span, Context context) {
 		return new OtelSpan(span, context);
 	}
 

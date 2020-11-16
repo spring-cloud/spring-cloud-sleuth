@@ -44,7 +44,7 @@ import org.springframework.context.ApplicationEventPublisher;
  * @author Marcin Grzejszczak
  * @since 3.0.0
  */
-public class OtelBaggageManager {
+class OtelBaggageManager {
 
 	private final CurrentTraceContext currentTraceContext;
 
@@ -52,14 +52,14 @@ public class OtelBaggageManager {
 
 	private final ApplicationEventPublisher publisher;
 
-	public OtelBaggageManager(CurrentTraceContext currentTraceContext, SleuthBaggageProperties sleuthBaggageProperties,
+	OtelBaggageManager(CurrentTraceContext currentTraceContext, SleuthBaggageProperties sleuthBaggageProperties,
 			ApplicationEventPublisher publisher) {
 		this.currentTraceContext = currentTraceContext;
 		this.sleuthBaggageProperties = sleuthBaggageProperties;
 		this.publisher = publisher;
 	}
 
-	public Map<String, String> getAllBaggage() {
+	Map<String, String> getAllBaggage() {
 		Map<String, String> baggage = new HashMap<>();
 		currentBaggage().getEntries().forEach(entry -> baggage.put(entry.getKey(), entry.getValue()));
 		return baggage;
@@ -76,7 +76,7 @@ public class OtelBaggageManager {
 		return new CompositeBaggage(stack);
 	}
 
-	public BaggageInScope getBaggage(String name) {
+	BaggageInScope getBaggage(String name) {
 		Entry entry = getBaggage(name, currentBaggage());
 		return createNewEntryIfMissing(name, entry);
 	}
@@ -92,7 +92,7 @@ public class OtelBaggageManager {
 		return entryForName(name, baggage);
 	}
 
-	public BaggageInScope getBaggage(TraceContext traceContext, String name) {
+	BaggageInScope getBaggage(TraceContext traceContext, String name) {
 		OtelTraceContext context = (OtelTraceContext) traceContext;
 		// TODO: Refactor
 		Deque<Context> stack = new ArrayDeque<>();

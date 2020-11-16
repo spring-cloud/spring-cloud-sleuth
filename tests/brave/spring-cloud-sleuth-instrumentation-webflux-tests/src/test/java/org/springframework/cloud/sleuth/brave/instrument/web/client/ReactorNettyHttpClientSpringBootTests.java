@@ -26,7 +26,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.cloud.sleuth.api.TraceContext;
 import org.springframework.cloud.sleuth.api.exporter.FinishedSpan;
 import org.springframework.cloud.sleuth.brave.BraveTestSpanHandler;
-import org.springframework.cloud.sleuth.brave.bridge.BraveTraceContext;
+import org.springframework.cloud.sleuth.brave.bridge.BraveAccessor;
 import org.springframework.cloud.sleuth.test.TestSpanHandler;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -39,8 +39,8 @@ public class ReactorNettyHttpClientSpringBootTests
 
 	@Override
 	public TraceContext traceContext() {
-		return BraveTraceContext
-				.fromBrave(brave.propagation.TraceContext.newBuilder().traceId(1).spanId(2).sampled(true).build());
+		return BraveAccessor
+				.traceContext(brave.propagation.TraceContext.newBuilder().traceId(1).spanId(2).sampled(true).build());
 	}
 
 	@Override

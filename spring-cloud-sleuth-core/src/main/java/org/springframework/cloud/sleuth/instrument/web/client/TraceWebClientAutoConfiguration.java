@@ -64,7 +64,7 @@ import org.springframework.web.reactive.function.client.WebClient;
  * @since 1.0.0
  */
 @Configuration(proxyBeanMethods = false)
-@ConditionalOnProperty(value = "spring.sleuth.web.client.enabled", matchIfMissing = true)
+@SleuthWebClientEnabled
 @ConditionalOnBean(Tracer.class)
 @AutoConfigureAfter(TraceAutoConfiguration.class)
 @AutoConfigureBefore(HttpClientConfiguration.class)

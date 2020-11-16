@@ -30,18 +30,18 @@ import brave.propagation.Propagation;
 import brave.propagation.ThreadLocalCurrentTraceContext;
 import brave.sampler.Sampler;
 
-import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.AutoConfigureBefore;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.cloud.sleuth.SpanNamer;
-import org.springframework.cloud.sleuth.api.exporter.SpanFilter;
+import org.springframework.cloud.sleuth.autoconfig.SleuthBaggageProperties;
+import org.springframework.cloud.sleuth.autoconfig.SleuthSpanFilterProperties;
+import org.springframework.cloud.sleuth.autoconfig.SleuthTracerProperties;
 import org.springframework.cloud.sleuth.autoconfig.TraceAutoConfiguration;
 import org.springframework.cloud.sleuth.brave.LocalServiceName;
-import org.springframework.cloud.sleuth.brave.bridge.BraveBaggageManager;
-import org.springframework.cloud.sleuth.brave.propagation.TraceBravePropagationAutoConfiguration;
-import org.springframework.cloud.sleuth.brave.sampler.SamplerAutoConfiguration;
+import org.springframework.cloud.sleuth.brave.bridge.BraveBridgeConfiguration;
+import org.springframework.cloud.sleuth.brave.instrument.web.BraveHttpConfiguration;
+import org.springframework.cloud.sleuth.brave.sampler.SamplerConfiguration;
 import org.springframework.cloud.sleuth.internal.DefaultSpanNamer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -59,13 +59,12 @@ import org.springframework.util.StringUtils;
  * @since 3.0.0
  */
 @Configuration(proxyBeanMethods = false)
-@ConditionalOnProperty(value = "spring.sleuth.enabled", matchIfMissing = true)
-@EnableConfigurationProperties(SleuthProperties.class)
-@Import({ TraceBaggageConfiguration.class, SamplerAutoConfiguration.class })
+@OnBraveEnabled
+@EnableConfigurationProperties({ SleuthProperties.class, SleuthSpanFilterProperties.class,
+		SleuthBaggageProperties.class, SleuthTracerProperties.class, SleuthBaggageProperties.class })
+@Import({ BraveBridgeConfiguration.class, BraveBaggageConfiguration.class, SamplerConfiguration.class,
+		BraveHttpConfiguration.class })
 @AutoConfigureBefore(TraceAutoConfiguration.class)
-@AutoConfigureAfter(TraceBravePropagationAutoConfiguration.class)
-// public allows @AutoConfigureAfter(TraceAutoConfiguration)
-// for components needing Tracing
 public class TraceBraveAutoConfiguration {
 
 	/**
@@ -83,84 +82,78 @@ public class TraceBraveAutoConfiguration {
 	 */
 	public static final String DEFAULT_SERVICE_NAME = "default";
 
-	@Bean
-	@ConditionalOnMissingBean
-	BraveBaggageManager braveBaggageManager() {
-		return new BraveBaggageManager();
-	}
+	@Configuration(proxyBeanMethods = false)
+	static class BraveConfiguration {
 
-	@Bean(name = TRACING_BEAN_NAME)
-	@ConditionalOnMissingBean
-	// NOTE: stable bean name as might be used outside sleuth
-	Tracing tracing(@LocalServiceName String serviceName, Propagation.Factory factory,
-			CurrentTraceContext currentTraceContext, Sampler sampler, SleuthProperties sleuthProperties,
-			@Nullable List<SpanHandler> spanHandlers, @Nullable List<TracingCustomizer> tracingCustomizers) {
-		Tracing.Builder builder = Tracing.newBuilder().sampler(sampler)
-				.localServiceName(StringUtils.isEmpty(serviceName) ? DEFAULT_SERVICE_NAME : serviceName)
-				.propagationFactory(factory).currentTraceContext(currentTraceContext)
-				.traceId128Bit(sleuthProperties.isTraceId128()).supportsJoin(sleuthProperties.isSupportsJoin());
-		if (spanHandlers != null) {
-			for (SpanHandler spanHandlerFactory : spanHandlers) {
-				builder.addSpanHandler(spanHandlerFactory);
+		@Bean(name = TRACING_BEAN_NAME)
+		@ConditionalOnMissingBean
+		// NOTE: stable bean name as might be used outside sleuth
+		Tracing tracing(@LocalServiceName String serviceName, Propagation.Factory factory,
+				CurrentTraceContext currentTraceContext, Sampler sampler, SleuthProperties sleuthProperties,
+				@Nullable List<SpanHandler> spanHandlers, @Nullable List<TracingCustomizer> tracingCustomizers) {
+			Tracing.Builder builder = Tracing.newBuilder().sampler(sampler)
+					.localServiceName(StringUtils.isEmpty(serviceName) ? DEFAULT_SERVICE_NAME : serviceName)
+					.propagationFactory(factory).currentTraceContext(currentTraceContext)
+					.traceId128Bit(sleuthProperties.isTraceId128()).supportsJoin(sleuthProperties.isSupportsJoin());
+			if (spanHandlers != null) {
+				for (SpanHandler spanHandlerFactory : spanHandlers) {
+					builder.addSpanHandler(spanHandlerFactory);
+				}
 			}
+			if (tracingCustomizers != null) {
+				for (TracingCustomizer customizer : tracingCustomizers) {
+					customizer.customize(builder);
+				}
+			}
+
+			return builder.build();
 		}
-		if (tracingCustomizers != null) {
-			for (TracingCustomizer customizer : tracingCustomizers) {
+
+		@Bean(name = TRACER_BEAN_NAME)
+		@ConditionalOnMissingBean
+		Tracer tracer(Tracing tracing) {
+			return tracing.tracer();
+		}
+
+		@Bean
+		@ConditionalOnMissingBean
+		SpanNamer sleuthSpanNamer() {
+			return new DefaultSpanNamer();
+		}
+
+		@Bean
+		CurrentTraceContext sleuthCurrentTraceContext(CurrentTraceContext.Builder builder,
+				@Nullable List<CurrentTraceContext.ScopeDecorator> scopeDecorators,
+				@Nullable List<CurrentTraceContextCustomizer> currentTraceContextCustomizers) {
+			if (scopeDecorators == null) {
+				scopeDecorators = Collections.emptyList();
+			}
+			if (currentTraceContextCustomizers == null) {
+				currentTraceContextCustomizers = Collections.emptyList();
+			}
+
+			for (CurrentTraceContext.ScopeDecorator scopeDecorator : scopeDecorators) {
+				builder.addScopeDecorator(scopeDecorator);
+			}
+			for (CurrentTraceContextCustomizer customizer : currentTraceContextCustomizers) {
 				customizer.customize(builder);
 			}
+			return builder.build();
 		}
 
-		return builder.build();
-	}
-
-	@Bean(name = TRACER_BEAN_NAME)
-	@ConditionalOnMissingBean
-	Tracer tracer(Tracing tracing) {
-		return tracing.tracer();
-	}
-
-	@Bean
-	@ConditionalOnMissingBean
-	SpanNamer sleuthSpanNamer() {
-		return new DefaultSpanNamer();
-	}
-
-	@Bean
-	CurrentTraceContext sleuthCurrentTraceContext(CurrentTraceContext.Builder builder,
-			@Nullable List<CurrentTraceContext.ScopeDecorator> scopeDecorators,
-			@Nullable List<CurrentTraceContextCustomizer> currentTraceContextCustomizers) {
-		if (scopeDecorators == null) {
-			scopeDecorators = Collections.emptyList();
-		}
-		if (currentTraceContextCustomizers == null) {
-			currentTraceContextCustomizers = Collections.emptyList();
+		@Bean
+		@ConditionalOnMissingBean
+		CurrentTraceContext.Builder sleuthCurrentTraceContextBuilder() {
+			return ThreadLocalCurrentTraceContext.newBuilder();
 		}
 
-		for (CurrentTraceContext.ScopeDecorator scopeDecorator : scopeDecorators) {
-			builder.addScopeDecorator(scopeDecorator);
+		@Bean
+		@ConditionalOnMissingBean
+		// NOTE: stable bean name as might be used outside sleuth
+		CurrentSpanCustomizer spanCustomizer(Tracing tracing) {
+			return CurrentSpanCustomizer.create(tracing);
 		}
-		for (CurrentTraceContextCustomizer customizer : currentTraceContextCustomizers) {
-			customizer.customize(builder);
-		}
-		return builder.build();
-	}
 
-	@Bean
-	@ConditionalOnMissingBean
-	CurrentTraceContext.Builder sleuthCurrentTraceContextBuilder() {
-		return ThreadLocalCurrentTraceContext.newBuilder();
-	}
-
-	@Bean
-	@ConditionalOnMissingBean
-	// NOTE: stable bean name as might be used outside sleuth
-	CurrentSpanCustomizer spanCustomizer(Tracing tracing) {
-		return CurrentSpanCustomizer.create(tracing);
-	}
-
-	@Bean
-	SpanHandler compositeSpanHandler(@Nullable List<SpanFilter> exporters) {
-		return new CompositeSpanHandler(exporters);
 	}
 
 }

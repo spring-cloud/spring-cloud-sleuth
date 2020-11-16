@@ -1,24 +1,21 @@
 [[features]]
 [[project-features]]
 = Spring Cloud Sleuth Features
+
 include::_attributes.adoc[]
 
-This section dives into the details of {project-full-name}. Here you can learn about the key
-features that you may want to use and customize. If you have not already done so, you
-might want to read the "<<getting-started.adoc#getting-started>>" and
-"<<using.adoc#using>>" sections, so that you have a good grounding in the
-basics.
+This section dives into the details of {project-full-name}.
+Here you can learn about the key features that you may want to use and customize.
+If you have not already done so, you might want to read the "<<getting-started.adoc#getting-started>>" and "<<using.adoc#using>>" sections, so that you have a good grounding in the basics.
 
 [[features-context-propagation]]
 == Context Propagation
 
-Traces connect from service to service using header propagation. The default
-format is https://github.com/openzipkin/b3-propagation[B3]. Similar to data
-formats, you can configure alternate header formats also, provided trace and
-span IDs are compatible with B3. Most notably, this means the trace ID and span
-IDs are lower-case hex, not UUIDs. Besides trace identifiers, other properties
-(Baggage) can also be passed along with the request. Remote Baggage must be
-predefined, but is flexible otherwise.
+Traces connect from service to service using header propagation.
+The default format is https://github.com/openzipkin/b3-propagation[B3].
+Similar to data formats, you can configure alternate header formats also, provided trace and span IDs are compatible with B3. Most notably, this means the trace ID and span IDs are lower-case hex, not UUIDs.
+Besides trace identifiers, other properties (Baggage) can also be passed along with the request.
+Remote Baggage must be predefined, but is flexible otherwise.
 
 To use the provided defaults you can set the `spring.sleuth.propagation.type` property.
 The value can be a list in which case you will propagate more tracing headers.
@@ -31,21 +28,21 @@ You can read more about how to provide custom context propagation in this "<<how
 [[features-sampling]]
 == Sampling
 
-Spring Cloud Sleuth pushes the sampling decision down to the tracer implementation. However, there are cases where you can change the sampling decision at runtime.
+Spring Cloud Sleuth pushes the sampling decision down to the tracer implementation.
+However, there are cases where you can change the sampling decision at runtime.
 
-One of such cases is skip reporting of certain client spans. To achieve that you can set the `spring.sleuth.web.client.skip-pattern` with the path patterns to be skipped. Another option is to provide your own custom `org.springframework.cloud.sleuth.api.SamplerFunction<`org.springframework.cloud.sleuth.api.http.HttpRequest>` implementation and define when a given `HttpRequest` should not be sampled.
+One of such cases is skip reporting of certain client spans.
+To achieve that you can set the `spring.sleuth.web.client.skip-pattern` with the path patterns to be skipped.
+Another option is to provide your own custom `org.springframework.cloud.sleuth.api.SamplerFunction<`org.springframework.cloud.sleuth.api.http.HttpRequest>` implementation and define when a given `HttpRequest` should not be sampled.
 
 [[features-baggage]]
 == Baggage
 
-Distributed tracing works by propagating fields inside and across services that
-connect the trace together: traceId and spanId notably. The context that holds
-these fields can optionally push other fields that need to be consistent
-regardless of many services are touched. The simple name for these extra fields
-is "Baggage".
+Distributed tracing works by propagating fields inside and across services that connect the trace together: traceId and spanId notably.
+The context that holds these fields can optionally push other fields that need to be consistent regardless of many services are touched.
+The simple name for these extra fields is "Baggage".
 
-Sleuth allows you to define which baggage are permitted to exist in the trace
-context, including what header names are used.
+Sleuth allows you to define which baggage are permitted to exist in the trace context, including what header names are used.
 
 The following example shows setting baggage values using Spring Cloud Sleuth's API:
 
@@ -54,25 +51,21 @@ The following example shows setting baggage values using Spring Cloud Sleuth's A
 include::{common_tests_path}/src/main/java/org/springframework/cloud/sleuth/baggage/multiple/MultipleHopsIntegrationTests.java[tags=baggage,indent=0]
 ----
 
-IMPORTANT: There is currently no limitation of the count or size of baggage
-items. Keep in mind that too many can decrease system throughput or increase
-RPC latency. In extreme cases, too much baggage can crash the application, due
-to exceeding transport-level message or header capacity.
+IMPORTANT: There is currently no limitation of the count or size of baggage items.
+Keep in mind that too many can decrease system throughput or increase RPC latency.
+In extreme cases, too much baggage can crash the application, due to exceeding transport-level message or header capacity.
 
-You can use
-properties to define fields that have no special configuration such as name mapping:
+You can use properties to define fields that have no special configuration such as name mapping:
 
 * `spring.sleuth.baggage.remote-fields` is a list of header names to accept and propagate to remote services.
 * `spring.sleuth.baggage.local-fields` is a list of names to propagate locally
 
-No prefixing applies with these keys. What you set is literally what is used.
+No prefixing applies with these keys.
+What you set is literally what is used.
 
 A name set in either of these properties will result in a `Baggage` of the same name.
 
-In order to automatically set the baggage values to Slf4j's MDC, you have to set
-the `spring.sleuth.baggage.correlation-fields` property with a list of allowed
-local or remote keys. E.g. `spring.sleuth.baggage.correlation-fields=country-code` will set the
-value of the `country-code` baggage into MDC.
+In order to automatically set the baggage values to Slf4j's MDC, you have to set the `spring.sleuth.baggage.correlation-fields` property with a list of allowed local or remote keys. E.g. `spring.sleuth.baggage.correlation-fields=country-code` will set the value of the `country-code` baggage into MDC.
 
 Note that the extra field is propagated and added to MDC starting with the next downstream trace context. To immediately
 add the extra field to MDC in the current trace context, configure the field to flush on update:
@@ -104,18 +97,19 @@ countryCodeField.updateValue("new-value");
 IMPORTANT: Remember that adding entries to MDC can drastically decrease the performance of your application!
 
 If you want to add the baggage entries as tags, to make it possible to search for spans via the baggage entries, you can set the value of
-`spring.sleuth.baggage.tag-fields` with a list of allowed baggage keys. To disable the feature you have to pass the `spring.sleuth.propagation.tag.enabled=false` property.
+`spring.sleuth.baggage.tag-fields` with a list of allowed baggage keys.
+To disable the feature you have to pass the `spring.sleuth.propagation.tag.enabled=false` property.
 
 [[features-baggage-vs-tags]]
 === Baggage versus Tags
 
-Like trace IDs, Baggage is attached to messages or requests, usually as
-headers. Tags are key value pairs sent in a Span to Zipkin. Baggage values are
-not added spans by default, which means you can't search based on Baggage
-unless  you opt-in.
+Like trace IDs, Baggage is attached to messages or requests, usually as headers.
+Tags are key value pairs sent in a Span to Zipkin.
+Baggage values are not added spans by default, which means you can't search based on Baggage unless you opt-in.
 
 To make baggage also tags, use the property `spring.sleuth.baggage.tag-fields`
 like so:
+
 [source,yml]
 ----
 include::{brave_path}/src/test/resources/application-baggage.yml[indent=0]
@@ -124,9 +118,11 @@ include::{brave_path}/src/test/resources/application-baggage.yml[indent=0]
 [[features-brave]]
 == OpenZipkin Brave Tracer Integration
 
-Spring Cloud Sleuth integrates with the OpenZipkin Brave tracer via the bridge that is available in the `spring-cloud-sleuth-brave` module. In this section you can read about specific Brave integrations.
+Spring Cloud Sleuth integrates with the OpenZipkin Brave tracer via the bridge that is available in the `spring-cloud-sleuth-brave` module.
+In this section you can read about specific Brave integrations.
 
-You can choose to use either Sleuth's API or the Brave API directly in your code (e.g. either Sleuth's `Tracer` or Brave's `Tracer`). If you want to use this tracer implementation's API directly please read https://github.com/openzipkin/brave[their documentation to learn more about it].
+You can choose to use either Sleuth's API or the Brave API directly in your code (e.g. either Sleuth's `Tracer` or Brave's `Tracer`).
+If you want to use this tracer implementation's API directly please read https://github.com/openzipkin/brave[their documentation to learn more about it].
 
 [[features-brave-basics]]
 === Brave Basics
@@ -145,13 +141,13 @@ Here are the most relevant links from the OpenZipkin Brave project:
 [[features-brave-sampling]]
 === Brave Sampling
 
-Sampling only applies to tracing backends, such as Zipkin. Trace IDs appear in logs regardless of
-sample rate. Sampling is a way to prevent overloading the system, by consistently tracing some, but
-not all requests.
+Sampling only applies to tracing backends, such as Zipkin.
+Trace IDs appear in logs regardless of sample rate.
+Sampling is a way to prevent overloading the system, by consistently tracing some, but not all requests.
 
 The default rate of 10 traces per second is controlled by the `spring.sleuth.sampler.rate`
-property and applies when we know Sleuth is used for reasons besides logging. Use a rate above 100
-traces per second with extreme caution as it can overload your tracing system.
+property and applies when we know Sleuth is used for reasons besides logging.
+Use a rate above 100 traces per second with extreme caution as it can overload your tracing system.
 
 The sampler can be set by Java Config also, as shown in the following example:
 
@@ -163,7 +159,10 @@ include::{brave_path}/src/test/java/org/springframework/cloud/sleuth/documentati
 TIP: You can set the HTTP header `b3` to `1`, or, when doing messaging, you can set the `spanFlags` header to `1`.
 Doing so forces the current request to be sampled regardless of configuration.
 
-By default samplers will work with the refresh scope mechanism. That means that you can change the sampling properties at runtime, refresh the application and the changes will be reflected. However, sometimes the fact of creating a proxy around samplers and calling it from too early (from `@PostConstruct` annotated method) may lead to dead locks. In such a case either create a sampler bean explicitly, or set the property `spring.sleuth.sampler.refresh.enabled` to `false` to disable the refresh scope support.
+By default samplers will work with the refresh scope mechanism.
+That means that you can change the sampling properties at runtime, refresh the application and the changes will be reflected.
+However, sometimes the fact of creating a proxy around samplers and calling it from too early (from `@PostConstruct` annotated method) may lead to dead locks.
+In such a case either create a sampler bean explicitly, or set the property `spring.sleuth.sampler.refresh.enabled` to `false` to disable the refresh scope support.
 
 [[features-brave-baggage]]
 === Brave Baggage Java configuration
@@ -179,12 +178,10 @@ If you need to do anything more advanced than above, do not define properties an
 [[features-brave-customizations]]
 === Brave Customizations
 
-The `brave.Tracer` object is fully managed by sleuth, so you rarely need to affect it. That said,
-Sleuth supports a number of `Customizer` types, that allow you to configure
-anything not already done by Sleuth with auto-configuration or properties.
+The `brave.Tracer` object is fully managed by sleuth, so you rarely need to affect it.
+That said, Sleuth supports a number of `Customizer` types, that allow you to configure anything not already done by Sleuth with auto-configuration or properties.
 
-If you define one of the following as a `Bean`, Sleuth will invoke it to
-customize behaviour:
+If you define one of the following as a `Bean`, Sleuth will invoke it to customize behaviour:
 
 * `RpcTracingCustomizer` - for RPC tagging and sampling policy
 * `HttpTracingCustomizer` - for HTTP tagging and sampling policy
@@ -196,21 +193,20 @@ customize behaviour:
 [[features-brave-sampling-customizations]]
 ==== Brave Sampling Customizations
 
-If client /server sampling is required, just  register a bean of type
-`brave.sampler.SamplerFunction<HttpRequest>` and name  the bean
+If client /server sampling is required, just register a bean of type
+`brave.sampler.SamplerFunction<HttpRequest>` and name the bean
 `sleuthHttpClientSampler` for client sampler and `sleuthHttpServerSampler`
-for server  sampler.
+for server sampler.
 
 For your convenience the `@HttpClientSampler` and `@HttpServerSampler`
-annotations can be used to inject the proper beans or to  reference the bean
-names via their static String `NAME` fields.
+annotations can be used to inject the proper beans or to reference the bean names via their static String `NAME` fields.
 
 Check out Brave's code to see an example of how to make a path-based sampler
 https://github.com/openzipkin/brave/tree/master/instrumentation/http#sampling-policy
 
 If you want to completely rewrite the `HttpTracing` bean you can use the `SkipPatternProvider`
-interface to retrieve the URL `Pattern` for spans that should be not sampled. Below you can see
-an example of usage of `SkipPatternProvider` inside a server side, `Sampler<HttpRequest>`.
+interface to retrieve the URL `Pattern` for spans that should be not sampled.
+Below you can see an example of usage of `SkipPatternProvider` inside a server side, `Sampler<HttpRequest>`.
 
 [source,java,indent=0]
 ----
@@ -223,20 +219,17 @@ include::{tests_path}/brave/spring-cloud-sleuth-instrumentation-mvc-tests/src/te
 [[features-brave-messaging]]
 === Brave Messaging
 
-Sleuth automatically configures the `MessagingTracing` bean which serves as a
-foundation for Messaging instrumentation such as Kafka or JMS.
+Sleuth automatically configures the `MessagingTracing` bean which serves as a foundation for Messaging instrumentation such as Kafka or JMS.
 
-If a customization of producer / consumer sampling of messaging traces is required,
-just register a bean of type `brave.sampler.SamplerFunction<MessagingRequest>` and
-name the bean `sleuthProducerSampler` for producer sampler and `sleuthConsumerSampler`
+If a customization of producer / consumer sampling of messaging traces is required, just register a bean of type `brave.sampler.SamplerFunction<MessagingRequest>` and name the bean `sleuthProducerSampler` for producer sampler and `sleuthConsumerSampler`
 for consumer sampler.
 
 For your convenience the `@ProducerSampler` and `@ConsumerSampler`
-annotations can  be used to inject the proper beans or to reference the bean
-names via their  static String `NAME` fields.
+annotations can be used to inject the proper beans or to reference the bean names via their static String `NAME` fields.
 
-Ex. Here's a sampler that traces 100 consumer requests per second, except for
-the "alerts" channel. Other requests will use a global rate provided by the
+Ex.
+Here's a sampler that traces 100 consumer requests per second, except for the "alerts" channel.
+Other requests will use a global rate provided by the
 `Tracing` component.
 
 [source,java,indent=0]
@@ -253,34 +246,43 @@ For more, see https://github.com/openzipkin/brave/tree/master/instrumentation/me
 === Brave Opentracing
 
 You can integrate with Brave and https://opentracing.io/[OpenTracing] via the
-`io.opentracing.brave:brave-opentracing` bridge. Just add it to the classpath and the OpenTracing `Tracer` will be set up automatically.
+`io.opentracing.brave:brave-opentracing` bridge.
+Just add it to the classpath and the OpenTracing `Tracer` will be set up automatically.
 
 [[features-otel]]
 == OpenTelemetry Tracer Integration
 
-Spring Cloud Sleuth integrates with the OpenTelemetry (OTel in short) SDK tracer via the bridge that is available in the `spring-cloud-sleuth-otel` module. In this section you can read about specific OTel integrations.
+Spring Cloud Sleuth integrates with the OpenTelemetry (OTel in short) SDK tracer via the bridge that is available in the `spring-cloud-sleuth-otel` module.
+In this section you can read about specific OTel integrations.
 
-You can choose to use either Sleuth's API or the OpenTelemetry API directly in your code (e.g. either Sleuth's `Tracer` or OpenTelemetry's `Tracer`). If you want to use this tracer implementation's API directly please read https://github.com/open-telemetry/opentelemetry-java[their documentation to learn more about it].
+You can choose to use either Sleuth's API or the OpenTelemetry API directly in your code (e.g. either Sleuth's `Tracer` or OpenTelemetry's `Tracer`).
+If you want to use this tracer implementation's API directly please read https://github.com/open-telemetry/opentelemetry-java[their documentation to learn more about it].
 
 [[features-otel-logging]]
 === OpenTelemetry Logging Integration
 
 We're providing an Slf4j integration via a `SpanProcessor` that injects to and removes entries (trace / span ids, baggage, tags etc.) from MDC. You can disable that via the `spring.sleuth.otel.log.slf4j.enabled=false` property.
 
-If it's there on the classpath, we integrate with the `LoggingSpanExporter`. You can disable that integration via the `spring.sleuth.otel.log.exporter.enabled=false` property.
+If it's there on the classpath, we integrate with the `LoggingSpanExporter`.
+You can disable that integration via the `spring.sleuth.otel.log.exporter.enabled=false` property.
 
 [[features-otel-opentracing]]
 === OpenTelemetry Opentracing
 
 You can integrate with OpenTelemetry and https://opentracing.io/[OpenTracing] via the
-`io.opentelemetry:opentelemetry-opentracing-shim` bridge. Just add it to the classpath and the OpenTracing `Tracer` will be set up automatically.
+`io.opentelemetry:opentelemetry-opentracing-shim` bridge.
+Just add it to the classpath and the OpenTracing `Tracer` will be set up automatically.
 
 [[features-zipkin]]
 == Sending Spans to Zipkin
 
-Spring Cloud Sleuth provides various integrations with the https://zipkin.io[OpenZipkin] distributed tracing system. Regardless of the chosen tracer implementation it's enough to add `spring-cloud-sleuth-zipkin` to the classpath to start sending spans to Zipkin. You can choose whether to do that via HTTP or messaging. You can read more about how to do that in "<<howto.adoc#how-to-set-up-sleuth-with-brave-zipkin-messaging,how to section>>".
+Spring Cloud Sleuth provides various integrations with the https://zipkin.io[OpenZipkin] distributed tracing system.
+Regardless of the chosen tracer implementation it's enough to add `spring-cloud-sleuth-zipkin` to the classpath to start sending spans to Zipkin.
+You can choose whether to do that via HTTP or messaging.
+You can read more about how to do that in "<<howto.adoc#how-to-set-up-sleuth-with-brave-zipkin-messaging,how to section>>".
 
-When the span is closed, it is sent to Zipkin over HTTP. The communication is asynchronous. You can configure the URL by setting the `spring.zipkin.baseUrl` property, as follows:
+When the span is closed, it is sent to Zipkin over HTTP. The communication is asynchronous.
+You can configure the URL by setting the `spring.zipkin.baseUrl` property, as follows:
 
 [source,yaml]
 ----
@@ -297,8 +299,8 @@ spring.zipkin.baseUrl: https://zipkinserver/
 To disable this feature just set `spring.zipkin.discovery-client-enabled` to `false.
 
 When the Discovery Client feature is enabled, Sleuth uses
-`LoadBalancerClient` to find the URL of the Zipkin Server. It means
-that you can set up the load balancing configuration.
+`LoadBalancerClient` to find the URL of the Zipkin Server.
+It means that you can set up the load balancing configuration.
 
 If you have `web`, `rabbit`, `activemq` or `kafka` together on the classpath, you might need to pick the means by which you would like to send spans to zipkin.
 To do so, set `web`, `rabbit`, `activemq` or `kafka` to the `spring.zipkin.sender.type` property.
@@ -309,8 +311,7 @@ The following example shows setting the sender type for `web`:
 spring.zipkin.sender.type: web
 ----
 
-To customize the `RestTemplate` that sends spans to Zipkin via HTTP, you can register
-the `ZipkinRestTemplateCustomizer` bean.
+To customize the `RestTemplate` that sends spans to Zipkin via HTTP, you can register the `ZipkinRestTemplateCustomizer` bean.
 
 [source,java,indent=0]
 ----
@@ -376,13 +377,15 @@ spring.zipkin.locator.discovery.enabled: true
 In Sleuth, we generate spans with a fixed name.
 Some users want to modify the name depending on values of tags.
 
-Sleuth registers a `SpanFilter` bean that can automatically skip reporting spans of given name patterns. The property `spring.sleuth.span-filter.span-name-patterns-to-skip` contains the default skip patterns for span names. The property `spring.sleuth.span-filter.additional-span-name-patterns-to-skip` will append the provided span name patterns to the existing ones. In order to disable this functionality just set `spring.sleuth.span-filter.enabled` to `false`.
+Sleuth registers a `SpanFilter` bean that can automatically skip reporting spans of given name patterns.
+The property `spring.sleuth.span-filter.span-name-patterns-to-skip` contains the default skip patterns for span names.
+The property `spring.sleuth.span-filter.additional-span-name-patterns-to-skip` will append the provided span name patterns to the existing ones.
+In order to disable this functionality just set `spring.sleuth.span-filter.enabled` to `false`.
 
 [[features-zipkin-custom-reported-spans-brave]]
 ==== Brave Customization of Reported Spans
 
 IMPORTANT: This section is applicable for Brave tracer only.
-
 
 Before reporting spans (for example, to Zipkin) you may want to modify that span in some way.
 You can do so by implementing a `SpanHandler`.
@@ -398,8 +401,7 @@ The preceding example results in changing the name of the reported span to `foo 
 
 === Overriding the auto-configuration of Zipkin
 
-Spring Cloud Sleuth supports sending traces to multiple tracing systems as of version 2.1.0.
-In order to get this to work, every tracing system needs to have a `Reporter<Span>` and `Sender`.
+Spring Cloud Sleuth supports sending traces to multiple tracing systems as of version 2.1.0. In order to get this to work, every tracing system needs to have a `Reporter<Span>` and `Sender`.
 If you want to override the provided beans you need to give them a specific name.
 To do this you can use respectively `ZipkinAutoConfiguration.REPORTER_BEAN_NAME` and `ZipkinAutoConfiguration.SENDER_BEAN_NAME`.
 
@@ -411,13 +413,11 @@ include::{project-root}/spring-cloud-sleuth-zipkin/src/test/java/org/springframe
 [[features-log-integration]]
 == Log integration
 
-Sleuth configures the logging context with variables including the service name
-(`%{spring.zipkin.service.name}` or `%{spring.application.name}` if the previous one was not set), span ID (`%{spanId}`)  and the trace ID (`%{traceId}`). These help
-you connect logs with distributed traces and allow you choice in what tools you
-use to troubleshoot your services.
+Sleuth configures the logging context with variables including the service name (`%{spring.zipkin.service.name}` or `%{spring.application.name}` if the previous one was not set), span ID (`%{spanId}`) and the trace ID (`%{traceId}`).
+These help you connect logs with distributed traces and allow you choice in what tools you use to troubleshoot your services.
 
-Once you find any log with an error, you can look for the trace ID in the
-message. Paste that into your distributed tracing system to visualize the entire trace, regardless of how many services the first request ended up hitting.
+Once you find any log with an error, you can look for the trace ID in the message.
+Paste that into your distributed tracing system to visualize the entire trace, regardless of how many services the first request ended up hitting.
 
 [source]
 ----
@@ -425,8 +425,9 @@ backend.log:  2020-04-09 17:45:40.516 ERROR [backend,5e8eeec48b08e26882aba313eb0
 frontend.log:2020-04-09 17:45:40.574 ERROR [frontend,5e8eeec48b08e26882aba313eb08f0a4,82aba313eb08f0a4,true] 97192 --- [nio-8081-exec-2] o.s.c.s.i.web.ExceptionLoggingFilter     : Uncaught exception thrown
 ----
 
-Above, you'll notice the trace ID is `5e8eeec48b08e26882aba313eb08f0a4`, for
-example. This log configuration was automatically setup by Sleuth. You can disable it by disabling Sleuth via `spring.sleuth.enabled=false` property or putting your own `logging.pattern.level` property.
+Above, you'll notice the trace ID is `5e8eeec48b08e26882aba313eb08f0a4`, for example.
+This log configuration was automatically setup by Sleuth.
+You can disable it by disabling Sleuth via `spring.sleuth.enabled=false` property or putting your own `logging.pattern.level` property.
 
 If you use a log aggregating tool (such as https://www.elastic.co/products/kibana[Kibana], https://www.splunk.com/[Splunk], and others), you can order the events that took place.
 An example from Kibana would resemble the following image:
@@ -452,6 +453,7 @@ filter {
 ----
 
 NOTE: If you want to use Grok together with the logs from Cloud Foundry, you have to use the following pattern:
+
 [source]
 ----
 filter {
@@ -477,7 +479,8 @@ To do so, you have to do the following (for readability, we pass the dependencie
 *Dependencies Setup*
 
 . Ensure that Logback is on the classpath (`ch.qos.logback:logback-core`).
-. Add Logstash Logback encode. For example, to use version `4.6`, add `net.logstash.logback:logstash-logback-encoder:4.6`.
+. Add Logstash Logback encode.
+For example, to use version `4.6`, add `net.logstash.logback:logstash-logback-encoder:4.6`.
 
 *Logback Setup*
 
@@ -501,9 +504,9 @@ Otherwise, your custom logback file does not properly read the property.
 == What to Read Next
 
 If you want to learn more about any of the classes discussed in this section, you can browse the
-{github-code}[source code directly]. If you have specific questions, see the
+{github-code}[source code directly].
+If you have specific questions, see the
 <<howto.adoc#howto, how-to>> section.
 
-If you are comfortable with {project-full-name}'s core features, you can continue on and read
-about
+If you are comfortable with {project-full-name}'s core features, you can continue on and read about
 <<integrations.adoc, {project-full-name}'s integrations>>.

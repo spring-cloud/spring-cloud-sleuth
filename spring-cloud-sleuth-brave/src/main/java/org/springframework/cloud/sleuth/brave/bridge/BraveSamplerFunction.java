@@ -20,7 +20,6 @@ import brave.sampler.SamplerFunctions;
 
 import org.springframework.cloud.sleuth.api.SamplerFunction;
 import org.springframework.cloud.sleuth.api.http.HttpRequest;
-import org.springframework.cloud.sleuth.brave.bridge.http.BraveHttpRequest;
 
 /**
  * Brave implementation of a {@link SamplerFunction}.
@@ -29,11 +28,11 @@ import org.springframework.cloud.sleuth.brave.bridge.http.BraveHttpRequest;
  * @author Marcin Grzejszczak
  * @since 3.0.0
  */
-public class BraveSamplerFunction<T> implements SamplerFunction<T> {
+public final class BraveSamplerFunction<T> implements SamplerFunction<T> {
 
 	final brave.sampler.SamplerFunction<T> samplerFunction;
 
-	public BraveSamplerFunction(brave.sampler.SamplerFunction<T> samplerFunction) {
+	BraveSamplerFunction(brave.sampler.SamplerFunction<T> samplerFunction) {
 		this.samplerFunction = samplerFunction;
 	}
 

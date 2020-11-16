@@ -28,18 +28,18 @@ import org.springframework.lang.NonNull;
  * @author Marcin Grzejszczak
  * @since 3.0.0
  */
-public class OtelSpanCustomizer implements SpanCustomizer {
+class OtelSpanCustomizer implements SpanCustomizer {
 
 	private final Tracer tracer;
 
 	private final Span span;
 
-	public OtelSpanCustomizer(@NonNull Tracer tracer) {
+	OtelSpanCustomizer(@NonNull Tracer tracer) {
 		this.tracer = tracer;
 		this.span = null;
 	}
 
-	public OtelSpanCustomizer(@NonNull Span span) {
+	OtelSpanCustomizer(@NonNull Span span) {
 		this.tracer = null;
 		this.span = span;
 	}

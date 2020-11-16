@@ -27,14 +27,17 @@ import org.springframework.cloud.sleuth.api.CurrentTraceContext;
 import org.springframework.cloud.sleuth.api.SpanCustomizer;
 import org.springframework.cloud.sleuth.api.Tracer;
 import org.springframework.cloud.sleuth.api.exporter.SpanFilter;
-import org.springframework.cloud.sleuth.api.noop.NoOpCurrentTraceContext;
-import org.springframework.cloud.sleuth.api.noop.NoOpPropagator;
-import org.springframework.cloud.sleuth.api.noop.NoOpSpanCustomizer;
-import org.springframework.cloud.sleuth.api.noop.NoOpTracer;
+import org.springframework.cloud.sleuth.api.http.HttpClientHandler;
+import org.springframework.cloud.sleuth.api.http.HttpServerHandler;
 import org.springframework.cloud.sleuth.api.propagation.Propagator;
+import org.springframework.cloud.sleuth.instrument.web.SleuthWebProperties;
+import org.springframework.cloud.sleuth.instrument.web.TraceWebFluxConfiguration;
+import org.springframework.cloud.sleuth.instrument.web.TraceWebServletConfiguration;
+import org.springframework.cloud.sleuth.instrument.web.client.SleuthWebClientEnabled;
 import org.springframework.cloud.sleuth.internal.DefaultSpanNamer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Import;
 
 /**
  * {@link org.springframework.boot.autoconfigure.EnableAutoConfiguration
@@ -47,17 +50,30 @@ import org.springframework.context.annotation.Configuration;
  */
 @Configuration(proxyBeanMethods = false)
 @ConditionalOnProperty(value = "spring.sleuth.enabled", matchIfMissing = true)
-@EnableConfigurationProperties({ SleuthSpanFilterProperties.class, SleuthBaggageProperties.class })
+@EnableConfigurationProperties({ SleuthSpanFilterProperties.class, SleuthBaggageProperties.class,
+		SleuthTracerProperties.class })
 public class TraceAutoConfiguration {
 
 	private static final Log log = LogFactory.getLog(TraceAutoConfiguration.class);
 
+	private final SleuthTracerProperties properties;
+
+	private final NoOpAssertion noOpAssertion;
+
+	public TraceAutoConfiguration(SleuthTracerProperties properties) {
+		this.properties = properties;
+		this.noOpAssertion = new NoOpAssertion(properties);
+	}
+
 	@Bean
 	@ConditionalOnMissingBean
 	Tracer defaultTracer() {
-		if (log.isWarnEnabled()) {
-			log.warn(
-					"You have not provided a tracer implementation. A default, noop one will be set up. You will not see any spans get reported to external systems (e.g. Zipkin) nor will any context get propagated.");
+		if (this.properties.getMode() != SleuthTracerProperties.TracerMode.NOOP) {
+			this.noOpAssertion.throwException();
+		}
+		else if (log.isDebugEnabled()) {
+			log.debug(
+					"You have not provided a tracer implementation but you have switched the [spring.sleuth.tracer.mode] to [NOOP]. A default, noop tracer will be set up. You will not see any spans get reported to external systems (e.g. Zipkin) nor will any context get propagated.");
 		}
 		return new NoOpTracer();
 	}
@@ -71,18 +87,21 @@ public class TraceAutoConfiguration {
 	@Bean
 	@ConditionalOnMissingBean
 	Propagator defaultPropagator() {
+		this.noOpAssertion.checkIfNoOpSet();
 		return new NoOpPropagator();
 	}
 
 	@Bean
 	@ConditionalOnMissingBean
 	CurrentTraceContext defaultCurrentTraceContext() {
+		this.noOpAssertion.checkIfNoOpSet();
 		return new NoOpCurrentTraceContext();
 	}
 
 	@Bean
 	@ConditionalOnMissingBean
 	SpanCustomizer defaultSpanCustomizer() {
+		this.noOpAssertion.checkIfNoOpSet();
 		return new NoOpSpanCustomizer();
 	}
 
@@ -90,6 +109,56 @@ public class TraceAutoConfiguration {
 	@ConditionalOnProperty(value = "spring.sleuth.span-filter.enabled", matchIfMissing = true)
 	SpanFilter spanIgnoringSpanExporter(SleuthSpanFilterProperties sleuthSpanFilterProperties) {
 		return new SpanIgnoringSpanFilter(sleuthSpanFilterProperties);
+	}
+
+	@Configuration(proxyBeanMethods = false)
+	@SleuthWebClientEnabled
+	@Import({ SkipPatternConfiguration.class, TraceWebFluxConfiguration.class, TraceWebServletConfiguration.class,
+			TraceWebFluxConfiguration.class })
+	@EnableConfigurationProperties(SleuthWebProperties.class)
+	static class TraceHttpConfiguration {
+
+		private final NoOpAssertion assertion;
+
+		TraceHttpConfiguration(SleuthTracerProperties properties) {
+			this.assertion = new NoOpAssertion(properties);
+		}
+
+		@Bean
+		@ConditionalOnMissingBean
+		HttpClientHandler defaultHttpClientHandler() {
+			this.assertion.checkIfNoOpSet();
+			return new NoOpHttpClientHandler();
+		}
+
+		@Bean
+		@ConditionalOnMissingBean
+		HttpServerHandler defaultHttpServerHandler() {
+			this.assertion.checkIfNoOpSet();
+			return new NoOpHttpServerHandler();
+		}
+
+	}
+
+}
+
+class NoOpAssertion {
+
+	private final SleuthTracerProperties properties;
+
+	NoOpAssertion(SleuthTracerProperties properties) {
+		this.properties = properties;
+	}
+
+	void checkIfNoOpSet() {
+		if (this.properties.getMode() != SleuthTracerProperties.TracerMode.NOOP) {
+			throwException();
+		}
+	}
+
+	void throwException() {
+		throw new IllegalStateException(
+				"You have not provided a tracer implementation and the [spring.sleuth.tracer.mode] was not set to [NOOP]");
 	}
 
 }
