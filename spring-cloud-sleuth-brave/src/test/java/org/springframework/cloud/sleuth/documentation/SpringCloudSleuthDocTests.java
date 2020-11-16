@@ -246,7 +246,7 @@ public class SpringCloudSleuthDocTests {
 		// end::trace_runnable[]
 
 		ExecutorService executorService = Executors.newSingleThreadExecutor();
-		executorService.submit(traceRunnable).get(10, TimeUnit.MILLISECONDS);
+		executorService.submit(traceRunnable).get(100, TimeUnit.MILLISECONDS);
 		Optional<MutableSpan> calculateTax = spans.spans().stream().filter(span -> span.name().equals("calculateTax"))
 				.findFirst();
 		BDDAssertions.then(calculateTax).isPresent();
@@ -274,7 +274,7 @@ public class SpringCloudSleuthDocTests {
 		// end::trace_callable[]
 
 		ExecutorService executorService = Executors.newSingleThreadExecutor();
-		String result = executorService.submit(traceCallable).get(10, TimeUnit.MILLISECONDS);
+		String result = executorService.submit(traceCallable).get(100, TimeUnit.MILLISECONDS);
 		BDDAssertions.then(result).isEqualTo("some logic");
 		Optional<MutableSpan> calculateTax = spans.spans().stream().filter(span -> span.name().equals("calculateTax"))
 				.findFirst();
