@@ -36,8 +36,8 @@ public class ZipkinSamplerTests {
 
 	@Test
 	void should_set_sampler_to_non_never_when_zipkin_handler_on_classpath_for_brave() {
-		ApplicationContextRunner contextRunner = new ApplicationContextRunner().withConfiguration(
-				AutoConfigurations.of(BraveTestConfig.class));
+		ApplicationContextRunner contextRunner = new ApplicationContextRunner()
+				.withConfiguration(AutoConfigurations.of(BraveTestConfig.class));
 
 		contextRunner.run(context -> {
 			brave.sampler.Sampler sampler = context.getBean(brave.sampler.Sampler.class);
@@ -47,11 +47,12 @@ public class ZipkinSamplerTests {
 
 	@Test
 	void should_set_sampler_to_non_off_when_zipkin_handler_on_classpath_for_otel() {
-		ApplicationContextRunner contextRunner = new ApplicationContextRunner().withConfiguration(
-				AutoConfigurations.of(OtelTestConfig.class));
+		ApplicationContextRunner contextRunner = new ApplicationContextRunner()
+				.withConfiguration(AutoConfigurations.of(OtelTestConfig.class));
 
 		contextRunner.run(context -> {
-			io.opentelemetry.sdk.trace.samplers.Sampler sampler = context.getBean(io.opentelemetry.sdk.trace.samplers.Sampler.class);
+			io.opentelemetry.sdk.trace.samplers.Sampler sampler = context
+					.getBean(io.opentelemetry.sdk.trace.samplers.Sampler.class);
 			BDDAssertions.then(sampler).isNotSameAs(io.opentelemetry.sdk.trace.samplers.Sampler.alwaysOff());
 		});
 	}
@@ -67,4 +68,5 @@ public class ZipkinSamplerTests {
 	static class BraveTestConfig {
 
 	}
+
 }
