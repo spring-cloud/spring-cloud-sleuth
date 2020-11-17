@@ -34,13 +34,9 @@ import org.springframework.boot.WebApplicationType;
 import org.springframework.boot.autoconfigure.ImportAutoConfiguration;
 import org.springframework.cloud.sleuth.api.Span;
 import org.springframework.cloud.sleuth.api.Tracer;
-import org.springframework.cloud.sleuth.autoconfig.TraceAutoConfiguration;
 import org.springframework.cloud.sleuth.benchmarks.jmh.TracerImplementation;
-import org.springframework.cloud.sleuth.brave.autoconfig.TraceBraveAutoConfiguration;
-import org.springframework.cloud.sleuth.otel.autoconfig.TraceOtelAutoConfiguration;
-import org.springframework.cloud.sleuth.otel.bridge.TraceOtelBridgeConfiguation;
-import org.springframework.cloud.sleuth.otel.bridge.TraceOtelLogConfiguration;
-import org.springframework.cloud.sleuth.otel.propagation.TraceOtelPropagationConfiguration;
+import org.springframework.cloud.sleuth.brave.autoconfig.BraveAutoConfiguration;
+import org.springframework.cloud.sleuth.otel.autoconfig.OtelAutoConfiguration;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.Configuration;
 
@@ -119,10 +115,7 @@ public class BridgeTests {
 		}
 
 		@Configuration(proxyBeanMethods = false)
-		@ImportAutoConfiguration({ TraceAutoConfiguration.class, TraceBraveAutoConfiguration.class,
-				TraceOtelAutoConfiguration.class, TraceOtelBridgeConfiguation.class,
-				TraceOtelPropagationConfiguration.class, TraceOtelLogConfiguration.class,
-				TraceOtelLogConfiguration.class })
+		@ImportAutoConfiguration({ BraveAutoConfiguration.class, OtelAutoConfiguration.class })
 		static class TestConfiguration {
 
 		}

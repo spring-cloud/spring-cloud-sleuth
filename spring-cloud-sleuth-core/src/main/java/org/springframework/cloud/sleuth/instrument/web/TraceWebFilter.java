@@ -55,13 +55,6 @@ import org.springframework.web.server.WebFilterChain;
  */
 final class TraceWebFilter implements WebFilter, Ordered {
 
-	/**
-	 * If you register your filter before the {@link TraceWebFilter} then you will not
-	 * have the tracing context passed for you out of the box. That means that e.g. your
-	 * logs will not get correlated.
-	 */
-	public static final int ORDER = SleuthWebProperties.TRACING_FILTER_ORDER;
-
 	// Remember that this can be used in other packages
 	protected static final String TRACE_REQUEST_ATTR = Span.class.getName();
 

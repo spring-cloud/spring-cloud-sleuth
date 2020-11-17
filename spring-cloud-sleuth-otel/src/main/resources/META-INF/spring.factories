@@ -1,4 +1,0 @@
-# Auto Configuration
-org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
-org.springframework.cloud.sleuth.otel.autoconfig.TraceOtelAutoConfiguration,\
-org.springframework.cloud.sleuth.otel.opentracing.OpentracingAutoConfiguration

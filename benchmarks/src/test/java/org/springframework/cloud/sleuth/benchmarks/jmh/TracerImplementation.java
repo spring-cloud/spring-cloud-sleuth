@@ -16,13 +16,12 @@
 
 package org.springframework.cloud.sleuth.benchmarks.jmh;
 
-import org.springframework.cloud.sleuth.brave.autoconfig.TraceBraveAutoConfiguration;
-import org.springframework.cloud.sleuth.otel.autoconfig.TraceOtelAutoConfiguration;
+import org.springframework.cloud.sleuth.brave.autoconfig.BraveAutoConfiguration;
+import org.springframework.cloud.sleuth.otel.autoconfig.OtelAutoConfiguration;
 
 public enum TracerImplementation {
 
-	otel(TraceBraveAutoConfiguration.class.getCanonicalName()), brave(
-			TraceOtelAutoConfiguration.class.getCanonicalName());
+	otel(BraveAutoConfiguration.class.getCanonicalName()), brave(OtelAutoConfiguration.class.getCanonicalName());
 
 	private String key = "spring.autoconfigure.exclude";
 

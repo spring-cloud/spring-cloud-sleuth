@@ -1,5 +1,3 @@
-spring.sleuth.tracer.mode: NOOP
-
 logging.level.org.springframework.cloud: DEBUG
 logging.level.com.netflix.discovery.InstanceInfoReplicator: ERROR
 logging.level.org.springframework.cloud.sleuth.brave.instrument.web.client.feign: TRACE

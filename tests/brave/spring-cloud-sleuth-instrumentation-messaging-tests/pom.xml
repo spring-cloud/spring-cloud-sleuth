@@ -66,7 +66,7 @@
 		</dependency>
 		<dependency>
 			<groupId>org.springframework.cloud</groupId>
-			<artifactId>spring-cloud-sleuth-brave</artifactId>
+			<artifactId>spring-cloud-starter-sleuth</artifactId>
 			<scope>test</scope>
 		</dependency>
 		<dependency>

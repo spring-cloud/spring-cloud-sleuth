@@ -40,6 +40,11 @@
 		<dependencies>
 			<dependency>
 				<groupId>org.springframework.cloud</groupId>
+				<artifactId>spring-cloud-sleuth-autoconfigure</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.springframework.cloud</groupId>
 				<artifactId>spring-cloud-sleuth-core</artifactId>
 				<version>${project.version}</version>
 			</dependency>

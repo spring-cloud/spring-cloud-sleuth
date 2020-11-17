@@ -18,6 +18,7 @@ package org.springframework.cloud.sleuth.instrument.web;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.context.properties.NestedConfigurationProperty;
+import org.springframework.core.Ordered;
 
 /**
  * Configuration properties for web tracing.
@@ -33,7 +34,7 @@ public class SleuthWebProperties {
 	 * have the tracing context passed for you out of the box. That means that e.g. your
 	 * logs will not get correlated.
 	 */
-	public static final int TRACING_FILTER_ORDER = 5;
+	public static final int TRACING_FILTER_ORDER = Ordered.HIGHEST_PRECEDENCE + 5;
 
 	/**
 	 * Default set of skip patterns.
@@ -58,10 +59,9 @@ public class SleuthWebProperties {
 	private String additionalSkipPattern;
 
 	/**
-	 * Order in which the tracing filters should be registered. Defaults to
-	 * {@link TraceWebServletConfiguration#TRACING_FILTER_ORDER}.
+	 * Order in which the tracing filters should be registered.
 	 */
-	private int filterOrder = TraceWebServletConfiguration.TRACING_FILTER_ORDER;
+	private int filterOrder = TRACING_FILTER_ORDER;
 
 	/**
 	 * If set to true, auto-configured skip patterns will be ignored.

@@ -54,6 +54,7 @@
 		<module>spring-cloud-starter-sleuth</module>
 		<module>spring-cloud-starter-sleuth-otel</module>
 		<module>spring-cloud-sleuth-samples</module>
+		<module>spring-cloud-sleuth-autoconfigure</module>
 		<module>docs</module>
 	</modules>
 

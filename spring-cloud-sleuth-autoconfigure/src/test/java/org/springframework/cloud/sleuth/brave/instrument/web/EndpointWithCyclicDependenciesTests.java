@@ -1,0 +1,77 @@
+/*
+ * Copyright 2013-2019 the original author or authors.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package org.springframework.cloud.sleuth.brave.instrument.web;
+
+import brave.http.HttpTracing;
+import org.junit.jupiter.api.Test;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.actuate.endpoint.web.annotation.RestControllerEndpoint;
+import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.cloud.sleuth.DisableSecurity;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.stereotype.Service;
+
+/**
+ * This tests that actuator components can have instrumented HTTP clients inside of them.
+ *
+ * @author Marcin Grzejszczak
+ */
+@SpringBootTest(classes = { EndpointWithCyclicDependenciesTests.ClientConfig.class },
+		properties = "spring.sleuth.tracer.mode=BRAVE")
+public class EndpointWithCyclicDependenciesTests {
+
+	@Test
+	void should_load_context() {
+	}
+
+	static class Client {
+
+	}
+
+	@EnableAutoConfiguration
+	@Configuration(proxyBeanMethods = false)
+	@DisableSecurity
+	static class ClientConfig {
+
+		@Bean
+		public Client client(HttpTracing httpTracing) {
+			// imagine this instruments the client.
+			return new Client();
+		}
+
+	}
+
+	@Service
+	static class MyService {
+
+		@Autowired
+		Client client;
+
+	}
+
+	@RestControllerEndpoint(id = "admin-endpoint")
+	static class MyRestEndpoint {
+
+		@Autowired
+		MyService myService;
+
+	}
+
+}

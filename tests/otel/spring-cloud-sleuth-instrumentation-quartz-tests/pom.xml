@@ -66,7 +66,7 @@
 		</dependency>
 		<dependency>
 			<groupId>org.springframework.cloud</groupId>
-			<artifactId>spring-cloud-sleuth-otel</artifactId>
+			<artifactId>spring-cloud-starter-sleuth-otel</artifactId>
 			<scope>test</scope>
 		</dependency>
 		<dependency>
