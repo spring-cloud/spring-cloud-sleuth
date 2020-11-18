@@ -16,33 +16,25 @@
 
 package org.springframework.cloud.sleuth.zipkin2;
 
-import brave.sampler.Sampler;
+import io.opentelemetry.sdk.trace.samplers.Sampler;
 
-import org.springframework.boot.actuate.autoconfigure.security.servlet.ManagementWebSecurityAutoConfiguration;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
-import org.springframework.boot.autoconfigure.mongo.MongoAutoConfiguration;
-import org.springframework.boot.autoconfigure.quartz.QuartzAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.cloud.gateway.config.GatewayAutoConfiguration;
-import org.springframework.cloud.gateway.config.GatewayClassPathWarningAutoConfiguration;
-import org.springframework.cloud.gateway.config.GatewayMetricsAutoConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.test.context.TestPropertySource;
 
-@SpringBootTest(classes = BraveZipkinDiscoveryClientTests.TestConfig.class)
-@TestPropertySource(properties = "spring.sleuth.tracer.mode=BRAVE")
-public class BraveZipkinDiscoveryClientTests extends ZipkinDiscoveryClientTests {
+@SpringBootTest(classes = OtelZipkinDiscoveryClientTests.TestConfig.class)
+@TestPropertySource(properties = "spring.sleuth.trace.mode=OTEL")
+public class OtelZipkinDiscoveryClientTests extends ZipkinDiscoveryClientTests {
 
 	@Configuration(proxyBeanMethods = false)
-	@EnableAutoConfiguration(exclude = { GatewayClassPathWarningAutoConfiguration.class, GatewayAutoConfiguration.class,
-			GatewayMetricsAutoConfiguration.class, ManagementWebSecurityAutoConfiguration.class,
-			MongoAutoConfiguration.class, QuartzAutoConfiguration.class })
+	@EnableAutoConfiguration
 	static class TestConfig {
 
 		@Bean
 		Sampler alwaysSampler() {
-			return Sampler.ALWAYS_SAMPLE;
+			return Sampler.alwaysOn();
 		}
 
 	}
