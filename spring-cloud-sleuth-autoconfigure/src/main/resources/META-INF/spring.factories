@@ -7,8 +7,8 @@ org.springframework.cloud.sleuth.instrument.circuitbreaker.SleuthCircuitBreakerA
 org.springframework.cloud.sleuth.instrument.rxjava.RxJavaAutoConfiguration,\
 org.springframework.cloud.sleuth.instrument.quartz.TraceQuartzAutoConfiguration,\
 org.springframework.cloud.sleuth.instrument.web.client.TraceWebClientAutoConfiguration,\
+org.springframework.cloud.sleuth.instrument.web.client.feign.TraceFeignClientAutoConfiguration,\
 org.springframework.cloud.sleuth.instrument.web.client.TraceWebAsyncClientAutoConfiguration,\
-org.springframework.cloud.sleuth.autoconfig.SkipPatternConfiguration,\
 org.springframework.cloud.sleuth.instrument.scheduling.TraceSchedulingAutoConfiguration,\
 org.springframework.cloud.sleuth.instrument.reactor.TraceReactorAutoConfiguration,\
 org.springframework.cloud.sleuth.instrument.messaging.TraceFunctionAutoConfiguration,\

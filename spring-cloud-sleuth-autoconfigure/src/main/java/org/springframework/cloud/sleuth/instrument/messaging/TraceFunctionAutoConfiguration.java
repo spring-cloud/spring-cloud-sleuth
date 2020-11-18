@@ -16,6 +16,7 @@
 
 package org.springframework.cloud.sleuth.instrument.messaging;
 
+import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -23,6 +24,8 @@ import org.springframework.cloud.context.scope.refresh.RefreshScopeRefreshedEven
 import org.springframework.cloud.function.context.catalog.FunctionAroundWrapper;
 import org.springframework.cloud.sleuth.api.Tracer;
 import org.springframework.cloud.sleuth.api.propagation.Propagator;
+import org.springframework.cloud.sleuth.brave.autoconfig.BraveAutoConfiguration;
+import org.springframework.cloud.sleuth.otel.autoconfig.OtelAutoConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.env.Environment;
@@ -40,6 +43,7 @@ import org.springframework.messaging.support.MessageHeaderAccessor;
 @ConditionalOnProperty(value = "spring.sleuth.function.enabled", matchIfMissing = true)
 @ConditionalOnBean(Tracer.class)
 @ConditionalOnClass({ FunctionAroundWrapper.class, RefreshScopeRefreshedEvent.class })
+@AutoConfigureAfter({ BraveAutoConfiguration.class, OtelAutoConfiguration.class })
 class TraceFunctionAutoConfiguration {
 
 	@Bean

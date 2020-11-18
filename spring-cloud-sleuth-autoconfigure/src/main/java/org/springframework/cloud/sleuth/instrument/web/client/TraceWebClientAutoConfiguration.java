@@ -27,6 +27,7 @@ import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.ListableBeanFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.BeanPostProcessor;
+import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.AutoConfigureBefore;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
@@ -40,7 +41,9 @@ import org.springframework.cloud.sleuth.api.CurrentTraceContext;
 import org.springframework.cloud.sleuth.api.Tracer;
 import org.springframework.cloud.sleuth.api.http.HttpClientHandler;
 import org.springframework.cloud.sleuth.api.propagation.Propagator;
+import org.springframework.cloud.sleuth.brave.autoconfig.BraveAutoConfiguration;
 import org.springframework.cloud.sleuth.instrument.web.mvc.TracingClientHttpRequestInterceptor;
+import org.springframework.cloud.sleuth.otel.autoconfig.OtelAutoConfiguration;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -65,6 +68,7 @@ import org.springframework.web.reactive.function.client.WebClient;
 @SleuthWebClientEnabled
 @ConditionalOnBean(Tracer.class)
 @AutoConfigureBefore(HttpClientConfiguration.class)
+@AutoConfigureAfter({ BraveAutoConfiguration.class, OtelAutoConfiguration.class })
 class TraceWebClientAutoConfiguration {
 
 	@Configuration(proxyBeanMethods = false)

@@ -25,6 +25,8 @@ import org.springframework.boot.autoconfigure.AutoConfigureBefore;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.cloud.sleuth.brave.autoconfig.BraveAutoConfiguration;
+import org.springframework.cloud.sleuth.otel.autoconfig.OtelAutoConfiguration;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.scheduling.annotation.AsyncConfigurer;
 
@@ -41,7 +43,8 @@ import org.springframework.scheduling.annotation.AsyncConfigurer;
 @ConditionalOnBean(AsyncConfigurer.class)
 @AutoConfigureBefore(AsyncDefaultAutoConfiguration.class)
 @ConditionalOnProperty(value = "spring.sleuth.async.enabled", matchIfMissing = true)
-@AutoConfigureAfter(name = "org.springframework.cloud.sleuth.instrument.scheduling.TraceSchedulingAutoConfiguration")
+@AutoConfigureAfter(name = "org.springframework.cloud.sleuth.instrument.scheduling.TraceSchedulingAutoConfiguration",
+		value = { BraveAutoConfiguration.class, OtelAutoConfiguration.class })
 class AsyncCustomAutoConfiguration implements BeanPostProcessor {
 
 	@Autowired

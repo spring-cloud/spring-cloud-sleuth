@@ -27,6 +27,8 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.autoconfigure.quartz.QuartzAutoConfiguration;
 import org.springframework.cloud.sleuth.api.Tracer;
 import org.springframework.cloud.sleuth.api.propagation.Propagator;
+import org.springframework.cloud.sleuth.brave.autoconfig.BraveAutoConfiguration;
+import org.springframework.cloud.sleuth.otel.autoconfig.OtelAutoConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -39,8 +41,8 @@ import org.springframework.context.annotation.Configuration;
  */
 @Configuration(proxyBeanMethods = false)
 @ConditionalOnBean({ Tracer.class, Scheduler.class })
-@AutoConfigureAfter({ QuartzAutoConfiguration.class })
 @ConditionalOnProperty(value = "spring.sleuth.quartz.enabled", matchIfMissing = true)
+@AutoConfigureAfter({ BraveAutoConfiguration.class, OtelAutoConfiguration.class, QuartzAutoConfiguration.class })
 class TraceQuartzAutoConfiguration implements InitializingBean {
 
 	private final Scheduler scheduler;

@@ -166,7 +166,8 @@ public class JmsTracingConfigurationTest {
 }
 
 @Configuration(proxyBeanMethods = false)
-@EnableAutoConfiguration(exclude = { KafkaAutoConfiguration.class, MongoAutoConfiguration.class, QuartzAutoConfiguration.class })
+@EnableAutoConfiguration(
+		exclude = { KafkaAutoConfiguration.class, MongoAutoConfiguration.class, QuartzAutoConfiguration.class })
 class JmsTestTracingConfiguration {
 
 }

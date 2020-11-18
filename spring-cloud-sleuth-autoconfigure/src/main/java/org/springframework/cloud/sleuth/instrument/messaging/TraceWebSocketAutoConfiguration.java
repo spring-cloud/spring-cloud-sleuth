@@ -17,11 +17,14 @@
 package org.springframework.cloud.sleuth.instrument.messaging;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.cloud.sleuth.api.Tracer;
 import org.springframework.cloud.sleuth.api.propagation.Propagator;
+import org.springframework.cloud.sleuth.brave.autoconfig.BraveAutoConfiguration;
+import org.springframework.cloud.sleuth.otel.autoconfig.OtelAutoConfiguration;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.messaging.simp.config.ChannelRegistration;
 import org.springframework.messaging.simp.config.MessageBrokerRegistry;
@@ -41,6 +44,7 @@ import org.springframework.web.socket.config.annotation.StompEndpointRegistry;
 @ConditionalOnClass(DelegatingWebSocketMessageBrokerConfiguration.class)
 @ConditionalOnBean(Tracer.class)
 @ConditionalOnProperty(value = "spring.sleuth.integration.websockets.enabled", matchIfMissing = true)
+@AutoConfigureAfter({ BraveAutoConfiguration.class, OtelAutoConfiguration.class })
 class TraceWebSocketAutoConfiguration extends AbstractWebSocketMessageBrokerConfigurer {
 
 	@Autowired

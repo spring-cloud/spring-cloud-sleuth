@@ -43,6 +43,7 @@ import org.springframework.context.annotation.Import;
 @ConditionalOnProperty(value = "spring.sleuth.enabled", matchIfMissing = true)
 @EnableConfigurationProperties({ SleuthSpanFilterProperties.class, SleuthBaggageProperties.class,
 		SleuthTracerProperties.class })
+@Import(SkipPatternConfiguration.class)
 public class TraceConfiguration {
 
 	@Bean

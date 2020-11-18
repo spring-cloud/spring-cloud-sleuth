@@ -7,6 +7,3 @@ sample:
   zipkin:
     enabled: false
 spring:
-  sleuth:
-    tracer:
-      mode: noop

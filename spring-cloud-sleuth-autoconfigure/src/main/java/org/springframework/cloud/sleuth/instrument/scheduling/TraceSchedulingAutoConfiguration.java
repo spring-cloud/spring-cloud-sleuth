@@ -18,11 +18,14 @@ package org.springframework.cloud.sleuth.instrument.scheduling;
 
 import java.util.regex.Pattern;
 
+import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.cloud.sleuth.api.Tracer;
+import org.springframework.cloud.sleuth.brave.autoconfig.BraveAutoConfiguration;
+import org.springframework.cloud.sleuth.otel.autoconfig.OtelAutoConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -39,6 +42,7 @@ import org.springframework.context.annotation.Configuration;
 @ConditionalOnProperty(value = "spring.sleuth.scheduled.enabled", matchIfMissing = true)
 @ConditionalOnBean(Tracer.class)
 @EnableConfigurationProperties(SleuthSchedulingProperties.class)
+@AutoConfigureAfter({ BraveAutoConfiguration.class, OtelAutoConfiguration.class })
 class TraceSchedulingAutoConfiguration {
 
 	@Bean

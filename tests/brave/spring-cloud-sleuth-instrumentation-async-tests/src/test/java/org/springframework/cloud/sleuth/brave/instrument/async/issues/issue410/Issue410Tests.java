@@ -151,8 +151,8 @@ public class Issue410Tests {
 	@Test
 	public void should_pass_tracing_info_for_completable_futures_with_task_scheduler() {
 		Span span = this.tracer.nextSpan().name("foo");
-		log.info("Starting test");
 		try (Tracer.SpanInScope ws = this.tracer.withSpanInScope(span)) {
+			log.info("Starting test");
 			String response = this.restTemplate.getForObject("http://localhost:" + port() + "/taskScheduler",
 					String.class);
 
@@ -175,8 +175,8 @@ public class Issue410Tests {
 	@Test
 	public void should_pass_tracing_info_for_submitted_tasks_with_threadPoolTaskScheduler() {
 		Span span = this.tracer.nextSpan().name("foo");
-		log.info("Starting test");
 		try (Tracer.SpanInScope ws = this.tracer.withSpanInScope(span)) {
+			log.info("Starting test");
 			String response = this.restTemplate
 					.getForObject("http://localhost:" + port() + "/threadPoolTaskScheduler_submit", String.class);
 
@@ -196,8 +196,8 @@ public class Issue410Tests {
 	@Test
 	public void should_pass_tracing_info_for_scheduled_tasks_with_threadPoolTaskScheduler() {
 		Span span = this.tracer.nextSpan().name("foo");
-		log.info("Starting test");
 		try (Tracer.SpanInScope ws = this.tracer.withSpanInScope(span)) {
+			log.info("Starting test");
 			String response = this.restTemplate
 					.getForObject("http://localhost:" + port() + "/threadPoolTaskScheduler_schedule", String.class);
 
@@ -220,8 +220,8 @@ public class Issue410Tests {
 	@Test
 	public void should_pass_tracing_info_for_completable_futures_with_scheduledThreadPoolExecutor() {
 		Span span = this.tracer.nextSpan().name("foo");
-		log.info("Starting test");
 		try (Tracer.SpanInScope ws = this.tracer.withSpanInScope(span)) {
+			log.info("Starting test");
 			String response = this.restTemplate
 					.getForObject("http://localhost:" + port() + "/scheduledThreadPoolExecutor", String.class);
 

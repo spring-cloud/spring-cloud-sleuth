@@ -2,8 +2,5 @@ server:
   port: 3379
 
 spring:
-  sleuth:
-    tracer:
-      mode: noop
   application:
     name: testSleuthApp

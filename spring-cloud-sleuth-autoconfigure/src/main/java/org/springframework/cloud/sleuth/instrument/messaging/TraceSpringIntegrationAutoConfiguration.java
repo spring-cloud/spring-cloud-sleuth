@@ -26,6 +26,8 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.cloud.function.context.FunctionCatalog;
 import org.springframework.cloud.sleuth.api.Tracer;
 import org.springframework.cloud.sleuth.api.propagation.Propagator;
+import org.springframework.cloud.sleuth.brave.autoconfig.BraveAutoConfiguration;
+import org.springframework.cloud.sleuth.otel.autoconfig.OtelAutoConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ConditionContext;
 import org.springframework.context.annotation.Conditional;
@@ -49,7 +51,8 @@ import org.springframework.util.ObjectUtils;
 @Configuration(proxyBeanMethods = false)
 @ConditionalOnClass(GlobalChannelInterceptor.class)
 @ConditionalOnBean(Tracer.class)
-@AutoConfigureAfter({ TraceSpringMessagingAutoConfiguration.class })
+@AutoConfigureAfter({ BraveAutoConfiguration.class, OtelAutoConfiguration.class,
+		TraceSpringMessagingAutoConfiguration.class })
 @ConditionalOnProperty(value = "spring.sleuth.messaging.enabled", matchIfMissing = true)
 @EnableConfigurationProperties(SleuthIntegrationMessagingProperties.class)
 @Conditional(TracingChannelInterceptorCondition.class)

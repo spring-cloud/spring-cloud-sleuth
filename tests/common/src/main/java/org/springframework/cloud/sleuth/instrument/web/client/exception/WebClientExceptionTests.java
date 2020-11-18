@@ -55,7 +55,6 @@ import static org.assertj.core.api.BDDAssertions.then;
 
 @ContextConfiguration(classes = WebClientExceptionTests.TestConfiguration.class)
 @TestPropertySource(properties = "spring.application.name=exceptionservice")
-@DirtiesContext
 public class WebClientExceptionTests {
 
 	private static final Log log = LogFactory.getLog(WebClientExceptionTests.class);
@@ -81,6 +80,7 @@ public class WebClientExceptionTests {
 	// issue #198
 	@ParameterizedTest
 	@MethodSource("parametersForShouldCloseSpanUponException")
+	@DirtiesContext
 	public void shouldCloseSpanUponException(ResponseEntityProvider provider) throws IOException {
 		Span span = this.tracer.nextSpan().name("new trace").start();
 
@@ -99,6 +99,7 @@ public class WebClientExceptionTests {
 		then(this.tracer.currentSpan()).isNull();
 		Awaitility.await().atMost(5, TimeUnit.SECONDS).untilAsserted(() -> {
 			then(this.spans).isNotEmpty();
+			log.info("Reported spans are not empty [" + this.spans + "]");
 			then(this.spans.get(0).getError()).isNotNull();
 		});
 	}

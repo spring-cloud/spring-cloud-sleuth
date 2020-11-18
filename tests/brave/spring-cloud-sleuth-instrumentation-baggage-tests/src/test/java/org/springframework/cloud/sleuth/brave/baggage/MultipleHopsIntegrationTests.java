@@ -20,6 +20,10 @@ import brave.baggage.BaggageField;
 import brave.baggage.BaggagePropagationConfig;
 import brave.sampler.Sampler;
 
+import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
+import org.springframework.boot.autoconfigure.jmx.JmxAutoConfiguration;
+import org.springframework.boot.autoconfigure.mongo.MongoAutoConfiguration;
+import org.springframework.boot.autoconfigure.quartz.QuartzAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.cloud.sleuth.api.Span;
 import org.springframework.cloud.sleuth.api.exporter.FinishedSpan;
@@ -61,6 +65,8 @@ public class MultipleHopsIntegrationTests
 	}
 
 	@Configuration(proxyBeanMethods = false)
+	@EnableAutoConfiguration(
+			exclude = { MongoAutoConfiguration.class, QuartzAutoConfiguration.class, JmxAutoConfiguration.class })
 	static class Config {
 
 		@Bean

@@ -16,12 +16,15 @@
 
 package org.springframework.cloud.sleuth.instrument.circuitbreaker;
 
+import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.cloud.client.circuitbreaker.CircuitBreaker;
 import org.springframework.cloud.sleuth.api.Tracer;
+import org.springframework.cloud.sleuth.brave.autoconfig.BraveAutoConfiguration;
+import org.springframework.cloud.sleuth.otel.autoconfig.OtelAutoConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -37,6 +40,7 @@ import org.springframework.context.annotation.Configuration;
 @ConditionalOnBean(Tracer.class)
 @ConditionalOnProperty(value = "spring.sleuth.circuitbreaker.enabled", matchIfMissing = true)
 @EnableConfigurationProperties(SleuthCircuitBreakerProperties.class)
+@AutoConfigureAfter({ BraveAutoConfiguration.class, OtelAutoConfiguration.class })
 class SleuthCircuitBreakerAutoConfiguration {
 
 	@Bean
