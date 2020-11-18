@@ -74,6 +74,33 @@ the `spring.sleuth.baggage.correlation-fields` property with a list of allowed
 local or remote keys. E.g. `spring.sleuth.baggage.correlation-fields=country-code` will set the
 value of the `country-code` baggage into MDC.
 
+Note that the extra field is propagated and added to MDC starting with the next downstream trace context. To immediately
+add the extra field to MDC in the current trace context, configure the field to flush on update:
+
+```
+// configuration
+@Bean
+BaggageField countryCodeField() {
+	return BaggageField.create("country-code");
+}
+
+@Bean
+ScopeDecorator mdcScopeDecorator() {
+    return MDCScopeDecorator.newBuilder()
+            .clear()
+            .add(SingleCorrelationField.newBuilder(countryCodeField())
+                    .flushOnUpdate()
+                    .build())
+            .build();
+}
+
+// service
+@Autowired
+BaggageField countryCodeField;
+
+countryCodeField.updateValue("new-value");
+```
+
 IMPORTANT: Remember that adding entries to MDC can drastically decrease the performance of your application!
 
 If you want to add the baggage entries as tags, to make it possible to search for spans via the baggage entries, you can set the value of
@@ -163,7 +190,7 @@ customize behaviour:
 * `HttpTracingCustomizer` - for HTTP tagging and sampling policy
 * `MessagingTracingCustomizer` - for messaging tagging and sampling policy
 * `CurrentTraceContextCustomizer` - to integrate decorators such as correlation.
-* `BaggagePropagationCustomize`r - for propagating baggage fields in process and over headers
+* `BaggagePropagationCustomizer` - for propagating baggage fields in process and over headers
 * `CorrelationScopeDecoratorCustomizer` - for scope decorations such as MDC (logging) field correlation
 
 [[features-brave-sampling-customizations]]
