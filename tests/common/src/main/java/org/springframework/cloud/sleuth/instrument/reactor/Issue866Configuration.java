@@ -33,10 +33,11 @@ public class Issue866Configuration {
 
 	private static final Log log = LogFactory.getLog(Issue866Configuration.class);
 
-	// we don't want to force direct dependencies between components
-	// because Spring might just properly setup the context
-	// we want to ensure that the HRBDRPP is always executed before
-	// any other object is started
+	/**
+	 * We don't want to force direct dependencies between components because Spring might
+	 * just properly setup the context we want to ensure that the HRBDRPP is always
+	 * executed before any other object is started.
+	 */
 	public static TestHook hook;
 
 	@Bean
@@ -48,8 +49,14 @@ public class Issue866Configuration {
 		return hook;
 	}
 
+	/**
+	 * Test Hook.
+	 */
 	public static class TestHook extends HookRegisteringBeanDefinitionRegistryPostProcessor {
 
+		/**
+		 * Whether the hook was called.
+		 */
 		public boolean executed = false;
 
 		public TestHook(ConfigurableApplicationContext context) {

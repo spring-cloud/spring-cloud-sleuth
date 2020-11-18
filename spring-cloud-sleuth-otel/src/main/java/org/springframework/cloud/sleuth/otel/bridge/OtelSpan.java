@@ -127,6 +127,23 @@ class OtelSpan implements Span {
 		return this.delegate != null ? this.delegate.toString() : "null";
 	}
 
+	@Override
+	public boolean equals(Object o) {
+		if (this == o) {
+			return true;
+		}
+		if (o == null || getClass() != o.getClass()) {
+			return false;
+		}
+		OtelSpan otelSpan = (OtelSpan) o;
+		return Objects.equals(this.delegate, otelSpan.delegate);
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hash(this.delegate);
+	}
+
 }
 
 class SpanFromSpanContext implements io.opentelemetry.api.trace.Span {

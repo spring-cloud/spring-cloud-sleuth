@@ -121,4 +121,9 @@ public class OtelTestSpanHandler implements TestSpanHandler, SpanProcessor, Span
 		return spanProcessor.forceFlush();
 	}
 
+	@Override
+	public String toString() {
+		return "OtelTestSpanHandler{" + "spanProcessor=" + this.spanProcessor + '}';
+	}
+
 }

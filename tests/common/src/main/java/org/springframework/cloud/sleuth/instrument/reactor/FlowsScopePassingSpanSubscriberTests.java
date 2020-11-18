@@ -19,9 +19,6 @@ package org.springframework.cloud.sleuth.instrument.reactor;
 import java.util.Objects;
 import java.util.function.Function;
 
-import brave.propagation.CurrentTraceContext;
-import brave.propagation.CurrentTraceContext.Scope;
-import brave.propagation.TraceContext;
 import org.assertj.core.presentation.StandardRepresentation;
 import org.awaitility.Awaitility;
 import org.junit.jupiter.api.AfterEach;
@@ -35,6 +32,8 @@ import reactor.core.publisher.Hooks;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 
+import org.springframework.cloud.sleuth.api.CurrentTraceContext;
+import org.springframework.cloud.sleuth.api.TraceContext;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -45,7 +44,7 @@ import static org.springframework.cloud.sleuth.instrument.reactor.TraceReactorAu
 /**
  * @author Marcin Grzejszczak
  */
-public class FlowsScopePassingSpanSubscriberTests {
+public abstract class FlowsScopePassingSpanSubscriberTests {
 
 	static {
 		// AssertJ will recognise QueueSubscription implements queue and try to invoke
@@ -55,9 +54,9 @@ public class FlowsScopePassingSpanSubscriberTests {
 		StandardRepresentation.registerFormatterForType(ScopePassingSpanSubscriber.class, Objects::toString);
 	}
 
-	final CurrentTraceContext currentTraceContext = CurrentTraceContext.Default.create();
+	protected abstract CurrentTraceContext currentTraceContext();
 
-	TraceContext context = TraceContext.newBuilder().traceId(1).spanId(1).sampled(true).build();
+	protected abstract TraceContext context();
 
 	AnnotationConfigApplicationContext springContext = new AnnotationConfigApplicationContext();
 
@@ -75,13 +74,13 @@ public class FlowsScopePassingSpanSubscriberTests {
 
 	@Test
 	public void should_not_trace_scalar_flows() {
-		springContext.registerBean(CurrentTraceContext.class, () -> currentTraceContext);
+		springContext.registerBean(CurrentTraceContext.class, this::currentTraceContext);
 		springContext.refresh();
 
 		Function<? super Publisher<Integer>, ? extends Publisher<Integer>> transformer = scopePassingSpanOperator(
 				this.springContext);
 
-		try (Scope ws = this.currentTraceContext.newScope(context)) {
+		try (CurrentTraceContext.Scope ws = currentTraceContext().newScope(context())) {
 			Subscriber<Object> assertNoSpanSubscriber = new CoreSubscriber<Object>() {
 				@Override
 				public void onSubscribe(Subscription s) {
@@ -141,7 +140,7 @@ public class FlowsScopePassingSpanSubscriberTests {
 
 		}
 
-		Awaitility.await().untilAsserted(() -> then(this.currentTraceContext.get()).isNull());
+		Awaitility.await().untilAsserted(() -> then(currentTraceContext().context()).isNull());
 	}
 
 }

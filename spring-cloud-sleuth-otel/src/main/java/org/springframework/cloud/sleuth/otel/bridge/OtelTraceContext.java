@@ -104,16 +104,6 @@ class OtelTraceContext implements TraceContext {
 		return this.delegate != null ? this.delegate.toString() : "null";
 	}
 
-	@Override
-	public boolean equals(Object o) {
-		return Objects.equals(this.delegate, o);
-	}
-
-	@Override
-	public int hashCode() {
-		return Objects.hashCode(this.delegate);
-	}
-
 	@Nullable
 	public Boolean sampled() {
 		return this.delegate.isSampled();
@@ -129,6 +119,23 @@ class OtelTraceContext implements TraceContext {
 
 	void updateContext(Context context) {
 		this.context.set(context);
+	}
+
+	@Override
+	public boolean equals(Object o) {
+		if (this == o) {
+			return true;
+		}
+		if (o == null || getClass() != o.getClass()) {
+			return false;
+		}
+		OtelTraceContext context = (OtelTraceContext) o;
+		return Objects.equals(this.delegate, context.delegate);
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hash(this.delegate);
 	}
 
 }

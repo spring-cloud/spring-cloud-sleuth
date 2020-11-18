@@ -18,15 +18,10 @@ package org.springframework.cloud.sleuth.instrument.reactor.sample;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
-import brave.Span;
-import brave.Tracer;
-import brave.handler.MutableSpan;
-import brave.handler.SpanHandler;
-import brave.sampler.Sampler;
-import brave.test.TestSpanHandler;
 import org.awaitility.Awaitility;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
@@ -43,10 +38,13 @@ import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.boot.test.system.CapturedOutput;
 import org.springframework.boot.test.system.OutputCaptureExtension;
 import org.springframework.cloud.sleuth.api.CurrentTraceContext;
-import org.springframework.cloud.sleuth.brave.bridge.BraveAccessor;
+import org.springframework.cloud.sleuth.api.Span;
+import org.springframework.cloud.sleuth.api.Tracer;
+import org.springframework.cloud.sleuth.api.exporter.FinishedSpan;
 import org.springframework.cloud.sleuth.instrument.reactor.Issue866Configuration;
 import org.springframework.cloud.sleuth.instrument.reactor.TraceReactorAutoConfigurationAccessorConfiguration;
 import org.springframework.cloud.sleuth.instrument.web.WebFluxSleuthOperators;
+import org.springframework.cloud.sleuth.test.TestSpanHandler;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -63,7 +61,7 @@ import static org.springframework.web.reactive.function.server.RouterFunctions.r
 
 // https://github.com/spring-cloud/spring-cloud-sleuth/issues/850
 @ExtendWith(OutputCaptureExtension.class)
-public class FlatMapTests {
+public abstract class FlatMapTests {
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(FlatMapTests.class);
 
@@ -82,7 +80,7 @@ public class FlatMapTests {
 	public void should_work_with_flat_maps(CapturedOutput capture) {
 		// given
 		ConfigurableApplicationContext context = new SpringApplicationBuilder(FlatMapTests.TestConfiguration.class,
-				Issue866Configuration.class)
+				testConfiguration(), Issue866Configuration.class)
 						.web(WebApplicationType.REACTIVE)
 						.properties("server.port=0", "spring.jmx.enabled=false",
 								"spring.application.name=TraceWebFluxTests", "security.basic.enabled=false",
@@ -91,11 +89,13 @@ public class FlatMapTests {
 		assertReactorTracing(context, capture, () -> context.getBean(TestConfiguration.class).spanInFoo);
 	}
 
+	protected abstract Class testConfiguration();
+
 	@Test
 	public void should_work_with_flat_maps_with_on_last_operator_instrumentation(CapturedOutput capture) {
 		// given
 		ConfigurableApplicationContext context = new SpringApplicationBuilder(FlatMapTests.TestConfiguration.class,
-				Issue866Configuration.class)
+				testConfiguration(), Issue866Configuration.class)
 						.web(WebApplicationType.REACTIVE)
 						.properties("server.port=0", "spring.jmx.enabled=false",
 								"spring.sleuth.reactor.decorate-on-each=false",
@@ -109,7 +109,7 @@ public class FlatMapTests {
 	public void should_work_with_flat_maps_with_on_manual_operator_instrumentation(CapturedOutput capture) {
 		// given
 		ConfigurableApplicationContext context = new SpringApplicationBuilder(
-				FlatMapTests.TestManualConfiguration.class, Issue866Configuration.class)
+				FlatMapTests.TestManualConfiguration.class, testConfiguration(), Issue866Configuration.class)
 						.web(WebApplicationType.REACTIVE)
 						.properties("server.port=0", "spring.jmx.enabled=false",
 								"spring.sleuth.reactor.instrumentation-type=MANUAL",
@@ -128,7 +128,7 @@ public class FlatMapTests {
 		sender.port = port;
 		spans.clear();
 
-		Awaitility.await().untilAsserted(() -> {
+		Awaitility.await().atMost(5, TimeUnit.SECONDS).pollInterval(1, TimeUnit.SECONDS).untilAsserted(() -> {
 			// when
 			LOGGER.info("Start");
 			spans.clear();
@@ -161,11 +161,11 @@ public class FlatMapTests {
 	}
 
 	private void thenAllWebClientCallsHaveSameTraceId(String traceId, RequestSender sender) {
-		then(sender.span.context().traceIdString()).isEqualTo(traceId);
+		then(sender.span.context().traceId()).isEqualTo(traceId);
 	}
 
 	private void thenSpanInFooHasSameTraceId(String traceId, SpanProvider spanProvider) {
-		then(spanProvider.get().context().traceIdString()).isEqualTo(traceId);
+		then(spanProvider.get().context().traceId()).isEqualTo(traceId);
 	}
 
 	private Mono<ClientResponse> callFlatMap(int port) {
@@ -176,9 +176,10 @@ public class FlatMapTests {
 		then(response.statusCode().value()).isEqualTo(200);
 		then(spans).isNotEmpty();
 		LOGGER.info("Accumulated spans: " + spans);
-		List<String> traceIdOfFlatMap = spans.spans().stream().filter(
-				span -> span.tags().containsKey("http.path") && span.tags().get("http.path").equals("/withFlatMap"))
-				.map(MutableSpan::traceId).collect(Collectors.toList());
+		List<String> traceIdOfFlatMap = spans.reportedSpans().stream()
+				.filter(span -> span.getTags().containsKey("http.path")
+						&& span.getTags().get("http.path").equals("/withFlatMap"))
+				.map(FinishedSpan::getTraceId).collect(Collectors.toList());
 		then(traceIdOfFlatMap).hasSize(1);
 		return traceIdOfFlatMap.get(0);
 	}
@@ -187,7 +188,7 @@ public class FlatMapTests {
 	@EnableAutoConfiguration
 	static class TestConfiguration {
 
-		brave.Span spanInFoo;
+		Span spanInFoo;
 
 		@Bean
 		RouterFunction<ServerResponse> handlers(Tracer tracer, RequestSender requestSender) {
@@ -218,16 +219,6 @@ public class FlatMapTests {
 		}
 
 		@Bean
-		SpanHandler testSpanHandler() {
-			return new TestSpanHandler();
-		}
-
-		@Bean
-		Sampler sampler() {
-			return Sampler.ALWAYS_SAMPLE;
-		}
-
-		@Bean
 		RequestSender sender(WebClient client, Tracer tracer) {
 			return new RequestSender(client, tracer);
 		}
@@ -244,7 +235,7 @@ public class FlatMapTests {
 	@EnableAutoConfiguration
 	static class TestManualConfiguration {
 
-		brave.Span spanInFoo;
+		Span spanInFoo;
 
 		@Bean
 		RouterFunction<ServerResponse> handlers(org.springframework.cloud.sleuth.api.Tracer tracing,
@@ -273,7 +264,7 @@ public class FlatMapTests {
 				ServerWebExchange exchange = request.exchange();
 				WebFluxSleuthOperators.withSpanInScope(tracing, currentTraceContext, exchange, () -> {
 					LOGGER.info("foo");
-					this.spanInFoo = BraveAccessor.braveSpan(tracing.currentSpan());
+					this.spanInFoo = tracing.currentSpan();
 				});
 				return ServerResponse.ok().body(Flux.just(1), Integer.class);
 			});
@@ -282,16 +273,6 @@ public class FlatMapTests {
 		@Bean
 		WebClient webClient() {
 			return WebClient.create();
-		}
-
-		@Bean
-		SpanHandler testSpanHandler() {
-			return new TestSpanHandler();
-		}
-
-		@Bean
-		Sampler sampler() {
-			return Sampler.ALWAYS_SAMPLE;
 		}
 
 		@Bean

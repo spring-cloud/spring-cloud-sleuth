@@ -56,16 +56,6 @@ class BraveTraceContext implements TraceContext {
 		return this.traceContext != null ? this.traceContext.toString() : "null";
 	}
 
-	@Override
-	public boolean equals(Object o) {
-		return Objects.equals(this.traceContext, o);
-	}
-
-	@Override
-	public int hashCode() {
-		return Objects.hashCode(this.traceContext);
-	}
-
 	@Nullable
 	public Boolean sampled() {
 		return this.traceContext.sampled();
@@ -80,6 +70,23 @@ class BraveTraceContext implements TraceContext {
 
 	public static TraceContext fromBrave(brave.propagation.TraceContext traceContext) {
 		return new BraveTraceContext(traceContext);
+	}
+
+	@Override
+	public boolean equals(Object o) {
+		if (this == o) {
+			return true;
+		}
+		if (o == null || getClass() != o.getClass()) {
+			return false;
+		}
+		BraveTraceContext that = (BraveTraceContext) o;
+		return Objects.equals(this.traceContext, that.traceContext);
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hash(this.traceContext);
 	}
 
 }

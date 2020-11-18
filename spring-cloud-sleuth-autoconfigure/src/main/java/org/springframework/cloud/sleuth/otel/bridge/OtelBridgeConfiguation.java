@@ -74,8 +74,9 @@ public class OtelBridgeConfiguation {
 	}
 
 	@Bean
-	Tracer otelTracerBridge(io.opentelemetry.api.trace.Tracer tracer, OtelBaggageManager otelBaggageManager) {
-		return new OtelTracer(tracer, otelBaggageManager);
+	Tracer otelTracerBridge(io.opentelemetry.api.trace.Tracer tracer, ApplicationEventPublisher publisher,
+			OtelBaggageManager otelBaggageManager) {
+		return new OtelTracer(tracer, publisher, otelBaggageManager);
 	}
 
 	// Both CurrentTraceContext & ContextStorageProvider

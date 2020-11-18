@@ -16,6 +16,8 @@
 
 package org.springframework.cloud.sleuth.brave.bridge;
 
+import java.util.Objects;
+
 import org.springframework.cloud.sleuth.api.ScopedSpan;
 import org.springframework.cloud.sleuth.api.TraceContext;
 
@@ -66,6 +68,23 @@ class BraveScopedSpan implements ScopedSpan {
 	@Override
 	public void end() {
 		this.span.finish();
+	}
+
+	@Override
+	public boolean equals(Object o) {
+		if (this == o) {
+			return true;
+		}
+		if (o == null || getClass() != o.getClass()) {
+			return false;
+		}
+		BraveScopedSpan that = (BraveScopedSpan) o;
+		return Objects.equals(this.span, that.span);
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hash(this.span);
 	}
 
 }

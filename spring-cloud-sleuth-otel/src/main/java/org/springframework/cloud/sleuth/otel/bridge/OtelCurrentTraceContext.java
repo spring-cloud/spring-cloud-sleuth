@@ -28,6 +28,8 @@ import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.ContextStorage;
 import io.opentelemetry.context.ContextStorageProvider;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 import org.springframework.cloud.sleuth.api.CurrentTraceContext;
 import org.springframework.cloud.sleuth.api.TraceContext;
@@ -42,6 +44,8 @@ import org.springframework.lang.Nullable;
  * @since 3.0.0
  */
 class OtelCurrentTraceContext implements CurrentTraceContext, ContextStorageProvider {
+
+	private static final Log log = LogFactory.getLog(OtelCurrentTraceContext.class);
 
 	private final ApplicationEventPublisher publisher;
 

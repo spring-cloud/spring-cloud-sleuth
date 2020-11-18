@@ -36,7 +36,7 @@ import io.opentelemetry.sdk.trace.export.SpanExporter;
  */
 public class ArrayListSpanProcessor implements SpanProcessor, SpanExporter {
 
-	Queue<SpanData> spans = new LinkedBlockingQueue<>();
+	Queue<SpanData> spans = new LinkedBlockingQueue<>(50);
 
 	@Override
 	public void onStart(Context parent, ReadWriteSpan span) {
@@ -88,6 +88,11 @@ public class ArrayListSpanProcessor implements SpanProcessor, SpanExporter {
 
 	public void clear() {
 		this.spans.clear();
+	}
+
+	@Override
+	public String toString() {
+		return "ArrayListSpanProcessor{" + "spans=" + spans + '}';
 	}
 
 }

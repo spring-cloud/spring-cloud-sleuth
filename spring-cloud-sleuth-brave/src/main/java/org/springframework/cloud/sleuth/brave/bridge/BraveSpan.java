@@ -16,6 +16,8 @@
 
 package org.springframework.cloud.sleuth.brave.bridge;
 
+import java.util.Objects;
+
 import org.springframework.cloud.sleuth.api.Span;
 import org.springframework.cloud.sleuth.api.TraceContext;
 
@@ -95,6 +97,23 @@ class BraveSpan implements Span {
 
 	public static Span fromBrave(brave.Span span) {
 		return new BraveSpan(span);
+	}
+
+	@Override
+	public boolean equals(Object o) {
+		if (this == o) {
+			return true;
+		}
+		if (o == null || getClass() != o.getClass()) {
+			return false;
+		}
+		BraveSpan braveSpan = (BraveSpan) o;
+		return Objects.equals(this.delegate, braveSpan.delegate);
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hash(this.delegate);
 	}
 
 }

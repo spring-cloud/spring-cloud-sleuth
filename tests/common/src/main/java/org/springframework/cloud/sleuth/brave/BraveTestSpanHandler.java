@@ -86,4 +86,9 @@ public class BraveTestSpanHandler implements TestSpanHandler {
 		return reportedSpans().iterator();
 	}
 
+	@Override
+	public String toString() {
+		return "BraveTestSpanHandler{" + "spans=" + spans + ", integrationSpans=" + integrationSpans + '}';
+	}
+
 }
