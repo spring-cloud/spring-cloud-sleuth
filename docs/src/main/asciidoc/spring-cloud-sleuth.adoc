@@ -447,6 +447,22 @@ In order to automatically set the baggage values to Slf4j's MDC, you have to set
 the `spring.sleuth.log.slf4j.whitelisted-mdc-keys` property with a list of whitelisted
 baggage and propagation keys. E.g. `spring.sleuth.log.slf4j.whitelisted-mdc-keys=foo` will set the value of the `foo` baggage into MDC.
 
+Note that the extra field is propagated and added to MDC starting with the next downstream trace context. To immediately
+add the extra field to MDC in the current trace context, configure the field to flush on update:
+
+```
+@Bean
+ScopeDecorator mdcScopeDecorator() {
+    BaggageField countryCodeField = BaggageField.create("x-country-code");
+    return MDCScopeDecorator.newBuilder()
+            .clear()
+            .add(SingleCorrelationField.newBuilder(countryCodeField)
+                    .flushOnUpdate()
+                    .build())
+            .build();
+}
+```
+
 IMPORTANT: Remember that adding entries to MDC can drastically decrease the performance of your application!
 
 If you want to add the baggage entries as tags, to make it possible to search for spans via the baggage entries, you can set the value of
