@@ -24,12 +24,12 @@ import java.util.Map;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
-import org.springframework.boot.SpringApplication;
 import org.springframework.boot.actuate.autoconfigure.security.servlet.ManagementWebSecurityAutoConfiguration;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.mongo.MongoAutoConfiguration;
 import org.springframework.boot.autoconfigure.quartz.QuartzAutoConfiguration;
 import org.springframework.boot.autoconfigure.web.ServerProperties;
+import org.springframework.boot.test.context.runner.ApplicationContextRunner;
 import org.springframework.cloud.client.serviceregistry.Registration;
 import org.springframework.cloud.commons.util.InetUtils;
 import org.springframework.cloud.commons.util.InetUtilsProperties;
@@ -38,7 +38,6 @@ import org.springframework.cloud.gateway.config.GatewayClassPathWarningAutoConfi
 import org.springframework.cloud.gateway.config.GatewayMetricsAutoConfiguration;
 import org.springframework.cloud.sleuth.brave.autoconfig.BraveAutoConfiguration;
 import org.springframework.cloud.sleuth.otel.autoconfig.OtelAutoConfiguration;
-import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.env.Environment;
@@ -57,10 +56,9 @@ public abstract class DefaultEndpointLocatorConfigurationTest {
 
 	@Test
 	public void endpointLocatorShouldDefaultToServerPropertiesEndpointLocator() {
-		ConfigurableApplicationContext ctxt = new SpringApplication(emptyConfiguration())
-				.run("--spring.jmx.enabled=false");
-		assertThat(ctxt.getBean(EndpointLocator.class)).isInstanceOf(DefaultEndpointLocator.class);
-		ctxt.close();
+		new ApplicationContextRunner().withUserConfiguration(emptyConfiguration())
+				.withPropertyValues("spring.jmx.enabled=false")
+				.run(ctxt -> assertThat(ctxt).hasSingleBean(DefaultEndpointLocator.class));
 	}
 
 	protected Class emptyConfiguration() {
@@ -69,10 +67,9 @@ public abstract class DefaultEndpointLocatorConfigurationTest {
 
 	@Test
 	public void endpointLocatorShouldDefaultToServerPropertiesEndpointLocatorEvenWhenDiscoveryClientPresent() {
-		ConfigurableApplicationContext ctxt = new SpringApplication(configurationWithRegistrationClass())
-				.run("--spring.jmx.enabled=false");
-		assertThat(ctxt.getBean(EndpointLocator.class)).isInstanceOf(DefaultEndpointLocator.class);
-		ctxt.close();
+		new ApplicationContextRunner().withUserConfiguration(configurationWithRegistrationClass())
+				.withPropertyValues("spring.jmx.enabled=false")
+				.run(ctxt -> assertThat(ctxt).hasSingleBean(DefaultEndpointLocator.class));
 	}
 
 	protected Class configurationWithRegistrationClass() {
@@ -81,10 +78,9 @@ public abstract class DefaultEndpointLocatorConfigurationTest {
 
 	@Test
 	public void endpointLocatorShouldRespectExistingEndpointLocator() {
-		ConfigurableApplicationContext ctxt = new SpringApplication(configurationWithCustomLocatorClass())
-				.run("--spring.jmx.enabled=false");
-		assertThat(ctxt.getBean(EndpointLocator.class)).isSameAs(locatorFromConfiguration());
-		ctxt.close();
+		new ApplicationContextRunner().withUserConfiguration(configurationWithCustomLocatorClass())
+				.withPropertyValues("spring.jmx.enabled=false")
+				.run(ctxt -> assertThat(ctxt.getBean(EndpointLocator.class)).isSameAs(locatorFromConfiguration()));
 	}
 
 	protected Class configurationWithCustomLocatorClass() {
@@ -93,28 +89,26 @@ public abstract class DefaultEndpointLocatorConfigurationTest {
 
 	@Test
 	public void endpointLocatorShouldSetServiceNameToServiceId() {
-		ConfigurableApplicationContext ctxt = new SpringApplication(configurationWithRegistrationClass())
-				.run("--spring.jmx.enabled=false", "--spring.zipkin.locator.discovery.enabled=true");
-		assertThat(ctxt.getBean(EndpointLocator.class).local().serviceName()).isEqualTo("from-registration");
-		ctxt.close();
+		new ApplicationContextRunner().withUserConfiguration(configurationWithRegistrationClass())
+				.withPropertyValues("spring.jmx.enabled=false", "spring.zipkin.locator.discovery.enabled=true")
+				.run(ctxt -> assertThat(ctxt.getBean(EndpointLocator.class).local().serviceName())
+						.isEqualTo("from-registration"));
 	}
 
 	@Test
 	public void endpointLocatorShouldAcceptServiceNameOverride() {
-		ConfigurableApplicationContext ctxt = new SpringApplication(configurationWithRegistrationClass()).run(
-				"--spring.jmx.enabled=false", "--spring.zipkin.locator.discovery.enabled=true",
-				"--spring.zipkin.service.name=foo");
-		assertThat(ctxt.getBean(EndpointLocator.class).local().serviceName()).isEqualTo("foo");
-		ctxt.close();
+		new ApplicationContextRunner().withUserConfiguration(configurationWithRegistrationClass())
+				.withPropertyValues("spring.jmx.enabled=false", "spring.zipkin.locator.discovery.enabled=true",
+						"spring.zipkin.service.name=foo")
+				.run(ctxt -> assertThat(ctxt.getBean(EndpointLocator.class).local().serviceName()).isEqualTo("foo"));
 	}
 
 	@Test
 	public void endpointLocatorShouldRespectExistingEndpointLocatorEvenWhenAskedToBeDiscovery() {
-		ConfigurableApplicationContext ctxt = new SpringApplication(configurationWithRegistrationClass(),
-				configurationWithCustomLocatorClass()).run("--spring.jmx.enabled=false",
-						"--spring.zipkin.locator.discovery.enabled=true");
-		assertThat(ctxt.getBean(EndpointLocator.class)).isSameAs(locatorFromConfiguration());
-		ctxt.close();
+		new ApplicationContextRunner()
+				.withUserConfiguration(configurationWithRegistrationClass(), configurationWithCustomLocatorClass())
+				.withPropertyValues("spring.jmx.enabled=false", "spring.zipkin.locator.discovery.enabled=true")
+				.run(ctxt -> assertThat(ctxt.getBean(EndpointLocator.class)).isSameAs(locatorFromConfiguration()));
 	}
 
 	protected EndpointLocator locatorFromConfiguration() {
