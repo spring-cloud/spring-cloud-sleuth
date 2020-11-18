@@ -29,8 +29,8 @@ import org.junit.jupiter.api.Test;
 import org.springframework.boot.autoconfigure.AutoConfigurations;
 import org.springframework.boot.test.context.assertj.AssertableApplicationContext;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
-import org.springframework.cloud.sleuth.brave.instrument.messaging.TraceMessagingAutoConfiguration;
-import org.springframework.cloud.sleuth.brave.instrument.rpc.TraceRpcAutoConfiguration;
+import org.springframework.cloud.sleuth.brave.instrument.messaging.BraveMessagingAutoConfiguration;
+import org.springframework.cloud.sleuth.brave.instrument.rpc.BraveRpcAutoConfiguration;
 import org.springframework.cloud.sleuth.brave.instrument.web.BraveHttpConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -42,7 +42,7 @@ public class BraveAutoConfigurationCustomizersTests {
 
 	private final ApplicationContextRunner contextRunner = new ApplicationContextRunner()
 			.withConfiguration(AutoConfigurations.of(BraveAutoConfiguration.class, BraveHttpConfiguration.class,
-					TraceRpcAutoConfiguration.class, TraceMessagingAutoConfiguration.class,
+					BraveRpcAutoConfiguration.class, BraveMessagingAutoConfiguration.class,
 					FakeSpringMessagingAutoConfiguration.class))
 			.withUserConfiguration(Customizers.class);
 

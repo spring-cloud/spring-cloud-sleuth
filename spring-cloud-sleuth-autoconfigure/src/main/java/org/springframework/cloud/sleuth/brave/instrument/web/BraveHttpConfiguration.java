@@ -38,6 +38,7 @@ import org.springframework.cloud.sleuth.brave.bridge.BraveHttpBridgeConfiguratio
 import org.springframework.cloud.sleuth.brave.bridge.BraveHttpRequestParser;
 import org.springframework.cloud.sleuth.brave.bridge.BraveHttpResponseParser;
 import org.springframework.cloud.sleuth.brave.bridge.BraveSamplerFunction;
+import org.springframework.cloud.sleuth.instrument.web.ConditionalOnSleuthHttp;
 import org.springframework.cloud.sleuth.instrument.web.HttpClientRequestParser;
 import org.springframework.cloud.sleuth.instrument.web.HttpClientResponseParser;
 import org.springframework.cloud.sleuth.instrument.web.HttpClientSampler;
@@ -45,7 +46,6 @@ import org.springframework.cloud.sleuth.instrument.web.HttpServerRequestParser;
 import org.springframework.cloud.sleuth.instrument.web.HttpServerResponseParser;
 import org.springframework.cloud.sleuth.instrument.web.HttpServerSampler;
 import org.springframework.cloud.sleuth.instrument.web.SkipPatternProvider;
-import org.springframework.cloud.sleuth.instrument.web.SleuthHttpEnabled;
 import org.springframework.cloud.sleuth.instrument.web.SleuthHttpProperties;
 import org.springframework.cloud.sleuth.instrument.web.SleuthWebProperties;
 import org.springframework.context.annotation.Bean;
@@ -61,7 +61,7 @@ import org.springframework.lang.Nullable;
  * @since 2.0.0
  */
 @Configuration(proxyBeanMethods = false)
-@SleuthHttpEnabled
+@ConditionalOnSleuthHttp
 @ConditionalOnClass(HttpTracing.class)
 @EnableConfigurationProperties({ SleuthWebProperties.class, SleuthHttpProperties.class })
 @Import(BraveHttpBridgeConfiguration.class)

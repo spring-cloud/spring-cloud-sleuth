@@ -53,7 +53,7 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
  * @since 1.0.0
  */
 @Configuration(proxyBeanMethods = false)
-@SleuthWebEnabled
+@ConditionalOnSleuthWeb
 @ConditionalOnWebApplication(type = ConditionalOnWebApplication.Type.SERVLET)
 @Import(SpanCustomizingAsyncHandlerInterceptor.class)
 public class TraceWebServletConfiguration {

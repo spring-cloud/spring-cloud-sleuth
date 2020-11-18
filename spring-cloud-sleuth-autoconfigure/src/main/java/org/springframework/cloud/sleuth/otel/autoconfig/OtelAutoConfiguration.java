@@ -44,7 +44,7 @@ import org.springframework.cloud.sleuth.autoconfig.SleuthBaggageProperties;
 import org.springframework.cloud.sleuth.autoconfig.SleuthSpanFilterProperties;
 import org.springframework.cloud.sleuth.autoconfig.SleuthTracerProperties;
 import org.springframework.cloud.sleuth.autoconfig.TraceConfiguration;
-import org.springframework.cloud.sleuth.otel.OnOtelEnabled;
+import org.springframework.cloud.sleuth.otel.ConditionalOnOtelEnabled;
 import org.springframework.cloud.sleuth.otel.OtelProperties;
 import org.springframework.cloud.sleuth.otel.bridge.OtelBridgeConfiguation;
 import org.springframework.cloud.sleuth.otel.bridge.SpanExporterCustomizer;
@@ -62,7 +62,7 @@ import org.springframework.context.annotation.Import;
  */
 @Configuration(proxyBeanMethods = false)
 @ConditionalOnClass({ io.opentelemetry.api.trace.Tracer.class, OtelProperties.class })
-@OnOtelEnabled
+@ConditionalOnOtelEnabled
 @ConditionalOnProperty(value = "spring.sleuth.enabled", matchIfMissing = true)
 @ConditionalOnMissingBean(org.springframework.cloud.sleuth.api.Tracer.class)
 @EnableConfigurationProperties({ OtelProperties.class, SleuthSpanFilterProperties.class, SleuthBaggageProperties.class,

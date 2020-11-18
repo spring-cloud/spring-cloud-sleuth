@@ -26,7 +26,7 @@ import org.springframework.cloud.sleuth.api.http.HttpClientHandler;
 import org.springframework.cloud.sleuth.api.http.HttpServerHandler;
 import org.springframework.cloud.sleuth.api.propagation.Propagator;
 import org.springframework.cloud.sleuth.brave.autoconfig.BraveAutoConfiguration;
-import org.springframework.cloud.sleuth.instrument.web.client.SleuthWebClientEnabled;
+import org.springframework.cloud.sleuth.instrument.web.client.ConditionalnOnSleuthWebClient;
 import org.springframework.cloud.sleuth.otel.autoconfig.OtelAutoConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -69,7 +69,7 @@ public class TraceNoOpAutoConfiguration {
 	}
 
 	@Configuration(proxyBeanMethods = false)
-	@SleuthWebClientEnabled
+	@ConditionalnOnSleuthWebClient
 	static class TraceHttpConfiguration {
 
 		@Bean

@@ -65,7 +65,7 @@ import org.springframework.web.reactive.function.client.WebClient;
  * @since 1.0.0
  */
 @Configuration(proxyBeanMethods = false)
-@SleuthWebClientEnabled
+@ConditionalnOnSleuthWebClient
 @ConditionalOnBean(Tracer.class)
 @AutoConfigureBefore(HttpClientConfiguration.class)
 @AutoConfigureAfter({ BraveAutoConfiguration.class, OtelAutoConfiguration.class })

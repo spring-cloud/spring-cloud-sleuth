@@ -476,7 +476,7 @@ An example of Spring Cloud Sleuth and Dubbo can be found https://github.com/open
 [[sleuth-rpc-grpc-integration]]
 === gRPC
 
-Spring Cloud Sleuth provides instrumentation for https://grpc.io/[gRPC] through `TraceGrpcAutoConfiguration` via the Brave tracer.
+Spring Cloud Sleuth provides instrumentation for https://grpc.io/[gRPC] via the Brave tracer.
 You can disable it entirely by setting `spring.sleuth.grpc.enabled` to `false`.
 
 [[sleuth-rpc-grpc-variant1-integration]]

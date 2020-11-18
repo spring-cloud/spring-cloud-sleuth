@@ -48,7 +48,7 @@ import org.springframework.web.client.AsyncRestTemplate;
  * @since 1.0.0
  */
 @Configuration(proxyBeanMethods = false)
-@SleuthWebClientEnabled
+@ConditionalnOnSleuthWebClient
 @ConditionalOnProperty(value = "spring.sleuth.web.async.client.enabled", matchIfMissing = true)
 @ConditionalOnClass(AsyncRestTemplate.class)
 @ConditionalOnBean(Tracer.class)

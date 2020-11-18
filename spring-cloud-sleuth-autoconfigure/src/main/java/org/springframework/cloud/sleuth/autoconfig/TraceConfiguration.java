@@ -24,7 +24,7 @@ import org.springframework.cloud.sleuth.api.exporter.SpanFilter;
 import org.springframework.cloud.sleuth.instrument.web.SleuthWebProperties;
 import org.springframework.cloud.sleuth.instrument.web.TraceWebFluxConfiguration;
 import org.springframework.cloud.sleuth.instrument.web.TraceWebServletConfiguration;
-import org.springframework.cloud.sleuth.instrument.web.client.SleuthWebClientEnabled;
+import org.springframework.cloud.sleuth.instrument.web.client.ConditionalnOnSleuthWebClient;
 import org.springframework.cloud.sleuth.internal.DefaultSpanNamer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -59,7 +59,7 @@ public class TraceConfiguration {
 	}
 
 	@Configuration(proxyBeanMethods = false)
-	@SleuthWebClientEnabled
+	@ConditionalnOnSleuthWebClient
 	@Import({ SkipPatternConfiguration.class, TraceWebFluxConfiguration.class, TraceWebServletConfiguration.class,
 			TraceWebFluxConfiguration.class })
 	@EnableConfigurationProperties(SleuthWebProperties.class)

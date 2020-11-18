@@ -40,12 +40,12 @@ import org.springframework.cloud.sleuth.autoconfig.SleuthBaggageProperties;
 import org.springframework.cloud.sleuth.autoconfig.SleuthSpanFilterProperties;
 import org.springframework.cloud.sleuth.autoconfig.SleuthTracerProperties;
 import org.springframework.cloud.sleuth.autoconfig.TraceConfiguration;
+import org.springframework.cloud.sleuth.brave.ConditionalOnBraveEnabled;
 import org.springframework.cloud.sleuth.brave.LocalServiceName;
-import org.springframework.cloud.sleuth.brave.OnBraveEnabled;
 import org.springframework.cloud.sleuth.brave.SleuthProperties;
 import org.springframework.cloud.sleuth.brave.bridge.BraveBridgeConfiguration;
 import org.springframework.cloud.sleuth.brave.instrument.web.BraveHttpConfiguration;
-import org.springframework.cloud.sleuth.brave.sampler.SamplerConfiguration;
+import org.springframework.cloud.sleuth.brave.sampler.BraveSamplerConfiguration;
 import org.springframework.cloud.sleuth.internal.DefaultSpanNamer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -63,13 +63,13 @@ import org.springframework.util.StringUtils;
  * @since 3.0.0
  */
 @Configuration(proxyBeanMethods = false)
-@OnBraveEnabled
+@ConditionalOnBraveEnabled
 @ConditionalOnProperty(value = "spring.sleuth.enabled", matchIfMissing = true)
 @ConditionalOnMissingBean(org.springframework.cloud.sleuth.api.Tracer.class)
 @ConditionalOnClass({ Tracer.class, SleuthProperties.class })
 @EnableConfigurationProperties({ SleuthProperties.class, SleuthSpanFilterProperties.class,
 		SleuthBaggageProperties.class, SleuthTracerProperties.class, SleuthBaggageProperties.class })
-@Import({ BraveBridgeConfiguration.class, BraveBaggageConfiguration.class, SamplerConfiguration.class,
+@Import({ BraveBridgeConfiguration.class, BraveBaggageConfiguration.class, BraveSamplerConfiguration.class,
 		BraveHttpConfiguration.class, TraceConfiguration.class, SleuthAnnotationConfiguration.class })
 public class BraveAutoConfiguration {
 

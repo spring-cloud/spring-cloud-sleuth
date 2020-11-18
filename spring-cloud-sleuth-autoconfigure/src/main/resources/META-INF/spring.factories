@@ -1,10 +1,10 @@
 # Auto Configuration
 org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
-org.springframework.cloud.sleuth.instrument.async.AsyncAutoConfiguration,\
-org.springframework.cloud.sleuth.instrument.async.AsyncCustomAutoConfiguration,\
-org.springframework.cloud.sleuth.instrument.async.AsyncDefaultAutoConfiguration,\
-org.springframework.cloud.sleuth.instrument.circuitbreaker.SleuthCircuitBreakerAutoConfiguration,\
-org.springframework.cloud.sleuth.instrument.rxjava.RxJavaAutoConfiguration,\
+org.springframework.cloud.sleuth.instrument.async.TraceAsyncAutoConfiguration,\
+org.springframework.cloud.sleuth.instrument.async.TraceAsyncCustomAutoConfiguration,\
+org.springframework.cloud.sleuth.instrument.async.TraceAsyncDefaultAutoConfiguration,\
+org.springframework.cloud.sleuth.instrument.circuitbreaker.TraceCircuitBreakerAutoConfiguration,\
+org.springframework.cloud.sleuth.instrument.rxjava.TraceRxJavaAutoConfiguration,\
 org.springframework.cloud.sleuth.instrument.quartz.TraceQuartzAutoConfiguration,\
 org.springframework.cloud.sleuth.instrument.web.client.TraceWebClientAutoConfiguration,\
 org.springframework.cloud.sleuth.instrument.web.client.feign.TraceFeignClientAutoConfiguration,\
@@ -16,16 +16,16 @@ org.springframework.cloud.sleuth.instrument.messaging.TraceSpringIntegrationAuto
 org.springframework.cloud.sleuth.instrument.messaging.TraceSpringMessagingAutoConfiguration,\
 org.springframework.cloud.sleuth.instrument.messaging.TraceWebSocketAutoConfiguration,\
 org.springframework.cloud.sleuth.brave.autoconfig.BraveAutoConfiguration,\
-org.springframework.cloud.sleuth.brave.instrument.web.client.TraceWebClientAutoConfiguration,\
-org.springframework.cloud.sleuth.brave.instrument.rpc.TraceRpcAutoConfiguration,\
-org.springframework.cloud.sleuth.brave.instrument.grpc.TraceGrpcAutoConfiguration,\
-org.springframework.cloud.sleuth.brave.instrument.messaging.SleuthKafkaStreamsAutoConfiguration,\
-org.springframework.cloud.sleuth.brave.instrument.messaging.TraceMessagingAutoConfiguration,\
-org.springframework.cloud.sleuth.brave.instrument.opentracing.OpentracingAutoConfiguration,\
-org.springframework.cloud.sleuth.brave.instrument.redis.TraceRedisAutoConfiguration,\
-org.springframework.cloud.sleuth.brave.instrument.mongodb.TraceMongoDbAutoConfiguration,\
+org.springframework.cloud.sleuth.brave.instrument.web.client.BraveWebClientAutoConfiguration,\
+org.springframework.cloud.sleuth.brave.instrument.rpc.BraveRpcAutoConfiguration,\
+org.springframework.cloud.sleuth.brave.instrument.grpc.BraveGrpcAutoConfiguration,\
+org.springframework.cloud.sleuth.brave.instrument.messaging.BraveKafkaStreamsAutoConfiguration,\
+org.springframework.cloud.sleuth.brave.instrument.messaging.BraveMessagingAutoConfiguration,\
+org.springframework.cloud.sleuth.brave.instrument.opentracing.BraveOpentracingAutoConfiguration,\
+org.springframework.cloud.sleuth.brave.instrument.redis.BraveRedisAutoConfiguration,\
+org.springframework.cloud.sleuth.brave.instrument.mongodb.BraveMongoDbAutoConfiguration,\
 org.springframework.cloud.sleuth.otel.autoconfig.OtelAutoConfiguration,\
-org.springframework.cloud.sleuth.otel.instrument.opentracing.OpentracingAutoConfiguration,\
+org.springframework.cloud.sleuth.otel.instrument.opentracing.OtelOpentracingAutoConfiguration,\
 org.springframework.cloud.sleuth.zipkin2.ZipkinAutoConfiguration
 # Environment Post Processor
 org.springframework.boot.env.EnvironmentPostProcessor=\

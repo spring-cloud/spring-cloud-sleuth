@@ -39,7 +39,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.AutoConfigurations;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
-import org.springframework.cloud.sleuth.brave.sampler.SamplerConfigurationTests;
+import org.springframework.cloud.sleuth.brave.sampler.BraveSamplerConfigurationTests;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -49,8 +49,8 @@ public class BraveAutoConfigurationTests {
 			.withConfiguration(AutoConfigurations.of(BraveAutoConfiguration.class));
 
 	/**
-	 * Duplicates {@link SamplerConfigurationTests} intentionally, to ensure configuration
-	 * condition bugs do not exist.
+	 * Duplicates {@link BraveSamplerConfigurationTests} intentionally, to ensure
+	 * configuration condition bugs do not exist.
 	 */
 	@Test
 	void should_use_NEVER_SAMPLER_when_only_logging() {
@@ -61,8 +61,8 @@ public class BraveAutoConfigurationTests {
 	}
 
 	/**
-	 * Duplicates {@link SamplerConfigurationTests} intentionally, to ensure configuration
-	 * condition bugs do not exist.
+	 * Duplicates {@link BraveSamplerConfigurationTests} intentionally, to ensure
+	 * configuration condition bugs do not exist.
 	 */
 	@Test
 	void should_use_RateLimitedSampler_withSpanHandler() {
@@ -73,8 +73,8 @@ public class BraveAutoConfigurationTests {
 	}
 
 	/**
-	 * Duplicates {@link SamplerConfigurationTests} intentionally, to ensure configuration
-	 * condition bugs do not exist.
+	 * Duplicates {@link BraveSamplerConfigurationTests} intentionally, to ensure
+	 * configuration condition bugs do not exist.
 	 */
 	@Test
 	void should_override_sampler() {
