@@ -27,11 +27,11 @@ import org.springframework.cloud.sleuth.api.http.HttpRequestParser;
  * @author Marcin Grzejszczak
  * @since 3.0.0
  */
-public final class BraveHttpRequestParser implements HttpRequestParser {
+public class BraveHttpRequestParser implements HttpRequestParser {
 
 	final brave.http.HttpRequestParser delegate;
 
-	BraveHttpRequestParser(brave.http.HttpRequestParser delegate) {
+	public BraveHttpRequestParser(brave.http.HttpRequestParser delegate) {
 		this.delegate = delegate;
 	}
 
@@ -41,6 +41,10 @@ public final class BraveHttpRequestParser implements HttpRequestParser {
 				BraveSpanCustomizer.toBrave(span));
 	}
 
+	/**
+	 * @param parser Sleuth's API parser
+	 * @return Brave version of the parser
+	 */
 	public static brave.http.HttpRequestParser toBrave(HttpRequestParser parser) {
 		if (parser instanceof BraveHttpRequestParser) {
 			return ((BraveHttpRequestParser) parser).delegate;

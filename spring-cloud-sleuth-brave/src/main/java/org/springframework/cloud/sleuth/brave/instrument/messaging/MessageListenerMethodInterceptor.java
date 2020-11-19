@@ -27,7 +27,7 @@ import org.apache.kafka.clients.consumer.ConsumerRecord;
 
 import org.springframework.kafka.listener.MessageListener;
 
-class MessageListenerMethodInterceptor<T extends MessageListener> implements MethodInterceptor {
+public class MessageListenerMethodInterceptor<T extends MessageListener> implements MethodInterceptor {
 
 	private static final Log log = LogFactory.getLog(MessageListenerMethodInterceptor.class);
 
@@ -35,7 +35,7 @@ class MessageListenerMethodInterceptor<T extends MessageListener> implements Met
 
 	private final Tracer tracer;
 
-	MessageListenerMethodInterceptor(KafkaTracing kafkaTracing, Tracer tracer) {
+	public MessageListenerMethodInterceptor(KafkaTracing kafkaTracing, Tracer tracer) {
 		this.kafkaTracing = kafkaTracing;
 		this.tracer = tracer;
 	}

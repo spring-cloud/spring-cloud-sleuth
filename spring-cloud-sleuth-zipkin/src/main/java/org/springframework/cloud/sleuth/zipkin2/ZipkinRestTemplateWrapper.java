@@ -34,8 +34,11 @@ import org.springframework.web.client.RestTemplate;
  * Resolves at runtime where the Zipkin server is. If there's no discovery client then
  * {@link URI} from the properties is taken. Otherwise service discovery is pinged for
  * current Zipkin address.
+ *
+ * @author Marcin Grzejszczak
+ * @since 3.0.0
  */
-class ZipkinRestTemplateWrapper extends RestTemplate {
+public class ZipkinRestTemplateWrapper extends RestTemplate {
 
 	private static final Log log = LogFactory.getLog(ZipkinRestTemplateWrapper.class);
 
@@ -45,7 +48,7 @@ class ZipkinRestTemplateWrapper extends RestTemplate {
 
 	private final ZipkinUrlExtractor extractor;
 
-	ZipkinRestTemplateWrapper(ZipkinProperties zipkinProperties, ZipkinUrlExtractor extractor) {
+	public ZipkinRestTemplateWrapper(ZipkinProperties zipkinProperties, ZipkinUrlExtractor extractor) {
 		this.zipkinProperties = zipkinProperties;
 		this.extractor = extractor;
 		setRequestFactory(clientHttpRequestFactory());

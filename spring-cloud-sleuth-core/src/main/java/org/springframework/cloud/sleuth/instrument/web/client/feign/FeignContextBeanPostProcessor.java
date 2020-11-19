@@ -27,11 +27,11 @@ import org.springframework.cloud.openfeign.FeignContext;
  * @author Marcin Grzejszczak
  * @since 1.0.2
  */
-final class FeignContextBeanPostProcessor implements BeanPostProcessor {
+public class FeignContextBeanPostProcessor implements BeanPostProcessor {
 
 	private final BeanFactory beanFactory;
 
-	FeignContextBeanPostProcessor(BeanFactory beanFactory) {
+	public FeignContextBeanPostProcessor(BeanFactory beanFactory) {
 		this.beanFactory = beanFactory;
 	}
 

@@ -35,7 +35,7 @@ import org.springframework.cloud.sleuth.api.propagation.Propagator;
  * @author Branden Cash
  * @since 2.2.0
  */
-class TracingJobListener implements JobListener, TriggerListener {
+public class TracingJobListener implements JobListener, TriggerListener {
 
 	static final String TRIGGER_TAG_KEY = "quartz.trigger";
 
@@ -55,7 +55,7 @@ class TracingJobListener implements JobListener, TriggerListener {
 
 	private final Propagator propagator;
 
-	TracingJobListener(Tracer tracer, Propagator propagator) {
+	public TracingJobListener(Tracer tracer, Propagator propagator) {
 		this.tracer = tracer;
 		this.propagator = propagator;
 	}

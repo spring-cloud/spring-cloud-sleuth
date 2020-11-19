@@ -21,11 +21,17 @@ import java.util.regex.Pattern;
 import org.springframework.cloud.sleuth.api.SamplerFunction;
 import org.springframework.cloud.sleuth.api.http.HttpRequest;
 
-class SkipPatternSampler implements SamplerFunction<HttpRequest> {
+/**
+ * Decides if sampling should take place for the given request.
+ *
+ * @author Marcin Grzejszczak
+ * @since 3.0.0
+ */
+public class SkipPatternSampler implements SamplerFunction<HttpRequest> {
 
 	private final Pattern pattern;
 
-	SkipPatternSampler(Pattern pattern) {
+	public SkipPatternSampler(Pattern pattern) {
 		this.pattern = pattern;
 	}
 

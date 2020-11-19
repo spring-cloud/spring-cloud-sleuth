@@ -79,7 +79,7 @@ class BraveHttpServerRequest implements HttpServerRequest {
 		return this.delegate.header(name);
 	}
 
-	public static brave.http.HttpServerRequest toBrave(HttpServerRequest request) {
+	static brave.http.HttpServerRequest toBrave(HttpServerRequest request) {
 		if (request == null) {
 			return null;
 		}

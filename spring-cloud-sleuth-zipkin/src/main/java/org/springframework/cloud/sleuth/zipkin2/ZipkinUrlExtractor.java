@@ -19,11 +19,13 @@ package org.springframework.cloud.sleuth.zipkin2;
 import java.net.URI;
 
 /**
- * Internal interface to provide a way to retrieve Zipkin URI. If there's no discovery
- * client then this value will be taken from the properties. Otherwise host will be
- * assumed to be a service id.
+ * Provides a way to retrieve Zipkin URI. If there's no discovery client then this value
+ * will be taken from the properties. Otherwise host will be assumed to be a service id.
+ *
+ * @author Marcin Grzejszczak
+ * @since 3.0.0
  */
-interface ZipkinUrlExtractor {
+public interface ZipkinUrlExtractor {
 
 	URI zipkinUrl(ZipkinProperties zipkinProperties);
 

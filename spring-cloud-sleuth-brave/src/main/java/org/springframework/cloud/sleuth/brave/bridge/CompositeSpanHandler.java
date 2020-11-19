@@ -25,11 +25,17 @@ import brave.propagation.TraceContext;
 
 import org.springframework.cloud.sleuth.api.exporter.SpanFilter;
 
-class CompositeSpanHandler extends SpanHandler {
+/**
+ * Merges {@link SpanFilter}s into a {@link SpanHandler}.
+ *
+ * @author Marcin Grzejszczak
+ * @since 3.0.0
+ */
+public class CompositeSpanHandler extends SpanHandler {
 
 	private final List<SpanFilter> exporters;
 
-	CompositeSpanHandler(List<SpanFilter> exporters) {
+	public CompositeSpanHandler(List<SpanFilter> exporters) {
 		this.exporters = exporters == null ? Collections.emptyList() : exporters;
 	}
 

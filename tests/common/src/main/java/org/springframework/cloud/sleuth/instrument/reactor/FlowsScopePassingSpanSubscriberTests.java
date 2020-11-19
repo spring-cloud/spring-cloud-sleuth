@@ -39,7 +39,6 @@ import org.springframework.context.annotation.AnnotationConfigApplicationContext
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.BDDAssertions.then;
 import static org.springframework.cloud.sleuth.instrument.reactor.ReactorSleuth.scopePassingSpanOperator;
-import static org.springframework.cloud.sleuth.instrument.reactor.TraceReactorAutoConfiguration.TraceReactorConfiguration.SLEUTH_TRACE_REACTOR_KEY;
 
 /**
  * @author Marcin Grzejszczak
@@ -62,8 +61,10 @@ public abstract class FlowsScopePassingSpanSubscriberTests {
 
 	@BeforeEach
 	public void setup() {
-		Hooks.resetOnEachOperator(SLEUTH_TRACE_REACTOR_KEY);
-		Hooks.resetOnLastOperator(SLEUTH_TRACE_REACTOR_KEY);
+		Hooks.resetOnEachOperator(
+				"org.springframework.cloud.sleuth.autoconfig.instrument.reactor.TraceReactorAutoConfiguration.TraceReactorConfiguration");
+		Hooks.resetOnLastOperator(
+				"org.springframework.cloud.sleuth.autoconfig.instrument.reactor.TraceReactorAutoConfiguration.TraceReactorConfiguration");
 		Schedulers.resetOnScheduleHooks();
 	}
 

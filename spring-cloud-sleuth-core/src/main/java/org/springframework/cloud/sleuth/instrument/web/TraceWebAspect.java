@@ -55,7 +55,7 @@ import org.springframework.web.context.request.async.WebAsyncTask;
  */
 @SuppressWarnings("ArgNamesWarningsInspection")
 @Aspect
-class TraceWebAspect {
+public class TraceWebAspect {
 
 	private static final Log log = org.apache.commons.logging.LogFactory.getLog(TraceWebAspect.class);
 
@@ -65,7 +65,7 @@ class TraceWebAspect {
 
 	private final SpanNamer spanNamer;
 
-	TraceWebAspect(Tracer tracer, CurrentTraceContext currentTraceContext, SpanNamer spanNamer) {
+	public TraceWebAspect(Tracer tracer, CurrentTraceContext currentTraceContext, SpanNamer spanNamer) {
 		this.tracer = tracer;
 		this.currentTraceContext = currentTraceContext;
 		this.spanNamer = spanNamer;

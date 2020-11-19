@@ -61,14 +61,14 @@ class BraveTraceContext implements TraceContext {
 		return this.traceContext.sampled();
 	}
 
-	public static brave.propagation.TraceContext toBrave(TraceContext traceContext) {
+	static brave.propagation.TraceContext toBrave(TraceContext traceContext) {
 		if (traceContext == null) {
 			return null;
 		}
 		return ((BraveTraceContext) traceContext).traceContext;
 	}
 
-	public static TraceContext fromBrave(brave.propagation.TraceContext traceContext) {
+	static TraceContext fromBrave(brave.propagation.TraceContext traceContext) {
 		return new BraveTraceContext(traceContext);
 	}
 

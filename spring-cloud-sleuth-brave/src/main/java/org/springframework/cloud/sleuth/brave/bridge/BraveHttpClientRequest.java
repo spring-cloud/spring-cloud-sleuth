@@ -82,7 +82,7 @@ class BraveHttpClientRequest implements HttpClientRequest {
 		return this.delegate.header(name);
 	}
 
-	public static brave.http.HttpClientRequest toBrave(HttpClientRequest httpClientRequest) {
+	static brave.http.HttpClientRequest toBrave(HttpClientRequest httpClientRequest) {
 		if (httpClientRequest instanceof BraveHttpClientRequest) {
 			return ((BraveHttpClientRequest) httpClientRequest).delegate;
 		}

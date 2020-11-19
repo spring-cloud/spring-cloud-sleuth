@@ -91,11 +91,11 @@ class BraveSpan implements Span {
 		return this.delegate != null ? this.delegate.toString() : "null";
 	}
 
-	public static brave.Span toBrave(Span span) {
+	static brave.Span toBrave(Span span) {
 		return ((BraveSpan) span).delegate;
 	}
 
-	public static Span fromBrave(brave.Span span) {
+	static Span fromBrave(brave.Span span) {
 		return new BraveSpan(span);
 	}
 

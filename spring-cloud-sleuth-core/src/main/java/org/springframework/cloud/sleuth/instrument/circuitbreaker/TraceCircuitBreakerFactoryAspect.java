@@ -24,12 +24,18 @@ import org.aspectj.lang.annotation.Pointcut;
 import org.springframework.cloud.client.circuitbreaker.CircuitBreaker;
 import org.springframework.cloud.sleuth.api.Tracer;
 
+/**
+ * Aspec around {@link CircuitBreaker} creation.
+ *
+ * @author Marcin Grzejszczak
+ * @since 3.0.0
+ */
 @Aspect
-class TraceCircuitBreakerFactoryAspect {
+public class TraceCircuitBreakerFactoryAspect {
 
 	private final Tracer tracer;
 
-	TraceCircuitBreakerFactoryAspect(Tracer tracer) {
+	public TraceCircuitBreakerFactoryAspect(Tracer tracer) {
 		this.tracer = tracer;
 	}
 

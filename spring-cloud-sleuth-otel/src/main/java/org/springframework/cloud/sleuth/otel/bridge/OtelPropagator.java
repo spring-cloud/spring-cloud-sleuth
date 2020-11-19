@@ -33,13 +33,13 @@ import org.springframework.cloud.sleuth.api.propagation.Propagator;
  * @author Marcin Grzejszczak
  * @since 3.0.0
  */
-class OtelPropagator implements Propagator {
+public class OtelPropagator implements Propagator {
 
 	private final TextMapPropagator propagator;
 
 	private final Tracer tracer;
 
-	OtelPropagator(ContextPropagators propagation, Tracer tracer) {
+	public OtelPropagator(ContextPropagators propagation, Tracer tracer) {
 		this.propagator = propagation.getTextMapPropagator();
 		this.tracer = tracer;
 	}

@@ -56,6 +56,7 @@ class W3CPropagation extends Propagation.Factory implements Propagation<String> 
 	private static final Log logger = LogFactory.getLog(W3CPropagation.class.getName());
 
 	static final String TRACE_PARENT = "traceparent";
+
 	static final String TRACE_STATE = "tracestate";
 
 	private static final List<String> FIELDS = Collections.unmodifiableList(Arrays.asList(TRACE_PARENT, TRACE_STATE));
@@ -157,7 +158,7 @@ class W3CPropagation extends Propagation.Factory implements Propagation<String> 
 		};
 	}
 
-	public void copyTraceFlagsHexTo(char[] dest, int destOffset, TraceContext context) {
+	void copyTraceFlagsHexTo(char[] dest, int destOffset, TraceContext context) {
 		dest[destOffset] = '0';
 		dest[destOffset + 1] = Boolean.TRUE.equals(context.sampled()) ? '1' : '0';
 	}
@@ -187,7 +188,7 @@ class W3CPropagation extends Propagation.Factory implements Propagation<String> 
 		return this.baggagePropagator.contextWithBaggage(carrier, context, getter);
 	}
 
-	protected TraceContextOrSamplingFlags context(TraceContext contextFromParentHeader, String traceStateHeader) {
+	TraceContextOrSamplingFlags context(TraceContext contextFromParentHeader, String traceStateHeader) {
 		if (traceStateHeader == null || traceStateHeader.isEmpty()) {
 			return TraceContextOrSamplingFlags.create(contextFromParentHeader);
 		}

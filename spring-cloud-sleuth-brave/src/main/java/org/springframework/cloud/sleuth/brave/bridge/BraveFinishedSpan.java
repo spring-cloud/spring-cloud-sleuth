@@ -106,7 +106,7 @@ class BraveFinishedSpan implements FinishedSpan {
 		return this.mutableSpan.remoteServiceName();
 	}
 
-	public static FinishedSpan fromBrave(MutableSpan mutableSpan) {
+	static FinishedSpan fromBrave(MutableSpan mutableSpan) {
 		return new BraveFinishedSpan(mutableSpan);
 	}
 

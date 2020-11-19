@@ -36,8 +36,14 @@ import org.springframework.kafka.listener.MessageListenerContainer;
 import org.springframework.kafka.listener.adapter.MessagingMessageListenerAdapter;
 import org.springframework.util.ReflectionUtils;
 
+/**
+ * Instruments Kafka related components.
+ *
+ * @since 3.0.0
+ * @author Marcin Grzejszczak
+ */
 @Aspect
-class SleuthKafkaAspect {
+public class SleuthKafkaAspect {
 
 	private static final Log log = LogFactory.getLog(SleuthKafkaAspect.class);
 
@@ -47,7 +53,7 @@ class SleuthKafkaAspect {
 
 	private final Tracer tracer;
 
-	SleuthKafkaAspect(KafkaTracing kafkaTracing, Tracer tracer) {
+	public SleuthKafkaAspect(KafkaTracing kafkaTracing, Tracer tracer) {
 		this.kafkaTracing = kafkaTracing;
 		this.tracer = tracer;
 		this.recordMessageConverter = ReflectionUtils.findField(MessagingMessageListenerAdapter.class,

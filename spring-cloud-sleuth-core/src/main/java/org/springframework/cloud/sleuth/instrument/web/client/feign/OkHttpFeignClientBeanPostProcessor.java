@@ -29,11 +29,11 @@ import org.springframework.beans.factory.config.BeanPostProcessor;
  * @author Marcin Grzejszczak
  * @since 1.1.3
  */
-final class OkHttpFeignClientBeanPostProcessor implements BeanPostProcessor {
+public class OkHttpFeignClientBeanPostProcessor implements BeanPostProcessor {
 
 	private final BeanFactory beanFactory;
 
-	OkHttpFeignClientBeanPostProcessor(BeanFactory beanFactory) {
+	public OkHttpFeignClientBeanPostProcessor(BeanFactory beanFactory) {
 		this.beanFactory = beanFactory;
 	}
 

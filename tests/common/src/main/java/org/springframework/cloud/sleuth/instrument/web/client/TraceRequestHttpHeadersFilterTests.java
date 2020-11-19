@@ -34,7 +34,7 @@ public abstract class TraceRequestHttpHeadersFilterTests implements TestTracingA
 
 	@Test
 	public void should_override_span_tracing_headers() {
-		HttpHeadersFilter filter = TraceRequestHttpHeadersFilter.create(tracerTest().tracing().tracer(),
+		HttpHeadersFilter filter = new TraceRequestHttpHeadersFilter(tracerTest().tracing().tracer(),
 				tracerTest().tracing().httpClientHandler(), tracerTest().tracing().propagator());
 		HttpHeaders httpHeaders = new HttpHeaders();
 		httpHeaders.set("X-Hello", "World");
@@ -58,7 +58,7 @@ public abstract class TraceRequestHttpHeadersFilterTests implements TestTracingA
 
 	@Test
 	public void should_override_span_tracing_headers_when_using_b3() {
-		HttpHeadersFilter filter = TraceRequestHttpHeadersFilter.create(tracerTest().tracing().tracer(),
+		HttpHeadersFilter filter = new TraceRequestHttpHeadersFilter(tracerTest().tracing().tracer(),
 				tracerTest().tracing().httpClientHandler(), tracerTest().tracing().propagator());
 		HttpHeaders httpHeaders = new HttpHeaders();
 		httpHeaders.set("X-Hello", "World");
@@ -85,7 +85,7 @@ public abstract class TraceRequestHttpHeadersFilterTests implements TestTracingA
 
 	@Test
 	public void should_set_tracing_headers() {
-		HttpHeadersFilter filter = TraceRequestHttpHeadersFilter.create(tracerTest().tracing().tracer(),
+		HttpHeadersFilter filter = new TraceRequestHttpHeadersFilter(tracerTest().tracing().tracer(),
 				tracerTest().tracing().httpClientHandler(), tracerTest().tracing().propagator());
 		HttpHeaders httpHeaders = new HttpHeaders();
 		httpHeaders.set("X-Hello", "World");
@@ -105,7 +105,7 @@ public abstract class TraceRequestHttpHeadersFilterTests implements TestTracingA
 	// #1469
 	@Test
 	public void should_reuse_headers_only_from_input_since_exchange_may_contain_already_ignored_headers() {
-		HttpHeadersFilter filter = TraceRequestHttpHeadersFilter.create(tracerTest().tracing().tracer(),
+		HttpHeadersFilter filter = new TraceRequestHttpHeadersFilter(tracerTest().tracing().tracer(),
 				tracerTest().tracing().httpClientHandler(), tracerTest().tracing().propagator());
 		HttpHeaders httpHeaders = new HttpHeaders();
 		httpHeaders.set("X-Hello", "World");
@@ -123,7 +123,7 @@ public abstract class TraceRequestHttpHeadersFilterTests implements TestTracingA
 	// #1352
 	@Test
 	public void should_set_tracing_headers_with_multiple_values() {
-		HttpHeadersFilter filter = TraceRequestHttpHeadersFilter.create(tracerTest().tracing().tracer(),
+		HttpHeadersFilter filter = new TraceRequestHttpHeadersFilter(tracerTest().tracing().tracer(),
 				tracerTest().tracing().httpClientHandler(), tracerTest().tracing().propagator());
 		HttpHeaders httpHeaders = new HttpHeaders();
 		httpHeaders.add("X-Hello-Request", "Request World");

@@ -21,14 +21,9 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.cloud.sleuth.SpanNamer;
 import org.springframework.cloud.sleuth.api.exporter.SpanFilter;
-import org.springframework.cloud.sleuth.instrument.web.SleuthWebProperties;
-import org.springframework.cloud.sleuth.instrument.web.TraceWebFluxConfiguration;
-import org.springframework.cloud.sleuth.instrument.web.TraceWebServletConfiguration;
-import org.springframework.cloud.sleuth.instrument.web.client.ConditionalnOnSleuthWebClient;
 import org.springframework.cloud.sleuth.internal.DefaultSpanNamer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Import;
 
 /**
  * {@link org.springframework.boot.autoconfigure.EnableAutoConfiguration
@@ -43,7 +38,6 @@ import org.springframework.context.annotation.Import;
 @ConditionalOnProperty(value = "spring.sleuth.enabled", matchIfMissing = true)
 @EnableConfigurationProperties({ SleuthSpanFilterProperties.class, SleuthBaggageProperties.class,
 		SleuthTracerProperties.class })
-@Import(SkipPatternConfiguration.class)
 public class TraceConfiguration {
 
 	@Bean
@@ -56,15 +50,6 @@ public class TraceConfiguration {
 	@ConditionalOnProperty(value = "spring.sleuth.span-filter.enabled", matchIfMissing = true)
 	SpanFilter spanIgnoringSpanExporter(SleuthSpanFilterProperties sleuthSpanFilterProperties) {
 		return new SpanIgnoringSpanFilter(sleuthSpanFilterProperties);
-	}
-
-	@Configuration(proxyBeanMethods = false)
-	@ConditionalnOnSleuthWebClient
-	@Import({ SkipPatternConfiguration.class, TraceWebFluxConfiguration.class, TraceWebServletConfiguration.class,
-			TraceWebFluxConfiguration.class })
-	@EnableConfigurationProperties(SleuthWebProperties.class)
-	static class TraceHttpConfiguration {
-
 	}
 
 }

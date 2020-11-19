@@ -27,11 +27,11 @@ import org.springframework.cloud.sleuth.api.http.HttpServerResponse;
  * @author Marcin Grzejszczak
  * @since 3.0.0
  */
-class BraveHttpServerHandler implements HttpServerHandler {
+public class BraveHttpServerHandler implements HttpServerHandler {
 
 	final brave.http.HttpServerHandler<brave.http.HttpServerRequest, brave.http.HttpServerResponse> delegate;
 
-	BraveHttpServerHandler(
+	public BraveHttpServerHandler(
 			brave.http.HttpServerHandler<brave.http.HttpServerRequest, brave.http.HttpServerResponse> delegate) {
 		this.delegate = delegate;
 	}

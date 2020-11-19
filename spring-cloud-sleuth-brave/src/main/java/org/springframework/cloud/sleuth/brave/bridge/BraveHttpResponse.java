@@ -82,11 +82,11 @@ class BraveHttpResponse implements HttpResponse {
 		return this.delegate.error();
 	}
 
-	public static brave.http.HttpResponse toBrave(HttpResponse httpResponse) {
+	static brave.http.HttpResponse toBrave(HttpResponse httpResponse) {
 		return ((BraveHttpResponse) httpResponse).delegate;
 	}
 
-	public static HttpResponse fromBrave(brave.http.HttpResponse httpResponse) {
+	static HttpResponse fromBrave(brave.http.HttpResponse httpResponse) {
 		return new BraveHttpResponse(httpResponse);
 	}
 

@@ -22,11 +22,17 @@ import org.springframework.beans.factory.config.BeanPostProcessor;
 import org.springframework.jms.config.JmsListenerEndpointRegistry;
 import org.springframework.jms.config.TracingJmsListenerEndpointRegistry;
 
-class TracingJmsBeanPostProcessor implements BeanPostProcessor {
+/**
+ * A {@link BeanPostProcessor} for JMS endpoint registry.
+ *
+ * @author Marcin Grzejszczak
+ * @since 3.0.0
+ */
+public class TracingJmsBeanPostProcessor implements BeanPostProcessor {
 
 	private final BeanFactory beanFactory;
 
-	TracingJmsBeanPostProcessor(BeanFactory beanFactory) {
+	public TracingJmsBeanPostProcessor(BeanFactory beanFactory) {
 		this.beanFactory = beanFactory;
 	}
 
@@ -35,7 +41,7 @@ class TracingJmsBeanPostProcessor implements BeanPostProcessor {
 		return wrap(bean);
 	}
 
-	Object wrap(Object bean) {
+	private Object wrap(Object bean) {
 		if (typeMatches(bean)) {
 			return new TracingJmsListenerEndpointRegistry((JmsListenerEndpointRegistry) bean, this.beanFactory);
 		}

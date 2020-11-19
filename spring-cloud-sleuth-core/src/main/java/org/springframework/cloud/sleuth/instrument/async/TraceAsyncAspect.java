@@ -38,7 +38,7 @@ import org.springframework.util.ReflectionUtils;
  * @see Tracer
  */
 @Aspect
-class TraceAsyncAspect {
+public class TraceAsyncAspect {
 
 	private static final String CLASS_KEY = "class";
 
@@ -48,7 +48,7 @@ class TraceAsyncAspect {
 
 	private final SpanNamer spanNamer;
 
-	TraceAsyncAspect(Tracer tracer, SpanNamer spanNamer) {
+	public TraceAsyncAspect(Tracer tracer, SpanNamer spanNamer) {
 		this.tracer = tracer;
 		this.spanNamer = spanNamer;
 	}

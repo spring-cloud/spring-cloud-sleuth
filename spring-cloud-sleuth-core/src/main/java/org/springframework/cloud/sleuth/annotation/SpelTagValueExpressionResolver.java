@@ -31,7 +31,7 @@ import org.springframework.expression.spel.support.SimpleEvaluationContext;
  * @author Marcin Grzejszczak
  * @since 1.2.0
  */
-class SpelTagValueExpressionResolver implements TagValueExpressionResolver {
+public class SpelTagValueExpressionResolver implements TagValueExpressionResolver {
 
 	private static final Log log = LogFactory.getLog(SpelTagValueExpressionResolver.class);
 

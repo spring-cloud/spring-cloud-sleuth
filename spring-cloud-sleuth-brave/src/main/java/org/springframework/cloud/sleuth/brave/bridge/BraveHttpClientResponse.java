@@ -82,7 +82,7 @@ class BraveHttpClientResponse implements HttpClientResponse {
 		return this.delegate.error();
 	}
 
-	public static brave.http.HttpClientResponse toBrave(HttpClientResponse httpClientResponse) {
+	static brave.http.HttpClientResponse toBrave(HttpClientResponse httpClientResponse) {
 		if (httpClientResponse == null) {
 			return null;
 		}

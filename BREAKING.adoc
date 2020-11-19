@@ -1,0 +1,17 @@
+= Breaking changes document
+
+== `3.0.0-M6`
+
+=== Modules
+
+* New modules: `spring-cloud-sleuth-autoconfigure`, `spring-cloud-sleuth-api`, `spring-cloud-sleuth-instrumentation`
+** `spring-cloud-sleuth-core` removed and changed to `spring-cloud-sleuth-instrumentation` & `spring-cloud-sleuth-api`
+
+=== Package moving
+
+* `org.springframework.cloud.sleuth.brave.autoconfig` -> `org.springframework.cloud.sleuth.autoconfig.brave`
+* `org.springframework.cloud.sleuth.otel.autoconfig` -> `org.springframework.cloud.sleuth.autoconfig.otel`
+
+=== Class opening
+
+* Any class registered as a bean is now public

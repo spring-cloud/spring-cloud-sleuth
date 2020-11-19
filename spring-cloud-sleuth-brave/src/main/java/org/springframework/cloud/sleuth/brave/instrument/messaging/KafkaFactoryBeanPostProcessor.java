@@ -22,11 +22,17 @@ import org.springframework.beans.factory.config.BeanPostProcessor;
 import org.springframework.kafka.core.ConsumerFactory;
 import org.springframework.kafka.core.ProducerFactory;
 
-class KafkaFactoryBeanPostProcessor implements BeanPostProcessor {
+/**
+ * Bean post processor that wraps Kafka factories.
+ *
+ * @author Marcin Grzejszczak
+ * @since 3.0.0
+ */
+public class KafkaFactoryBeanPostProcessor implements BeanPostProcessor {
 
 	private final BeanFactory beanFactory;
 
-	KafkaFactoryBeanPostProcessor(BeanFactory beanFactory) {
+	public KafkaFactoryBeanPostProcessor(BeanFactory beanFactory) {
 		this.beanFactory = beanFactory;
 	}
 

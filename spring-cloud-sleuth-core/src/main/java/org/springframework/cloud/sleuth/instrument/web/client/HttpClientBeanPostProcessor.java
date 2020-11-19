@@ -42,11 +42,17 @@ import org.springframework.cloud.sleuth.internal.LazyBean;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.lang.Nullable;
 
-class HttpClientBeanPostProcessor implements BeanPostProcessor {
+/**
+ * A {@link BeanPostProcessor} that wraps a {@link HttpClient} in a trace representation.
+ *
+ * @author Marcin Grzejszczak
+ * @since 3.0.0
+ */
+public class HttpClientBeanPostProcessor implements BeanPostProcessor {
 
 	final ConfigurableApplicationContext springContext;
 
-	HttpClientBeanPostProcessor(ConfigurableApplicationContext springContext) {
+	public HttpClientBeanPostProcessor(ConfigurableApplicationContext springContext) {
 		this.springContext = springContext;
 	}
 

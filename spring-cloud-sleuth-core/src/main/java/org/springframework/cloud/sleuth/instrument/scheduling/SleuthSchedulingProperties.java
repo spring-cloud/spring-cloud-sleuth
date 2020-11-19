@@ -26,7 +26,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * @since 1.0.12
  */
 @ConfigurationProperties("spring.sleuth.scheduled")
-class SleuthSchedulingProperties {
+public class SleuthSchedulingProperties {
 
 	/**
 	 * Enable tracing for {@link org.springframework.scheduling.annotation.Scheduled}.

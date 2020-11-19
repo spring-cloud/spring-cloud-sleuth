@@ -20,7 +20,10 @@ import brave.grpc.GrpcTracing;
 import io.grpc.ManagedChannelBuilder;
 
 /**
+ * Brave interceptor based customizer.
+ *
  * @author Tyler Van Gorder
+ * @since 3.0.0
  */
 public class TracingManagedChannelBuilderCustomizer implements GrpcManagedChannelBuilderCustomizer {
 

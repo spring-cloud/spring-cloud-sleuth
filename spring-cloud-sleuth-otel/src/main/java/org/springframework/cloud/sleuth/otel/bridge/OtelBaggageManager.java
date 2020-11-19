@@ -35,16 +35,18 @@ import org.springframework.cloud.sleuth.api.BaggageInScope;
 import org.springframework.cloud.sleuth.api.BaggageManager;
 import org.springframework.cloud.sleuth.api.CurrentTraceContext;
 import org.springframework.cloud.sleuth.api.TraceContext;
+import org.springframework.cloud.sleuth.api.Tracer;
 import org.springframework.cloud.sleuth.autoconfig.SleuthBaggageProperties;
 import org.springframework.context.ApplicationEventPublisher;
 
 /**
- * OpenTelemetry implementation of a {@link BaggageManager}.
+ * OpenTelemetry implementation of a {@link BaggageManager}. Doesn't implement an
+ * interface cause {@link Tracer} already implements it.
  *
  * @author Marcin Grzejszczak
  * @since 3.0.0
  */
-class OtelBaggageManager {
+public class OtelBaggageManager implements BaggageManager {
 
 	private final CurrentTraceContext currentTraceContext;
 
@@ -52,14 +54,15 @@ class OtelBaggageManager {
 
 	private final ApplicationEventPublisher publisher;
 
-	OtelBaggageManager(CurrentTraceContext currentTraceContext, SleuthBaggageProperties sleuthBaggageProperties,
+	public OtelBaggageManager(CurrentTraceContext currentTraceContext, SleuthBaggageProperties sleuthBaggageProperties,
 			ApplicationEventPublisher publisher) {
 		this.currentTraceContext = currentTraceContext;
 		this.sleuthBaggageProperties = sleuthBaggageProperties;
 		this.publisher = publisher;
 	}
 
-	Map<String, String> getAllBaggage() {
+	@Override
+	public Map<String, String> getAllBaggage() {
 		Map<String, String> baggage = new HashMap<>();
 		currentBaggage().getEntries().forEach(entry -> baggage.put(entry.getKey(), entry.getValue()));
 		return baggage;
@@ -76,12 +79,13 @@ class OtelBaggageManager {
 		return new CompositeBaggage(stack);
 	}
 
-	BaggageInScope getBaggage(String name) {
+	@Override
+	public BaggageInScope getBaggage(String name) {
 		Entry entry = getBaggage(name, currentBaggage());
 		return createNewEntryIfMissing(name, entry);
 	}
 
-	protected BaggageInScope createNewEntryIfMissing(String name, Entry entry) {
+	BaggageInScope createNewEntryIfMissing(String name, Entry entry) {
 		if (entry == null) {
 			return createBaggage(name);
 		}
@@ -92,7 +96,8 @@ class OtelBaggageManager {
 		return entryForName(name, baggage);
 	}
 
-	BaggageInScope getBaggage(TraceContext traceContext, String name) {
+	@Override
+	public BaggageInScope getBaggage(TraceContext traceContext, String name) {
 		OtelTraceContext context = (OtelTraceContext) traceContext;
 		// TODO: Refactor
 		Deque<Context> stack = new ArrayDeque<>();
@@ -107,13 +112,13 @@ class OtelBaggageManager {
 		return createNewEntryIfMissing(name, entry);
 	}
 
-	protected Entry getEntry(OtelTraceContext traceContext, String name) {
+	Entry getEntry(OtelTraceContext traceContext, String name) {
 		OtelTraceContext context = traceContext;
 		Context ctx = context.context();
 		return getBaggage(name, Baggage.fromContext(ctx));
 	}
 
-	protected Context removeFirst(Deque<Context> stack) {
+	Context removeFirst(Deque<Context> stack) {
 		return stack.isEmpty() ? null : stack.removeFirst();
 	}
 
@@ -127,10 +132,12 @@ class OtelBaggageManager {
 				entry);
 	}
 
+	@Override
 	public BaggageInScope createBaggage(String name) {
 		return createBaggage(name, "");
 	}
 
+	@Override
 	public BaggageInScope createBaggage(String name, String value) {
 		BaggageInScope baggageInScope = baggageWithValue(name, "");
 		return baggageInScope.set(value);

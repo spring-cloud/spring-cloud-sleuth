@@ -22,7 +22,7 @@ package org.springframework.cloud.sleuth.annotation;
  * @author Marcin Grzejszczak
  * @since 1.2.0
  */
-class NoOpTagValueResolver implements TagValueResolver {
+public class NoOpTagValueResolver implements TagValueResolver {
 
 	@Override
 	public String resolve(Object parameter) {

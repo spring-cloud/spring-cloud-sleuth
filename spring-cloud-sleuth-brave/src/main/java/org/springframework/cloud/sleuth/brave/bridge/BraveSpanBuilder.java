@@ -118,7 +118,7 @@ class BraveSpanBuilder implements Span.Builder {
 		return BraveSpan.fromBrave(this.delegate);
 	}
 
-	public static Span.Builder toBuilder(Tracer tracer, TraceContextOrSamplingFlags context) {
+	static Span.Builder toBuilder(Tracer tracer, TraceContextOrSamplingFlags context) {
 		return new BraveSpanBuilder(tracer, context);
 	}
 

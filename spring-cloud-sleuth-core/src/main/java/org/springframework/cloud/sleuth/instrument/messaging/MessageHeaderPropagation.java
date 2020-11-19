@@ -32,14 +32,20 @@ import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.StringUtils;
 
 /**
+ * Setter and getter for Spring Integration based communication.
+ *
  * This always sets native headers in defence of STOMP issues discussed <a href=
  * "https://github.com/spring-cloud/spring-cloud-sleuth/issues/716#issuecomment-337523705">here</a>.
  *
  * @author Marcin Grzejszczak
+ * @since 3.0.0
  */
-enum MessageHeaderPropagation
+public enum MessageHeaderPropagation
 		implements Propagator.Setter<MessageHeaderAccessor>, Propagator.Getter<MessageHeaderAccessor> {
 
+	/**
+	 * Singleton instance for message header propagation.
+	 */
 	INSTANCE;
 
 	private static final Log log = LogFactory.getLog(MessageHeaderPropagation.class);

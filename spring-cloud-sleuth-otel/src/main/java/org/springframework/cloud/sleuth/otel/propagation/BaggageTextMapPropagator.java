@@ -30,9 +30,15 @@ import org.apache.commons.logging.LogFactory;
 
 import org.springframework.cloud.sleuth.api.BaggageManager;
 import org.springframework.cloud.sleuth.autoconfig.SleuthBaggageProperties;
-import org.springframework.context.ApplicationEventPublisher;
 
-class BaggageTextMapPropagator implements TextMapPropagator {
+/**
+ * {@link TextMapPropagator} that adds Sleuth compatible baggage entries (name of the
+ * field means an HTTP header entry).
+ *
+ * @author Marcin Grzejszczak
+ * @since 3.0.0
+ */
+public class BaggageTextMapPropagator implements TextMapPropagator {
 
 	private static final Log log = LogFactory.getLog(BaggageTextMapPropagator.class);
 
@@ -40,13 +46,9 @@ class BaggageTextMapPropagator implements TextMapPropagator {
 
 	private final BaggageManager baggageManager;
 
-	private final ApplicationEventPublisher publisher;
-
-	BaggageTextMapPropagator(SleuthBaggageProperties properties, BaggageManager baggageManager,
-			ApplicationEventPublisher publisher) {
+	public BaggageTextMapPropagator(SleuthBaggageProperties properties, BaggageManager baggageManager) {
 		this.properties = properties;
 		this.baggageManager = baggageManager;
-		this.publisher = publisher;
 	}
 
 	@Override

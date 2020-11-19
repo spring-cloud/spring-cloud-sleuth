@@ -39,7 +39,7 @@ import org.springframework.util.StringUtils;
  * @author Marcin Grzejszczak
  * @since 3.0.0
  */
-class OtelHttpServerHandler
+public class OtelHttpServerHandler
 		extends HttpServerTracer<HttpServerRequest, HttpServerResponse, HttpServerRequest, HttpServerRequest>
 		implements HttpServerHandler {
 
@@ -49,7 +49,7 @@ class OtelHttpServerHandler
 
 	private final Pattern pattern;
 
-	OtelHttpServerHandler(Tracer tracer, HttpRequestParser httpServerRequestParser,
+	public OtelHttpServerHandler(Tracer tracer, HttpRequestParser httpServerRequestParser,
 			HttpResponseParser httpServerResponseParser, SkipPatternProvider skipPatternProvider) {
 		super(tracer);
 		this.httpServerRequestParser = httpServerRequestParser;

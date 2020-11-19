@@ -147,7 +147,13 @@ public abstract class ReactorSleuth {
 		return context;
 	}
 
-	static <T> Function<? super Publisher<T>, ? extends Publisher<T>> springContextSpanOperator(
+	/**
+	 * Creates a context with beans in it.
+	 * @param springContext spring context
+	 * @param <T> an arbitrary type that is left unchanged by the span operator
+	 * @return a new operator pointcut that has beans in the context
+	 */
+	public static <T> Function<? super Publisher<T>, ? extends Publisher<T>> springContextSpanOperator(
 			ConfigurableApplicationContext springContext) {
 		if (log.isTraceEnabled()) {
 			log.trace("Spring Context passing operator [" + springContext + "]");

@@ -24,7 +24,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * @author Daniel Albuquerque
  */
 @ConfigurationProperties("spring.sleuth.redis")
-class TraceRedisProperties {
+public class TraceRedisProperties {
 
 	/**
 	 * Enable span information propagation when using Redis.

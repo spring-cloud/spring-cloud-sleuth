@@ -51,7 +51,7 @@ import org.springframework.util.ReflectionUtils;
  * @author Vladislav Fefelov
  * @since 1.1.4
  */
-class ExecutorBeanPostProcessor implements BeanPostProcessor {
+public class ExecutorBeanPostProcessor implements BeanPostProcessor {
 
 	private static final Log log = LogFactory.getLog(ExecutorBeanPostProcessor.class);
 
@@ -59,7 +59,7 @@ class ExecutorBeanPostProcessor implements BeanPostProcessor {
 
 	private SleuthAsyncProperties sleuthAsyncProperties;
 
-	ExecutorBeanPostProcessor(BeanFactory beanFactory) {
+	public ExecutorBeanPostProcessor(BeanFactory beanFactory) {
 		this.beanFactory = beanFactory;
 	}
 

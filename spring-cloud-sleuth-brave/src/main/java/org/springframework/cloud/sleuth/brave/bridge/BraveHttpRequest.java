@@ -72,11 +72,11 @@ class BraveHttpRequest implements HttpRequest {
 		return this.delegate.unwrap();
 	}
 
-	public static brave.http.HttpRequest toBrave(HttpRequest httpRequest) {
+	static brave.http.HttpRequest toBrave(HttpRequest httpRequest) {
 		return ((BraveHttpRequest) httpRequest).delegate;
 	}
 
-	public static HttpRequest fromBrave(brave.http.HttpRequest httpRequest) {
+	static HttpRequest fromBrave(brave.http.HttpRequest httpRequest) {
 		return new BraveHttpRequest(httpRequest);
 	}
 

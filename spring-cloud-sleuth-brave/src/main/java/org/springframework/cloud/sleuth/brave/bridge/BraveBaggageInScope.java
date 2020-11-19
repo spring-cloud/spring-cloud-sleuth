@@ -56,7 +56,7 @@ class BraveBaggageInScope implements BaggageInScope {
 		return this;
 	}
 
-	public BaggageField unwrap() {
+	BaggageField unwrap() {
 		return this.delegate;
 	}
 

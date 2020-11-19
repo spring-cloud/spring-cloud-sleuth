@@ -42,7 +42,7 @@ import org.springframework.util.StringUtils;
  * @author Marcin Grzejszczak
  * @since 2.1.0
  */
-class ReactorSleuthMethodInvocationProcessor extends AbstractSleuthMethodInvocationProcessor {
+public class ReactorSleuthMethodInvocationProcessor extends AbstractSleuthMethodInvocationProcessor {
 
 	private NonReactorSleuthMethodInvocationProcessor nonReactorSleuthMethodInvocationProcessor;
 

@@ -35,13 +35,13 @@ import org.springframework.beans.factory.BeanFactory;
  * @since 1.1.2
  */
 @Aspect
-class TraceFeignAspect {
+public class TraceFeignAspect {
 
 	private static final Log log = LogFactory.getLog(TraceFeignAspect.class);
 
 	private final BeanFactory beanFactory;
 
-	TraceFeignAspect(BeanFactory beanFactory) {
+	public TraceFeignAspect(BeanFactory beanFactory) {
 		this.beanFactory = beanFactory;
 	}
 

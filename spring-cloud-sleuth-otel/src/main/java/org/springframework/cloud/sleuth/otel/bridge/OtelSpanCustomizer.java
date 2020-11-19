@@ -17,10 +17,8 @@
 package org.springframework.cloud.sleuth.otel.bridge;
 
 import io.opentelemetry.api.trace.Span;
-import io.opentelemetry.api.trace.Tracer;
 
 import org.springframework.cloud.sleuth.api.SpanCustomizer;
-import org.springframework.lang.NonNull;
 
 /**
  * OpenTelemetry implementation of a {@link SpanCustomizer}.
@@ -28,21 +26,7 @@ import org.springframework.lang.NonNull;
  * @author Marcin Grzejszczak
  * @since 3.0.0
  */
-class OtelSpanCustomizer implements SpanCustomizer {
-
-	private final Tracer tracer;
-
-	private final Span span;
-
-	OtelSpanCustomizer(@NonNull Tracer tracer) {
-		this.tracer = tracer;
-		this.span = null;
-	}
-
-	OtelSpanCustomizer(@NonNull Span span) {
-		this.tracer = null;
-		this.span = span;
-	}
+public class OtelSpanCustomizer implements SpanCustomizer {
 
 	@Override
 	public SpanCustomizer name(String name) {
@@ -51,7 +35,7 @@ class OtelSpanCustomizer implements SpanCustomizer {
 	}
 
 	private Span currentSpan() {
-		return this.span != null ? this.span : Span.current();
+		return Span.current();
 	}
 
 	@Override

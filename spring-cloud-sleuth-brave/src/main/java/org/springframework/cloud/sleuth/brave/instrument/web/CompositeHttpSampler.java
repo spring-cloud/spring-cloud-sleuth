@@ -23,14 +23,15 @@ import brave.sampler.SamplerFunction;
  * Composite Http Sampler.
  *
  * @author Adrian Cole
+ * @since 3.0.0
  */
-final class CompositeHttpSampler implements SamplerFunction<HttpRequest> {
+public final class CompositeHttpSampler implements SamplerFunction<HttpRequest> {
 
 	final SamplerFunction<HttpRequest> left;
 
 	final SamplerFunction<HttpRequest> right;
 
-	CompositeHttpSampler(SamplerFunction<HttpRequest> left, SamplerFunction<HttpRequest> right) {
+	public CompositeHttpSampler(SamplerFunction<HttpRequest> left, SamplerFunction<HttpRequest> right) {
 		this.left = left;
 		this.right = right;
 	}

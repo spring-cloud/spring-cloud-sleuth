@@ -24,13 +24,16 @@ import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.config.BeanPostProcessor;
 
-class SleuthRabbitBeanPostProcessor implements BeanPostProcessor {
+/**
+ *
+ */
+public class SleuthRabbitBeanPostProcessor implements BeanPostProcessor {
 
 	private final BeanFactory beanFactory;
 
 	private SpringRabbitTracing tracing;
 
-	SleuthRabbitBeanPostProcessor(BeanFactory beanFactory) {
+	public SleuthRabbitBeanPostProcessor(BeanFactory beanFactory) {
 		this.beanFactory = beanFactory;
 	}
 

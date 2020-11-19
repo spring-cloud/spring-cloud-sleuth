@@ -34,6 +34,6 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 @Target({ ElementType.TYPE, ElementType.METHOD })
 @Documented
 @ConditionalOnProperty(value = "spring.sleuth.messaging.enabled", matchIfMissing = true)
-@interface ConditionalOnMessagingEnabled {
+public @interface ConditionalOnMessagingEnabled {
 
 }

@@ -28,11 +28,11 @@ import org.springframework.cloud.sleuth.api.http.HttpClientResponse;
  * @author Marcin Grzejszczak
  * @since 3.0.0
  */
-class BraveHttpClientHandler implements HttpClientHandler {
+public class BraveHttpClientHandler implements HttpClientHandler {
 
 	final brave.http.HttpClientHandler<brave.http.HttpClientRequest, brave.http.HttpClientResponse> delegate;
 
-	BraveHttpClientHandler(
+	public BraveHttpClientHandler(
 			brave.http.HttpClientHandler<brave.http.HttpClientRequest, brave.http.HttpClientResponse> delegate) {
 		this.delegate = delegate;
 	}
@@ -55,11 +55,6 @@ class BraveHttpClientHandler implements HttpClientHandler {
 	@Override
 	public void handleReceive(HttpClientResponse response, Span span) {
 		this.delegate.handleReceive(BraveHttpClientResponse.toBrave(response), BraveSpan.toBrave(span));
-	}
-
-	public static HttpClientHandler fromBrave(
-			brave.http.HttpClientHandler<brave.http.HttpClientRequest, brave.http.HttpClientResponse> handler) {
-		return new BraveHttpClientHandler(handler);
 	}
 
 }

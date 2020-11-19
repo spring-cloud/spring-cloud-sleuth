@@ -25,7 +25,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * @since 2.0.0
  */
 @ConfigurationProperties("spring.sleuth.integration")
-class SleuthIntegrationMessagingProperties {
+public class SleuthIntegrationMessagingProperties {
 
 	/**
 	 * An array of patterns against which channel names will be matched.

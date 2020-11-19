@@ -18,11 +18,11 @@ package org.springframework.cloud.sleuth.brave.instrument.web;
 
 import java.util.regex.Pattern;
 
-final class SkipPatternHttpClientSampler extends SkipPatternSampler {
+public class SkipPatternHttpClientSampler extends SkipPatternSampler {
 
 	private final Pattern skipPattern;
 
-	SkipPatternHttpClientSampler(Pattern skipPattern) {
+	public SkipPatternHttpClientSampler(Pattern skipPattern) {
 		this.skipPattern = skipPattern;
 	}
 

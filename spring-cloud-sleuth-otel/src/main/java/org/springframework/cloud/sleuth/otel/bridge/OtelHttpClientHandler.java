@@ -44,7 +44,7 @@ import org.springframework.util.StringUtils;
  * @author Marcin Grzejszczak
  * @since 3.0.0
  */
-class OtelHttpClientHandler extends HttpClientTracer<HttpClientRequest, HttpClientRequest, HttpClientResponse>
+public class OtelHttpClientHandler extends HttpClientTracer<HttpClientRequest, HttpClientRequest, HttpClientResponse>
 		implements HttpClientHandler {
 
 	private static final Log log = LogFactory.getLog(OtelHttpClientHandler.class);
@@ -55,7 +55,7 @@ class OtelHttpClientHandler extends HttpClientTracer<HttpClientRequest, HttpClie
 
 	private final SamplerFunction<HttpRequest> samplerFunction;
 
-	OtelHttpClientHandler(Tracer tracer, @Nullable HttpRequestParser httpClientRequestParser,
+	public OtelHttpClientHandler(Tracer tracer, @Nullable HttpRequestParser httpClientRequestParser,
 			@Nullable HttpResponseParser httpClientResponseParser, SamplerFunction<HttpRequest> samplerFunction) {
 		super(tracer);
 		this.httpClientRequestParser = httpClientRequestParser;

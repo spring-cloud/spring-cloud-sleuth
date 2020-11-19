@@ -25,7 +25,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * @since 2.0.0
  */
 @ConfigurationProperties("spring.sleuth.messaging")
-class SleuthMessagingProperties {
+public class SleuthMessagingProperties {
 
 	private Messaging messaging = new Messaging();
 

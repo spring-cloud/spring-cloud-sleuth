@@ -32,7 +32,13 @@ import org.springframework.context.event.ContextClosedEvent;
 import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.context.event.SmartApplicationListener;
 
-class SleuthContextListener implements SmartApplicationListener {
+/**
+ * Checks whether Spring Context is up and running.
+ *
+ * @author Marcin Grzejszczak
+ * @since 3.0.0
+ */
+public class SleuthContextListener implements SmartApplicationListener {
 
 	static final Map<BeanFactory, SleuthContextListener> CACHE = new ConcurrentHashMap<>();
 
@@ -42,7 +48,7 @@ class SleuthContextListener implements SmartApplicationListener {
 
 	final AtomicBoolean closed;
 
-	SleuthContextListener() {
+	public SleuthContextListener() {
 		this.refreshed = new AtomicBoolean();
 		this.closed = new AtomicBoolean();
 	}

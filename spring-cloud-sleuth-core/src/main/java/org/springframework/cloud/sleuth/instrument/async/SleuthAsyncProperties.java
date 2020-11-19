@@ -28,7 +28,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * @since 2.1.0
  */
 @ConfigurationProperties(prefix = "spring.sleuth.async")
-class SleuthAsyncProperties {
+public class SleuthAsyncProperties {
 
 	private boolean enabled;
 

@@ -53,7 +53,7 @@ import org.springframework.web.server.WebFilterChain;
  * @author Marcin Grzejszczak
  * @since 2.0.0
  */
-final class TraceWebFilter implements WebFilter, Ordered {
+public class TraceWebFilter implements WebFilter, Ordered {
 
 	// Remember that this can be used in other packages
 	protected static final String TRACE_REQUEST_ATTR = Span.class.getName();
@@ -77,12 +77,8 @@ final class TraceWebFilter implements WebFilter, Ordered {
 
 	SleuthReactorProperties sleuthReactorProperties;
 
-	TraceWebFilter(BeanFactory beanFactory) {
+	public TraceWebFilter(BeanFactory beanFactory) {
 		this.beanFactory = beanFactory;
-	}
-
-	public static WebFilter create(BeanFactory beanFactory) {
-		return new TraceWebFilter(beanFactory);
 	}
 
 	@SuppressWarnings("unchecked")

@@ -27,13 +27,12 @@ import org.springframework.cloud.sleuth.api.BaggageManager;
 import org.springframework.cloud.sleuth.api.TraceContext;
 
 /**
- * Brave implementation of a {@link BaggageManager}. Not implementing the interface
- * directly cause {@link BraveTracer} will already implement it.
+ * Brave implementation of a {@link BaggageManager}.
  *
  * @author Marcin Grzejszczak
  * @since 3.0.0
  */
-class BraveBaggageManager implements Closeable {
+public class BraveBaggageManager implements Closeable, BaggageManager {
 
 	private static final Map<String, BaggageInScope> CACHE = new ConcurrentHashMap<>();
 
@@ -41,16 +40,24 @@ class BraveBaggageManager implements Closeable {
 		return BaggageField.getAllValues();
 	}
 
+	@Override
 	public BaggageInScope getBaggage(String name) {
 		return createBaggage(name);
 	}
 
+	@Override
 	public BaggageInScope getBaggage(TraceContext traceContext, String name) {
 		return new BraveBaggageInScope(BaggageField.getByName(BraveTraceContext.toBrave(traceContext), name));
 	}
 
+	@Override
 	public BaggageInScope createBaggage(String name) {
 		return CACHE.computeIfAbsent(name, s -> new BraveBaggageInScope(BaggageField.create(s)));
+	}
+
+	@Override
+	public BaggageInScope createBaggage(String name, String value) {
+		return createBaggage(name).set(value);
 	}
 
 	@Override

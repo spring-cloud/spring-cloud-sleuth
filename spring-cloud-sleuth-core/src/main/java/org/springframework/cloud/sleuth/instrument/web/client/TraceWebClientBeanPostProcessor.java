@@ -51,11 +51,11 @@ import org.springframework.web.reactive.function.client.WebClient;
  * @author Marcin Grzejszczak
  * @since 2.0.0
  */
-final class TraceWebClientBeanPostProcessor implements BeanPostProcessor {
+public class TraceWebClientBeanPostProcessor implements BeanPostProcessor {
 
 	final ConfigurableApplicationContext springContext;
 
-	TraceWebClientBeanPostProcessor(ConfigurableApplicationContext springContext) {
+	public TraceWebClientBeanPostProcessor(ConfigurableApplicationContext springContext) {
 		this.springContext = springContext;
 	}
 

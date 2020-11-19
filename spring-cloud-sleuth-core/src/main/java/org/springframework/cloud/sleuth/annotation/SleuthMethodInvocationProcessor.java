@@ -24,8 +24,16 @@ import org.aopalliance.intercept.MethodInvocation;
  * @author Marcin Grzejszczak
  * @since 2.1.0
  */
-interface SleuthMethodInvocationProcessor {
+public interface SleuthMethodInvocationProcessor {
 
+	/**
+	 * Executes a given Sleuth annotated method.
+	 * @param invocation method invocation
+	 * @param newSpan annotation
+	 * @param continueSpan annotation
+	 * @return executed method result
+	 * @throws Throwable exception upon running a method
+	 */
 	Object process(MethodInvocation invocation, NewSpan newSpan, ContinueSpan continueSpan) throws Throwable;
 
 }

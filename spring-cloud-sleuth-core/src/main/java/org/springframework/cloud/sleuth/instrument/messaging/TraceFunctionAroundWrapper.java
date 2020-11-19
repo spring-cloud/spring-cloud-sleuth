@@ -33,7 +33,13 @@ import org.springframework.messaging.Message;
 import org.springframework.messaging.support.MessageBuilder;
 import org.springframework.messaging.support.MessageHeaderAccessor;
 
-class TraceFunctionAroundWrapper extends FunctionAroundWrapper
+/**
+ * Trace representation of a {@link FunctionAroundWrapper}.
+ *
+ * @author Marcin Grzejszczak
+ * @since 3.0.0
+ */
+public class TraceFunctionAroundWrapper extends FunctionAroundWrapper
 		implements ApplicationListener<RefreshScopeRefreshedEvent> {
 
 	private static final Log log = LogFactory.getLog(TraceFunctionAroundWrapper.class);
@@ -50,7 +56,7 @@ class TraceFunctionAroundWrapper extends FunctionAroundWrapper
 
 	final Map<String, String> functionToDestinationCache = new ConcurrentHashMap<>();
 
-	TraceFunctionAroundWrapper(Environment environment, Tracer tracer, Propagator propagator,
+	public TraceFunctionAroundWrapper(Environment environment, Tracer tracer, Propagator propagator,
 			Propagator.Setter<MessageHeaderAccessor> injector, Propagator.Getter<MessageHeaderAccessor> extractor) {
 		this.environment = environment;
 		this.tracer = tracer;

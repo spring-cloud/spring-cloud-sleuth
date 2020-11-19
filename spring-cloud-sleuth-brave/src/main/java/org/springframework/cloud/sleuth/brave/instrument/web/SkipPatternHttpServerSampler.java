@@ -24,12 +24,13 @@ import org.springframework.cloud.sleuth.instrument.web.SkipPatternProvider;
  * Http Sampler that looks at paths.
  *
  * @author Marcin Grzejszczak
+ * @since 3.0.0
  */
-final class SkipPatternHttpServerSampler extends SkipPatternSampler {
+public class SkipPatternHttpServerSampler extends SkipPatternSampler {
 
 	private final SkipPatternProvider provider;
 
-	SkipPatternHttpServerSampler(SkipPatternProvider provider) {
+	public SkipPatternHttpServerSampler(SkipPatternProvider provider) {
 		this.provider = provider;
 	}
 

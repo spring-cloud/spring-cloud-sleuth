@@ -25,7 +25,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * @since 1.0.12
  */
 @ConfigurationProperties("spring.sleuth.rxjava.schedulers")
-class SleuthRxJavaSchedulersProperties {
+public class SleuthRxJavaSchedulersProperties {
 
 	/**
 	 * Thread names for which spans will not be sampled.
@@ -50,7 +50,7 @@ class SleuthRxJavaSchedulersProperties {
 		this.hook = hook;
 	}
 
-	private static class Hook {
+	public static class Hook {
 
 		/**
 		 * Enable support for RxJava via RxJavaSchedulersHook.

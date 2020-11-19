@@ -30,12 +30,12 @@ import org.springframework.beans.factory.BeanFactory;
  * @author Marcin Grzejszczak
  * @since 1.0.0
  */
-final class SleuthFeignBuilder {
+public final class SleuthFeignBuilder {
 
 	private SleuthFeignBuilder() {
 	}
 
-	static Feign.Builder builder(BeanFactory beanFactory) {
+	public static Feign.Builder builder(BeanFactory beanFactory) {
 		return Feign.builder().retryer(Retryer.NEVER_RETRY).client(client(beanFactory));
 	}
 

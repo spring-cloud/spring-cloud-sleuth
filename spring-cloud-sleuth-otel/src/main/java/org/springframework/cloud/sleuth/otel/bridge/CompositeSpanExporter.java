@@ -22,16 +22,23 @@ import java.util.stream.Collectors;
 
 import io.opentelemetry.sdk.common.CompletableResultCode;
 import io.opentelemetry.sdk.trace.data.SpanData;
+import io.opentelemetry.sdk.trace.export.SpanExporter;
 
 import org.springframework.cloud.sleuth.api.exporter.SpanFilter;
 
-class CompositeSpanExporter implements io.opentelemetry.sdk.trace.export.SpanExporter {
+/**
+ * Composes multiple {@link SpanFilter} into a single {@link SpanExporter}.
+ *
+ * @author Marcin Grzejszczak
+ * @since 3.0.0
+ */
+public class CompositeSpanExporter implements io.opentelemetry.sdk.trace.export.SpanExporter {
 
 	private final io.opentelemetry.sdk.trace.export.SpanExporter delegate;
 
 	private final List<SpanFilter> filters;
 
-	CompositeSpanExporter(io.opentelemetry.sdk.trace.export.SpanExporter delegate, List<SpanFilter> filters) {
+	public CompositeSpanExporter(io.opentelemetry.sdk.trace.export.SpanExporter delegate, List<SpanFilter> filters) {
 		this.delegate = delegate;
 		this.filters = filters;
 	}

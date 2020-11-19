@@ -24,11 +24,11 @@ import org.springframework.cloud.sleuth.api.SpanCustomizer;
  * @author Marcin Grzejszczak
  * @since 3.0.0
  */
-class BraveSpanCustomizer implements SpanCustomizer {
+public class BraveSpanCustomizer implements SpanCustomizer {
 
 	private final brave.SpanCustomizer spanCustomizer;
 
-	BraveSpanCustomizer(brave.SpanCustomizer spanCustomizer) {
+	public BraveSpanCustomizer(brave.SpanCustomizer spanCustomizer) {
 		this.spanCustomizer = spanCustomizer;
 	}
 
@@ -47,11 +47,11 @@ class BraveSpanCustomizer implements SpanCustomizer {
 		return new BraveSpanCustomizer(this.spanCustomizer.annotate(value));
 	}
 
-	public static brave.SpanCustomizer toBrave(SpanCustomizer spanCustomizer) {
+	static brave.SpanCustomizer toBrave(SpanCustomizer spanCustomizer) {
 		return ((BraveSpanCustomizer) spanCustomizer).spanCustomizer;
 	}
 
-	public static SpanCustomizer fromBrave(brave.SpanCustomizer spanCustomizer) {
+	static SpanCustomizer fromBrave(brave.SpanCustomizer spanCustomizer) {
 		return new BraveSpanCustomizer(spanCustomizer);
 	}
 

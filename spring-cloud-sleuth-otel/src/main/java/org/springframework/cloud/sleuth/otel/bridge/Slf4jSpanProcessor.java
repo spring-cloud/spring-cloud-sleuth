@@ -30,21 +30,32 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.slf4j.MDC;
 
+import org.springframework.beans.factory.BeanFactory;
+import org.springframework.cloud.sleuth.api.BaggageManager;
 import org.springframework.cloud.sleuth.autoconfig.SleuthBaggageProperties;
 import org.springframework.context.ApplicationEvent;
 import org.springframework.context.ApplicationListener;
 
-class Slf4jSpanProcessor implements SpanProcessor, ApplicationListener {
+public class Slf4jSpanProcessor implements SpanProcessor, ApplicationListener {
 
 	private static final Log log = LogFactory.getLog(Slf4jSpanProcessor.class);
 
 	private final SleuthBaggageProperties sleuthBaggageProperties;
 
-	private final OtelBaggageManager baggageManager;
+	private final BeanFactory beanFactory;
 
-	Slf4jSpanProcessor(SleuthBaggageProperties sleuthBaggageProperties, OtelBaggageManager baggageManager) {
+	private BaggageManager baggageManager;
+
+	public Slf4jSpanProcessor(SleuthBaggageProperties sleuthBaggageProperties, BeanFactory beanFactory) {
 		this.sleuthBaggageProperties = sleuthBaggageProperties;
-		this.baggageManager = baggageManager;
+		this.beanFactory = beanFactory;
+	}
+
+	private BaggageManager baggageManager() {
+		if (this.baggageManager == null) {
+			this.baggageManager = this.beanFactory.getBean(BaggageManager.class);
+		}
+		return this.baggageManager;
 	}
 
 	@Override
@@ -94,7 +105,7 @@ class Slf4jSpanProcessor implements SpanProcessor, ApplicationListener {
 	private void onEachCorrelatedBaggageEntry(Consumer<Map.Entry<String, String>> consumer) {
 		if (this.sleuthBaggageProperties.isCorrelationEnabled()) {
 			List<String> correlationFields = lowerCaseCorrelationFields();
-			this.baggageManager.getAllBaggage().entrySet().stream()
+			baggageManager().getAllBaggage().entrySet().stream()
 					.filter(e -> correlationFields.contains(e.getKey().toLowerCase())).forEach(consumer);
 		}
 	}

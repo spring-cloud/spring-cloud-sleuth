@@ -30,7 +30,7 @@ import org.springframework.util.StringUtils;
  * @author Christian Schwerdtfeger
  * @since 1.2.0
  */
-class DefaultSpanCreator implements NewSpanParser {
+public class DefaultSpanCreator implements NewSpanParser {
 
 	private static final Log log = LogFactory.getLog(DefaultSpanCreator.class);
 

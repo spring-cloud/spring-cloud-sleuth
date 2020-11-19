@@ -43,7 +43,7 @@ import org.springframework.lang.Nullable;
  * @author Marcin Grzejszczak
  * @since 3.0.0
  */
-class OtelCurrentTraceContext implements CurrentTraceContext, ContextStorageProvider {
+public class OtelCurrentTraceContext implements CurrentTraceContext, ContextStorageProvider {
 
 	private static final Log log = LogFactory.getLog(OtelCurrentTraceContext.class);
 
@@ -51,7 +51,7 @@ class OtelCurrentTraceContext implements CurrentTraceContext, ContextStorageProv
 
 	private final ContextStorageProvider delegate = ContextStorage::get;
 
-	OtelCurrentTraceContext(ApplicationEventPublisher publisher) {
+	public OtelCurrentTraceContext(ApplicationEventPublisher publisher) {
 		this.publisher = publisher;
 	}
 

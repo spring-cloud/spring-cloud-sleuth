@@ -22,7 +22,6 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import org.springframework.aop.support.AopUtils;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cloud.sleuth.api.Span;
 import org.springframework.cloud.sleuth.api.Tracer;
 import org.springframework.cloud.sleuth.api.propagation.Propagator;
@@ -46,12 +45,12 @@ import org.springframework.util.ClassUtils;
  * This starts and propagates {@link Span.Kind#PRODUCER} span for each message sent (via
  * native headers. It also extracts or creates a {@link Span.Kind#CONSUMER} span for each
  * message received. This span is injected onto each message so it becomes the parent when
- * a handler later calls {@link MessageHandler#handleMessage(Message)}, or a another
- * processing library calls {@link #nextSpan(Message)}.
+ * a handler later calls {@link MessageHandler#handleMessage(Message)}.
  *
  * @author Marcin Grzejszczak
+ * @since 3.0.0
  */
-final class TracingChannelInterceptor extends ChannelInterceptorAdapter implements ExecutorChannelInterceptor {
+public final class TracingChannelInterceptor extends ChannelInterceptorAdapter implements ExecutorChannelInterceptor {
 
 	/**
 	 * Name of the class in Spring Cloud Stream that is a direct channel.
@@ -100,13 +99,13 @@ final class TracingChannelInterceptor extends ChannelInterceptorAdapter implemen
 
 	private final ThreadLocalSpan threadLocalSpan = new ThreadLocalSpan();
 
-	@Autowired
 	TracingChannelInterceptor(Tracer tracer, Propagator propagator, SleuthIntegrationMessagingProperties properties) {
 		this(tracer, propagator, properties, MessageHeaderPropagation.INSTANCE, MessageHeaderPropagation.INSTANCE);
 	}
 
-	TracingChannelInterceptor(Tracer tracer, Propagator propagator, SleuthIntegrationMessagingProperties properties,
-			Propagator.Setter<MessageHeaderAccessor> setter, Propagator.Getter<MessageHeaderAccessor> getter) {
+	public TracingChannelInterceptor(Tracer tracer, Propagator propagator,
+			SleuthIntegrationMessagingProperties properties, Propagator.Setter<MessageHeaderAccessor> setter,
+			Propagator.Getter<MessageHeaderAccessor> getter) {
 		this.properties = properties;
 		this.tracer = tracer;
 		this.propagator = propagator;
@@ -137,7 +136,7 @@ final class TracingChannelInterceptor extends ChannelInterceptorAdapter implemen
 		Span result = this.propagator.extract(headers, this.extractor).start();
 		headers.setImmutable();
 		if (!result.isNoop()) {
-			addTags(message, result, null);
+			addTags(result, null);
 		}
 		if (log.isDebugEnabled()) {
 			log.debug("Created a new span " + result);
@@ -161,7 +160,7 @@ final class TracingChannelInterceptor extends ChannelInterceptorAdapter implemen
 		Span.Builder spanBuilder = this.propagator.extract(headers, this.extractor);
 		MessageHeaderPropagation.removeAnyTraceHeaders(headers, this.propagator.fields());
 		spanBuilder.kind(Span.Kind.PRODUCER).name("send").remoteServiceName(toRemoteServiceName(headers));
-		addTags(message, spanBuilder, channel);
+		addTags(spanBuilder, channel);
 		Span span = spanBuilder.start();
 		if (log.isDebugEnabled()) {
 			log.debug("Extracted result from headers " + span);
@@ -288,7 +287,7 @@ final class TracingChannelInterceptor extends ChannelInterceptorAdapter implemen
 		Span.Builder builder = this.tracer.spanBuilder().setParent(result.context());
 		MessageHeaderPropagation.removeAnyTraceHeaders(headers, this.propagator.fields());
 		builder.kind(Span.Kind.CONSUMER).name("receive").remoteServiceName(toRemoteServiceName(headers));
-		addTags(message, builder, channel);
+		addTags(builder, channel);
 		return builder.start();
 	}
 
@@ -345,7 +344,7 @@ final class TracingChannelInterceptor extends ChannelInterceptorAdapter implemen
 		// Start and finish a consumer span as we will immediately process it.
 		consumerSpanBuilder.kind(Span.Kind.CONSUMER).start();
 		consumerSpanBuilder.remoteServiceName(REMOTE_SERVICE_NAME);
-		addTags(message, consumerSpanBuilder, channel);
+		addTags(consumerSpanBuilder, channel);
 		Span consumerSpan = consumerSpanBuilder.start();
 		consumerSpan.end();
 		return consumerSpan;
@@ -364,18 +363,17 @@ final class TracingChannelInterceptor extends ChannelInterceptorAdapter implemen
 
 	/**
 	 * When an upstream context was not present, lookup keys are unlikely added.
-	 * @param message a message to append tags to
 	 * @param result span to customize
 	 * @param channel channel to which a message was sent
 	 */
-	void addTags(Message<?> message, Span.Builder result, MessageChannel channel) {
+	void addTags(Span.Builder result, MessageChannel channel) {
 		// TODO topic etc
 		if (channel != null) {
 			result.tag("channel", messageChannelName(channel));
 		}
 	}
 
-	void addTags(Message<?> message, Span result, MessageChannel channel) {
+	void addTags(Span result, MessageChannel channel) {
 		// TODO topic etc
 		if (channel != null) {
 			result.tag("channel", messageChannelName(channel));

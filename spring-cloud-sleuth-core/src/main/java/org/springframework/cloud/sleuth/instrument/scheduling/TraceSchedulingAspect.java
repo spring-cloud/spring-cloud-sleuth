@@ -41,7 +41,7 @@ import org.springframework.lang.Nullable;
  * @since 1.0.0
  */
 @Aspect
-class TraceSchedulingAspect {
+public class TraceSchedulingAspect {
 
 	private static final String CLASS_KEY = "class";
 
@@ -52,7 +52,7 @@ class TraceSchedulingAspect {
 	@Nullable
 	private final Pattern skipPattern;
 
-	TraceSchedulingAspect(Tracer tracer, Pattern skipPattern) {
+	public TraceSchedulingAspect(Tracer tracer, Pattern skipPattern) {
 		this.tracer = tracer;
 		this.skipPattern = skipPattern;
 	}

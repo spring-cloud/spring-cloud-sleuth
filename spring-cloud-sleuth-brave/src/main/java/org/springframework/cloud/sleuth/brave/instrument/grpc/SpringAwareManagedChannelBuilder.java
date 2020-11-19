@@ -34,6 +34,7 @@ import io.grpc.inprocess.InProcessChannelBuilder;
  * "spring-grpc"/"spring-cloud-grpc"?
  *
  * @author Tyler Van Gorder
+ * @since 3.0.0
  */
 // TODO: research why we need to continue to maintain this given current libraries
 public class SpringAwareManagedChannelBuilder {

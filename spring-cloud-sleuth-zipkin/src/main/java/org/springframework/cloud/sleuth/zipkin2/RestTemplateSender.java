@@ -37,7 +37,12 @@ import org.springframework.web.client.RestTemplate;
 
 import static zipkin2.codec.SpanBytesEncoder.JSON_V2;
 
-final class RestTemplateSender extends Sender {
+/**
+ * {@link Sender} that uses {@link RestTemplate} to send spans to Zipkin.
+ *
+ * @since 3.0.0
+ */
+public class RestTemplateSender extends Sender {
 
 	final RestTemplate restTemplate;
 
@@ -54,7 +59,7 @@ final class RestTemplateSender extends Sender {
 	 */
 	transient boolean closeCalled;
 
-	RestTemplateSender(RestTemplate restTemplate, String baseUrl, BytesEncoder<Span> encoder) {
+	public RestTemplateSender(RestTemplate restTemplate, String baseUrl, BytesEncoder<Span> encoder) {
 		this.restTemplate = restTemplate;
 		this.encoding = encoder.encoding();
 		if (encoder.equals(JSON_V2)) {

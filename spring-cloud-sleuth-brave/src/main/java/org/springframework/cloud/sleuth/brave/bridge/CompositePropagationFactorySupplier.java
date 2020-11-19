@@ -34,7 +34,13 @@ import org.springframework.cloud.sleuth.autoconfig.SleuthBaggageProperties;
 import org.springframework.cloud.sleuth.brave.propagation.PropagationFactorySupplier;
 import org.springframework.cloud.sleuth.brave.propagation.SleuthPropagationProperties;
 
-class CompositePropagationFactorySupplier implements PropagationFactorySupplier {
+/**
+ * Merges various propagation factories into a composite.
+ *
+ * @author Marcin Grzejszczak
+ * @since 3.0.0
+ */
+public class CompositePropagationFactorySupplier implements PropagationFactorySupplier {
 
 	private final BeanFactory beanFactory;
 
@@ -42,7 +48,7 @@ class CompositePropagationFactorySupplier implements PropagationFactorySupplier 
 
 	private final SleuthPropagationProperties properties;
 
-	CompositePropagationFactorySupplier(BeanFactory beanFactory, SleuthBaggageProperties baggageProperties,
+	public CompositePropagationFactorySupplier(BeanFactory beanFactory, SleuthBaggageProperties baggageProperties,
 			SleuthPropagationProperties properties) {
 		this.beanFactory = beanFactory;
 		this.baggageProperties = baggageProperties;

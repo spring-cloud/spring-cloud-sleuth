@@ -39,7 +39,7 @@ import org.springframework.cloud.sleuth.api.Tracer;
  * @author Shivang Shah
  * @since 1.0.0
  */
-class SleuthRxJavaSchedulersHook extends RxJavaSchedulersHook {
+public class SleuthRxJavaSchedulersHook extends RxJavaSchedulersHook {
 
 	private static final Log log = LogFactory.getLog(SleuthRxJavaSchedulersHook.class);
 
@@ -51,7 +51,7 @@ class SleuthRxJavaSchedulersHook extends RxJavaSchedulersHook {
 
 	private RxJavaSchedulersHook delegate;
 
-	SleuthRxJavaSchedulersHook(Tracer tracer, List<String> threadsToIgnore) {
+	public SleuthRxJavaSchedulersHook(Tracer tracer, List<String> threadsToIgnore) {
 		this.tracer = tracer;
 		this.threadsToIgnore = toPatternList(threadsToIgnore);
 		try {

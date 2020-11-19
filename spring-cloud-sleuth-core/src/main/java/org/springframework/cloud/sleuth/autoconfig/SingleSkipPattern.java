@@ -29,8 +29,11 @@ import org.springframework.cloud.sleuth.instrument.web.SkipPatternProvider;
  * @author Marcin Grzejszczak
  * @since 2.1.0
  */
-interface SingleSkipPattern {
+public interface SingleSkipPattern {
 
+	/**
+	 * @return optional pattern to skip
+	 */
 	Optional<Pattern> skipPattern();
 
 }

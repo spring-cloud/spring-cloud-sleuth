@@ -26,7 +26,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * @since 1.0.0
  */
 @ConfigurationProperties("spring.sleuth.sampler")
-class SamplerProperties {
+public class SamplerProperties {
 
 	/**
 	 * Probability of requests that should be sampled. E.g. 1.0 - 100% requests should be

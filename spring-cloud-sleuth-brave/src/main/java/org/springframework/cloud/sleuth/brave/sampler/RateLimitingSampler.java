@@ -27,11 +27,11 @@ import brave.sampler.Sampler;
  * @author Marcin Grzejszczak
  * @since 2.1.0
  */
-class RateLimitingSampler extends Sampler {
+public class RateLimitingSampler extends Sampler {
 
 	private final Sampler sampler;
 
-	RateLimitingSampler(SamplerProperties configuration) {
+	public RateLimitingSampler(SamplerProperties configuration) {
 		this.sampler = brave.sampler.RateLimitingSampler.create(rateLimit(configuration));
 	}
 

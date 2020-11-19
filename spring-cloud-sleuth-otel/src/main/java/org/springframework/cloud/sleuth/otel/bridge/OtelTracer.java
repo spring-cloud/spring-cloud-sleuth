@@ -24,6 +24,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import org.springframework.cloud.sleuth.api.BaggageInScope;
+import org.springframework.cloud.sleuth.api.BaggageManager;
 import org.springframework.cloud.sleuth.api.ScopedSpan;
 import org.springframework.cloud.sleuth.api.Span;
 import org.springframework.cloud.sleuth.api.SpanCustomizer;
@@ -37,16 +38,16 @@ import org.springframework.context.ApplicationEventPublisher;
  * @author Marcin Grzejszczak
  * @since 3.0.0
  */
-class OtelTracer implements Tracer {
+public class OtelTracer implements Tracer {
 
 	private final io.opentelemetry.api.trace.Tracer tracer;
 
-	private final OtelBaggageManager otelBaggageManager;
+	private final BaggageManager otelBaggageManager;
 
 	private final ApplicationEventPublisher publisher;
 
-	OtelTracer(io.opentelemetry.api.trace.Tracer tracer, ApplicationEventPublisher publisher,
-			OtelBaggageManager otelBaggageManager) {
+	public OtelTracer(io.opentelemetry.api.trace.Tracer tracer, ApplicationEventPublisher publisher,
+			BaggageManager otelBaggageManager) {
 		this.tracer = tracer;
 		this.publisher = publisher;
 		this.otelBaggageManager = otelBaggageManager;
@@ -77,7 +78,7 @@ class OtelTracer implements Tracer {
 
 	@Override
 	public SpanCustomizer currentSpanCustomizer() {
-		return new OtelSpanCustomizer(this.tracer);
+		return new OtelSpanCustomizer();
 	}
 
 	@Override

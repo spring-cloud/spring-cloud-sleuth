@@ -21,13 +21,21 @@ import java.net.URI;
 import org.springframework.cloud.client.ServiceInstance;
 import org.springframework.cloud.client.loadbalancer.LoadBalancerClient;
 
-class LoadBalancerClientZipkinLoadBalancer implements ZipkinLoadBalancer {
+/**
+ * {@link ZipkinLoadBalancer} that uses {@link LoadBalancerClient} to find Zipkin in
+ * service discovery.
+ *
+ * @author Marcin Grzejszczak
+ * @since 3.0.0
+ */
+public class LoadBalancerClientZipkinLoadBalancer implements ZipkinLoadBalancer {
 
 	private final LoadBalancerClient loadBalancerClient;
 
 	private final ZipkinProperties zipkinProperties;
 
-	LoadBalancerClientZipkinLoadBalancer(LoadBalancerClient loadBalancerClient, ZipkinProperties zipkinProperties) {
+	public LoadBalancerClientZipkinLoadBalancer(LoadBalancerClient loadBalancerClient,
+			ZipkinProperties zipkinProperties) {
 		this.loadBalancerClient = loadBalancerClient;
 		this.zipkinProperties = zipkinProperties;
 	}

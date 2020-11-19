@@ -28,7 +28,7 @@ import org.springframework.util.StringUtils;
  * @author Marcin Grzejszczak
  * @since 2.1.0
  */
-class NonReactorSleuthMethodInvocationProcessor extends AbstractSleuthMethodInvocationProcessor {
+public class NonReactorSleuthMethodInvocationProcessor extends AbstractSleuthMethodInvocationProcessor {
 
 	@Override
 	public Object process(MethodInvocation invocation, NewSpan newSpan, ContinueSpan continueSpan) throws Throwable {

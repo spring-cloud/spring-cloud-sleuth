@@ -46,7 +46,7 @@ import org.springframework.util.ReflectionUtils;
  * @since 1.2.0
  */
 @SuppressWarnings("serial")
-class SleuthAdvisorConfig extends AbstractPointcutAdvisor implements BeanFactoryAware {
+public class SleuthAdvisorConfig extends AbstractPointcutAdvisor implements BeanFactoryAware {
 
 	private Advice advice;
 
