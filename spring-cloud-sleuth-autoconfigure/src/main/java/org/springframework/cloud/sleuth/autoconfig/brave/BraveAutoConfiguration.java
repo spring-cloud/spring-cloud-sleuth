@@ -42,7 +42,6 @@ import org.springframework.cloud.sleuth.autoconfig.SleuthTracerProperties;
 import org.springframework.cloud.sleuth.autoconfig.TraceConfiguration;
 import org.springframework.cloud.sleuth.autoconfig.brave.instrument.web.BraveHttpConfiguration;
 import org.springframework.cloud.sleuth.brave.LocalServiceName;
-import org.springframework.cloud.sleuth.brave.SleuthProperties;
 import org.springframework.cloud.sleuth.internal.DefaultSpanNamer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

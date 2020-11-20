@@ -16,6 +16,8 @@
 
 package org.springframework.cloud.sleuth.brave.sampler;
 
+import java.util.function.Supplier;
+
 import brave.sampler.Sampler;
 
 /**
@@ -31,12 +33,12 @@ public class RateLimitingSampler extends Sampler {
 
 	private final Sampler sampler;
 
-	public RateLimitingSampler(SamplerProperties configuration) {
-		this.sampler = brave.sampler.RateLimitingSampler.create(rateLimit(configuration));
+	public RateLimitingSampler(Supplier<Integer> rate) {
+		this.sampler = brave.sampler.RateLimitingSampler.create(rateLimit(rate));
 	}
 
-	private Integer rateLimit(SamplerProperties configuration) {
-		return configuration.getRate() != null ? configuration.getRate() : 0;
+	private Integer rateLimit(Supplier<Integer> rate) {
+		return rate.get() != null ? rate.get() : 0;
 	}
 
 	@Override

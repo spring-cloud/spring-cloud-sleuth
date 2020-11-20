@@ -35,6 +35,7 @@ import org.springframework.cloud.sleuth.SpanCustomizer;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.autoconfig.SleuthBaggageProperties;
 import org.springframework.cloud.sleuth.autoconfig.instrument.web.ConditionalOnSleuthWeb;
+import org.springframework.cloud.sleuth.autoconfig.instrument.web.SleuthWebProperties;
 import org.springframework.cloud.sleuth.http.HttpClientHandler;
 import org.springframework.cloud.sleuth.http.HttpRequest;
 import org.springframework.cloud.sleuth.http.HttpRequestParser;
@@ -46,7 +47,6 @@ import org.springframework.cloud.sleuth.instrument.web.HttpClientSampler;
 import org.springframework.cloud.sleuth.instrument.web.HttpServerRequestParser;
 import org.springframework.cloud.sleuth.instrument.web.HttpServerResponseParser;
 import org.springframework.cloud.sleuth.instrument.web.SkipPatternProvider;
-import org.springframework.cloud.sleuth.instrument.web.SleuthWebProperties;
 import org.springframework.cloud.sleuth.otel.bridge.OtelBaggageManager;
 import org.springframework.cloud.sleuth.otel.bridge.OtelCurrentTraceContext;
 import org.springframework.cloud.sleuth.otel.bridge.OtelHttpClientHandler;
@@ -87,8 +87,8 @@ class OtelBridgeConfiguation {
 	@Bean
 	Tracer otelTracerBridge(io.opentelemetry.api.trace.Tracer tracer, ApplicationEventPublisher publisher,
 			CurrentTraceContext currentTraceContext, SleuthBaggageProperties sleuthBaggageProperties) {
-		return new OtelTracer(tracer, publisher,
-				new OtelBaggageManager(currentTraceContext, sleuthBaggageProperties, publisher));
+		return new OtelTracer(tracer, publisher, new OtelBaggageManager(currentTraceContext,
+				sleuthBaggageProperties.getRemoteFields(), sleuthBaggageProperties.getTagFields(), publisher));
 	}
 
 	// Both CurrentTraceContext & ContextStorageProvider

@@ -36,7 +36,6 @@ import org.springframework.cloud.sleuth.BaggageManager;
 import org.springframework.cloud.sleuth.CurrentTraceContext;
 import org.springframework.cloud.sleuth.TraceContext;
 import org.springframework.cloud.sleuth.Tracer;
-import org.springframework.cloud.sleuth.autoconfig.SleuthBaggageProperties;
 import org.springframework.context.ApplicationEventPublisher;
 
 /**
@@ -50,14 +49,17 @@ public class OtelBaggageManager implements BaggageManager {
 
 	private final CurrentTraceContext currentTraceContext;
 
-	private final SleuthBaggageProperties sleuthBaggageProperties;
+	private final List<String> remoteFields;
+
+	private final List<String> tagFields;
 
 	private final ApplicationEventPublisher publisher;
 
-	public OtelBaggageManager(CurrentTraceContext currentTraceContext, SleuthBaggageProperties sleuthBaggageProperties,
-			ApplicationEventPublisher publisher) {
+	public OtelBaggageManager(CurrentTraceContext currentTraceContext, List<String> remoteFields,
+			List<String> tagFields, ApplicationEventPublisher publisher) {
 		this.currentTraceContext = currentTraceContext;
-		this.sleuthBaggageProperties = sleuthBaggageProperties;
+		this.remoteFields = remoteFields;
+		this.tagFields = tagFields;
 		this.publisher = publisher;
 	}
 
@@ -128,8 +130,7 @@ public class OtelBaggageManager implements BaggageManager {
 	}
 
 	private BaggageInScope otelBaggage(Entry entry) {
-		return new OtelBaggageInScope(this, this.currentTraceContext, this.publisher, this.sleuthBaggageProperties,
-				entry);
+		return new OtelBaggageInScope(this, this.currentTraceContext, this.publisher, this.tagFields, entry);
 	}
 
 	@Override
@@ -144,13 +145,12 @@ public class OtelBaggageManager implements BaggageManager {
 	}
 
 	private BaggageInScope baggageWithValue(String name, String value) {
-		List<String> remoteFieldsFields = this.sleuthBaggageProperties.getRemoteFields();
+		List<String> remoteFieldsFields = this.remoteFields;
 		boolean remoteField = remoteFieldsFields.stream().map(String::toLowerCase)
 				.anyMatch(s -> s.equals(name.toLowerCase()));
 		EntryMetadata entryMetadata = EntryMetadata.create(propagationString(remoteField));
 		Entry entry = new Entry(name, value, entryMetadata);
-		return new OtelBaggageInScope(this, this.currentTraceContext, this.publisher, this.sleuthBaggageProperties,
-				entry);
+		return new OtelBaggageInScope(this, this.currentTraceContext, this.publisher, this.tagFields, entry);
 	}
 
 	private String propagationString(boolean remoteField) {

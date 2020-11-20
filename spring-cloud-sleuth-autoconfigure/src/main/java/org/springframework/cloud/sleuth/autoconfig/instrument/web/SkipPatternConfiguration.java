@@ -38,7 +38,6 @@ import org.springframework.boot.autoconfigure.web.ServerProperties;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.cloud.sleuth.autoconfig.SingleSkipPattern;
 import org.springframework.cloud.sleuth.instrument.web.SkipPatternProvider;
-import org.springframework.cloud.sleuth.instrument.web.SleuthWebProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.env.Environment;

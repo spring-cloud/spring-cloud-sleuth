@@ -41,7 +41,6 @@ import org.springframework.cloud.sleuth.brave.instrument.messaging.ConsumerSampl
 import org.springframework.cloud.sleuth.brave.instrument.messaging.KafkaFactoryBeanPostProcessor;
 import org.springframework.cloud.sleuth.brave.instrument.messaging.ProducerSampler;
 import org.springframework.cloud.sleuth.brave.instrument.messaging.SleuthKafkaAspect;
-import org.springframework.cloud.sleuth.brave.instrument.messaging.SleuthMessagingProperties;
 import org.springframework.cloud.sleuth.brave.instrument.messaging.SleuthRabbitBeanPostProcessor;
 import org.springframework.cloud.sleuth.brave.instrument.messaging.TracingConnectionFactoryBeanPostProcessor;
 import org.springframework.cloud.sleuth.brave.instrument.messaging.TracingJmsBeanPostProcessor;

@@ -14,29 +14,29 @@
  * limitations under the License.
  */
 
-package org.springframework.cloud.sleuth.instrument.scheduling;
+package org.springframework.cloud.sleuth.autoconfig.brave;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 /**
- * Configuration properties for
- * {@link org.springframework.scheduling.annotation.Scheduled} tracing.
+ * Sleuth settings.
  *
- * @author Arthur Gavlyukovskiy
- * @since 1.0.12
+ * @author Marcin Grzejszczak
+ * @since 1.0.11
  */
-@ConfigurationProperties("spring.sleuth.scheduled")
-public class SleuthSchedulingProperties {
+@ConfigurationProperties("spring.sleuth")
+public class SleuthProperties {
 
-	/**
-	 * Enable tracing for {@link org.springframework.scheduling.annotation.Scheduled}.
-	 */
 	private boolean enabled = true;
 
+	/** When true, generate 128-bit trace IDs instead of 64-bit ones. */
+	private boolean traceId128 = false;
+
 	/**
-	 * Pattern for the fully qualified name of a class that should be skipped.
+	 * True means the tracing system supports sharing a span ID between a client and
+	 * server.
 	 */
-	private String skipPattern;
+	private boolean supportsJoin = true;
 
 	public boolean isEnabled() {
 		return this.enabled;
@@ -46,19 +46,20 @@ public class SleuthSchedulingProperties {
 		this.enabled = enabled;
 	}
 
-	public String getSkipPattern() {
-		return this.skipPattern;
+	public boolean isTraceId128() {
+		return this.traceId128;
 	}
 
-	public void setSkipPattern(String skipPattern) {
-		this.skipPattern = emptyToNull(skipPattern);
+	public void setTraceId128(boolean traceId128) {
+		this.traceId128 = traceId128;
 	}
 
-	static String emptyToNull(String skipPattern) {
-		if (skipPattern != null && skipPattern.isEmpty()) {
-			skipPattern = null; // otherwise this make an empty pattern!
-		}
-		return skipPattern;
+	public boolean isSupportsJoin() {
+		return this.supportsJoin;
+	}
+
+	public void setSupportsJoin(boolean supportsJoin) {
+		this.supportsJoin = supportsJoin;
 	}
 
 }

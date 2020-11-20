@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.springframework.cloud.sleuth.instrument.async;
+package org.springframework.cloud.sleuth.autoconfig.instrument.async;
 
 import java.util.Collections;
 import java.util.List;

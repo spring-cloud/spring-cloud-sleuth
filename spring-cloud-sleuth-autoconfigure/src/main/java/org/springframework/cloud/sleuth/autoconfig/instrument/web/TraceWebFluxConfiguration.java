@@ -16,9 +16,10 @@
 
 package org.springframework.cloud.sleuth.autoconfig.instrument.web;
 
-import org.springframework.beans.factory.BeanFactory;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
+import org.springframework.cloud.sleuth.Tracer;
+import org.springframework.cloud.sleuth.http.HttpServerHandler;
 import org.springframework.cloud.sleuth.instrument.web.TraceWebFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -36,8 +37,8 @@ import org.springframework.context.annotation.Configuration;
 class TraceWebFluxConfiguration {
 
 	@Bean
-	TraceWebFilter traceFilter(BeanFactory beanFactory) {
-		return new TraceWebFilter(beanFactory);
+	TraceWebFilter traceFilter(Tracer tracer, HttpServerHandler httpServerHandler) {
+		return new TraceWebFilter(tracer, httpServerHandler);
 	}
 
 }

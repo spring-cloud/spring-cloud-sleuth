@@ -86,8 +86,6 @@ public final class TracingChannelInterceptor extends ChannelInterceptorAdapter i
 
 	final Propagator.Getter<MessageHeaderAccessor> extractor;
 
-	final SleuthIntegrationMessagingProperties properties;
-
 	final boolean integrationObjectSupportPresent;
 
 	private final boolean hasDirectChannelClass;
@@ -99,14 +97,12 @@ public final class TracingChannelInterceptor extends ChannelInterceptorAdapter i
 
 	private final ThreadLocalSpan threadLocalSpan = new ThreadLocalSpan();
 
-	TracingChannelInterceptor(Tracer tracer, Propagator propagator, SleuthIntegrationMessagingProperties properties) {
-		this(tracer, propagator, properties, MessageHeaderPropagation.INSTANCE, MessageHeaderPropagation.INSTANCE);
+	TracingChannelInterceptor(Tracer tracer, Propagator propagator) {
+		this(tracer, propagator, MessageHeaderPropagation.INSTANCE, MessageHeaderPropagation.INSTANCE);
 	}
 
 	public TracingChannelInterceptor(Tracer tracer, Propagator propagator,
-			SleuthIntegrationMessagingProperties properties, Propagator.Setter<MessageHeaderAccessor> setter,
-			Propagator.Getter<MessageHeaderAccessor> getter) {
-		this.properties = properties;
+			Propagator.Setter<MessageHeaderAccessor> setter, Propagator.Getter<MessageHeaderAccessor> getter) {
 		this.tracer = tracer;
 		this.propagator = propagator;
 		this.injector = setter;
@@ -119,9 +115,8 @@ public final class TracingChannelInterceptor extends ChannelInterceptorAdapter i
 				? ClassUtils.resolveClassName(STREAM_DIRECT_CHANNEL, null) : null;
 	}
 
-	public static TracingChannelInterceptor create(Tracer tracer, Propagator propagator,
-			SleuthIntegrationMessagingProperties properties) {
-		return new TracingChannelInterceptor(tracer, propagator, properties);
+	public static TracingChannelInterceptor create(Tracer tracer, Propagator propagator) {
+		return new TracingChannelInterceptor(tracer, propagator);
 	}
 
 	/**

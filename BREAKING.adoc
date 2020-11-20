@@ -8,6 +8,8 @@
 ** `spring-cloud-sleuth-core` removed and changed to `spring-cloud-sleuth-instrumentation` & `spring-cloud-sleuth-api`
 * Removed `spring-cloud-starter-sleuth-otel`
 ** To add OpenTelemetry support you need to add `spring-cloud-starter-sleuth` (adds Brave by default), exclude Brave and add `spring-cloud-sleuth-otel` dependency
+* Except for the tests, `spring-cloud-sleuth-autoconfigure` is the only module that can have access to `@Configuration`, `@ConfiguraationProperties` classes.
+Tests have been added to ensure such separation.
 
 === Package moving
 
@@ -16,6 +18,10 @@
 * `org.springframework.cloud.sleuth` -> `org.springframework.cloud.sleuth`
 * Instrumentation: `org.springframework.cloud.sleuth.annotation` -> `org.springframework.cloud.sleuth.instrument.annotation`
 
-=== Class opening
+=== Global class modifications
 
 * Any class registered as a bean is now public
+
+=== Classes
+
+* `RateLimitingSampler` constructor changed

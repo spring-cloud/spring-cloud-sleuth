@@ -14,10 +14,7 @@
  * limitations under the License.
  */
 
-package org.springframework.cloud.sleuth.otel.propagation;
-
-import java.util.Collections;
-import java.util.List;
+package org.springframework.cloud.sleuth.autoconfig.otel;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
@@ -27,53 +24,36 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * @author Marcin Grzejszczak
  * @since 3.0.0
  */
-@ConfigurationProperties("spring.sleuth.propagation")
-public class SleuthPropagationProperties {
+@ConfigurationProperties("spring.sleuth.otel.exporter")
+public class OtelExporterProperties {
+
+	private SleuthSpanFilter sleuthSpanFilter = new SleuthSpanFilter();
+
+	public SleuthSpanFilter getSleuthSpanFilter() {
+		return this.sleuthSpanFilter;
+	}
+
+	public void setSleuthSpanFilter(SleuthSpanFilter sleuthSpanFilter) {
+		this.sleuthSpanFilter = sleuthSpanFilter;
+	}
 
 	/**
-	 * Type of propagation.
+	 * Integrations with core Sleuth handler mechanism.
 	 */
-	private List<PropagationType> type = Collections.singletonList(PropagationType.B3);
-
-	public List<PropagationType> getType() {
-		return this.type;
-	}
-
-	public void setType(List<PropagationType> type) {
-		this.type = type;
-	}
-
-	public enum PropagationType {
+	public static class SleuthSpanFilter {
 
 		/**
-		 * AWS propagation type.
+		 * This application service name.
 		 */
-		AWS,
+		private boolean enabled = true;
 
-		/**
-		 * B3 propagation type.
-		 */
-		B3,
+		public boolean isEnabled() {
+			return this.enabled;
+		}
 
-		/**
-		 * Jaeger propagation type.
-		 */
-		JAEGER,
-
-		/**
-		 * Lightstep propagation type.
-		 */
-		OT_TRACER,
-
-		/**
-		 * W3C propagation type.
-		 */
-		W3C,
-
-		/**
-		 * Custom propagation type.
-		 */
-		CUSTOM
+		public void setEnabled(boolean enabled) {
+			this.enabled = enabled;
+		}
 
 	}
 

@@ -26,7 +26,6 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.autoconfig.brave.BraveAutoConfiguration;
 import org.springframework.cloud.sleuth.autoconfig.otel.OtelAutoConfiguration;
-import org.springframework.cloud.sleuth.instrument.scheduling.SleuthSchedulingProperties;
 import org.springframework.cloud.sleuth.instrument.scheduling.TraceSchedulingAspect;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

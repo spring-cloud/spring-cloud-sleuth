@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.springframework.cloud.sleuth.autoconfig;
+package org.springframework.cloud.sleuth.exporter;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -26,8 +26,6 @@ import java.util.stream.Collectors;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import org.springframework.cloud.sleuth.exporter.FinishedSpan;
-import org.springframework.cloud.sleuth.exporter.SpanFilter;
 import org.springframework.util.StringUtils;
 
 /**
@@ -40,12 +38,16 @@ public class SpanIgnoringSpanFilter implements SpanFilter {
 
 	private static final Log log = LogFactory.getLog(SpanIgnoringSpanFilter.class);
 
-	private final SleuthSpanFilterProperties sleuthSpanFilterProperties;
+	private final List<String> spanNamePatternsToSkip;
+
+	private final List<String> additionalSpanNamePatternsToIgnore;
 
 	static final Map<String, Pattern> cache = new ConcurrentHashMap<>();
 
-	public SpanIgnoringSpanFilter(SleuthSpanFilterProperties sleuthSpanFilterProperties) {
-		this.sleuthSpanFilterProperties = sleuthSpanFilterProperties;
+	public SpanIgnoringSpanFilter(List<String> spanNamePatternsToSkip,
+			List<String> additionalSpanNamePatternsToIgnore) {
+		this.spanNamePatternsToSkip = spanNamePatternsToSkip;
+		this.additionalSpanNamePatternsToIgnore = additionalSpanNamePatternsToIgnore;
 	}
 
 	private List<Pattern> spanNamesToIgnore() {
@@ -54,8 +56,8 @@ public class SpanIgnoringSpanFilter implements SpanFilter {
 	}
 
 	private List<String> spanNames() {
-		List<String> spanNamesToIgnore = new ArrayList<>(this.sleuthSpanFilterProperties.getSpanNamePatternsToSkip());
-		spanNamesToIgnore.addAll(this.sleuthSpanFilterProperties.getAdditionalSpanNamePatternsToIgnore());
+		List<String> spanNamesToIgnore = new ArrayList<>(this.spanNamePatternsToSkip);
+		spanNamesToIgnore.addAll(this.additionalSpanNamePatternsToIgnore);
 		return spanNamesToIgnore;
 	}
 

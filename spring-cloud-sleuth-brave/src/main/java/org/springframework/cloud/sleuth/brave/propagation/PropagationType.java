@@ -14,30 +14,34 @@
  * limitations under the License.
  */
 
-package org.springframework.cloud.sleuth.instrument.circuitbreaker;
+package org.springframework.cloud.sleuth.brave.propagation;
 
-import org.springframework.boot.context.properties.ConfigurationProperties;
-
-/**
- * Sleuth Circuit Breaker settings.
+/*
+ * Supported propagation types.
  *
  * @author Marcin Grzejszczak
- * @since 2.2.1
+ * @since 3.0.0
  */
-@ConfigurationProperties("spring.sleuth.circuitbreaker")
-public class SleuthCircuitBreakerProperties {
+public enum PropagationType {
 
 	/**
-	 * Enable Spring Cloud CircuitBreaker instrumentation.
+	 * AWS propagation type.
 	 */
-	private boolean enabled = true;
+	AWS,
 
-	public boolean isEnabled() {
-		return this.enabled;
-	}
+	/**
+	 * B3 propagation type.
+	 */
+	B3,
 
-	public void setEnabled(boolean enabled) {
-		this.enabled = enabled;
-	}
+	/**
+	 * W3C propagation type.
+	 */
+	W3C,
+
+	/**
+	 * Custom propagation type.
+	 */
+	CUSTOM
 
 }

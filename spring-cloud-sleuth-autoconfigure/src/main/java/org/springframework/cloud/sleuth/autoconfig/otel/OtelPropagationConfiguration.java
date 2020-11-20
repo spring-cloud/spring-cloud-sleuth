@@ -33,7 +33,6 @@ import org.springframework.cloud.sleuth.BaggageManager;
 import org.springframework.cloud.sleuth.autoconfig.SleuthBaggageProperties;
 import org.springframework.cloud.sleuth.otel.propagation.BaggageTextMapPropagator;
 import org.springframework.cloud.sleuth.otel.propagation.CompositeTextMapPropagator;
-import org.springframework.cloud.sleuth.otel.propagation.SleuthPropagationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -69,7 +68,7 @@ class OtelPropagationConfiguration {
 
 		@Bean
 		TextMapPropagator compositeTextMapPropagator(BeanFactory beanFactory, SleuthPropagationProperties properties) {
-			return new CompositeTextMapPropagator(beanFactory, properties);
+			return new CompositeTextMapPropagator(beanFactory, properties.getType());
 		}
 
 	}
@@ -80,7 +79,7 @@ class OtelPropagationConfiguration {
 
 		@Bean
 		TextMapPropagator baggageTextMapPropagator(SleuthBaggageProperties properties, BaggageManager baggageManager) {
-			return new BaggageTextMapPropagator(properties, baggageManager);
+			return new BaggageTextMapPropagator(properties.getRemoteFields(), baggageManager);
 		}
 
 	}

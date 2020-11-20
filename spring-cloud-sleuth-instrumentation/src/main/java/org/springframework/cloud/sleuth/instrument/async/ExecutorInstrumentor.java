@@ -19,6 +19,7 @@ package org.springframework.cloud.sleuth.instrument.async;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
+import java.util.List;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ScheduledExecutorService;
@@ -33,47 +34,50 @@ import org.apache.commons.logging.LogFactory;
 
 import org.springframework.aop.framework.AopConfigException;
 import org.springframework.aop.framework.ProxyFactoryBean;
-import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.BeanFactory;
-import org.springframework.beans.factory.config.BeanPostProcessor;
 import org.springframework.core.task.AsyncTaskExecutor;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 import org.springframework.util.ReflectionUtils;
 
 /**
- * Bean post processor that wraps a call to an {@link Executor} either in a JDK or CGLIB
- * proxy. Depending on whether the implementation has a final method or is final.
+ * Wraps {@link Executor}s in tracing representations.
  *
  * @author Marcin Grzejszczak
- * @author Jesus Alonso
- * @author Denys Ivano
- * @author Vladislav Fefelov
- * @since 1.1.4
+ * @since 3.0.0
  */
-public class ExecutorBeanPostProcessor implements BeanPostProcessor {
+public class ExecutorInstrumentor {
 
-	private static final Log log = LogFactory.getLog(ExecutorBeanPostProcessor.class);
+	private static final Log log = LogFactory.getLog(ExecutorInstrumentor.class);
+
+	private final Supplier<List<String>> ignoredBeans;
 
 	private final BeanFactory beanFactory;
 
-	private SleuthAsyncProperties sleuthAsyncProperties;
-
-	public ExecutorBeanPostProcessor(BeanFactory beanFactory) {
+	public ExecutorInstrumentor(Supplier<List<String>> ignoredBeans, BeanFactory beanFactory) {
+		this.ignoredBeans = ignoredBeans;
 		this.beanFactory = beanFactory;
 	}
 
-	@Override
-	public Object postProcessBeforeInitialization(Object bean, String beanName) throws BeansException {
-		return bean;
+	/**
+	 * @param bean bean to instrument
+	 * @return {@code true} if bean is applicable for instrumentation
+	 */
+	public static boolean isApplicableForInstrumentation(Object bean) {
+		return bean instanceof Executor && !(bean instanceof LazyTraceThreadPoolTaskExecutor
+				|| bean instanceof TraceableScheduledExecutorService || bean instanceof TraceableExecutorService
+				|| bean instanceof LazyTraceAsyncTaskExecutor || bean instanceof LazyTraceExecutor);
 	}
 
-	@Override
-	public Object postProcessAfterInitialization(Object bean, String beanName) throws BeansException {
-		if (bean instanceof LazyTraceThreadPoolTaskExecutor || bean instanceof TraceableScheduledExecutorService
-				|| bean instanceof TraceableExecutorService || bean instanceof LazyTraceAsyncTaskExecutor
-				|| bean instanceof LazyTraceExecutor) {
-			log.info("Bean is already instrumented " + beanName);
+	/**
+	 * Wraps an {@link Executor} bean in its trace representation.
+	 * @param bean a bean (might be of {@link Executor} type
+	 * @param beanName name of the bean
+	 * @return wrapped bean or just bean if not {@link Executor} or already instrumented
+	 */
+	public Object instrument(Object bean, String beanName) {
+		if (!isApplicableForInstrumentation(bean)) {
+			log.info("Bean is already instrumented or is not applicable for instrumentation " + beanName);
 			return bean;
 		}
 		if (bean instanceof ThreadPoolTaskExecutor) {
@@ -166,8 +170,7 @@ public class ExecutorBeanPostProcessor implements BeanPostProcessor {
 	}
 
 	boolean isProxyNeeded(String beanName) {
-		SleuthAsyncProperties sleuthAsyncProperties = asyncConfigurationProperties();
-		return !sleuthAsyncProperties.getIgnoredBeans().contains(beanName);
+		return !this.ignoredBeans.get().contains(beanName);
 	}
 
 	Object createThreadPoolTaskExecutorProxy(Object bean, boolean cglibProxy, ThreadPoolTaskExecutor executor,
@@ -274,13 +277,6 @@ public class ExecutorBeanPostProcessor implements BeanPostProcessor {
 		factory.addAdvice(advice);
 		factory.setTarget(bean);
 		return getObject(factory);
-	}
-
-	private SleuthAsyncProperties asyncConfigurationProperties() {
-		if (this.sleuthAsyncProperties == null) {
-			this.sleuthAsyncProperties = this.beanFactory.getBean(SleuthAsyncProperties.class);
-		}
-		return this.sleuthAsyncProperties;
 	}
 
 	private static <T> boolean anyFinalMethods(T object) {

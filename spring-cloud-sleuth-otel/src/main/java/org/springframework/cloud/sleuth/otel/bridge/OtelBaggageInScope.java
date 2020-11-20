@@ -16,6 +16,7 @@
 
 package org.springframework.cloud.sleuth.otel.bridge;
 
+import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 
 import io.opentelemetry.api.baggage.Baggage;
@@ -26,7 +27,6 @@ import io.opentelemetry.context.Scope;
 import org.springframework.cloud.sleuth.BaggageInScope;
 import org.springframework.cloud.sleuth.CurrentTraceContext;
 import org.springframework.cloud.sleuth.TraceContext;
-import org.springframework.cloud.sleuth.autoconfig.SleuthBaggageProperties;
 import org.springframework.context.ApplicationEvent;
 import org.springframework.context.ApplicationEventPublisher;
 
@@ -44,18 +44,18 @@ class OtelBaggageInScope implements BaggageInScope {
 
 	private final ApplicationEventPublisher publisher;
 
-	private final SleuthBaggageProperties sleuthBaggageProperties;
+	private final List<String> tagFields;
 
 	private final AtomicReference<Entry> entry = new AtomicReference<>();
 
 	private final AtomicReference<Scope> scope = new AtomicReference<>();
 
 	OtelBaggageInScope(OtelBaggageManager otelBaggageManager, CurrentTraceContext currentTraceContext,
-			ApplicationEventPublisher publisher, SleuthBaggageProperties sleuthBaggageProperties, Entry entry) {
+			ApplicationEventPublisher publisher, List<String> tagFields, Entry entry) {
 		this.otelBaggageManager = otelBaggageManager;
 		this.currentTraceContext = currentTraceContext;
 		this.publisher = publisher;
-		this.sleuthBaggageProperties = sleuthBaggageProperties;
+		this.tagFields = tagFields;
 		this.entry.set(entry);
 	}
 
@@ -101,8 +101,7 @@ class OtelBaggageInScope implements BaggageInScope {
 		}
 		Context withBaggage = current.with(baggage);
 		this.scope.set(withBaggage.makeCurrent());
-		if (this.sleuthBaggageProperties.getTagFields().stream().map(String::toLowerCase)
-				.anyMatch(s -> s.equals(entry().getKey()))) {
+		if (this.tagFields.stream().map(String::toLowerCase).anyMatch(s -> s.equals(entry().getKey()))) {
 			currentSpan.setAttribute(entry().getKey(), value);
 		}
 		this.publisher.publishEvent(new BaggageChanged(this, baggage, entry().getKey(), value));

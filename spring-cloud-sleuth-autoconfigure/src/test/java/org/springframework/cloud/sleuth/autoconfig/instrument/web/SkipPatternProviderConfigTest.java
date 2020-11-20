@@ -45,7 +45,6 @@ import org.springframework.boot.test.context.runner.WebApplicationContextRunner;
 import org.springframework.cloud.sleuth.autoconfig.SingleSkipPattern;
 import org.springframework.cloud.sleuth.autoconfig.TraceNoOpAutoConfiguration;
 import org.springframework.cloud.sleuth.instrument.web.SkipPatternProvider;
-import org.springframework.cloud.sleuth.instrument.web.SleuthWebProperties;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

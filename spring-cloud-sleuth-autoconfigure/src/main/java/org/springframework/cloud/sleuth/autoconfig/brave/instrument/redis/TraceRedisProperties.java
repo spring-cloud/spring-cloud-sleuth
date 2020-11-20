@@ -14,20 +14,27 @@
  * limitations under the License.
  */
 
-package org.springframework.cloud.sleuth.opentracing;
+package org.springframework.cloud.sleuth.autoconfig.brave.instrument.redis;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 /**
- * Sleuth Opentracing settings.
+ * Sleuth Redis properties.
  *
- * @author Marcin Grzejszczak
- * @since 2.0.0
+ * @author Daniel Albuquerque
  */
-@ConfigurationProperties("spring.sleuth.opentracing")
-public class SleuthOpentracingProperties {
+@ConfigurationProperties("spring.sleuth.redis")
+public class TraceRedisProperties {
 
+	/**
+	 * Enable span information propagation when using Redis.
+	 */
 	private boolean enabled = true;
+
+	/**
+	 * Service name for the remote Redis endpoint.
+	 */
+	private String remoteServiceName = "redis";
 
 	public boolean isEnabled() {
 		return this.enabled;
@@ -35,6 +42,14 @@ public class SleuthOpentracingProperties {
 
 	public void setEnabled(boolean enabled) {
 		this.enabled = enabled;
+	}
+
+	public String getRemoteServiceName() {
+		return remoteServiceName;
+	}
+
+	public void setRemoteServiceName(String remoteServiceName) {
+		this.remoteServiceName = remoteServiceName;
 	}
 
 }

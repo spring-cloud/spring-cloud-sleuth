@@ -45,7 +45,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.actuate.autoconfigure.web.server.ManagementServerProperties;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.cloud.sleuth.instrument.web.SleuthWebProperties;
+import org.springframework.cloud.sleuth.autoconfig.instrument.web.SleuthWebProperties;
 import org.springframework.cloud.sleuth.instrument.web.servlet.TracingFilter;
 import org.springframework.cloud.sleuth.util.SpanUtil;
 import org.springframework.context.annotation.Bean;

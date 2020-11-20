@@ -53,31 +53,31 @@ public class CompositeTextMapPropagator implements TextMapPropagator {
 
 	private static final Log log = LogFactory.getLog(CompositeTextMapPropagator.class);
 
-	private final Map<SleuthPropagationProperties.PropagationType, TextMapPropagator> mapping = new HashMap<>();
+	private final Map<PropagationType, TextMapPropagator> mapping = new HashMap<>();
 
-	private final SleuthPropagationProperties properties;
+	private final List<PropagationType> types;
 
-	public CompositeTextMapPropagator(BeanFactory beanFactory, SleuthPropagationProperties properties) {
-		this.properties = properties;
+	public CompositeTextMapPropagator(BeanFactory beanFactory, List<PropagationType> types) {
+		this.types = types;
 		if (isOnClasspath("io.opentelemetry.extension.trace.propagation.AwsXRayPropagator")) {
-			this.mapping.put(SleuthPropagationProperties.PropagationType.AWS, beanFactory
-					.getBeanProvider(AwsXRayPropagator.class).getIfAvailable(AwsXRayPropagator::getInstance));
+			this.mapping.put(PropagationType.AWS, beanFactory.getBeanProvider(AwsXRayPropagator.class)
+					.getIfAvailable(AwsXRayPropagator::getInstance));
 		}
 		if (isOnClasspath("io.opentelemetry.extension.trace.propagation.B3Propagator")) {
-			this.mapping.put(SleuthPropagationProperties.PropagationType.B3,
+			this.mapping.put(PropagationType.B3,
 					beanFactory.getBeanProvider(B3Propagator.class).getIfAvailable(B3Propagator::getInstance));
 		}
 		if (isOnClasspath("io.opentelemetry.extension.trace.propagation.JaegerPropagator")) {
-			this.mapping.put(SleuthPropagationProperties.PropagationType.JAEGER,
+			this.mapping.put(PropagationType.JAEGER,
 					beanFactory.getBeanProvider(JaegerPropagator.class).getIfAvailable(JaegerPropagator::getInstance));
 		}
 		if (isOnClasspath("io.opentelemetry.extension.trace.propagation.OtTracerPropagator")) {
-			this.mapping.put(SleuthPropagationProperties.PropagationType.OT_TRACER, beanFactory
-					.getBeanProvider(OtTracerPropagator.class).getIfAvailable(OtTracerPropagator::getInstance));
+			this.mapping.put(PropagationType.OT_TRACER, beanFactory.getBeanProvider(OtTracerPropagator.class)
+					.getIfAvailable(OtTracerPropagator::getInstance));
 		}
-		this.mapping.put(SleuthPropagationProperties.PropagationType.W3C, new MultiTextMapPropagator(
+		this.mapping.put(PropagationType.W3C, new MultiTextMapPropagator(
 				Arrays.asList(HttpTraceContext.getInstance(), W3CBaggagePropagator.getInstance())));
-		this.mapping.put(SleuthPropagationProperties.PropagationType.CUSTOM, NoopTextMapPropagator.INSTANCE);
+		this.mapping.put(PropagationType.CUSTOM, NoopTextMapPropagator.INSTANCE);
 		log.info("Registered the following context propagation types " + this.mapping.keySet());
 	}
 
@@ -87,20 +87,19 @@ public class CompositeTextMapPropagator implements TextMapPropagator {
 
 	@Override
 	public List<String> fields() {
-		return this.properties.getType().stream()
-				.map(key -> this.mapping.getOrDefault(key, NoopTextMapPropagator.INSTANCE))
+		return this.types.stream().map(key -> this.mapping.getOrDefault(key, NoopTextMapPropagator.INSTANCE))
 				.flatMap(p -> p.fields().stream()).collect(Collectors.toList());
 	}
 
 	@Override
 	public <C> void inject(Context context, C carrier, Setter<C> setter) {
-		this.properties.getType().stream().map(key -> this.mapping.getOrDefault(key, NoopTextMapPropagator.INSTANCE))
+		this.types.stream().map(key -> this.mapping.getOrDefault(key, NoopTextMapPropagator.INSTANCE))
 				.forEach(p -> p.inject(context, carrier, setter));
 	}
 
 	@Override
 	public <C> Context extract(Context context, C carrier, Getter<C> getter) {
-		for (SleuthPropagationProperties.PropagationType type : this.properties.getType()) {
+		for (PropagationType type : this.types) {
 			TextMapPropagator propagator = this.mapping.get(type);
 			if (propagator == null || propagator == NoopTextMapPropagator.INSTANCE) {
 				continue;

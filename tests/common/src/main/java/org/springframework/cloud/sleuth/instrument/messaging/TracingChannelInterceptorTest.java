@@ -49,7 +49,7 @@ import static org.springframework.messaging.support.NativeMessageHeaderAccessor.
 public abstract class TracingChannelInterceptorTest implements TestTracingAwareSupplier {
 
 	protected ChannelInterceptor interceptor = new TracingChannelInterceptor(tracerTest().tracing().tracer(),
-			tracerTest().tracing().propagator(), new SleuthIntegrationMessagingProperties());
+			tracerTest().tracing().propagator());
 
 	protected TestSpanHandler spans = tracerTest().handler();
 

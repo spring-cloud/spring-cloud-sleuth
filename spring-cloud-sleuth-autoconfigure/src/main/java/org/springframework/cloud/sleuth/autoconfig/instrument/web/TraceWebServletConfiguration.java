@@ -36,7 +36,6 @@ import org.springframework.cloud.sleuth.CurrentTraceContext;
 import org.springframework.cloud.sleuth.SpanNamer;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.http.HttpServerHandler;
-import org.springframework.cloud.sleuth.instrument.web.SleuthWebProperties;
 import org.springframework.cloud.sleuth.instrument.web.TraceWebAspect;
 import org.springframework.cloud.sleuth.instrument.web.mvc.SpanCustomizingAsyncHandlerInterceptor;
 import org.springframework.cloud.sleuth.instrument.web.servlet.TracingFilter;

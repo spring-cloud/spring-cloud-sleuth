@@ -24,7 +24,6 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.autoconfig.brave.BraveAutoConfiguration;
 import org.springframework.cloud.sleuth.autoconfig.otel.OtelAutoConfiguration;
-import org.springframework.cloud.sleuth.instrument.messaging.SleuthIntegrationMessagingProperties;
 import org.springframework.cloud.sleuth.instrument.messaging.TracingChannelInterceptor;
 import org.springframework.cloud.sleuth.propagation.Propagator;
 import org.springframework.context.annotation.Configuration;
@@ -57,9 +56,6 @@ class TraceWebSocketAutoConfiguration extends AbstractWebSocketMessageBrokerConf
 	Propagator propagator;
 
 	@Autowired
-	SleuthIntegrationMessagingProperties properties;
-
-	@Autowired
 	Propagator.Setter<MessageHeaderAccessor> setter;
 
 	@Autowired
@@ -72,20 +68,20 @@ class TraceWebSocketAutoConfiguration extends AbstractWebSocketMessageBrokerConf
 
 	@Override
 	public void configureMessageBroker(MessageBrokerRegistry registry) {
-		registry.configureBrokerChannel().setInterceptors(
-				new TracingChannelInterceptor(this.tracer, this.propagator, this.properties, this.setter, this.getter));
+		registry.configureBrokerChannel()
+				.setInterceptors(new TracingChannelInterceptor(this.tracer, this.propagator, this.setter, this.getter));
 	}
 
 	@Override
 	public void configureClientOutboundChannel(ChannelRegistration registration) {
-		registration.setInterceptors(
-				new TracingChannelInterceptor(this.tracer, this.propagator, this.properties, this.setter, this.getter));
+		registration
+				.setInterceptors(new TracingChannelInterceptor(this.tracer, this.propagator, this.setter, this.getter));
 	}
 
 	@Override
 	public void configureClientInboundChannel(ChannelRegistration registration) {
-		registration.setInterceptors(
-				new TracingChannelInterceptor(this.tracer, this.propagator, this.properties, this.setter, this.getter));
+		registration
+				.setInterceptors(new TracingChannelInterceptor(this.tracer, this.propagator, this.setter, this.getter));
 	}
 
 }

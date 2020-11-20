@@ -44,7 +44,6 @@ import org.springframework.cloud.sleuth.autoconfig.brave.BraveAutoConfiguration;
 import org.springframework.cloud.sleuth.autoconfig.otel.OtelAutoConfiguration;
 import org.springframework.cloud.sleuth.instrument.async.TraceableScheduledExecutorService;
 import org.springframework.cloud.sleuth.instrument.reactor.ReactorSleuth;
-import org.springframework.cloud.sleuth.instrument.reactor.SleuthReactorProperties;
 import org.springframework.context.ApplicationListener;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.Bean;

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.springframework.cloud.sleuth.instrument.reactor;
+package org.springframework.cloud.sleuth.autoconfig.instrument.reactor;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;

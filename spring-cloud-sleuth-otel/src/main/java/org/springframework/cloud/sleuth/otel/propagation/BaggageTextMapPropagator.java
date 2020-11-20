@@ -29,7 +29,6 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import org.springframework.cloud.sleuth.BaggageManager;
-import org.springframework.cloud.sleuth.autoconfig.SleuthBaggageProperties;
 
 /**
  * {@link TextMapPropagator} that adds Sleuth compatible baggage entries (name of the
@@ -42,18 +41,18 @@ public class BaggageTextMapPropagator implements TextMapPropagator {
 
 	private static final Log log = LogFactory.getLog(BaggageTextMapPropagator.class);
 
-	private final SleuthBaggageProperties properties;
+	private final List<String> remoteFields;
 
 	private final BaggageManager baggageManager;
 
-	public BaggageTextMapPropagator(SleuthBaggageProperties properties, BaggageManager baggageManager) {
-		this.properties = properties;
+	public BaggageTextMapPropagator(List<String> remoteFields, BaggageManager baggageManager) {
+		this.remoteFields = remoteFields;
 		this.baggageManager = baggageManager;
 	}
 
 	@Override
 	public List<String> fields() {
-		return this.properties.getRemoteFields();
+		return this.remoteFields;
 	}
 
 	@Override
@@ -64,15 +63,14 @@ public class BaggageTextMapPropagator implements TextMapPropagator {
 
 	private <C> List<Map.Entry<String, String>> applicableBaggageEntries(C c) {
 		Map<String, String> allBaggage = this.baggageManager.getAllBaggage();
-		List<String> lowerCaseKeys = this.properties.getRemoteFields().stream().map(String::toLowerCase)
-				.collect(Collectors.toList());
+		List<String> lowerCaseKeys = this.remoteFields.stream().map(String::toLowerCase).collect(Collectors.toList());
 		return allBaggage.entrySet().stream().filter(e -> lowerCaseKeys.contains(e.getKey().toLowerCase()))
 				.collect(Collectors.toList());
 	}
 
 	@Override
 	public <C> Context extract(Context context, C c, Getter<C> getter) {
-		Map<String, String> baggageEntries = this.properties.getRemoteFields().stream()
+		Map<String, String> baggageEntries = this.remoteFields.stream()
 				.map(s -> new AbstractMap.SimpleEntry<>(s, getter.get(c, s))).filter(e -> e.getValue() != null)
 				.collect(Collectors.toMap((e) -> e.getKey(), (e) -> e.getValue()));
 		Baggage.Builder builder = Baggage.builder().setParent(context);

@@ -14,12 +14,13 @@
  * limitations under the License.
  */
 
-package org.springframework.cloud.sleuth.brave.propagation;
+package org.springframework.cloud.sleuth.autoconfig.otel;
 
 import java.util.Collections;
 import java.util.List;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.cloud.sleuth.otel.propagation.PropagationType;
 
 /**
  * Sleuth settings for OpenTelemetry.
@@ -41,30 +42,6 @@ public class SleuthPropagationProperties {
 
 	public void setType(List<PropagationType> type) {
 		this.type = type;
-	}
-
-	public enum PropagationType {
-
-		/**
-		 * AWS propagation type.
-		 */
-		AWS,
-
-		/**
-		 * B3 propagation type.
-		 */
-		B3,
-
-		/**
-		 * W3C propagation type.
-		 */
-		W3C,
-
-		/**
-		 * Custom propagation type.
-		 */
-		CUSTOM
-
 	}
 
 }

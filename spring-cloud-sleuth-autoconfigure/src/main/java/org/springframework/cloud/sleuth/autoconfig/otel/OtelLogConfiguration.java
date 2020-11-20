@@ -21,9 +21,11 @@ import org.slf4j.MDC;
 
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.cloud.sleuth.autoconfig.SleuthBaggageProperties;
+import org.springframework.cloud.sleuth.otel.bridge.Slf4jBaggageSpanProcessor;
 import org.springframework.cloud.sleuth.otel.bridge.Slf4jSpanProcessor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -46,9 +48,16 @@ class OtelLogConfiguration {
 	static class Slf4jConfiguration {
 
 		@Bean
-		Slf4jSpanProcessor otelSlf4jSpanProcessor(SleuthBaggageProperties sleuthBaggageProperties,
-				BeanFactory beanFactory) {
-			return new Slf4jSpanProcessor(sleuthBaggageProperties, beanFactory);
+		@ConditionalOnMissingBean
+		Slf4jSpanProcessor otelSlf4jSpanProcessor() {
+			return new Slf4jSpanProcessor();
+		}
+
+		@Bean
+		@ConditionalOnMissingBean
+		Slf4jBaggageSpanProcessor otelSlf4jBaggageSpanProcessor(BeanFactory beanFactory,
+				SleuthBaggageProperties baggageProperties) {
+			return new Slf4jBaggageSpanProcessor(baggageProperties.getCorrelationFields(), beanFactory);
 		}
 
 	}

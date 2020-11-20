@@ -14,29 +14,23 @@
  * limitations under the License.
  */
 
-package org.springframework.cloud.sleuth.brave;
+package org.springframework.cloud.sleuth.autoconfig.instrument.circuitbreaker;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 /**
- * Sleuth settings.
+ * Sleuth Circuit Breaker settings.
  *
  * @author Marcin Grzejszczak
- * @since 1.0.11
+ * @since 2.2.1
  */
-@ConfigurationProperties("spring.sleuth")
-public class SleuthProperties {
-
-	private boolean enabled = true;
-
-	/** When true, generate 128-bit trace IDs instead of 64-bit ones. */
-	private boolean traceId128 = false;
+@ConfigurationProperties("spring.sleuth.circuitbreaker")
+public class SleuthCircuitBreakerProperties {
 
 	/**
-	 * True means the tracing system supports sharing a span ID between a client and
-	 * server.
+	 * Enable Spring Cloud CircuitBreaker instrumentation.
 	 */
-	private boolean supportsJoin = true;
+	private boolean enabled = true;
 
 	public boolean isEnabled() {
 		return this.enabled;
@@ -44,22 +38,6 @@ public class SleuthProperties {
 
 	public void setEnabled(boolean enabled) {
 		this.enabled = enabled;
-	}
-
-	public boolean isTraceId128() {
-		return this.traceId128;
-	}
-
-	public void setTraceId128(boolean traceId128) {
-		this.traceId128 = traceId128;
-	}
-
-	public boolean isSupportsJoin() {
-		return this.supportsJoin;
-	}
-
-	public void setSupportsJoin(boolean supportsJoin) {
-		this.supportsJoin = supportsJoin;
 	}
 
 }

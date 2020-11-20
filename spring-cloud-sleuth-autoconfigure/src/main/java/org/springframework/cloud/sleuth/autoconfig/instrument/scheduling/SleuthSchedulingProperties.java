@@ -14,27 +14,29 @@
  * limitations under the License.
  */
 
-package org.springframework.cloud.sleuth.brave.instrument.redis;
+package org.springframework.cloud.sleuth.autoconfig.instrument.scheduling;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 /**
- * Sleuth Redis properties.
+ * Configuration properties for
+ * {@link org.springframework.scheduling.annotation.Scheduled} tracing.
  *
- * @author Daniel Albuquerque
+ * @author Arthur Gavlyukovskiy
+ * @since 1.0.12
  */
-@ConfigurationProperties("spring.sleuth.redis")
-public class TraceRedisProperties {
+@ConfigurationProperties("spring.sleuth.scheduled")
+public class SleuthSchedulingProperties {
 
 	/**
-	 * Enable span information propagation when using Redis.
+	 * Enable tracing for {@link org.springframework.scheduling.annotation.Scheduled}.
 	 */
 	private boolean enabled = true;
 
 	/**
-	 * Service name for the remote Redis endpoint.
+	 * Pattern for the fully qualified name of a class that should be skipped.
 	 */
-	private String remoteServiceName = "redis";
+	private String skipPattern;
 
 	public boolean isEnabled() {
 		return this.enabled;
@@ -44,12 +46,19 @@ public class TraceRedisProperties {
 		this.enabled = enabled;
 	}
 
-	public String getRemoteServiceName() {
-		return remoteServiceName;
+	public String getSkipPattern() {
+		return this.skipPattern;
 	}
 
-	public void setRemoteServiceName(String remoteServiceName) {
-		this.remoteServiceName = remoteServiceName;
+	public void setSkipPattern(String skipPattern) {
+		this.skipPattern = emptyToNull(skipPattern);
+	}
+
+	static String emptyToNull(String skipPattern) {
+		if (skipPattern != null && skipPattern.isEmpty()) {
+			skipPattern = null; // otherwise this make an empty pattern!
+		}
+		return skipPattern;
 	}
 
 }

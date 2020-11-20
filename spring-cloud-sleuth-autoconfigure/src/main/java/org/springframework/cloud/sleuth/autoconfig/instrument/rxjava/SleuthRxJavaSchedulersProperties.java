@@ -14,36 +14,46 @@
  * limitations under the License.
  */
 
-package org.springframework.cloud.sleuth.otel.bridge;
+package org.springframework.cloud.sleuth.autoconfig.instrument.rxjava;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 /**
- * Sleuth settings for OpenTelemetry.
+ * Configuration properties for RxJava tracing.
  *
- * @author Marcin Grzejszczak
- * @since 3.0.0
+ * @author Arthur Gavlyukovskiy
+ * @since 1.0.12
  */
-@ConfigurationProperties("spring.sleuth.otel.exporter")
-public class OtelExporterProperties {
-
-	private SleuthSpanFilter sleuthSpanFilter = new SleuthSpanFilter();
-
-	public SleuthSpanFilter getSleuthSpanFilter() {
-		return this.sleuthSpanFilter;
-	}
-
-	public void setSleuthSpanFilter(SleuthSpanFilter sleuthSpanFilter) {
-		this.sleuthSpanFilter = sleuthSpanFilter;
-	}
+@ConfigurationProperties("spring.sleuth.rxjava.schedulers")
+public class SleuthRxJavaSchedulersProperties {
 
 	/**
-	 * Integrations with core Sleuth handler mechanism.
+	 * Thread names for which spans will not be sampled.
 	 */
-	public static class SleuthSpanFilter {
+	private String[] ignoredthreads = { "HystrixMetricPoller", "^RxComputation.*$" };
+
+	private Hook hook = new Hook();
+
+	public String[] getIgnoredthreads() {
+		return this.ignoredthreads;
+	}
+
+	public void setIgnoredthreads(String[] ignoredthreads) {
+		this.ignoredthreads = ignoredthreads;
+	}
+
+	public Hook getHook() {
+		return this.hook;
+	}
+
+	public void setHook(Hook hook) {
+		this.hook = hook;
+	}
+
+	public static class Hook {
 
 		/**
-		 * This application service name.
+		 * Enable support for RxJava via RxJavaSchedulersHook.
 		 */
 		private boolean enabled = true;
 

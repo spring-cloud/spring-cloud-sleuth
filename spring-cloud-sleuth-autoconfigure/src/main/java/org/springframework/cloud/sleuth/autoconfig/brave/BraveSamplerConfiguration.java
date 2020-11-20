@@ -26,7 +26,6 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.cloud.context.config.annotation.RefreshScope;
 import org.springframework.cloud.sleuth.brave.sampler.ProbabilityBasedSampler;
 import org.springframework.cloud.sleuth.brave.sampler.RateLimitingSampler;
-import org.springframework.cloud.sleuth.brave.sampler.SamplerProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Conditional;
 import org.springframework.context.annotation.Configuration;
@@ -81,9 +80,9 @@ class BraveSamplerConfiguration {
 			// TODO: Rewrite: refresh should replace the sampler, not change its state
 			// internally
 			if (config.getProbability() != null) {
-				return new ProbabilityBasedSampler(config);
+				return new ProbabilityBasedSampler(config::getProbability);
 			}
-			return new RateLimitingSampler(config);
+			return new RateLimitingSampler(config::getRate);
 		}
 
 	}

@@ -28,14 +28,12 @@ import reactor.core.publisher.MonoOperator;
 import reactor.util.annotation.Nullable;
 import reactor.util.context.Context;
 
-import org.springframework.beans.factory.BeanFactory;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.TraceContext;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.http.HttpServerHandler;
 import org.springframework.cloud.sleuth.http.HttpServerRequest;
 import org.springframework.cloud.sleuth.http.HttpServerResponse;
-import org.springframework.cloud.sleuth.instrument.reactor.SleuthReactorProperties;
 import org.springframework.core.Ordered;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.server.reactive.ServerHttpRequest;
@@ -67,47 +65,15 @@ public class TraceWebFilter implements WebFilter, Ordered {
 
 	private static final String TRACE_SPAN_WITHOUT_PARENT = TraceWebFilter.class.getName() + ".SPAN_WITH_NO_PARENT";
 
-	private final BeanFactory beanFactory;
+	private final Tracer tracer;
 
-	Tracer tracer;
+	private final HttpServerHandler handler;
 
-	HttpServerHandler handler;
+	private int order;
 
-	SleuthWebProperties webProperties;
-
-	SleuthReactorProperties sleuthReactorProperties;
-
-	public TraceWebFilter(BeanFactory beanFactory) {
-		this.beanFactory = beanFactory;
-	}
-
-	@SuppressWarnings("unchecked")
-	HttpServerHandler handler() {
-		if (this.handler == null) {
-			this.handler = this.beanFactory.getBean(HttpServerHandler.class);
-		}
-		return this.handler;
-	}
-
-	Tracer tracer() {
-		if (this.tracer == null) {
-			this.tracer = this.beanFactory.getBean(Tracer.class);
-		}
-		return this.tracer;
-	}
-
-	SleuthWebProperties sleuthWebProperties() {
-		if (this.webProperties == null) {
-			this.webProperties = this.beanFactory.getBean(SleuthWebProperties.class);
-		}
-		return this.webProperties;
-	}
-
-	SleuthReactorProperties sleuthReactorProperties() {
-		if (this.sleuthReactorProperties == null) {
-			this.sleuthReactorProperties = this.beanFactory.getBean(SleuthReactorProperties.class);
-		}
-		return this.sleuthReactorProperties;
+	public TraceWebFilter(Tracer tracer, HttpServerHandler handler) {
+		this.tracer = tracer;
+		this.handler = handler;
 	}
 
 	@Override
@@ -122,20 +88,21 @@ public class TraceWebFilter implements WebFilter, Ordered {
 	}
 
 	private boolean isTracePresent() {
-		if (sleuthReactorProperties().getInstrumentationType() == SleuthReactorProperties.InstrumentationType.MANUAL) {
-			return false;
-		}
-		boolean tracePresent = tracer().currentSpan() != null;
+		boolean tracePresent = this.tracer.currentSpan() != null;
 		if (tracePresent) {
 			// clear any previous trace
-			tracer().withSpan(null); // TODO: dangerous and also allocates stuff
+			this.tracer.withSpan(null); // TODO: dangerous and also allocates stuff
 		}
 		return tracePresent;
 	}
 
 	@Override
 	public int getOrder() {
-		return sleuthWebProperties().getFilterOrder();
+		return this.order;
+	}
+
+	public void setOrder(int order) {
+		this.order = order;
 	}
 
 	private static class MonoWebFilterTrace extends MonoOperator<Void, Void> {
@@ -155,8 +122,8 @@ public class TraceWebFilter implements WebFilter, Ordered {
 		MonoWebFilterTrace(Mono<? extends Void> source, ServerWebExchange exchange, boolean initialTracePresent,
 				TraceWebFilter parent) {
 			super(source);
-			this.tracer = parent.tracer();
-			this.handler = parent.handler();
+			this.tracer = parent.tracer;
+			this.handler = parent.handler;
 			this.exchange = exchange;
 			this.span = exchange.getAttribute(TRACE_REQUEST_ATTR);
 			this.initialTracePresent = initialTracePresent;

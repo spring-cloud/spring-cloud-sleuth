@@ -30,9 +30,8 @@ import brave.propagation.TraceContextOrSamplingFlags;
 import brave.propagation.aws.AWSPropagation;
 
 import org.springframework.beans.factory.BeanFactory;
-import org.springframework.cloud.sleuth.autoconfig.SleuthBaggageProperties;
 import org.springframework.cloud.sleuth.brave.propagation.PropagationFactorySupplier;
-import org.springframework.cloud.sleuth.brave.propagation.SleuthPropagationProperties;
+import org.springframework.cloud.sleuth.brave.propagation.PropagationType;
 
 /**
  * Merges various propagation factories into a composite.
@@ -44,64 +43,61 @@ public class CompositePropagationFactorySupplier implements PropagationFactorySu
 
 	private final BeanFactory beanFactory;
 
-	private final SleuthBaggageProperties baggageProperties;
+	private final List<String> localFields;
 
-	private final SleuthPropagationProperties properties;
+	private final List<PropagationType> types;
 
-	public CompositePropagationFactorySupplier(BeanFactory beanFactory, SleuthBaggageProperties baggageProperties,
-			SleuthPropagationProperties properties) {
+	public CompositePropagationFactorySupplier(BeanFactory beanFactory, List<String> localFields,
+			List<PropagationType> types) {
 		this.beanFactory = beanFactory;
-		this.baggageProperties = baggageProperties;
-		this.properties = properties;
+		this.localFields = localFields;
+		this.types = types;
 	}
 
 	@Override
 	public Propagation.Factory get() {
 		return new CompositePropagationFactory(
 				this.beanFactory.getBeanProvider(BraveBaggageManager.class).getIfAvailable(BraveBaggageManager::new),
-				this.baggageProperties, this.properties);
+				this.localFields, this.types);
 	}
 
 }
 
 class CompositePropagationFactory extends Propagation.Factory implements Propagation<String> {
 
-	private final Map<SleuthPropagationProperties.PropagationType, Propagation<String>> mapping = new HashMap<>();
+	private final Map<PropagationType, Propagation<String>> mapping = new HashMap<>();
 
-	private final SleuthPropagationProperties properties;
+	private final List<PropagationType> types;
 
-	CompositePropagationFactory(BraveBaggageManager braveBaggageManager, SleuthBaggageProperties baggageProperties,
-			SleuthPropagationProperties properties) {
-		this.properties = properties;
-		this.mapping.put(SleuthPropagationProperties.PropagationType.AWS, AWSPropagation.FACTORY.get());
+	CompositePropagationFactory(BraveBaggageManager braveBaggageManager, List<String> localFields,
+			List<PropagationType> types) {
+		this.types = types;
+		this.mapping.put(PropagationType.AWS, AWSPropagation.FACTORY.get());
 		// Note: Versions <2.2.3 use injectFormat(MULTI) for non-remote (ex
 		// spring-messaging)
 		// See #1643
-		this.mapping.put(SleuthPropagationProperties.PropagationType.B3,
+		this.mapping.put(PropagationType.B3,
 				B3Propagation.newFactoryBuilder().injectFormat(B3Propagation.Format.SINGLE_NO_PARENT).build().get());
-		this.mapping.put(SleuthPropagationProperties.PropagationType.W3C,
-				new W3CPropagation(braveBaggageManager, baggageProperties));
-		this.mapping.put(SleuthPropagationProperties.PropagationType.CUSTOM, NoOpPropagation.INSTANCE);
+		this.mapping.put(PropagationType.W3C, new W3CPropagation(braveBaggageManager, localFields));
+		this.mapping.put(PropagationType.CUSTOM, NoOpPropagation.INSTANCE);
 	}
 
 	@Override
 	public List<String> keys() {
-		return this.properties.getType().stream().map(this.mapping::get).flatMap(p -> p.keys().stream())
-				.collect(Collectors.toList());
+		return this.types.stream().map(this.mapping::get).flatMap(p -> p.keys().stream()).collect(Collectors.toList());
 	}
 
 	@Override
 	public <R> TraceContext.Injector<R> injector(Setter<R, String> setter) {
 		return (traceContext, request) -> {
-			this.properties.getType().stream().map(this.mapping::get)
-					.forEach(p -> p.injector(setter).inject(traceContext, request));
+			this.types.stream().map(this.mapping::get).forEach(p -> p.injector(setter).inject(traceContext, request));
 		};
 	}
 
 	@Override
 	public <R> TraceContext.Extractor<R> extractor(Getter<R, String> getter) {
 		return request -> {
-			for (SleuthPropagationProperties.PropagationType type : this.properties.getType()) {
+			for (PropagationType type : this.types) {
 				Propagation<String> propagator = this.mapping.get(type);
 				if (propagator == null || propagator == NoOpPropagation.INSTANCE) {
 					continue;

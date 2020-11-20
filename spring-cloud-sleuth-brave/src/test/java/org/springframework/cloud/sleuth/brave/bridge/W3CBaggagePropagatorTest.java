@@ -17,6 +17,7 @@
 package org.springframework.cloud.sleuth.brave.bridge;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -28,8 +29,6 @@ import brave.propagation.TraceContextOrSamplingFlags;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
-import org.springframework.cloud.sleuth.autoconfig.SleuthBaggageProperties;
-
 import static java.util.Collections.singletonMap;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -38,13 +37,7 @@ import static org.assertj.core.api.Assertions.assertThat;
  */
 class W3CBaggagePropagatorTest {
 
-	W3CBaggagePropagator propagator = new W3CBaggagePropagator(new BraveBaggageManager(), sleuthBaggageProperties());
-
-	SleuthBaggageProperties sleuthBaggageProperties() {
-		SleuthBaggageProperties properties = new SleuthBaggageProperties();
-		properties.setRemoteFields(Arrays.asList("nometa", "meta", "key", "key1", "key2"));
-		return properties;
-	}
+	W3CBaggagePropagator propagator = new W3CBaggagePropagator(new BraveBaggageManager(), Collections.emptyList());
 
 	@Test
 	void fields() {
@@ -87,10 +80,6 @@ class W3CBaggagePropagatorTest {
 	private TraceContextOrSamplingFlags context() {
 		return TraceContextOrSamplingFlags
 				.create(TraceContext.newBuilder().traceId(1L).spanId(2L).sampled(true).build());
-	}
-
-	private TraceContext.Builder contextBuilder() {
-		return TraceContext.newBuilder().traceId(1L).spanId(2L).sampled(true);
 	}
 
 	@Test

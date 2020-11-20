@@ -19,6 +19,7 @@ package org.springframework.cloud.sleuth.brave.sampler;
 import java.util.BitSet;
 import java.util.Random;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Supplier;
 
 import brave.sampler.Sampler;
 
@@ -49,13 +50,13 @@ public class ProbabilityBasedSampler extends Sampler {
 
 	private final BitSet sampleDecisions;
 
-	private final SamplerProperties configuration;
+	private final Supplier<Float> probability;
 
-	public ProbabilityBasedSampler(SamplerProperties configuration) {
-		Assert.notNull(configuration.getProbability(), "probability property is required for ProbabilityBasedSampler");
-		int outOf100 = (int) (configuration.getProbability() * 100.0f);
+	public ProbabilityBasedSampler(Supplier<Float> probability) {
+		Assert.notNull(probability, "probability property is required for ProbabilityBasedSampler");
+		this.probability = probability;
+		int outOf100 = (int) (probability.get() * 100.0f);
 		this.sampleDecisions = randomBitSet(100, outOf100, new Random());
-		this.configuration = configuration;
 	}
 
 	/**
@@ -88,10 +89,10 @@ public class ProbabilityBasedSampler extends Sampler {
 
 	@Override
 	public boolean isSampled(long traceId) {
-		if (this.configuration.getProbability() == 0) {
+		if (this.probability.get() == 0) {
 			return false;
 		}
-		else if (this.configuration.getProbability() == 1.0f) {
+		else if (this.probability.get() == 1.0f) {
 			return true;
 		}
 		synchronized (this) {

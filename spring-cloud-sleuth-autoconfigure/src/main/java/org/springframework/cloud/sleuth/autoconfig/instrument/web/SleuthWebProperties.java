@@ -14,10 +14,11 @@
  * limitations under the License.
  */
 
-package org.springframework.cloud.sleuth.instrument.web;
+package org.springframework.cloud.sleuth.autoconfig.instrument.web;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.context.properties.NestedConfigurationProperty;
+import org.springframework.cloud.sleuth.instrument.web.TraceWebFilter;
 import org.springframework.core.Ordered;
 
 /**

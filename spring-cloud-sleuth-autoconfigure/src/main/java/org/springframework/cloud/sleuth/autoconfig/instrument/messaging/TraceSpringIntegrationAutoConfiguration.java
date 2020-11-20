@@ -27,7 +27,6 @@ import org.springframework.cloud.function.context.FunctionCatalog;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.autoconfig.brave.BraveAutoConfiguration;
 import org.springframework.cloud.sleuth.autoconfig.otel.OtelAutoConfiguration;
-import org.springframework.cloud.sleuth.instrument.messaging.SleuthIntegrationMessagingProperties;
 import org.springframework.cloud.sleuth.instrument.messaging.TracingChannelInterceptor;
 import org.springframework.cloud.sleuth.propagation.Propagator;
 import org.springframework.context.annotation.Bean;
@@ -70,10 +69,9 @@ public class TraceSpringIntegrationAutoConfiguration {
 
 	@Bean
 	TracingChannelInterceptor traceChannelInterceptor(Tracer tracer, Propagator propagator,
-			SleuthIntegrationMessagingProperties properties,
 			Propagator.Setter<MessageHeaderAccessor> traceMessagePropagationSetter,
 			Propagator.Getter<MessageHeaderAccessor> traceMessagePropagationGetter) {
-		return new TracingChannelInterceptor(tracer, propagator, properties, traceMessagePropagationSetter,
+		return new TracingChannelInterceptor(tracer, propagator, traceMessagePropagationSetter,
 				traceMessagePropagationGetter);
 	}
 

@@ -25,7 +25,6 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.cloud.sleuth.exporter.SpanFilter;
 import org.springframework.cloud.sleuth.otel.bridge.CompositeSpanExporter;
-import org.springframework.cloud.sleuth.otel.bridge.OtelExporterProperties;
 import org.springframework.cloud.sleuth.otel.bridge.SpanExporterCustomizer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

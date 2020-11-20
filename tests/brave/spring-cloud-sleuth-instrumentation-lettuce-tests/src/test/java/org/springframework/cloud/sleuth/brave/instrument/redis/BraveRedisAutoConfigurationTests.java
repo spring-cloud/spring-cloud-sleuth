@@ -24,6 +24,8 @@ import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.cloud.sleuth.autoconfig.brave.instrument.redis.TraceRedisProperties;
+import org.springframework.cloud.sleuth.autoconfig.instrument.redis.TraceLettuceClientResourcesBeanPostProcessor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 

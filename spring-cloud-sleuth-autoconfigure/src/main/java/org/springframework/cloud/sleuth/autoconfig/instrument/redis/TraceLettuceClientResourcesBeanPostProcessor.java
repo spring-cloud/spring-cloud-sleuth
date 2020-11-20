@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.springframework.cloud.sleuth.brave.instrument.redis;
+package org.springframework.cloud.sleuth.autoconfig.instrument.redis;
 
 import brave.Tracing;
 import io.lettuce.core.resource.ClientResources;
@@ -25,6 +25,7 @@ import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.config.BeanPostProcessor;
+import org.springframework.cloud.sleuth.autoconfig.brave.instrument.redis.TraceRedisProperties;
 
 /**
  * {@link BeanPostProcessor} for wrapping Lettuce components in a tracing representation.

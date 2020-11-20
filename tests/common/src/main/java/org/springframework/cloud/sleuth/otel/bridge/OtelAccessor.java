@@ -44,8 +44,8 @@ public final class OtelAccessor {
 
 	public static Tracer tracer(io.opentelemetry.api.trace.Tracer tracer, CurrentTraceContext currentTraceContext,
 			SleuthBaggageProperties sleuthBaggageProperties, ApplicationEventPublisher publisher) {
-		return new OtelTracer(tracer, publisher,
-				new OtelBaggageManager(currentTraceContext, sleuthBaggageProperties, publisher));
+		return new OtelTracer(tracer, publisher, new OtelBaggageManager(currentTraceContext,
+				sleuthBaggageProperties.getRemoteFields(), sleuthBaggageProperties.getTagFields(), publisher));
 	}
 
 	public static CurrentTraceContext currentTraceContext(ApplicationEventPublisher publisher) {

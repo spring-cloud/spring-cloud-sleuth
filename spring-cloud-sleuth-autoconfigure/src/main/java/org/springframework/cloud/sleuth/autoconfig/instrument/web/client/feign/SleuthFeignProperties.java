@@ -14,19 +14,22 @@
  * limitations under the License.
  */
 
-package org.springframework.cloud.sleuth.instrument.web;
+package org.springframework.cloud.sleuth.autoconfig.instrument.web.client.feign;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 /**
- * Sleuth HTTP settings.
+ * Configuration properties for Feign.
  *
  * @author Marcin Grzejszczak
- * @since 2.0.0
+ * @since 2.0.2
  */
-@ConfigurationProperties("spring.sleuth.http")
-public class SleuthHttpProperties {
+@ConfigurationProperties("spring.sleuth.feign")
+public class SleuthFeignProperties {
 
+	/**
+	 * When true enables instrumentation for feign.
+	 */
 	private boolean enabled = true;
 
 	public boolean isEnabled() {

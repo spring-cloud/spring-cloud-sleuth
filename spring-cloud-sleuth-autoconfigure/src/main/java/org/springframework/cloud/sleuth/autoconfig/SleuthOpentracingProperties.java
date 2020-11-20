@@ -14,39 +14,20 @@
  * limitations under the License.
  */
 
-package org.springframework.cloud.sleuth.instrument.messaging;
+package org.springframework.cloud.sleuth.autoconfig;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 /**
- * Properties for Spring Integration messaging.
+ * Sleuth Opentracing settings.
  *
  * @author Marcin Grzejszczak
  * @since 2.0.0
  */
-@ConfigurationProperties("spring.sleuth.integration")
-public class SleuthIntegrationMessagingProperties {
+@ConfigurationProperties("spring.sleuth.opentracing")
+public class SleuthOpentracingProperties {
 
-	/**
-	 * An array of patterns against which channel names will be matched.
-	 * @see org.springframework.integration.config.GlobalChannelInterceptor#patterns()
-	 * Defaults to any channel name not matching the Hystrix Stream and functional Stream
-	 * channel names.
-	 */
-	private String[] patterns = new String[] { "!hystrixStreamOutput*", "*", "!channel*" };
-
-	/**
-	 * Enable Spring Integration sleuth instrumentation.
-	 */
-	private boolean enabled;
-
-	public String[] getPatterns() {
-		return this.patterns;
-	}
-
-	public void setPatterns(String[] patterns) {
-		this.patterns = patterns;
-	}
+	private boolean enabled = true;
 
 	public boolean isEnabled() {
 		return this.enabled;

@@ -37,7 +37,6 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import org.springframework.cloud.sleuth.BaggageInScope;
-import org.springframework.cloud.sleuth.autoconfig.SleuthBaggageProperties;
 
 import static java.util.Collections.singletonList;
 
@@ -97,7 +96,7 @@ class W3CPropagation extends Propagation.Factory implements Propagation<String> 
 
 	private static final String INVALID_SPAN_ID = "0000000000000000";
 
-	private static final char TRACESTATE_ENTRY_DELIMITER = ',';
+	// private static final char TRACESTATE_ENTRY_DELIMITER = ',';
 
 	private static final Set<String> VALID_VERSIONS;
 
@@ -118,8 +117,8 @@ class W3CPropagation extends Propagation.Factory implements Propagation<String> 
 
 	private final W3CBaggagePropagator baggagePropagator;
 
-	W3CPropagation(BraveBaggageManager braveBaggageManager, SleuthBaggageProperties sleuthBaggageProperties) {
-		this.baggagePropagator = new W3CBaggagePropagator(braveBaggageManager, sleuthBaggageProperties);
+	W3CPropagation(BraveBaggageManager braveBaggageManager, List<String> localFields) {
+		this.baggagePropagator = new W3CBaggagePropagator(braveBaggageManager, localFields);
 	}
 
 	@Override
@@ -272,11 +271,11 @@ class W3CBaggagePropagator {
 
 	private final BraveBaggageManager braveBaggageManager;
 
-	private final SleuthBaggageProperties properties;
+	private final List<String> localFields;
 
-	W3CBaggagePropagator(BraveBaggageManager braveBaggageManager, SleuthBaggageProperties properties) {
+	W3CBaggagePropagator(BraveBaggageManager braveBaggageManager, List<String> localFields) {
 		this.braveBaggageManager = braveBaggageManager;
-		this.properties = properties;
+		this.localFields = localFields;
 	}
 
 	public List<String> keys() {
@@ -291,7 +290,7 @@ class W3CBaggagePropagator {
 			}
 			StringBuilder headerContent = new StringBuilder();
 			// We ignore local keys - they won't get propagated
-			String[] strings = this.properties.getLocalFields().toArray(new String[0]);
+			String[] strings = this.localFields.toArray(new String[0]);
 			Map<String, String> filtered = extra.toMapFilteringFieldNames(strings);
 			for (Map.Entry<String, String> entry : filtered.entrySet()) {
 				headerContent.append(entry.getKey()).append("=").append(entry.getValue());

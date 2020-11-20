@@ -34,7 +34,6 @@ import org.springframework.cloud.sleuth.brave.bridge.BraveTracer;
 import org.springframework.cloud.sleuth.brave.bridge.CompositePropagationFactorySupplier;
 import org.springframework.cloud.sleuth.brave.bridge.CompositeSpanHandler;
 import org.springframework.cloud.sleuth.brave.propagation.PropagationFactorySupplier;
-import org.springframework.cloud.sleuth.brave.propagation.SleuthPropagationProperties;
 import org.springframework.cloud.sleuth.exporter.SpanFilter;
 import org.springframework.cloud.sleuth.propagation.Propagator;
 import org.springframework.context.annotation.Bean;
@@ -70,7 +69,8 @@ class BraveBridgeConfiguration {
 	@ConditionalOnMissingBean
 	PropagationFactorySupplier compositePropagationFactorySupplier(BeanFactory beanFactory,
 			SleuthBaggageProperties baggageProperties, SleuthPropagationProperties properties) {
-		return new CompositePropagationFactorySupplier(beanFactory, baggageProperties, properties);
+		return new CompositePropagationFactorySupplier(beanFactory, baggageProperties.getLocalFields(),
+				properties.getType());
 	}
 
 	// Name is important for sampling conditions
