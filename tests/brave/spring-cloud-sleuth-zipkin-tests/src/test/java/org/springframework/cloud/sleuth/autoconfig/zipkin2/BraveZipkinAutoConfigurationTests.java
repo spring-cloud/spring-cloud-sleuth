@@ -31,7 +31,7 @@ import zipkin2.reporter.Reporter;
 import zipkin2.reporter.Sender;
 import zipkin2.reporter.brave.ZipkinSpanHandler;
 
-import org.springframework.cloud.sleuth.api.Tracer;
+import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.autoconfig.brave.BraveAutoConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

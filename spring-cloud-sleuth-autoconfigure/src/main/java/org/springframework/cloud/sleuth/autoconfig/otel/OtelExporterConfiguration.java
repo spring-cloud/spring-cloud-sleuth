@@ -23,7 +23,7 @@ import io.opentelemetry.sdk.trace.export.SpanExporter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
-import org.springframework.cloud.sleuth.api.exporter.SpanFilter;
+import org.springframework.cloud.sleuth.exporter.SpanFilter;
 import org.springframework.cloud.sleuth.otel.bridge.CompositeSpanExporter;
 import org.springframework.cloud.sleuth.otel.bridge.OtelExporterProperties;
 import org.springframework.cloud.sleuth.otel.bridge.SpanExporterCustomizer;

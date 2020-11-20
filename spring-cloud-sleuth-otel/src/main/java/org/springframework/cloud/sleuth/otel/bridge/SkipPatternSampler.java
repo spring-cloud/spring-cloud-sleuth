@@ -18,8 +18,8 @@ package org.springframework.cloud.sleuth.otel.bridge;
 
 import java.util.regex.Pattern;
 
-import org.springframework.cloud.sleuth.api.SamplerFunction;
-import org.springframework.cloud.sleuth.api.http.HttpRequest;
+import org.springframework.cloud.sleuth.SamplerFunction;
+import org.springframework.cloud.sleuth.http.HttpRequest;
 
 /**
  * Decides if sampling should take place for the given request.

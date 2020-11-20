@@ -179,10 +179,10 @@ public class BraveHttpConfigurationTests {
 @Configuration(proxyBeanMethods = false)
 class HttpClientSamplerConfig {
 
-	static final org.springframework.cloud.sleuth.api.SamplerFunction<org.springframework.cloud.sleuth.api.http.HttpRequest> INSTANCE = request -> null;
+	static final org.springframework.cloud.sleuth.SamplerFunction<org.springframework.cloud.sleuth.http.HttpRequest> INSTANCE = request -> null;
 
 	@Bean(HttpClientSampler.NAME)
-	org.springframework.cloud.sleuth.api.SamplerFunction<org.springframework.cloud.sleuth.api.http.HttpRequest> sleuthHttpClientSampler() {
+	org.springframework.cloud.sleuth.SamplerFunction<org.springframework.cloud.sleuth.http.HttpRequest> sleuthHttpClientSampler() {
 		return INSTANCE;
 	}
 
@@ -191,10 +191,10 @@ class HttpClientSamplerConfig {
 @Configuration(proxyBeanMethods = false)
 class HttpServerSamplerConfig {
 
-	static final org.springframework.cloud.sleuth.api.SamplerFunction<org.springframework.cloud.sleuth.api.http.HttpRequest> INSTANCE = request -> null;
+	static final org.springframework.cloud.sleuth.SamplerFunction<org.springframework.cloud.sleuth.http.HttpRequest> INSTANCE = request -> null;
 
 	@Bean(HttpServerSampler.NAME)
-	org.springframework.cloud.sleuth.api.SamplerFunction<org.springframework.cloud.sleuth.api.http.HttpRequest> sleuthHttpServerSampler() {
+	org.springframework.cloud.sleuth.SamplerFunction<org.springframework.cloud.sleuth.http.HttpRequest> sleuthHttpServerSampler() {
 		return INSTANCE;
 	}
 

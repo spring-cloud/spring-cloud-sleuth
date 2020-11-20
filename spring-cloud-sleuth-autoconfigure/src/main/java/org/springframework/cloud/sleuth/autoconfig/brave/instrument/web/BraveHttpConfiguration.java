@@ -32,8 +32,6 @@ import org.springframework.beans.factory.BeanFactory;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
-import org.springframework.cloud.sleuth.api.http.HttpRequestParser;
-import org.springframework.cloud.sleuth.api.http.HttpResponseParser;
 import org.springframework.cloud.sleuth.autoconfig.instrument.web.ConditionalOnSleuthHttp;
 import org.springframework.cloud.sleuth.brave.bridge.BraveHttpRequestParser;
 import org.springframework.cloud.sleuth.brave.bridge.BraveHttpResponseParser;
@@ -41,6 +39,8 @@ import org.springframework.cloud.sleuth.brave.bridge.BraveSamplerFunction;
 import org.springframework.cloud.sleuth.brave.instrument.web.CompositeHttpSampler;
 import org.springframework.cloud.sleuth.brave.instrument.web.SkipPatternHttpClientSampler;
 import org.springframework.cloud.sleuth.brave.instrument.web.SkipPatternHttpServerSampler;
+import org.springframework.cloud.sleuth.http.HttpRequestParser;
+import org.springframework.cloud.sleuth.http.HttpResponseParser;
 import org.springframework.cloud.sleuth.instrument.web.HttpClientRequestParser;
 import org.springframework.cloud.sleuth.instrument.web.HttpClientResponseParser;
 import org.springframework.cloud.sleuth.instrument.web.HttpClientSampler;
@@ -161,12 +161,11 @@ public class BraveHttpConfiguration {
 		Object bean = beanFactory.getBean(beanName);
 		SamplerFunction<brave.http.HttpRequest> braveSampler = bean instanceof SamplerFunction
 				? (SamplerFunction<brave.http.HttpRequest>) bean
-				: bean instanceof org.springframework.cloud.sleuth.api.SamplerFunction
-						? BraveSamplerFunction.toHttpBrave(
-								(org.springframework.cloud.sleuth.api.SamplerFunction<org.springframework.cloud.sleuth.api.http.HttpRequest>) bean)
+				: bean instanceof org.springframework.cloud.sleuth.SamplerFunction ? BraveSamplerFunction.toHttpBrave(
+						(org.springframework.cloud.sleuth.SamplerFunction<org.springframework.cloud.sleuth.http.HttpRequest>) bean)
 						: null;
 		return returnOrThrow(bean, braveSampler, beanName, SamplerFunction.class,
-				org.springframework.cloud.sleuth.api.SamplerFunction.class);
+				org.springframework.cloud.sleuth.SamplerFunction.class);
 	}
 
 	@NotNull

@@ -24,7 +24,7 @@ import org.mockito.BDDMockito;
 
 import org.springframework.beans.factory.NoSuchBeanDefinitionException;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
-import org.springframework.cloud.sleuth.api.exporter.FinishedSpan;
+import org.springframework.cloud.sleuth.exporter.FinishedSpan;
 
 import static org.assertj.core.api.BDDAssertions.then;
 

@@ -22,10 +22,10 @@ import org.assertj.core.api.BDDAssertions;
 import org.junit.jupiter.api.Test;
 
 import org.springframework.cloud.circuitbreaker.resilience4j.Resilience4JCircuitBreakerFactory;
-import org.springframework.cloud.sleuth.api.ScopedSpan;
-import org.springframework.cloud.sleuth.api.Span;
-import org.springframework.cloud.sleuth.api.Tracer;
-import org.springframework.cloud.sleuth.api.exporter.FinishedSpan;
+import org.springframework.cloud.sleuth.ScopedSpan;
+import org.springframework.cloud.sleuth.Span;
+import org.springframework.cloud.sleuth.Tracer;
+import org.springframework.cloud.sleuth.exporter.FinishedSpan;
 import org.springframework.cloud.sleuth.test.TestTracingAwareSupplier;
 
 public abstract class CircuitBreakerTests implements TestTracingAwareSupplier {

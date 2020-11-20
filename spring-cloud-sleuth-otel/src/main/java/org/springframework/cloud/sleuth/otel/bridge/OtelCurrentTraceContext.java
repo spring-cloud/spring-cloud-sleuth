@@ -31,8 +31,8 @@ import io.opentelemetry.context.ContextStorageProvider;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import org.springframework.cloud.sleuth.api.CurrentTraceContext;
-import org.springframework.cloud.sleuth.api.TraceContext;
+import org.springframework.cloud.sleuth.CurrentTraceContext;
+import org.springframework.cloud.sleuth.TraceContext;
 import org.springframework.context.ApplicationEvent;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.lang.Nullable;

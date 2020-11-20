@@ -6,11 +6,15 @@
 
 * New modules: `spring-cloud-sleuth-autoconfigure`, `spring-cloud-sleuth-api`, `spring-cloud-sleuth-instrumentation`
 ** `spring-cloud-sleuth-core` removed and changed to `spring-cloud-sleuth-instrumentation` & `spring-cloud-sleuth-api`
+* Removed `spring-cloud-starter-sleuth-otel`
+** To add OpenTelemetry support you need to add `spring-cloud-starter-sleuth` (adds Brave by default), exclude Brave and add `spring-cloud-sleuth-otel` dependency
 
 === Package moving
 
 * `org.springframework.cloud.sleuth.brave.autoconfig` -> `org.springframework.cloud.sleuth.autoconfig.brave`
 * `org.springframework.cloud.sleuth.otel.autoconfig` -> `org.springframework.cloud.sleuth.autoconfig.otel`
+* `org.springframework.cloud.sleuth` -> `org.springframework.cloud.sleuth`
+* Instrumentation: `org.springframework.cloud.sleuth.annotation` -> `org.springframework.cloud.sleuth.instrument.annotation`
 
 === Class opening
 

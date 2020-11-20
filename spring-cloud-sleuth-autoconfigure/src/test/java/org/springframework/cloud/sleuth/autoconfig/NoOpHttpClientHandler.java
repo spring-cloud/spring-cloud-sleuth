@@ -16,11 +16,11 @@
 
 package org.springframework.cloud.sleuth.autoconfig;
 
-import org.springframework.cloud.sleuth.api.Span;
-import org.springframework.cloud.sleuth.api.TraceContext;
-import org.springframework.cloud.sleuth.api.http.HttpClientHandler;
-import org.springframework.cloud.sleuth.api.http.HttpClientRequest;
-import org.springframework.cloud.sleuth.api.http.HttpClientResponse;
+import org.springframework.cloud.sleuth.Span;
+import org.springframework.cloud.sleuth.TraceContext;
+import org.springframework.cloud.sleuth.http.HttpClientHandler;
+import org.springframework.cloud.sleuth.http.HttpClientRequest;
+import org.springframework.cloud.sleuth.http.HttpClientResponse;
 
 /**
  * A noop implementation. Does nothing.

@@ -36,7 +36,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.cloud.sleuth.api.http.HttpClientHandler;
+import org.springframework.cloud.sleuth.http.HttpClientHandler;
 import org.springframework.cloud.sleuth.instrument.web.mvc.TracingAsyncClientHttpRequestInterceptor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
@@ -190,7 +190,7 @@ public class RestTemplateTraceAspectIntegrationTests {
 
 		@Bean
 		public AsyncRestTemplate asyncRestTemplate(
-				org.springframework.cloud.sleuth.api.CurrentTraceContext currentTraceContext,
+				org.springframework.cloud.sleuth.CurrentTraceContext currentTraceContext,
 				HttpClientHandler httpClientHandler) {
 			AsyncRestTemplate asyncRestTemplate = new AsyncRestTemplate();
 			asyncRestTemplate.setInterceptors(Collections.singletonList(

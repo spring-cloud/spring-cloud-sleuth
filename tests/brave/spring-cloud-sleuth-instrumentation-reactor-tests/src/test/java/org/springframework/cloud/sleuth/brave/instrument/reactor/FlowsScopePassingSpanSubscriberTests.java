@@ -16,8 +16,8 @@
 
 package org.springframework.cloud.sleuth.brave.instrument.reactor;
 
-import org.springframework.cloud.sleuth.api.CurrentTraceContext;
-import org.springframework.cloud.sleuth.api.TraceContext;
+import org.springframework.cloud.sleuth.CurrentTraceContext;
+import org.springframework.cloud.sleuth.TraceContext;
 import org.springframework.cloud.sleuth.brave.bridge.BraveAccessor;
 
 /**

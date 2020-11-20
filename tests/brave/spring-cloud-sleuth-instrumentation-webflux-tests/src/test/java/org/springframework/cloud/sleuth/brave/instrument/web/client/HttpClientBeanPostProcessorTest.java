@@ -16,7 +16,7 @@
 
 package org.springframework.cloud.sleuth.brave.instrument.web.client;
 
-import org.springframework.cloud.sleuth.api.TraceContext;
+import org.springframework.cloud.sleuth.TraceContext;
 import org.springframework.cloud.sleuth.brave.bridge.BraveAccessor;
 
 public class HttpClientBeanPostProcessorTest

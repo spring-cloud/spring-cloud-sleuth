@@ -20,7 +20,7 @@ import brave.sampler.Sampler;
 
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.cloud.sleuth.api.TraceContext;
+import org.springframework.cloud.sleuth.TraceContext;
 import org.springframework.cloud.sleuth.brave.BraveTestSpanHandler;
 import org.springframework.cloud.sleuth.brave.bridge.BraveAccessor;
 import org.springframework.cloud.sleuth.test.TestSpanHandler;

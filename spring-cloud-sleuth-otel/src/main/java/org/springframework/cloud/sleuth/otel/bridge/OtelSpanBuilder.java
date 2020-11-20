@@ -19,8 +19,8 @@ package org.springframework.cloud.sleuth.otel.bridge;
 import java.util.LinkedList;
 import java.util.List;
 
-import org.springframework.cloud.sleuth.api.Span;
-import org.springframework.cloud.sleuth.api.TraceContext;
+import org.springframework.cloud.sleuth.Span;
+import org.springframework.cloud.sleuth.TraceContext;
 import org.springframework.util.StringUtils;
 
 /**

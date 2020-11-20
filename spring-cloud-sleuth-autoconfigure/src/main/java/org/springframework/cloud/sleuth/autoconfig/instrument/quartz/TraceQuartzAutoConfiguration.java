@@ -25,11 +25,11 @@ import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.autoconfigure.quartz.QuartzAutoConfiguration;
-import org.springframework.cloud.sleuth.api.Tracer;
-import org.springframework.cloud.sleuth.api.propagation.Propagator;
+import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.autoconfig.brave.BraveAutoConfiguration;
 import org.springframework.cloud.sleuth.autoconfig.otel.OtelAutoConfiguration;
 import org.springframework.cloud.sleuth.instrument.quartz.TracingJobListener;
+import org.springframework.cloud.sleuth.propagation.Propagator;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 

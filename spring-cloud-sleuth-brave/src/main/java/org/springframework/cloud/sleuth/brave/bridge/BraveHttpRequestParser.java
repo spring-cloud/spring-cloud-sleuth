@@ -16,10 +16,10 @@
 
 package org.springframework.cloud.sleuth.brave.bridge;
 
-import org.springframework.cloud.sleuth.api.SpanCustomizer;
-import org.springframework.cloud.sleuth.api.TraceContext;
-import org.springframework.cloud.sleuth.api.http.HttpRequest;
-import org.springframework.cloud.sleuth.api.http.HttpRequestParser;
+import org.springframework.cloud.sleuth.SpanCustomizer;
+import org.springframework.cloud.sleuth.TraceContext;
+import org.springframework.cloud.sleuth.http.HttpRequest;
+import org.springframework.cloud.sleuth.http.HttpRequestParser;
 
 /**
  * Brave implementation of a {@link HttpRequestParser}.

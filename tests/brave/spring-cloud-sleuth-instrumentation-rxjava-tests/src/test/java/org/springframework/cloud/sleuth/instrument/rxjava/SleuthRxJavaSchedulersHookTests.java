@@ -38,7 +38,7 @@ import rx.plugins.RxJavaObservableExecutionHook;
 import rx.plugins.RxJavaPlugins;
 import rx.plugins.RxJavaSchedulersHook;
 
-import org.springframework.cloud.sleuth.api.Tracer;
+import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.brave.bridge.BraveAccessor;
 
 import static org.assertj.core.api.BDDAssertions.then;

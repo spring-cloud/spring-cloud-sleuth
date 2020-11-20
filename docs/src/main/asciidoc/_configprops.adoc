@@ -5,10 +5,10 @@
 |spring.sleuth.async.enabled | `true` | Enable instrumenting async related components so that the tracing information is passed between threads.
 |spring.sleuth.async.ignored-beans |  | List of {@link java.util.concurrent.Executor} bean names that should be ignored and not wrapped in a trace representation.
 |spring.sleuth.baggage.correlation-enabled | `true` | context.
-|spring.sleuth.baggage.correlation-fields |  | 
-|spring.sleuth.baggage.local-fields |  | 
+|spring.sleuth.baggage.correlation-fields |  |
+|spring.sleuth.baggage.local-fields |  |
 |spring.sleuth.baggage.remote-fields |  | List of fields that are referenced the same in-process as it is on the wire. For example, the field "x-vcap-request-id" would be set as-is including the prefix.
-|spring.sleuth.baggage.tag-fields |  | 
+|spring.sleuth.baggage.tag-fields |  |
 |spring.sleuth.circuitbreaker.enabled | `true` | Enable Spring Cloud CircuitBreaker instrumentation.
 |spring.sleuth.enabled | `true` |
 |spring.sleuth.feign.enabled | `true` | Enable span information propagation when using Feign.

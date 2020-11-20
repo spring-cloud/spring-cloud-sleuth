@@ -25,8 +25,8 @@ import org.assertj.core.api.BDDAssertions;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
-import org.springframework.cloud.sleuth.api.Span;
-import org.springframework.cloud.sleuth.api.exporter.FinishedSpan;
+import org.springframework.cloud.sleuth.Span;
+import org.springframework.cloud.sleuth.exporter.FinishedSpan;
 import org.springframework.cloud.sleuth.test.TestSpanHandler;
 import org.springframework.cloud.sleuth.test.TestTracingAwareSupplier;
 import org.springframework.integration.channel.DirectChannel;

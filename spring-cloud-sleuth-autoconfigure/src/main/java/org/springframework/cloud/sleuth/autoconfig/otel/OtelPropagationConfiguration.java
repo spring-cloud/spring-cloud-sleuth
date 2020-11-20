@@ -29,7 +29,7 @@ import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
-import org.springframework.cloud.sleuth.api.BaggageManager;
+import org.springframework.cloud.sleuth.BaggageManager;
 import org.springframework.cloud.sleuth.autoconfig.SleuthBaggageProperties;
 import org.springframework.cloud.sleuth.otel.propagation.BaggageTextMapPropagator;
 import org.springframework.cloud.sleuth.otel.propagation.CompositeTextMapPropagator;

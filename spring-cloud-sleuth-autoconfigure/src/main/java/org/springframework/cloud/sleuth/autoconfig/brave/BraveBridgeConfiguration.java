@@ -24,9 +24,7 @@ import brave.handler.SpanHandler;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
-import org.springframework.cloud.sleuth.api.SpanCustomizer;
-import org.springframework.cloud.sleuth.api.exporter.SpanFilter;
-import org.springframework.cloud.sleuth.api.propagation.Propagator;
+import org.springframework.cloud.sleuth.SpanCustomizer;
 import org.springframework.cloud.sleuth.autoconfig.SleuthBaggageProperties;
 import org.springframework.cloud.sleuth.brave.bridge.BraveBaggageManager;
 import org.springframework.cloud.sleuth.brave.bridge.BraveCurrentTraceContext;
@@ -37,6 +35,8 @@ import org.springframework.cloud.sleuth.brave.bridge.CompositePropagationFactory
 import org.springframework.cloud.sleuth.brave.bridge.CompositeSpanHandler;
 import org.springframework.cloud.sleuth.brave.propagation.PropagationFactorySupplier;
 import org.springframework.cloud.sleuth.brave.propagation.SleuthPropagationProperties;
+import org.springframework.cloud.sleuth.exporter.SpanFilter;
+import org.springframework.cloud.sleuth.propagation.Propagator;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.lang.Nullable;
@@ -46,12 +46,12 @@ import org.springframework.lang.Nullable;
 class BraveBridgeConfiguration {
 
 	@Bean
-	org.springframework.cloud.sleuth.api.Tracer braveTracer(brave.Tracer tracer) {
+	org.springframework.cloud.sleuth.Tracer braveTracer(brave.Tracer tracer) {
 		return new BraveTracer(tracer, new BraveBaggageManager());
 	}
 
 	@Bean
-	org.springframework.cloud.sleuth.api.CurrentTraceContext braveCurrentTraceContext(
+	org.springframework.cloud.sleuth.CurrentTraceContext braveCurrentTraceContext(
 			brave.propagation.CurrentTraceContext currentTraceContext) {
 		return new BraveCurrentTraceContext(currentTraceContext);
 	}

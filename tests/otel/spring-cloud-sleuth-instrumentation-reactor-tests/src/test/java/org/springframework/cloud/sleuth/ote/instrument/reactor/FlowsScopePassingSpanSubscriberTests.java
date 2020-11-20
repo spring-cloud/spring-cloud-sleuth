@@ -22,8 +22,8 @@ import io.opentelemetry.api.trace.TraceFlags;
 import io.opentelemetry.api.trace.TraceId;
 import io.opentelemetry.api.trace.TraceState;
 
-import org.springframework.cloud.sleuth.api.CurrentTraceContext;
-import org.springframework.cloud.sleuth.api.TraceContext;
+import org.springframework.cloud.sleuth.CurrentTraceContext;
+import org.springframework.cloud.sleuth.TraceContext;
 import org.springframework.cloud.sleuth.otel.bridge.OtelAccessor;
 
 /**

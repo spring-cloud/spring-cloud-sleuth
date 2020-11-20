@@ -23,13 +23,13 @@ import io.opentelemetry.context.Scope;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import org.springframework.cloud.sleuth.api.BaggageInScope;
-import org.springframework.cloud.sleuth.api.BaggageManager;
-import org.springframework.cloud.sleuth.api.ScopedSpan;
-import org.springframework.cloud.sleuth.api.Span;
-import org.springframework.cloud.sleuth.api.SpanCustomizer;
-import org.springframework.cloud.sleuth.api.TraceContext;
-import org.springframework.cloud.sleuth.api.Tracer;
+import org.springframework.cloud.sleuth.BaggageInScope;
+import org.springframework.cloud.sleuth.BaggageManager;
+import org.springframework.cloud.sleuth.ScopedSpan;
+import org.springframework.cloud.sleuth.Span;
+import org.springframework.cloud.sleuth.SpanCustomizer;
+import org.springframework.cloud.sleuth.TraceContext;
+import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.context.ApplicationEventPublisher;
 
 /**

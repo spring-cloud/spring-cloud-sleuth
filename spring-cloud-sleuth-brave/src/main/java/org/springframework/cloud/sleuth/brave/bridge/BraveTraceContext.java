@@ -18,7 +18,7 @@ package org.springframework.cloud.sleuth.brave.bridge;
 
 import java.util.Objects;
 
-import org.springframework.cloud.sleuth.api.TraceContext;
+import org.springframework.cloud.sleuth.TraceContext;
 import org.springframework.lang.Nullable;
 
 /**

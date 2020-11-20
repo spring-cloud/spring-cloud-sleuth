@@ -33,7 +33,7 @@ However, there are cases where you can change the sampling decision at runtime.
 
 One of such cases is skip reporting of certain client spans.
 To achieve that you can set the `spring.sleuth.web.client.skip-pattern` with the path patterns to be skipped.
-Another option is to provide your own custom `org.springframework.cloud.sleuth.api.SamplerFunction<`org.springframework.cloud.sleuth.api.http.HttpRequest>` implementation and define when a given `HttpRequest` should not be sampled.
+Another option is to provide your own custom `org.springframework.cloud.sleuth.SamplerFunction<`org.springframework.cloud.sleuth.http.HttpRequest>` implementation and define when a given `HttpRequest` should not be sampled.
 
 [[features-baggage]]
 == Baggage
@@ -67,8 +67,8 @@ A name set in either of these properties will result in a `Baggage` of the same 
 
 In order to automatically set the baggage values to Slf4j's MDC, you have to set the `spring.sleuth.baggage.correlation-fields` property with a list of allowed local or remote keys. E.g. `spring.sleuth.baggage.correlation-fields=country-code` will set the value of the `country-code` baggage into MDC.
 
-Note that the extra field is propagated and added to MDC starting with the next downstream trace context. To immediately
-add the extra field to MDC in the current trace context, configure the field to flush on update:
+Note that the extra field is propagated and added to MDC starting with the next downstream trace context.
+To immediately add the extra field to MDC in the current trace context, configure the field to flush on update:
 
 ```
 // configuration

@@ -19,9 +19,9 @@ package org.springframework.cloud.sleuth.brave.bridge;
 import java.util.Collection;
 import java.util.Collections;
 
-import org.springframework.cloud.sleuth.api.Span;
-import org.springframework.cloud.sleuth.api.http.HttpClientRequest;
-import org.springframework.cloud.sleuth.api.http.HttpClientResponse;
+import org.springframework.cloud.sleuth.Span;
+import org.springframework.cloud.sleuth.http.HttpClientRequest;
+import org.springframework.cloud.sleuth.http.HttpClientResponse;
 
 /**
  * Brave implementation of a {@link HttpClientResponse}.

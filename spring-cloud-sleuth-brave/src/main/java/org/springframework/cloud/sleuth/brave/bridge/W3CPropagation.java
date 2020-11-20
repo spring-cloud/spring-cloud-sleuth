@@ -36,7 +36,7 @@ import brave.propagation.TraceContextOrSamplingFlags;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import org.springframework.cloud.sleuth.api.BaggageInScope;
+import org.springframework.cloud.sleuth.BaggageInScope;
 import org.springframework.cloud.sleuth.autoconfig.SleuthBaggageProperties;
 
 import static java.util.Collections.singletonList;

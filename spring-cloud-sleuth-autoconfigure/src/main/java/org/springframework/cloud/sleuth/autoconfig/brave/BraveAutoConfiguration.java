@@ -62,7 +62,7 @@ import org.springframework.util.StringUtils;
 @Configuration(proxyBeanMethods = false)
 @ConditionalOnBraveEnabled
 @ConditionalOnProperty(value = "spring.sleuth.enabled", matchIfMissing = true)
-@ConditionalOnMissingBean(org.springframework.cloud.sleuth.api.Tracer.class)
+@ConditionalOnMissingBean(org.springframework.cloud.sleuth.Tracer.class)
 @ConditionalOnClass({ Tracer.class, SleuthProperties.class })
 @EnableConfigurationProperties({ SleuthProperties.class, SleuthSpanFilterProperties.class,
 		SleuthBaggageProperties.class, SleuthTracerProperties.class, SleuthBaggageProperties.class })

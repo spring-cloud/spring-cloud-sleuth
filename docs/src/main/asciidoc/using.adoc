@@ -19,8 +19,8 @@ You can check how both tracers are bridged to the Sleuth's API by looking at the
 
 The most commonly used interfaces are:
 
-* `org.springframework.cloud.sleuth.api.Tracer` - Using a tracer, you can create a root span capturing the critical path of a request.
-* `org.springframework.cloud.sleuth.api.Span` - Span is a single unit of work that needs to be started and stopped.
+* `org.springframework.cloud.sleuth.Tracer` - Using a tracer, you can create a root span capturing the critical path of a request.
+* `org.springframework.cloud.sleuth.Span` - Span is a single unit of work that needs to be started and stopped.
 Contains timing information and events and tags.
 
 You can also use your tracer implementation's API directly.

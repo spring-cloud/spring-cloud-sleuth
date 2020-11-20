@@ -35,10 +35,10 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.SpanName;
 import org.springframework.cloud.sleuth.SpanNamer;
-import org.springframework.cloud.sleuth.api.Span;
-import org.springframework.cloud.sleuth.api.Tracer;
+import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.instrument.async.TraceCallable;
 import org.springframework.cloud.sleuth.instrument.async.TraceRunnable;
 import org.springframework.cloud.sleuth.internal.DefaultSpanNamer;
@@ -65,7 +65,7 @@ public class SpringCloudSleuthDocTests {
 
 	brave.Tracer braveTracer = this.tracing.tracer();
 
-	org.springframework.cloud.sleuth.api.Tracer tracer = new BraveTracer(this.braveTracer, new BraveBaggageManager());
+	org.springframework.cloud.sleuth.Tracer tracer = new BraveTracer(this.braveTracer, new BraveBaggageManager());
 
 	@BeforeEach
 	public void setup() {

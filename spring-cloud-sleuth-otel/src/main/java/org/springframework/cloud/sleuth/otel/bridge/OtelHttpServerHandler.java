@@ -24,12 +24,12 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.propagation.TextMapPropagator;
 import io.opentelemetry.instrumentation.api.tracer.HttpServerTracer;
 
-import org.springframework.cloud.sleuth.api.Span;
-import org.springframework.cloud.sleuth.api.http.HttpRequestParser;
-import org.springframework.cloud.sleuth.api.http.HttpResponseParser;
-import org.springframework.cloud.sleuth.api.http.HttpServerHandler;
-import org.springframework.cloud.sleuth.api.http.HttpServerRequest;
-import org.springframework.cloud.sleuth.api.http.HttpServerResponse;
+import org.springframework.cloud.sleuth.Span;
+import org.springframework.cloud.sleuth.http.HttpRequestParser;
+import org.springframework.cloud.sleuth.http.HttpResponseParser;
+import org.springframework.cloud.sleuth.http.HttpServerHandler;
+import org.springframework.cloud.sleuth.http.HttpServerRequest;
+import org.springframework.cloud.sleuth.http.HttpServerResponse;
 import org.springframework.cloud.sleuth.instrument.web.SkipPatternProvider;
 import org.springframework.util.StringUtils;
 

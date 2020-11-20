@@ -23,10 +23,10 @@ import brave.sampler.Sampler;
 import org.assertj.core.api.Assertions;
 
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.cloud.sleuth.api.TraceContext;
-import org.springframework.cloud.sleuth.api.exporter.FinishedSpan;
+import org.springframework.cloud.sleuth.TraceContext;
 import org.springframework.cloud.sleuth.brave.BraveTestSpanHandler;
 import org.springframework.cloud.sleuth.brave.bridge.BraveAccessor;
+import org.springframework.cloud.sleuth.exporter.FinishedSpan;
 import org.springframework.cloud.sleuth.test.TestSpanHandler;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

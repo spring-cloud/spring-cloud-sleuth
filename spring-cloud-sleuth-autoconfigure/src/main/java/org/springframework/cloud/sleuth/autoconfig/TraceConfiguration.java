@@ -20,7 +20,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.cloud.sleuth.SpanNamer;
-import org.springframework.cloud.sleuth.api.exporter.SpanFilter;
+import org.springframework.cloud.sleuth.exporter.SpanFilter;
 import org.springframework.cloud.sleuth.internal.DefaultSpanNamer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

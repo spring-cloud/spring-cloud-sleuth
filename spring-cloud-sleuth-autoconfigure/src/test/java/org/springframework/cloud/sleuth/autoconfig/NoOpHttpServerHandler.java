@@ -16,10 +16,10 @@
 
 package org.springframework.cloud.sleuth.autoconfig;
 
-import org.springframework.cloud.sleuth.api.Span;
-import org.springframework.cloud.sleuth.api.http.HttpServerHandler;
-import org.springframework.cloud.sleuth.api.http.HttpServerRequest;
-import org.springframework.cloud.sleuth.api.http.HttpServerResponse;
+import org.springframework.cloud.sleuth.Span;
+import org.springframework.cloud.sleuth.http.HttpServerHandler;
+import org.springframework.cloud.sleuth.http.HttpServerRequest;
+import org.springframework.cloud.sleuth.http.HttpServerResponse;
 
 /**
  * A noop implementation. Does nothing.

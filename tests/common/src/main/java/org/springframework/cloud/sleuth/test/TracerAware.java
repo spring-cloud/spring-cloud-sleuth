@@ -16,12 +16,12 @@
 
 package org.springframework.cloud.sleuth.test;
 
-import org.springframework.cloud.sleuth.api.CurrentTraceContext;
-import org.springframework.cloud.sleuth.api.Tracer;
-import org.springframework.cloud.sleuth.api.http.HttpClientHandler;
-import org.springframework.cloud.sleuth.api.http.HttpRequestParser;
-import org.springframework.cloud.sleuth.api.http.HttpServerHandler;
-import org.springframework.cloud.sleuth.api.propagation.Propagator;
+import org.springframework.cloud.sleuth.CurrentTraceContext;
+import org.springframework.cloud.sleuth.Tracer;
+import org.springframework.cloud.sleuth.http.HttpClientHandler;
+import org.springframework.cloud.sleuth.http.HttpRequestParser;
+import org.springframework.cloud.sleuth.http.HttpServerHandler;
+import org.springframework.cloud.sleuth.propagation.Propagator;
 
 public interface TracerAware {
 

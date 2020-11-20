@@ -70,7 +70,7 @@
 		</dependency>
 		<dependency>
 			<groupId>${project.groupId}</groupId>
-			<artifactId>spring-cloud-starter-sleuth-otel</artifactId>
+			<artifactId>spring-cloud-sleuth-otel</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>

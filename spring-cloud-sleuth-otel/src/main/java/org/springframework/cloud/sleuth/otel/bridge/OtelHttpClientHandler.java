@@ -26,15 +26,15 @@ import io.opentelemetry.instrumentation.api.tracer.HttpClientTracer;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import org.springframework.cloud.sleuth.api.SamplerFunction;
-import org.springframework.cloud.sleuth.api.Span;
-import org.springframework.cloud.sleuth.api.TraceContext;
-import org.springframework.cloud.sleuth.api.http.HttpClientHandler;
-import org.springframework.cloud.sleuth.api.http.HttpClientRequest;
-import org.springframework.cloud.sleuth.api.http.HttpClientResponse;
-import org.springframework.cloud.sleuth.api.http.HttpRequest;
-import org.springframework.cloud.sleuth.api.http.HttpRequestParser;
-import org.springframework.cloud.sleuth.api.http.HttpResponseParser;
+import org.springframework.cloud.sleuth.SamplerFunction;
+import org.springframework.cloud.sleuth.Span;
+import org.springframework.cloud.sleuth.TraceContext;
+import org.springframework.cloud.sleuth.http.HttpClientHandler;
+import org.springframework.cloud.sleuth.http.HttpClientRequest;
+import org.springframework.cloud.sleuth.http.HttpClientResponse;
+import org.springframework.cloud.sleuth.http.HttpRequest;
+import org.springframework.cloud.sleuth.http.HttpRequestParser;
+import org.springframework.cloud.sleuth.http.HttpResponseParser;
 import org.springframework.lang.Nullable;
 import org.springframework.util.StringUtils;
 

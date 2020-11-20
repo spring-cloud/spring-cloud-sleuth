@@ -16,8 +16,8 @@
 
 package org.springframework.cloud.sleuth.autoconfig;
 
-import org.springframework.cloud.sleuth.api.BaggageInScope;
-import org.springframework.cloud.sleuth.api.TraceContext;
+import org.springframework.cloud.sleuth.BaggageInScope;
+import org.springframework.cloud.sleuth.TraceContext;
 
 /**
  * A noop implementation. Does nothing.

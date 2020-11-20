@@ -19,15 +19,15 @@ package org.springframework.cloud.sleuth.brave.bridge;
 import brave.Tracing;
 import brave.handler.MutableSpan;
 
-import org.springframework.cloud.sleuth.api.CurrentTraceContext;
-import org.springframework.cloud.sleuth.api.Span;
-import org.springframework.cloud.sleuth.api.TraceContext;
-import org.springframework.cloud.sleuth.api.Tracer;
-import org.springframework.cloud.sleuth.api.exporter.FinishedSpan;
-import org.springframework.cloud.sleuth.api.http.HttpClientHandler;
-import org.springframework.cloud.sleuth.api.http.HttpRequestParser;
-import org.springframework.cloud.sleuth.api.http.HttpServerHandler;
-import org.springframework.cloud.sleuth.api.propagation.Propagator;
+import org.springframework.cloud.sleuth.CurrentTraceContext;
+import org.springframework.cloud.sleuth.Span;
+import org.springframework.cloud.sleuth.TraceContext;
+import org.springframework.cloud.sleuth.Tracer;
+import org.springframework.cloud.sleuth.exporter.FinishedSpan;
+import org.springframework.cloud.sleuth.http.HttpClientHandler;
+import org.springframework.cloud.sleuth.http.HttpRequestParser;
+import org.springframework.cloud.sleuth.http.HttpServerHandler;
+import org.springframework.cloud.sleuth.propagation.Propagator;
 
 public final class BraveAccessor {
 

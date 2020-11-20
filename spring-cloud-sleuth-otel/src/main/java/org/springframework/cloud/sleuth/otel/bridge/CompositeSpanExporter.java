@@ -24,7 +24,7 @@ import io.opentelemetry.sdk.common.CompletableResultCode;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import io.opentelemetry.sdk.trace.export.SpanExporter;
 
-import org.springframework.cloud.sleuth.api.exporter.SpanFilter;
+import org.springframework.cloud.sleuth.exporter.SpanFilter;
 
 /**
  * Composes multiple {@link SpanFilter} into a single {@link SpanExporter}.

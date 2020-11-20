@@ -18,10 +18,10 @@ package org.springframework.cloud.sleuth.autoconfig.brave.instrument.web;
 
 import brave.http.HttpTracing;
 
-import org.springframework.cloud.sleuth.api.http.HttpClientHandler;
-import org.springframework.cloud.sleuth.api.http.HttpServerHandler;
 import org.springframework.cloud.sleuth.brave.bridge.BraveHttpClientHandler;
 import org.springframework.cloud.sleuth.brave.bridge.BraveHttpServerHandler;
+import org.springframework.cloud.sleuth.http.HttpClientHandler;
+import org.springframework.cloud.sleuth.http.HttpServerHandler;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 

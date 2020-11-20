@@ -28,10 +28,10 @@ import org.junit.jupiter.api.Test;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.web.servlet.context.ServletWebServerInitializedEvent;
-import org.springframework.cloud.sleuth.api.BaggageInScope;
-import org.springframework.cloud.sleuth.api.Span;
-import org.springframework.cloud.sleuth.api.Tracer;
-import org.springframework.cloud.sleuth.api.exporter.FinishedSpan;
+import org.springframework.cloud.sleuth.BaggageInScope;
+import org.springframework.cloud.sleuth.Span;
+import org.springframework.cloud.sleuth.Tracer;
+import org.springframework.cloud.sleuth.exporter.FinishedSpan;
 import org.springframework.cloud.sleuth.test.TestSpanHandler;
 import org.springframework.context.ApplicationListener;
 import org.springframework.context.annotation.Bean;

@@ -33,7 +33,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.cloud.sleuth.SpanNamer;
-import org.springframework.cloud.sleuth.api.Tracer;
+import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.internal.DefaultSpanNamer;
 import org.springframework.cloud.sleuth.test.TestTracingAwareSupplier;
 import org.springframework.scheduling.Trigger;

@@ -33,7 +33,7 @@ import org.springframework.boot.test.context.runner.ApplicationContextRunner;
 import org.springframework.cloud.gateway.config.GatewayAutoConfiguration;
 import org.springframework.cloud.gateway.config.GatewayClassPathWarningAutoConfiguration;
 import org.springframework.cloud.gateway.config.GatewayMetricsAutoConfiguration;
-import org.springframework.cloud.sleuth.api.Tracer;
+import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.instrument.quartz.TracingJobListener;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

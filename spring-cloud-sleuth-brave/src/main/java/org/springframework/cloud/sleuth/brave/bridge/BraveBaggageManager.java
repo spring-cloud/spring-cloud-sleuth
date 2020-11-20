@@ -22,9 +22,9 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import brave.baggage.BaggageField;
 
-import org.springframework.cloud.sleuth.api.BaggageInScope;
-import org.springframework.cloud.sleuth.api.BaggageManager;
-import org.springframework.cloud.sleuth.api.TraceContext;
+import org.springframework.cloud.sleuth.BaggageInScope;
+import org.springframework.cloud.sleuth.BaggageManager;
+import org.springframework.cloud.sleuth.TraceContext;
 
 /**
  * Brave implementation of a {@link BaggageManager}.

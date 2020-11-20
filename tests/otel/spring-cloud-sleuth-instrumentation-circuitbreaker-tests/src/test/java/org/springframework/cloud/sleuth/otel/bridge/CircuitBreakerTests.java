@@ -19,7 +19,7 @@ package org.springframework.cloud.sleuth.otel.bridge;
 import io.opentelemetry.api.common.AttributeKey;
 import org.assertj.core.api.BDDAssertions;
 
-import org.springframework.cloud.sleuth.api.exporter.FinishedSpan;
+import org.springframework.cloud.sleuth.exporter.FinishedSpan;
 import org.springframework.cloud.sleuth.otel.OtelTestTracing;
 import org.springframework.cloud.sleuth.test.TestTracingAware;
 

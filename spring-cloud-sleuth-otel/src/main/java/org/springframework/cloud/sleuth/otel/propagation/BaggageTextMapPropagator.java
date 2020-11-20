@@ -28,7 +28,7 @@ import io.opentelemetry.context.propagation.TextMapPropagator;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import org.springframework.cloud.sleuth.api.BaggageManager;
+import org.springframework.cloud.sleuth.BaggageManager;
 import org.springframework.cloud.sleuth.autoconfig.SleuthBaggageProperties;
 
 /**

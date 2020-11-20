@@ -16,7 +16,7 @@
 
 package org.springframework.cloud.sleuth.autoconfig;
 
-import org.springframework.cloud.sleuth.api.Tracer;
+import org.springframework.cloud.sleuth.Tracer;
 
 /**
  * A noop implementation. Does nothing.

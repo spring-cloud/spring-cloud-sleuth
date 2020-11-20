@@ -19,12 +19,12 @@ package org.springframework.cloud.sleuth.autoconfig;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.springframework.cloud.sleuth.api.BaggageInScope;
-import org.springframework.cloud.sleuth.api.ScopedSpan;
-import org.springframework.cloud.sleuth.api.Span;
-import org.springframework.cloud.sleuth.api.SpanCustomizer;
-import org.springframework.cloud.sleuth.api.TraceContext;
-import org.springframework.cloud.sleuth.api.Tracer;
+import org.springframework.cloud.sleuth.BaggageInScope;
+import org.springframework.cloud.sleuth.ScopedSpan;
+import org.springframework.cloud.sleuth.Span;
+import org.springframework.cloud.sleuth.SpanCustomizer;
+import org.springframework.cloud.sleuth.TraceContext;
+import org.springframework.cloud.sleuth.Tracer;
 
 /**
  * A noop implementation. Does nothing.

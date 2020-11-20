@@ -32,10 +32,10 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
+import org.springframework.cloud.sleuth.CurrentTraceContext;
 import org.springframework.cloud.sleuth.SpanNamer;
-import org.springframework.cloud.sleuth.api.CurrentTraceContext;
-import org.springframework.cloud.sleuth.api.Tracer;
-import org.springframework.cloud.sleuth.api.http.HttpServerHandler;
+import org.springframework.cloud.sleuth.Tracer;
+import org.springframework.cloud.sleuth.http.HttpServerHandler;
 import org.springframework.cloud.sleuth.instrument.web.SleuthWebProperties;
 import org.springframework.cloud.sleuth.instrument.web.TraceWebAspect;
 import org.springframework.cloud.sleuth.instrument.web.mvc.SpanCustomizingAsyncHandlerInterceptor;

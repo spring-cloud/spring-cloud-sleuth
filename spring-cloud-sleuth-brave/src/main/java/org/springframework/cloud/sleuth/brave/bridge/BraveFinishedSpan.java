@@ -21,8 +21,8 @@ import java.util.Map;
 
 import brave.handler.MutableSpan;
 
-import org.springframework.cloud.sleuth.api.Span;
-import org.springframework.cloud.sleuth.api.exporter.FinishedSpan;
+import org.springframework.cloud.sleuth.Span;
+import org.springframework.cloud.sleuth.exporter.FinishedSpan;
 
 /**
  * Brave implementation of a {@link FinishedSpan}.

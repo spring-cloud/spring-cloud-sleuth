@@ -21,8 +21,8 @@ import org.junit.jupiter.api.Test;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.annotation.NewSpanParser;
-import org.springframework.cloud.sleuth.api.Tracer;
 
 import static org.assertj.core.api.Assertions.assertThat;
 

@@ -22,9 +22,9 @@ import java.util.stream.Collectors;
 
 import brave.test.IntegrationTestSpanHandler;
 
-import org.springframework.cloud.sleuth.api.Span;
-import org.springframework.cloud.sleuth.api.exporter.FinishedSpan;
+import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.brave.bridge.BraveAccessor;
+import org.springframework.cloud.sleuth.exporter.FinishedSpan;
 import org.springframework.cloud.sleuth.test.TestSpanHandler;
 
 public class BraveTestSpanHandler implements TestSpanHandler {

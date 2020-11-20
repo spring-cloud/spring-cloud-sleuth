@@ -18,8 +18,8 @@ package org.springframework.cloud.sleuth.brave.bridge;
 
 import brave.sampler.SamplerFunctions;
 
-import org.springframework.cloud.sleuth.api.SamplerFunction;
-import org.springframework.cloud.sleuth.api.http.HttpRequest;
+import org.springframework.cloud.sleuth.SamplerFunction;
+import org.springframework.cloud.sleuth.http.HttpRequest;
 
 /**
  * Brave implementation of a {@link SamplerFunction}.

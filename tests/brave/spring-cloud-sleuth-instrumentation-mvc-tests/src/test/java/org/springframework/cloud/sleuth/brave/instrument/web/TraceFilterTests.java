@@ -22,9 +22,9 @@ import brave.http.HttpTracing;
 import org.assertj.core.api.BDDAssertions;
 import org.junit.jupiter.api.Test;
 
-import org.springframework.cloud.sleuth.api.http.HttpServerHandler;
 import org.springframework.cloud.sleuth.brave.BraveTestTracing;
 import org.springframework.cloud.sleuth.brave.bridge.BraveAccessor;
+import org.springframework.cloud.sleuth.http.HttpServerHandler;
 import org.springframework.cloud.sleuth.instrument.web.servlet.TracingFilter;
 import org.springframework.cloud.sleuth.test.TestTracingAware;
 import org.springframework.cloud.sleuth.test.TracerAware;

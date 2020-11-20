@@ -31,7 +31,7 @@ import org.apache.commons.logging.LogFactory;
 import org.slf4j.MDC;
 
 import org.springframework.beans.factory.BeanFactory;
-import org.springframework.cloud.sleuth.api.BaggageManager;
+import org.springframework.cloud.sleuth.BaggageManager;
 import org.springframework.cloud.sleuth.autoconfig.SleuthBaggageProperties;
 import org.springframework.context.ApplicationEvent;
 import org.springframework.context.ApplicationListener;

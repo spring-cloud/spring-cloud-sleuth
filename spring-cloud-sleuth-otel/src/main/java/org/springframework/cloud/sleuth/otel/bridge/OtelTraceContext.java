@@ -24,7 +24,7 @@ import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.sdk.trace.ReadableSpan;
 
-import org.springframework.cloud.sleuth.api.TraceContext;
+import org.springframework.cloud.sleuth.TraceContext;
 import org.springframework.lang.Nullable;
 
 /**

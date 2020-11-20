@@ -665,7 +665,7 @@ Register a bean of `HttpResponseParser` type whose name is `HttpServerResponsePa
 ====
 [source,java,indent=0]
 ----
-import org.springframework.cloud.sleuth.api.http.HttpResponseParser;
+import org.springframework.cloud.sleuth.http.HttpResponseParser;
 import org.springframework.cloud.sleuth.instrument.web.HttpServerResponseParser;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

@@ -27,8 +27,8 @@ import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.sdk.trace.data.SpanData;
 
-import org.springframework.cloud.sleuth.api.Span;
-import org.springframework.cloud.sleuth.api.exporter.FinishedSpan;
+import org.springframework.cloud.sleuth.Span;
+import org.springframework.cloud.sleuth.exporter.FinishedSpan;
 
 /**
  * OpenTelemetry implementation of a {@link FinishedSpan}.

@@ -18,7 +18,7 @@ package org.springframework.cloud.sleuth.brave;
 
 import org.assertj.core.api.BDDAssertions;
 
-import org.springframework.cloud.sleuth.api.exporter.FinishedSpan;
+import org.springframework.cloud.sleuth.exporter.FinishedSpan;
 import org.springframework.cloud.sleuth.test.TestTracingAssertions;
 
 public class BraveTestTracingAssertions implements TestTracingAssertions {

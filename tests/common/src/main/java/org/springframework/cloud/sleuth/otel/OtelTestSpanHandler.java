@@ -29,8 +29,8 @@ import io.opentelemetry.sdk.trace.SpanProcessor;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import io.opentelemetry.sdk.trace.export.SpanExporter;
 
-import org.springframework.cloud.sleuth.api.Span;
-import org.springframework.cloud.sleuth.api.exporter.FinishedSpan;
+import org.springframework.cloud.sleuth.Span;
+import org.springframework.cloud.sleuth.exporter.FinishedSpan;
 import org.springframework.cloud.sleuth.otel.bridge.ArrayListSpanProcessor;
 import org.springframework.cloud.sleuth.otel.bridge.OtelAccessor;
 import org.springframework.cloud.sleuth.test.TestSpanHandler;

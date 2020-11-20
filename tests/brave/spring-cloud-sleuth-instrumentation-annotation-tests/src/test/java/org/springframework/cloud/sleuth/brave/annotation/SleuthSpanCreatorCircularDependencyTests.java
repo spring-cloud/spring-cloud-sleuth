@@ -28,7 +28,7 @@ import org.springframework.test.context.ContextConfiguration;
 @SpringBootTest
 @ContextConfiguration(classes = SleuthSpanCreatorCircularDependencyTests.Config.class)
 public class SleuthSpanCreatorCircularDependencyTests
-		extends org.springframework.cloud.sleuth.annotation.SleuthSpanCreatorCircularDependencyTests {
+		extends org.springframework.cloud.sleuth.instrument.annotation.SleuthSpanCreatorCircularDependencyTests {
 
 	@Configuration(proxyBeanMethods = false)
 	static class Config {

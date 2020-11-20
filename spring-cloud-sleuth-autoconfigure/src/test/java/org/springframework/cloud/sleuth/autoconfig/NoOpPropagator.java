@@ -19,9 +19,9 @@ package org.springframework.cloud.sleuth.autoconfig;
 import java.util.Collections;
 import java.util.List;
 
-import org.springframework.cloud.sleuth.api.Span;
-import org.springframework.cloud.sleuth.api.TraceContext;
-import org.springframework.cloud.sleuth.api.propagation.Propagator;
+import org.springframework.cloud.sleuth.Span;
+import org.springframework.cloud.sleuth.TraceContext;
+import org.springframework.cloud.sleuth.propagation.Propagator;
 
 /**
  * A noop implementation. Does nothing.

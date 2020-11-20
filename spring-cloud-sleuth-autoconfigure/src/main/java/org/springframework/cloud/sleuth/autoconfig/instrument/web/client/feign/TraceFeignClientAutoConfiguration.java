@@ -28,7 +28,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.cloud.openfeign.FeignAutoConfiguration;
 import org.springframework.cloud.openfeign.FeignContext;
-import org.springframework.cloud.sleuth.api.Tracer;
+import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.instrument.web.client.feign.FeignContextBeanPostProcessor;
 import org.springframework.cloud.sleuth.instrument.web.client.feign.OkHttpFeignClientBeanPostProcessor;
 import org.springframework.cloud.sleuth.instrument.web.client.feign.SleuthFeignBuilder;

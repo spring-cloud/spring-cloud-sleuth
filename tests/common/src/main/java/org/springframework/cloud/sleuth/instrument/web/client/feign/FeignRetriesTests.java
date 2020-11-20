@@ -40,9 +40,9 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import org.springframework.beans.factory.BeanFactory;
-import org.springframework.cloud.sleuth.api.CurrentTraceContext;
-import org.springframework.cloud.sleuth.api.Span;
-import org.springframework.cloud.sleuth.api.http.HttpClientHandler;
+import org.springframework.cloud.sleuth.CurrentTraceContext;
+import org.springframework.cloud.sleuth.Span;
+import org.springframework.cloud.sleuth.http.HttpClientHandler;
 import org.springframework.cloud.sleuth.test.TestTracingAwareSupplier;
 
 /**

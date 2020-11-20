@@ -24,8 +24,8 @@ import org.assertj.core.api.BDDAssertions;
 import org.awaitility.Awaitility;
 import org.junit.jupiter.api.Test;
 
-import org.springframework.cloud.sleuth.api.Span;
-import org.springframework.cloud.sleuth.api.Tracer;
+import org.springframework.cloud.sleuth.Span;
+import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.internal.DefaultSpanNamer;
 import org.springframework.cloud.sleuth.test.TestTracingAwareSupplier;
 import org.springframework.core.task.AsyncListenableTaskExecutor;

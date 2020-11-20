@@ -31,12 +31,11 @@ import org.springframework.boot.autoconfigure.security.oauth2.resource.UserInfoR
 import org.springframework.boot.web.client.RestTemplateCustomizer;
 import org.springframework.cloud.commons.httpclient.HttpClientConfiguration;
 import org.springframework.cloud.gateway.filter.headers.HttpHeadersFilter;
-import org.springframework.cloud.sleuth.api.CurrentTraceContext;
-import org.springframework.cloud.sleuth.api.Tracer;
-import org.springframework.cloud.sleuth.api.http.HttpClientHandler;
-import org.springframework.cloud.sleuth.api.propagation.Propagator;
+import org.springframework.cloud.sleuth.CurrentTraceContext;
+import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.autoconfig.brave.BraveAutoConfiguration;
 import org.springframework.cloud.sleuth.autoconfig.otel.OtelAutoConfiguration;
+import org.springframework.cloud.sleuth.http.HttpClientHandler;
 import org.springframework.cloud.sleuth.instrument.web.client.HttpClientBeanPostProcessor;
 import org.springframework.cloud.sleuth.instrument.web.client.LazyTraceClientHttpRequestInterceptor;
 import org.springframework.cloud.sleuth.instrument.web.client.TraceRequestHttpHeadersFilter;
@@ -47,6 +46,7 @@ import org.springframework.cloud.sleuth.instrument.web.client.TraceUserInfoRestT
 import org.springframework.cloud.sleuth.instrument.web.client.TraceWebClientBeanPostProcessor;
 import org.springframework.cloud.sleuth.instrument.web.client.UserInfoRestTemplateCustomizerBeanPostProcessor;
 import org.springframework.cloud.sleuth.instrument.web.mvc.TracingClientHttpRequestInterceptor;
+import org.springframework.cloud.sleuth.propagation.Propagator;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

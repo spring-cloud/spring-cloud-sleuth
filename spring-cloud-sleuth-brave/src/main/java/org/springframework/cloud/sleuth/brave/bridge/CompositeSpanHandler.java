@@ -23,7 +23,7 @@ import brave.handler.MutableSpan;
 import brave.handler.SpanHandler;
 import brave.propagation.TraceContext;
 
-import org.springframework.cloud.sleuth.api.exporter.SpanFilter;
+import org.springframework.cloud.sleuth.exporter.SpanFilter;
 
 /**
  * Merges {@link SpanFilter}s into a {@link SpanHandler}.

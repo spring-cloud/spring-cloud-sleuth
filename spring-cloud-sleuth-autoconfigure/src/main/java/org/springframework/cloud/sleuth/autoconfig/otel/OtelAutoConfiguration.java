@@ -60,7 +60,7 @@ import org.springframework.context.annotation.Import;
 @ConditionalOnClass({ io.opentelemetry.api.trace.Tracer.class, OtelProperties.class })
 @ConditionalOnOtelEnabled
 @ConditionalOnProperty(value = "spring.sleuth.enabled", matchIfMissing = true)
-@ConditionalOnMissingBean(org.springframework.cloud.sleuth.api.Tracer.class)
+@ConditionalOnMissingBean(org.springframework.cloud.sleuth.Tracer.class)
 @EnableConfigurationProperties({ OtelProperties.class, SleuthSpanFilterProperties.class, SleuthBaggageProperties.class,
 		SleuthTracerProperties.class })
 @Import({ OtelBridgeConfiguation.class, OtelPropagationConfiguration.class, TraceConfiguration.class,

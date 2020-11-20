@@ -18,7 +18,7 @@ package org.springframework.cloud.sleuth.otel.instrument.web.client;
 
 import java.util.Map;
 
-import org.springframework.cloud.sleuth.api.Span;
+import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.otel.OtelTestTracing;
 import org.springframework.cloud.sleuth.test.TestTracingAware;
 

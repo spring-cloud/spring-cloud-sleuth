@@ -16,7 +16,7 @@
 
 package org.springframework.cloud.sleuth.autoconfig;
 
-import org.springframework.cloud.sleuth.api.SpanCustomizer;
+import org.springframework.cloud.sleuth.SpanCustomizer;
 
 /**
  * A noop implementation. Does nothing.

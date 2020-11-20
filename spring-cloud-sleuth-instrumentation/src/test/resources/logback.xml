@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ~ Copyright 2013-2018 the original author or authors.
+  ~
+  ~ Licensed under the Apache License, Version 2.0 (the "License");
+  ~ you may not use this file except in compliance with the License.
+  ~ You may obtain a copy of the License at
+  ~
+  ~      https://www.apache.org/licenses/LICENSE-2.0
+  ~
+  ~ Unless required by applicable law or agreed to in writing, software
+  ~ distributed under the License is distributed on an "AS IS" BASIS,
+  ~ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  ~ See the License for the specific language governing permissions and
+  ~ limitations under the License.
+  -->
+
+<configuration>
+	<include resource="org/springframework/boot/logging/logback/base.xml"/>
+	<logger name="feign" level="DEBUG"/>
+	<logger name="com.netflix.discovery.InstanceInfoReplicator" level="ERROR"/>
+	<logger name="org.springframework" level="INFO"/>
+	<logger name="org.springframework.cloud.sleuth" level="TRACE"/>
+	<logger name="org.springframework.boot.autoconfigure.logging" level="INFO"/>
+	<logger name="org.springframework.cloud.sleuth.log" level="DEBUG"/>
+	<logger name="org.springframework.cloud.sleuth.trace" level="DEBUG"/>
+	<logger name="org.springframework.cloud.sleuth.instrument.rxjava" level="DEBUG"/>
+	<logger name="org.springframework.cloud.sleuth.instrument.reactor" level="TRACE"/>
+	<root level="INFO">
+		<appender-ref ref="CONSOLE"/>
+		<appender-ref ref="FILE"/>
+	</root>
+</configuration>

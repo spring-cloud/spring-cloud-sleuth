@@ -28,7 +28,7 @@ import org.springframework.test.context.ContextConfiguration;
 @SpringBootTest
 @ContextConfiguration(classes = NullSpanTagAnnotationHandlerTests.Config.class)
 public class NullSpanTagAnnotationHandlerTests
-		extends org.springframework.cloud.sleuth.annotation.NullSpanTagAnnotationHandlerTests {
+		extends org.springframework.cloud.sleuth.instrument.annotation.NullSpanTagAnnotationHandlerTests {
 
 	@Configuration(proxyBeanMethods = false)
 	static class Config {

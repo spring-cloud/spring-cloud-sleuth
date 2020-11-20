@@ -37,12 +37,12 @@ import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.boot.test.system.CapturedOutput;
 import org.springframework.boot.test.system.OutputCaptureExtension;
-import org.springframework.cloud.sleuth.api.CurrentTraceContext;
-import org.springframework.cloud.sleuth.api.Span;
-import org.springframework.cloud.sleuth.api.Tracer;
-import org.springframework.cloud.sleuth.api.exporter.FinishedSpan;
+import org.springframework.cloud.sleuth.CurrentTraceContext;
+import org.springframework.cloud.sleuth.Span;
+import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.autoconfig.instrument.reactor.Issue866Configuration;
 import org.springframework.cloud.sleuth.autoconfig.instrument.reactor.TraceReactorAutoConfigurationAccessorConfiguration;
+import org.springframework.cloud.sleuth.exporter.FinishedSpan;
 import org.springframework.cloud.sleuth.instrument.web.WebFluxSleuthOperators;
 import org.springframework.cloud.sleuth.test.TestSpanHandler;
 import org.springframework.context.ConfigurableApplicationContext;
@@ -238,7 +238,7 @@ public abstract class FlatMapTests {
 		Span spanInFoo;
 
 		@Bean
-		RouterFunction<ServerResponse> handlers(org.springframework.cloud.sleuth.api.Tracer tracing,
+		RouterFunction<ServerResponse> handlers(org.springframework.cloud.sleuth.Tracer tracing,
 				CurrentTraceContext currentTraceContext, ManualRequestSender requestSender) {
 			return route(GET("/noFlatMap"), request -> {
 				ServerWebExchange exchange = request.exchange();
