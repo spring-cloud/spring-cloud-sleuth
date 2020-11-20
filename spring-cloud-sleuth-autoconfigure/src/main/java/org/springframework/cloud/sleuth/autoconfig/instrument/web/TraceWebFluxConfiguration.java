@@ -37,7 +37,8 @@ import org.springframework.context.annotation.Configuration;
 class TraceWebFluxConfiguration {
 
 	@Bean
-	TraceWebFilter traceFilter(Tracer tracer, HttpServerHandler httpServerHandler, SleuthWebProperties sleuthWebProperties) {
+	TraceWebFilter traceFilter(Tracer tracer, HttpServerHandler httpServerHandler,
+			SleuthWebProperties sleuthWebProperties) {
 		TraceWebFilter traceWebFilter = new TraceWebFilter(tracer, httpServerHandler);
 		traceWebFilter.setOrder(sleuthWebProperties.getFilterOrder());
 		return traceWebFilter;
