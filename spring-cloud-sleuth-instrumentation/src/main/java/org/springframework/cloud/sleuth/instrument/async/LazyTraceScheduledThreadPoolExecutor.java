@@ -105,7 +105,7 @@ class LazyTraceScheduledThreadPoolExecutor extends ScheduledThreadPoolExecutor {
 				Runnable.class, Object.class);
 		makeAccessibleIfNotNull(this.newTaskForRunnable);
 		this.newTaskForCallable = ReflectionUtils.findMethod(ScheduledThreadPoolExecutor.class, "newTaskFor",
-				Callable.class, Object.class);
+				Callable.class);
 		makeAccessibleIfNotNull(this.newTaskForCallable);
 	}
 
@@ -140,7 +140,7 @@ class LazyTraceScheduledThreadPoolExecutor extends ScheduledThreadPoolExecutor {
 				Runnable.class, Object.class);
 		makeAccessibleIfNotNull(this.newTaskForRunnable);
 		this.newTaskForCallable = ReflectionUtils.findMethod(ScheduledThreadPoolExecutor.class, "newTaskFor",
-				Callable.class, Object.class);
+				Callable.class);
 		makeAccessibleIfNotNull(this.newTaskForCallable);
 	}
 
