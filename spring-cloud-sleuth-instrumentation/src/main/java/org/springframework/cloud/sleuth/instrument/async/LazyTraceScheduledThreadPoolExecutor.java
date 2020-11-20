@@ -90,8 +90,8 @@ class LazyTraceScheduledThreadPoolExecutor extends ScheduledThreadPoolExecutor {
 		this.decorateTaskRunnable = ReflectionUtils.findMethod(ScheduledThreadPoolExecutor.class, "decorateTask",
 				Runnable.class, RunnableScheduledFuture.class);
 		makeAccessibleIfNotNull(this.decorateTaskRunnable);
-		this.decorateTaskCallable = ReflectionUtils.findMethod(ScheduledThreadPoolExecutor.class,
-				"decorateTask", Callable.class, RunnableScheduledFuture.class);
+		this.decorateTaskCallable = ReflectionUtils.findMethod(ScheduledThreadPoolExecutor.class, "decorateTask",
+				Callable.class, RunnableScheduledFuture.class);
 		makeAccessibleIfNotNull(this.decorateTaskCallable);
 		this.finalize = ReflectionUtils.findMethod(ScheduledThreadPoolExecutor.class, "finalize", null);
 		makeAccessibleIfNotNull(this.finalize);
@@ -125,8 +125,8 @@ class LazyTraceScheduledThreadPoolExecutor extends ScheduledThreadPoolExecutor {
 		this.decorateTaskRunnable = ReflectionUtils.findMethod(ScheduledThreadPoolExecutor.class, "decorateTask",
 				Runnable.class, RunnableScheduledFuture.class);
 		makeAccessibleIfNotNull(this.decorateTaskRunnable);
-		this.decorateTaskCallable = ReflectionUtils.findMethod(ScheduledThreadPoolExecutor.class,
-				"decorateTask", Callable.class, RunnableScheduledFuture.class);
+		this.decorateTaskCallable = ReflectionUtils.findMethod(ScheduledThreadPoolExecutor.class, "decorateTask",
+				Callable.class, RunnableScheduledFuture.class);
 		makeAccessibleIfNotNull(this.decorateTaskCallable);
 		this.finalize = ReflectionUtils.findMethod(ScheduledThreadPoolExecutor.class, "finalize", null);
 		makeAccessibleIfNotNull(this.finalize);
@@ -416,7 +416,7 @@ class LazyTraceScheduledThreadPoolExecutor extends ScheduledThreadPoolExecutor {
 		return this.delegate.invokeAny(wrapCallableCollection(tasks));
 	}
 
-	private <T> Collection<? extends Callable<T>> wrapCallableCollection(Collection<? extends Callable<T>> tasks) {
+	<T> Collection<? extends Callable<T>> wrapCallableCollection(Collection<? extends Callable<T>> tasks) {
 		List<Callable<T>> ts = new ArrayList<>();
 		for (Callable<T> task : tasks) {
 			if (!(task instanceof TraceCallable)) {
