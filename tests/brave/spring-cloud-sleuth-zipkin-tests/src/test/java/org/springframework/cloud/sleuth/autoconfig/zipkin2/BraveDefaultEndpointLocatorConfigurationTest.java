@@ -16,31 +16,9 @@
 
 package org.springframework.cloud.sleuth.autoconfig.zipkin2;
 
-import org.springframework.cloud.sleuth.zipkin2.EndpointLocator;
-
 /**
  * @author Matcin Wielgus
  */
 public class BraveDefaultEndpointLocatorConfigurationTest extends DefaultEndpointLocatorConfigurationTest {
-
-	@Override
-	protected Class emptyConfiguration() {
-		return BraveEmptyConfiguration.class;
-	}
-
-	@Override
-	protected Class configurationWithRegistrationClass() {
-		return BraveConfigurationWithRegistration.class;
-	}
-
-	@Override
-	protected Class configurationWithCustomLocatorClass() {
-		return BraveConfigurationWithCustomLocator.class;
-	}
-
-	@Override
-	protected EndpointLocator locatorFromConfiguration() {
-		return BraveConfigurationWithCustomLocator.locator;
-	}
 
 }

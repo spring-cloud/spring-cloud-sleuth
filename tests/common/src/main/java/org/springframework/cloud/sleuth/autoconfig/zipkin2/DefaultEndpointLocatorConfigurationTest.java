@@ -25,20 +25,12 @@ import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
-import org.springframework.boot.actuate.autoconfigure.security.servlet.ManagementWebSecurityAutoConfiguration;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
-import org.springframework.boot.autoconfigure.mongo.MongoAutoConfiguration;
-import org.springframework.boot.autoconfigure.quartz.QuartzAutoConfiguration;
 import org.springframework.boot.autoconfigure.web.ServerProperties;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
 import org.springframework.cloud.client.serviceregistry.Registration;
 import org.springframework.cloud.commons.util.InetUtils;
 import org.springframework.cloud.commons.util.InetUtilsProperties;
-import org.springframework.cloud.gateway.config.GatewayAutoConfiguration;
-import org.springframework.cloud.gateway.config.GatewayClassPathWarningAutoConfiguration;
-import org.springframework.cloud.gateway.config.GatewayMetricsAutoConfiguration;
-import org.springframework.cloud.sleuth.autoconfig.brave.BraveAutoConfiguration;
-import org.springframework.cloud.sleuth.autoconfig.otel.OtelAutoConfiguration;
 import org.springframework.cloud.sleuth.zipkin2.DefaultEndpointLocator;
 import org.springframework.cloud.sleuth.zipkin2.EndpointLocator;
 import org.springframework.cloud.sleuth.zipkin2.ZipkinProperties;
@@ -60,40 +52,29 @@ public abstract class DefaultEndpointLocatorConfigurationTest {
 
 	@Test
 	public void endpointLocatorShouldDefaultToServerPropertiesEndpointLocator() {
-		new ApplicationContextRunner().withUserConfiguration(emptyConfiguration())
+		new ApplicationContextRunner().withUserConfiguration(EmptyConfiguration.class)
 				.withPropertyValues("spring.jmx.enabled=false")
 				.run(ctxt -> assertThat(ctxt).hasSingleBean(DefaultEndpointLocator.class));
-	}
-
-	protected Class emptyConfiguration() {
-		throw new UnsupportedOperationException("Provide configuration");
 	}
 
 	@Test
 	public void endpointLocatorShouldDefaultToServerPropertiesEndpointLocatorEvenWhenDiscoveryClientPresent() {
-		new ApplicationContextRunner().withUserConfiguration(configurationWithRegistrationClass())
+		new ApplicationContextRunner().withUserConfiguration(ConfigurationWithRegistration.class)
 				.withPropertyValues("spring.jmx.enabled=false")
 				.run(ctxt -> assertThat(ctxt).hasSingleBean(DefaultEndpointLocator.class));
 	}
 
-	protected Class configurationWithRegistrationClass() {
-		throw new UnsupportedOperationException("Provide configuration");
-	}
-
 	@Test
 	public void endpointLocatorShouldRespectExistingEndpointLocator() {
-		new ApplicationContextRunner().withUserConfiguration(configurationWithCustomLocatorClass())
-				.withPropertyValues("spring.jmx.enabled=false").run(ctxt -> Assertions
-						.assertThat(ctxt.getBean(EndpointLocator.class)).isSameAs(locatorFromConfiguration()));
-	}
-
-	protected Class configurationWithCustomLocatorClass() {
-		throw new UnsupportedOperationException("Provide configuration");
+		new ApplicationContextRunner().withUserConfiguration(ConfigurationWithCustomLocator.class)
+				.withPropertyValues("spring.jmx.enabled=false")
+				.run(ctxt -> Assertions.assertThat(ctxt.getBean(EndpointLocator.class))
+						.isSameAs(ConfigurationWithCustomLocator.locator));
 	}
 
 	@Test
 	public void endpointLocatorShouldSetServiceNameToServiceId() {
-		new ApplicationContextRunner().withUserConfiguration(configurationWithRegistrationClass())
+		new ApplicationContextRunner().withUserConfiguration(ConfigurationWithRegistration.class)
 				.withPropertyValues("spring.jmx.enabled=false", "spring.zipkin.locator.discovery.enabled=true")
 				.run(ctxt -> assertThat(ctxt.getBean(EndpointLocator.class).local().serviceName())
 						.isEqualTo("from-registration"));
@@ -101,7 +82,7 @@ public abstract class DefaultEndpointLocatorConfigurationTest {
 
 	@Test
 	public void endpointLocatorShouldAcceptServiceNameOverride() {
-		new ApplicationContextRunner().withUserConfiguration(configurationWithRegistrationClass())
+		new ApplicationContextRunner().withUserConfiguration(ConfigurationWithRegistration.class)
 				.withPropertyValues("spring.jmx.enabled=false", "spring.zipkin.locator.discovery.enabled=true",
 						"spring.zipkin.service.name=foo")
 				.run(ctxt -> assertThat(ctxt.getBean(EndpointLocator.class).local().serviceName()).isEqualTo("foo"));
@@ -110,13 +91,10 @@ public abstract class DefaultEndpointLocatorConfigurationTest {
 	@Test
 	public void endpointLocatorShouldRespectExistingEndpointLocatorEvenWhenAskedToBeDiscovery() {
 		new ApplicationContextRunner()
-				.withUserConfiguration(configurationWithRegistrationClass(), configurationWithCustomLocatorClass())
+				.withUserConfiguration(ConfigurationWithRegistration.class, ConfigurationWithCustomLocator.class)
 				.withPropertyValues("spring.jmx.enabled=false", "spring.zipkin.locator.discovery.enabled=true")
-				.run(ctxt -> assertThat(ctxt.getBean(EndpointLocator.class)).isSameAs(locatorFromConfiguration()));
-	}
-
-	protected EndpointLocator locatorFromConfiguration() {
-		throw new UnsupportedOperationException("Provide the locator");
+				.run(ctxt -> assertThat(ctxt.getBean(EndpointLocator.class))
+						.isSameAs(ConfigurationWithCustomLocator.locator));
 	}
 
 	@Test
@@ -187,18 +165,14 @@ public abstract class DefaultEndpointLocatorConfigurationTest {
 	}
 
 	@Configuration(proxyBeanMethods = false)
-	@EnableAutoConfiguration(exclude = { GatewayClassPathWarningAutoConfiguration.class, GatewayAutoConfiguration.class,
-			GatewayMetricsAutoConfiguration.class, ManagementWebSecurityAutoConfiguration.class,
-			MongoAutoConfiguration.class, QuartzAutoConfiguration.class, OtelAutoConfiguration.class })
-	public static class BraveEmptyConfiguration {
+	@EnableAutoConfiguration
+	public static class EmptyConfiguration {
 
 	}
 
 	@Configuration(proxyBeanMethods = false)
-	@EnableAutoConfiguration(exclude = { GatewayClassPathWarningAutoConfiguration.class, GatewayAutoConfiguration.class,
-			GatewayMetricsAutoConfiguration.class, ManagementWebSecurityAutoConfiguration.class,
-			MongoAutoConfiguration.class, QuartzAutoConfiguration.class, OtelAutoConfiguration.class })
-	public static class BraveConfigurationWithRegistration {
+	@EnableAutoConfiguration
+	public static class ConfigurationWithRegistration {
 
 		@Bean
 		public Registration getRegistration() {
@@ -238,76 +212,8 @@ public abstract class DefaultEndpointLocatorConfigurationTest {
 	}
 
 	@Configuration(proxyBeanMethods = false)
-	@EnableAutoConfiguration(exclude = { GatewayClassPathWarningAutoConfiguration.class, GatewayAutoConfiguration.class,
-			GatewayMetricsAutoConfiguration.class, ManagementWebSecurityAutoConfiguration.class,
-			MongoAutoConfiguration.class, QuartzAutoConfiguration.class, OtelAutoConfiguration.class })
-	public static class BraveConfigurationWithCustomLocator {
-
-		static EndpointLocator locator = Mockito.mock(EndpointLocator.class);
-
-		@Bean
-		public EndpointLocator getEndpointLocator() {
-			return locator;
-		}
-
-	}
-
-	@Configuration(proxyBeanMethods = false)
-	@EnableAutoConfiguration(exclude = { GatewayClassPathWarningAutoConfiguration.class, GatewayAutoConfiguration.class,
-			GatewayMetricsAutoConfiguration.class, ManagementWebSecurityAutoConfiguration.class,
-			MongoAutoConfiguration.class, QuartzAutoConfiguration.class, BraveAutoConfiguration.class })
-	public static class OtelEmptyConfiguration {
-
-	}
-
-	@Configuration(proxyBeanMethods = false)
-	@EnableAutoConfiguration(exclude = { GatewayClassPathWarningAutoConfiguration.class, GatewayAutoConfiguration.class,
-			GatewayMetricsAutoConfiguration.class, ManagementWebSecurityAutoConfiguration.class,
-			MongoAutoConfiguration.class, QuartzAutoConfiguration.class, BraveAutoConfiguration.class })
-	public static class OtelConfigurationWithRegistration {
-
-		@Bean
-		public Registration getRegistration() {
-			return new Registration() {
-				@Override
-				public String getServiceId() {
-					return "from-registration";
-				}
-
-				@Override
-				public String getHost() {
-					return null;
-				}
-
-				@Override
-				public int getPort() {
-					return 0;
-				}
-
-				@Override
-				public boolean isSecure() {
-					return false;
-				}
-
-				@Override
-				public URI getUri() {
-					return null;
-				}
-
-				@Override
-				public Map<String, String> getMetadata() {
-					return null;
-				}
-			};
-		}
-
-	}
-
-	@Configuration(proxyBeanMethods = false)
-	@EnableAutoConfiguration(exclude = { GatewayClassPathWarningAutoConfiguration.class, GatewayAutoConfiguration.class,
-			GatewayMetricsAutoConfiguration.class, ManagementWebSecurityAutoConfiguration.class,
-			MongoAutoConfiguration.class, QuartzAutoConfiguration.class, BraveAutoConfiguration.class })
-	public static class OtelConfigurationWithCustomLocator {
+	@EnableAutoConfiguration
+	public static class ConfigurationWithCustomLocator {
 
 		static EndpointLocator locator = Mockito.mock(EndpointLocator.class);
 

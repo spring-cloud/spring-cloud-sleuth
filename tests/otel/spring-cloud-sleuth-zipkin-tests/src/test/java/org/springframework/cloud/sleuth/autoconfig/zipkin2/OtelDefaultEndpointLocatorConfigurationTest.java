@@ -16,31 +16,9 @@
 
 package org.springframework.cloud.sleuth.autoconfig.zipkin2;
 
-import org.springframework.cloud.sleuth.zipkin2.EndpointLocator;
-
 /**
  * @author Matcin Wielgus
  */
 public class OtelDefaultEndpointLocatorConfigurationTest extends DefaultEndpointLocatorConfigurationTest {
-
-	@Override
-	protected Class emptyConfiguration() {
-		return OtelEmptyConfiguration.class;
-	}
-
-	@Override
-	protected Class configurationWithRegistrationClass() {
-		return OtelConfigurationWithRegistration.class;
-	}
-
-	@Override
-	protected Class configurationWithCustomLocatorClass() {
-		return OtelConfigurationWithCustomLocator.class;
-	}
-
-	@Override
-	protected EndpointLocator locatorFromConfiguration() {
-		return OtelConfigurationWithCustomLocator.locator;
-	}
 
 }

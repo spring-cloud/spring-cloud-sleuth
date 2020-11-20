@@ -25,7 +25,6 @@ import org.awaitility.Awaitility;
 import org.junit.jupiter.api.Test;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.cloud.client.ServiceInstance;
 import org.springframework.cloud.client.loadbalancer.LoadBalancerClient;
 import org.springframework.cloud.client.loadbalancer.LoadBalancerRequest;
@@ -59,7 +58,6 @@ public abstract class ZipkinDiscoveryClientTests {
 	}
 
 	@Configuration(proxyBeanMethods = false)
-	@EnableAutoConfiguration
 	static class Config {
 
 		@Bean(initMethod = "start", destroyMethod = "close")

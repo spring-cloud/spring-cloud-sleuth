@@ -22,10 +22,8 @@ import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.test.context.TestPropertySource;
 
 @SpringBootTest(classes = BraveZipkinDiscoveryClientTests.TestConfig.class)
-@TestPropertySource(properties = "spring.sleuth.tracer.mode=BRAVE")
 public class BraveZipkinDiscoveryClientTests
 		extends org.springframework.cloud.sleuth.zipkin2.ZipkinDiscoveryClientTests {
 
