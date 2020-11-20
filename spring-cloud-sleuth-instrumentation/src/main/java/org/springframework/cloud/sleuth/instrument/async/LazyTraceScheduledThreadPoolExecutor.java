@@ -91,7 +91,7 @@ class LazyTraceScheduledThreadPoolExecutor extends ScheduledThreadPoolExecutor {
 				Runnable.class, RunnableScheduledFuture.class);
 		makeAccessibleIfNotNull(this.decorateTaskRunnable);
 		this.decorateTaskCallable = ReflectionUtils.findMethod(ScheduledThreadPoolExecutor.class,
-				"decorateTaskCallable", Callable.class, RunnableScheduledFuture.class);
+				"decorateTask", Callable.class, RunnableScheduledFuture.class);
 		makeAccessibleIfNotNull(this.decorateTaskCallable);
 		this.finalize = ReflectionUtils.findMethod(ScheduledThreadPoolExecutor.class, "finalize", null);
 		makeAccessibleIfNotNull(this.finalize);
@@ -126,7 +126,7 @@ class LazyTraceScheduledThreadPoolExecutor extends ScheduledThreadPoolExecutor {
 				Runnable.class, RunnableScheduledFuture.class);
 		makeAccessibleIfNotNull(this.decorateTaskRunnable);
 		this.decorateTaskCallable = ReflectionUtils.findMethod(ScheduledThreadPoolExecutor.class,
-				"decorateTaskCallable", Callable.class, RunnableScheduledFuture.class);
+				"decorateTask", Callable.class, RunnableScheduledFuture.class);
 		makeAccessibleIfNotNull(this.decorateTaskCallable);
 		this.finalize = ReflectionUtils.findMethod(ScheduledThreadPoolExecutor.class, "finalize", null);
 		makeAccessibleIfNotNull(this.finalize);
