@@ -16,6 +16,19 @@
 
 package org.springframework.cloud.sleuth.instrument.async;
 
+import org.assertj.core.api.BDDAssertions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Captor;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.beans.factory.BeanFactory;
+import org.springframework.cloud.sleuth.SpanNamer;
+import org.springframework.cloud.sleuth.api.Span;
+import org.springframework.cloud.sleuth.api.Tracer;
+
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
@@ -30,20 +43,6 @@ import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
-
-import org.assertj.core.api.BDDAssertions;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.ArgumentCaptor;
-import org.mockito.Captor;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
-
-import org.springframework.beans.factory.BeanFactory;
-import org.springframework.cloud.sleuth.SpanNamer;
-import org.springframework.cloud.sleuth.api.Span;
-import org.springframework.cloud.sleuth.api.Tracer;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.tuple;
@@ -112,11 +111,12 @@ public class LazyTraceScheduledThreadPoolExecutorTests {
 	public void should_delegate_decorateTask_with_runnable() {
 		final Runnable runnable = mock(Runnable.class);
 		final RunnableScheduledFuture<String> value = mock(RunnableScheduledFuture.class);
-		final RunnableScheduledFuture<String> future = mock(RunnableScheduledFuture.class);
-		doReturn(future).when(delegate).decorateTask(any(Runnable.class), eq(value));
+		final RunnableScheduledFuture<String> expected = mock(RunnableScheduledFuture.class);
+		doReturn(expected).when(delegate).decorateTask(any(Runnable.class), eq(value));
 
-		assertThat((Future<?>) executor.decorateTask(runnable, value)).isEqualTo(future);
+		final Future<?> actual = executor.decorateTask(runnable, value);
 
+		assertThat(actual).isEqualTo(expected);
 		verify(delegate).decorateTask(runnableCaptor.capture(), eq(value));
 		assertInstrumentedDelegate(runnableCaptor.getValue(), runnable);
 	}
@@ -125,11 +125,12 @@ public class LazyTraceScheduledThreadPoolExecutorTests {
 	public void should_delegate_decorateTask_with_callable() {
 		final Callable callable = mock(Callable.class);
 		final RunnableScheduledFuture<String> value = mock(RunnableScheduledFuture.class);
-		final RunnableScheduledFuture<String> future = mock(RunnableScheduledFuture.class);
-		doReturn(future).when(delegate).decorateTask(any(Callable.class), eq(value));
+		final RunnableScheduledFuture<String> expected = mock(RunnableScheduledFuture.class);
+		doReturn(expected).when(delegate).decorateTask(any(Callable.class), eq(value));
 
-		assertThat((Future<?>) executor.decorateTask(callable, value)).isEqualTo(future);
+		final Future<?> actual = executor.decorateTask(callable, value);
 
+		assertThat(actual).isEqualTo(expected);
 		verify(delegate).decorateTask(callableCaptor.capture(), eq(value));
 		assertInstrumentedDelegate(callableCaptor.getValue(), callable);
 	}
@@ -139,11 +140,12 @@ public class LazyTraceScheduledThreadPoolExecutorTests {
 		final Runnable runnable = mock(Runnable.class);
 		final long delay = 100;
 		final TimeUnit timeUnit = TimeUnit.SECONDS;
-		final ScheduledFuture<String> future = mock(ScheduledFuture.class);
-		doReturn(future).when(delegate).schedule(any(Runnable.class), eq(delay), eq(timeUnit));
+		final ScheduledFuture<String> expected = mock(ScheduledFuture.class);
+		doReturn(expected).when(delegate).schedule(any(Runnable.class), eq(delay), eq(timeUnit));
 
-		assertThat((Future<?>) executor.schedule(runnable, delay, timeUnit)).isEqualTo(future);
+		final Future<?> actual = executor.schedule(runnable, delay, timeUnit);
 
+		assertThat(actual).isEqualTo(expected);
 		verify(delegate).schedule(runnableCaptor.capture(), eq(delay), eq(timeUnit));
 		assertInstrumentedDelegate(runnableCaptor.getValue(), runnable);
 	}
@@ -153,11 +155,12 @@ public class LazyTraceScheduledThreadPoolExecutorTests {
 		final Callable callable = mock(Callable.class);
 		final long delay = 100;
 		final TimeUnit timeUnit = TimeUnit.SECONDS;
-		final ScheduledFuture<String> future = mock(ScheduledFuture.class);
-		doReturn(future).when(delegate).schedule(any(Callable.class), eq(delay), eq(timeUnit));
+		final ScheduledFuture<String> expected = mock(ScheduledFuture.class);
+		doReturn(expected).when(delegate).schedule(any(Callable.class), eq(delay), eq(timeUnit));
 
-		assertThat((Future<?>) executor.schedule(callable, delay, timeUnit)).isEqualTo(future);
+		final Future<?> actual = executor.schedule(callable, delay, timeUnit);
 
+		assertThat(actual).isEqualTo(expected);
 		verify(delegate).schedule(callableCaptor.capture(), eq(delay), eq(timeUnit));
 		assertInstrumentedDelegate(callableCaptor.getValue(), callable);
 	}
@@ -168,13 +171,13 @@ public class LazyTraceScheduledThreadPoolExecutorTests {
 		final long initialDelay = 1000;
 		final long period = 2000;
 		final TimeUnit timeUnit = TimeUnit.SECONDS;
-		final ScheduledFuture<String> future = mock(ScheduledFuture.class);
-		doReturn(future).when(delegate).scheduleAtFixedRate(any(Runnable.class), eq(initialDelay), eq(period),
+		final ScheduledFuture<String> expected = mock(ScheduledFuture.class);
+		doReturn(expected).when(delegate).scheduleAtFixedRate(any(Runnable.class), eq(initialDelay), eq(period),
 				eq(timeUnit));
 
-		assertThat((Future<?>) executor.scheduleAtFixedRate(runnable, initialDelay, period, timeUnit))
-				.isEqualTo(future);
+		final Future<?> actual = executor.scheduleAtFixedRate(runnable, initialDelay, period, timeUnit);
 
+		assertThat(actual).isEqualTo(expected);
 		verify(delegate).scheduleAtFixedRate(runnableCaptor.capture(), eq(initialDelay), eq(period), eq(timeUnit));
 		assertInstrumentedDelegate(runnableCaptor.getValue(), runnable);
 	}
@@ -185,13 +188,13 @@ public class LazyTraceScheduledThreadPoolExecutorTests {
 		final long initialDelay = 1000;
 		final long period = 2000;
 		final TimeUnit timeUnit = TimeUnit.SECONDS;
-		final ScheduledFuture<String> future = mock(ScheduledFuture.class);
-		doReturn(future).when(delegate).scheduleWithFixedDelay(any(Runnable.class), eq(initialDelay), eq(period),
+		final ScheduledFuture<String> expected = mock(ScheduledFuture.class);
+		doReturn(expected).when(delegate).scheduleWithFixedDelay(any(Runnable.class), eq(initialDelay), eq(period),
 				eq(timeUnit));
 
-		assertThat((Future<?>) executor.scheduleWithFixedDelay(runnable, initialDelay, period, timeUnit))
-				.isEqualTo(future);
+		final Future<?> actual = executor.scheduleWithFixedDelay(runnable, initialDelay, period, timeUnit);
 
+		assertThat(actual).isEqualTo(expected);
 		verify(delegate).scheduleWithFixedDelay(runnableCaptor.capture(), eq(initialDelay), eq(period), eq(timeUnit));
 		assertInstrumentedDelegate(runnableCaptor.getValue(), runnable);
 	}
@@ -239,53 +242,59 @@ public class LazyTraceScheduledThreadPoolExecutorTests {
 
 	@Test
 	public void should_delegate_setContinueExistingPeriodicTasksAfterShutdownPolicy() {
-		final boolean value = true;
+		final boolean expected = true;
 
-		executor.setContinueExistingPeriodicTasksAfterShutdownPolicy(value);
+		executor.setContinueExistingPeriodicTasksAfterShutdownPolicy(expected);
 
-		verify(delegate).setContinueExistingPeriodicTasksAfterShutdownPolicy(value);
+		verify(delegate).setContinueExistingPeriodicTasksAfterShutdownPolicy(expected);
 	}
 
 	@Test
 	public void should_delegate_getContinueExistingPeriodicTasksAfterShutdownPolicy() {
-		final boolean value = true;
-		doReturn(value).when(delegate).getContinueExistingPeriodicTasksAfterShutdownPolicy();
+		final boolean expected = true;
+		doReturn(expected).when(delegate).getContinueExistingPeriodicTasksAfterShutdownPolicy();
 
-		assertThat(executor.getContinueExistingPeriodicTasksAfterShutdownPolicy()).isEqualTo(value);
+		final boolean actual = executor.getContinueExistingPeriodicTasksAfterShutdownPolicy();
+
+		assertThat(actual).isEqualTo(expected);
 	}
 
 	@Test
 	public void should_delegate_setExecuteExistingDelayedTasksAfterShutdownPolicy() {
-		final boolean value = true;
+		final boolean expected = true;
 
-		executor.setExecuteExistingDelayedTasksAfterShutdownPolicy(value);
+		executor.setExecuteExistingDelayedTasksAfterShutdownPolicy(expected);
 
-		verify(delegate).setExecuteExistingDelayedTasksAfterShutdownPolicy(value);
+		verify(delegate).setExecuteExistingDelayedTasksAfterShutdownPolicy(expected);
 	}
 
 	@Test
 	public void should_delegate_getExecuteExistingDelayedTasksAfterShutdownPolicy() {
-		final boolean value = true;
-		doReturn(value).when(delegate).getExecuteExistingDelayedTasksAfterShutdownPolicy();
+		final boolean expected = true;
+		doReturn(expected).when(delegate).getExecuteExistingDelayedTasksAfterShutdownPolicy();
 
-		assertThat(executor.getExecuteExistingDelayedTasksAfterShutdownPolicy()).isEqualTo(value);
+		final boolean actual = executor.getExecuteExistingDelayedTasksAfterShutdownPolicy();
+
+		assertThat(actual).isEqualTo(expected);
 	}
 
 	@Test
 	public void should_delegate_setRemoveOnCancelPolicy() {
-		final boolean value = true;
+		final boolean expected = true;
 
-		executor.setRemoveOnCancelPolicy(value);
+		executor.setRemoveOnCancelPolicy(expected);
 
-		verify(delegate).setRemoveOnCancelPolicy(value);
+		verify(delegate).setRemoveOnCancelPolicy(expected);
 	}
 
 	@Test
 	public void should_delegate_getRemoveOnCancelPolicy() {
-		final boolean value = true;
-		doReturn(value).when(delegate).getRemoveOnCancelPolicy();
+		final boolean expected = true;
+		doReturn(expected).when(delegate).getRemoveOnCancelPolicy();
 
-		assertThat(executor.getRemoveOnCancelPolicy()).isEqualTo(value);
+		final boolean actual = executor.getRemoveOnCancelPolicy();
+
+		assertThat(actual).isEqualTo(expected);
 	}
 
 	@Test
@@ -304,172 +313,199 @@ public class LazyTraceScheduledThreadPoolExecutorTests {
 
 	@Test
 	public void should_delegate_getQueue() {
-		final BlockingQueue<Runnable> value = mock(BlockingQueue.class);
-		doReturn(value).when(delegate).getQueue();
-		assertThat(executor.getQueue()).isEqualTo(value);
+		final BlockingQueue<Runnable> expected = mock(BlockingQueue.class);
+		doReturn(expected).when(delegate).getQueue();
+
+		final BlockingQueue<Runnable> actual = executor.getQueue();
+
+		assertThat(actual).isEqualTo(expected);
 	}
 
 	@Test
 	public void should_delegate_isShutdown() {
-		final boolean value = true;
-		doReturn(value).when(delegate).isShutdown();
+		final boolean expected = true;
+		doReturn(expected).when(delegate).isShutdown();
 
-		assertThat(executor.isShutdown()).isEqualTo(value);
+		final boolean actual = executor.isShutdown();
+
+		assertThat(actual).isEqualTo(expected);
 	}
 
 	@Test
 	public void should_delegate_isTerminating() {
-		final boolean value = true;
-		doReturn(value).when(delegate).isTerminating();
+		final boolean expected = true;
+		doReturn(expected).when(delegate).isTerminating();
 
-		assertThat(executor.isTerminating()).isEqualTo(value);
+		final boolean actual = executor.isTerminating();
+
+		assertThat(actual).isEqualTo(expected);
 	}
 
 	@Test
 	public void should_delegate_isTerminated() {
-		final boolean value = true;
-		doReturn(value).when(delegate).isTerminated();
+		final boolean expected = true;
+		doReturn(expected).when(delegate).isTerminated();
 
-		assertThat(executor.isTerminated()).isEqualTo(value);
+		final boolean actual = executor.isTerminated();
+
+		assertThat(actual).isEqualTo(expected);
 	}
 
 	@Test
 	public void should_delegate_awaitTermination() throws Exception {
 		final long timeout = 1000;
 		final TimeUnit timeUnit = TimeUnit.SECONDS;
-		final boolean value = true;
-		doReturn(value).when(delegate).awaitTermination(timeout, timeUnit);
+		final boolean expected = true;
+		doReturn(expected).when(delegate).awaitTermination(timeout, timeUnit);
 
-		assertThat(executor.awaitTermination(timeout, timeUnit)).isEqualTo(value);
+		final boolean terminated = executor.awaitTermination(timeout, timeUnit);
+
+		assertThat(terminated).isEqualTo(expected);
 	}
 
 	@Test
 	public void should_delegate_setThreadFactory() {
-		final ThreadFactory value = mock(ThreadFactory.class);
+		final ThreadFactory expected = mock(ThreadFactory.class);
 
-		executor.setThreadFactory(value);
+		executor.setThreadFactory(expected);
 
-		verify(delegate).setThreadFactory(value);
+		verify(delegate).setThreadFactory(expected);
 	}
 
 	@Test
 	public void should_delegate_getThreadFactory() {
-		final ThreadFactory value = mock(ThreadFactory.class);
-		doReturn(value).when(delegate).getThreadFactory();
+		final ThreadFactory expected = mock(ThreadFactory.class);
+		doReturn(expected).when(delegate).getThreadFactory();
 
-		assertThat(executor.getThreadFactory()).isEqualTo(value);
+		final ThreadFactory actual = executor.getThreadFactory();
+
+		assertThat(actual).isEqualTo(expected);
 	}
 
 	@Test
 	public void should_delegate_setRejectedExecutionHandler() {
-		final RejectedExecutionHandler value = mock(RejectedExecutionHandler.class);
+		final RejectedExecutionHandler expected = mock(RejectedExecutionHandler.class);
 
-		executor.setRejectedExecutionHandler(value);
+		executor.setRejectedExecutionHandler(expected);
 
-		verify(delegate).setRejectedExecutionHandler(value);
+		verify(delegate).setRejectedExecutionHandler(expected);
 	}
 
 	@Test
 	public void should_delegate_getRejectedExecutionHandler() {
-		final RejectedExecutionHandler value = mock(RejectedExecutionHandler.class);
-		doReturn(value).when(delegate).getRejectedExecutionHandler();
+		final RejectedExecutionHandler expected = mock(RejectedExecutionHandler.class);
+		doReturn(expected).when(delegate).getRejectedExecutionHandler();
 
-		assertThat(executor.getRejectedExecutionHandler()).isEqualTo(value);
+		final RejectedExecutionHandler actual = executor.getRejectedExecutionHandler();
+
+		assertThat(actual).isEqualTo(expected);
 	}
 
 	@Test
 	public void should_delegate_setCorePoolSize() {
-		final int value = 1000;
+		final int expected = 1000;
 
-		executor.setCorePoolSize(value);
+		executor.setCorePoolSize(expected);
 
-		verify(delegate).setCorePoolSize(value);
+		verify(delegate).setCorePoolSize(expected);
 	}
 
 	@Test
 	public void should_delegate_getCorePoolSize() {
-		final int value = 1000;
-		doReturn(value).when(delegate).getCorePoolSize();
+		final int expected = 1000;
+		doReturn(expected).when(delegate).getCorePoolSize();
 
-		assertThat(executor.getCorePoolSize()).isEqualTo(value);
+		final int actual = executor.getCorePoolSize();
+
+		assertThat(actual).isEqualTo(expected);
 	}
 
 	@Test
 	public void should_delegate_prestartCoreThread() {
-		final boolean value = true;
-		doReturn(value).when(delegate).prestartCoreThread();
+		final boolean expected = true;
+		doReturn(expected).when(delegate).prestartCoreThread();
 
-		assertThat(executor.prestartCoreThread()).isEqualTo(value);
+		final boolean actual = executor.prestartCoreThread();
+
+		assertThat(actual).isEqualTo(expected);
 	}
 
 	@Test
 	public void should_delegate_prestartAllCoreThreads() {
-		final int value = 1000;
-		doReturn(value).when(delegate).prestartAllCoreThreads();
+		final int expected = 1000;
+		doReturn(expected).when(delegate).prestartAllCoreThreads();
 
-		assertThat(executor.prestartAllCoreThreads()).isEqualTo(value);
+		final int actual = executor.prestartAllCoreThreads();
+
+		assertThat(actual).isEqualTo(expected);
 	}
 
 	@Test
 	public void should_delegate_allowsCoreThreadTimeOut() {
-		final boolean value = true;
-		doReturn(value).when(delegate).allowsCoreThreadTimeOut();
+		final boolean expected = true;
+		doReturn(expected).when(delegate).allowsCoreThreadTimeOut();
 
-		assertThat(executor.allowsCoreThreadTimeOut()).isEqualTo(value);
+		final boolean actual = executor.allowsCoreThreadTimeOut();
+
+		assertThat(actual).isEqualTo(expected);
 	}
 
 	@Test
 	public void should_delegate_allowCoreThreadTimeOut() {
-		final boolean value = true;
+		final boolean expected = true;
 
-		executor.allowCoreThreadTimeOut(value);
+		executor.allowCoreThreadTimeOut(expected);
 
-		verify(delegate).allowCoreThreadTimeOut(value);
+		verify(delegate).allowCoreThreadTimeOut(expected);
 	}
 
 	@Test
 	public void should_delegate_setMaximumPoolSize() {
-		final int value = 1000;
+		final int expected = 1000;
 
-		executor.setMaximumPoolSize(value);
+		executor.setMaximumPoolSize(expected);
 
-		verify(delegate).setMaximumPoolSize(value);
+		verify(delegate).setMaximumPoolSize(expected);
 	}
 
 	@Test
 	public void should_delegate_getMaximumPoolSize() {
-		final int value = 1000;
-		doReturn(value).when(delegate).getMaximumPoolSize();
+		final int expected = 1000;
+		doReturn(expected).when(delegate).getMaximumPoolSize();
 
-		assertThat(executor.getMaximumPoolSize()).isEqualTo(value);
+		final int actual = executor.getMaximumPoolSize();
+
+		assertThat(actual).isEqualTo(expected);
 	}
 
 	@Test
 	public void should_delegate_setKeepAliveTime() {
-		final long value = 1000;
+		final long expected = 1000;
 		final TimeUnit timeUnit = TimeUnit.SECONDS;
 
-		executor.setKeepAliveTime(value, timeUnit);
+		executor.setKeepAliveTime(expected, timeUnit);
 
-		verify(delegate).setKeepAliveTime(value, timeUnit);
+		verify(delegate).setKeepAliveTime(expected, timeUnit);
 	}
 
 	@Test
 	public void should_delegate_getKeepAliveTime() {
-		final long value = 1000;
+		final long expected = 1000;
 		final TimeUnit timeUnit = TimeUnit.SECONDS;
-		doReturn(value).when(delegate).getKeepAliveTime(timeUnit);
+		doReturn(expected).when(delegate).getKeepAliveTime(timeUnit);
 
-		assertThat(executor.getKeepAliveTime(timeUnit)).isEqualTo(value);
+		final long actual = executor.getKeepAliveTime(timeUnit);
+
+		assertThat(actual).isEqualTo(expected);
 	}
 
 	@Test
 	public void should_delegate_remove() {
-		final Runnable value = mock(Runnable.class);
+		final Runnable expected = mock(Runnable.class);
 
-		executor.remove(value);
+		executor.remove(expected);
 
-		verify(delegate).remove(value);
+		verify(delegate).remove(expected);
 	}
 
 	@Test
@@ -481,26 +517,32 @@ public class LazyTraceScheduledThreadPoolExecutorTests {
 
 	@Test
 	public void should_delegate_getPoolSize() {
-		final int value = 1000;
-		doReturn(value).when(delegate).getPoolSize();
+		final int expected = 1000;
+		doReturn(expected).when(delegate).getPoolSize();
 
-		assertThat(executor.getPoolSize()).isEqualTo(value);
+		final int actual = executor.getPoolSize();
+
+		assertThat(actual).isEqualTo(expected);
 	}
 
 	@Test
 	public void should_delegate_getActiveCount() {
-		final int value = 1000;
-		doReturn(value).when(delegate).getActiveCount();
+		final int expected = 1000;
+		doReturn(expected).when(delegate).getActiveCount();
 
-		assertThat(executor.getActiveCount()).isEqualTo(value);
+		final int actual = executor.getActiveCount();
+
+		assertThat(actual).isEqualTo(expected);
 	}
 
 	@Test
 	public void should_delegate_getLargestPoolSize() {
-		final int value = 1000;
-		doReturn(value).when(delegate).getLargestPoolSize();
+		final int expected = 1000;
+		doReturn(expected).when(delegate).getLargestPoolSize();
 
-		assertThat(executor.getLargestPoolSize()).isEqualTo(value);
+		final int actual = executor.getLargestPoolSize();
+
+		assertThat(actual).isEqualTo(expected);
 	}
 
 	@Test
@@ -508,45 +550,51 @@ public class LazyTraceScheduledThreadPoolExecutorTests {
 		final long value = 1000;
 		doReturn(value).when(delegate).getTaskCount();
 
-		assertThat(executor.getTaskCount()).isEqualTo(value);
+		final long actual = executor.getTaskCount();
+
+		assertThat(actual).isEqualTo(value);
 	}
 
 	@Test
 	public void should_delegate_getCompletedTaskCount() {
-		final long value = 1000;
-		doReturn(value).when(delegate).getCompletedTaskCount();
+		final long expected = 1000;
+		doReturn(expected).when(delegate).getCompletedTaskCount();
 
-		assertThat(executor.getCompletedTaskCount()).isEqualTo(value);
+		final long actual = executor.getCompletedTaskCount();
+
+		assertThat(actual).isEqualTo(expected);
 	}
 
 	@Test
 	public void should_delegate_toString() {
-		final String value = "testing";
-		doReturn(value).when(delegate).toString();
+		final String expected = "testing";
+		doReturn(expected).when(delegate).toString();
 
-		assertThat(executor.toString()).isEqualTo(value);
+		final String actual = executor.toString();
+
+		assertThat(actual).isEqualTo(expected);
 	}
 
 	@Test
 	public void should_delegate_beforeExecute() {
 		final Thread thread = mock(Thread.class);
-		final Runnable runnable = mock(Runnable.class);
+		final Runnable expected = mock(Runnable.class);
 
-		executor.beforeExecute(thread, runnable);
+		executor.beforeExecute(thread, expected);
 
 		verify(delegate).beforeExecute(eq(thread), runnableCaptor.capture());
-		assertInstrumentedDelegate(runnableCaptor.getValue(), runnable);
+		assertInstrumentedDelegate(runnableCaptor.getValue(), expected);
 	}
 
 	@Test
 	public void should_delegate_afterExecute() {
 		final Throwable throwable = mock(Throwable.class);
-		final Runnable runnable = mock(Runnable.class);
+		final Runnable expected = mock(Runnable.class);
 
-		executor.afterExecute(runnable, throwable);
+		executor.afterExecute(expected, throwable);
 
 		verify(delegate).afterExecute(runnableCaptor.capture(), eq(throwable));
-		assertInstrumentedDelegate(runnableCaptor.getValue(), runnable);
+		assertInstrumentedDelegate(runnableCaptor.getValue(), expected);
 	}
 
 	@Test
@@ -559,22 +607,26 @@ public class LazyTraceScheduledThreadPoolExecutorTests {
 	@Test
 	public void should_delegate_newTaskForRunnable() {
 		final Runnable runnable = mock(Runnable.class);
-		final String value = "testing";
+		final String expected = "testing";
 		final RunnableFuture<String> future = mock(RunnableFuture.class);
-		doReturn(future).when(delegate).newTaskFor(any(Runnable.class), eq(value));
-		assertThat(executor.newTaskFor(runnable, value)).isEqualTo(future);
-		verify(delegate).newTaskFor(runnableCaptor.capture(), eq(value));
+		doReturn(future).when(delegate).newTaskFor(any(Runnable.class), eq(expected));
+
+		final Future<?> actual = executor.newTaskFor(runnable, expected);
+
+		assertThat(actual).isEqualTo(future);
+		verify(delegate).newTaskFor(runnableCaptor.capture(), eq(expected));
 		assertInstrumentedDelegate(runnableCaptor.getValue(), runnable);
 	}
 
 	@Test
 	public void should_delegate_newTaskForCallable() {
 		final Callable<String> callable = mock(Callable.class);
-		final RunnableFuture<String> future = mock(RunnableFuture.class);
-		doReturn(future).when(delegate).newTaskFor(any());
+		final RunnableFuture<String> expected = mock(RunnableFuture.class);
+		doReturn(expected).when(delegate).newTaskFor(any());
 
-		assertThat(executor.newTaskFor(callable)).isEqualTo(future);
+		final Future<?> actual = executor.newTaskFor(callable);
 
+		assertThat(actual).isEqualTo(expected);
 		verify(delegate).newTaskFor(callableCaptor.capture());
 		assertInstrumentedDelegate(callableCaptor.getValue(), callable);
 	}
@@ -588,10 +640,12 @@ public class LazyTraceScheduledThreadPoolExecutorTests {
 		final Collection<Callable<String>> wrapped = Arrays.asList(mock(Callable.class), mock(Callable.class),
 				mock(Callable.class));
 		doReturn(wrapped).when(executor).wrapCallableCollection(tasks);
-		final List<Future<String>> futures = Arrays.asList(mock(Future.class), mock(Future.class), mock(Future.class));
-		doReturn(futures).when(delegate).invokeAll(wrapped, timeout, timeUnit);
+		final List<Future<String>> expected = Arrays.asList(mock(Future.class), mock(Future.class), mock(Future.class));
+		doReturn(expected).when(delegate).invokeAll(wrapped, timeout, timeUnit);
 
-		assertThat(executor.invokeAll(tasks, timeout, timeUnit)).isEqualTo(futures);
+		final List<Future<String>> actual = executor.invokeAll(tasks, timeout, timeUnit);
+
+		assertThat(actual).isEqualTo(expected);
 	}
 
 	@Test
@@ -603,22 +657,27 @@ public class LazyTraceScheduledThreadPoolExecutorTests {
 		final Collection<Callable<String>> wrapped = Arrays.asList(mock(Callable.class), mock(Callable.class),
 				mock(Callable.class));
 		doReturn(wrapped).when(executor).wrapCallableCollection(tasks);
-		final String completed = "completed";
-		doReturn(completed).when(delegate).invokeAny(wrapped, timeout, timeUnit);
+		final String expected = "completed";
+		doReturn(expected).when(delegate).invokeAny(wrapped, timeout, timeUnit);
 
-		assertThat(executor.invokeAny(tasks, timeout, timeUnit)).isEqualTo(completed);
+		final String actual = executor.invokeAny(tasks, timeout, timeUnit);
+
+		assertThat(actual).isEqualTo(expected);
 	}
 
 	@Test
 	public void should_wrapCallableCollection() {
-		final Callable<String> task1 = mock(Callable.class);
-		final Callable<String> task2 = mock(Callable.class);
-		final Callable<String> task3 = mock(Callable.class);
+		final Callable<String> expected1 = mock(Callable.class);
+		final Callable<String> expected2 = mock(Callable.class);
+		final Callable<String> expected3 = mock(Callable.class);
 
-		assertThat(executor.wrapCallableCollection(Arrays.asList(task1, task2, task3)))
+		final Collection<? extends Callable<String>> actual = executor
+				.wrapCallableCollection(Arrays.asList(expected1, expected2, expected3));
+
+		assertThat(actual)
 				.extracting("tracer", "delegate", "parent", "spanName")
-				.containsExactly(tuple(tracer, task1, parent, BEAN_NAME), tuple(tracer, task2, parent, BEAN_NAME),
-						tuple(tracer, task3, parent, BEAN_NAME));
+				.containsExactly(tuple(tracer, expected1, parent, BEAN_NAME), tuple(tracer, expected2, parent, BEAN_NAME),
+						tuple(tracer, expected3, parent, BEAN_NAME));
 	}
 
 	@Test
@@ -628,10 +687,12 @@ public class LazyTraceScheduledThreadPoolExecutorTests {
 		final Collection<Callable<String>> wrapped = Arrays.asList(mock(Callable.class), mock(Callable.class),
 				mock(Callable.class));
 		doReturn(wrapped).when(executor).wrapCallableCollection(tasks);
-		final String completed = "completed";
-		doReturn(completed).when(delegate).invokeAny(wrapped);
+		final String expected = "completed";
+		doReturn(expected).when(delegate).invokeAny(wrapped);
 
-		assertThat(executor.invokeAny(tasks)).isEqualTo(completed);
+		final String actual = executor.invokeAny(tasks);
+
+		assertThat(actual).isEqualTo(expected);
 	}
 
 	@Test
@@ -641,10 +702,12 @@ public class LazyTraceScheduledThreadPoolExecutorTests {
 		final Collection<Callable<String>> wrapped = Arrays.asList(mock(Callable.class), mock(Callable.class),
 				mock(Callable.class));
 		doReturn(wrapped).when(executor).wrapCallableCollection(tasks);
-		final List<Future<String>> futures = Arrays.asList(mock(Future.class), mock(Future.class), mock(Future.class));
-		doReturn(futures).when(delegate).invokeAll(wrapped);
+		final List<Future<String>> expected = Arrays.asList(mock(Future.class), mock(Future.class), mock(Future.class));
+		doReturn(expected).when(delegate).invokeAll(wrapped);
 
-		assertThat(executor.invokeAll(tasks)).isEqualTo(futures);
+		final List<Future<String>> actual = executor.invokeAll(tasks);
+
+		assertThat(actual).isEqualTo(expected);
 	}
 
 	void assertInstrumentedDelegate(final Runnable instrumented, final Runnable delegate) {
