@@ -19,7 +19,7 @@ package org.springframework.cloud.sleuth.autoconfig;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 /**
- * Sleuth Tracer properties.
+ * Sets tracer related properties.
  *
  * @author Marcin Grzejszczak
  * @since 3.0

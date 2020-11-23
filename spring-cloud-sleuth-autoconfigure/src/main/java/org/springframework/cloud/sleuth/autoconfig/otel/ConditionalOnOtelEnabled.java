@@ -27,7 +27,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Conditional;
 
 /**
- * Conditional on Brave tracer.
+ * Conditional on OTel tracer.
  *
  * @author Marcin Grzejszczak
  * @since 3.0.0
