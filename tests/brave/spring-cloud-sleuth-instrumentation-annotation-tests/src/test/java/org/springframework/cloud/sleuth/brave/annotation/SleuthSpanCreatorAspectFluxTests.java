@@ -19,9 +19,9 @@ package org.springframework.cloud.sleuth.brave.annotation;
 import brave.sampler.Sampler;
 
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.cloud.sleuth.api.TraceContext;
+import org.springframework.cloud.sleuth.TraceContext;
 import org.springframework.cloud.sleuth.brave.BraveTestSpanHandler;
-import org.springframework.cloud.sleuth.brave.bridge.BraveTraceContext;
+import org.springframework.cloud.sleuth.brave.bridge.BraveAccessor;
 import org.springframework.cloud.sleuth.test.TestSpanHandler;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -30,12 +30,12 @@ import org.springframework.test.context.ContextConfiguration;
 @SpringBootTest
 @ContextConfiguration(classes = SleuthSpanCreatorAspectFluxTests.Config.class)
 public class SleuthSpanCreatorAspectFluxTests
-		extends org.springframework.cloud.sleuth.annotation.SleuthSpanCreatorAspectFluxTests {
+		extends org.springframework.cloud.sleuth.instrument.annotation.SleuthSpanCreatorAspectFluxTests {
 
 	@Override
 	public TraceContext traceContext() {
-		return BraveTraceContext
-				.fromBrave(brave.propagation.TraceContext.newBuilder().traceId(1).spanId(2).sampled(true).build());
+		return BraveAccessor
+				.traceContext(brave.propagation.TraceContext.newBuilder().traceId(1).spanId(2).sampled(true).build());
 	}
 
 	@Configuration(proxyBeanMethods = false)

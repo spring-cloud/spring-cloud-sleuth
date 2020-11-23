@@ -18,8 +18,8 @@ package org.springframework.cloud.sleuth.test;
 
 import java.util.List;
 
-import org.springframework.cloud.sleuth.api.Span;
-import org.springframework.cloud.sleuth.api.exporter.FinishedSpan;
+import org.springframework.cloud.sleuth.Span;
+import org.springframework.cloud.sleuth.exporter.FinishedSpan;
 
 public interface TestSpanHandler extends Iterable<FinishedSpan> {
 

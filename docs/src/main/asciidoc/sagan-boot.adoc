@@ -65,10 +65,11 @@ public class Application {
 }
 ```
 
-Run this app and then hit the home page. You will see traceId and spanId populated in the logs.
-If this app calls out to another one (e.g. with `RestTemplate`) it will send the trace data in
-headers and if the receiver is another Sleuth app you will see the trace continue there.
+Run this app and then hit the home page.
+You will see traceId and spanId populated in the logs.
+If this app calls out to another one (e.g. with `RestTemplate`) it will send the trace data in headers and if the receiver is another Sleuth app you will see the trace continue there.
 
 * Instead of logging the request in the handler explicitly, you could set `logging.level.org.springframework.web.servlet.DispatcherServlet=DEBUG`
-* Sleuth defaults to a rate limited sampler. That means that it will sample up to 1000 transactions per second.
+* Sleuth defaults to a rate limited sampler.
+That means that it will sample up to 1000 transactions per second.
 * Set `spring.application.name=bar` (for instance) to see the service name as well as the trace and span ids.

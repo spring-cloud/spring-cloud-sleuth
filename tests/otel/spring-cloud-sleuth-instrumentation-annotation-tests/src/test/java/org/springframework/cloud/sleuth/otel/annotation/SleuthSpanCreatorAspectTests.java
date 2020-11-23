@@ -20,7 +20,7 @@ import io.opentelemetry.sdk.trace.samplers.Sampler;
 
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.cloud.sleuth.otel.OtelTestSpanHandler;
-import org.springframework.cloud.sleuth.otel.exporter.ArrayListSpanProcessor;
+import org.springframework.cloud.sleuth.otel.bridge.ArrayListSpanProcessor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.test.context.ContextConfiguration;
@@ -28,7 +28,7 @@ import org.springframework.test.context.ContextConfiguration;
 @SpringBootTest
 @ContextConfiguration(classes = SleuthSpanCreatorAspectTests.Config.class)
 public class SleuthSpanCreatorAspectTests
-		extends org.springframework.cloud.sleuth.annotation.SleuthSpanCreatorAspectTests {
+		extends org.springframework.cloud.sleuth.instrument.annotation.SleuthSpanCreatorAspectTests {
 
 	@Configuration(proxyBeanMethods = false)
 	static class Config {

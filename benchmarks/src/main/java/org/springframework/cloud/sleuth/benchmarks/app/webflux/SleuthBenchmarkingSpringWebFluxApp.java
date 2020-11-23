@@ -34,7 +34,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.boot.web.embedded.netty.NettyReactiveWebServerFactory;
 import org.springframework.boot.web.reactive.context.ReactiveWebServerInitializedEvent;
-import org.springframework.cloud.sleuth.api.TraceContext;
+import org.springframework.cloud.sleuth.TraceContext;
 import org.springframework.cloud.sleuth.instrument.web.SkipPatternProvider;
 import org.springframework.cloud.sleuth.instrument.web.WebFluxSleuthOperators;
 import org.springframework.context.ApplicationListener;

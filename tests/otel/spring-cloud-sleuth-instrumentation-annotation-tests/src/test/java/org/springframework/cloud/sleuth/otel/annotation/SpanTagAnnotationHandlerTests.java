@@ -20,7 +20,7 @@ import io.opentelemetry.sdk.trace.samplers.Sampler;
 
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.cloud.sleuth.otel.OtelTestSpanHandler;
-import org.springframework.cloud.sleuth.otel.exporter.ArrayListSpanProcessor;
+import org.springframework.cloud.sleuth.otel.bridge.ArrayListSpanProcessor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.test.context.ContextConfiguration;
@@ -28,7 +28,7 @@ import org.springframework.test.context.ContextConfiguration;
 @SpringBootTest
 @ContextConfiguration(classes = SpanTagAnnotationHandlerTests.Config.class)
 public class SpanTagAnnotationHandlerTests
-		extends org.springframework.cloud.sleuth.annotation.SpanTagAnnotationHandlerTests {
+		extends org.springframework.cloud.sleuth.instrument.annotation.SpanTagAnnotationHandlerTests {
 
 	@Configuration(proxyBeanMethods = false)
 	static class Config {

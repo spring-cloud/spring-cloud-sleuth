@@ -40,8 +40,8 @@ public class WithOutReactorSleuthSpringWebFluxBenchmarksTests extends SpringWebF
 	@Override
 	protected String[] runArgs() {
 		return new String[] { "--spring.jmx.enabled=false", "--spring.application.name=defaultTraceContext",
-				TracerImplementation.brave.toString(),
-				"--spring.sleuth.enabled=true", "--spring.sleuth.reactor.enabled=false"
+				TracerImplementation.brave.toString(), "--spring.sleuth.enabled=true",
+				"--spring.sleuth.reactor.enabled=false"
 
 		};
 	}

@@ -29,7 +29,7 @@ public abstract class TraceResponseHttpHeadersFilterTests implements TestTracing
 
 	@Test
 	public void should_not_report_span_when_no_span_was_present_in_attribute() {
-		HttpHeadersFilter filter = TraceResponseHttpHeadersFilter.create(tracerTest().tracing().tracer(),
+		HttpHeadersFilter filter = new TraceResponseHttpHeadersFilter(tracerTest().tracing().tracer(),
 				tracerTest().tracing().httpClientHandler(), tracerTest().tracing().propagator());
 		HttpHeaders httpHeaders = new HttpHeaders();
 		httpHeaders.set("b3", "52f112af7472aff0-53e6ab6fc5dfee58");
@@ -43,7 +43,7 @@ public abstract class TraceResponseHttpHeadersFilterTests implements TestTracing
 
 	@Test
 	public void should_report_span_when_span_was_present_in_attribute() {
-		HttpHeadersFilter filter = TraceResponseHttpHeadersFilter.create(tracerTest().tracing().tracer(),
+		HttpHeadersFilter filter = new TraceResponseHttpHeadersFilter(tracerTest().tracing().tracer(),
 				tracerTest().tracing().httpClientHandler(), tracerTest().tracing().propagator());
 		HttpHeaders httpHeaders = new HttpHeaders();
 		httpHeaders.set("b3", "52f112af7472aff0-53e6ab6fc5dfee58");

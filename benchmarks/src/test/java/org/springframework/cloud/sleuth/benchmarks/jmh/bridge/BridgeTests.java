@@ -32,17 +32,11 @@ import org.openjdk.jmh.annotations.Warmup;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.WebApplicationType;
 import org.springframework.boot.autoconfigure.ImportAutoConfiguration;
-import org.springframework.cloud.sleuth.api.Span;
-import org.springframework.cloud.sleuth.api.Tracer;
-import org.springframework.cloud.sleuth.autoconfig.TraceAutoConfiguration;
+import org.springframework.cloud.sleuth.Span;
+import org.springframework.cloud.sleuth.Tracer;
+import org.springframework.cloud.sleuth.autoconfig.brave.BraveAutoConfiguration;
+import org.springframework.cloud.sleuth.autoconfig.otel.OtelAutoConfiguration;
 import org.springframework.cloud.sleuth.benchmarks.jmh.TracerImplementation;
-import org.springframework.cloud.sleuth.brave.autoconfig.TraceBraveAutoConfiguration;
-import org.springframework.cloud.sleuth.brave.bridge.TraceBraveBridgeAutoConfiguation;
-import org.springframework.cloud.sleuth.brave.propagation.TraceBravePropagationAutoConfiguration;
-import org.springframework.cloud.sleuth.otel.autoconfig.TraceOtelAutoConfiguration;
-import org.springframework.cloud.sleuth.otel.bridge.TraceOtelBridgeAutoConfiguation;
-import org.springframework.cloud.sleuth.otel.log.TraceOtelLogAutoConfiguration;
-import org.springframework.cloud.sleuth.otel.propagation.TraceOtelPropagationAutoConfiguration;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.Configuration;
 
@@ -121,11 +115,7 @@ public class BridgeTests {
 		}
 
 		@Configuration(proxyBeanMethods = false)
-		@ImportAutoConfiguration({ TraceAutoConfiguration.class, TraceBraveAutoConfiguration.class,
-				TraceBraveBridgeAutoConfiguation.class, TraceBravePropagationAutoConfiguration.class,
-				TraceOtelAutoConfiguration.class, TraceOtelBridgeAutoConfiguation.class,
-				TraceOtelPropagationAutoConfiguration.class, TraceOtelLogAutoConfiguration.class,
-				 TraceOtelLogAutoConfiguration.class })
+		@ImportAutoConfiguration({ BraveAutoConfiguration.class, OtelAutoConfiguration.class })
 		static class TestConfiguration {
 
 		}

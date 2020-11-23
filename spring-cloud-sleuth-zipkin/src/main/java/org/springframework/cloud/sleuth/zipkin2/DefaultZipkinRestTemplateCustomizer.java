@@ -33,11 +33,11 @@ import org.springframework.web.client.RestTemplate;
  * @author Marcin Grzejszczak
  * @since 1.1.0
  */
-class DefaultZipkinRestTemplateCustomizer implements ZipkinRestTemplateCustomizer {
+public class DefaultZipkinRestTemplateCustomizer implements ZipkinRestTemplateCustomizer {
 
 	private final ZipkinProperties zipkinProperties;
 
-	DefaultZipkinRestTemplateCustomizer(ZipkinProperties zipkinProperties) {
+	public DefaultZipkinRestTemplateCustomizer(ZipkinProperties zipkinProperties) {
 		this.zipkinProperties = zipkinProperties;
 	}
 

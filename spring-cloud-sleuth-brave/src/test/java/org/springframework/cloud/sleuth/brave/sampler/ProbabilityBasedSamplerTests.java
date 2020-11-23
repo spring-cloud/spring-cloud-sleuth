@@ -17,6 +17,7 @@
 package org.springframework.cloud.sleuth.brave.sampler;
 
 import java.util.Random;
+import java.util.function.Supplier;
 
 import brave.sampler.Sampler;
 import org.junit.jupiter.api.Test;
@@ -31,24 +32,18 @@ public class ProbabilityBasedSamplerTests {
 
 	private static Random RANDOM = new Random();
 
-	SamplerProperties samplerConfiguration = new SamplerProperties();
-
 	@Test
 	public void should_pass_all_samples_when_config_has_1_probability() throws Exception {
-		this.samplerConfiguration.setProbability(1f);
-
 		for (int i = 0; i < 10; i++) {
-			then(new ProbabilityBasedSampler(this.samplerConfiguration).isSampled(RANDOM.nextLong())).isTrue();
+			then(new ProbabilityBasedSampler(() -> 1f).isSampled(RANDOM.nextLong())).isTrue();
 		}
 
 	}
 
 	@Test
 	public void should_reject_all_samples_when_config_has_0_probability() throws Exception {
-		this.samplerConfiguration.setProbability(0f);
-
 		for (int i = 0; i < 10; i++) {
-			then(new ProbabilityBasedSampler(this.samplerConfiguration).isSampled(RANDOM.nextLong())).isFalse();
+			then(new ProbabilityBasedSampler(() -> 0f).isSampled(RANDOM.nextLong())).isFalse();
 		}
 	}
 
@@ -56,9 +51,8 @@ public class ProbabilityBasedSamplerTests {
 	public void should_pass_given_percent_of_samples() throws Exception {
 		int numberOfIterations = 1000;
 		float probability = 1f;
-		this.samplerConfiguration.setProbability(probability);
 
-		int numberOfSampledElements = countNumberOfSampledElements(numberOfIterations);
+		int numberOfSampledElements = countNumberOfSampledElements(numberOfIterations, () -> probability);
 
 		then(numberOfSampledElements).isEqualTo((int) (numberOfIterations * probability));
 	}
@@ -67,9 +61,8 @@ public class ProbabilityBasedSamplerTests {
 	public void should_pass_given_percent_of_samples_with_fractional_element() throws Exception {
 		int numberOfIterations = 1000;
 		float probability = 0.35f;
-		this.samplerConfiguration.setProbability(probability);
 
-		int numberOfSampledElements = countNumberOfSampledElements(numberOfIterations);
+		int numberOfSampledElements = countNumberOfSampledElements(numberOfIterations, () -> probability);
 
 		int threshold = (int) (numberOfIterations * probability);
 		then(numberOfSampledElements).isEqualTo(threshold);
@@ -77,13 +70,12 @@ public class ProbabilityBasedSamplerTests {
 
 	@Test
 	public void should_fail_given_no_probability() {
-		assertThatThrownBy(() -> new ProbabilityBasedSampler(this.samplerConfiguration))
-				.isInstanceOf(IllegalArgumentException.class)
+		assertThatThrownBy(() -> new ProbabilityBasedSampler(null)).isInstanceOf(IllegalArgumentException.class)
 				.hasMessage("probability property is required for ProbabilityBasedSampler");
 	}
 
-	private int countNumberOfSampledElements(int numberOfIterations) {
-		Sampler sampler = new ProbabilityBasedSampler(this.samplerConfiguration);
+	private int countNumberOfSampledElements(int numberOfIterations, Supplier<Float> probability) {
+		Sampler sampler = new ProbabilityBasedSampler(probability);
 		int passedCounter = 0;
 		for (int i = 0; i < numberOfIterations; i++) {
 			boolean passed = sampler.isSampled(RANDOM.nextLong());

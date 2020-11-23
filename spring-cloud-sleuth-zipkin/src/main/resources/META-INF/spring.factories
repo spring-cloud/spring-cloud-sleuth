@@ -1,5 +1,0 @@
-# Auto Configuration
-org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
-org.springframework.cloud.sleuth.zipkin2.ZipkinAutoConfiguration,\
-org.springframework.cloud.sleuth.zipkin2.ZipkinBraveAutoConfiguration,\
-org.springframework.cloud.sleuth.zipkin2.ZipkinOtelAutoConfiguration

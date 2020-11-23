@@ -23,7 +23,7 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.cloud.openfeign.EnableFeignClients;
-import org.springframework.cloud.sleuth.api.exporter.SpanFilter;
+import org.springframework.cloud.sleuth.exporter.SpanFilter;
 import org.springframework.context.annotation.Bean;
 
 /**

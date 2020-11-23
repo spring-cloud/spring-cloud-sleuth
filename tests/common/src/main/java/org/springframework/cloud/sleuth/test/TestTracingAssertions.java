@@ -16,7 +16,7 @@
 
 package org.springframework.cloud.sleuth.test;
 
-import org.springframework.cloud.sleuth.api.exporter.FinishedSpan;
+import org.springframework.cloud.sleuth.exporter.FinishedSpan;
 
 public interface TestTracingAssertions {
 

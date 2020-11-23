@@ -22,19 +22,21 @@ import org.junit.jupiter.api.Test;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
-import org.springframework.cloud.sleuth.api.BaggageInScope;
-import org.springframework.cloud.sleuth.api.ScopedSpan;
-import org.springframework.cloud.sleuth.api.Tracer;
+import org.springframework.cloud.sleuth.BaggageInScope;
+import org.springframework.cloud.sleuth.ScopedSpan;
+import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.test.TestSpanHandler;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.TestPropertySource;
 
 /**
  * @author Taras Danylchuk
  */
 @ContextConfiguration(classes = BaggageEntryTagSpanHandlerTest.TestConfig.class)
-@ActiveProfiles("baggage") // application-baggage.yml
+@TestPropertySource(properties = { "spring.sleuth.baggage.remote-fields[0]=country-code",
+		"spring.sleuth.baggage.remote-fields[1]=x-vcap-request-id",
+		"spring.sleuth.baggage.tag-fields[0]=country-code" })
 public abstract class BaggageEntryTagSpanHandlerTest {
 
 	BaggageInScope countryCode;
@@ -64,11 +66,8 @@ public abstract class BaggageEntryTagSpanHandlerTest {
 		this.span.end();
 
 		Assertions.assertThat(this.spans).hasSize(1);
-		Assertions.assertThat(this.spans.get(0).getTags()).hasSize(1) // REQUEST_ID is not
-																		// in
-																		// the
-				// tag-fields
-				.containsEntry(countryCode.name(), "FO");
+		// REQUEST_ID is NOT in the tag fields
+		Assertions.assertThat(this.spans.get(0).getTags()).hasSize(1).containsEntry(countryCode.name(), "FO");
 	}
 
 	@EnableAutoConfiguration

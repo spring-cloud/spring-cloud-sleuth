@@ -28,7 +28,7 @@ import org.springframework.test.context.ContextConfiguration;
 @SpringBootTest
 @ContextConfiguration(classes = SpanTagAnnotationHandlerTests.Config.class)
 public class SpanTagAnnotationHandlerTests
-		extends org.springframework.cloud.sleuth.annotation.SpanTagAnnotationHandlerTests {
+		extends org.springframework.cloud.sleuth.instrument.annotation.SpanTagAnnotationHandlerTests {
 
 	@Configuration(proxyBeanMethods = false)
 	static class Config {

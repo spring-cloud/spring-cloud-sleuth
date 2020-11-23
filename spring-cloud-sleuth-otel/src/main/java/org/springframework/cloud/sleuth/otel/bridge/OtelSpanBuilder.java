@@ -19,8 +19,8 @@ package org.springframework.cloud.sleuth.otel.bridge;
 import java.util.LinkedList;
 import java.util.List;
 
-import org.springframework.cloud.sleuth.api.Span;
-import org.springframework.cloud.sleuth.api.TraceContext;
+import org.springframework.cloud.sleuth.Span;
+import org.springframework.cloud.sleuth.TraceContext;
 import org.springframework.util.StringUtils;
 
 /**
@@ -29,7 +29,7 @@ import org.springframework.util.StringUtils;
  * @author Marcin Grzejszczak
  * @since 3.0.0
  */
-public class OtelSpanBuilder implements Span.Builder {
+class OtelSpanBuilder implements Span.Builder {
 
 	private final io.opentelemetry.api.trace.Span.Builder delegate;
 
@@ -39,11 +39,11 @@ public class OtelSpanBuilder implements Span.Builder {
 
 	private Throwable error;
 
-	public OtelSpanBuilder(io.opentelemetry.api.trace.Span.Builder delegate) {
+	OtelSpanBuilder(io.opentelemetry.api.trace.Span.Builder delegate) {
 		this.delegate = delegate;
 	}
 
-	public static Span.Builder fromOtel(io.opentelemetry.api.trace.Span.Builder builder) {
+	static Span.Builder fromOtel(io.opentelemetry.api.trace.Span.Builder builder) {
 		return new OtelSpanBuilder(builder);
 	}
 

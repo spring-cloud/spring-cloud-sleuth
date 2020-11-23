@@ -16,8 +16,10 @@
 
 package org.springframework.cloud.sleuth.brave.bridge;
 
-import org.springframework.cloud.sleuth.api.Span;
-import org.springframework.cloud.sleuth.api.TraceContext;
+import java.util.Objects;
+
+import org.springframework.cloud.sleuth.Span;
+import org.springframework.cloud.sleuth.TraceContext;
 
 /**
  * Brave implementation of a {@link Span}.
@@ -25,11 +27,11 @@ import org.springframework.cloud.sleuth.api.TraceContext;
  * @author Marcin Grzejszczak
  * @since 3.0.0
  */
-public class BraveSpan implements Span {
+class BraveSpan implements Span {
 
 	final brave.Span delegate;
 
-	public BraveSpan(brave.Span delegate) {
+	BraveSpan(brave.Span delegate) {
 		this.delegate = delegate;
 	}
 
@@ -89,12 +91,29 @@ public class BraveSpan implements Span {
 		return this.delegate != null ? this.delegate.toString() : "null";
 	}
 
-	public static brave.Span toBrave(Span span) {
+	static brave.Span toBrave(Span span) {
 		return ((BraveSpan) span).delegate;
 	}
 
-	public static Span fromBrave(brave.Span span) {
+	static Span fromBrave(brave.Span span) {
 		return new BraveSpan(span);
+	}
+
+	@Override
+	public boolean equals(Object o) {
+		if (this == o) {
+			return true;
+		}
+		if (o == null || getClass() != o.getClass()) {
+			return false;
+		}
+		BraveSpan braveSpan = (BraveSpan) o;
+		return Objects.equals(this.delegate, braveSpan.delegate);
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hash(this.delegate);
 	}
 
 }

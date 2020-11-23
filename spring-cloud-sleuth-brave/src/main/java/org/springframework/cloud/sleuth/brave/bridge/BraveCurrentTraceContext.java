@@ -20,8 +20,8 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 
-import org.springframework.cloud.sleuth.api.CurrentTraceContext;
-import org.springframework.cloud.sleuth.api.TraceContext;
+import org.springframework.cloud.sleuth.CurrentTraceContext;
+import org.springframework.cloud.sleuth.TraceContext;
 
 /**
  * Brave implementation of a {@link CurrentTraceContext}.
@@ -76,11 +76,11 @@ public class BraveCurrentTraceContext implements CurrentTraceContext {
 		return this.delegate.executorService(delegate);
 	}
 
-	public static brave.propagation.CurrentTraceContext toBrave(CurrentTraceContext context) {
+	static brave.propagation.CurrentTraceContext toBrave(CurrentTraceContext context) {
 		return ((BraveCurrentTraceContext) context).delegate;
 	}
 
-	public static CurrentTraceContext fromBrave(brave.propagation.CurrentTraceContext context) {
+	static CurrentTraceContext fromBrave(brave.propagation.CurrentTraceContext context) {
 		return new BraveCurrentTraceContext(context);
 	}
 

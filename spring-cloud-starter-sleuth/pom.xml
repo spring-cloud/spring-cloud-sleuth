@@ -42,6 +42,10 @@
 		</dependency>
 		<dependency>
 			<groupId>org.springframework.cloud</groupId>
+			<artifactId>spring-cloud-sleuth-autoconfigure</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.cloud</groupId>
 			<artifactId>spring-cloud-sleuth-brave</artifactId>
 		</dependency>
 	</dependencies>

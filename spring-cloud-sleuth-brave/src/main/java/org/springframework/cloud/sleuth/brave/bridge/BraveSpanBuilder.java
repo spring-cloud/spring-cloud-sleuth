@@ -19,8 +19,8 @@ package org.springframework.cloud.sleuth.brave.bridge;
 import brave.Tracer;
 import brave.propagation.TraceContextOrSamplingFlags;
 
-import org.springframework.cloud.sleuth.api.Span;
-import org.springframework.cloud.sleuth.api.TraceContext;
+import org.springframework.cloud.sleuth.Span;
+import org.springframework.cloud.sleuth.TraceContext;
 
 /**
  * Brave implementation of a {@link Span.Builder}.
@@ -28,7 +28,7 @@ import org.springframework.cloud.sleuth.api.TraceContext;
  * @author Marcin Grzejszczak
  * @since 3.0.0
  */
-public class BraveSpanBuilder implements Span.Builder {
+class BraveSpanBuilder implements Span.Builder {
 
 	brave.Span delegate;
 
@@ -38,11 +38,11 @@ public class BraveSpanBuilder implements Span.Builder {
 
 	private long startTimestamp;
 
-	public BraveSpanBuilder(Tracer tracer) {
+	BraveSpanBuilder(Tracer tracer) {
 		this.tracer = tracer;
 	}
 
-	public BraveSpanBuilder(Tracer tracer, TraceContextOrSamplingFlags parentContext) {
+	BraveSpanBuilder(Tracer tracer, TraceContextOrSamplingFlags parentContext) {
 		this.tracer = tracer;
 		this.parentContext = parentContext;
 	}
@@ -118,7 +118,7 @@ public class BraveSpanBuilder implements Span.Builder {
 		return BraveSpan.fromBrave(this.delegate);
 	}
 
-	public static Span.Builder toBuilder(Tracer tracer, TraceContextOrSamplingFlags context) {
+	static Span.Builder toBuilder(Tracer tracer, TraceContextOrSamplingFlags context) {
 		return new BraveSpanBuilder(tracer, context);
 	}
 

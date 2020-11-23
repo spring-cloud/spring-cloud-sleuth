@@ -21,8 +21,8 @@ import java.util.Map;
 
 import brave.handler.MutableSpan;
 
-import org.springframework.cloud.sleuth.api.Span;
-import org.springframework.cloud.sleuth.api.exporter.FinishedSpan;
+import org.springframework.cloud.sleuth.Span;
+import org.springframework.cloud.sleuth.exporter.FinishedSpan;
 
 /**
  * Brave implementation of a {@link FinishedSpan}.
@@ -30,11 +30,11 @@ import org.springframework.cloud.sleuth.api.exporter.FinishedSpan;
  * @author Marcin Grzejszczak
  * @since 3.0.0
  */
-public class BraveFinishedSpan implements FinishedSpan {
+class BraveFinishedSpan implements FinishedSpan {
 
 	private final MutableSpan mutableSpan;
 
-	public BraveFinishedSpan(MutableSpan mutableSpan) {
+	BraveFinishedSpan(MutableSpan mutableSpan) {
 		this.mutableSpan = mutableSpan;
 	}
 
@@ -106,7 +106,7 @@ public class BraveFinishedSpan implements FinishedSpan {
 		return this.mutableSpan.remoteServiceName();
 	}
 
-	public static FinishedSpan fromBrave(MutableSpan mutableSpan) {
+	static FinishedSpan fromBrave(MutableSpan mutableSpan) {
 		return new BraveFinishedSpan(mutableSpan);
 	}
 

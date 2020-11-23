@@ -54,7 +54,17 @@ Example of Sleuth with Brave tracer:
         <!--
         <dependency>
             <groupId>org.springframework.cloud</groupId>
-            <artifactId>spring-cloud-starter-sleuth-otel</artifactId>
+            <artifactId>spring-cloud-starter-sleuth</artifactId>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.springframework.cloud</groupId>
+                    <artifactId>spring-cloud-sleuth-brave</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-sleuth-otel</artifactId>
         </dependency>
         -->
     </dependencies>
@@ -81,7 +91,7 @@ being traced in the logs (notice the `0b6aaf642574edd3` ids).
 
 [indent=0]
 ----
-2020-10-21 12:01:16.285  INFO [,0b6aaf642574edd3,0b6aaf642574edd3,true] 289589 --- [nio-9000-exec-1] DemoController              : Handling home!
+2020-10-21 12:01:16.285  INFO [,0b6aaf642574edd3,0b6aaf642574edd3,true] 289589 --- [nio-9000-exec-1] DemoController	          : Handling home!
 ----
 
 NOTE: Instead of logging the request in the handler explicitly, you could set `logging.level.org.springframework.web.servlet.DispatcherServlet=DEBUG`.
