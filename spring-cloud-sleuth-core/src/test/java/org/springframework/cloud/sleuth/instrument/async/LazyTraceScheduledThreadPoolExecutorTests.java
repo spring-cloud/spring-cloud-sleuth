@@ -114,7 +114,9 @@ public class LazyTraceScheduledThreadPoolExecutorTests {
 		final RunnableScheduledFuture<String> value = mock(RunnableScheduledFuture.class);
 		final RunnableScheduledFuture<String> future = mock(RunnableScheduledFuture.class);
 		doReturn(future).when(delegate).decorateTask(any(Runnable.class), eq(value));
+
 		assertThat((Future<?>) executor.decorateTask(runnable, value)).isEqualTo(future);
+
 		verify(delegate).decorateTask(runnableCaptor.capture(), eq(value));
 		assertInstrumentedDelegate(runnableCaptor.getValue(), runnable);
 	}
@@ -125,7 +127,9 @@ public class LazyTraceScheduledThreadPoolExecutorTests {
 		final RunnableScheduledFuture<String> value = mock(RunnableScheduledFuture.class);
 		final RunnableScheduledFuture<String> future = mock(RunnableScheduledFuture.class);
 		doReturn(future).when(delegate).decorateTask(any(Callable.class), eq(value));
+
 		assertThat((Future<?>) executor.decorateTask(callable, value)).isEqualTo(future);
+
 		verify(delegate).decorateTask(callableCaptor.capture(), eq(value));
 		assertInstrumentedDelegate(callableCaptor.getValue(), callable);
 	}
@@ -137,7 +141,9 @@ public class LazyTraceScheduledThreadPoolExecutorTests {
 		final TimeUnit timeUnit = TimeUnit.SECONDS;
 		final ScheduledFuture<String> future = mock(ScheduledFuture.class);
 		doReturn(future).when(delegate).schedule(any(Runnable.class), eq(delay), eq(timeUnit));
+
 		assertThat((Future<?>) executor.schedule(runnable, delay, timeUnit)).isEqualTo(future);
+
 		verify(delegate).schedule(runnableCaptor.capture(), eq(delay), eq(timeUnit));
 		assertInstrumentedDelegate(runnableCaptor.getValue(), runnable);
 	}
@@ -149,7 +155,9 @@ public class LazyTraceScheduledThreadPoolExecutorTests {
 		final TimeUnit timeUnit = TimeUnit.SECONDS;
 		final ScheduledFuture<String> future = mock(ScheduledFuture.class);
 		doReturn(future).when(delegate).schedule(any(Callable.class), eq(delay), eq(timeUnit));
+
 		assertThat((Future<?>) executor.schedule(callable, delay, timeUnit)).isEqualTo(future);
+
 		verify(delegate).schedule(callableCaptor.capture(), eq(delay), eq(timeUnit));
 		assertInstrumentedDelegate(callableCaptor.getValue(), callable);
 	}
@@ -163,8 +171,10 @@ public class LazyTraceScheduledThreadPoolExecutorTests {
 		final ScheduledFuture<String> future = mock(ScheduledFuture.class);
 		doReturn(future).when(delegate).scheduleAtFixedRate(any(Runnable.class), eq(initialDelay), eq(period),
 				eq(timeUnit));
+
 		assertThat((Future<?>) executor.scheduleAtFixedRate(runnable, initialDelay, period, timeUnit))
 				.isEqualTo(future);
+
 		verify(delegate).scheduleAtFixedRate(runnableCaptor.capture(), eq(initialDelay), eq(period), eq(timeUnit));
 		assertInstrumentedDelegate(runnableCaptor.getValue(), runnable);
 	}
@@ -178,8 +188,10 @@ public class LazyTraceScheduledThreadPoolExecutorTests {
 		final ScheduledFuture<String> future = mock(ScheduledFuture.class);
 		doReturn(future).when(delegate).scheduleWithFixedDelay(any(Runnable.class), eq(initialDelay), eq(period),
 				eq(timeUnit));
+
 		assertThat((Future<?>) executor.scheduleWithFixedDelay(runnable, initialDelay, period, timeUnit))
 				.isEqualTo(future);
+
 		verify(delegate).scheduleWithFixedDelay(runnableCaptor.capture(), eq(initialDelay), eq(period), eq(timeUnit));
 		assertInstrumentedDelegate(runnableCaptor.getValue(), runnable);
 	}
@@ -187,7 +199,9 @@ public class LazyTraceScheduledThreadPoolExecutorTests {
 	@Test
 	public void should_delegate_execute() {
 		final Runnable runnable = mock(Runnable.class);
+
 		executor.execute(runnable);
+
 		verify(delegate).execute(runnableCaptor.capture());
 		assertInstrumentedDelegate(runnableCaptor.getValue(), runnable);
 	}
@@ -195,7 +209,9 @@ public class LazyTraceScheduledThreadPoolExecutorTests {
 	@Test
 	public void should_delegate_submit_with_runnable() {
 		final Runnable runnable = mock(Runnable.class);
+
 		executor.submit(runnable);
+
 		verify(delegate).submit(runnableCaptor.capture());
 		assertInstrumentedDelegate(runnableCaptor.getValue(), runnable);
 	}
@@ -204,7 +220,9 @@ public class LazyTraceScheduledThreadPoolExecutorTests {
 	public void should_delegate_submit_with_runnable_result() {
 		final Object result = new Object();
 		final Runnable runnable = mock(Runnable.class);
+
 		executor.submit(runnable, result);
+
 		verify(delegate).submit(runnableCaptor.capture(), eq(result));
 		assertInstrumentedDelegate(runnableCaptor.getValue(), runnable);
 	}
@@ -212,7 +230,9 @@ public class LazyTraceScheduledThreadPoolExecutorTests {
 	@Test
 	public void should_delegate_submit_with_callable() {
 		final Callable callable = mock(Callable.class);
+
 		executor.submit(callable);
+
 		verify(delegate).submit(callableCaptor.capture());
 		assertInstrumentedDelegate(callableCaptor.getValue(), callable);
 	}
@@ -220,7 +240,9 @@ public class LazyTraceScheduledThreadPoolExecutorTests {
 	@Test
 	public void should_delegate_setContinueExistingPeriodicTasksAfterShutdownPolicy() {
 		final boolean value = true;
+
 		executor.setContinueExistingPeriodicTasksAfterShutdownPolicy(value);
+
 		verify(delegate).setContinueExistingPeriodicTasksAfterShutdownPolicy(value);
 	}
 
@@ -228,13 +250,16 @@ public class LazyTraceScheduledThreadPoolExecutorTests {
 	public void should_delegate_getContinueExistingPeriodicTasksAfterShutdownPolicy() {
 		final boolean value = true;
 		doReturn(value).when(delegate).getContinueExistingPeriodicTasksAfterShutdownPolicy();
+
 		assertThat(executor.getContinueExistingPeriodicTasksAfterShutdownPolicy()).isEqualTo(value);
 	}
 
 	@Test
 	public void should_delegate_setExecuteExistingDelayedTasksAfterShutdownPolicy() {
 		final boolean value = true;
+
 		executor.setExecuteExistingDelayedTasksAfterShutdownPolicy(value);
+
 		verify(delegate).setExecuteExistingDelayedTasksAfterShutdownPolicy(value);
 	}
 
@@ -242,13 +267,16 @@ public class LazyTraceScheduledThreadPoolExecutorTests {
 	public void should_delegate_getExecuteExistingDelayedTasksAfterShutdownPolicy() {
 		final boolean value = true;
 		doReturn(value).when(delegate).getExecuteExistingDelayedTasksAfterShutdownPolicy();
+
 		assertThat(executor.getExecuteExistingDelayedTasksAfterShutdownPolicy()).isEqualTo(value);
 	}
 
 	@Test
 	public void should_delegate_setRemoveOnCancelPolicy() {
 		final boolean value = true;
+
 		executor.setRemoveOnCancelPolicy(value);
+
 		verify(delegate).setRemoveOnCancelPolicy(value);
 	}
 
@@ -256,18 +284,21 @@ public class LazyTraceScheduledThreadPoolExecutorTests {
 	public void should_delegate_getRemoveOnCancelPolicy() {
 		final boolean value = true;
 		doReturn(value).when(delegate).getRemoveOnCancelPolicy();
+
 		assertThat(executor.getRemoveOnCancelPolicy()).isEqualTo(value);
 	}
 
 	@Test
 	public void should_delegate_shutdown() {
 		executor.shutdown();
+
 		verify(delegate).shutdown();
 	}
 
 	@Test
 	public void should_delegate_shutdownNow() {
 		executor.shutdownNow();
+
 		verify(delegate).shutdownNow();
 	}
 
@@ -282,6 +313,7 @@ public class LazyTraceScheduledThreadPoolExecutorTests {
 	public void should_delegate_isShutdown() {
 		final boolean value = true;
 		doReturn(value).when(delegate).isShutdown();
+
 		assertThat(executor.isShutdown()).isEqualTo(value);
 	}
 
@@ -289,6 +321,7 @@ public class LazyTraceScheduledThreadPoolExecutorTests {
 	public void should_delegate_isTerminating() {
 		final boolean value = true;
 		doReturn(value).when(delegate).isTerminating();
+
 		assertThat(executor.isTerminating()).isEqualTo(value);
 	}
 
@@ -296,6 +329,7 @@ public class LazyTraceScheduledThreadPoolExecutorTests {
 	public void should_delegate_isTerminated() {
 		final boolean value = true;
 		doReturn(value).when(delegate).isTerminated();
+
 		assertThat(executor.isTerminated()).isEqualTo(value);
 	}
 
@@ -305,13 +339,16 @@ public class LazyTraceScheduledThreadPoolExecutorTests {
 		final TimeUnit timeUnit = TimeUnit.SECONDS;
 		final boolean value = true;
 		doReturn(value).when(delegate).awaitTermination(timeout, timeUnit);
+
 		assertThat(executor.awaitTermination(timeout, timeUnit)).isEqualTo(value);
 	}
 
 	@Test
 	public void should_delegate_setThreadFactory() {
 		final ThreadFactory value = mock(ThreadFactory.class);
+
 		executor.setThreadFactory(value);
+
 		verify(delegate).setThreadFactory(value);
 	}
 
@@ -319,13 +356,16 @@ public class LazyTraceScheduledThreadPoolExecutorTests {
 	public void should_delegate_getThreadFactory() {
 		final ThreadFactory value = mock(ThreadFactory.class);
 		doReturn(value).when(delegate).getThreadFactory();
+
 		assertThat(executor.getThreadFactory()).isEqualTo(value);
 	}
 
 	@Test
 	public void should_delegate_setRejectedExecutionHandler() {
 		final RejectedExecutionHandler value = mock(RejectedExecutionHandler.class);
+
 		executor.setRejectedExecutionHandler(value);
+
 		verify(delegate).setRejectedExecutionHandler(value);
 	}
 
@@ -333,13 +373,16 @@ public class LazyTraceScheduledThreadPoolExecutorTests {
 	public void should_delegate_getRejectedExecutionHandler() {
 		final RejectedExecutionHandler value = mock(RejectedExecutionHandler.class);
 		doReturn(value).when(delegate).getRejectedExecutionHandler();
+
 		assertThat(executor.getRejectedExecutionHandler()).isEqualTo(value);
 	}
 
 	@Test
 	public void should_delegate_setCorePoolSize() {
 		final int value = 1000;
+
 		executor.setCorePoolSize(value);
+
 		verify(delegate).setCorePoolSize(value);
 	}
 
@@ -347,6 +390,7 @@ public class LazyTraceScheduledThreadPoolExecutorTests {
 	public void should_delegate_getCorePoolSize() {
 		final int value = 1000;
 		doReturn(value).when(delegate).getCorePoolSize();
+
 		assertThat(executor.getCorePoolSize()).isEqualTo(value);
 	}
 
@@ -354,6 +398,7 @@ public class LazyTraceScheduledThreadPoolExecutorTests {
 	public void should_delegate_prestartCoreThread() {
 		final boolean value = true;
 		doReturn(value).when(delegate).prestartCoreThread();
+
 		assertThat(executor.prestartCoreThread()).isEqualTo(value);
 	}
 
@@ -361,6 +406,7 @@ public class LazyTraceScheduledThreadPoolExecutorTests {
 	public void should_delegate_prestartAllCoreThreads() {
 		final int value = 1000;
 		doReturn(value).when(delegate).prestartAllCoreThreads();
+
 		assertThat(executor.prestartAllCoreThreads()).isEqualTo(value);
 	}
 
@@ -368,20 +414,25 @@ public class LazyTraceScheduledThreadPoolExecutorTests {
 	public void should_delegate_allowsCoreThreadTimeOut() {
 		final boolean value = true;
 		doReturn(value).when(delegate).allowsCoreThreadTimeOut();
+
 		assertThat(executor.allowsCoreThreadTimeOut()).isEqualTo(value);
 	}
 
 	@Test
 	public void should_delegate_allowCoreThreadTimeOut() {
 		final boolean value = true;
+
 		executor.allowCoreThreadTimeOut(value);
+
 		verify(delegate).allowCoreThreadTimeOut(value);
 	}
 
 	@Test
 	public void should_delegate_setMaximumPoolSize() {
 		final int value = 1000;
+
 		executor.setMaximumPoolSize(value);
+
 		verify(delegate).setMaximumPoolSize(value);
 	}
 
@@ -389,6 +440,7 @@ public class LazyTraceScheduledThreadPoolExecutorTests {
 	public void should_delegate_getMaximumPoolSize() {
 		final int value = 1000;
 		doReturn(value).when(delegate).getMaximumPoolSize();
+
 		assertThat(executor.getMaximumPoolSize()).isEqualTo(value);
 	}
 
@@ -396,7 +448,9 @@ public class LazyTraceScheduledThreadPoolExecutorTests {
 	public void should_delegate_setKeepAliveTime() {
 		final long value = 1000;
 		final TimeUnit timeUnit = TimeUnit.SECONDS;
+
 		executor.setKeepAliveTime(value, timeUnit);
+
 		verify(delegate).setKeepAliveTime(value, timeUnit);
 	}
 
@@ -405,19 +459,23 @@ public class LazyTraceScheduledThreadPoolExecutorTests {
 		final long value = 1000;
 		final TimeUnit timeUnit = TimeUnit.SECONDS;
 		doReturn(value).when(delegate).getKeepAliveTime(timeUnit);
+
 		assertThat(executor.getKeepAliveTime(timeUnit)).isEqualTo(value);
 	}
 
 	@Test
 	public void should_delegate_remove() {
 		final Runnable value = mock(Runnable.class);
+
 		executor.remove(value);
+
 		verify(delegate).remove(value);
 	}
 
 	@Test
 	public void should_delegate_purge() {
 		executor.purge();
+
 		verify(delegate).purge();
 	}
 
@@ -425,6 +483,7 @@ public class LazyTraceScheduledThreadPoolExecutorTests {
 	public void should_delegate_getPoolSize() {
 		final int value = 1000;
 		doReturn(value).when(delegate).getPoolSize();
+
 		assertThat(executor.getPoolSize()).isEqualTo(value);
 	}
 
@@ -432,6 +491,7 @@ public class LazyTraceScheduledThreadPoolExecutorTests {
 	public void should_delegate_getActiveCount() {
 		final int value = 1000;
 		doReturn(value).when(delegate).getActiveCount();
+
 		assertThat(executor.getActiveCount()).isEqualTo(value);
 	}
 
@@ -439,6 +499,7 @@ public class LazyTraceScheduledThreadPoolExecutorTests {
 	public void should_delegate_getLargestPoolSize() {
 		final int value = 1000;
 		doReturn(value).when(delegate).getLargestPoolSize();
+
 		assertThat(executor.getLargestPoolSize()).isEqualTo(value);
 	}
 
@@ -446,6 +507,7 @@ public class LazyTraceScheduledThreadPoolExecutorTests {
 	public void should_delegate_getTaskCount() {
 		final long value = 1000;
 		doReturn(value).when(delegate).getTaskCount();
+
 		assertThat(executor.getTaskCount()).isEqualTo(value);
 	}
 
@@ -453,6 +515,7 @@ public class LazyTraceScheduledThreadPoolExecutorTests {
 	public void should_delegate_getCompletedTaskCount() {
 		final long value = 1000;
 		doReturn(value).when(delegate).getCompletedTaskCount();
+
 		assertThat(executor.getCompletedTaskCount()).isEqualTo(value);
 	}
 
@@ -460,6 +523,7 @@ public class LazyTraceScheduledThreadPoolExecutorTests {
 	public void should_delegate_toString() {
 		final String value = "testing";
 		doReturn(value).when(delegate).toString();
+
 		assertThat(executor.toString()).isEqualTo(value);
 	}
 
@@ -467,7 +531,9 @@ public class LazyTraceScheduledThreadPoolExecutorTests {
 	public void should_delegate_beforeExecute() {
 		final Thread thread = mock(Thread.class);
 		final Runnable runnable = mock(Runnable.class);
+
 		executor.beforeExecute(thread, runnable);
+
 		verify(delegate).beforeExecute(eq(thread), runnableCaptor.capture());
 		assertInstrumentedDelegate(runnableCaptor.getValue(), runnable);
 	}
@@ -476,7 +542,9 @@ public class LazyTraceScheduledThreadPoolExecutorTests {
 	public void should_delegate_afterExecute() {
 		final Throwable throwable = mock(Throwable.class);
 		final Runnable runnable = mock(Runnable.class);
+
 		executor.afterExecute(runnable, throwable);
+
 		verify(delegate).afterExecute(runnableCaptor.capture(), eq(throwable));
 		assertInstrumentedDelegate(runnableCaptor.getValue(), runnable);
 	}
@@ -484,6 +552,7 @@ public class LazyTraceScheduledThreadPoolExecutorTests {
 	@Test
 	public void should_delegate_terminated() {
 		executor.terminated();
+
 		verify(delegate).terminated();
 	}
 
@@ -503,7 +572,9 @@ public class LazyTraceScheduledThreadPoolExecutorTests {
 		final Callable<String> callable = mock(Callable.class);
 		final RunnableFuture<String> future = mock(RunnableFuture.class);
 		doReturn(future).when(delegate).newTaskFor(any());
+
 		assertThat(executor.newTaskFor(callable)).isEqualTo(future);
+
 		verify(delegate).newTaskFor(callableCaptor.capture());
 		assertInstrumentedDelegate(callableCaptor.getValue(), callable);
 	}
@@ -519,6 +590,7 @@ public class LazyTraceScheduledThreadPoolExecutorTests {
 		doReturn(wrapped).when(executor).wrapCallableCollection(tasks);
 		final List<Future<String>> futures = Arrays.asList(mock(Future.class), mock(Future.class), mock(Future.class));
 		doReturn(futures).when(delegate).invokeAll(wrapped, timeout, timeUnit);
+
 		assertThat(executor.invokeAll(tasks, timeout, timeUnit)).isEqualTo(futures);
 	}
 
@@ -533,6 +605,7 @@ public class LazyTraceScheduledThreadPoolExecutorTests {
 		doReturn(wrapped).when(executor).wrapCallableCollection(tasks);
 		final String completed = "completed";
 		doReturn(completed).when(delegate).invokeAny(wrapped, timeout, timeUnit);
+
 		assertThat(executor.invokeAny(tasks, timeout, timeUnit)).isEqualTo(completed);
 	}
 
@@ -541,6 +614,7 @@ public class LazyTraceScheduledThreadPoolExecutorTests {
 		final Callable<String> task1 = mock(Callable.class);
 		final Callable<String> task2 = mock(Callable.class);
 		final Callable<String> task3 = mock(Callable.class);
+
 		assertThat(executor.wrapCallableCollection(Arrays.asList(task1, task2, task3)))
 				.extracting("tracer", "delegate", "parent", "spanName")
 				.containsExactly(tuple(tracer, task1, parent, BEAN_NAME), tuple(tracer, task2, parent, BEAN_NAME),
@@ -556,6 +630,7 @@ public class LazyTraceScheduledThreadPoolExecutorTests {
 		doReturn(wrapped).when(executor).wrapCallableCollection(tasks);
 		final String completed = "completed";
 		doReturn(completed).when(delegate).invokeAny(wrapped);
+
 		assertThat(executor.invokeAny(tasks)).isEqualTo(completed);
 	}
 
@@ -568,6 +643,7 @@ public class LazyTraceScheduledThreadPoolExecutorTests {
 		doReturn(wrapped).when(executor).wrapCallableCollection(tasks);
 		final List<Future<String>> futures = Arrays.asList(mock(Future.class), mock(Future.class), mock(Future.class));
 		doReturn(futures).when(delegate).invokeAll(wrapped);
+
 		assertThat(executor.invokeAll(tasks)).isEqualTo(futures);
 	}
 
