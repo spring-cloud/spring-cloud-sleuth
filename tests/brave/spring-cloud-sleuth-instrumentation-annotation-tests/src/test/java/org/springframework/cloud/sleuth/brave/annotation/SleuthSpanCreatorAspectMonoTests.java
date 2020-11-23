@@ -28,7 +28,7 @@ import org.springframework.test.context.ContextConfiguration;
 @SpringBootTest
 @ContextConfiguration(classes = SleuthSpanCreatorAspectMonoTests.Config.class)
 public class SleuthSpanCreatorAspectMonoTests
-		extends org.springframework.cloud.sleuth.annotation.SleuthSpanCreatorAspectMonoTests {
+		extends org.springframework.cloud.sleuth.instrument.annotation.SleuthSpanCreatorAspectMonoTests {
 
 	@Configuration(proxyBeanMethods = false)
 	static class Config {

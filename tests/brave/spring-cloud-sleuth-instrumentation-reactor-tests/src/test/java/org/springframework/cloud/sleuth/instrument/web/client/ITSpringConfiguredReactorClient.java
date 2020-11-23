@@ -37,7 +37,7 @@ import reactor.core.publisher.BaseSubscriber;
 import reactor.core.publisher.Mono;
 import reactor.netty.http.client.HttpClient;
 
-import org.springframework.cloud.sleuth.instrument.reactor.TraceReactorAutoConfigurationAccessorConfiguration;
+import org.springframework.cloud.sleuth.autoconfig.instrument.reactor.TraceReactorAutoConfigurationAccessorConfiguration;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 
 import static brave.Span.Kind.CLIENT;

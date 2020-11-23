@@ -68,6 +68,7 @@ public class SpringWebFluxBenchmarksTests {
 	static final SpanHandler FAKE_SPAN_HANDLER = new SpanHandler() {
 		// intentionally anonymous to prevent logging fallback on NOOP
 	};
+
 	protected static TraceContext defaultTraceContext = TraceContext.newBuilder().traceIdHigh(333L).traceId(444L)
 			.spanId(3).sampled(true).build();
 
@@ -138,8 +139,8 @@ public class SpringWebFluxBenchmarksTests {
 	}
 
 	protected String[] runArgs() {
-		return new String[] { "--spring.jmx.enabled=false", "--spring.application.name=defaultTraceContext", TracerImplementation.brave.toString(),
-				"--spring.sleuth.enabled=true" };
+		return new String[] { "--spring.jmx.enabled=false", "--spring.application.name=defaultTraceContext",
+				TracerImplementation.brave.toString(), "--spring.sleuth.enabled=true" };
 	}
 
 	@TearDown

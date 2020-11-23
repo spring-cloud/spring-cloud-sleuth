@@ -18,9 +18,8 @@ package org.springframework.cloud.sleuth.brave.bridge;
 
 import brave.sampler.SamplerFunctions;
 
-import org.springframework.cloud.sleuth.api.SamplerFunction;
-import org.springframework.cloud.sleuth.api.http.HttpRequest;
-import org.springframework.cloud.sleuth.brave.bridge.http.BraveHttpRequest;
+import org.springframework.cloud.sleuth.SamplerFunction;
+import org.springframework.cloud.sleuth.http.HttpRequest;
 
 /**
  * Brave implementation of a {@link SamplerFunction}.
@@ -29,7 +28,7 @@ import org.springframework.cloud.sleuth.brave.bridge.http.BraveHttpRequest;
  * @author Marcin Grzejszczak
  * @since 3.0.0
  */
-public class BraveSamplerFunction<T> implements SamplerFunction<T> {
+public final class BraveSamplerFunction<T> implements SamplerFunction<T> {
 
 	final brave.sampler.SamplerFunction<T> samplerFunction;
 
@@ -42,8 +41,8 @@ public class BraveSamplerFunction<T> implements SamplerFunction<T> {
 		return this.samplerFunction.trySample(arg);
 	}
 
-	public static <T, V> brave.sampler.SamplerFunction<V> toBrave(SamplerFunction<T> samplerFunction,
-			Class<T> sleuthInput, Class<V> braveInput) {
+	static <T, V> brave.sampler.SamplerFunction<V> toBrave(SamplerFunction<T> samplerFunction, Class<T> sleuthInput,
+			Class<V> braveInput) {
 		if (sleuthInput.equals(HttpRequest.class) && braveInput.equals(brave.http.HttpRequest.class)) {
 			return arg -> samplerFunction.trySample((T) BraveHttpRequest.fromBrave((brave.http.HttpRequest) arg));
 		}

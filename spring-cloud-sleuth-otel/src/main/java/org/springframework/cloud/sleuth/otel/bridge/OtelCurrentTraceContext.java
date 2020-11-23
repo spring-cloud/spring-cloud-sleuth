@@ -31,8 +31,8 @@ import io.opentelemetry.context.ContextStorageProvider;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import org.springframework.cloud.sleuth.api.CurrentTraceContext;
-import org.springframework.cloud.sleuth.api.TraceContext;
+import org.springframework.cloud.sleuth.CurrentTraceContext;
+import org.springframework.cloud.sleuth.TraceContext;
 import org.springframework.context.ApplicationEvent;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.lang.Nullable;
@@ -124,13 +124,6 @@ public class OtelCurrentTraceContext implements CurrentTraceContext, ContextStor
 		return get().current().wrap(delegate);
 	}
 
-	private boolean traceAndSpanIdsAreEqual(Span fromContext, Span currentSpan) {
-		return fromContext.getSpanContext().getTraceIdAsHexString()
-				.equals(currentSpan.getSpanContext().getTraceIdAsHexString())
-				&& fromContext.getSpanContext().getSpanIdAsHexString()
-						.equals(currentSpan.getSpanContext().getSpanIdAsHexString());
-	}
-
 	@Override
 	public ContextStorage get() {
 		ContextStorage threadLocalStorage = this.delegate.get();
@@ -157,12 +150,12 @@ public class OtelCurrentTraceContext implements CurrentTraceContext, ContextStor
 		};
 	}
 
-	public static class ScopeChanged extends ApplicationEvent {
+	static class ScopeChanged extends ApplicationEvent {
 
 		/**
 		 * Span corresponding to the changed scope. Might be {@code null}.
 		 */
-		public final Span span;
+		final Span span;
 
 		/**
 		 * Create a new {@code ApplicationEvent}.
@@ -170,21 +163,21 @@ public class OtelCurrentTraceContext implements CurrentTraceContext, ContextStor
 		 * the event is associated (never {@code null})
 		 * @param span corresponding trace context
 		 */
-		public ScopeChanged(Object source, @Nullable Span span) {
+		ScopeChanged(Object source, @Nullable Span span) {
 			super(source);
 			this.span = span;
 		}
 
 	}
 
-	public static class ScopeClosed extends ApplicationEvent {
+	static class ScopeClosed extends ApplicationEvent {
 
 		/**
 		 * Create a new {@code ApplicationEvent}.
 		 * @param source the object on which the event initially occurred or with which
 		 * the event is associated (never {@code null})
 		 */
-		public ScopeClosed(Object source) {
+		ScopeClosed(Object source) {
 			super(source);
 		}
 

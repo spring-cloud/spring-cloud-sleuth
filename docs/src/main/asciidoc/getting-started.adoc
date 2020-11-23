@@ -18,7 +18,8 @@ It integrates out of the box with two tracer implementations:
 * https://opentelemetry.io[OpenTelemetry SDK]
 
 Spring Cloud Sleuth is able to trace your requests and messages so that you can correlate that communication to corresponding log entries.
-You can also export the tracing information to an external system to visualize latency. Spring Cloud Sleuth supports https://zipkin.io[OpenZipkin] compatible systems directly and various other ones via the OpenTelemetry integration.
+You can also export the tracing information to an external system to visualize latency.
+Spring Cloud Sleuth supports https://zipkin.io[OpenZipkin] compatible systems directly and various other ones via the OpenTelemetry integration.
 
 [[getting-started-terminology]]
 === Terminology
@@ -92,7 +93,8 @@ image::{github-raw}/docs/src/main/asciidoc/images/parents.png[Parent child relat
 == Developing Your First Spring Cloud sleuth-based Application
 
 This section describes how to develop a small “Hello World!” web application that highlights some of Spring Cloud Sleuth’s key features.
-We use Maven to build this project, since most IDEs support it. As the tracer implementation we'll use https://github.com/openzipkin/brave[OpenZipkin Brave].
+We use Maven to build this project, since most IDEs support it.
+As the tracer implementation we'll use https://github.com/openzipkin/brave[OpenZipkin Brave].
 
 [TIP]
 ====
@@ -191,7 +193,35 @@ To add the necessary dependencies, edit your `pom.xml` and add the `spring-boot-
 	</dependencies>
 ----
 
-To use Sleuth with OpenTelemetry pass `spring-cloud-starter-sleuth-otel` instead of `spring-cloud-stater-sleuth`.
+To use Sleuth with OpenTelemetry do the following.
+
+[source,xml,indent=0,subs="verbatim,quotes,attributes"]
+----
+	<dependencies>
+		<!-- Boot's Web support -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-web</artifactId>
+		</dependency>
+		<!-- Sleuth with Brave tracer implementation -->
+		<dependency>
+			<groupId>org.springframework.cloud</groupId>
+			<artifactId>spring-cloud-starter-sleuth</artifactId>
+			<exclusions>
+				<!-- Exclude Brave -->
+				<exclusion>
+					<groupId>org.springframework.cloud</groupId>
+					<artifactId>spring-cloud-sleuth-brave</artifactId>
+				</exclusion>
+			</exclusions>
+		</dependency>
+		<!-- Add OpenTelemetry tracer -->
+		<dependency>
+			<groupId>org.springframework.cloud</groupId>
+			<artifactId>spring-cloud-sleuth-otel</artifactId>
+		</dependency>
+	</dependencies>
+----
 
 [[getting-started-first-application-code]]
 === Writing the Code
@@ -232,7 +262,8 @@ We step through the important parts in the next few sections.
 [getting-started-first-application-annotations]]
 ==== The @RestController and @RequestMapping Annotations
 
-Spring Boot sets up the Rest Controller and makes our application bind to a Tomcat port. Spring Cloud Sleuth with Brave tracer will provide instrumentation of the incoming request.
+Spring Boot sets up the Rest Controller and makes our application bind to a Tomcat port.
+Spring Cloud Sleuth with Brave tracer will provide instrumentation of the incoming request.
 
 [[getting-started-first-application-run]]
 === Running the Example
@@ -273,10 +304,11 @@ If you check the logs you should see a similar output
 2020-10-21 12:01:16.285  INFO [backend,0b6aaf642574edd3,0b6aaf642574edd3,true] 289589 --- [nio-9000-exec-1] Example              : Hello world!
 ----
 
-You can notice that the logging format has been updated with the following information `[backend,0b6aaf642574edd3,0b6aaf642574edd3,true]`. This entry corresponds to `[application name,trace id, span id, whether the trace should be propagated to an external system]`. The application name got read from the `SPRING_APPLICATION_NAME` environment variable.
+You can notice that the logging format has been updated with the following information `[backend,0b6aaf642574edd3,0b6aaf642574edd3,true]`.
+This entry corresponds to `[application name,trace id, span id, whether the trace should be propagated to an external system]`.
+The application name got read from the `SPRING_APPLICATION_NAME` environment variable.
 
-NOTE: Instead of logging the request in the handler explicitly, you
-could set `logging.level.org.springframework.web.servlet.DispatcherServlet=DEBUG`.
+NOTE: Instead of logging the request in the handler explicitly, you could set `logging.level.org.springframework.web.servlet.DispatcherServlet=DEBUG`.
 
 To gracefully exit the application, press `ctrl-c`.
 

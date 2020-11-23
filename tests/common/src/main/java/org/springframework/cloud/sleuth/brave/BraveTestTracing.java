@@ -25,19 +25,13 @@ import brave.propagation.StrictScopeDecorator;
 import brave.propagation.ThreadLocalCurrentTraceContext;
 import brave.sampler.Sampler;
 
-import org.springframework.cloud.sleuth.api.CurrentTraceContext;
-import org.springframework.cloud.sleuth.api.Tracer;
-import org.springframework.cloud.sleuth.api.http.HttpClientHandler;
-import org.springframework.cloud.sleuth.api.http.HttpRequestParser;
-import org.springframework.cloud.sleuth.api.http.HttpServerHandler;
-import org.springframework.cloud.sleuth.api.propagation.Propagator;
-import org.springframework.cloud.sleuth.brave.bridge.BraveBaggageManager;
-import org.springframework.cloud.sleuth.brave.bridge.BraveCurrentTraceContext;
-import org.springframework.cloud.sleuth.brave.bridge.BravePropagator;
-import org.springframework.cloud.sleuth.brave.bridge.BraveTracer;
-import org.springframework.cloud.sleuth.brave.bridge.http.BraveHttpClientHandler;
-import org.springframework.cloud.sleuth.brave.bridge.http.BraveHttpRequestParser;
-import org.springframework.cloud.sleuth.brave.bridge.http.BraveHttpServerHandler;
+import org.springframework.cloud.sleuth.CurrentTraceContext;
+import org.springframework.cloud.sleuth.Tracer;
+import org.springframework.cloud.sleuth.brave.bridge.BraveAccessor;
+import org.springframework.cloud.sleuth.http.HttpClientHandler;
+import org.springframework.cloud.sleuth.http.HttpRequestParser;
+import org.springframework.cloud.sleuth.http.HttpServerHandler;
+import org.springframework.cloud.sleuth.propagation.Propagator;
 import org.springframework.cloud.sleuth.test.TestSpanHandler;
 import org.springframework.cloud.sleuth.test.TestTracingAssertions;
 import org.springframework.cloud.sleuth.test.TestTracingAware;
@@ -71,8 +65,6 @@ public class BraveTestTracing implements TracerAware, TestTracingAware, TestTrac
 
 	brave.Tracer tracer = this.tracing.tracer();
 
-	BraveBaggageManager braveBaggageManager = new BraveBaggageManager();
-
 	HttpTracing httpTracing = httpTracingBuilder().build();
 
 	public HttpTracing.Builder httpTracingBuilder() {
@@ -81,7 +73,7 @@ public class BraveTestTracing implements TracerAware, TestTracingAware, TestTrac
 
 	@Override
 	public Tracer tracer() {
-		return BraveTracer.fromBrave(this.tracer, this.braveBaggageManager);
+		return BraveAccessor.tracer(this.tracer);
 	}
 
 	@Override
@@ -104,30 +96,30 @@ public class BraveTestTracing implements TracerAware, TestTracingAware, TestTrac
 
 	@Override
 	public CurrentTraceContext currentTraceContext() {
-		return BraveCurrentTraceContext.fromBrave(this.context);
+		return BraveAccessor.currentTraceContext(this.context);
 	}
 
 	@Override
 	public Propagator propagator() {
-		return new BravePropagator(this.tracing);
+		return BraveAccessor.propagator(this.tracing);
 	}
 
 	@Override
 	public HttpServerHandler httpServerHandler() {
-		return new BraveHttpServerHandler(brave.http.HttpServerHandler.create(this.httpTracing));
+		return BraveAccessor.httpServerHandler(brave.http.HttpServerHandler.create(this.httpTracing));
 	}
 
 	@Override
 	public TracerAware clientRequestParser(HttpRequestParser httpRequestParser) {
 		reset();
 		this.httpTracing = this.httpTracing.toBuilder()
-				.clientRequestParser(BraveHttpRequestParser.toBrave(httpRequestParser)).build();
+				.clientRequestParser(BraveAccessor.httpRequestParser(httpRequestParser)).build();
 		return this;
 	}
 
 	@Override
 	public HttpClientHandler httpClientHandler() {
-		return new BraveHttpClientHandler(brave.http.HttpClientHandler.create(this.httpTracing));
+		return BraveAccessor.httpClientHandler(brave.http.HttpClientHandler.create(this.httpTracing));
 	}
 
 	@Override

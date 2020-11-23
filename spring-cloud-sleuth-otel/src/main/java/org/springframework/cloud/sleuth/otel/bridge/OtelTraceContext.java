@@ -24,7 +24,7 @@ import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.sdk.trace.ReadableSpan;
 
-import org.springframework.cloud.sleuth.api.TraceContext;
+import org.springframework.cloud.sleuth.TraceContext;
 import org.springframework.lang.Nullable;
 
 /**
@@ -33,7 +33,7 @@ import org.springframework.lang.Nullable;
  * @author Marcin Grzejszczak
  * @since 3.0.0
  */
-public class OtelTraceContext implements TraceContext {
+class OtelTraceContext implements TraceContext {
 
 	final AtomicReference<Context> context;
 
@@ -41,7 +41,7 @@ public class OtelTraceContext implements TraceContext {
 
 	final Span span;
 
-	public OtelTraceContext(Context context, SpanContext delegate, @Nullable Span span) {
+	OtelTraceContext(Context context, SpanContext delegate, @Nullable Span span) {
 		this(new AtomicReference<>(context), delegate, span);
 	}
 
@@ -51,25 +51,25 @@ public class OtelTraceContext implements TraceContext {
 		this.span = span;
 	}
 
-	public OtelTraceContext(SpanContext delegate, @Nullable Span span) {
+	OtelTraceContext(SpanContext delegate, @Nullable Span span) {
 		this.context = new AtomicReference<>(Context.current());
 		this.delegate = delegate;
 		this.span = span;
 	}
 
-	public OtelTraceContext(Span span) {
+	OtelTraceContext(Span span) {
 		this(Context.current(), span.getSpanContext(), span);
 	}
 
-	public OtelTraceContext(SpanFromSpanContext span) {
+	OtelTraceContext(SpanFromSpanContext span) {
 		this(span.otelTraceContext.context.get(), span.getSpanContext(), span);
 	}
 
-	public static TraceContext fromOtel(SpanContext traceContext) {
+	static TraceContext fromOtel(SpanContext traceContext) {
 		return new OtelTraceContext(traceContext, null);
 	}
 
-	public static Context toOtelContext(TraceContext context) {
+	static Context toOtelContext(TraceContext context) {
 		if (context instanceof OtelTraceContext) {
 			Span span = ((OtelTraceContext) context).span;
 			if (span != null) {
@@ -104,31 +104,38 @@ public class OtelTraceContext implements TraceContext {
 		return this.delegate != null ? this.delegate.toString() : "null";
 	}
 
-	@Override
-	public boolean equals(Object o) {
-		return Objects.equals(this.delegate, o);
-	}
-
-	@Override
-	public int hashCode() {
-		return Objects.hashCode(this.delegate);
-	}
-
 	@Nullable
 	public Boolean sampled() {
 		return this.delegate.isSampled();
 	}
 
-	public Span span() {
+	Span span() {
 		return this.span;
 	}
 
-	public Context context() {
+	Context context() {
 		return this.context.get();
 	}
 
-	public void updateContext(Context context) {
+	void updateContext(Context context) {
 		this.context.set(context);
+	}
+
+	@Override
+	public boolean equals(Object o) {
+		if (this == o) {
+			return true;
+		}
+		if (o == null || getClass() != o.getClass()) {
+			return false;
+		}
+		OtelTraceContext context = (OtelTraceContext) o;
+		return Objects.equals(this.delegate, context.delegate);
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hash(this.delegate);
 	}
 
 }

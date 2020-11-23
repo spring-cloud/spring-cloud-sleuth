@@ -27,14 +27,11 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
-import org.springframework.boot.autoconfigure.jmx.JmxAutoConfiguration;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.web.servlet.context.ServletWebServerInitializedEvent;
-import org.springframework.cloud.sleuth.api.BaggageInScope;
-import org.springframework.cloud.sleuth.api.Span;
-import org.springframework.cloud.sleuth.api.Tracer;
-import org.springframework.cloud.sleuth.api.exporter.FinishedSpan;
+import org.springframework.cloud.sleuth.BaggageInScope;
+import org.springframework.cloud.sleuth.Span;
+import org.springframework.cloud.sleuth.Tracer;
+import org.springframework.cloud.sleuth.exporter.FinishedSpan;
 import org.springframework.cloud.sleuth.test.TestSpanHandler;
 import org.springframework.context.ApplicationListener;
 import org.springframework.context.annotation.Bean;
@@ -53,9 +50,7 @@ import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.BDDAssertions.then;
 import static org.awaitility.Awaitility.await;
-import static org.springframework.boot.test.context.SpringBootTest.WebEnvironment.RANDOM_PORT;
 
-@SpringBootTest(webEnvironment = RANDOM_PORT)
 @ContextConfiguration(classes = MultipleHopsIntegrationTests.TestConfig.class)
 @TestPropertySource(properties = { "spring.sleuth.baggage.remote-fields=x-vcap-request-id,country-code",
 		"spring.sleuth.baggage.local-fields=bp", "spring.sleuth.integration.enabled=true" })
@@ -109,7 +104,6 @@ public abstract class MultipleHopsIntegrationTests {
 	@Test
 	public void should_propagate_the_baggage() {
 		Span initialSpan = this.tracer.nextSpan().name("span").start();
-		System.out.println("FOO: " + initialSpan.context().traceId());
 		// tag::baggage[]
 		try (Tracer.SpanInScope ws = this.tracer.withSpan(initialSpan)) {
 			BaggageInScope businessProcess = this.tracer.createBaggage(BUSINESS_PROCESS).set("ALM");
@@ -159,7 +153,6 @@ public abstract class MultipleHopsIntegrationTests {
 	}
 
 	@Configuration(proxyBeanMethods = false)
-	@EnableAutoConfiguration(exclude = JmxAutoConfiguration.class)
 	@Import(DemoApplication.class)
 	public static class TestConfig implements ApplicationListener<ServletWebServerInitializedEvent> {
 

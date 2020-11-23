@@ -23,6 +23,7 @@ import io.grpc.ManagedChannelBuilder;
  * {@link io.grpc.ManagedChannelBuilder} via the {@link SpringAwareManagedChannelBuilder}.
  *
  * @author Tyler Van Gorder
+ * @since 3.0.0
  */
 public interface GrpcManagedChannelBuilderCustomizer {
 

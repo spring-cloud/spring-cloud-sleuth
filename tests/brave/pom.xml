@@ -50,6 +50,7 @@
 		<module>spring-cloud-sleuth-instrumentation-rxjava-tests</module>
 		<module>spring-cloud-sleuth-instrumentation-scheduling-tests</module>
 		<module>spring-cloud-sleuth-instrumentation-webflux-tests</module>
+		<module>spring-cloud-sleuth-zipkin-tests</module>
 	</modules>
 
 	<build>

@@ -25,8 +25,8 @@ import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.api.trace.StatusCode;
 import io.opentelemetry.context.Context;
 
-import org.springframework.cloud.sleuth.api.Span;
-import org.springframework.cloud.sleuth.api.TraceContext;
+import org.springframework.cloud.sleuth.Span;
+import org.springframework.cloud.sleuth.TraceContext;
 import org.springframework.lang.Nullable;
 
 /**
@@ -35,13 +35,13 @@ import org.springframework.lang.Nullable;
  * @author Marcin Grzejszczak
  * @since 3.0.0
  */
-public class OtelSpan implements Span {
+class OtelSpan implements Span {
 
 	final io.opentelemetry.api.trace.Span delegate;
 
 	private final AtomicReference<Context> context;
 
-	public OtelSpan(io.opentelemetry.api.trace.Span delegate) {
+	OtelSpan(io.opentelemetry.api.trace.Span delegate) {
 		this.delegate = delegate;
 		if (delegate instanceof SpanFromSpanContext) {
 			SpanFromSpanContext fromSpanContext = (SpanFromSpanContext) delegate;
@@ -52,20 +52,20 @@ public class OtelSpan implements Span {
 		}
 	}
 
-	public OtelSpan(io.opentelemetry.api.trace.Span delegate, Context context) {
+	OtelSpan(io.opentelemetry.api.trace.Span delegate, Context context) {
 		this.delegate = delegate;
 		this.context = new AtomicReference<>(context);
 	}
 
-	public static io.opentelemetry.api.trace.Span toOtel(Span span) {
+	static io.opentelemetry.api.trace.Span toOtel(Span span) {
 		return ((OtelSpan) span).delegate;
 	}
 
-	public static Span fromOtel(io.opentelemetry.api.trace.Span span) {
+	static Span fromOtel(io.opentelemetry.api.trace.Span span) {
 		return new OtelSpan(span);
 	}
 
-	public static Span fromOtel(io.opentelemetry.api.trace.Span span, Context context) {
+	static Span fromOtel(io.opentelemetry.api.trace.Span span, Context context) {
 		return new OtelSpan(span, context);
 	}
 
@@ -125,6 +125,23 @@ public class OtelSpan implements Span {
 	@Override
 	public String toString() {
 		return this.delegate != null ? this.delegate.toString() : "null";
+	}
+
+	@Override
+	public boolean equals(Object o) {
+		if (this == o) {
+			return true;
+		}
+		if (o == null || getClass() != o.getClass()) {
+			return false;
+		}
+		OtelSpan otelSpan = (OtelSpan) o;
+		return Objects.equals(this.delegate, otelSpan.delegate);
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hash(this.delegate);
 	}
 
 }

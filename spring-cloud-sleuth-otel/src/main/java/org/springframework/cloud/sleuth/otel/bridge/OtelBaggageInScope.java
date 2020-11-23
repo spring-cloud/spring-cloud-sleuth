@@ -16,6 +16,7 @@
 
 package org.springframework.cloud.sleuth.otel.bridge;
 
+import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 
 import io.opentelemetry.api.baggage.Baggage;
@@ -23,10 +24,9 @@ import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 
-import org.springframework.cloud.sleuth.api.BaggageInScope;
-import org.springframework.cloud.sleuth.api.CurrentTraceContext;
-import org.springframework.cloud.sleuth.api.TraceContext;
-import org.springframework.cloud.sleuth.autoconfig.SleuthBaggageProperties;
+import org.springframework.cloud.sleuth.BaggageInScope;
+import org.springframework.cloud.sleuth.CurrentTraceContext;
+import org.springframework.cloud.sleuth.TraceContext;
 import org.springframework.context.ApplicationEvent;
 import org.springframework.context.ApplicationEventPublisher;
 
@@ -36,7 +36,7 @@ import org.springframework.context.ApplicationEventPublisher;
  * @author Marcin Grzejszczak
  * @since 3.0.0
  */
-public class OtelBaggageInScope implements BaggageInScope {
+class OtelBaggageInScope implements BaggageInScope {
 
 	private final OtelBaggageManager otelBaggageManager;
 
@@ -44,18 +44,18 @@ public class OtelBaggageInScope implements BaggageInScope {
 
 	private final ApplicationEventPublisher publisher;
 
-	private final SleuthBaggageProperties sleuthBaggageProperties;
+	private final List<String> tagFields;
 
 	private final AtomicReference<Entry> entry = new AtomicReference<>();
 
 	private final AtomicReference<Scope> scope = new AtomicReference<>();
 
-	public OtelBaggageInScope(OtelBaggageManager otelBaggageManager, CurrentTraceContext currentTraceContext,
-			ApplicationEventPublisher publisher, SleuthBaggageProperties sleuthBaggageProperties, Entry entry) {
+	OtelBaggageInScope(OtelBaggageManager otelBaggageManager, CurrentTraceContext currentTraceContext,
+			ApplicationEventPublisher publisher, List<String> tagFields, Entry entry) {
 		this.otelBaggageManager = otelBaggageManager;
 		this.currentTraceContext = currentTraceContext;
 		this.publisher = publisher;
-		this.sleuthBaggageProperties = sleuthBaggageProperties;
+		this.tagFields = tagFields;
 		this.entry.set(entry);
 	}
 
@@ -101,8 +101,7 @@ public class OtelBaggageInScope implements BaggageInScope {
 		}
 		Context withBaggage = current.with(baggage);
 		this.scope.set(withBaggage.makeCurrent());
-		if (this.sleuthBaggageProperties.getTagFields().stream().map(String::toLowerCase)
-				.anyMatch(s -> s.equals(entry().getKey()))) {
+		if (this.tagFields.stream().map(String::toLowerCase).anyMatch(s -> s.equals(entry().getKey()))) {
 			currentSpan.setAttribute(entry().getKey(), value);
 		}
 		this.publisher.publishEvent(new BaggageChanged(this, baggage, entry().getKey(), value));
@@ -129,24 +128,24 @@ public class OtelBaggageInScope implements BaggageInScope {
 		}
 	}
 
-	public static class BaggageChanged extends ApplicationEvent {
+	static class BaggageChanged extends ApplicationEvent {
 
 		/**
 		 * Baggage with the new entry.
 		 */
-		public Baggage baggage;
+		Baggage baggage;
 
 		/**
 		 * Baggage entry name.
 		 */
-		public String name;
+		String name;
 
 		/**
 		 * Baggage entry value.
 		 */
-		public String value;
+		String value;
 
-		public BaggageChanged(OtelBaggageInScope source, Baggage baggage, String name, String value) {
+		BaggageChanged(OtelBaggageInScope source, Baggage baggage, String name, String value) {
 			super(source);
 			this.baggage = baggage;
 			this.name = name;

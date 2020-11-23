@@ -32,13 +32,12 @@ import org.springframework.cloud.loadbalancer.annotation.LoadBalancerClient;
 import org.springframework.cloud.loadbalancer.core.ServiceInstanceListSupplier;
 import org.springframework.cloud.openfeign.EnableFeignClients;
 import org.springframework.cloud.openfeign.FeignClient;
-import org.springframework.cloud.sleuth.api.Span;
-import org.springframework.cloud.sleuth.api.Tracer;
-import org.springframework.cloud.sleuth.api.http.HttpRequestParser;
-import org.springframework.cloud.sleuth.api.http.HttpResponseParser;
+import org.springframework.cloud.sleuth.Span;
+import org.springframework.cloud.sleuth.Tracer;
+import org.springframework.cloud.sleuth.http.HttpRequestParser;
+import org.springframework.cloud.sleuth.http.HttpResponseParser;
 import org.springframework.cloud.sleuth.instrument.web.HttpClientRequestParser;
 import org.springframework.cloud.sleuth.instrument.web.HttpClientResponseParser;
-import org.springframework.cloud.sleuth.instrument.web.TraceWebServletAutoConfiguration;
 import org.springframework.cloud.sleuth.test.TestSpanHandler;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -56,8 +55,8 @@ import org.springframework.web.bind.annotation.RestController;
 import static org.assertj.core.api.BDDAssertions.then;
 
 @ContextConfiguration(classes = WebClientCustomParserTests.TestConfiguration.class)
-@TestPropertySource(
-		properties = { "spring.application.name=fooservice", "spring.sleuth.web.client.skip-pattern=/skip.*" })
+@TestPropertySource(properties = { "spring.sleuth.web.servlet.enabled=false", "spring.application.name=fooservice",
+		"spring.sleuth.web.client.skip-pattern=/skip.*" })
 @DirtiesContext
 public abstract class WebClientCustomParserTests {
 
@@ -103,7 +102,7 @@ public abstract class WebClientCustomParserTests {
 	}
 
 	@Configuration(proxyBeanMethods = false)
-	@EnableAutoConfiguration(exclude = { TraceWebServletAutoConfiguration.class, JmxAutoConfiguration.class })
+	@EnableAutoConfiguration(exclude = JmxAutoConfiguration.class)
 	@EnableFeignClients
 	@LoadBalancerClient(value = "fooservice", configuration = SimpleLoadBalancerClientConfiguration.class)
 	@Import(ClientParserConfiguration.class)

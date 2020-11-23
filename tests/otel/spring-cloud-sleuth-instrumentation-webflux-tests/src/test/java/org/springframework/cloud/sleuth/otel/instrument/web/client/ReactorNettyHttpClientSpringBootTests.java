@@ -27,11 +27,11 @@ import io.opentelemetry.sdk.trace.samplers.Sampler;
 import org.assertj.core.api.Assertions;
 
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.cloud.sleuth.api.TraceContext;
-import org.springframework.cloud.sleuth.api.exporter.FinishedSpan;
+import org.springframework.cloud.sleuth.TraceContext;
+import org.springframework.cloud.sleuth.exporter.FinishedSpan;
 import org.springframework.cloud.sleuth.otel.OtelTestSpanHandler;
-import org.springframework.cloud.sleuth.otel.bridge.OtelTraceContext;
-import org.springframework.cloud.sleuth.otel.exporter.ArrayListSpanProcessor;
+import org.springframework.cloud.sleuth.otel.bridge.ArrayListSpanProcessor;
+import org.springframework.cloud.sleuth.otel.bridge.OtelAccessor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.test.context.ContextConfiguration;
@@ -45,7 +45,7 @@ public class ReactorNettyHttpClientSpringBootTests
 
 	@Override
 	public TraceContext traceContext() {
-		return OtelTraceContext.fromOtel(SpanContext.create(TraceId.fromLongs(1L, 0L), SpanId.fromLong(2L),
+		return OtelAccessor.traceContext(SpanContext.create(TraceId.fromLongs(1L, 0L), SpanId.fromLong(2L),
 				TraceFlags.getSampled(), TraceState.builder().build()));
 	}
 

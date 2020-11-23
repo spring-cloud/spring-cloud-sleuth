@@ -24,9 +24,9 @@ Just execute them from the root folder like this:
 
 For JMH we're building a shaded JAR file that is next executed.
 
-For JMeter we're running two applications, one with Sleuth, one without with Spring Boot
-Maven Plugin. Next a Maven JMeter plugin is executed that loads the `*.jmx` files, starts
-JMeter and prints out the results. At the end Spring Boot Maven Plugin stops the applications.
+For JMeter we're running two applications, one with Sleuth, one without with Spring Boot Maven Plugin.
+Next a Maven JMeter plugin is executed that loads the `*.jmx` files, starts JMeter and prints out the results.
+At the end Spring Boot Maven Plugin stops the applications.
 
 === What are we testing?
 

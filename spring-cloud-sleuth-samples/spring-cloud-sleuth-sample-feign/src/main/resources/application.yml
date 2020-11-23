@@ -6,3 +6,4 @@ logging.level.com.netflix.discovery: 'OFF'
 sample:
   zipkin:
     enabled: false
+spring:

@@ -39,8 +39,8 @@ public class WithOutSleuthSpringWebFluxBenchmarksTests extends SpringWebFluxBenc
 
 	@Override
 	protected String[] runArgs() {
-		return new String[] { "--spring.jmx.enabled=false", "--spring.application.name=defaultTraceContext", TracerImplementation.brave.toString(),
-				"--spring.sleuth.enabled=false" };
+		return new String[] { "--spring.jmx.enabled=false", "--spring.application.name=defaultTraceContext",
+				TracerImplementation.brave.toString(), "--spring.sleuth.enabled=false" };
 	}
 
 	@Override

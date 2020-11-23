@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <!DOCTYPE suppressions PUBLIC
-	"-//Puppy Crawl//DTD Suppressions 1.1//EN"
-	"https://www.puppycrawl.com/dtds/suppressions_1_1.dtd">
+		"-//Puppy Crawl//DTD Suppressions 1.1//EN"
+		"https://www.puppycrawl.com/dtds/suppressions_1_1.dtd">
 <suppressions>
 	<suppress files=".*/test/.*" checks="JavadocVariable"/>
 	<suppress files=".*ReactorSleuth\.java" checks="InnerAssignment"/>
@@ -32,5 +32,6 @@
 	<suppress files=".*TraceReactorAutoConfigurationAccessorConfiguration.*" checks="LineLengthCheck"/>
 	<suppress files=".*SamplerAutoConfiguration.*" checks="HideUtilityClassConstructorCheck"/>
 	<suppress files=".*TraceReactorAutoConfiguration.*" checks="HideUtilityClassConstructorCheck"/>
+	<suppress files=".*Configuration.*" checks="HideUtilityClassConstructorCheck"/>
 	<suppress files=".*grpc.stubs.*" checks=".*"/>
 </suppressions>

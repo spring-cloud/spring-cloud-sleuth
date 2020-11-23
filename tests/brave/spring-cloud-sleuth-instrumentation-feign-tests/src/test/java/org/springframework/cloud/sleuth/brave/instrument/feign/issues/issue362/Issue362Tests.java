@@ -42,7 +42,6 @@ import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.cloud.openfeign.EnableFeignClients;
 import org.springframework.cloud.openfeign.FeignClient;
-import org.springframework.cloud.sleuth.instrument.web.TraceWebServletAutoConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpStatus;
@@ -72,7 +71,7 @@ interface MyFeignClient {
  */
 
 @SpringBootTest(classes = Application.class, webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT)
-@TestPropertySource(properties = { "server.port=9998" })
+@TestPropertySource(properties = { "server.port=9998", "spring.sleuth.web.servlet.enabled=false" })
 public class Issue362Tests {
 
 	RestTemplate template = new RestTemplate();
@@ -126,10 +125,7 @@ public class Issue362Tests {
 }
 
 @Configuration(proxyBeanMethods = false)
-@EnableAutoConfiguration(
-		// spring boot test will otherwise instrument the client and server with the
-		// same bean factory which isn't expected
-		exclude = TraceWebServletAutoConfiguration.class)
+@EnableAutoConfiguration
 @EnableFeignClients(basePackageClasses = { SleuthTestController.class })
 class Application {
 

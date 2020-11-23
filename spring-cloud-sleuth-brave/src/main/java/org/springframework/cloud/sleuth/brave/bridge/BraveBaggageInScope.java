@@ -18,8 +18,8 @@ package org.springframework.cloud.sleuth.brave.bridge;
 
 import brave.baggage.BaggageField;
 
-import org.springframework.cloud.sleuth.api.BaggageInScope;
-import org.springframework.cloud.sleuth.api.TraceContext;
+import org.springframework.cloud.sleuth.BaggageInScope;
+import org.springframework.cloud.sleuth.TraceContext;
 
 /**
  * Brave implementation of a {@link BaggageInScope}.
@@ -27,11 +27,11 @@ import org.springframework.cloud.sleuth.api.TraceContext;
  * @author Marcin Grzejszczak
  * @since 3.0.0
  */
-public class BraveBaggageInScope implements BaggageInScope {
+class BraveBaggageInScope implements BaggageInScope {
 
 	private final BaggageField delegate;
 
-	public BraveBaggageInScope(BaggageField delegate) {
+	BraveBaggageInScope(BaggageField delegate) {
 		this.delegate = delegate;
 	}
 
@@ -56,7 +56,7 @@ public class BraveBaggageInScope implements BaggageInScope {
 		return this;
 	}
 
-	public BaggageField unwrap() {
+	BaggageField unwrap() {
 		return this.delegate;
 	}
 

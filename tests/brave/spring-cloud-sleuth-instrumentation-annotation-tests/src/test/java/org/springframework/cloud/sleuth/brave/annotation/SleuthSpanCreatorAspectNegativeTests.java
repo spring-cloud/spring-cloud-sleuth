@@ -28,7 +28,7 @@ import org.springframework.test.context.ContextConfiguration;
 @SpringBootTest
 @ContextConfiguration(classes = SleuthSpanCreatorAspectNegativeTests.Config.class)
 public class SleuthSpanCreatorAspectNegativeTests
-		extends org.springframework.cloud.sleuth.annotation.SleuthSpanCreatorAspectNegativeTests {
+		extends org.springframework.cloud.sleuth.instrument.annotation.SleuthSpanCreatorAspectNegativeTests {
 
 	@Configuration(proxyBeanMethods = false)
 	static class Config {

@@ -25,8 +25,8 @@ import org.assertj.core.api.BDDAssertions;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
-import org.springframework.cloud.sleuth.api.Span;
-import org.springframework.cloud.sleuth.api.exporter.FinishedSpan;
+import org.springframework.cloud.sleuth.Span;
+import org.springframework.cloud.sleuth.exporter.FinishedSpan;
 import org.springframework.cloud.sleuth.test.TestSpanHandler;
 import org.springframework.cloud.sleuth.test.TestTracingAwareSupplier;
 import org.springframework.integration.channel.DirectChannel;
@@ -48,8 +48,8 @@ import static org.springframework.messaging.support.NativeMessageHeaderAccessor.
 
 public abstract class TracingChannelInterceptorTest implements TestTracingAwareSupplier {
 
-	protected ChannelInterceptor interceptor = TracingChannelInterceptor.create(tracerTest().tracing().tracer(),
-			tracerTest().tracing().propagator(), new SleuthIntegrationMessagingProperties());
+	protected ChannelInterceptor interceptor = new TracingChannelInterceptor(tracerTest().tracing().tracer(),
+			tracerTest().tracing().propagator());
 
 	protected TestSpanHandler spans = tracerTest().handler();
 

@@ -36,9 +36,8 @@ import org.springframework.cloud.loadbalancer.annotation.LoadBalancerClient;
 import org.springframework.cloud.loadbalancer.core.ServiceInstanceListSupplier;
 import org.springframework.cloud.openfeign.EnableFeignClients;
 import org.springframework.cloud.openfeign.FeignClient;
-import org.springframework.cloud.sleuth.api.Span;
-import org.springframework.cloud.sleuth.api.Tracer;
-import org.springframework.cloud.sleuth.instrument.web.TraceWebServletAutoConfiguration;
+import org.springframework.cloud.sleuth.Span;
+import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.test.TestSpanHandler;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -53,7 +52,8 @@ import org.springframework.web.client.RestTemplate;
 import static org.assertj.core.api.BDDAssertions.then;
 
 @ContextConfiguration(classes = WebClientDiscoveryExceptionTests.TestConfiguration.class)
-@TestPropertySource(properties = "spring.application.name=exceptionservice")
+@TestPropertySource(
+		properties = { "spring.application.name=exceptionservice", "spring.sleuth.web.servlet.enabled=false" })
 @DirtiesContext
 public abstract class WebClientDiscoveryExceptionTests {
 
@@ -124,7 +124,7 @@ public abstract class WebClientDiscoveryExceptionTests {
 	}
 
 	@Configuration(proxyBeanMethods = false)
-	@EnableAutoConfiguration(exclude = TraceWebServletAutoConfiguration.class)
+	@EnableAutoConfiguration
 	@EnableDiscoveryClient
 	@EnableFeignClients
 	@LoadBalancerClient("exceptionservice")

@@ -50,7 +50,7 @@ dependencyManagement {
 }
 
 dependencies {
-    compile "org.springframework.cloud:spring-cloud-starter-sleuth"
+    implementation "org.springframework.cloud:spring-cloud-starter-sleuth"
 }
 ----
 ====
@@ -58,7 +58,7 @@ dependencies {
 [[how-to-set-up-sleuth-with-otel]]
 == How to Set Up Sleuth with OpenTelemetry?
 
-Add the Sleuth OpenTelemetry starter to the classpath.
+Add the Sleuth starter, exlcude Brave and add OpenTelemetry dependency to the classpath.
 
 ====
 [source,xml,indent=0,subs="verbatim,attributes",role="primary"]
@@ -78,7 +78,17 @@ Add the Sleuth OpenTelemetry starter to the classpath.
 
     <dependency>
         <groupId>org.springframework.cloud</groupId>
-        <artifactId>spring-cloud-starter-sleuth-otel</artifactId>
+        <artifactId>spring-cloud-starter-sleuth</artifactId>
+        <exclusions>
+            <exclusion>
+                <groupId>org.springframework.cloud</groupId>
+                <artifactId>spring-cloud-sleuth-brave</artifactId>
+            </exclusion>
+        </exclusions>
+    </dependency>
+    <dependency>
+        <groupId>org.springframework.cloud</groupId>
+        <artifactId>spring-cloud-sleuth-otel</artifactId>
     </dependency>
 ----
 
@@ -92,7 +102,9 @@ dependencyManagement {
 }
 
 dependencies {
-    compile "org.springframework.cloud:spring-cloud-starter-sleuth-otel"
+    implementation("org.springframework.cloud:spring-cloud-starter-sleuth") {
+        exclude group: 'org.springframework.cloud', module: 'spring-cloud-sleuth-brave'
+    }
 }
 ----
 ====
@@ -138,8 +150,8 @@ dependencyManagement {
 }
 
 dependencies {
-    compile "org.springframework.cloud:spring-cloud-starter-sleuth"
-    compile "org.springframework.cloud:spring-cloud-sleuth-zipkin"
+    implementation "org.springframework.cloud:spring-cloud-starter-sleuth"
+    implementation "org.springframework.cloud:spring-cloud-sleuth-zipkin"
 }
 ----
 ====
@@ -147,7 +159,7 @@ dependencies {
 [[how-to-set-up-sleuth-with-otel-zipkin-http]]
 == How to Set Up Sleuth with OpenTelemetry & Zipkin via HTTP?
 
-Add the Sleuth starter and Zipkin to the classpath.
+Add the Sleuth starter, exclude Brave, add OTel and Zipkin to the classpath.
 
 ====
 [source,xml,indent=0,subs="verbatim,attributes",role="primary"]
@@ -167,7 +179,17 @@ Add the Sleuth starter and Zipkin to the classpath.
 
     <dependency>
         <groupId>org.springframework.cloud</groupId>
-        <artifactId>spring-cloud-starter-sleuth-otel</artifactId>
+        <artifactId>spring-cloud-starter-sleuth</artifactId>
+        <exclusions>
+            <exclusion>
+                <groupId>org.springframework.cloud</groupId>
+                <artifactId>spring-cloud-sleuth-brave</artifactId>
+            </exclusion>
+        </exclusions>
+    </dependency>
+    <dependency>
+        <groupId>org.springframework.cloud</groupId>
+        <artifactId>spring-cloud-sleuth-otel</artifactId>
     </dependency>
     <dependency>
         <groupId>org.springframework.cloud</groupId>
@@ -185,8 +207,10 @@ dependencyManagement {
 }
 
 dependencies {
-    compile "org.springframework.cloud:spring-cloud-starter-sleuth-otel"
-    compile "org.springframework.cloud:spring-cloud-sleuth-zipkin"
+    implementation("org.springframework.cloud:spring-cloud-starter-sleuth") {
+        exclude group: 'org.springframework.cloud', module: 'spring-cloud-sleuth-brave'
+    }
+    implementation "org.springframework.cloud:spring-cloud-sleuth-zipkin"
 }
 ----
 ====
@@ -239,9 +263,9 @@ dependencyManagement {
 }
 
 dependencies {
-    compile "org.springframework.cloud:spring-cloud-starter-sleuth"
-    compile "org.springframework.cloud:spring-cloud-sleuth-zipkin"
-    compile "org.springframework.kafka:spring-kafka"
+    implementation "org.springframework.cloud:spring-cloud-starter-sleuth"
+    implementation "org.springframework.cloud:spring-cloud-sleuth-zipkin"
+    implementation "org.springframework.kafka:spring-kafka"
 }
 ----
 ====
@@ -295,9 +319,9 @@ dependencyManagement {
 }
 
 dependencies {
-    compile "org.springframework.cloud:spring-cloud-starter-sleuth"
-    compile "org.springframework.cloud:spring-cloud-sleuth-zipkin"
-    compile "org.springframework.amqp:spring-rabbit"
+    implementation "org.springframework.cloud:spring-cloud-starter-sleuth"
+    implementation "org.springframework.cloud:spring-cloud-sleuth-zipkin"
+    implementation "org.springframework.amqp:spring-rabbit"
 }
 ----
 ====
@@ -344,9 +368,9 @@ dependencyManagement {
 }
 
 dependencies {
-    compile "org.springframework.cloud:spring-cloud-starter-sleuth"
-    compile "org.springframework.cloud:spring-cloud-sleuth-zipkin"
-    compile "org.apache.activemq:activemq-client"
+    implementation "org.springframework.cloud:spring-cloud-starter-sleuth"
+    implementation "org.springframework.cloud:spring-cloud-sleuth-zipkin"
+    implementation "org.apache.activemq:activemq-client"
 }
 ----
 ====
@@ -384,7 +408,17 @@ If using Kafka, you must add the Kafka dependency.
 
     <dependency>
         <groupId>org.springframework.cloud</groupId>
-        <artifactId>spring-cloud-starter-sleuth-otel</artifactId>
+        <artifactId>spring-cloud-starter-sleuth</artifactId>
+        <exclusions>
+            <exclusion>
+                <groupId>org.springframework.cloud</groupId>
+                <artifactId>spring-cloud-sleuth-brave</artifactId>
+            </exclusion>
+        </exclusions>
+    </dependency>
+    <dependency>
+        <groupId>org.springframework.cloud</groupId>
+        <artifactId>spring-cloud-sleuth-otel</artifactId>
     </dependency>
     <dependency>
         <groupId>org.springframework.cloud</groupId>
@@ -406,9 +440,11 @@ dependencyManagement {
 }
 
 dependencies {
-    compile "org.springframework.cloud:spring-cloud-starter-sleuth-otel"
-    compile "org.springframework.cloud:spring-cloud-sleuth-zipkin"
-    compile "org.springframework.kafka:spring-kafka"
+    implementation("org.springframework.cloud:spring-cloud-starter-sleuth") {
+        exclude group: 'org.springframework.cloud', module: 'spring-cloud-sleuth-brave'
+    }
+    implementation "org.springframework.cloud:spring-cloud-sleuth-zipkin"
+    implementation "org.springframework.kafka:spring-kafka"
 }
 ----
 ====
@@ -420,7 +456,7 @@ Also, you need to set the property `spring.zipkin.sender.type` property accordin
 spring.zipkin.sender.type: kafka
 ----
 
-If you want Sleuth over RabbitMQ, add the `spring-cloud-starter-sleuth-otel`, `spring-cloud-sleuth-zipkin` and `spring-rabbit` dependencies.
+If you want Sleuth over RabbitMQ, add the `spring-cloud-sleuth-otel` (exclude `spring-cloud-sleuth-brave`), `spring-cloud-sleuth-zipkin` and `spring-rabbit` dependencies.
 
 ====
 [source,xml,indent=0,subs="verbatim,attributes",role="primary"]
@@ -462,14 +498,14 @@ dependencyManagement {
 }
 
 dependencies {
-    compile "org.springframework.cloud:spring-cloud-starter-sleuth"
-    compile "org.springframework.cloud:spring-cloud-sleuth-zipkin"
-    compile "org.springframework.amqp:spring-rabbit"
+    implementation "org.springframework.cloud:spring-cloud-starter-sleuth"
+    implementation "org.springframework.cloud:spring-cloud-sleuth-zipkin"
+    implementation "org.springframework.amqp:spring-rabbit"
 }
 ----
 ====
 
-If you want Sleuth over RabbitMQ, add the `spring-cloud-starter-sleuth-otel`, `spring-cloud-sleuth-zipkin` and `activemq-client` dependencies.
+If you want Sleuth over RabbitMQ, add the `spring-cloud-sleuth-otel` (exclude `spring-cloud-sleuth-brave`), `spring-cloud-sleuth-zipkin` and `activemq-client` dependencies.
 
 ====
 [source,xml,indent=0,subs="verbatim,attributes",role="primary"]
@@ -489,7 +525,17 @@ If you want Sleuth over RabbitMQ, add the `spring-cloud-starter-sleuth-otel`, `s
 
     <dependency>
         <groupId>org.springframework.cloud</groupId>
-        <artifactId>spring-cloud-starter-sleuth-otel</artifactId>
+        <artifactId>spring-cloud-starter-sleuth</artifactId>
+        <exclusions>
+            <exclusion>
+                <groupId>org.springframework.cloud</groupId>
+                <artifactId>spring-cloud-sleuth-brave</artifactId>
+            </exclusion>
+        </exclusions>
+    </dependency>
+    <dependency>
+        <groupId>org.springframework.cloud</groupId>
+        <artifactId>spring-cloud-sleuth-otel</artifactId>
     </dependency>
     <dependency>
         <groupId>org.springframework.cloud</groupId>
@@ -511,9 +557,11 @@ dependencyManagement {
 }
 
 dependencies {
-    compile "org.springframework.cloud:spring-cloud-starter-sleuth-otel"
-    compile "org.springframework.cloud:spring-cloud-sleuth-zipkin"
-    compile "org.apache.activemq:activemq-client"
+    implementation("org.springframework.cloud:spring-cloud-starter-sleuth") {
+        exclude group: 'org.springframework.cloud', module: 'spring-cloud-sleuth-brave'
+    }
+    implementation "org.springframework.cloud:spring-cloud-sleuth-zipkin"
+    implementation "org.apache.activemq:activemq-client"
 }
 ----
 ====
@@ -570,7 +618,7 @@ For example if you want to use the OpenTelemetry Zipkin Exporter just add a depe
 .Gradle
 ----
 dependencies {
-    compile "io.opentelemetry:opentelemetry-exporter-zipkin"
+    implementation "io.opentelemetry:opentelemetry-exporter-zipkin"
 }
 ----
 ====
@@ -615,7 +663,7 @@ Example where instrumentation will work:
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.client.RestTemplate;
 
-@Configuration
+@Configuration(proxyBeanMethods = false)
 class MyConfiguration {
     @Bean RestTemplate myRestTemplate() {
         return new RestTemplate();
@@ -665,12 +713,12 @@ Register a bean of `HttpResponseParser` type whose name is `HttpServerResponsePa
 ====
 [source,java,indent=0]
 ----
-import org.springframework.cloud.sleuth.api.http.HttpResponseParser;
+import org.springframework.cloud.sleuth.http.HttpResponseParser;
 import org.springframework.cloud.sleuth.instrument.web.HttpServerResponseParser;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-@Configuration
+@Configuration(proxyBeanMethods = false)
 class MyConfig {
 
 	@Bean(name = HttpServerResponseParser.NAME)
@@ -688,6 +736,8 @@ class MyConfig {
 
 ----
 ====
+
+IMPORTANT: Your spans need to be sampled for the parser to work. That means that you need to be able to export spans to e.g. Zipkin.
 
 [[how-to-cutomize-http-client-spans]]
 == How to Customize HTTP Client Spans?
@@ -715,6 +765,8 @@ include::{common_tests_path}/src/main/java/org/springframework/cloud/sleuth/inst
 ----
 ====
 
+IMPORTANT: Your spans need to be sampled for the parser to work. That means that you need to be able to export spans to e.g. Zipkin.
+
 [[how-to-see-application-name-in-logs]]
 == How to See the Application Name in Logs?
 
@@ -729,7 +781,7 @@ To use the provided defaults you can set the `spring.sleuth.propagation.type` pr
 The value can be a list in which case you will propagate more tracing headers.
 
 For Brave we support `AWS`, `B3`, `W3C` propagation types.
-For OpenTelemetry we support `AWS`, `B3`, `JAEGER`, `W3C`, `OT_TRACER` and `W3C` via the `io.opentelemetry:opentelemetry-extension-trace-propagators` that we provide via the `spring-cloud-starter-sleuth-otel` starter.
+For OpenTelemetry we support `AWS`, `B3`, `JAEGER`, `W3C`, `OT_TRACER` and `W3C` propagation types.
 
 If you want to provide a custom propagation mechanism set the `spring.sleuth.propagation.type` property to `CUSTOM` and implement your own bean (`Propagation.Factory` for Brave and `TextMapPropagator` for OpenTelemetry).
 Below you can find the examples:
@@ -739,18 +791,20 @@ Below you can find the examples:
 .Brave
 ----
 @Component
-include::{brave_path}/src/test/java/org/springframework/cloud/sleuth/brave/propagation/TraceBravePropagationAutoConfigurationTests.java[tags=custom_propagator,indent=0]
+include::{autoconfig_path}/src/test/java/org/springframework/cloud/sleuth/autoconfig/brave/BravePropagationTests.java[tags=custom_propagator,indent=0]
 ----
 
 [source,java,indent=0,subs="verbatim,attributes",role="secondary"]
 .OpenTelemetry
 ----
 @Component
-include::{otel_path}/src/test/java/org/springframework/cloud/sleuth/otel/propagation/TraceOtelPropagationAutoConfigurationTests.java[tags=custom_propagator,indent=0]
+include::{autoconfig_path}/src/test/java/org/springframework/cloud/sleuth/autoconfig/otel/OtelPropagationConfigurationTests.java[tags=custom_propagator,indent=0]
 ----
 ====
 
 [[how-to-implement-own-tracer]]
 == How to Implement My Own Tracer?
 
-Spring Cloud Sleuth Core in its `api` module contains all necessary interfaces to be implemented by a tracer. The project comes with OpenZipkin Brave and OpenTelemetry implementations. You can check how both tracers are bridged to the Sleuth's API by looking at the `org.springframework.cloud.sleuth.brave.bridge` and `org.springframework.cloud.sleuth.otel.bridge` modules respectively.
+Spring Cloud Sleuth API contains all necessary interfaces to be implemented by a tracer.
+The project comes with OpenZipkin Brave and OpenTelemetry implementations.
+You can check how both tracers are bridged to the Sleuth's API by looking at the `org.springframework.cloud.sleuth.brave.bridge` and `org.springframework.cloud.sleuth.otel.bridge` modules respectively.

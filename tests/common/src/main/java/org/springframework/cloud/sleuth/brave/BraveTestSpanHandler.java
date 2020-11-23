@@ -22,9 +22,9 @@ import java.util.stream.Collectors;
 
 import brave.test.IntegrationTestSpanHandler;
 
-import org.springframework.cloud.sleuth.api.Span;
-import org.springframework.cloud.sleuth.api.exporter.FinishedSpan;
-import org.springframework.cloud.sleuth.brave.bridge.BraveFinishedSpan;
+import org.springframework.cloud.sleuth.Span;
+import org.springframework.cloud.sleuth.brave.bridge.BraveAccessor;
+import org.springframework.cloud.sleuth.exporter.FinishedSpan;
 import org.springframework.cloud.sleuth.test.TestSpanHandler;
 
 public class BraveTestSpanHandler implements TestSpanHandler {
@@ -50,12 +50,12 @@ public class BraveTestSpanHandler implements TestSpanHandler {
 
 	@Override
 	public List<FinishedSpan> reportedSpans() {
-		return this.spans.spans().stream().map(BraveFinishedSpan::new).collect(Collectors.toList());
+		return this.spans.spans().stream().map(BraveAccessor::finishedSpan).collect(Collectors.toList());
 	}
 
 	@Override
 	public FinishedSpan takeLocalSpan() {
-		return new BraveFinishedSpan(this.integrationSpans.takeLocalSpan());
+		return BraveAccessor.finishedSpan(this.integrationSpans.takeLocalSpan());
 	}
 
 	@Override
@@ -67,23 +67,28 @@ public class BraveTestSpanHandler implements TestSpanHandler {
 
 	@Override
 	public FinishedSpan takeRemoteSpan(Span.Kind kind) {
-		return new BraveFinishedSpan(this.integrationSpans.takeRemoteSpan(brave.Span.Kind.valueOf(kind.name())));
+		return BraveAccessor.finishedSpan(this.integrationSpans.takeRemoteSpan(brave.Span.Kind.valueOf(kind.name())));
 	}
 
 	@Override
 	public FinishedSpan takeRemoteSpanWithError(Span.Kind kind) {
-		return new BraveFinishedSpan(
-				this.integrationSpans.takeRemoteSpanWithError(brave.Span.Kind.valueOf(kind.name())));
+		return BraveAccessor
+				.finishedSpan(this.integrationSpans.takeRemoteSpanWithError(brave.Span.Kind.valueOf(kind.name())));
 	}
 
 	@Override
 	public FinishedSpan get(int index) {
-		return new BraveFinishedSpan(this.spans.get(index));
+		return BraveAccessor.finishedSpan(this.spans.get(index));
 	}
 
 	@Override
 	public Iterator<FinishedSpan> iterator() {
 		return reportedSpans().iterator();
+	}
+
+	@Override
+	public String toString() {
+		return "BraveTestSpanHandler{" + "spans=" + spans + ", integrationSpans=" + integrationSpans + '}';
 	}
 
 }

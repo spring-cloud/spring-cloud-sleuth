@@ -42,11 +42,11 @@ import org.springframework.jms.listener.endpoint.JmsMessageEndpointManager;
  * @author Adrian Cole
  * @since 2.1.0
  */
-class TracingConnectionFactoryBeanPostProcessor implements BeanPostProcessor {
+public class TracingConnectionFactoryBeanPostProcessor implements BeanPostProcessor {
 
 	private final BeanFactory beanFactory;
 
-	TracingConnectionFactoryBeanPostProcessor(BeanFactory beanFactory) {
+	public TracingConnectionFactoryBeanPostProcessor(BeanFactory beanFactory) {
 		this.beanFactory = beanFactory;
 	}
 
