@@ -193,7 +193,35 @@ To add the necessary dependencies, edit your `pom.xml` and add the `spring-boot-
 	</dependencies>
 ----
 
-To use Sleuth with OpenTelemetry pass `spring-cloud-starter-sleuth-otel` instead of `spring-cloud-stater-sleuth`.
+To use Sleuth with OpenTelemetry do the following.
+
+[source,xml,indent=0,subs="verbatim,quotes,attributes"]
+----
+	<dependencies>
+		<!-- Boot's Web support -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-web</artifactId>
+		</dependency>
+		<!-- Sleuth with Brave tracer implementation -->
+		<dependency>
+			<groupId>org.springframework.cloud</groupId>
+			<artifactId>spring-cloud-starter-sleuth</artifactId>
+			<exclusions>
+				<!-- Exclude Brave -->
+				<exclusion>
+					<groupId>org.springframework.cloud</groupId>
+					<artifactId>spring-cloud-sleuth-brave</artifactId>
+				</exclusion>
+			</exclusions>
+		</dependency>
+		<!-- Add OpenTelemetry tracer -->
+		<dependency>
+			<groupId>org.springframework.cloud</groupId>
+			<artifactId>spring-cloud-sleuth-otel</artifactId>
+		</dependency>
+	</dependencies>
+----
 
 [[getting-started-first-application-code]]
 === Writing the Code

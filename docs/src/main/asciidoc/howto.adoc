@@ -456,7 +456,7 @@ Also, you need to set the property `spring.zipkin.sender.type` property accordin
 spring.zipkin.sender.type: kafka
 ----
 
-If you want Sleuth over RabbitMQ, add the `spring-cloud-starter-sleuth-otel`, `spring-cloud-sleuth-zipkin` and `spring-rabbit` dependencies.
+If you want Sleuth over RabbitMQ, add the `spring-cloud-sleuth-otel` (exclude `spring-cloud-sleuth-brave`), `spring-cloud-sleuth-zipkin` and `spring-rabbit` dependencies.
 
 ====
 [source,xml,indent=0,subs="verbatim,attributes",role="primary"]
@@ -505,7 +505,7 @@ dependencies {
 ----
 ====
 
-If you want Sleuth over RabbitMQ, add the `spring-cloud-starter-sleuth-otel`, `spring-cloud-sleuth-zipkin` and `activemq-client` dependencies.
+If you want Sleuth over RabbitMQ, add the `spring-cloud-sleuth-otel` (exclude `spring-cloud-sleuth-brave`), `spring-cloud-sleuth-zipkin` and `activemq-client` dependencies.
 
 ====
 [source,xml,indent=0,subs="verbatim,attributes",role="primary"]
@@ -781,7 +781,7 @@ To use the provided defaults you can set the `spring.sleuth.propagation.type` pr
 The value can be a list in which case you will propagate more tracing headers.
 
 For Brave we support `AWS`, `B3`, `W3C` propagation types.
-For OpenTelemetry we support `AWS`, `B3`, `JAEGER`, `W3C`, `OT_TRACER` and `W3C` via the `io.opentelemetry:opentelemetry-extension-trace-propagators` that we provide via the `spring-cloud-starter-sleuth-otel` starter.
+For OpenTelemetry we support `AWS`, `B3`, `JAEGER`, `W3C`, `OT_TRACER` and `W3C` propagation types.
 
 If you want to provide a custom propagation mechanism set the `spring.sleuth.propagation.type` property to `CUSTOM` and implement your own bean (`Propagation.Factory` for Brave and `TextMapPropagator` for OpenTelemetry).
 Below you can find the examples:
