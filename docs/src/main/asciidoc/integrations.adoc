@@ -409,14 +409,14 @@ If you wrap your logic in `Runnable` or `Callable`, you can wrap those classes i
 
 [source,java,indent=0]
 ----
-include::{brave_path}/src/test/java/org/springframework/cloud/sleuth/documentation/SpringCloudSleuthDocTests.java[tags=trace_runnable,indent=0]
+include::{brave_path}/src/test/java/org/springframework/cloud/sleuth/brave/SpringCloudSleuthDocTests.java[tags=trace_runnable,indent=0]
 ----
 
 The following example shows how to do so for `Callable`:
 
 [source,java,indent=0]
 ----
-include::{brave_path}/src/test/java/org/springframework/cloud/sleuth/documentation/SpringCloudSleuthDocTests.java[tags=trace_callable,indent=0]
+include::{brave_path}/src/test/java/org/springframework/cloud/sleuth/brave/SpringCloudSleuthDocTests.java[tags=trace_callable,indent=0]
 ----
 
 That way, you ensure that a new span is created and closed for each execution.
@@ -443,7 +443,7 @@ Other requests will use the global sampling configuration.
 ----
 @Configuration(proxyBeanMethods = false)
 	class Config {
-include::{brave_path}/src/test/java/org/springframework/cloud/sleuth/brave/instrument/rpc/TraceRpcAutoConfigurationIntegrationTests.java[tags=custom_rpc_server_sampler,indent=2]
+include::{autoconfig_path}/src/test/java/org/springframework/cloud/sleuth/autoconfig/brave/instrument/rpc/BraveRpcAutoConfigurationIntegrationTests.java[tags=custom_rpc_server_sampler,indent=2]
 }
 ----
 

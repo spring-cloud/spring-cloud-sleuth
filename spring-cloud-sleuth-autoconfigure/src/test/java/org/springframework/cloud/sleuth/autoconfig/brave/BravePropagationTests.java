@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.springframework.cloud.sleuth.autoconfig.brave.bridge;
+package org.springframework.cloud.sleuth.autoconfig.brave;
 
 import java.util.Arrays;
 import java.util.HashMap;
@@ -30,7 +30,6 @@ import org.junit.jupiter.api.Test;
 
 import org.springframework.boot.autoconfigure.AutoConfigurations;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
-import org.springframework.cloud.sleuth.autoconfig.brave.BraveAutoConfiguration;
 import org.springframework.cloud.sleuth.brave.bridge.CompositePropagationFactorySupplier;
 import org.springframework.cloud.sleuth.brave.propagation.PropagationFactorySupplier;
 import org.springframework.context.annotation.Bean;
@@ -38,7 +37,7 @@ import org.springframework.context.annotation.Configuration;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-class TraceBravePropagationAutoConfigurationTests {
+class BravePropagationTests {
 
 	@Test
 	void should_start_a_composite_propagation_factory_supplier_with_b3_as_default() {

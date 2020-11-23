@@ -42,7 +42,7 @@ You can manually create spans by using the `Tracer`, as shown in the following e
 
 [source,java,indent=0]
 ----
-include::{brave_path}/src/test/java/org/springframework/cloud/sleuth/documentation/SpringCloudSleuthDocTests.java[tags=manual_span_creation,indent=0]
+include::{brave_path}/src/test/java/org/springframework/cloud/sleuth/brave/SpringCloudSleuthDocTests.java[tags=manual_span_creation,indent=0]
 ----
 
 In the preceding example, we could see how to create a new instance of the span.
@@ -66,7 +66,7 @@ To continue a span, you can store the span in one thread and pass it on to anoth
 
 [source,java,indent=0]
 ----
-include::{brave_path}/src/test/java/org/springframework/cloud/sleuth/documentation/SpringCloudSleuthDocTests.java[tags=manual_span_continuation,indent=0]
+include::{brave_path}/src/test/java/org/springframework/cloud/sleuth/brave/SpringCloudSleuthDocTests.java[tags=manual_span_continuation,indent=0]
 ----
 
 [[using-creating-spans-with-explicit-parent]]
@@ -79,7 +79,7 @@ You can put the span in scope and then call `Tracer.nextSpan()`, as shown in the
 
 [source,java,indent=0]
 ----
-include::{brave_path}/src/test/java/org/springframework/cloud/sleuth/documentation/SpringCloudSleuthDocTests.java[tags=manual_span_joining,indent=0]
+include::{brave_path}/src/test/java/org/springframework/cloud/sleuth/brave/SpringCloudSleuthDocTests.java[tags=manual_span_joining,indent=0]
 ----
 
 IMPORTANT: After creating such a span, you must finish it.
@@ -109,14 +109,14 @@ You can name the span explicitly by using the `@SpanName` annotation, as shown i
 
 [source,java,indent=0]
 ----
-include::{brave_path}/src/test/java/org/springframework/cloud/sleuth/documentation/SpringCloudSleuthDocTests.java[tags=span_name_annotation,indent=0]
+include::{brave_path}/src/test/java/org/springframework/cloud/sleuth/brave/SpringCloudSleuthDocTests.java[tags=span_name_annotation,indent=0]
 ----
 
 In this case, when processed in the following manner, the span is named `calculateTax`:
 
 [source,java,indent=0]
 ----
-include::{brave_path}/src/test/java/org/springframework/cloud/sleuth/documentation/SpringCloudSleuthDocTests.java[tags=span_name_annotated_runnable_execution,indent=0]
+include::{brave_path}/src/test/java/org/springframework/cloud/sleuth/brave/SpringCloudSleuthDocTests.java[tags=span_name_annotated_runnable_execution,indent=0]
 ----
 
 [[using-naming-spans-to-string]]
@@ -131,7 +131,7 @@ Running such code leads to creating a span named `calculateTax`, as shown in the
 
 [source,java,indent=0]
 ----
-include::{brave_path}/src/test/java/org/springframework/cloud/sleuth/documentation/SpringCloudSleuthDocTests.java[tags=span_name_to_string_runnable_execution,indent=0]
+include::{brave_path}/src/test/java/org/springframework/cloud/sleuth/brave/SpringCloudSleuthDocTests.java[tags=span_name_to_string_runnable_execution,indent=0]
 ----
 
 [[using-annotations]]
@@ -160,14 +160,14 @@ Now we can consider some examples of usage.
 
 [source,java,indent=0]
 ----
-include::{common_tests_path}/src/main/java/org/springframework/cloud/sleuth/annotation/SleuthSpanCreatorAspectTests.java[tags=annotated_method,indent=0]
+include::{common_tests_path}/src/main/java/org/springframework/cloud/sleuth/instrument/annotation/SleuthSpanCreatorAspectTests.java[tags=annotated_method,indent=0]
 ----
 
 Annotating the method without any parameter leads to creating a new span whose name equals the annotated method name.
 
 [source,java,indent=0]
 ----
-include::{common_tests_path}/src/main/java/org/springframework/cloud/sleuth/annotation/SleuthSpanCreatorAspectTests.java[tags=custom_name_on_annotated_method,indent=0]
+include::{common_tests_path}/src/main/java/org/springframework/cloud/sleuth/instrument/annotation/SleuthSpanCreatorAspectTests.java[tags=custom_name_on_annotated_method,indent=0]
 ----
 
 If you provide the value in the annotation (either directly or by setting the `name` parameter), the created span has the provided value as the name.
@@ -175,10 +175,10 @@ If you provide the value in the annotation (either directly or by setting the `n
 [source,java,indent=0]
 ----
 // method declaration
-include::{common_tests_path}/src/main/java/org/springframework/cloud/sleuth/annotation/SleuthSpanCreatorAspectTests.java[tags=custom_name_and_tag_on_annotated_method,indent=0]
+include::{common_tests_path}/src/main/java/org/springframework/cloud/sleuth/instrument/annotation/SleuthSpanCreatorAspectTests.java[tags=custom_name_and_tag_on_annotated_method,indent=0]
 
 // and method execution
-include::{common_tests_path}/src/main/java/org/springframework/cloud/sleuth/annotation/SleuthSpanCreatorAspectTests.java[tags=execution,indent=0]
+include::{common_tests_path}/src/main/java/org/springframework/cloud/sleuth/instrument/annotation/SleuthSpanCreatorAspectTests.java[tags=execution,indent=0]
 ----
 
 You can combine both the name and a tag.
@@ -188,7 +188,7 @@ In our sample, the tag key is `testTag`, and the tag value is `test`.
 
 [source,java,indent=0]
 ----
-include::{common_tests_path}/src/main/java/org/springframework/cloud/sleuth/annotation/SleuthSpanCreatorAspectTests.java[tags=name_on_implementation,indent=0]
+include::{common_tests_path}/src/main/java/org/springframework/cloud/sleuth/instrument/annotation/SleuthSpanCreatorAspectTests.java[tags=name_on_implementation,indent=0]
 ----
 
 You can place the `@NewSpan` annotation on both the class and an interface.
@@ -202,10 +202,10 @@ If you want to add tags and annotations to an existing span, you can use the `@C
 [source,java,indent=0]
 ----
 // method declaration
-include::{common_tests_path}/src/main/java/org/springframework/cloud/sleuth/annotation/SleuthSpanCreatorAspectTests.java[tags=continue_span,indent=0]
+include::{common_tests_path}/src/main/java/org/springframework/cloud/sleuth/instrument/annotation/SleuthSpanCreatorAspectTests.java[tags=continue_span,indent=0]
 
 // method execution
-include::{common_tests_path}/src/main/java/org/springframework/cloud/sleuth/annotation/SleuthSpanCreatorAspectTests.java[tags=continue_span_execution,indent=0]
+include::{common_tests_path}/src/main/java/org/springframework/cloud/sleuth/instrument/annotation/SleuthSpanCreatorAspectTests.java[tags=continue_span_execution,indent=0]
 ----
 
 (Note that, in contrast with the `@NewSpan` annotation ,you can also add logs with the `log` parameter.)
@@ -241,14 +241,14 @@ Consider the following annotated method:
 
 [source,java,indent=0]
 ----
-include::{common_tests_path}/src/main/java/org/springframework/cloud/sleuth/annotation/SpanTagAnnotationHandlerTests.java[tags=resolver_bean,indent=0]
+include::{common_tests_path}/src/main/java/org/springframework/cloud/sleuth/instrument/annotation/SpanTagAnnotationHandlerTests.java[tags=resolver_bean,indent=0]
 ----
 
 Now further consider the following `TagValueResolver` bean implementation:
 
 [source,java,indent=0]
 ----
-include::{common_tests_path}/src/main/java/org/springframework/cloud/sleuth/annotation/SpanTagAnnotationHandlerTests.java[tags=custom_resolver,indent=0]
+include::{common_tests_path}/src/main/java/org/springframework/cloud/sleuth/instrument/annotation/SpanTagAnnotationHandlerTests.java[tags=custom_resolver,indent=0]
 ----
 
 The two preceding examples lead to setting a tag value equal to `Value from myCustomTagValueResolver`.
@@ -260,7 +260,7 @@ Consider the following annotated method:
 
 [source,java,indent=0]
 ----
-include::{common_tests_path}/src/main/java/org/springframework/cloud/sleuth/annotation/SpanTagAnnotationHandlerTests.java[tags=spel,indent=0]
+include::{common_tests_path}/src/main/java/org/springframework/cloud/sleuth/instrument/annotation/SpanTagAnnotationHandlerTests.java[tags=spel,indent=0]
 ----
 
 No custom implementation of a `TagValueExpressionResolver` leads to evaluation of the SPEL expression, and a tag with a value of `4 characters` is set on the span.
@@ -273,7 +273,7 @@ Consider the following annotated method:
 
 [source,java,indent=0]
 ----
-include::{common_tests_path}/src/main/java/org/springframework/cloud/sleuth/annotation/SpanTagAnnotationHandlerTests.java[tags=toString,indent=0]
+include::{common_tests_path}/src/main/java/org/springframework/cloud/sleuth/instrument/annotation/SpanTagAnnotationHandlerTests.java[tags=toString,indent=0]
 ----
 
 Running the preceding method with a value of `15` leads to setting a tag with a String value of `"15"`.

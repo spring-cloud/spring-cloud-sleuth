@@ -153,7 +153,7 @@ The sampler can be set by Java Config also, as shown in the following example:
 
 [source,java,indent=0]
 ----
-include::{brave_path}/src/test/java/org/springframework/cloud/sleuth/documentation/SpringCloudSleuthDocTests.java[tags=always_sampler,indent=0]
+include::{brave_path}/src/test/java/org/springframework/cloud/sleuth/brave/SpringCloudSleuthDocTests.java[tags=always_sampler,indent=0]
 ----
 
 TIP: You can set the HTTP header `b3` to `1`, or, when doing messaging, you can set the `spanFlags` header to `1`.
@@ -236,7 +236,7 @@ Other requests will use a global rate provided by the
 ----
 @Configuration(proxyBeanMethods = false)
 	class Config {
-include::{brave_path}/src/test/java/org/springframework/cloud/sleuth/brave/instrument/messaging/TraceMessagingAutoConfigurationIntegrationTests.java[tags=custom_messaging_consumer_sampler,indent=2]
+include::{autoconfig_path}/src/test/java/org/springframework/cloud/sleuth/autoconfig/brave/instrument/messaging/BraveMessagingAutoConfigurationIntegrationTests.java[tags=custom_messaging_consumer_sampler,indent=2]
 }
 ----
 
@@ -394,7 +394,7 @@ The following example shows how to register two beans that implement `SpanHandle
 
 [source,java,indent=0]
 ----
-include::{brave_path}/src/test/java/org/springframework/cloud/sleuth/SpanHandlerTests.java[tags=spanHandler,indent=0]
+include::{autoconfig_path}/src/test/java/org/springframework/cloud/sleuth/autoconfig/brave/SpanHandlerTests.java[tags=spanHandler,indent=0]
 ----
 
 The preceding example results in changing the name of the reported span to `foo bar`, just before it gets reported (for example, to Zipkin).
@@ -407,7 +407,7 @@ To do this you can use respectively `ZipkinAutoConfiguration.REPORTER_BEAN_NAME`
 
 [source,java,indent=0]
 ----
-include::{project-root}/spring-cloud-sleuth-zipkin/src/test/java/org/springframework/cloud/sleuth/zipkin2/ZipkinAutoConfigurationTests.java[tags=override_default_beans,indent=0]
+include::{common_tests_path}/src/main/java/org/springframework/cloud/sleuth/autoconfig/zipkin2/ZipkinAutoConfigurationTests.java[tags=override_default_beans,indent=0]
 ----
 
 [[features-log-integration]]
