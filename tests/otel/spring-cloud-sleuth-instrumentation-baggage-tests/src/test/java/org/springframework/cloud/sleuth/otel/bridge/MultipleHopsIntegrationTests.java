@@ -35,6 +35,7 @@ import org.springframework.context.ApplicationListener;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.TestPropertySource;
 
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.BDDAssertions.then;
@@ -42,6 +43,7 @@ import static org.springframework.boot.test.context.SpringBootTest.WebEnvironmen
 
 @SpringBootTest(webEnvironment = RANDOM_PORT)
 @ContextConfiguration(classes = MultipleHopsIntegrationTests.Config.class)
+@TestPropertySource(properties = "spring.sleuth.otel.propagation.sleuth-baggage.enabled=true")
 public class MultipleHopsIntegrationTests
 		extends org.springframework.cloud.sleuth.baggage.multiple.MultipleHopsIntegrationTests {
 

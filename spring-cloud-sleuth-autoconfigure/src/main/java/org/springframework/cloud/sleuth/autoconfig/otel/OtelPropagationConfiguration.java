@@ -33,8 +33,13 @@ import org.springframework.cloud.sleuth.BaggageManager;
 import org.springframework.cloud.sleuth.autoconfig.SleuthBaggageProperties;
 import org.springframework.cloud.sleuth.otel.propagation.BaggageTextMapPropagator;
 import org.springframework.cloud.sleuth.otel.propagation.CompositeTextMapPropagator;
+import org.springframework.cloud.sleuth.otel.propagation.PropagationType;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Condition;
+import org.springframework.context.annotation.ConditionContext;
+import org.springframework.context.annotation.Conditional;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.type.AnnotatedTypeMetadata;
 
 /**
  * {@link org.springframework.boot.autoconfigure.EnableAutoConfiguration
@@ -74,12 +79,24 @@ class OtelPropagationConfiguration {
 	}
 
 	@Configuration(proxyBeanMethods = false)
-	@ConditionalOnProperty(name = "spring.sleuth.otel.propagation.sleuth-baggage.enabled", matchIfMissing = true)
+	@Conditional(B3PresentOrPropertyEnabledCondition.class)
 	static class BaggagePropagatorConfiguration {
 
 		@Bean
 		TextMapPropagator baggageTextMapPropagator(SleuthBaggageProperties properties, BaggageManager baggageManager) {
 			return new BaggageTextMapPropagator(properties.getRemoteFields(), baggageManager);
+		}
+
+	}
+
+	static class B3PresentOrPropertyEnabledCondition implements Condition {
+
+		@Override
+		public boolean matches(ConditionContext context, AnnotatedTypeMetadata metadata) {
+			String type = context.getEnvironment().getProperty("spring.sleuth.propagation.type", "").toLowerCase();
+			boolean sleuthBaggageEnabled = context.getEnvironment()
+					.getProperty("spring.sleuth.otel.propagation.sleuth-baggage.enabled", Boolean.class, false);
+			return type.contains(PropagationType.B3.toString().toLowerCase()) || sleuthBaggageEnabled;
 		}
 
 	}

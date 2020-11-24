@@ -90,6 +90,16 @@
 			<groupId>org.awaitility</groupId>
 			<artifactId>awaitility</artifactId>
 		</dependency>
+		<dependency>
+			<groupId>com.squareup.okhttp3</groupId>
+			<artifactId>mockwebserver</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>com.squareup.okhttp3</groupId>
+			<artifactId>okhttp</artifactId>
+			<!-- Kotlin... -->
+			<version>4.8.0</version>
+		</dependency>
 	</dependencies>
 
 </project>

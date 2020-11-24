@@ -49,6 +49,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.cloud.sleuth.autoconfig.SleuthBaggageProperties;
 import org.springframework.cloud.sleuth.brave.propagation.PropagationFactorySupplier;
+import org.springframework.cloud.sleuth.brave.propagation.PropagationType;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Conditional;
 import org.springframework.context.annotation.Configuration;
@@ -125,9 +126,10 @@ class BraveBaggageConfiguration {
 
 	@Bean
 	@ConditionalOnMissingBean
-	Propagation.Factory sleuthPropagation(BaggagePropagation.FactoryBuilder factoryBuilder,
+	Propagation.Factory sleuthPropagationWithB3Baggage(BaggagePropagation.FactoryBuilder factoryBuilder,
 			@Qualifier(BAGGAGE_KEYS) List<String> baggageKeys, @Qualifier(LOCAL_KEYS) List<String> localKeys,
 			@Qualifier(PROPAGATION_KEYS) List<String> propagationKeys, SleuthBaggageProperties sleuthBaggageProperties,
+			SleuthPropagationProperties sleuthPropagationProperties, PropagationFactorySupplier supplier,
 			@Nullable List<BaggagePropagationCustomizer> baggagePropagationCustomizers) {
 
 		Set<String> localFields = redirectOldPropertyToNew(LOCAL_KEYS, localKeys, "spring.sleuth.baggage.local-fields",
@@ -159,7 +161,13 @@ class BraveBaggageConfiguration {
 				customizer.customize(factoryBuilder);
 			}
 		}
-		return factoryBuilder.build();
+		Propagation.Factory delegate = factoryBuilder.build();
+		Propagation.Factory factoryFromSupplier = supplier.get();
+		final boolean hasB3 = sleuthPropagationProperties.getType().contains(PropagationType.B3);
+		if (hasB3) {
+			return delegate;
+		}
+		return new BaggageFactoryWrapper(delegate, factoryFromSupplier);
 	}
 
 	static Set<String> redirectOldPropertyToNew(String oldProperty, List<String> oldValue, String newProperty,
@@ -289,5 +297,66 @@ class BraveBaggageConfiguration {
 		}
 
 	}
+
+	static class BaggageFactoryWrapper extends Propagation.Factory {
+
+		private final Propagation.Factory delegate;
+
+		private final Propagation.Factory factoryFromSupplier;
+
+		BaggageFactoryWrapper(Propagation.Factory delegate, Propagation.Factory factoryFromSupplier) {
+			this.delegate = delegate;
+			this.factoryFromSupplier = factoryFromSupplier;
+		}
+
+		@Override
+		public boolean supportsJoin() {
+			return delegate.supportsJoin();
+		}
+
+		@Override
+		public boolean requires128BitTraceId() {
+			return delegate.requires128BitTraceId();
+		}
+
+		@Override
+		public Propagation<String> get() {
+			Propagation<String> propagation = delegate.get();
+			return delegateWithoutB3Baggage(factoryFromSupplier, propagation);
+		}
+
+		@Override
+		public TraceContext decorate(TraceContext context) {
+			return delegate.decorate(context);
+		}
+
+		@Override
+		public <K> Propagation<K> create(Propagation.KeyFactory<K> keyFactory) {
+			Propagation<K> propagation = delegate.create(keyFactory);
+			return delegateWithoutB3Baggage(factoryFromSupplier, propagation);
+		}
+
+		private <K> Propagation<K> delegateWithoutB3Baggage(Propagation.Factory factoryFromSupplier,
+				Propagation<K> propagation) {
+			return new Propagation<K>() {
+				@Override
+				public List<K> keys() {
+					return propagation.keys();
+				}
+
+				@Override
+				public <R> TraceContext.Injector<R> injector(Setter<R, K> setter) {
+					// We don't want to inject baggage in the Brave way
+					return factoryFromSupplier.get().injector((Setter<R, String>) setter);
+				}
+
+				@Override
+				public <R> TraceContext.Extractor<R> extractor(Getter<R, K> getter) {
+					return propagation.extractor(getter);
+				}
+			};
+		}
+
+	};
 
 }

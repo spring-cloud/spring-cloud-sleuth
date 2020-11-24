@@ -91,7 +91,7 @@ public class BraveAutoConfiguration {
 			CurrentTraceContext currentTraceContext, Sampler sampler, SleuthProperties sleuthProperties,
 			@Nullable List<SpanHandler> spanHandlers, @Nullable List<TracingCustomizer> tracingCustomizers) {
 		Tracing.Builder builder = Tracing.newBuilder().sampler(sampler)
-				.localServiceName(StringUtils.isEmpty(serviceName) ? DEFAULT_SERVICE_NAME : serviceName)
+				.localServiceName(!StringUtils.hasText(serviceName) ? DEFAULT_SERVICE_NAME : serviceName)
 				.propagationFactory(factory).currentTraceContext(currentTraceContext)
 				.traceId128Bit(sleuthProperties.isTraceId128()).supportsJoin(sleuthProperties.isSupportsJoin());
 		if (spanHandlers != null) {
