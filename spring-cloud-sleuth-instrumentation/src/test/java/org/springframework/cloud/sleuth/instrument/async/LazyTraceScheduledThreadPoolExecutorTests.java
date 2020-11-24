@@ -16,19 +16,6 @@
 
 package org.springframework.cloud.sleuth.instrument.async;
 
-import org.assertj.core.api.BDDAssertions;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.ArgumentCaptor;
-import org.mockito.Captor;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.beans.factory.BeanFactory;
-import org.springframework.cloud.sleuth.SpanNamer;
-import org.springframework.cloud.sleuth.api.Span;
-import org.springframework.cloud.sleuth.api.Tracer;
-
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
@@ -43,6 +30,20 @@ import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
+
+import org.assertj.core.api.BDDAssertions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Captor;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+
+import org.springframework.beans.factory.BeanFactory;
+import org.springframework.cloud.sleuth.Span;
+import org.springframework.cloud.sleuth.SpanNamer;
+import org.springframework.cloud.sleuth.Tracer;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.tuple;
@@ -674,10 +675,9 @@ public class LazyTraceScheduledThreadPoolExecutorTests {
 		final Collection<? extends Callable<String>> actual = executor
 				.wrapCallableCollection(Arrays.asList(expected1, expected2, expected3));
 
-		assertThat(actual)
-				.extracting("tracer", "delegate", "parent", "spanName")
-				.containsExactly(tuple(tracer, expected1, parent, BEAN_NAME), tuple(tracer, expected2, parent, BEAN_NAME),
-						tuple(tracer, expected3, parent, BEAN_NAME));
+		assertThat(actual).extracting("tracer", "delegate", "parent", "spanName").containsExactly(
+				tuple(tracer, expected1, parent, BEAN_NAME), tuple(tracer, expected2, parent, BEAN_NAME),
+				tuple(tracer, expected3, parent, BEAN_NAME));
 	}
 
 	@Test
