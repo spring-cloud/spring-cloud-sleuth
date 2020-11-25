@@ -42,7 +42,6 @@ import org.springframework.cloud.context.scope.refresh.RefreshScopeRefreshedEven
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.autoconfig.brave.BraveAutoConfiguration;
 import org.springframework.cloud.sleuth.autoconfig.otel.OtelAutoConfiguration;
-import org.springframework.cloud.sleuth.instrument.async.TraceableScheduledExecutorService;
 import org.springframework.cloud.sleuth.instrument.reactor.ReactorSleuth;
 import org.springframework.context.ApplicationListener;
 import org.springframework.context.ConfigurableApplicationContext;
@@ -187,9 +186,6 @@ class HookRegisteringBeanDefinitionRegistryPostProcessor implements BeanDefiniti
 		else if (property == SleuthReactorProperties.InstrumentationType.MANUAL) {
 			decorateOnLast(ReactorSleuth.springContextSpanOperator(springContext));
 		}
-		Schedulers.setExecutorServiceDecorator(TraceReactorAutoConfiguration.SLEUTH_REACTOR_EXECUTOR_SERVICE_KEY,
-				(scheduler, scheduledExecutorService) -> new TraceableScheduledExecutorService(springContext,
-						scheduledExecutorService));
 	}
 
 	private static void decorateOnLast(Function<? super Publisher<Object>, ? extends Publisher<Object>> function) {

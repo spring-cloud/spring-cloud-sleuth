@@ -120,7 +120,7 @@ public abstract class ZipkinAutoConfigurationTests {
 			context.getBean(Tracer.class).nextSpan().name("foo").tag("foo", "bar").start().end();
 
 			context.getBean(ZipkinAutoConfiguration.REPORTER_BEAN_NAME, AsyncReporter.class).flush();
-			Awaitility.await().atMost(250, TimeUnit.MILLISECONDS)
+			Awaitility.await().atMost(5, TimeUnit.SECONDS)
 					.untilAsserted(() -> then(this.server.getRequestCount()).isGreaterThan(1));
 
 			Awaitility.await().atMost(5, TimeUnit.SECONDS).untilAsserted(() -> {
@@ -147,7 +147,7 @@ public abstract class ZipkinAutoConfigurationTests {
 				"spring.zipkin.encoder=JSON_V1").run(context -> {
 					context.getBean(Tracer.class).nextSpan().name("foo").tag("foo", "bar").start().end();
 
-					Awaitility.await().atMost(250, TimeUnit.MILLISECONDS)
+					Awaitility.await().atMost(5, TimeUnit.SECONDS)
 							.untilAsserted(() -> then(this.server.getRequestCount()).isGreaterThan(0));
 
 					Awaitility.await().atMost(5, TimeUnit.SECONDS).untilAsserted(() -> {
@@ -209,12 +209,12 @@ public abstract class ZipkinAutoConfigurationTests {
 
 					context.getBean(Tracer.class).nextSpan().name("foo").tag("foo", "bar").start().end();
 
-					Awaitility.await().atMost(250, TimeUnit.MILLISECONDS)
+					Awaitility.await().atMost(5, TimeUnit.SECONDS)
 							.untilAsserted(() -> then(this.server.getRequestCount()).isEqualTo(0));
 
 					context.getBean(ZipkinAutoConfiguration.REPORTER_BEAN_NAME, AsyncReporter.class).flush();
 					MyConfig.MySender sender = context.getBean(MyConfig.MySender.class);
-					Awaitility.await().atMost(250, TimeUnit.MILLISECONDS)
+					Awaitility.await().atMost(5, TimeUnit.SECONDS)
 							.untilAsserted(() -> then(sender.isSpanSent()).isTrue());
 				});
 	}
