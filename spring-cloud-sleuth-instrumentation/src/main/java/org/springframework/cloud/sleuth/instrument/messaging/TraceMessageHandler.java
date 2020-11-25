@@ -264,7 +264,7 @@ class TraceMessageHandler {
 
 	private Message<?> outputMessage(Message<?> originalMessage, Message<?> retrievedMessage,
 			MessageHeaderAccessor additionalHeaders) {
-		MessageHeaderAccessor headers = MessageHeaderAccessor.getMutableAccessor(originalMessage);
+		MessageHeaderAccessor headers = mutableHeaderAccessor(originalMessage);
 		clearTechnicalTracingHeaders(headers);
 		if (originalMessage instanceof ErrorMessage) {
 			ErrorMessage errorMessage = (ErrorMessage) originalMessage;
@@ -294,6 +294,10 @@ class TraceMessageHandler {
 	}
 
 	private MessageHeaderAccessor mutableHeaderAccessor(Message<?> message) {
+		MessageHeaderAccessor accessor = MessageHeaderAccessor.getAccessor(message, MessageHeaderAccessor.class);
+		if (accessor != null && accessor.isMutable()) {
+			return accessor;
+		}
 		MessageHeaderAccessor headers = MessageHeaderAccessor.getMutableAccessor(message);
 		headers.setLeaveMutable(true);
 		return headers;

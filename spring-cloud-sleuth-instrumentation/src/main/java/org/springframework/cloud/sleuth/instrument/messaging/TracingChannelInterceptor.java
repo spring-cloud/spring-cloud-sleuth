@@ -194,7 +194,7 @@ public final class TracingChannelInterceptor extends ChannelInterceptorAdapter i
 
 	private Message<?> outputMessage(Message<?> originalMessage, Message<?> retrievedMessage,
 			MessageHeaderAccessor additionalHeaders) {
-		MessageHeaderAccessor headers = MessageHeaderAccessor.getMutableAccessor(originalMessage);
+		MessageHeaderAccessor headers = mutableHeaderAccessor(originalMessage);
 		if (originalMessage instanceof ErrorMessage) {
 			ErrorMessage errorMessage = (ErrorMessage) originalMessage;
 			headers.copyHeaders(MessageHeaderPropagation.propagationHeaders(additionalHeaders.getMessageHeaders(),
@@ -433,6 +433,10 @@ public final class TracingChannelInterceptor extends ChannelInterceptorAdapter i
 	}
 
 	private MessageHeaderAccessor mutableHeaderAccessor(Message<?> message) {
+		MessageHeaderAccessor accessor = MessageHeaderAccessor.getAccessor(message, MessageHeaderAccessor.class);
+		if (accessor != null && accessor.isMutable()) {
+			return accessor;
+		}
 		MessageHeaderAccessor headers = MessageHeaderAccessor.getMutableAccessor(message);
 		headers.setLeaveMutable(true);
 		return headers;
