@@ -27,6 +27,9 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 @ConfigurationProperties("spring.sleuth.http")
 public class SleuthHttpProperties {
 
+	/**
+	 * Enables HTTP support.
+	 */
 	private boolean enabled = true;
 
 	public boolean isEnabled() {

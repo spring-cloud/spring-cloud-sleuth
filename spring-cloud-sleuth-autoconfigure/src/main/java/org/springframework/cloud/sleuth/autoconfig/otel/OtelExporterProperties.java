@@ -43,7 +43,7 @@ public class OtelExporterProperties {
 	public static class SleuthSpanFilter {
 
 		/**
-		 * This application service name.
+		 * Enables Sleuth span filter.
 		 */
 		private boolean enabled = true;
 

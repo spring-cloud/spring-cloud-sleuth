@@ -23,7 +23,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.cloud.sleuth.otel.propagation.PropagationType;
 
 /**
- * Sleuth settings for OpenTelemetry.
+ * Sleuth propagation types.
  *
  * @author Marcin Grzejszczak
  * @since 3.0.0
@@ -32,7 +32,7 @@ import org.springframework.cloud.sleuth.otel.propagation.PropagationType;
 public class SleuthPropagationProperties {
 
 	/**
-	 * Type of propagation.
+	 * Tracing context propagation types.
 	 */
 	private List<PropagationType> type = Collections.singletonList(PropagationType.B3);
 

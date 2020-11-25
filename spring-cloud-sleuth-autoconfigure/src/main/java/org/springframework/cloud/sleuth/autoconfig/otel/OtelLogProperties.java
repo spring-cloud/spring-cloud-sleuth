@@ -50,7 +50,7 @@ public class OtelLogProperties {
 	public static class Exporter {
 
 		/**
-		 * Enable log support for Otel.
+		 * Enable log exporter for OTel.
 		 */
 		private boolean enabled = false;
 
@@ -67,7 +67,7 @@ public class OtelLogProperties {
 	public static class Slf4j {
 
 		/**
-		 * Enable log support for Otel.
+		 * Enable slf4j support for OTel.
 		 */
 		private boolean enabled;
 

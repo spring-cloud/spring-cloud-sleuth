@@ -23,7 +23,7 @@ import java.util.List;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 /**
- * Sleuth settings.
+ * Sleuth settings for span filtering.
  *
  * @author Marcin Grzejszczak
  * @since 1.0.11

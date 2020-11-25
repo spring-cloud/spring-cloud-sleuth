@@ -55,7 +55,7 @@ Subtracting the `cs` timestamp from this timestamp reveals the whole time needed
 
 The following image shows how *Span* and *Trace* look in a system.
 
-image::{github-raw}/docs/src/main/asciidoc/images/trace-id.png[Trace Info propagation]
+image::{github-raw}/docs/src/main/asciidoc/images/trace-id.jpg[Trace Info propagation]
 
 Each color of a note signifies a span (there are seven spans - from *A* to *G*).
 Consider the following note:
@@ -87,7 +87,7 @@ You can continue with a created span (example with `no custom span` indication) 
 
 The following image shows how parent-child relationships of spans look:
 
-image::{github-raw}/docs/src/main/asciidoc/images/parents.png[Parent child relationship]
+image::{github-raw}/docs/src/main/asciidoc/images/parents.jpg[Parent child relationship]
 
 [[getting-started-first-application]]
 == Developing Your First Spring Cloud sleuth-based Application
@@ -301,11 +301,11 @@ If you check the logs you should see a similar output
 
 [indent=0]
 ----
-2020-10-21 12:01:16.285  INFO [backend,0b6aaf642574edd3,0b6aaf642574edd3,true] 289589 --- [nio-9000-exec-1] Example              : Hello world!
+2020-10-21 12:01:16.285  INFO [backend,0b6aaf642574edd3,0b6aaf642574edd3] 289589 --- [nio-9000-exec-1] Example              : Hello world!
 ----
 
-You can notice that the logging format has been updated with the following information `[backend,0b6aaf642574edd3,0b6aaf642574edd3,true]`.
-This entry corresponds to `[application name,trace id, span id, whether the trace should be propagated to an external system]`.
+You can notice that the logging format has been updated with the following information `[backend,0b6aaf642574edd3,0b6aaf642574edd3`.
+This entry corresponds to `[application name,trace id, span id]`.
 The application name got read from the `SPRING_APPLICATION_NAME` environment variable.
 
 NOTE: Instead of logging the request in the handler explicitly, you could set `logging.level.org.springframework.web.servlet.DispatcherServlet=DEBUG`.

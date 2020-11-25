@@ -31,7 +31,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 public class SleuthBaggageProperties {
 
 	/**
-	 * context.
+	 * Enables correlating the baggage context with logging contexts.
 	 */
 	private boolean correlationEnabled = true;
 

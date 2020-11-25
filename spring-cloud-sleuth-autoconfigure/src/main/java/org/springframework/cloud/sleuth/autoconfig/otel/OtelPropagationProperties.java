@@ -39,7 +39,11 @@ public class OtelPropagationProperties {
 
 	public static class SleuthBaggage {
 
-		private boolean enabled = true;
+		/**
+		 * Enables default B3 Sleuth Baggage propagation. This will be automatically
+		 * turned on when B3 propagation type gets picked.
+		 */
+		private boolean enabled;
 
 		public boolean isEnabled() {
 			return this.enabled;

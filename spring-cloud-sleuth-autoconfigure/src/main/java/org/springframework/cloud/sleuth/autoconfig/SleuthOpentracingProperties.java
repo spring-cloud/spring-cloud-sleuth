@@ -19,7 +19,7 @@ package org.springframework.cloud.sleuth.autoconfig;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 /**
- * Sleuth Opentracing settings.
+ * Sleuth OpenTracing settings.
  *
  * @author Marcin Grzejszczak
  * @since 2.0.0
@@ -27,6 +27,9 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 @ConfigurationProperties("spring.sleuth.opentracing")
 public class SleuthOpentracingProperties {
 
+	/**
+	 * Enables OpenTracing support.
+	 */
 	private boolean enabled = true;
 
 	public boolean isEnabled() {

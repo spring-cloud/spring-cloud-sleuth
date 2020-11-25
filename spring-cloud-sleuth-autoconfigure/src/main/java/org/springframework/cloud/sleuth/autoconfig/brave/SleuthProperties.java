@@ -19,7 +19,7 @@ package org.springframework.cloud.sleuth.autoconfig.brave;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 /**
- * Sleuth settings.
+ * Brave Sleuth settings.
  *
  * @author Marcin Grzejszczak
  * @since 1.0.11
