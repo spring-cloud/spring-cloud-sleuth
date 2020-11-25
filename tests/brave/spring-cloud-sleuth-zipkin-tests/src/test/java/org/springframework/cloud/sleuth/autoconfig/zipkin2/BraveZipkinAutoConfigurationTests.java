@@ -74,7 +74,7 @@ public class BraveZipkinAutoConfigurationTests
 					context.getBean(Tracer.class).nextSpan().name("foo").tag("foo", "bar").start().end();
 
 					context.getBean(ZipkinAutoConfiguration.REPORTER_BEAN_NAME, AsyncReporter.class).flush();
-					Awaitility.await().atMost(250, TimeUnit.MILLISECONDS)
+					Awaitility.await().atMost(5, TimeUnit.SECONDS)
 							.untilAsserted(() -> then(this.server.getRequestCount()).isGreaterThan(1));
 
 					Awaitility.await().atMost(5, TimeUnit.SECONDS).untilAsserted(() -> {
@@ -85,7 +85,7 @@ public class BraveZipkinAutoConfigurationTests
 
 					MultipleReportersConfig.OtherSender sender = context
 							.getBean(MultipleReportersConfig.OtherSender.class);
-					Awaitility.await().atMost(250, TimeUnit.MILLISECONDS)
+					Awaitility.await().atMost(5, TimeUnit.SECONDS)
 							.untilAsserted(() -> then(sender.isSpanSent()).isTrue());
 				});
 	}

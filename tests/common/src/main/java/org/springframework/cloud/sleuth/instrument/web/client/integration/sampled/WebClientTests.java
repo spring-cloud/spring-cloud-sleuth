@@ -207,7 +207,7 @@ public abstract class WebClientTests {
 
 		try (Tracer.SpanInScope ws = this.tracer.withSpan(span)) {
 			this.webClient.get().uri("http://localhost:" + this.port + "/traceid").retrieve().bodyToMono(String.class)
-					.block(Duration.ofMillis(100));
+					.block(Duration.ofSeconds(5));
 		}
 		finally {
 			span.end();
@@ -356,7 +356,7 @@ public abstract class WebClientTests {
 
 				return exchange.exchange(request);
 			}).build().get().uri("http://localhost:" + this.port + "/traceid").retrieve().bodyToMono(String.class)
-					.block(Duration.ofMillis(100));
+					.block(Duration.ofSeconds(5));
 		}
 		finally {
 			span.end();
