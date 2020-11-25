@@ -93,7 +93,8 @@ class OtelPropagationConfiguration {
 
 		@Override
 		public boolean matches(ConditionContext context, AnnotatedTypeMetadata metadata) {
-			String type = context.getEnvironment().getProperty("spring.sleuth.propagation.type", PropagationType.B3.toString()).toLowerCase();
+			String type = context.getEnvironment()
+					.getProperty("spring.sleuth.propagation.type", PropagationType.B3.toString()).toLowerCase();
 			boolean sleuthBaggageEnabled = context.getEnvironment()
 					.getProperty("spring.sleuth.otel.propagation.sleuth-baggage.enabled", Boolean.class, false);
 			return type.contains(PropagationType.B3.toString().toLowerCase()) || sleuthBaggageEnabled;
