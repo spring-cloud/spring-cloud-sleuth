@@ -138,8 +138,17 @@ final class MessageConsumerRequest extends ConsumerRequest {
 	MessageConsumerRequest(Message delegate,
 			Getter<MessageHeaderAccessor, String> getter) {
 		this.delegate = delegate;
-		this.mutableHeaders = MessageHeaderAccessor.getMutableAccessor(delegate);
+		this.mutableHeaders = mutableAccessor(delegate);
 		this.getter = getter;
+	}
+
+	private MessageHeaderAccessor mutableAccessor(Message message) {
+		MessageHeaderAccessor accessor = MessageHeaderAccessor.getAccessor(message,
+				MessageHeaderAccessor.class);
+		if (accessor != null && accessor.isMutable()) {
+			return accessor;
+		}
+		return MessageHeaderAccessor.getMutableAccessor(delegate);
 	}
 
 	@Override
