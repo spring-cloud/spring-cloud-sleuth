@@ -73,7 +73,7 @@
 		<spring-cloud-openfeign.version>3.0.0-SNAPSHOT</spring-cloud-openfeign.version>
 		<brave.version>5.12.7</brave.version>
 		<opentracing.version>0.32.0</opentracing.version>
-		<opentelemetry.version>0.10.0</opentelemetry.version>
+		<opentelemetry.version>0.11.0</opentelemetry.version>
 		<!-- From maven local -->
 		<opentelemetry-instrumentation.version>0.10.1</opentelemetry-instrumentation.version>
 		<spring-security-boot-autoconfigure.version>2.3.4.RELEASE</spring-security-boot-autoconfigure.version>
