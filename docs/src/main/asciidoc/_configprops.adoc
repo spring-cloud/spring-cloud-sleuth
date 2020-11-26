@@ -4,7 +4,7 @@
 |spring.sleuth.async.configurer.enabled | `true` | Enable default AsyncConfigurer.
 |spring.sleuth.async.enabled | `true` | Enable instrumenting async related components so that the tracing information is passed between threads.
 |spring.sleuth.async.ignored-beans |  | List of {@link java.util.concurrent.Executor} bean names that should be ignored and not wrapped in a trace representation.
-|spring.sleuth.baggage.correlation-enabled | `true` | context.
+|spring.sleuth.baggage.correlation-enabled | `true` | Enables correlating the baggage context with logging contexts.
 |spring.sleuth.baggage.correlation-fields |  | 
 |spring.sleuth.baggage.local-fields |  | 
 |spring.sleuth.baggage.remote-fields |  | List of fields that are referenced the same in-process as it is on the wire. For example, the field "x-vcap-request-id" would be set as-is including the prefix.
@@ -15,7 +15,7 @@
 |spring.sleuth.feign.processor.enabled | `true` | Enable post processor that wraps Feign Context in its tracing representations.
 |spring.sleuth.function.enabled | `true` | Enable instrumenting of Spring Cloud Function and Spring Cloud Function based projects (e.g. Spring Cloud Stream).
 |spring.sleuth.grpc.enabled | `true` | Enable span information propagation when using GRPC.
-|spring.sleuth.http.enabled | `true` | 
+|spring.sleuth.http.enabled | `true` | Enables HTTP support.
 |spring.sleuth.integration.enabled | `true` | Enable Spring Integration sleuth instrumentation.
 |spring.sleuth.integration.patterns | `[!hystrixStreamOutput*, *, !channel*]` | An array of patterns against which channel names will be matched. @see org.springframework.integration.config.GlobalChannelInterceptor#patterns() Defaults to any channel name not matching the Hystrix Stream and functional Stream channel names.
 |spring.sleuth.integration.websockets.enabled | `true` | Enable tracing for WebSockets.
@@ -31,7 +31,7 @@
 |spring.sleuth.messaging.messaging.rabbit.remote-service-name | `rabbitmq` | 
 |spring.sleuth.messaging.rabbit.enabled | `true` | Enable tracing of RabbitMQ.
 |spring.sleuth.mongodb.enabled | `true` | Enable tracing for MongoDb.
-|spring.sleuth.opentracing.enabled | `true` | 
+|spring.sleuth.opentracing.enabled | `true` | Enables OpenTracing support.
 |spring.sleuth.otel.config.instrumentation-name | `org.springframework.cloud.spring-cloud-sleuth` | Instrumentation name to be used to find a Tracer.
 |spring.sleuth.otel.config.instrumentation-version |  | Instrumentation version to be used to find a Tracer.
 |spring.sleuth.otel.config.max-attr-length | `0` | Returns the global default max length of string attribute value in characters.
@@ -40,12 +40,12 @@
 |spring.sleuth.otel.config.max-events | `0` | Returns the global default max number of events per {@link Span}.
 |spring.sleuth.otel.config.max-link-attrs | `0` | Returns the global default max number of attributes per link.
 |spring.sleuth.otel.config.max-links | `0` | Returns the global default max number of link entries per {@link Span}.
-|spring.sleuth.otel.exporter.sleuth-span-filter.enabled | `true` | This application service name.
-|spring.sleuth.otel.log.exporter.enabled | `false` | Enable log support for Otel.
-|spring.sleuth.otel.log.slf4j.enabled | `false` | Enable log support for Otel.
+|spring.sleuth.otel.exporter.sleuth-span-filter.enabled | `true` | Enables Sleuth span filter.
+|spring.sleuth.otel.log.exporter.enabled | `false` | Enable log exporter for OTel.
+|spring.sleuth.otel.log.slf4j.enabled | `false` | Enable slf4j support for OTel.
 |spring.sleuth.otel.propagation.composite-text-map-propagator.enabled | `true` | Enable a composite text map propagator that can combine multiple propagation types into a single text map propagator.
 |spring.sleuth.otel.propagation.sleuth-baggage.enabled | `true` | Enable propagating baggage in a Sleuth compatible way (baggage key & value pair means e.g. a key & value HTTP pair).
-|spring.sleuth.propagation.type |  | Type of propagation.
+|spring.sleuth.propagation.type |  | Tracing context propagation types.
 |spring.sleuth.quartz.enabled | `true` | Enable tracing for Quartz.
 |spring.sleuth.reactor.decorate-on-each | `true` | When true decorates on each operator, will be less performing, but logging will always contain the tracing entries in each operator. When false decorates on last operator, will be more performing, but logging might not always contain the tracing entries. @deprecated use explicit value via {@link SleuthReactorProperties#instrumentationType}
 |spring.sleuth.reactor.enabled | `true` | When true enables instrumentation for reactor.
