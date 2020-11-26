@@ -90,17 +90,6 @@
 		</dependency>
 		<dependency>
 			<groupId>io.opentelemetry</groupId>
-			<artifactId>opentelemetry-extension-auto-annotations</artifactId>
-			<optional>true</optional>
-			<exclusions>
-				<exclusion>
-					<groupId>io.opentelemetry</groupId>
-					<artifactId>*</artifactId>
-				</exclusion>
-			</exclusions>
-		</dependency>
-		<dependency>
-			<groupId>io.opentelemetry</groupId>
 			<artifactId>opentelemetry-exporter-logging</artifactId>
 			<optional>true</optional>
 			<exclusions>

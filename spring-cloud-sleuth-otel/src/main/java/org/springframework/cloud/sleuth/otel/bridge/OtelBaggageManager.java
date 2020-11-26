@@ -27,6 +27,7 @@ import java.util.Map;
 import java.util.Objects;
 
 import io.opentelemetry.api.baggage.Baggage;
+import io.opentelemetry.api.baggage.BaggageBuilder;
 import io.opentelemetry.api.baggage.BaggageConsumer;
 import io.opentelemetry.api.baggage.EntryMetadata;
 import io.opentelemetry.context.Context;
@@ -205,7 +206,7 @@ class CompositeBaggage implements io.opentelemetry.api.baggage.Baggage {
 	}
 
 	@Override
-	public Builder toBuilder() {
+	public BaggageBuilder toBuilder() {
 		return Baggage.builder();
 	}
 

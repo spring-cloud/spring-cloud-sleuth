@@ -20,10 +20,10 @@ import java.util.Objects;
 
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.metrics.MeterProvider;
-import io.opentelemetry.api.metrics.spi.MeterProviderFactory;
 import io.opentelemetry.api.trace.TracerProvider;
-import io.opentelemetry.api.trace.spi.TracerProviderFactory;
 import io.opentelemetry.context.propagation.ContextPropagators;
+import io.opentelemetry.spi.metrics.MeterProviderFactory;
+import io.opentelemetry.spi.trace.TracerProviderFactory;
 
 /**
  * Sleuth implementation of a {@link OpenTelemetry}.
@@ -68,11 +68,11 @@ public class OtelOpenTelemetry implements OpenTelemetry {
 	}
 
 	@Override
-	public io.opentelemetry.api.OpenTelemetry.Builder<OtelOpenTelemetry.Builder> toBuilder() {
+	public io.opentelemetry.api.OpenTelemetryBuilder<OtelOpenTelemetry.Builder> toBuilder() {
 		return new Builder(this.meterProviderFactory, this.tracerProviderFactory);
 	}
 
-	static class Builder implements io.opentelemetry.api.OpenTelemetry.Builder<OtelOpenTelemetry.Builder> {
+	static class Builder implements io.opentelemetry.api.OpenTelemetryBuilder<OtelOpenTelemetry.Builder> {
 
 		private ContextPropagators propagators;
 

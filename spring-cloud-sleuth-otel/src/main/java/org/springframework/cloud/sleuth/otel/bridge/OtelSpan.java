@@ -16,7 +16,9 @@
 
 package org.springframework.cloud.sleuth.otel.bridge;
 
+import java.time.Instant;
 import java.util.Objects;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
 import io.opentelemetry.api.common.AttributeKey;
@@ -187,7 +189,12 @@ class SpanFromSpanContext implements io.opentelemetry.api.trace.Span {
 	}
 
 	@Override
-	public io.opentelemetry.api.trace.Span addEvent(String name, long timestamp) {
+	public io.opentelemetry.api.trace.Span addEvent(String name, long timestamp, TimeUnit unit) {
+		return span.addEvent(name, timestamp, unit);
+	}
+
+	@Override
+	public io.opentelemetry.api.trace.Span addEvent(String name, Instant timestamp) {
 		return span.addEvent(name, timestamp);
 	}
 
@@ -197,7 +204,12 @@ class SpanFromSpanContext implements io.opentelemetry.api.trace.Span {
 	}
 
 	@Override
-	public io.opentelemetry.api.trace.Span addEvent(String name, Attributes attributes, long timestamp) {
+	public io.opentelemetry.api.trace.Span addEvent(String name, Attributes attributes, long timestamp, TimeUnit unit) {
+		return span.addEvent(name, attributes, timestamp, unit);
+	}
+
+	@Override
+	public io.opentelemetry.api.trace.Span addEvent(String name, Attributes attributes, Instant timestamp) {
 		return span.addEvent(name, attributes, timestamp);
 	}
 
@@ -242,8 +254,13 @@ class SpanFromSpanContext implements io.opentelemetry.api.trace.Span {
 	}
 
 	@Override
-	public void end(long l) {
-		span.end(l);
+	public void end(long timestamp, TimeUnit unit) {
+		span.end(timestamp, unit);
+	}
+
+	@Override
+	public void end(Instant timestamp) {
+		span.end(timestamp);
 	}
 
 	@Override
@@ -254,6 +271,11 @@ class SpanFromSpanContext implements io.opentelemetry.api.trace.Span {
 	@Override
 	public boolean isRecording() {
 		return span.isRecording();
+	}
+
+	@Override
+	public Context storeInContext(Context context) {
+		return span.storeInContext(context);
 	}
 
 	@Override
