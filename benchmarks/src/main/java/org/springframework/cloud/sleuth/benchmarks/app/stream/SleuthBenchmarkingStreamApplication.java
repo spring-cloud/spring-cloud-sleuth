@@ -50,6 +50,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 @Import(TestChannelBinderConfiguration.class)
 public class SleuthBenchmarkingStreamApplication {
 
+	private static final Logger log = LoggerFactory.getLogger(SleuthBenchmarkingStreamApplication.class);
+
 	public static void main(String[] args) throws InterruptedException, IOException {
 		// System.setProperty("spring.sleuth.enabled", "false");
 		// System.setProperty("spring.sleuth.reactor.instrumentation-type",
@@ -64,16 +66,16 @@ public class SleuthBenchmarkingStreamApplication {
 			InputDestination input = context.getBean(InputDestination.class);
 			input.send(MessageBuilder.withPayload("hello".getBytes())
 					.setHeader("b3", "4883117762eb9420-4883117762eb9420-1").build());
-			System.out.println("Retrieving the message for tests");
+			log.info("Retrieving the message for tests");
 			OutputDestination output = context.getBean(OutputDestination.class);
 			Message<byte[]> message = output.receive(200L);
-			System.out.println("Got the message from output");
+			log.info("Got the message from output");
 			assertThat(message).isNotNull();
-			System.out.println("Message is not null");
+			log.info("Message is not null");
 			assertThat(message.getPayload()).isEqualTo("HELLO".getBytes());
-			System.out.println("Payload is HELLO");
+			log.info("Payload is HELLO");
 			String b3 = message.getHeaders().get("b3", String.class);
-			System.out.println("Checking the b3 header [" + b3 + "]");
+			log.info("Checking the b3 header [" + b3 + "]");
 			assertThat(b3).startsWith("4883117762eb9420");
 		}
 	}
@@ -86,42 +88,42 @@ public class SleuthBenchmarkingStreamApplication {
 	@Bean(name = "myFlux")
 	@ConditionalOnProperty(value = "spring.sleuth.function.type", havingValue = "simple")
 	public Function<String, String> simple() {
-		System.out.println("simple_function");
+		log.info("simple_function");
 		return new SimpleFunction();
 	}
 
 	@Bean(name = "myFlux")
 	@ConditionalOnProperty(value = "spring.sleuth.function.type", havingValue = "reactive_simple")
 	public Function<Flux<String>, Flux<String>> reactiveSimple() {
-		System.out.println("simple_reactive_function");
+		log.info("simple_reactive_function");
 		return new SimpleReactiveFunction();
 	}
 
 	@Bean(name = "myFlux")
 	@ConditionalOnProperty(value = "spring.sleuth.function.type", havingValue = "simple_function_with_around")
 	public Function<Message<String>, Message<String>> simpleFunctionWithAround() {
-		System.out.println("simple_function_with_around");
+		log.info("simple_function_with_around");
 		return new SimpleMessageFunction();
 	}
 
 	@Bean(name = "myFlux")
 	@ConditionalOnProperty(value = "spring.sleuth.function.type", havingValue = "simple_manual")
 	public Function<Message<String>, Message<String>> simpleManual(BeanFactory beanFactory) {
-		System.out.println("simple_manual_function");
+		log.info("simple_manual_function");
 		return new SimpleManualFunction(beanFactory);
 	}
 
 	@Bean(name = "myFlux")
 	@ConditionalOnProperty(value = "spring.sleuth.function.type", havingValue = "reactive_simple_manual")
 	public Function<Flux<Message<String>>, Flux<Message<String>>> reactiveSimpleManual(BeanFactory beanFactory) {
-		System.out.println("simple_reactive_manual_function");
+		log.info("simple_reactive_manual_function");
 		return new SimpleReactiveManualFunction(beanFactory);
 	}
 
 	@Bean(name = "myFlux")
 	@ConditionalOnProperty(value = "spring.sleuth.nonreactive.function.enabled", havingValue = "true")
 	public Function<String, String> nonReactiveFunction(ExecutorService executorService) {
-		System.out.println("no sleuth non reactive function");
+		log.info("no sleuth non reactive function");
 		return new SleuthNonReactiveFunction(executorService);
 	}
 
@@ -129,14 +131,14 @@ public class SleuthBenchmarkingStreamApplication {
 	@ConditionalOnProperty(value = "spring.sleuth.function.type", havingValue = "DECORATE_ON_EACH",
 			matchIfMissing = true)
 	public Function<Flux<String>, Flux<String>> onEachFunction() {
-		System.out.println("on each function");
+		log.info("on each function");
 		return new SleuthFunction();
 	}
 
 	@Bean(name = "myFlux")
 	@ConditionalOnProperty(value = "spring.sleuth.function.type", havingValue = "DECORATE_ON_LAST")
 	public Function<Flux<String>, Flux<String>> onLastFunction() {
-		System.out.println("on last function");
+		log.info("on last function");
 		return new SleuthFunction();
 	}
 

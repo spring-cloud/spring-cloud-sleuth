@@ -53,7 +53,7 @@ import static org.assertj.core.api.BDDAssertions.then;
  * We're checking how much overhead does the instrumentation of the RestTemplate take
  */
 @Measurement(iterations = 5, time = 1)
-@Warmup(iterations = 10, time = 1)
+@Warmup(iterations = 5, time = 1)
 @Fork(2)
 @BenchmarkMode(Mode.SampleTime)
 @OutputTimeUnit(TimeUnit.MICROSECONDS)

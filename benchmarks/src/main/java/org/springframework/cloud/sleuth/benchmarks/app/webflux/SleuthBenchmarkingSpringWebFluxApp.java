@@ -121,7 +121,11 @@ public class SleuthBenchmarkingSpringWebFluxApp implements ApplicationListener<R
 					log.info("Doing assertions");
 					TraceContext traceContext = signal.getContext().get(TraceContext.class);
 					Assert.notNull(traceContext, "Context must be set by Sleuth instrumentation");
-					Assert.state(traceContext.traceId().equals("4883117762eb9420"), "TraceId must be propagated");
+					if (traceContext.traceId().startsWith("0000000000000000")) {
+						Assert.state(traceContext.traceId().equals("00000000000000004883117762eb9420"), "TraceId must be propagated");
+					} else {
+						Assert.state(traceContext.traceId().equals("4883117762eb9420"), "TraceId must be propagated");
+					}
 					log.info("Assertions passed");
 				});
 	}
@@ -137,7 +141,11 @@ public class SleuthBenchmarkingSpringWebFluxApp implements ApplicationListener<R
 					WebFluxSleuthOperators.withSpanInScope(signal.getContext(), () -> log.info("Doing assertions"));
 					TraceContext traceContext = signal.getContext().get(TraceContext.class);
 					Assert.notNull(traceContext, "Context must be set by Sleuth instrumentation");
-					Assert.state(traceContext.traceId().equals("4883117762eb9420"), "TraceId must be propagated");
+					if (traceContext.traceId().startsWith("0000000000000000")) {
+						Assert.state(traceContext.traceId().equals("00000000000000004883117762eb9420"), "TraceId must be propagated");
+					} else {
+						Assert.state(traceContext.traceId().equals("4883117762eb9420"), "TraceId must be propagated");
+					}
 					log.info("Assertions passed");
 				});
 	}

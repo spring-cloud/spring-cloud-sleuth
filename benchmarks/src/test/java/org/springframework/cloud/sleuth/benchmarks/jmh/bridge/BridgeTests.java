@@ -16,12 +16,15 @@
 
 package org.springframework.cloud.sleuth.benchmarks.jmh.bridge;
 
+import java.util.concurrent.TimeUnit;
+
 import jmh.mbr.junit5.Microbenchmark;
 import org.openjdk.jmh.annotations.Benchmark;
 import org.openjdk.jmh.annotations.BenchmarkMode;
 import org.openjdk.jmh.annotations.Fork;
 import org.openjdk.jmh.annotations.Measurement;
 import org.openjdk.jmh.annotations.Mode;
+import org.openjdk.jmh.annotations.OutputTimeUnit;
 import org.openjdk.jmh.annotations.Param;
 import org.openjdk.jmh.annotations.Scope;
 import org.openjdk.jmh.annotations.Setup;
@@ -42,10 +45,11 @@ import org.springframework.context.annotation.Configuration;
 
 import static org.assertj.core.api.BDDAssertions.then;
 
-@Measurement(iterations = 5)
-@Warmup(iterations = 1)
-@Fork(value = 2, warmups = 0)
-@BenchmarkMode(Mode.AverageTime)
+@Measurement(iterations = 5, time = 1)
+@Warmup(iterations = 5, time = 1)
+@Fork(2)
+@BenchmarkMode(Mode.SampleTime)
+@OutputTimeUnit(TimeUnit.MILLISECONDS)
 @Microbenchmark
 public class BridgeTests {
 

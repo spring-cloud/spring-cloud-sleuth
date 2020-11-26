@@ -88,12 +88,16 @@ public class SleuthReactorProperties {
 
 		/**
 		 * Wraps each operator in a Sleuth representation.
+		 * @deprecated to be removed in Sleuth 4.0.0
 		 */
+		@Deprecated
 		DECORATE_ON_EACH,
 
 		/**
 		 * Wraps only the last operator in Sleuth representation.
+		 * @deprecated to be removed in Sleuth 4.0.0
 		 */
+		@Deprecated
 		DECORATE_ON_LAST,
 
 		/**

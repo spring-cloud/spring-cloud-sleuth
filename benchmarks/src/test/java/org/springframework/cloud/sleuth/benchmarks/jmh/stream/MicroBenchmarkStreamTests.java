@@ -58,7 +58,7 @@ import org.springframework.util.StringUtils;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @Measurement(iterations = 5, time = 1)
-@Warmup(iterations = 10, time = 1)
+@Warmup(iterations = 5, time = 1)
 @Fork(2)
 @BenchmarkMode(Mode.SampleTime)
 @OutputTimeUnit(TimeUnit.MILLISECONDS)
@@ -130,7 +130,12 @@ public class MicroBenchmarkStreamTests {
 			if (!instrumentation.toString().toLowerCase().contains("nosleuth")) {
 				String b3 = message.getHeaders().get("b3", String.class);
 				// System.out.println("Checking the b3 header [" + b3 + "]");
-				assertThat(b3).startsWith("4883117762eb9420");
+				assertThat(b3).isNotEmpty();
+				if (b3.startsWith("0000000000000000")) {
+					assertThat(b3).startsWith("00000000000000004883117762eb9420");
+				} else {
+					assertThat(b3).startsWith("4883117762eb9420");
+				}
 			}
 		}
 

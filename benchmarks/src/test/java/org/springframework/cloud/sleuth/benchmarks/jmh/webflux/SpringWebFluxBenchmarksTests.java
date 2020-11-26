@@ -56,14 +56,14 @@ import org.springframework.cloud.sleuth.benchmarks.jmh.TracerImplementation;
 import org.springframework.context.ConfigurableApplicationContext;
 
 @Measurement(iterations = 5, time = 1)
-@Warmup(iterations = 10, time = 1)
+@Warmup(iterations = 5, time = 1)
 @Fork(2)
 @BenchmarkMode(Mode.SampleTime)
 @OutputTimeUnit(TimeUnit.MICROSECONDS)
 @Threads(2)
 @State(Scope.Benchmark)
 @Microbenchmark
-public class SpringWebFluxBenchmarksTests {
+public abstract class SpringWebFluxBenchmarksTests {
 
 	static final SpanHandler FAKE_SPAN_HANDLER = new SpanHandler() {
 		// intentionally anonymous to prevent logging fallback on NOOP

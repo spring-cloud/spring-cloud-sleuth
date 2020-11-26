@@ -43,7 +43,7 @@ import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.test.web.reactive.server.WebTestClient;
 
 @Measurement(iterations = 5, time = 1)
-@Warmup(iterations = 10, time = 1)
+@Warmup(iterations = 5, time = 1)
 @Fork(2)
 @BenchmarkMode(Mode.SampleTime)
 @OutputTimeUnit(TimeUnit.MILLISECONDS)
