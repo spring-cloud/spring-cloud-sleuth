@@ -87,14 +87,16 @@ public class SleuthReactorProperties {
 	public enum InstrumentationType {
 
 		/**
-		 * Wraps each operator in a Sleuth representation.
+		 * Decorates on each operator, will be less performing, but logging will always
+		 * contain the tracing entries in each operator.
 		 * @deprecated to be removed in Sleuth 4.0.0
 		 */
 		@Deprecated
 		DECORATE_ON_EACH,
 
 		/**
-		 * Wraps only the last operator in Sleuth representation.
+		 * Decorates on last operator, will be more performing, but logging might not
+		 * always contain the tracing entries.
 		 * @deprecated to be removed in Sleuth 4.0.0
 		 */
 		@Deprecated
