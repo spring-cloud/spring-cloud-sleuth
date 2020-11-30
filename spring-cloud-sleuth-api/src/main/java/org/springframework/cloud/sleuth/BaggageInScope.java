@@ -68,6 +68,12 @@ public interface BaggageInScope extends Closeable {
 	 */
 	BaggageInScope set(TraceContext traceContext, String value);
 
+	/**
+	 * Sets the current baggage in scope.
+	 * @return this in scope
+	 */
+	BaggageInScope makeCurrent();
+
 	@Override
 	void close();
 

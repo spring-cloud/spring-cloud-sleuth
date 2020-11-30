@@ -53,6 +53,11 @@ class NoOpBaggageInScope implements BaggageInScope {
 	}
 
 	@Override
+	public BaggageInScope makeCurrent() {
+		return this;
+	}
+
+	@Override
 	public void close() {
 
 	}

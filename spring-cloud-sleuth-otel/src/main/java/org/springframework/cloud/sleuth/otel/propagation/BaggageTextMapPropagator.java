@@ -22,6 +22,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import io.opentelemetry.api.baggage.Baggage;
+import io.opentelemetry.api.baggage.BaggageBuilder;
 import io.opentelemetry.api.baggage.EntryMetadata;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.propagation.TextMapPropagator;
@@ -73,7 +74,7 @@ public class BaggageTextMapPropagator implements TextMapPropagator {
 		Map<String, String> baggageEntries = this.remoteFields.stream()
 				.map(s -> new AbstractMap.SimpleEntry<>(s, getter.get(c, s))).filter(e -> e.getValue() != null)
 				.collect(Collectors.toMap((e) -> e.getKey(), (e) -> e.getValue()));
-		Baggage.Builder builder = Baggage.builder().setParent(context);
+		BaggageBuilder builder = Baggage.builder().setParent(context);
 		// TODO: [OTEL] magic string
 		baggageEntries.forEach((key, value) -> builder.put(key, value, EntryMetadata.create("propagation=unlimited")));
 		Baggage baggage = builder.build();

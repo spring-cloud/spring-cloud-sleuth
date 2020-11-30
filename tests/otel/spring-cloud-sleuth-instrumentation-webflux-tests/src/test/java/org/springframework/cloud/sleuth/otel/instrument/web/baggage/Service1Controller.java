@@ -95,7 +95,7 @@ class Service2Client {
 		log.info("Hello from service1. Calling service2");
 		return webClient.get().uri(serviceAddress + "/foo").exchange().doOnSuccess(clientResponse -> {
 			log.info("Got response from service2 [{}]", clientResponse);
-			try (BaggageInScope bs = this.tracer.getBaggage("key")) {
+			try (BaggageInScope bs = baggageField.makeCurrent()) {
 				this.baggageKey = bs.get();
 				log.info("Service1: Baggage for [key] is [" + (bs == null ? null : bs.get()) + "]");
 			}

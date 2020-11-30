@@ -17,9 +17,12 @@
 package org.springframework.cloud.sleuth.autoconfig.otel;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
-import io.opentelemetry.api.OpenTelemetry;
+import javax.annotation.Nullable;
+
+import io.opentelemetry.context.Context;
 import io.opentelemetry.context.propagation.ContextPropagators;
 import io.opentelemetry.context.propagation.DefaultContextPropagators;
 import io.opentelemetry.context.propagation.TextMapPropagator;
@@ -58,12 +61,30 @@ class OtelPropagationConfiguration {
 	ContextPropagators otelContextPropagators(ObjectProvider<List<TextMapPropagator>> propagators) {
 		List<TextMapPropagator> mapPropagators = propagators.getIfAvailable(ArrayList::new);
 		if (mapPropagators.isEmpty()) {
-			return OpenTelemetry.getGlobalPropagators();
+			return noOpContextPropagator();
 		}
 		DefaultContextPropagators.Builder builder = DefaultContextPropagators.builder();
 		mapPropagators.forEach(builder::addTextMapPropagator);
-		OpenTelemetry.setGlobalPropagators(builder.build());
-		return OpenTelemetry.getGlobalPropagators();
+		return builder.build();
+	}
+
+	private ContextPropagators noOpContextPropagator() {
+		return () -> new TextMapPropagator() {
+			@Override
+			public List<String> fields() {
+				return Collections.emptyList();
+			}
+
+			@Override
+			public <C> void inject(Context context, @Nullable C carrier, Setter<C> setter) {
+
+			}
+
+			@Override
+			public <C> Context extract(Context context, @Nullable C carrier, Getter<C> getter) {
+				return context;
+			}
+		};
 	}
 
 	@Configuration(proxyBeanMethods = false)

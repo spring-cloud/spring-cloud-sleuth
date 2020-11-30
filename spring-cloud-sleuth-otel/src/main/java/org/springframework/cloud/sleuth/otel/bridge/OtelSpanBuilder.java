@@ -31,7 +31,7 @@ import org.springframework.util.StringUtils;
  */
 class OtelSpanBuilder implements Span.Builder {
 
-	private final io.opentelemetry.api.trace.Span.Builder delegate;
+	private final io.opentelemetry.api.trace.SpanBuilder delegate;
 
 	private final List<String> annotations = new LinkedList<>();
 
@@ -39,11 +39,11 @@ class OtelSpanBuilder implements Span.Builder {
 
 	private Throwable error;
 
-	OtelSpanBuilder(io.opentelemetry.api.trace.Span.Builder delegate) {
+	OtelSpanBuilder(io.opentelemetry.api.trace.SpanBuilder delegate) {
 		this.delegate = delegate;
 	}
 
-	static Span.Builder fromOtel(io.opentelemetry.api.trace.Span.Builder builder) {
+	static Span.Builder fromOtel(io.opentelemetry.api.trace.SpanBuilder builder) {
 		return new OtelSpanBuilder(builder);
 	}
 

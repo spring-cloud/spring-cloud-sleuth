@@ -120,6 +120,16 @@ class OtelBaggageInScope implements BaggageInScope {
 	}
 
 	@Override
+	public BaggageInScope makeCurrent() {
+		close();
+		Entry entry = entry();
+		Scope scope = Baggage.builder().put(entry.getKey(), entry.getValue(), entry.getEntryMetadata()).build()
+				.makeCurrent();
+		this.scope.set(scope);
+		return this;
+	}
+
+	@Override
 	public void close() {
 		Scope scope = this.scope.get();
 		if (scope != null) {

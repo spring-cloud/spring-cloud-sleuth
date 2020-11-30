@@ -22,10 +22,9 @@ import java.util.stream.Collectors;
 
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.metrics.MeterProvider;
-import io.opentelemetry.api.metrics.spi.MeterProviderFactory;
 import io.opentelemetry.api.trace.Tracer;
 import io.opentelemetry.api.trace.TracerProvider;
-import io.opentelemetry.api.trace.spi.TracerProviderFactory;
+import io.opentelemetry.context.propagation.ContextPropagators;
 import io.opentelemetry.sdk.trace.SpanProcessor;
 import io.opentelemetry.sdk.trace.TracerSdkProvider;
 import io.opentelemetry.sdk.trace.config.TraceConfig;
@@ -33,6 +32,8 @@ import io.opentelemetry.sdk.trace.export.SimpleSpanProcessor;
 import io.opentelemetry.sdk.trace.export.SpanExporter;
 import io.opentelemetry.sdk.trace.samplers.Sampler;
 import io.opentelemetry.sdk.trace.spi.TracerProviderFactorySdk;
+import io.opentelemetry.spi.metrics.MeterProviderFactory;
+import io.opentelemetry.spi.trace.TracerProviderFactory;
 
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
@@ -44,6 +45,7 @@ import org.springframework.cloud.sleuth.autoconfig.SleuthBaggageProperties;
 import org.springframework.cloud.sleuth.autoconfig.SleuthSpanFilterProperties;
 import org.springframework.cloud.sleuth.autoconfig.SleuthTracerProperties;
 import org.springframework.cloud.sleuth.autoconfig.TraceConfiguration;
+import org.springframework.cloud.sleuth.otel.bridge.OtelOpenTelemetry;
 import org.springframework.cloud.sleuth.otel.bridge.SpanExporterCustomizer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -66,6 +68,17 @@ import org.springframework.context.annotation.Import;
 @Import({ OtelBridgeConfiguation.class, OtelPropagationConfiguration.class, TraceConfiguration.class,
 		SleuthAnnotationConfiguration.class })
 public class OtelAutoConfiguration {
+
+	@Bean
+	@ConditionalOnMissingBean
+	OpenTelemetry otel(TracerProviderFactory tracerProviderFactory, MeterProviderFactory meterProviderFactory,
+			TracerProvider tracerProvider, MeterProvider meterProvider, ContextPropagators contextPropagators) {
+		OtelOpenTelemetry otelOpenTelemetry = new OtelOpenTelemetry(tracerProviderFactory, meterProviderFactory,
+				tracerProvider, meterProvider, contextPropagators);
+		OpenTelemetry.set(otelOpenTelemetry);
+		OpenTelemetry.setGlobalPropagators(contextPropagators);
+		return otelOpenTelemetry;
+	}
 
 	@Bean
 	@ConditionalOnMissingBean
