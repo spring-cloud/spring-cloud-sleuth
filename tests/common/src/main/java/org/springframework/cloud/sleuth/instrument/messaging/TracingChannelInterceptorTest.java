@@ -20,12 +20,15 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
 
 import org.assertj.core.api.BDDAssertions;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
 import org.springframework.cloud.sleuth.Span;
+import org.springframework.cloud.sleuth.autoconfig.instrument.messaging.SleuthMessagingProperties;
+import org.springframework.cloud.sleuth.autoconfig.instrument.messaging.TraceSpringIntegrationAutoConfiguration;
 import org.springframework.cloud.sleuth.exporter.FinishedSpan;
 import org.springframework.cloud.sleuth.test.TestSpanHandler;
 import org.springframework.cloud.sleuth.test.TestTracingAwareSupplier;
@@ -42,14 +45,37 @@ import org.springframework.messaging.support.ErrorMessage;
 import org.springframework.messaging.support.ExecutorChannelInterceptor;
 import org.springframework.messaging.support.ExecutorSubscribableChannel;
 import org.springframework.messaging.support.MessageBuilder;
+import org.springframework.util.StringUtils;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.messaging.support.NativeMessageHeaderAccessor.NATIVE_HEADERS;
 
 public abstract class TracingChannelInterceptorTest implements TestTracingAwareSupplier {
 
+	/**
+	 * Align with
+	 * {@link TraceSpringIntegrationAutoConfiguration#remoteServiceNameMapper(SleuthMessagingProperties)}.
+	 * @param properties messaging properties
+	 * @return function mapping remote service name
+	 */
+	static Function<String, String> remoteServiceNameMapper(SleuthMessagingProperties properties) {
+		return s -> {
+			if (!StringUtils.hasText(s)) {
+				return null;
+			}
+			if (s.startsWith("amqp") || s.startsWith("rabbit")) {
+				return properties.getMessaging().getRabbit().getRemoteServiceName();
+			}
+			else if (s.startsWith("kafka")) {
+				return properties.getMessaging().getKafka().getRemoteServiceName();
+			}
+			return null;
+		};
+	}
+
 	protected ChannelInterceptor interceptor = new TracingChannelInterceptor(tracerTest().tracing().tracer(),
-			tracerTest().tracing().propagator());
+			tracerTest().tracing().propagator(), MessageHeaderPropagation.INSTANCE, MessageHeaderPropagation.INSTANCE,
+			remoteServiceNameMapper(new SleuthMessagingProperties()));
 
 	protected TestSpanHandler spans = tracerTest().handler();
 

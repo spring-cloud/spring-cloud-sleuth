@@ -40,6 +40,7 @@ import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.NoSuchBeanDefinitionException;
 import org.springframework.cloud.sleuth.SpanNamer;
 import org.springframework.cloud.sleuth.Tracer;
+import org.springframework.cloud.sleuth.internal.ContextUtil;
 import org.springframework.cloud.sleuth.internal.DefaultSpanNamer;
 import org.springframework.util.ReflectionUtils;
 
@@ -144,61 +145,76 @@ class LazyTraceScheduledThreadPoolExecutor extends ScheduledThreadPoolExecutor {
 		makeAccessibleIfNotNull(this.newTaskForCallable);
 	}
 
+	private Runnable traceRunnableWhenContextReady(Runnable delegate) {
+		if (isContextUnusable()) {
+			return delegate;
+		}
+		return new TraceRunnable(tracing(), spanNamer(), delegate, this.beanName);
+	}
+
+	boolean isContextUnusable() {
+		return ContextUtil.isContextUnusable(this.beanFactory);
+	}
+
+	private <V> Callable<V> traceCallableWhenContextReady(Callable<V> delegate) {
+		if (isContextUnusable()) {
+			return delegate;
+		}
+		return new TraceCallable<>(tracing(), spanNamer(), delegate, this.beanName);
+	}
+
 	@Override
 	@SuppressWarnings("unchecked")
 	public <V> RunnableScheduledFuture<V> decorateTask(Runnable runnable, RunnableScheduledFuture<V> task) {
 		return (RunnableScheduledFuture<V>) ReflectionUtils.invokeMethod(this.decorateTaskRunnable, this.delegate,
-				new TraceRunnable(tracing(), spanNamer(), runnable, this.beanName), task);
+				traceRunnableWhenContextReady(runnable), task);
 	}
 
 	@Override
 	@SuppressWarnings("unchecked")
 	public <V> RunnableScheduledFuture<V> decorateTask(Callable<V> callable, RunnableScheduledFuture<V> task) {
 		return (RunnableScheduledFuture<V>) ReflectionUtils.invokeMethod(this.decorateTaskCallable, this.delegate,
-				new TraceCallable<>(tracing(), spanNamer(), callable, this.beanName), task);
+				traceCallableWhenContextReady(callable), task);
 	}
 
 	@Override
 	public ScheduledFuture<?> schedule(Runnable command, long delay, TimeUnit unit) {
-		return this.delegate.schedule(new TraceRunnable(tracing(), spanNamer(), command, this.beanName), delay, unit);
+		return this.delegate.schedule(traceRunnableWhenContextReady(command), delay, unit);
 	}
 
 	@Override
 	public <V> ScheduledFuture<V> schedule(Callable<V> callable, long delay, TimeUnit unit) {
-		return this.delegate.schedule(new TraceCallable<>(tracing(), spanNamer(), callable, this.beanName), delay,
-				unit);
+		return this.delegate.schedule(traceCallableWhenContextReady(callable), delay, unit);
 	}
 
 	@Override
 	public ScheduledFuture<?> scheduleAtFixedRate(Runnable command, long initialDelay, long period, TimeUnit unit) {
-		return this.delegate.scheduleAtFixedRate(new TraceRunnable(tracing(), spanNamer(), command, this.beanName),
-				initialDelay, period, unit);
+		return this.delegate.scheduleAtFixedRate(traceRunnableWhenContextReady(command), initialDelay, period, unit);
 	}
 
 	@Override
 	public ScheduledFuture<?> scheduleWithFixedDelay(Runnable command, long initialDelay, long delay, TimeUnit unit) {
-		return this.delegate.scheduleWithFixedDelay(new TraceRunnable(tracing(), spanNamer(), command, this.beanName),
-				initialDelay, delay, unit);
+		return this.delegate.scheduleWithFixedDelay(traceRunnableWhenContextReady(command), initialDelay, delay, unit);
 	}
 
 	@Override
 	public void execute(Runnable command) {
-		this.delegate.execute(new TraceRunnable(tracing(), spanNamer(), command, this.beanName));
+		this.delegate.execute(traceRunnableWhenContextReady(command));
 	}
 
 	@Override
 	public Future<?> submit(Runnable task) {
-		return this.delegate.submit(new TraceRunnable(tracing(), spanNamer(), task, this.beanName));
+		return this.delegate.submit(traceRunnableWhenContextReady(task));
 	}
 
 	@Override
 	public <T> Future<T> submit(Runnable task, T result) {
-		return this.delegate.submit(new TraceRunnable(tracing(), spanNamer(), task, this.beanName), result);
+		return this.delegate.submit(traceRunnableWhenContextReady(task), result);
 	}
 
 	@Override
 	public <T> Future<T> submit(Callable<T> task) {
-		return this.delegate.submit(new TraceCallable<>(tracing(), spanNamer(), task, this.beanName));
+		return this.delegate.submit(traceCallableWhenContextReady(task));
 	}
 
 	@Override
@@ -382,14 +398,12 @@ class LazyTraceScheduledThreadPoolExecutor extends ScheduledThreadPoolExecutor {
 
 	@Override
 	public void beforeExecute(Thread t, Runnable r) {
-		ReflectionUtils.invokeMethod(this.beforeExecute, this.delegate, t,
-				new TraceRunnable(tracing(), spanNamer(), r, this.beanName));
+		ReflectionUtils.invokeMethod(this.beforeExecute, this.delegate, t, traceRunnableWhenContextReady(r));
 	}
 
 	@Override
 	public void afterExecute(Runnable r, Throwable t) {
-		ReflectionUtils.invokeMethod(this.afterExecute, this.delegate,
-				new TraceRunnable(tracing(), spanNamer(), r, this.beanName), t);
+		ReflectionUtils.invokeMethod(this.afterExecute, this.delegate, traceRunnableWhenContextReady(r), t);
 	}
 
 	@Override
@@ -401,14 +415,14 @@ class LazyTraceScheduledThreadPoolExecutor extends ScheduledThreadPoolExecutor {
 	@SuppressWarnings("unchecked")
 	public <T> RunnableFuture<T> newTaskFor(Runnable runnable, T value) {
 		return (RunnableFuture<T>) ReflectionUtils.invokeMethod(this.newTaskForRunnable, this.delegate,
-				new TraceRunnable(tracing(), spanNamer(), runnable, this.beanName), value);
+				traceRunnableWhenContextReady(runnable), value);
 	}
 
 	@Override
 	@SuppressWarnings("unchecked")
 	public <T> RunnableFuture<T> newTaskFor(Callable<T> callable) {
 		return (RunnableFuture<T>) ReflectionUtils.invokeMethod(this.newTaskForCallable, this.delegate,
-				new TraceCallable<>(tracing(), spanNamer(), callable, this.beanName));
+				traceCallableWhenContextReady(callable));
 	}
 
 	@Override
@@ -420,7 +434,7 @@ class LazyTraceScheduledThreadPoolExecutor extends ScheduledThreadPoolExecutor {
 		List<Callable<T>> ts = new ArrayList<>();
 		for (Callable<T> task : tasks) {
 			if (!(task instanceof TraceCallable)) {
-				ts.add(new TraceCallable<>(tracing(), spanNamer(), task, this.beanName));
+				ts.add(traceCallableWhenContextReady(task));
 			}
 		}
 		return ts;

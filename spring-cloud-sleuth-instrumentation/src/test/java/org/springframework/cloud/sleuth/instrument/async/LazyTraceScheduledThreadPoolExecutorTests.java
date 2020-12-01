@@ -87,7 +87,12 @@ public class LazyTraceScheduledThreadPoolExecutorTests {
 		doReturn(tracer).when(beanFactory).getBean(Tracer.class);
 		doReturn(parent).when(tracer).currentSpan();
 		doReturn(spanNamer).when(beanFactory).getBean(SpanNamer.class);
-		this.executor = spy(new LazyTraceScheduledThreadPoolExecutor(1, beanFactory, delegate, BEAN_NAME));
+		this.executor = spy(new LazyTraceScheduledThreadPoolExecutor(1, beanFactory, delegate, BEAN_NAME) {
+			@Override
+			boolean isContextUnusable() {
+				return false;
+			}
+		});
 	}
 
 	@Test

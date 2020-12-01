@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.springframework.cloud.sleuth.instrument.async;
+package org.springframework.cloud.sleuth.internal;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -33,10 +33,10 @@ import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.context.event.SmartApplicationListener;
 
 /**
- * Checks whether Spring Context is up and running.
+ * Internal tool used by Sleuth. Do not use.
  *
  * @author Marcin Grzejszczak
- * @since 3.0.0
+ * @since 2.2.5
  */
 public class SleuthContextListener implements SmartApplicationListener {
 
@@ -58,11 +58,18 @@ public class SleuthContextListener implements SmartApplicationListener {
 		this.closed = closed;
 	}
 
-	static SleuthContextListener getBean(BeanFactory beanFactory) {
-		if (beanFactory instanceof ConfigurableApplicationContext) {
-			beanFactory = ((ConfigurableApplicationContext) beanFactory).getBeanFactory();
+	/**
+	 * Returns an instance of the {@link SleuthContextListener} that might have already
+	 * been initialized.
+	 * @param beanFactory bean factory
+	 * @return instance of {@link SleuthContextListener}
+	 */
+	public static SleuthContextListener getBean(BeanFactory beanFactory) {
+		BeanFactory bf = beanFactory;
+		if (bf instanceof ConfigurableApplicationContext) {
+			bf = ((ConfigurableApplicationContext) bf).getBeanFactory();
 		}
-		return CACHE.getOrDefault(beanFactory, new SleuthContextListener());
+		return CACHE.getOrDefault(bf, new SleuthContextListener());
 	}
 
 	@Override
@@ -90,7 +97,11 @@ public class SleuthContextListener implements SmartApplicationListener {
 		}
 	}
 
-	boolean isUnusable() {
+	/**
+	 * Verifies if context is unusable.
+	 * @return true when Spring Context has NOT yet been started
+	 */
+	public boolean isUnusable() {
 		return !this.refreshed.get() || this.closed.get();
 	}
 

@@ -36,6 +36,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.cloud.sleuth.autoconfig.instrument.messaging.SleuthMessagingProperties;
 import org.springframework.cloud.sleuth.brave.instrument.messaging.ConditionalOnMessagingEnabled;
 import org.springframework.cloud.sleuth.brave.instrument.messaging.ConsumerSampler;
 import org.springframework.cloud.sleuth.brave.instrument.messaging.KafkaFactoryBeanPostProcessor;

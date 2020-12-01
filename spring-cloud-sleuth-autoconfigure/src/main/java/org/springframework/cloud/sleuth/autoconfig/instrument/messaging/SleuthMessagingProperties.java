@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.springframework.cloud.sleuth.autoconfig.brave.instrument.messaging;
+package org.springframework.cloud.sleuth.autoconfig.instrument.messaging;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 

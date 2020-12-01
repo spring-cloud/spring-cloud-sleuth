@@ -43,6 +43,7 @@ import org.springframework.cloud.sleuth.autoconfig.TraceConfiguration;
 import org.springframework.cloud.sleuth.autoconfig.brave.instrument.web.BraveHttpConfiguration;
 import org.springframework.cloud.sleuth.brave.LocalServiceName;
 import org.springframework.cloud.sleuth.internal.DefaultSpanNamer;
+import org.springframework.cloud.sleuth.internal.SleuthContextListener;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
@@ -151,6 +152,11 @@ public class BraveAutoConfiguration {
 	// NOTE: stable bean name as might be used outside sleuth
 	CurrentSpanCustomizer spanCustomizer(Tracing tracing) {
 		return CurrentSpanCustomizer.create(tracing);
+	}
+
+	@Bean
+	SleuthContextListener sleuthContextListener() {
+		return new SleuthContextListener();
 	}
 
 }

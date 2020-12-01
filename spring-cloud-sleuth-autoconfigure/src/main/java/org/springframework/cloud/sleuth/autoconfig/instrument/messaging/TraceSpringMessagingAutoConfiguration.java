@@ -29,7 +29,7 @@ import org.springframework.messaging.support.MessageHeaderAccessor;
 @Configuration(proxyBeanMethods = false)
 @ConditionalOnClass(MessageHeaderAccessor.class)
 @ConditionalOnProperty(value = "spring.sleuth.messaging.enabled", matchIfMissing = true)
-@EnableConfigurationProperties(SleuthIntegrationMessagingProperties.class)
+@EnableConfigurationProperties({ SleuthIntegrationMessagingProperties.class, SleuthMessagingProperties.class })
 class TraceSpringMessagingAutoConfiguration {
 
 	@Bean

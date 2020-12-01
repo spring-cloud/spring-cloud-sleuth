@@ -16,6 +16,8 @@
 
 package org.springframework.cloud.sleuth.autoconfig.instrument.messaging;
 
+import java.util.function.Function;
+
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.AnyNestedCondition;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
@@ -39,6 +41,7 @@ import org.springframework.integration.channel.interceptor.GlobalChannelIntercep
 import org.springframework.integration.config.GlobalChannelInterceptor;
 import org.springframework.messaging.support.MessageHeaderAccessor;
 import org.springframework.util.ObjectUtils;
+import org.springframework.util.StringUtils;
 
 /**
  * {@link org.springframework.boot.autoconfigure.EnableAutoConfiguration
@@ -70,9 +73,25 @@ public class TraceSpringIntegrationAutoConfiguration {
 	@Bean
 	TracingChannelInterceptor traceChannelInterceptor(Tracer tracer, Propagator propagator,
 			Propagator.Setter<MessageHeaderAccessor> traceMessagePropagationSetter,
-			Propagator.Getter<MessageHeaderAccessor> traceMessagePropagationGetter) {
+			Propagator.Getter<MessageHeaderAccessor> traceMessagePropagationGetter,
+			SleuthMessagingProperties properties) {
 		return new TracingChannelInterceptor(tracer, propagator, traceMessagePropagationSetter,
-				traceMessagePropagationGetter);
+				traceMessagePropagationGetter, remoteServiceNameMapper(properties));
+	}
+
+	static Function<String, String> remoteServiceNameMapper(SleuthMessagingProperties properties) {
+		return s -> {
+			if (!StringUtils.hasText(s)) {
+				return null;
+			}
+			if (s.startsWith("amqp") || s.startsWith("rabbit")) {
+				return properties.getMessaging().getRabbit().getRemoteServiceName();
+			}
+			else if (s.startsWith("kafka")) {
+				return properties.getMessaging().getKafka().getRemoteServiceName();
+			}
+			return null;
+		};
 	}
 
 }

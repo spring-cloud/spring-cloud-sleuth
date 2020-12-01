@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.springframework.cloud.sleuth.instrument.async;
+package org.springframework.cloud.sleuth.internal;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -22,12 +22,12 @@ import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.BeanFactory;
 
 /**
- * Utility class that verifies that context is in creation.
+ * Utility class that verifies that context is in creation. Do not use.
  *
  * @author Marcin Grzejszczak
  * @since 2.1.0
  */
-final class ContextUtil {
+public final class ContextUtil {
 
 	private ContextUtil() {
 		throw new IllegalStateException("Can't instantiate a utility class");
@@ -35,8 +35,13 @@ final class ContextUtil {
 
 	private static final Log log = LogFactory.getLog(ContextUtil.class);
 
-	static boolean isContextUnusable(BeanFactory beanFactory) {
-		SleuthContextListener listener = SleuthContextListener.getBean(beanFactory);
+	/**
+	 * @param beanFactory bean facotry
+	 * @return {@code true} when context is not ready to be used
+	 */
+	public static boolean isContextUnusable(BeanFactory beanFactory) {
+		org.springframework.cloud.sleuth.internal.SleuthContextListener listener = org.springframework.cloud.sleuth.internal.SleuthContextListener
+				.getBean(beanFactory);
 		boolean contextUnusable = listener.isUnusable();
 		if (contextUnusable && log.isDebugEnabled()) {
 			log.debug("Context [" + Integer.toHexString(beanFactory.hashCode())

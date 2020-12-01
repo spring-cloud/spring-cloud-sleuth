@@ -16,16 +16,24 @@
 
 package org.springframework.cloud.sleuth.instrument.messaging;
 
+import java.util.Iterator;
+import java.util.Map;
 import java.util.concurrent.LinkedBlockingDeque;
+import java.util.function.Function;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import org.springframework.aop.support.AopUtils;
+import org.springframework.beans.BeansException;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.internal.SpanNameUtil;
 import org.springframework.cloud.sleuth.propagation.Propagator;
+import org.springframework.cloud.stream.binder.BinderType;
+import org.springframework.cloud.stream.binder.BinderTypeRegistry;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.ApplicationContextAware;
 import org.springframework.integration.channel.AbstractMessageChannel;
 import org.springframework.integration.channel.DirectChannel;
 import org.springframework.integration.context.IntegrationObjectSupport;
@@ -40,6 +48,7 @@ import org.springframework.messaging.support.ExecutorChannelInterceptor;
 import org.springframework.messaging.support.GenericMessage;
 import org.springframework.messaging.support.MessageHeaderAccessor;
 import org.springframework.util.ClassUtils;
+import org.springframework.util.StringUtils;
 
 /**
  * This starts and propagates {@link Span.Kind#PRODUCER} span for each message sent (via
@@ -50,7 +59,8 @@ import org.springframework.util.ClassUtils;
  * @author Marcin Grzejszczak
  * @since 3.0.0
  */
-public final class TracingChannelInterceptor extends ChannelInterceptorAdapter implements ExecutorChannelInterceptor {
+public final class TracingChannelInterceptor extends ChannelInterceptorAdapter
+		implements ExecutorChannelInterceptor, ApplicationContextAware {
 
 	/**
 	 * Name of the class in Spring Cloud Stream that is a direct channel.
@@ -90,33 +100,35 @@ public final class TracingChannelInterceptor extends ChannelInterceptorAdapter i
 
 	private final boolean hasDirectChannelClass;
 
+	private final boolean hasBinderTypeRegistry;
+
 	// special case of a Stream
 	private final Class<?> directWithAttributesChannelClass;
+
+	private ApplicationContext applicationContext;
 
 	private final Propagator propagator;
 
 	private final ThreadLocalSpan threadLocalSpan = new ThreadLocalSpan();
 
-	TracingChannelInterceptor(Tracer tracer, Propagator propagator) {
-		this(tracer, propagator, MessageHeaderPropagation.INSTANCE, MessageHeaderPropagation.INSTANCE);
-	}
+	private final Function<String, String> remoteServiceNameMapper;
 
 	public TracingChannelInterceptor(Tracer tracer, Propagator propagator,
-			Propagator.Setter<MessageHeaderAccessor> setter, Propagator.Getter<MessageHeaderAccessor> getter) {
+			Propagator.Setter<MessageHeaderAccessor> setter, Propagator.Getter<MessageHeaderAccessor> getter,
+			Function<String, String> remoteServiceNameMapper) {
 		this.tracer = tracer;
 		this.propagator = propagator;
 		this.injector = setter;
 		this.extractor = getter;
+		this.remoteServiceNameMapper = remoteServiceNameMapper;
 		this.integrationObjectSupportPresent = ClassUtils
 				.isPresent("org.springframework.integration.context.IntegrationObjectSupport", null);
 		this.hasDirectChannelClass = ClassUtils.isPresent("org.springframework.integration.channel.DirectChannel",
 				null);
+		this.hasBinderTypeRegistry = ClassUtils.isPresent("org.springframework.cloud.stream.binder.BinderTypeRegistry",
+				null);
 		this.directWithAttributesChannelClass = ClassUtils.isPresent(STREAM_DIRECT_CHANNEL, null)
 				? ClassUtils.resolveClassName(STREAM_DIRECT_CHANNEL, null) : null;
-	}
-
-	public static TracingChannelInterceptor create(Tracer tracer, Propagator propagator) {
-		return new TracingChannelInterceptor(tracer, propagator);
 	}
 
 	/**
@@ -182,11 +194,20 @@ public final class TracingChannelInterceptor extends ChannelInterceptorAdapter i
 
 	private String toRemoteServiceName(MessageHeaderAccessor headers) {
 		for (String key : headers.getMessageHeaders().keySet()) {
-			if (key.startsWith("kafka_")) {
-				return "kafka";
+			String remoteServiceName = this.remoteServiceNameMapper.apply(key);
+			if (StringUtils.hasText(remoteServiceName)) {
+				return remoteServiceName;
 			}
-			else if (key.startsWith("amqp_")) {
-				return "rabbitmq";
+		}
+		if (this.hasBinderTypeRegistry && this.applicationContext != null) {
+			BinderTypeRegistry typeRegistry = this.applicationContext.getBean(BinderTypeRegistry.class);
+			Iterator<Map.Entry<String, BinderType>> iterator = typeRegistry.getAll().entrySet().iterator();
+			if (iterator.hasNext()) {
+				String binderName = iterator.next().getKey();
+				String remoteServiceName = this.remoteServiceNameMapper.apply(binderName);
+				if (StringUtils.hasText(remoteServiceName)) {
+					return remoteServiceName;
+				}
 			}
 		}
 		return REMOTE_SERVICE_NAME;
@@ -454,6 +475,11 @@ public final class TracingChannelInterceptor extends ChannelInterceptorAdapter i
 
 	private boolean emptyMessage(Message<?> message) {
 		return message == null;
+	}
+
+	@Override
+	public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
+		this.applicationContext = applicationContext;
 	}
 
 }

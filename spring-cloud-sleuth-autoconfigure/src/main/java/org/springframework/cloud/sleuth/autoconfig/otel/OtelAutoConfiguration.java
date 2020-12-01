@@ -45,6 +45,7 @@ import org.springframework.cloud.sleuth.autoconfig.SleuthBaggageProperties;
 import org.springframework.cloud.sleuth.autoconfig.SleuthSpanFilterProperties;
 import org.springframework.cloud.sleuth.autoconfig.SleuthTracerProperties;
 import org.springframework.cloud.sleuth.autoconfig.TraceConfiguration;
+import org.springframework.cloud.sleuth.internal.SleuthContextListener;
 import org.springframework.cloud.sleuth.otel.bridge.OtelOpenTelemetry;
 import org.springframework.cloud.sleuth.otel.bridge.SpanExporterCustomizer;
 import org.springframework.context.annotation.Bean;
@@ -135,6 +136,11 @@ public class OtelAutoConfiguration {
 	@ConditionalOnMissingBean
 	Sampler otelSampler(OtelProperties otelProperties) {
 		return Sampler.traceIdRatioBased(otelProperties.getTraceIdRatioBased());
+	}
+
+	@Bean
+	SleuthContextListener sleuthContextListener() {
+		return new SleuthContextListener();
 	}
 
 }

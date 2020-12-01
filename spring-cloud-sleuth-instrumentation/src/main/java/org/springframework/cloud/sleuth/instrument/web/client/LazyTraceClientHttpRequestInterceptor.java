@@ -20,6 +20,7 @@ import java.io.IOException;
 
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.cloud.sleuth.instrument.web.mvc.TracingClientHttpRequestInterceptor;
+import org.springframework.cloud.sleuth.internal.ContextUtil;
 import org.springframework.http.HttpRequest;
 import org.springframework.http.client.ClientHttpRequestExecution;
 import org.springframework.http.client.ClientHttpRequestInterceptor;
@@ -44,10 +45,17 @@ public class LazyTraceClientHttpRequestInterceptor implements ClientHttpRequestI
 	@Override
 	public ClientHttpResponse intercept(HttpRequest request, byte[] body, ClientHttpRequestExecution execution)
 			throws IOException {
+		if (isContextUnusable()) {
+			return execution.execute(request, body);
+		}
 		return interceptor().intercept(request, body, execution);
 	}
 
-	private TracingClientHttpRequestInterceptor interceptor() {
+	boolean isContextUnusable() {
+		return ContextUtil.isContextUnusable(this.beanFactory);
+	}
+
+	ClientHttpRequestInterceptor interceptor() {
 		if (this.interceptor == null) {
 			this.interceptor = this.beanFactory.getBean(TracingClientHttpRequestInterceptor.class);
 		}

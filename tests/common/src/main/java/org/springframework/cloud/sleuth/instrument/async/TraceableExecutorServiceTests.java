@@ -46,6 +46,7 @@ import org.springframework.cloud.sleuth.SpanNamer;
 import org.springframework.cloud.sleuth.TraceContext;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.internal.DefaultSpanNamer;
+import org.springframework.cloud.sleuth.internal.SleuthContextListenerAccessor;
 import org.springframework.cloud.sleuth.test.TestTracingAwareSupplier;
 
 import static java.util.stream.Collectors.toList;

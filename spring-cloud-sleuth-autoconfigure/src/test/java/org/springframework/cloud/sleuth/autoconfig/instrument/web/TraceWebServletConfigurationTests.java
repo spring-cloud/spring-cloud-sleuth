@@ -40,7 +40,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 public class TraceWebServletConfigurationTests {
 
 	private final WebApplicationContextRunner contextRunner = new WebApplicationContextRunner()
-			.withConfiguration(AutoConfigurations.of(TraceWebAutoConfiguration.class)).withUserConfiguration(TestConfig.class);
+			.withConfiguration(AutoConfigurations.of(TraceWebAutoConfiguration.class))
+			.withUserConfiguration(TestConfig.class);
 
 	@Test
 	public void shouldNotCreateTracedWebBeansWhenServletClassMissing() {
@@ -78,6 +79,7 @@ public class TraceWebServletConfigurationTests {
 		HttpServerHandler httpServerHandler() {
 			return BDDMockito.mock(HttpServerHandler.class);
 		}
+
 	}
 
 }
