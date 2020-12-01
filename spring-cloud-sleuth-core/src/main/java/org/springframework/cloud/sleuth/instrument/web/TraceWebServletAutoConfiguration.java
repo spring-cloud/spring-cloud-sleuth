@@ -44,6 +44,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
+import org.springframework.web.servlet.handler.HandlerInterceptorAdapter;
 
 /**
  * {@link org.springframework.boot.autoconfigure.EnableAutoConfiguration
@@ -61,6 +62,7 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 @ConditionalOnWebApplication(type = ConditionalOnWebApplication.Type.SERVLET)
 @ConditionalOnBean(HttpTracing.class)
 @AutoConfigureAfter(TraceHttpAutoConfiguration.class)
+@ConditionalOnClass(HandlerInterceptorAdapter.class)
 @Import(SpanCustomizingAsyncHandlerInterceptor.class)
 public class TraceWebServletAutoConfiguration {
 

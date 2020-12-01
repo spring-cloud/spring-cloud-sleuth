@@ -19,8 +19,10 @@ package org.springframework.cloud.sleuth.instrument.web;
 import org.junit.Test;
 
 import org.springframework.boot.autoconfigure.AutoConfigurations;
+import org.springframework.boot.test.context.FilteredClassLoader;
 import org.springframework.boot.test.context.runner.WebApplicationContextRunner;
 import org.springframework.cloud.sleuth.autoconfig.TraceAutoConfiguration;
+import org.springframework.web.servlet.handler.HandlerInterceptorAdapter;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -35,6 +37,20 @@ public class TraceWebServletAutoConfigurationTests {
 			.withConfiguration(AutoConfigurations.of(TraceAutoConfiguration.class,
 					TraceHttpAutoConfiguration.class, TraceWebAutoConfiguration.class,
 					TraceWebServletAutoConfiguration.class));
+
+	@Test
+	public void shouldNotCreateTracedWebBeansWhenServletClassMissing() {
+		this.contextRunner.withClassLoader(new FilteredClassLoader(HandlerInterceptorAdapter.class)).run((context) -> {
+			assertThat(context).doesNotHaveBean(TraceWebAspect.class);
+		});
+	}
+
+	@Test
+	public void shouldCreateTracedWebBeansWhenServletClassNotMissing() {
+		this.contextRunner.run((context) -> {
+			assertThat(context).hasSingleBean(TraceWebAspect.class);
+		});
+	}
 
 	@Test
 	public void shouldNotCreateExceptionLoggingFilterBeanByDefault() {
