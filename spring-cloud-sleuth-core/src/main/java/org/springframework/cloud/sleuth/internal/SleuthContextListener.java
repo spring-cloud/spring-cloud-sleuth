@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.springframework.cloud.sleuth.instrument.async;
+package org.springframework.cloud.sleuth.internal;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -32,7 +32,13 @@ import org.springframework.context.event.ContextClosedEvent;
 import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.context.event.SmartApplicationListener;
 
-class SleuthContextListener implements SmartApplicationListener {
+/**
+ * Internal tool used by Sleuth. Do not use.
+ *
+ * @author Marcin Grzejszczak
+ * @since 2.2.5
+ */
+public class SleuthContextListener implements SmartApplicationListener {
 
 	static final Map<BeanFactory, SleuthContextListener> CACHE = new ConcurrentHashMap<>();
 
@@ -42,7 +48,7 @@ class SleuthContextListener implements SmartApplicationListener {
 
 	final AtomicBoolean closed;
 
-	SleuthContextListener() {
+	public SleuthContextListener() {
 		this.refreshed = new AtomicBoolean();
 		this.closed = new AtomicBoolean();
 	}
@@ -52,7 +58,13 @@ class SleuthContextListener implements SmartApplicationListener {
 		this.closed = closed;
 	}
 
-	static SleuthContextListener getBean(BeanFactory beanFactory) {
+	/**
+	 * Returns an instance of the {@link SleuthContextListener} that might have already
+	 * been initialized.
+	 * @param beanFactory bean factory
+	 * @return instance of {@link SleuthContextListener}
+	 */
+	public static SleuthContextListener getBean(BeanFactory beanFactory) {
 		return CACHE.getOrDefault(beanFactory, new SleuthContextListener());
 	}
 
@@ -83,7 +95,10 @@ class SleuthContextListener implements SmartApplicationListener {
 		}
 	}
 
-	boolean isUnusable() {
+	/**
+	 * @return @{code true} when Spring Context has NOT yet been started
+	 */
+	public boolean isUnusable() {
 		return !this.refreshed.get() || this.closed.get();
 	}
 

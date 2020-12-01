@@ -30,6 +30,7 @@ import brave.Tracing;
 
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.cloud.sleuth.SpanNamer;
+import org.springframework.cloud.sleuth.internal.ContextUtil;
 
 /**
  * A decorator class for {@link ExecutorService} to support tracing in Executors.

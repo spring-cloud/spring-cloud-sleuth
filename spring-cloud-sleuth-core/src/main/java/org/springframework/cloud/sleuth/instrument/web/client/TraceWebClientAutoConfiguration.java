@@ -43,6 +43,7 @@ import org.springframework.boot.web.client.RestTemplateCustomizer;
 import org.springframework.cloud.commons.httpclient.HttpClientConfiguration;
 import org.springframework.cloud.gateway.filter.headers.HttpHeadersFilter;
 import org.springframework.cloud.sleuth.instrument.web.TraceHttpAutoConfiguration;
+import org.springframework.cloud.sleuth.internal.ContextUtil;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -309,10 +310,17 @@ class LazyTracingClientHttpRequestInterceptor implements ClientHttpRequestInterc
 	@Override
 	public ClientHttpResponse intercept(HttpRequest request, byte[] body,
 			ClientHttpRequestExecution execution) throws IOException {
+		if (isContextUnusable()) {
+			return execution.execute(request, body);
+		}
 		return interceptor().intercept(request, body, execution);
 	}
 
-	private TracingClientHttpRequestInterceptor interceptor() {
+	boolean isContextUnusable() {
+		return ContextUtil.isContextUnusable(this.beanFactory);
+	}
+
+	ClientHttpRequestInterceptor interceptor() {
 		if (this.interceptor == null) {
 			this.interceptor = this.beanFactory
 					.getBean(TracingClientHttpRequestInterceptor.class);

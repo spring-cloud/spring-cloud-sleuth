@@ -23,6 +23,7 @@ import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
 import org.springframework.beans.factory.BeanFactory;
+import org.springframework.cloud.sleuth.internal.ContextUtil;
 
 /**
  * A decorator class for {@link ScheduledExecutorService} to support tracing in Executors.

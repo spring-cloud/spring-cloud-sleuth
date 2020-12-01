@@ -52,6 +52,7 @@ import org.springframework.cloud.sleuth.DefaultSpanNamer;
 import org.springframework.cloud.sleuth.LocalServiceName;
 import org.springframework.cloud.sleuth.SpanAdjuster;
 import org.springframework.cloud.sleuth.SpanNamer;
+import org.springframework.cloud.sleuth.internal.SleuthContextListener;
 import org.springframework.cloud.sleuth.log.SleuthLogAutoConfiguration;
 import org.springframework.cloud.sleuth.sampler.SamplerAutoConfiguration;
 import org.springframework.context.annotation.Bean;
@@ -103,6 +104,11 @@ public class TraceAutoConfiguration {
 		}
 		return 0;
 	};
+
+	@Bean
+	SleuthContextListener traceContextClosedListener() {
+		return new SleuthContextListener();
+	}
 
 	@Bean
 	@ConditionalOnMissingBean
