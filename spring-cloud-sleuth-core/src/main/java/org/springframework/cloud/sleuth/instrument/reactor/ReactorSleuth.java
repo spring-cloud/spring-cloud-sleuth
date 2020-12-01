@@ -84,14 +84,11 @@ public abstract class ReactorSleuth {
 			}
 
 			if (!springContext.isActive()) {
-				boolean assertOn = false;
-				assert assertOn = true; // gives a message in unit test failures
-				if (log.isTraceEnabled() || assertOn) {
+				if (log.isTraceEnabled()) {
 					String message = "Spring Context [" + springContext
 							+ "] is not yet refreshed. This is unexpected. Reactor Context is ["
 							+ sub.currentContext() + "] and name is [" + name(sub) + "]";
 					log.trace(message);
-					assert false : message; // should never happen, but don't break.
 				}
 				return sub;
 			}
