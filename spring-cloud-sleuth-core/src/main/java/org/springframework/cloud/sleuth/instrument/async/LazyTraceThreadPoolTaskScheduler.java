@@ -103,6 +103,20 @@ class LazyTraceThreadPoolTaskScheduler extends ThreadPoolTaskScheduler {
 		}
 	}
 
+	private Runnable traceRunnableWhenContextReady(Runnable delegate) {
+		if (ContextUtil.isContextUnusable(this.beanFactory)) {
+			return delegate;
+		}
+		return new TraceRunnable(tracing(), spanNamer(), delegate);
+	}
+
+	private <V> Callable<V> traceCallableWhenContextReady(Callable<V> delegate) {
+		if (ContextUtil.isContextUnusable(this.beanFactory)) {
+			return delegate;
+		}
+		return new TraceCallable<>(tracing(), spanNamer(), delegate);
+	}
+
 	@Override
 	public void setPoolSize(int poolSize) {
 		this.delegate.setPoolSize(poolSize);
@@ -184,41 +198,38 @@ class LazyTraceThreadPoolTaskScheduler extends ThreadPoolTaskScheduler {
 
 	@Override
 	public void execute(Runnable task) {
-		this.delegate.execute(new TraceRunnable(tracing(), spanNamer(), task));
+		this.delegate.execute(traceRunnableWhenContextReady(task));
 	}
 
 	@Override
 	public void execute(Runnable task, long startTimeout) {
-		this.delegate.execute(new TraceRunnable(tracing(), spanNamer(), task),
-				startTimeout);
+		this.delegate.execute(traceRunnableWhenContextReady(task), startTimeout);
 	}
 
 	@Override
 	public Future<?> submit(Runnable task) {
-		return this.delegate.submit(new TraceRunnable(tracing(), spanNamer(), task));
+		return this.delegate.submit(traceRunnableWhenContextReady(task));
 	}
 
 	@Override
 	public <T> Future<T> submit(Callable<T> task) {
-		return this.delegate.submit(new TraceCallable<>(tracing(), spanNamer(), task));
+		return this.delegate.submit(traceCallableWhenContextReady(task));
 	}
 
 	@Override
 	public ListenableFuture<?> submitListenable(Runnable task) {
-		return this.delegate
-				.submitListenable(new TraceRunnable(tracing(), spanNamer(), task));
+		return this.delegate.submitListenable(traceRunnableWhenContextReady(task));
 	}
 
 	@Override
 	public <T> ListenableFuture<T> submitListenable(Callable<T> task) {
-		return this.delegate
-				.submitListenable(new TraceCallable<>(tracing(), spanNamer(), task));
+		return this.delegate.submitListenable(traceCallableWhenContextReady(task));
 	}
 
 	@Override
 	public void cancelRemainingTask(Runnable task) {
 		ReflectionUtils.invokeMethod(this.cancelRemainingTask, this.delegate,
-				new TraceRunnable(tracing(), spanNamer(), task));
+				traceRunnableWhenContextReady(task));
 	}
 
 	@Override
@@ -229,40 +240,38 @@ class LazyTraceThreadPoolTaskScheduler extends ThreadPoolTaskScheduler {
 	@Override
 	@Nullable
 	public ScheduledFuture<?> schedule(Runnable task, Trigger trigger) {
-		return this.delegate.schedule(new TraceRunnable(tracing(), spanNamer(), task),
-				trigger);
+		return this.delegate.schedule(traceRunnableWhenContextReady(task), trigger);
 	}
 
 	@Override
 	public ScheduledFuture<?> schedule(Runnable task, Date startTime) {
-		return this.delegate.schedule(new TraceRunnable(tracing(), spanNamer(), task),
-				startTime);
+		return this.delegate.schedule(traceRunnableWhenContextReady(task), startTime);
 	}
 
 	@Override
 	public ScheduledFuture<?> scheduleAtFixedRate(Runnable task, Date startTime,
 			long period) {
-		return this.delegate.scheduleAtFixedRate(
-				new TraceRunnable(tracing(), spanNamer(), task), startTime, period);
+		return this.delegate.scheduleAtFixedRate(traceRunnableWhenContextReady(task),
+				startTime, period);
 	}
 
 	@Override
 	public ScheduledFuture<?> scheduleAtFixedRate(Runnable task, long period) {
-		return this.delegate.scheduleAtFixedRate(
-				new TraceRunnable(tracing(), spanNamer(), task), period);
+		return this.delegate.scheduleAtFixedRate(traceRunnableWhenContextReady(task),
+				period);
 	}
 
 	@Override
 	public ScheduledFuture<?> scheduleWithFixedDelay(Runnable task, Date startTime,
 			long delay) {
-		return this.delegate.scheduleWithFixedDelay(
-				new TraceRunnable(tracing(), spanNamer(), task), startTime, delay);
+		return this.delegate.scheduleWithFixedDelay(traceRunnableWhenContextReady(task),
+				startTime, delay);
 	}
 
 	@Override
 	public ScheduledFuture<?> scheduleWithFixedDelay(Runnable task, long delay) {
-		return this.delegate.scheduleWithFixedDelay(
-				new TraceRunnable(tracing(), spanNamer(), task), delay);
+		return this.delegate.scheduleWithFixedDelay(traceRunnableWhenContextReady(task),
+				delay);
 	}
 
 	@Override
@@ -385,34 +394,33 @@ class LazyTraceThreadPoolTaskScheduler extends ThreadPoolTaskScheduler {
 
 	@Override
 	public ScheduledFuture<?> schedule(Runnable task, Instant startTime) {
-		return this.delegate.schedule(new TraceRunnable(tracing(), spanNamer(), task),
-				startTime);
+		return this.delegate.schedule(traceRunnableWhenContextReady(task), startTime);
 	}
 
 	@Override
 	public ScheduledFuture<?> scheduleAtFixedRate(Runnable task, Instant startTime,
 			Duration period) {
-		return this.delegate.scheduleAtFixedRate(
-				new TraceRunnable(tracing(), spanNamer(), task), startTime, period);
+		return this.delegate.scheduleAtFixedRate(traceRunnableWhenContextReady(task),
+				startTime, period);
 	}
 
 	@Override
 	public ScheduledFuture<?> scheduleAtFixedRate(Runnable task, Duration period) {
-		return this.delegate.scheduleAtFixedRate(
-				new TraceRunnable(tracing(), spanNamer(), task), period);
+		return this.delegate.scheduleAtFixedRate(traceRunnableWhenContextReady(task),
+				period);
 	}
 
 	@Override
 	public ScheduledFuture<?> scheduleWithFixedDelay(Runnable task, Instant startTime,
 			Duration delay) {
-		return this.delegate.scheduleWithFixedDelay(
-				new TraceRunnable(tracing(), spanNamer(), task), startTime, delay);
+		return this.delegate.scheduleWithFixedDelay(traceRunnableWhenContextReady(task),
+				startTime, delay);
 	}
 
 	@Override
 	public ScheduledFuture<?> scheduleWithFixedDelay(Runnable task, Duration delay) {
-		return this.delegate.scheduleWithFixedDelay(
-				new TraceRunnable(tracing(), spanNamer(), task), delay);
+		return this.delegate.scheduleWithFixedDelay(traceRunnableWhenContextReady(task),
+				delay);
 	}
 
 	private Tracing tracing() {

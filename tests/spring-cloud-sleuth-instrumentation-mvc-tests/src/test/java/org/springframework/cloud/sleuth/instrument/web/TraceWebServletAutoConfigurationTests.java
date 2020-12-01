@@ -40,9 +40,11 @@ public class TraceWebServletAutoConfigurationTests {
 
 	@Test
 	public void shouldNotCreateTracedWebBeansWhenServletClassMissing() {
-		this.contextRunner.withClassLoader(new FilteredClassLoader(HandlerInterceptorAdapter.class)).run((context) -> {
-			assertThat(context).doesNotHaveBean(TraceWebAspect.class);
-		});
+		this.contextRunner
+				.withClassLoader(new FilteredClassLoader(HandlerInterceptorAdapter.class))
+				.run((context) -> {
+					assertThat(context).doesNotHaveBean(TraceWebAspect.class);
+				});
 	}
 
 	@Test
