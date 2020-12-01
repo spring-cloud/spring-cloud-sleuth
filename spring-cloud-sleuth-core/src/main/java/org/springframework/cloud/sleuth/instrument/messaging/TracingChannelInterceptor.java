@@ -16,6 +16,9 @@
 
 package org.springframework.cloud.sleuth.instrument.messaging;
 
+import java.util.Iterator;
+import java.util.Map;
+
 import brave.Span;
 import brave.SpanCustomizer;
 import brave.Tracer;
@@ -28,8 +31,13 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import org.springframework.aop.support.AopUtils;
+import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cloud.sleuth.util.SpanNameUtil;
+import org.springframework.cloud.stream.binder.BinderType;
+import org.springframework.cloud.stream.binder.BinderTypeRegistry;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.ApplicationContextAware;
 import org.springframework.integration.channel.AbstractMessageChannel;
 import org.springframework.integration.channel.DirectChannel;
 import org.springframework.integration.context.IntegrationObjectSupport;
@@ -63,7 +71,7 @@ import org.springframework.util.ClassUtils;
  */
 @Deprecated
 public final class TracingChannelInterceptor extends ChannelInterceptorAdapter
-		implements ExecutorChannelInterceptor {
+		implements ExecutorChannelInterceptor, ApplicationContextAware {
 
 	/**
 	 * Name of the class in Spring Cloud Stream that is a direct channel.
@@ -109,8 +117,12 @@ public final class TracingChannelInterceptor extends ChannelInterceptorAdapter
 
 	private final boolean hasDirectChannelClass;
 
+	private final boolean hasBinderTypeRegistry;
+
 	// special case of a Stream
 	private final Class<?> directWithAttributesChannelClass;
+
+	private ApplicationContext applicationContext;
 
 	@Autowired
 	TracingChannelInterceptor(Tracing tracing, SleuthMessagingProperties properties) {
@@ -131,6 +143,8 @@ public final class TracingChannelInterceptor extends ChannelInterceptorAdapter
 				"org.springframework.integration.context.IntegrationObjectSupport", null);
 		this.hasDirectChannelClass = ClassUtils
 				.isPresent("org.springframework.integration.channel.DirectChannel", null);
+		this.hasBinderTypeRegistry = ClassUtils.isPresent(
+				"org.springframework.cloud.stream.binder.BinderTypeRegistry", null);
 		this.directWithAttributesChannelClass = ClassUtils
 				.isPresent(STREAM_DIRECT_CHANNEL, null)
 						? ClassUtils.resolveClassName(STREAM_DIRECT_CHANNEL, null) : null;
@@ -202,6 +216,23 @@ public final class TracingChannelInterceptor extends ChannelInterceptorAdapter
 			}
 			else if (key.startsWith("amqp_")) {
 				return this.properties.getMessaging().getRabbit().getRemoteServiceName();
+			}
+		}
+		if (this.hasBinderTypeRegistry && this.applicationContext != null) {
+			BinderTypeRegistry typeRegistry = this.applicationContext
+					.getBean(BinderTypeRegistry.class);
+			Iterator<Map.Entry<String, BinderType>> iterator = typeRegistry.getAll()
+					.entrySet().iterator();
+			if (iterator.hasNext()) {
+				String binderName = iterator.next().getKey();
+				if (binderName.equals("kafka")) {
+					return this.properties.getMessaging().getKafka()
+							.getRemoteServiceName();
+				}
+				else if (binderName.equals("rabbit")) {
+					return this.properties.getMessaging().getRabbit()
+							.getRemoteServiceName();
+				}
 			}
 		}
 		return REMOTE_SERVICE_NAME;
@@ -433,6 +464,12 @@ public final class TracingChannelInterceptor extends ChannelInterceptorAdapter
 
 	private boolean emptyMessage(Message<?> message) {
 		return message == null;
+	}
+
+	@Override
+	public void setApplicationContext(ApplicationContext applicationContext)
+			throws BeansException {
+		this.applicationContext = applicationContext;
 	}
 
 }

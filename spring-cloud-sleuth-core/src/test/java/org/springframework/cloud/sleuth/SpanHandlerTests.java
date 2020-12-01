@@ -31,6 +31,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.integration.IntegrationAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.cloud.stream.function.FunctionConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.test.context.junit4.SpringRunner;
@@ -62,7 +63,8 @@ public class SpanHandlerTests {
 	}
 
 	@Configuration
-	@EnableAutoConfiguration(exclude = IntegrationAutoConfiguration.class)
+	@EnableAutoConfiguration(
+			exclude = { IntegrationAutoConfiguration.class, FunctionConfiguration.class })
 	static class SpanHandlerAspectTestsConfig {
 
 		@Bean
