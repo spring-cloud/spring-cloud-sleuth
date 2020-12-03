@@ -21,9 +21,13 @@ import brave.Tracing;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.cloud.sleuth.instrument.messaging.DefaultMessageSpanCustomizer;
+import org.springframework.cloud.sleuth.instrument.messaging.MessageSpanCustomizer;
 import org.springframework.cloud.sleuth.instrument.messaging.SleuthMessagingProperties;
 import org.springframework.cloud.sleuth.instrument.messaging.TracingChannelInterceptor;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.messaging.simp.config.ChannelRegistration;
 import org.springframework.messaging.simp.config.MessageBrokerRegistry;
@@ -56,6 +60,15 @@ public class TraceWebSocketAutoConfiguration
 	@Autowired
 	SleuthMessagingProperties properties;
 
+	@Autowired
+	MessageSpanCustomizer messageSpanCustomizer;
+
+	@Bean
+	@ConditionalOnMissingBean
+	MessageSpanCustomizer defaultMessageSpanCustomizer() {
+		return new DefaultMessageSpanCustomizer();
+	}
+
 	@Override
 	public void registerStompEndpoints(StompEndpointRegistry registry) {
 		// The user must register their own endpoints
@@ -63,20 +76,20 @@ public class TraceWebSocketAutoConfiguration
 
 	@Override
 	public void configureMessageBroker(MessageBrokerRegistry registry) {
-		registry.configureBrokerChannel().setInterceptors(
-				TracingChannelInterceptor.create(this.tracing, this.properties));
+		registry.configureBrokerChannel().setInterceptors(TracingChannelInterceptor
+				.create(this.tracing, this.properties, this.messageSpanCustomizer));
 	}
 
 	@Override
 	public void configureClientOutboundChannel(ChannelRegistration registration) {
-		registration.setInterceptors(
-				TracingChannelInterceptor.create(this.tracing, this.properties));
+		registration.setInterceptors(TracingChannelInterceptor.create(this.tracing,
+				this.properties, this.messageSpanCustomizer));
 	}
 
 	@Override
 	public void configureClientInboundChannel(ChannelRegistration registration) {
-		registration.setInterceptors(
-				TracingChannelInterceptor.create(this.tracing, this.properties));
+		registration.setInterceptors(TracingChannelInterceptor.create(this.tracing,
+				this.properties, this.messageSpanCustomizer));
 	}
 
 }

@@ -946,6 +946,18 @@ include::{project-root}/spring-cloud-sleuth-core/src/test/java/org/springframewo
 
 For more, see https://github.com/openzipkin/brave/tree/master/instrumentation/messaging#sampling-policy
 
+==== Customizing messaging spans
+
+In order to change the default span names and tags, just register a bean of type `MessageSpanCustomizer`. You can also
+override the existing `DefaultMessageSpanCustomizer` to extend the existing behaviour.
+
+[source,java]
+----
+@Component
+include::{project-root}/spring-cloud-sleuth-core/src/test/java/org/springframework/cloud/sleuth/instrument/messaging/TracingChannelInterceptorTest.java[tags=message_span_customizer,indent=2]
+----
+
+
 === RPC
 
 Sleuth automatically configures the `RpcTracing` bean which serves as a

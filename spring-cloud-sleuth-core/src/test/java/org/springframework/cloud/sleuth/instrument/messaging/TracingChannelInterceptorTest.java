@@ -23,6 +23,7 @@ import java.util.List;
 import java.util.Map;
 
 import brave.Span;
+import brave.SpanCustomizer;
 import brave.Tracing;
 import brave.handler.MutableSpan;
 import brave.propagation.StrictCurrentTraceContext;
@@ -60,7 +61,7 @@ public class TracingChannelInterceptorTest {
 			.addSpanHandler(this.spans).build();
 
 	ChannelInterceptor interceptor = TracingChannelInterceptor.create(tracing,
-			new SleuthMessagingProperties());
+			new SleuthMessagingProperties(), new DefaultMessageSpanCustomizer());
 
 	QueueChannel channel = new QueueChannel();
 
@@ -112,6 +113,24 @@ public class TracingChannelInterceptorTest {
 				"X-B3-Sampled", "nativeHeaders");
 		assertThat(this.spans).extracting(MutableSpan::kind).contains(Span.Kind.CONSUMER,
 				Span.Kind.PRODUCER);
+	}
+
+	@Test
+	public void allowsSpanCustomization() {
+		this.interceptor = TracingChannelInterceptor.create(tracing,
+				new SleuthMessagingProperties(), new MyMessageSpanCustomizer());
+
+		this.directChannel.addInterceptor(this.interceptor);
+		this.directChannel.subscribe(this.handler);
+		this.directChannel.send(MessageBuilder.withPayload("foo").build());
+
+		assertThat(
+				this.spans.spans().stream().filter(s -> "changedHandle".equals(s.name()))
+						.findFirst().map(s -> s.tag("handleKey"))).isPresent().get()
+								.isEqualTo("handleValue");
+		assertThat(this.spans.spans().stream().filter(s -> "changedSend".equals(s.name()))
+				.findFirst().map(s -> s.tag("sendKey"))).isPresent().get()
+						.isEqualTo("sendValue");
 	}
 
 	@Test
@@ -436,3 +455,27 @@ public class TracingChannelInterceptorTest {
 	}
 
 }
+
+// @formatter:off
+// tag::message_span_customizer[]
+class MyMessageSpanCustomizer extends DefaultMessageSpanCustomizer {
+	@Override
+	public SpanCustomizer customizeHandle(SpanCustomizer spanCustomizer,
+			Message<?> message, MessageChannel messageChannel) {
+		return super.customizeHandle(spanCustomizer, message, messageChannel)
+				.name("changedHandle")
+				.tag("handleKey", "handleValue")
+				.tag("channelName", channelName(messageChannel));
+	}
+
+	@Override
+	public SpanCustomizer customizeSend(SpanCustomizer spanCustomizer,
+			Message<?> message, MessageChannel messageChannel) {
+		return super.customizeSend(spanCustomizer, message, messageChannel)
+				.name("changedSend")
+				.tag("sendKey", "sendValue")
+				.tag("channelName", channelName(messageChannel));
+	}
+}
+// end::message_span_customizer[]
+// @formatter:on

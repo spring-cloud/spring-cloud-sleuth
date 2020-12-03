@@ -113,6 +113,8 @@ public final class TracingChannelInterceptor extends ChannelInterceptorAdapter
 
 	final SleuthMessagingProperties properties;
 
+	final MessageSpanCustomizer messageSpanCustomizer;
+
 	final boolean integrationObjectSupportPresent;
 
 	private final boolean hasDirectChannelClass;
@@ -125,17 +127,20 @@ public final class TracingChannelInterceptor extends ChannelInterceptorAdapter
 	private ApplicationContext applicationContext;
 
 	@Autowired
-	TracingChannelInterceptor(Tracing tracing, SleuthMessagingProperties properties) {
+	TracingChannelInterceptor(Tracing tracing, SleuthMessagingProperties properties,
+			MessageSpanCustomizer messageSpanCustomizer) {
 		this(tracing, properties, MessageHeaderPropagation.INSTANCE,
-				MessageHeaderPropagation.INSTANCE);
+				MessageHeaderPropagation.INSTANCE, messageSpanCustomizer);
 	}
 
 	TracingChannelInterceptor(Tracing tracing, SleuthMessagingProperties properties,
 			Propagation.Setter<MessageHeaderAccessor, String> setter,
-			Propagation.Getter<MessageHeaderAccessor, String> getter) {
+			Propagation.Getter<MessageHeaderAccessor, String> getter,
+			MessageSpanCustomizer messageSpanCustomizer) {
 		this.tracing = tracing;
 		this.properties = properties;
 		this.tracer = tracing.tracer();
+		this.messageSpanCustomizer = messageSpanCustomizer;
 		this.threadLocalSpan = ThreadLocalSpan.create(this.tracer);
 		this.injector = tracing.propagation().injector(setter);
 		this.extractor = tracing.propagation().extractor(getter);
@@ -151,8 +156,9 @@ public final class TracingChannelInterceptor extends ChannelInterceptorAdapter
 	}
 
 	public static TracingChannelInterceptor create(Tracing tracing,
-			SleuthMessagingProperties properties) {
-		return new TracingChannelInterceptor(tracing, properties);
+			SleuthMessagingProperties properties,
+			MessageSpanCustomizer messageSpanCustomizer) {
+		return new TracingChannelInterceptor(tracing, properties, messageSpanCustomizer);
 	}
 
 	/**
@@ -164,7 +170,9 @@ public final class TracingChannelInterceptor extends ChannelInterceptorAdapter
 	 * span if one couldn't be extracted.
 	 * @param message message to use for span creation
 	 * @return span to be created
+	 * @deprecated scheduled for removal in 3.0.0
 	 */
+	@Deprecated
 	public Span nextSpan(Message<?> message) {
 		MessageHeaderAccessor headers = mutableHeaderAccessor(message);
 		TraceContextOrSamplingFlags extracted = this.extractor.extract(headers);
@@ -195,9 +203,9 @@ public final class TracingChannelInterceptor extends ChannelInterceptorAdapter
 				this.tracing.propagation().keys());
 		this.injector.inject(span.context(), headers);
 		if (!span.isNoop()) {
-			span.kind(Span.Kind.PRODUCER).name("send").start();
+			span.kind(Span.Kind.PRODUCER).start();
+			this.messageSpanCustomizer.customizeSend(span, message, channel);
 			span.remoteServiceName(toRemoteServiceName(headers));
-			addTags(message, span, channel);
 		}
 		if (log.isDebugEnabled()) {
 			log.debug("Created a new span in pre send" + span);
@@ -311,9 +319,9 @@ public final class TracingChannelInterceptor extends ChannelInterceptorAdapter
 				this.tracing.propagation().keys());
 		this.injector.inject(span.context(), headers);
 		if (!span.isNoop()) {
-			span.kind(Span.Kind.CONSUMER).name("receive").start();
+			span.kind(Span.Kind.CONSUMER).start();
+			this.messageSpanCustomizer.customizeReceive(span, message, channel);
 			span.remoteServiceName(toRemoteServiceName(headers));
-			addTags(message, span, channel);
 		}
 		if (log.isDebugEnabled()) {
 			log.debug("Created a new span in post receive " + span);
@@ -361,9 +369,9 @@ public final class TracingChannelInterceptor extends ChannelInterceptorAdapter
 			consumerSpan.finish();
 		}
 		// create and scope a span for the message processor
-		this.threadLocalSpan
-				.next(TraceContextOrSamplingFlags.create(consumerSpan.context()))
-				.name("handle").start();
+		Span span = this.threadLocalSpan
+				.next(TraceContextOrSamplingFlags.create(consumerSpan.context())).start();
+		this.messageSpanCustomizer.customizeHandle(span, message, channel);
 		// remove any trace headers, but don't re-inject as we are synchronously
 		// processing the
 		// message and can rely on scoping to access this span later.
@@ -393,19 +401,16 @@ public final class TracingChannelInterceptor extends ChannelInterceptorAdapter
 		finishSpan(ex);
 	}
 
-	/**
-	 * When an upstream context was not present, lookup keys are unlikely added.
-	 * @param message a message to append tags to
-	 * @param result span to customize
-	 * @param channel channel to which a message was sent
-	 */
-	void addTags(Message<?> message, SpanCustomizer result, MessageChannel channel) {
+	@Deprecated
+	private void addTags(Message<?> message, SpanCustomizer result,
+			MessageChannel channel) {
 		// TODO topic etc
 		if (channel != null) {
 			result.tag("channel", messageChannelName(channel));
 		}
 	}
 
+	@Deprecated
 	private String channelName(MessageChannel channel) {
 		String name = null;
 		if (this.integrationObjectSupportPresent) {
@@ -422,6 +427,7 @@ public final class TracingChannelInterceptor extends ChannelInterceptorAdapter
 		return name;
 	}
 
+	@Deprecated
 	private String messageChannelName(MessageChannel channel) {
 		return SpanNameUtil.shorten(channelName(channel));
 	}

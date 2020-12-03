@@ -22,6 +22,7 @@ import brave.propagation.Propagation;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.cloud.sleuth.autoconfig.TraceAutoConfiguration;
@@ -63,12 +64,20 @@ public class TraceSpringIntegrationAutoConfiguration {
 	}
 
 	@Bean
+	@ConditionalOnMissingBean
+	MessageSpanCustomizer defaultMessageSpanCustomizer() {
+		return new DefaultMessageSpanCustomizer();
+	}
+
+	@Bean
 	TracingChannelInterceptor traceChannelInterceptor(Tracing tracing,
 			SleuthMessagingProperties properties,
 			Propagation.Setter<MessageHeaderAccessor, String> traceMessagePropagationSetter,
-			Propagation.Getter<MessageHeaderAccessor, String> traceMessagePropagationGetter) {
+			Propagation.Getter<MessageHeaderAccessor, String> traceMessagePropagationGetter,
+			MessageSpanCustomizer messageSpanCustomizer) {
 		return new TracingChannelInterceptor(tracing, properties,
-				traceMessagePropagationSetter, traceMessagePropagationGetter);
+				traceMessagePropagationSetter, traceMessagePropagationGetter,
+				messageSpanCustomizer);
 	}
 
 }
