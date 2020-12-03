@@ -22,6 +22,7 @@ import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.AnyNestedCondition;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -29,6 +30,8 @@ import org.springframework.cloud.function.context.FunctionCatalog;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.autoconfig.brave.BraveAutoConfiguration;
 import org.springframework.cloud.sleuth.autoconfig.otel.OtelAutoConfiguration;
+import org.springframework.cloud.sleuth.instrument.messaging.DefaultMessageSpanCustomizer;
+import org.springframework.cloud.sleuth.instrument.messaging.MessageSpanCustomizer;
 import org.springframework.cloud.sleuth.instrument.messaging.TracingChannelInterceptor;
 import org.springframework.cloud.sleuth.propagation.Propagator;
 import org.springframework.context.annotation.Bean;
@@ -63,6 +66,12 @@ import org.springframework.util.StringUtils;
 public class TraceSpringIntegrationAutoConfiguration {
 
 	@Bean
+	@ConditionalOnMissingBean
+	MessageSpanCustomizer defaultMessageSpanCustomizer() {
+		return new DefaultMessageSpanCustomizer();
+	}
+
+	@Bean
 	GlobalChannelInterceptorWrapper traceGlobalChannelInterceptorWrapper(TracingChannelInterceptor interceptor,
 			SleuthIntegrationMessagingProperties properties) {
 		GlobalChannelInterceptorWrapper wrapper = new GlobalChannelInterceptorWrapper(interceptor);
@@ -74,9 +83,9 @@ public class TraceSpringIntegrationAutoConfiguration {
 	TracingChannelInterceptor traceChannelInterceptor(Tracer tracer, Propagator propagator,
 			Propagator.Setter<MessageHeaderAccessor> traceMessagePropagationSetter,
 			Propagator.Getter<MessageHeaderAccessor> traceMessagePropagationGetter,
-			SleuthMessagingProperties properties) {
+			SleuthMessagingProperties properties, MessageSpanCustomizer messageSpanCustomizer) {
 		return new TracingChannelInterceptor(tracer, propagator, traceMessagePropagationSetter,
-				traceMessagePropagationGetter, remoteServiceNameMapper(properties));
+				traceMessagePropagationGetter, remoteServiceNameMapper(properties), messageSpanCustomizer);
 	}
 
 	static Function<String, String> remoteServiceNameMapper(SleuthMessagingProperties properties) {

@@ -28,15 +28,12 @@ import org.springframework.aop.support.AopUtils;
 import org.springframework.beans.BeansException;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.Tracer;
-import org.springframework.cloud.sleuth.internal.SpanNameUtil;
 import org.springframework.cloud.sleuth.propagation.Propagator;
 import org.springframework.cloud.stream.binder.BinderType;
 import org.springframework.cloud.stream.binder.BinderTypeRegistry;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
-import org.springframework.integration.channel.AbstractMessageChannel;
 import org.springframework.integration.channel.DirectChannel;
-import org.springframework.integration.context.IntegrationObjectSupport;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageChannel;
 import org.springframework.messaging.MessageHandler;
@@ -96,7 +93,7 @@ public final class TracingChannelInterceptor extends ChannelInterceptorAdapter
 
 	final Propagator.Getter<MessageHeaderAccessor> extractor;
 
-	final boolean integrationObjectSupportPresent;
+	final MessageSpanCustomizer messageSpanCustomizer;
 
 	private final boolean hasDirectChannelClass;
 
@@ -115,40 +112,19 @@ public final class TracingChannelInterceptor extends ChannelInterceptorAdapter
 
 	public TracingChannelInterceptor(Tracer tracer, Propagator propagator,
 			Propagator.Setter<MessageHeaderAccessor> setter, Propagator.Getter<MessageHeaderAccessor> getter,
-			Function<String, String> remoteServiceNameMapper) {
+			Function<String, String> remoteServiceNameMapper, MessageSpanCustomizer messageSpanCustomizer) {
 		this.tracer = tracer;
 		this.propagator = propagator;
 		this.injector = setter;
 		this.extractor = getter;
 		this.remoteServiceNameMapper = remoteServiceNameMapper;
-		this.integrationObjectSupportPresent = ClassUtils
-				.isPresent("org.springframework.integration.context.IntegrationObjectSupport", null);
+		this.messageSpanCustomizer = messageSpanCustomizer;
 		this.hasDirectChannelClass = ClassUtils.isPresent("org.springframework.integration.channel.DirectChannel",
 				null);
 		this.hasBinderTypeRegistry = ClassUtils.isPresent("org.springframework.cloud.stream.binder.BinderTypeRegistry",
 				null);
 		this.directWithAttributesChannelClass = ClassUtils.isPresent(STREAM_DIRECT_CHANNEL, null)
 				? ClassUtils.resolveClassName(STREAM_DIRECT_CHANNEL, null) : null;
-	}
-
-	/**
-	 * Use this to create a span for processing the given message. Note: the result has no
-	 * name and is not started. This creates a child from identifiers extracted from the
-	 * message headers, or a new span if one couldn't be extracted.
-	 * @param message message to use for span creation
-	 * @return span to be created
-	 */
-	public Span nextSpan(Message<?> message) {
-		MessageHeaderAccessor headers = mutableHeaderAccessor(message);
-		Span result = this.propagator.extract(headers, this.extractor).start();
-		headers.setImmutable();
-		if (!result.isNoop()) {
-			addTags(result, null);
-		}
-		if (log.isDebugEnabled()) {
-			log.debug("Created a new span " + result);
-		}
-		return result;
 	}
 
 	/**
@@ -166,8 +142,9 @@ public final class TracingChannelInterceptor extends ChannelInterceptorAdapter
 		MessageHeaderAccessor headers = mutableHeaderAccessor(retrievedMessage);
 		Span.Builder spanBuilder = this.propagator.extract(headers, this.extractor);
 		MessageHeaderPropagation.removeAnyTraceHeaders(headers, this.propagator.fields());
-		spanBuilder.kind(Span.Kind.PRODUCER).name("send").remoteServiceName(toRemoteServiceName(headers));
-		addTags(spanBuilder, channel);
+		spanBuilder = spanBuilder.kind(Span.Kind.PRODUCER);
+		spanBuilder = this.messageSpanCustomizer.customizeSend(spanBuilder, message, channel)
+				.remoteServiceName(toRemoteServiceName(headers));
 		Span span = spanBuilder.start();
 		if (log.isDebugEnabled()) {
 			log.debug("Extracted result from headers " + span);
@@ -302,8 +279,9 @@ public final class TracingChannelInterceptor extends ChannelInterceptorAdapter
 			Span result) {
 		Span.Builder builder = this.tracer.spanBuilder().setParent(result.context());
 		MessageHeaderPropagation.removeAnyTraceHeaders(headers, this.propagator.fields());
-		builder.kind(Span.Kind.CONSUMER).name("receive").remoteServiceName(toRemoteServiceName(headers));
-		addTags(builder, channel);
+		builder = builder.kind(Span.Kind.CONSUMER);
+		builder = this.messageSpanCustomizer.customizeReceive(builder, message, channel);
+		builder = builder.remoteServiceName(toRemoteServiceName(headers));
 		return builder.start();
 	}
 
@@ -333,7 +311,8 @@ public final class TracingChannelInterceptor extends ChannelInterceptorAdapter
 		}
 		Span consumerSpan = consumerSpan(message, channel, headers);
 		// create and scope a span for the message processor
-		Span handle = this.tracer.nextSpan(consumerSpan).name("handle").start();
+		Span handle = this.tracer.nextSpan(consumerSpan);
+		handle = this.messageSpanCustomizer.customizeHandle(handle, message, channel).start();
 		if (log.isDebugEnabled()) {
 			log.debug("Created consumer span " + handle);
 		}
@@ -360,7 +339,7 @@ public final class TracingChannelInterceptor extends ChannelInterceptorAdapter
 		// Start and finish a consumer span as we will immediately process it.
 		consumerSpanBuilder.kind(Span.Kind.CONSUMER).start();
 		consumerSpanBuilder.remoteServiceName(REMOTE_SERVICE_NAME);
-		addTags(consumerSpanBuilder, channel);
+		consumerSpanBuilder = this.messageSpanCustomizer.customizeHandle(consumerSpanBuilder, message, channel);
 		Span consumerSpan = consumerSpanBuilder.start();
 		consumerSpan.end();
 		return consumerSpan;
@@ -375,45 +354,6 @@ public final class TracingChannelInterceptor extends ChannelInterceptorAdapter
 			log.debug("Will finish the current span after message handled " + this.tracer.currentSpan());
 		}
 		finishSpan(ex);
-	}
-
-	/**
-	 * When an upstream context was not present, lookup keys are unlikely added.
-	 * @param result span to customize
-	 * @param channel channel to which a message was sent
-	 */
-	void addTags(Span.Builder result, MessageChannel channel) {
-		// TODO topic etc
-		if (channel != null) {
-			result.tag("channel", messageChannelName(channel));
-		}
-	}
-
-	void addTags(Span result, MessageChannel channel) {
-		// TODO topic etc
-		if (channel != null) {
-			result.tag("channel", messageChannelName(channel));
-		}
-	}
-
-	private String channelName(MessageChannel channel) {
-		String name = null;
-		if (this.integrationObjectSupportPresent) {
-			if (channel instanceof IntegrationObjectSupport) {
-				name = ((IntegrationObjectSupport) channel).getComponentName();
-			}
-			if (name == null && channel instanceof AbstractMessageChannel) {
-				name = ((AbstractMessageChannel) channel).getFullChannelName();
-			}
-		}
-		if (name == null) {
-			name = channel.toString();
-		}
-		return name;
-	}
-
-	private String messageChannelName(MessageChannel channel) {
-		return SpanNameUtil.shorten(channelName(channel));
 	}
 
 	void finishSpan(Exception error) {
