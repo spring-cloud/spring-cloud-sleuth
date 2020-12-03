@@ -21,6 +21,8 @@ import brave.SpanCustomizer;
 import org.springframework.lang.Nullable;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageChannel;
+import org.springframework.messaging.MessageHandler;
+import org.springframework.messaging.support.ExecutorChannelInterceptor;
 
 /**
  * Allows customization of messaging spans.
@@ -30,12 +32,38 @@ import org.springframework.messaging.MessageChannel;
  */
 public interface MessageSpanCustomizer {
 
+	/**
+	 * Customizes the span created when
+	 * {@link ExecutorChannelInterceptor#beforeHandle(Message, MessageChannel, MessageHandler)}
+	 * gets called.
+	 * @param spanCustomizer current span to customize
+	 * @param message received or sent message
+	 * @param messageChannel channel from / to which the message was sent
+	 * @return customized span
+	 */
 	SpanCustomizer customizeHandle(SpanCustomizer spanCustomizer, Message<?> message,
 			@Nullable MessageChannel messageChannel);
 
+	/**
+	 * Customizes the span created when
+	 * {@link ExecutorChannelInterceptor#postReceive(Message, MessageChannel)} gets
+	 * called.
+	 * @param spanCustomizer current span to customize
+	 * @param message received or sent message
+	 * @param messageChannel channel from / to which the message was sent
+	 * @return customized span
+	 */
 	SpanCustomizer customizeReceive(SpanCustomizer spanCustomizer, Message<?> message,
 			@Nullable MessageChannel messageChannel);
 
+	/**
+	 * Customizes the span created when
+	 * {@link ExecutorChannelInterceptor#preSend(Message, MessageChannel)} gets called.
+	 * @param spanCustomizer current span to customize
+	 * @param message received or sent message
+	 * @param messageChannel channel from / to which the message was sent
+	 * @return customized span
+	 */
 	SpanCustomizer customizeSend(SpanCustomizer spanCustomizer, Message<?> message,
 			@Nullable MessageChannel messageChannel);
 
