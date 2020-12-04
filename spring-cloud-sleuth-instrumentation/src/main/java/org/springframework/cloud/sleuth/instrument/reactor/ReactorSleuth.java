@@ -88,29 +88,33 @@ public abstract class ReactorSleuth {
 			if (!springContext.isActive()) {
 				if (log.isTraceEnabled()) {
 					String message = "Spring Context [" + springContext
-							+ "] is not yet refreshed. This is unexpected. Reactor Context is [" + sub.currentContext()
+							+ "] is not yet refreshed. This is unexpected. Reactor Context is [" + context(sub)
 							+ "] and name is [" + name(sub) + "]";
 					log.trace(message);
 				}
 				return sub;
+			}
+
+			Context context = context(sub);
+
+			if (log.isTraceEnabled()) {
+				log.trace("Spring context [" + springContext + "], Reactor context [" + context + "], name ["
+						+ name(sub) + "]");
 			}
 
 			// Try to get the current trace context bean, lenient when there are problems
 			CurrentTraceContext currentTraceContext = lazyCurrentTraceContext.get();
 			if (currentTraceContext == null) {
-				boolean assertOn = false;
-				assert assertOn = true; // gives a message in unit test failures
-				if (log.isTraceEnabled() || assertOn) {
+				if (log.isTraceEnabled()) {
 					String message = "Spring Context [" + springContext
-							+ "] did not return a CurrentTraceContext. Reactor Context is [" + sub.currentContext()
+							+ "] did not return a CurrentTraceContext. Reactor Context is [" + context
 							+ "] and name is [" + name(sub) + "]";
 					log.trace(message);
-					assert false : message; // should never happen, but don't break.
 				}
 				return sub;
 			}
 
-			Context context = contextWithBeans(springContext, sub);
+			context = contextWithBeans(context, springContext, sub);
 			if (log.isTraceEnabled()) {
 				log.trace("Spring context [" + springContext + "], Reactor context [" + context + "], name ["
 						+ name(sub) + "]");
@@ -132,9 +136,8 @@ public abstract class ReactorSleuth {
 		});
 	}
 
-	private static <T> Context contextWithBeans(ConfigurableApplicationContext springContext,
+	private static <T> Context contextWithBeans(Context context, ConfigurableApplicationContext springContext,
 			CoreSubscriber<? super T> sub) {
-		Context context = sub.currentContext();
 		if (!context.hasKey(Tracer.class)) {
 			context = context.put(Tracer.class, springContext.getBean(Tracer.class));
 		}
@@ -164,9 +167,21 @@ public abstract class ReactorSleuth {
 			if (!springContext.isActive()) {
 				return sub;
 			}
-			final Context context = contextWithBeans(springContext, sub);
+			final Context context = contextWithBeans(context(sub), springContext, sub);
 			return new SleuthContextOperator<>(context, sub);
 		});
+	}
+
+	private static <T> Context context(CoreSubscriber<? super T> sub) {
+		try {
+			return sub.currentContext();
+		}
+		catch (Exception ex) {
+			if (log.isDebugEnabled()) {
+				log.debug("Exception occurred while trying to retrieve the context", ex);
+			}
+		}
+		return Context.empty();
 	}
 
 	static String name(CoreSubscriber<?> sub) {
