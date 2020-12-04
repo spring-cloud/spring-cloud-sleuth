@@ -87,13 +87,13 @@ public abstract class ReactorSleuth {
 				if (log.isTraceEnabled()) {
 					String message = "Spring Context [" + springContext
 							+ "] is not yet refreshed. This is unexpected. Reactor Context is ["
-							+ sub.currentContext() + "] and name is [" + name(sub) + "]";
+							+ context(sub) + "] and name is [" + name(sub) + "]";
 					log.trace(message);
 				}
 				return sub;
 			}
 
-			Context context = sub.currentContext();
+			Context context = context(sub);
 
 			if (log.isTraceEnabled()) {
 				log.trace("Spring context [" + springContext + "], Reactor context ["
@@ -108,7 +108,7 @@ public abstract class ReactorSleuth {
 				if (log.isTraceEnabled() || assertOn) {
 					String message = "Spring Context [" + springContext
 							+ "] did not return a CurrentTraceContext. Reactor Context is ["
-							+ sub.currentContext() + "] and name is [" + name(sub) + "]";
+							+ context(sub) + "] and name is [" + name(sub) + "]";
 					log.trace(message);
 					assert false : message; // should never happen, but don't break.
 				}
@@ -127,6 +127,18 @@ public abstract class ReactorSleuth {
 			return new ScopePassingSpanSubscriber<>(sub, context, currentTraceContext,
 					parent);
 		});
+	}
+
+	private static <T> Context context(CoreSubscriber<? super T> sub) {
+		try {
+			return sub.currentContext();
+		}
+		catch (Exception ex) {
+			if (log.isDebugEnabled()) {
+				log.debug("Exception occurred while trying to retrieve the context", ex);
+			}
+		}
+		return Context.empty();
 	}
 
 	static String name(CoreSubscriber<?> sub) {
