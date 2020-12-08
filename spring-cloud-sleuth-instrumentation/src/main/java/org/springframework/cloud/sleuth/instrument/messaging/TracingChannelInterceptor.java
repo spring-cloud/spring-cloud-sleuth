@@ -18,6 +18,7 @@ package org.springframework.cloud.sleuth.instrument.messaging;
 
 import java.util.Iterator;
 import java.util.Map;
+import java.util.NoSuchElementException;
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.function.Function;
 
@@ -462,11 +463,18 @@ class ThreadLocalSpan {
 		if (this.spans.isEmpty()) {
 			return;
 		}
-		SpanAndScope span = this.spans.removeFirst();
-		if (log.isDebugEnabled()) {
-			log.debug("Took span [" + span + "] from thread local");
+		try {
+			SpanAndScope span = this.spans.removeFirst();
+			if (log.isDebugEnabled()) {
+				log.debug("Took span [" + span + "] from thread local");
+			}
+			this.threadLocalSpan.set(span);
 		}
-		this.threadLocalSpan.set(span);
+		catch (NoSuchElementException ex) {
+			if (log.isTraceEnabled()) {
+				log.trace("Failed to remove a span from the queue", ex);
+			}
+		}
 	}
 
 }

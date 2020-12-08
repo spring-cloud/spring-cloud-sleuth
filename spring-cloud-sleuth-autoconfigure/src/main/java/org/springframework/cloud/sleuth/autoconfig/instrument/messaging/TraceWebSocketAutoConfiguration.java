@@ -29,6 +29,7 @@ import org.springframework.cloud.sleuth.instrument.messaging.DefaultMessageSpanC
 import org.springframework.cloud.sleuth.instrument.messaging.MessageSpanCustomizer;
 import org.springframework.cloud.sleuth.instrument.messaging.TracingChannelInterceptor;
 import org.springframework.cloud.sleuth.propagation.Propagator;
+import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.messaging.simp.config.ChannelRegistration;
@@ -71,6 +72,9 @@ class TraceWebSocketAutoConfiguration extends AbstractWebSocketMessageBrokerConf
 	@Autowired
 	MessageSpanCustomizer messageSpanCustomizer;
 
+	@Autowired
+	ApplicationContext applicationContext;
+
 	@Bean
 	@ConditionalOnMissingBean
 	MessageSpanCustomizer defaultMessageSpanCustomizer() {
@@ -84,26 +88,26 @@ class TraceWebSocketAutoConfiguration extends AbstractWebSocketMessageBrokerConf
 
 	@Override
 	public void configureMessageBroker(MessageBrokerRegistry registry) {
-		registry.configureBrokerChannel()
-				.setInterceptors(new TracingChannelInterceptor(this.tracer, this.propagator, this.setter, this.getter,
-						TraceSpringIntegrationAutoConfiguration.remoteServiceNameMapper(this.sleuthMessagingProperties),
-						this.messageSpanCustomizer));
+		registry.configureBrokerChannel().interceptors(tracingChannelInterceptor());
+	}
+
+	private TracingChannelInterceptor tracingChannelInterceptor() {
+		TracingChannelInterceptor tracingChannelInterceptor = new TracingChannelInterceptor(this.tracer,
+				this.propagator, this.setter, this.getter,
+				TraceSpringIntegrationAutoConfiguration.remoteServiceNameMapper(this.sleuthMessagingProperties),
+				this.messageSpanCustomizer);
+		tracingChannelInterceptor.setApplicationContext(this.applicationContext);
+		return tracingChannelInterceptor;
 	}
 
 	@Override
 	public void configureClientOutboundChannel(ChannelRegistration registration) {
-		registration
-				.setInterceptors(new TracingChannelInterceptor(this.tracer, this.propagator, this.setter, this.getter,
-						TraceSpringIntegrationAutoConfiguration.remoteServiceNameMapper(this.sleuthMessagingProperties),
-						this.messageSpanCustomizer));
+		registration.interceptors(tracingChannelInterceptor());
 	}
 
 	@Override
 	public void configureClientInboundChannel(ChannelRegistration registration) {
-		registration
-				.setInterceptors(new TracingChannelInterceptor(this.tracer, this.propagator, this.setter, this.getter,
-						TraceSpringIntegrationAutoConfiguration.remoteServiceNameMapper(this.sleuthMessagingProperties),
-						this.messageSpanCustomizer));
+		registration.interceptors(tracingChannelInterceptor());
 	}
 
 }
