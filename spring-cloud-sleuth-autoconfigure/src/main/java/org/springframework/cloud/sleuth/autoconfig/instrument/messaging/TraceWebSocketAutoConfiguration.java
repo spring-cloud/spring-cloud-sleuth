@@ -56,10 +56,10 @@ class TraceWebSocketAutoConfiguration extends AbstractWebSocketMessageBrokerConf
 	Propagator propagator;
 
 	@Autowired
-	Propagator.Setter<MessageHeaderAccessor> setter;
+	Propagator.Setter<MessageHeaderAccessor> traceMessagePropagationSetter;
 
 	@Autowired
-	Propagator.Getter<MessageHeaderAccessor> getter;
+	Propagator.Getter<MessageHeaderAccessor> traceMessagePropagationGetter;
 
 	@Autowired
 	SleuthMessagingProperties sleuthMessagingProperties;
@@ -72,21 +72,21 @@ class TraceWebSocketAutoConfiguration extends AbstractWebSocketMessageBrokerConf
 	@Override
 	public void configureMessageBroker(MessageBrokerRegistry registry) {
 		registry.configureBrokerChannel().setInterceptors(new TracingChannelInterceptor(this.tracer, this.propagator,
-				this.setter, this.getter,
+				this.traceMessagePropagationSetter, this.traceMessagePropagationGetter,
 				TraceSpringIntegrationAutoConfiguration.remoteServiceNameMapper(this.sleuthMessagingProperties)));
 	}
 
 	@Override
 	public void configureClientOutboundChannel(ChannelRegistration registration) {
-		registration.setInterceptors(new TracingChannelInterceptor(this.tracer, this.propagator, this.setter,
-				this.getter,
+		registration.setInterceptors(new TracingChannelInterceptor(this.tracer, this.propagator,
+				this.traceMessagePropagationSetter, this.traceMessagePropagationGetter,
 				TraceSpringIntegrationAutoConfiguration.remoteServiceNameMapper(this.sleuthMessagingProperties)));
 	}
 
 	@Override
 	public void configureClientInboundChannel(ChannelRegistration registration) {
-		registration.setInterceptors(new TracingChannelInterceptor(this.tracer, this.propagator, this.setter,
-				this.getter,
+		registration.setInterceptors(new TracingChannelInterceptor(this.tracer, this.propagator,
+				this.traceMessagePropagationSetter, this.traceMessagePropagationGetter,
 				TraceSpringIntegrationAutoConfiguration.remoteServiceNameMapper(this.sleuthMessagingProperties)));
 	}
 
