@@ -201,7 +201,7 @@ public final class TracingChannelInterceptor extends ChannelInterceptorAdapter
 			return new ErrorMessage(errorMessage.getPayload(), isWebSockets(headers) ? headers.getMessageHeaders()
 					: new MessageHeaders(headers.getMessageHeaders()), errorMessage.getOriginalMessage());
 		}
-		headers.copyHeaders(additionalHeaders.getMessageHeaders());
+		headers.copyHeaders(new MessageHeaders(additionalHeaders.getMessageHeaders()));
 		return new GenericMessage<>(retrievedMessage.getPayload(),
 				isWebSockets(headers) ? headers.getMessageHeaders() : new MessageHeaders(headers.getMessageHeaders()));
 	}
