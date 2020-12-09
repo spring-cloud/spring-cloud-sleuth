@@ -272,6 +272,20 @@ If you want to customize the way tracing context is read from and written to mes
 * `Propagator.Setter<MessageHeaderAccessor>` - for writing headers to the message
 * `Propagator.Getter<MessageHeaderAccessor>` - for reading headers from the message
 
+[[sleuth-messaging-spring-integration-customization]]
+==== Spring Integration Customization
+
+==== Customizing messaging spans
+
+In order to change the default span names and tags, just register a bean of type `MessageSpanCustomizer`. You can also
+override the existing `DefaultMessageSpanCustomizer` to extend the existing behaviour.
+
+[source,java]
+----
+@Component
+include::{common_tests_path}/src/main/java/org/springframework/cloud/sleuth/instrument/messaging/TracingChannelInterceptorTest.java[tags=message_span_customizer,indent=2]
+----
+
 [[sleuth-messaging-spring-cloud-function-integration]]
 === Spring Cloud Function and Spring Cloud Stream
 

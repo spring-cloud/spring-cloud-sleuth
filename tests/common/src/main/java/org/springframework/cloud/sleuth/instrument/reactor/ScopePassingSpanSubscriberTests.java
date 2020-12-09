@@ -106,6 +106,33 @@ public abstract class ScopePassingSpanSubscriberTests {
 		}
 	};
 
+	Subscriber<Object> exceptionThrowingPassingSpanSubscriber = new CoreSubscriber<Object>() {
+		@Override
+		public void onSubscribe(Subscription s) {
+
+		}
+
+		@Override
+		public void onNext(Object o) {
+
+		}
+
+		@Override
+		public void onError(Throwable t) {
+
+		}
+
+		@Override
+		public void onComplete() {
+
+		}
+
+		@Override
+		public Context currentContext() {
+			throw new NullPointerException("Boom!");
+		}
+	};
+
 	AnnotationConfigApplicationContext springContext = new AnnotationConfigApplicationContext();
 
 	@BeforeEach
@@ -146,6 +173,14 @@ public abstract class ScopePassingSpanSubscriberTests {
 
 	@Test
 	public void should_set_empty_context_when_context_is_null() {
+		ScopePassingSpanSubscriber<?> subscriber = new ScopePassingSpanSubscriber<>(null, Context.empty(),
+				currentTraceContext(), null);
+
+		then(subscriber.currentContext().isEmpty()).isTrue();
+	}
+
+	@org.junit.Test
+	public void should_set_empty_context_when_exception_occurs_while_trying_to_retrieve_the_context() {
 		ScopePassingSpanSubscriber<?> subscriber = new ScopePassingSpanSubscriber<>(null, Context.empty(),
 				currentTraceContext(), null);
 
