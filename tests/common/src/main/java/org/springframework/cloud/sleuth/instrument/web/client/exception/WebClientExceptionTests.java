@@ -150,9 +150,8 @@ public class WebClientExceptionTests {
 
 		@Bean
 		public ServiceInstanceListSupplier serviceInstanceListSupplier() {
-			return ServiceInstanceListSuppliers
-					.from("exceptionservice", new DefaultServiceInstance(
-							"exceptionservice" + "-1", "exceptionservice", "invalid.host.to.break.tests", 1234, false));
+			return ServiceInstanceListSuppliers.from("exceptionservice", new DefaultServiceInstance(
+					"exceptionservice" + "-1", "exceptionservice", "invalid.host.to.break.tests", 1234, false));
 		}
 
 	}
