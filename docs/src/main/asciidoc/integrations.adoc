@@ -13,7 +13,7 @@ In this section, we describe how to customize asynchronous communication with Sp
 [[sleuth-async-annotation-integration]]
 === `@Async` Annotated methods
 
-This feature is available for both Brave and OpenTelemetry tracer implementation.
+This feature is available for all tracer implementations.
 
 In Spring Cloud Sleuth, we instrument async-related components so that the tracing information is passed between threads.
 You can disable this behavior by setting the value of `spring.sleuth.async.enabled` to `false`.
@@ -27,7 +27,7 @@ If you annotate your method with `@Async`, we automatically create a new Span wi
 [[sleuth-async-scheduled-integration]]
 === `@Scheduled` Annotated Methods
 
-This feature is available for both Brave and OpenTelemetry tracer implementation.
+This feature is available for all tracer implementations.
 
 In Spring Cloud Sleuth, we instrument scheduled method execution so that the tracing information is passed between threads.
 You can disable this behavior by setting the value of `spring.sleuth.scheduled.enabled` to `false`.
@@ -42,7 +42,7 @@ If you want to skip span creation for some `@Scheduled` annotated classes, you c
 [[sleuth-async-executor-service-integration]]
 === Executor, ExecutorService, and ScheduledExecutorService
 
-This feature is available for both Brave and OpenTelemetry tracer implementation.
+This feature is available for all tracer implementations.
 
 We provide `LazyTraceExecutor`, `TraceableExecutorService`, and `TraceableScheduledExecutorService`.
 Those implementations create spans each time a new task is submitted, invoked, or scheduled.
@@ -85,7 +85,7 @@ Features from this section can be disabled by setting the `spring.sleuth.web.cli
 [[sleuth-http-client-rest-template-integration]]
 === Synchronous Rest Template
 
-This feature is available for both Brave and OpenTelemetry tracer implementation.
+This feature is available for all tracer implementations.
 
 We inject a `RestTemplate` interceptor to ensure that all the tracing information is passed to the requests.
 Each time a call is made, a new Span is created.
@@ -98,7 +98,7 @@ If you create a `RestTemplate` instance with a `new` keyword, the instrumentatio
 [[sleuth-http-client-async-rest-template-integration]]
 === Asynchronous Rest Template
 
-This feature is available for both Brave and OpenTelemetry tracer implementation.
+This feature is available for all tracer implementations.
 
 IMPORTANT: Starting with Sleuth `2.0.0`, we no longer register a bean of `AsyncRestTemplate` type.
 It is up to you to create such a bean.
@@ -123,7 +123,7 @@ include::{common_tests_path}/src/main/java/org/springframework/cloud/sleuth/inst
 [[sleuth-http-client-webclient-integration]]
 ==== `WebClient`
 
-This feature is available for both Brave and OpenTelemetry tracer implementation.
+This feature is available for all tracer implementations.
 
 We inject a `ExchangeFilterFunction` implementation that creates a span and, through on-success and on-error callbacks, takes care of closing client-side spans.
 
@@ -135,7 +135,7 @@ If you create a `WebClient` instance with a `new` keyword, the instrumentation d
 [[sleuth-http-client-traverson-integration]]
 ==== Traverson
 
-This feature is available for both Brave and OpenTelemetry tracer implementation.
+This feature is available for all tracer implementations.
 
 If you use the https://docs.spring.io/spring-hateoas/docs/current/reference/html/#client.traverson[Traverson] library, you can inject a `RestTemplate` as a bean into your Traverson object.
 Since `RestTemplate` is already intercepted, you get full support for tracing in your client.
@@ -162,7 +162,7 @@ To block these features, set `spring.sleuth.web.client.enabled` to `false`.
 [[sleuth-http-client-netty-integration]]
 ==== Netty `HttpClient`
 
-This feature is available for both Brave and OpenTelemetry tracer implementation.
+This feature is available for all tracer implementations.
 
 We instrument the Netty's `HttpClient`.
 
@@ -174,7 +174,7 @@ If you create a `HttpClient` instance with a `new` keyword, the instrumentation 
 [[sleuth-http-client-userinfo-integration]]
 ==== `UserInfoRestTemplateCustomizer`
 
-This feature is available for both Brave and OpenTelemetry tracer implementation.
+This feature is available for all tracer implementations.
 
 We instrument the Spring Security's `UserInfoRestTemplateCustomizer`.
 
@@ -188,7 +188,7 @@ Features from this section can be disabled by setting the `spring.sleuth.web.ena
 [[sleuth-http-server-http-filter-integration]]
 === HTTP Filter
 
-This feature is available for both Brave and OpenTelemetry tracer implementation.
+This feature is available for all tracer implementations.
 
 Through the `TracingFilter`, all sampled incoming requests result in creation of a Span.
 You can configure which URIs you would like to skip by setting the `spring.sleuth.web.skipPattern` property.
@@ -208,7 +208,7 @@ To disable the filter that logs uncaught exceptions you can disable the
 [[sleuth-http-server-handler-interceptor-integration]]
 === HandlerInterceptor
 
-This feature is available for both Brave and OpenTelemetry tracer implementation.
+This feature is available for all tracer implementations.
 
 Since we want the span names to be precise, we use a `TraceHandlerInterceptor` that either wraps an existing `HandlerInterceptor` or is added directly to the list of existing `HandlerInterceptors`.
 The `TraceHandlerInterceptor` adds a special request attribute to the given `HttpServletRequest`.
@@ -219,14 +219,14 @@ In that case, please file an issue in Spring Cloud Sleuth.
 [[sleuth-http-server-async-integration]]
 === Async Servlet support
 
-This feature is available for both Brave and OpenTelemetry tracer implementation.
+This feature is available for all tracer implementations.
 
 If your controller returns a `Callable` or a `WebAsyncTask`, Spring Cloud Sleuth continues the existing span instead of creating a new one.
 
 [[sleuth-http-server-webflux-integration]]
 === WebFlux support
 
-This feature is available for both Brave and OpenTelemetry tracer implementation.
+This feature is available for all tracer implementations.
 
 Through `TraceWebFilter`, all sampled incoming requests result in creation of a Span.
 That Span's name is `http:` + the path to which the request was sent.
@@ -255,7 +255,7 @@ Features from this section can be disabled by setting the `spring.sleuth.messagi
 [[sleuth-messaging-spring-integration-integration]]
 === Spring Integration
 
-This feature is available for both Brave and OpenTelemetry tracer implementation.
+This feature is available for all tracer implementations.
 
 Spring Cloud Sleuth integrates with https://projects.spring.io/spring-integration/[Spring Integration].
 It creates spans for publish and subscribe events.
@@ -289,7 +289,7 @@ include::{common_tests_path}/src/main/java/org/springframework/cloud/sleuth/inst
 [[sleuth-messaging-spring-cloud-function-integration]]
 === Spring Cloud Function and Spring Cloud Stream
 
-This feature is available for both Brave and OpenTelemetry tracer implementation.
+This feature is available for all tracer implementations.
 
 Spring Cloud Sleuth can instrument Spring Cloud Function.
 The way to achieve it is to provide a `Function` or `Consumer` or `Supplier` that takes in a `Message` as a parameter e.g. `Function<Message<String>, Message<Integer>>`.
@@ -352,7 +352,7 @@ IMPORTANT: We don't support baggage propagation for JMS
 [[sleuth-openfeign-integration]]
 == OpenFeign
 
-This feature is available for both Brave and OpenTelemetry tracer implementation.
+This feature is available for all tracer implementations.
 
 By default, Spring Cloud Sleuth provides integration with Feign through `TraceFeignClientAutoConfiguration`.
 You can disable it entirely by setting `spring.sleuth.feign.enabled` to `false`.
@@ -366,7 +366,7 @@ However, all the default instrumentation is still there.
 [[sleuth-opentracing-integration]]
 == OpenTracing
 
-This feature is available for both Brave and OpenTelemetry tracer implementation.
+This feature is available for all tracer implementations.
 
 Spring Cloud Sleuth is compatible with https://opentracing.io/[OpenTracing].
 If you have OpenTracing on the classpath, we automatically register the OpenTracing `Tracer` bean.
@@ -375,7 +375,7 @@ If you wish to disable this, set `spring.sleuth.opentracing.enabled` to `false`
 [[sleuth-quartz-integration]]
 == Quartz
 
-This feature is available for both Brave and OpenTelemetry tracer implementation.
+This feature is available for all tracer implementations.
 
 We instrument quartz jobs by adding Job/Trigger listeners to the Quartz Scheduler.
 
@@ -384,7 +384,7 @@ To turn off this feature, set the `spring.sleuth.quartz.enabled` property to `fa
 [[sleuth-reactor-integration]]
 == Reactor
 
-This feature is available for both Brave and OpenTelemetry tracer implementation.
+This feature is available for all tracer implementations.
 
 We have three modes of instrumenting reactor based applications that can be set via `spring.sleuth.reactor.instrumentation-type` property:
 
@@ -417,7 +417,7 @@ To disable Redis support, set the `spring.sleuth.redis.enabled` property to `fal
 [[sleuth-runnablecallable-integration]]
 == Runnable and Callable
 
-This feature is available for both Brave and OpenTelemetry tracer implementation.
+This feature is available for all tracer implementations.
 
 If you wrap your logic in `Runnable` or `Callable`, you can wrap those classes in their Sleuth representative, as shown in the following example for `Runnable`:
 
@@ -545,7 +545,7 @@ https://github.com/yidongnan/grpc-spring-boot-starter[Grpc Spring Boot Starter] 
 [[sleuth-rxjava-integration]]
 == RxJava
 
-This feature is available for both Brave and OpenTelemetry tracer implementation.
+This feature is available for all tracer implementations.
 
 We registering a custom https://github.com/ReactiveX/RxJava/wiki/Plugins#rxjavaschedulershook[`RxJavaSchedulersHook`] that wraps all `Action0` instances in their Sleuth representative, which is called `TraceAction`.
 The hook either starts or continues a span, depending on whether tracing was already going on before the Action was scheduled.
@@ -559,7 +559,7 @@ IMPORTANT: The suggested approach to reactive programming and Sleuth is to use t
 [[sleuth-circuitbreaker-integration]]
 == Spring Cloud CircuitBreaker
 
-This feature is available for both Brave and OpenTelemetry tracer implementation.
+This feature is available for all tracer implementations.
 
 If you have Spring Cloud CircuitBreaker on the classpath, we will wrap the passed command `Supplier` and the fallback `Function` in its trace representations.
 In order to disable this instrumentation set `spring.sleuth.circuitbreaker.enabled` to `false`.

@@ -37,7 +37,6 @@
 	<modules>
 		<module>common</module>
 		<module>brave</module>
-		<module>otel</module>
 	</modules>
 
 </project>

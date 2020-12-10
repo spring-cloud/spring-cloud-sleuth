@@ -34,7 +34,6 @@
 		<brave.version>5.13.2</brave.version>
 		<brave.opentracing.version>0.37.4</brave.opentracing.version>
 		<grpc.spring.boot.version>4.2.2</grpc.spring.boot.version>
-		<opentelemetry.version>0.11.0</opentelemetry.version>
 	</properties>
 	<dependencyManagement>
 		<dependencies>
@@ -56,11 +55,6 @@
 			<dependency>
 				<groupId>org.springframework.cloud</groupId>
 				<artifactId>spring-cloud-sleuth-brave</artifactId>
-				<version>${project.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>org.springframework.cloud</groupId>
-				<artifactId>spring-cloud-sleuth-otel</artifactId>
 				<version>${project.version}</version>
 			</dependency>
 			<dependency>
@@ -97,14 +91,6 @@
 						<artifactId>*</artifactId>
 					</exclusion>
 				</exclusions>
-			</dependency>
-			<!-- OpenTelemetry -->
-			<dependency>
-				<groupId>io.opentelemetry</groupId>
-				<artifactId>opentelemetry-bom</artifactId>
-				<version>${opentelemetry.version}</version>
-				<type>pom</type>
-				<scope>import</scope>
 			</dependency>
 			<!-- GRPC -->
 			<dependency>

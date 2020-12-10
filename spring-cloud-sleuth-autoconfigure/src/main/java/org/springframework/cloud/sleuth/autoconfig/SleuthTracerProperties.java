@@ -53,12 +53,7 @@ public class SleuthTracerProperties {
 		/**
 		 * Picks the OpenZipkin Brave tracer implementation.
 		 */
-		BRAVE,
-
-		/**
-		 * Picks the OpenTelemetry tracer implementation.
-		 */
-		OTEL
+		BRAVE
 
 	}
 

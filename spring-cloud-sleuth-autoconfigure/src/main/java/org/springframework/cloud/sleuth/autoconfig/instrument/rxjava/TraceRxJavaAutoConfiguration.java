@@ -27,7 +27,6 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.autoconfig.brave.BraveAutoConfiguration;
-import org.springframework.cloud.sleuth.autoconfig.otel.OtelAutoConfiguration;
 import org.springframework.cloud.sleuth.instrument.rxjava.SleuthRxJavaSchedulersHook;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -44,7 +43,7 @@ import org.springframework.context.annotation.Configuration;
 @ConditionalOnClass(RxJavaSchedulersHook.class)
 @ConditionalOnProperty(value = "spring.sleuth.rxjava.schedulers.hook.enabled", matchIfMissing = true)
 @EnableConfigurationProperties(SleuthRxJavaSchedulersProperties.class)
-@AutoConfigureAfter({ BraveAutoConfiguration.class, OtelAutoConfiguration.class })
+@AutoConfigureAfter(BraveAutoConfiguration.class)
 class TraceRxJavaAutoConfiguration {
 
 	@Bean

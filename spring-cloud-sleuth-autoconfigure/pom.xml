@@ -303,97 +303,10 @@
 			<optional>true</optional>
 		</dependency>
 
-		<!-- Otel -->
-		<dependency>
-			<groupId>org.springframework.cloud</groupId>
-			<artifactId>spring-cloud-sleuth-otel</artifactId>
-			<optional>true</optional>
-		</dependency>
-		<dependency>
-			<groupId>io.opentelemetry</groupId>
-			<artifactId>opentelemetry-api</artifactId>
-			<optional>true</optional>
-		</dependency>
-		<dependency>
-			<groupId>io.opentelemetry</groupId>
-			<artifactId>opentelemetry-sdk-common</artifactId>
-			<optional>true</optional>
-			<exclusions>
-				<exclusion>
-					<groupId>io.opentelemetry</groupId>
-					<artifactId>*</artifactId>
-				</exclusion>
-			</exclusions>
-		</dependency>
-		<dependency>
-			<groupId>io.opentelemetry</groupId>
-			<artifactId>opentelemetry-sdk-tracing</artifactId>
-			<optional>true</optional>
-			<exclusions>
-				<exclusion>
-					<groupId>io.opentelemetry</groupId>
-					<artifactId>*</artifactId>
-				</exclusion>
-			</exclusions>
-		</dependency>
-		<dependency>
-			<groupId>io.opentelemetry.instrumentation</groupId>
-			<artifactId>opentelemetry-instrumentation-api</artifactId>
-			<optional>true</optional>
-			<exclusions>
-				<exclusion>
-					<groupId>io.opentelemetry</groupId>
-					<artifactId>*</artifactId>
-				</exclusion>
-				<exclusion>
-					<groupId>io.opentelemetry.instrumentation</groupId>
-					<artifactId>*</artifactId>
-				</exclusion>
-			</exclusions>
-		</dependency>
-		<dependency>
-			<groupId>io.opentelemetry</groupId>
-			<artifactId>opentelemetry-exporter-logging</artifactId>
-			<optional>true</optional>
-			<exclusions>
-				<exclusion>
-					<groupId>io.opentelemetry</groupId>
-					<artifactId>*</artifactId>
-				</exclusion>
-			</exclusions>
-		</dependency>
-		<dependency>
-			<groupId>io.opentelemetry</groupId>
-			<artifactId>opentelemetry-extension-trace-propagators</artifactId>
-			<optional>true</optional>
-			<exclusions>
-				<exclusion>
-					<groupId>io.opentelemetry</groupId>
-					<artifactId>*</artifactId>
-				</exclusion>
-			</exclusions>
-		</dependency>
-		<dependency>
-			<groupId>io.opentelemetry</groupId>
-			<artifactId>opentelemetry-opentracing-shim</artifactId>
-			<optional>true</optional>
-			<exclusions>
-				<exclusion>
-					<groupId>io.opentelemetry</groupId>
-					<artifactId>*</artifactId>
-				</exclusion>
-			</exclusions>
-		</dependency>
-
 		<!-- Zipkin -->
 		<dependency>
 			<groupId>org.springframework.cloud</groupId>
 			<artifactId>spring-cloud-sleuth-zipkin</artifactId>
-			<optional>true</optional>
-		</dependency>
-		<dependency>
-			<groupId>io.opentelemetry</groupId>
-			<artifactId>opentelemetry-exporter-zipkin</artifactId>
 			<optional>true</optional>
 		</dependency>
 		<dependency>

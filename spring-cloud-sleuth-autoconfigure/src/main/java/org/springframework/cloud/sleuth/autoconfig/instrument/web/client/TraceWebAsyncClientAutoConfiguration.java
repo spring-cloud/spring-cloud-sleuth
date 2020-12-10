@@ -30,7 +30,6 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.cloud.sleuth.CurrentTraceContext;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.autoconfig.brave.BraveAutoConfiguration;
-import org.springframework.cloud.sleuth.autoconfig.otel.OtelAutoConfiguration;
 import org.springframework.cloud.sleuth.http.HttpClientHandler;
 import org.springframework.cloud.sleuth.instrument.web.mvc.TracingAsyncClientHttpRequestInterceptor;
 import org.springframework.context.annotation.Bean;
@@ -52,7 +51,7 @@ import org.springframework.web.client.AsyncRestTemplate;
 @ConditionalOnProperty(value = "spring.sleuth.web.async.client.enabled", matchIfMissing = true)
 @ConditionalOnClass(AsyncRestTemplate.class)
 @ConditionalOnBean(Tracer.class)
-@AutoConfigureAfter({ BraveAutoConfiguration.class, OtelAutoConfiguration.class })
+@AutoConfigureAfter(BraveAutoConfiguration.class)
 public class TraceWebAsyncClientAutoConfiguration {
 
 	@Configuration(proxyBeanMethods = false)

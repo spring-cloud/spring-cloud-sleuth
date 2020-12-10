@@ -15,11 +15,10 @@ Spring Cloud Sleuth provides API for distributed tracing solution for https://cl
 It integrates out of the box with two tracer implementations:
 
 * https://github.com/openzipkin/brave[OpenZipkin Brave]
-* https://opentelemetry.io[OpenTelemetry SDK]
 
 Spring Cloud Sleuth is able to trace your requests and messages so that you can correlate that communication to corresponding log entries.
 You can also export the tracing information to an external system to visualize latency.
-Spring Cloud Sleuth supports https://zipkin.io[OpenZipkin] compatible systems directly and various other ones via the OpenTelemetry integration.
+Spring Cloud Sleuth supports https://zipkin.io[OpenZipkin] compatible systems directly.
 
 [[getting-started-terminology]]
 === Terminology
@@ -189,36 +188,6 @@ To add the necessary dependencies, edit your `pom.xml` and add the `spring-boot-
 		<dependency>
 			<groupId>org.springframework.cloud</groupId>
 			<artifactId>spring-cloud-starter-sleuth</artifactId>
-		</dependency>
-	</dependencies>
-----
-
-To use Sleuth with OpenTelemetry do the following.
-
-[source,xml,indent=0,subs="verbatim,quotes,attributes"]
-----
-	<dependencies>
-		<!-- Boot's Web support -->
-		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-web</artifactId>
-		</dependency>
-		<!-- Sleuth with Brave tracer implementation -->
-		<dependency>
-			<groupId>org.springframework.cloud</groupId>
-			<artifactId>spring-cloud-starter-sleuth</artifactId>
-			<exclusions>
-				<!-- Exclude Brave -->
-				<exclusion>
-					<groupId>org.springframework.cloud</groupId>
-					<artifactId>spring-cloud-sleuth-brave</artifactId>
-				</exclusion>
-			</exclusions>
-		</dependency>
-		<!-- Add OpenTelemetry tracer -->
-		<dependency>
-			<groupId>org.springframework.cloud</groupId>
-			<artifactId>spring-cloud-sleuth-otel</artifactId>
 		</dependency>
 	</dependencies>
 ----

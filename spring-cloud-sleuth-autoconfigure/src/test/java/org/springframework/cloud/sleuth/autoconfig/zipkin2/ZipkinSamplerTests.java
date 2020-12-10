@@ -50,19 +50,6 @@ public class ZipkinSamplerTests {
 		});
 	}
 
-	@Test
-	void should_set_sampler_to_non_off_when_zipkin_handler_on_classpath_for_otel() {
-		ApplicationContextRunner contextRunner = new ApplicationContextRunner()
-				.withPropertyValues("spring.sleuth.tracer.mode=OTEL")
-				.withConfiguration(AutoConfigurations.of(TestConfig.class));
-
-		contextRunner.run(context -> {
-			io.opentelemetry.sdk.trace.samplers.Sampler sampler = context
-					.getBean(io.opentelemetry.sdk.trace.samplers.Sampler.class);
-			BDDAssertions.then(sampler).isNotSameAs(io.opentelemetry.sdk.trace.samplers.Sampler.alwaysOff());
-		});
-	}
-
 	@Configuration(proxyBeanMethods = false)
 	@EnableAutoConfiguration(exclude = { GatewayClassPathWarningAutoConfiguration.class, GatewayAutoConfiguration.class,
 			GatewayMetricsAutoConfiguration.class, ManagementWebSecurityAutoConfiguration.class,

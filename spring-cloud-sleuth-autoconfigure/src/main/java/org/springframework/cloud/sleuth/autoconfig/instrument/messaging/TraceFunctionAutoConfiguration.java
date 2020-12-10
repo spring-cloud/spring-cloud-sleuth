@@ -24,7 +24,6 @@ import org.springframework.cloud.context.scope.refresh.RefreshScopeRefreshedEven
 import org.springframework.cloud.function.context.catalog.FunctionAroundWrapper;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.autoconfig.brave.BraveAutoConfiguration;
-import org.springframework.cloud.sleuth.autoconfig.otel.OtelAutoConfiguration;
 import org.springframework.cloud.sleuth.instrument.messaging.TraceFunctionAroundWrapper;
 import org.springframework.cloud.sleuth.propagation.Propagator;
 import org.springframework.context.annotation.Bean;
@@ -44,7 +43,7 @@ import org.springframework.messaging.support.MessageHeaderAccessor;
 @ConditionalOnProperty(value = "spring.sleuth.function.enabled", matchIfMissing = true)
 @ConditionalOnBean(Tracer.class)
 @ConditionalOnClass({ FunctionAroundWrapper.class, RefreshScopeRefreshedEvent.class })
-@AutoConfigureAfter({ BraveAutoConfiguration.class, OtelAutoConfiguration.class })
+@AutoConfigureAfter(BraveAutoConfiguration.class)
 public class TraceFunctionAutoConfiguration {
 
 	@Bean

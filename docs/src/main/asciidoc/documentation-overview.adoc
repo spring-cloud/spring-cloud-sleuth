@@ -65,8 +65,7 @@ Need more details about {project-full-name}'s core features?
 <<project-features.adoc#features-baggage, Baggage>>
 
 * *Tracer Features:*
-<<project-features.adoc#features-brave, OpenZipkin Brave>> |
-<<project-features.adoc#features-otel, OpenTelemetry>>
+<<project-features.adoc#features-brave, OpenZipkin Brave>>
 
 * *Reporting Features:*
 <<project-features.adoc#features-zipkin, Zipkin>> |

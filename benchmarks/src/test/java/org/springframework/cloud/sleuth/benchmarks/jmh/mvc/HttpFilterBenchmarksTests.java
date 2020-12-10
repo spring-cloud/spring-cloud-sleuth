@@ -139,7 +139,7 @@ public class HttpFilterBenchmarksTests {
 		@Setup
 		public void setup() {
 			this.withSleuth = new SpringApplication(SleuthBenchmarkingSpringApp.class).run("--spring.jmx.enabled=false",
-					this.tracerImplementation.property(),
+
 					"--spring.application.name=withSleuth_" + this.tracerImplementation.name());
 			this.tracingFilter = this.withSleuth.getBean(TracingFilter.class);
 			this.mockMvcForTracedController = MockMvcBuilders
