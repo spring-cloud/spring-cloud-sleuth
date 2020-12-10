@@ -61,11 +61,6 @@ class BraveTraceContext implements TraceContext {
 		return this.traceContext != null ? this.traceContext.toString() : "null";
 	}
 
-	@Nullable
-	public Boolean sampled() {
-		return this.traceContext.sampled();
-	}
-
 	static brave.propagation.TraceContext toBrave(TraceContext traceContext) {
 		if (traceContext == null) {
 			return null;

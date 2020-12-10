@@ -109,11 +109,6 @@ class OtelTraceContext implements TraceContext {
 		return this.delegate != null ? this.delegate.toString() : "null";
 	}
 
-	@Nullable
-	public Boolean sampled() {
-		return this.delegate.isSampled();
-	}
-
 	Span span() {
 		return this.span;
 	}
