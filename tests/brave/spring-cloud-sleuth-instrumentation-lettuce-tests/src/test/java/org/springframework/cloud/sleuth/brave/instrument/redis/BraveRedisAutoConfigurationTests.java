@@ -24,7 +24,6 @@ import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.cloud.sleuth.autoconfig.brave.instrument.redis.TraceRedisProperties;
 import org.springframework.cloud.sleuth.autoconfig.instrument.redis.TraceLettuceClientResourcesBeanPostProcessor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -35,7 +34,8 @@ import static org.assertj.core.api.BDDAssertions.then;
  * @author Chao Chang
  */
 @SpringBootTest(classes = BraveRedisAutoConfigurationTests.Config.class,
-		webEnvironment = SpringBootTest.WebEnvironment.NONE)
+		webEnvironment = SpringBootTest.WebEnvironment.NONE,
+		properties = { "spring.sleuth.redis.enabled=true", "spring.sleuth.redis.remote-service-name=redis-foo" })
 public class BraveRedisAutoConfigurationTests {
 
 	@Autowired
@@ -62,17 +62,9 @@ public class BraveRedisAutoConfigurationTests {
 		}
 
 		@Bean
-		TraceRedisProperties traceRedisProperties() {
-			TraceRedisProperties traceRedisProperties = new TraceRedisProperties();
-			traceRedisProperties.setEnabled(true);
-			traceRedisProperties.setRemoteServiceName("redis-foo");
-			return traceRedisProperties;
-		}
-
-		@Bean
 		TestTraceLettuceClientResourcesBeanPostProcessor testTraceLettuceClientResourcesBeanPostProcessor(
-				BeanFactory beanFactory, TraceRedisProperties traceRedisProperties) {
-			return new TestTraceLettuceClientResourcesBeanPostProcessor(beanFactory, traceRedisProperties);
+				BeanFactory beanFactory) {
+			return new TestTraceLettuceClientResourcesBeanPostProcessor(beanFactory);
 		}
 
 	}
@@ -83,9 +75,8 @@ class TestTraceLettuceClientResourcesBeanPostProcessor extends TraceLettuceClien
 
 	boolean tracingCalled = false;
 
-	TestTraceLettuceClientResourcesBeanPostProcessor(BeanFactory beanFactory,
-			TraceRedisProperties traceRedisProperties) {
-		super(beanFactory, traceRedisProperties);
+	TestTraceLettuceClientResourcesBeanPostProcessor(BeanFactory beanFactory) {
+		super(beanFactory);
 	}
 
 	@Override

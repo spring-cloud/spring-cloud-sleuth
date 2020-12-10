@@ -16,9 +16,16 @@
 
 package org.springframework.cloud.sleuth.autoconfig.instrument.redis;
 
+import java.net.SocketAddress;
+
 import brave.Tracing;
+import io.lettuce.core.protocol.RedisCommand;
 import io.lettuce.core.resource.ClientResources;
 import io.lettuce.core.tracing.BraveTracing;
+import io.lettuce.core.tracing.TraceContext;
+import io.lettuce.core.tracing.TraceContextProvider;
+import io.lettuce.core.tracing.Tracer;
+import io.lettuce.core.tracing.TracerProvider;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -26,6 +33,7 @@ import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.config.BeanPostProcessor;
 import org.springframework.cloud.sleuth.autoconfig.brave.instrument.redis.TraceRedisProperties;
+import org.springframework.cloud.sleuth.internal.ContextUtil;
 
 /**
  * {@link BeanPostProcessor} for wrapping Lettuce components in a tracing representation.
@@ -39,14 +47,8 @@ public class TraceLettuceClientResourcesBeanPostProcessor implements BeanPostPro
 
 	private final BeanFactory beanFactory;
 
-	private final TraceRedisProperties traceRedisProperties;
-
-	private Tracing tracing;
-
-	public TraceLettuceClientResourcesBeanPostProcessor(BeanFactory beanFactory,
-			TraceRedisProperties traceRedisProperties) {
+	public TraceLettuceClientResourcesBeanPostProcessor(BeanFactory beanFactory) {
 		this.beanFactory = beanFactory;
-		this.traceRedisProperties = traceRedisProperties;
 	}
 
 	@Override
@@ -62,11 +64,9 @@ public class TraceLettuceClientResourcesBeanPostProcessor implements BeanPostPro
 				if (log.isDebugEnabled()) {
 					log.debug("Lettuce ClientResources bean is auto-configured to enable tracing.");
 				}
-				BraveTracing lettuceTracing = BraveTracing.builder().tracing(tracing()).excludeCommandArgsFromSpanTags()
-						.serviceName(traceRedisProperties.getRemoteServiceName()).build();
-				return cr.mutate().tracing(lettuceTracing).build();
+				return cr.mutate().tracing(new LazyTracing(this.beanFactory)).build();
 			}
-			if (log.isDebugEnabled()) {
+			else if (log.isDebugEnabled()) {
 				log.debug(
 						"Lettuce ClientResources bean is skipped for auto-configuration because tracing was already enabled.");
 			}
@@ -74,11 +74,167 @@ public class TraceLettuceClientResourcesBeanPostProcessor implements BeanPostPro
 		return bean;
 	}
 
-	private Tracing tracing() {
-		if (this.tracing == null) {
-			this.tracing = this.beanFactory.getBean(Tracing.class);
+}
+
+class LazyTracing implements io.lettuce.core.tracing.Tracing {
+
+	private final BeanFactory beanFactory;
+
+	private final io.lettuce.core.tracing.Tracing noOpTracing = NoOpTracing.INSTANCE;
+
+	private BraveTracing braveTracing;
+
+	LazyTracing(BeanFactory beanFactory) {
+		this.beanFactory = beanFactory;
+	}
+
+	@Override
+	public TracerProvider getTracerProvider() {
+		if (ContextUtil.isContextUnusable(this.beanFactory)) {
+			return this.noOpTracing.getTracerProvider();
 		}
-		return this.tracing;
+		return braveTracing().getTracerProvider();
+	}
+
+	@Override
+	public TraceContextProvider initialTraceContextProvider() {
+		if (ContextUtil.isContextUnusable(this.beanFactory)) {
+			return this.noOpTracing.initialTraceContextProvider();
+		}
+		return braveTracing().initialTraceContextProvider();
+	}
+
+	@Override
+	public boolean isEnabled() {
+		if (ContextUtil.isContextUnusable(this.beanFactory)) {
+			return this.noOpTracing.isEnabled();
+		}
+		return braveTracing().isEnabled();
+	}
+
+	@Override
+	public boolean includeCommandArgsInSpanTags() {
+		if (ContextUtil.isContextUnusable(this.beanFactory)) {
+			return this.noOpTracing.includeCommandArgsInSpanTags();
+		}
+		return braveTracing().includeCommandArgsInSpanTags();
+	}
+
+	@Override
+	public Endpoint createEndpoint(SocketAddress socketAddress) {
+		if (ContextUtil.isContextUnusable(this.beanFactory)) {
+			return this.noOpTracing.createEndpoint(socketAddress);
+		}
+		return braveTracing().createEndpoint(socketAddress);
+	}
+
+	private BraveTracing braveTracing() {
+		if (this.braveTracing == null) {
+			this.braveTracing = BraveTracing.builder().tracing(this.beanFactory.getBean(Tracing.class))
+					.excludeCommandArgsFromSpanTags()
+					.serviceName(this.beanFactory.getBean(TraceRedisProperties.class).getRemoteServiceName()).build();
+		}
+		return this.braveTracing;
+	}
+
+}
+
+enum NoOpTracing implements io.lettuce.core.tracing.Tracing, TraceContextProvider, TracerProvider {
+
+	INSTANCE;
+
+	private final Endpoint NOOP_ENDPOINT = new Endpoint() {
+	};
+
+	@Override
+	public TraceContext getTraceContext() {
+		return TraceContext.EMPTY;
+	}
+
+	@Override
+	public Tracer getTracer() {
+		return NoOpTracer.INSTANCE;
+	}
+
+	@Override
+	public TracerProvider getTracerProvider() {
+		return this;
+	}
+
+	@Override
+	public TraceContextProvider initialTraceContextProvider() {
+		return this;
+	}
+
+	@Override
+	public boolean isEnabled() {
+		return false;
+	}
+
+	@Override
+	public boolean includeCommandArgsInSpanTags() {
+		return false;
+	}
+
+	@Override
+	public Endpoint createEndpoint(SocketAddress socketAddress) {
+		return NOOP_ENDPOINT;
+	}
+
+	static class NoOpTracer extends Tracer {
+
+		static final Tracer INSTANCE = new NoOpTracer();
+
+		@Override
+		public Span nextSpan(TraceContext traceContext) {
+			return NoOpSpan.INSTANCE;
+		}
+
+		@Override
+		public Span nextSpan() {
+			return NoOpSpan.INSTANCE;
+		}
+
+	}
+
+	public static class NoOpSpan extends Tracer.Span {
+
+		static final NoOpSpan INSTANCE = new NoOpSpan();
+
+		@Override
+		public Tracer.Span start(RedisCommand<?, ?, ?> redisCommand) {
+			return this;
+		}
+
+		@Override
+		public Tracer.Span name(String name) {
+			return this;
+		}
+
+		@Override
+		public Tracer.Span annotate(String value) {
+			return this;
+		}
+
+		@Override
+		public Tracer.Span tag(String key, String value) {
+			return this;
+		}
+
+		@Override
+		public Tracer.Span error(Throwable throwable) {
+			return this;
+		}
+
+		@Override
+		public Tracer.Span remoteEndpoint(io.lettuce.core.tracing.Tracing.Endpoint endpoint) {
+			return this;
+		}
+
+		@Override
+		public void finish() {
+		}
+
 	}
 
 }

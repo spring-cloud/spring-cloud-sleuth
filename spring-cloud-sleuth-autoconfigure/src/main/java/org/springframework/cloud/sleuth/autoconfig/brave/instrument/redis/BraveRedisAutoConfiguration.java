@@ -48,8 +48,8 @@ public class BraveRedisAutoConfiguration {
 
 	@Bean
 	static TraceLettuceClientResourcesBeanPostProcessor traceLettuceClientResourcesBeanPostProcessor(
-			BeanFactory beanFactory, TraceRedisProperties traceRedisProperties) {
-		return new TraceLettuceClientResourcesBeanPostProcessor(beanFactory, traceRedisProperties);
+			BeanFactory beanFactory) {
+		return new TraceLettuceClientResourcesBeanPostProcessor(beanFactory);
 	}
 
 }
