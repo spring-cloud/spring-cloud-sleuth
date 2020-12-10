@@ -45,4 +45,9 @@ public interface TraceContext {
 	 */
 	String spanId();
 
+	/**
+	 * @return {@code true} when sampled
+	 */
+	boolean isSampled();
+
 }

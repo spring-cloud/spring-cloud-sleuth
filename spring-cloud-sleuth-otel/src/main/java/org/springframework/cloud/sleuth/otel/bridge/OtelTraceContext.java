@@ -100,6 +100,11 @@ class OtelTraceContext implements TraceContext {
 	}
 
 	@Override
+	public boolean isSampled() {
+		return this.delegate.isSampled();
+	}
+
+	@Override
 	public String toString() {
 		return this.delegate != null ? this.delegate.toString() : "null";
 	}

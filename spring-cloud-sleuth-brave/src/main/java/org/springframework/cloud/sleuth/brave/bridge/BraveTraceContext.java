@@ -52,6 +52,11 @@ class BraveTraceContext implements TraceContext {
 	}
 
 	@Override
+	public boolean isSampled() {
+		return this.traceContext.sampled();
+	}
+
+	@Override
 	public String toString() {
 		return this.traceContext != null ? this.traceContext.toString() : "null";
 	}
