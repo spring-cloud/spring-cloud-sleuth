@@ -32,5 +32,6 @@
 	<suppress files=".*TraceReactorAutoConfigurationAccessorConfiguration.*" checks="LineLengthCheck"/>
 	<suppress files=".*SamplerAutoConfiguration.*" checks="HideUtilityClassConstructorCheck"/>
 	<suppress files=".*TraceReactorAutoConfiguration.*" checks="HideUtilityClassConstructorCheck"/>
+	<suppress files=".*TraceRedisAutoConfiguration.*" checks="HideUtilityClassConstructorCheck"/>
 	<suppress files=".*grpc.stubs.*" checks=".*"/>
 </suppressions>
