@@ -50,9 +50,11 @@ import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.boot.web.client.RestTemplateCustomizer;
 import org.springframework.boot.web.server.LocalServerPort;
 import org.springframework.boot.web.servlet.error.ErrorAttributes;
+import org.springframework.cloud.client.DefaultServiceInstance;
 import org.springframework.cloud.client.loadbalancer.LoadBalanced;
 import org.springframework.cloud.loadbalancer.annotation.LoadBalancerClient;
 import org.springframework.cloud.loadbalancer.core.ServiceInstanceListSupplier;
+import org.springframework.cloud.loadbalancer.support.ServiceInstanceListSuppliers;
 import org.springframework.cloud.openfeign.EnableFeignClients;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.cloud.sleuth.Span;
@@ -544,7 +546,8 @@ public abstract class WebClientTests {
 
 		@Bean
 		public ServiceInstanceListSupplier serviceInstanceListSupplier(Environment env) {
-			return ServiceInstanceListSupplier.fixed(env).instance(this.port, "fooservice").build();
+			return ServiceInstanceListSuppliers.from("fooservice",
+					new DefaultServiceInstance("fooservice" + "-1", "fooservice", "localhost", port, false));
 		}
 
 	}

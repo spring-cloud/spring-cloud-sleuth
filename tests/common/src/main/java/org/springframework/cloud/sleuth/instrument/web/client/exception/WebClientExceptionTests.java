@@ -30,9 +30,11 @@ import org.junit.jupiter.params.provider.MethodSource;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
+import org.springframework.cloud.client.DefaultServiceInstance;
 import org.springframework.cloud.client.loadbalancer.LoadBalanced;
 import org.springframework.cloud.loadbalancer.annotation.LoadBalancerClient;
 import org.springframework.cloud.loadbalancer.core.ServiceInstanceListSupplier;
+import org.springframework.cloud.loadbalancer.support.ServiceInstanceListSuppliers;
 import org.springframework.cloud.openfeign.EnableFeignClients;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.cloud.sleuth.Span;
@@ -149,8 +151,8 @@ public class WebClientExceptionTests {
 
 		@Bean
 		public ServiceInstanceListSupplier serviceInstanceListSupplier(Environment env) {
-			return ServiceInstanceListSupplier.fixed(env)
-					.instance("invalid.host.to.break.tests", 1234, "exceptionservice").build();
+			return ServiceInstanceListSuppliers.from("exceptionservice", new DefaultServiceInstance(
+					"exceptionservice" + "-1", "exceptionservice", "invalid.host.to.break.tests", 1234, false));
 		}
 
 	}

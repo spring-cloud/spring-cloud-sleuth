@@ -28,8 +28,10 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.jmx.JmxAutoConfiguration;
 import org.springframework.boot.web.server.LocalServerPort;
+import org.springframework.cloud.client.DefaultServiceInstance;
 import org.springframework.cloud.loadbalancer.annotation.LoadBalancerClient;
 import org.springframework.cloud.loadbalancer.core.ServiceInstanceListSupplier;
+import org.springframework.cloud.loadbalancer.support.ServiceInstanceListSuppliers;
 import org.springframework.cloud.openfeign.EnableFeignClients;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.cloud.sleuth.Span;
@@ -123,7 +125,8 @@ public abstract class WebClientCustomParserTests {
 
 		@Bean
 		public ServiceInstanceListSupplier serviceInstanceListSupplier(Environment env) {
-			return ServiceInstanceListSupplier.fixed(env).instance(this.port, "fooservice").build();
+			return ServiceInstanceListSuppliers.from("fooservice",
+					new DefaultServiceInstance("fooservice" + "-1", "fooservice", "localhost", port, false));
 		}
 
 	}
