@@ -44,7 +44,6 @@ import org.springframework.cloud.sleuth.test.TestSpanHandler;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
-import org.springframework.core.env.Environment;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ContextConfiguration;
@@ -124,7 +123,7 @@ public abstract class WebClientCustomParserTests {
 		private int port = 0;
 
 		@Bean
-		public ServiceInstanceListSupplier serviceInstanceListSupplier(Environment env) {
+		public ServiceInstanceListSupplier serviceInstanceListSupplier() {
 			return ServiceInstanceListSuppliers.from("fooservice",
 					new DefaultServiceInstance("fooservice" + "-1", "fooservice", "localhost", port, false));
 		}

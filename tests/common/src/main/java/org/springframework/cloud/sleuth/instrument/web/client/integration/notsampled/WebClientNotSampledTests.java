@@ -42,7 +42,6 @@ import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.test.TestSpanHandler;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.core.env.Environment;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.annotation.DirtiesContext;
@@ -182,7 +181,7 @@ public abstract class WebClientNotSampledTests {
 		private int port = 0;
 
 		@Bean
-		public ServiceInstanceListSupplier serviceInstanceListSupplier(Environment env) {
+		public ServiceInstanceListSupplier serviceInstanceListSupplier() {
 			return ServiceInstanceListSuppliers.from("fooservice",
 					new DefaultServiceInstance("fooservice" + "-1", "fooservice", "localhost", port, false));
 		}

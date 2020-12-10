@@ -42,7 +42,6 @@ import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.test.TestSpanHandler;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.core.env.Environment;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.test.annotation.DirtiesContext;
@@ -150,9 +149,10 @@ public class WebClientExceptionTests {
 	public static class ExceptionServiceLoadBalancerClientConfiguration {
 
 		@Bean
-		public ServiceInstanceListSupplier serviceInstanceListSupplier(Environment env) {
-			return ServiceInstanceListSuppliers.from("exceptionservice", new DefaultServiceInstance(
-					"exceptionservice" + "-1", "exceptionservice", "invalid.host.to.break.tests", 1234, false));
+		public ServiceInstanceListSupplier serviceInstanceListSupplier() {
+			return ServiceInstanceListSuppliers
+					.from("exceptionservice", new DefaultServiceInstance(
+							"exceptionservice" + "-1", "exceptionservice", "invalid.host.to.break.tests", 1234, false));
 		}
 
 	}
