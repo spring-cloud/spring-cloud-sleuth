@@ -41,7 +41,6 @@ import org.springframework.cloud.context.scope.refresh.RefreshScope;
 import org.springframework.cloud.context.scope.refresh.RefreshScopeRefreshedEvent;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.autoconfig.brave.BraveAutoConfiguration;
-import org.springframework.cloud.sleuth.autoconfig.otel.OtelAutoConfiguration;
 import org.springframework.cloud.sleuth.instrument.reactor.ReactorSleuth;
 import org.springframework.context.ApplicationListener;
 import org.springframework.context.ConfigurableApplicationContext;
@@ -63,7 +62,7 @@ import static org.springframework.cloud.sleuth.autoconfig.instrument.reactor.Tra
 @ConditionalOnProperty(value = "spring.sleuth.reactor.enabled", matchIfMissing = true)
 @ConditionalOnClass(Mono.class)
 @AutoConfigureAfter(name = "org.springframework.cloud.sleuth.autoconfig.instrument.web.TraceWebAutoConfiguration",
-		value = { BraveAutoConfiguration.class, OtelAutoConfiguration.class })
+		value = BraveAutoConfiguration.class)
 @EnableConfigurationProperties(SleuthReactorProperties.class)
 public class TraceReactorAutoConfiguration {
 

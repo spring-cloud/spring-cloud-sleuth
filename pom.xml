@@ -49,7 +49,6 @@
 		<module>spring-cloud-sleuth-api</module>
 		<module>spring-cloud-sleuth-instrumentation</module>
 		<module>spring-cloud-sleuth-brave</module>
-		<module>spring-cloud-sleuth-otel</module>
 		<module>spring-cloud-sleuth-autoconfigure</module>
 		<module>tests</module>
 		<module>spring-cloud-sleuth-zipkin</module>
@@ -73,9 +72,6 @@
 		<spring-cloud-openfeign.version>3.0.0-SNAPSHOT</spring-cloud-openfeign.version>
 		<brave.version>5.13.2</brave.version>
 		<opentracing.version>0.32.0</opentracing.version>
-		<opentelemetry.version>0.11.0</opentelemetry.version>
-		<!-- From maven local -->
-		<opentelemetry-instrumentation.version>0.11.0</opentelemetry-instrumentation.version>
 		<spring-security-boot-autoconfigure.version>2.3.4.RELEASE</spring-security-boot-autoconfigure.version>
 		<disable.nohttp.checks>false</disable.nohttp.checks>
 		<okhttp.version>4.9.0</okhttp.version>
@@ -233,13 +229,6 @@
 				<scope>import</scope>
 			</dependency>
 			<dependency>
-				<groupId>io.opentelemetry</groupId>
-				<artifactId>opentelemetry-bom</artifactId>
-				<version>${opentelemetry.version}</version>
-				<type>pom</type>
-				<scope>import</scope>
-			</dependency>
-			<dependency>
 				<groupId>org.springframework.security.oauth.boot</groupId>
 				<artifactId>spring-security-oauth2-autoconfigure</artifactId>
 				<version>${spring-security-boot-autoconfigure.version}</version>
@@ -260,12 +249,6 @@
 				<groupId>com.squareup.okhttp3</groupId>
 				<artifactId>mockwebserver</artifactId>
 				<version>${mockwebserver.version}</version>
-			</dependency>
-			<!-- OpenTelemetry -->
-			<dependency>
-				<groupId>io.opentelemetry.instrumentation</groupId>
-				<artifactId>opentelemetry-instrumentation-api</artifactId>
-				<version>${opentelemetry-instrumentation.version}</version>
 			</dependency>
 			<dependency>
 				<groupId>org.springframework.security.oauth</groupId>
@@ -297,35 +280,6 @@
 		</dependencies>
 	</dependencyManagement>
 
-	<repositories>
-		<repository>
-			<snapshots>
-				<enabled>false</enabled>
-			</snapshots>
-			<id>bintray-open-telemetry-maven</id>
-			<name>bintray</name>
-			<url>https://dl.bintray.com/open-telemetry/maven</url>
-		</repository>
-		<repository>
-			<snapshots>
-				<enabled>true</enabled>
-			</snapshots>
-			<id>bintray-open-telemetry-maven-snapshot</id>
-			<name>bintray</name>
-			<url>https://oss.jfrog.org/oss-snapshot-local/</url>
-		</repository>
-	</repositories>
-	<pluginRepositories>
-		<pluginRepository>
-			<snapshots>
-				<enabled>false</enabled>
-			</snapshots>
-			<id>bintray-open-telemetry-maven</id>
-			<name>bintray-plugins</name>
-			<url>https://dl.bintray.com/open-telemetry/maven</url>
-		</pluginRepository>
-	</pluginRepositories>
-
 	<profiles>
 		<profile>
 			<id>spring</id>
@@ -341,7 +295,7 @@
 						<enabled>false</enabled>
 					</releases>
 				</repository>
-				<!-- BRAVE & OTEL -->
+				<!-- BRAVE  -->
 				<repository>
 					<id>jfrog-snapshots</id>
 					<name>JFrog Snapshots</name>

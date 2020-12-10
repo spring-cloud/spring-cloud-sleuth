@@ -76,7 +76,7 @@ public class AsyncBenchmarksTests {
 		@Setup
 		public void setup() {
 			this.withSleuth = new SpringApplication(SleuthBenchmarkingSpringApp.class).run("--spring.jmx.enabled=false",
-					this.tracerImplementation.property(),
+
 					"--spring.application.name=withSleuth_" + this.tracerImplementation.name());
 			this.withoutSleuth = new SpringApplication(SleuthBenchmarkingSpringApp.class).run(
 					"--spring.jmx.enabled=false", "--spring.application.name=withoutSleuth",

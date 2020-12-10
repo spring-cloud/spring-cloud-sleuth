@@ -25,7 +25,6 @@ import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.autoconfig.brave.BraveAutoConfiguration;
 import org.springframework.cloud.sleuth.autoconfig.instrument.web.ConditionalOnSleuthWeb;
 import org.springframework.cloud.sleuth.autoconfig.instrument.web.client.ConditionalnOnSleuthWebClient;
-import org.springframework.cloud.sleuth.autoconfig.otel.OtelAutoConfiguration;
 import org.springframework.cloud.sleuth.http.HttpClientHandler;
 import org.springframework.cloud.sleuth.http.HttpServerHandler;
 import org.springframework.cloud.sleuth.propagation.Propagator;
@@ -44,7 +43,7 @@ import org.springframework.context.annotation.Import;
  */
 @Configuration(proxyBeanMethods = false)
 @ConditionalOnProperty("spring.sleuth.noop.enabled")
-@AutoConfigureBefore({ BraveAutoConfiguration.class, OtelAutoConfiguration.class })
+@AutoConfigureBefore(BraveAutoConfiguration.class)
 @Import(TraceConfiguration.class)
 public class TraceNoOpAutoConfiguration {
 

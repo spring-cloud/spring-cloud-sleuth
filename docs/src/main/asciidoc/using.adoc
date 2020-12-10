@@ -14,8 +14,8 @@ If you are starting out with {project-full-name}, you should probably read the
 == Span Lifecycle with Spring Cloud Sleuth's API
 
 Spring Cloud Sleuth Core in its `api` module contains all necessary interfaces to be implemented by a tracer.
-The project comes with OpenZipkin Brave and OpenTelemetry implementations.
-You can check how both tracers are bridged to the Sleuth's API by looking at the `org.springframework.cloud.sleuth.brave.bridge` and `org.springframework.cloud.sleuth.otel.bridge` modules respectively.
+The project comes with OpenZipkin Brave implementation.
+You can check how the tracers are bridged to the Sleuth's API by looking at the `org.springframework.cloud.sleuth.brave.bridge`.
 
 The most commonly used interfaces are:
 

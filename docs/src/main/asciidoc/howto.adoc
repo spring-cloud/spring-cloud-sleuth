@@ -55,60 +55,6 @@ dependencies {
 ----
 ====
 
-[[how-to-set-up-sleuth-with-otel]]
-== How to Set Up Sleuth with OpenTelemetry?
-
-Add the Sleuth starter, exlcude Brave and add OpenTelemetry dependency to the classpath.
-
-====
-[source,xml,indent=0,subs="verbatim,attributes",role="primary"]
-.Maven
-----
-    <dependencyManagement>
-          <dependencies>
-              <dependency>
-                  <groupId>org.springframework.cloud</groupId>
-                  <artifactId>spring-cloud-dependencies</artifactId>
-                  <version>${release.train-version}</version>
-                  <type>pom</type>
-                  <scope>import</scope>
-              </dependency>
-          </dependencies>
-    </dependencyManagement>
-
-    <dependency>
-        <groupId>org.springframework.cloud</groupId>
-        <artifactId>spring-cloud-starter-sleuth</artifactId>
-        <exclusions>
-            <exclusion>
-                <groupId>org.springframework.cloud</groupId>
-                <artifactId>spring-cloud-sleuth-brave</artifactId>
-            </exclusion>
-        </exclusions>
-    </dependency>
-    <dependency>
-        <groupId>org.springframework.cloud</groupId>
-        <artifactId>spring-cloud-sleuth-otel</artifactId>
-    </dependency>
-----
-
-[source,groovy,indent=0,subs="verbatim,attributes",role="secondary"]
-.Gradle
-----
-dependencyManagement {
-    imports {
-        mavenBom "org.springframework.cloud:spring-cloud-dependencies:${releaseTrainVersion}"
-    }
-}
-
-dependencies {
-    implementation("org.springframework.cloud:spring-cloud-starter-sleuth") {
-        exclude group: 'org.springframework.cloud', module: 'spring-cloud-sleuth-brave'
-    }
-}
-----
-====
-
 [[how-to-set-up-sleuth-with-brave-zipkin-http]]
 == How to Set Up Sleuth with Brave & Zipkin via HTTP?
 
@@ -151,65 +97,6 @@ dependencyManagement {
 
 dependencies {
     implementation "org.springframework.cloud:spring-cloud-starter-sleuth"
-    implementation "org.springframework.cloud:spring-cloud-sleuth-zipkin"
-}
-----
-====
-
-[[how-to-set-up-sleuth-with-otel-zipkin-http]]
-== How to Set Up Sleuth with OpenTelemetry & Zipkin via HTTP?
-
-Add the Sleuth starter, exclude Brave, add OTel and Zipkin to the classpath.
-
-====
-[source,xml,indent=0,subs="verbatim,attributes",role="primary"]
-.Maven
-----
-    <dependencyManagement>
-          <dependencies>
-              <dependency>
-                  <groupId>org.springframework.cloud</groupId>
-                  <artifactId>spring-cloud-dependencies</artifactId>
-                  <version>${release.train-version}</version>
-                  <type>pom</type>
-                  <scope>import</scope>
-              </dependency>
-          </dependencies>
-    </dependencyManagement>
-
-    <dependency>
-        <groupId>org.springframework.cloud</groupId>
-        <artifactId>spring-cloud-starter-sleuth</artifactId>
-        <exclusions>
-            <exclusion>
-                <groupId>org.springframework.cloud</groupId>
-                <artifactId>spring-cloud-sleuth-brave</artifactId>
-            </exclusion>
-        </exclusions>
-    </dependency>
-    <dependency>
-        <groupId>org.springframework.cloud</groupId>
-        <artifactId>spring-cloud-sleuth-otel</artifactId>
-    </dependency>
-    <dependency>
-        <groupId>org.springframework.cloud</groupId>
-        <artifactId>spring-cloud-sleuth-zipkin</artifactId>
-    </dependency>
-----
-
-[source,groovy,indent=0,subs="verbatim,attributes",role="secondary"]
-.Gradle
-----
-dependencyManagement {
-    imports {
-        mavenBom "org.springframework.cloud:spring-cloud-dependencies:${releaseTrainVersion}"
-    }
-}
-
-dependencies {
-    implementation("org.springframework.cloud:spring-cloud-starter-sleuth") {
-        exclude group: 'org.springframework.cloud', module: 'spring-cloud-sleuth-brave'
-    }
     implementation "org.springframework.cloud:spring-cloud-sleuth-zipkin"
 }
 ----
@@ -382,197 +269,6 @@ Also, you need to set the property `spring.zipkin.sender.type` property accordin
 spring.zipkin.sender.type: activemq
 ----
 
-[[how-to-set-up-sleuth-with-otel-zipkin-messaging]]
-== How to Set Up Sleuth with OpenTelemetry & Zipkin via Messaging?
-
-If you want to use RabbitMQ, Kafka or ActiveMQ instead of HTTP, add the `spring-rabbit`, `spring-kafka` or `org.apache.activemq:activemq-client` dependency.
-The default destination name is `Zipkin`.
-
-If using Kafka, you must add the Kafka dependency.
-
-====
-[source,xml,indent=0,subs="verbatim,attributes",role="primary"]
-.Maven
-----
-    <dependencyManagement>
-          <dependencies>
-              <dependency>
-                  <groupId>org.springframework.cloud</groupId>
-                  <artifactId>spring-cloud-dependencies</artifactId>
-                  <version>${release.train-version}</version>
-                  <type>pom</type>
-                  <scope>import</scope>
-              </dependency>
-          </dependencies>
-    </dependencyManagement>
-
-    <dependency>
-        <groupId>org.springframework.cloud</groupId>
-        <artifactId>spring-cloud-starter-sleuth</artifactId>
-        <exclusions>
-            <exclusion>
-                <groupId>org.springframework.cloud</groupId>
-                <artifactId>spring-cloud-sleuth-brave</artifactId>
-            </exclusion>
-        </exclusions>
-    </dependency>
-    <dependency>
-        <groupId>org.springframework.cloud</groupId>
-        <artifactId>spring-cloud-sleuth-otel</artifactId>
-    </dependency>
-    <dependency>
-        <groupId>org.springframework.cloud</groupId>
-        <artifactId>spring-cloud-sleuth-zipkin</artifactId>
-    </dependency>
-    <dependency>
-        <groupId>org.springframework.kafka</groupId>
-        <artifactId>spring-kafka</artifactId>
-    </dependency>
-----
-
-[source,groovy,indent=0,subs="verbatim,attributes",role="secondary"]
-.Gradle
-----
-dependencyManagement {
-    imports {
-        mavenBom "org.springframework.cloud:spring-cloud-dependencies:${releaseTrainVersion}"
-    }
-}
-
-dependencies {
-    implementation("org.springframework.cloud:spring-cloud-starter-sleuth") {
-        exclude group: 'org.springframework.cloud', module: 'spring-cloud-sleuth-brave'
-    }
-    implementation "org.springframework.cloud:spring-cloud-sleuth-zipkin"
-    implementation "org.springframework.kafka:spring-kafka"
-}
-----
-====
-
-Also, you need to set the property `spring.zipkin.sender.type` property accordingly:
-
-[source,yaml]
-----
-spring.zipkin.sender.type: kafka
-----
-
-If you want Sleuth over RabbitMQ, add the `spring-cloud-sleuth-otel` (exclude `spring-cloud-sleuth-brave`), `spring-cloud-sleuth-zipkin` and `spring-rabbit` dependencies.
-
-====
-[source,xml,indent=0,subs="verbatim,attributes",role="primary"]
-.Maven
-----
-    <dependencyManagement>
-          <dependencies>
-              <dependency>
-                  <groupId>org.springframework.cloud</groupId>
-                  <artifactId>spring-cloud-dependencies</artifactId>
-                  <version>${release.train-version}</version>
-                  <type>pom</type>
-                  <scope>import</scope>
-              </dependency>
-          </dependencies>
-    </dependencyManagement>
-
-    <dependency>
-        <groupId>org.springframework.cloud</groupId>
-        <artifactId>spring-cloud-starter-sleuth</artifactId>
-    </dependency>
-    <dependency>
-        <groupId>org.springframework.cloud</groupId>
-        <artifactId>spring-cloud-sleuth-zipkin</artifactId>
-    </dependency>
-    <dependency>
-        <groupId>org.springframework.amqp</groupId>
-        <artifactId>spring-rabbit</artifactId>
-    </dependency>
-----
-
-[source,groovy,indent=0,subs="verbatim,attributes",role="secondary"]
-.Gradle
-----
-dependencyManagement {
-    imports {
-        mavenBom "org.springframework.cloud:spring-cloud-dependencies:${releaseTrainVersion}"
-    }
-}
-
-dependencies {
-    implementation "org.springframework.cloud:spring-cloud-starter-sleuth"
-    implementation "org.springframework.cloud:spring-cloud-sleuth-zipkin"
-    implementation "org.springframework.amqp:spring-rabbit"
-}
-----
-====
-
-If you want Sleuth over RabbitMQ, add the `spring-cloud-sleuth-otel` (exclude `spring-cloud-sleuth-brave`), `spring-cloud-sleuth-zipkin` and `activemq-client` dependencies.
-
-====
-[source,xml,indent=0,subs="verbatim,attributes",role="primary"]
-.Maven
-----
-    <dependencyManagement>
-          <dependencies>
-              <dependency>
-                  <groupId>org.springframework.cloud</groupId>
-                  <artifactId>spring-cloud-dependencies</artifactId>
-                  <version>${release.train-version}</version>
-                  <type>pom</type>
-                  <scope>import</scope>
-              </dependency>
-          </dependencies>
-    </dependencyManagement>
-
-    <dependency>
-        <groupId>org.springframework.cloud</groupId>
-        <artifactId>spring-cloud-starter-sleuth</artifactId>
-        <exclusions>
-            <exclusion>
-                <groupId>org.springframework.cloud</groupId>
-                <artifactId>spring-cloud-sleuth-brave</artifactId>
-            </exclusion>
-        </exclusions>
-    </dependency>
-    <dependency>
-        <groupId>org.springframework.cloud</groupId>
-        <artifactId>spring-cloud-sleuth-otel</artifactId>
-    </dependency>
-    <dependency>
-        <groupId>org.springframework.cloud</groupId>
-        <artifactId>spring-cloud-sleuth-zipkin</artifactId>
-    </dependency>
-    <dependency>
-        <groupId>org.apache.activemq</groupId>
-        <artifactId>activemq-client</artifactId>
-    </dependency>
-----
-
-[source,groovy,indent=0,subs="verbatim,attributes",role="secondary"]
-.Gradle
-----
-dependencyManagement {
-    imports {
-        mavenBom "org.springframework.cloud:spring-cloud-dependencies:${releaseTrainVersion}"
-    }
-}
-
-dependencies {
-    implementation("org.springframework.cloud:spring-cloud-starter-sleuth") {
-        exclude group: 'org.springframework.cloud', module: 'spring-cloud-sleuth-brave'
-    }
-    implementation "org.springframework.cloud:spring-cloud-sleuth-zipkin"
-    implementation "org.apache.activemq:activemq-client"
-}
-----
-====
-
-Also, you need to set the property `spring.zipkin.sender.type` property accordingly:
-
-[source,yaml]
-----
-spring.zipkin.sender.type: activemq
-----
-
 [[how-to-see-spans-in-an-external-system]]
 == How to See Spans in an External System?
 
@@ -600,42 +296,6 @@ If the boolean value in the section `[backend,0b6aaf642574edd3,0b6aaf642574edd3,
 
 Up till Sleuth 3.0.0 the dependency `spring-cloud-starter-zipkin` included the `spring-cloud-starter-sleuth` dependency and the `spring-cloud-sleuth-zipkin` dependency.
 With 3.0.0 `spring-cloud-starter-zipkin` was removed, so you need to change it to `spring-cloud-sleuth-zipkin`.
-
-If you're working with OpenTelemetry you need to provide the dependency with your exporter.
-For example if you want to use the OpenTelemetry Zipkin Exporter just add a dependency.
-
-====
-[source,xml,indent=0,subs="verbatim,attributes",role="primary"]
-.Maven
-----
-    <dependency>
-      <groupId>io.opentelemetry</groupId>
-      <artifactId>opentelemetry-exporter-zipkin</artifactId>
-    </dependency>
-----
-
-[source,groovy,indent=0,subs="verbatim,attributes",role="secondary"]
-.Gradle
-----
-dependencies {
-    implementation "io.opentelemetry:opentelemetry-exporter-zipkin"
-}
-----
-====
-
-Then add the `SpanExporter` bean.
-
-====
-[source,java,indent=0]
-----
-@Bean SpanExporter zipkinExporter() {
-    return ZipkinSpanExporter.builder()
-            .setEndpoint("http://localhost/api/v2/spans")
-            .setServiceName("my-service")
-            .build();
-}
-----
-====
 
 [[connection-misconfiguration]]
 === Connection Misconfiguration
@@ -781,24 +441,15 @@ To use the provided defaults you can set the `spring.sleuth.propagation.type` pr
 The value can be a list in which case you will propagate more tracing headers.
 
 For Brave we support `AWS`, `B3`, `W3C` propagation types.
-For OpenTelemetry we support `AWS`, `B3`, `JAEGER`, `W3C`, `OT_TRACER` and `W3C` propagation types.
 
-If you want to provide a custom propagation mechanism set the `spring.sleuth.propagation.type` property to `CUSTOM` and implement your own bean (`Propagation.Factory` for Brave and `TextMapPropagator` for OpenTelemetry).
+If you want to provide a custom propagation mechanism set the `spring.sleuth.propagation.type` property to `CUSTOM` and implement your own bean (`Propagation.Factory` for Brave).
 Below you can find the examples:
 
 ====
-[source,java,indent=0,subs="verbatim,attributes",role="primary"]
-.Brave
+[source,java,indent=0,subs="verbatim,attributes"]
 ----
 @Component
 include::{autoconfig_path}/src/test/java/org/springframework/cloud/sleuth/autoconfig/brave/BravePropagationTests.java[tags=custom_propagator,indent=0]
-----
-
-[source,java,indent=0,subs="verbatim,attributes",role="secondary"]
-.OpenTelemetry
-----
-@Component
-include::{autoconfig_path}/src/test/java/org/springframework/cloud/sleuth/autoconfig/otel/OtelPropagationConfigurationTests.java[tags=custom_propagator,indent=0]
 ----
 ====
 
@@ -806,5 +457,5 @@ include::{autoconfig_path}/src/test/java/org/springframework/cloud/sleuth/autoco
 == How to Implement My Own Tracer?
 
 Spring Cloud Sleuth API contains all necessary interfaces to be implemented by a tracer.
-The project comes with OpenZipkin Brave and OpenTelemetry implementations.
-You can check how both tracers are bridged to the Sleuth's API by looking at the `org.springframework.cloud.sleuth.brave.bridge` and `org.springframework.cloud.sleuth.otel.bridge` modules respectively.
+The project comes with OpenZipkin Brave implementation.
+You can check how both tracers are bridged to the Sleuth's API by looking at the `org.springframework.cloud.sleuth.brave.bridge` module.

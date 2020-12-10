@@ -45,7 +45,6 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.cloud.client.serviceregistry.Registration;
 import org.springframework.cloud.commons.util.InetUtils;
 import org.springframework.cloud.sleuth.autoconfig.brave.BraveAutoConfiguration;
-import org.springframework.cloud.sleuth.autoconfig.otel.OtelAutoConfiguration;
 import org.springframework.cloud.sleuth.zipkin2.DefaultEndpointLocator;
 import org.springframework.cloud.sleuth.zipkin2.DefaultZipkinRestTemplateCustomizer;
 import org.springframework.cloud.sleuth.zipkin2.EndpointLocator;
@@ -76,9 +75,8 @@ import org.springframework.web.client.RestTemplate;
 @ConditionalOnClass({ Sender.class, EndpointLocator.class })
 @ConditionalOnProperty(value = { "spring.sleuth.enabled", "spring.zipkin.enabled" }, matchIfMissing = true)
 @AutoConfigureAfter(name = "org.springframework.cloud.autoconfigure.RefreshAutoConfiguration")
-@AutoConfigureBefore({ OtelAutoConfiguration.class, BraveAutoConfiguration.class })
-@Import({ ZipkinSenderConfigurationImportSelector.class, ZipkinBraveConfiguration.class,
-		ZipkinOtelConfiguration.class })
+@AutoConfigureBefore(BraveAutoConfiguration.class)
+@Import({ ZipkinSenderConfigurationImportSelector.class, ZipkinBraveConfiguration.class })
 public class ZipkinAutoConfiguration {
 
 	/**

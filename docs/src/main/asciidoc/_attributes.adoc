@@ -20,8 +20,6 @@
 :autoconfig_path: {project-root}/spring-cloud-sleuth-autoconfigure
 :api_path: {project-root}/spring-cloud-sleuth-api
 :brave_path: {project-root}/spring-cloud-sleuth-brave
-:otel_path: {project-root}/spring-cloud-sleuth-otel
 :tests_path: {core_path}/tests
 :common_tests_path: {tests_path}/common
 :brave_tests_path: {tests_path}/brave
-:otel_tests_path: {tests_path}/otel

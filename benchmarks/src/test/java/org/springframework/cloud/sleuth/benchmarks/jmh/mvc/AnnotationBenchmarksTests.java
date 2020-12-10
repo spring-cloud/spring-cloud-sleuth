@@ -72,7 +72,7 @@ public class AnnotationBenchmarksTests {
 		@Setup
 		public void setup() {
 			this.withSleuth = new SpringApplication(SleuthBenchmarkingSpringApp.class).run("--spring.jmx.enabled=false",
-					this.tracerImplementation.property(),
+
 					"--spring.application.name=withSleuth_" + this.tracerImplementation.name());
 			this.sleuth = this.withSleuth.getBean(SleuthBenchmarkingSpringApp.class);
 		}

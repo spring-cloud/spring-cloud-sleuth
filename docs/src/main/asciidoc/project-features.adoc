@@ -21,7 +21,6 @@ To use the provided defaults you can set the `spring.sleuth.propagation.type` pr
 The value can be a list in which case you will propagate more tracing headers.
 
 For Brave we support `AWS`, `B3`, `W3C` propagation types.
-For OpenTelemetry we support `AWS`, `B3`, `JAEGER`, `OT_TRACER` and `W3C` via the `io.opentelemetry:opentelemetry-extension-trace-propagators` dependency that you have to manually add to your classpath.
 
 You can read more about how to provide custom context propagation in this "<<howto.adoc#how-to-change-context-propagation,how to section>>".
 
@@ -247,30 +246,6 @@ For more, see https://github.com/openzipkin/brave/tree/master/instrumentation/me
 
 You can integrate with Brave and https://opentracing.io/[OpenTracing] via the
 `io.opentracing.brave:brave-opentracing` bridge.
-Just add it to the classpath and the OpenTracing `Tracer` will be set up automatically.
-
-[[features-otel]]
-== OpenTelemetry Tracer Integration
-
-Spring Cloud Sleuth integrates with the OpenTelemetry (OTel in short) SDK tracer via the bridge that is available in the `spring-cloud-sleuth-otel` module.
-In this section you can read about specific OTel integrations.
-
-You can choose to use either Sleuth's API or the OpenTelemetry API directly in your code (e.g. either Sleuth's `Tracer` or OpenTelemetry's `Tracer`).
-If you want to use this tracer implementation's API directly please read https://github.com/open-telemetry/opentelemetry-java[their documentation to learn more about it].
-
-[[features-otel-logging]]
-=== OpenTelemetry Logging Integration
-
-We're providing an Slf4j integration via a `SpanProcessor` that injects to and removes entries (trace / span ids, baggage, tags etc.) from MDC. You can disable that via the `spring.sleuth.otel.log.slf4j.enabled=false` property.
-
-If it's there on the classpath, we integrate with the `LoggingSpanExporter`.
-You can disable that integration via the `spring.sleuth.otel.log.exporter.enabled=false` property.
-
-[[features-otel-opentracing]]
-=== OpenTelemetry Opentracing
-
-You can integrate with OpenTelemetry and https://opentracing.io/[OpenTracing] via the
-`io.opentelemetry:opentelemetry-opentracing-shim` bridge.
 Just add it to the classpath and the OpenTracing `Tracer` will be set up automatically.
 
 [[features-zipkin]]

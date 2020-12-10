@@ -36,7 +36,6 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.cloud.sleuth.SpanNamer;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.autoconfig.brave.BraveAutoConfiguration;
-import org.springframework.cloud.sleuth.autoconfig.otel.OtelAutoConfiguration;
 import org.springframework.cloud.sleuth.instrument.async.LazyTraceExecutor;
 import org.springframework.cloud.sleuth.instrument.async.TraceAsyncAspect;
 import org.springframework.context.annotation.Bean;
@@ -61,7 +60,7 @@ import org.springframework.scheduling.annotation.AsyncConfigurerSupport;
 @EnableConfigurationProperties(SleuthAsyncProperties.class)
 @ConditionalOnProperty(value = "spring.sleuth.async.enabled", matchIfMissing = true)
 @ConditionalOnBean(Tracer.class)
-@AutoConfigureAfter({ BraveAutoConfiguration.class, OtelAutoConfiguration.class })
+@AutoConfigureAfter(BraveAutoConfiguration.class)
 public class TraceAsyncDefaultAutoConfiguration {
 
 	@Bean

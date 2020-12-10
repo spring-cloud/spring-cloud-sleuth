@@ -34,7 +34,6 @@ import org.springframework.cloud.gateway.filter.headers.HttpHeadersFilter;
 import org.springframework.cloud.sleuth.CurrentTraceContext;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.autoconfig.brave.BraveAutoConfiguration;
-import org.springframework.cloud.sleuth.autoconfig.otel.OtelAutoConfiguration;
 import org.springframework.cloud.sleuth.http.HttpClientHandler;
 import org.springframework.cloud.sleuth.instrument.web.client.HttpClientBeanPostProcessor;
 import org.springframework.cloud.sleuth.instrument.web.client.LazyTraceClientHttpRequestInterceptor;
@@ -67,7 +66,7 @@ import org.springframework.web.reactive.function.client.WebClient;
 @ConditionalnOnSleuthWebClient
 @ConditionalOnBean(Tracer.class)
 @AutoConfigureBefore(HttpClientConfiguration.class)
-@AutoConfigureAfter({ BraveAutoConfiguration.class, OtelAutoConfiguration.class })
+@AutoConfigureAfter(BraveAutoConfiguration.class)
 class TraceWebClientAutoConfiguration {
 
 	@Configuration(proxyBeanMethods = false)

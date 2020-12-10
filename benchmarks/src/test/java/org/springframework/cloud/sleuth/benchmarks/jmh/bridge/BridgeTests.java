@@ -38,7 +38,6 @@ import org.springframework.boot.autoconfigure.ImportAutoConfiguration;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.autoconfig.brave.BraveAutoConfiguration;
-import org.springframework.cloud.sleuth.autoconfig.otel.OtelAutoConfiguration;
 import org.springframework.cloud.sleuth.benchmarks.jmh.TracerImplementation;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.Configuration;
@@ -106,7 +105,7 @@ public class BridgeTests {
 		public void setup() {
 			SpringApplication application = new SpringApplication(TestConfiguration.class);
 			application.setWebApplicationType(WebApplicationType.NONE);
-			this.withSleuth = application.run("--spring.jmx.enabled=false", this.tracerImplementation.property(),
+			this.withSleuth = application.run("--spring.jmx.enabled=false",
 					"--spring.application.name=withSleuth_" + this.tracerImplementation.name());
 			this.tracer = this.withSleuth.getBean(Tracer.class);
 			this.parent = this.tracer.nextSpan().name("name").start();
@@ -119,7 +118,7 @@ public class BridgeTests {
 		}
 
 		@Configuration(proxyBeanMethods = false)
-		@ImportAutoConfiguration({ BraveAutoConfiguration.class, OtelAutoConfiguration.class })
+		@ImportAutoConfiguration(BraveAutoConfiguration.class)
 		static class TestConfiguration {
 
 		}

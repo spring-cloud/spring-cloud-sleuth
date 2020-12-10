@@ -40,18 +40,6 @@
 		<dependency>
 			<groupId>org.springframework.cloud</groupId>
 			<artifactId>spring-cloud-sleuth-brave</artifactId>
-			<!-- TODO: [OTEL] breaking change -->
-			<optional>true</optional>
-		</dependency>
-		<dependency>
-			<groupId>org.springframework.cloud</groupId>
-			<artifactId>spring-cloud-sleuth-otel</artifactId>
-			<!-- TODO: [OTEL] breaking change -->
-			<optional>true</optional>
-		</dependency>
-		<dependency>
-			<groupId>io.opentelemetry</groupId>
-			<artifactId>opentelemetry-exporter-zipkin</artifactId>
 			<optional>true</optional>
 		</dependency>
 		<dependency>

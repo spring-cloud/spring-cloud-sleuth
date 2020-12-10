@@ -36,18 +36,6 @@
       "defaultValue": true
     },
     {
-      "name": "spring.sleuth.otel.propagation.sleuth-baggage.enabled",
-      "type": "java.lang.Boolean",
-      "description": "Enable propagating baggage in a Sleuth compatible way (baggage key & value pair means e.g. a key & value HTTP pair).",
-      "defaultValue": true
-    },
-    {
-      "name": "spring.sleuth.otel.propagation.composite-text-map-propagator.enabled",
-      "type": "java.lang.Boolean",
-      "description": "Enable a composite text map propagator that can combine multiple propagation types into a single text map propagator.",
-      "defaultValue": true
-    },
-    {
       "name": "spring.sleuth.integration.websockets.enabled",
       "type": "java.lang.Boolean",
       "description": "Enable tracing for WebSockets.",
