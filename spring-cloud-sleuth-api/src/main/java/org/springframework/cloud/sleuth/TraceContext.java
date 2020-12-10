@@ -46,8 +46,8 @@ public interface TraceContext {
 	String spanId();
 
 	/**
-	 * @return {@code true} when sampled
+	 * @return {@code true} when sampled, {@code false} when not sampled and {@code null} when sampling decision should be deferred
 	 */
-	boolean isSampled();
+	Boolean isSampled();
 
 }

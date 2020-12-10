@@ -42,7 +42,7 @@ class NoOpTraceContext implements TraceContext {
 	}
 
 	@Override
-	public boolean isSampled() {
+	public Boolean isSampled() {
 		return false;
 	}
 
