@@ -142,7 +142,7 @@ public final class TracingChannelInterceptor extends ChannelInterceptorAdapter
 		}
 		MessageHeaderAccessor headers = mutableHeaderAccessor(retrievedMessage);
 		Span.Builder spanBuilder = this.propagator.extract(headers, this.extractor);
-		MessageHeaderPropagation.removeAnyTraceHeaders(headers, this.propagator.fields());
+		MessageHeaderPropagatorSetter.removeAnyTraceHeaders(headers, this.propagator.fields());
 		spanBuilder = spanBuilder.kind(Span.Kind.PRODUCER);
 		spanBuilder = this.messageSpanCustomizer.customizeSend(spanBuilder, message, channel)
 				.remoteServiceName(toRemoteServiceName(headers));
@@ -196,7 +196,7 @@ public final class TracingChannelInterceptor extends ChannelInterceptorAdapter
 		MessageHeaderAccessor headers = mutableHeaderAccessor(originalMessage);
 		if (originalMessage instanceof ErrorMessage) {
 			ErrorMessage errorMessage = (ErrorMessage) originalMessage;
-			headers.copyHeaders(MessageHeaderPropagation.propagationHeaders(additionalHeaders.getMessageHeaders(),
+			headers.copyHeaders(MessageHeaderPropagatorSetter.propagationHeaders(additionalHeaders.getMessageHeaders(),
 					this.propagator.fields()));
 			return new ErrorMessage(errorMessage.getPayload(), isWebSockets(headers) ? headers.getMessageHeaders()
 					: new MessageHeaders(headers.getMessageHeaders()), errorMessage.getOriginalMessage());
@@ -279,7 +279,7 @@ public final class TracingChannelInterceptor extends ChannelInterceptorAdapter
 	private Span consumerSpanReceive(Message<?> message, MessageChannel channel, MessageHeaderAccessor headers,
 			Span result) {
 		Span.Builder builder = this.tracer.spanBuilder().setParent(result.context());
-		MessageHeaderPropagation.removeAnyTraceHeaders(headers, this.propagator.fields());
+		MessageHeaderPropagatorSetter.removeAnyTraceHeaders(headers, this.propagator.fields());
 		builder = builder.kind(Span.Kind.CONSUMER);
 		builder = this.messageSpanCustomizer.customizeReceive(builder, message, channel);
 		builder = builder.remoteServiceName(toRemoteServiceName(headers));
@@ -321,7 +321,7 @@ public final class TracingChannelInterceptor extends ChannelInterceptorAdapter
 		// remove any trace headers, but don't re-inject as we are synchronously
 		// processing the
 		// message and can rely on scoping to access this span later.
-		MessageHeaderPropagation.removeAnyTraceHeaders(headers, this.propagator.fields());
+		MessageHeaderPropagatorSetter.removeAnyTraceHeaders(headers, this.propagator.fields());
 		if (log.isDebugEnabled()) {
 			log.debug("Created a new span in before handle " + handle);
 		}

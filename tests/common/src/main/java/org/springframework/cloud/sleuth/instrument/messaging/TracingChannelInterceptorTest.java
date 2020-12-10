@@ -74,8 +74,9 @@ public abstract class TracingChannelInterceptorTest implements TestTracingAwareS
 	}
 
 	protected ChannelInterceptor interceptor = new TracingChannelInterceptor(tracerTest().tracing().tracer(),
-			tracerTest().tracing().propagator(), MessageHeaderPropagation.INSTANCE, MessageHeaderPropagation.INSTANCE,
-			remoteServiceNameMapper(new SleuthMessagingProperties()), new DefaultMessageSpanCustomizer());
+			tracerTest().tracing().propagator(), new MessageHeaderPropagatorSetter(),
+			new MessageHeaderPropagatorGetter(), remoteServiceNameMapper(new SleuthMessagingProperties()),
+			new DefaultMessageSpanCustomizer());
 
 	protected TestSpanHandler spans = tracerTest().handler();
 
@@ -129,8 +130,8 @@ public abstract class TracingChannelInterceptorTest implements TestTracingAwareS
 	@Test
 	public void allowsSpanCustomization() {
 		this.interceptor = new TracingChannelInterceptor(tracerTest().tracing().tracer(),
-				tracerTest().tracing().propagator(), MessageHeaderPropagation.INSTANCE,
-				MessageHeaderPropagation.INSTANCE, remoteServiceNameMapper(new SleuthMessagingProperties()),
+				tracerTest().tracing().propagator(), new MessageHeaderPropagatorSetter(),
+				new MessageHeaderPropagatorGetter(), remoteServiceNameMapper(new SleuthMessagingProperties()),
 				new MyMessageSpanCustomizer());
 
 		this.directChannel.addInterceptor(this.interceptor);

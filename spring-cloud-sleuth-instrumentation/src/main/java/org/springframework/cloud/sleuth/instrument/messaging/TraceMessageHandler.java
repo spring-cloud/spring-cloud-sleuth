@@ -268,7 +268,7 @@ class TraceMessageHandler {
 		clearTechnicalTracingHeaders(headers);
 		if (originalMessage instanceof ErrorMessage) {
 			ErrorMessage errorMessage = (ErrorMessage) originalMessage;
-			headers.copyHeaders(MessageHeaderPropagation.propagationHeaders(additionalHeaders.getMessageHeaders(),
+			headers.copyHeaders(MessageHeaderPropagatorSetter.propagationHeaders(additionalHeaders.getMessageHeaders(),
 					this.propagator.fields()));
 			return new ErrorMessage(errorMessage.getPayload(), isWebSockets(headers) ? headers.getMessageHeaders()
 					: new MessageHeaders(headers.getMessageHeaders()), errorMessage.getOriginalMessage());
@@ -307,11 +307,11 @@ class TraceMessageHandler {
 		List<String> keysToRemove = new ArrayList<>(this.propagator.fields());
 		keysToRemove.add(Span.class.getName());
 		keysToRemove.add("traceHandlerParentSpan");
-		MessageHeaderPropagation.removeAnyTraceHeaders(headers, keysToRemove);
+		MessageHeaderPropagatorSetter.removeAnyTraceHeaders(headers, keysToRemove);
 	}
 
 	private void clearTechnicalTracingHeaders(MessageHeaderAccessor headers) {
-		MessageHeaderPropagation.removeAnyTraceHeaders(headers,
+		MessageHeaderPropagatorSetter.removeAnyTraceHeaders(headers,
 				Arrays.asList(Span.class.getName(), "traceHandlerParentSpan"));
 	}
 

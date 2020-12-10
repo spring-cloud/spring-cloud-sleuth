@@ -20,7 +20,8 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
-import org.springframework.cloud.sleuth.instrument.messaging.MessageHeaderPropagation;
+import org.springframework.cloud.sleuth.instrument.messaging.MessageHeaderPropagatorGetter;
+import org.springframework.cloud.sleuth.instrument.messaging.MessageHeaderPropagatorSetter;
 import org.springframework.cloud.sleuth.propagation.Propagator;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -35,13 +36,13 @@ class TraceSpringMessagingAutoConfiguration {
 	@Bean
 	@ConditionalOnMissingBean
 	Propagator.Setter<MessageHeaderAccessor> traceMessagePropagationSetter() {
-		return MessageHeaderPropagation.INSTANCE;
+		return new MessageHeaderPropagatorSetter();
 	}
 
 	@Bean
 	@ConditionalOnMissingBean
 	Propagator.Getter<MessageHeaderAccessor> traceMessagePropagationGetter() {
-		return MessageHeaderPropagation.INSTANCE;
+		return new MessageHeaderPropagatorGetter();
 	}
 
 }
