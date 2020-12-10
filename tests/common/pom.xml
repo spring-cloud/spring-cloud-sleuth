@@ -34,10 +34,6 @@
 		<relativePath>..</relativePath>
 	</parent>
 
-	<properties>
-		<maven.javadoc.skip>true</maven.javadoc.skip>
-	</properties>
-
 	<dependencies>
 		<dependency>
 			<groupId>org.springframework.cloud</groupId>

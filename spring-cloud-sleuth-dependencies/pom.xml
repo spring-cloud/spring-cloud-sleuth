@@ -73,6 +73,12 @@
 				<artifactId>spring-cloud-starter-sleuth</artifactId>
 				<version>${project.version}</version>
 			</dependency>
+			<!-- Test framework -->
+			<dependency>
+				<groupId>org.springframework.cloud</groupId>
+				<artifactId>spring-cloud-sleuth-tests-common</artifactId>
+				<version>${project.version}</version>
+			</dependency>
 			<!-- BRAVE -->
 			<dependency>
 				<groupId>io.zipkin.brave</groupId>
