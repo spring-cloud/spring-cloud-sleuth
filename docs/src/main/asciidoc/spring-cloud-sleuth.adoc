@@ -1390,11 +1390,14 @@ https://github.com/yidongnan/grpc-spring-boot-starter[Grpc Spring Boot Starter] 
 In Spring Cloud Sleuth, we instrument async-related components so that the tracing information is passed between threads.
 You can disable this behavior by setting the value of `spring.sleuth.async.enabled` to `false`.
 
-If you annotate your method with `@Async`, we automatically create a new Span with the following characteristics:
+If you annotate your method with `@Async`, we automatically modify the existing Span as follows:
 
 * If the method is annotated with `@SpanName`, the value of the annotation is the Span's name.
 * If the method is not annotated with `@SpanName`, the Span name is the annotated method name.
 * The span is tagged with the method's class name and method name.
+
+Since we're modifying the existing span, if you want to maintain its original name (e.g. a span created by receiving an HTTP request)
+you should wrap your `@Async` annotated method with a `@NewSpan` annotation or create a new span manually.
 
 ==== `@Scheduled` Annotated Methods
 
