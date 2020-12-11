@@ -37,7 +37,6 @@ import org.assertj.core.api.InstanceOfAssertFactories;
 import org.assertj.core.api.ListAssert;
 import org.assertj.core.api.ObjectAssert;
 import org.assertj.core.groups.Tuple;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import org.springframework.boot.autoconfigure.AutoConfigurations;
@@ -75,22 +74,20 @@ public class TraceBaggageEntryConfigurationTests {
 				.asInstanceOf(InstanceOfAssertFactories.list(Tuple.class));
 	}
 
-	@Disabled("Brave broke its internal implementation and tests are bound to it - will skip for now")
 	@Test
 	public void shouldCreateRemoteFields() {
 		this.contextRunner.withPropertyValues("spring.sleuth.baggage.remote-fields=x-vcap-request-id,country-code")
-				.run((context) -> assertThatBaggageFieldNameToKeyNames(context).containsOnly(
-						tuple("x-vcap-request-id", new HashSet<>(Collections.singletonList("x-vcap-request-id")),
-								tuple("country-code", new HashSet<>(Collections.singletonList("country-code"))))));
+				.run(context -> assertThatBaggageFieldNameToKeyNames(context).containsExactlyInAnyOrder(
+						tuple("x-vcap-request-id", new HashSet<>(Collections.singletonList("x-vcap-request-id"))),
+						tuple("country-code", new HashSet<>(Collections.singletonList("country-code")))));
 	}
 
-	@Disabled("Brave broke its internal implementation and tests are bound to it - will skip for now")
 	@Test
 	public void shouldCreateRemoteFields_oldName() {
 		this.contextRunner.withPropertyValues("spring.sleuth.propagation-keys=x-vcap-request-id,country-code")
-				.run((context) -> assertThatBaggageFieldNameToKeyNames(context).containsOnly(
-						tuple("x-vcap-request-id", new HashSet<>(Collections.singletonList("x-vcap-request-id")),
-								tuple("country-code", new HashSet<>(Collections.singletonList("country-code"))))));
+				.run(context -> assertThatBaggageFieldNameToKeyNames(context).containsExactlyInAnyOrder(
+						tuple("x-vcap-request-id", new HashSet<>(Collections.singletonList("x-vcap-request-id"))),
+						tuple("country-code", new HashSet<>(Collections.singletonList("country-code")))));
 	}
 
 	@Test
