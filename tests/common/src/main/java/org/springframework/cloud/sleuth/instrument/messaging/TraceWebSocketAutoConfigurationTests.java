@@ -23,6 +23,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.messaging.simp.config.MessageBrokerRegistry;
+import org.springframework.messaging.support.AbstractSubscribableChannel;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.web.socket.config.annotation.AbstractWebSocketMessageBrokerConfigurer;
 import org.springframework.web.socket.config.annotation.DelegatingWebSocketMessageBrokerConfiguration;
@@ -40,11 +41,17 @@ public abstract class TraceWebSocketAutoConfigurationTests {
 
 	@Test
 	public void should_register_interceptors_for_all_channels() {
-		BDDAssertions.then(this.delegatingWebSocketMessageBrokerConfiguration.clientInboundChannel().getInterceptors())
+		AbstractSubscribableChannel inboundChannel = this.delegatingWebSocketMessageBrokerConfiguration
+				.clientInboundChannel(this.delegatingWebSocketMessageBrokerConfiguration.clientInboundChannelExecutor());
+		BDDAssertions.then(inboundChannel.getInterceptors())
 				.hasAtLeastOneElementOfType(TracingChannelInterceptor.class);
-		BDDAssertions.then(this.delegatingWebSocketMessageBrokerConfiguration.clientOutboundChannel().getInterceptors())
+		AbstractSubscribableChannel outboundChannel = this.delegatingWebSocketMessageBrokerConfiguration
+				.clientOutboundChannel(this.delegatingWebSocketMessageBrokerConfiguration.clientOutboundChannelExecutor());
+		BDDAssertions.then(outboundChannel.getInterceptors())
 				.hasAtLeastOneElementOfType(TracingChannelInterceptor.class);
-		BDDAssertions.then(this.delegatingWebSocketMessageBrokerConfiguration.brokerChannel().getInterceptors())
+		BDDAssertions.then(this.delegatingWebSocketMessageBrokerConfiguration
+				.brokerChannel(inboundChannel, outboundChannel, this.delegatingWebSocketMessageBrokerConfiguration.brokerChannelExecutor(inboundChannel, outboundChannel))
+				.getInterceptors())
 				.hasAtLeastOneElementOfType(TracingChannelInterceptor.class);
 	}
 
