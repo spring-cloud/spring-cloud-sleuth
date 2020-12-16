@@ -82,7 +82,7 @@ public class MicroBenchmarkHttpTests {
 		}
 
 		protected String[] runArgs() {
-			return new String[] { "--spring.jmx.enabled=false", tracerImplementation.property(),
+			return new String[] { "--spring.jmx.enabled=false",
 					"--spring.application.name=defaultTraceContext" + instrumentation.name() + "_"
 							+ tracerImplementation.name(),
 					"--" + instrumentation.key + "=" + instrumentation.value };

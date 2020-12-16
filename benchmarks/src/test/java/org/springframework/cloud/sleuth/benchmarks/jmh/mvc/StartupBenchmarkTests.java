@@ -48,29 +48,27 @@ public class StartupBenchmarkTests {
 
 	@Benchmark
 	public void withoutAnnotations(ApplicationState state) throws Exception {
-		state.setExtraArgs("--spring.sleuth.annotation.enabled=false", state.tracerImplementation.property());
+		state.setExtraArgs("--spring.sleuth.annotation.enabled=false");
 		state.run();
 	}
 
 	@Benchmark
 	public void withoutAsync(ApplicationState state) throws Exception {
-		state.setExtraArgs("--spring.sleuth.async.enabled=false", "--spring.sleuth.annotation.enabled=false",
-				state.tracerImplementation.property());
+		state.setExtraArgs("--spring.sleuth.async.enabled=false", "--spring.sleuth.annotation.enabled=false");
 		state.run();
 	}
 
 	@Benchmark
 	public void withoutScheduled(ApplicationState state) throws Exception {
 		state.setExtraArgs("--spring.sleuth.scheduled.enabled=false", "--spring.sleuth.async.enabled=false",
-				"--spring.sleuth.annotation.enabled=false", state.tracerImplementation.property());
+				"--spring.sleuth.annotation.enabled=false");
 		state.run();
 	}
 
 	@Benchmark
 	public void withoutWeb(ApplicationState state) throws Exception {
 		state.setExtraArgs("--spring.sleuth.web.enabled=false", "--spring.sleuth.scheduled.enabled=false",
-				"--spring.sleuth.async.enabled=false", "--spring.sleuth.annotation.enabled=false",
-				state.tracerImplementation.property());
+				"--spring.sleuth.async.enabled=false", "--spring.sleuth.annotation.enabled=false");
 		state.run();
 	}
 
