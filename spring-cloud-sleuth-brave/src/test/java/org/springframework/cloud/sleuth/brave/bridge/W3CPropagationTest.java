@@ -63,15 +63,19 @@ class W3CPropagationTest {
 	}
 
 	private TraceContext.Builder sampledTraceContext() {
+		return sampledTraceContext("ff00000000000000", "0000000000000041", "ff00000000000041");
+	}
+
+	private TraceContext.Builder sampledTraceContext(String traceIdHigh, String traceId, String spanId) {
 		return TraceContext.newBuilder().sampled(SAMPLED_TRACE_OPTIONS)
-				.spanId(BigendianEncoding.longFromBase16String("ff00000000000041"))
-				.traceIdHigh(BigendianEncoding.longFromBase16String("ff00000000000000"))
-				.traceId(BigendianEncoding.longFromBase16String("0000000000000041"));
+				.traceIdHigh(BigendianEncoding.longFromBase16String(traceIdHigh))
+				.traceId(BigendianEncoding.longFromBase16String(traceId))
+				.spanId(BigendianEncoding.longFromBase16String(spanId));
 	}
 
 	@Test
 	void inject_SampledContext() {
-		final Map<String, String> carrier = new LinkedHashMap<>();
+		Map<String, String> carrier = new LinkedHashMap<>();
 		TraceContext traceContext = sampledTraceContext().build();
 		w3CPropagation.injector((ignored, key, value) -> carrier.put(key, value)).inject(traceContext, carrier);
 		assertThat(carrier).containsExactly(entry(TRACE_PARENT, TRACEPARENT_HEADER_SAMPLED));
@@ -79,10 +83,21 @@ class W3CPropagationTest {
 
 	@Test
 	void inject_NotSampledContext() {
-		final Map<String, String> carrier = new LinkedHashMap<>();
+		Map<String, String> carrier = new LinkedHashMap<>();
 		TraceContext traceContext = notSampledTraceContext().build();
 		w3CPropagation.injector((ignored, key, value) -> carrier.put(key, value)).inject(traceContext, carrier);
 		assertThat(carrier).containsExactly(entry(TRACE_PARENT, TRACEPARENT_HEADER_NOT_SAMPLED));
+	}
+
+	/**
+	 * see: gh-1809
+	 */
+	@Test
+	void inject_traceIdShouldBePaddedWithZeros() {
+		Map<String, String> carrier = new LinkedHashMap<>();
+		TraceContext traceContext = sampledTraceContext("0000000000000000", "123456789abcdef0", "123456789abcdef1").build();
+		w3CPropagation.injector((ignored, key, value) -> carrier.put(key, value)).inject(traceContext, carrier);
+		assertThat(carrier).containsExactly(entry(TRACE_PARENT, "00-0000000000000000123456789abcdef0-123456789abcdef1-01"));
 	}
 
 	@Test

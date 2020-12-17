@@ -140,7 +140,7 @@ class W3CPropagation extends Propagation.Factory implements Propagation<String> 
 			chars[0] = VERSION.charAt(0);
 			chars[1] = VERSION.charAt(1);
 			chars[2] = TRACEPARENT_DELIMITER;
-			String traceId = context.traceIdString();
+			String traceId = padLeftWithZeros(context.traceIdString(), TRACE_ID_HEX_SIZE);
 			for (int i = 0; i < traceId.length(); i++) {
 				chars[TRACE_ID_OFFSET + i] = traceId.charAt(i);
 			}
@@ -155,6 +155,20 @@ class W3CPropagation extends Propagation.Factory implements Propagation<String> 
 			// Add baggage
 			this.baggagePropagator.injector(setter).inject(context, carrier);
 		};
+	}
+
+	private String padLeftWithZeros(String string, int length) {
+		if (string.length() >= length) {
+			return string;
+		}
+		else {
+			StringBuilder sb = new StringBuilder(length);
+			for (int i = string.length(); i < length; i++) {
+				sb.append('0');
+			}
+
+			return sb.append(string).toString();
+		}
 	}
 
 	void copyTraceFlagsHexTo(char[] dest, int destOffset, TraceContext context) {
@@ -327,7 +341,6 @@ class W3CBaggagePropagator {
 		return built;
 	}
 
-	@SuppressWarnings("StringSplitter")
 	List<AbstractMap.SimpleEntry<BaggageField, String>> addBaggageToContext(String baggageHeader,
 			TraceContextOrSamplingFlags.Builder builder) {
 		List<AbstractMap.SimpleEntry<BaggageField, String>> pairs = new ArrayList<>();
