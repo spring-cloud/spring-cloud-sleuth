@@ -95,9 +95,11 @@ class W3CPropagationTest {
 	@Test
 	void inject_traceIdShouldBePaddedWithZeros() {
 		Map<String, String> carrier = new LinkedHashMap<>();
-		TraceContext traceContext = sampledTraceContext("0000000000000000", "123456789abcdef0", "123456789abcdef1").build();
+		TraceContext traceContext = sampledTraceContext("0000000000000000", "123456789abcdef0", "123456789abcdef1")
+				.build();
 		w3CPropagation.injector((ignored, key, value) -> carrier.put(key, value)).inject(traceContext, carrier);
-		assertThat(carrier).containsExactly(entry(TRACE_PARENT, "00-0000000000000000123456789abcdef0-123456789abcdef1-01"));
+		assertThat(carrier)
+				.containsExactly(entry(TRACE_PARENT, "00-0000000000000000123456789abcdef0-123456789abcdef1-01"));
 	}
 
 	@Test

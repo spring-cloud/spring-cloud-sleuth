@@ -42,16 +42,20 @@ public abstract class TraceWebSocketAutoConfigurationTests {
 	@Test
 	public void should_register_interceptors_for_all_channels() {
 		AbstractSubscribableChannel inboundChannel = this.delegatingWebSocketMessageBrokerConfiguration
-				.clientInboundChannel(this.delegatingWebSocketMessageBrokerConfiguration.clientInboundChannelExecutor());
+				.clientInboundChannel(
+						this.delegatingWebSocketMessageBrokerConfiguration.clientInboundChannelExecutor());
 		BDDAssertions.then(inboundChannel.getInterceptors())
 				.hasAtLeastOneElementOfType(TracingChannelInterceptor.class);
 		AbstractSubscribableChannel outboundChannel = this.delegatingWebSocketMessageBrokerConfiguration
-				.clientOutboundChannel(this.delegatingWebSocketMessageBrokerConfiguration.clientOutboundChannelExecutor());
+				.clientOutboundChannel(
+						this.delegatingWebSocketMessageBrokerConfiguration.clientOutboundChannelExecutor());
 		BDDAssertions.then(outboundChannel.getInterceptors())
 				.hasAtLeastOneElementOfType(TracingChannelInterceptor.class);
-		BDDAssertions.then(this.delegatingWebSocketMessageBrokerConfiguration
-				.brokerChannel(inboundChannel, outboundChannel, this.delegatingWebSocketMessageBrokerConfiguration.brokerChannelExecutor(inboundChannel, outboundChannel))
-				.getInterceptors())
+		BDDAssertions
+				.then(this.delegatingWebSocketMessageBrokerConfiguration.brokerChannel(inboundChannel, outboundChannel,
+						this.delegatingWebSocketMessageBrokerConfiguration.brokerChannelExecutor(inboundChannel,
+								outboundChannel))
+						.getInterceptors())
 				.hasAtLeastOneElementOfType(TracingChannelInterceptor.class);
 	}
 
