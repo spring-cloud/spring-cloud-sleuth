@@ -107,6 +107,7 @@ public abstract class TraceFilterTests implements TestTracingAwareSupplier {
 				HttpMethod.GET.toString());
 		// we don't check for status_code anymore cause Brave doesn't support it oob
 		// .containsEntry("http.status_code", "200")
+		BDDAssertions.then(this.spans.get(0).getRemoteIp()).isEqualTo("127.0.0.1");
 	}
 
 	@Test
