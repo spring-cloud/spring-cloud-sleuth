@@ -20,6 +20,8 @@ import java.net.InetSocketAddress;
 import java.util.Collection;
 import java.util.Collections;
 
+import javax.servlet.http.HttpServletRequest;
+
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.http.HttpServerRequest;
 import org.springframework.http.server.reactive.ServerHttpRequest;
@@ -130,6 +132,10 @@ class BraveHttpServerRequest implements HttpServerRequest {
 						return false;
 					}
 					return span.remoteIpAndPort(addr.getAddress().getHostAddress(), addr.getPort());
+				}
+				else if (delegate instanceof HttpServletRequest) {
+					HttpServletRequest servletRequest = (HttpServletRequest) delegate;
+					return span.remoteIpAndPort(servletRequest.getRemoteAddr(), servletRequest.getRemotePort());
 				}
 				return false;
 			}
