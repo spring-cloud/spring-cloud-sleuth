@@ -64,10 +64,10 @@ public abstract class TracingChannelInterceptorTest implements TestTracingAwareS
 				return null;
 			}
 			if (s.startsWith("amqp") || s.startsWith("rabbit")) {
-				return properties.getMessaging().getRabbit().getRemoteServiceName();
+				return properties.getRabbit().getRemoteServiceName();
 			}
 			else if (s.startsWith("kafka")) {
-				return properties.getMessaging().getKafka().getRemoteServiceName();
+				return properties.getKafka().getRemoteServiceName();
 			}
 			return null;
 		};

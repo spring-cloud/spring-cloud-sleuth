@@ -19,17 +19,14 @@
 |spring.sleuth.integration.enabled | `true` | Enable Spring Integration sleuth instrumentation.
 |spring.sleuth.integration.patterns | `[!hystrixStreamOutput*, *, !channel*]` | An array of patterns against which channel names will be matched. @see org.springframework.integration.config.GlobalChannelInterceptor#patterns() Defaults to any channel name not matching the Hystrix Stream and functional Stream channel names.
 |spring.sleuth.integration.websockets.enabled | `true` | Enable tracing for WebSockets.
-|spring.sleuth.messaging.jms.enabled | `true` | Enable tracing of JMS.
-|spring.sleuth.messaging.kafka.enabled | `true` | Enable tracing of Kafka.
-|spring.sleuth.messaging.kafka.mapper.enabled | `true` | Enable DefaultKafkaHeaderMapper tracing for Kafka.
-|spring.sleuth.messaging.messaging.enabled | `false` | Should messaging be turned on.
-|spring.sleuth.messaging.messaging.jms.enabled | `false` | 
-|spring.sleuth.messaging.messaging.jms.remote-service-name | `jms` | 
-|spring.sleuth.messaging.messaging.kafka.enabled | `false` | 
-|spring.sleuth.messaging.messaging.kafka.remote-service-name | `kafka` | 
-|spring.sleuth.messaging.messaging.rabbit.enabled | `false` | 
-|spring.sleuth.messaging.messaging.rabbit.remote-service-name | `rabbitmq` | 
-|spring.sleuth.messaging.rabbit.enabled | `true` | Enable tracing of RabbitMQ.
+|spring.sleuth.messaging.enabled | `false` | Should messaging be turned on.
+|spring.sleuth.messaging.jms.enabled | `false` | Enable tracing of JMS.
+|spring.sleuth.messaging.jms.remote-service-name | `jms` | JMS remote service name.
+|spring.sleuth.messaging.kafka.enabled | `false` | Enable tracing of Kafka.
+|spring.sleuth.messaging.kafka.remote-service-name | `kafka` | Kafka remote service name.
+|spring.sleuth.messaging.kafka.streams.enabled | `false` | Enable tracing of Kafka Streams.
+|spring.sleuth.messaging.rabbit.enabled | `false` | Enable tracing of RabbitMQ.
+|spring.sleuth.messaging.rabbit.remote-service-name | `rabbitmq` | Rabbit remote service name.
 |spring.sleuth.mongodb.enabled | `true` | Enable tracing for MongoDb.
 |spring.sleuth.opentracing.enabled | `true` | Enables OpenTracing support.
 |spring.sleuth.propagation.type |  | Tracing context propagation types.
