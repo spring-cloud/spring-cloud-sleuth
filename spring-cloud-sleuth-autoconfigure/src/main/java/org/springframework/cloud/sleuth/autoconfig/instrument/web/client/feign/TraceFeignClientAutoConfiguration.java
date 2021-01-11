@@ -22,9 +22,11 @@ import feign.okhttp.OkHttpClient;
 
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.boot.autoconfigure.AutoConfigureBefore;
+import org.springframework.boot.autoconfigure.condition.AnyNestedCondition;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.cloud.openfeign.FeignAutoConfiguration;
 import org.springframework.cloud.openfeign.FeignContext;
@@ -34,6 +36,7 @@ import org.springframework.cloud.sleuth.instrument.web.client.feign.OkHttpFeignC
 import org.springframework.cloud.sleuth.instrument.web.client.feign.SleuthFeignBuilder;
 import org.springframework.cloud.sleuth.instrument.web.client.feign.TraceFeignAspect;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Conditional;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Scope;
 
@@ -50,13 +53,6 @@ import org.springframework.context.annotation.Scope;
 @ConditionalOnBean(Tracer.class)
 @AutoConfigureBefore(FeignAutoConfiguration.class)
 public class TraceFeignClientAutoConfiguration {
-
-	@Bean
-	@ConditionalOnMissingBean
-	@Scope("prototype")
-	Feign.Builder feignBuilder(BeanFactory beanFactory) {
-		return SleuthFeignBuilder.builder(beanFactory);
-	}
 
 	@Bean
 	TraceFeignAspect traceFeignAspect(BeanFactory beanFactory) {
@@ -81,6 +77,37 @@ public class TraceFeignClientAutoConfiguration {
 		@Bean
 		static OkHttpFeignClientBeanPostProcessor okHttpFeignClientBeanPostProcessor(BeanFactory beanFactory) {
 			return new OkHttpFeignClientBeanPostProcessor(beanFactory);
+		}
+
+	}
+
+	@Configuration(proxyBeanMethods = false)
+	@Conditional(CircuitBreakerMissingOrDisabledCondition.class)
+	protected static class CircuitBreakerMissingConfiguration {
+
+		@Bean
+		@ConditionalOnMissingBean
+		@Scope("prototype")
+		Feign.Builder feignBuilder(BeanFactory beanFactory) {
+			return SleuthFeignBuilder.builder(beanFactory);
+		}
+
+	}
+
+	private static class CircuitBreakerMissingOrDisabledCondition extends AnyNestedCondition {
+
+		CircuitBreakerMissingOrDisabledCondition() {
+			super(ConfigurationPhase.PARSE_CONFIGURATION);
+		}
+
+		@ConditionalOnMissingClass("org.springframework.cloud.client.circuitbreaker.CircuitBreaker")
+		static class NoCircuitBreakerClassFound {
+
+		}
+
+		@ConditionalOnProperty(value = "feign.circuitbreaker.enabled", havingValue = "false", matchIfMissing = true)
+		static class CircuitBreakerDisabled {
+
 		}
 
 	}
