@@ -107,7 +107,7 @@ public class BraveMessagingAutoConfiguration {
 		SpringRabbitTracing springRabbitTracing(MessagingTracing messagingTracing,
 				SleuthMessagingProperties properties) {
 			return SpringRabbitTracing.newBuilder(messagingTracing)
-					.remoteServiceName(properties.getMessaging().getRabbit().getRemoteServiceName()).build();
+					.remoteServiceName(properties.getRabbit().getRemoteServiceName()).build();
 		}
 
 	}
@@ -121,7 +121,7 @@ public class BraveMessagingAutoConfiguration {
 		@ConditionalOnMissingBean
 		KafkaTracing kafkaTracing(MessagingTracing messagingTracing, SleuthMessagingProperties properties) {
 			return KafkaTracing.newBuilder(messagingTracing)
-					.remoteServiceName(properties.getMessaging().getKafka().getRemoteServiceName()).build();
+					.remoteServiceName(properties.getKafka().getRemoteServiceName()).build();
 		}
 
 		@Bean
@@ -149,7 +149,7 @@ public class BraveMessagingAutoConfiguration {
 		@ConditionalOnMissingBean
 		JmsTracing jmsTracing(MessagingTracing messagingTracing, SleuthMessagingProperties properties) {
 			return JmsTracing.newBuilder(messagingTracing)
-					.remoteServiceName(properties.getMessaging().getJms().getRemoteServiceName()).build();
+					.remoteServiceName(properties.getJms().getRemoteServiceName()).build();
 		}
 
 		@Bean

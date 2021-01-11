@@ -27,75 +27,56 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 @ConfigurationProperties("spring.sleuth.messaging")
 public class SleuthMessagingProperties {
 
-	private Messaging messaging = new Messaging();
-
-	public Messaging getMessaging() {
-		return this.messaging;
-	}
-
-	public void setMessaging(Messaging messaging) {
-		this.messaging = messaging;
-	}
+	/**
+	 * Should messaging be turned on.
+	 */
+	private boolean enabled;
 
 	/**
-	 * Generic messaging properties.
-	 *
-	 * @author Marcin Grzejszczak
+	 * Rabbit related properties.
 	 */
-	public static class Messaging {
+	private Rabbit rabbit = new Rabbit();
 
-		/**
-		 * Should messaging be turned on.
-		 */
-		private boolean enabled;
+	/**
+	 * Kafka related properties.
+	 */
+	private Kafka kafka = new Kafka();
 
-		/**
-		 * Rabbit related properties.
-		 */
-		private Rabbit rabbit = new Rabbit();
+	/**
+	 * JMS related properties.
+	 */
+	private Jms jms = new Jms();
 
-		/**
-		 * Kafka related properties.
-		 */
-		private Kafka kafka = new Kafka();
+	public boolean isEnabled() {
+		return this.enabled;
+	}
 
-		/**
-		 * JMS related properties.
-		 */
-		private Jms jms = new Jms();
+	public void setEnabled(boolean enabled) {
+		this.enabled = enabled;
+	}
 
-		public boolean isEnabled() {
-			return this.enabled;
-		}
+	public Rabbit getRabbit() {
+		return this.rabbit;
+	}
 
-		public void setEnabled(boolean enabled) {
-			this.enabled = enabled;
-		}
+	public void setRabbit(Rabbit rabbit) {
+		this.rabbit = rabbit;
+	}
 
-		public Rabbit getRabbit() {
-			return this.rabbit;
-		}
+	public Kafka getKafka() {
+		return this.kafka;
+	}
 
-		public void setRabbit(Rabbit rabbit) {
-			this.rabbit = rabbit;
-		}
+	public void setKafka(Kafka kafka) {
+		this.kafka = kafka;
+	}
 
-		public Kafka getKafka() {
-			return this.kafka;
-		}
+	public Jms getJms() {
+		return this.jms;
+	}
 
-		public void setKafka(Kafka kafka) {
-			this.kafka = kafka;
-		}
-
-		public Jms getJms() {
-			return this.jms;
-		}
-
-		public void setJms(Jms jms) {
-			this.jms = jms;
-		}
-
+	public void setJms(Jms jms) {
+		this.jms = jms;
 	}
 
 	/**
@@ -103,8 +84,14 @@ public class SleuthMessagingProperties {
 	 */
 	public static class Rabbit {
 
+		/**
+		 * Should Rabbit be turned on.
+		 */
 		private boolean enabled;
 
+		/**
+		 * Rabbit remote service name.
+		 */
 		private String remoteServiceName = "rabbitmq";
 
 		public boolean isEnabled() {
@@ -130,9 +117,20 @@ public class SleuthMessagingProperties {
 	 */
 	public static class Kafka {
 
+		/**
+		 * Should Kafka be turned on.
+		 */
 		private boolean enabled;
 
+		/**
+		 * Kafka remote service name.
+		 */
 		private String remoteServiceName = "kafka";
+
+		/**
+		 * Kafka Streams related properties.
+		 */
+		private Streams streams = new Streams();
 
 		public boolean isEnabled() {
 			return this.enabled;
@@ -150,6 +148,34 @@ public class SleuthMessagingProperties {
 			this.remoteServiceName = remoteServiceName;
 		}
 
+		public Streams getStreams() {
+			return streams;
+		}
+
+		public void setStreams(Streams streams) {
+			this.streams = streams;
+		}
+
+		/**
+		 * Kafka streams configuration.
+		 */
+		public static class Streams {
+
+			/**
+			 * Should Kafka Streams be turned on.
+			 */
+			private boolean enabled;
+
+			public boolean isEnabled() {
+				return this.enabled;
+			}
+
+			public void setEnabled(boolean enabled) {
+				this.enabled = enabled;
+			}
+
+		}
+
 	}
 
 	/**
@@ -157,8 +183,14 @@ public class SleuthMessagingProperties {
 	 */
 	public static class Jms {
 
+		/**
+		 * Should JMS be turned on.
+		 */
 		private boolean enabled;
 
+		/**
+		 * JMS remote service name.
+		 */
 		private String remoteServiceName = "jms";
 
 		public boolean isEnabled() {
