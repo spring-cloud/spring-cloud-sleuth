@@ -148,8 +148,8 @@ public class BraveMessagingAutoConfiguration {
 		@Bean
 		@ConditionalOnMissingBean
 		JmsTracing jmsTracing(MessagingTracing messagingTracing, SleuthMessagingProperties properties) {
-			return JmsTracing.newBuilder(messagingTracing)
-					.remoteServiceName(properties.getJms().getRemoteServiceName()).build();
+			return JmsTracing.newBuilder(messagingTracing).remoteServiceName(properties.getJms().getRemoteServiceName())
+					.build();
 		}
 
 		@Bean
