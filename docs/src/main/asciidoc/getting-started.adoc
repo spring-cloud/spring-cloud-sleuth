@@ -12,9 +12,7 @@ We then walk you through building your first {project-full-name} application, di
 == Introducing Spring Cloud Sleuth
 
 Spring Cloud Sleuth provides API for distributed tracing solution for https://cloud.spring.io[Spring Cloud].
-It integrates out of the box with two tracer implementations:
-
-* https://github.com/openzipkin/brave[OpenZipkin Brave]
+It integrates with https://github.com/openzipkin/brave[OpenZipkin Brave]
 
 Spring Cloud Sleuth is able to trace your requests and messages so that you can correlate that communication to corresponding log entries.
 You can also export the tracing information to an external system to visualize latency.
