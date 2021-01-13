@@ -292,7 +292,7 @@ public class SkipPatternProviderConfigTest {
 	}
 
 	/**
-	 * Extracts the patterns from pattern provider
+	 * Extracts the patterns from pattern provider.
 	 */
 	private String extractPattern(ApplicationContext context) {
 		SkipPatternProvider skipPatternProvider = context.getBean(SkipPatternProvider.class);
@@ -300,7 +300,7 @@ public class SkipPatternProviderConfigTest {
 	}
 
 	/**
-	 * Extracts all single patterns
+	 * Extracts all single patterns.
 	 */
 	private Collection<String> extractAllPatterns(ApplicationContext context) {
 		return context.getBeansOfType(SingleSkipPattern.class).values().stream().map(SingleSkipPattern::skipPattern)

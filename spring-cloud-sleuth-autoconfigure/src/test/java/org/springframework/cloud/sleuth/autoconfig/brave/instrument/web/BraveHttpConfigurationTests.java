@@ -143,7 +143,7 @@ public class BraveHttpConfigurationTests {
 	}
 
 	/**
-	 * Shows bean aliases work to configure the same instance for both client and server
+	 * Shows bean aliases work to configure the same instance for both client and server.
 	 */
 	@Test
 	public void configuresUserProvidedHttpClientAndServerParser() {

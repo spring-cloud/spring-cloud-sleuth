@@ -16,6 +16,9 @@
 
 package org.springframework.cloud.sleuth.brave.bridge;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.TraceContext;
 import org.springframework.cloud.sleuth.http.HttpClientHandler;
@@ -29,6 +32,8 @@ import org.springframework.cloud.sleuth.http.HttpClientResponse;
  * @since 3.0.0
  */
 public class BraveHttpClientHandler implements HttpClientHandler {
+
+	private static final Log log = LogFactory.getLog(BraveHttpClientHandler.class);
 
 	final brave.http.HttpClientHandler<brave.http.HttpClientRequest, brave.http.HttpClientResponse> delegate;
 
@@ -54,6 +59,12 @@ public class BraveHttpClientHandler implements HttpClientHandler {
 
 	@Override
 	public void handleReceive(HttpClientResponse response, Span span) {
+		if (response == null) {
+			if (log.isDebugEnabled()) {
+				log.debug("Response is null, will not handle receiving of span [" + span + "]");
+			}
+			return;
+		}
 		this.delegate.handleReceive(BraveHttpClientResponse.toBrave(response), BraveSpan.toBrave(span));
 	}
 
