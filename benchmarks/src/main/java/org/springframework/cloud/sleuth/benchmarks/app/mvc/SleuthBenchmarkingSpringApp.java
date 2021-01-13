@@ -43,6 +43,7 @@ import org.springframework.cloud.sleuth.annotation.SpanTag;
 import org.springframework.cloud.sleuth.instrument.web.SkipPatternProvider;
 import org.springframework.context.ApplicationListener;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.util.SocketUtils;
@@ -53,13 +54,10 @@ import org.springframework.web.bind.annotation.RestController;
  * @author Marcin Grzejszczak
  */
 @SpringBootApplication
-@RestController
 @EnableAsync
 public class SleuthBenchmarkingSpringApp implements ApplicationListener<ServletWebServerInitializedEvent> {
 
 	private static final Log log = LogFactory.getLog(SleuthBenchmarkingSpringApp.class);
-
-	public final ExecutorService pool = Executors.newWorkStealingPool();
 
 	/**
 	 * Port of the app.
@@ -72,9 +70,72 @@ public class SleuthBenchmarkingSpringApp implements ApplicationListener<ServletW
 	@Autowired
 	AClass aClass;
 
+	@Autowired
+	AController aController;
+
 	public static void main(String... args) {
 		SpringApplication.run(SleuthBenchmarkingSpringApp.class, args);
 	}
+
+	@PreDestroy
+	public void clean() {
+		this.aController.clean();
+	}
+
+	public String manualSpan() {
+		return this.aClass.manualSpan();
+	}
+
+	public String newSpan() {
+		return this.aClass.newSpan();
+	}
+
+	@Override
+	public void onApplicationEvent(ServletWebServerInitializedEvent event) {
+		this.port = event.getSource().getPort();
+	}
+
+	public Future<String> async() {
+		return this.aController.async();
+	}
+
+	@Configuration
+	static class Config {
+
+		@Bean
+		AnotherClass anotherClass(Tracer tracer) {
+			return new AnotherClass(tracer);
+		}
+
+		@Bean
+		AClass aClass(Tracer tracer, AnotherClass anotherClass) {
+			return new AClass(tracer, anotherClass);
+		}
+
+		@Bean
+		SkipPatternProvider patternProvider() {
+			return new SkipPatternProvider() {
+				@Override
+				public Pattern skipPattern() {
+					return Pattern.compile("");
+				}
+			};
+		}
+
+
+		@Bean
+		public ServletWebServerFactory servletContainer(@Value("${server.port:0}") int serverPort) {
+			log.info("Starting container at port [" + serverPort + "]");
+			return new TomcatServletWebServerFactory(serverPort == 0 ? SocketUtils.findAvailableTcpPort() : serverPort);
+		}
+
+	}
+}
+
+@RestController
+class AController {
+
+	public final ExecutorService pool = Executors.newWorkStealingPool();
 
 	@RequestMapping("/foo")
 	public String foo() {
@@ -96,54 +157,14 @@ public class SleuthBenchmarkingSpringApp implements ApplicationListener<ServletW
 		return this.pool.submit(() -> "async");
 	}
 
-	public String manualSpan() {
-		return this.aClass.manualSpan();
-	}
-
-	public String newSpan() {
-		return this.aClass.newSpan();
-	}
-
-	@Override
-	public void onApplicationEvent(ServletWebServerInitializedEvent event) {
-		this.port = event.getSource().getPort();
-	}
-
-	@Bean
-	public ServletWebServerFactory servletContainer(@Value("${server.port:0}") int serverPort) {
-		log.info("Starting container at port [" + serverPort + "]");
-		return new TomcatServletWebServerFactory(serverPort == 0 ? SocketUtils.findAvailableTcpPort() : serverPort);
-	}
-
 	@PreDestroy
 	public void clean() {
 		this.pool.shutdownNow();
 	}
 
-	@Bean
-	AnotherClass anotherClass() {
-		return new AnotherClass(this.tracer);
-	}
-
-	@Bean
-	AClass aClass() {
-		return new AClass(this.tracer, anotherClass());
-	}
-
-	@Bean
-	SkipPatternProvider patternProvider() {
-		return new SkipPatternProvider() {
-			@Override
-			public Pattern skipPattern() {
-				return Pattern.compile("");
-			}
-		};
-	}
-
 	public ExecutorService getPool() {
 		return this.pool;
 	}
-
 }
 
 class AClass {
