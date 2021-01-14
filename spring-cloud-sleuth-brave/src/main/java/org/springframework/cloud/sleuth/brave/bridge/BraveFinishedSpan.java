@@ -30,11 +30,11 @@ import org.springframework.cloud.sleuth.exporter.FinishedSpan;
  * @author Marcin Grzejszczak
  * @since 3.0.0
  */
-class BraveFinishedSpan implements FinishedSpan {
+public class BraveFinishedSpan implements FinishedSpan {
 
 	private final MutableSpan mutableSpan;
 
-	BraveFinishedSpan(MutableSpan mutableSpan) {
+	public BraveFinishedSpan(MutableSpan mutableSpan) {
 		this.mutableSpan = mutableSpan;
 	}
 
@@ -79,6 +79,11 @@ class BraveFinishedSpan implements FinishedSpan {
 	}
 
 	@Override
+	public String getLocalIp() {
+		return this.mutableSpan.localIp();
+	}
+
+	@Override
 	public int getRemotePort() {
 		return this.mutableSpan.remotePort();
 	}
@@ -106,8 +111,12 @@ class BraveFinishedSpan implements FinishedSpan {
 		return this.mutableSpan.remoteServiceName();
 	}
 
-	static FinishedSpan fromBrave(MutableSpan mutableSpan) {
+	public static FinishedSpan fromBrave(MutableSpan mutableSpan) {
 		return new BraveFinishedSpan(mutableSpan);
+	}
+
+	public static MutableSpan toBrave(FinishedSpan mutableSpan) {
+		return ((BraveFinishedSpan) mutableSpan).mutableSpan;
 	}
 
 	@Override
