@@ -39,6 +39,7 @@ import org.openjdk.jmh.annotations.Warmup;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.cloud.sleuth.benchmarks.app.mvc.SleuthBenchmarkingSpringApp;
+import org.springframework.cloud.sleuth.benchmarks.app.mvc.controller.AsyncSimulationController;
 import org.springframework.cloud.sleuth.benchmarks.jmh.TracerImplementation;
 import org.springframework.cloud.sleuth.instrument.web.mvc.TracingClientHttpRequestInterceptor;
 import org.springframework.context.ConfigurableApplicationContext;
@@ -87,10 +88,11 @@ public class RestTemplateBenchmarkTests {
 
 		@Setup
 		public void setup() {
-			this.withSleuth = new SpringApplication(SleuthBenchmarkingSpringApp.class).run("--spring.jmx.enabled=false",
-
-					"--spring.application.name=withSleuth_" + this.tracerImplementation.name());
-			this.mockMvc = MockMvcBuilders.standaloneSetup(this.withSleuth.getBean(SleuthBenchmarkingSpringApp.class))
+			this.withSleuth = new SpringApplication(SleuthBenchmarkingSpringApp.class).run(
+					"--spring.jmx.enabled=false",
+					"--spring.application.name=withSleuth_" + this.tracerImplementation.name()
+			);
+			this.mockMvc = MockMvcBuilders.standaloneSetup(this.withSleuth.getBean(AsyncSimulationController.class))
 					.build();
 			this.tracedTemplate = new RestTemplate(new MockMvcClientHttpRequestFactory(this.mockMvc));
 			this.tracedTemplate.setInterceptors(
