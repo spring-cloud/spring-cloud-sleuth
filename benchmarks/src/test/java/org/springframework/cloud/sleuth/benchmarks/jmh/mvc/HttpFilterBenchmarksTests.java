@@ -45,6 +45,7 @@ import org.openjdk.jmh.annotations.Warmup;
 import org.springframework.boot.SpringApplication;
 import org.springframework.cloud.sleuth.benchmarks.app.mvc.SleuthBenchmarkingSpringApp;
 import org.springframework.cloud.sleuth.benchmarks.jmh.TracerImplementation;
+import org.springframework.cloud.sleuth.benchmarks.app.mvc.controller.AsyncSimulationController;
 import org.springframework.cloud.sleuth.instrument.web.servlet.TracingFilter;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.http.MediaType;
@@ -143,7 +144,7 @@ public class HttpFilterBenchmarksTests {
 					"--spring.application.name=withSleuth_" + this.tracerImplementation.name());
 			this.tracingFilter = this.withSleuth.getBean(TracingFilter.class);
 			this.mockMvcForTracedController = MockMvcBuilders
-					.standaloneSetup(this.withSleuth.getBean(SleuthBenchmarkingSpringApp.class)).build();
+					.standaloneSetup(this.withSleuth.getBean(AsyncSimulationController.class)).build();
 			this.mockMvcForUntracedController = MockMvcBuilders.standaloneSetup(new VanillaController()).build();
 		}
 
