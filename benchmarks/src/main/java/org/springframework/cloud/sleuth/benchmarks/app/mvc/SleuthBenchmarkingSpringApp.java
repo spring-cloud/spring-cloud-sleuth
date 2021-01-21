@@ -101,15 +101,17 @@ public class SleuthBenchmarkingSpringApp implements ApplicationListener<ServletW
 
 	@Configuration
 	static class Config {
+		@Autowired(required = false)
+		Tracer tracer;
 
 		@Bean
-		AnotherClass anotherClass(Tracer tracer) {
-			return new AnotherClass(tracer);
+		AnotherClass anotherClass() {
+			return new AnotherClass(this.tracer);
 		}
 
 		@Bean
-		AClass aClass(Tracer tracer, AnotherClass anotherClass) {
-			return new AClass(tracer, anotherClass);
+		AClass aClass() {
+			return new AClass(this.tracer, anotherClass());
 		}
 
 		@Bean
