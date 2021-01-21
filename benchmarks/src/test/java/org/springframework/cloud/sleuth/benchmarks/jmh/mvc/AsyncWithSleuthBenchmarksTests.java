@@ -47,50 +47,33 @@ import static org.assertj.core.api.BDDAssertions.then;
 @OutputTimeUnit(TimeUnit.MICROSECONDS)
 @Threads(Threads.MAX)
 @Microbenchmark
-public class AsyncBenchmarksTests {
-
-	@Benchmark
-	public void asyncMethodWithoutSleuth(BenchmarkContext context) throws Exception {
-		then(context.untracedAsyncMethodHavingBean.async().get()).isEqualTo("async");
-	}
-
+public class AsyncWithSleuthBenchmarksTests {
 	@Benchmark
 	public void asyncMethodWithSleuth(BenchmarkContext context) throws Exception {
-		then(context.tracedAsyncMethodHavingBean.async().get()).isEqualTo("async");
+		then(context.app.async().get()).isEqualTo("async");
 	}
 
 	@State(Scope.Benchmark)
 	public static class BenchmarkContext {
-
-		volatile ConfigurableApplicationContext withSleuth;
-
-		volatile ConfigurableApplicationContext withoutSleuth;
-
-		volatile SleuthBenchmarkingSpringApp tracedAsyncMethodHavingBean;
-
-		volatile SleuthBenchmarkingSpringApp untracedAsyncMethodHavingBean;
+		volatile ConfigurableApplicationContext context;
+		volatile SleuthBenchmarkingSpringApp app;
 
 		@Param
 		private TracerImplementation tracerImplementation;
 
 		@Setup
 		public void setup() {
-			this.withSleuth = new SpringApplication(SleuthBenchmarkingSpringApp.class).run("--spring.jmx.enabled=false",
-
-					"--spring.application.name=withSleuth_" + this.tracerImplementation.name());
-			this.withoutSleuth = new SpringApplication(SleuthBenchmarkingSpringApp.class).run(
-					"--spring.jmx.enabled=false", "--spring.application.name=withoutSleuth",
-					"--spring.sleuth.enabled=false", "--spring.sleuth.async.enabled=false");
-			this.tracedAsyncMethodHavingBean = this.withSleuth.getBean(SleuthBenchmarkingSpringApp.class);
-			this.untracedAsyncMethodHavingBean = this.withoutSleuth.getBean(SleuthBenchmarkingSpringApp.class);
+			this.context = new SpringApplication(SleuthBenchmarkingSpringApp.class).run(
+					"--spring.jmx.enabled=false",
+					"--spring.application.name=withSleuth_" + this.tracerImplementation.name()
+			);
+			this.app = this.context.getBean(SleuthBenchmarkingSpringApp.class);
 		}
 
 		@TearDown
 		public void clean() {
-			this.tracedAsyncMethodHavingBean.clean();
-			this.untracedAsyncMethodHavingBean.clean();
-			this.withSleuth.close();
-			this.withoutSleuth.close();
+			this.app.clean();
+			this.context.close();
 		}
 
 	}
