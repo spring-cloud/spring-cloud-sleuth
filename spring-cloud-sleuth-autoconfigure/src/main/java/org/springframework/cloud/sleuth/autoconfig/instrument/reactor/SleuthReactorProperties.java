@@ -89,9 +89,7 @@ public class SleuthReactorProperties {
 		/**
 		 * Decorates on each operator, will be less performing, but logging will always
 		 * contain the tracing entries in each operator.
-		 * @deprecated to be removed in Sleuth 4.0.0
 		 */
-		@Deprecated
 		DECORATE_ON_EACH,
 
 		/**

@@ -36,6 +36,7 @@ import org.springframework.cloud.sleuth.TraceContext;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.annotation.ContinueSpan;
 import org.springframework.cloud.sleuth.annotation.NewSpan;
+import org.springframework.cloud.sleuth.instrument.reactor.TraceContextPropagator;
 import org.springframework.util.StringUtils;
 
 /**
@@ -146,7 +147,7 @@ public class ReactorSleuthMethodInvocationProcessor extends AbstractSleuthMethod
 
 	}
 
-	private static final class MonoSpan extends MonoOperator<Object, Object> {
+	private static final class MonoSpan extends MonoOperator<Object, Object> implements TraceContextPropagator {
 
 		final Span span;
 
@@ -187,6 +188,14 @@ public class ReactorSleuthMethodInvocationProcessor extends AbstractSleuthMethod
 				this.source.subscribe(new SpanSubscriber(actual, this.processor, this.invocation, this.span == null,
 						span, this.log, this.hasLog));
 			}
+		}
+
+		@Override
+		public Object scanUnsafe(Attr key) {
+			if (key == Attr.RUN_STYLE) {
+				return Attr.RunStyle.SYNC;
+			}
+			return super.scanUnsafe(key);
 		}
 
 	}

@@ -44,7 +44,7 @@ final class ScopePassingSpanSubscriber<T> implements SpanSubscription<T>, Scanna
 
 	private final CurrentTraceContext currentTraceContext;
 
-	private final TraceContext parent;
+	final TraceContext parent;
 
 	private Subscription s;
 
@@ -108,10 +108,14 @@ final class ScopePassingSpanSubscriber<T> implements SpanSubscription<T>, Scanna
 		return this.context;
 	}
 
+	@reactor.util.annotation.Nullable
 	@Override
 	public Object scanUnsafe(Attr key) {
 		if (key == Attr.PARENT) {
 			return this.s;
+		}
+		else if (key == Attr.RUN_STYLE) {
+			return Attr.RunStyle.SYNC;
 		}
 		else {
 			return key == Attr.ACTUAL ? this.subscriber : null;

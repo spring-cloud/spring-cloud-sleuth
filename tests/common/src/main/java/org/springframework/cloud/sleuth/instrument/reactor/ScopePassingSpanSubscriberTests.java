@@ -143,7 +143,7 @@ public abstract class ScopePassingSpanSubscriberTests {
 				"org.springframework.cloud.sleuth.autoconfig.instrument.reactor.TraceReactorAutoConfiguration.TraceReactorConfiguration");
 		Hooks.resetOnLastOperator(
 				"org.springframework.cloud.sleuth.autoconfig.instrument.reactor.TraceReactorAutoConfiguration.TraceReactorConfiguration");
-		Schedulers.removeExecutorServiceDecorator("s;euth");
+		Schedulers.resetOnScheduleHook("sleuth");
 	}
 
 	@AfterEach

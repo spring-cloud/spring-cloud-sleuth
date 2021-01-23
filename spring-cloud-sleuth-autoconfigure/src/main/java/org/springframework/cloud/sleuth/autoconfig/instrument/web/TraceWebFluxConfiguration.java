@@ -18,6 +18,7 @@ package org.springframework.cloud.sleuth.autoconfig.instrument.web;
 
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
+import org.springframework.cloud.sleuth.CurrentTraceContext;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.http.HttpServerHandler;
 import org.springframework.cloud.sleuth.instrument.web.TraceWebFilter;
@@ -38,8 +39,8 @@ class TraceWebFluxConfiguration {
 
 	@Bean
 	TraceWebFilter traceFilter(Tracer tracer, HttpServerHandler httpServerHandler,
-			SleuthWebProperties sleuthWebProperties) {
-		TraceWebFilter traceWebFilter = new TraceWebFilter(tracer, httpServerHandler);
+			CurrentTraceContext currentTraceContext, SleuthWebProperties sleuthWebProperties) {
+		TraceWebFilter traceWebFilter = new TraceWebFilter(tracer, httpServerHandler, currentTraceContext);
 		traceWebFilter.setOrder(sleuthWebProperties.getFilterOrder());
 		return traceWebFilter;
 	}

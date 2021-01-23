@@ -26,6 +26,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.reactivestreams.Subscription;
 import reactor.core.CoreSubscriber;
+import reactor.core.Scannable;
 import reactor.core.publisher.Mono;
 import reactor.util.annotation.Nullable;
 import reactor.util.context.Context;
@@ -37,6 +38,7 @@ import org.springframework.cloud.sleuth.TraceContext;
 import org.springframework.cloud.sleuth.http.HttpClientHandler;
 import org.springframework.cloud.sleuth.http.HttpClientRequest;
 import org.springframework.cloud.sleuth.http.HttpClientResponse;
+import org.springframework.cloud.sleuth.instrument.reactor.TraceContextPropagator;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.web.reactive.function.client.ClientRequest;
 import org.springframework.web.reactive.function.client.ClientResponse;
@@ -139,7 +141,8 @@ final class TraceExchangeFilterFunction implements ExchangeFilterFunction {
 		return this.handler;
 	}
 
-	private static final class MonoWebClientTrace extends Mono<ClientResponse> {
+	private static final class MonoWebClientTrace extends Mono<ClientResponse>
+			implements Scannable, TraceContextPropagator {
 
 		final ExchangeFunction next;
 
@@ -175,13 +178,22 @@ final class TraceExchangeFilterFunction implements ExchangeFilterFunction {
 					.subscribe(new TraceWebClientSubscriber(subscriber, context, span, parent, this));
 		}
 
+		@Nullable
+		@Override
+		public Object scanUnsafe(Scannable.Attr key) {
+			if (key == Scannable.Attr.RUN_STYLE) {
+				return Scannable.Attr.RunStyle.SYNC;
+			}
+			return null;
+		}
+
 	}
 
 	/**
 	 * Subscriber for WebClient.
 	 */
 	static final class TraceWebClientSubscriber extends AtomicReference<Span>
-			implements CoreSubscriber<ClientResponse> {
+			implements CoreSubscriber<ClientResponse>, Scannable {
 
 		final CoreSubscriber<? super ClientResponse> actual;
 
@@ -275,6 +287,14 @@ final class TraceExchangeFilterFunction implements ExchangeFilterFunction {
 		@Override
 		public Context currentContext() {
 			return this.context;
+		}
+
+		@Override
+		public Object scanUnsafe(Scannable.Attr key) {
+			if (key == Scannable.Attr.RUN_STYLE) {
+				return Scannable.Attr.RunStyle.SYNC;
+			}
+			return null;
 		}
 
 	}
