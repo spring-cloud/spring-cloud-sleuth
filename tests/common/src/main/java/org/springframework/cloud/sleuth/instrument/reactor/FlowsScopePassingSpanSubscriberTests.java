@@ -17,23 +17,33 @@
 package org.springframework.cloud.sleuth.instrument.reactor;
 
 import java.util.Objects;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Function;
+import java.util.function.Supplier;
+import java.util.stream.Stream;
 
 import org.assertj.core.presentation.StandardRepresentation;
 import org.awaitility.Awaitility;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
+import org.mockito.Mockito;
 import org.reactivestreams.Publisher;
 import org.reactivestreams.Subscriber;
 import org.reactivestreams.Subscription;
 import reactor.core.CoreSubscriber;
+import reactor.core.Exceptions;
+import reactor.core.Scannable;
 import reactor.core.publisher.Hooks;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 
 import org.springframework.cloud.sleuth.CurrentTraceContext;
 import org.springframework.cloud.sleuth.TraceContext;
+import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -44,6 +54,8 @@ import static org.springframework.cloud.sleuth.instrument.reactor.ReactorSleuth.
  * @author Marcin Grzejszczak
  */
 public abstract class FlowsScopePassingSpanSubscriberTests {
+
+	static final String HOOK_KEY = "org.springframework.cloud.sleuth.autoconfig.instrument.reactor.TraceReactorAutoConfiguration.TraceReactorConfiguration";
 
 	static {
 		// AssertJ will recognise QueueSubscription implements queue and try to invoke
@@ -61,16 +73,17 @@ public abstract class FlowsScopePassingSpanSubscriberTests {
 
 	@BeforeEach
 	public void setup() {
-		Hooks.resetOnEachOperator(
-				"org.springframework.cloud.sleuth.autoconfig.instrument.reactor.TraceReactorAutoConfiguration.TraceReactorConfiguration");
-		Hooks.resetOnLastOperator(
-				"org.springframework.cloud.sleuth.autoconfig.instrument.reactor.TraceReactorAutoConfiguration.TraceReactorConfiguration");
+		Hooks.resetOnEachOperator();
+		Hooks.resetOnLastOperator();
 		Schedulers.resetOnScheduleHooks();
 	}
 
 	@AfterEach
 	public void close() {
 		springContext.close();
+		Hooks.resetOnEachOperator();
+		Hooks.resetOnLastOperator();
+		Schedulers.resetOnScheduleHooks();
 	}
 
 	@Test
@@ -142,6 +155,67 @@ public abstract class FlowsScopePassingSpanSubscriberTests {
 		}
 
 		Awaitility.await().untilAsserted(() -> then(currentTraceContext().context()).isNull());
+	}
+
+	@ParameterizedTest
+	@MethodSource("should_not_double_wrap_async_publisher_Args")
+	public void should_not_double_wrap_async_publisher(String name, Supplier<Mono<Integer>> sourceSupplier) {
+		springContext.registerBean(CurrentTraceContext.class, this::currentTraceContext);
+		springContext.registerBean(Tracer.class, () -> Mockito.mock(Tracer.class));
+		springContext.refresh();
+
+		Hooks.onEachOperator(HOOK_KEY, ReactorSleuth.onEachOperatorForOnEachInstrumentation(springContext));
+		Hooks.onLastOperator(HOOK_KEY, ReactorSleuth.onLastOperatorForOnEachInstrumentation(springContext));
+
+		AtomicBoolean once = new AtomicBoolean();
+		Hooks.onLastOperator("test", p -> {
+			// check only first onLast Hook
+			if (once.compareAndSet(false, true)) {
+				assertThat(p).isInstanceOf(TraceContextPropagator.class);
+				Object parent = Scannable.from(p).scanUnsafe(Scannable.Attr.PARENT);
+				assertThat(parent).isNotInstanceOf(TraceContextPropagator.class);
+			}
+			return p;
+		});
+		try (CurrentTraceContext.Scope ws = currentTraceContext().newScope(context())) {
+			Mono<Integer> source = sourceSupplier.get();
+
+			source.subscribe((Subscriber<? super Integer>) new CoreSubscriber<Integer>() {
+				@Override
+				public void onSubscribe(Subscription subscription) {
+					assertThat(subscription).isInstanceOf(ScopePassingSpanSubscriber.class);
+					ScopePassingSpanSubscriber<Integer> spanSubscriber = (ScopePassingSpanSubscriber) subscription;
+					Object parent = spanSubscriber.scanUnsafe(Scannable.Attr.PARENT);
+
+					assertThat(parent).isInstanceOf(Subscriber.class).isNotInstanceOf(ScopePassingSpanSubscriber.class);
+				}
+
+				@Override
+				public void onNext(Integer integer) {
+				}
+
+				@Override
+				public void onError(Throwable throwable) {
+					throw Exceptions.propagate(throwable);
+				}
+
+				@Override
+				public void onComplete() {
+				}
+			});
+
+		}
+	}
+
+	private static Stream<Arguments> should_not_double_wrap_async_publisher_Args() {
+		return Stream.of(
+				// async source is hidden by Mono.defer()
+				Arguments.of("hidden by defer",
+						(Supplier) () -> Mono
+								.defer(() -> Mono.fromSupplier(() -> 1).hide().subscribeOn(Schedulers.parallel()))),
+				// async source is directly accessible during subscription
+				Arguments.of("directly accessible",
+						(Supplier) () -> Mono.fromSupplier(() -> 1).hide().subscribeOn(Schedulers.parallel())));
 	}
 
 }

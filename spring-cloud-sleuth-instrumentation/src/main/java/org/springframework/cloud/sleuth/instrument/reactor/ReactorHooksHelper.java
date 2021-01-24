@@ -143,7 +143,7 @@ final class ReactorHooksHelper {
 		}
 	}
 
-	private static boolean isTraceContextPropagator(Publisher<?> current) {
+	static boolean isTraceContextPropagator(Publisher<?> current) {
 		return current instanceof TraceContextPropagator;
 	}
 

@@ -82,8 +82,10 @@ public abstract class ReactorSleuth {
 		LazyBean<CurrentTraceContext> lazyCurrentTraceContext = LazyBean.create(springContext,
 				CurrentTraceContext.class);
 
+		LazyBean<Tracer> lazyTracer = LazyBean.create(springContext, Tracer.class);
+
 		return Operators.liftPublisher(p -> !(p instanceof Fuseable.ScalarCallable),
-				(BiFunction) liftFunction(springContext, lazyCurrentTraceContext));
+				(BiFunction) liftFunction(springContext, lazyCurrentTraceContext, lazyTracer));
 	}
 
 	/**
@@ -105,14 +107,20 @@ public abstract class ReactorSleuth {
 		LazyBean<CurrentTraceContext> lazyCurrentTraceContext = LazyBean.create(springContext,
 				CurrentTraceContext.class);
 
-		Predicate<Publisher> publisherPredicate = ReactorHooksHelper::shouldDecorate;
-		BiFunction lifter = liftFunction(springContext, lazyCurrentTraceContext);
+		LazyBean<Tracer> lazyTracer = LazyBean.create(springContext, Tracer.class);
 
-		return ReactorHooksHelper.liftPublisher(publisherPredicate, lifter);
+		@SuppressWarnings("rawtypes")
+		Predicate<Publisher> shouldDecorate = ReactorHooksHelper::shouldDecorate;
+		@SuppressWarnings("rawtypes")
+		BiFunction<Publisher, ? super CoreSubscriber<? super T>, ? extends CoreSubscriber<? super T>> lifter = liftFunction(
+				springContext, lazyCurrentTraceContext, lazyTracer);
+
+		return ReactorHooksHelper.liftPublisher(shouldDecorate, lifter);
 	}
 
 	static <O> BiFunction<Publisher, ? super CoreSubscriber<? super O>, ? extends CoreSubscriber<? super O>> liftFunction(
-			ConfigurableApplicationContext springContext, LazyBean<CurrentTraceContext> lazyCurrentTraceContext) {
+			ConfigurableApplicationContext springContext, LazyBean<CurrentTraceContext> lazyCurrentTraceContext,
+			LazyBean<Tracer> lazyTracer) {
 		return (p, sub) -> {
 			if (!springContext.isActive()) {
 				if (log.isTraceEnabled()) {
@@ -143,15 +151,23 @@ public abstract class ReactorSleuth {
 				return sub;
 			}
 
-			context = contextWithBeans(context, springContext);
-			if (log.isTraceEnabled()) {
-				log.trace("Spring context [" + springContext + "], Reactor context [" + context + "], name ["
-						+ name(sub) + "]");
-			}
-
 			TraceContext parent = traceContext(context, currentTraceContext);
 			if (parent == null) {
 				return sub; // no need to scope a null parent
+			}
+
+			// Handle scenarios such as Mono.defer
+			if (sub instanceof ScopePassingSpanSubscriber) {
+				ScopePassingSpanSubscriber<?> scopePassing = (ScopePassingSpanSubscriber<?>) sub;
+				if (scopePassing.parent.equals(parent)) {
+					return sub; // don't double-wrap
+				}
+			}
+
+			context = contextWithBeans(context, lazyTracer, lazyCurrentTraceContext);
+			if (log.isTraceEnabled()) {
+				log.trace("Spring context [" + springContext + "], Reactor context [" + context + "], name ["
+						+ name(sub) + "]");
 			}
 
 			if (log.isTraceEnabled()) {
@@ -163,12 +179,13 @@ public abstract class ReactorSleuth {
 		};
 	}
 
-	private static <T> Context contextWithBeans(Context context, ConfigurableApplicationContext springContext) {
+	private static <T> Context contextWithBeans(Context context, LazyBean<Tracer> tracer,
+			LazyBean<CurrentTraceContext> currentTraceContext) {
 		if (!context.hasKey(Tracer.class)) {
-			context = context.put(Tracer.class, springContext.getBean(Tracer.class));
+			context = context.put(Tracer.class, tracer.getOrError());
 		}
 		if (!context.hasKey(CurrentTraceContext.class)) {
-			context = context.put(CurrentTraceContext.class, springContext.getBean(CurrentTraceContext.class));
+			context = context.put(CurrentTraceContext.class, currentTraceContext.getOrError());
 		}
 		return context;
 	}
@@ -184,13 +201,18 @@ public abstract class ReactorSleuth {
 		if (log.isTraceEnabled()) {
 			log.trace("Spring Context passing operator [" + springContext + "]");
 		}
+
+		LazyBean<Tracer> lazyTracer = LazyBean.create(springContext, Tracer.class);
+		LazyBean<CurrentTraceContext> lazyCurrentTraceContext = LazyBean.create(springContext,
+				CurrentTraceContext.class);
+
 		return Operators.liftPublisher(p -> {
 			// We don't scope scalar results as they happen in an instant. This prevents
 			// excessive overhead when using Flux/Mono #just, #empty, #error, etc.
 			return !(p instanceof Fuseable.ScalarCallable) && springContext.isActive();
 		}, (p, sub) -> {
 			Context ctxBefore = context(sub);
-			Context context = contextWithBeans(ctxBefore, springContext);
+			Context context = contextWithBeans(ctxBefore, lazyTracer, lazyCurrentTraceContext);
 			if (context == ctxBefore) {
 				return sub;
 			}
@@ -210,9 +232,11 @@ public abstract class ReactorSleuth {
 			ConfigurableApplicationContext springContext) {
 		LazyBean<CurrentTraceContext> lazyCurrentTraceContext = LazyBean.create(springContext,
 				CurrentTraceContext.class);
+		LazyBean<Tracer> lazyTracer = LazyBean.create(springContext, Tracer.class);
 
 		BiFunction<Publisher, ? super CoreSubscriber<? super T>, ? extends CoreSubscriber<? super T>> scopePassingSpanSubscriber = liftFunction(
-				springContext, lazyCurrentTraceContext);
+				springContext, lazyCurrentTraceContext, lazyTracer);
+
 		BiFunction<Publisher, ? super CoreSubscriber<? super T>, ? extends CoreSubscriber<? super T>> skipIfNoTraceCtx = (
 				pub, sub) -> {
 			// lazyCurrentTraceContext.get() is not null here. see predicate bellow
@@ -224,6 +248,13 @@ public abstract class ReactorSleuth {
 		};
 
 		return ReactorHooksHelper.liftPublisher(p -> {
+			/*
+			 * this prevent double decoration when last operator in the chain is not SYNC
+			 * like {@code Mono.fromSuppler(() -> ...).subscribeOn(Schedulers.parallel())}
+			 */
+			if (ReactorHooksHelper.isTraceContextPropagator(p)) {
+				return false;
+			}
 			boolean addContext = !(p instanceof Fuseable.ScalarCallable) && springContext.isActive();
 			if (addContext) {
 				CurrentTraceContext currentTraceContext = lazyCurrentTraceContext.get();
