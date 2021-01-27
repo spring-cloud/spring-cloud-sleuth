@@ -129,14 +129,13 @@ final class ReactorHooksHelper {
 			if (isTraceContextPropagator(current)) {
 				return false;
 			}
-			if (!isLifter(current)) {
-				if (!isSync(current)) {
-					return true;
-				}
 
-				if (isSourceProducer(current)) {
-					return false;
-				}
+			if (!isSync(current)) {
+				return true;
+			}
+
+			if (isSourceProducer(current)) {
+				return false;
 			}
 
 			current = getParent(current);
@@ -163,18 +162,6 @@ final class ReactorHooksHelper {
 			return (Publisher<?>) parent;
 		}
 		return null;
-	}
-
-	private static boolean isReactorCorePublisher(String pubClassName) {
-		return pubClassName != null && pubClassName.startsWith("reactor.core.publisher");
-	}
-
-	private static boolean isLifter(Publisher<?> current) {
-		if (current == null) {
-			return false;
-		}
-		String name = current.getClass().getName();
-		return isReactorCorePublisher(name) && ((name.endsWith("Lift") || name.endsWith("LiftFuseable")));
 	}
 
 	/**
