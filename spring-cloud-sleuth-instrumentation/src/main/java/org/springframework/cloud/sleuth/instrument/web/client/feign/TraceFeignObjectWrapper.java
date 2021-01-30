@@ -75,7 +75,8 @@ final class TraceFeignObjectWrapper {
 	}
 
 	Object wrap(Object bean) {
-		if (bean instanceof Client && !(bean instanceof TracingFeignClient)) {
+		if (bean instanceof Client && !(bean instanceof TracingFeignClient)
+				&& !(bean instanceof LazyTracingFeignClient)) {
 			if (loadBalancerPresent && bean instanceof FeignBlockingLoadBalancerClient
 					&& !(bean instanceof TraceFeignBlockingLoadBalancerClient)) {
 				return instrumentedFeignLoadBalancerClient(bean);
