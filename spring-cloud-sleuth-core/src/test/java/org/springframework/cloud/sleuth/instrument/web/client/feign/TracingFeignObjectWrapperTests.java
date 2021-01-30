@@ -30,6 +30,8 @@ import org.springframework.cloud.client.loadbalancer.LoadBalancedRetryFactory;
 import org.springframework.cloud.loadbalancer.blocking.client.BlockingLoadBalancerClient;
 import org.springframework.cloud.openfeign.loadbalancer.FeignBlockingLoadBalancerClient;
 import org.springframework.cloud.openfeign.loadbalancer.RetryableFeignBlockingLoadBalancerClient;
+import org.springframework.cloud.openfeign.ribbon.LoadBalancerFeignClient;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.BDDAssertions.then;
@@ -59,6 +61,19 @@ public class TracingFeignObjectWrapperTests {
 		String notFeignRelatedObject = "object";
 		then(this.traceFeignObjectWrapper.wrap(notFeignRelatedObject))
 				.isSameAs(notFeignRelatedObject);
+	}
+
+	// gh-1824
+	@Test
+	public void should_not_wrap_nor_modify_lazy_tracing_feign_client() {
+		Client delegate = mock(Client.class);
+		LazyTracingFeignClient lazyTracingFeignClient = new LazyTracingFeignClient(
+				beanFactory, delegate);
+
+		assertThat(traceFeignObjectWrapper.wrap(lazyTracingFeignClient))
+				.isSameAs(lazyTracingFeignClient);
+		assertThat(ReflectionTestUtils.getField(lazyTracingFeignClient, "delegate"))
+				.isSameAs(delegate);
 	}
 
 	// gh-1528
@@ -128,6 +143,29 @@ public class TracingFeignObjectWrapperTests {
 				.isInstanceOf(TraceRetryableFeignBlockingLoadBalancerClient.class);
 	}
 
+	// gh-1824, multiwrap should be ok too
+	@Test
+	public void should_wrap_subclass_of_load_balancer_feign_client() {
+		Client delegate = mock(Client.class);
+		TestLoadBalancerFeignClient testLoadBalancerFeignClient = new TestLoadBalancerFeignClient(
+				delegate);
+
+		traceFeignObjectWrapper.wrap(testLoadBalancerFeignClient);
+		traceFeignObjectWrapper.wrap(testLoadBalancerFeignClient);
+		Object wrapped = traceFeignObjectWrapper.wrap(testLoadBalancerFeignClient);
+		assertThat(wrapped).isExactlyInstanceOf(TraceLoadBalancerFeignClient.class);
+		TraceLoadBalancerFeignClient wrappedClient = (TraceLoadBalancerFeignClient) wrapped;
+		assertThat(wrappedClient.getDelegate()).isSameAs(testLoadBalancerFeignClient);
+		TestLoadBalancerFeignClient firstDelegate = (TestLoadBalancerFeignClient) wrappedClient
+				.getDelegate();
+		assertThat(firstDelegate.getDelegate())
+				.isExactlyInstanceOf(LazyTracingFeignClient.class);
+		LazyTracingFeignClient secondDelegate = (LazyTracingFeignClient) firstDelegate
+				.getDelegate();
+		assertThat(ReflectionTestUtils.getField(secondDelegate, "delegate"))
+				.isSameAs(delegate);
+	}
+
 	static class TestFeignBlockingLoadBalancerClient
 			extends FeignBlockingLoadBalancerClient {
 
@@ -145,6 +183,14 @@ public class TracingFeignObjectWrapperTests {
 				BlockingLoadBalancerClient loadBalancerClient,
 				LoadBalancedRetryFactory retryFactory) {
 			super(delegate, loadBalancerClient, retryFactory);
+		}
+
+	}
+
+	static class TestLoadBalancerFeignClient extends LoadBalancerFeignClient {
+
+		TestLoadBalancerFeignClient(Client delegate) {
+			super(delegate, null, null);
 		}
 
 	}
