@@ -85,16 +85,10 @@ class TraceFeignBlockingLoadBalancerClient extends FeignBlockingLoadBalancerClie
 			if (LOG.isDebugEnabled()) {
 				LOG.debug("Exception thrown", e);
 			}
-			if (e instanceof IOException/*
-										 * || e.getCause() != null && e.getCause()
-										 * instanceof ClientException &&
-										 * ((ClientException) e.getCause())
-										 * .getErrorType() ==
-										 * ClientException.ErrorType.GENERAL
-										 */) {
+			if (e instanceof IOException) {
 				if (LOG.isDebugEnabled()) {
 					LOG.debug(
-							"General exception was thrown, so most likely the traced client wasn't called. Falling back to a manual span");
+							"IOException was thrown, so most likely the traced client wasn't called. Falling back to a manual span.");
 				}
 				tracingFeignClient().handleSendAndReceive(fallbackSpan, request, response, e);
 			}
