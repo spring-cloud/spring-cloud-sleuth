@@ -21,7 +21,6 @@ import java.io.IOException;
 import brave.Span;
 import brave.Tracer;
 import brave.http.HttpTracing;
-import com.netflix.client.ClientException;
 import feign.Client;
 import feign.Request;
 import feign.Response;
@@ -80,13 +79,10 @@ class TraceRetryableFeignBlockingLoadBalancerClient
 			if (LOG.isDebugEnabled()) {
 				LOG.debug("Exception thrown", e);
 			}
-			if (e instanceof IOException || e.getCause() != null
-					&& e.getCause() instanceof ClientException
-					&& ((ClientException) e.getCause())
-							.getErrorType() == ClientException.ErrorType.GENERAL) {
+			if (e instanceof IOException) {
 				if (LOG.isDebugEnabled()) {
 					LOG.debug(
-							"General exception was thrown, so most likely the traced client wasn't called. Falling back to a manual span");
+							"IO exception was thrown, so most likely the traced client wasn't called. Falling back to a manual span");
 				}
 				tracingFeignClient().handleSendAndReceive(fallbackSpan, request, response,
 						e);
