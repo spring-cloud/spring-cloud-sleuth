@@ -132,6 +132,13 @@
 
 	<dependencyManagement>
 		<dependencies>
+			<!-- https://mvnrepository.com/artifact/io.projectreactor/reactor-bom -->
+			<dependency>
+				<groupId>io.projectreactor</groupId>
+				<artifactId>reactor-core</artifactId>
+				<version>3.3.14.BUILD-SNAPSHOT</version>
+			</dependency>
+
 			<!-- force latest reactor-netty -->
 			<dependency>
 				<groupId>org.springframework.cloud</groupId>

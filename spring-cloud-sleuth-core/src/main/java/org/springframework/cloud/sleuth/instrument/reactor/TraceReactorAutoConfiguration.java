@@ -16,8 +16,14 @@
 
 package org.springframework.cloud.sleuth.instrument.reactor;
 
+import java.util.AbstractQueue;
+import java.util.Iterator;
+import java.util.Queue;
+
 import javax.annotation.PreDestroy;
 
+import brave.Span;
+import brave.Tracer;
 import brave.Tracing;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -87,6 +93,9 @@ public class TraceReactorAutoConfiguration {
 			}
 			SleuthReactorProperties reactorProperties = this.springContext
 					.getBean(SleuthReactorProperties.class);
+			if (reactorProperties.isDecorateHooks()) {
+				Hooks.removeQueueWrapper(SLEUTH_TRACE_REACTOR_KEY);
+			}
 			if (reactorProperties.isDecorateOnEach()) {
 				if (log.isTraceEnabled()) {
 					log.trace("Resetting onEach operator instrumentation");
@@ -152,6 +161,10 @@ class HooksRefresher implements ApplicationListener<RefreshScopeRefreshedEvent> 
 		}
 		Hooks.resetOnEachOperator(SLEUTH_TRACE_REACTOR_KEY);
 		Hooks.resetOnLastOperator(SLEUTH_TRACE_REACTOR_KEY);
+		Hooks.removeQueueWrapper(SLEUTH_TRACE_REACTOR_KEY);
+		if (this.reactorProperties.isDecorateHooks()) {
+			HookRegisteringBeanDefinitionRegistryPostProcessor.addQueueWrapper(context);
+		}
 		if (this.reactorProperties.isDecorateOnEach()) {
 			if (log.isTraceEnabled()) {
 				log.trace("Decorating onEach operator instrumentation");
@@ -194,27 +207,103 @@ class HookRegisteringBeanDefinitionRegistryPostProcessor
 
 	static void setupHooks(ConfigurableApplicationContext springContext) {
 		ConfigurableEnvironment environment = springContext.getEnvironment();
-		boolean decorateOnEach = environment.getProperty(
-				"spring.sleuth.reactor.decorate-on-each", Boolean.class, true);
-		if (decorateOnEach) {
-			if (log.isTraceEnabled()) {
-				log.trace("Decorating onEach operator instrumentation");
-			}
-			Hooks.onEachOperator(SLEUTH_TRACE_REACTOR_KEY,
-					scopePassingSpanOperator(springContext));
+		boolean decorateHooks = environment
+				.getProperty("spring.sleuth.reactor.decorate-hooks", Boolean.class, true);
+		if (decorateHooks) {
+			addQueueWrapper(springContext);
 		}
 		else {
-			if (log.isTraceEnabled()) {
-				log.trace("Decorating onLast operator instrumentation");
+			boolean decorateOnEach = environment.getProperty(
+					"spring.sleuth.reactor.decorate-on-each", Boolean.class, true);
+			if (decorateOnEach) {
+				if (log.isTraceEnabled()) {
+					log.trace("Decorating onEach operator instrumentation");
+				}
+				Hooks.onEachOperator(SLEUTH_TRACE_REACTOR_KEY,
+						scopePassingSpanOperator(springContext));
 			}
-			Hooks.onLastOperator(SLEUTH_TRACE_REACTOR_KEY,
-					scopePassingSpanOperator(springContext));
+			else {
+				if (log.isTraceEnabled()) {
+					log.trace("Decorating onLast operator instrumentation");
+				}
+				Hooks.onLastOperator(SLEUTH_TRACE_REACTOR_KEY,
+						scopePassingSpanOperator(springContext));
+			}
 		}
 		Schedulers.setExecutorServiceDecorator(
 				TraceReactorAutoConfiguration.SLEUTH_REACTOR_EXECUTOR_SERVICE_KEY,
 				(scheduler,
 						scheduledExecutorService) -> new TraceableScheduledExecutorService(
 								springContext, scheduledExecutorService));
+	}
+
+	static void addQueueWrapper(ConfigurableApplicationContext springContext) {
+		Hooks.addQueueWrapper(SLEUTH_TRACE_REACTOR_KEY,
+				queue -> traceQueue(springContext, queue));
+	}
+
+	private static Queue<?> traceQueue(ConfigurableApplicationContext springContext,
+			Queue<?> queue) {
+		if (!springContext.isActive()) {
+			return queue;
+		}
+		Tracer tracer = springContext.getBean(Tracer.class);
+		@SuppressWarnings("unchecked")
+		Queue<Envelope> envelopeQueue = (Queue<Envelope>) queue;
+		return new AbstractQueue<Object>() {
+
+			@Override
+			public int size() {
+				return envelopeQueue.size();
+			}
+
+			@Override
+			public boolean offer(Object o) {
+				Span span = tracer.currentSpan();
+				if (span != null) {
+					// Clear the current thread
+					tracer.withSpanInScope(null);
+				}
+				return envelopeQueue.offer(new Envelope(o, span));
+			}
+
+			@Override
+			public Object poll() {
+				Envelope envelope = envelopeQueue.poll();
+				if (envelope == null) {
+					return null;
+				}
+				if (envelope.span != null) {
+					// puts in thread local
+					tracer.withSpanInScope(envelope.span);
+				}
+				return envelope.body;
+			}
+
+			@Override
+			public Object peek() {
+				return queue.peek();
+			}
+
+			@Override
+			@SuppressWarnings("unchecked")
+			public Iterator<Object> iterator() {
+				return (Iterator<Object>) queue.iterator();
+			}
+		};
+	}
+
+	static class Envelope {
+
+		final Object body;
+
+		final Span span;
+
+		Envelope(Object body, Span span) {
+			this.body = body;
+			this.span = span;
+		}
+
 	}
 
 }
