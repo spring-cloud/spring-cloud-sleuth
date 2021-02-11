@@ -365,6 +365,34 @@
 			</exclusions>
 		</dependency>
 
+		<!-- Wavefront -->
+		<dependency>
+			<groupId>com.wavefront</groupId>
+			<artifactId>wavefront-opentracing-sdk-java</artifactId>
+			<optional>true</optional>
+		</dependency>
+		<dependency>
+			<groupId>com.wavefront</groupId>
+			<artifactId>wavefront-spring-boot</artifactId>
+			<optional>true</optional>
+		</dependency>
+		<dependency>
+			<groupId>com.wavefront</groupId>
+			<artifactId>wavefront-runtime-sdk-jvm</artifactId>
+			<optional>true</optional>
+		</dependency>
+		<dependency>
+			<groupId>com.wavefront</groupId>
+			<artifactId>wavefront-sdk-java</artifactId>
+			<optional>true</optional>
+		</dependency>
+		<dependency>
+			<groupId>io.micrometer</groupId>
+			<artifactId>micrometer-registry-wavefront</artifactId>
+			<optional>true</optional>
+		</dependency>
+
+		<!-- Tests -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-test</artifactId>

@@ -25,7 +25,8 @@ org.springframework.cloud.sleuth.autoconfig.brave.instrument.messaging.BraveMess
 org.springframework.cloud.sleuth.autoconfig.brave.instrument.opentracing.BraveOpentracingAutoConfiguration,\
 org.springframework.cloud.sleuth.autoconfig.brave.instrument.redis.BraveRedisAutoConfiguration,\
 org.springframework.cloud.sleuth.autoconfig.brave.instrument.mongodb.BraveMongoDbAutoConfiguration,\
-org.springframework.cloud.sleuth.autoconfig.zipkin2.ZipkinAutoConfiguration
+org.springframework.cloud.sleuth.autoconfig.zipkin2.ZipkinAutoConfiguration,\
+org.springframework.cloud.sleuth.autoconfig.wavefront.WavefrontSleuthAutoConfiguration
 # Environment Post Processor
 org.springframework.boot.env.EnvironmentPostProcessor=\
 org.springframework.cloud.sleuth.autoconfig.TraceEnvironmentPostProcessor,\

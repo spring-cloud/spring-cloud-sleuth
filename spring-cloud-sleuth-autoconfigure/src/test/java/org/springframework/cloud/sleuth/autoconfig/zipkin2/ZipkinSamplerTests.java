@@ -29,6 +29,8 @@ import org.springframework.boot.test.context.runner.ApplicationContextRunner;
 import org.springframework.cloud.gateway.config.GatewayAutoConfiguration;
 import org.springframework.cloud.gateway.config.GatewayClassPathWarningAutoConfiguration;
 import org.springframework.cloud.gateway.config.GatewayMetricsAutoConfiguration;
+import org.springframework.cloud.sleuth.autoconfig.NoOpWavefrontSender;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 /**
@@ -55,6 +57,11 @@ public class ZipkinSamplerTests {
 			GatewayMetricsAutoConfiguration.class, ManagementWebSecurityAutoConfiguration.class,
 			MongoAutoConfiguration.class, QuartzAutoConfiguration.class })
 	static class TestConfig {
+
+		@Bean
+		NoOpWavefrontSender noOpWavefrontSender() {
+			return new NoOpWavefrontSender();
+		}
 
 	}
 

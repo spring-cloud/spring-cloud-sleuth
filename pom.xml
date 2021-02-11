@@ -71,6 +71,7 @@
 		<spring-cloud-netflix.version>3.0.2-SNAPSHOT</spring-cloud-netflix.version>
 		<spring-cloud-openfeign.version>3.0.2-SNAPSHOT</spring-cloud-openfeign.version>
 		<brave.version>5.13.2</brave.version>
+		<wavefront-spring-boot.version>2.1.1-SNAPSHOT</wavefront-spring-boot.version>
 		<opentracing.version>0.32.0</opentracing.version>
 		<spring-security-boot-autoconfigure.version>2.3.4.RELEASE</spring-security-boot-autoconfigure.version>
 		<disable.nohttp.checks>false</disable.nohttp.checks>
@@ -225,6 +226,13 @@
 				<groupId>org.springframework.cloud</groupId>
 				<artifactId>spring-cloud-openfeign-dependencies</artifactId>
 				<version>${spring-cloud-openfeign.version}</version>
+				<type>pom</type>
+				<scope>import</scope>
+			</dependency>
+			<dependency>
+				<groupId>com.wavefront</groupId>
+				<artifactId>wavefront-spring-boot-bom</artifactId>
+				<version>${wavefront-spring-boot.version}</version>
 				<type>pom</type>
 				<scope>import</scope>
 			</dependency>
