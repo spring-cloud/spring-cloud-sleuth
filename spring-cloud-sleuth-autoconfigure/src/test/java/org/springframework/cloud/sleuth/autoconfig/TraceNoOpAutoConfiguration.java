@@ -16,6 +16,7 @@
 
 package org.springframework.cloud.sleuth.autoconfig;
 
+import org.springframework.boot.actuate.autoconfigure.metrics.export.wavefront.WavefrontMetricsExportAutoConfiguration;
 import org.springframework.boot.autoconfigure.AutoConfigureBefore;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -31,6 +32,7 @@ import org.springframework.cloud.sleuth.propagation.Propagator;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
+import org.springframework.context.annotation.Primary;
 
 /**
  * {@link org.springframework.boot.autoconfigure.EnableAutoConfiguration
@@ -43,7 +45,7 @@ import org.springframework.context.annotation.Import;
  */
 @Configuration(proxyBeanMethods = false)
 @ConditionalOnProperty("spring.sleuth.noop.enabled")
-@AutoConfigureBefore(BraveAutoConfiguration.class)
+@AutoConfigureBefore({ BraveAutoConfiguration.class, WavefrontMetricsExportAutoConfiguration.class })
 @Import(TraceConfiguration.class)
 public class TraceNoOpAutoConfiguration {
 
@@ -66,6 +68,12 @@ public class TraceNoOpAutoConfiguration {
 	@Bean
 	SpanCustomizer defaultSpanCustomizer() {
 		return new NoOpSpanCustomizer();
+	}
+
+	@Bean
+	@Primary
+	NoOpWavefrontSender noOpWavefrontSender() {
+		return new NoOpWavefrontSender();
 	}
 
 	@Configuration(proxyBeanMethods = false)
