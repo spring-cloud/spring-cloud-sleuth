@@ -21,8 +21,6 @@ import brave.TracingCustomizer;
 import brave.handler.SpanHandler;
 import com.wavefront.sdk.common.WavefrontSender;
 import com.wavefront.sdk.common.application.ApplicationTags;
-import com.wavefront.spring.autoconfigure.WavefrontAutoConfiguration;
-import com.wavefront.spring.autoconfigure.WavefrontTracerBla;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.wavefront.WavefrontConfig;
 
@@ -34,7 +32,6 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
-import org.springframework.cloud.sleuth.SpanNamer;
 import org.springframework.cloud.sleuth.autoconfig.brave.BraveAutoConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -47,24 +44,25 @@ import org.springframework.context.annotation.Configuration;
  * @since 3.1.0
  */
 @Configuration(proxyBeanMethods = false)
-@ConditionalOnClass({ SpanNamer.class, MeterRegistry.class, WavefrontConfig.class, WavefrontSender.class })
-@ConditionalOnBean(WavefrontSender.class)
-@AutoConfigureBefore({ BraveAutoConfiguration.class, WavefrontAutoConfiguration.class })
+@ConditionalOnClass({ MeterRegistry.class, WavefrontConfig.class, WavefrontSender.class })
+@ConditionalOnBean({ WavefrontSender.class, ApplicationTags.class })
 @AutoConfigureAfter(WavefrontMetricsExportAutoConfiguration.class)
+@AutoConfigureBefore(BraveAutoConfiguration.class)
 @EnableConfigurationProperties(WavefrontProperties.class)
-@ConditionalOnProperty(value = "wavefront.tracing.enabled", matchIfMissing = true)
+@ConditionalOnProperty(value = { "spring.sleuth.enabled", "spring.sleuth.wavefront.enabled" }, matchIfMissing = true)
 public class WavefrontSleuthAutoConfiguration {
 
 	static final String BEAN_NAME = "wavefrontTracingCustomizer";
 
 	@Bean
-	@ConditionalOnBean({ MeterRegistry.class, WavefrontConfig.class, WavefrontSender.class })
+	@ConditionalOnBean({ MeterRegistry.class, WavefrontConfig.class, WavefrontSender.class, ApplicationTags.class })
 	WavefrontSleuthSpanHandler wavefrontSleuthSpanHandler(MeterRegistry meterRegistry, WavefrontSender wavefrontSender,
 			ApplicationTags applicationTags, WavefrontConfig wavefrontConfig, WavefrontProperties wavefrontProperties) {
 		return new WavefrontSleuthSpanHandler(
 				// https://github.com/wavefrontHQ/wavefront-opentracing-sdk-java/blob/f1f08d8daf7b692b9b61dcd5bc24ca6befa8e710/src/main/java/com/wavefront/opentracing/reporting/WavefrontSpanReporter.java#L54
 				50000, // TODO: maxQueueSize should be a property, ya?
-				wavefrontSender, meterRegistry, wavefrontConfig.source(), applicationTags, wavefrontProperties);
+				wavefrontSender, meterRegistry, wavefrontConfig.source(), applicationTags,
+				wavefrontProperties.getRedMetricsCustomTagKeys());
 	}
 
 	@Configuration(proxyBeanMethods = false)
@@ -72,17 +70,10 @@ public class WavefrontSleuthAutoConfiguration {
 	static class BraveCustomizerConfiguration {
 
 		@Bean(BEAN_NAME)
-		@ConditionalOnMissingBean(name = BEAN_NAME)
+		@ConditionalOnMissingBean(WavefrontTracingCustomizer.class)
 		@ConditionalOnBean({ MeterRegistry.class, WavefrontConfig.class, WavefrontSender.class })
-		TracingCustomizer wavefrontTracingCustomizer(WavefrontSleuthSpanHandler spanHandler) {
-			return t -> t.traceId128Bit(true).supportsJoin(false)
-					.addSpanHandler(new WavefrontSleuthBraveSpanHandler(spanHandler));
-		}
-
-		@Bean
-		WavefrontTracerBla wavefrontTracerBla() {
-			return new WavefrontTracerBla() {
-			};
+		WavefrontTracingCustomizer wavefrontTracingCustomizer(WavefrontSleuthSpanHandler spanHandler) {
+			return new WavefrontTracingCustomizer(spanHandler);
 		}
 
 	}

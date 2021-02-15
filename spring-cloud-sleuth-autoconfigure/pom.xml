@@ -373,11 +373,6 @@
 		</dependency>
 		<dependency>
 			<groupId>com.wavefront</groupId>
-			<artifactId>wavefront-spring-boot</artifactId>
-			<optional>true</optional>
-		</dependency>
-		<dependency>
-			<groupId>com.wavefront</groupId>
 			<artifactId>wavefront-runtime-sdk-jvm</artifactId>
 			<optional>true</optional>
 		</dependency>

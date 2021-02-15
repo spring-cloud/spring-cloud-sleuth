@@ -30,6 +30,7 @@ import brave.opentracing.BraveTracer;
 import brave.sampler.Sampler;
 import com.wavefront.sdk.common.Pair;
 import com.wavefront.sdk.common.WavefrontSender;
+import com.wavefront.sdk.common.application.ApplicationTags;
 import com.wavefront.sdk.entities.histograms.HistogramGranularity;
 import com.wavefront.sdk.entities.tracing.SpanLog;
 import io.opentracing.Tracer;
@@ -45,11 +46,13 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
+import org.springframework.core.env.Environment;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.web.reactive.server.WebTestClient;
+import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 
@@ -275,6 +278,26 @@ public class WavefrontTracingIntegrationTests {
 
 				}
 			};
+		}
+
+		@Bean
+		ApplicationTags applicationTags(Environment environment) {
+			return createFromProperties(environment);
+		}
+
+		public ApplicationTags createFromProperties(Environment environment) {
+			String application = environment.getProperty("wavefront.application.name");
+			String service = environment.getProperty("wavefront.application.service");
+			service = (StringUtils.hasText(service)) ? service : defaultServiceName(environment);
+			ApplicationTags.Builder builder = new ApplicationTags.Builder(application, service);
+			builder.cluster(environment.getProperty("wavefront.application.cluster"));
+			builder.shard(environment.getProperty("wavefront.application.shard"));
+			return builder.build();
+		}
+
+		private String defaultServiceName(Environment environment) {
+			String applicationName = environment.getProperty("spring.application.name");
+			return (StringUtils.hasText(applicationName)) ? applicationName : "unnamed_service";
 		}
 
 	}

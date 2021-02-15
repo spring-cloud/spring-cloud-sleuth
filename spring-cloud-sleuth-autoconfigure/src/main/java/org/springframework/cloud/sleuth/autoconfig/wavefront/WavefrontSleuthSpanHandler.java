@@ -147,7 +147,7 @@ public final class WavefrontSleuthSpanHandler implements Runnable, Closeable {
 	final ApplicationTags applicationTags;
 
 	WavefrontSleuthSpanHandler(int maxQueueSize, WavefrontSender wavefrontSender, MeterRegistry meterRegistry,
-			String source, ApplicationTags applicationTags, WavefrontProperties wavefrontProperties) {
+			String source, ApplicationTags applicationTags, Set<String> redMetricsCustomTagKeys) {
 		this.wavefrontSender = wavefrontSender;
 		this.applicationTags = applicationTags;
 		this.discoveredHeartbeatMetrics = Sets.newConcurrentHashSet();
@@ -165,7 +165,7 @@ public final class WavefrontSleuthSpanHandler implements Runnable, Closeable {
 			}
 		}, 1, 60, TimeUnit.SECONDS);
 
-		this.traceDerivedCustomTagKeys = new HashSet<>(wavefrontProperties.getRedMetricsCustomTagKeys());
+		this.traceDerivedCustomTagKeys = new HashSet<>(redMetricsCustomTagKeys);
 
 		// Start the reporter
 		wfInternalReporter = new WavefrontInternalReporter.Builder().prefixedWith(TRACING_DERIVED_PREFIX)
