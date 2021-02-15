@@ -25,8 +25,9 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * Advanced configuration properties for Wavefront.
  *
  * @author Stephane Nicoll
+ * @since 3.0.2
  */
-@ConfigurationProperties("wavefront.tracing")
+@ConfigurationProperties("spring.sleuth.wavefront")
 public class WavefrontProperties {
 
 	/**
