@@ -368,11 +368,6 @@
 		<!-- Wavefront -->
 		<dependency>
 			<groupId>com.wavefront</groupId>
-			<artifactId>wavefront-opentracing-sdk-java</artifactId>
-			<optional>true</optional>
-		</dependency>
-		<dependency>
-			<groupId>com.wavefront</groupId>
 			<artifactId>wavefront-runtime-sdk-jvm</artifactId>
 			<optional>true</optional>
 		</dependency>
