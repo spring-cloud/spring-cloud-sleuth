@@ -71,7 +71,8 @@
 		<spring-cloud-netflix.version>3.0.2-SNAPSHOT</spring-cloud-netflix.version>
 		<spring-cloud-openfeign.version>3.0.2-SNAPSHOT</spring-cloud-openfeign.version>
 		<brave.version>5.13.2</brave.version>
-		<wavefront-spring-boot.version>2.1.1-SNAPSHOT</wavefront-spring-boot.version>
+		<wavefront-runtime-sdk-jvm.version>1.3.3</wavefront-runtime-sdk-jvm.version>
+		<wavefront-sdk-java.version>2.6.2</wavefront-sdk-java.version>
 		<opentracing.version>0.32.0</opentracing.version>
 		<spring-security-boot-autoconfigure.version>2.3.4.RELEASE</spring-security-boot-autoconfigure.version>
 		<disable.nohttp.checks>false</disable.nohttp.checks>
@@ -230,16 +231,21 @@
 				<scope>import</scope>
 			</dependency>
 			<dependency>
-				<groupId>com.wavefront</groupId>
-				<artifactId>wavefront-spring-boot-bom</artifactId>
-				<version>${wavefront-spring-boot.version}</version>
-				<type>pom</type>
-				<scope>import</scope>
-			</dependency>
-			<dependency>
 				<groupId>org.springframework.security.oauth.boot</groupId>
 				<artifactId>spring-security-oauth2-autoconfigure</artifactId>
 				<version>${spring-security-boot-autoconfigure.version}</version>
+				<optional>true</optional>
+			</dependency>
+			<dependency>
+				<groupId>com.wavefront</groupId>
+				<artifactId>wavefront-runtime-sdk-jvm</artifactId>
+				<version>${wavefront-runtime-sdk-jvm.version}</version>
+				<optional>true</optional>
+			</dependency>
+			<dependency>
+				<groupId>com.wavefront</groupId>
+				<artifactId>wavefront-sdk-java</artifactId>
+				<version>${wavefront-sdk-java.version}</version>
 				<optional>true</optional>
 			</dependency>
 			<dependency>
