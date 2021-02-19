@@ -116,21 +116,21 @@ public final class WavefrontSleuthSpanHandler implements Runnable, Closeable {
 
 	private static final byte[] DECODING = buildDecodingArray();
 
-	final LinkedBlockingQueue<Pair<TraceContext, FinishedSpan>> spanBuffer;
+	private final LinkedBlockingQueue<Pair<TraceContext, FinishedSpan>> spanBuffer;
 
-	final WavefrontSender wavefrontSender;
+	private final WavefrontSender wavefrontSender;
 
-	final WavefrontInternalReporter wfInternalReporter;
+	private final WavefrontInternalReporter wfInternalReporter;
 
-	final Set<String> traceDerivedCustomTagKeys;
+	private final Set<String> traceDerivedCustomTagKeys;
 
-	final Counter spansDropped;
+	private final Counter spansDropped;
 
-	final Counter spansReceived;
+	private final Counter spansReceived;
 
-	final Counter reportErrors;
+	private final Counter reportErrors;
 
-	final Thread sendingThread;
+	private final Thread sendingThread;
 
 	private volatile boolean stop = false;
 
@@ -138,13 +138,13 @@ public final class WavefrontSleuthSpanHandler implements Runnable, Closeable {
 
 	private final ScheduledExecutorService heartbeatMetricsScheduledExecutorService;
 
-	final String source;
+	private final String source;
 
-	final List<Pair<String, String>> defaultTags;
+	private final List<Pair<String, String>> defaultTags;
 
-	final Set<String> defaultTagKeys;
+	private final Set<String> defaultTagKeys;
 
-	final ApplicationTags applicationTags;
+	private final ApplicationTags applicationTags;
 
 	WavefrontSleuthSpanHandler(int maxQueueSize, WavefrontSender wavefrontSender, MeterRegistry meterRegistry,
 			String source, ApplicationTags applicationTags, Set<String> redMetricsCustomTagKeys) {
@@ -265,6 +265,7 @@ public final class WavefrontSleuthSpanHandler implements Runnable, Closeable {
 			if (LOG.isDebugEnabled()) {
 				LOG.debug("error sending span " + context, t);
 			}
+			this.reportErrors.increment();
 		}
 
 		// report stats irrespective of span sampling.
@@ -281,6 +282,7 @@ public final class WavefrontSleuthSpanHandler implements Runnable, Closeable {
 				if (LOG.isDebugEnabled()) {
 					LOG.debug("error sending span RED metrics " + context, t);
 				}
+				this.reportErrors.increment();
 			}
 		}
 	}

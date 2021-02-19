@@ -36,6 +36,11 @@ public class WavefrontProperties {
 	private boolean enabled;
 
 	/**
+	 * Span buffer maximum queue size.
+	 */
+	private int maxQueueSize = 50000;
+
+	/**
 	 * Tags that should be associated with RED metrics. If the span has any of the
 	 * specified tags, then those get reported to generated RED metrics.
 	 */
@@ -47,6 +52,14 @@ public class WavefrontProperties {
 
 	public void setRedMetricsCustomTagKeys(Set<String> redMetricsCustomTagKeys) {
 		this.redMetricsCustomTagKeys = redMetricsCustomTagKeys;
+	}
+
+	public int getMaxQueueSize() {
+		return this.maxQueueSize;
+	}
+
+	public void setMaxQueueSize(int maxQueueSize) {
+		this.maxQueueSize = maxQueueSize;
 	}
 
 	public boolean isEnabled() {
