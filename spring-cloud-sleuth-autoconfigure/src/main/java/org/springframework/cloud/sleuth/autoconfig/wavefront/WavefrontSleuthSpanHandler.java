@@ -87,7 +87,7 @@ import static com.wavefront.sdk.common.Constants.SPAN_LOG_KEY;
  * While in practice this is not a problem, it is worth mentioning that this convention
  * will only only result in RFC 4122 timestamp (version 1) format by accident. In other
  * words, don't call {@link UUID#timestamp()} on UUIDs converted here, or in other
- * Wavefront code, as it might throw.
+ * Wavefront code, as it might throw an exception.
  *
  * @since 3.1.0
  */
