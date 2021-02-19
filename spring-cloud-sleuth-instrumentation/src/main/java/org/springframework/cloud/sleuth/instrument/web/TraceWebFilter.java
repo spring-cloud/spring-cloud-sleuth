@@ -40,6 +40,7 @@ import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.http.server.reactive.ServerHttpResponse;
 import org.springframework.web.method.HandlerMethod;
 import org.springframework.web.reactive.HandlerMapping;
+import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.server.ServerWebExchange;
 import org.springframework.web.server.WebFilter;
 import org.springframework.web.server.WebFilterChain;
@@ -353,12 +354,16 @@ public class TraceWebFilter implements WebFilter, Ordered {
 
 		@Override
 		public int statusCode() {
-			HttpStatus statusCode = delegate.getStatusCode();
+			if (this.throwable != null && this.throwable instanceof ResponseStatusException) {
+				return ((ResponseStatusException) this.throwable).getRawStatusCode();
+			}
+			HttpStatus statusCode = this.delegate.getStatusCode();
 			return statusCode != null ? statusCode.value() : 0;
 		}
 
 		@Override
 		public Collection<String> headerNames() {
+			// TODO: As with the status code, these headers get rewritten later
 			return this.delegate.getHeaders().keySet();
 		}
 

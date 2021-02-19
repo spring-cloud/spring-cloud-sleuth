@@ -78,6 +78,12 @@ public class TraceWebFluxTests {
 		spans.clear();
 
 		// when
+		response = whenRequestIsSent(port, "/missing-endpoint");
+		// then
+		thenSpanWith404StatusCodeWasReported(spans, response);
+		spans.clear();
+
+		// when
 		ClientResponse nonSampledResponse = whenNonSampledRequestIsSent(port);
 		// then
 		thenNoSpanWasReported(spans, nonSampledResponse, controller2);
@@ -123,6 +129,12 @@ public class TraceWebFluxTests {
 		then(spans.get(0).name()).isEqualTo("GET /api/fn/{id}");
 		then(spans.get(0).tags()).hasEntrySatisfying("mvc.controller.class",
 				value -> then(value).startsWith("TraceWebFluxTests$Config$$Lambda$"));
+	}
+
+	private void thenSpanWith404StatusCodeWasReported(TestSpanHandler spans, ClientResponse response) {
+		Awaitility.await().untilAsserted(() -> then(response.statusCode().value()).isEqualTo(404));
+		then(spans).hasSize(1);
+		then(spans.get(0).tags()).hasEntrySatisfying("http.status_code", value -> then(value).isEqualTo("404"));
 	}
 
 	private void thenNoSpanWasReported(TestSpanHandler spans, ClientResponse response, Controller2 controller2) {
