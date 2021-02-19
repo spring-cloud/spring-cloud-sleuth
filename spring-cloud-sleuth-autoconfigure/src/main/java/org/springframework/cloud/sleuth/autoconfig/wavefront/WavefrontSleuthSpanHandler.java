@@ -458,7 +458,9 @@ public final class WavefrontSleuthSpanHandler implements Runnable, Closeable {
 
 			// https://github.com/wavefrontHQ/wavefront-proxy/blob/3dd1fa11711a04de2d9d418e2269f0f9fb464f36/proxy/src/main/java/com/wavefront/agent/listeners/tracing/ZipkinPortUnificationHandler.java#L324-L327
 			if (span.getLocalIp() != null) {
-				add(Pair.of("ipv4", span.getLocalIp())); // NOTE: this could be IPv6!!
+				String localIp = span.getLocalIp();
+				String version = localIp.contains(":") ? "ipv6" : "ipv4";
+				add(Pair.of(version, localIp));
 			}
 		}
 
