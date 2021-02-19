@@ -28,6 +28,7 @@ import reactor.core.publisher.MonoOperator;
 import reactor.util.annotation.Nullable;
 import reactor.util.context.Context;
 
+import org.springframework.beans.BeansException;
 import org.springframework.cloud.sleuth.CurrentTraceContext;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.TraceContext;
@@ -36,6 +37,8 @@ import org.springframework.cloud.sleuth.http.HttpServerHandler;
 import org.springframework.cloud.sleuth.http.HttpServerRequest;
 import org.springframework.cloud.sleuth.http.HttpServerResponse;
 import org.springframework.cloud.sleuth.instrument.reactor.TraceContextPropagator;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.ApplicationContextAware;
 import org.springframework.core.Ordered;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.server.reactive.ServerHttpRequest;
@@ -54,7 +57,7 @@ import org.springframework.web.server.WebFilterChain;
  * @author Marcin Grzejszczak
  * @since 2.0.0
  */
-public class TraceWebFilter implements WebFilter, Ordered {
+public class TraceWebFilter implements WebFilter, Ordered, ApplicationContextAware {
 
 	// Remember that this can be used in other packages
 	protected static final String TRACE_REQUEST_ATTR = Span.class.getName();
@@ -72,9 +75,18 @@ public class TraceWebFilter implements WebFilter, Ordered {
 
 	private final HttpServerHandler handler;
 
-	private final CurrentTraceContext currentTraceContext;
+	private CurrentTraceContext currentTraceContext;
+
+	private ApplicationContext applicationContext;
 
 	private int order;
+
+	@Deprecated
+	public TraceWebFilter(Tracer tracer, HttpServerHandler handler) {
+		this.tracer = tracer;
+		this.handler = handler;
+		this.currentTraceContext = null;
+	}
 
 	public TraceWebFilter(Tracer tracer, HttpServerHandler handler, CurrentTraceContext currentTraceContext) {
 		this.tracer = tracer;
@@ -111,6 +123,18 @@ public class TraceWebFilter implements WebFilter, Ordered {
 		this.order = order;
 	}
 
+	@Override
+	public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
+		this.applicationContext = applicationContext;
+	}
+
+	private CurrentTraceContext currentTraceContext() {
+		if (this.currentTraceContext == null) {
+			this.currentTraceContext = this.applicationContext.getBean(CurrentTraceContext.class);
+		}
+		return this.currentTraceContext;
+	}
+
 	private static class MonoWebFilterTrace extends MonoOperator<Void, Void> implements TraceContextPropagator {
 
 		final ServerWebExchange exchange;
@@ -132,7 +156,7 @@ public class TraceWebFilter implements WebFilter, Ordered {
 			super(source);
 			this.tracer = parent.tracer;
 			this.handler = parent.handler;
-			this.currentTraceContext = parent.currentTraceContext;
+			this.currentTraceContext = parent.currentTraceContext();
 			this.exchange = exchange;
 			this.span = exchange.getAttribute(TRACE_REQUEST_ATTR);
 			this.initialTracePresent = initialTracePresent;
