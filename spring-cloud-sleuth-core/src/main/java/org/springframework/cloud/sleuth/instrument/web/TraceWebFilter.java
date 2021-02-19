@@ -41,6 +41,7 @@ import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.http.server.reactive.ServerHttpResponse;
 import org.springframework.web.method.HandlerMethod;
 import org.springframework.web.reactive.HandlerMapping;
+import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.server.ServerWebExchange;
 import org.springframework.web.server.WebFilter;
 import org.springframework.web.server.WebFilterChain;
@@ -262,7 +263,7 @@ public final class TraceWebFilter implements WebFilter, Ordered {
 						this.exchange.getResponse(), this.span);
 				WrappedResponse response = new WrappedResponse(
 						this.exchange.getResponse(),
-						this.exchange.getRequest().getMethodValue(), httpRoute);
+						this.exchange.getRequest().getMethodValue(), httpRoute, t);
 				this.handler.handleSend(response, t, this.span);
 				if (log.isDebugEnabled()) {
 					log.debug("Handled send of " + this.span);
@@ -376,10 +377,14 @@ public final class TraceWebFilter implements WebFilter, Ordered {
 
 		final String httpRoute;
 
-		WrappedResponse(ServerHttpResponse resp, String method, String httpRoute) {
+		final Throwable throwable;
+
+		WrappedResponse(ServerHttpResponse resp, String method, String httpRoute,
+				Throwable throwable) {
 			this.delegate = resp;
 			this.method = method;
 			this.httpRoute = httpRoute;
+			this.throwable = throwable;
 		}
 
 		@Override
@@ -399,6 +404,10 @@ public final class TraceWebFilter implements WebFilter, Ordered {
 
 		@Override
 		public int statusCode() {
+			if (this.throwable != null
+					&& this.throwable instanceof ResponseStatusException) {
+				return ((ResponseStatusException) this.throwable).getStatus().value();
+			}
 			return delegate.getStatusCode() != null ? delegate.getStatusCode().value()
 					: 0;
 		}
