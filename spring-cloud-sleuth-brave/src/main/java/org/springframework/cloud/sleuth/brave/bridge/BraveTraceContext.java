@@ -27,11 +27,11 @@ import org.springframework.lang.Nullable;
  * @author Marcin Grzejszczak
  * @since 3.0.0
  */
-class BraveTraceContext implements TraceContext {
+public class BraveTraceContext implements TraceContext {
 
 	final brave.propagation.TraceContext traceContext;
 
-	BraveTraceContext(brave.propagation.TraceContext traceContext) {
+	public BraveTraceContext(brave.propagation.TraceContext traceContext) {
 		this.traceContext = traceContext;
 	}
 
@@ -61,14 +61,14 @@ class BraveTraceContext implements TraceContext {
 		return this.traceContext != null ? this.traceContext.toString() : "null";
 	}
 
-	static brave.propagation.TraceContext toBrave(TraceContext traceContext) {
+	public static brave.propagation.TraceContext toBrave(TraceContext traceContext) {
 		if (traceContext == null) {
 			return null;
 		}
 		return ((BraveTraceContext) traceContext).traceContext;
 	}
 
-	static TraceContext fromBrave(brave.propagation.TraceContext traceContext) {
+	public static TraceContext fromBrave(brave.propagation.TraceContext traceContext) {
 		return new BraveTraceContext(traceContext);
 	}
 

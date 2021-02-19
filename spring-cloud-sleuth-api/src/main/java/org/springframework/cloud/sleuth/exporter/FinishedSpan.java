@@ -77,6 +77,12 @@ public interface FinishedSpan {
 	String getRemoteIp();
 
 	/**
+	 * @return span's local ip
+	 */
+	@Nullable
+	String getLocalIp();
+
+	/**
 	 * @return span's remote port
 	 */
 	int getRemotePort();
