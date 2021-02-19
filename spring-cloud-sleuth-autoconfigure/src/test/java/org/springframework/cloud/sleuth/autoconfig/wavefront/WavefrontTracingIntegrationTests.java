@@ -121,11 +121,10 @@ public class WavefrontTracingIntegrationTests {
 
 		SpanRecord spanRecord = takeRecord(spanRecordQueue);
 		// http
-		assertThat(spanRecord.tags).contains(Pair.of("http.status_code", "500"), Pair.of("error", "true") // retains
+		assertThat(spanRecord.tags).contains(Pair.of("http.status_code", "500"), Pair.of("error", "true")); // retains
 																											// the
 																											// boolean
 																											// true
-		);
 	}
 
 	@Test
@@ -134,11 +133,10 @@ public class WavefrontTracingIntegrationTests {
 
 		SpanRecord spanRecord = takeRecord(spanRecordQueue);
 		// http
-		assertThat(spanRecord.tags).contains(Pair.of("http.status_code", "500"), Pair.of("error", "true") // deletes
+		assertThat(spanRecord.tags).contains(Pair.of("http.status_code", "500"), Pair.of("error", "true")); // deletes
 																											// the
 																											// user
 																											// message
-		);
 	}
 
 	@Test
