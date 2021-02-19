@@ -91,7 +91,7 @@ public class WavefrontTracingIntegrationTests {
 		assertThat(spanRecord.name).isEqualTo("GET /api/fn/{id}");
 
 		// spot check the unit is valid (millis not micros)
-		long currentTime = System.currentTimeMillis();
+		long currentTime = TimeUnit.NANOSECONDS.toMillis(System.nanoTime());
 		assertThat(spanRecord.startMillis).isGreaterThan(currentTime - 5000).isLessThan(currentTime);
 		// Less than a millis should round up to 1, but the test could take longer than
 		// 1ms
