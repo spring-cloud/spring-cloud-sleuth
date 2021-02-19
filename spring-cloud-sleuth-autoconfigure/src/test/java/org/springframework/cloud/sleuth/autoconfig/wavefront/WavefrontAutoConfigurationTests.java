@@ -198,8 +198,7 @@ class WavefrontAutoConfigurationTests {
 		}
 
 		private String defaultServiceName(Environment environment) {
-			String applicationName = environment.getProperty("spring.application.name");
-			return (StringUtils.hasText(applicationName)) ? applicationName : "unnamed_service";
+			return environment.getProperty("spring.application.name", "unnamed_service");
 		}
 
 	}
