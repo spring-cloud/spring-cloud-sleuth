@@ -55,12 +55,8 @@ public final class LazyBean<T> {
 	 */
 	@Nullable
 	public T get() {
-		if (this.value != null) {
-			return this.value;
-		}
-
 		try {
-			this.value = springContext.getBean(requiredType);
+			return getOrError();
 		}
 		catch (Exception ex) {
 			if (log.isDebugEnabled()) {
@@ -68,6 +64,21 @@ public final class LazyBean<T> {
 			}
 		}
 		return this.value;
+	}
+
+	/**
+	 * Attempts to provision from the underlying bean factory, if not already provisioned.
+	 * @return the bean value. This variant does not catch exception.
+	 */
+	public T getOrError() {
+		T bean = this.value;
+		if (bean != null) {
+			return bean;
+		}
+
+		bean = springContext.getBean(requiredType);
+		this.value = bean;
+		return bean;
 	}
 
 }

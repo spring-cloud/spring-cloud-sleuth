@@ -20,10 +20,12 @@ import brave.propagation.CurrentTraceContext;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
+import org.springframework.beans.factory.NoSuchBeanDefinitionException;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.BDDAssertions.then;
 
 public class LazyBeanTests {
@@ -52,6 +54,15 @@ public class LazyBeanTests {
 		LazyBean<CurrentTraceContext> provider = LazyBean.create(context, CurrentTraceContext.class);
 
 		then(provider.get()).isNull();
+	}
+
+	@Test
+	public void should_throw_error_when_no_basic_type() {
+		context.refresh();
+
+		LazyBean<CurrentTraceContext> provider = LazyBean.create(context, CurrentTraceContext.class);
+
+		assertThatCode(() -> provider.getOrError()).isInstanceOf(NoSuchBeanDefinitionException.class);
 	}
 
 	@Configuration(proxyBeanMethods = false)

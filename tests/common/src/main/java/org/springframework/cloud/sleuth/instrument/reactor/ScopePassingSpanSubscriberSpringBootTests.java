@@ -20,10 +20,14 @@ import java.time.Duration;
 import java.util.concurrent.atomic.AtomicReference;
 
 import org.awaitility.Awaitility;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.reactivestreams.Publisher;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.core.publisher.Sinks;
+import reactor.core.scheduler.Scheduler;
 import reactor.core.scheduler.Schedulers;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -45,9 +49,25 @@ public abstract class ScopePassingSpanSubscriberSpringBootTests {
 	@Autowired
 	CurrentTraceContext currentTraceContext;
 
+	private Scheduler subscribeScheduler;
+
+	private Scheduler secondScheduler;
+
 	protected abstract TraceContext context();
 
 	protected abstract TraceContext context2();
+
+	@BeforeEach
+	void setUp() {
+		subscribeScheduler = Schedulers.newSingle("subscribeThread2");
+		secondScheduler = Schedulers.newSingle("secondThread");
+	}
+
+	@AfterEach
+	void tearDown() {
+		subscribeScheduler.dispose();
+		secondScheduler.dispose();
+	}
 
 	@Test
 	public void should_pass_tracing_info_when_using_reactor() {
@@ -88,7 +108,7 @@ public abstract class ScopePassingSpanSubscriberSpringBootTests {
 
 		try (CurrentTraceContext.Scope ws = this.currentTraceContext.newScope(context())) {
 			Flux.just(1, 2, 3).publishOn(Schedulers.single()).log("reactor.1").map(d -> d + 1).map(d -> d + 1)
-					.publishOn(Schedulers.newSingle("secondThread")).log("reactor.2").map((d) -> {
+					.publishOn(secondScheduler).log("reactor.2").map((d) -> {
 						spanInOperation.set(this.currentTraceContext.context());
 						return d + 1;
 					}).map(d -> d + 1).blockLast();
@@ -108,6 +128,71 @@ public abstract class ScopePassingSpanSubscriberSpringBootTests {
 
 			then(this.currentTraceContext.context()).isEqualTo(context2());
 			then(spanInOperation.get()).isEqualTo(context2());
+		}
+
+		then(this.currentTraceContext.context()).isNull();
+	}
+
+	@Test
+	public void should_pass_tracing_info_into_sources_when_using_reactor_async() {
+		final AtomicReference<TraceContext> spanInOperation = new AtomicReference<>();
+
+		try (CurrentTraceContext.Scope ws = this.currentTraceContext.newScope(context())) {
+			Mono.fromSupplier(() -> {
+				spanInOperation.set(this.currentTraceContext.context());
+				return 1;
+			}).publishOn(Schedulers.single()).log("reactor.1").map(d -> d + 1).map(d -> d + 1)
+					.publishOn(secondScheduler).log("reactor.2").map((d) -> d + 1).map(d -> d + 1)
+					.subscribeOn(subscribeScheduler).block();
+
+			Awaitility.await().untilAsserted(() -> then(spanInOperation.get()).isEqualTo(context()));
+			then(this.currentTraceContext.context()).isEqualTo(context());
+		}
+
+		then(this.currentTraceContext.context()).isNull();
+
+		try (CurrentTraceContext.Scope ws = this.currentTraceContext.newScope(context2())) {
+			Mono.fromCallable(() -> {
+				spanInOperation.set(this.currentTraceContext.context());
+				return 1;
+			}).log("reactor.").map(d -> d + 1).map(d -> d + 1).map(d -> d + 1).subscribeOn(subscribeScheduler).block();
+
+			then(this.currentTraceContext.context()).isEqualTo(context2());
+			then(spanInOperation.get()).isEqualTo(context2());
+		}
+
+		then(this.currentTraceContext.context()).isNull();
+	}
+
+	@Test
+	public void should_pass_tracing_info_when_using_reactor_async_processor() {
+		final AtomicReference<TraceContext> spanInOperation = new AtomicReference<>();
+
+		Sinks.One<Integer> one = Sinks.one();
+		try (CurrentTraceContext.Scope ws = this.currentTraceContext.newScope(context())) {
+			one.asMono()
+					// hook is not applied for Processors so first operator after it will
+					// not be decorated with brave context
+					.map(d -> d + 1).map((d) -> {
+						spanInOperation.set(this.currentTraceContext.context());
+						return d + 1;
+					}).map(d -> d + 1).doOnSubscribe(subscription -> {
+						final Thread thread = new Thread(() -> {
+							try {
+								Thread.sleep(300);
+							}
+							catch (InterruptedException e) {
+								e.printStackTrace();
+							}
+							one.tryEmitValue(0);
+						});
+						thread.setName("async_processor_source");
+						thread.setDaemon(true);
+						thread.start();
+					}).subscribeOn(Schedulers.boundedElastic()).block();
+
+			Awaitility.await().untilAsserted(() -> then(spanInOperation.get()).isEqualTo(context()));
+			then(this.currentTraceContext.context()).isEqualTo(context());
 		}
 
 		then(this.currentTraceContext.context()).isNull();
