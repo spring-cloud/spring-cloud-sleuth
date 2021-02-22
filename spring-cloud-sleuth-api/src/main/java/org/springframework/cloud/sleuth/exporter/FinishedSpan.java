@@ -80,7 +80,9 @@ public interface FinishedSpan {
 	 * @return span's local ip
 	 */
 	@Nullable
-	String getLocalIp();
+	default String getLocalIp() {
+		return null;
+	}
 
 	/**
 	 * @return span's remote port
