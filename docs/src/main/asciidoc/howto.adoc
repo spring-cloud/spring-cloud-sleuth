@@ -213,7 +213,7 @@ dependencies {
 ----
 ====
 
-If you want Sleuth over RabbitMQ, add the `spring-cloud-starter-sleuth`, `spring-cloud-sleuth-zipkin` and `activemq-client` dependencies.
+If you want Sleuth over ActiveMQ, add the `spring-cloud-starter-sleuth`, `spring-cloud-sleuth-zipkin` and `activemq-client` dependencies.
 
 ====
 [source,xml,indent=0,subs="verbatim,attributes",role="primary"]
