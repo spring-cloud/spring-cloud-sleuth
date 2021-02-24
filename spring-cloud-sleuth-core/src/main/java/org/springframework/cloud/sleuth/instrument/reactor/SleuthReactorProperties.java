@@ -34,7 +34,9 @@ public class SleuthReactorProperties {
 	private boolean enabled = true;
 
 	/**
-	 * When true uses the new decorate hooks feature from Project Reactor.
+	 * When true uses the new decorate hooks feature from Project Reactor. Should allow
+	 * the feature set of {@link SleuthReactorProperties#decorateOnEach} with the least
+	 * impact on the performance.
 	 */
 	private boolean decorateHooks = true;
 
@@ -43,6 +45,9 @@ public class SleuthReactorProperties {
 	 * always contain the tracing entries in each operator. When false decorates on last
 	 * operator, will be more performing, but logging might not always contain the tracing
 	 * entries.
+	 *
+	 * If {@link SleuthReactorProperties#decorateHooks} is used, this decoration mode will
+	 * NOT be used.
 	 */
 	private boolean decorateOnEach = true;
 

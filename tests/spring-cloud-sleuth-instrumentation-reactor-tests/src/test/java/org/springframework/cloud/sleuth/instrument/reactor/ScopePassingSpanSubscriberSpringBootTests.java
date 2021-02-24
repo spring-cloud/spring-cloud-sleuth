@@ -25,6 +25,7 @@ import brave.propagation.TraceContext;
 import brave.sampler.Sampler;
 import org.awaitility.Awaitility;
 import org.junit.Test;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.runner.RunWith;
 import org.reactivestreams.Publisher;
 import reactor.core.publisher.Flux;
@@ -57,6 +58,11 @@ public class ScopePassingSpanSubscriberSpringBootTests {
 
 	TraceContext context2 = TraceContext.newBuilder().traceId(1).spanId(2).sampled(true)
 			.build();
+
+	@BeforeAll
+	static void setup() {
+		TraceReactorAutoConfigurationAccessorConfiguration.close();
+	}
 
 	@Test
 	public void should_pass_tracing_info_when_using_reactor() {

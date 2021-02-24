@@ -48,4 +48,10 @@ public class TraceWebFluxAutoConfiguration {
 		return new TraceWebFilter(beanFactory);
 	}
 
+	@Bean
+	public TraceHandlerFunctionAdapterBeanPostProcessor traceHandlerFunctionAdapterBeanPostProcessor(
+			BeanFactory beanFactory) {
+		return new TraceHandlerFunctionAdapterBeanPostProcessor(beanFactory);
+	}
+
 }

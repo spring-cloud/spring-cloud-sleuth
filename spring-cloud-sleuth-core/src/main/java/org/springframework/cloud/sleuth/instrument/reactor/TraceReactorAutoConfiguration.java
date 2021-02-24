@@ -16,15 +16,18 @@
 
 package org.springframework.cloud.sleuth.instrument.reactor;
 
+import java.io.Closeable;
+import java.io.IOException;
 import java.util.AbstractQueue;
 import java.util.Iterator;
 import java.util.Queue;
+import java.util.function.Function;
 
 import javax.annotation.PreDestroy;
 
-import brave.Span;
-import brave.Tracer;
 import brave.Tracing;
+import brave.propagation.CurrentTraceContext;
+import brave.propagation.TraceContext;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import reactor.core.publisher.Hooks;
@@ -43,13 +46,13 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.cloud.context.scope.refresh.RefreshScope;
 import org.springframework.cloud.context.scope.refresh.RefreshScopeRefreshedEvent;
-import org.springframework.cloud.sleuth.instrument.async.TraceableScheduledExecutorService;
 import org.springframework.cloud.sleuth.instrument.web.TraceWebFluxAutoConfiguration;
 import org.springframework.context.ApplicationListener;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.env.ConfigurableEnvironment;
+import org.springframework.util.ReflectionUtils;
 
 import static org.springframework.cloud.sleuth.instrument.reactor.ReactorSleuth.scopePassingSpanOperator;
 import static org.springframework.cloud.sleuth.instrument.reactor.TraceReactorAutoConfiguration.TraceReactorConfiguration.SLEUTH_TRACE_REACTOR_KEY;
@@ -171,6 +174,9 @@ class HooksRefresher implements ApplicationListener<RefreshScopeRefreshedEvent> 
 			}
 			Hooks.onEachOperator(SLEUTH_TRACE_REACTOR_KEY,
 					scopePassingSpanOperator(this.context));
+			Schedulers.onScheduleHook(
+					TraceReactorAutoConfiguration.SLEUTH_REACTOR_EXECUTOR_SERVICE_KEY,
+					ReactorSleuth.scopePassingOnScheduleHook(this.context));
 		}
 		else {
 			if (log.isTraceEnabled()) {
@@ -184,7 +190,7 @@ class HooksRefresher implements ApplicationListener<RefreshScopeRefreshedEvent> 
 }
 
 class HookRegisteringBeanDefinitionRegistryPostProcessor
-		implements BeanDefinitionRegistryPostProcessor {
+		implements BeanDefinitionRegistryPostProcessor, Closeable {
 
 	private static final Log log = LogFactory
 			.getLog(HookRegisteringBeanDefinitionRegistryPostProcessor.class);
@@ -207,9 +213,18 @@ class HookRegisteringBeanDefinitionRegistryPostProcessor
 
 	static void setupHooks(ConfigurableApplicationContext springContext) {
 		ConfigurableEnvironment environment = springContext.getEnvironment();
-		boolean decorateHooks = environment
-				.getProperty("spring.sleuth.reactor.decorate-hooks", Boolean.class, true);
-		if (decorateHooks) {
+		Boolean decorateHooks = environment
+				.getProperty("spring.sleuth.reactor.decorate-hooks", Boolean.class);
+		boolean hasQueueWrapper = ReflectionUtils.findMethod(Hooks.class,
+				"addQueueWrapper", String.class, Function.class) != null;
+		if (!hasQueueWrapper && decorateHooks != null) {
+			log.warn(
+					"You have explicitly turned on the decorate hooks option but you're using an old version of Reactor. Please upgrade to the latest Boot version (at least 2.3.9.RELEASE). Will fall back to the previous reactor instrumentation mode");
+		}
+		else {
+			decorateHooks = decorateHooks != null ? decorateHooks : Boolean.TRUE;
+		}
+		if (Boolean.TRUE.equals(decorateHooks) && hasQueueWrapper) {
 			addQueueWrapper(springContext);
 		}
 		else {
@@ -230,11 +245,7 @@ class HookRegisteringBeanDefinitionRegistryPostProcessor
 						scopePassingSpanOperator(springContext));
 			}
 		}
-		Schedulers.setExecutorServiceDecorator(
-				TraceReactorAutoConfiguration.SLEUTH_REACTOR_EXECUTOR_SERVICE_KEY,
-				(scheduler,
-						scheduledExecutorService) -> new TraceableScheduledExecutorService(
-								springContext, scheduledExecutorService));
+		decorateScheduler(springContext);
 	}
 
 	static void addQueueWrapper(ConfigurableApplicationContext springContext) {
@@ -242,12 +253,30 @@ class HookRegisteringBeanDefinitionRegistryPostProcessor
 				queue -> traceQueue(springContext, queue));
 	}
 
+	@Override
+	public void close() throws IOException {
+		if (log.isTraceEnabled()) {
+			log.trace("Cleaning up hooks");
+		}
+		Hooks.resetOnEachOperator(SLEUTH_TRACE_REACTOR_KEY);
+		Hooks.resetOnLastOperator(SLEUTH_TRACE_REACTOR_KEY);
+		Schedulers.resetOnScheduleHook(
+				TraceReactorAutoConfiguration.SLEUTH_REACTOR_EXECUTOR_SERVICE_KEY);
+	}
+
+	private static void decorateScheduler(ConfigurableApplicationContext springContext) {
+		Schedulers.onScheduleHook(
+				TraceReactorAutoConfiguration.SLEUTH_REACTOR_EXECUTOR_SERVICE_KEY,
+				ReactorSleuth.scopePassingOnScheduleHook(springContext));
+	}
+
 	private static Queue<?> traceQueue(ConfigurableApplicationContext springContext,
 			Queue<?> queue) {
 		if (!springContext.isActive()) {
 			return queue;
 		}
-		Tracer tracer = springContext.getBean(Tracer.class);
+		CurrentTraceContext currentTraceContext = springContext
+				.getBean(CurrentTraceContext.class);
 		@SuppressWarnings("unchecked")
 		Queue<Envelope> envelopeQueue = (Queue<Envelope>) queue;
 		return new AbstractQueue<Object>() {
@@ -259,12 +288,8 @@ class HookRegisteringBeanDefinitionRegistryPostProcessor
 
 			@Override
 			public boolean offer(Object o) {
-				Span span = tracer.currentSpan();
-				if (span != null) {
-					// Clear the current thread
-					tracer.withSpanInScope(null);
-				}
-				return envelopeQueue.offer(new Envelope(o, span));
+				TraceContext traceContext = currentTraceContext.get();
+				return envelopeQueue.offer(new Envelope(o, traceContext));
 			}
 
 			@Override
@@ -273,9 +298,9 @@ class HookRegisteringBeanDefinitionRegistryPostProcessor
 				if (envelope == null) {
 					return null;
 				}
-				if (envelope.span != null) {
+				if (envelope.traceContext != null) {
 					// puts in thread local
-					tracer.withSpanInScope(envelope.span);
+					currentTraceContext.maybeScope(envelope.traceContext);
 				}
 				return envelope.body;
 			}
@@ -297,11 +322,11 @@ class HookRegisteringBeanDefinitionRegistryPostProcessor
 
 		final Object body;
 
-		final Span span;
+		final TraceContext traceContext;
 
-		Envelope(Object body, Span span) {
+		Envelope(Object body, TraceContext traceContext) {
 			this.body = body;
-			this.span = span;
+			this.traceContext = traceContext;
 		}
 
 	}

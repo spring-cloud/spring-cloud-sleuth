@@ -56,6 +56,7 @@ public class SleuthSpanCreatorAspectTests {
 	@Before
 	public void setup() {
 		this.spans.clear();
+		tracer.withSpanInScope(null);
 	}
 
 	@Test

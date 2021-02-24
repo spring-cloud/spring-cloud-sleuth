@@ -196,11 +196,11 @@ public class FlatMapTests {
 		RouterFunction<ServerResponse> handlers(Tracer tracer,
 				RequestSender requestSender) {
 			return route(GET("/noFlatMap"), request -> {
-				LOGGER.info("noFlatMap");
+				LOGGER.info("noFlatMap [" + request + "]");
 				Flux<Integer> one = requestSender.getAll().map(String::length);
 				return ServerResponse.ok().body(one, Integer.class);
 			}).andRoute(GET("/withFlatMap"), request -> {
-				LOGGER.info("withFlatMap");
+				LOGGER.info("withFlatMap [" + request + "]");
 				Flux<Integer> one = requestSender.getAll().map(String::length);
 				Flux<Integer> response = one
 						.flatMap(size -> requestSender.getAll().doOnEach(
@@ -211,7 +211,7 @@ public class FlatMapTests {
 						});
 				return ServerResponse.ok().body(response, Integer.class);
 			}).andRoute(GET("/foo"), request -> {
-				LOGGER.info("foo");
+				LOGGER.info("foo [" + request + "]");
 				this.spanInFoo = tracer.currentSpan();
 				return ServerResponse.ok().body(Flux.just(1), Integer.class);
 			});

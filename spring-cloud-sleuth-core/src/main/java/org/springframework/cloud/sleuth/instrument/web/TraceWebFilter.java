@@ -25,6 +25,7 @@ import brave.http.HttpServerHandler;
 import brave.http.HttpServerRequest;
 import brave.http.HttpServerResponse;
 import brave.http.HttpTracing;
+import brave.propagation.CurrentTraceContext;
 import brave.propagation.TraceContext;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -85,6 +86,8 @@ public final class TraceWebFilter implements WebFilter, Ordered {
 
 	SleuthWebProperties webProperties;
 
+	CurrentTraceContext currentTraceContext;
+
 	TraceWebFilter(BeanFactory beanFactory) {
 		this.beanFactory = beanFactory;
 	}
@@ -114,6 +117,14 @@ public final class TraceWebFilter implements WebFilter, Ordered {
 			this.webProperties = this.beanFactory.getBean(SleuthWebProperties.class);
 		}
 		return this.webProperties;
+	}
+
+	CurrentTraceContext currentTraceContext() {
+		if (this.currentTraceContext == null) {
+			this.currentTraceContext = this.beanFactory
+					.getBean(CurrentTraceContext.class);
+		}
+		return this.currentTraceContext;
 	}
 
 	@Override
@@ -150,11 +161,14 @@ public final class TraceWebFilter implements WebFilter, Ordered {
 
 		final boolean initialTracePresent;
 
+		final CurrentTraceContext currentTraceContext;
+
 		MonoWebFilterTrace(Mono<? extends Void> source, ServerWebExchange exchange,
 				boolean initialTracePresent, TraceWebFilter parent) {
 			super(source);
 			this.tracer = parent.tracer();
 			this.handler = parent.handler();
+			this.currentTraceContext = parent.currentTraceContext();
 			this.exchange = exchange;
 			this.attrSpan = exchange.getAttribute(TRACE_REQUEST_ATTR);
 			this.initialTracePresent = initialTracePresent;
@@ -163,8 +177,12 @@ public final class TraceWebFilter implements WebFilter, Ordered {
 		@Override
 		public void subscribe(CoreSubscriber<? super Void> subscriber) {
 			Context context = contextWithoutInitialSpan(subscriber.currentContext());
-			this.source.subscribe(new WebFilterTraceSubscriber(subscriber, context,
-					findOrCreateSpan(context), this));
+			Span span = findOrCreateSpan(context);
+			try (CurrentTraceContext.Scope scope = this.currentTraceContext
+					.maybeScope(span.context())) {
+				this.source.subscribe(
+						new WebFilterTraceSubscriber(subscriber, context, span, this));
+			}
 		}
 
 		private Context contextWithoutInitialSpan(Context context) {

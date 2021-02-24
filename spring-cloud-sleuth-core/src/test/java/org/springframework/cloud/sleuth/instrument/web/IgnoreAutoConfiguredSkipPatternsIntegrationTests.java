@@ -62,6 +62,7 @@ public class IgnoreAutoConfiguredSkipPatternsIntegrationTests {
 	@After
 	public void clearSpans() {
 		this.spans.clear();
+		tracer.withSpanInScope(null);
 	}
 
 	@Test
