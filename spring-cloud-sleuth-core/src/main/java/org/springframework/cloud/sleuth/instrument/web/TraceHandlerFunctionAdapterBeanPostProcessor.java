@@ -92,16 +92,21 @@ class TraceHandlerFunctionAdapterBeanPostProcessor implements BeanPostProcessor 
 		@Override
 		public Mono<?> handle(ServerRequest serverRequest) {
 			AtomicReference<CurrentTraceContext.Scope> scope = new AtomicReference<>();
-			return Mono.fromRunnable(() -> serverRequest
-					.attribute(TraceWebFilter.TRACE_REQUEST_ATTR)
-					.ifPresent(span -> scope.set(currentTraceContext().maybeScope(((Span) span).context()))))
-					.flatMap(r -> this.delegate.handle(serverRequest))
+			// @formatter:off
+			return Mono.defer(() -> {
+						serverRequest
+							.attribute(TraceWebFilter.TRACE_REQUEST_ATTR)
+							.ifPresent(span -> scope.set(
+								currentTraceContext().maybeScope(((Span) span).context())));
+						return this.delegate.handle(serverRequest);
+					})
 					.doFinally(signalType -> {
 						CurrentTraceContext.Scope spanInScope = scope.get();
 						if (spanInScope != null) {
 							spanInScope.close();
 						}
 					});
+			// @formatter:on
 		}
 
 		private CurrentTraceContext currentTraceContext() {

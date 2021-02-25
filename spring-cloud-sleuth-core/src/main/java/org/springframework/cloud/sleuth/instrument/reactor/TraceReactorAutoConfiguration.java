@@ -171,9 +171,11 @@ class HooksRefresher implements ApplicationListener<RefreshScopeRefreshedEvent> 
 		Hooks.resetOnEachOperator(SLEUTH_TRACE_REACTOR_KEY);
 		Hooks.resetOnLastOperator(SLEUTH_TRACE_REACTOR_KEY);
 		Hooks.removeQueueWrapper(SLEUTH_TRACE_REACTOR_KEY);
-		if (this.reactorProperties.isDecorateHooks() && TraceReactorAutoConfiguration.TraceReactorConfiguration.IS_QUEUE_WRAPPER_ON_THE_CLASSPATH) {
+		if (this.reactorProperties.isDecorateHooks()
+				&& TraceReactorAutoConfiguration.TraceReactorConfiguration.IS_QUEUE_WRAPPER_ON_THE_CLASSPATH) {
 			HookRegisteringBeanDefinitionRegistryPostProcessor.addQueueWrapper(context);
-		} else if (this.reactorProperties.isDecorateOnEach()) {
+		}
+		else if (this.reactorProperties.isDecorateOnEach()) {
 			if (log.isTraceEnabled()) {
 				log.trace("Decorating onEach operator instrumentation");
 			}
