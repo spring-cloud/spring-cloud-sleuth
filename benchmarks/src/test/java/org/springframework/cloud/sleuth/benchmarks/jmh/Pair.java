@@ -34,7 +34,7 @@ public class Pair {
 	}
 
 	public static Pair noHook() {
-		return new Pair("spring.sleuth.reactor.decorate-hooks", "false");
+		return new Pair("spring.sleuth.reactor.decorate-queues", "false");
 	}
 
 	public static Pair noSleuth() {

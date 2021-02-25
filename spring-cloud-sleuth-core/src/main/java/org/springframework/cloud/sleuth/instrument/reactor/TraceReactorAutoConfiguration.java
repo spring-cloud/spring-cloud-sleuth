@@ -100,7 +100,7 @@ public class TraceReactorAutoConfiguration {
 			SleuthReactorProperties reactorProperties = this.springContext
 					.getBean(SleuthReactorProperties.class);
 			if (TraceReactorAutoConfiguration.TraceReactorConfiguration.IS_QUEUE_WRAPPER_ON_THE_CLASSPATH
-					&& reactorProperties.isDecorateHooks()) {
+					&& reactorProperties.isDecorateQueues()) {
 				if (log.isTraceEnabled()) {
 					log.trace("Resetting queue wrapper instrumentation");
 				}
@@ -175,7 +175,7 @@ class HooksRefresher implements ApplicationListener<RefreshScopeRefreshedEvent> 
 		Hooks.resetOnEachOperator(SLEUTH_TRACE_REACTOR_KEY);
 		Hooks.resetOnLastOperator(SLEUTH_TRACE_REACTOR_KEY);
 		Hooks.removeQueueWrapper(SLEUTH_TRACE_REACTOR_KEY);
-		if (this.reactorProperties.isDecorateHooks()
+		if (this.reactorProperties.isDecorateQueues()
 				&& TraceReactorAutoConfiguration.TraceReactorConfiguration.IS_QUEUE_WRAPPER_ON_THE_CLASSPATH) {
 			if (log.isTraceEnabled()) {
 				log.trace("Adding queue wrapper instrumentation");
@@ -227,16 +227,16 @@ class HookRegisteringBeanDefinitionRegistryPostProcessor
 
 	static void setupHooks(ConfigurableApplicationContext springContext) {
 		ConfigurableEnvironment environment = springContext.getEnvironment();
-		Boolean decorateHooks = environment
-				.getProperty("spring.sleuth.reactor.decorate-hooks", Boolean.class);
-		if (wrapperNotOnClasspathButPropertyHasValue(decorateHooks)) {
+		Boolean decorateQueues = environment
+				.getProperty("spring.sleuth.reactor.decorate-queues", Boolean.class);
+		if (wrapperNotOnClasspathButPropertyHasValue(decorateQueues)) {
 			log.warn(
 					"You have explicitly set the decorate hooks option but you're using an old version of Reactor. Please upgrade to the latest Boot version (at least 2.3.9.RELEASE). Will fall back to the previous reactor instrumentation mode");
 		}
 		else {
-			decorateHooks = decorateHooks != null ? decorateHooks : Boolean.TRUE;
+			decorateQueues = decorateQueues != null ? decorateQueues : Boolean.TRUE;
 		}
-		if (wrapperOnClasspathHooksPropertyTurnedOn(decorateHooks)) {
+		if (wrapperOnClasspathHooksPropertyTurnedOn(decorateQueues)) {
 			if (log.isTraceEnabled()) {
 				log.trace("Adding queue wrapper instrumentation");
 			}
@@ -263,12 +263,14 @@ class HookRegisteringBeanDefinitionRegistryPostProcessor
 		decorateScheduler(springContext);
 	}
 
-	private static boolean wrapperOnClasspathHooksPropertyTurnedOn(Boolean decorateHooks) {
+	private static boolean wrapperOnClasspathHooksPropertyTurnedOn(
+			Boolean decorateHooks) {
 		return Boolean.TRUE.equals(decorateHooks)
 				&& TraceReactorAutoConfiguration.TraceReactorConfiguration.IS_QUEUE_WRAPPER_ON_THE_CLASSPATH;
 	}
 
-	private static boolean wrapperNotOnClasspathButPropertyHasValue(Boolean decorateHooks) {
+	private static boolean wrapperNotOnClasspathButPropertyHasValue(
+			Boolean decorateHooks) {
 		return !TraceReactorAutoConfiguration.TraceReactorConfiguration.IS_QUEUE_WRAPPER_ON_THE_CLASSPATH
 				&& decorateHooks != null;
 	}
@@ -286,7 +288,6 @@ class HookRegisteringBeanDefinitionRegistryPostProcessor
 		Hooks.resetOnEachOperator(SLEUTH_TRACE_REACTOR_KEY);
 		Hooks.resetOnLastOperator(SLEUTH_TRACE_REACTOR_KEY);
 		Hooks.removeQueueWrapper(SLEUTH_REACTOR_EXECUTOR_SERVICE_KEY);
-		Schedulers.resetOnScheduleHook(SLEUTH_REACTOR_EXECUTOR_SERVICE_KEY);
 		Schedulers.resetOnScheduleHook(
 				TraceReactorAutoConfiguration.SLEUTH_REACTOR_EXECUTOR_SERVICE_KEY);
 	}
