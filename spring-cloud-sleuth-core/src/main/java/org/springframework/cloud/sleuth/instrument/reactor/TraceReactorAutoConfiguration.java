@@ -86,6 +86,8 @@ public class TraceReactorAutoConfiguration {
 
 		private static final Log log = LogFactory.getLog(TraceReactorConfiguration.class);
 
+		static final boolean IS_QUEUE_WRAPPER_ON_THE_CLASSPATH = isQueueWrapperOnTheClasspath();
+
 		@Autowired
 		ConfigurableApplicationContext springContext;
 
@@ -96,7 +98,8 @@ public class TraceReactorAutoConfiguration {
 			}
 			SleuthReactorProperties reactorProperties = this.springContext
 					.getBean(SleuthReactorProperties.class);
-			if (reactorProperties.isDecorateHooks()) {
+			if (TraceReactorAutoConfiguration.TraceReactorConfiguration.IS_QUEUE_WRAPPER_ON_THE_CLASSPATH
+					&& reactorProperties.isDecorateHooks()) {
 				Hooks.removeQueueWrapper(SLEUTH_TRACE_REACTOR_KEY);
 			}
 			if (reactorProperties.isDecorateOnEach()) {
@@ -111,8 +114,11 @@ public class TraceReactorAutoConfiguration {
 				}
 				Hooks.resetOnLastOperator(SLEUTH_TRACE_REACTOR_KEY);
 			}
-			Schedulers
-					.removeExecutorServiceDecorator(SLEUTH_REACTOR_EXECUTOR_SERVICE_KEY);
+		}
+
+		private static boolean isQueueWrapperOnTheClasspath() {
+			return ReflectionUtils.findMethod(Hooks.class, "addQueueWrapper",
+					String.class, Function.class) != null;
 		}
 
 		@Bean
@@ -165,10 +171,9 @@ class HooksRefresher implements ApplicationListener<RefreshScopeRefreshedEvent> 
 		Hooks.resetOnEachOperator(SLEUTH_TRACE_REACTOR_KEY);
 		Hooks.resetOnLastOperator(SLEUTH_TRACE_REACTOR_KEY);
 		Hooks.removeQueueWrapper(SLEUTH_TRACE_REACTOR_KEY);
-		if (this.reactorProperties.isDecorateHooks()) {
+		if (this.reactorProperties.isDecorateHooks() && TraceReactorAutoConfiguration.TraceReactorConfiguration.IS_QUEUE_WRAPPER_ON_THE_CLASSPATH) {
 			HookRegisteringBeanDefinitionRegistryPostProcessor.addQueueWrapper(context);
-		}
-		if (this.reactorProperties.isDecorateOnEach()) {
+		} else if (this.reactorProperties.isDecorateOnEach()) {
 			if (log.isTraceEnabled()) {
 				log.trace("Decorating onEach operator instrumentation");
 			}
@@ -215,16 +220,16 @@ class HookRegisteringBeanDefinitionRegistryPostProcessor
 		ConfigurableEnvironment environment = springContext.getEnvironment();
 		Boolean decorateHooks = environment
 				.getProperty("spring.sleuth.reactor.decorate-hooks", Boolean.class);
-		boolean hasQueueWrapper = ReflectionUtils.findMethod(Hooks.class,
-				"addQueueWrapper", String.class, Function.class) != null;
-		if (!hasQueueWrapper && decorateHooks != null) {
+		if (!TraceReactorAutoConfiguration.TraceReactorConfiguration.IS_QUEUE_WRAPPER_ON_THE_CLASSPATH
+				&& decorateHooks != null) {
 			log.warn(
 					"You have explicitly turned on the decorate hooks option but you're using an old version of Reactor. Please upgrade to the latest Boot version (at least 2.3.9.RELEASE). Will fall back to the previous reactor instrumentation mode");
 		}
 		else {
 			decorateHooks = decorateHooks != null ? decorateHooks : Boolean.TRUE;
 		}
-		if (Boolean.TRUE.equals(decorateHooks) && hasQueueWrapper) {
+		if (Boolean.TRUE.equals(decorateHooks)
+				&& TraceReactorAutoConfiguration.TraceReactorConfiguration.IS_QUEUE_WRAPPER_ON_THE_CLASSPATH) {
 			addQueueWrapper(springContext);
 		}
 		else {
@@ -246,6 +251,11 @@ class HookRegisteringBeanDefinitionRegistryPostProcessor
 			}
 		}
 		decorateScheduler(springContext);
+	}
+
+	static boolean isQueueWrapperOnTheClasspath() {
+		return ReflectionUtils.findMethod(Hooks.class, "addQueueWrapper", String.class,
+				Function.class) != null;
 	}
 
 	static void addQueueWrapper(ConfigurableApplicationContext springContext) {
@@ -278,7 +288,7 @@ class HookRegisteringBeanDefinitionRegistryPostProcessor
 		CurrentTraceContext currentTraceContext = springContext
 				.getBean(CurrentTraceContext.class);
 		@SuppressWarnings("unchecked")
-		Queue<Envelope> envelopeQueue = (Queue<Envelope>) queue;
+		Queue envelopeQueue = queue;
 		return new AbstractQueue<Object>() {
 
 			@Override
@@ -294,26 +304,57 @@ class HookRegisteringBeanDefinitionRegistryPostProcessor
 
 			@Override
 			public Object poll() {
-				Envelope envelope = envelopeQueue.poll();
-				if (envelope == null) {
+				Object object = envelopeQueue.poll();
+				if (object == null) {
 					return null;
 				}
+				else if (object instanceof Envelope) {
+					Envelope envelope = (Envelope) object;
+					restoreTheContext(envelope);
+					return envelope.body;
+				}
+				return object;
+			}
+
+			private void restoreTheContext(Envelope envelope) {
 				if (envelope.traceContext != null) {
 					// puts in thread local
 					currentTraceContext.maybeScope(envelope.traceContext);
 				}
-				return envelope.body;
 			}
 
 			@Override
 			public Object peek() {
-				return queue.peek();
+				Object peek = queue.peek();
+				if (peek instanceof Envelope) {
+					Envelope envelope = (Envelope) peek;
+					restoreTheContext(envelope);
+					return (envelope).body;
+				}
+				return peek;
 			}
 
 			@Override
 			@SuppressWarnings("unchecked")
 			public Iterator<Object> iterator() {
-				return (Iterator<Object>) queue.iterator();
+				Iterator<?> iterator = queue.iterator();
+				return new Iterator<Object>() {
+					@Override
+					public boolean hasNext() {
+						return iterator.hasNext();
+					}
+
+					@Override
+					public Object next() {
+						Object next = iterator.next();
+						if (next instanceof Envelope) {
+							Envelope envelope = (Envelope) next;
+							restoreTheContext(envelope);
+							return (envelope).body;
+						}
+						return next;
+					}
+				};
 			}
 		};
 	}

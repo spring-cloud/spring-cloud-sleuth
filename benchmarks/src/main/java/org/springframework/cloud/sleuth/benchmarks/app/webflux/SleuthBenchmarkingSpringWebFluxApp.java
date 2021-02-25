@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2019 the original author or authors.
+ * Copyright 2013-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,13 +16,17 @@
 
 package org.springframework.cloud.sleuth.benchmarks.app.webflux;
 
+import java.time.Duration;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
-import brave.sampler.Sampler;
-import brave.handler.SpanHandler;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import brave.propagation.TraceContext;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Scheduler;
+import reactor.core.scheduler.Schedulers;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.WebApplicationType;
@@ -33,7 +37,9 @@ import org.springframework.boot.web.reactive.context.ReactiveWebServerInitialize
 import org.springframework.cloud.sleuth.instrument.web.SkipPatternProvider;
 import org.springframework.context.ApplicationListener;
 import org.springframework.context.annotation.Bean;
+import org.springframework.util.Assert;
 import org.springframework.util.SocketUtils;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -42,17 +48,20 @@ import org.springframework.web.bind.annotation.RestController;
  */
 @SpringBootApplication
 @RestController
-public class SleuthBenchmarkingSpringWebFluxApp
-		implements ApplicationListener<ReactiveWebServerInitializedEvent> {
+public class SleuthBenchmarkingSpringWebFluxApp implements ApplicationListener<ReactiveWebServerInitializedEvent> {
 
-	private static final Log log = LogFactory
-			.getLog(SleuthBenchmarkingSpringWebFluxApp.class);
+	static final Scheduler FOO_SCHEDULER = Schedulers.newParallel("foo");
 
+	private static final Logger log = LoggerFactory.getLogger(SleuthBenchmarkingSpringWebFluxApp.class);
+
+	/**
+	 * Port to set.
+	 */
 	public int port;
 
 	public static void main(String... args) {
-		new SpringApplicationBuilder(SleuthBenchmarkingSpringWebFluxApp.class)
-				.web(WebApplicationType.REACTIVE).application().run(args);
+		new SpringApplicationBuilder(SleuthBenchmarkingSpringWebFluxApp.class).web(WebApplicationType.REACTIVE)
+				.application().run(args);
 	}
 
 	@RequestMapping("/foo")
@@ -61,33 +70,55 @@ public class SleuthBenchmarkingSpringWebFluxApp
 	}
 
 	@Bean
-	Sampler alwaysSampler() {
-		return Sampler.ALWAYS_SAMPLE;
-	}
-
-	@Bean
 	SkipPatternProvider patternProvider() {
 		return () -> Pattern.compile("");
 	}
 
 	@Bean
-	NettyReactiveWebServerFactory nettyReactiveWebServerFactory(
-			@Value("${server.port:0}") int serverPort) {
+	NettyReactiveWebServerFactory nettyReactiveWebServerFactory(@Value("${server.port:0}") int serverPort) {
 		log.info("Starting container at port [" + serverPort + "]");
-		return new NettyReactiveWebServerFactory(
-				serverPort == 0 ? SocketUtils.findAvailableTcpPort() : serverPort);
-	}
-
-	@Bean
-	public SpanHandler spanHandler() {
-		return new SpanHandler() {
-			// intentionally anonymous to prevent logging fallback on NOOP
-		};
+		return new NettyReactiveWebServerFactory(serverPort == 0 ? SocketUtils.findAvailableTcpPort() : serverPort);
 	}
 
 	@Override
 	public void onApplicationEvent(ReactiveWebServerInitializedEvent event) {
 		this.port = event.getWebServer().getPort();
+	}
+
+	@GetMapping("/simple")
+	public Mono<String> simple() {
+		return Mono.just("hello").map(String::toUpperCase).doOnNext(s -> log.info("Hello from simple [{}]", s));
+	}
+
+
+	@GetMapping("/complexNoSleuth")
+	public Mono<String> complexNoSleuth() {
+		return Flux.range(1, 10).map(String::valueOf).collect(Collectors.toList())
+				.doOnEach(signal -> log.info("Got a request"))
+				.flatMap(s -> Mono.delay(Duration.ofMillis(1), FOO_SCHEDULER).map(aLong -> {
+					log.info("Logging [{}] from flat map", s);
+					return "";
+				}));
+	}
+
+	@GetMapping("/complex")
+	public Mono<String> complex() {
+		return Flux.range(1, 10).map(String::valueOf).collect(Collectors.toList())
+				.doOnEach(signal -> log.info("Got a request"))
+				.flatMap(s -> Mono.delay(Duration.ofMillis(1), FOO_SCHEDULER).map(aLong -> {
+					log.info("Logging [{}] from flat map", s);
+					return "";
+				})).doOnEach(signal -> {
+					log.info("Doing assertions");
+					TraceContext traceContext = signal.getContext().get(TraceContext.class);
+					Assert.notNull(traceContext, "Context must be set by Sleuth instrumentation");
+					if (traceContext.traceIdString().startsWith("0000000000000000")) {
+						Assert.state(traceContext.traceIdString().equals("00000000000000004883117762eb9420"), "TraceId must be propagated");
+					} else {
+						Assert.state(traceContext.traceIdString().equals("4883117762eb9420"), "TraceId must be propagated");
+					}
+					log.info("Assertions passed");
+				});
 	}
 
 }

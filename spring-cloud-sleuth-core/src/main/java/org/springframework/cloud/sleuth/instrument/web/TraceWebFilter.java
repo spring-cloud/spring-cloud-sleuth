@@ -80,13 +80,13 @@ public final class TraceWebFilter implements WebFilter, Ordered {
 
 	private final BeanFactory beanFactory;
 
-	Tracer tracer;
+	private Tracer tracer;
 
-	HttpServerHandler<HttpServerRequest, HttpServerResponse> handler;
+	private HttpServerHandler<HttpServerRequest, HttpServerResponse> handler;
 
-	SleuthWebProperties webProperties;
+	private SleuthWebProperties webProperties;
 
-	CurrentTraceContext currentTraceContext;
+	private CurrentTraceContext currentTraceContext;
 
 	TraceWebFilter(BeanFactory beanFactory) {
 		this.beanFactory = beanFactory;
@@ -97,7 +97,7 @@ public final class TraceWebFilter implements WebFilter, Ordered {
 	}
 
 	@SuppressWarnings("unchecked")
-	HttpServerHandler<HttpServerRequest, HttpServerResponse> handler() {
+	private HttpServerHandler<HttpServerRequest, HttpServerResponse> handler() {
 		if (this.handler == null) {
 			this.handler = HttpServerHandler
 					.create(this.beanFactory.getBean(HttpTracing.class));
@@ -105,21 +105,21 @@ public final class TraceWebFilter implements WebFilter, Ordered {
 		return this.handler;
 	}
 
-	Tracer tracer() {
+	private Tracer tracer() {
 		if (this.tracer == null) {
 			this.tracer = this.beanFactory.getBean(HttpTracing.class).tracing().tracer();
 		}
 		return this.tracer;
 	}
 
-	SleuthWebProperties sleuthWebProperties() {
+	private SleuthWebProperties sleuthWebProperties() {
 		if (this.webProperties == null) {
 			this.webProperties = this.beanFactory.getBean(SleuthWebProperties.class);
 		}
 		return this.webProperties;
 	}
 
-	CurrentTraceContext currentTraceContext() {
+	private CurrentTraceContext currentTraceContext() {
 		if (this.currentTraceContext == null) {
 			this.currentTraceContext = this.beanFactory
 					.getBean(CurrentTraceContext.class);

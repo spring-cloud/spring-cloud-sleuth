@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2019 the original author or authors.
+ * Copyright 2016-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,21 +16,13 @@
 
 package org.springframework.cloud.sleuth.benchmarks.jmh;
 
-import org.openjdk.jmh.runner.Runner;
-import org.openjdk.jmh.runner.RunnerException;
-import org.openjdk.jmh.runner.options.Options;
-import org.openjdk.jmh.runner.options.OptionsBuilder;
+public enum TracerImplementation {
 
-public class RunSleuthJmhBenchmarksFromIde {
+	brave;
 
-	// Convenience main entry-point for testing from IDE
-	public static void main(String[] args) throws RunnerException {
-		Options opt = new OptionsBuilder()
-				.include(RunSleuthJmhBenchmarksFromIde.class.getPackage().getName()
-						+ ".benchmarks.*")
-				.build();
-
-		new Runner(opt).run();
+	@Override
+	public String toString() {
+		return this.name();
 	}
 
 }

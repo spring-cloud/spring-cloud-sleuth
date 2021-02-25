@@ -95,6 +95,7 @@ public class FlatMapTests {
 				FlatMapTests.TestConfiguration.class, Issue866Configuration.class)
 						.web(WebApplicationType.REACTIVE)
 						.properties("server.port=0", "spring.jmx.enabled=false",
+								"spring.sleuth.reactor.decorate-hooks=false",
 								"spring.sleuth.reactor.decorate-on-each=false",
 								"spring.application.name=TraceWebFlux2Tests",
 								"security.basic.enabled=false",
@@ -103,12 +104,14 @@ public class FlatMapTests {
 		assertReactorTracing(context);
 
 		try {
+			System.setProperty("spring.sleuth.reactor.decorate-hooks", "false");
 			System.setProperty("spring.sleuth.reactor.decorate-on-each", "true");
 			// trigger context refreshed
 			context.getBean(ContextRefresher.class).refresh();
 			assertReactorTracing(context);
 		}
 		finally {
+			System.clearProperty("spring.sleuth.reactor.decorate-hooks");
 			System.clearProperty("spring.sleuth.reactor.decorate-on-each");
 		}
 	}
