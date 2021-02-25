@@ -38,6 +38,13 @@ public class ZipkinProperties {
 	private String baseUrl = "http://localhost:9411/";
 
 	/**
+	 * Api path that will be appended to baseUrl above as suffix This is applicable if you
+	 * are using other monitoring tools. IE, new relic, the trace api doesn't need api
+	 * path, so this can be set to blank ("") in the config.
+	 */
+	private String apiPath = null;
+
+	/**
 	 * If set to {@code false}, will treat the {@link ZipkinProperties#baseUrl} as a URL
 	 * always.
 	 */
@@ -82,6 +89,14 @@ public class ZipkinProperties {
 
 	public void setBaseUrl(String baseUrl) {
 		this.baseUrl = baseUrl;
+	}
+
+	public String getApiPath() {
+		return apiPath;
+	}
+
+	public void setApiPath(String apiPath) {
+		this.apiPath = apiPath;
 	}
 
 	public boolean isEnabled() {

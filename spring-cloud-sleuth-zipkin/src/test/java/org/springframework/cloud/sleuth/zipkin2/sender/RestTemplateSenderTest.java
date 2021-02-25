@@ -54,7 +54,7 @@ public class RestTemplateSenderTest {
 	String baseUrl = "http://localhost:" + this.server.getPort();
 
 	RestTemplateSender sender = new RestTemplateSender(new RestTemplate(), this.baseUrl,
-			JSON_V2);
+			null, JSON_V2);
 
 	/**
 	 * Tests that json is not manipulated as a side-effect of using rest template.
@@ -73,7 +73,8 @@ public class RestTemplateSenderTest {
 	@Test
 	public void proto3() throws Exception {
 		this.server.enqueue(new MockResponse());
-		this.sender = new RestTemplateSender(new RestTemplate(), this.baseUrl, PROTO3);
+		this.sender = new RestTemplateSender(new RestTemplate(), this.baseUrl, "",
+				PROTO3);
 
 		send(SPAN).execute();
 
@@ -83,6 +84,26 @@ public class RestTemplateSenderTest {
 		// proto3 encoding of ListOfSpan is simply a repeated span entry
 		assertThat(request.getBody().readByteArray())
 				.containsExactly(SpanBytesEncoder.PROTO3.encode(SPAN));
+	}
+
+	@Test
+	public void testWhereApiIsSetNonEmpty() {
+		final String mockedApiPath = "/test/v2";
+		final RestTemplateSender senderWithMockedApiPath = new RestTemplateSender(
+				new RestTemplate(), this.baseUrl, mockedApiPath, JSON_V2);
+
+		assertThat(senderWithMockedApiPath.toString())
+				.isEqualTo("RestTemplateSender{" + baseUrl + mockedApiPath + "}");
+	}
+
+	@Test
+	public void testWhereApiIsSetToEmpty() {
+		final String mockedApiPath = "";
+		final RestTemplateSender senderWithMockedApiPath = new RestTemplateSender(
+				new RestTemplate(), this.baseUrl, mockedApiPath, JSON_V2);
+
+		assertThat(senderWithMockedApiPath.toString())
+				.isEqualTo("RestTemplateSender{" + baseUrl + "}");
 	}
 
 	/**
