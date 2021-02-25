@@ -18,7 +18,6 @@ package org.springframework.cloud.sleuth.instrument.reactor.sample;
 
 import java.util.Arrays;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import brave.Tracer;
@@ -31,6 +30,7 @@ import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import reactor.core.publisher.Flux;
@@ -73,6 +73,11 @@ public class FlatMapTests {
 	@AfterClass
 	public static void cleanup() {
 		Issue866Configuration.hook = null;
+	}
+
+	@BeforeEach
+	void before() {
+		TraceReactorAutoConfigurationAccessorConfiguration.close();
 	}
 
 	@Test
@@ -143,7 +148,7 @@ public class FlatMapTests {
 		sender.port = port;
 		spans.clear();
 
-		Awaitility.await().atMost(20, TimeUnit.SECONDS).untilAsserted(() -> {
+		Awaitility.await().untilAsserted(() -> {
 			// when
 			LOGGER.info("Start");
 			spans.clear();

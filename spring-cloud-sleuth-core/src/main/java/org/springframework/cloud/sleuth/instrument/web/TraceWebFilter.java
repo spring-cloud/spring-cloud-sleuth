@@ -130,14 +130,14 @@ public final class TraceWebFilter implements WebFilter, Ordered {
 	@Override
 	public Mono<Void> filter(ServerWebExchange exchange, WebFilterChain chain) {
 		String uri = exchange.getRequest().getPath().pathWithinApplication().value();
-		if (log.isDebugEnabled()) {
-			log.debug("Received a request to uri [" + uri + "]");
-		}
 		Mono<Void> source = chain.filter(exchange);
 		boolean tracePresent = tracer().currentSpan() != null;
 		if (tracePresent) {
 			// clear any previous trace
 			tracer().withSpanInScope(null); // TODO: dangerous and also allocates stuff
+		}
+		if (log.isDebugEnabled()) {
+			log.debug("Received a request to uri [" + uri + "]");
 		}
 		return new MonoWebFilterTrace(source, exchange, tracePresent, this);
 	}
