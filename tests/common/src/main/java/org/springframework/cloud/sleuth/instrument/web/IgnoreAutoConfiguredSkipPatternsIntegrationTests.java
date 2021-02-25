@@ -53,6 +53,7 @@ public abstract class IgnoreAutoConfiguredSkipPatternsIntegrationTests {
 	@AfterEach
 	public void clearSpans() {
 		this.spans.clear();
+		this.tracer.withSpan(null);
 	}
 
 	@Test

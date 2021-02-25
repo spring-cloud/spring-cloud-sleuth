@@ -20,6 +20,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.boot.context.properties.DeprecatedConfigurationProperty;
 
 /**
  * Sleuth Reactor settings.
@@ -58,6 +59,8 @@ public class SleuthReactorProperties {
 		this.enabled = enabled;
 	}
 
+	@DeprecatedConfigurationProperty(reason = "An enum is a more clear solution",
+			replacement = "spring.sleuth.reactor.instrumentation-type=DECORATE_ON_EACH")
 	@Deprecated
 	public boolean isDecorateOnEach() {
 		warn();
@@ -85,6 +88,13 @@ public class SleuthReactorProperties {
 	}
 
 	public enum InstrumentationType {
+
+		/**
+		 * Uses the new decorate queues feature from Project Reactor. Should allow the
+		 * feature set of {@link InstrumentationType#DECORATE_ON_EACH} with the least
+		 * impact on the performance.
+		 */
+		DECORATE_QUEUES,
 
 		/**
 		 * Decorates on each operator, will be less performing, but logging will always

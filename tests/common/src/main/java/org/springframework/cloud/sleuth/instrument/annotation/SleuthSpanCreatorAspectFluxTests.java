@@ -87,6 +87,7 @@ public abstract class SleuthSpanCreatorAspectFluxTests {
 	public void setup() {
 		this.spans.clear();
 		this.testBean.reset();
+		this.tracer.withSpan(null);
 	}
 
 	@Test

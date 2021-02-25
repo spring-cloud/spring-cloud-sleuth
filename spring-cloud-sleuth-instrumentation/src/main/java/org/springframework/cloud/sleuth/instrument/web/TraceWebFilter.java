@@ -97,11 +97,11 @@ public class TraceWebFilter implements WebFilter, Ordered, ApplicationContextAwa
 	@Override
 	public Mono<Void> filter(ServerWebExchange exchange, WebFilterChain chain) {
 		String uri = exchange.getRequest().getPath().pathWithinApplication().value();
+		Mono<Void> source = chain.filter(exchange);
+		boolean tracePresent = isTracePresent();
 		if (log.isDebugEnabled()) {
 			log.debug("Received a request to uri [" + uri + "]");
 		}
-		Mono<Void> source = chain.filter(exchange);
-		boolean tracePresent = isTracePresent();
 		return new MonoWebFilterTrace(source, exchange, tracePresent, this);
 	}
 

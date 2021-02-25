@@ -69,6 +69,7 @@ public abstract class SleuthSpanCreatorAspectMonoTests {
 	@BeforeEach
 	public void setup() {
 		this.spans.clear();
+		this.tracer.withSpan(null);
 	}
 
 	@Test

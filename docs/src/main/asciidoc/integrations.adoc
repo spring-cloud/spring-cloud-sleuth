@@ -389,8 +389,9 @@ To turn off this feature, set the `spring.sleuth.quartz.enabled` property to `fa
 
 This feature is available for all tracer implementations.
 
-We have three modes of instrumenting reactor based applications that can be set via `spring.sleuth.reactor.instrumentation-type` property:
+We have the following modes of instrumenting reactor based applications that can be set via `spring.sleuth.reactor.instrumentation-type` property:
 
+* `ON_HOOKS` - With the new Reactor https://github.com/reactor/reactor-core/pull/2566[queue wrapping mechanism] (Reactor 3.4.3) we're instrumenting the way threads are switched by Reactor. This should lead to feature parity with `ON_EACH` with low performance impact.
 * `ON_EACH` - wraps every Reactor operator in a trace representation.
 Passes the tracing context in most cases.
 This mode might lead to drastic performance degradation.
