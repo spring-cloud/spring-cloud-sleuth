@@ -34,10 +34,20 @@ public class SleuthReactorProperties {
 	private boolean enabled = true;
 
 	/**
+	 * When true uses the new decorate hooks feature from Project Reactor. Should allow
+	 * the feature set of {@link SleuthReactorProperties#decorateOnEach} with the least
+	 * impact on the performance.
+	 */
+	private boolean decorateHooks = true;
+
+	/**
 	 * When true decorates on each operator, will be less performing, but logging will
 	 * always contain the tracing entries in each operator. When false decorates on last
 	 * operator, will be more performing, but logging might not always contain the tracing
 	 * entries.
+	 *
+	 * If {@link SleuthReactorProperties#decorateHooks} is used, this decoration mode will
+	 * NOT be used.
 	 */
 	private boolean decorateOnEach = true;
 
@@ -47,6 +57,14 @@ public class SleuthReactorProperties {
 
 	public void setEnabled(boolean enabled) {
 		this.enabled = enabled;
+	}
+
+	public boolean isDecorateHooks() {
+		return this.decorateHooks;
+	}
+
+	public void setDecorateHooks(boolean decorateHooks) {
+		this.decorateHooks = decorateHooks;
 	}
 
 	public boolean isDecorateOnEach() {

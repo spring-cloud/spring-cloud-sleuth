@@ -1526,19 +1526,14 @@ To turn off this feature, set the `spring.sleuth.quartz.enabled` property to `fa
 
 === Project Reactor
 
+==== From Spring Cloud Sleuth 2.2.8 (inclusive)
+
+With the new Reactor https://github.com/reactor/reactor-core/pull/2566[queue wrapping mechanism] (Reactor 3.3.14) we're instrumenting the way threads are switched by Reactor. You should observe significant improvement in performance. In order to disable this feature you have to set the `spring.sleuth.reactor.decorate-hooks` option to `false`. You'll fall back to the previous instrumentation mode mechanism.
+
+==== To Spring Cloud Sleuth 2.2.8 (exclusive)
+
 For projects depending on Project Reactor such as Spring Cloud Gateway, we suggest turning the `spring.sleuth.reactor.decorate-on-each` option to `false`. That way an increased performance gain should be observed in comparison to the standard instrumentation mechanism. What this option does is it will wrap decorate `onLast` operator instead of `onEach` which will result in creation of far fewer objects. The downside of this is that when Project Reactor will change threads, the trace propagation will continue without issues, however anything relying on the `ThreadLocal` such as e.g. MDC entries can be buggy.
 
 == Configuration properties
 
 To see the list of all Sleuth related configuration properties please check link:appendix.html[the Appendix page].
-
-== Running examples
-
-You can see the running examples deployed in the https://run.pivotal.io/[Pivotal Web Services].
-Check them out at the following links:
-
-* https://docssleuth-zipkin-server.cfapps.io/[Zipkin for apps presented in the samples to the top]. First make
-a request to https://docssleuth-service1.cfapps.io/start[Service 1] and then check out the trace in Zipkin.
-* https://docsbrewing-zipkin-server.cfapps.io/[Zipkin for Brewery on PWS], its https://github.com/spring-cloud-samples/brewery[Github Code].
-Ensure that you've picked the lookback period of 7 days. If there are no traces, go to https://docsbrewing-presenting.cfapps.io/[Presenting application]
-and order some beers. Then check Zipkin for traces.

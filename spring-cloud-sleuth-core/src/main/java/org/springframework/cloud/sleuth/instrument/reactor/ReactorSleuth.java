@@ -129,6 +129,29 @@ public abstract class ReactorSleuth {
 		});
 	}
 
+	public static Function<Runnable, Runnable> scopePassingOnScheduleHook(
+			ConfigurableApplicationContext springContext) {
+		LazyBean<CurrentTraceContext> lazyCurrentTraceContext = LazyBean
+				.create(springContext, CurrentTraceContext.class);
+		return delegate -> {
+			if (springContext.isActive()) {
+				final CurrentTraceContext currentTraceContext = lazyCurrentTraceContext
+						.get();
+				if (currentTraceContext == null) {
+					return delegate;
+				}
+				final TraceContext traceContext = currentTraceContext.get();
+				return () -> {
+					try (CurrentTraceContext.Scope scope = currentTraceContext
+							.maybeScope(traceContext)) {
+						delegate.run();
+					}
+				};
+			}
+			return delegate;
+		};
+	}
+
 	private static <T> Context context(CoreSubscriber<? super T> sub) {
 		try {
 			return sub.currentContext();

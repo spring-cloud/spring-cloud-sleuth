@@ -40,7 +40,7 @@ public class Issue866Configuration {
 	public static TestHook hook;
 
 	@Bean
-	HookRegisteringBeanDefinitionRegistryPostProcessor overridingProcessorForTests(
+	static HookRegisteringBeanDefinitionRegistryPostProcessor overridingProcessorForTests(
 			ConfigurableApplicationContext context) {
 		log.info(
 				"Registering a HookRegisteringBeanDefinitionRegistryPostProcessor for context ["

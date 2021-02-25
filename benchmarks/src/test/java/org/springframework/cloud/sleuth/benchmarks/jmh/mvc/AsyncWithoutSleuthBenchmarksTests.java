@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2019 the original author or authors.
+ * Copyright 2013-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,10 +14,11 @@
  * limitations under the License.
  */
 
-package org.springframework.cloud.sleuth.benchmarks.jmh.benchmarks;
+package org.springframework.cloud.sleuth.benchmarks.jmh.mvc;
 
 import java.util.concurrent.TimeUnit;
 
+import jmh.mbr.junit5.Microbenchmark;
 import org.openjdk.jmh.annotations.Benchmark;
 import org.openjdk.jmh.annotations.BenchmarkMode;
 import org.openjdk.jmh.annotations.Fork;
@@ -37,43 +38,39 @@ import org.springframework.context.ConfigurableApplicationContext;
 
 import static org.assertj.core.api.BDDAssertions.then;
 
-@Measurement(iterations = 5)
-@Warmup(iterations = 10)
-@Fork(3)
+@Measurement(iterations = 10, time = 1)
+@Warmup(iterations = 10, time = 1)
+@Fork(4)
 @BenchmarkMode(Mode.SampleTime)
 @OutputTimeUnit(TimeUnit.MICROSECONDS)
 @Threads(Threads.MAX)
-public class AnnotationBenchmarks {
-
+@Microbenchmark
+public class AsyncWithoutSleuthBenchmarksTests {
 	@Benchmark
-	public void manuallyCreatedSpans(BenchmarkContext context) throws Exception {
-		then(context.sleuth.manualSpan()).isEqualTo("continued");
-	}
-
-	@Benchmark
-	public void spanCreatedWithAnnotations(BenchmarkContext context) throws Exception {
-		then(context.sleuth.newSpan()).isEqualTo("continued");
+	public void asyncMethodWithoutSleuth(BenchmarkContext context) throws Exception {
+		then(context.app.async().get()).isEqualTo("async");
 	}
 
 	@State(Scope.Benchmark)
 	public static class BenchmarkContext {
-
-		volatile ConfigurableApplicationContext withSleuth;
-
-		volatile SleuthBenchmarkingSpringApp sleuth;
+		volatile ConfigurableApplicationContext context;
+		volatile SleuthBenchmarkingSpringApp app;
 
 		@Setup
 		public void setup() {
-			this.withSleuth = new SpringApplication(SleuthBenchmarkingSpringApp.class)
-					.run("--spring.jmx.enabled=false",
-							"--spring.application.name=withSleuth");
-			this.sleuth = this.withSleuth.getBean(SleuthBenchmarkingSpringApp.class);
+			this.context = new SpringApplication(SleuthBenchmarkingSpringApp.class).run(
+					"--spring.jmx.enabled=false",
+					"--spring.application.name=withoutSleuth",
+					"--spring.sleuth.enabled=false",
+					"--spring.sleuth.async.enabled=false"
+			);
+			this.app = this.context.getBean(SleuthBenchmarkingSpringApp.class);
 		}
 
 		@TearDown
 		public void clean() {
-			this.sleuth.clean();
-			this.withSleuth.close();
+			this.app.clean();
+			this.context.close();
 		}
 
 	}

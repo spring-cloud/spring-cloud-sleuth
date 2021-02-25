@@ -30,6 +30,7 @@ import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import reactor.core.publisher.Flux;
@@ -74,14 +75,35 @@ public class FlatMapTests {
 		Issue866Configuration.hook = null;
 	}
 
+	@BeforeEach
+	void before() {
+		TraceReactorAutoConfigurationAccessorConfiguration.close();
+	}
+
 	@Test
-	public void should_work_with_flat_maps() {
+	public void should_work_with_flat_maps_on_hooks_instrumentation() {
 		// given
 		ConfigurableApplicationContext context = new SpringApplicationBuilder(
 				FlatMapTests.TestConfiguration.class, Issue866Configuration.class)
 						.web(WebApplicationType.REACTIVE)
 						.properties("server.port=0", "spring.jmx.enabled=false",
-								"spring.application.name=TraceWebFluxTests",
+								"spring.application.name=TraceWebFluxOnHooksTests",
+								"security.basic.enabled=false",
+								"management.security.enabled=false")
+						.run();
+		assertReactorTracing(context);
+	}
+
+	@Test
+	public void should_work_with_flat_maps_on_each_operator_instrumentation() {
+		// given
+		ConfigurableApplicationContext context = new SpringApplicationBuilder(
+				FlatMapTests.TestConfiguration.class, Issue866Configuration.class)
+						.web(WebApplicationType.REACTIVE)
+						.properties("server.port=0", "spring.jmx.enabled=false",
+								"spring.sleuth.reactor.decorate-hooks=false",
+								"spring.sleuth.reactor.decorate-on-each=true",
+								"spring.application.name=TraceWebFluxOnEachTests",
 								"security.basic.enabled=false",
 								"management.security.enabled=false")
 						.run();
@@ -95,20 +117,23 @@ public class FlatMapTests {
 				FlatMapTests.TestConfiguration.class, Issue866Configuration.class)
 						.web(WebApplicationType.REACTIVE)
 						.properties("server.port=0", "spring.jmx.enabled=false",
+								"spring.sleuth.reactor.decorate-hooks=false",
 								"spring.sleuth.reactor.decorate-on-each=false",
-								"spring.application.name=TraceWebFlux2Tests",
+								"spring.application.name=TraceWebFluxOnLastTests",
 								"security.basic.enabled=false",
 								"management.security.enabled=false")
 						.run();
 		assertReactorTracing(context);
 
 		try {
-			System.setProperty("spring.sleuth.reactor.decorate-on-each", "true");
+			System.setProperty("spring.sleuth.reactor.decorate-hooks", "false");
+			System.setProperty("spring.sleuth.reactor.decorate-on-each", "false");
 			// trigger context refreshed
 			context.getBean(ContextRefresher.class).refresh();
 			assertReactorTracing(context);
 		}
 		finally {
+			System.clearProperty("spring.sleuth.reactor.decorate-hooks");
 			System.clearProperty("spring.sleuth.reactor.decorate-on-each");
 		}
 	}
@@ -196,11 +221,11 @@ public class FlatMapTests {
 		RouterFunction<ServerResponse> handlers(Tracer tracer,
 				RequestSender requestSender) {
 			return route(GET("/noFlatMap"), request -> {
-				LOGGER.info("noFlatMap");
+				LOGGER.info("noFlatMap [" + request + "]");
 				Flux<Integer> one = requestSender.getAll().map(String::length);
 				return ServerResponse.ok().body(one, Integer.class);
 			}).andRoute(GET("/withFlatMap"), request -> {
-				LOGGER.info("withFlatMap");
+				LOGGER.info("withFlatMap [" + request + "]");
 				Flux<Integer> one = requestSender.getAll().map(String::length);
 				Flux<Integer> response = one
 						.flatMap(size -> requestSender.getAll().doOnEach(
@@ -211,7 +236,7 @@ public class FlatMapTests {
 						});
 				return ServerResponse.ok().body(response, Integer.class);
 			}).andRoute(GET("/foo"), request -> {
-				LOGGER.info("foo");
+				LOGGER.info("foo [" + request + "]");
 				this.spanInFoo = tracer.currentSpan();
 				return ServerResponse.ok().body(Flux.just(1), Integer.class);
 			});

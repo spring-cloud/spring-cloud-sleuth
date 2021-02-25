@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2019 the original author or authors.
+ * Copyright 2013-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.springframework.cloud.sleuth.benchmarks.jmh.benchmarks;
+package org.springframework.cloud.sleuth.benchmarks.jmh.webflux;
 
 import java.io.IOException;
 import java.util.concurrent.TimeUnit;
@@ -26,6 +26,7 @@ import brave.httpclient.TracingHttpClientBuilder;
 import brave.propagation.CurrentTraceContext;
 import brave.propagation.TraceContext;
 import brave.sampler.Sampler;
+import jmh.mbr.junit5.Microbenchmark;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
@@ -51,32 +52,40 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.WebApplicationType;
 import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.cloud.sleuth.benchmarks.app.webflux.SleuthBenchmarkingSpringWebFluxApp;
+import org.springframework.cloud.sleuth.benchmarks.jmh.TracerImplementation;
 import org.springframework.context.ConfigurableApplicationContext;
 
-@Measurement(iterations = 5, time = 1)
+@Measurement(iterations = 10, time = 1)
 @Warmup(iterations = 10, time = 1)
-@Fork(3)
+@Fork(4)
 @BenchmarkMode(Mode.SampleTime)
 @OutputTimeUnit(TimeUnit.MICROSECONDS)
 @Threads(2)
 @State(Scope.Benchmark)
-public class SpringWebFluxBenchmarks {
+@Microbenchmark
+public abstract class SpringWebFluxBenchmarksTests {
+
 	static final SpanHandler FAKE_SPAN_HANDLER = new SpanHandler() {
 		// intentionally anonymous to prevent logging fallback on NOOP
 	};
 
-	protected static TraceContext defaultTraceContext = TraceContext.newBuilder()
-			.traceIdHigh(333L).traceId(444L).spanId(3).sampled(true).build();
+	protected static TraceContext defaultTraceContext = TraceContext.newBuilder().traceIdHigh(333L).traceId(444L)
+			.spanId(3).sampled(true).build();
+
 	protected ConfigurableApplicationContext applicationContext;
+
 	protected SleuthBenchmarkingSpringWebFluxApp springWebFluxApp;
+
 	CloseableHttpClient client;
+
 	CloseableHttpClient tracedClient;
+
 	CloseableHttpClient unsampledClient;
+
 	private String baseUrl;
 
 	public static void main(String[] args) throws RunnerException {
-		Options opt = new OptionsBuilder()
-				.include(".*" + SpringWebFluxBenchmarks.class.getSimpleName() + ".*")
+		Options opt = new OptionsBuilder().include(".*" + SpringWebFluxBenchmarksTests.class.getSimpleName() + ".*")
 				.build();
 
 		new Runner(opt).run();
@@ -87,8 +96,7 @@ public class SpringWebFluxBenchmarks {
 	}
 
 	protected CloseableHttpClient newClient(HttpTracing httpTracing) {
-		return TracingHttpClientBuilder.create(httpTracing).disableAutomaticRetries()
-				.build();
+		return TracingHttpClientBuilder.create(httpTracing).disableAutomaticRetries().build();
 	}
 
 	protected CloseableHttpClient newClient() {
@@ -107,21 +115,18 @@ public class SpringWebFluxBenchmarks {
 	public void setup() {
 		ConfigurableApplicationContext context = initContext();
 		this.applicationContext = context;
-		this.springWebFluxApp = this.applicationContext
-				.getBean(SleuthBenchmarkingSpringWebFluxApp.class);
+		this.springWebFluxApp = this.applicationContext.getBean(SleuthBenchmarkingSpringWebFluxApp.class);
 		baseUrl = "http://127.0.0.1:" + springWebFluxApp.port + "/foo";
 		client = newClient();
-		tracedClient = newClient(HttpTracing
-				.create(Tracing.newBuilder().addSpanHandler(FAKE_SPAN_HANDLER).build()));
-		unsampledClient = newClient(HttpTracing.create(Tracing.newBuilder()
-				.sampler(Sampler.NEVER_SAMPLE).addSpanHandler(FAKE_SPAN_HANDLER).build()));
+		tracedClient = newClient(HttpTracing.create(Tracing.newBuilder().addSpanHandler(FAKE_SPAN_HANDLER).build()));
+		unsampledClient = newClient(HttpTracing
+				.create(Tracing.newBuilder().sampler(Sampler.NEVER_SAMPLE).addSpanHandler(FAKE_SPAN_HANDLER).build()));
 		postSetUp();
 	}
 
 	protected ConfigurableApplicationContext initContext() {
-		SpringApplication application = new SpringApplicationBuilder(
-				SleuthBenchmarkingSpringWebFluxApp.class).web(WebApplicationType.REACTIVE)
-						.application();
+		SpringApplication application = new SpringApplicationBuilder(SleuthBenchmarkingSpringWebFluxApp.class)
+				.web(WebApplicationType.REACTIVE).application();
 		customSpringApplication(application);
 		return application.run(runArgs());
 	}
@@ -134,9 +139,8 @@ public class SpringWebFluxBenchmarks {
 	}
 
 	protected String[] runArgs() {
-		return new String[] { "--spring.jmx.enabled=false",
-				"--spring.application.name=defaultTraceContext",
-				"--spring.sleuth.enabled=true" };
+		return new String[] { "--spring.jmx.enabled=false", "--spring.application.name=defaultTraceContext",
+				TracerImplementation.brave.toString(), "--spring.sleuth.enabled=true" };
 	}
 
 	@TearDown
@@ -171,8 +175,7 @@ public class SpringWebFluxBenchmarks {
 
 	@Benchmark
 	public void tracedClient_get_resumeTrace() throws Exception {
-		try (CurrentTraceContext.Scope scope = Tracing.current().currentTraceContext()
-				.newScope(defaultTraceContext)) {
+		try (CurrentTraceContext.Scope scope = Tracing.current().currentTraceContext().newScope(defaultTraceContext)) {
 			get(tracedClient);
 		}
 	}

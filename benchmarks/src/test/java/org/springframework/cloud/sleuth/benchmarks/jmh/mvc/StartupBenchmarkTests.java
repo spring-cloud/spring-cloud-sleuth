@@ -14,24 +14,32 @@
  * limitations under the License.
  */
 
-package org.springframework.cloud.sleuth.benchmarks.jmh.benchmarks;
+package org.springframework.cloud.sleuth.benchmarks.jmh.mvc;
 
+import jmh.mbr.junit5.Microbenchmark;
+import org.junit.jupiter.api.Disabled;
 import org.openjdk.jmh.annotations.Benchmark;
 import org.openjdk.jmh.annotations.BenchmarkMode;
 import org.openjdk.jmh.annotations.Fork;
 import org.openjdk.jmh.annotations.Level;
 import org.openjdk.jmh.annotations.Measurement;
 import org.openjdk.jmh.annotations.Mode;
+import org.openjdk.jmh.annotations.Param;
 import org.openjdk.jmh.annotations.Scope;
 import org.openjdk.jmh.annotations.State;
 import org.openjdk.jmh.annotations.TearDown;
 import org.openjdk.jmh.annotations.Warmup;
 
+import org.springframework.cloud.sleuth.benchmarks.jmh.ProcessLauncherState;
+import org.springframework.cloud.sleuth.benchmarks.jmh.TracerImplementation;
+
 @Measurement(iterations = 5)
 @Warmup(iterations = 1)
 @Fork(value = 2, warmups = 0)
 @BenchmarkMode(Mode.AverageTime)
-public class StartupBenchmark {
+@Microbenchmark
+@Disabled("Process doesn't stop")
+public class StartupBenchmarkTests {
 
 	@Benchmark
 	public void withAnnotations(ApplicationState state) throws Exception {
@@ -46,30 +54,29 @@ public class StartupBenchmark {
 
 	@Benchmark
 	public void withoutAsync(ApplicationState state) throws Exception {
-		state.setExtraArgs("--spring.sleuth.async.enabled=false",
-				"--spring.sleuth.annotation.enabled=false");
+		state.setExtraArgs("--spring.sleuth.async.enabled=false", "--spring.sleuth.annotation.enabled=false");
 		state.run();
 	}
 
 	@Benchmark
 	public void withoutScheduled(ApplicationState state) throws Exception {
-		state.setExtraArgs("--spring.sleuth.scheduled.enabled=false",
-				"--spring.sleuth.async.enabled=false",
+		state.setExtraArgs("--spring.sleuth.scheduled.enabled=false", "--spring.sleuth.async.enabled=false",
 				"--spring.sleuth.annotation.enabled=false");
 		state.run();
 	}
 
 	@Benchmark
 	public void withoutWeb(ApplicationState state) throws Exception {
-		state.setExtraArgs("--spring.sleuth.web.enabled=false",
-				"--spring.sleuth.scheduled.enabled=false",
-				"--spring.sleuth.async.enabled=false",
-				"--spring.sleuth.annotation.enabled=false");
+		state.setExtraArgs("--spring.sleuth.web.enabled=false", "--spring.sleuth.scheduled.enabled=false",
+				"--spring.sleuth.async.enabled=false", "--spring.sleuth.annotation.enabled=false");
 		state.run();
 	}
 
 	@State(Scope.Benchmark)
 	public static class ApplicationState extends ProcessLauncherState {
+
+		@Param
+		private TracerImplementation tracerImplementation;
 
 		public ApplicationState() {
 			super("target", "--server.port=0");

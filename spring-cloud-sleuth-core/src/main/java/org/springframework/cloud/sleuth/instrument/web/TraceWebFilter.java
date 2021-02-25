@@ -25,6 +25,7 @@ import brave.http.HttpServerHandler;
 import brave.http.HttpServerRequest;
 import brave.http.HttpServerResponse;
 import brave.http.HttpTracing;
+import brave.propagation.CurrentTraceContext;
 import brave.propagation.TraceContext;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -79,11 +80,13 @@ public final class TraceWebFilter implements WebFilter, Ordered {
 
 	private final BeanFactory beanFactory;
 
-	Tracer tracer;
+	private Tracer tracer;
 
-	HttpServerHandler<HttpServerRequest, HttpServerResponse> handler;
+	private HttpServerHandler<HttpServerRequest, HttpServerResponse> handler;
 
-	SleuthWebProperties webProperties;
+	private SleuthWebProperties webProperties;
+
+	private CurrentTraceContext currentTraceContext;
 
 	TraceWebFilter(BeanFactory beanFactory) {
 		this.beanFactory = beanFactory;
@@ -94,7 +97,7 @@ public final class TraceWebFilter implements WebFilter, Ordered {
 	}
 
 	@SuppressWarnings("unchecked")
-	HttpServerHandler<HttpServerRequest, HttpServerResponse> handler() {
+	private HttpServerHandler<HttpServerRequest, HttpServerResponse> handler() {
 		if (this.handler == null) {
 			this.handler = HttpServerHandler
 					.create(this.beanFactory.getBean(HttpTracing.class));
@@ -102,31 +105,39 @@ public final class TraceWebFilter implements WebFilter, Ordered {
 		return this.handler;
 	}
 
-	Tracer tracer() {
+	private Tracer tracer() {
 		if (this.tracer == null) {
 			this.tracer = this.beanFactory.getBean(HttpTracing.class).tracing().tracer();
 		}
 		return this.tracer;
 	}
 
-	SleuthWebProperties sleuthWebProperties() {
+	private SleuthWebProperties sleuthWebProperties() {
 		if (this.webProperties == null) {
 			this.webProperties = this.beanFactory.getBean(SleuthWebProperties.class);
 		}
 		return this.webProperties;
 	}
 
+	private CurrentTraceContext currentTraceContext() {
+		if (this.currentTraceContext == null) {
+			this.currentTraceContext = this.beanFactory
+					.getBean(CurrentTraceContext.class);
+		}
+		return this.currentTraceContext;
+	}
+
 	@Override
 	public Mono<Void> filter(ServerWebExchange exchange, WebFilterChain chain) {
 		String uri = exchange.getRequest().getPath().pathWithinApplication().value();
-		if (log.isDebugEnabled()) {
-			log.debug("Received a request to uri [" + uri + "]");
-		}
 		Mono<Void> source = chain.filter(exchange);
 		boolean tracePresent = tracer().currentSpan() != null;
 		if (tracePresent) {
 			// clear any previous trace
 			tracer().withSpanInScope(null); // TODO: dangerous and also allocates stuff
+		}
+		if (log.isDebugEnabled()) {
+			log.debug("Received a request to uri [" + uri + "]");
 		}
 		return new MonoWebFilterTrace(source, exchange, tracePresent, this);
 	}
@@ -150,11 +161,14 @@ public final class TraceWebFilter implements WebFilter, Ordered {
 
 		final boolean initialTracePresent;
 
+		final CurrentTraceContext currentTraceContext;
+
 		MonoWebFilterTrace(Mono<? extends Void> source, ServerWebExchange exchange,
 				boolean initialTracePresent, TraceWebFilter parent) {
 			super(source);
 			this.tracer = parent.tracer();
 			this.handler = parent.handler();
+			this.currentTraceContext = parent.currentTraceContext();
 			this.exchange = exchange;
 			this.attrSpan = exchange.getAttribute(TRACE_REQUEST_ATTR);
 			this.initialTracePresent = initialTracePresent;
@@ -163,8 +177,12 @@ public final class TraceWebFilter implements WebFilter, Ordered {
 		@Override
 		public void subscribe(CoreSubscriber<? super Void> subscriber) {
 			Context context = contextWithoutInitialSpan(subscriber.currentContext());
-			this.source.subscribe(new WebFilterTraceSubscriber(subscriber, context,
-					findOrCreateSpan(context), this));
+			Span span = findOrCreateSpan(context);
+			try (CurrentTraceContext.Scope scope = this.currentTraceContext
+					.maybeScope(span.context())) {
+				this.source.subscribe(
+						new WebFilterTraceSubscriber(subscriber, context, span, this));
+			}
 		}
 
 		private Context contextWithoutInitialSpan(Context context) {
