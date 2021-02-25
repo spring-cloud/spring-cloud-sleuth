@@ -18,6 +18,7 @@ package org.springframework.cloud.sleuth.instrument.reactor.sample;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import brave.Tracer;
@@ -26,6 +27,7 @@ import brave.handler.SpanHandler;
 import brave.sampler.Sampler;
 import brave.test.TestSpanHandler;
 import org.awaitility.Awaitility;
+import org.awaitility.Duration;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Rule;
@@ -75,13 +77,29 @@ public class FlatMapTests {
 	}
 
 	@Test
-	public void should_work_with_flat_maps() {
+	public void should_work_with_flat_maps_on_hooks_instrumentation() {
 		// given
 		ConfigurableApplicationContext context = new SpringApplicationBuilder(
 				FlatMapTests.TestConfiguration.class, Issue866Configuration.class)
 						.web(WebApplicationType.REACTIVE)
 						.properties("server.port=0", "spring.jmx.enabled=false",
-								"spring.application.name=TraceWebFluxTests",
+								"spring.application.name=TraceWebFluxOnHooksTests",
+								"security.basic.enabled=false",
+								"management.security.enabled=false")
+						.run();
+		assertReactorTracing(context);
+	}
+
+	@Test
+	public void should_work_with_flat_maps_on_each_operator_instrumentation() {
+		// given
+		ConfigurableApplicationContext context = new SpringApplicationBuilder(
+				FlatMapTests.TestConfiguration.class, Issue866Configuration.class)
+						.web(WebApplicationType.REACTIVE)
+						.properties("server.port=0", "spring.jmx.enabled=false",
+								"spring.sleuth.reactor.decorate-hooks=false",
+								"spring.sleuth.reactor.decorate-on-each=true",
+								"spring.application.name=TraceWebFluxOnEachTests",
 								"security.basic.enabled=false",
 								"management.security.enabled=false")
 						.run();
@@ -97,7 +115,7 @@ public class FlatMapTests {
 						.properties("server.port=0", "spring.jmx.enabled=false",
 								"spring.sleuth.reactor.decorate-hooks=false",
 								"spring.sleuth.reactor.decorate-on-each=false",
-								"spring.application.name=TraceWebFlux2Tests",
+								"spring.application.name=TraceWebFluxOnLastTests",
 								"security.basic.enabled=false",
 								"management.security.enabled=false")
 						.run();
@@ -105,7 +123,7 @@ public class FlatMapTests {
 
 		try {
 			System.setProperty("spring.sleuth.reactor.decorate-hooks", "false");
-			System.setProperty("spring.sleuth.reactor.decorate-on-each", "true");
+			System.setProperty("spring.sleuth.reactor.decorate-on-each", "false");
 			// trigger context refreshed
 			context.getBean(ContextRefresher.class).refresh();
 			assertReactorTracing(context);
@@ -126,7 +144,7 @@ public class FlatMapTests {
 		sender.port = port;
 		spans.clear();
 
-		Awaitility.await().untilAsserted(() -> {
+		Awaitility.await().atMost(20, TimeUnit.SECONDS).untilAsserted(() -> {
 			// when
 			LOGGER.info("Start");
 			spans.clear();
