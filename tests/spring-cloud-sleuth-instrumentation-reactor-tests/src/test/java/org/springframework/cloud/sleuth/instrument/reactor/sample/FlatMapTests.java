@@ -27,7 +27,6 @@ import brave.handler.SpanHandler;
 import brave.sampler.Sampler;
 import brave.test.TestSpanHandler;
 import org.awaitility.Awaitility;
-import org.awaitility.Duration;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Rule;
