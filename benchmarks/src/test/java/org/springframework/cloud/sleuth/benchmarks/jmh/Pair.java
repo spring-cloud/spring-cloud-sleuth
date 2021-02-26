@@ -16,6 +16,8 @@
 
 package org.springframework.cloud.sleuth.benchmarks.jmh;
 
+import org.springframework.cloud.sleuth.autoconfig.instrument.reactor.SleuthReactorProperties;
+
 public class Pair {
 	final String key;
 	final String value;
@@ -33,19 +35,19 @@ public class Pair {
 		return new Pair(key, value);
 	}
 
-	public static Pair noHook() {
-		return new Pair("spring.sleuth.reactor.decorate-hooks", "false");
-	}
-
 	public static Pair noSleuth() {
 		return new Pair("spring.sleuth.enabled", "false");
 	}
 
 	public static Pair onEach() {
-		return new Pair("spring.sleuth.reactor.decorate-on-each", "true");
+		return new Pair("spring.sleuth.reactor.instrumentation-type", SleuthReactorProperties.InstrumentationType.DECORATE_ON_EACH.name());
+	}
+
+	public static Pair manual() {
+		return new Pair("spring.sleuth.reactor.instrumentation-type", SleuthReactorProperties.InstrumentationType.MANUAL.name());
 	}
 
 	public static Pair onLast() {
-		return new Pair("spring.sleuth.reactor.decorate-on-each", "false");
+		return new Pair("spring.sleuth.reactor.instrumentation-type", SleuthReactorProperties.InstrumentationType.DECORATE_ON_LAST.name());
 	}
 }

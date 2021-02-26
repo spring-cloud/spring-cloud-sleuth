@@ -18,9 +18,7 @@ package org.springframework.cloud.sleuth.benchmarks.jmh.stream;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
@@ -44,6 +42,7 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.WebApplicationType;
 import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.cloud.sleuth.benchmarks.app.stream.SleuthBenchmarkingStreamApplication;
+import org.springframework.cloud.sleuth.benchmarks.jmh.Pair;
 import org.springframework.cloud.sleuth.benchmarks.jmh.TracerImplementation;
 import org.springframework.cloud.stream.binder.test.InputDestination;
 import org.springframework.cloud.stream.binder.test.OutputDestination;
@@ -53,7 +52,6 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.support.MessageBuilder;
-import org.springframework.util.StringUtils;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -110,7 +108,7 @@ public class MicroBenchmarkStreamTests {
 			strings.addAll(Arrays.asList("--spring.jmx.enabled=false",
 					"--spring.application.name=defaultTraceContextForStream" + instrumentation.name() + "_"
 							+ tracerImplementation.name()));
-			strings.addAll(instrumentation.entires.stream().map(s -> "--" + s).collect(Collectors.toList()));
+			strings.addAll(Arrays.asList(instrumentation.asParams()));
 			return strings.toArray(new String[0]);
 		}
 
@@ -155,30 +153,46 @@ public class MicroBenchmarkStreamTests {
 
 		public enum Instrumentation {
 
-			noSleuthSimple("spring.sleuth.enabled=false,spring.sleuth.function.type=simple"), sleuthSimple(
-					"spring.sleuth.function.type=simple"), sleuthSimpleWithAround(
-							"spring.sleuth.function.type=simple_function_with_around"), noSleuthReactiveSimple(
-									"spring.sleuth.enabled=false,spring.sleuth.function.type=reactive_simple"), sleuthReactiveSimpleManual(
-											"spring.sleuth.function.type=reactive_simple_manual"), sleuthReactiveSimpleOnEach(
-													"spring.sleuth.reactor.instrumentation-type=DECORATE_ON_EACH,spring.sleuth.integration.enabled=true,spring.sleuth.function.type=DECORATE_ON_EACH"),
-			// This won't work with messaging
-			// sleuthReactiveSimpleOnLast("spring.sleuth.reactor.instrumentation-type=DECORATE_ON_LAST,spring.sleuth.function.type=DECORATE_ON_LAST"),
-			// NO FUNCTION, NO INTEGRATION, MANUAL OPERATORS
-			sleuthSimpleManual(
-					"spring.sleuth.function.enabled=false,spring.sleuth.integration.enabled=false,spring.sleuth.function.type=simple_manual"), sleuthSimpleNoFunctionInstrumentationManual(
-							"spring.sleuth.function.type=simple_manual,spring.sleuth.function.enabled=false,spring.sleuth.integration.enabled=true,spring.sleuth.reactor.instrumentation-type=MANUAL"), sleuthReactiveSimpleNoFunctionInstrumentationManual(
-									"spring.sleuth.function.type=reactive_simple_manual,spring.sleuth.function.enabled=false,spring.sleuth.integration.enabled=true,spring.sleuth.reactor.instrumentation-type=MANUAL");
+			// @formatter:off
+			noSleuthSimple(Pair.noSleuth(), function("simple")),
+			sleuthSimpleOnQueues(function("simple")),
+			sleuthSimpleManual(function("simple_manual"), Pair.manual(), functionDisabled(), integrationDisabled()),
+			sleuthSimpleNoFunctionInstrumentationManual(function("simple_manual"), Pair.manual(), functionDisabled(), integrationEnabled()),
+			sleuthSimpleOnEach(function("simple"), Pair.onEach()),
+			sleuthSimpleOnLast(function("simple"), Pair.onLast()),
+			sleuthSimpleWithAroundOnQueues(function("simple_function_with_around")),
+			noSleuthReactiveSimple(function("reactive_simple"), Pair.noSleuth()),
+			sleuthReactiveSimpleOnQueues(function("DECORATE_QUEUES")),
+			sleuthReactiveSimpleOnEach(function("DECORATE_ON_EACH"), Pair.onEach(), integrationEnabled()),
+			sleuthReactiveSimpleManual(function("reactive_simple_manual"), Pair.manual()),
+			sleuthReactiveSimpleNoFunctionInstrumentationManual(function("reactive_simple_manual"), Pair.manual(), integrationEnabled(), functionDisabled());
+			// @formatter:on
 
-			private Set<String> entires = new HashSet<>();
+			private final List<Pair> pairs;
 
-			Instrumentation(String key, String value) {
-				this.entires.add(key + "=" + value);
+			Instrumentation(Pair... pairs) {
+				this.pairs = Arrays.asList(pairs);
 			}
 
-			Instrumentation(String commaSeparated) {
-				this.entires.addAll(StringUtils.commaDelimitedListToSet(commaSeparated));
+			String[] asParams() {
+				return this.pairs.stream().map(p -> "--" + p.asProp()).toArray(String[]::new);
 			}
 
+			static Pair function(String type) {
+				return Pair.of("spring.sleuth.function.type", type);
+			}
+
+			static Pair integrationEnabled() {
+				return Pair.of("spring.sleuth.integration.enabled", "true");
+			}
+
+			static Pair integrationDisabled() {
+				return Pair.of("spring.sleuth.integration.enabled", "false");
+			}
+
+			static Pair functionDisabled() {
+				return Pair.of("spring.sleuth.function.enabled", "false");
+			}
 		}
 
 	}

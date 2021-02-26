@@ -16,7 +16,11 @@
 
 package org.springframework.cloud.sleuth.benchmarks.jmh.webflux;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 import brave.Tracing;
 import jmh.mbr.junit5.Microbenchmark;
@@ -38,6 +42,7 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.WebApplicationType;
 import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.cloud.sleuth.benchmarks.app.webflux.SleuthBenchmarkingSpringWebFluxApp;
+import org.springframework.cloud.sleuth.benchmarks.jmh.Pair;
 import org.springframework.cloud.sleuth.benchmarks.jmh.TracerImplementation;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.test.web.reactive.server.WebTestClient;
@@ -82,10 +87,12 @@ public class MicroBenchmarkHttpTests {
 		}
 
 		protected String[] runArgs() {
-			return new String[] { "--spring.jmx.enabled=false",
+			String[] defaultArgs = new String[] { "--spring.jmx.enabled=false",
 					"--spring.application.name=defaultTraceContext" + instrumentation.name() + "_"
-							+ tracerImplementation.name(),
-					"--" + instrumentation.key + "=" + instrumentation.value };
+							+ tracerImplementation.name() };
+			List<String> list = new ArrayList<>(Arrays.asList(defaultArgs));
+			list.addAll(Arrays.asList(instrumentation.asParams()));
+			return list.toArray(new String[0]);
 		}
 
 		void run() {
@@ -109,33 +116,31 @@ public class MicroBenchmarkHttpTests {
 
 		public enum Instrumentation {
 
-			noSleuthSimple("spring.sleuth.enabled", "false", "/simple"), sleuthSimpleManual(
-					"spring.sleuth.reactor.instrumentation-type", "MANUAL",
-					"/simple"), sleuthManual("spring.sleuth.reactor.instrumentation-type", "MANUAL",
-							"/simpleManual"), sleuthSimpleOnEach("spring.sleuth.reactor.instrumentation-type",
-									"DECORATE_ON_EACH",
-									"/simple"), sleuthSimpleOnLast("spring.sleuth.reactor.instrumentation-type",
-											"DECORATE_ON_LAST", "/simple"), noSleuthComplex("spring.sleuth.enabled",
-													"false", "/complexNoSleuth"), onEachComplex(
-															"spring.sleuth.reactor.instrumentation-type",
-															"DECORATE_ON_EACH", "/complex"), onLastComplex(
-																	"spring.sleuth.reactor.instrumentation-type",
-																	"DECORATE_ON_LAST", "/complex"), onManualComplex(
-																			"spring.sleuth.reactor.instrumentation-type",
-																			"MANUAL", "/complexManual");
-
-			private String key;
-
-			private String value;
+			// @formatter:off
+			noSleuthSimple("/simple", Pair.noSleuth()),
+			sleuthSimpleOnHooks("/simple"),
+			sleuthSimpleManual("/simpleManual", Pair.manual()),
+			sleuthSimpleOnEach("/simple", Pair.onEach()),
+			sleuthSimpleOnLast("/simple", Pair.onLast()),
+			noSleuthComplex("/complexNoSleuth", Pair.noSleuth()),
+			onHooksComplex("/complex"),
+			onManualComplex("/complexManual", Pair.manual()),
+			onEachComplex("/complex", Pair.onEach()),
+			onLastComplex("/complex", Pair.onLast());
+			// @formatter:on
 
 			private String url;
 
-			Instrumentation(String key, String value, String url) {
-				this.key = key;
-				this.value = value;
+			private List<Pair> pairs;
+
+			Instrumentation(String url, Pair... pairs) {
 				this.url = url;
+				this.pairs = Arrays.asList(pairs);
 			}
 
+			String[] asParams() {
+				return this.pairs.stream().map(p -> "--" + p.asProp()).collect(Collectors.toList()).toArray(new String[0]);
+			}
 		}
 
 	}

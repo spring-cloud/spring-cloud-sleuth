@@ -136,6 +136,14 @@ public class SleuthBenchmarkingStreamApplication {
 	}
 
 	@Bean(name = "myFlux")
+	@ConditionalOnProperty(value = "spring.sleuth.function.type", havingValue = "DECORATE_QUEUES",
+			matchIfMissing = true)
+	public Function<Flux<String>, Flux<String>> decorateQueuesFunction() {
+		log.info("decorate queues function");
+		return new SleuthFunction();
+	}
+
+	@Bean(name = "myFlux")
 	@ConditionalOnProperty(value = "spring.sleuth.function.type", havingValue = "DECORATE_ON_LAST")
 	public Function<Flux<String>, Flux<String>> onLastFunction() {
 		log.info("on last function");
