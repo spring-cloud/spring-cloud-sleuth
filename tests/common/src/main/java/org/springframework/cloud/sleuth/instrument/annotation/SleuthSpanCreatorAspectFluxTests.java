@@ -25,6 +25,7 @@ import java.util.stream.Collectors;
 
 import org.assertj.core.api.BDDAssertions;
 import org.awaitility.Awaitility;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import reactor.core.publisher.Flux;
@@ -84,6 +85,7 @@ public abstract class SleuthSpanCreatorAspectFluxTests {
 	}
 
 	@BeforeEach
+	@AfterEach
 	public void setup() {
 		this.spans.clear();
 		this.testBean.reset();

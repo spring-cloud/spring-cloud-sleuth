@@ -130,6 +130,11 @@ public abstract class WebClientTests {
 		this.fooController.clear();
 	}
 
+	@BeforeEach
+	public void setup() {
+		log.info("Starting test");
+	}
+
 	@ParameterizedTest
 	@MethodSource("parametersForShouldCreateANewSpanWithClientSideTagsWhenNoPreviousTracingWasPresent")
 	@SuppressWarnings("unchecked")
@@ -150,6 +155,11 @@ public abstract class WebClientTests {
 			// at the interceptor level
 			then(noTraceSpan.get().getTags().get("http.path")).matches(".*/notrace");
 		});
+		thenThereIsNoCurrentSpan();
+	}
+
+	private void thenThereIsNoCurrentSpan() {
+		log.info("Current span [" + this.tracer.currentSpan() + "]");
 		then(this.tracer.currentSpan()).isNull();
 	}
 
@@ -197,7 +207,7 @@ public abstract class WebClientTests {
 			span.end();
 		}
 
-		then(this.tracer.currentSpan()).isNull();
+		thenThereIsNoCurrentSpan();
 		then(this.spans).isNotEmpty();
 	}
 
@@ -213,7 +223,7 @@ public abstract class WebClientTests {
 		finally {
 			span.end();
 		}
-		then(this.tracer.currentSpan()).isNull();
+		thenThereIsNoCurrentSpan();
 		then(this.spans.reportedSpans().stream().filter(r -> r.getKind() != null).map(r -> r.getKind().name())
 				.collect(Collectors.toList())).isNotEmpty().contains("CLIENT");
 	}
@@ -234,7 +244,7 @@ public abstract class WebClientTests {
 			span.end();
 		}
 
-		then(this.tracer.currentSpan()).isNull();
+		thenThereIsNoCurrentSpan();
 		then(this.spans.reportedSpans().stream().filter(r -> r.getKind() != null).map(r -> r.getKind().name())
 				.collect(Collectors.toList())).isNotEmpty().contains("CLIENT");
 	}
@@ -286,7 +296,7 @@ public abstract class WebClientTests {
 			span.end();
 		}
 
-		then(this.tracer.currentSpan()).isNull();
+		thenThereIsNoCurrentSpan();
 		then(this.spans).isNotEmpty();
 	}
 
@@ -305,7 +315,7 @@ public abstract class WebClientTests {
 		catch (HttpClientErrorException e) {
 		}
 
-		then(this.tracer.currentSpan()).isNull();
+		thenThereIsNoCurrentSpan();
 		Optional<FinishedSpan> storedSpan = this.spans.reportedSpans().stream()
 				.filter(span -> "404".equals(span.getTags().get("http.status_code"))).findFirst();
 		then(storedSpan.isPresent()).isTrue();
@@ -325,7 +335,7 @@ public abstract class WebClientTests {
 	public void shouldNotExecuteErrorControllerWhenUrlIsFound() {
 		this.template.getForEntity("http://fooservice/notrace", String.class);
 
-		then(this.tracer.currentSpan()).isNull();
+		thenThereIsNoCurrentSpan();
 		then(this.testErrorController.getSpan()).isNull();
 	}
 
@@ -341,7 +351,7 @@ public abstract class WebClientTests {
 		finally {
 			span.end();
 		}
-		then(this.tracer.currentSpan()).isNull();
+		thenThereIsNoCurrentSpan();
 		then(this.customizer.isExecuted()).isTrue();
 		then(this.spans).extracting("kind.name").contains("CLIENT");
 	}
