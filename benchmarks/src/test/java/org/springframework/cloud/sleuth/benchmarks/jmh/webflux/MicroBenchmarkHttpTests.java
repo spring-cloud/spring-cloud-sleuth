@@ -41,15 +41,18 @@ import org.openjdk.jmh.annotations.Warmup;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.WebApplicationType;
 import org.springframework.boot.builder.SpringApplicationBuilder;
+import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.benchmarks.app.webflux.SleuthBenchmarkingSpringWebFluxApp;
 import org.springframework.cloud.sleuth.benchmarks.jmh.Pair;
 import org.springframework.cloud.sleuth.benchmarks.jmh.TracerImplementation;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.test.web.reactive.server.WebTestClient;
 
-@Measurement(iterations = 5, time = 1)
-@Warmup(iterations = 5, time = 1)
-@Fork(2)
+import static org.assertj.core.api.Assertions.assertThat;
+
+@Measurement(iterations = 10, time = 1)
+@Warmup(iterations = 10, time = 1)
+@Fork(4)
 @BenchmarkMode(Mode.SampleTime)
 @OutputTimeUnit(TimeUnit.MILLISECONDS)
 @Microbenchmark
@@ -98,6 +101,7 @@ public class MicroBenchmarkHttpTests {
 		void run() {
 			this.webTestClient.get().uri(instrumentation.url).header("X-B3-TraceId", "4883117762eb9420")
 					.header("X-B3-SpanId", "4883117762eb9420").exchange().expectStatus().isOk();
+			assertThat(this.applicationContext.getBean(Tracer.class).currentSpan()).isNull();
 		}
 
 		@TearDown
@@ -118,12 +122,12 @@ public class MicroBenchmarkHttpTests {
 
 			// @formatter:off
 			noSleuthSimple("/simple", Pair.noSleuth()),
-			sleuthSimpleOnHooks("/simple"),
-			sleuthSimpleManual("/simpleManual", Pair.manual()),
-			sleuthSimpleOnEach("/simple", Pair.onEach()),
-			sleuthSimpleOnLast("/simple", Pair.onLast()),
+			onQueuesSimple("/simple", Pair.onHook()),
+			onManualSimple("/simpleManual", Pair.manual()),
+			onEachSimple("/simple", Pair.onEach()),
+			onLastSimple("/simple", Pair.onLast()),
 			noSleuthComplex("/complexNoSleuth", Pair.noSleuth()),
-			onHooksComplex("/complex"),
+			onQueueComplex("/complex", Pair.onHook()),
 			onManualComplex("/complexManual", Pair.manual()),
 			onEachComplex("/complex", Pair.onEach()),
 			onLastComplex("/complex", Pair.onLast());

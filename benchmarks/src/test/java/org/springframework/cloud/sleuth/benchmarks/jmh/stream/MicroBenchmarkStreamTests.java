@@ -40,6 +40,7 @@ import org.openjdk.jmh.annotations.Warmup;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.WebApplicationType;
 import org.springframework.boot.builder.SpringApplicationBuilder;
+import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.benchmarks.app.stream.SleuthBenchmarkingStreamApplication;
 import org.springframework.cloud.sleuth.benchmarks.jmh.Pair;
 import org.springframework.cloud.sleuth.benchmarks.jmh.TracerImplementation;
@@ -54,9 +55,9 @@ import org.springframework.messaging.support.MessageBuilder;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-@Measurement(iterations = 5, time = 1)
-@Warmup(iterations = 5, time = 1)
-@Fork(2)
+@Measurement(iterations = 10, time = 1)
+@Warmup(iterations = 10, time = 1)
+@Fork(4)
 @BenchmarkMode(Mode.SampleTime)
 @OutputTimeUnit(TimeUnit.MILLISECONDS)
 @Microbenchmark
@@ -133,6 +134,7 @@ public class MicroBenchmarkStreamTests {
 				} else {
 					assertThat(b3).startsWith("4883117762eb9420");
 				}
+				assertThat(this.applicationContext.getBean(Tracer.class).currentSpan()).isNull();
 			}
 		}
 
@@ -154,7 +156,7 @@ public class MicroBenchmarkStreamTests {
 
 			// @formatter:off
 			noSleuthSimple(Pair.noSleuth(), function("simple")),
-			sleuthSimpleOnQueues(function("simple")),
+			sleuthSimpleOnQueues(function("simple"), Pair.onHook()),
 			sleuthSimpleManual(function("simple_manual"), Pair.manual(), functionDisabled(), integrationDisabled()),
 			sleuthSimpleNoFunctionInstrumentationManual(function("simple_manual"), Pair.manual(), functionDisabled(), integrationEnabled()),
 			sleuthSimpleOnEach(function("simple"), Pair.onEach()),

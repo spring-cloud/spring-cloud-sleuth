@@ -83,6 +83,7 @@ public abstract class FlatMapTests {
 				testConfiguration(), Issue866Configuration.class)
 						.web(WebApplicationType.REACTIVE)
 						.properties("server.port=0", "spring.jmx.enabled=false",
+								"spring.sleuth.reactor.instrumentation-type=DECORATE_QUEUES",
 								"spring.application.name=TraceWebFluxOnQueuesTests", "security.basic.enabled=false",
 								"management.security.enabled=false")
 						.run();

@@ -35,6 +35,10 @@ public class Pair {
 		return new Pair(key, value);
 	}
 
+	public static Pair onHook() {
+		return new Pair("spring.sleuth.reactor.instrumentation-type", SleuthReactorProperties.InstrumentationType.DECORATE_QUEUES.name());
+	}
+
 	public static Pair noSleuth() {
 		return new Pair("spring.sleuth.enabled", "false");
 	}

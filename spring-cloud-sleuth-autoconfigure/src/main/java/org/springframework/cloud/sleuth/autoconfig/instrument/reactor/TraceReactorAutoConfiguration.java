@@ -139,8 +139,8 @@ class HooksRefresher implements ApplicationListener<RefreshScopeRefreshedEvent> 
 		}
 		Hooks.resetOnEachOperator(SLEUTH_TRACE_REACTOR_KEY);
 		Hooks.resetOnLastOperator(SLEUTH_TRACE_REACTOR_KEY);
-		Hooks.resetOnLastOperator(SLEUTH_REACTOR_EXECUTOR_SERVICE_KEY);
 		Hooks.removeQueueWrapper(SLEUTH_TRACE_REACTOR_KEY);
+		Schedulers.resetOnScheduleHook(SLEUTH_REACTOR_EXECUTOR_SERVICE_KEY);
 		switch (this.reactorProperties.getInstrumentationType()) {
 		case DECORATE_QUEUES:
 			if (TraceReactorAutoConfiguration.TraceReactorConfiguration.IS_QUEUE_WRAPPER_ON_THE_CLASSPATH) {
@@ -148,6 +148,8 @@ class HooksRefresher implements ApplicationListener<RefreshScopeRefreshedEvent> 
 					log.trace("Adding queue wrapper instrumentation");
 				}
 				HookRegisteringBeanDefinitionRegistryPostProcessor.addQueueWrapper(context);
+				Schedulers.onScheduleHook(TraceReactorAutoConfiguration.SLEUTH_REACTOR_EXECUTOR_SERVICE_KEY,
+						ReactorSleuth.scopePassingOnScheduleHook(this.context));
 			}
 		case DECORATE_ON_EACH:
 			if (log.isTraceEnabled()) {
@@ -197,7 +199,7 @@ class HookRegisteringBeanDefinitionRegistryPostProcessor implements BeanDefiniti
 		ConfigurableEnvironment environment = springContext.getEnvironment();
 		SleuthReactorProperties.InstrumentationType property = environment.getProperty(
 				"spring.sleuth.reactor.instrumentation-type", SleuthReactorProperties.InstrumentationType.class,
-				SleuthReactorProperties.InstrumentationType.DECORATE_QUEUES);
+				SleuthReactorProperties.InstrumentationType.DECORATE_ON_EACH);
 		if (wrapperNotOnClasspathHooksPropertyTurnedOn(property)) {
 			log.warn(
 					"You have explicitly set the decorate hooks option but you're using an old version of Reactor. Please upgrade to the latest Boot version (at least 2.4.3). Will fall back to the previous reactor instrumentation mode");
