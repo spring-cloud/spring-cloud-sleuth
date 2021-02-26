@@ -58,6 +58,7 @@ import org.junit.ClassRule;
 import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.runner.RunWith;
 import org.reactivestreams.Subscription;
 import reactor.core.publisher.BaseSubscriber;
@@ -167,6 +168,11 @@ public class WebClientTests {
 		this.testErrorController.clear();
 		this.fooController.clear();
 	}
+	
+	@Before
+	public void setup() {
+		log.info("Starting test");
+	}
 
 	@Test
 	@Parameters
@@ -191,6 +197,11 @@ public class WebClientTests {
 			// at the interceptor level
 			then(noTraceSpan.get().tags().get("http.url")).matches(".*/notrace");
 		});
+		thenThereIsNoCurrentSpan();
+	}
+
+	private void thenThereIsNoCurrentSpan() {
+		log.info("Current span [" + this.tracer.currentSpan() + "]");
 		then(this.tracer.currentSpan()).isNull();
 	}
 
@@ -241,7 +252,7 @@ public class WebClientTests {
 		}
 
 		then(this.spans).isEmpty();
-		then(this.tracer.currentSpan()).isNull();
+		thenThereIsNoCurrentSpan();
 	}
 
 	Object[] parametersForShouldPropagateNotSamplingHeader() throws Exception {
@@ -270,7 +281,7 @@ public class WebClientTests {
 			span.finish();
 		}
 
-		then(this.tracer.currentSpan()).isNull();
+		thenThereIsNoCurrentSpan();
 		then(this.spans).isNotEmpty();
 	}
 
@@ -288,7 +299,7 @@ public class WebClientTests {
 			then(response).isNotEmpty();
 		}
 
-		then(this.tracer.currentSpan()).isNull();
+		thenThereIsNoCurrentSpan();
 		then(this.spans).isNotEmpty().extracting("traceId", String.class)
 				.containsOnly(span.context().traceIdString());
 		then(this.spans).extracting("kind.name").contains("CLIENT");
@@ -327,7 +338,7 @@ public class WebClientTests {
 			client.close();
 		}
 
-		then(this.tracer.currentSpan()).isNull();
+		thenThereIsNoCurrentSpan();
 		then(this.spans).isNotEmpty().extracting("traceId", String.class)
 				.containsOnly(span.context().traceIdString());
 		then(this.spans).extracting("kind.name").contains("CLIENT");
@@ -345,7 +356,7 @@ public class WebClientTests {
 		finally {
 			span.finish();
 		}
-		then(this.tracer.currentSpan()).isNull();
+		thenThereIsNoCurrentSpan();
 		then(this.spans).isNotEmpty().extracting("kind.name").contains("CLIENT");
 	}
 
@@ -365,7 +376,7 @@ public class WebClientTests {
 			span.finish();
 		}
 
-		then(this.tracer.currentSpan()).isNull();
+		thenThereIsNoCurrentSpan();
 		then(this.spans).isNotEmpty().extracting("kind.name").contains("CLIENT");
 	}
 
@@ -419,7 +430,7 @@ public class WebClientTests {
 			span.finish();
 		}
 
-		then(this.tracer.currentSpan()).isNull();
+		thenThereIsNoCurrentSpan();
 		then(this.spans).isNotEmpty();
 	}
 
@@ -440,7 +451,7 @@ public class WebClientTests {
 		catch (HttpClientErrorException e) {
 		}
 
-		then(this.tracer.currentSpan()).isNull();
+		thenThereIsNoCurrentSpan();
 		Optional<MutableSpan> storedSpan = this.spans.spans().stream()
 				.filter(span -> "404".equals(span.tags().get("http.status_code")))
 				.findFirst();
@@ -461,7 +472,7 @@ public class WebClientTests {
 	public void shouldNotExecuteErrorControllerWhenUrlIsFound() {
 		this.template.getForEntity("http://fooservice/notrace", String.class);
 
-		then(this.tracer.currentSpan()).isNull();
+		thenThereIsNoCurrentSpan();
 		then(this.testErrorController.getSpan()).isNull();
 	}
 
@@ -478,7 +489,7 @@ public class WebClientTests {
 		finally {
 			span.finish();
 		}
-		then(this.tracer.currentSpan()).isNull();
+		thenThereIsNoCurrentSpan();
 		then(this.customizer.isExecuted()).isTrue();
 		then(this.spans).extracting("kind.name").contains("CLIENT");
 	}
