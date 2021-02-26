@@ -32,6 +32,7 @@ import brave.sampler.Sampler;
 import brave.test.TestSpanHandler;
 import org.apache.commons.lang3.StringUtils;
 import org.awaitility.Awaitility;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -89,10 +90,11 @@ public class SleuthSpanCreatorAspectFluxTests {
 	}
 
 	@Before
+	@After
 	public void setup() {
 		this.spans.clear();
 		this.testBean.reset();
-		tracer.withSpanInScope(null);
+		this.tracer.withSpanInScope(null);
 	}
 
 	@Test
