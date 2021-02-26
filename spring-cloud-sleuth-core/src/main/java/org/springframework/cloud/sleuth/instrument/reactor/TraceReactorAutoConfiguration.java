@@ -234,7 +234,7 @@ class HookRegisteringBeanDefinitionRegistryPostProcessor
 					"You have explicitly set the decorate hooks option but you're using an old version of Reactor. Please upgrade to the latest Boot version (at least 2.3.9.RELEASE). Will fall back to the previous reactor instrumentation mode");
 		}
 		else {
-			decorateQueues = decorateQueues != null ? decorateQueues : Boolean.TRUE;
+			decorateQueues = decorateQueues != null ? decorateQueues : Boolean.FALSE;
 		}
 		if (wrapperOnClasspathHooksPropertyTurnedOn(decorateQueues)) {
 			if (log.isTraceEnabled()) {

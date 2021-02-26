@@ -22,6 +22,7 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
+import brave.Tracer;
 import brave.Tracing;
 import jmh.mbr.junit5.Microbenchmark;
 import org.junit.platform.commons.annotation.Testable;
@@ -46,6 +47,8 @@ import org.springframework.cloud.sleuth.benchmarks.jmh.Pair;
 import org.springframework.cloud.sleuth.benchmarks.jmh.TracerImplementation;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.test.web.reactive.server.WebTestClient;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 @Measurement(iterations = 10, time = 1)
 @Warmup(iterations = 10, time = 1)
@@ -98,6 +101,7 @@ public class MicroBenchmarkHttpTests {
 		void run() {
 			this.webTestClient.get().uri(instrumentation.url).header("X-B3-TraceId", "4883117762eb9420")
 					.header("X-B3-SpanId", "4883117762eb9420").exchange().expectStatus().isOk();
+			assertThat(this.applicationContext.getBean(Tracer.class).currentSpan()).isNull();
 		}
 
 		@TearDown
@@ -118,13 +122,13 @@ public class MicroBenchmarkHttpTests {
 
 			// @formatter:off
 			noSleuthSimple("/simple", Pair.noSleuth()),
-			sleuthSimpleOnHooks("/simple"),
-			sleuthSimpleOnEach("/simple", Pair.noHook(), Pair.onEach()),
-			sleuthSimpleOnLast("/simple", Pair.noHook(), Pair.onLast()),
+			sleuthSimpleOnHooks("/simple", Pair.onHook()),
+			sleuthSimpleOnEach("/simple", Pair.onEach()),
+			sleuthSimpleOnLast("/simple", Pair.onLast()),
 			noSleuthComplex("/complexNoSleuth", Pair.noSleuth()),
-			onHooksComplex("/complex"),
-			onEachComplex("/complex", Pair.noHook(), Pair.onEach()),
-			onLastComplex("/complex", Pair.noHook(), Pair.onLast());
+			onHooksComplex("/complex", Pair.onHook()),
+			onEachComplex("/complex", Pair.onEach()),
+			onLastComplex("/complex", Pair.onLast());
 			// @formatter:on
 
 			private String url;

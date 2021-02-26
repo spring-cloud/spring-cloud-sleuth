@@ -167,7 +167,7 @@ public class WebClientTests {
 		this.testErrorController.clear();
 		this.fooController.clear();
 	}
-	
+
 	@Before
 	public void setup() {
 		log.info("Starting test");

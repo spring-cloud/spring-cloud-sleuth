@@ -22,6 +22,7 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
+import brave.Tracer;
 import brave.Tracing;
 import jmh.mbr.junit5.Microbenchmark;
 import org.junit.platform.commons.annotation.Testable;
@@ -134,6 +135,7 @@ public class MicroBenchmarkStreamTests {
 				} else {
 					assertThat(b3).startsWith("4883117762eb9420");
 				}
+				assertThat(this.applicationContext.getBean(Tracer.class).currentSpan()).isNull();
 			}
 		}
 
@@ -155,15 +157,15 @@ public class MicroBenchmarkStreamTests {
 
 			// @formatter:off
 			noSleuthSimple(Pair.noSleuth(), function("simple")),
-			sleuthSimpleOnHooks(function("simple")),
-			sleuthSimpleOnEach(function("simple"), Pair.noHook(), Pair.onEach()),
-			sleuthSimpleOnLast(function("simple"), Pair.noHook(), Pair.onLast()),
-			sleuthSimpleWithAroundOnHooks(function("simple_function_with_around")),
-			sleuthSimpleWithAroundOnEach(function("simple_function_with_around"), Pair.noHook(), Pair.onEach()),
-			sleuthSimpleWithAroundOnLast(function("simple_function_with_around"), Pair.noHook(), Pair.onLast()),
+			sleuthSimpleOnHooks(function("simple"), Pair.onHook()),
+			sleuthSimpleOnEach(function("simple"), Pair.onEach()),
+			sleuthSimpleOnLast(function("simple"), Pair.onLast()),
+			sleuthSimpleWithAroundOnHooks(function("simple_function_with_around"), Pair.onHook()),
+			sleuthSimpleWithAroundOnEach(function("simple_function_with_around"), Pair.onEach()),
+			sleuthSimpleWithAroundOnLast(function("simple_function_with_around"), Pair.onLast()),
 			noSleuthReactiveSimple(function("reactive_simple"), Pair.noSleuth()),
-			sleuthReactiveSimpleOnHooks(function("DECORATE_ON_EACH")),
-			sleuthReactiveSimpleOnEach(function("DECORATE_ON_EACH"), Pair.noHook(), Pair.onEach(), integrationEnabled());
+			sleuthReactiveSimpleOnHooks(function("DECORATE_ON_EACH"), Pair.onHook()),
+			sleuthReactiveSimpleOnEach(function("DECORATE_ON_EACH"), Pair.onEach(), integrationEnabled());
 			// @formatter:on
 
 			private List<Pair> pairs;

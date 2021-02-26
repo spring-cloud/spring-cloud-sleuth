@@ -1528,7 +1528,7 @@ To turn off this feature, set the `spring.sleuth.quartz.enabled` property to `fa
 
 ==== From Spring Cloud Sleuth 2.2.8 (inclusive)
 
-With the new Reactor https://github.com/reactor/reactor-core/pull/2566[queue wrapping mechanism] (Reactor 3.3.14) we're instrumenting the way threads are switched by Reactor. You should observe significant improvement in performance. In order to disable this feature you have to set the `spring.sleuth.reactor.decorate-queues` option to `false`. You'll fall back to the previous instrumentation mode mechanism.
+With the new Reactor https://github.com/reactor/reactor-core/pull/2566[queue wrapping mechanism] (Reactor 3.3.14) we're instrumenting the way threads are switched by Reactor. You should observe significant improvement in performance. In order to enable this feature you have to set the `spring.sleuth.reactor.decorate-queues` option to `true`.
 
 ==== To Spring Cloud Sleuth 2.2.8 (exclusive)
 

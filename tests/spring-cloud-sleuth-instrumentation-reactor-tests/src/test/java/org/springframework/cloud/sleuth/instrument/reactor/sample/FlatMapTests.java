@@ -88,6 +88,7 @@ public class FlatMapTests {
 						.web(WebApplicationType.REACTIVE)
 						.properties("server.port=0", "spring.jmx.enabled=false",
 								"spring.application.name=TraceWebFluxOnHooksTests",
+								"spring.sleuth.reactor.decorate-queues=true",
 								"security.basic.enabled=false",
 								"management.security.enabled=false")
 						.run();

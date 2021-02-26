@@ -33,8 +33,8 @@ public class Pair {
 		return new Pair(key, value);
 	}
 
-	public static Pair noHook() {
-		return new Pair("spring.sleuth.reactor.decorate-queues", "false");
+	public static Pair onHook() {
+		return new Pair("spring.sleuth.reactor.decorate-queues", "true");
 	}
 
 	public static Pair noSleuth() {
