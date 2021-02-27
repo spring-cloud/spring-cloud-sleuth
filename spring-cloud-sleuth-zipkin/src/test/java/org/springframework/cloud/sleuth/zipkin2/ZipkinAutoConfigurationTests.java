@@ -106,6 +106,60 @@ public class ZipkinAutoConfigurationTests {
 		then(request.getBody().readUtf8()).contains("localEndpoint");
 	}
 
+	@Test
+	public void useCustomApiPathIfSetEmpty() throws InterruptedException {
+		this.context = new AnnotationConfigApplicationContext();
+
+		environment().setProperty("spring.zipkin.base-url",
+				this.server.url("/").toString());
+		environment().setProperty("spring.zipkin.api-path", "");
+
+		this.context.register(ZipkinAutoConfiguration.class,
+				PropertyPlaceholderAutoConfiguration.class, TraceAutoConfiguration.class,
+				Config.class, ZipkinBackwardsCompatibilityAutoConfiguration.class);
+		this.context.refresh();
+		Span span = this.context.getBean(Tracing.class).tracer().nextSpan().name("foo")
+				.tag("foo", "bar").start();
+
+		span.finish();
+
+		Awaitility.await().untilAsserted(
+				() -> then(this.server.getRequestCount()).isGreaterThan(1));
+		// first request is for health check
+		this.server.takeRequest();
+		// second request is the span one
+		RecordedRequest request = this.server.takeRequest();
+		then(request.getPath()).isEqualTo("/");
+	}
+
+	@Test
+	public void useCustomApiPathIfSetNonEmpty() throws InterruptedException {
+		final String testPath = "test/v2";
+
+		this.context = new AnnotationConfigApplicationContext();
+
+		environment().setProperty("spring.zipkin.base-url",
+				this.server.url("").toString());
+		environment().setProperty("spring.zipkin.api-path", testPath);
+
+		this.context.register(ZipkinAutoConfiguration.class,
+				PropertyPlaceholderAutoConfiguration.class, TraceAutoConfiguration.class,
+				Config.class, ZipkinBackwardsCompatibilityAutoConfiguration.class);
+		this.context.refresh();
+		Span span = this.context.getBean(Tracing.class).tracer().nextSpan().name("foo")
+				.tag("foo", "bar").start();
+
+		span.finish();
+
+		Awaitility.await().untilAsserted(
+				() -> then(this.server.getRequestCount()).isGreaterThan(1));
+		// first request is for health check
+		this.server.takeRequest();
+		// second request is the span one
+		RecordedRequest request = this.server.takeRequest();
+		then(request.getPath()).isEqualTo("/" + testPath);
+	}
+
 	private MockEnvironment environment() {
 		this.context.setEnvironment(this.environment);
 		return this.environment;
