@@ -1050,7 +1050,7 @@ If you want to find Zipkin through service discovery, you can pass the Zipkin's 
 spring.zipkin.baseUrl: https://zipkinserver/
 ----
 
-By default api path will be set to `api/v2/spans` or `api/v1/spans` depending on the encoder version. If you want to use a custom api path, you can configure it using the following property (empty case, set ""):
+By default, api path will be set to `api/v2/spans` or `api/v1/spans` depending on the encoder version. If you want to use a custom api path, you can configure it using the following property (empty case, set ""):
 
 [source,yaml]
 ----
