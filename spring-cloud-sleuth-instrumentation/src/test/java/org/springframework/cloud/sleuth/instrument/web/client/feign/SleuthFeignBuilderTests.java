@@ -18,37 +18,34 @@ package org.springframework.cloud.sleuth.instrument.web.client.feign;
 
 import feign.Client;
 import feign.Feign;
-import feign.Retryer;
+import org.assertj.core.api.BDDAssertions;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import org.springframework.beans.factory.BeanFactory;
 
+import static org.mockito.Mockito.mock;
+
 /**
- * Contains {@link Feign.Builder} implementation with tracing components that close spans
- * on completion of request processing.
- *
- * @author Marcin Grzejszczak
- * @since 1.0.0
+ * @author Julien Baillagou
  */
-public final class SleuthFeignBuilder {
+@ExtendWith(MockitoExtension.class)
+public class SleuthFeignBuilderTests {
 
-	private SleuthFeignBuilder() {
+	@Mock
+	BeanFactory beanFactory;
+
+	@Test
+	public void should_generate_feign_builder() {
+		BDDAssertions.then(SleuthFeignBuilder.builder(beanFactory)).isExactlyInstanceOf(Feign.Builder.class);
 	}
 
-	public static Feign.Builder builder(BeanFactory beanFactory) {
-		return builder(beanFactory, null);
-	}
-
-	public static Feign.Builder builder(BeanFactory beanFactory, Client delegate) {
-		return Feign.builder().retryer(Retryer.NEVER_RETRY).client(client(beanFactory, delegate));
-	}
-
-	private static Client client(BeanFactory beanFactory, Client delegate) {
-		if (delegate == null) {
-			return new LazyClient(beanFactory);
-		}
-		else {
-			return new LazyClient(beanFactory, delegate);
-		}
+	@Test
+	public void should_generate_feign_builder_with_given_delegate() {
+		BDDAssertions.then(SleuthFeignBuilder.builder(beanFactory, mock(Client.class)))
+				.isExactlyInstanceOf(Feign.Builder.class);
 	}
 
 }
