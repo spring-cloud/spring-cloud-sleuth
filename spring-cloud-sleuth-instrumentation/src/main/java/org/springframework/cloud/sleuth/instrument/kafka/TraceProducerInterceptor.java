@@ -16,23 +16,50 @@
 
 package org.springframework.cloud.sleuth.instrument.kafka;
 
+import java.util.Map;
+import java.util.Optional;
+
 import org.apache.kafka.clients.producer.ProducerInterceptor;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.clients.producer.RecordMetadata;
+import org.slf4j.MDC;
 
-import java.util.Map;
+import org.springframework.cloud.sleuth.Span;
+import org.springframework.cloud.sleuth.TraceContext;
+import org.springframework.cloud.sleuth.Tracer;
 
 public class TraceProducerInterceptor implements ProducerInterceptor {
 
+	private Tracer tracer;
+
+	private Span span;
+
 	@Override
 	public ProducerRecord onSend(ProducerRecord producerRecord) {
-		System.out.println("Sending");
+		// System.out.println(
+		// Thread.currentThread().getName() + " traceId " + MDC.get("traceId") + " ,
+		// spanId " + MDC.get("spanId"));
+		Span.Builder spanBuilder = tracer.spanBuilder().kind(Span.Kind.PRODUCER).name("kafka.produce")
+				.tag("kafka.topic", producerRecord.topic());
+		this.span = spanBuilder.start();
+		String spanId = Optional.ofNullable(tracer.currentSpan()).map(Span::context).map(TraceContext::spanId)
+				.orElse(null);
+		System.out.println(Thread.currentThread().getName() + " " + spanId + " traceId " + MDC.get("traceId")
+				+ " , spanId " + MDC.get("spanId"));
 		return producerRecord;
 	}
 
 	@Override
 	public void onAcknowledgement(RecordMetadata recordMetadata, Exception e) {
-
+		String spanId = Optional.ofNullable(tracer.currentSpan()).map(Span::context).map(TraceContext::spanId)
+				.orElse(null);
+		System.out.println(Thread.currentThread().getName() + " " + spanId + " traceId " + MDC.get("traceId")
+				+ " , spanId " + MDC.get("spanId"));
+		System.out.println(this.span.context().spanId());
+		this.span.end();
+		// System.out.println(
+		// Thread.currentThread().getName() + " traceId " + MDC.get("traceId") + " ,
+		// spanId " + MDC.get("spanId"));
 	}
 
 	@Override
@@ -42,7 +69,7 @@ public class TraceProducerInterceptor implements ProducerInterceptor {
 
 	@Override
 	public void configure(Map<String, ?> map) {
-
+		this.tracer = (Tracer) map.get("tracer");
 	}
 
 }
