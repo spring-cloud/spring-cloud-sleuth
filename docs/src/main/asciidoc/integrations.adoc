@@ -391,11 +391,11 @@ This feature is available for all tracer implementations.
 
 We have the following modes of instrumenting reactor based applications that can be set via `spring.sleuth.reactor.instrumentation-type` property:
 
-* `ON_HOOKS` - With the new Reactor https://github.com/reactor/reactor-core/pull/2566[queue wrapping mechanism] (Reactor 3.4.3) we're instrumenting the way threads are switched by Reactor. This should lead to feature parity with `ON_EACH` with low performance impact.
-* `ON_EACH` - wraps every Reactor operator in a trace representation.
+* `DECORATE_QUEUES` - With the new Reactor https://github.com/reactor/reactor-core/pull/2566[queue wrapping mechanism] (Reactor 3.4.3) we're instrumenting the way threads are switched by Reactor. This should lead to feature parity with `ON_EACH` with low performance impact.
+* `DECORATE_ON_EACH` - wraps every Reactor operator in a trace representation.
 Passes the tracing context in most cases.
 This mode might lead to drastic performance degradation.
-* `ON_LAST` - wraps last Reactor operator in a trace representation.
+* `DECORATE_ON_LAST` - wraps last Reactor operator in a trace representation.
 Passes the tracing context in some cases thus accessing MDC context might not work.
 This mode might lead to medium performance degradation.
 * `MANUAL` - wraps every Reactor in the least invasive way without passing of tracing context.
