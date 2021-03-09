@@ -90,6 +90,7 @@
 		<awaitility.version>4.0.3</awaitility.version>
 		<brave-propagation-aws.version>0.21.3</brave-propagation-aws.version>
 		<archunit-junit5.version>0.14.1</archunit-junit5.version>
+		<mongodb-driver-reactivestreams.version>4.0.0</mongodb-driver-reactivestreams.version>
 	</properties>
 
 	<build>
@@ -276,6 +277,11 @@
 				<groupId>com.tngtech.archunit</groupId>
 				<artifactId>archunit-junit5</artifactId>
 				<version>${archunit-junit5.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.mongodb</groupId>
+				<artifactId>mongodb-driver-reactivestreams</artifactId>
+				<version>${mongodb-driver-reactivestreams.version}</version>
 			</dependency>
 		</dependencies>
 	</dependencyManagement>

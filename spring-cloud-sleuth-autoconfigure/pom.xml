@@ -375,6 +375,11 @@
 			<artifactId>awaitility</artifactId>
 			<scope>test</scope>
 		</dependency>
+		<dependency>
+			<groupId>org.mongodb</groupId>
+			<artifactId>mongodb-driver-reactivestreams</artifactId>
+			<scope>test</scope>
+		</dependency>
 
 		<!-- Brave -->
 		<dependency>
