@@ -146,16 +146,19 @@ public abstract class WebClientTests {
 			then(this.spans).isNotEmpty();
 			Optional<FinishedSpan> noTraceSpan = this.spans.reportedSpans().stream()
 					.filter(span -> span.getName().contains("GET") && !span.getTags().isEmpty()
-							&& span.getTags().containsKey("http.path"))
+							&& span.getTags().containsKey(pathKey()))
 					.findFirst();
 			then(noTraceSpan.isPresent()).isTrue();
-			then(noTraceSpan.get().getTags()).containsEntry("http.path", "/notrace").containsEntry("http.method",
-					"GET");
+			then(noTraceSpan.get().getTags()).containsEntry(pathKey(), "/notrace").containsEntry("http.method", "GET");
 			// TODO: matches cause there is an issue with Feign not providing the full URL
 			// at the interceptor level
-			then(noTraceSpan.get().getTags().get("http.path")).matches(".*/notrace");
+			then(noTraceSpan.get().getTags().get(pathKey())).matches(".*/notrace");
 		});
 		thenThereIsNoCurrentSpan();
+	}
+
+	protected String pathKey() {
+		return "http.path";
 	}
 
 	private void thenThereIsNoCurrentSpan() {
