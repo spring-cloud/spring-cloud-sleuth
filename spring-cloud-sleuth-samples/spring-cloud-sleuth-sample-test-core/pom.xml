@@ -38,36 +38,6 @@
 		<sonar.skip>true</sonar.skip>
 	</properties>
 
-	<build>
-		<pluginManagement>
-			<plugins>
-				<plugin>
-					<!--skip deploy (this is just a test module) -->
-					<artifactId>maven-deploy-plugin</artifactId>
-					<configuration>
-						<skip>true</skip>
-					</configuration>
-				</plugin>
-			</plugins>
-		</pluginManagement>
-		<plugins>
-			<!-- This is a test jar - it can have jdk8 -->
-			<plugin>
-				<groupId>org.codehaus.mojo</groupId>
-				<artifactId>animal-sniffer-maven-plugin</artifactId>
-				<version>1.19</version>
-				<configuration>
-					<skip>true</skip>
-					<signature>
-						<groupId>org.codehaus.mojo.signature</groupId>
-						<artifactId>java17</artifactId>
-						<version>1.0</version>
-					</signature>
-				</configuration>
-			</plugin>
-		</plugins>
-	</build>
-
 	<dependencies>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
