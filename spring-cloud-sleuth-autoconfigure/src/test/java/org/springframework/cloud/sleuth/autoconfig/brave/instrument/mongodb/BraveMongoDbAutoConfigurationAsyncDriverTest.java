@@ -16,7 +16,7 @@
 
 package org.springframework.cloud.sleuth.autoconfig.brave.instrument.mongodb;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import org.springframework.boot.autoconfigure.AutoConfigurations;
 import org.springframework.boot.test.context.FilteredClassLoader;
@@ -28,10 +28,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 /**
  * @author Chintan Radia
  */
-public class BraveMongoDbAutoConfigurationAsyncDriverTest {
+class BraveMongoDbAutoConfigurationAsyncDriverTest {
 
 	@Test
-	public void should_not_auto_configure_brave_mongo_db() {
+	void should_not_auto_configure_brave_mongo_db() {
 		new ApplicationContextRunner()
 				.withConfiguration(
 						AutoConfigurations.of(BraveAutoConfiguration.class, BraveMongoDbAutoConfiguration.class))
@@ -39,7 +39,7 @@ public class BraveMongoDbAutoConfigurationAsyncDriverTest {
 	}
 
 	@Test
-	public void should_auto_configure_brave_mongo_db() {
+	void should_auto_configure_brave_mongo_db() {
 		new ApplicationContextRunner()
 				.withClassLoader(new FilteredClassLoader("com.mongodb.reactivestreams.client.MongoClient"))
 				.withConfiguration(
