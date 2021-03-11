@@ -49,6 +49,7 @@ public class KafkaTracingCallback implements Callback {
 			}
 		}
 		finally { // TODO: Add error handling
+			// this.span.error();
 			this.span.end();
 		}
 	}
