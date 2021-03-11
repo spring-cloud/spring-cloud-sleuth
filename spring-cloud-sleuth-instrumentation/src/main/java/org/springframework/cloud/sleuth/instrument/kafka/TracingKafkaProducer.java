@@ -37,6 +37,7 @@ import org.apache.kafka.common.errors.ProducerFencedException;
 
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.Tracer;
+import org.springframework.cloud.sleuth.propagation.Propagator;
 
 public class TracingKafkaProducer<K, V> implements Producer<K, V> {
 
@@ -46,9 +47,16 @@ public class TracingKafkaProducer<K, V> implements Producer<K, V> {
 
 	private final Tracer tracer;
 
-	public TracingKafkaProducer(Producer<K, V> producer, Tracer tracer) {
+	private final Propagator propagator;
+
+	private final Propagator.Setter<ProducerRecord<?, ?>> injector;
+
+	public TracingKafkaProducer(Producer<K, V> producer, Tracer tracer, Propagator propagator,
+			Propagator.Setter<ProducerRecord<?, ?>> setter) {
 		this.delegate = producer;
 		this.tracer = tracer;
+		this.propagator = propagator;
+		this.injector = setter;
 	}
 
 	@Override
@@ -93,8 +101,8 @@ public class TracingKafkaProducer<K, V> implements Producer<K, V> {
 		Span.Builder spanBuilder = tracer.spanBuilder().kind(Span.Kind.PRODUCER).name("kafka.produce")
 				.tag("kafka.topic", producerRecord.topic());
 		Span span = spanBuilder.start();
+		this.propagator.inject(span.context(), producerRecord, this.injector);
 		try (Tracer.SpanInScope spanInScope = tracer.withSpan(span)) {
-			//TODO: Inject tracing headers and baggage
 			log.info("Current span: " + tracer.currentSpan().context().spanId());
 			return this.delegate.send(producerRecord, new KafkaTracingCallback(callback, tracer, span));
 		}

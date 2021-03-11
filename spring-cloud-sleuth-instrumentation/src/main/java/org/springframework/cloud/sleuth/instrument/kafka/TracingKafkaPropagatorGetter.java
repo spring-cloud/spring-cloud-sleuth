@@ -16,29 +16,15 @@
 
 package org.springframework.cloud.sleuth.instrument.kafka;
 
-import org.apache.kafka.clients.producer.Producer;
-import reactor.kafka.sender.SenderOptions;
-import reactor.kafka.sender.internals.ProducerFactory;
+import org.apache.kafka.clients.producer.ProducerRecord;
 
-import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.propagation.Propagator;
 
-public class TracingKafkaProducerFactory extends ProducerFactory {
-
-	private final Tracer tracer;
-
-	private final Propagator propagator;
-
-	public TracingKafkaProducerFactory(Tracer tracer, Propagator propagator) {
-		super();
-		this.tracer = tracer;
-		this.propagator = propagator;
-	}
+public class TracingKafkaPropagatorGetter implements Propagator.Getter<ProducerRecord<?, ?>> {
 
 	@Override
-	public <K, V> Producer<K, V> createProducer(SenderOptions<K, V> senderOptions) {
-		return new TracingKafkaProducer<>(super.createProducer(senderOptions), tracer, propagator,
-				new TracingKafkaPropagatorSetter());
+	public String get(ProducerRecord<?, ?> carrier, String key) {
+		return null;
 	}
 
 }
