@@ -30,8 +30,8 @@ import org.springframework.util.ReflectionUtils;
  * {@link BeanPostProcessor} that ensures that each {@link Feign.Builder} has
  * a trace representation of a {@link Client}.
  *
- * @since 3.0.2
  * @author Marcin Grzejszczak
+ * @since 3.0.2
  */
 public class TraceFeignBuilderBeanPostProcessor implements BeanPostProcessor {
 
