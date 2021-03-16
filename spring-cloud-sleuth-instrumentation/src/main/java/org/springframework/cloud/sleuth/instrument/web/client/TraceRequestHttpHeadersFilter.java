@@ -44,6 +44,8 @@ public class TraceRequestHttpHeadersFilter extends AbstractHttpHeadersFilter {
 
 	static final String TRACE_REQUEST_ATTR = TraceContext.class.getName();
 
+	static final String TRACE_REQUEST_ATTR_FROM_TRACE_WEB_FILTER = Span.class.getName();
+
 	public TraceRequestHttpHeadersFilter(Tracer tracer, HttpClientHandler handler, Propagator propagator) {
 		super(tracer, handler, propagator);
 	}
@@ -84,11 +86,19 @@ public class TraceRequestHttpHeadersFilter extends AbstractHttpHeadersFilter {
 
 	private Span currentSpan(ServerWebExchange exchange) {
 		Object attribute = exchange.getAttribute(TRACE_REQUEST_ATTR);
+		Object span = exchange.getAttribute(TRACE_REQUEST_ATTR_FROM_TRACE_WEB_FILTER);
 		if (attribute instanceof Span) {
 			if (log.isDebugEnabled()) {
 				log.debug("Found trace request attribute in the server web exchange [" + attribute + "]");
 			}
 			return (Span) attribute;
+		}
+		else if (span instanceof Span) {
+			if (log.isDebugEnabled()) {
+				log.debug("Found trace request attribute in the server web exchange set by TraceWebFilter [" + span
+						+ "]");
+			}
+			return (Span) span;
 		}
 		return this.tracer.currentSpan();
 	}
@@ -97,10 +107,7 @@ public class TraceRequestHttpHeadersFilter extends AbstractHttpHeadersFilter {
 		if (currentSpan == null) {
 			return this.handler.handleSend(request);
 		}
-		try (Tracer.SpanInScope ws = this.tracer.withSpan(currentSpan)) {
-			Span clientSpan = this.tracer.nextSpan();
-			return this.handler.handleSend(request, clientSpan.context());
-		}
+		return this.handler.handleSend(request, currentSpan.context());
 	}
 
 	private void addHeadersWithInput(HttpHeaders filteredHeaders, HttpHeaders headersWithInput) {
