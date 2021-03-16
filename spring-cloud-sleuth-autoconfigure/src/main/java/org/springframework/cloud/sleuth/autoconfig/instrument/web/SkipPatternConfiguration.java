@@ -24,6 +24,7 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.BeanCurrentlyInCreationException;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.actuate.autoconfigure.endpoint.web.WebEndpointProperties;
 import org.springframework.boot.actuate.autoconfigure.web.server.ConditionalOnManagementPort;
 import org.springframework.boot.actuate.autoconfigure.web.server.ManagementPortType;
@@ -211,9 +212,14 @@ class SkipPatternConfiguration {
 		@ConditionalOnProperty(name = "management.server.servlet.context-path", havingValue = "/",
 				matchIfMissing = true)
 		SingleSkipPattern skipPatternForActuatorEndpointsDifferentPort(Environment environment,
-				final ServerProperties serverProperties, final WebEndpointProperties webEndpointProperties,
+				final WebEndpointProperties webEndpointProperties,
+				ObjectProvider<ManagementServerProperties> managementServerProperties,
 				final EndpointsSupplier<ExposableWebEndpoint> endpointsSupplier) {
-			return () -> getEndpointsPatterns(environment, null, webEndpointProperties, endpointsSupplier);
+			return () -> {
+				ManagementServerProperties props = managementServerProperties.getIfAvailable();
+				return getEndpointsPatterns(environment, props != null ? props.getBasePath() : null,
+						webEndpointProperties, endpointsSupplier);
+			};
 		}
 
 	}

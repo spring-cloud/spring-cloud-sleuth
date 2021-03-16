@@ -213,6 +213,20 @@ public class SkipPatternProviderConfigTest {
 	}
 
 	@Test
+	public void should_return_endpoints_with_base_path_when_management_port_is_different() {
+		contextRunner
+				.withConfiguration(
+						UserConfigurations.of(ServerPropertiesConfig.class, ManagementServerPropertiesConfig.class))
+				.withPropertyValues("management.server.base-path=/foo", "management.endpoints.web.base-path=/actuator",
+						"management.server.port=0")
+				.run(context -> {
+					BDDAssertions.then(extractAllPatterns(context)).containsExactlyInAnyOrder(
+							"/foo/actuator(/|/(health|health/.*|info|info/.*))?",
+							SleuthWebProperties.DEFAULT_SKIP_PATTERN);
+				});
+	}
+
+	@Test
 	public void should_return_endpoints_with_context_path_and_base_path_set_to_root_different_port_with_placeholder() {
 		contextRunner.withConfiguration(UserConfigurations.of(ServerPropertiesConfig.class))
 				.withPropertyValues("management.endpoints.web.base-path=/", "management.server.port=${some-port:0}",
@@ -310,6 +324,12 @@ public class SkipPatternProviderConfigTest {
 	@Configuration(proxyBeanMethods = false)
 	@EnableConfigurationProperties(ServerProperties.class)
 	static class ServerPropertiesConfig {
+
+	}
+
+	@Configuration(proxyBeanMethods = false)
+	@EnableConfigurationProperties(ManagementServerProperties.class)
+	static class ManagementServerPropertiesConfig {
 
 	}
 
