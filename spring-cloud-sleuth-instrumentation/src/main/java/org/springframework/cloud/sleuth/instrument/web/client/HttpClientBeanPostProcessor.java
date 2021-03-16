@@ -25,6 +25,8 @@ import java.util.function.BiConsumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import reactor.core.publisher.Mono;
 import reactor.netty.Connection;
 import reactor.netty.http.client.HttpClient;
@@ -86,6 +88,8 @@ public class HttpClientBeanPostProcessor implements BeanPostProcessor {
 
 	static class TracingMapConnect implements Function<Mono<? extends Connection>, Mono<? extends Connection>> {
 
+		private static final Log log = LogFactory.getLog(TracingMapConnect.class);
+
 		static final Exception CANCELLED_ERROR = new CancellationException("CANCELLED") {
 			@Override
 			public Throwable fillInStackTrace() {
@@ -116,6 +120,9 @@ public class HttpClientBeanPostProcessor implements BeanPostProcessor {
 				// like onComplete() completed the span (clearing the reference).
 				Span span = pendingSpan.getAndSet(null);
 				if (span != null) {
+					if (log.isDebugEnabled()) {
+						log.debug("Marking span [" + span + "] with cancelled error");
+					}
 					span.error(CANCELLED_ERROR);
 					span.end();
 				}
@@ -125,6 +132,8 @@ public class HttpClientBeanPostProcessor implements BeanPostProcessor {
 	}
 
 	private static class TracingDoOnRequest implements BiConsumer<HttpClientRequest, Connection> {
+
+		private static final Log log = LogFactory.getLog(TracingDoOnRequest.class);
 
 		final ConfigurableApplicationContext context;
 
@@ -153,15 +162,16 @@ public class HttpClientBeanPostProcessor implements BeanPostProcessor {
 			// update this code!
 			Span span = pendingSpan.getAndSet(null);
 			if (span != null) {
-				assert false : "span exists when it shouldn't!";
 				span.abandon(); // abandon instead of break
 			}
 
 			// Start a new client span with the appropriate parent
 			TraceContext parent = req.currentContextView().getOrDefault(TraceContext.class, null);
 			HttpClientRequestWrapper request = new HttpClientRequestWrapper(req, connection);
-
 			span = handler().handleSend(request, parent);
+			if (log.isDebugEnabled()) {
+				log.debug("Handled send of the netty client span [" + span + "] with parent [" + parent + "]");
+			}
 			pendingSpan.set(span);
 		}
 
@@ -211,6 +221,8 @@ public class HttpClientBeanPostProcessor implements BeanPostProcessor {
 
 	private static abstract class AbstractTracingDoOnHandler {
 
+		private static final Log log = LogFactory.getLog(AbstractTracingDoOnHandler.class);
+
 		final ConfigurableApplicationContext context;
 
 		HttpClientHandler handler;
@@ -235,6 +247,9 @@ public class HttpClientBeanPostProcessor implements BeanPostProcessor {
 			Span span = pendingSpan.getAndSet(null);
 			if (span == null) {
 				return; // Unexpected. In the handle method, without a span to finish!
+			}
+			if (log.isDebugEnabled()) {
+				log.debug("Handle receive of the netty client span [" + span + "]");
 			}
 			HttpClientResponseWrapper response = new HttpClientResponseWrapper(resp, error);
 			handler().handleReceive(response, span);

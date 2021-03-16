@@ -24,6 +24,7 @@ import org.assertj.core.api.BDDAssertions;
 import org.junit.jupiter.api.Test;
 
 import org.springframework.cloud.gateway.filter.headers.HttpHeadersFilter;
+import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.test.TestTracingAwareSupplier;
 import org.springframework.http.HttpHeaders;
 import org.springframework.mock.http.server.reactive.MockServerHttpRequest;
@@ -44,7 +45,11 @@ public abstract class TraceRequestHttpHeadersFilterTests implements TestTracingA
 		MockServerWebExchange exchange = MockServerWebExchange.builder(request).build();
 
 		HttpHeaders filteredHeaders = filter.filter(requestHeaders(httpHeaders), exchange);
+		thenTraceContinuedWithNewSpan(httpHeaders, filteredHeaders);
+		BDDAssertions.then((Object) exchange.getAttribute(TraceRequestHttpHeadersFilter.SPAN_ATTRIBUTE)).isNotNull();
+	}
 
+	private void thenTraceContinuedWithNewSpan(HttpHeaders httpHeaders, HttpHeaders filteredHeaders) {
 		// we want to continue the trace
 		BDDAssertions.then(high(filteredHeaders.get("X-B3-TraceId"))).isEqualTo(high(httpHeaders.get("X-B3-TraceId")));
 		// but we want to have a new span id
@@ -53,6 +58,25 @@ public abstract class TraceRequestHttpHeadersFilterTests implements TestTracingA
 		BDDAssertions.then(filteredHeaders.get("X-Hello-Request"))
 				.isEqualTo(Collections.singletonList("Request World"));
 		BDDAssertions.then(filteredHeaders.get("X-Auth-User")).hasSize(1);
+	}
+
+	@Test
+	public void should_continue_span_tracing_when_span_already_in_exchange_attributes() {
+		HttpHeadersFilter filter = new TraceRequestHttpHeadersFilter(tracerTest().tracing().tracer(),
+				tracerTest().tracing().httpClientHandler(), tracerTest().tracing().propagator());
+		HttpHeaders httpHeaders = new HttpHeaders();
+		Span span = tracerTest().tracing().tracer().nextSpan();
+		httpHeaders.set("X-Hello", "World");
+		httpHeaders.set("X-B3-TraceId", span.context().traceId());
+		httpHeaders.set("X-B3-SpanId", span.context().spanId());
+		MockServerHttpRequest request = MockServerHttpRequest.post("foo/bar").headers(httpHeaders).build();
+		MockServerWebExchange exchange = MockServerWebExchange.builder(request).build();
+		exchange.getAttributes().put(TraceRequestHttpHeadersFilter.TRACE_REQUEST_ATTR_FROM_TRACE_WEB_FILTER, span);
+
+		HttpHeaders filteredHeaders = filter.filter(requestHeaders(httpHeaders), exchange);
+
+		// we want to continue the trace
+		thenTraceContinuedWithNewSpan(httpHeaders, filteredHeaders);
 		BDDAssertions.then((Object) exchange.getAttribute(TraceRequestHttpHeadersFilter.SPAN_ATTRIBUTE)).isNotNull();
 	}
 

@@ -26,6 +26,7 @@ import org.springframework.boot.autoconfigure.AutoConfigureBefore;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.autoconfigure.security.oauth2.resource.UserInfoRestTemplateCustomizer;
 import org.springframework.boot.web.client.RestTemplateCustomizer;
@@ -104,6 +105,7 @@ class TraceWebClientAutoConfiguration {
 
 	@Configuration(proxyBeanMethods = false)
 	@ConditionalOnClass(HttpHeadersFilter.class)
+	@ConditionalOnMissingClass("reactor.netty.http.client.HttpClient")
 	static class HttpHeadersFilterConfig {
 
 		@Bean
