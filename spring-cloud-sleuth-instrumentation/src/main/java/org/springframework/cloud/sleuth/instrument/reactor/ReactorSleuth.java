@@ -122,7 +122,7 @@ public abstract class ReactorSleuth {
 			ConfigurableApplicationContext springContext, LazyBean<CurrentTraceContext> lazyCurrentTraceContext,
 			LazyBean<Tracer> lazyTracer) {
 		return (p, sub) -> {
-			if (!springContext.isActive()) {
+			if (!springContext.isActive() || !springContext.isRunning()) {
 				if (log.isTraceEnabled()) {
 					String message = "Spring Context [" + springContext
 							+ "] is not yet refreshed. This is unexpected. Reactor Context is [" + context(sub)
