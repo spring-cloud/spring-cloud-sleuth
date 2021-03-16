@@ -28,7 +28,6 @@ import javax.servlet.ServletResponse;
 
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
@@ -79,12 +78,6 @@ class TraceWebServletConfiguration {
 			return filterRegistrationBean;
 		}
 
-		@Bean
-		@ConditionalOnMissingBean
-		TracingFilter tracingFilter(CurrentTraceContext currentTraceContext, HttpServerHandler httpServerHandler) {
-			return TracingFilter.create(currentTraceContext, httpServerHandler);
-		}
-
 		/**
 		 * Nested config that configures Web MVC if it's present (without adding a runtime
 		 * dependency to it).
@@ -128,7 +121,8 @@ final class LazyTracingFilter implements Filter {
 
 	private Filter tracingFilter() {
 		if (this.tracingFilter == null) {
-			this.tracingFilter = this.beanFactory.getBean(TracingFilter.class);
+			this.tracingFilter = TracingFilter.create(this.beanFactory.getBean(CurrentTraceContext.class),
+					this.beanFactory.getBean(HttpServerHandler.class));
 		}
 		return this.tracingFilter;
 	}
