@@ -35,6 +35,7 @@ import org.springframework.cloud.sleuth.instrument.web.client.feign.FeignContext
 import org.springframework.cloud.sleuth.instrument.web.client.feign.OkHttpFeignClientBeanPostProcessor;
 import org.springframework.cloud.sleuth.instrument.web.client.feign.SleuthFeignBuilder;
 import org.springframework.cloud.sleuth.instrument.web.client.feign.TraceFeignAspect;
+import org.springframework.cloud.sleuth.instrument.web.client.feign.TraceFeignBuilderBeanPostProcessor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Conditional;
 import org.springframework.context.annotation.Configuration;
@@ -66,6 +67,11 @@ public class TraceFeignClientAutoConfiguration {
 		@Bean
 		static FeignContextBeanPostProcessor feignContextBeanPostProcessor(BeanFactory beanFactory) {
 			return new FeignContextBeanPostProcessor(beanFactory);
+		}
+
+		@Bean
+		static TraceFeignBuilderBeanPostProcessor traceFeignBuilderBeanPostProcessor(BeanFactory beanFactory) {
+			return new TraceFeignBuilderBeanPostProcessor(beanFactory);
 		}
 
 	}
