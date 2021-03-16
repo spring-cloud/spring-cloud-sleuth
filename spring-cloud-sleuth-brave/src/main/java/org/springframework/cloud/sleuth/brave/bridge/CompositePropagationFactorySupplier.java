@@ -30,6 +30,7 @@ import brave.propagation.TraceContextOrSamplingFlags;
 import brave.propagation.aws.AWSPropagation;
 
 import org.springframework.beans.factory.BeanFactory;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.cloud.sleuth.brave.propagation.PropagationFactorySupplier;
 import org.springframework.cloud.sleuth.brave.propagation.PropagationType;
 
@@ -56,7 +57,7 @@ public class CompositePropagationFactorySupplier implements PropagationFactorySu
 
 	@Override
 	public Propagation.Factory get() {
-		return new CompositePropagationFactory(
+		return new CompositePropagationFactory(this.beanFactory,
 				this.beanFactory.getBeanProvider(BraveBaggageManager.class).getIfAvailable(BraveBaggageManager::new),
 				this.localFields, this.types);
 	}
@@ -69,8 +70,8 @@ class CompositePropagationFactory extends Propagation.Factory implements Propaga
 
 	private final List<PropagationType> types;
 
-	CompositePropagationFactory(BraveBaggageManager braveBaggageManager, List<String> localFields,
-			List<PropagationType> types) {
+	CompositePropagationFactory(BeanFactory beanFactory, BraveBaggageManager braveBaggageManager,
+			List<String> localFields, List<PropagationType> types) {
 		this.types = types;
 		this.mapping.put(PropagationType.AWS, AWSPropagation.FACTORY.get());
 		// Note: Versions <2.2.3 use injectFormat(MULTI) for non-remote (ex
@@ -79,7 +80,7 @@ class CompositePropagationFactory extends Propagation.Factory implements Propaga
 		this.mapping.put(PropagationType.B3,
 				B3Propagation.newFactoryBuilder().injectFormat(B3Propagation.Format.SINGLE_NO_PARENT).build().get());
 		this.mapping.put(PropagationType.W3C, new W3CPropagation(braveBaggageManager, localFields));
-		this.mapping.put(PropagationType.CUSTOM, NoOpPropagation.INSTANCE);
+		this.mapping.put(PropagationType.CUSTOM, new LazyPropagation(beanFactory.getBeanProvider(Propagation.class)));
 	}
 
 	@Override
@@ -114,6 +115,32 @@ class CompositePropagationFactory extends Propagation.Factory implements Propaga
 	@Override
 	public <K> Propagation<K> create(KeyFactory<K> keyFactory) {
 		return StringPropagationAdapter.create(this, keyFactory);
+	}
+
+	@SuppressWarnings("unchecked")
+	private static final class LazyPropagation implements Propagation<String> {
+
+		private final ObjectProvider<Propagation> delegate;
+
+		private LazyPropagation(ObjectProvider<Propagation> delegate) {
+			this.delegate = delegate;
+		}
+
+		@Override
+		public List<String> keys() {
+			return this.delegate.getIfAvailable(() -> NoOpPropagation.INSTANCE).keys();
+		}
+
+		@Override
+		public <R> TraceContext.Injector<R> injector(Setter<R, String> setter) {
+			return this.delegate.getIfAvailable(() -> NoOpPropagation.INSTANCE).injector(setter);
+		}
+
+		@Override
+		public <R> TraceContext.Extractor<R> extractor(Getter<R, String> getter) {
+			return this.delegate.getIfAvailable(() -> NoOpPropagation.INSTANCE).extractor(getter);
+		}
+
 	}
 
 	private static class NoOpPropagation implements Propagation<String> {

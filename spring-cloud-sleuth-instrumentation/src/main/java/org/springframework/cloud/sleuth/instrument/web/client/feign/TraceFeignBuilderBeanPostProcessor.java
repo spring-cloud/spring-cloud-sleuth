@@ -27,8 +27,8 @@ import org.springframework.beans.factory.config.BeanPostProcessor;
 import org.springframework.util.ReflectionUtils;
 
 /**
- * {@link BeanPostProcessor} that ensures that each {@link Feign.Builder} has
- * a trace representation of a {@link Client}.
+ * {@link BeanPostProcessor} that ensures that each {@link Feign.Builder} has a trace
+ * representation of a {@link Client}.
  *
  * @author Marcin Grzejszczak
  * @since 3.0.2
