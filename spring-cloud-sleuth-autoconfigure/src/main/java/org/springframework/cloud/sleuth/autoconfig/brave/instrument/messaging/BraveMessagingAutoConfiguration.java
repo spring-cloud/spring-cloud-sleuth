@@ -132,7 +132,7 @@ public class BraveMessagingAutoConfiguration {
 		}
 
 		@Bean
-		KafkaFactoryBeanPostProcessor kafkaFactoryBeanPostProcessor(BeanFactory beanFactory) {
+		static KafkaFactoryBeanPostProcessor kafkaFactoryBeanPostProcessor(BeanFactory beanFactory) {
 			return new KafkaFactoryBeanPostProcessor(beanFactory);
 		}
 
@@ -171,7 +171,7 @@ public class BraveMessagingAutoConfiguration {
 
 		// Setup the tracing endpoint registry.
 		@Bean
-		TracingJmsBeanPostProcessor tracingJmsBeanPostProcessor(BeanFactory beanFactory) {
+		static TracingJmsBeanPostProcessor tracingJmsBeanPostProcessor(BeanFactory beanFactory) {
 			return new TracingJmsBeanPostProcessor(beanFactory);
 		}
 

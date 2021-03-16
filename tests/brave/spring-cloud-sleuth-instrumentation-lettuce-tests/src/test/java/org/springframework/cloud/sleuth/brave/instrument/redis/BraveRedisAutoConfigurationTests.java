@@ -62,7 +62,7 @@ public class BraveRedisAutoConfigurationTests {
 		}
 
 		@Bean
-		TestTraceLettuceClientResourcesBeanPostProcessor testTraceLettuceClientResourcesBeanPostProcessor(
+		static TestTraceLettuceClientResourcesBeanPostProcessor testTraceLettuceClientResourcesBeanPostProcessor(
 				BeanFactory beanFactory) {
 			return new TestTraceLettuceClientResourcesBeanPostProcessor(beanFactory);
 		}

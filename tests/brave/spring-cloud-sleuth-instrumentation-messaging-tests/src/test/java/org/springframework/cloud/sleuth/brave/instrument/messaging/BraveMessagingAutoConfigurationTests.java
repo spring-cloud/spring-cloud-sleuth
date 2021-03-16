@@ -163,7 +163,7 @@ public class BraveMessagingAutoConfigurationTests {
 		}
 
 		@Bean
-		SleuthRabbitBeanPostProcessor sleuthRabbitBeanPostProcessor(BeanFactory beanFactory) {
+		static SleuthRabbitBeanPostProcessor sleuthRabbitBeanPostProcessor(BeanFactory beanFactory) {
 			return new TestSleuthRabbitBeanPostProcessor(beanFactory);
 		}
 
@@ -173,7 +173,7 @@ public class BraveMessagingAutoConfigurationTests {
 		}
 
 		@Bean
-		TestSleuthJmsBeanPostProcessor sleuthJmsBeanPostProcessor(BeanFactory beanFactory) {
+		static TestSleuthJmsBeanPostProcessor sleuthJmsBeanPostProcessor(BeanFactory beanFactory) {
 			return new TestSleuthJmsBeanPostProcessor(beanFactory);
 		}
 

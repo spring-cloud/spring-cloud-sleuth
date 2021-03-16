@@ -47,7 +47,8 @@ class TraceWebFluxConfiguration {
 	}
 
 	@Bean
-	TraceHandlerFunctionAdapterBeanPostProcessor traceHandlerFunctionAdapterBeanPostProcessor(BeanFactory beanFactory) {
+	static TraceHandlerFunctionAdapterBeanPostProcessor traceHandlerFunctionAdapterBeanPostProcessor(
+			BeanFactory beanFactory) {
 		return new TraceHandlerFunctionAdapterBeanPostProcessor(beanFactory);
 	}
 
