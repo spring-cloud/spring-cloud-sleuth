@@ -20,6 +20,9 @@ import java.util.List;
 import java.util.Map;
 
 import brave.Tracing;
+import brave.baggage.BaggageField;
+import brave.baggage.BaggagePropagation;
+import brave.baggage.BaggagePropagationConfig;
 import brave.propagation.B3Propagation;
 import brave.propagation.TraceContext;
 import org.junit.jupiter.api.Test;
@@ -46,7 +49,14 @@ public class TracingChannelInterceptorTest
 				@Override
 				public Tracing.Builder tracingBuilder() {
 					return super.tracingBuilder()
-							.propagationFactory(B3Propagation.newFactoryBuilder().injectFormat(SINGLE).build());
+							.propagationFactory(BaggagePropagation.newFactoryBuilder(B3Propagation.newFactoryBuilder()
+											.injectFormat(SINGLE)
+											.build()
+									)
+											.add(BaggagePropagationConfig.SingleBaggageField.remote(BaggageField.create("Foo-Id")))
+											.add(BaggagePropagationConfig.SingleBaggageField.remote(BaggageField.create("Baz-Id")))
+											.build()
+							);
 				}
 			};
 			this.testTracing.reset();
@@ -67,7 +77,7 @@ public class TracingChannelInterceptorTest
 
 		TraceContext receiveContext = parseB3SingleFormat(
 				((List) ((Map) this.channel.receive().getHeaders().get(NATIVE_HEADERS)).get("b3")).get(0).toString())
-						.context();
+				.context();
 		assertThat(receiveContext.parentIdString()).isEqualTo("000000000000000b");
 	}
 

@@ -45,6 +45,8 @@ public class MultipleHopsIntegrationTests
 
 	static final BaggageField REQUEST_ID = BaggageField.create("x-vcap-request-id");
 	static final BaggageField COUNTRY_CODE = BaggageField.create("country-code");
+	static final BaggageField CASE_INSENSITIVE_ID = BaggageField.create("foo-id");
+	static final BaggageField NOT_PROPAGATED_HEADER = BaggageField.create("baz-id");
 
 	@Override
 	protected void assertSpanNames() {
@@ -61,7 +63,10 @@ public class MultipleHopsIntegrationTests
 		// baz is not tagged in the initial span, only downstream!
 		then(this.application.allSpans()).as("All downstream have country-code")
 				.filteredOn(span -> !span.equals(initialSpan))
-				.allMatch(span -> "FO".equals(COUNTRY_CODE.getValue(BraveAccessor.traceContext(span.context()))));
+				// it propagates only and all the `spring.sleuth.baggage.remote-fields` in case insensitive way
+				.allMatch(span -> "FO".equals(COUNTRY_CODE.getValue(BraveAccessor.traceContext(span.context()))))
+				.allMatch(span -> "123".equalsIgnoreCase(CASE_INSENSITIVE_ID.getValue(BraveAccessor.traceContext(span.context()))))
+				.allMatch(span -> NOT_PROPAGATED_HEADER.getValue(BraveAccessor.traceContext(span.context())) == null);
 	}
 
 	@Configuration(proxyBeanMethods = false)
