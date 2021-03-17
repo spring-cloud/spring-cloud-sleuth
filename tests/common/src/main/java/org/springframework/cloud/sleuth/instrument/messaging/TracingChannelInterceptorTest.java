@@ -45,8 +45,10 @@ import org.springframework.messaging.support.ErrorMessage;
 import org.springframework.messaging.support.ExecutorChannelInterceptor;
 import org.springframework.messaging.support.ExecutorSubscribableChannel;
 import org.springframework.messaging.support.MessageBuilder;
+import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.StringUtils;
 
+import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.messaging.support.NativeMessageHeaderAccessor.NATIVE_HEADERS;
 
@@ -346,6 +348,44 @@ public abstract class TracingChannelInterceptorTest implements TestTracingAwareS
 		channel.send(MessageBuilder.createMessage("foo", new MessageHeaders(headers)));
 
 		assertThat(this.spans).extracting(FinishedSpan::getRemoteServiceName).containsOnly("broker", null);
+	}
+
+	@Test
+	public void should_propagate_headers_case_insensitive() {
+		channel.addInterceptor(this.interceptor);
+		Map<String, Object> headers = new HashMap<>();
+		headers.put("Foo-Id", "123");
+		headers.put("baz-id", "456");
+
+		channel.send(MessageBuilder.createMessage("foo", new MessageHeaders(headers)));
+
+		Message<?> actualMessage = channel.receive();
+
+		assertThat(actualMessage.getHeaders()).isNotEmpty();
+		assertThat(actualMessage.getHeaders().get("not-propagated-header")).isNull();
+		assertThat(actualMessage.getHeaders().get("Foo-Id")).isEqualTo("123");
+		assertThat(actualMessage.getHeaders().get("baz-id")).isEqualTo("456");
+	}
+
+	@Test
+	public void should_propagate_native_headers_case_insensitive() {
+		channel.addInterceptor(this.interceptor);
+		LinkedMultiValueMap<String, String> nativeHeaders = new LinkedMultiValueMap<>();
+		nativeHeaders.put("Foo-Id", singletonList("123"));
+		nativeHeaders.put("baz-id", singletonList("456"));
+		Map<String, Object> headers = new HashMap<>();
+		headers.put(NATIVE_HEADERS, nativeHeaders);
+
+		channel.send(MessageBuilder.createMessage("foo", new MessageHeaders(headers)));
+
+		Message<?> actualMessage = channel.receive();
+
+		assertThat(actualMessage.getHeaders()).isNotEmpty();
+		LinkedMultiValueMap<String, String> actualNativeHeaders = (LinkedMultiValueMap) actualMessage.getHeaders().get(NATIVE_HEADERS);
+		assertThat(actualNativeHeaders).isNotEmpty();
+		assertThat(actualNativeHeaders.get("not-propagated-header")).isNull();
+		assertThat(actualNativeHeaders.get("Foo-Id")).isEqualTo(singletonList("123"));
+		assertThat(actualNativeHeaders.get("baz-id")).isEqualTo(singletonList("456"));
 	}
 
 	public ChannelInterceptor producerSideOnly(ChannelInterceptor delegate) {

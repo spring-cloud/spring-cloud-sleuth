@@ -19,6 +19,7 @@ package org.springframework.cloud.sleuth.instrument.messaging;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -60,26 +61,51 @@ public class MessageHeaderPropagatorGetter implements Propagator.Getter<MessageH
 	private String doGet(MessageHeaderAccessor accessor, String key) {
 		if (accessor instanceof NativeMessageHeaderAccessor) {
 			NativeMessageHeaderAccessor nativeAccessor = (NativeMessageHeaderAccessor) accessor;
-			String result = nativeAccessor.getFirstNativeHeader(key);
-			if (result != null) {
-				return result;
+			Map<String, List<String>> nativeHeadersMap = nativeAccessor.toNativeHeaderMap();
+			if (!nativeHeadersMap.isEmpty()) {
+				return getFromNativeHeaders(nativeHeadersMap, key);
 			}
 		}
 		else {
 			Object nativeHeaders = accessor.getHeader(NativeMessageHeaderAccessor.NATIVE_HEADERS);
 			if (nativeHeaders instanceof Map) {
-				Object result = ((Map) nativeHeaders).get(key);
-				if (result instanceof List && !((List) result).isEmpty()) {
-					return String.valueOf(((List) result).get(0));
+				Map nativeHeadersMap = (Map) nativeHeaders;
+				if (!nativeHeadersMap.isEmpty()) {
+					return getFromNativeHeaders(nativeHeadersMap, key);
 				}
 			}
 		}
-		Object result = accessor.getHeader(key);
-		if (result != null) {
-			if (result instanceof byte[]) {
-				return new String((byte[]) result, StandardCharsets.UTF_8);
+		Set<Map.Entry<String, Object>> headerEntries = accessor.getMessageHeaders().entrySet();
+		return getFromHeaders(headerEntries, key);
+	}
+
+	private String getFromHeaders(Set<Map.Entry<String, Object>> headerEntries, String key) {
+		for (Map.Entry<String, Object> entry : headerEntries) {
+			if (entry.getKey().equalsIgnoreCase(key)) {
+				Object result = entry.getValue();
+				if (result != null) {
+					if (result instanceof byte[]) {
+						return new String((byte[]) result, StandardCharsets.UTF_8);
+					}
+					return result.toString();
+				}
 			}
-			return result.toString();
+		}
+		return null;
+	}
+
+	private String getFromNativeHeaders(Map nativeHeaders, String key) {
+		Set<Map.Entry> entrySet = nativeHeaders.entrySet();
+		for (Map.Entry entries : entrySet) {
+			if (entries.getKey() instanceof String) {
+				String headersKey = (String) entries.getKey();
+				if (headersKey.equalsIgnoreCase(key)) {
+					Object result = entries.getValue();
+					if (result instanceof List && !((List) result).isEmpty()) {
+						return String.valueOf(((List) result).get(0));
+					}
+				}
+			}
 		}
 		return null;
 	}
@@ -88,5 +114,4 @@ public class MessageHeaderPropagatorGetter implements Propagator.Getter<MessageH
 	public String toString() {
 		return "MessageHeaderPropagatorGetter{}";
 	}
-
 }
