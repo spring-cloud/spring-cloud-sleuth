@@ -48,11 +48,15 @@ public class TracingChannelInterceptorTest
 			this.testTracing = new BraveTestTracing() {
 				@Override
 				public Tracing.Builder tracingBuilder() {
-					return super.tracingBuilder().propagationFactory(BaggagePropagation
-							.newFactoryBuilder(B3Propagation.newFactoryBuilder().injectFormat(SINGLE).build())
-							.add(BaggagePropagationConfig.SingleBaggageField.remote(BaggageField.create("Foo-Id")))
-							.add(BaggagePropagationConfig.SingleBaggageField.remote(BaggageField.create("Baz-Id")))
-							.build());
+					return super.tracingBuilder()
+							.propagationFactory(BaggagePropagation.newFactoryBuilder(B3Propagation.newFactoryBuilder()
+											.injectFormat(SINGLE)
+											.build()
+									)
+											.add(BaggagePropagationConfig.SingleBaggageField.remote(BaggageField.create("Foo-Id")))
+											.add(BaggagePropagationConfig.SingleBaggageField.remote(BaggageField.create("Baz-Id")))
+											.build()
+							);
 				}
 			};
 			this.testTracing.reset();
@@ -73,7 +77,7 @@ public class TracingChannelInterceptorTest
 
 		TraceContext receiveContext = parseB3SingleFormat(
 				((List) ((Map) this.channel.receive().getHeaders().get(NATIVE_HEADERS)).get("b3")).get(0).toString())
-						.context();
+				.context();
 		assertThat(receiveContext.parentIdString()).isEqualTo("000000000000000b");
 	}
 

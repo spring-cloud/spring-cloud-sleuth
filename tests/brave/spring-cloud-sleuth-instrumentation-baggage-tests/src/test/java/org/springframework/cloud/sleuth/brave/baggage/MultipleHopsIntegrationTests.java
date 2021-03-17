@@ -63,11 +63,9 @@ public class MultipleHopsIntegrationTests
 		// baz is not tagged in the initial span, only downstream!
 		then(this.application.allSpans()).as("All downstream have country-code")
 				.filteredOn(span -> !span.equals(initialSpan))
-				// it propagates only and all the `spring.sleuth.baggage.remote-fields` in
-				// case insensitive way
+				// it propagates only and all the `spring.sleuth.baggage.remote-fields` in case insensitive way
 				.allMatch(span -> "FO".equals(COUNTRY_CODE.getValue(BraveAccessor.traceContext(span.context()))))
-				.allMatch(span -> "123"
-						.equalsIgnoreCase(CASE_INSENSITIVE_ID.getValue(BraveAccessor.traceContext(span.context()))))
+				.allMatch(span -> "123".equalsIgnoreCase(CASE_INSENSITIVE_ID.getValue(BraveAccessor.traceContext(span.context()))))
 				.allMatch(span -> NOT_PROPAGATED_HEADER.getValue(BraveAccessor.traceContext(span.context())) == null);
 	}
 

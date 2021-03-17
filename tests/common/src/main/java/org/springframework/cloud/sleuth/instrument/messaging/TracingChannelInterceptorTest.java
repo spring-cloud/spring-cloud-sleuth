@@ -381,8 +381,7 @@ public abstract class TracingChannelInterceptorTest implements TestTracingAwareS
 		Message<?> actualMessage = channel.receive();
 
 		assertThat(actualMessage.getHeaders()).isNotEmpty();
-		LinkedMultiValueMap<String, String> actualNativeHeaders = (LinkedMultiValueMap) actualMessage.getHeaders()
-				.get(NATIVE_HEADERS);
+		LinkedMultiValueMap<String, String> actualNativeHeaders = (LinkedMultiValueMap) actualMessage.getHeaders().get(NATIVE_HEADERS);
 		assertThat(actualNativeHeaders).isNotEmpty();
 		assertThat(actualNativeHeaders.get("not-propagated-header")).isNull();
 		assertThat(actualNativeHeaders.get("Foo-Id")).isEqualTo(singletonList("123"));

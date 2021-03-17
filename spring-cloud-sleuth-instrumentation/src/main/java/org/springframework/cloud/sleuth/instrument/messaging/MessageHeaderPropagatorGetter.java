@@ -114,5 +114,4 @@ public class MessageHeaderPropagatorGetter implements Propagator.Getter<MessageH
 	public String toString() {
 		return "MessageHeaderPropagatorGetter{}";
 	}
-
 }
