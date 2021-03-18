@@ -16,6 +16,7 @@
 
 package integration;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -107,16 +108,19 @@ public class MessagingApplicationTests extends AbstractIntegrationTest {
 	}
 
 	private void thenThereIsAtLeastOneTagWithKey(String key) {
-		then(this.testSpanHandler.spans.stream().map(MutableSpan::tags).flatMap(m -> m.keySet().stream())
-				.anyMatch(b -> b.equals(key))).isTrue();
+		then(spans().stream().map(MutableSpan::tags).flatMap(m -> m.keySet().stream()).anyMatch(b -> b.equals(key)))
+				.isTrue();
+	}
+
+	private List<MutableSpan> spans() {
+		return new ArrayList<>(this.testSpanHandler.spans);
 	}
 
 	private void thenAllSpansHaveTraceIdEqualTo(long traceId) {
 		String traceIdHex = Long.toHexString(traceId);
-		log.info("Stored spans: [\n"
-				+ this.testSpanHandler.spans.stream().map(MutableSpan::toString).collect(Collectors.joining("\n"))
+		log.info("Stored spans: [\n" + spans().stream().map(MutableSpan::toString).collect(Collectors.joining("\n"))
 				+ "\n]");
-		then(this.testSpanHandler.spans.stream().filter(span -> !span.traceId().equals(SpanUtil.idToHex(traceId)))
+		then(spans().stream().filter(span -> !span.traceId().equals(SpanUtil.idToHex(traceId)))
 				.collect(Collectors.toList())).describedAs("All spans have same trace id [" + traceIdHex + "]")
 						.isEmpty();
 	}
@@ -130,8 +134,8 @@ public class MessagingApplicationTests extends AbstractIntegrationTest {
 		// "http:/parent/" -> "message:messages" -> "http:/foo" (CS + CR) -> "http:/foo"
 		// (SS)
 		thenAllSpansArePresent(firstHttpSpan, eventSpans, lastHttpSpansParent, eventSentSpan, producerSpan);
-		List<MutableSpan> spans = this.testSpanHandler.spans;
-		then(spans).as("There were 7 spans").hasSize(7);
+		List<MutableSpan> spans = spans();
+		then(spans).as("There were 6 spans").hasSize(6);
 		log.info("Checking the parent child structure");
 		List<Optional<MutableSpan>> parentChild = spans.stream().filter(span -> span.parentId() != null).map(span -> {
 			Optional<MutableSpan> any = spans.stream().filter(span1 -> span1.id().equals(span.parentId())).findAny();
@@ -146,21 +150,20 @@ public class MessagingApplicationTests extends AbstractIntegrationTest {
 	}
 
 	private Optional<MutableSpan> findLastHttpSpansParent() {
-		return this.testSpanHandler.spans.stream().filter(span -> "GET /".equals(span.name()) && span.kind() != null)
-				.findFirst();
+		return spans().stream().filter(span -> "GET /".equals(span.name()) && span.kind() != null).findFirst();
 	}
 
 	private Optional<MutableSpan> findSpanWithKind(Span.Kind kind) {
-		return this.testSpanHandler.spans.stream().filter(span -> kind.equals(span.kind())).findFirst();
+		return spans().stream().filter(span -> kind.equals(span.kind())).findFirst();
 	}
 
 	private List<MutableSpan> findAllEventRelatedSpans() {
-		return this.testSpanHandler.spans.stream().filter(span -> "send".equals(span.name()) && span.parentId() != null)
+		return spans().stream().filter(span -> "send".equals(span.name()) && span.parentId() != null)
 				.collect(Collectors.toList());
 	}
 
 	private Optional<MutableSpan> findFirstHttpRequestSpan() {
-		return this.testSpanHandler.spans.stream()
+		return spans().stream()
 				// home is the name of the method
 				.filter(span -> span.tags().values().stream().anyMatch("home"::equals)).findFirst();
 	}
@@ -174,8 +177,7 @@ public class MessagingApplicationTests extends AbstractIntegrationTest {
 		log.info("Event sent span " + eventSentSpan);
 		log.info("Event received span " + eventReceivedSpan);
 		log.info("Last http span " + lastHttpSpan);
-		log.info("All found spans \n"
-				+ this.testSpanHandler.spans.stream().map(MutableSpan::toString).collect(Collectors.joining("\n")));
+		log.info("All found spans \n" + spans().stream().map(MutableSpan::toString).collect(Collectors.joining("\n")));
 		then(firstHttpSpan.isPresent()).isTrue();
 		then(eventSpans).isNotEmpty();
 		then(eventSentSpan.isPresent()).isTrue();

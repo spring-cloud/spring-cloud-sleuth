@@ -16,6 +16,7 @@
 
 package org.springframework.cloud.sleuth.brave.bridge;
 
+import java.util.AbstractMap;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -66,32 +67,43 @@ public class CompositePropagationFactorySupplier implements PropagationFactorySu
 
 class CompositePropagationFactory extends Propagation.Factory implements Propagation<String> {
 
-	private final Map<PropagationType, Propagation<String>> mapping = new HashMap<>();
+	private final Map<PropagationType, Map.Entry<Propagation.Factory, Propagation<String>>> mapping = new HashMap<>();
 
 	private final List<PropagationType> types;
 
 	CompositePropagationFactory(BeanFactory beanFactory, BraveBaggageManager braveBaggageManager,
 			List<String> localFields, List<PropagationType> types) {
 		this.types = types;
-		this.mapping.put(PropagationType.AWS, AWSPropagation.FACTORY.get());
+		this.mapping.put(PropagationType.AWS,
+				new AbstractMap.SimpleEntry<>(AWSPropagation.FACTORY, AWSPropagation.FACTORY.get()));
 		// Note: Versions <2.2.3 use injectFormat(MULTI) for non-remote (ex
 		// spring-messaging)
 		// See #1643
-		this.mapping.put(PropagationType.B3,
-				B3Propagation.newFactoryBuilder().injectFormat(B3Propagation.Format.SINGLE_NO_PARENT).build().get());
-		this.mapping.put(PropagationType.W3C, new W3CPropagation(braveBaggageManager, localFields));
-		this.mapping.put(PropagationType.CUSTOM, new LazyPropagation(beanFactory.getBeanProvider(Propagation.class)));
+		Factory b3Factory = b3Factory();
+		this.mapping.put(PropagationType.B3, new AbstractMap.SimpleEntry<>(b3Factory, b3Factory.get()));
+		W3CPropagation w3CPropagation = new W3CPropagation(braveBaggageManager, localFields);
+		this.mapping.put(PropagationType.W3C, new AbstractMap.SimpleEntry<>(w3CPropagation, w3CPropagation.get()));
+		LazyPropagationFactory lazyPropagationFactory = new LazyPropagationFactory(
+				beanFactory.getBeanProvider(Factory.class));
+		this.mapping.put(PropagationType.CUSTOM,
+				new AbstractMap.SimpleEntry<>(lazyPropagationFactory, lazyPropagationFactory.get()));
+	}
+
+	private Factory b3Factory() {
+		return B3Propagation.newFactoryBuilder().injectFormat(B3Propagation.Format.SINGLE_NO_PARENT).build();
 	}
 
 	@Override
 	public List<String> keys() {
-		return this.types.stream().map(this.mapping::get).flatMap(p -> p.keys().stream()).collect(Collectors.toList());
+		return this.types.stream().map(this.mapping::get).flatMap(p -> p.getValue().keys().stream())
+				.collect(Collectors.toList());
 	}
 
 	@Override
 	public <R> TraceContext.Injector<R> injector(Setter<R, String> setter) {
 		return (traceContext, request) -> {
-			this.types.stream().map(this.mapping::get).forEach(p -> p.injector(setter).inject(traceContext, request));
+			this.types.stream().map(this.mapping::get)
+					.forEach(p -> p.getValue().injector(setter).inject(traceContext, request));
 		};
 	}
 
@@ -99,7 +111,11 @@ class CompositePropagationFactory extends Propagation.Factory implements Propaga
 	public <R> TraceContext.Extractor<R> extractor(Getter<R, String> getter) {
 		return request -> {
 			for (PropagationType type : this.types) {
-				Propagation<String> propagator = this.mapping.get(type);
+				Map.Entry<Factory, Propagation<String>> entry = this.mapping.get(type);
+				if (entry == null) {
+					continue;
+				}
+				Propagation<String> propagator = entry.getValue();
 				if (propagator == null || propagator == NoOpPropagation.INSTANCE) {
 					continue;
 				}
@@ -117,33 +133,112 @@ class CompositePropagationFactory extends Propagation.Factory implements Propaga
 		return StringPropagationAdapter.create(this, keyFactory);
 	}
 
+	@Override
+	public boolean supportsJoin() {
+		return this.types.stream().map(this.mapping::get).allMatch(e -> e.getKey().supportsJoin());
+	}
+
+	@Override
+	public boolean requires128BitTraceId() {
+		return this.types.stream().map(this.mapping::get).allMatch(e -> e.getKey().requires128BitTraceId());
+	}
+
+	@Override
+	public TraceContext decorate(TraceContext context) {
+		for (PropagationType type : this.types) {
+			Map.Entry<Factory, Propagation<String>> entry = this.mapping.get(type);
+			if (entry == null) {
+				continue;
+			}
+			TraceContext decorate = entry.getKey().decorate(context);
+			if (decorate != context) {
+				return decorate;
+			}
+		}
+		return super.decorate(context);
+	}
+
 	@SuppressWarnings("unchecked")
-	private static final class LazyPropagation implements Propagation<String> {
+	private static final class LazyPropagationFactory extends Propagation.Factory {
 
-		private final ObjectProvider<Propagation> delegate;
+		private final ObjectProvider<Propagation.Factory> delegate;
 
-		private LazyPropagation(ObjectProvider<Propagation> delegate) {
+		private volatile Propagation.Factory propagationFactory;
+
+		private LazyPropagationFactory(ObjectProvider<Propagation.Factory> delegate) {
 			this.delegate = delegate;
 		}
 
-		@Override
-		public List<String> keys() {
-			return this.delegate.getIfAvailable(() -> NoOpPropagation.INSTANCE).keys();
+		private Propagation.Factory propagationFactory() {
+			if (this.propagationFactory == null) {
+				this.propagationFactory = this.delegate.getIfAvailable(() -> NoOpPropagation.INSTANCE);
+			}
+			return this.propagationFactory;
 		}
 
 		@Override
-		public <R> TraceContext.Injector<R> injector(Setter<R, String> setter) {
-			return this.delegate.getIfAvailable(() -> NoOpPropagation.INSTANCE).injector(setter);
+		public <K> Propagation<K> create(KeyFactory<K> keyFactory) {
+			return propagationFactory().create(keyFactory);
 		}
 
 		@Override
-		public <R> TraceContext.Extractor<R> extractor(Getter<R, String> getter) {
-			return this.delegate.getIfAvailable(() -> NoOpPropagation.INSTANCE).extractor(getter);
+		public boolean supportsJoin() {
+			return propagationFactory().supportsJoin();
+		}
+
+		@Override
+		public boolean requires128BitTraceId() {
+			return propagationFactory().requires128BitTraceId();
+		}
+
+		@Override
+		public Propagation<String> get() {
+			return new LazyPropagation(this);
+		}
+
+		@Override
+		public TraceContext decorate(TraceContext context) {
+			return propagationFactory().decorate(context);
 		}
 
 	}
 
-	private static class NoOpPropagation implements Propagation<String> {
+	@SuppressWarnings("unchecked")
+	private static final class LazyPropagation implements Propagation<String> {
+
+		private final LazyPropagationFactory delegate;
+
+		private volatile Propagation<String> propagation;
+
+		private LazyPropagation(LazyPropagationFactory delegate) {
+			this.delegate = delegate;
+		}
+
+		private Propagation<String> propagation() {
+			if (this.propagation == null) {
+				this.propagation = this.delegate.propagationFactory().get();
+			}
+			return this.propagation;
+		}
+
+		@Override
+		public List<String> keys() {
+			return propagation().keys();
+		}
+
+		@Override
+		public <R> TraceContext.Injector<R> injector(Setter<R, String> setter) {
+			return propagation().injector(setter);
+		}
+
+		@Override
+		public <R> TraceContext.Extractor<R> extractor(Getter<R, String> getter) {
+			return propagation().extractor(getter);
+		}
+
+	}
+
+	private static class NoOpPropagation extends Propagation.Factory implements Propagation<String> {
 
 		static final NoOpPropagation INSTANCE = new NoOpPropagation();
 
@@ -162,6 +257,11 @@ class CompositePropagationFactory extends Propagation.Factory implements Propaga
 		@Override
 		public <R> TraceContext.Extractor<R> extractor(Getter<R, String> getter) {
 			return request -> TraceContextOrSamplingFlags.EMPTY;
+		}
+
+		@Override
+		public <K> Propagation<K> create(KeyFactory<K> keyFactory) {
+			return StringPropagationAdapter.create(this, keyFactory);
 		}
 
 	}

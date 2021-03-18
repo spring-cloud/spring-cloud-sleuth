@@ -35,8 +35,8 @@ class BraveSpanFromContextRetrieverTests {
 
 	StrictCurrentTraceContext traceContext = StrictCurrentTraceContext.create();
 
-	Tracing tracing = Tracing.newBuilder().currentTraceContext(this.traceContext)
-			.sampler(Sampler.ALWAYS_SAMPLE).addSpanHandler(this.spans).build();
+	Tracing tracing = Tracing.newBuilder().currentTraceContext(this.traceContext).sampler(Sampler.ALWAYS_SAMPLE)
+			.addSpanHandler(this.spans).build();
 
 	brave.Tracer tracer = this.tracing.tracer();
 
@@ -60,4 +60,5 @@ class BraveSpanFromContextRetrieverTests {
 
 		then(BraveSpan.toBrave(retriever.findSpan(Context.of(TraceContext.class, span.context())))).isEqualTo(span);
 	}
+
 }

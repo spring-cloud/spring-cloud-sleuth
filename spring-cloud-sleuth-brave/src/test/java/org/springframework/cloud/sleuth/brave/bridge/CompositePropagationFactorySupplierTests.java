@@ -41,6 +41,8 @@ class CompositePropagationFactorySupplierTests {
 		BeanFactory beanFactory = Mockito.mock(BeanFactory.class);
 		Mockito.when(beanFactory.getBeanProvider(BraveBaggageManager.class))
 				.thenReturn(new SimpleObjectProvider(new BraveBaggageManager()));
+		Mockito.when(beanFactory.getBeanProvider(Propagation.Factory.class))
+				.thenReturn(new SimpleObjectProvider(new CustomTracePropagation()));
 		Mockito.when(beanFactory.getBeanProvider(Propagation.class))
 				.thenReturn(new SimpleObjectProvider(new CustomTracePropagation()));
 
