@@ -81,6 +81,8 @@ public class TraceWebFilter implements WebFilter, Ordered, ApplicationContextAwa
 
 	private int order;
 
+	private SpanFromContextRetriever spanFromContextRetriever;
+
 	@Deprecated
 	public TraceWebFilter(Tracer tracer, HttpServerHandler handler) {
 		this.tracer = tracer;
@@ -102,7 +104,7 @@ public class TraceWebFilter implements WebFilter, Ordered, ApplicationContextAwa
 		if (log.isDebugEnabled()) {
 			log.debug("Received a request to uri [" + uri + "]");
 		}
-		return new MonoWebFilterTrace(source, exchange, tracePresent, this);
+		return new MonoWebFilterTrace(source, exchange, tracePresent, this, spanFromContextRetriever());
 	}
 
 	private boolean isTracePresent() {
@@ -135,6 +137,15 @@ public class TraceWebFilter implements WebFilter, Ordered, ApplicationContextAwa
 		return this.currentTraceContext;
 	}
 
+	private SpanFromContextRetriever spanFromContextRetriever() {
+		if (this.spanFromContextRetriever == null) {
+			this.spanFromContextRetriever = this.applicationContext.getBeanProvider(SpanFromContextRetriever.class)
+					.getIfAvailable(() -> new SpanFromContextRetriever() {
+					});
+		}
+		return this.spanFromContextRetriever;
+	}
+
 	private static class MonoWebFilterTrace extends MonoOperator<Void, Void> implements TraceContextPropagator {
 
 		final ServerWebExchange exchange;
@@ -151,8 +162,10 @@ public class TraceWebFilter implements WebFilter, Ordered, ApplicationContextAwa
 
 		final CurrentTraceContext currentTraceContext;
 
+		final SpanFromContextRetriever spanFromContextRetriever;
+
 		MonoWebFilterTrace(Mono<? extends Void> source, ServerWebExchange exchange, boolean initialTracePresent,
-				TraceWebFilter parent) {
+				TraceWebFilter parent, SpanFromContextRetriever spanFromContextRetriever) {
 			super(source);
 			this.tracer = parent.tracer;
 			this.handler = parent.handler;
@@ -160,6 +173,7 @@ public class TraceWebFilter implements WebFilter, Ordered, ApplicationContextAwa
 			this.exchange = exchange;
 			this.span = exchange.getAttribute(TRACE_REQUEST_ATTR);
 			this.initialTracePresent = initialTracePresent;
+			this.spanFromContextRetriever = spanFromContextRetriever;
 		}
 
 		@Override
@@ -207,11 +221,15 @@ public class TraceWebFilter implements WebFilter, Ordered, ApplicationContextAwa
 						log.debug("Found span in attribute " + span);
 					}
 				}
-				else {
+				span = this.spanFromContextRetriever.findSpan(c);
+				if (this.span == null && span == null) {
 					span = this.handler.handleReceive(new WrappedRequest(this.exchange.getRequest()));
 					if (log.isDebugEnabled()) {
 						log.debug("Handled receive of span " + span);
 					}
+				}
+				else if (log.isDebugEnabled()) {
+					log.debug("Found tracer specific span in reactor context [" + span + "]");
 				}
 				this.exchange.getAttributes().put(TRACE_REQUEST_ATTR, span);
 			}
