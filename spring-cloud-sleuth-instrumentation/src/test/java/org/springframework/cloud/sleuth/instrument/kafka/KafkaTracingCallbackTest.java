@@ -16,6 +16,47 @@
 
 package org.springframework.cloud.sleuth.instrument.kafka;
 
+import org.apache.kafka.clients.producer.Callback;
+import org.apache.kafka.clients.producer.RecordMetadata;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
+import org.mockito.Mockito;
+import org.mockito.junit.jupiter.MockitoExtension;
+
+import org.springframework.cloud.sleuth.Span;
+import org.springframework.cloud.sleuth.Tracer;
+
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.isNull;
+
+@ExtendWith(MockitoExtension.class)
 public class KafkaTracingCallbackTest {
+
+	@Mock
+	Tracer tracer;
+
+	@Mock
+	Span span;
+
+	@Mock
+	Callback callback;
+
+
+	@Test
+	void should_call_on_completion_on_user_callback_success() {
+		KafkaTracingCallback tracingCallback = new KafkaTracingCallback(callback, tracer, span);
+		RecordMetadata recordMetadata = new RecordMetadata(null, 0, 0, 0, 0L, 0, 0);
+		tracingCallback.onCompletion(recordMetadata, null);
+		Mockito.verify(callback).onCompletion(eq(recordMetadata), isNull());
+	}
+
+	@Test
+	void should_call_on_completion_on_user_callback_error() {
+		KafkaTracingCallback tracingCallback = new KafkaTracingCallback(callback, tracer, span);
+		tracingCallback.onCompletion(null, new RuntimeException());
+		Mockito.verify(callback).onCompletion(isNull(), any(RuntimeException.class));
+	}
 
 }
