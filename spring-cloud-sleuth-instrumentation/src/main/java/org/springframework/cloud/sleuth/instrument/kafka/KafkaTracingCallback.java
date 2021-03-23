@@ -43,13 +43,14 @@ public class KafkaTracingCallback implements Callback {
 	@Override
 	public void onCompletion(RecordMetadata recordMetadata, Exception e) {
 		try (Tracer.SpanInScope spanInScope = tracer.withSpan(this.span)) {
-			log.info("In callback for span " + tracer.currentSpan().context().spanId());
 			if (this.callback != null) {
 				this.callback.onCompletion(recordMetadata, e);
 			}
 		}
-		finally { // TODO: Add error handling
-			// this.span.error();
+		finally {
+			if (e != null) {
+				this.span.error(e);
+			}
 			this.span.end();
 		}
 	}

@@ -103,7 +103,6 @@ public class TracingKafkaProducer<K, V> implements Producer<K, V> {
 		Span span = spanBuilder.start();
 		this.propagator.inject(span.context(), producerRecord, this.injector);
 		try (Tracer.SpanInScope spanInScope = tracer.withSpan(span)) {
-			log.info("Current span: " + tracer.currentSpan().context().spanId());
 			return this.delegate.send(producerRecord, new KafkaTracingCallback(callback, tracer, span));
 		}
 	}

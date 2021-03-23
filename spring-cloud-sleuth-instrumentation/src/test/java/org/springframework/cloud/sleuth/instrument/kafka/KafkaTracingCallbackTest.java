@@ -16,21 +16,6 @@
 
 package org.springframework.cloud.sleuth.instrument.kafka;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.apache.kafka.clients.producer.ProducerRecord;
-
-import org.springframework.cloud.sleuth.propagation.Propagator;
-
-public class TracingKafkaPropagatorSetter implements Propagator.Setter<ProducerRecord<?, ?>> {
-
-	private static final Log log = LogFactory.getLog(TracingKafkaPropagatorSetter.class);
-
-	@Override
-	public void set(ProducerRecord<?, ?> carrier, String key, String value) {
-		if (carrier != null) {
-			carrier.headers().add(key, value.getBytes());
-		}
-	}
+public class KafkaTracingCallbackTest {
 
 }
