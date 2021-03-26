@@ -86,6 +86,8 @@
 		<dependency>
 			<groupId>org.springframework.cloud</groupId>
 			<artifactId>spring-cloud-stream</artifactId>
+			<!-- TODO: why is this needed? -->
+			<version>${spring-cloud-stream.version}</version>
 			<optional>true</optional>
 		</dependency>
 		<dependency>
