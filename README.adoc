@@ -261,10 +261,10 @@ Consider the following example of a Logback configuration file (named https://gi
 <?xml version="1.0" encoding="UTF-8"?>
 <configuration>
     <include resource="org/springframework/boot/logging/logback/defaults.xml"/>
-    ​
+
     <springProperty scope="context" name="springAppName" source="spring.application.name"/>
     <!-- Example for logging into the build folder of your project -->
-    <property name="LOG_FILE" value="${BUILD_FOLDER:-build}/${springAppName}"/>​
+    <property name="LOG_FILE" value="${BUILD_FOLDER:-build}/${springAppName}"/>
 
     <!-- You can override this to have a custom pattern -->
     <property name="CONSOLE_LOG_PATTERN"
@@ -282,7 +282,7 @@ Consider the following example of a Logback configuration file (named https://gi
         </encoder>
     </appender>
 
-    <!-- Appender to log to file -->​
+    <!-- Appender to log to file -->
     <appender name="flatfile" class="ch.qos.logback.core.rolling.RollingFileAppender">
         <file>${LOG_FILE}</file>
         <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
@@ -294,7 +294,7 @@ Consider the following example of a Logback configuration file (named https://gi
             <charset>utf8</charset>
         </encoder>
     </appender>
-    ​
+
     <!-- Appender to log to file in a JSON format -->
     <appender name="logstash" class="ch.qos.logback.core.rolling.RollingFileAppender">
         <file>${LOG_FILE}.json</file>
@@ -310,6 +310,7 @@ Consider the following example of a Logback configuration file (named https://gi
                 <pattern>
                     <pattern>
                         {
+                        "timestamp": "@timestamp",
                         "severity": "%level",
                         "service": "${springAppName:-}",
                         "trace": "%X{traceId:-}",
@@ -325,7 +326,48 @@ Consider the following example of a Logback configuration file (named https://gi
             </providers>
         </encoder>
     </appender>
-    ​
+
+    <springProfile name="logzio">
+        <!-- Use shutdownHook so that we can close gracefully and finish the log drain -->
+        <shutdownHook class="ch.qos.logback.core.hook.DelayingShutdownHook"/>
+        <appender name="LogzioLogbackAppender" class="io.logz.logback.LogzioLogbackAppender">
+            <token>${LOGZ_IO_API_TOKEN}</token>
+            <logzioUrl>https://listener.logz.io:8071</logzioUrl>
+            <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+                <level>INFO</level>
+            </filter>
+            <debug>true</debug>
+            <encoder class="net.logstash.logback.encoder.LoggingEventCompositeJsonEncoder">
+                <providers>
+                    <timestamp>
+                        <timeZone>UTC</timeZone>
+                    </timestamp>
+                    <pattern>
+                        <pattern>
+                            {
+                            "timestamp": "@timestamp",
+                            "severity": "%level",
+                            "service": "${springAppName:-}",
+                            "trace": "%X{traceId:-}",
+                            "span": "%X{spanId:-}",
+                            "baggage": "%X{key:-}",
+                            "pid": "${PID:-}",
+                            "thread": "%thread",
+                            "class": "%logger{40}",
+                            "rest": "%message"
+                            }
+                        </pattern>
+                    </pattern>
+                </providers>
+            </encoder>
+        </appender>
+
+        <root level="info">
+            <!-- IMPORTANT: make sure to include this line, otherwise the appender won't be used -->
+            <appender-ref ref="LogzioLogbackAppender"/>
+        </root>
+    </springProfile>
+
     <root level="INFO">
         <appender-ref ref="console"/>
         <!-- uncomment this to have also JSON logs -->
@@ -714,7 +756,7 @@ If you do not use SLF4J, this pattern is NOT automatically applied.
 
 == Building
 
-:jdkversion: 1.7
+:jdkversion: 1.8
 
 === Basic Compile and Test
 

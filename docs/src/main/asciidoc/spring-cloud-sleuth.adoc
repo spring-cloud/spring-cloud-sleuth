@@ -842,6 +842,10 @@ Running the preceding method with a value of `15` leads to setting a tag with a 
 
 == Customizations
 
+=== Disabling Default Logging Pattern
+
+Spring Cloud Sleuth sets a default logging pattern. To disable it set the `spring.sleuth.default-logging-pattern-enabled` property to `false`.
+
 === Customizers
 
 With Brave 5.7 you have various options of providing customizers for your project. Brave ships with

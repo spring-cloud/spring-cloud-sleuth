@@ -77,6 +77,12 @@
       "type": "java.lang.Boolean",
       "description": "Enable tracing of RPC.",
       "defaultValue": true
+    },
+    {
+      "name": "spring.sleuth.default-logging-pattern-enabled",
+      "type": "java.lang.Boolean",
+      "description": "Enable setting of a default logging pattern.",
+      "defaultValue": true
     }
   ]
 }
