@@ -54,7 +54,7 @@ class ZipkinRestTemplateSenderConfiguration {
 			ZipkinUrlExtractor extractor) {
 		RestTemplate restTemplate = new ZipkinRestTemplateWrapper(zipkin, extractor);
 		restTemplate = zipkinRestTemplateCustomizer.customizeTemplate(restTemplate);
-		return new RestTemplateSender(restTemplate, zipkin.getBaseUrl(), zipkin.getEncoder());
+		return new RestTemplateSender(restTemplate, zipkin.getBaseUrl(), zipkin.getApiPath(), zipkin.getEncoder());
 	}
 
 	@Bean

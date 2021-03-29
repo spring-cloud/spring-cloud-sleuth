@@ -62,6 +62,7 @@
 |spring.sleuth.web.webclient.enabled | `true` | Enable tracing instrumentation for WebClient.
 |spring.zipkin.activemq.message-max-bytes | `100000` | Maximum number of bytes for a given message with spans sent to Zipkin over ActiveMQ.
 |spring.zipkin.activemq.queue | `zipkin` | Name of the ActiveMQ queue where spans should be sent to Zipkin.
+|spring.zipkin.api-path |  | The API path to append to baseUrl (above) as suffix. This applies if you use other monitoring tools, such as New Relic. The trace API doesn't need the API path, so you can set it to blank ("") in the configuration.
 |spring.zipkin.base-url | `http://localhost:9411/` | URL of the zipkin query server instance. You can also provide the service id of the Zipkin server if Zipkin's registered in service discovery (e.g. https://zipkinserver/).
 |spring.zipkin.compression.enabled | `false` | 
 |spring.zipkin.discovery-client-enabled |  | If set to {@code false}, will treat the {@link ZipkinProperties#baseUrl} as a URL always.

@@ -19,6 +19,7 @@ package org.springframework.cloud.sleuth.zipkin2;
 import java.io.IOException;
 import java.net.URI;
 import java.util.List;
+import java.util.Objects;
 
 import zipkin2.Call;
 import zipkin2.Callback;
@@ -59,25 +60,43 @@ public class RestTemplateSender extends Sender {
 	 */
 	transient boolean closeCalled;
 
+	@Deprecated
 	public RestTemplateSender(RestTemplate restTemplate, String baseUrl, BytesEncoder<Span> encoder) {
+		this(restTemplate, baseUrl, "", encoder);
+	}
+
+	public RestTemplateSender(RestTemplate restTemplate, String baseUrl, String apiPath, BytesEncoder<Span> encoder) {
 		this.restTemplate = restTemplate;
 		this.encoding = encoder.encoding();
 		if (encoder.equals(JSON_V2)) {
 			this.mediaType = MediaType.APPLICATION_JSON;
-			this.url = baseUrl + (baseUrl.endsWith("/") ? "" : "/") + "api/v2/spans";
+			this.url = buildUrlWithCustomPathIfNecessary(baseUrl, apiPath,
+					baseUrl + (baseUrl.endsWith("/") ? "" : "/") + "api/v2/spans");
 		}
 		else if (this.encoding == Encoding.PROTO3) {
 			this.mediaType = MediaType.parseMediaType("application/x-protobuf");
-			this.url = baseUrl + (baseUrl.endsWith("/") ? "" : "/") + "api/v2/spans";
+			this.url = buildUrlWithCustomPathIfNecessary(baseUrl, apiPath,
+					baseUrl + (baseUrl.endsWith("/") ? "" : "/") + "api/v2/spans");
 		}
 		else if (this.encoding == Encoding.JSON) {
 			this.mediaType = MediaType.APPLICATION_JSON;
-			this.url = baseUrl + (baseUrl.endsWith("/") ? "" : "/") + "api/v1/spans";
+			this.url = buildUrlWithCustomPathIfNecessary(baseUrl, apiPath,
+					baseUrl + (baseUrl.endsWith("/") ? "" : "/") + "api/v1/spans");
 		}
 		else {
 			throw new UnsupportedOperationException("Unsupported encoding: " + this.encoding.name());
 		}
 		this.messageEncoder = BytesMessageEncoder.forEncoding(this.encoding);
+	}
+
+	private String buildUrlWithCustomPathIfNecessary(final String baseUrl, final String customApiPath,
+			final String defaultUrl) {
+		if (Objects.nonNull(customApiPath)) {
+			return baseUrl
+					+ (baseUrl.endsWith("/") || customApiPath.startsWith("/") || customApiPath.isEmpty() ? "" : "/")
+					+ customApiPath;
+		}
+		return defaultUrl;
 	}
 
 	@Override
