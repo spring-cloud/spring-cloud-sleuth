@@ -38,6 +38,7 @@ import reactor.util.context.Context;
 
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.core.Ordered;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.http.server.reactive.ServerHttpResponse;
 import org.springframework.web.method.HandlerMethod;
@@ -422,9 +423,11 @@ public final class TraceWebFilter implements WebFilter, Ordered {
 
 		@Override
 		public int statusCode() {
-			if (this.throwable != null
-					&& this.throwable instanceof ResponseStatusException) {
-				return ((ResponseStatusException) this.throwable).getStatus().value();
+			if (!this.delegate.isCommitted() && this.throwable != null) {
+				if (this.throwable instanceof ResponseStatusException) {
+					return ((ResponseStatusException) this.throwable).getStatus().value();
+				}
+				return HttpStatus.INTERNAL_SERVER_ERROR.value();
 			}
 			return delegate.getStatusCode() != null ? delegate.getStatusCode().value()
 					: 0;
