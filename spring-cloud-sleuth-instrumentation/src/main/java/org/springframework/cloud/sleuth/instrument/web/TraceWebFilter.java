@@ -417,6 +417,8 @@ public class TraceWebFilter implements WebFilter, Ordered, ApplicationContextAwa
 		public int statusCode() {
 			if (this.throwable != null && this.throwable instanceof ResponseStatusException) {
 				return ((ResponseStatusException) this.throwable).getRawStatusCode();
+			} else if (this.throwable != null) {
+				return HttpStatus.INTERNAL_SERVER_ERROR.value();
 			}
 			HttpStatus statusCode = this.delegate.getStatusCode();
 			return statusCode != null ? statusCode.value() : 0;
