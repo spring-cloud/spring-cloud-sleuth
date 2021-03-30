@@ -84,6 +84,12 @@ public class TraceWebFluxTests {
 		spans.clear();
 
 		// when
+		response = whenRequestIsSent(port, "/exception");
+		// then
+		thenSpanWithExceptionWasReported(spans, response);
+		spans.clear();
+
+		// when
 		ClientResponse nonSampledResponse = whenNonSampledRequestIsSent(port);
 		// then
 		thenNoSpanWasReported(spans, nonSampledResponse, controller2);
@@ -135,6 +141,12 @@ public class TraceWebFluxTests {
 		Awaitility.await().untilAsserted(() -> then(response.statusCode().value()).isEqualTo(404));
 		then(spans).hasSize(1);
 		then(spans.get(0).tags()).hasEntrySatisfying("http.status_code", value -> then(value).isEqualTo("404"));
+	}
+
+	private void thenSpanWithExceptionWasReported(TestSpanHandler spans, ClientResponse response) {
+		Awaitility.await().untilAsserted(() -> then(response.statusCode().value()).isEqualTo(500));
+		then(spans).hasSize(1);
+		then(spans.get(0).tags()).hasEntrySatisfying("http.status_code", value -> then(value).isEqualTo("500"));
 	}
 
 	private void thenNoSpanWasReported(TestSpanHandler spans, ClientResponse response, Controller2 controller2) {
@@ -227,6 +239,11 @@ public class TraceWebFluxTests {
 			Boolean sampled = this.tracer.currentSpan().context().sampled();
 			then(sampled).isFalse();
 			return Flux.just(sampled.toString());
+		}
+
+		@GetMapping("/exception")
+		public Flux<Void> exception() {
+			throw new RuntimeException("Exception");
 		}
 
 	}
