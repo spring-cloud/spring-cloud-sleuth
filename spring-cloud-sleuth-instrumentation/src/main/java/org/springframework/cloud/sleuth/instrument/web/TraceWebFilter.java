@@ -415,9 +415,10 @@ public class TraceWebFilter implements WebFilter, Ordered, ApplicationContextAwa
 
 		@Override
 		public int statusCode() {
-			if (this.throwable != null && this.throwable instanceof ResponseStatusException) {
-				return ((ResponseStatusException) this.throwable).getRawStatusCode();
-			} else if (this.throwable != null) {
+			if (!this.delegate.isCommitted() && this.throwable != null) {
+				if (this.throwable instanceof ResponseStatusException) {
+					return ((ResponseStatusException) this.throwable).getRawStatusCode();
+				}
 				return HttpStatus.INTERNAL_SERVER_ERROR.value();
 			}
 			HttpStatus statusCode = this.delegate.getStatusCode();
