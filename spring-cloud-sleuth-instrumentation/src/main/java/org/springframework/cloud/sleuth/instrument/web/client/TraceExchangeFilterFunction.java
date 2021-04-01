@@ -113,6 +113,9 @@ public final class TraceExchangeFilterFunction implements ExchangeFilterFunction
 			}
 			ClientRequestWrapper wrapper = new ClientRequestWrapper(this.request);
 			TraceContext parent = context.hasKey(TraceContext.class) ? context.get(TraceContext.class) : null;
+			if (parent == null) {
+				parent = this.currentTraceContext.context();
+			}
 			Span span = handler.handleSend(wrapper, parent);
 			if (log.isTraceEnabled()) {
 				log.trace("HttpClientHandler::handleSend: " + span);
