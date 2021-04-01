@@ -59,8 +59,8 @@ public class SleuthBenchmarkingStreamApplication {
 		// System.setProperty("spring.sleuth.reactor.instrumentation-type",
 		// "DECORATE_ON_LAST");
 		// System.setProperty("spring.sleuth.reactor.instrumentation-type", "MANUAL");
-		System.setProperty("spring.sleuth.reactor.instrumentation-type", "MANUAL");
-		System.setProperty("spring.sleuth.function.type", "simple");
+		System.setProperty("spring.sleuth.reactor.instrumentation-type", "DECORATE_QUEUES");
+		System.setProperty("spring.sleuth.function.type", "DECORATE_QUEUES");
 		ConfigurableApplicationContext context = SpringApplication.run(SleuthBenchmarkingStreamApplication.class, args);
 		for (int i = 0; i < 1; i++) {
 			InputDestination input = context.getBean(InputDestination.class);

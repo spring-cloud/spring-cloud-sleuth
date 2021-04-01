@@ -43,13 +43,9 @@ import org.openjdk.jmh.annotations.Threads;
 import org.openjdk.jmh.annotations.Warmup;
 
 import org.springframework.boot.SpringApplication;
-import org.springframework.cloud.sleuth.CurrentTraceContext;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.benchmarks.app.mvc.SleuthBenchmarkingSpringApp;
 import org.springframework.cloud.sleuth.benchmarks.jmh.TracerImplementation;
-import org.springframework.cloud.sleuth.benchmarks.app.mvc.controller.AsyncSimulationController;
-import org.springframework.cloud.sleuth.http.HttpServerHandler;
-import org.springframework.cloud.sleuth.instrument.web.servlet.TracingFilter;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockFilterChain;
@@ -77,20 +73,20 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @OutputTimeUnit(TimeUnit.MICROSECONDS)
 @Threads(Threads.MAX)
 @Microbenchmark
-public class HttpFilterBenchmarksTests {
+public class HttpFilterNoSleuthBenchmarksTests {
 
 	@Benchmark
-	public void filterWithSleuth(BenchmarkContext context) throws ServletException, IOException {
+	public void filterWithoutSleuth(BenchmarkContext context) throws IOException, ServletException {
 		MockHttpServletRequest request = builder().buildRequest(new MockServletContext());
 		MockHttpServletResponse response = new MockHttpServletResponse();
 		response.setContentType(MediaType.APPLICATION_JSON_VALUE);
 
-		context.tracingFilter.doFilter(request, response, new MockFilterChain());
+		context.dummyFilter.doFilter(request, response, new MockFilterChain());
 	}
 
 	@Benchmark
-	public void asyncWithSleuth(BenchmarkContext context) throws Exception {
-		performRequest(context.mockMvcForTracedController, "bar", "bar");
+	public void asyncWithoutSleuth(BenchmarkContext context) throws Exception {
+		performRequest(context.mockMvcForUntracedController, "vanilla", "vanilla");
 	}
 
 	private MockHttpServletRequestBuilder builder() {
@@ -108,30 +104,28 @@ public class HttpFilterBenchmarksTests {
 	@State(Scope.Benchmark)
 	public static class BenchmarkContext {
 
-		volatile ConfigurableApplicationContext withSleuth;
+		volatile ConfigurableApplicationContext app;
 
-		volatile TracingFilter tracingFilter;
+		volatile DummyFilter dummyFilter = new DummyFilter();
 
-		volatile MockMvc mockMvcForTracedController;
+		volatile MockMvc mockMvcForUntracedController;
 
 		@Param
 		private TracerImplementation tracerImplementation;
 
 		@Setup
 		public void setup() {
-			this.withSleuth = new SpringApplication(SleuthBenchmarkingSpringApp.class).run("--spring.jmx.enabled=false",
+			this.app = new SpringApplication(SleuthBenchmarkingSpringApp.class).run("--spring.jmx.enabled=false", "--spring.sleuth.enabled=false",
 
-					"--spring.application.name=withSleuth_" + this.tracerImplementation.name());
-			assertThat(this.withSleuth.getBeanProvider(Tracer.class).getIfAvailable(() -> null)).isNotNull();
-			this.tracingFilter = TracingFilter.create(this.withSleuth.getBean(CurrentTraceContext.class), this.withSleuth.getBean(HttpServerHandler.class));
-			this.mockMvcForTracedController = MockMvcBuilders
-					.standaloneSetup(this.withSleuth.getBean(AsyncSimulationController.class)).build();
+					"--spring.application.name=noSleuth_" + this.tracerImplementation.name());
+			assertThat(this.app.getBeanProvider(Tracer.class).getIfAvailable(() -> null)).isNull();
+			this.mockMvcForUntracedController = MockMvcBuilders.standaloneSetup(new VanillaController()).build();
 		}
 
 		@TearDown
 		public void clean() {
-			this.withSleuth.getBean(SleuthBenchmarkingSpringApp.class).clean();
-			this.withSleuth.close();
+			this.app.getBean(SleuthBenchmarkingSpringApp.class).clean();
+			this.app.close();
 		}
 
 	}

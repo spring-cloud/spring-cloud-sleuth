@@ -101,7 +101,11 @@ public class MicroBenchmarkHttpTests {
 		void run() {
 			this.webTestClient.get().uri(instrumentation.url).header("X-B3-TraceId", "4883117762eb9420")
 					.header("X-B3-SpanId", "4883117762eb9420").exchange().expectStatus().isOk();
-			assertThat(this.applicationContext.getBean(Tracer.class).currentSpan()).isNull();
+			if (this.instrumentation.name().toLowerCase().contains("nosleuth")) {
+				assertThat(this.applicationContext.getBeanProvider(Tracer.class).getIfAvailable(() -> null)).isNull();
+			} else {
+				assertThat(this.applicationContext.getBean(Tracer.class).currentSpan()).isNull();
+			}
 		}
 
 		@TearDown
