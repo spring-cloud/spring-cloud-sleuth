@@ -71,7 +71,7 @@ public class HttpClientBeanPostProcessor implements BeanPostProcessor {
 			// preparation of a redirect follow-up.
 			TracingDoOnResponse doOnResponse = new TracingDoOnResponse(springContext);
 			return ((HttpClient) bean).doOnResponseError(new TracingDoOnErrorResponse(springContext))
-					.doOnRedirect(doOnResponse).doOnResponse(doOnResponse)
+					.doOnRedirect(doOnResponse).doAfterResponseSuccess(doOnResponse)
 					.doOnRequestError(new TracingDoOnErrorRequest(springContext))
 					.doOnRequest(new TracingDoOnRequest(springContext)).mapConnect(new TracingMapConnect(() -> {
 						CurrentTraceContext ref = currentContext.get();
