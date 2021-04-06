@@ -47,6 +47,10 @@ public class Pair {
 		return new Pair("spring.sleuth.reactor.instrumentation-type", SleuthReactorProperties.InstrumentationType.DECORATE_ON_EACH.name());
 	}
 
+	public static Pair decorateQueues() {
+		return new Pair("spring.sleuth.reactor.instrumentation-type", SleuthReactorProperties.InstrumentationType.DECORATE_QUEUES.name());
+	}
+
 	public static Pair manual() {
 		return new Pair("spring.sleuth.reactor.instrumentation-type", SleuthReactorProperties.InstrumentationType.MANUAL.name());
 	}
