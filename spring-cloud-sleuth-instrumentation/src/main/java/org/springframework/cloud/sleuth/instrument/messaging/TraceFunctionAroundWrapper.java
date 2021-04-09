@@ -91,7 +91,9 @@ public class TraceFunctionAroundWrapper extends FunctionAroundWrapper
 			traceMessageHandler.afterMessageHandled(wrappedInputMessage.childSpan, throwable);
 		}
 		if (result == null) {
-			log.debug("Returned message is null - we have a consumer");
+			if (log.isDebugEnabled()) {
+				log.debug("Returned message is null - we have a consumer");
+			}
 			return null;
 		}
 		Message msgResult = toMessage(result);
@@ -111,7 +113,7 @@ public class TraceFunctionAroundWrapper extends FunctionAroundWrapper
 		return (Message) result;
 	}
 
-	private String inputDestination(String functionDefinition) {
+	String inputDestination(String functionDefinition) {
 		return this.functionToDestinationCache.computeIfAbsent(functionDefinition, s -> {
 			String bindingMappingProperty = "spring.cloud.stream.function.bindings." + s + "-in-0";
 			String bindingProperty = this.environment.containsProperty(bindingMappingProperty)
@@ -120,7 +122,7 @@ public class TraceFunctionAroundWrapper extends FunctionAroundWrapper
 		});
 	}
 
-	private String outputDestination(String functionDefinition) {
+	String outputDestination(String functionDefinition) {
 		return this.functionToDestinationCache.computeIfAbsent(functionDefinition, s -> {
 			String bindingMappingProperty = "spring.cloud.stream.function.bindings." + s + "-out-0";
 			String bindingProperty = this.environment.containsProperty(bindingMappingProperty)
@@ -131,7 +133,9 @@ public class TraceFunctionAroundWrapper extends FunctionAroundWrapper
 
 	@Override
 	public void onApplicationEvent(RefreshScopeRefreshedEvent event) {
-		log.debug("Context refreshed, will reset the cache");
+		if (log.isDebugEnabled()) {
+			log.debug("Context refreshed, will reset the cache");
+		}
 		this.functionToDestinationCache.clear();
 	}
 
