@@ -16,8 +16,14 @@
 
 package org.springframework.cloud.sleuth.instrument.messaging;
 
+import java.lang.reflect.Method;
+
 import org.junit.jupiter.api.Test;
 
+import org.springframework.context.support.GenericApplicationContext;
+import org.springframework.util.ReflectionUtils;
+
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.BDDAssertions.then;
 
 class TraceFunctionAroundWrapperTests {
@@ -31,6 +37,56 @@ class TraceFunctionAroundWrapperTests {
 		wrapper.onApplicationEvent(null);
 
 		then(wrapper.functionToDestinationCache).isEmpty();
+	}
+
+	@Test
+	void test_with_standard_bindings() throws Exception {
+		try (GenericApplicationContext context = new GenericApplicationContext()) {
+			System.setProperty("spring.cloud.stream.bindings.marcin-in-0.destination", "oleg");
+			System.setProperty("spring.cloud.stream.bindings.marcin-out-0.destination", "bob");
+			TraceFunctionAroundWrapper wrapper = new TraceFunctionAroundWrapper(context.getEnvironment(), null, null,
+					null, null);
+
+			Method inputDestinationMethod = ReflectionUtils.findMethod(TraceFunctionAroundWrapper.class,
+					"inputDestination", String.class);
+			inputDestinationMethod.setAccessible(true);
+			assertThat(inputDestinationMethod.invoke(wrapper, "marcin")).isEqualTo("oleg"); // gross
+																							// overestimation
+																							// ;)
+
+			wrapper.functionToDestinationCache.clear();
+			Method outputDestinationMethod = ReflectionUtils.findMethod(TraceFunctionAroundWrapper.class,
+					"outputDestination", String.class);
+			outputDestinationMethod.setAccessible(true);
+			assertThat(outputDestinationMethod.invoke(wrapper, "marcin")).isEqualTo("bob");
+		}
+	}
+
+	@Test
+	void test_with_remapped_bindings() throws Exception {
+		try (GenericApplicationContext context = new GenericApplicationContext()) {
+			System.setProperty("spring.cloud.stream.function.bindings.marcin-in-0", "input");
+			System.setProperty("spring.cloud.stream.bindings.input.destination", "oleg");
+			System.setProperty("spring.cloud.stream.function.bindings.marcin-out-0", "output");
+			System.setProperty("spring.cloud.stream.bindings.output.destination", "bob");
+			TraceFunctionAroundWrapper wrapper = new TraceFunctionAroundWrapper(context.getEnvironment(), null, null,
+					null, null);
+
+			Method inputDestinationMethod = ReflectionUtils.findMethod(TraceFunctionAroundWrapper.class,
+					"inputDestination", String.class);
+			inputDestinationMethod.setAccessible(true);
+			assertThat(inputDestinationMethod.invoke(wrapper, "marcin")).isEqualTo("oleg"); // that's
+																							// a
+																							// gross
+																							// overestimation
+																							// ;)
+
+			wrapper.functionToDestinationCache.clear();
+			Method outputDestinationMethod = ReflectionUtils.findMethod(TraceFunctionAroundWrapper.class,
+					"outputDestination", String.class);
+			outputDestinationMethod.setAccessible(true);
+			assertThat(outputDestinationMethod.invoke(wrapper, "marcin")).isEqualTo("bob");
+		}
 	}
 
 }
