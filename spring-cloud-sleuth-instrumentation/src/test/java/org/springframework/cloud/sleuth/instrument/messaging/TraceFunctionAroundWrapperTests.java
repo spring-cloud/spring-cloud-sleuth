@@ -41,8 +41,7 @@ class TraceFunctionAroundWrapperTests {
 		MockEnvironment mockEnvironment = new MockEnvironment();
 		mockEnvironment.setProperty("spring.cloud.stream.bindings.marcin-in-0.destination", "oleg");
 		mockEnvironment.setProperty("spring.cloud.stream.bindings.marcin-out-0.destination", "bob");
-		TraceFunctionAroundWrapper wrapper = new TraceFunctionAroundWrapper(mockEnvironment, null, null,
-				null, null);
+		TraceFunctionAroundWrapper wrapper = new TraceFunctionAroundWrapper(mockEnvironment, null, null, null, null);
 
 		assertThat(wrapper.inputDestination("marcin")).isEqualTo("oleg");
 
@@ -58,8 +57,7 @@ class TraceFunctionAroundWrapperTests {
 		mockEnvironment.setProperty("spring.cloud.stream.bindings.input.destination", "oleg");
 		mockEnvironment.setProperty("spring.cloud.stream.function.bindings.marcin-out-0", "output");
 		mockEnvironment.setProperty("spring.cloud.stream.bindings.output.destination", "bob");
-		TraceFunctionAroundWrapper wrapper = new TraceFunctionAroundWrapper(mockEnvironment, null, null,
-				null, null);
+		TraceFunctionAroundWrapper wrapper = new TraceFunctionAroundWrapper(mockEnvironment, null, null, null, null);
 
 		assertThat(wrapper.inputDestination("marcin")).isEqualTo("oleg");
 
