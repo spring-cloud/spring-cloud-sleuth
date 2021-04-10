@@ -17,36 +17,24 @@
 package org.springframework.cloud.sleuth.instrument.reactor;
 
 import java.time.Duration;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mockito;
 import org.reactivestreams.Publisher;
-import org.reactivestreams.Subscription;
 import reactor.core.CoreSubscriber;
-import reactor.core.Disposable;
-import reactor.core.Scannable;
-import reactor.core.publisher.BaseSubscriber;
-import reactor.core.publisher.ConnectableFlux;
-import reactor.core.publisher.Flux;
-import reactor.core.publisher.GroupedFlux;
 import reactor.core.publisher.Hooks;
 import reactor.core.publisher.Mono;
 import reactor.core.publisher.MonoOperator;
 import reactor.core.publisher.Operators;
-import reactor.core.publisher.ParallelFlux;
 import reactor.core.publisher.Sinks;
 import reactor.core.scheduler.Schedulers;
-import reactor.test.StepVerifier;
 import reactor.util.annotation.Nullable;
-import reactor.util.context.Context;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
+import static org.springframework.cloud.sleuth.instrument.reactor.ReactorHooksHelper.named;
 
 class ReactorHooksHelperTests {
 
@@ -114,8 +102,16 @@ class ReactorHooksHelperTests {
 
 	@Test
 	public void shouldDecorateWhenAsyncSourceAndTraceContextPropagatorThanShouldNotDecorate() {
-		Function<? super Publisher<Long>, ? extends Publisher<Long>> traceContextPropagator = ReactorHooksHelper
-				.liftPublisher(publisher -> true, (publisher, coreSubscriber) -> coreSubscriber);
+		Mono<?> syncSourceWithLifter = Mono.delay(Duration.ofMillis(10)).as(TraceContextPropagatorOperator::new);
+		boolean actual = ReactorHooksHelper.shouldDecorate(syncSourceWithLifter.map(Function.identity()));
+		assertThat(actual).isFalse();
+	}
+
+	@Test
+	public void shouldDecorateWhenAsyncSourceAndScopePassingLifterThanShouldNotDecorate() {
+		Function<? super Publisher<Long>, ? extends Publisher<Long>> traceContextPropagator = Operators.liftPublisher(
+				publisher -> true,
+				named(ReactorHooksHelper.LIFTER_NAME, (publisher, coreSubscriber) -> coreSubscriber));
 		Mono<?> syncSourceWithLifter = Mono.delay(Duration.ofMillis(10)).transform(traceContextPropagator);
 		boolean actual = ReactorHooksHelper.shouldDecorate(syncSourceWithLifter.map(Function.identity()));
 		assertThat(actual).isFalse();
@@ -134,182 +130,13 @@ class ReactorHooksHelperTests {
 		assertThat(actual).isTrue();
 	}
 
-	@Test
-	public void liftPublisherWhenFilterDiscardsThenReturnSource() {
-		Mono<Integer> source = Mono.just(1);
-		final Function<? super Publisher<Integer>, ? extends Publisher<Integer>> transformer = ReactorHooksHelper
-				.liftPublisher(p -> false, (p, s) -> s);
-		Mono<Integer> transformed = source.transform(transformer);
-		assertThat(source).isSameAs(transformed);
-	}
-
-	@Test
-	public void liftPublisherWhenFilterIsNullThenDecorate() {
-		Mono<Integer> source = Mono.just(1);
-		final Function<? super Publisher<Integer>, ? extends Publisher<Integer>> transformer = ReactorHooksHelper
-				.liftPublisher(null, (p, s) -> s);
-		Mono<Integer> transformed = source.transform(transformer);
-		assertThat(source).isNotSameAs(transformed);
-		assertThat(transformed).isInstanceOf(SleuthMonoLift.class);
-	}
-
-	@Test
-	public void liftPublisherWhenSourceMonoThenDecorateWithMono() {
-		Mono<Integer> source = Mono.just(1);
-		final Function<? super Publisher<Integer>, ? extends Publisher<Integer>> transformer = ReactorHooksHelper
-				.liftPublisher(p -> true, (p, s) -> new PlusOneSubscriber(s));
-		Mono<Integer> transformed = source.transform(transformer);
-		assertThat(source).isNotSameAs(transformed);
-		assertThat(transformed).isInstanceOf(SleuthMonoLift.class).isInstanceOf(TraceContextPropagator.class);
-
-		StepVerifier.create(transformed).expectSubscription().expectNext(2).expectComplete()
-				.verify(Duration.ofSeconds(5));
-	}
-
-	@Test
-	public void liftPublisherWhenSourceFluxThenDecorateWithFlux() {
-		Flux<Integer> source = Flux.just(1, 2, 3);
-		final Function<? super Publisher<Integer>, ? extends Publisher<Integer>> transformer = ReactorHooksHelper
-				.liftPublisher(p -> true, (p, s) -> new PlusOneSubscriber(s));
-		Flux<Integer> transformed = source.transform(transformer);
-		assertThat(source).isNotSameAs(transformed);
-		assertThat(transformed).isInstanceOf(SleuthFluxLift.class).isInstanceOf(TraceContextPropagator.class);
-
-		StepVerifier.create(transformed).expectSubscription().expectNext(2).expectNext(3).expectNext(4).expectComplete()
-				.verify(Duration.ofSeconds(5));
-	}
-
-	@SuppressWarnings({ "rawtypes", "unchecked" })
-	@Test
-	public void liftPublisherWhenSourceParallelFluxThenDecorateWithParallelFlux() {
-		ParallelFlux<Integer> source = Flux.just(1, 2, 3).parallel();
-
-		Function function = ReactorHooksHelper.liftPublisher(p -> true,
-				(p, s) -> (CoreSubscriber) new PlusOneSubscriber(s));
-
-		ParallelFlux<Integer> transformed = source.transform(function);
-		assertThat(source).isNotSameAs(transformed);
-		assertThat(transformed).isInstanceOf(SleuthParallelLift.class).isInstanceOf(TraceContextPropagator.class);
-		Flux<Integer> sorted = transformed.map(it -> it).sequential().sort();
-		StepVerifier.create(sorted).expectSubscription().expectNext(2).expectNext(3).expectNext(4).expectComplete()
-				.verify(Duration.ofSeconds(5));
-	}
-
-	@SuppressWarnings({ "rawtypes", "unchecked" })
-	@Test
-	public void liftPublisherWhenSourceConnectableFluxThenDecorateWithConnectableFlux() {
-		final AtomicBoolean sourceCanceled = new AtomicBoolean();
-		ConnectableFlux<Integer> source = Flux.just(1, 2, 3).doOnCancel(() -> sourceCanceled.set(true)).replay();
-
-		Function function = ReactorHooksHelper.liftPublisher(p -> true,
-				(p, s) -> (CoreSubscriber) new PlusOneSubscriber(s));
-
-		Flux<Integer> transformed = source.transform(function);
-		assertThat(source).isNotSameAs(transformed);
-		assertThat(transformed).isInstanceOf(SleuthConnectableLift.class).isInstanceOf(TraceContextPropagator.class);
-		final AtomicReference<Disposable> cancelSource = new AtomicReference<>();
-		Flux<Integer> autoConnect = ((ConnectableFlux<Integer>) transformed).autoConnect(1, cancelSource::set);
-
-		StepVerifier.create(autoConnect).expectSubscription().expectNext(2).expectNext(3).expectNext(4).thenCancel()
-				.verify(Duration.ofSeconds(5));
-
-		assertThat(cancelSource.get()).isNotNull();
-		cancelSource.get().dispose();
-		assertThat(sourceCanceled).isTrue();
-	}
-
-	@SuppressWarnings({ "rawtypes", "unchecked" })
-	@Test
-	public void liftPublisherWhenSourceGroupedFluxThenDecorateWithGroupedFlux() {
-		Flux<GroupedFlux<Integer, Integer>> source = Flux.just(1, 2, 3).groupBy(i -> i % 2);
-
-		Function function = ReactorHooksHelper.liftPublisher(p -> true,
-				(p, s) -> (CoreSubscriber) new PlusOneSubscriber(s));
-
-		GroupedFlux<Integer, Integer> grouped = source.filter(it -> it.key() == 1).blockFirst();
-		Flux<Integer> transformed = grouped.transform(function);
-		assertThat(grouped).isNotSameAs(transformed);
-		assertThat(transformed).isInstanceOf(SleuthGroupedLift.class).isInstanceOf(TraceContextPropagator.class);
-
-		assertThat(((GroupedFlux) transformed).key()).isEqualTo(1);
-
-		StepVerifier.create(transformed).expectSubscription().expectNext(2).expectNext(4).expectComplete()
-				.verify(Duration.ofSeconds(5));
-	}
-
-	@SuppressWarnings({ "rawtypes", "unchecked" })
-	@Test
-	public void sleuthMonoLiftWhenScanRunStyleThenSync() {
-		final Mono source = Mockito.mock(Mono.class);
-
-		SleuthMonoLift lifter = new SleuthMonoLift(source, (p, s) -> s);
-
-		assertThat(lifter.scanUnsafe(Scannable.Attr.RUN_STYLE)).isEqualTo(Scannable.Attr.RunStyle.SYNC);
-		assertThat(lifter.scanUnsafe(Scannable.Attr.PARENT)).isEqualTo(source);
-		assertThat(lifter.scanUnsafe(Scannable.Attr.PREFETCH)).isEqualTo(Integer.MAX_VALUE);
-	}
-
-	@SuppressWarnings({ "rawtypes", "unchecked" })
-	@Test
-	public void testSleuthFluxLiftScanUnsafe() {
-		final Flux source = Mockito.mock(Flux.class);
-
-		SleuthFluxLift lifter = new SleuthFluxLift(source, (p, s) -> s);
-
-		assertThat(lifter.scanUnsafe(Scannable.Attr.RUN_STYLE)).isEqualTo(Scannable.Attr.RunStyle.SYNC);
-		assertThat(lifter.scanUnsafe(Scannable.Attr.PARENT)).isEqualTo(source);
-		assertThat(lifter.scanUnsafe(Scannable.Attr.PREFETCH)).isEqualTo(lifter.getPrefetch());
-	}
-
-	@SuppressWarnings({ "rawtypes", "unchecked" })
-	@Test
-	public void testSleuthConnectableLiftScanUnsafe() {
-		final ConnectableFlux source = Mockito.mock(ConnectableFlux.class);
-		int sourcePrefetch = 1;
-		Mockito.when(source.getPrefetch()).thenReturn(sourcePrefetch);
-
-		SleuthConnectableLift lifter = new SleuthConnectableLift(source, (p, s) -> s);
-
-		assertThat(lifter.scanUnsafe(Scannable.Attr.RUN_STYLE)).isEqualTo(Scannable.Attr.RunStyle.SYNC);
-		assertThat(lifter.scanUnsafe(Scannable.Attr.PARENT)).isEqualTo(source);
-		assertThat(lifter.scanUnsafe(Scannable.Attr.PREFETCH)).isEqualTo(sourcePrefetch);
-	}
-
-	@SuppressWarnings({ "rawtypes", "unchecked" })
-	@Test
-	public void testSleuthGroupedLiftFluxScanUnsafe() {
-		final GroupedFlux source = Mockito.mock(GroupedFlux.class);
-		int sourcePrefetch = 1;
-		Mockito.when(source.getPrefetch()).thenReturn(sourcePrefetch);
-
-		SleuthGroupedLift lifter = new SleuthGroupedLift(source, (p, s) -> s);
-
-		assertThat(lifter.scanUnsafe(Scannable.Attr.RUN_STYLE)).isEqualTo(Scannable.Attr.RunStyle.SYNC);
-		assertThat(lifter.scanUnsafe(Scannable.Attr.PARENT)).isEqualTo(source);
-		assertThat(lifter.scanUnsafe(Scannable.Attr.PREFETCH)).isEqualTo(sourcePrefetch);
-	}
-
-	@SuppressWarnings({ "rawtypes", "unchecked" })
-	@Test
-	public void testSleuthParallelLiftScanUnsafe() {
-		final ParallelFlux source = Mockito.mock(ParallelFlux.class);
-		int sourcePrefetch = 1;
-		Mockito.when(source.getPrefetch()).thenReturn(sourcePrefetch);
-
-		SleuthParallelLift lifter = new SleuthParallelLift(source, (p, s) -> s);
-
-		assertThat(lifter.scanUnsafe(Scannable.Attr.RUN_STYLE)).isEqualTo(Scannable.Attr.RunStyle.SYNC);
-		assertThat(lifter.scanUnsafe(Scannable.Attr.PARENT)).isEqualTo(source);
-		assertThat(lifter.scanUnsafe(Scannable.Attr.PREFETCH)).isEqualTo(sourcePrefetch);
-	}
-
 	static class CustomMonoWithoutRunStyleOperator<O> extends MonoOperator<O, O> {
 
 		/**
 		 * Build a {@link MonoOperator} wrapper around the passed parent {@link Publisher}
 		 * @param source the {@link Publisher} to decorate
 		 */
-		protected CustomMonoWithoutRunStyleOperator(Mono<? extends O> source) {
+		CustomMonoWithoutRunStyleOperator(Mono<? extends O> source) {
 			super(source);
 		}
 
@@ -329,37 +156,29 @@ class ReactorHooksHelperTests {
 
 	}
 
-	static class PlusOneSubscriber extends BaseSubscriber<Integer> {
+	static class TraceContextPropagatorOperator<O> extends MonoOperator<O, O> implements TraceContextPropagator {
 
-		CoreSubscriber<? super Integer> actual;
-
-		PlusOneSubscriber(CoreSubscriber<? super Integer> actual) {
-			this.actual = actual;
+		/**
+		 * Build a {@link MonoOperator} wrapper around the passed parent {@link Publisher}
+		 * @param source the {@link Publisher} to decorate
+		 */
+		TraceContextPropagatorOperator(Mono<? extends O> source) {
+			super(source);
 		}
 
 		@Override
-		public Context currentContext() {
-			return actual.currentContext();
+		public void subscribe(CoreSubscriber<? super O> actual) {
+			source.subscribe(actual);
 		}
 
+		@Nullable
 		@Override
-		protected void hookOnSubscribe(Subscription subscription) {
-			actual.onSubscribe(subscription);
-		}
-
-		@Override
-		protected void hookOnNext(Integer value) {
-			actual.onNext(value + 1);
-		}
-
-		@Override
-		protected void hookOnComplete() {
-			actual.onComplete();
-		}
-
-		@Override
-		protected void hookOnError(Throwable throwable) {
-			actual.onError(throwable);
+		public Object scanUnsafe(Attr key) {
+			// just to check that it pass by instanceof
+			if (Attr.RUN_STYLE == key) {
+				return null;
+			}
+			return super.scanUnsafe(key);
 		}
 
 	}

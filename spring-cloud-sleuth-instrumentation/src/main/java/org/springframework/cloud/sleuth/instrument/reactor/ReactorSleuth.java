@@ -39,10 +39,13 @@ import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.internal.LazyBean;
 import org.springframework.context.ConfigurableApplicationContext;
 
+import static org.springframework.cloud.sleuth.instrument.reactor.ReactorHooksHelper.named;
+
 /**
  * Reactive Span pointcuts factories.
  *
  * @author Stephane Maldini
+ * @author Roman Matiushchenko
  * @since 2.0.0
  */
 // TODO: this is public as it is used out of package, but unlikely intended to be
@@ -115,7 +118,7 @@ public abstract class ReactorSleuth {
 		BiFunction<Publisher, ? super CoreSubscriber<? super T>, ? extends CoreSubscriber<? super T>> lifter = liftFunction(
 				springContext, lazyCurrentTraceContext, lazyTracer);
 
-		return ReactorHooksHelper.liftPublisher(shouldDecorate, lifter);
+		return Operators.liftPublisher(shouldDecorate, named(ReactorHooksHelper.LIFTER_NAME, lifter));
 	}
 
 	static <O> BiFunction<Publisher, ? super CoreSubscriber<? super O>, ? extends CoreSubscriber<? super O>> liftFunction(
@@ -247,7 +250,7 @@ public abstract class ReactorSleuth {
 			return scopePassingSpanSubscriber.apply(pub, sub);
 		};
 
-		return ReactorHooksHelper.liftPublisher(p -> {
+		return Operators.liftPublisher(p -> {
 			/*
 			 * this prevent double decoration when last operator in the chain is not SYNC
 			 * like {@code Mono.fromSuppler(() -> ...).subscribeOn(Schedulers.parallel())}
@@ -263,7 +266,7 @@ public abstract class ReactorSleuth {
 				}
 			}
 			return addContext;
-		}, skipIfNoTraceCtx);
+		}, named(ReactorHooksHelper.LIFTER_NAME, skipIfNoTraceCtx));
 	}
 
 	private static <T> Context context(CoreSubscriber<? super T> sub) {
