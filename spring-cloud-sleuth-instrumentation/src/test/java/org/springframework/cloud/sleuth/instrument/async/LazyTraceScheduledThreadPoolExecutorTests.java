@@ -101,7 +101,7 @@ public class LazyTraceScheduledThreadPoolExecutorTests {
 				if (JRE.currentVersion().ordinal() >= JRE.JAVA_16.ordinal()) {
 					return false;
 				}
-				return super.isMethodOverridden(originalMethod);
+				return true;
 			}
 		});
 	}
@@ -124,7 +124,7 @@ public class LazyTraceScheduledThreadPoolExecutorTests {
 				if (JRE.currentVersion().ordinal() >= JRE.JAVA_16.ordinal()) {
 					return false;
 				}
-				return super.isMethodOverridden(originalMethod);
+				return true;
 			}
 		}.finalize();
 
