@@ -90,6 +90,16 @@ public interface Span extends SpanCustomizer {
 	void abandon();
 
 	/**
+	 * Sets the remote service name for the span.
+	 * @param remoteServiceName remote service name
+	 * @return this span
+	 * @since 3.0.3
+	 */
+	default Span remoteServiceName(String remoteServiceName) {
+		return this;
+	}
+
+	/**
 	 * Type of span. Can be used to specify additional relationships between spans in
 	 * addition to a parent/child relationship.
 	 *

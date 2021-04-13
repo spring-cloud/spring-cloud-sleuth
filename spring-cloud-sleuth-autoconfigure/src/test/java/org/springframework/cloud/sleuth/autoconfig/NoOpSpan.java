@@ -72,4 +72,9 @@ class NoOpSpan implements Span {
 
 	}
 
+	@Override
+	public Span remoteServiceName(String remoteServiceName) {
+		return this;
+	}
+
 }

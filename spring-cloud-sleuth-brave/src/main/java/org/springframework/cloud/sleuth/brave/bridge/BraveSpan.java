@@ -87,6 +87,12 @@ public class BraveSpan implements Span {
 	}
 
 	@Override
+	public Span remoteServiceName(String remoteServiceName) {
+		this.delegate.remoteServiceName(remoteServiceName);
+		return this;
+	}
+
+	@Override
 	public String toString() {
 		return this.delegate != null ? this.delegate.toString() : "null";
 	}
