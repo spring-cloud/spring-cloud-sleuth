@@ -19,6 +19,7 @@ package org.springframework.cloud.sleuth.autoconfig.brave.instrument.web.client;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.Future;
+import java.util.stream.Collectors;
 
 import brave.Span;
 import brave.Tracer;
@@ -104,7 +105,7 @@ public class WebClientTests {
 
 		then(this.tracer.currentSpan()).isNull();
 		then(this.spans).isNotEmpty().extracting("traceId", String.class).containsOnly(span.context().traceIdString());
-		then(this.spans).extracting("kind.name").contains("CLIENT");
+		then(this.spans.spans().stream().map(s -> s.kind().name()).collect(Collectors.toList())).contains("CLIENT");
 	}
 
 	@Test
@@ -140,7 +141,7 @@ public class WebClientTests {
 
 		then(this.tracer.currentSpan()).isNull();
 		then(this.spans).isNotEmpty().extracting("traceId", String.class).containsOnly(span.context().traceIdString());
-		then(this.spans).extracting("kind.name").contains("CLIENT");
+		then(this.spans.spans().stream().map(s -> s.kind().name()).collect(Collectors.toList())).contains("CLIENT");
 	}
 
 	@Configuration(proxyBeanMethods = false)

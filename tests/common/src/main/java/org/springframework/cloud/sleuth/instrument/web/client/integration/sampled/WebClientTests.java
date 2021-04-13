@@ -356,7 +356,8 @@ public abstract class WebClientTests {
 		}
 		thenThereIsNoCurrentSpan();
 		then(this.customizer.isExecuted()).isTrue();
-		then(this.spans).extracting("kind.name").contains("CLIENT");
+		then(this.spans.reportedSpans().stream().filter(s -> s.getKind() != null).map(s -> s.getKind().name())
+				.collect(Collectors.toList())).contains("CLIENT");
 	}
 
 	@Test

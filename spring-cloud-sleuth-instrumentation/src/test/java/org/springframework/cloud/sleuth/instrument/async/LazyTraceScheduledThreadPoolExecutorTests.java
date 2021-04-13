@@ -16,6 +16,7 @@
 
 package org.springframework.cloud.sleuth.instrument.async;
 
+import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
@@ -34,6 +35,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import org.assertj.core.api.BDDAssertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.EnabledForJreRange;
+import org.junit.jupiter.api.condition.JRE;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
@@ -92,6 +95,14 @@ public class LazyTraceScheduledThreadPoolExecutorTests {
 			boolean isContextUnusable() {
 				return false;
 			}
+
+			@Override
+			boolean isMethodOverridden(Method originalMethod) {
+				if (JRE.currentVersion().ordinal() >= JRE.JAVA_16.ordinal()) {
+					return false;
+				}
+				return super.isMethodOverridden(originalMethod);
+			}
 		});
 	}
 
@@ -107,13 +118,22 @@ public class LazyTraceScheduledThreadPoolExecutorTests {
 		};
 		BeanFactory beanFactory = mock(BeanFactory.class);
 
-		new LazyTraceScheduledThreadPoolExecutor(10, beanFactory, executor, null).finalize();
+		new LazyTraceScheduledThreadPoolExecutor(10, beanFactory, executor, null) {
+			@Override
+			boolean isMethodOverridden(Method originalMethod) {
+				if (JRE.currentVersion().ordinal() >= JRE.JAVA_16.ordinal()) {
+					return false;
+				}
+				return super.isMethodOverridden(originalMethod);
+			}
+		}.finalize();
 
 		BDDAssertions.then(wasCalled).isFalse();
 		BDDAssertions.then(executor.isShutdown()).isFalse();
 	}
 
 	@Test
+	@EnabledForJreRange(min = JRE.JAVA_8, max = JRE.JAVA_15)
 	public void should_delegate_decorateTask_with_runnable() {
 		final Runnable runnable = mock(Runnable.class);
 		final RunnableScheduledFuture<String> value = mock(RunnableScheduledFuture.class);
@@ -128,6 +148,7 @@ public class LazyTraceScheduledThreadPoolExecutorTests {
 	}
 
 	@Test
+	@EnabledForJreRange(min = JRE.JAVA_8, max = JRE.JAVA_15)
 	public void should_delegate_decorateTask_with_callable() {
 		final Callable callable = mock(Callable.class);
 		final RunnableScheduledFuture<String> value = mock(RunnableScheduledFuture.class);
@@ -582,6 +603,7 @@ public class LazyTraceScheduledThreadPoolExecutorTests {
 	}
 
 	@Test
+	@EnabledForJreRange(min = JRE.JAVA_8, max = JRE.JAVA_15)
 	public void should_delegate_beforeExecute() {
 		final Thread thread = mock(Thread.class);
 		final Runnable expected = mock(Runnable.class);
@@ -593,6 +615,7 @@ public class LazyTraceScheduledThreadPoolExecutorTests {
 	}
 
 	@Test
+	@EnabledForJreRange(min = JRE.JAVA_8, max = JRE.JAVA_15)
 	public void should_delegate_afterExecute() {
 		final Throwable throwable = mock(Throwable.class);
 		final Runnable expected = mock(Runnable.class);
@@ -604,6 +627,7 @@ public class LazyTraceScheduledThreadPoolExecutorTests {
 	}
 
 	@Test
+	@EnabledForJreRange(min = JRE.JAVA_8, max = JRE.JAVA_15)
 	public void should_delegate_terminated() {
 		executor.terminated();
 
@@ -611,6 +635,7 @@ public class LazyTraceScheduledThreadPoolExecutorTests {
 	}
 
 	@Test
+	@EnabledForJreRange(min = JRE.JAVA_8, max = JRE.JAVA_15)
 	public void should_delegate_newTaskForRunnable() {
 		final Runnable runnable = mock(Runnable.class);
 		final String expected = "testing";
@@ -625,6 +650,7 @@ public class LazyTraceScheduledThreadPoolExecutorTests {
 	}
 
 	@Test
+	@EnabledForJreRange(min = JRE.JAVA_8, max = JRE.JAVA_15)
 	public void should_delegate_newTaskForCallable() {
 		final Callable<String> callable = mock(Callable.class);
 		final RunnableFuture<String> expected = mock(RunnableFuture.class);
