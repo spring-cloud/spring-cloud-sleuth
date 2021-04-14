@@ -39,6 +39,7 @@ import org.junit.jupiter.api.condition.EnabledForJreRange;
 import org.junit.jupiter.api.condition.JRE;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
+import org.mockito.BDDMockito;
 import org.mockito.Captor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -532,7 +533,7 @@ public class LazyTraceScheduledThreadPoolExecutorTests {
 
 		executor.remove(expected);
 
-		verify(delegate).remove(expected);
+		verify(delegate).remove(BDDMockito.isA(TraceRunnable.class));
 	}
 
 	@Test

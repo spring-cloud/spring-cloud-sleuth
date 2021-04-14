@@ -343,7 +343,7 @@ public abstract class LazyTraceThreadPoolTaskSchedulerTests implements TestTraci
 		};
 		this.executor.newThread(runnable);
 
-		BDDMockito.then(this.delegate).should().newThread(runnable);
+		BDDMockito.then(this.delegate).should().newThread(BDDMockito.isA(TraceRunnable.class));
 	}
 
 	@Test
@@ -409,7 +409,7 @@ public abstract class LazyTraceThreadPoolTaskSchedulerTests implements TestTraci
 		};
 		this.executor.createThread(r);
 
-		BDDMockito.then(this.delegate).should().createThread(r);
+		BDDMockito.then(this.delegate).should().createThread(BDDMockito.isA(TraceRunnable.class));
 	}
 
 	@Test

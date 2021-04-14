@@ -66,8 +66,6 @@ class LazyTraceScheduledThreadPoolExecutor extends ScheduledThreadPoolExecutor {
 
 	private final Method decorateTaskCallable;
 
-	private final Method finalize;
-
 	private final Method beforeExecute;
 
 	private final Method afterExecute;
@@ -94,8 +92,6 @@ class LazyTraceScheduledThreadPoolExecutor extends ScheduledThreadPoolExecutor {
 		Method decorateTaskCallable = ReflectionUtils.findMethod(ScheduledThreadPoolExecutor.class, "decorateTask",
 				Callable.class, RunnableScheduledFuture.class);
 		this.decorateTaskCallable = makeAccessibleIfNotNullAndOverridden(decorateTaskCallable);
-		Method finalize = ReflectionUtils.findMethod(ScheduledThreadPoolExecutor.class, "finalize", null);
-		this.finalize = makeAccessibleIfNotNullAndOverridden(finalize);
 		Method beforeExecute = ReflectionUtils.findMethod(ScheduledThreadPoolExecutor.class, "beforeExecute", null);
 		this.beforeExecute = makeAccessibleIfNotNullAndOverridden(beforeExecute);
 		Method afterExecute = ReflectionUtils.findMethod(ScheduledThreadPoolExecutor.class, "afterExecute", null);
@@ -118,7 +114,7 @@ class LazyTraceScheduledThreadPoolExecutor extends ScheduledThreadPoolExecutor {
 					return method;
 				}
 				catch (Throwable ex) {
-					if (ex.getClass().toString().contains("InaccessibleObjectException")) {
+					if (anyCauseIsInaccessibleObjectException(ex)) {
 						throw new IllegalStateException("The executor [" + this.delegate.getClass()
 								+ "] has overridden a method with name [" + method.getName()
 								+ "] and the object is inaccessible. You have to run your JVM with [--add-opens] switch to allow such access. Example: [--add-opens java.base/java.util.concurrent=ALL-UNNAMED].",
@@ -129,6 +125,19 @@ class LazyTraceScheduledThreadPoolExecutor extends ScheduledThreadPoolExecutor {
 			}
 		}
 		return null;
+	}
+
+	private boolean anyCauseIsInaccessibleObjectException(Throwable t) {
+		Throwable parent = t;
+		Throwable cause = t.getCause();
+		while (cause != null && cause != parent) {
+			if (cause.getClass().toString().contains("InaccessibleObjectException")) {
+				return true;
+			}
+			parent = cause;
+			cause = parent.getCause();
+		}
+		return false;
 	}
 
 	boolean isMethodOverridden(Method originalMethod) {
@@ -152,8 +161,6 @@ class LazyTraceScheduledThreadPoolExecutor extends ScheduledThreadPoolExecutor {
 		Method decorateTaskCallable = ReflectionUtils.findMethod(ScheduledThreadPoolExecutor.class, "decorateTask",
 				Callable.class, RunnableScheduledFuture.class);
 		this.decorateTaskCallable = makeAccessibleIfNotNullAndOverridden(decorateTaskCallable);
-		Method finalize = ReflectionUtils.findMethod(ScheduledThreadPoolExecutor.class, "finalize", null);
-		this.finalize = makeAccessibleIfNotNullAndOverridden(finalize);
 		Method beforeExecute = ReflectionUtils.findMethod(ScheduledThreadPoolExecutor.class, "beforeExecute", null);
 		this.beforeExecute = makeAccessibleIfNotNullAndOverridden(beforeExecute);
 		Method afterExecute = ReflectionUtils.findMethod(ScheduledThreadPoolExecutor.class, "afterExecute", null);
@@ -387,7 +394,7 @@ class LazyTraceScheduledThreadPoolExecutor extends ScheduledThreadPoolExecutor {
 
 	@Override
 	public boolean remove(Runnable task) {
-		return this.delegate.remove(task);
+		return this.delegate.remove(traceRunnableWhenContextReady(task));
 	}
 
 	@Override

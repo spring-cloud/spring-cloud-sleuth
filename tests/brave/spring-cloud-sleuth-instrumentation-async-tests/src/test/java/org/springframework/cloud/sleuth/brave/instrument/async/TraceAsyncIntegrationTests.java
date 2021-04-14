@@ -78,9 +78,8 @@ public class TraceAsyncIntegrationTests {
 			assertThat(span.traceId()).isEqualTo(context.traceIdString());
 		}
 		finally {
-			parent.finish();
+			parent.abandon();
 		}
-
 	}
 
 	@Test
@@ -100,7 +99,7 @@ public class TraceAsyncIntegrationTests {
 			assertThat(span.traceId()).isEqualTo(context.traceIdString());
 		}
 		finally {
-			parent.finish();
+			parent.abandon();
 		}
 	}
 
@@ -108,10 +107,8 @@ public class TraceAsyncIntegrationTests {
 	// We don't want that one.
 	MutableSpan takeDesirableSpan(String name) {
 		MutableSpan span1 = spans.takeLocalSpan();
-		MutableSpan span2 = spans.takeLocalSpan();
-		log.info("Two last spans [" + span2 + "] and [" + span1 + "]");
-		MutableSpan span = span1 != null && name.equals(span1.name()) ? span1
-				: span2 != null && name.equals(span2.name()) ? span2 : null;
+		log.info("Span [" + span1 + "] found");
+		MutableSpan span = span1 != null && name.equals(span1.name()) ? span1 : null;
 		assertThat(span).as("No span with name <> was found", name).isNotNull();
 		return span;
 	}

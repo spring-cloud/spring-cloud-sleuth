@@ -70,38 +70,32 @@ public class LazyTraceThreadPoolTaskExecutor extends ThreadPoolTaskExecutor {
 
 	@Override
 	public void execute(Runnable task) {
-		this.delegate.execute(ContextUtil.isContextUnusable(this.beanFactory) ? task
-				: new TraceRunnable(tracing(), spanNamer(), task, this.beanName));
+		this.delegate.execute(wrap(task));
 	}
 
 	@Override
 	public void execute(Runnable task, long startTimeout) {
-		this.delegate.execute(ContextUtil.isContextUnusable(this.beanFactory) ? task
-				: new TraceRunnable(tracing(), spanNamer(), task, this.beanName), startTimeout);
+		this.delegate.execute(wrap(task), startTimeout);
 	}
 
 	@Override
 	public Future<?> submit(Runnable task) {
-		return this.delegate.submit(ContextUtil.isContextUnusable(this.beanFactory) ? task
-				: new TraceRunnable(tracing(), spanNamer(), task, this.beanName));
+		return this.delegate.submit(wrap(task));
 	}
 
 	@Override
 	public <T> Future<T> submit(Callable<T> task) {
-		return this.delegate.submit(ContextUtil.isContextUnusable(this.beanFactory) ? task
-				: new TraceCallable<>(tracing(), spanNamer(), task, this.beanName));
+		return this.delegate.submit(wrap(task));
 	}
 
 	@Override
 	public ListenableFuture<?> submitListenable(Runnable task) {
-		return this.delegate.submitListenable(ContextUtil.isContextUnusable(this.beanFactory) ? task
-				: new TraceRunnable(tracing(), spanNamer(), task, this.beanName));
+		return this.delegate.submitListenable(wrap(task));
 	}
 
 	@Override
 	public <T> ListenableFuture<T> submitListenable(Callable<T> task) {
-		return this.delegate.submitListenable(ContextUtil.isContextUnusable(this.beanFactory) ? task
-				: new TraceCallable<>(tracing(), spanNamer(), task, this.beanName));
+		return this.delegate.submitListenable(wrap(task));
 	}
 
 	@Override
@@ -174,7 +168,23 @@ public class LazyTraceThreadPoolTaskExecutor extends ThreadPoolTaskExecutor {
 
 	@Override
 	public Thread newThread(Runnable runnable) {
-		return this.delegate.newThread(runnable);
+		return this.delegate.newThread(wrap(runnable));
+	}
+
+	private Runnable wrap(Runnable runnable) {
+		if (runnable instanceof TraceRunnable) {
+			return runnable;
+		}
+		return ContextUtil.isContextUnusable(this.beanFactory) ? runnable
+				: new TraceRunnable(tracer(), spanNamer(), runnable, this.beanName);
+	}
+
+	private <V> Callable<V> wrap(Callable<V> callable) {
+		if (callable instanceof TraceCallable) {
+			return callable;
+		}
+		return ContextUtil.isContextUnusable(this.beanFactory) ? callable
+				: new TraceCallable<>(tracer(), spanNamer(), callable, this.beanName);
 	}
 
 	@Override
@@ -224,7 +234,7 @@ public class LazyTraceThreadPoolTaskExecutor extends ThreadPoolTaskExecutor {
 
 	@Override
 	public Thread createThread(Runnable runnable) {
-		return this.delegate.createThread(runnable);
+		return this.delegate.createThread(wrap(runnable));
 	}
 
 	@Override
@@ -272,7 +282,7 @@ public class LazyTraceThreadPoolTaskExecutor extends ThreadPoolTaskExecutor {
 		this.delegate.setTaskDecorator(taskDecorator);
 	}
 
-	private Tracer tracing() {
+	private Tracer tracer() {
 		if (this.tracer == null) {
 			this.tracer = this.beanFactory.getBean(Tracer.class);
 		}
