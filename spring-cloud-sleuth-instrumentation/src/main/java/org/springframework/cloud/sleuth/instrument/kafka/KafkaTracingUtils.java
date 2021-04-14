@@ -16,21 +16,23 @@
 
 package org.springframework.cloud.sleuth.instrument.kafka;
 
-import java.util.Iterator;
-import java.util.Optional;
-
 import org.apache.kafka.clients.consumer.ConsumerRecord;
-import org.apache.kafka.common.header.Header;
 
+import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.propagation.Propagator;
 
-public class TracingKafkaPropagatorGetter implements Propagator.Getter<ConsumerRecord<?, ?>> {
+public final class KafkaTracingUtils {
 
-	@Override
-	public String get(ConsumerRecord<?, ?> carrier, String key) {
-		return Optional.ofNullable(carrier).map(ConsumerRecord::headers).map(headers -> headers.headers(key))
-				.map(Iterable::iterator).filter(Iterator::hasNext).map(Iterator::next).map(Header::value)
-				.map(String::new).orElse(null);
+	private KafkaTracingUtils() {
+	}
+
+	static <K, V> void buildAndFinishSpan(ConsumerRecord<K, V> consumerRecord, Propagator propagator,
+			Propagator.Getter<ConsumerRecord<?, ?>> extractor) {
+		Span.Builder spanBuilder = propagator.extract(consumerRecord, extractor).kind(Span.Kind.CONSUMER)
+				.name("kafka.consume").tag("kafka.topic", consumerRecord.topic())
+				.tag("kafka.offset", Long.toString(consumerRecord.offset()))
+				.tag("kafka.partition", Integer.toString(consumerRecord.partition()));
+		spanBuilder.start().end();
 	}
 
 }
