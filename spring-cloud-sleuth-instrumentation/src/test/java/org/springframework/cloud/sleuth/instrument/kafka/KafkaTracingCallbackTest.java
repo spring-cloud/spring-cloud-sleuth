@@ -43,7 +43,6 @@ public class KafkaTracingCallbackTest {
 	@Mock
 	Callback callback;
 
-
 	@Test
 	void should_call_on_completion_on_user_callback_success() {
 		KafkaTracingCallback tracingCallback = new KafkaTracingCallback(callback, tracer, span);
