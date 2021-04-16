@@ -12,6 +12,6 @@ Please provide details of the problem, including the version of Spring Cloud tha
 are using. 
 
 **Sample**
-If possible, please provide a test case or a minimal sample **Java** application that reproduces
+If possible, please provide a test case or a minimal **Maven** sample written in **Java** that reproduces
 the problem. This makes it much easier for us to diagnose the problem and to verify that
 we have fixed it.
