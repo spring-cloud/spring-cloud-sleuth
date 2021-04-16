@@ -44,13 +44,28 @@ public class TracingKafkaReceiver<K, V> implements KafkaReceiver<K, V> {
 	}
 
 	@Override
+	public Flux<ReceiverRecord<K, V>> receive(Integer integer) {
+		return buildAndFinishSpanOnNextReceiverRecord(this.delegate.receive(integer));
+	}
+
+	@Override
 	public Flux<ReceiverRecord<K, V>> receive() {
 		return buildAndFinishSpanOnNextReceiverRecord(this.delegate.receive());
 	}
 
 	@Override
+	public Flux<Flux<ConsumerRecord<K, V>>> receiveAutoAck(Integer integer) {
+		return this.delegate.receiveAutoAck(integer).map(this::buildAndFinishSpanOnNextConsumerRecord);
+	}
+
+	@Override
 	public Flux<Flux<ConsumerRecord<K, V>>> receiveAutoAck() {
 		return this.delegate.receiveAutoAck().map(this::buildAndFinishSpanOnNextConsumerRecord);
+	}
+
+	@Override
+	public Flux<ConsumerRecord<K, V>> receiveAtmostOnce(Integer integer) {
+		return this.buildAndFinishSpanOnNextConsumerRecord(this.delegate.receiveAtmostOnce(integer));
 	}
 
 	@Override
@@ -61,6 +76,12 @@ public class TracingKafkaReceiver<K, V> implements KafkaReceiver<K, V> {
 	@Override
 	public Flux<Flux<ConsumerRecord<K, V>>> receiveExactlyOnce(TransactionManager transactionManager) {
 		return this.delegate.receiveExactlyOnce(transactionManager).map(this::buildAndFinishSpanOnNextConsumerRecord);
+	}
+
+	@Override
+	public Flux<Flux<ConsumerRecord<K, V>>> receiveExactlyOnce(TransactionManager transactionManager, Integer integer) {
+		return this.delegate.receiveExactlyOnce(transactionManager, integer)
+				.map(this::buildAndFinishSpanOnNextConsumerRecord);
 	}
 
 	@Override
