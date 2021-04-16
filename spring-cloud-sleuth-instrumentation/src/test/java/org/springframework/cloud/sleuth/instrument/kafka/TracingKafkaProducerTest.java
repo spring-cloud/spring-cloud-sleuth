@@ -73,8 +73,7 @@ public class TracingKafkaProducerTest {
 		ArgumentCaptor<KafkaTracingCallback> callbackArgument = ArgumentCaptor.forClass(KafkaTracingCallback.class);
 		Mockito.verify(kafkaProducer).send(any(), callbackArgument.capture());
 		BDDAssertions.then(callbackArgument.getValue()).isNotNull();
-		BDDAssertions.then(ReflectionTestUtils.getField(callbackArgument.getValue(), "callback"))
-				.isEqualTo(callback);
+		BDDAssertions.then(ReflectionTestUtils.getField(callbackArgument.getValue(), "callback")).isEqualTo(callback);
 	}
 
 }
