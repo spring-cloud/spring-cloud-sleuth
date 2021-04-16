@@ -44,6 +44,7 @@ class TraceSupplier<T> implements Supplier<T> {
 
 	@Override
 	public T get() {
+		// TODO: This name needs to be better
 		String name = this.delegate.getClass().getSimpleName();
 		Span span = this.span.get().name(name);
 		Throwable tr = null;
