@@ -21,7 +21,7 @@ import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.propagation.Propagator;
 
-public final class KafkaTracingUtils {
+final class KafkaTracingUtils {
 
 	private KafkaTracingUtils() {
 	}

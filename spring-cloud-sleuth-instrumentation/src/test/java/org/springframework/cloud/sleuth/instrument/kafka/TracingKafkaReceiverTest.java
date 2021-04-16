@@ -51,8 +51,10 @@ public class TracingKafkaReceiverTest {
 		BDDMockito.given(kafkaReceiver.receive()).willReturn(Flux.just(receiverRecord));
 		TracingKafkaReceiver<String, String> tracingKafkaReceiver = new TracingKafkaReceiver<>(kafkaReceiver,
 				propagator, new TracingKafkaPropagatorGetter());
+
 		StepVerifier.create(tracingKafkaReceiver.receive()).expectNextMatches(Predicate.isEqual(receiverRecord))
 				.verifyComplete();
+
 		Mockito.verify(kafkaReceiver).receive();
 	}
 

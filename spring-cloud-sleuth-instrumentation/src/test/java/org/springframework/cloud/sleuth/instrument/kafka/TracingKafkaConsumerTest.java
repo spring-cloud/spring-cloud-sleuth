@@ -58,7 +58,9 @@ public class TracingKafkaConsumerTest {
 		BDDMockito.given(kafkaConsumer.poll(pollTimeout)).willReturn(records);
 		TracingKafkaConsumer<String, String> tracingKafkaConsumer = new TracingKafkaConsumer<>(kafkaConsumer,
 				propagator, new TracingKafkaPropagatorGetter());
+
 		tracingKafkaConsumer.poll(pollTimeout);
+
 		Mockito.verify(kafkaConsumer).poll(eq(pollTimeout));
 	}
 
