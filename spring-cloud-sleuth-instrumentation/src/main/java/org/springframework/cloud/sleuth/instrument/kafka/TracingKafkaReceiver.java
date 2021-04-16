@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2020 the original author or authors.
+ * Copyright 2013-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,8 +26,18 @@ import reactor.kafka.receiver.KafkaReceiver;
 import reactor.kafka.receiver.ReceiverRecord;
 import reactor.kafka.sender.TransactionManager;
 
+import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.propagation.Propagator;
 
+/**
+ * This decorates a reactive {@link KafkaReceiver} and creates and completes a
+ * {@link Span.Kind#CONSUMER} span for each record received. This span will be a child
+ * span of the one extracted from the record headers.
+ *
+ * @author Anders Clausen
+ * @author Flaviu Muresan
+ * @since 3.0.3
+ */
 public class TracingKafkaReceiver<K, V> implements KafkaReceiver<K, V> {
 
 	private final KafkaReceiver<K, V> delegate;

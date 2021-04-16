@@ -16,12 +16,16 @@
 
 package org.springframework.cloud.sleuth.instrument.kafka;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.propagation.Propagator;
 
 final class KafkaTracingUtils {
+
+	private static final Log log = LogFactory.getLog(KafkaTracingUtils.class);
 
 	private KafkaTracingUtils() {
 	}
@@ -32,7 +36,11 @@ final class KafkaTracingUtils {
 				.name("kafka.consume").tag("kafka.topic", consumerRecord.topic())
 				.tag("kafka.offset", Long.toString(consumerRecord.offset()))
 				.tag("kafka.partition", Integer.toString(consumerRecord.partition()));
-		spanBuilder.start().end();
+		Span span = spanBuilder.start();
+		if (log.isDebugEnabled()) {
+			log.debug("Extracted span from event headers " + span);
+		}
+		span.end();
 	}
 
 }

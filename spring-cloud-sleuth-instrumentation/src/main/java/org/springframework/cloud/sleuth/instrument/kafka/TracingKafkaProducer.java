@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2020 the original author or authors.
+ * Copyright 2013-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -39,6 +39,15 @@ import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.propagation.Propagator;
 
+/**
+ * This decorates a Kafka {@link Producer} and creates a {@link Span.Kind#PRODUCER} span
+ * for each record sent. This span is also injected onto each record (via headers) so it
+ * becomes the parent when a consumer later receives the record.
+ *
+ * @author Anders Clausen
+ * @author Flaviu Muresan
+ * @since 3.0.3
+ */
 public class TracingKafkaProducer<K, V> implements Producer<K, V> {
 
 	private static final Log log = LogFactory.getLog(TracingKafkaProducer.class);
@@ -103,6 +112,9 @@ public class TracingKafkaProducer<K, V> implements Producer<K, V> {
 		Span span = spanBuilder.start();
 		this.propagator.inject(span.context(), producerRecord, this.injector);
 		try (Tracer.SpanInScope spanInScope = tracer.withSpan(span)) {
+			if (log.isDebugEnabled()) {
+				log.debug("Created producer span " + span);
+			}
 			return this.delegate.send(producerRecord, new KafkaTracingCallback(callback, tracer, span));
 		}
 	}
