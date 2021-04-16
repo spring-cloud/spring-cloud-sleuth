@@ -26,4 +26,3 @@ pom.xml.versionsBackup
 _includes
 .sdkmanrc
 results/jmh/*.csv
-/.github/
