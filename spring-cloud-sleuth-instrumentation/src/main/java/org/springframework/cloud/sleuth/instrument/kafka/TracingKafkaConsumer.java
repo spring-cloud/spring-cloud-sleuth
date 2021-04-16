@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2020 the original author or authors.
+ * Copyright 2013-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -37,8 +37,18 @@ import org.apache.kafka.common.MetricName;
 import org.apache.kafka.common.PartitionInfo;
 import org.apache.kafka.common.TopicPartition;
 
+import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.propagation.Propagator;
 
+/**
+ * This decorates a Kafka {@link Consumer}. It creates and completes a
+ * {@link Span.Kind#CONSUMER} span for each record received. This span will be a child
+ * span of the one extracted from the record headers.
+ *
+ * @author Anders Clausen
+ * @author Flaviu Muresan
+ * @since 3.0.3
+ */
 public class TracingKafkaConsumer<K, V> implements Consumer<K, V> {
 
 	private final Consumer<K, V> delegate;

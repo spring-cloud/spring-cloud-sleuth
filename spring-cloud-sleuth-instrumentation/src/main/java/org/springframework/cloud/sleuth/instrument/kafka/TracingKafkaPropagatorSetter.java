@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2020 the original author or authors.
+ * Copyright 2013-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,15 +16,19 @@
 
 package org.springframework.cloud.sleuth.instrument.kafka;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.kafka.clients.producer.ProducerRecord;
 
 import org.springframework.cloud.sleuth.propagation.Propagator;
 
+/**
+ * Setter injecting the values onto the {@link ProducerRecord} headers for Kafka based
+ * communication.
+ *
+ * @author Anders Clausen
+ * @author Flaviu Muresan
+ * @since 3.0.3
+ */
 public class TracingKafkaPropagatorSetter implements Propagator.Setter<ProducerRecord<?, ?>> {
-
-	private static final Log log = LogFactory.getLog(TracingKafkaPropagatorSetter.class);
 
 	@Override
 	public void set(ProducerRecord<?, ?> carrier, String key, String value) {

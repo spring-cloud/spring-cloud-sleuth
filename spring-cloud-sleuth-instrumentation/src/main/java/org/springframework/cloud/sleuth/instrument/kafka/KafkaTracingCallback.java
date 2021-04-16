@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2020 the original author or authors.
+ * Copyright 2013-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,6 +24,15 @@ import org.apache.kafka.clients.producer.RecordMetadata;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.Tracer;
 
+/**
+ * This decorates a Kafka {@link Callback} and completes the {@link Span.Kind#PRODUCER}
+ * span created for the record when {@code onCompletion()} is invoked (i.e. the broker has
+ * acknowledged or an {@link Exception}) was thrown.
+ *
+ * @author Anders Clausen
+ * @author Flaviu Muresan
+ * @since 3.0.3
+ */
 public class KafkaTracingCallback implements Callback {
 
 	private static final Log log = LogFactory.getLog(KafkaTracingCallback.class);
@@ -52,6 +61,9 @@ public class KafkaTracingCallback implements Callback {
 				this.span.error(e);
 			}
 			this.span.end();
+			if (log.isDebugEnabled()) {
+				log.debug("Finished producer span " + span);
+			}
 		}
 	}
 
