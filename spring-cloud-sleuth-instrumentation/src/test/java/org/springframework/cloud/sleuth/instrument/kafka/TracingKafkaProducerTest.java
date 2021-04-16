@@ -54,7 +54,9 @@ public class TracingKafkaProducerTest {
 		};
 		TracingKafkaProducer<String, String> tracingKafkaProducer = new TracingKafkaProducer<>(kafkaProducer, tracer,
 				propagator, new TracingKafkaPropagatorSetter());
+
 		tracingKafkaProducer.send(testRecord, callback);
+
 		Mockito.verify(kafkaProducer).send(eq(testRecord), any());
 	}
 
@@ -65,11 +67,13 @@ public class TracingKafkaProducerTest {
 		};
 		TracingKafkaProducer<String, String> tracingKafkaProducer = new TracingKafkaProducer<>(kafkaProducer, tracer,
 				propagator, new TracingKafkaPropagatorSetter());
+
 		tracingKafkaProducer.send(testRecord, callback);
+
 		ArgumentCaptor<KafkaTracingCallback> callbackArgument = ArgumentCaptor.forClass(KafkaTracingCallback.class);
 		Mockito.verify(kafkaProducer).send(any(), callbackArgument.capture());
 		BDDAssertions.then(callbackArgument.getValue()).isNotNull();
-		BDDAssertions.assertThat(ReflectionTestUtils.getField(callbackArgument.getValue(), "callback"))
+		BDDAssertions.then(ReflectionTestUtils.getField(callbackArgument.getValue(), "callback"))
 				.isEqualTo(callback);
 	}
 

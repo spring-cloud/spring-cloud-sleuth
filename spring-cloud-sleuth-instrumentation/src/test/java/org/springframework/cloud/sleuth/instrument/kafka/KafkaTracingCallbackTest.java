@@ -47,14 +47,18 @@ public class KafkaTracingCallbackTest {
 	void should_call_on_completion_on_user_callback_success() {
 		KafkaTracingCallback tracingCallback = new KafkaTracingCallback(callback, tracer, span);
 		RecordMetadata recordMetadata = new RecordMetadata(null, 0, 0, 0, 0L, 0, 0);
+
 		tracingCallback.onCompletion(recordMetadata, null);
+
 		Mockito.verify(callback).onCompletion(eq(recordMetadata), isNull());
 	}
 
 	@Test
 	void should_call_on_completion_on_user_callback_error() {
 		KafkaTracingCallback tracingCallback = new KafkaTracingCallback(callback, tracer, span);
+
 		tracingCallback.onCompletion(null, new RuntimeException());
+
 		Mockito.verify(callback).onCompletion(isNull(), any(RuntimeException.class));
 	}
 
