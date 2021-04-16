@@ -148,6 +148,7 @@ class HooksRefresher implements ApplicationListener<RefreshScopeRefreshedEvent> 
 					log.trace("Adding queue wrapper instrumentation");
 				}
 				HookRegisteringBeanDefinitionRegistryPostProcessor.addQueueWrapper(context);
+				Hooks.onLastOperator(SLEUTH_TRACE_REACTOR_KEY, ReactorSleuth.scopePassingSpanOperator(this.context));
 				Schedulers.onScheduleHook(TraceReactorAutoConfiguration.SLEUTH_REACTOR_EXECUTOR_SERVICE_KEY,
 						ReactorSleuth.scopePassingOnScheduleHook(this.context));
 			}
@@ -207,6 +208,7 @@ class HookRegisteringBeanDefinitionRegistryPostProcessor implements BeanDefiniti
 		}
 		if (property == SleuthReactorProperties.InstrumentationType.DECORATE_QUEUES) {
 			addQueueWrapper(springContext);
+			decorateOnLast(ReactorSleuth.scopePassingSpanOperator(springContext));
 			decorateScheduler(springContext);
 		}
 		else {
