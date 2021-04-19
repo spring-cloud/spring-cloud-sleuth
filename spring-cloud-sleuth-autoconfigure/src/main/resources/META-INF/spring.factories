@@ -6,6 +6,7 @@ org.springframework.cloud.sleuth.autoconfig.instrument.async.TraceAsyncDefaultAu
 org.springframework.cloud.sleuth.autoconfig.instrument.circuitbreaker.TraceCircuitBreakerAutoConfiguration,\
 org.springframework.cloud.sleuth.autoconfig.instrument.rxjava.TraceRxJavaAutoConfiguration,\
 org.springframework.cloud.sleuth.autoconfig.instrument.quartz.TraceQuartzAutoConfiguration,\
+org.springframework.cloud.sleuth.autoconfig.instrument.task.TraceTaskAutoConfiguration,\
 org.springframework.cloud.sleuth.autoconfig.instrument.web.TraceWebAutoConfiguration,\
 org.springframework.cloud.sleuth.autoconfig.instrument.web.client.TraceWebClientAutoConfiguration,\
 org.springframework.cloud.sleuth.autoconfig.instrument.web.client.feign.TraceFeignClientAutoConfiguration,\
