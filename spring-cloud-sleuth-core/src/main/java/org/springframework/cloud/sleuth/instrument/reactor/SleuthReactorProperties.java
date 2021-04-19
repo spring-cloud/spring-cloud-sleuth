@@ -38,7 +38,7 @@ public class SleuthReactorProperties {
 	 * the feature set of {@link SleuthReactorProperties#decorateOnEach} with the least
 	 * impact on the performance.
 	 */
-	private boolean decorateQueues = true;
+	private boolean decorateQueues = false;
 
 	/**
 	 * When true decorates on each operator, will be less performing, but logging will

@@ -105,6 +105,7 @@ public class TraceReactorAutoConfiguration {
 					log.trace("Resetting queue wrapper instrumentation");
 				}
 				Hooks.removeQueueWrapper(SLEUTH_TRACE_REACTOR_KEY);
+				Hooks.resetOnLastOperator(SLEUTH_TRACE_REACTOR_KEY);
 			}
 			if (reactorProperties.isDecorateOnEach()) {
 				if (log.isTraceEnabled()) {
@@ -181,6 +182,8 @@ class HooksRefresher implements ApplicationListener<RefreshScopeRefreshedEvent> 
 				log.trace("Adding queue wrapper instrumentation");
 			}
 			HookRegisteringBeanDefinitionRegistryPostProcessor.addQueueWrapper(context);
+			Hooks.onLastOperator(SLEUTH_TRACE_REACTOR_KEY,
+					scopePassingSpanOperator(this.context));
 		}
 		else if (this.reactorProperties.isDecorateOnEach()) {
 			if (log.isTraceEnabled()) {
