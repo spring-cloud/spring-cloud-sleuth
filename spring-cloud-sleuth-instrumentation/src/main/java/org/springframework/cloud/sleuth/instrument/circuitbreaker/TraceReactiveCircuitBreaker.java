@@ -17,6 +17,7 @@
 package org.springframework.cloud.sleuth.instrument.circuitbreaker;
 
 import java.util.function.Function;
+import java.util.function.Supplier;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -49,42 +50,42 @@ class TraceReactiveCircuitBreaker implements ReactiveCircuitBreaker {
 
 	@Override
 	public <T> Mono<T> run(Mono<T> toRun) {
-		return runAndTrace(this.delegate.run(toRun));
+		return runAndTraceMono(() -> this.delegate.run(toRun));
 	}
 
 	@Override
 	public <T> Mono<T> run(Mono<T> toRun, Function<Throwable, Mono<T>> fallback) {
-		return runAndTrace(
-				this.delegate.run(toRun, fallback != null ? new TraceFunction<>(this.tracer, fallback) : null));
+		return runAndTraceMono(
+				() -> this.delegate.run(toRun, fallback != null ? new TraceFunction<>(this.tracer, fallback) : null));
 	}
 
 	@Override
 	public <T> Flux<T> run(Flux<T> toRun) {
-		return runAndTrace(this.delegate.run(toRun));
+		return runAndTraceFlux(() -> this.delegate.run(toRun));
 	}
 
 	@Override
 	public <T> Flux<T> run(Flux<T> toRun, Function<Throwable, Flux<T>> fallback) {
-		return runAndTrace(
-				this.delegate.run(toRun, fallback != null ? new TraceFunction<>(this.tracer, fallback) : null));
+		return runAndTraceFlux(
+				() -> this.delegate.run(toRun, fallback != null ? new TraceFunction<>(this.tracer, fallback) : null));
 	}
 
-	private <T> Mono<T> runAndTrace(Mono<T> mono) {
+	private <T> Mono<T> runAndTraceMono(Supplier<Mono<T>> mono) {
 		return Mono.deferContextual(contextView -> {
 			Span span = contextView.get(Span.class);
 			Tracer.SpanInScope scope = contextView.get(Tracer.SpanInScope.class);
-			return mono.doOnError(span::error).doFinally(signalType -> {
+			return mono.get().doOnError(span::error).doFinally(signalType -> {
 				span.end();
 				scope.close();
 			});
 		}).contextWrite(this::enhanceContext);
 	}
 
-	private <T> Flux<T> runAndTrace(Flux<T> flux) {
+	private <T> Flux<T> runAndTraceFlux(Supplier<Flux<T>> flux) {
 		return Flux.deferContextual(contextView -> {
 			Span span = contextView.get(Span.class);
 			Tracer.SpanInScope scope = contextView.get(Tracer.SpanInScope.class);
-			return flux.doOnError(span::error).doFinally(signalType -> {
+			return flux.get().doOnError(span::error).doFinally(signalType -> {
 				span.end();
 				scope.close();
 			});
