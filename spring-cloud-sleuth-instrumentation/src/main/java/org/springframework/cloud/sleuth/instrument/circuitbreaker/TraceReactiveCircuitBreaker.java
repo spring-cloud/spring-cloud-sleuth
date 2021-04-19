@@ -49,14 +49,46 @@ class TraceReactiveCircuitBreaker implements ReactiveCircuitBreaker {
 
 	@Override
 	public <T> Mono<T> run(Mono<T> toRun) {
+		return runAndTrace(this.delegate.run(toRun));
+	}
+
+	@Override
+	public <T> Mono<T> run(Mono<T> toRun, Function<Throwable, Mono<T>> fallback) {
+		return runAndTrace(
+				this.delegate.run(toRun, fallback != null ? new TraceFunction<>(this.tracer, fallback) : null));
+	}
+
+	@Override
+	public <T> Flux<T> run(Flux<T> toRun) {
+		return runAndTrace(this.delegate.run(toRun));
+	}
+
+	@Override
+	public <T> Flux<T> run(Flux<T> toRun, Function<Throwable, Flux<T>> fallback) {
+		return runAndTrace(
+				this.delegate.run(toRun, fallback != null ? new TraceFunction<>(this.tracer, fallback) : null));
+	}
+
+	private <T> Mono<T> runAndTrace(Mono<T> mono) {
 		return Mono.deferContextual(contextView -> {
 			Span span = contextView.get(Span.class);
 			Tracer.SpanInScope scope = contextView.get(Tracer.SpanInScope.class);
-			return this.delegate.run(toRun).doOnError(span::error).doFinally(signalType -> {
+			return mono.doOnError(span::error).doFinally(signalType -> {
 				span.end();
 				scope.close();
 			});
-		}).contextWrite(setupContext());
+		}).contextWrite(this::enhanceContext);
+	}
+
+	private <T> Flux<T> runAndTrace(Flux<T> flux) {
+		return Flux.deferContextual(contextView -> {
+			Span span = contextView.get(Span.class);
+			Tracer.SpanInScope scope = contextView.get(Tracer.SpanInScope.class);
+			return flux.doOnError(span::error).doFinally(signalType -> {
+				span.end();
+				scope.close();
+			});
+		}).contextWrite(this::enhanceContext);
 	}
 
 	private Span spanFromContext(reactor.util.context.Context context) {
@@ -68,7 +100,7 @@ class TraceReactiveCircuitBreaker implements ReactiveCircuitBreaker {
 		if (traceContext == null && span == null) {
 			span = this.tracer.nextSpan();
 			if (log.isDebugEnabled()) {
-				log.debug("There was no previous span in reactor context, will create a new one [" + span + "]");
+				log.debug("There was no previous span in reactor context, created a new one [" + span + "]");
 			}
 		}
 		else if (traceContext != null) {
@@ -96,50 +128,10 @@ class TraceReactiveCircuitBreaker implements ReactiveCircuitBreaker {
 		return span.name("function");
 	}
 
-	@Override
-	public <T> Mono<T> run(Mono<T> toRun, Function<Throwable, Mono<T>> fallback) {
-		return Mono.deferContextual(contextView -> {
-			Span span = contextView.get(Span.class);
-			Tracer.SpanInScope scope = contextView.get(Tracer.SpanInScope.class);
-			return this.delegate.run(toRun, fallback != null ? new TraceFunction<>(this.tracer, fallback) : fallback)
-					.doOnError(span::error).doFinally(signalType -> {
-						span.end();
-						scope.close();
-					});
-		}).contextWrite(setupContext());
-	}
-
-	private Function<Context, Context> setupContext() {
-		return context -> {
-			Span span = spanFromContext(context);
-			return context.put(Span.class, span).put(TraceContext.class, span.context()).put(Tracer.SpanInScope.class,
-					this.tracer.withSpan(span));
-		};
-	}
-
-	@Override
-	public <T> Flux<T> run(Flux<T> toRun) {
-		return Flux.deferContextual(contextView -> {
-			Span span = contextView.get(Span.class);
-			Tracer.SpanInScope scope = contextView.get(Tracer.SpanInScope.class);
-			return this.delegate.run(toRun).doOnError(span::error).doFinally(signalType -> {
-				span.end();
-				scope.close();
-			});
-		}).contextWrite(setupContext());
-	}
-
-	@Override
-	public <T> Flux<T> run(Flux<T> toRun, Function<Throwable, Flux<T>> fallback) {
-		return Flux.deferContextual(contextView -> {
-			Span span = contextView.get(Span.class);
-			Tracer.SpanInScope scope = contextView.get(Tracer.SpanInScope.class);
-			return this.delegate.run(toRun, fallback != null ? new TraceFunction<>(this.tracer, fallback) : fallback)
-					.doOnError(span::error).doFinally(signalType -> {
-						span.end();
-						scope.close();
-					});
-		}).contextWrite(setupContext());
+	private Context enhanceContext(Context context) {
+		Span span = spanFromContext(context);
+		return context.put(Span.class, span).put(TraceContext.class, span.context()).put(Tracer.SpanInScope.class,
+				this.tracer.withSpan(span));
 	}
 
 }

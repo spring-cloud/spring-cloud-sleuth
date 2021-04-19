@@ -19,7 +19,6 @@ package org.springframework.cloud.sleuth.instrument.circuitbreaker;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
-import org.aspectj.lang.annotation.Pointcut;
 
 import org.springframework.cloud.client.circuitbreaker.ReactiveCircuitBreaker;
 import org.springframework.cloud.sleuth.CurrentTraceContext;
@@ -37,11 +36,7 @@ public class TraceReactiveCircuitBreakerFactoryAspect {
 		this.currentTraceContext = currentTraceContext;
 	}
 
-	@Pointcut("execution(public * org.springframework.cloud.client.circuitbreaker.ReactiveCircuitBreakerFactory.create(..))")
-	private void anyCircuitBreakerFactoryCreate() {
-	} // NOSONAR
-
-	@Around("anyCircuitBreakerFactoryCreate()")
+	@Around("execution(public * org.springframework.cloud.client.circuitbreaker.ReactiveCircuitBreakerFactory.create(..))")
 	public Object wrapFactory(ProceedingJoinPoint pjp) throws Throwable {
 		ReactiveCircuitBreaker circuitBreaker = (ReactiveCircuitBreaker) pjp.proceed();
 		return new TraceReactiveCircuitBreaker(circuitBreaker, this.tracer, this.currentTraceContext);
