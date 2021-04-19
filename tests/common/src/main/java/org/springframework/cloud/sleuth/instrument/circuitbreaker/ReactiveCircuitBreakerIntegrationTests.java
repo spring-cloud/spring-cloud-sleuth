@@ -16,11 +16,11 @@
 
 package org.springframework.cloud.sleuth.instrument.circuitbreaker;
 
-import java.util.concurrent.atomic.AtomicReference;
-
 import org.assertj.core.api.BDDAssertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import reactor.core.publisher.Mono;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -48,6 +48,9 @@ public abstract class ReactiveCircuitBreakerIntegrationTests {
 	@Autowired
 	ReactiveCircuitBreakerFactory factory;
 
+	@Autowired
+	CircuitService circuitService;
+
 	@BeforeEach
 	public void setup() {
 		this.spans.clear();
@@ -73,38 +76,18 @@ public abstract class ReactiveCircuitBreakerIntegrationTests {
 
 	@Test
 	public void should_pass_tracing_information_when_using_circuit_breaker_with_fallback() {
-		// given
-		Tracer tracer = this.tracer;
-		AtomicReference<Span> first = new AtomicReference<>();
-		AtomicReference<Span> second = new AtomicReference<>();
-		ScopedSpan scopedSpan = null;
-		try {
-			scopedSpan = tracer.startScopedSpan("start");
-			// when
-			BDDAssertions.thenThrownBy(() -> this.factory.create("name").run(Mono.defer(() -> {
-				first.set(tracer.currentSpan());
-				throw new IllegalStateException("boom");
-			}), throwable -> {
-				second.set(tracer.currentSpan());
-				throw new IllegalStateException("boom2");
-			}).block()).isInstanceOf(IllegalStateException.class).hasMessageContaining("boom2");
+		// when
+		BDDAssertions.then(this.circuitService.call().block()).isEqualTo("fallback");
 
-			BDDAssertions.then(this.spans).hasSize(2);
-			BDDAssertions.then(scopedSpan.context().traceId()).isEqualTo(first.get().context().traceId());
-			BDDAssertions.then(scopedSpan.context().traceId()).isEqualTo(second.get().context().traceId());
-			BDDAssertions.then(first.get().context().spanId()).isNotEqualTo(second.get().context().spanId());
+		BDDAssertions.then(this.spans).hasSize(2);
+		String traceId = this.circuitService.firstSpan.context().traceId();
+		BDDAssertions.then(this.circuitService.secondSpan.context().traceId()).isEqualTo(traceId);
 
-			FinishedSpan finishedSpan = this.spans.get(0);
-			BDDAssertions.then(finishedSpan.getName()).contains("CircuitBreakerIntegrationTests");
-			assertException(finishedSpan);
+		FinishedSpan finishedSpan = this.spans.get(0);
+		BDDAssertions.then(finishedSpan.getName()).contains("CircuitBreakerIntegrationTests");
 
-			finishedSpan = this.spans.get(1);
-			BDDAssertions.then(finishedSpan.getName()).contains("function");
-			assertException(finishedSpan);
-		}
-		finally {
-			scopedSpan.end();
-		}
+		finishedSpan = this.spans.get(1);
+		BDDAssertions.then(finishedSpan.getName()).contains("function");
 	}
 
 	public void assertException(FinishedSpan finishedSpan) {
@@ -118,6 +101,44 @@ public abstract class ReactiveCircuitBreakerIntegrationTests {
 		@Bean
 		ReactiveResilience4JCircuitBreakerFactory reactiveResilience4JCircuitBreakerFactory() {
 			return new ReactiveResilience4JCircuitBreakerFactory();
+		}
+
+		@Bean
+		CircuitService circuitService(ReactiveCircuitBreakerFactory reactiveCircuitBreakerFactory, Tracer tracer) {
+			return new CircuitService(reactiveCircuitBreakerFactory, tracer);
+		}
+
+	}
+
+	static class CircuitService {
+
+		private static final Logger log = LoggerFactory.getLogger(CircuitService.class);
+
+		private final ReactiveCircuitBreakerFactory factory;
+
+		private final Tracer tracer;
+
+		Span firstSpan;
+
+		Span secondSpan;
+
+		CircuitService(ReactiveCircuitBreakerFactory factory, Tracer tracer) {
+			this.factory = factory;
+			this.tracer = tracer;
+		}
+
+		Mono<String> call() {
+			return this.factory.create("circuit").run(Mono.defer(() -> {
+				this.firstSpan = this.tracer.currentSpan();
+				log.info("<ACCEPTANCE_TEST> <TRACE:{}> Hello from consumer",
+						this.tracer.currentSpan().context().traceId());
+				return Mono.error(new IllegalStateException("boom"));
+			}), throwable -> {
+				this.secondSpan = this.tracer.currentSpan();
+				log.info("<ACCEPTANCE_TEST> <TRACE:{}> Hello from producer",
+						this.tracer.currentSpan().context().traceId());
+				return Mono.just("fallback");
+			});
 		}
 
 	}
