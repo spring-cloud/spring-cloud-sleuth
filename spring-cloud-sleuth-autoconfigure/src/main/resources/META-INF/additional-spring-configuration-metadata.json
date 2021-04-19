@@ -130,6 +130,12 @@
       "type": "java.lang.Boolean",
       "description": "Enable Spring Integration sleuth instrumentation.",
       "defaultValue": true
+    },
+    {
+      "name": "spring.sleuth.batch.enabled",
+      "type": "java.lang.Boolean",
+      "description": "Enable Spring Batch instrumentation.",
+      "defaultValue": true
     }
   ]
 }
