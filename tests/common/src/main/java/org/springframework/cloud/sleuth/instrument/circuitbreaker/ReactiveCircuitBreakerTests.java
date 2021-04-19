@@ -41,7 +41,7 @@ public abstract class ReactiveCircuitBreakerTests implements TestTracingAwareSup
 			// when
 			Span span = new TraceReactiveCircuitBreaker(new ReactiveResilience4JCircuitBreakerFactory().create("name"),
 					tracer, tracerTest().tracing().currentTraceContext())
-					.run(Mono.defer(() -> Mono.just(tracer.currentSpan()))).block();
+							.run(Mono.defer(() -> Mono.just(tracer.currentSpan()))).block();
 
 			BDDAssertions.then(span).isNotNull();
 			BDDAssertions.then(scopedSpan.context().traceId()).isEqualTo(span.context().traceId());
@@ -64,12 +64,12 @@ public abstract class ReactiveCircuitBreakerTests implements TestTracingAwareSup
 			BDDAssertions.thenThrownBy(() -> new TraceReactiveCircuitBreaker(
 					new ReactiveResilience4JCircuitBreakerFactory().create("name"), tracer,
 					tracerTest().tracing().currentTraceContext()).run(Mono.defer(() -> {
-				first.set(tracer.currentSpan());
-				throw new IllegalStateException("boom");
-			}), throwable -> {
-				second.set(tracer.currentSpan());
-				throw new IllegalStateException("boom2");
-			}).block()).isInstanceOf(IllegalStateException.class).hasMessageContaining("boom2");
+						first.set(tracer.currentSpan());
+						throw new IllegalStateException("boom");
+					}), throwable -> {
+						second.set(tracer.currentSpan());
+						throw new IllegalStateException("boom2");
+					}).block()).isInstanceOf(IllegalStateException.class).hasMessageContaining("boom2");
 
 			BDDAssertions.then(tracerTest().handler().reportedSpans()).hasSize(2);
 			BDDAssertions.then(first.get()).isNotNull();
