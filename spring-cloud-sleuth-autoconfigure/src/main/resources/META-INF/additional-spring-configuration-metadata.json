@@ -142,6 +142,12 @@
       "type": "java.lang.Boolean",
       "description": "Enable Spring Cloud Config Server instrumentation.",
       "defaultValue": true
+    },
+    {
+      "name": "spring.sleuth.batch.enabled",
+      "type": "java.lang.Boolean",
+      "description": "Enable Spring Batch instrumentation.",
+      "defaultValue": true
     }
   ]
 }
