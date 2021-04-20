@@ -18,7 +18,7 @@
 |spring.sleuth.feign.processor.enabled | `true` | Enable post processor that wraps Feign Context in its tracing representations.
 |spring.sleuth.grpc.enabled | `true` | Enable span information propagation when using GRPC.
 |spring.sleuth.http.enabled | `true` | 
-|spring.sleuth.http.legacy.enabled | `false` | 
+|spring.sleuth.http.legacy.enabled | `false` | Enables the legacy Sleuth setup.
 |spring.sleuth.hystrix.strategy.enabled | `true` | Enable custom HystrixConcurrencyStrategy that wraps all Callable instances into their Sleuth representative - the TraceCallable.
 |spring.sleuth.hystrix.strategy.passthrough | `false` | When enabled the tracing information is passed to the Hystrix execution threads but spans are not created for each execution.
 |spring.sleuth.integration.enabled | `true` | Enable Spring Integration sleuth instrumentation.
@@ -42,7 +42,7 @@
 |spring.sleuth.propagation.tag.enabled | `true` | Enables a {@link TagPropagationFinishedSpanHandler} that adds extra propagated fields to span tags.
 |spring.sleuth.propagation.tag.whitelisted-keys |  | A list of keys to be put from extra propagation fields to span tags.
 |spring.sleuth.reactor.decorate-on-each | `true` | When true decorates on each operator, will be less performing, but logging will always contain the tracing entries in each operator. When false decorates on last operator, will be more performing, but logging might not always contain the tracing entries. If {@link SleuthReactorProperties#decorateQueues} is used, this decoration mode will NOT be used.
-|spring.sleuth.reactor.decorate-queues | `true` | When true uses the new decorate queues feature from Project Reactor. Should allow the feature set of {@link SleuthReactorProperties#decorateOnEach} with the least impact on the performance.
+|spring.sleuth.reactor.decorate-queues | `false` | When true uses the new decorate queues feature from Project Reactor. Should allow the feature set of {@link SleuthReactorProperties#decorateOnEach} with the least impact on the performance.
 |spring.sleuth.reactor.enabled | `true` | When true enables instrumentation for reactor.
 |spring.sleuth.redis.enabled | `true` | Enable span information propagation when using Redis.
 |spring.sleuth.redis.remote-service-name | `redis` | Service name for the remote Redis endpoint.
