@@ -567,3 +567,11 @@ This feature is available for all tracer implementations.
 
 If you have Spring Cloud CircuitBreaker on the classpath, we will wrap the passed command `Supplier` and the fallback `Function` in its trace representations. We will also instrument the reactive implementation of the CircuitBreaker.
 In order to disable this instrumentation set `spring.sleuth.circuitbreaker.enabled` to `false`.
+
+[[sleuth-config-server-integration]]
+== Spring Cloud Config Server
+
+This feature is available for all tracer implementations.
+
+If you have Spring Cloud Config Server running on the classpath, we will wrap the `EnvironmentRepository` in a span.
+In order to disable this instrumentation set `spring.sleuth.config.server.enabled` to `false`.
