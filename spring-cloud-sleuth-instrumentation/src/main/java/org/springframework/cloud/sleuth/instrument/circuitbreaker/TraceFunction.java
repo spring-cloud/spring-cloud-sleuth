@@ -44,6 +44,7 @@ class TraceFunction<T> implements Function<Throwable, T> {
 
 	@Override
 	public T apply(Throwable throwable) {
+		// TODO: This name needs to be better
 		String name = this.delegate.getClass().getSimpleName();
 		Span span = this.span.get().name(name);
 		Throwable tr = null;

@@ -565,5 +565,5 @@ IMPORTANT: The suggested approach to reactive programming and Sleuth is to use t
 
 This feature is available for all tracer implementations.
 
-If you have Spring Cloud CircuitBreaker on the classpath, we will wrap the passed command `Supplier` and the fallback `Function` in its trace representations.
+If you have Spring Cloud CircuitBreaker on the classpath, we will wrap the passed command `Supplier` and the fallback `Function` in its trace representations. We will also instrument the reactive implementation of the CircuitBreaker.
 In order to disable this instrumentation set `spring.sleuth.circuitbreaker.enabled` to `false`.

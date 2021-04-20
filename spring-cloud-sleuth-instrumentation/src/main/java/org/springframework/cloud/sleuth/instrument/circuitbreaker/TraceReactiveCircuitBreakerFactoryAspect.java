@@ -20,28 +20,26 @@ import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 
-import org.springframework.cloud.client.circuitbreaker.CircuitBreaker;
+import org.springframework.cloud.client.circuitbreaker.ReactiveCircuitBreaker;
+import org.springframework.cloud.sleuth.CurrentTraceContext;
 import org.springframework.cloud.sleuth.Tracer;
 
-/**
- * Aspec around {@link CircuitBreaker} creation.
- *
- * @author Marcin Grzejszczak
- * @since 3.0.0
- */
 @Aspect
-public class TraceCircuitBreakerFactoryAspect {
+public class TraceReactiveCircuitBreakerFactoryAspect {
 
 	private final Tracer tracer;
 
-	public TraceCircuitBreakerFactoryAspect(Tracer tracer) {
+	private final CurrentTraceContext currentTraceContext;
+
+	public TraceReactiveCircuitBreakerFactoryAspect(Tracer tracer, CurrentTraceContext currentTraceContext) {
 		this.tracer = tracer;
+		this.currentTraceContext = currentTraceContext;
 	}
 
-	@Around("execution(public * org.springframework.cloud.client.circuitbreaker.CircuitBreakerFactory.create(..))")
+	@Around("execution(public * org.springframework.cloud.client.circuitbreaker.ReactiveCircuitBreakerFactory.create(..))")
 	public Object wrapFactory(ProceedingJoinPoint pjp) throws Throwable {
-		CircuitBreaker circuitBreaker = (CircuitBreaker) pjp.proceed();
-		return new TraceCircuitBreaker(circuitBreaker, this.tracer);
+		ReactiveCircuitBreaker circuitBreaker = (ReactiveCircuitBreaker) pjp.proceed();
+		return new TraceReactiveCircuitBreaker(circuitBreaker, this.tracer, this.currentTraceContext);
 	}
 
 }

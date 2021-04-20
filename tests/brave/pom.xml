@@ -39,6 +39,7 @@
 		<module>spring-cloud-sleuth-instrumentation-async-tests</module>
 		<module>spring-cloud-sleuth-instrumentation-baggage-tests</module>
 		<module>spring-cloud-sleuth-instrumentation-circuitbreaker-tests</module>
+		<module>spring-cloud-sleuth-instrumentation-circuitbreaker-reactive-tests</module>
 		<module>spring-cloud-sleuth-instrumentation-feign-tests</module>
 		<module>spring-cloud-sleuth-instrumentation-gateway-tests</module>
 		<module>spring-cloud-sleuth-instrumentation-grpc-tests</module>
