@@ -136,6 +136,12 @@
       "type": "java.lang.Boolean",
       "description": "Enable Spring Cloud Task instrumentation.",
       "defaultValue": true
+    },
+    {
+      "name": "spring.sleuth.config.server.enabled",
+      "type": "java.lang.Boolean",
+      "description": "Enable Spring Cloud Config Server instrumentation.",
+      "defaultValue": true
     }
   ]
 }
