@@ -21,12 +21,16 @@ import org.apache.kafka.clients.producer.Producer;
 
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.kafka.core.ProducerPostProcessor;
+import org.springframework.util.ClassUtils;
 
 class TraceProducerPostProcessor<K, V> implements ProducerPostProcessor<K, V> {
 
 	private final BeanFactory beanFactory;
 
 	private KafkaTracing kafkaTracing;
+
+	// Because it's not public in Brave
+	private static final Class tracingProducer = ClassUtils.resolveClassName("brave.kafka.clients.TracingProducer", null);
 
 	TraceProducerPostProcessor(BeanFactory beanFactory) {
 		this.beanFactory = beanFactory;
@@ -41,6 +45,13 @@ class TraceProducerPostProcessor<K, V> implements ProducerPostProcessor<K, V> {
 
 	@Override
 	public Producer<K, V> apply(Producer<K, V> kvProducer) {
+		if (tracingProducer.isAssignableFrom(kvProducer.getClass())) {
+			return kvProducer;
+		}
+		return wrapInTracing(kvProducer);
+	}
+
+	Producer<K, V> wrapInTracing(Producer<K, V> kvProducer) {
 		return kafkaTracing().producer(kvProducer);
 	}
 

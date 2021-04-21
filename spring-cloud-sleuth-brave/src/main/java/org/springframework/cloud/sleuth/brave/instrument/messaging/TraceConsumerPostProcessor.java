@@ -21,12 +21,16 @@ import org.apache.kafka.clients.consumer.Consumer;
 
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.kafka.core.ConsumerPostProcessor;
+import org.springframework.util.ClassUtils;
 
 class TraceConsumerPostProcessor<K, V> implements ConsumerPostProcessor<K, V> {
 
 	private final BeanFactory beanFactory;
 
 	private KafkaTracing kafkaTracing;
+
+	// Because it's not public in Brave
+	private static final Class tracingConsumer = ClassUtils.resolveClassName("brave.kafka.clients.TracingConsumer", null);
 
 	TraceConsumerPostProcessor(BeanFactory beanFactory) {
 		this.beanFactory = beanFactory;
@@ -41,6 +45,13 @@ class TraceConsumerPostProcessor<K, V> implements ConsumerPostProcessor<K, V> {
 
 	@Override
 	public Consumer<K, V> apply(Consumer<K, V> kvConsumer) {
+		if (tracingConsumer.isAssignableFrom(kvConsumer.getClass())) {
+			return kvConsumer;
+		}
+		return wrapInTracing(kvConsumer);
+	}
+
+	Consumer<K, V> wrapInTracing(Consumer<K, V> kvConsumer) {
 		return kafkaTracing().consumer(kvConsumer);
 	}
 
