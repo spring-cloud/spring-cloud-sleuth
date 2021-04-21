@@ -18,8 +18,6 @@ package org.springframework.cloud.sleuth.instrument.messaging;
 
 import java.util.Iterator;
 import java.util.Map;
-import java.util.NoSuchElementException;
-import java.util.concurrent.LinkedBlockingDeque;
 import java.util.function.Function;
 
 import org.apache.commons.logging.Log;
@@ -28,6 +26,8 @@ import org.apache.commons.logging.LogFactory;
 import org.springframework.aop.support.AopUtils;
 import org.springframework.beans.BeansException;
 import org.springframework.cloud.sleuth.Span;
+import org.springframework.cloud.sleuth.SpanAndScope;
+import org.springframework.cloud.sleuth.ThreadLocalSpan;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.propagation.Propagator;
 import org.springframework.cloud.stream.binder.BinderType;
@@ -107,7 +107,7 @@ public final class TracingChannelInterceptor extends ChannelInterceptorAdapter
 
 	private final Propagator propagator;
 
-	private final ThreadLocalSpan threadLocalSpan = new ThreadLocalSpan();
+	private final ThreadLocalSpan threadLocalSpan;
 
 	private final Function<String, String> remoteServiceNameMapper;
 
@@ -115,6 +115,7 @@ public final class TracingChannelInterceptor extends ChannelInterceptorAdapter
 			Propagator.Setter<MessageHeaderAccessor> setter, Propagator.Getter<MessageHeaderAccessor> getter,
 			Function<String, String> remoteServiceNameMapper, MessageSpanCustomizer messageSpanCustomizer) {
 		this.tracer = tracer;
+		this.threadLocalSpan = new ThreadLocalSpan(tracer);
 		this.propagator = propagator;
 		this.injector = setter;
 		this.extractor = getter;
@@ -163,8 +164,7 @@ public final class TracingChannelInterceptor extends ChannelInterceptorAdapter
 	}
 
 	private void setSpanInScope(Span span) {
-		Tracer.SpanInScope spanInScope = this.tracer.withSpan(span);
-		this.threadLocalSpan.set(new SpanAndScope(span, spanInScope));
+		this.threadLocalSpan.set(span);
 		if (log.isDebugEnabled()) {
 			log.debug("Put span in scope " + span);
 		}
@@ -362,8 +362,8 @@ public final class TracingChannelInterceptor extends ChannelInterceptorAdapter
 		if (spanAndScope == null) {
 			return;
 		}
-		Span span = spanAndScope.span;
-		Tracer.SpanInScope scope = spanAndScope.scope;
+		Span span = spanAndScope.getSpan();
+		Tracer.SpanInScope scope = spanAndScope.getScope();
 		if (span.isNoop()) {
 			if (log.isDebugEnabled()) {
 				log.debug("Span " + span + " is noop - will stope the scope");
@@ -421,60 +421,6 @@ public final class TracingChannelInterceptor extends ChannelInterceptorAdapter
 	@Override
 	public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
 		this.applicationContext = applicationContext;
-	}
-
-}
-
-class SpanAndScope {
-
-	final Span span;
-
-	final Tracer.SpanInScope scope;
-
-	SpanAndScope(Span span, Tracer.SpanInScope scope) {
-		this.span = span;
-		this.scope = scope;
-	}
-
-}
-
-class ThreadLocalSpan {
-
-	private static final Log log = LogFactory.getLog(ThreadLocalSpan.class);
-
-	final ThreadLocal<SpanAndScope> threadLocalSpan = new ThreadLocal<>();
-
-	final LinkedBlockingDeque<SpanAndScope> spans = new LinkedBlockingDeque<>();
-
-	void set(SpanAndScope spanAndScope) {
-		SpanAndScope scope = this.threadLocalSpan.get();
-		if (scope != null) {
-			this.spans.addFirst(scope);
-		}
-		this.threadLocalSpan.set(spanAndScope);
-	}
-
-	SpanAndScope get() {
-		return this.threadLocalSpan.get();
-	}
-
-	void remove() {
-		this.threadLocalSpan.remove();
-		if (this.spans.isEmpty()) {
-			return;
-		}
-		try {
-			SpanAndScope span = this.spans.removeFirst();
-			if (log.isDebugEnabled()) {
-				log.debug("Took span [" + span + "] from thread local");
-			}
-			this.threadLocalSpan.set(span);
-		}
-		catch (NoSuchElementException ex) {
-			if (log.isTraceEnabled()) {
-				log.trace("Failed to remove a span from the queue", ex);
-			}
-		}
 	}
 
 }
