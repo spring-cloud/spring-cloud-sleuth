@@ -32,16 +32,19 @@ public class TraceJobBuilderFactory extends JobBuilderFactory {
 
 	private final BeanFactory beanFactory;
 
+	private final JobBuilderFactory delegate;
+
 	private Tracer tracer;
 
-	public TraceJobBuilderFactory(BeanFactory beanFactory) {
+	public TraceJobBuilderFactory(BeanFactory beanFactory, JobBuilderFactory delegate) {
 		super(beanFactory.getBean(JobRepository.class));
 		this.beanFactory = beanFactory;
+		this.delegate = delegate;
 	}
 
 	@Override
 	public JobBuilder get(String name) {
-		return super.get(name).listener(new TraceJobExecutionListener(tracer()));
+		return this.delegate.get(name).listener(new TraceJobExecutionListener(tracer()));
 	}
 
 	private Tracer tracer() {

@@ -33,16 +33,19 @@ public class TraceStepBuilderFactory extends StepBuilderFactory {
 
 	private final BeanFactory beanFactory;
 
+	private final StepBuilderFactory delegate;
+
 	private Tracer tracer;
 
-	public TraceStepBuilderFactory(BeanFactory beanFactory) {
+	public TraceStepBuilderFactory(BeanFactory beanFactory, StepBuilderFactory delegate) {
 		super(beanFactory.getBean(JobRepository.class), beanFactory.getBean(PlatformTransactionManager.class));
 		this.beanFactory = beanFactory;
+		this.delegate = delegate;
 	}
 
 	@Override
 	public StepBuilder get(String name) {
-		return super.get(name).listener(new TraceStepExecutionListener(tracer()));
+		return this.delegate.get(name).listener(new TraceStepExecutionListener(tracer()));
 	}
 
 	private Tracer tracer() {

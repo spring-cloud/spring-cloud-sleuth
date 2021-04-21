@@ -39,7 +39,7 @@ public class TraceJobBuilderFactoryBeanPostProcessor implements BeanPostProcesso
 	@Override
 	public Object postProcessAfterInitialization(Object bean, String beanName) throws BeansException {
 		if (bean instanceof JobBuilderFactory && !(bean instanceof TraceJobBuilderFactory)) {
-			return new TraceJobBuilderFactory(this.beanFactory);
+			return new TraceJobBuilderFactory(this.beanFactory, (JobBuilderFactory) bean);
 		}
 		return bean;
 	}

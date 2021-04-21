@@ -16,7 +16,6 @@
 
 package org.springframework.cloud.sleuth.instrument.batch;
 
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -25,6 +24,7 @@ import java.util.stream.Collectors;
 import org.springframework.batch.core.JobExecution;
 import org.springframework.batch.core.JobExecutionListener;
 import org.springframework.cloud.sleuth.Span;
+import org.springframework.cloud.sleuth.SpanAndScope;
 import org.springframework.cloud.sleuth.Tracer;
 
 class TraceJobExecutionListener implements JobExecutionListener {
@@ -40,6 +40,7 @@ class TraceJobExecutionListener implements JobExecutionListener {
 	@Override
 	public void beforeJob(JobExecution jobExecution) {
 		Span span = this.tracer.nextSpan().name(jobExecution.getJobInstance().getJobName());
+		span.tag("job.name", jobExecution.getJobInstance().getJobName());
 		// TODO: How to add step type?
 		Tracer.SpanInScope spanInScope = this.tracer.withSpan(span.start());
 		SPANS.put(jobExecution, new SpanAndScope(span, spanInScope));
@@ -47,11 +48,11 @@ class TraceJobExecutionListener implements JobExecutionListener {
 
 	@Override
 	public void afterJob(JobExecution jobExecution) {
-		SpanAndScope spanAndScope = SPANS.get(jobExecution);
+		SpanAndScope spanAndScope = SPANS.remove(jobExecution);
 		List<Throwable> throwables = jobExecution.getFailureExceptions();
-		Span span = spanAndScope.span;
+		Span span = spanAndScope.getSpan();
 		span.tag("status", jobExecution.getStatus().name());
-		Tracer.SpanInScope scope = spanAndScope.scope;
+		Tracer.SpanInScope scope = spanAndScope.getScope();
 		if (!throwables.isEmpty()) {
 			span.error(mergedThrowables(throwables));
 		}
@@ -60,8 +61,8 @@ class TraceJobExecutionListener implements JobExecutionListener {
 	}
 
 	private IllegalStateException mergedThrowables(List<Throwable> throwables) {
-		return new IllegalStateException(throwables.stream().map(Throwable::getStackTrace).flatMap(Arrays::stream)
-				.map(StackTraceElement::toString).collect(Collectors.joining("\n")));
+		return new IllegalStateException(
+				throwables.stream().map(Throwable::toString).collect(Collectors.joining("\n")));
 	}
 
 }

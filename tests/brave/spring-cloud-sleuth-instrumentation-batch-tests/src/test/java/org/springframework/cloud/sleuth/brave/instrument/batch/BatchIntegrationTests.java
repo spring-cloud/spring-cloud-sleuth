@@ -28,8 +28,7 @@ import org.springframework.test.context.ContextConfiguration;
 
 @SpringBootTest
 @ContextConfiguration(classes = BatchIntegrationTests.Config.class)
-public class BatchIntegrationTests
-		extends org.springframework.cloud.sleuth.instrument.batch.BatchIntegrationTests {
+public class BatchIntegrationTests extends org.springframework.cloud.sleuth.instrument.batch.BatchIntegrationTests {
 
 	@Configuration(proxyBeanMethods = false)
 	@EnableBatchProcessing
