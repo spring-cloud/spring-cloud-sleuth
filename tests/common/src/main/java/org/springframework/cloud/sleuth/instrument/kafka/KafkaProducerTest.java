@@ -92,7 +92,7 @@ public abstract class KafkaProducerTest implements TestTracingAwareSupplier {
 
 	@Override
 	public void cleanUpTracing() {
-
+		this.spans.clear();
 	}
 
 }
