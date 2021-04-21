@@ -128,7 +128,13 @@
     {
       "name": "spring.sleuth.integration.enabled",
       "type": "java.lang.Boolean",
-      "description": "Enable Spring Integration sleuth instrumentation.",
+      "description": "Enable Spring Integration instrumentation.",
+      "defaultValue": true
+    },
+    {
+      "name": "spring.sleuth.task.enabled",
+      "type": "java.lang.Boolean",
+      "description": "Enable Spring Cloud Task instrumentation.",
       "defaultValue": true
     },
     {
