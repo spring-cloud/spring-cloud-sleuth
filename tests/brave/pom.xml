@@ -42,6 +42,7 @@
 		<module>spring-cloud-sleuth-instrumentation-feign-tests</module>
 		<module>spring-cloud-sleuth-instrumentation-gateway-tests</module>
 		<module>spring-cloud-sleuth-instrumentation-grpc-tests</module>
+		<module>spring-cloud-sleuth-instrumentation-kafka-tests</module>
 		<module>spring-cloud-sleuth-instrumentation-lettuce-tests</module>
 		<module>spring-cloud-sleuth-instrumentation-messaging-tests</module>
 		<module>spring-cloud-sleuth-instrumentation-mvc-tests</module>
