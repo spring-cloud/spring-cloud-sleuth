@@ -96,6 +96,10 @@ public class BraveMessagingAutoConfigurationTests {
 	public void should_wrap_kafka() {
 		this.producerFactory.createProducer();
 		then(this.mySleuthKafkaAspect.producerWrapped).isTrue();
+		this.mySleuthKafkaAspect.producerWrapped = false;
+
+		this.producerFactory.createNonTransactionalProducer();
+		then(this.mySleuthKafkaAspect.producerWrapped).isTrue();
 
 		this.consumerFactory.createConsumer();
 		then(this.mySleuthKafkaAspect.consumerWrapped).isTrue();
