@@ -138,6 +138,12 @@
       "defaultValue": true
     },
     {
+      "name": "spring.sleuth.deployer.enabled",
+      "type": "java.lang.Boolean",
+      "description": "Enable Spring Cloud Deployer instrumentation.",
+      "defaultValue": true
+    },
+    {
       "name": "spring.sleuth.config.server.enabled",
       "type": "java.lang.Boolean",
       "description": "Enable Spring Cloud Config Server instrumentation.",
