@@ -31,7 +31,7 @@ import org.springframework.cloud.sleuth.Tracer;
  *
  * @author Anders Clausen
  * @author Flaviu Muresan
- * @since 3.0.3
+ * @since 3.1.0
  */
 public class KafkaTracingCallback implements Callback {
 

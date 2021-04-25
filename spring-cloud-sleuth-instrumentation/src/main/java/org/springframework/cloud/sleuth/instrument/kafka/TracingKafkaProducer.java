@@ -46,7 +46,7 @@ import org.springframework.cloud.sleuth.propagation.Propagator;
  *
  * @author Anders Clausen
  * @author Flaviu Muresan
- * @since 3.0.3
+ * @since 3.1.0
  */
 public class TracingKafkaProducer<K, V> implements Producer<K, V> {
 
