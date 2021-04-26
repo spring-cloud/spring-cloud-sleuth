@@ -362,6 +362,8 @@ public class TraceRSocketTests {
 
 		@MessageMapping("rc")
 		Flux<String> testRC(@Payload Flux<String> inbound) {
+			this.span = this.tracer.currentSpan();
+
 			return Flux.deferContextual(c -> {
 				interceptedContext = c;
 				receivedFrames.offer(FrameType.REQUEST_CHANNEL);
