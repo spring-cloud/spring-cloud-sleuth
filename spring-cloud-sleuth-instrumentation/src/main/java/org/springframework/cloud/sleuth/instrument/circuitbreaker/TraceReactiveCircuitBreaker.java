@@ -19,21 +19,15 @@ package org.springframework.cloud.sleuth.instrument.circuitbreaker;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-import reactor.util.context.Context;
 
 import org.springframework.cloud.client.circuitbreaker.ReactiveCircuitBreaker;
 import org.springframework.cloud.sleuth.CurrentTraceContext;
-import org.springframework.cloud.sleuth.Span;
-import org.springframework.cloud.sleuth.TraceContext;
 import org.springframework.cloud.sleuth.Tracer;
+import org.springframework.cloud.sleuth.instrument.reactor.ReactorSleuth;
 
 class TraceReactiveCircuitBreaker implements ReactiveCircuitBreaker {
-
-	private static final Log log = LogFactory.getLog(TraceReactiveCircuitBreaker.class);
 
 	private final ReactiveCircuitBreaker delegate;
 
@@ -71,68 +65,11 @@ class TraceReactiveCircuitBreaker implements ReactiveCircuitBreaker {
 	}
 
 	private <T> Mono<T> runAndTraceMono(Supplier<Mono<T>> mono) {
-		return Mono.deferContextual(contextView -> {
-			Span span = contextView.get(Span.class);
-			Tracer.SpanInScope scope = contextView.get(Tracer.SpanInScope.class);
-			return mono.get().doOnError(span::error).doFinally(signalType -> {
-				span.end();
-				scope.close();
-			});
-		}).contextWrite(this::enhanceContext);
+		return ReactorSleuth.tracedMono(this.tracer, this.currentTraceContext, "function", mono);
 	}
 
 	private <T> Flux<T> runAndTraceFlux(Supplier<Flux<T>> flux) {
-		return Flux.deferContextual(contextView -> {
-			Span span = contextView.get(Span.class);
-			Tracer.SpanInScope scope = contextView.get(Tracer.SpanInScope.class);
-			return flux.get().doOnError(span::error).doFinally(signalType -> {
-				span.end();
-				scope.close();
-			});
-		}).contextWrite(this::enhanceContext);
-	}
-
-	private Span spanFromContext(reactor.util.context.Context context) {
-		TraceContext traceContext = context.getOrDefault(TraceContext.class, null);
-		Span span = null;
-		if (traceContext == null) {
-			span = context.getOrDefault(Span.class, null);
-		}
-		if (traceContext == null && span == null) {
-			span = this.tracer.nextSpan();
-			if (log.isDebugEnabled()) {
-				log.debug("There was no previous span in reactor context, created a new one [" + span + "]");
-			}
-		}
-		else if (traceContext != null) {
-			// there was a previous span - we create a child one
-			try (CurrentTraceContext.Scope scope = this.currentTraceContext.maybeScope(traceContext)) {
-				if (log.isDebugEnabled()) {
-					log.debug("Found a trace context in reactor context [" + traceContext + "]");
-				}
-				span = this.tracer.nextSpan();
-				if (log.isDebugEnabled()) {
-					log.debug("Created a child span [" + span + "]");
-				}
-			}
-		}
-		else {
-			if (log.isDebugEnabled()) {
-				log.debug("Found a span in reactor context [" + span + "]");
-			}
-			span = this.tracer.nextSpan(span);
-			if (log.isDebugEnabled()) {
-				log.debug("Created a child span [" + span + "]");
-			}
-		}
-		// TODO: Better name?
-		return span.name("function");
-	}
-
-	private Context enhanceContext(Context context) {
-		Span span = spanFromContext(context);
-		return context.put(Span.class, span).put(TraceContext.class, span.context()).put(Tracer.SpanInScope.class,
-				this.tracer.withSpan(span));
+		return ReactorSleuth.tracedFlux(this.tracer, this.currentTraceContext, "function", flux);
 	}
 
 }
