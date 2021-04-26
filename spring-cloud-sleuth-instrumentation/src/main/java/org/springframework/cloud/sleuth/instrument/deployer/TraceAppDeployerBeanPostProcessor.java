@@ -19,6 +19,7 @@ package org.springframework.cloud.sleuth.instrument.deployer;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.config.BeanPostProcessor;
 import org.springframework.cloud.deployer.spi.app.AppDeployer;
+import org.springframework.core.env.Environment;
 
 /**
  * {@link BeanPostProcessor} to wrap a {@link AppDeployer} instance into its trace
@@ -31,8 +32,11 @@ public class TraceAppDeployerBeanPostProcessor implements BeanPostProcessor {
 
 	private final BeanFactory beanFactory;
 
-	public TraceAppDeployerBeanPostProcessor(BeanFactory beanFactory) {
+	private final Environment environment;
+
+	public TraceAppDeployerBeanPostProcessor(BeanFactory beanFactory, Environment environment) {
 		this.beanFactory = beanFactory;
+		this.environment = environment;
 	}
 
 	@Override
@@ -43,7 +47,7 @@ public class TraceAppDeployerBeanPostProcessor implements BeanPostProcessor {
 	@Override
 	public Object postProcessAfterInitialization(Object bean, String beanName) {
 		if (bean instanceof AppDeployer && !(bean instanceof TraceAppDeployer)) {
-			return new TraceAppDeployer((AppDeployer) bean, this.beanFactory);
+			return new TraceAppDeployer((AppDeployer) bean, this.beanFactory, this.environment);
 		}
 		return bean;
 	}

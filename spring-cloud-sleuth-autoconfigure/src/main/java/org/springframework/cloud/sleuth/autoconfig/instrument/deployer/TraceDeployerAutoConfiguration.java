@@ -19,12 +19,15 @@ package org.springframework.cloud.sleuth.autoconfig.instrument.deployer;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.cloud.deployer.spi.app.AppDeployer;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.autoconfig.brave.BraveAutoConfiguration;
 import org.springframework.cloud.sleuth.instrument.deployer.TraceAppDeployerBeanPostProcessor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.env.Environment;
 
 /**
  * {@link org.springframework.boot.autoconfigure.EnableAutoConfiguration
@@ -36,12 +39,14 @@ import org.springframework.context.annotation.Configuration;
 @Configuration(proxyBeanMethods = false)
 @ConditionalOnBean(Tracer.class)
 @ConditionalOnProperty(value = "spring.sleuth.deployer.enabled", matchIfMissing = true)
+@ConditionalOnClass(AppDeployer.class)
 @AutoConfigureAfter(BraveAutoConfiguration.class)
 public class TraceDeployerAutoConfiguration {
 
 	@Bean
-	static TraceAppDeployerBeanPostProcessor traceAppDeployerBeanPostProcessor(BeanFactory beanFactory) {
-		return new TraceAppDeployerBeanPostProcessor(beanFactory);
+	static TraceAppDeployerBeanPostProcessor traceAppDeployerBeanPostProcessor(BeanFactory beanFactory,
+			Environment environment) {
+		return new TraceAppDeployerBeanPostProcessor(beanFactory, environment);
 	}
 
 }

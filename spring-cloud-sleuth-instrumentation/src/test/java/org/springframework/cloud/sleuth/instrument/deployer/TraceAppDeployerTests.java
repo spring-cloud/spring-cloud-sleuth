@@ -28,14 +28,15 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import org.springframework.beans.factory.BeanFactory;
+import org.springframework.beans.factory.support.StaticListableBeanFactory;
 import org.springframework.cloud.deployer.spi.app.AppDeployer;
 import org.springframework.cloud.deployer.spi.app.AppScaleRequest;
 import org.springframework.cloud.deployer.spi.app.AppStatus;
 import org.springframework.cloud.deployer.spi.core.AppDefinition;
 import org.springframework.cloud.deployer.spi.core.AppDeploymentRequest;
-import org.springframework.cloud.sleuth.CurrentTraceContext;
-import org.springframework.cloud.sleuth.Tracer;
+import org.springframework.core.env.Environment;
 import org.springframework.core.io.PathResource;
+import org.springframework.mock.env.MockEnvironment;
 
 class TraceAppDeployerTests {
 
@@ -43,10 +44,13 @@ class TraceAppDeployerTests {
 
 	AppDeployer delegate = BDDMockito.mock(AppDeployer.class);
 
-	TraceAppDeployer traceAppDeployer = new TraceAppDeployer(this.delegate, beanFactory());
+	TraceAppDeployer traceAppDeployer = new TraceAppDeployer(this.delegate, beanFactory(), environment());
 
 	@Test
 	void should_trace_deploy() {
+		BDDMockito.given(this.delegate.statusReactive(BDDMockito.any()))
+				.willReturn(Mono.just(AppStatus.of("asd").build()));
+
 		this.traceAppDeployer.deploy(deploymentRequest());
 
 		BDDAssertions.then(this.simpleTracer.getOnlySpan().tags).isNotEmpty();
@@ -55,6 +59,9 @@ class TraceAppDeployerTests {
 
 	@Test
 	void should_trace_undeploy() {
+		BDDMockito.given(this.delegate.statusReactive(BDDMockito.any()))
+				.willReturn(Mono.just(AppStatus.of("asd").build()));
+
 		this.traceAppDeployer.undeploy("asd");
 
 		BDDAssertions.then(this.simpleTracer.getOnlySpan().tags).isNotEmpty();
@@ -124,10 +131,14 @@ class TraceAppDeployerTests {
 	}
 
 	private BeanFactory beanFactory() {
-		BeanFactory beanFactory = BDDMockito.mock(BeanFactory.class);
-		BDDMockito.given(beanFactory.getBean(Tracer.class)).willReturn(this.simpleTracer);
-		BDDMockito.given(beanFactory.getBean(CurrentTraceContext.class)).willReturn(new NoOpCurrentTraceContext());
+		StaticListableBeanFactory beanFactory = new StaticListableBeanFactory();
+		beanFactory.addBean("tracer", this.simpleTracer);
+		beanFactory.addBean("currentTraceContext", new NoOpCurrentTraceContext());
 		return beanFactory;
+	}
+
+	private Environment environment() {
+		return new MockEnvironment();
 	}
 
 }
