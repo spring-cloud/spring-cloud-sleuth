@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.springframework.cloud.sleuth.instrument.messaging.rsocket;
+package org.springframework.cloud.sleuth.instrument.rsocket;
 
 import java.util.NoSuchElementException;
 import java.util.concurrent.LinkedBlockingDeque;

@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-package org.springframework.cloud.sleuth.instrument.messaging.rsocket;
+package org.springframework.cloud.sleuth.instrument.rsocket;
 
-import static org.springframework.cloud.sleuth.instrument.messaging.rsocket.PayloadUtils.cleanTracingMetadata;
+import static org.springframework.cloud.sleuth.instrument.rsocket.PayloadUtils.cleanTracingMetadata;
 
 import io.netty.buffer.ByteBuf;
 import io.rsocket.Payload;
@@ -55,8 +55,7 @@ public class ResponderTracingRSocket extends RSocketProxy {
 	// Propagator.Setter<ByteBuf> setter, Propagator.Getter<ByteBuf> getter,
 	// MessageSpanCustomizer messageSpanCustomizer, Tracer tracer) {
 
-	public ResponderTracingRSocket(RSocket source, Propagator propagator,
-			Propagator.Getter<ByteBuf> getter,
+	public ResponderTracingRSocket(RSocket source, Propagator propagator, Propagator.Getter<ByteBuf> getter,
 			Tracer tracer) {
 		super(source);
 		this.propagator = propagator;
@@ -85,15 +84,12 @@ public class ResponderTracingRSocket extends RSocketProxy {
 		// MessageHeaderPropagatorSetter.removeAnyTraceHeaders(headers,
 		// this.propagator.fields());
 
-		final Payload newPayload = cleanTracingMetadata(payload,
-				new HashSet<>(propagator.fields()));
+		final Payload newPayload = cleanTracingMetadata(payload, new HashSet<>(propagator.fields()));
 
 		return super.fireAndForget(newPayload)
 				// TODO: Put TraceContext and Span into reactor context
-				.contextWrite(context -> context.put(Span.class, handle)
-						.put(TraceContext.class, handle.context()))
-				.doOnError(this::finishSpan).doOnSuccess(__ -> finishSpan(null))
-				.doOnCancel(() -> finishSpan(null));
+				.contextWrite(context -> context.put(Span.class, handle).put(TraceContext.class, handle.context()))
+				.doOnError(this::finishSpan).doOnSuccess(__ -> finishSpan(null)).doOnCancel(() -> finishSpan(null));
 	}
 
 	@Override
@@ -101,8 +97,7 @@ public class ResponderTracingRSocket extends RSocketProxy {
 		// called on Netty EventLoop
 		// there can't be trace context in thread local here
 		// payload -> metadata -> X-B3-TraceId = a , X-B3-SpanId = b
-		Span consumerSpan = consumerSpan(payload, payload.sliceMetadata(),
-				FrameType.REQUEST_RESPONSE);
+		Span consumerSpan = consumerSpan(payload, payload.sliceMetadata(), FrameType.REQUEST_RESPONSE);
 		// create and scope a span for the message processor
 		Span handle = this.tracer.nextSpan(consumerSpan).start();
 		// TODO: Convert Payload to Spring Message?
@@ -117,15 +112,12 @@ public class ResponderTracingRSocket extends RSocketProxy {
 		// MessageHeaderPropagatorSetter.removeAnyTraceHeaders(headers,
 		// this.propagator.fields());
 
-		final Payload newPayload = cleanTracingMetadata(payload,
-				new HashSet<>(propagator.fields()));
+		final Payload newPayload = cleanTracingMetadata(payload, new HashSet<>(propagator.fields()));
 
 		return super.requestResponse(newPayload)
 				// TODO: Put TraceContext and Span into reactor context
-				.contextWrite(context -> context.put(Span.class, handle)
-						.put(TraceContext.class, handle.context()))
-				.doOnError(this::finishSpan).doOnSuccess(__ -> finishSpan(null))
-				.doOnCancel(() -> finishSpan(null));
+				.contextWrite(context -> context.put(Span.class, handle).put(TraceContext.class, handle.context()))
+				.doOnError(this::finishSpan).doOnSuccess(__ -> finishSpan(null)).doOnCancel(() -> finishSpan(null));
 	}
 
 	@Override
@@ -133,8 +125,7 @@ public class ResponderTracingRSocket extends RSocketProxy {
 		// called on Netty EventLoop
 		// there can't be trace context in thread local here
 		// payload -> metadata -> X-B3-TraceId = a , X-B3-SpanId = b
-		Span consumerSpan = consumerSpan(payload, payload.sliceMetadata(),
-				FrameType.REQUEST_STREAM);
+		Span consumerSpan = consumerSpan(payload, payload.sliceMetadata(), FrameType.REQUEST_STREAM);
 		// create and scope a span for the message processor
 		Span handle = this.tracer.nextSpan(consumerSpan).start();
 		// TODO: Convert Payload to Spring Message?
@@ -149,15 +140,12 @@ public class ResponderTracingRSocket extends RSocketProxy {
 		// MessageHeaderPropagatorSetter.removeAnyTraceHeaders(headers,
 		// this.propagator.fields());
 
-		final Payload newPayload = cleanTracingMetadata(payload,
-				new HashSet<>(propagator.fields()));
+		final Payload newPayload = cleanTracingMetadata(payload, new HashSet<>(propagator.fields()));
 
 		return super.requestStream(newPayload)
 				// TODO: Put TraceContext and Span into reactor context
-				.contextWrite(context -> context.put(Span.class, handle)
-						.put(TraceContext.class, handle.context()))
-				.doOnError(this::finishSpan).doOnComplete(() -> finishSpan(null))
-				.doOnCancel(() -> finishSpan(null));
+				.contextWrite(context -> context.put(Span.class, handle).put(TraceContext.class, handle.context()))
+				.doOnError(this::finishSpan).doOnComplete(() -> finishSpan(null)).doOnCancel(() -> finishSpan(null));
 	}
 
 	@Override
@@ -168,8 +156,7 @@ public class ResponderTracingRSocket extends RSocketProxy {
 				// called on Netty EventLoop
 				// there can't be trace context in thread local here
 				// payload -> metadata -> X-B3-TraceId = a , X-B3-SpanId = b
-				Span consumerSpan = consumerSpan(firstPayload, firstPayload.sliceMetadata(),
-						FrameType.REQUEST_CHANNEL);
+				Span consumerSpan = consumerSpan(firstPayload, firstPayload.sliceMetadata(), FrameType.REQUEST_CHANNEL);
 				// create and scope a span for the message processor
 				Span handle = this.tracer.nextSpan(consumerSpan).start();
 				// TODO: Convert Payload to Spring Message?
@@ -184,14 +171,12 @@ public class ResponderTracingRSocket extends RSocketProxy {
 				// MessageHeaderPropagatorSetter.removeAnyTraceHeaders(headers,
 				// this.propagator.fields());
 
-				final Payload newPayload = cleanTracingMetadata(firstPayload,
-						new HashSet<>(propagator.fields()));
+				final Payload newPayload = cleanTracingMetadata(firstPayload, new HashSet<>(propagator.fields()));
 
 				return super.requestChannel(flux.skip(1).startWith(newPayload))
 						// TODO: Put TraceContext and Span into reactor context
 						.contextWrite(
-								context -> context.put(Span.class, handle)
-										.put(TraceContext.class, handle.context()))
+								context -> context.put(Span.class, handle).put(TraceContext.class, handle.context()))
 						.doOnError(this::finishSpan).doOnComplete(() -> finishSpan(null))
 						.doOnCancel(() -> finishSpan(null));
 			}
@@ -204,17 +189,14 @@ public class ResponderTracingRSocket extends RSocketProxy {
 	private Span consumerSpan(Payload payload, ByteBuf headers, FrameType requestType) {
 		Span.Builder consumerSpanBuilder = this.propagator.extract(headers, this.getter);
 		if (log.isDebugEnabled()) {
-			log.debug("Extracted result from headers - will finish it immediately "
-					+ consumerSpanBuilder);
+			log.debug("Extracted result from headers - will finish it immediately " + consumerSpanBuilder);
 		}
 		final RoutingMetadata routingMetadata = new RoutingMetadata(
-				CompositeMetadataUtils
-						.extract(headers, WellKnownMimeType.MESSAGE_RSOCKET_ROUTING.getString()));
+				CompositeMetadataUtils.extract(headers, WellKnownMimeType.MESSAGE_RSOCKET_ROUTING.getString()));
 		final Iterator<String> iterator = routingMetadata.iterator();
 
 		// Start and finish a consumer span as we will immediately process it.
-		consumerSpanBuilder.kind(Span.Kind.CONSUMER)
-				.name(requestType.name() + " " + iterator.next()).start();
+		consumerSpanBuilder.kind(Span.Kind.CONSUMER).name(requestType.name() + " " + iterator.next()).start();
 
 		// TODO: What to do about it? In SI we know that this would be the broker
 		// TODO: if in the headers broker has added a header we will set this to broker

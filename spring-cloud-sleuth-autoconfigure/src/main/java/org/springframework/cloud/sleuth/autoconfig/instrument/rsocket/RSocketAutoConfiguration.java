@@ -29,8 +29,8 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.boot.rsocket.server.RSocketServerCustomizer;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.autoconfig.brave.BraveAutoConfiguration;
-import org.springframework.cloud.sleuth.instrument.messaging.rsocket.TracingRSocketConnectorConfigurer;
-import org.springframework.cloud.sleuth.instrument.messaging.rsocket.TracingRSocketServerCustomizer;
+import org.springframework.cloud.sleuth.instrument.rsocket.TracingRSocketConnectorConfigurer;
+import org.springframework.cloud.sleuth.instrument.rsocket.TracingRSocketServerCustomizer;
 import org.springframework.cloud.sleuth.propagation.Propagator;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

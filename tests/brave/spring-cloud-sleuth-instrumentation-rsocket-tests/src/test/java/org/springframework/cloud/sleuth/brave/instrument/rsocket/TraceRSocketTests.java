@@ -27,7 +27,6 @@ import io.rsocket.frame.FrameType;
 import java.net.URI;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingDeque;
-import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.WebApplicationType;
@@ -49,6 +48,8 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.util.context.ContextView;
 
+import org.junit.jupiter.api.Test;
+
 public class TraceRSocketTests {
 
 	public static final String EXPECTED_TRACE_ID = "b919095138aa4c6e";
@@ -59,15 +60,10 @@ public class TraceRSocketTests {
 		ConfigurableApplicationContext context = new SpringApplicationBuilder(
 				TraceRSocketTests.Config.class)
 				.web(WebApplicationType.REACTIVE)
-				.properties(
-						"server.port=0",
-						"spring.rsocket.server.transport=websocket",
-						"spring.rsocket.server.mapping-path=/rsocket",
-						"spring.jmx.enabled=false",
-						"spring.application.name=TraceRSocketTests",
-						"security.basic.enabled=false",
-						"management.security.enabled=false"
-				)
+				.properties("server.port=0", "spring.rsocket.server.transport=websocket",
+						"spring.rsocket.server.mapping-path=/rsocket", "spring.jmx.enabled=false",
+						"spring.application.name=TraceRSocketTests", "security.basic.enabled=false",
+						"management.security.enabled=false")
 				.run();
 		final TestSpanHandler spans = context.getBean(TestSpanHandler.class);
 		final int port = context.getBean(Environment.class)
@@ -113,9 +109,6 @@ public class TraceRSocketTests {
 		spans.clear();
 		controller2.span = null;
 
-
-
-
 		// REQUEST FNF
 		whenNonSampledRequestFnfIsSent(rSocketRequester);
 		controller2.receivedFrames.take();
@@ -123,7 +116,6 @@ public class TraceRSocketTests {
 		thenNoSpanWasReported(spans, controller2, EXPECTED_TRACE_ID);
 		spans.clear();
 		controller2.span = null;
-
 
 		// REQUEST RESPONSE
 		whenNonSampledRequestResponseIsSent(rSocketRequester);
@@ -133,7 +125,6 @@ public class TraceRSocketTests {
 		spans.clear();
 		controller2.span = null;
 
-
 		// REQUEST STREAM
 		whenNonSampledRequestStreamIsSent(rSocketRequester);
 		controller2.receivedFrames.take();
@@ -142,9 +133,8 @@ public class TraceRSocketTests {
 		spans.clear();
 		controller2.span = null;
 
-
 		// REQUEST CHANNEL
-		whenNonSampledRequestResponseIsSent(rSocketRequester);
+		whenNonSampledRequestChannelIsSent(rSocketRequester);
 		controller2.receivedFrames.take();
 		// then
 		thenNoSpanWasReported(spans, controller2, EXPECTED_TRACE_ID);
@@ -155,26 +145,20 @@ public class TraceRSocketTests {
 		context.close();
 	}
 
-
 	@Test
 	public void should_instrument_requester_and_responder() throws Exception {
 		// setup
 		ConfigurableApplicationContext context = new SpringApplicationBuilder(
 				TraceRSocketTests.Config.class)
 				.web(WebApplicationType.REACTIVE)
-				.properties(
-						"server.port=0",
-						"spring.rsocket.server.transport=websocket",
-						"spring.rsocket.server.mapping-path=/rsocket",
-						"spring.jmx.enabled=false",
-						"spring.application.name=TraceRSocketTests",
-						"security.basic.enabled=false",
-						"management.security.enabled=false"
-				)
+				.properties("server.port=0", "spring.rsocket.server.transport=websocket",
+						"spring.rsocket.server.mapping-path=/rsocket", "spring.jmx.enabled=false",
+						"spring.application.name=TraceRSocketTests", "security.basic.enabled=false",
+						"management.security.enabled=false")
 				.run();
 
-		final org.springframework.cloud.sleuth.Tracer tracer = context.getBean(
-				org.springframework.cloud.sleuth.Tracer.class);
+		final org.springframework.cloud.sleuth.Tracer tracer = context
+				.getBean(org.springframework.cloud.sleuth.Tracer.class);
 		final TestSpanHandler spans = context.getBean(TestSpanHandler.class);
 		final int port = context.getBean(Environment.class)
 				.getProperty("local.server.port", Integer.class);
@@ -185,57 +169,48 @@ public class TraceRSocketTests {
 		final RSocketRequester rSocketRequester = rsocketRequesterBuilder
 				.websocket(URI.create("ws://localhost:" + port + "/rsocket"));
 
-
 		// REQUEST FNF
 		final org.springframework.cloud.sleuth.Span nextSpanFnf = tracer.nextSpan().start();
 		whenRequestFnFIsSent(rSocketRequester, "api.c2.fnf")
 				.contextWrite(ctx -> ctx.put(TraceContext.class, nextSpanFnf.context()))
-				.doFinally(signalType -> nextSpanFnf.end())
-				.block();
+				.doFinally(signalType -> nextSpanFnf.end()).block();
 		controller2.receivedFrames.take();
 		thenNoSpanWasReported(spans, controller2, nextSpanFnf.context().traceId());
 		spans.clear();
 		controller2.span = null;
 
-
 		// REQUEST RESPONSE
 		final org.springframework.cloud.sleuth.Span nextSpanRR = tracer.nextSpan().start();
 		whenRequestResponseIsSent(rSocketRequester, "api.c2.rr")
 				.contextWrite(ctx -> ctx.put(TraceContext.class, nextSpanRR.context()))
-				.doFinally(signalType -> nextSpanRR.end())
-				.block();
+				.doFinally(signalType -> nextSpanRR.end()).block();
 
 		controller2.receivedFrames.take();
 		thenNoSpanWasReported(spans, controller2, nextSpanRR.context().traceId());
 		spans.clear();
 		controller2.span = null;
 
-
 		// REQUEST STREAM
 		final org.springframework.cloud.sleuth.Span nextSpanRS = tracer.nextSpan().start();
 		whenRequestStreamIsSent(rSocketRequester, "api.c2.rs")
 				.contextWrite(ctx -> ctx.put(TraceContext.class, nextSpanRS.context()))
-				.doFinally(signalType -> nextSpanRS.end())
-				.blockLast();
+				.doFinally(signalType -> nextSpanRS.end()).blockLast();
 
 		controller2.receivedFrames.take();
 		thenNoSpanWasReported(spans, controller2, nextSpanRS.context().traceId());
 		spans.clear();
 		controller2.span = null;
 
-
 		// REQUEST CHANNEL
 		final org.springframework.cloud.sleuth.Span nextSpanRC = tracer.nextSpan().start();
 		whenRequestChannelIsSent(rSocketRequester, "api.c2.rc")
 				.contextWrite(ctx -> ctx.put(TraceContext.class, nextSpanRC.context()))
-				.doFinally(signalType -> nextSpanRC.end())
-				.blockLast();
+				.doFinally(signalType -> nextSpanRC.end()).blockLast();
 
 		controller2.receivedFrames.take();
 		thenNoSpanWasReported(spans, controller2, nextSpanRC.context().traceId());
 		spans.clear();
 		controller2.span = null;
-
 
 		// cleanup
 		context.close();
@@ -243,7 +218,7 @@ public class TraceRSocketTests {
 
 	private void thenSpanWasReportedWithTags(TestSpanHandler spans, String path,
 			FrameType frameType) {
-//		then(spans).hasSize(1); FIXME: there are 2 of them for unknown reasons
+		// then(spans).hasSize(1); FIXME: there are 2 of them for unknown reasons
 		then(spans.get(0).name()).isEqualTo(frameType.name() + " " + path);
 	}
 
@@ -260,8 +235,7 @@ public class TraceRSocketTests {
 	}
 
 	private Flux<String> whenRequestChannelIsSent(RSocketRequester requester, String path) {
-		return requester.route(path)
-				.data(Flux.fromArray(new String[]{"test1", "test2"}))
+		return requester.route(path).data(Flux.fromArray(new String[]{"test1", "test2"}))
 				.retrieveFlux(String.class);
 	}
 
@@ -272,9 +246,7 @@ public class TraceRSocketTests {
 					public String toString() {
 						return "b3";
 					}
-				})
-				.send()
-				.block();
+				}).send().block();
 	}
 
 	private void whenNonSampledRequestResponseIsSent(RSocketRequester requester) {
@@ -284,9 +256,7 @@ public class TraceRSocketTests {
 					public String toString() {
 						return "b3";
 					}
-				})
-				.retrieveMono(String.class)
-				.block();
+				}).retrieveMono(String.class).block();
 	}
 
 	private void whenNonSampledRequestStreamIsSent(RSocketRequester requester) {
@@ -296,11 +266,8 @@ public class TraceRSocketTests {
 					public String toString() {
 						return "b3";
 					}
-				})
-				.retrieveFlux(String.class)
-				.blockLast();
+				}).retrieveFlux(String.class).blockLast();
 	}
-
 
 	private void whenNonSampledRequestChannelIsSent(RSocketRequester requester) {
 		requester.route("api.c2.rc")
@@ -309,18 +276,16 @@ public class TraceRSocketTests {
 					public String toString() {
 						return "b3";
 					}
-				})
-				.data(Flux.fromArray(new String[]{"test1", "test2"}))
-				.retrieveFlux(String.class)
+				}).data(Flux.fromArray(new String[]{"test1", "test2"})).retrieveFlux(String.class)
 				.blockLast();
 	}
 
-	private void thenNoSpanWasReported(TestSpanHandler spans, TestController controller2, String expectedTraceId) {
-//		then(spans).isEmpty(); // FIXME: does not work for request case
+	private void thenNoSpanWasReported(TestSpanHandler spans, TestController controller2,
+			String expectedTraceId) {
+		// then(spans).isEmpty(); // FIXME: does not work for request case
 		then(controller2.span).isNotNull();
 		then(controller2.span.context().traceIdString()).isEqualTo(expectedTraceId);
 	}
-
 
 	@Configuration(proxyBeanMethods = false)
 	@EnableAutoConfiguration
@@ -345,7 +310,6 @@ public class TraceRSocketTests {
 
 	}
 
-
 	@Controller
 	@MessageMapping("api.c2")
 	static class TestController {
@@ -353,6 +317,7 @@ public class TraceRSocketTests {
 		final Tracer tracer;
 
 		Span span;
+
 		ContextView interceptedContext;
 
 		BlockingQueue<FrameType> receivedFrames = new LinkedBlockingDeque<>();

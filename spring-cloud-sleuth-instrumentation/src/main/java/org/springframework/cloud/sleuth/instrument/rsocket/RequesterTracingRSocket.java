@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-package org.springframework.cloud.sleuth.instrument.messaging.rsocket;
+package org.springframework.cloud.sleuth.instrument.rsocket;
 
-import static org.springframework.cloud.sleuth.instrument.messaging.rsocket.PayloadUtils.cleanTracingMetadata;
+import static org.springframework.cloud.sleuth.instrument.rsocket.PayloadUtils.cleanTracingMetadata;
 
 import io.netty.buffer.CompositeByteBuf;
 import io.rsocket.Payload;
