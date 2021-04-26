@@ -147,7 +147,7 @@
       "name": "spring.sleuth.deployer.status-poll-delay",
       "type": "java.lang.Long",
       "description": "Default poll delay to retrieve the deployed application status.",
-      "defaultValue": 1000
+      "defaultValue": 500
     },
     {
       "name": "spring.sleuth.config.server.enabled",

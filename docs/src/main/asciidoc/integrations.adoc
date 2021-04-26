@@ -575,3 +575,11 @@ This feature is available for all tracer implementations.
 
 If you have Spring Cloud Config Server running on the classpath, we will wrap the `EnvironmentRepository` in a span.
 In order to disable this instrumentation set `spring.sleuth.config.server.enabled` to `false`.
+
+[[sleuth-deployer-integration]]
+== Spring Cloud Deployer
+
+This feature is available for all tracer implementations.
+
+If you have Spring Cloud Deployer running on the classpath, we wrap the `AppDeployer` in a trace representation. We are polling the application for its status at a default interval. You can change that default by setting the `spring.sleuth.deployer.status-poll-delay` property.
+In order to disable this instrumentation set `spring.sleuth.deployer.enabled` to `false`.
