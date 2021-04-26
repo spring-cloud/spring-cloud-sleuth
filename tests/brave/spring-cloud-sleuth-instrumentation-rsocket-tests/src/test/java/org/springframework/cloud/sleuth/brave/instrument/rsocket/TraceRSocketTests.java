@@ -113,8 +113,38 @@ public class TraceRSocketTests {
 		spans.clear();
 		controller2.span = null;
 
-		// when
-		whenNonSampledRequestIsSent(rSocketRequester);
+
+
+
+		// REQUEST FNF
+		whenNonSampledRequestFnfIsSent(rSocketRequester);
+		controller2.receivedFrames.take();
+		// then
+		thenNoSpanWasReported(spans, controller2, EXPECTED_TRACE_ID);
+		spans.clear();
+		controller2.span = null;
+
+
+		// REQUEST RESPONSE
+		whenNonSampledRequestResponseIsSent(rSocketRequester);
+		controller2.receivedFrames.take();
+		// then
+		thenNoSpanWasReported(spans, controller2, EXPECTED_TRACE_ID);
+		spans.clear();
+		controller2.span = null;
+
+
+		// REQUEST STREAM
+		whenNonSampledRequestStreamIsSent(rSocketRequester);
+		controller2.receivedFrames.take();
+		// then
+		thenNoSpanWasReported(spans, controller2, EXPECTED_TRACE_ID);
+		spans.clear();
+		controller2.span = null;
+
+
+		// REQUEST CHANNEL
+		whenNonSampledRequestResponseIsSent(rSocketRequester);
 		controller2.receivedFrames.take();
 		// then
 		thenNoSpanWasReported(spans, controller2, EXPECTED_TRACE_ID);
@@ -235,15 +265,54 @@ public class TraceRSocketTests {
 				.retrieveFlux(String.class);
 	}
 
-	private void whenNonSampledRequestIsSent(RSocketRequester requester) {
+	private void whenNonSampledRequestFnfIsSent(RSocketRequester requester) {
+		requester.route("api.c2.fnf")
+				.metadata(EXPECTED_TRACE_ID + "-" + EXPECTED_TRACE_ID + "-0", new MimeType("b3") {
+					@Override
+					public String toString() {
+						return "b3";
+					}
+				})
+				.send()
+				.block();
+	}
+
+	private void whenNonSampledRequestResponseIsSent(RSocketRequester requester) {
 		requester.route("api.c2.rr")
 				.metadata(EXPECTED_TRACE_ID + "-" + EXPECTED_TRACE_ID + "-0", new MimeType("b3") {
 					@Override
 					public String toString() {
 						return "b3";
 					}
-				}).retrieveMono(String.class)
+				})
+				.retrieveMono(String.class)
 				.block();
+	}
+
+	private void whenNonSampledRequestStreamIsSent(RSocketRequester requester) {
+		requester.route("api.c2.rs")
+				.metadata(EXPECTED_TRACE_ID + "-" + EXPECTED_TRACE_ID + "-0", new MimeType("b3") {
+					@Override
+					public String toString() {
+						return "b3";
+					}
+				})
+				.retrieveFlux(String.class)
+				.blockLast();
+	}
+
+
+	private void whenNonSampledRequestChannelIsSent(RSocketRequester requester) {
+		requester.route("api.c2.rc")
+				.metadata(EXPECTED_TRACE_ID + "-" + EXPECTED_TRACE_ID + "-0", new MimeType("b3") {
+					@Override
+					public String toString() {
+						return "b3";
+					}
+				})
+				.data(Flux.fromArray(new String[]{"test1", "test2"}))
+				.retrieveFlux(String.class)
+				.blockLast();
 	}
 
 	private void thenNoSpanWasReported(TestSpanHandler spans, TestController controller2, String expectedTraceId) {
