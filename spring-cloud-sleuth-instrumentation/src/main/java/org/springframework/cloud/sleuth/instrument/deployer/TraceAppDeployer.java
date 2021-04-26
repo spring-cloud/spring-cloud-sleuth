@@ -79,7 +79,7 @@ public class TraceAppDeployer implements AppDeployer {
 		try (Tracer.SpanInScope spanInScope = tracer().withSpan(span.start())) {
 			span.event("start");
 			String id = this.delegate.deploy(request);
-			span.tag("id", id);
+			span.tag("deployer.app.id", id);
 			registerListener(span, id);
 			return id;
 		}
@@ -103,7 +103,7 @@ public class TraceAppDeployer implements AppDeployer {
 	@Override
 	public void undeploy(String id) {
 		Span span = tracer().nextSpan().name("undeploy");
-		span.tag("id", id);
+		span.tag("deployer.app.id", id);
 		try (Tracer.SpanInScope spanInScope = tracer().withSpan(span.start())) {
 			span.event("start");
 			this.delegate.undeploy(id);
@@ -117,7 +117,7 @@ public class TraceAppDeployer implements AppDeployer {
 	@Override
 	public AppStatus status(String id) {
 		Span span = tracer().nextSpan().name("status");
-		span.tag("id", id);
+		span.tag("deployer.app.id", id);
 		try (Tracer.SpanInScope spanInScope = tracer().withSpan(span.start())) {
 			return this.delegate.status(id);
 		}
@@ -129,13 +129,13 @@ public class TraceAppDeployer implements AppDeployer {
 	@Override
 	public Mono<AppStatus> statusReactive(String id) {
 		return ReactorSleuth.tracedMono(tracer(), currentTraceContext(), "status",
-				() -> this.delegate.statusReactive(id), span -> span.tag("id", id));
+				() -> this.delegate.statusReactive(id), span -> span.tag("deployer.app.id", id));
 	}
 
 	@Override
 	public Flux<AppStatus> statusesReactive(String... ids) {
 		return ReactorSleuth.tracedFlux(tracer(), currentTraceContext(), "statuses",
-				() -> this.delegate.statusesReactive(ids), span -> span.tag("ids", Arrays.toString(ids)));
+				() -> this.delegate.statusesReactive(ids), span -> span.tag("deployer.app.ids", Arrays.toString(ids)));
 	}
 
 	@Override
@@ -146,7 +146,7 @@ public class TraceAppDeployer implements AppDeployer {
 	@Override
 	public String getLog(String id) {
 		Span span = tracer().nextSpan().name("getLog");
-		span.tag("id", id);
+		span.tag("deployer.app.id", id);
 		try (Tracer.SpanInScope spanInScope = tracer().withSpan(span.start())) {
 			return this.delegate.getLog(id);
 		}
@@ -158,8 +158,8 @@ public class TraceAppDeployer implements AppDeployer {
 	@Override
 	public void scale(AppScaleRequest appScaleRequest) {
 		Span span = tracer().nextSpan().name("scale");
-		span.tag("deploymentId", appScaleRequest.getDeploymentId());
-		span.tag("count", String.valueOf(appScaleRequest.getCount()));
+		span.tag("deployer.scale.deploymentId", appScaleRequest.getDeploymentId());
+		span.tag("deployer.scale.count", String.valueOf(appScaleRequest.getCount()));
 		// TODO: Is this secure to pass?
 		// TODO: Does it make sense?
 		// if (appScaleRequest.getProperties().isPresent() &&
