@@ -28,7 +28,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 public class SleuthRSocketProperties {
 
 	/**
-	 * When true enables instrumentation for reactor.
+	 * When true enables instrumentation for rsocket.
 	 */
 	private boolean enabled = true;
 
