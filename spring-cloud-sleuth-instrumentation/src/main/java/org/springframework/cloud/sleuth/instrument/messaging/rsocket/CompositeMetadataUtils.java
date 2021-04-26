@@ -26,37 +26,38 @@ import reactor.util.annotation.Nullable;
 
 class CompositeMetadataUtils {
 
-  static Map<String, ByteBuf> extract(ByteBuf metadata, Set<String> keys) {
-    final CompositeMetadata compositeMetadata = new CompositeMetadata(metadata, false);
+	static Map<String, ByteBuf> extract(ByteBuf metadata, Set<String> keys) {
+		final CompositeMetadata compositeMetadata = new CompositeMetadata(metadata, false);
 
-    final Map<String, ByteBuf> map = new HashMap<>();
-    for (Entry entry : compositeMetadata) {
+		final Map<String, ByteBuf> map = new HashMap<>();
+		for (Entry entry : compositeMetadata) {
 
-      if (keys.isEmpty()) {
-        return map;
-      }
+			if (keys.isEmpty()) {
+				return map;
+			}
 
-      final String key = entry.getMimeType();
-      if (keys.contains(key)) {
-        keys.remove(key);
-        map.put(key, entry.getContent());
-      }
-    }
+			final String key = entry.getMimeType();
+			if (keys.contains(key)) {
+				keys.remove(key);
+				map.put(key, entry.getContent());
+			}
+		}
 
-    return map;
-  }
+		return map;
+	}
 
-  @Nullable
-  static ByteBuf extract(ByteBuf metadata, String key) {
-    final CompositeMetadata compositeMetadata = new CompositeMetadata(metadata, false);
+	@Nullable
+	static ByteBuf extract(ByteBuf metadata, String key) {
+		final CompositeMetadata compositeMetadata = new CompositeMetadata(metadata, false);
 
-    for (Entry entry : compositeMetadata) {
-      final String entryKey = entry.getMimeType();
-      if (key.equals(entryKey)) {
-        return entry.getContent();
-      }
-    }
+		for (Entry entry : compositeMetadata) {
+			final String entryKey = entry.getMimeType();
+			if (key.equals(entryKey)) {
+				return entry.getContent();
+			}
+		}
 
-    return null;
-  }
+		return null;
+	}
+
 }

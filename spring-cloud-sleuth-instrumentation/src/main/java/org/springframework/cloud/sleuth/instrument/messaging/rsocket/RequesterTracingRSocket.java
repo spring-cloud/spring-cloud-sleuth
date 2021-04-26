@@ -81,27 +81,24 @@ public class RequesterTracingRSocket extends RSocketProxy {
 			// message, channel);
 			if (contextView.hasKey(TraceContext.class)) {
 				spanBuilder = spanBuilder.setParent(contextView.get(TraceContext.class));
-			} else if (this.tracer.currentSpan() != null) {
+			}
+			else if (this.tracer.currentSpan() != null) {
 				// a use case where e.g. rSocketRequest is used outside spring
 				spanBuilder = spanBuilder.setParent(this.tracer.currentSpan().context());
 			}
 
 			final RoutingMetadata routingMetadata = new RoutingMetadata(CompositeMetadataUtils
-					.extract(payload.sliceMetadata(),
-							WellKnownMimeType.MESSAGE_RSOCKET_ROUTING.getString()));
+					.extract(payload.sliceMetadata(), WellKnownMimeType.MESSAGE_RSOCKET_ROUTING.getString()));
 			final Iterator<String> iterator = routingMetadata.iterator();
 
 			Span span = spanBuilder.kind(Span.Kind.PRODUCER).name(iterator.next()).start();
 			if (log.isDebugEnabled()) {
 				log.debug("Extracted result from context or thread local " + span);
 			}
-			final Payload newPayload = cleanTracingMetadata(payload,
-					new HashSet<>(propagator.fields()));
-			this.propagator
-					.inject(span.context(), (CompositeByteBuf) newPayload.metadata(), this.setter);
+			final Payload newPayload = cleanTracingMetadata(payload, new HashSet<>(propagator.fields()));
+			this.propagator.inject(span.context(), (CompositeByteBuf) newPayload.metadata(), this.setter);
 
-			return input.apply(newPayload).doOnError(span::error)
-					.doFinally(signalType -> span.end());
+			return input.apply(newPayload).doOnError(span::error).doFinally(signalType -> span.end());
 		});
 	}
 
@@ -116,7 +113,8 @@ public class RequesterTracingRSocket extends RSocketProxy {
 			final Payload firstPayload = firstSignal.get();
 
 			if (firstPayload != null) {
-				return setSpan(p -> super.requestChannel(flux.skip(1).startWith(p)), firstPayload, firstSignal.getContextView());
+				return setSpan(p -> super.requestChannel(flux.skip(1).startWith(p)), firstPayload,
+						firstSignal.getContextView());
 			}
 
 			return flux;
@@ -130,27 +128,24 @@ public class RequesterTracingRSocket extends RSocketProxy {
 		// message, channel);
 		if (contextView.hasKey(TraceContext.class)) {
 			spanBuilder = spanBuilder.setParent(contextView.get(TraceContext.class));
-		} else if (this.tracer.currentSpan() != null) {
+		}
+		else if (this.tracer.currentSpan() != null) {
 			// a use case where e.g. rSocketRequest is used outside spring
 			spanBuilder = spanBuilder.setParent(this.tracer.currentSpan().context());
 		}
 
 		final RoutingMetadata routingMetadata = new RoutingMetadata(CompositeMetadataUtils
-				.extract(payload.sliceMetadata(),
-						WellKnownMimeType.MESSAGE_RSOCKET_ROUTING.getString()));
+				.extract(payload.sliceMetadata(), WellKnownMimeType.MESSAGE_RSOCKET_ROUTING.getString()));
 		final Iterator<String> iterator = routingMetadata.iterator();
 
 		Span span = spanBuilder.kind(Span.Kind.PRODUCER).name(iterator.next()).start();
 		if (log.isDebugEnabled()) {
 			log.debug("Extracted result from context or thread local " + span);
 		}
-		final Payload newPayload = cleanTracingMetadata(payload,
-				new HashSet<>(propagator.fields()));
-		this.propagator
-				.inject(span.context(), (CompositeByteBuf) newPayload.metadata(), this.setter);
+		final Payload newPayload = cleanTracingMetadata(payload, new HashSet<>(propagator.fields()));
+		this.propagator.inject(span.context(), (CompositeByteBuf) newPayload.metadata(), this.setter);
 
-		return input.apply(newPayload).doOnError(span::error)
-				.doFinally(signalType -> span.end());
+		return input.apply(newPayload).doOnError(span::error).doFinally(signalType -> span.end());
 	}
 
 }
