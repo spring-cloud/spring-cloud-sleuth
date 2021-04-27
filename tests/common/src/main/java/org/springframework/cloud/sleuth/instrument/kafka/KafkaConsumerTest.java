@@ -20,20 +20,18 @@ import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
-import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.Executors;
-import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Pattern;
 
+import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
-import org.apache.kafka.clients.producer.Callback;
 import org.apache.kafka.clients.producer.KafkaProducer;
-import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.clients.producer.ProducerRecord;
-import org.apache.kafka.common.serialization.StringSerializer;
+import org.apache.kafka.common.serialization.StringDeserializer;
 import org.assertj.core.api.BDDAssertions;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
@@ -56,7 +54,7 @@ import org.springframework.cloud.sleuth.test.TestTracingAwareSupplier;
 import static org.awaitility.Awaitility.await;
 
 @Testcontainers
-public abstract class KafkaProducerTest implements TestTracingAwareSupplier {
+public abstract class KafkaConsumerTest implements TestTracingAwareSupplier {
 
 	protected String testTopic;
 
@@ -66,11 +64,11 @@ public abstract class KafkaProducerTest implements TestTracingAwareSupplier {
 
 	protected TestSpanHandler spans = tracerTest().handler();
 
-	protected TracingKafkaProducer<String, String> kafkaProducer;
+	protected TracingKafkaConsumer<String, String> kafkaConsumer;
 
 	private final AtomicBoolean consumerRun = new AtomicBoolean();
 
-	protected final BlockingQueue<ConsumerRecord<String, String>> consumerRecords = new LinkedBlockingQueue<>();
+	protected final AtomicInteger receivedCounter = new AtomicInteger(0);
 
 	@Container
 	protected static final KafkaContainer kafkaContainer = new KafkaContainer(
@@ -90,53 +88,52 @@ public abstract class KafkaProducerTest implements TestTracingAwareSupplier {
 	@BeforeEach
 	void setup() {
 		testTopic = UUID.randomUUID().toString();
-		Map<String, Object> producerProperties = new HashMap<>();
-		producerProperties.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, kafkaContainer.getBootstrapServers());
-		producerProperties.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
-		producerProperties.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
-		kafkaProducer = new TracingKafkaProducer<>(new KafkaProducer<>(producerProperties), tracer, propagator,
-				new TracingKafkaPropagatorSetter());
+		Map<String, Object> consumerProperties = new HashMap<>();
+		consumerProperties.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, kafkaContainer.getBootstrapServers());
+		consumerProperties.put(ConsumerConfig.GROUP_ID_CONFIG, "test-consumer-group");
+		consumerProperties.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
+		consumerProperties.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
+		consumerProperties.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
+		kafkaConsumer = new TracingKafkaConsumer<>(new KafkaConsumer<>(consumerProperties), propagator,
+				new TracingKafkaPropagatorGetter());
 		consumerRun.set(true);
-		consumerRecords.clear();
+		Executors.newSingleThreadExecutor().execute(() -> doStartKafkaConsumer(receivedCounter));
 	}
 
 	@AfterEach
 	void destroy() {
-		this.kafkaProducer.close();
 		consumerRun.set(false);
 	}
 
 	@Test
-	public void should_create_and_finish_producer_span() {
-		AtomicBoolean acknowledged = new AtomicBoolean(false);
-		Callback callback = (metadata, ex) -> acknowledged.set(true);
+	public void should_create_and_finish_consumer_span() {
+		KafkaProducer<String, String> kafkaProducer = KafkaTestUtils
+				.buildTestKafkaProducer(kafkaContainer.getBootstrapServers());
 		ProducerRecord<String, String> producerRecord = new ProducerRecord<>(testTopic, "test", "test");
+		kafkaProducer.send(producerRecord);
+		kafkaProducer.close();
 
-		this.kafkaProducer.send(producerRecord, callback);
-		await().atMost(Duration.ofSeconds(5)).until(acknowledged::get);
+		await().atMost(Duration.ofSeconds(5)).until(() -> receivedCounter.intValue() == 1);
 
 		BDDAssertions.then(this.tracer.currentSpan()).isNull();
 		BDDAssertions.then(this.spans).hasSize(1);
 		FinishedSpan span = this.spans.get(0);
-		BDDAssertions.then(span.getKind()).isEqualTo(Span.Kind.PRODUCER);
+		BDDAssertions.then(span.getKind()).isEqualTo(Span.Kind.CONSUMER);
+		BDDAssertions.then(span.getTags()).isNotEmpty();
 		BDDAssertions.then(span.getTags().get("kafka.topic")).isEqualTo(testTopic);
+		BDDAssertions.then(span.getTags().get("kafka.offset")).isEqualTo("0");
+		BDDAssertions.then(span.getTags().get("kafka.partition")).isEqualTo("0");
 	}
 
-	protected void startKafkaConsumer() {
-		Executors.newSingleThreadExecutor().execute(this::doStartKafkaConsumer);
-	}
-
-	private void doStartKafkaConsumer() {
-		KafkaConsumer<String, String> kafkaConsumer = KafkaTestUtils
-				.buildTestKafkaConsumer(kafkaContainer.getBootstrapServers());
-		kafkaConsumer.subscribe(Pattern.compile(testTopic));
-		while (consumerRun.get()) {
-			ConsumerRecords<String, String> records = kafkaConsumer.poll(Duration.ofSeconds(1));
+	private void doStartKafkaConsumer(AtomicInteger receivedCounter) {
+		this.kafkaConsumer.subscribe(Pattern.compile(this.testTopic));
+		while (this.consumerRun.get()) {
+			ConsumerRecords<String, String> records = this.kafkaConsumer.poll(Duration.ofSeconds(1));
 			for (ConsumerRecord<String, String> record : records) {
-				consumerRecords.offer(record);
+				receivedCounter.incrementAndGet();
 			}
 		}
-		kafkaConsumer.close();
+		this.kafkaConsumer.close();
 	}
 
 	@Override

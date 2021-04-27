@@ -23,14 +23,13 @@ import java.util.UUID;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.regex.Pattern;
 
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
-import org.apache.kafka.clients.producer.Callback;
-import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.common.serialization.StringSerializer;
@@ -45,6 +44,13 @@ import org.testcontainers.containers.wait.strategy.Wait;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 import org.testcontainers.utility.DockerImageName;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
+import reactor.kafka.sender.KafkaSender;
+import reactor.kafka.sender.SenderOptions;
+import reactor.kafka.sender.SenderRecord;
+import reactor.kafka.sender.SenderResult;
+import reactor.test.StepVerifier;
 
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.Tracer;
@@ -53,10 +59,8 @@ import org.springframework.cloud.sleuth.propagation.Propagator;
 import org.springframework.cloud.sleuth.test.TestSpanHandler;
 import org.springframework.cloud.sleuth.test.TestTracingAwareSupplier;
 
-import static org.awaitility.Awaitility.await;
-
 @Testcontainers
-public abstract class KafkaProducerTest implements TestTracingAwareSupplier {
+public abstract class KafkaSenderTest implements TestTracingAwareSupplier {
 
 	protected String testTopic;
 
@@ -66,7 +70,7 @@ public abstract class KafkaProducerTest implements TestTracingAwareSupplier {
 
 	protected TestSpanHandler spans = tracerTest().handler();
 
-	protected TracingKafkaProducer<String, String> kafkaProducer;
+	protected KafkaSender<String, String> kafkaSender;
 
 	private final AtomicBoolean consumerRun = new AtomicBoolean();
 
@@ -94,32 +98,33 @@ public abstract class KafkaProducerTest implements TestTracingAwareSupplier {
 		producerProperties.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, kafkaContainer.getBootstrapServers());
 		producerProperties.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
 		producerProperties.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
-		kafkaProducer = new TracingKafkaProducer<>(new KafkaProducer<>(producerProperties), tracer, propagator,
-				new TracingKafkaPropagatorSetter());
+		this.kafkaSender = KafkaSender.create(new TracingKafkaProducerFactory(tracer, propagator),
+				SenderOptions.create(producerProperties));
 		consumerRun.set(true);
 		consumerRecords.clear();
 	}
 
 	@AfterEach
 	void destroy() {
-		this.kafkaProducer.close();
 		consumerRun.set(false);
 	}
 
 	@Test
-	public void should_create_and_finish_producer_span() {
-		AtomicBoolean acknowledged = new AtomicBoolean(false);
-		Callback callback = (metadata, ex) -> acknowledged.set(true);
+	public void should_create_and_finish_producer_span() throws InterruptedException {
 		ProducerRecord<String, String> producerRecord = new ProducerRecord<>(testTopic, "test", "test");
+		startKafkaConsumer();
 
-		this.kafkaProducer.send(producerRecord, callback);
-		await().atMost(Duration.ofSeconds(5)).until(acknowledged::get);
+		Flux<SenderResult<Object>> senderResultFlux = this.kafkaSender
+				.send(Mono.just(SenderRecord.create(producerRecord, null)));
+		StepVerifier.create(senderResultFlux).expectNextCount(1).verifyComplete();
+		consumerRecords.poll(5, TimeUnit.SECONDS);
 
 		BDDAssertions.then(this.tracer.currentSpan()).isNull();
 		BDDAssertions.then(this.spans).hasSize(1);
 		FinishedSpan span = this.spans.get(0);
 		BDDAssertions.then(span.getKind()).isEqualTo(Span.Kind.PRODUCER);
 		BDDAssertions.then(span.getTags().get("kafka.topic")).isEqualTo(testTopic);
+
 	}
 
 	protected void startKafkaConsumer() {
@@ -129,11 +134,11 @@ public abstract class KafkaProducerTest implements TestTracingAwareSupplier {
 	private void doStartKafkaConsumer() {
 		KafkaConsumer<String, String> kafkaConsumer = KafkaTestUtils
 				.buildTestKafkaConsumer(kafkaContainer.getBootstrapServers());
-		kafkaConsumer.subscribe(Pattern.compile(testTopic));
-		while (consumerRun.get()) {
+		kafkaConsumer.subscribe(Pattern.compile(this.testTopic));
+		while (this.consumerRun.get()) {
 			ConsumerRecords<String, String> records = kafkaConsumer.poll(Duration.ofSeconds(1));
 			for (ConsumerRecord<String, String> record : records) {
-				consumerRecords.offer(record);
+				this.consumerRecords.offer(record);
 			}
 		}
 		kafkaConsumer.close();

@@ -24,11 +24,16 @@ import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.common.header.Header;
 import org.assertj.core.api.BDDAssertions;
 import org.junit.jupiter.api.Test;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
+import reactor.kafka.sender.SenderRecord;
+import reactor.kafka.sender.SenderResult;
+import reactor.test.StepVerifier;
 
 import org.springframework.cloud.sleuth.brave.BraveTestTracing;
 import org.springframework.cloud.sleuth.test.TestTracingAware;
 
-public class KafkaProducerTest extends org.springframework.cloud.sleuth.instrument.kafka.KafkaProducerTest {
+public class KafkaSenderTest extends org.springframework.cloud.sleuth.instrument.kafka.KafkaSenderTest {
 
 	BraveTestTracing testTracing;
 
@@ -45,7 +50,9 @@ public class KafkaProducerTest extends org.springframework.cloud.sleuth.instrume
 		ProducerRecord<String, String> producerRecord = new ProducerRecord<>(testTopic, "test", "test");
 		startKafkaConsumer();
 
-		this.kafkaProducer.send(producerRecord);
+		Flux<SenderResult<Object>> senderResultFlux = this.kafkaSender
+				.send(Mono.just(SenderRecord.create(producerRecord, null)));
+		StepVerifier.create(senderResultFlux).expectNextCount(1).verifyComplete();
 		ConsumerRecord<String, String> consumerRecord = consumerRecords.poll(5, TimeUnit.SECONDS);
 
 		BDDAssertions.then(consumerRecord).isNotNull();
