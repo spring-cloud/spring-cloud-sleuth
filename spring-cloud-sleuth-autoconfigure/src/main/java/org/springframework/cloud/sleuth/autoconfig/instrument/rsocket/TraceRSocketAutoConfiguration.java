@@ -16,13 +16,15 @@
 
 package org.springframework.cloud.sleuth.autoconfig.instrument.rsocket;
 
+import io.rsocket.RSocket;
+
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.AutoConfigureBefore;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.boot.autoconfigure.integration.IntegrationProperties.RSocket;
 import org.springframework.boot.autoconfigure.rsocket.RSocketRequesterAutoConfiguration;
 import org.springframework.boot.autoconfigure.rsocket.RSocketServerAutoConfiguration;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -41,35 +43,33 @@ import org.springframework.messaging.rsocket.RSocketRequester.Builder;
 import org.springframework.messaging.rsocket.RSocketStrategies;
 
 @Configuration(proxyBeanMethods = false)
+@ConditionalOnBean(Tracer.class)
 @ConditionalOnProperty(value = "spring.sleuth.rsocket.enabled", matchIfMissing = true)
-@ConditionalOnClass({RSocket.class, RSocketStrategies.class})
+@ConditionalOnClass({ RSocket.class, RSocketStrategies.class })
 @AutoConfigureAfter(BraveAutoConfiguration.class)
-@AutoConfigureBefore({RSocketRequesterAutoConfiguration.class, RSocketServerAutoConfiguration.class})
+@AutoConfigureBefore({ RSocketRequesterAutoConfiguration.class, RSocketServerAutoConfiguration.class })
 @EnableConfigurationProperties(SleuthRSocketProperties.class)
-public class RSocketAutoConfiguration {
+public class TraceRSocketAutoConfiguration {
 
 	@Bean
 	@Scope("prototype")
 	@ConditionalOnMissingBean
-	public Builder rSocketRequesterBuilder(RSocketStrategies strategies,
+	Builder rSocketRequesterBuilder(RSocketStrategies strategies,
 			ObjectProvider<RSocketConnectorConfigurer> connectorConfigurerProvider) {
-		// FIXME: should be in srping boot
+		// TODO: should be in spring boot
 		final Builder builder = RSocketRequester.builder().rsocketStrategies(strategies);
-
 		connectorConfigurerProvider.forEach(builder::rsocketConnector);
-
 		return builder;
 	}
 
 	@Bean
-	public RSocketConnectorConfigurer tracingRSocketConnectorConfigurer(Propagator propagator,
-			Tracer tracer) {
+	RSocketConnectorConfigurer tracingRSocketConnectorConfigurer(Propagator propagator, Tracer tracer) {
 		return new TracingRSocketConnectorConfigurer(propagator, tracer);
 	}
 
 	@Bean
-	public RSocketServerCustomizer tracingRSocketServerCustomizer(Propagator propagator,
-			Tracer tracer) {
+	RSocketServerCustomizer tracingRSocketServerCustomizer(Propagator propagator, Tracer tracer) {
 		return new TracingRSocketServerCustomizer(propagator, tracer);
 	}
+
 }

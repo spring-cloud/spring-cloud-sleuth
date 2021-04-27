@@ -39,4 +39,5 @@ public class SleuthRSocketProperties {
 	public void setEnabled(boolean enabled) {
 		this.enabled = enabled;
 	}
+
 }

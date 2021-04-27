@@ -191,12 +191,6 @@ class TraceMessageHandler {
 		}
 	}
 
-	private void addTags(Span result, String destinationName) {
-		if (StringUtils.hasText(destinationName)) {
-			result.tag("channel", SpanNameUtil.shorten(destinationName));
-		}
-	}
-
 	/**
 	 * Called either when message got received and processed or message got sent.
 	 * @param span - span that corresponds to the given operation

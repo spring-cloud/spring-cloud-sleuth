@@ -18,6 +18,7 @@ package org.springframework.cloud.sleuth.instrument.rsocket;
 
 import io.rsocket.core.RSocketConnector;
 import io.rsocket.plugins.RSocketInterceptor;
+
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.propagation.Propagator;
 import org.springframework.messaging.rsocket.RSocketConnectorConfigurer;
@@ -36,9 +37,9 @@ public class TracingRSocketConnectorConfigurer implements RSocketConnectorConfig
 	@Override
 	public void configure(RSocketConnector rSocketConnector) {
 		rSocketConnector.interceptors(ir -> ir
-				.forResponder((RSocketInterceptor) rSocket -> new ResponderTracingRSocket(rSocket, propagator,
+				.forResponder((RSocketInterceptor) rSocket -> new TracingResponderRSocketProxy(rSocket, propagator,
 						new ByteBufGetter(), tracer))
-				.forRequester((RSocketInterceptor) rSocket -> new RequesterTracingRSocket(rSocket, propagator,
+				.forRequester((RSocketInterceptor) rSocket -> new TracingRequesterRSocketProxy(rSocket, propagator,
 						new ByteBufSetter(), tracer)));
 	}
 

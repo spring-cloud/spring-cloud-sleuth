@@ -88,7 +88,7 @@ public abstract class ConfigServerIntegrationTests {
 
 		void call(int port) {
 			log.info("Sending request");
-			String result = new RestTemplate().getForObject("http://localhost:" + port + "/master/application.yml",
+			String result = new RestTemplate().getForObject("http://localhost:" + port + "/foo/default/main",
 					String.class);
 			log.info("Got [\n" + result + "\n]");
 		}

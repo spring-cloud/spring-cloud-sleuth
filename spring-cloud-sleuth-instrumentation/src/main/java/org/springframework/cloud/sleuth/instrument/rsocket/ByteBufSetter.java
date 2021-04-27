@@ -20,6 +20,7 @@ import io.netty.buffer.ByteBufAllocator;
 import io.netty.buffer.ByteBufUtil;
 import io.netty.buffer.CompositeByteBuf;
 import io.rsocket.metadata.CompositeMetadataCodec;
+
 import org.springframework.cloud.sleuth.propagation.Propagator;
 
 class ByteBufSetter implements Propagator.Setter<CompositeByteBuf> {
