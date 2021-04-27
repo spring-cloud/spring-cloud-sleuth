@@ -211,7 +211,9 @@ public abstract class TraceRSocketTests {
 	protected abstract Class testConfiguration();
 
 	private void thenSpanWasReportedWithTags(TestSpanHandler spans, String path, FrameType frameType) {
-		// then(spans).hasSize(1); FIXME: there are 2 of them for unknown reasons
+		then(spans).hasSize(1);
+		// TODO: there are 2 of them for unknown reasons
+		// TODO: Preferred option would be : [api.c2.{name}]
 		then(spans.get(0).name()).isEqualTo(frameType.name() + " " + path);
 	}
 
