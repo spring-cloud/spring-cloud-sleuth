@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2020 the original author or authors.
+ * Copyright 2013-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,6 +20,9 @@ import java.util.List;
 import java.util.Map;
 
 import brave.Tracing;
+import brave.baggage.BaggageField;
+import brave.baggage.BaggagePropagation;
+import brave.baggage.BaggagePropagationConfig;
 import brave.propagation.B3Propagation;
 import brave.propagation.TraceContext;
 import org.junit.jupiter.api.Test;
@@ -45,8 +48,11 @@ public class TracingChannelInterceptorTest
 			this.testTracing = new BraveTestTracing() {
 				@Override
 				public Tracing.Builder tracingBuilder() {
-					return super.tracingBuilder()
-							.propagationFactory(B3Propagation.newFactoryBuilder().injectFormat(SINGLE).build());
+					return super.tracingBuilder().propagationFactory(BaggagePropagation
+							.newFactoryBuilder(B3Propagation.newFactoryBuilder().injectFormat(SINGLE).build())
+							.add(BaggagePropagationConfig.SingleBaggageField.remote(BaggageField.create("Foo-Id")))
+							.add(BaggagePropagationConfig.SingleBaggageField.remote(BaggageField.create("Baz-Id")))
+							.build());
 				}
 			};
 			this.testTracing.reset();

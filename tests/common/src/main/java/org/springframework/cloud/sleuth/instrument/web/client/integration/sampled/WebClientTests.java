@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2020 the original author or authors.
+ * Copyright 2013-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -130,6 +130,11 @@ public abstract class WebClientTests {
 		this.fooController.clear();
 	}
 
+	@BeforeEach
+	public void setup() {
+		log.info("Starting test");
+	}
+
 	@ParameterizedTest
 	@MethodSource("parametersForShouldCreateANewSpanWithClientSideTagsWhenNoPreviousTracingWasPresent")
 	@SuppressWarnings("unchecked")
@@ -141,15 +146,23 @@ public abstract class WebClientTests {
 			then(this.spans).isNotEmpty();
 			Optional<FinishedSpan> noTraceSpan = this.spans.reportedSpans().stream()
 					.filter(span -> span.getName().contains("GET") && !span.getTags().isEmpty()
-							&& span.getTags().containsKey("http.path"))
+							&& span.getTags().containsKey(pathKey()))
 					.findFirst();
 			then(noTraceSpan.isPresent()).isTrue();
-			then(noTraceSpan.get().getTags()).containsEntry("http.path", "/notrace").containsEntry("http.method",
-					"GET");
+			then(noTraceSpan.get().getTags()).containsEntry(pathKey(), "/notrace").containsEntry("http.method", "GET");
 			// TODO: matches cause there is an issue with Feign not providing the full URL
 			// at the interceptor level
-			then(noTraceSpan.get().getTags().get("http.path")).matches(".*/notrace");
+			then(noTraceSpan.get().getTags().get(pathKey())).matches(".*/notrace");
 		});
+		thenThereIsNoCurrentSpan();
+	}
+
+	protected String pathKey() {
+		return "http.path";
+	}
+
+	private void thenThereIsNoCurrentSpan() {
+		log.info("Current span [" + this.tracer.currentSpan() + "]");
 		then(this.tracer.currentSpan()).isNull();
 	}
 
@@ -197,7 +210,7 @@ public abstract class WebClientTests {
 			span.end();
 		}
 
-		then(this.tracer.currentSpan()).isNull();
+		thenThereIsNoCurrentSpan();
 		then(this.spans).isNotEmpty();
 	}
 
@@ -213,7 +226,7 @@ public abstract class WebClientTests {
 		finally {
 			span.end();
 		}
-		then(this.tracer.currentSpan()).isNull();
+		thenThereIsNoCurrentSpan();
 		then(this.spans.reportedSpans().stream().filter(r -> r.getKind() != null).map(r -> r.getKind().name())
 				.collect(Collectors.toList())).isNotEmpty().contains("CLIENT");
 	}
@@ -234,7 +247,7 @@ public abstract class WebClientTests {
 			span.end();
 		}
 
-		then(this.tracer.currentSpan()).isNull();
+		thenThereIsNoCurrentSpan();
 		then(this.spans.reportedSpans().stream().filter(r -> r.getKind() != null).map(r -> r.getKind().name())
 				.collect(Collectors.toList())).isNotEmpty().contains("CLIENT");
 	}
@@ -286,7 +299,7 @@ public abstract class WebClientTests {
 			span.end();
 		}
 
-		then(this.tracer.currentSpan()).isNull();
+		thenThereIsNoCurrentSpan();
 		then(this.spans).isNotEmpty();
 	}
 
@@ -305,7 +318,7 @@ public abstract class WebClientTests {
 		catch (HttpClientErrorException e) {
 		}
 
-		then(this.tracer.currentSpan()).isNull();
+		thenThereIsNoCurrentSpan();
 		Optional<FinishedSpan> storedSpan = this.spans.reportedSpans().stream()
 				.filter(span -> "404".equals(span.getTags().get("http.status_code"))).findFirst();
 		then(storedSpan.isPresent()).isTrue();
@@ -325,7 +338,7 @@ public abstract class WebClientTests {
 	public void shouldNotExecuteErrorControllerWhenUrlIsFound() {
 		this.template.getForEntity("http://fooservice/notrace", String.class);
 
-		then(this.tracer.currentSpan()).isNull();
+		thenThereIsNoCurrentSpan();
 		then(this.testErrorController.getSpan()).isNull();
 	}
 
@@ -341,9 +354,10 @@ public abstract class WebClientTests {
 		finally {
 			span.end();
 		}
-		then(this.tracer.currentSpan()).isNull();
+		thenThereIsNoCurrentSpan();
 		then(this.customizer.isExecuted()).isTrue();
-		then(this.spans).extracting("kind.name").contains("CLIENT");
+		then(this.spans.reportedSpans().stream().filter(s -> s.getKind() != null).map(s -> s.getKind().name())
+				.collect(Collectors.toList())).contains("CLIENT");
 	}
 
 	@Test

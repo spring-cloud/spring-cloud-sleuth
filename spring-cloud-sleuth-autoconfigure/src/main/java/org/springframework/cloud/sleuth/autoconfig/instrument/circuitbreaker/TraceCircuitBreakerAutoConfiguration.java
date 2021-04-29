@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2020 the original author or authors.
+ * Copyright 2013-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,10 +21,11 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
-import org.springframework.cloud.client.circuitbreaker.CircuitBreaker;
+import org.springframework.cloud.sleuth.CurrentTraceContext;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.autoconfig.brave.BraveAutoConfiguration;
 import org.springframework.cloud.sleuth.instrument.circuitbreaker.TraceCircuitBreakerFactoryAspect;
+import org.springframework.cloud.sleuth.instrument.circuitbreaker.TraceReactiveCircuitBreakerFactoryAspect;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -36,7 +37,6 @@ import org.springframework.context.annotation.Configuration;
  * @since 2.2.1
  */
 @Configuration(proxyBeanMethods = false)
-@ConditionalOnClass(CircuitBreaker.class)
 @ConditionalOnBean(Tracer.class)
 @ConditionalOnProperty(value = "spring.sleuth.circuitbreaker.enabled", matchIfMissing = true)
 @EnableConfigurationProperties(SleuthCircuitBreakerProperties.class)
@@ -44,8 +44,17 @@ import org.springframework.context.annotation.Configuration;
 public class TraceCircuitBreakerAutoConfiguration {
 
 	@Bean
+	@ConditionalOnClass(name = "org.springframework.cloud.client.circuitbreaker.CircuitBreaker")
 	TraceCircuitBreakerFactoryAspect traceCircuitBreakerFactoryAspect(Tracer tracer) {
 		return new TraceCircuitBreakerFactoryAspect(tracer);
+	}
+
+	@Bean
+	@ConditionalOnClass(name = { "reactor.core.publisher.Mono",
+			"org.springframework.cloud.client.circuitbreaker.ReactiveCircuitBreaker" })
+	TraceReactiveCircuitBreakerFactoryAspect traceReactiveCircuitBreakerFactoryAspect(Tracer tracer,
+			CurrentTraceContext currentTraceContext) {
+		return new TraceReactiveCircuitBreakerFactoryAspect(tracer, currentTraceContext);
 	}
 
 }

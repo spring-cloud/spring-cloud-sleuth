@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2020 the original author or authors.
+ * Copyright 2013-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -77,13 +77,14 @@ public abstract class FlatMapTests {
 	}
 
 	@Test
-	public void should_work_with_flat_maps(CapturedOutput capture) {
+	public void should_work_with_flat_maps_with_on_queues_instrumentation(CapturedOutput capture) {
 		// given
 		ConfigurableApplicationContext context = new SpringApplicationBuilder(FlatMapTests.TestConfiguration.class,
 				testConfiguration(), Issue866Configuration.class)
 						.web(WebApplicationType.REACTIVE)
 						.properties("server.port=0", "spring.jmx.enabled=false",
-								"spring.application.name=TraceWebFluxTests", "security.basic.enabled=false",
+								"spring.sleuth.reactor.instrumentation-type=DECORATE_QUEUES",
+								"spring.application.name=TraceWebFluxOnQueuesTests", "security.basic.enabled=false",
 								"management.security.enabled=false")
 						.run();
 		assertReactorTracing(context, capture, () -> context.getBean(TestConfiguration.class).spanInFoo);
@@ -98,8 +99,22 @@ public abstract class FlatMapTests {
 				testConfiguration(), Issue866Configuration.class)
 						.web(WebApplicationType.REACTIVE)
 						.properties("server.port=0", "spring.jmx.enabled=false",
-								"spring.sleuth.reactor.decorate-on-each=false",
-								"spring.application.name=TraceWebFlux2Tests", "security.basic.enabled=false",
+								"spring.sleuth.reactor.instrumentation-type=DECORATE_ON_LAST",
+								"spring.application.name=TraceWebFluxOnLastTests", "security.basic.enabled=false",
+								"management.security.enabled=false")
+						.run();
+		assertReactorTracing(context, capture, () -> context.getBean(TestConfiguration.class).spanInFoo);
+	}
+
+	@Test
+	public void should_work_with_flat_maps_with_on_each_operator_instrumentation(CapturedOutput capture) {
+		// given
+		ConfigurableApplicationContext context = new SpringApplicationBuilder(FlatMapTests.TestConfiguration.class,
+				testConfiguration(), Issue866Configuration.class)
+						.web(WebApplicationType.REACTIVE)
+						.properties("server.port=0", "spring.jmx.enabled=false",
+								"spring.sleuth.reactor.instrumentation-type=DECORATE_ON_EACH",
+								"spring.application.name=TraceWebFluxOnEachTests", "security.basic.enabled=false",
 								"management.security.enabled=false")
 						.run();
 		assertReactorTracing(context, capture, () -> context.getBean(TestConfiguration.class).spanInFoo);
@@ -113,7 +128,7 @@ public abstract class FlatMapTests {
 						.web(WebApplicationType.REACTIVE)
 						.properties("server.port=0", "spring.jmx.enabled=false",
 								"spring.sleuth.reactor.instrumentation-type=MANUAL",
-								"spring.application.name=TraceWebFlux3Tests", "security.basic.enabled=false",
+								"spring.application.name=TraceWebFluxOnManualTests", "security.basic.enabled=false",
 								"management.security.enabled=false")
 						.run();
 		assertReactorTracing(context, capture, () -> context.getBean(TestManualConfiguration.class).spanInFoo);

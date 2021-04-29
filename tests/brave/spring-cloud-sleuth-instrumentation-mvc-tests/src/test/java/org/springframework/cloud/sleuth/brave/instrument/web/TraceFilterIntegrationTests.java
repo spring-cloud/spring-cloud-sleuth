@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2020 the original author or authors.
+ * Copyright 2013-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -45,7 +45,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.actuate.autoconfigure.web.server.ManagementServerProperties;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.cloud.sleuth.CurrentTraceContext;
 import org.springframework.cloud.sleuth.autoconfig.instrument.web.SleuthWebProperties;
+import org.springframework.cloud.sleuth.http.HttpServerHandler;
 import org.springframework.cloud.sleuth.instrument.web.servlet.TracingFilter;
 import org.springframework.cloud.sleuth.util.SpanUtil;
 import org.springframework.context.annotation.Bean;
@@ -78,7 +80,10 @@ public class TraceFilterIntegrationTests extends AbstractMvcIntegrationTest {
 	private static Span span;
 
 	@Autowired
-	TracingFilter traceFilter;
+	CurrentTraceContext currentTraceContext;
+
+	@Autowired
+	HttpServerHandler httpServerHandler;
 
 	@Autowired
 	MyFilter myFilter;
@@ -222,7 +227,8 @@ public class TraceFilterIntegrationTests extends AbstractMvcIntegrationTest {
 
 	@Override
 	protected void configureMockMvcBuilder(DefaultMockMvcBuilder mockMvcBuilder) {
-		mockMvcBuilder.addFilters(this.traceFilter, this.myFilter);
+		mockMvcBuilder.addFilters(TracingFilter.create(this.currentTraceContext, this.httpServerHandler),
+				this.myFilter);
 	}
 
 	private MvcResult whenSentPingWithoutTracingData() throws Exception {

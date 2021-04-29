@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2020 the original author or authors.
+ * Copyright 2013-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -64,6 +64,10 @@ public class SleuthKafkaAspect {
 	private void anyProducerFactory() {
 	} // NOSONAR
 
+	@Pointcut("execution(public * org.springframework.kafka.core.ProducerFactory.createNonTransactionalProducer(..))")
+	private void anyNonTransactionalProducerFactory() {
+	} // NOSONAR
+
 	@Pointcut("execution(public * org.springframework.kafka.core.ConsumerFactory.createConsumer(..))")
 	private void anyConsumerFactory() {
 	} // NOSONAR
@@ -76,7 +80,7 @@ public class SleuthKafkaAspect {
 	private void anyCreateContainer() {
 	} // NOSONAR
 
-	@Around("anyProducerFactory()")
+	@Around("anyProducerFactory() || anyNonTransactionalProducerFactory()")
 	public Object wrapProducerFactory(ProceedingJoinPoint pjp) throws Throwable {
 		Producer producer = (Producer) pjp.proceed();
 		return this.kafkaTracing.producer(producer);

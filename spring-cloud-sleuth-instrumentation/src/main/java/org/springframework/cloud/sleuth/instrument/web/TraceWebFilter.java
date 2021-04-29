@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2020 the original author or authors.
+ * Copyright 2013-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -81,6 +81,8 @@ public class TraceWebFilter implements WebFilter, Ordered, ApplicationContextAwa
 
 	private int order;
 
+	private SpanFromContextRetriever spanFromContextRetriever;
+
 	@Deprecated
 	public TraceWebFilter(Tracer tracer, HttpServerHandler handler) {
 		this.tracer = tracer;
@@ -97,12 +99,12 @@ public class TraceWebFilter implements WebFilter, Ordered, ApplicationContextAwa
 	@Override
 	public Mono<Void> filter(ServerWebExchange exchange, WebFilterChain chain) {
 		String uri = exchange.getRequest().getPath().pathWithinApplication().value();
+		Mono<Void> source = chain.filter(exchange);
+		boolean tracePresent = isTracePresent();
 		if (log.isDebugEnabled()) {
 			log.debug("Received a request to uri [" + uri + "]");
 		}
-		Mono<Void> source = chain.filter(exchange);
-		boolean tracePresent = isTracePresent();
-		return new MonoWebFilterTrace(source, exchange, tracePresent, this);
+		return new MonoWebFilterTrace(source, exchange, tracePresent, this, spanFromContextRetriever());
 	}
 
 	private boolean isTracePresent() {
@@ -135,6 +137,15 @@ public class TraceWebFilter implements WebFilter, Ordered, ApplicationContextAwa
 		return this.currentTraceContext;
 	}
 
+	private SpanFromContextRetriever spanFromContextRetriever() {
+		if (this.spanFromContextRetriever == null) {
+			this.spanFromContextRetriever = this.applicationContext.getBeanProvider(SpanFromContextRetriever.class)
+					.getIfAvailable(() -> new SpanFromContextRetriever() {
+					});
+		}
+		return this.spanFromContextRetriever;
+	}
+
 	private static class MonoWebFilterTrace extends MonoOperator<Void, Void> implements TraceContextPropagator {
 
 		final ServerWebExchange exchange;
@@ -151,8 +162,10 @@ public class TraceWebFilter implements WebFilter, Ordered, ApplicationContextAwa
 
 		final CurrentTraceContext currentTraceContext;
 
+		final SpanFromContextRetriever spanFromContextRetriever;
+
 		MonoWebFilterTrace(Mono<? extends Void> source, ServerWebExchange exchange, boolean initialTracePresent,
-				TraceWebFilter parent) {
+				TraceWebFilter parent, SpanFromContextRetriever spanFromContextRetriever) {
 			super(source);
 			this.tracer = parent.tracer;
 			this.handler = parent.handler;
@@ -160,6 +173,7 @@ public class TraceWebFilter implements WebFilter, Ordered, ApplicationContextAwa
 			this.exchange = exchange;
 			this.span = exchange.getAttribute(TRACE_REQUEST_ATTR);
 			this.initialTracePresent = initialTracePresent;
+			this.spanFromContextRetriever = spanFromContextRetriever;
 		}
 
 		@Override
@@ -207,11 +221,15 @@ public class TraceWebFilter implements WebFilter, Ordered, ApplicationContextAwa
 						log.debug("Found span in attribute " + span);
 					}
 				}
-				else {
+				span = this.spanFromContextRetriever.findSpan(c);
+				if (this.span == null && span == null) {
 					span = this.handler.handleReceive(new WrappedRequest(this.exchange.getRequest()));
 					if (log.isDebugEnabled()) {
 						log.debug("Handled receive of span " + span);
 					}
+				}
+				else if (log.isDebugEnabled()) {
+					log.debug("Found tracer specific span in reactor context [" + span + "]");
 				}
 				this.exchange.getAttributes().put(TRACE_REQUEST_ATTR, span);
 			}
@@ -397,8 +415,11 @@ public class TraceWebFilter implements WebFilter, Ordered, ApplicationContextAwa
 
 		@Override
 		public int statusCode() {
-			if (this.throwable != null && this.throwable instanceof ResponseStatusException) {
-				return ((ResponseStatusException) this.throwable).getRawStatusCode();
+			if (!this.delegate.isCommitted() && this.throwable != null) {
+				if (this.throwable instanceof ResponseStatusException) {
+					return ((ResponseStatusException) this.throwable).getRawStatusCode();
+				}
+				return HttpStatus.INTERNAL_SERVER_ERROR.value();
 			}
 			HttpStatus statusCode = this.delegate.getStatusCode();
 			return statusCode != null ? statusCode.value() : 0;

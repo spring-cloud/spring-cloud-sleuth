@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2020 the original author or authors.
+ * Copyright 2013-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,12 +21,15 @@ import java.util.regex.Pattern;
 
 import javax.validation.constraints.NotNull;
 
+import brave.Tracer;
 import brave.Tracing;
 import brave.http.HttpRequest;
 import brave.http.HttpTracing;
 import brave.http.HttpTracingCustomizer;
+import brave.propagation.CurrentTraceContext;
 import brave.sampler.SamplerFunction;
 import brave.sampler.SamplerFunctions;
+import reactor.util.context.Context;
 
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
@@ -38,6 +41,7 @@ import org.springframework.cloud.sleuth.autoconfig.instrument.web.SleuthWebPrope
 import org.springframework.cloud.sleuth.brave.bridge.BraveHttpRequestParser;
 import org.springframework.cloud.sleuth.brave.bridge.BraveHttpResponseParser;
 import org.springframework.cloud.sleuth.brave.bridge.BraveSamplerFunction;
+import org.springframework.cloud.sleuth.brave.instrument.web.BraveSpanFromContextRetriever;
 import org.springframework.cloud.sleuth.brave.instrument.web.CompositeHttpSampler;
 import org.springframework.cloud.sleuth.brave.instrument.web.SkipPatternHttpClientSampler;
 import org.springframework.cloud.sleuth.brave.instrument.web.SkipPatternHttpServerSampler;
@@ -50,6 +54,7 @@ import org.springframework.cloud.sleuth.instrument.web.HttpServerRequestParser;
 import org.springframework.cloud.sleuth.instrument.web.HttpServerResponseParser;
 import org.springframework.cloud.sleuth.instrument.web.HttpServerSampler;
 import org.springframework.cloud.sleuth.instrument.web.SkipPatternProvider;
+import org.springframework.cloud.sleuth.instrument.web.SpanFromContextRetriever;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
@@ -203,6 +208,17 @@ public class BraveHttpConfiguration {
 		}
 
 		return new SkipPatternHttpClientSampler(Pattern.compile(skipPattern));
+	}
+
+	@Configuration(proxyBeanMethods = false)
+	@ConditionalOnClass(Context.class)
+	static class BraveWebFilterConfiguration {
+
+		@Bean
+		SpanFromContextRetriever braveSpanFromContextRetriever(CurrentTraceContext currentTraceContext, Tracer tracer) {
+			return new BraveSpanFromContextRetriever(currentTraceContext, tracer);
+		}
+
 	}
 
 }

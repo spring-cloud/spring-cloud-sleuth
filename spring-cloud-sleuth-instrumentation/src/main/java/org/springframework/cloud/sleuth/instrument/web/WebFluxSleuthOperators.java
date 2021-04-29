@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2020 the original author or authors.
+ * Copyright 2013-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,6 +24,7 @@ import org.apache.commons.logging.LogFactory;
 import reactor.core.publisher.Signal;
 import reactor.core.publisher.SignalType;
 import reactor.util.context.Context;
+import reactor.util.context.ContextView;
 
 import org.springframework.cloud.sleuth.CurrentTraceContext;
 import org.springframework.cloud.sleuth.Span;
@@ -94,6 +95,15 @@ public final class WebFluxSleuthOperators {
 	 * @param runnable - lambda to execute within the tracing context
 	 */
 	public static void withSpanInScope(Context context, Runnable runnable) {
+		withSpanInScope((ContextView) context, runnable);
+	}
+
+	/**
+	 * Wraps a runnable with a span.
+	 * @param context - Reactor context that contains the {@link TraceContext}
+	 * @param runnable - lambda to execute within the tracing context
+	 */
+	public static void withSpanInScope(ContextView context, Runnable runnable) {
 		CurrentTraceContext currentTraceContext = context.get(CurrentTraceContext.class);
 		TraceContext traceContext = traceContextOrNew(context);
 		try (CurrentTraceContext.Scope scope = currentTraceContext.maybeScope(traceContext)) {
@@ -109,12 +119,23 @@ public final class WebFluxSleuthOperators {
 	 * @return value from the callable
 	 */
 	public static <T> T withSpanInScope(Context context, Callable<T> callable) {
+		return withSpanInScope((ContextView) context, callable);
+	}
+
+	/**
+	 * Wraps a callable with a span.
+	 * @param context - Reactor context that contains the {@link TraceContext}
+	 * @param callable - lambda to execute within the tracing context
+	 * @param <T> callable's return type
+	 * @return value from the callable
+	 */
+	public static <T> T withSpanInScope(ContextView context, Callable<T> callable) {
 		CurrentTraceContext currentTraceContext = context.get(CurrentTraceContext.class);
 		TraceContext traceContext = traceContextOrNew(context);
 		return withContext(callable, currentTraceContext, traceContext);
 	}
 
-	private static TraceContext traceContextOrNew(Context context) {
+	private static TraceContext traceContextOrNew(ContextView context) {
 		Tracer tracer = context.get(Tracer.class);
 		if (!context.hasKey(TraceContext.class)) {
 			if (log.isDebugEnabled()) {

@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2020 the original author or authors.
+ * Copyright 2013-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -43,9 +43,12 @@ import org.openjdk.jmh.annotations.Threads;
 import org.openjdk.jmh.annotations.Warmup;
 
 import org.springframework.boot.SpringApplication;
+import org.springframework.cloud.sleuth.CurrentTraceContext;
+import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.benchmarks.app.mvc.SleuthBenchmarkingSpringApp;
 import org.springframework.cloud.sleuth.benchmarks.jmh.TracerImplementation;
 import org.springframework.cloud.sleuth.benchmarks.app.mvc.controller.AsyncSimulationController;
+import org.springframework.cloud.sleuth.http.HttpServerHandler;
 import org.springframework.cloud.sleuth.instrument.web.servlet.TracingFilter;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.http.MediaType;
@@ -60,6 +63,7 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.asyncDispatch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
@@ -67,6 +71,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @Warmup(iterations = 5)
+@Measurement(iterations = 10, time = 1)
+@Fork(2)
 @BenchmarkMode(Mode.SampleTime)
 @OutputTimeUnit(TimeUnit.MICROSECONDS)
 @Threads(Threads.MAX)
@@ -74,19 +80,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 public class HttpFilterBenchmarksTests {
 
 	@Benchmark
-	@Measurement(iterations = 5, time = 1)
-	@Fork(2)
-	public void filterWithoutSleuth(BenchmarkContext context) throws IOException, ServletException {
-		MockHttpServletRequest request = builder().buildRequest(new MockServletContext());
-		MockHttpServletResponse response = new MockHttpServletResponse();
-		response.setContentType(MediaType.APPLICATION_JSON_VALUE);
-
-		context.dummyFilter.doFilter(request, response, new MockFilterChain());
-	}
-
-	@Benchmark
-	@Measurement(iterations = 5, time = 1)
-	@Fork(2)
 	public void filterWithSleuth(BenchmarkContext context) throws ServletException, IOException {
 		MockHttpServletRequest request = builder().buildRequest(new MockServletContext());
 		MockHttpServletResponse response = new MockHttpServletResponse();
@@ -96,15 +89,6 @@ public class HttpFilterBenchmarksTests {
 	}
 
 	@Benchmark
-	@Measurement(iterations = 5, time = 10)
-	@Fork(10)
-	public void asyncWithoutSleuth(BenchmarkContext context) throws Exception {
-		performRequest(context.mockMvcForUntracedController, "vanilla", "vanilla");
-	}
-
-	@Benchmark
-	@Measurement(iterations = 5, time = 10)
-	@Fork(10)
 	public void asyncWithSleuth(BenchmarkContext context) throws Exception {
 		performRequest(context.mockMvcForTracedController, "bar", "bar");
 	}
@@ -126,13 +110,9 @@ public class HttpFilterBenchmarksTests {
 
 		volatile ConfigurableApplicationContext withSleuth;
 
-		volatile DummyFilter dummyFilter = new DummyFilter();
-
 		volatile TracingFilter tracingFilter;
 
 		volatile MockMvc mockMvcForTracedController;
-
-		volatile MockMvc mockMvcForUntracedController;
 
 		@Param
 		private TracerImplementation tracerImplementation;
@@ -142,10 +122,10 @@ public class HttpFilterBenchmarksTests {
 			this.withSleuth = new SpringApplication(SleuthBenchmarkingSpringApp.class).run("--spring.jmx.enabled=false",
 
 					"--spring.application.name=withSleuth_" + this.tracerImplementation.name());
-			this.tracingFilter = this.withSleuth.getBean(TracingFilter.class);
+			assertThat(this.withSleuth.getBeanProvider(Tracer.class).getIfAvailable(() -> null)).isNotNull();
+			this.tracingFilter = TracingFilter.create(this.withSleuth.getBean(CurrentTraceContext.class), this.withSleuth.getBean(HttpServerHandler.class));
 			this.mockMvcForTracedController = MockMvcBuilders
 					.standaloneSetup(this.withSleuth.getBean(AsyncSimulationController.class)).build();
-			this.mockMvcForUntracedController = MockMvcBuilders.standaloneSetup(new VanillaController()).build();
 		}
 
 		@TearDown

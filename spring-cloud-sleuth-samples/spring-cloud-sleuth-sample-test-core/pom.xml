@@ -28,7 +28,7 @@
 	<parent>
 		<groupId>org.springframework.cloud</groupId>
 		<artifactId>spring-cloud-sleuth-samples</artifactId>
-		<version>3.0.2-SNAPSHOT</version>
+		<version>3.1.0-SNAPSHOT</version>
 		<relativePath>..</relativePath>
 	</parent>
 
@@ -37,36 +37,6 @@
 		<maven.compiler.target>1.8</maven.compiler.target>
 		<sonar.skip>true</sonar.skip>
 	</properties>
-
-	<build>
-		<pluginManagement>
-			<plugins>
-				<plugin>
-					<!--skip deploy (this is just a test module) -->
-					<artifactId>maven-deploy-plugin</artifactId>
-					<configuration>
-						<skip>true</skip>
-					</configuration>
-				</plugin>
-			</plugins>
-		</pluginManagement>
-		<plugins>
-			<!-- This is a test jar - it can have jdk8 -->
-			<plugin>
-				<groupId>org.codehaus.mojo</groupId>
-				<artifactId>animal-sniffer-maven-plugin</artifactId>
-				<version>1.19</version>
-				<configuration>
-					<skip>true</skip>
-					<signature>
-						<groupId>org.codehaus.mojo.signature</groupId>
-						<artifactId>java17</artifactId>
-						<version>1.0</version>
-					</signature>
-				</configuration>
-			</plugin>
-		</plugins>
-	</build>
 
 	<dependencies>
 		<dependency>

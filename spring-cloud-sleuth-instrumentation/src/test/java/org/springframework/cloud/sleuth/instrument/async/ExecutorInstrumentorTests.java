@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2020 the original author or authors.
+ * Copyright 2013-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -36,6 +36,8 @@ import org.aopalliance.aop.Advice;
 import org.assertj.core.api.BDDAssertions;
 import org.awaitility.Awaitility;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.EnabledForJreRange;
+import org.junit.jupiter.api.condition.JRE;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.BDDMockito;
 import org.mockito.Mock;
@@ -294,6 +296,7 @@ public class ExecutorInstrumentorTests {
 	}
 
 	@Test
+	@EnabledForJreRange(min = JRE.JAVA_8, max = JRE.JAVA_15)
 	public void should_use_cglib_proxy_when_an_executor_has_a_final_package_protected_method() {
 		ExecutorInstrumentor beanPostProcessor = new ExecutorInstrumentor(Collections::emptyList, beanFactory);
 		ScheduledThreadPoolExecutor executor = new ScheduledThreadPoolExecutor(10);
@@ -301,6 +304,21 @@ public class ExecutorInstrumentorTests {
 				.instrument(executor, "executor");
 
 		BDDAssertions.then(AopUtils.isCglibProxy(wrappedExecutor)).isTrue();
+
+		AtomicBoolean wasCalled = new AtomicBoolean(false);
+		wrappedExecutor.execute(() -> wasCalled.set(true));
+		Awaitility.await().untilAsserted(() -> BDDAssertions.then(wasCalled).isTrue());
+	}
+
+	@Test
+	@EnabledForJreRange(min = JRE.JAVA_16)
+	public void should_use_jdk_proxy_when_an_executor_has_a_final_package_protected_method() {
+		ExecutorInstrumentor beanPostProcessor = new ExecutorInstrumentor(Collections::emptyList, beanFactory);
+		ScheduledThreadPoolExecutor executor = new ScheduledThreadPoolExecutor(10);
+		ScheduledThreadPoolExecutor wrappedExecutor = (ScheduledThreadPoolExecutor) beanPostProcessor
+				.instrument(executor, "executor");
+
+		BDDAssertions.then(AopUtils.isCglibProxy(wrappedExecutor)).isFalse();
 
 		AtomicBoolean wasCalled = new AtomicBoolean(false);
 		wrappedExecutor.execute(() -> wasCalled.set(true));

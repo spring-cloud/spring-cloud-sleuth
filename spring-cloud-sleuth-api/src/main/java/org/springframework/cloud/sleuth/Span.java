@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2020 the original author or authors.
+ * Copyright 2013-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -88,6 +88,16 @@ public interface Span extends SpanCustomizer {
 	 * Ends the span. The span gets stopped but does not get recorded.
 	 */
 	void abandon();
+
+	/**
+	 * Sets the remote service name for the span.
+	 * @param remoteServiceName remote service name
+	 * @return this span
+	 * @since 3.0.3
+	 */
+	default Span remoteServiceName(String remoteServiceName) {
+		return this;
+	}
 
 	/**
 	 * Type of span. Can be used to specify additional relationships between spans in

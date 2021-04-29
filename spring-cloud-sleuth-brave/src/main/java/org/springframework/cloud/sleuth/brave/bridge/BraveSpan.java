@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2020 the original author or authors.
+ * Copyright 2013-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -27,11 +27,11 @@ import org.springframework.cloud.sleuth.TraceContext;
  * @author Marcin Grzejszczak
  * @since 3.0.0
  */
-class BraveSpan implements Span {
+public class BraveSpan implements Span {
 
 	final brave.Span delegate;
 
-	BraveSpan(brave.Span delegate) {
+	public BraveSpan(brave.Span delegate) {
 		this.delegate = delegate;
 	}
 
@@ -87,15 +87,21 @@ class BraveSpan implements Span {
 	}
 
 	@Override
+	public Span remoteServiceName(String remoteServiceName) {
+		this.delegate.remoteServiceName(remoteServiceName);
+		return this;
+	}
+
+	@Override
 	public String toString() {
 		return this.delegate != null ? this.delegate.toString() : "null";
 	}
 
-	static brave.Span toBrave(Span span) {
+	public static brave.Span toBrave(Span span) {
 		return ((BraveSpan) span).delegate;
 	}
 
-	static Span fromBrave(brave.Span span) {
+	public static Span fromBrave(brave.Span span) {
 		return new BraveSpan(span);
 	}
 

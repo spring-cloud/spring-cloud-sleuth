@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2020 the original author or authors.
+ * Copyright 2013-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -37,6 +37,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import org.springframework.cloud.sleuth.BaggageInScope;
+import org.springframework.cloud.sleuth.internal.EncodingUtils;
 
 import static java.util.Collections.singletonList;
 
@@ -219,12 +220,12 @@ class W3CPropagation extends Propagation.Factory implements Propagation<String> 
 
 	private static boolean isTraceIdValid(CharSequence traceId) {
 		return (traceId.length() == TRACE_ID_HEX_SIZE) && !INVALID_TRACE_ID.contentEquals(traceId)
-				&& BigendianEncoding.isValidBase16String(traceId);
+				&& EncodingUtils.isValidBase16String(traceId);
 	}
 
 	private static boolean isSpanIdValid(String spanId) {
 		return (spanId.length() == SPAN_ID_HEX_SIZE) && !INVALID_SPAN_ID.equals(spanId)
-				&& BigendianEncoding.isValidBase16String(spanId);
+				&& EncodingUtils.isValidBase16String(spanId);
 	}
 
 	private static TraceContext extractContextFromTraceParent(String traceparent) {
@@ -257,10 +258,10 @@ class W3CPropagation extends Propagation.Factory implements Propagation<String> 
 				String traceIdLow = traceId.substring(traceId.length() / 2);
 				byte isSampled = TraceFlags.byteFromHex(traceparent, TRACE_OPTION_OFFSET);
 				return TraceContext.newBuilder().shared(true)
-						.traceIdHigh(BigendianEncoding.longFromBase16String(traceIdHigh))
-						.traceId(BigendianEncoding.longFromBase16String(traceIdLow))
-						.spanId(BigendianEncoding.longFromBase16String(spanId))
-						.sampled(isSampled == TraceFlags.IS_SAMPLED).build();
+						.traceIdHigh(EncodingUtils.longFromBase16String(traceIdHigh))
+						.traceId(EncodingUtils.longFromBase16String(traceIdLow))
+						.spanId(EncodingUtils.longFromBase16String(spanId)).sampled(isSampled == TraceFlags.IS_SAMPLED)
+						.build();
 			}
 			return null;
 		}
@@ -424,41 +425,6 @@ final class TemporaryBuffers {
 /**
  * Taken from OpenTelemetry API.
  */
-final class Utils {
-
-	private Utils() {
-
-	}
-
-	/**
-	 * Throws an {@link IllegalArgumentException} if the argument is false. This method is
-	 * similar to {@code Preconditions.checkArgument(boolean, Object)} from Guava.
-	 * @param isValid whether the argument check passed.
-	 * @param errorMessage the message to use for the exception.
-	 */
-	static void checkArgument(boolean isValid, String errorMessage) {
-		if (!isValid) {
-			throw new IllegalArgumentException(errorMessage);
-		}
-	}
-
-	/**
-	 * Throws an {@link IllegalStateException} if the argument is false. This method is
-	 * similar to {@code Preconditions.checkState(boolean, Object)} from Guava.
-	 * @param isValid whether the state check passed.
-	 * @param errorMessage the message to use for the exception.
-	 */
-	static void checkState(boolean isValid, String errorMessage) {
-		if (!isValid) {
-			throw new IllegalStateException(String.valueOf(errorMessage));
-		}
-	}
-
-}
-
-/**
- * Taken from OpenTelemetry API.
- */
 final class TraceFlags {
 
 	private TraceFlags() {
@@ -469,131 +435,7 @@ final class TraceFlags {
 
 	/** Extract the byte representation of the flags from a hex-representation. */
 	static byte byteFromHex(CharSequence src, int srcOffset) {
-		return BigendianEncoding.byteFromBase16String(src, srcOffset);
-	}
-
-}
-
-/**
- * Taken from OpenTelemetry API.
- */
-final class BigendianEncoding {
-
-	private BigendianEncoding() {
-	}
-
-	static final int LONG_BYTES = Long.SIZE / Byte.SIZE;
-
-	static final int BYTE_BASE16 = 2;
-
-	static final int LONG_BASE16 = BYTE_BASE16 * LONG_BYTES;
-
-	private static final String ALPHABET = "0123456789abcdef";
-
-	private static final int ASCII_CHARACTERS = 128;
-
-	private static final char[] ENCODING = buildEncodingArray();
-
-	private static final byte[] DECODING = buildDecodingArray();
-
-	private static char[] buildEncodingArray() {
-		char[] encoding = new char[512];
-		for (int i = 0; i < 256; ++i) {
-			encoding[i] = ALPHABET.charAt(i >>> 4);
-			encoding[i | 0x100] = ALPHABET.charAt(i & 0xF);
-		}
-		return encoding;
-	}
-
-	private static byte[] buildDecodingArray() {
-		byte[] decoding = new byte[ASCII_CHARACTERS];
-		Arrays.fill(decoding, (byte) -1);
-		for (int i = 0; i < ALPHABET.length(); i++) {
-			char c = ALPHABET.charAt(i);
-			decoding[c] = (byte) i;
-		}
-		return decoding;
-	}
-
-	/**
-	 * Returns the {@code long} value whose base16 representation is stored in the first
-	 * 16 chars of {@code chars} starting from the {@code offset}.
-	 * @param chars the base16 representation of the {@code long}.
-	 */
-	static long longFromBase16String(CharSequence chars) {
-		return longFromBase16String(chars, 0);
-	}
-
-	/**
-	 * Returns the {@code long} value whose base16 representation is stored in the first
-	 * 16 chars of {@code chars} starting from the {@code offset}.
-	 * @param chars the base16 representation of the {@code long}.
-	 */
-	static long longFromBase16String(CharSequence chars, int offset) {
-		Utils.checkArgument(chars.length() >= offset + LONG_BASE16, "chars too small");
-		return (decodeByte(chars.charAt(offset), chars.charAt(offset + 1)) & 0xFFL) << 56
-				| (decodeByte(chars.charAt(offset + 2), chars.charAt(offset + 3)) & 0xFFL) << 48
-				| (decodeByte(chars.charAt(offset + 4), chars.charAt(offset + 5)) & 0xFFL) << 40
-				| (decodeByte(chars.charAt(offset + 6), chars.charAt(offset + 7)) & 0xFFL) << 32
-				| (decodeByte(chars.charAt(offset + 8), chars.charAt(offset + 9)) & 0xFFL) << 24
-				| (decodeByte(chars.charAt(offset + 10), chars.charAt(offset + 11)) & 0xFFL) << 16
-				| (decodeByte(chars.charAt(offset + 12), chars.charAt(offset + 13)) & 0xFFL) << 8
-				| (decodeByte(chars.charAt(offset + 14), chars.charAt(offset + 15)) & 0xFFL);
-	}
-
-	/**
-	 * Decodes the specified two character sequence, and returns the resulting
-	 * {@code byte}.
-	 * @param chars the character sequence to be decoded.
-	 * @param offset the starting offset in the {@code CharSequence}.
-	 * @return the resulting {@code byte}
-	 * @throws IllegalArgumentException if the input is not a valid encoded string
-	 * according to this encoding.
-	 */
-	static byte byteFromBase16String(CharSequence chars, int offset) {
-		Utils.checkArgument(chars.length() >= offset + 2, "chars too small");
-		return decodeByte(chars.charAt(offset), chars.charAt(offset + 1));
-	}
-
-	private static byte decodeByte(char hi, char lo) {
-		Utils.checkArgument(lo < ASCII_CHARACTERS && DECODING[lo] != -1, "invalid character " + lo);
-		Utils.checkArgument(hi < ASCII_CHARACTERS && DECODING[hi] != -1, "invalid character " + hi);
-		int decoded = DECODING[hi] << 4 | DECODING[lo];
-		return (byte) decoded;
-	}
-
-	/**
-	 * Returns the {@code long} value whose big-endian representation is stored in the
-	 * first 8 bytes of {@code bytes} starting from the {@code offset}.
-	 * @param bytes the byte array representation of the {@code long}.
-	 * @param offset the starting offset in the byte array.
-	 * @return the {@code long} value whose big-endian representation is given.
-	 * @throws IllegalArgumentException if {@code bytes} has fewer than 8 elements.
-	 */
-	static long longFromByteArray(byte[] bytes, int offset) {
-		Utils.checkArgument(bytes.length >= offset + LONG_BYTES, "array too small");
-		return (bytes[offset] & 0xFFL) << 56 | (bytes[offset + 1] & 0xFFL) << 48 | (bytes[offset + 2] & 0xFFL) << 40
-				| (bytes[offset + 3] & 0xFFL) << 32 | (bytes[offset + 4] & 0xFFL) << 24
-				| (bytes[offset + 5] & 0xFFL) << 16 | (bytes[offset + 6] & 0xFFL) << 8 | (bytes[offset + 7] & 0xFFL);
-	}
-
-	static boolean isValidBase16String(CharSequence value) {
-		for (int i = 0; i < value.length(); i++) {
-			char b = value.charAt(i);
-			// 48..57 && 97..102 are valid
-			if (!isDigit(b) && !isLowercaseHexCharacter(b)) {
-				return false;
-			}
-		}
-		return true;
-	}
-
-	private static boolean isLowercaseHexCharacter(char b) {
-		return 97 <= b && b <= 102;
-	}
-
-	private static boolean isDigit(char b) {
-		return 48 <= b && b <= 57;
+		return EncodingUtils.byteFromBase16String(src, srcOffset);
 	}
 
 }

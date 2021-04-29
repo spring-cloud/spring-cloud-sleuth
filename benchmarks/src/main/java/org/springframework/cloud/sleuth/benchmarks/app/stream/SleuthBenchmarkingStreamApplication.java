@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2020 the original author or authors.
+ * Copyright 2013-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -59,8 +59,8 @@ public class SleuthBenchmarkingStreamApplication {
 		// System.setProperty("spring.sleuth.reactor.instrumentation-type",
 		// "DECORATE_ON_LAST");
 		// System.setProperty("spring.sleuth.reactor.instrumentation-type", "MANUAL");
-		System.setProperty("spring.sleuth.reactor.instrumentation-type", "MANUAL");
-		System.setProperty("spring.sleuth.function.type", "simple");
+		System.setProperty("spring.sleuth.reactor.instrumentation-type", "DECORATE_QUEUES");
+		System.setProperty("spring.sleuth.function.type", "DECORATE_QUEUES");
 		ConfigurableApplicationContext context = SpringApplication.run(SleuthBenchmarkingStreamApplication.class, args);
 		for (int i = 0; i < 1; i++) {
 			InputDestination input = context.getBean(InputDestination.class);
@@ -132,6 +132,14 @@ public class SleuthBenchmarkingStreamApplication {
 			matchIfMissing = true)
 	public Function<Flux<String>, Flux<String>> onEachFunction() {
 		log.info("on each function");
+		return new SleuthFunction();
+	}
+
+	@Bean(name = "myFlux")
+	@ConditionalOnProperty(value = "spring.sleuth.function.type", havingValue = "DECORATE_QUEUES",
+			matchIfMissing = true)
+	public Function<Flux<String>, Flux<String>> decorateQueuesFunction() {
+		log.info("decorate queues function");
 		return new SleuthFunction();
 	}
 

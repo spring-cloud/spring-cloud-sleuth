@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2020 the original author or authors.
+ * Copyright 2013-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -50,7 +50,7 @@ public class RestTemplateSenderTest {
 
 	String endpoint = this.server.url("/api/v2/spans").toString();
 
-	RestTemplateSender sender = new RestTemplateSender(new RestTemplate(), this.endpoint, JSON_V2);
+	RestTemplateSender sender = new RestTemplateSender(new RestTemplate(), this.endpoint, null, JSON_V2);
 
 	@AfterEach
 	void clean() throws IOException {
@@ -74,7 +74,7 @@ public class RestTemplateSenderTest {
 	@Test
 	public void proto3() throws Exception {
 		this.server.enqueue(new MockResponse());
-		this.sender = new RestTemplateSender(new RestTemplate(), this.endpoint, PROTO3);
+		this.sender = new RestTemplateSender(new RestTemplate(), this.endpoint, "", PROTO3);
 
 		send(SPAN).execute();
 
@@ -83,6 +83,37 @@ public class RestTemplateSenderTest {
 
 		// proto3 encoding of ListOfSpan is simply a repeated span entry
 		assertThat(request.getBody().readByteArray()).containsExactly(SpanBytesEncoder.PROTO3.encode(SPAN));
+	}
+
+	@Test
+	public void testWhereApiIsSetNonEmpty() {
+		final String mockedApiPath = "/test/v2";
+		final RestTemplateSender senderWithMockedApiPath = new RestTemplateSender(new RestTemplate(), this.endpoint,
+				mockedApiPath, JSON_V2);
+
+		assertThat(senderWithMockedApiPath.toString())
+				.isEqualTo("RestTemplateSender{" + this.endpoint + mockedApiPath + "}");
+	}
+
+	@Test
+	public void testWhereApiIsSetToEmpty() {
+		final String mockedApiPath = "";
+		final RestTemplateSender senderWithMockedApiPath = new RestTemplateSender(new RestTemplate(), this.endpoint,
+				mockedApiPath, JSON_V2);
+
+		assertThat(senderWithMockedApiPath.toString()).isEqualTo("RestTemplateSender{" + this.endpoint + "}");
+	}
+
+	/**
+	 * The output of toString() on {@link Sender} implementations appears in thread names
+	 * created by {@link AsyncZipkinSpanHandler}. Since thread names are likely to be
+	 * exposed in logs and other monitoring tools, care should be taken to ensure the
+	 * toString() output is a reasonable length and does not contain sensitive
+	 * information.
+	 */
+	@Test
+	public void toStringContainsOnlySenderTypeAndEndpoint() {
+		assertThat(sender.toString()).isEqualTo("RestTemplateSender{" + this.endpoint + "/api/v2/spans}");
 	}
 
 	Call<Void> send(Span... spans) {

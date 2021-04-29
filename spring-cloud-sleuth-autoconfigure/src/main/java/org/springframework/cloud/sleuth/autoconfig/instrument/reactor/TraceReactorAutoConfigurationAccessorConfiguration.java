@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2020 the original author or authors.
+ * Copyright 2013-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,15 +16,12 @@
 
 package org.springframework.cloud.sleuth.autoconfig.instrument.reactor;
 
+import java.io.IOException;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import reactor.core.publisher.Hooks;
-import reactor.core.scheduler.Schedulers;
 
 import org.springframework.context.ConfigurableApplicationContext;
-
-import static org.springframework.cloud.sleuth.autoconfig.instrument.reactor.TraceReactorAutoConfiguration.SLEUTH_REACTOR_EXECUTOR_SERVICE_KEY;
-import static org.springframework.cloud.sleuth.autoconfig.instrument.reactor.TraceReactorAutoConfiguration.TraceReactorConfiguration.SLEUTH_TRACE_REACTOR_KEY;
 
 /**
  * @author Marcin Grzejszczak
@@ -41,9 +38,12 @@ public final class TraceReactorAutoConfigurationAccessorConfiguration {
 		if (log.isTraceEnabled()) {
 			log.trace("Cleaning up hooks");
 		}
-		Hooks.resetOnEachOperator(SLEUTH_TRACE_REACTOR_KEY);
-		Hooks.resetOnLastOperator(SLEUTH_TRACE_REACTOR_KEY);
-		Schedulers.resetOnScheduleHook(SLEUTH_REACTOR_EXECUTOR_SERVICE_KEY);
+		try {
+			new HookRegisteringBeanDefinitionRegistryPostProcessor(null).close();
+		}
+		catch (IOException e) {
+			throw new IllegalStateException(e);
+		}
 	}
 
 	public static void setup(ConfigurableApplicationContext context) {

@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2020 the original author or authors.
+ * Copyright 2013-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -37,6 +37,7 @@ import org.springframework.messaging.support.MessageHeaderAccessor;
  * Trace representation of a {@link FunctionAroundWrapper}.
  *
  * @author Marcin Grzejszczak
+ * @author Oleg Zhurakousky
  * @since 3.0.0
  */
 public class TraceFunctionAroundWrapper extends FunctionAroundWrapper
@@ -73,7 +74,7 @@ public class TraceFunctionAroundWrapper extends FunctionAroundWrapper
 			log.debug("Will retrieve the tracing headers from the message");
 		}
 		MessageAndSpans wrappedInputMessage = traceMessageHandler.wrapInputMessage(message,
-				inputDestination(targetFunction));
+				inputDestination(targetFunction.getFunctionDefinition()));
 		if (log.isDebugEnabled()) {
 			log.debug("Wrapped input msg " + wrappedInputMessage);
 		}
@@ -97,7 +98,7 @@ public class TraceFunctionAroundWrapper extends FunctionAroundWrapper
 		}
 		Message msgResult = toMessage(result);
 		MessageAndSpan wrappedOutputMessage = traceMessageHandler.wrapOutputMessage(msgResult,
-				wrappedInputMessage.parentSpan, outputDestination(targetFunction));
+				wrappedInputMessage.parentSpan, outputDestination(targetFunction.getFunctionDefinition()));
 		if (log.isDebugEnabled()) {
 			log.debug("Wrapped output msg " + wrappedOutputMessage);
 		}
@@ -112,16 +113,22 @@ public class TraceFunctionAroundWrapper extends FunctionAroundWrapper
 		return (Message) result;
 	}
 
-	private String inputDestination(SimpleFunctionRegistry.FunctionInvocationWrapper targetFunction) {
-		String functionDefinition = targetFunction.getFunctionDefinition();
-		return this.functionToDestinationCache.computeIfAbsent(functionDefinition,
-				s -> this.environment.getProperty("spring.cloud.stream.bindings." + s + "-in-0.destination", s));
+	String inputDestination(String functionDefinition) {
+		return this.functionToDestinationCache.computeIfAbsent(functionDefinition, s -> {
+			String bindingMappingProperty = "spring.cloud.stream.function.bindings." + s + "-in-0";
+			String bindingProperty = this.environment.containsProperty(bindingMappingProperty)
+					? this.environment.getProperty(bindingMappingProperty) : s + "-in-0";
+			return this.environment.getProperty("spring.cloud.stream.bindings." + bindingProperty + ".destination", s);
+		});
 	}
 
-	private String outputDestination(SimpleFunctionRegistry.FunctionInvocationWrapper targetFunction) {
-		String functionDefinition = targetFunction.getFunctionDefinition();
-		return functionToDestinationCache.computeIfAbsent(functionDefinition,
-				s -> this.environment.getProperty("spring.cloud.stream.bindings." + s + "-out-0.destination", s));
+	String outputDestination(String functionDefinition) {
+		return this.functionToDestinationCache.computeIfAbsent(functionDefinition, s -> {
+			String bindingMappingProperty = "spring.cloud.stream.function.bindings." + s + "-out-0";
+			String bindingProperty = this.environment.containsProperty(bindingMappingProperty)
+					? this.environment.getProperty(bindingMappingProperty) : s + "-out-0";
+			return this.environment.getProperty("spring.cloud.stream.bindings." + bindingProperty + ".destination", s);
+		});
 	}
 
 	@Override

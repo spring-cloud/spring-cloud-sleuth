@@ -316,6 +316,13 @@ object, you will have to create a bean of `zipkin2.reporter.Sender` type.
 	}
 ----
 
+By default, api path will be set to `api/v2/spans` or `api/v1/spans` depending on the encoder version. If you want to use a custom api path, you can configure it using the following property (empty case, set ""):
+
+[source,yaml]
+----
+spring.zipkin.api-path: v2/path2
+----
+
 [[features-zipkin-custom-service-name]]
 === Custom service name
 

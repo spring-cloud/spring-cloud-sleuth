@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2020 the original author or authors.
+ * Copyright 2013-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,8 +18,6 @@ package org.springframework.cloud.sleuth.instrument.messaging;
 
 import java.util.Iterator;
 import java.util.Map;
-import java.util.NoSuchElementException;
-import java.util.concurrent.LinkedBlockingDeque;
 import java.util.function.Function;
 
 import org.apache.commons.logging.Log;
@@ -28,7 +26,9 @@ import org.apache.commons.logging.LogFactory;
 import org.springframework.aop.support.AopUtils;
 import org.springframework.beans.BeansException;
 import org.springframework.cloud.sleuth.Span;
+import org.springframework.cloud.sleuth.ThreadLocalSpan;
 import org.springframework.cloud.sleuth.Tracer;
+import org.springframework.cloud.sleuth.WithThreadLocalSpan;
 import org.springframework.cloud.sleuth.propagation.Propagator;
 import org.springframework.cloud.stream.binder.BinderType;
 import org.springframework.cloud.stream.binder.BinderTypeRegistry;
@@ -58,7 +58,7 @@ import org.springframework.util.StringUtils;
  * @since 3.0.0
  */
 public final class TracingChannelInterceptor extends ChannelInterceptorAdapter
-		implements ExecutorChannelInterceptor, ApplicationContextAware {
+		implements ExecutorChannelInterceptor, ApplicationContextAware, WithThreadLocalSpan {
 
 	/**
 	 * Name of the class in Spring Cloud Stream that is a direct channel.
@@ -107,7 +107,7 @@ public final class TracingChannelInterceptor extends ChannelInterceptorAdapter
 
 	private final Propagator propagator;
 
-	private final ThreadLocalSpan threadLocalSpan = new ThreadLocalSpan();
+	private final ThreadLocalSpan threadLocalSpan;
 
 	private final Function<String, String> remoteServiceNameMapper;
 
@@ -115,6 +115,7 @@ public final class TracingChannelInterceptor extends ChannelInterceptorAdapter
 			Propagator.Setter<MessageHeaderAccessor> setter, Propagator.Getter<MessageHeaderAccessor> getter,
 			Function<String, String> remoteServiceNameMapper, MessageSpanCustomizer messageSpanCustomizer) {
 		this.tracer = tracer;
+		this.threadLocalSpan = new ThreadLocalSpan(tracer);
 		this.propagator = propagator;
 		this.injector = setter;
 		this.extractor = getter;
@@ -160,14 +161,6 @@ public final class TracingChannelInterceptor extends ChannelInterceptorAdapter
 			beforeHandle(outputMessage, channel, null);
 		}
 		return outputMessage;
-	}
-
-	private void setSpanInScope(Span span) {
-		Tracer.SpanInScope spanInScope = this.tracer.withSpan(span);
-		this.threadLocalSpan.set(new SpanAndScope(span, spanInScope));
-		if (log.isDebugEnabled()) {
-			log.debug("Put span in scope " + span);
-		}
 	}
 
 	private String toRemoteServiceName(MessageHeaderAccessor headers) {
@@ -357,41 +350,9 @@ public final class TracingChannelInterceptor extends ChannelInterceptorAdapter
 		finishSpan(ex);
 	}
 
-	void finishSpan(Exception error) {
-		SpanAndScope spanAndScope = getSpanFromThreadLocal();
-		if (spanAndScope == null) {
-			return;
-		}
-		Span span = spanAndScope.span;
-		Tracer.SpanInScope scope = spanAndScope.scope;
-		if (span.isNoop()) {
-			if (log.isDebugEnabled()) {
-				log.debug("Span " + span + " is noop - will stope the scope");
-			}
-			scope.close();
-			return;
-		}
-		if (error != null) { // an error occurred, adding error to span
-			String message = error.getMessage();
-			if (message == null) {
-				message = error.getClass().getSimpleName();
-			}
-			span.tag("error", message);
-		}
-		if (log.isDebugEnabled()) {
-			log.debug("Will finish the and its corresponding scope " + span);
-		}
-		span.end();
-		scope.close();
-	}
-
-	private SpanAndScope getSpanFromThreadLocal() {
-		SpanAndScope span = this.threadLocalSpan.get();
-		if (log.isDebugEnabled()) {
-			log.debug("Took span [" + span + "] from thread local");
-		}
-		this.threadLocalSpan.remove();
-		return span;
+	@Override
+	public ThreadLocalSpan getThreadLocalSpan() {
+		return this.threadLocalSpan;
 	}
 
 	private MessageHeaderAccessor mutableHeaderAccessor(Message<?> message) {
@@ -421,60 +382,6 @@ public final class TracingChannelInterceptor extends ChannelInterceptorAdapter
 	@Override
 	public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
 		this.applicationContext = applicationContext;
-	}
-
-}
-
-class SpanAndScope {
-
-	final Span span;
-
-	final Tracer.SpanInScope scope;
-
-	SpanAndScope(Span span, Tracer.SpanInScope scope) {
-		this.span = span;
-		this.scope = scope;
-	}
-
-}
-
-class ThreadLocalSpan {
-
-	private static final Log log = LogFactory.getLog(ThreadLocalSpan.class);
-
-	final ThreadLocal<SpanAndScope> threadLocalSpan = new ThreadLocal<>();
-
-	final LinkedBlockingDeque<SpanAndScope> spans = new LinkedBlockingDeque<>();
-
-	void set(SpanAndScope spanAndScope) {
-		SpanAndScope scope = this.threadLocalSpan.get();
-		if (scope != null) {
-			this.spans.addFirst(scope);
-		}
-		this.threadLocalSpan.set(spanAndScope);
-	}
-
-	SpanAndScope get() {
-		return this.threadLocalSpan.get();
-	}
-
-	void remove() {
-		this.threadLocalSpan.remove();
-		if (this.spans.isEmpty()) {
-			return;
-		}
-		try {
-			SpanAndScope span = this.spans.removeFirst();
-			if (log.isDebugEnabled()) {
-				log.debug("Took span [" + span + "] from thread local");
-			}
-			this.threadLocalSpan.set(span);
-		}
-		catch (NoSuchElementException ex) {
-			if (log.isTraceEnabled()) {
-				log.trace("Failed to remove a span from the queue", ex);
-			}
-		}
 	}
 
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2020 the original author or authors.
+ * Copyright 2013-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -50,5 +50,48 @@ public interface TraceContext {
 	 * when sampling decision should be deferred
 	 */
 	Boolean sampled();
+
+	/**
+	 * Builder for {@link TraceContext}.
+	 *
+	 * @since 3.1.0
+	 */
+	interface Builder {
+
+		/**
+		 * Sets trace id on the trace context.
+		 * @param traceId trace id
+		 * @return this
+		 */
+		TraceContext.Builder traceId(String traceId);
+
+		/**
+		 * Sets parent id on the trace context.
+		 * @param parentId parent trace id
+		 * @return this
+		 */
+		TraceContext.Builder parentId(String parentId);
+
+		/**
+		 * Sets span id on the trace context.
+		 * @param spanId span id
+		 * @return this
+		 */
+		TraceContext.Builder spanId(String spanId);
+
+		/**
+		 * Sets sampled on the trace context.
+		 * @param sampled if span is sampled
+		 * @return this
+		 */
+		TraceContext.Builder sampled(Boolean sampled);
+
+		/**
+		 * Builds the trace context.
+		 * @return trace context
+		 */
+		TraceContext build();
+
+	}
 
 }

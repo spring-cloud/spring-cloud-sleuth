@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2020 the original author or authors.
+ * Copyright 2013-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -52,7 +52,7 @@ import static org.assertj.core.api.BDDAssertions.then;
 import static org.awaitility.Awaitility.await;
 
 @ContextConfiguration(classes = MultipleHopsIntegrationTests.TestConfig.class)
-@TestPropertySource(properties = { "spring.sleuth.baggage.remote-fields=x-vcap-request-id,country-code",
+@TestPropertySource(properties = { "spring.sleuth.baggage.remote-fields=x-vcap-request-id,country-code,Foo-Id",
 		"spring.sleuth.baggage.local-fields=bp", "spring.sleuth.integration.enabled=true" })
 public abstract class MultipleHopsIntegrationTests {
 
@@ -61,6 +61,10 @@ public abstract class MultipleHopsIntegrationTests {
 	protected static final String BUSINESS_PROCESS = "bp";
 
 	protected static final String COUNTRY_CODE = "country-code";
+
+	protected static final String CASE_INSENSITIVE_ID = "Foo-Id";
+
+	protected static final String NOT_PROPAGATED_HEADER = "baz-id";
 
 	@Autowired
 	Tracer tracer;
@@ -117,6 +121,8 @@ public abstract class MultipleHopsIntegrationTests {
 				// set request ID in a header not with the api explicitly
 				HttpHeaders headers = new HttpHeaders();
 				headers.put(REQUEST_ID, Collections.singletonList("f4308d05-2228-4468-80f6-92a8377ba193"));
+				headers.put(CASE_INSENSITIVE_ID, Collections.singletonList("123"));
+				headers.put(NOT_PROPAGATED_HEADER, Collections.singletonList("456"));
 				RequestEntity requestEntity = new RequestEntity(headers, HttpMethod.GET,
 						URI.create("http://localhost:" + this.testConfig.port + "/greeting"));
 				this.restTemplate.exchange(requestEntity, String.class);

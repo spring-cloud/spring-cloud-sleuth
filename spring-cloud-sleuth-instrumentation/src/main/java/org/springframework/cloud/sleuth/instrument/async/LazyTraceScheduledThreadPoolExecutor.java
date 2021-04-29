@@ -66,8 +66,6 @@ class LazyTraceScheduledThreadPoolExecutor extends ScheduledThreadPoolExecutor {
 
 	private final Method decorateTaskCallable;
 
-	private final Method finalize;
-
 	private final Method beforeExecute;
 
 	private final Method afterExecute;
@@ -88,32 +86,66 @@ class LazyTraceScheduledThreadPoolExecutor extends ScheduledThreadPoolExecutor {
 		this.beanFactory = beanFactory;
 		this.delegate = delegate;
 		this.beanName = beanName;
-		this.decorateTaskRunnable = ReflectionUtils.findMethod(ScheduledThreadPoolExecutor.class, "decorateTask",
+		Method decorateTaskRunnable = ReflectionUtils.findMethod(ScheduledThreadPoolExecutor.class, "decorateTask",
 				Runnable.class, RunnableScheduledFuture.class);
-		makeAccessibleIfNotNull(this.decorateTaskRunnable);
-		this.decorateTaskCallable = ReflectionUtils.findMethod(ScheduledThreadPoolExecutor.class, "decorateTask",
+		this.decorateTaskRunnable = makeAccessibleIfNotNullAndOverridden(decorateTaskRunnable);
+		Method decorateTaskCallable = ReflectionUtils.findMethod(ScheduledThreadPoolExecutor.class, "decorateTask",
 				Callable.class, RunnableScheduledFuture.class);
-		makeAccessibleIfNotNull(this.decorateTaskCallable);
-		this.finalize = ReflectionUtils.findMethod(ScheduledThreadPoolExecutor.class, "finalize", null);
-		makeAccessibleIfNotNull(this.finalize);
-		this.beforeExecute = ReflectionUtils.findMethod(ScheduledThreadPoolExecutor.class, "beforeExecute", null);
-		makeAccessibleIfNotNull(this.beforeExecute);
-		this.afterExecute = ReflectionUtils.findMethod(ScheduledThreadPoolExecutor.class, "afterExecute", null);
-		makeAccessibleIfNotNull(this.afterExecute);
-		this.terminated = ReflectionUtils.findMethod(ScheduledThreadPoolExecutor.class, "terminated", null);
-		makeAccessibleIfNotNull(this.terminated);
-		this.newTaskForRunnable = ReflectionUtils.findMethod(ScheduledThreadPoolExecutor.class, "newTaskFor",
+		this.decorateTaskCallable = makeAccessibleIfNotNullAndOverridden(decorateTaskCallable);
+		Method beforeExecute = ReflectionUtils.findMethod(ScheduledThreadPoolExecutor.class, "beforeExecute", null);
+		this.beforeExecute = makeAccessibleIfNotNullAndOverridden(beforeExecute);
+		Method afterExecute = ReflectionUtils.findMethod(ScheduledThreadPoolExecutor.class, "afterExecute", null);
+		this.afterExecute = makeAccessibleIfNotNullAndOverridden(afterExecute);
+		Method terminated = ReflectionUtils.findMethod(ScheduledThreadPoolExecutor.class, "terminated", null);
+		this.terminated = makeAccessibleIfNotNullAndOverridden(terminated);
+		Method newTaskForRunnable = ReflectionUtils.findMethod(ScheduledThreadPoolExecutor.class, "newTaskFor",
 				Runnable.class, Object.class);
-		makeAccessibleIfNotNull(this.newTaskForRunnable);
-		this.newTaskForCallable = ReflectionUtils.findMethod(ScheduledThreadPoolExecutor.class, "newTaskFor",
+		this.newTaskForRunnable = makeAccessibleIfNotNullAndOverridden(newTaskForRunnable);
+		Method newTaskForCallable = ReflectionUtils.findMethod(ScheduledThreadPoolExecutor.class, "newTaskFor",
 				Callable.class);
-		makeAccessibleIfNotNull(this.newTaskForCallable);
+		this.newTaskForCallable = makeAccessibleIfNotNullAndOverridden(newTaskForCallable);
 	}
 
-	private void makeAccessibleIfNotNull(Method method) {
+	private Method makeAccessibleIfNotNullAndOverridden(Method method) {
 		if (method != null) {
-			ReflectionUtils.makeAccessible(method);
+			if (isMethodOverridden(method)) {
+				try {
+					ReflectionUtils.makeAccessible(method);
+					return method;
+				}
+				catch (Throwable ex) {
+					if (anyCauseIsInaccessibleObjectException(ex)) {
+						throw new IllegalStateException("The executor [" + this.delegate.getClass()
+								+ "] has overridden a method with name [" + method.getName()
+								+ "] and the object is inaccessible. You have to run your JVM with [--add-opens] switch to allow such access. Example: [--add-opens java.base/java.util.concurrent=ALL-UNNAMED].",
+								ex);
+					}
+					throw ex;
+				}
+			}
 		}
+		return null;
+	}
+
+	private boolean anyCauseIsInaccessibleObjectException(Throwable t) {
+		Throwable parent = t;
+		Throwable cause = t.getCause();
+		while (cause != null && cause != parent) {
+			if (cause.getClass().toString().contains("InaccessibleObjectException")) {
+				return true;
+			}
+			parent = cause;
+			cause = parent.getCause();
+		}
+		return false;
+	}
+
+	boolean isMethodOverridden(Method originalMethod) {
+		Method delegateMethod = ReflectionUtils.findMethod(this.delegate.getClass(), originalMethod.getName());
+		if (delegateMethod == null) {
+			return false;
+		}
+		return !delegateMethod.equals(originalMethod);
 	}
 
 	LazyTraceScheduledThreadPoolExecutor(int corePoolSize, ThreadFactory threadFactory,
@@ -123,26 +155,24 @@ class LazyTraceScheduledThreadPoolExecutor extends ScheduledThreadPoolExecutor {
 		this.beanFactory = beanFactory;
 		this.delegate = delegate;
 		this.beanName = beanName;
-		this.decorateTaskRunnable = ReflectionUtils.findMethod(ScheduledThreadPoolExecutor.class, "decorateTask",
+		Method decorateTaskRunnable = ReflectionUtils.findMethod(ScheduledThreadPoolExecutor.class, "decorateTask",
 				Runnable.class, RunnableScheduledFuture.class);
-		makeAccessibleIfNotNull(this.decorateTaskRunnable);
-		this.decorateTaskCallable = ReflectionUtils.findMethod(ScheduledThreadPoolExecutor.class, "decorateTask",
+		this.decorateTaskRunnable = makeAccessibleIfNotNullAndOverridden(decorateTaskRunnable);
+		Method decorateTaskCallable = ReflectionUtils.findMethod(ScheduledThreadPoolExecutor.class, "decorateTask",
 				Callable.class, RunnableScheduledFuture.class);
-		makeAccessibleIfNotNull(this.decorateTaskCallable);
-		this.finalize = ReflectionUtils.findMethod(ScheduledThreadPoolExecutor.class, "finalize", null);
-		makeAccessibleIfNotNull(this.finalize);
-		this.beforeExecute = ReflectionUtils.findMethod(ScheduledThreadPoolExecutor.class, "beforeExecute", null);
-		makeAccessibleIfNotNull(this.beforeExecute);
-		this.afterExecute = ReflectionUtils.findMethod(ScheduledThreadPoolExecutor.class, "afterExecute", null);
-		makeAccessibleIfNotNull(this.afterExecute);
-		this.terminated = ReflectionUtils.findMethod(ScheduledThreadPoolExecutor.class, "terminated");
-		makeAccessibleIfNotNull(this.terminated);
-		this.newTaskForRunnable = ReflectionUtils.findMethod(ScheduledThreadPoolExecutor.class, "newTaskFor",
+		this.decorateTaskCallable = makeAccessibleIfNotNullAndOverridden(decorateTaskCallable);
+		Method beforeExecute = ReflectionUtils.findMethod(ScheduledThreadPoolExecutor.class, "beforeExecute", null);
+		this.beforeExecute = makeAccessibleIfNotNullAndOverridden(beforeExecute);
+		Method afterExecute = ReflectionUtils.findMethod(ScheduledThreadPoolExecutor.class, "afterExecute", null);
+		this.afterExecute = makeAccessibleIfNotNullAndOverridden(afterExecute);
+		Method terminated = ReflectionUtils.findMethod(ScheduledThreadPoolExecutor.class, "terminated", null);
+		this.terminated = makeAccessibleIfNotNullAndOverridden(terminated);
+		Method newTaskForRunnable = ReflectionUtils.findMethod(ScheduledThreadPoolExecutor.class, "newTaskFor",
 				Runnable.class, Object.class);
-		makeAccessibleIfNotNull(this.newTaskForRunnable);
-		this.newTaskForCallable = ReflectionUtils.findMethod(ScheduledThreadPoolExecutor.class, "newTaskFor",
+		this.newTaskForRunnable = makeAccessibleIfNotNullAndOverridden(newTaskForRunnable);
+		Method newTaskForCallable = ReflectionUtils.findMethod(ScheduledThreadPoolExecutor.class, "newTaskFor",
 				Callable.class);
-		makeAccessibleIfNotNull(this.newTaskForCallable);
+		this.newTaskForCallable = makeAccessibleIfNotNullAndOverridden(newTaskForCallable);
 	}
 
 	private Runnable traceRunnableWhenContextReady(Runnable delegate) {
@@ -166,6 +196,9 @@ class LazyTraceScheduledThreadPoolExecutor extends ScheduledThreadPoolExecutor {
 	@Override
 	@SuppressWarnings("unchecked")
 	public <V> RunnableScheduledFuture<V> decorateTask(Runnable runnable, RunnableScheduledFuture<V> task) {
+		if (this.decorateTaskRunnable == null) {
+			return super.decorateTask(traceRunnableWhenContextReady(runnable), task);
+		}
 		return (RunnableScheduledFuture<V>) ReflectionUtils.invokeMethod(this.decorateTaskRunnable, this.delegate,
 				traceRunnableWhenContextReady(runnable), task);
 	}
@@ -173,6 +206,9 @@ class LazyTraceScheduledThreadPoolExecutor extends ScheduledThreadPoolExecutor {
 	@Override
 	@SuppressWarnings("unchecked")
 	public <V> RunnableScheduledFuture<V> decorateTask(Callable<V> callable, RunnableScheduledFuture<V> task) {
+		if (this.decorateTaskCallable == null) {
+			return super.decorateTask(traceCallableWhenContextReady(callable), task);
+		}
 		return (RunnableScheduledFuture<V>) ReflectionUtils.invokeMethod(this.decorateTaskCallable, this.delegate,
 				traceCallableWhenContextReady(callable), task);
 	}
@@ -358,7 +394,7 @@ class LazyTraceScheduledThreadPoolExecutor extends ScheduledThreadPoolExecutor {
 
 	@Override
 	public boolean remove(Runnable task) {
-		return this.delegate.remove(task);
+		return this.delegate.remove(traceRunnableWhenContextReady(task));
 	}
 
 	@Override
@@ -398,22 +434,37 @@ class LazyTraceScheduledThreadPoolExecutor extends ScheduledThreadPoolExecutor {
 
 	@Override
 	public void beforeExecute(Thread t, Runnable r) {
+		if (this.beforeExecute == null) {
+			super.beforeExecute(t, traceRunnableWhenContextReady(r));
+			return;
+		}
 		ReflectionUtils.invokeMethod(this.beforeExecute, this.delegate, t, traceRunnableWhenContextReady(r));
 	}
 
 	@Override
 	public void afterExecute(Runnable r, Throwable t) {
+		if (this.afterExecute == null) {
+			super.afterExecute(traceRunnableWhenContextReady(r), t);
+			return;
+		}
 		ReflectionUtils.invokeMethod(this.afterExecute, this.delegate, traceRunnableWhenContextReady(r), t);
 	}
 
 	@Override
 	public void terminated() {
+		if (this.terminated == null) {
+			super.terminated();
+			return;
+		}
 		ReflectionUtils.invokeMethod(this.terminated, this.delegate);
 	}
 
 	@Override
 	@SuppressWarnings("unchecked")
 	public <T> RunnableFuture<T> newTaskFor(Runnable runnable, T value) {
+		if (this.newTaskForRunnable == null) {
+			return super.newTaskFor(traceRunnableWhenContextReady(runnable), value);
+		}
 		return (RunnableFuture<T>) ReflectionUtils.invokeMethod(this.newTaskForRunnable, this.delegate,
 				traceRunnableWhenContextReady(runnable), value);
 	}
@@ -421,6 +472,9 @@ class LazyTraceScheduledThreadPoolExecutor extends ScheduledThreadPoolExecutor {
 	@Override
 	@SuppressWarnings("unchecked")
 	public <T> RunnableFuture<T> newTaskFor(Callable<T> callable) {
+		if (this.newTaskForRunnable == null) {
+			return super.newTaskFor(traceCallableWhenContextReady(callable));
+		}
 		return (RunnableFuture<T>) ReflectionUtils.invokeMethod(this.newTaskForCallable, this.delegate,
 				traceCallableWhenContextReady(callable));
 	}

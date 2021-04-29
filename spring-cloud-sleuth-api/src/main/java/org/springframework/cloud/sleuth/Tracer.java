@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2020 the original author or authors.
+ * Copyright 2013-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -133,6 +133,12 @@ public interface Tracer extends BaggageManager {
 	 * @return a span builder
 	 */
 	Span.Builder spanBuilder();
+
+	/**
+	 * Builder for {@link TraceContext}.
+	 * @return a trace context builder
+	 */
+	TraceContext.Builder traceContextBuilder();
 
 	/**
 	 * Allows to customize the current span in scope.

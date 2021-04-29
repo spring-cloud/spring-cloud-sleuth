@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2020 the original author or authors.
+ * Copyright 2013-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,6 +22,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import org.awaitility.Awaitility;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.reactivestreams.Publisher;
 import reactor.core.publisher.Flux;
@@ -165,6 +166,7 @@ public abstract class ScopePassingSpanSubscriberSpringBootTests {
 	}
 
 	@Test
+	@Disabled("Will work only for on each - by accident")
 	public void should_pass_tracing_info_when_using_reactor_async_processor() {
 		final AtomicReference<TraceContext> spanInOperation = new AtomicReference<>();
 

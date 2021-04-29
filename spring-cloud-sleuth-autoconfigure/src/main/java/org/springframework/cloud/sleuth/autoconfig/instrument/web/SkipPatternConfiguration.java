@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2020 the original author or authors.
+ * Copyright 2013-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,6 +24,7 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.BeanCurrentlyInCreationException;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.actuate.autoconfigure.endpoint.web.WebEndpointProperties;
 import org.springframework.boot.actuate.autoconfigure.web.server.ConditionalOnManagementPort;
 import org.springframework.boot.actuate.autoconfigure.web.server.ManagementPortType;
@@ -199,6 +200,7 @@ class SkipPatternConfiguration {
 
 		@Bean
 		@ConditionalOnManagementPort(ManagementPortType.SAME)
+		@ConditionalOnBean(WebEndpointProperties.class)
 		SingleSkipPattern skipPatternForActuatorEndpointsSamePort(Environment environment,
 				final ServerProperties serverProperties, final WebEndpointProperties webEndpointProperties,
 				final EndpointsSupplier<ExposableWebEndpoint> endpointsSupplier) {
@@ -210,10 +212,16 @@ class SkipPatternConfiguration {
 		@ConditionalOnManagementPort(ManagementPortType.DIFFERENT)
 		@ConditionalOnProperty(name = "management.server.servlet.context-path", havingValue = "/",
 				matchIfMissing = true)
+		@ConditionalOnBean(WebEndpointProperties.class)
 		SingleSkipPattern skipPatternForActuatorEndpointsDifferentPort(Environment environment,
-				final ServerProperties serverProperties, final WebEndpointProperties webEndpointProperties,
+				final WebEndpointProperties webEndpointProperties,
+				ObjectProvider<ManagementServerProperties> managementServerProperties,
 				final EndpointsSupplier<ExposableWebEndpoint> endpointsSupplier) {
-			return () -> getEndpointsPatterns(environment, null, webEndpointProperties, endpointsSupplier);
+			return () -> {
+				ManagementServerProperties props = managementServerProperties.getIfAvailable();
+				return getEndpointsPatterns(environment, props != null ? props.getBasePath() : null,
+						webEndpointProperties, endpointsSupplier);
+			};
 		}
 
 	}

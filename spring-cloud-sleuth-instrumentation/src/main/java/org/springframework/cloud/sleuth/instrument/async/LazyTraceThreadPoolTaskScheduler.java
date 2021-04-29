@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2020 the original author or authors.
+ * Copyright 2013-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -28,6 +28,7 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.ThreadPoolExecutor;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -106,11 +107,17 @@ class LazyTraceThreadPoolTaskScheduler extends ThreadPoolTaskScheduler {
 		if (ContextUtil.isContextUnusable(this.beanFactory)) {
 			return delegate;
 		}
+		if (delegate instanceof TraceRunnable) {
+			return delegate;
+		}
 		return new TraceRunnable(tracing(), spanNamer(), delegate, this.beanName);
 	}
 
 	private <V> Callable<V> traceCallableWhenContextReady(Callable<V> delegate) {
 		if (ContextUtil.isContextUnusable(this.beanFactory)) {
+			return delegate;
+		}
+		if (delegate instanceof TraceCallable) {
 			return delegate;
 		}
 		return new TraceCallable<>(tracing(), spanNamer(), delegate, this.beanName);
@@ -135,15 +142,25 @@ class LazyTraceThreadPoolTaskScheduler extends ThreadPoolTaskScheduler {
 	public ExecutorService initializeExecutor(ThreadFactory threadFactory,
 			RejectedExecutionHandler rejectedExecutionHandler) {
 		ExecutorService executorService = (ExecutorService) ReflectionUtils.invokeMethod(this.initializeExecutor,
-				this.delegate, traceThreadFactory(threadFactory), rejectedExecutionHandler);
+				this.delegate, traceThreadFactory(threadFactory),
+				traceRejectedExecutionHandler(rejectedExecutionHandler));
 		if (executorService instanceof TraceableScheduledExecutorService) {
 			return executorService;
 		}
 		return new TraceableExecutorService(this.beanFactory, executorService, this.beanName);
 	}
 
+	private RejectedExecutionHandler traceRejectedExecutionHandler(RejectedExecutionHandler rejectedExecutionHandler) {
+		return new RejectedExecutionHandler() {
+			@Override
+			public void rejectedExecution(Runnable r, ThreadPoolExecutor executor) {
+				rejectedExecutionHandler.rejectedExecution(traceRunnableWhenContextReady(r), executor);
+			}
+		};
+	}
+
 	private ThreadFactory traceThreadFactory(ThreadFactory threadFactory) {
-		return r -> threadFactory.newThread(new TraceRunnable(tracing(), spanNamer(), r, this.beanName));
+		return r -> threadFactory.newThread(traceRunnableWhenContextReady(r));
 	}
 
 	@Override
@@ -151,7 +168,7 @@ class LazyTraceThreadPoolTaskScheduler extends ThreadPoolTaskScheduler {
 			RejectedExecutionHandler rejectedExecutionHandler) {
 		ScheduledExecutorService executorService = (ScheduledExecutorService) ReflectionUtils.invokeMethod(
 				this.createExecutor, this.delegate, poolSize, traceThreadFactory(threadFactory),
-				rejectedExecutionHandler);
+				traceRejectedExecutionHandler(rejectedExecutionHandler));
 		if (executorService instanceof TraceableScheduledExecutorService) {
 			return executorService;
 		}
@@ -313,7 +330,7 @@ class LazyTraceThreadPoolTaskScheduler extends ThreadPoolTaskScheduler {
 
 	@Override
 	public Thread newThread(Runnable runnable) {
-		return this.delegate.newThread(runnable);
+		return this.delegate.newThread(traceRunnableWhenContextReady(runnable));
 	}
 
 	@Override
@@ -359,7 +376,7 @@ class LazyTraceThreadPoolTaskScheduler extends ThreadPoolTaskScheduler {
 
 	@Override
 	public Thread createThread(Runnable runnable) {
-		return this.delegate.createThread(runnable);
+		return this.delegate.createThread(traceRunnableWhenContextReady(runnable));
 	}
 
 	@Override

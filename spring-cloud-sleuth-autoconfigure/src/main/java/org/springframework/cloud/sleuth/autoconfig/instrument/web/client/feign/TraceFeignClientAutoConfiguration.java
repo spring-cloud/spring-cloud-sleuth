@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2020 the original author or authors.
+ * Copyright 2013-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -35,6 +35,7 @@ import org.springframework.cloud.sleuth.instrument.web.client.feign.FeignContext
 import org.springframework.cloud.sleuth.instrument.web.client.feign.OkHttpFeignClientBeanPostProcessor;
 import org.springframework.cloud.sleuth.instrument.web.client.feign.SleuthFeignBuilder;
 import org.springframework.cloud.sleuth.instrument.web.client.feign.TraceFeignAspect;
+import org.springframework.cloud.sleuth.instrument.web.client.feign.TraceFeignBuilderBeanPostProcessor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Conditional;
 import org.springframework.context.annotation.Configuration;
@@ -66,6 +67,11 @@ public class TraceFeignClientAutoConfiguration {
 		@Bean
 		static FeignContextBeanPostProcessor feignContextBeanPostProcessor(BeanFactory beanFactory) {
 			return new FeignContextBeanPostProcessor(beanFactory);
+		}
+
+		@Bean
+		static TraceFeignBuilderBeanPostProcessor traceFeignBuilderBeanPostProcessor(BeanFactory beanFactory) {
+			return new TraceFeignBuilderBeanPostProcessor(beanFactory);
 		}
 
 	}

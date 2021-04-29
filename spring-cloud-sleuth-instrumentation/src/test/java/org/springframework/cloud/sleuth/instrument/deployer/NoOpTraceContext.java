@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2020 the original author or authors.
+ * Copyright 2013-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,21 +14,36 @@
  * limitations under the License.
  */
 
-package org.springframework.cloud.sleuth.internal;
+package org.springframework.cloud.sleuth.instrument.deployer;
 
-import java.util.concurrent.atomic.AtomicBoolean;
+import org.springframework.cloud.sleuth.TraceContext;
 
-import org.springframework.beans.factory.BeanFactory;
+/**
+ * A noop implementation. Does nothing.
+ *
+ * @author Marcin Grzejszczak
+ * @since 3.0.0
+ */
+class NoOpTraceContext implements TraceContext {
 
-public final class SleuthContextListenerAccessor {
-
-	private SleuthContextListenerAccessor() {
-		throw new IllegalStateException("Can't instantiate a utility class");
+	@Override
+	public String traceId() {
+		return "";
 	}
 
-	public static void set(BeanFactory beanFactory, boolean refreshed) {
-		SleuthContextListener.CACHE.put(beanFactory,
-				new SleuthContextListener(new AtomicBoolean(refreshed), new AtomicBoolean(false)));
+	@Override
+	public String parentId() {
+		return "";
+	}
+
+	@Override
+	public String spanId() {
+		return "";
+	}
+
+	@Override
+	public Boolean sampled() {
+		return false;
 	}
 
 }

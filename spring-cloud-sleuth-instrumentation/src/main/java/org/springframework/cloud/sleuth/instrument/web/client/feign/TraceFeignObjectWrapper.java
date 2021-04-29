@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2020 the original author or authors.
+ * Copyright 2013-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -70,8 +70,11 @@ final class TraceFeignObjectWrapper {
 
 	private Object loadBalancerClientFactory;
 
+	private final TraceFeignBuilderBeanPostProcessor traceFeignBuilderBeanPostProcessor;
+
 	TraceFeignObjectWrapper(BeanFactory beanFactory) {
 		this.beanFactory = beanFactory;
+		this.traceFeignBuilderBeanPostProcessor = new TraceFeignBuilderBeanPostProcessor(beanFactory);
 	}
 
 	Object wrap(Object bean) {
@@ -87,7 +90,7 @@ final class TraceFeignObjectWrapper {
 			}
 			return new LazyTracingFeignClient(this.beanFactory, (Client) bean);
 		}
-		return bean;
+		return this.traceFeignBuilderBeanPostProcessor.postProcessAfterInitialization(bean, null);
 	}
 
 	private Object instrumentedFeignLoadBalancerClient(Object bean) {
