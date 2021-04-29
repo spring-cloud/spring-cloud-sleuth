@@ -17,7 +17,6 @@
 package org.springframework.cloud.sleuth.autoconfig.instrument.rsocket;
 
 import java.util.List;
-import java.util.Locale;
 
 import io.rsocket.RSocket;
 
