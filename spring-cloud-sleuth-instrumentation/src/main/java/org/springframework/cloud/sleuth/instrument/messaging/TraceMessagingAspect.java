@@ -59,7 +59,7 @@ public class TraceMessagingAspect {
 		this.spanNamer = spanNamer;
 	}
 
-	@Pointcut("@within(org.springframework.messaging.handler.annotation.MessageMapping)")
+	@Pointcut("@annotation(org.springframework.messaging.handler.annotation.MessageMapping)")
 	private void anyMessageMappingAnnotated() {
 	} // NOSONAR
 

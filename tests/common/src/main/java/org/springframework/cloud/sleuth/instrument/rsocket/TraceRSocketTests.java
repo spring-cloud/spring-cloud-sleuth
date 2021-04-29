@@ -20,9 +20,6 @@ import java.net.URI;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingDeque;
 
-import brave.Span;
-import brave.Tracer;
-import brave.test.TestSpanHandler;
 import io.rsocket.frame.FrameType;
 import org.junit.jupiter.api.Test;
 import reactor.core.publisher.Flux;
@@ -32,7 +29,11 @@ import reactor.util.context.ContextView;
 import org.springframework.boot.WebApplicationType;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.builder.SpringApplicationBuilder;
+import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.TraceContext;
+import org.springframework.cloud.sleuth.Tracer;
+import org.springframework.cloud.sleuth.exporter.FinishedSpan;
+import org.springframework.cloud.sleuth.test.TestSpanHandler;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -213,7 +214,10 @@ public abstract class TraceRSocketTests {
 	private void thenSpanWasReportedWithTags(TestSpanHandler spans, String path, FrameType frameType) {
 		then(spans).hasSize(1);
 		// TODO: Preferred option would be : [api.c2.{name}]
-		then(spans.get(0).name()).isEqualTo(frameType.name() + " " + path);
+		FinishedSpan span = spans.get(0);
+		then(span.getName()).isEqualTo(frameType.name() + " " + path);
+		then(span.getTags()).containsEntry("messaging.controller.class", "org.springframework.cloud.sleuth.instrument.rsocket.TraceRSocketTests$TestController");
+		then(span.getTags()).containsKey("messaging.controller.method");
 	}
 
 	private Mono<Void> whenRequestFnFIsSent(RSocketRequester requester, String path) {
@@ -271,7 +275,7 @@ public abstract class TraceRSocketTests {
 	private void thenNoSpanWasReported(TestSpanHandler spans, TestController controller2, String expectedTraceId) {
 		// then(spans).isEmpty(); // FIXME: does not work for request case
 		then(controller2.getSpan()).isNotNull();
-		then(controller2.getSpan().context().traceIdString()).isEqualTo(expectedTraceId);
+		then(controller2.getSpan().context().traceId()).isEqualTo(expectedTraceId);
 	}
 
 	@Configuration(proxyBeanMethods = false)
