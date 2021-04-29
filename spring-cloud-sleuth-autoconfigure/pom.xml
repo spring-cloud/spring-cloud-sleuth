@@ -265,6 +265,11 @@
 			<artifactId>spring-jms</artifactId>
 			<optional>true</optional>
 		</dependency>
+		<dependency>
+			<groupId>io.projectreactor.kafka</groupId>
+			<artifactId>reactor-kafka</artifactId>
+			<optional>true</optional>
+		</dependency>
 		<!-- GRPC Optional Dependencies -->
 		<dependency>
 			<groupId>io.github.lognet</groupId>
