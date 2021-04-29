@@ -64,6 +64,10 @@ public class SleuthKafkaAspect {
 	private void anyProducerFactory() {
 	} // NOSONAR
 
+	@Pointcut("execution(public * org.springframework.kafka.core.ProducerFactory.createNonTransactionalProducer(..))")
+	private void anyNonTransactionalProducerFactory() {
+	} // NOSONAR
+
 	@Pointcut("execution(public * org.springframework.kafka.core.ConsumerFactory.createConsumer(..))")
 	private void anyConsumerFactory() {
 	} // NOSONAR
@@ -76,7 +80,7 @@ public class SleuthKafkaAspect {
 	private void anyCreateContainer() {
 	} // NOSONAR
 
-	@Around("anyProducerFactory()")
+	@Around("anyProducerFactory() || anyNonTransactionalProducerFactory()")
 	public Object wrapProducerFactory(ProceedingJoinPoint pjp) throws Throwable {
 		Producer producer = (Producer) pjp.proceed();
 		return this.kafkaTracing.producer(producer);
