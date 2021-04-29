@@ -17,6 +17,7 @@
 package org.springframework.cloud.sleuth.autoconfig.instrument.rsocket;
 
 import java.util.List;
+import java.util.Locale;
 
 import io.rsocket.RSocket;
 
@@ -34,7 +35,6 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.boot.rsocket.server.RSocketServerCustomizer;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.autoconfig.brave.BraveAutoConfiguration;
-import org.springframework.cloud.sleuth.brave.propagation.PropagationType;
 import org.springframework.cloud.sleuth.instrument.rsocket.TracingRSocketConnectorConfigurer;
 import org.springframework.cloud.sleuth.instrument.rsocket.TracingRSocketServerCustomizer;
 import org.springframework.cloud.sleuth.propagation.Propagator;
@@ -68,13 +68,13 @@ public class TraceRSocketAutoConfiguration {
 		return builder;
 	}
 
-	private boolean containsZipkinPropagationType(List<PropagationType> types) {
-		return types.contains(PropagationType.B3);
+	private boolean containsZipkinPropagationType(List<String> types) {
+		return types.stream().anyMatch(s -> s.toLowerCase(Locale.ROOT).contains("b3"));
 	}
 
 	@Bean
 	RSocketConnectorConfigurer tracingRSocketConnectorConfigurer(Propagator propagator, Tracer tracer,
-			@Value("${spring.sleuth.propagation.type:B3}") List<PropagationType> types) {
+			@Value("${spring.sleuth.propagation.type:B3}") List<String> types) {
 		return new TracingRSocketConnectorConfigurer(propagator, tracer, containsZipkinPropagationType(types));
 	}
 
@@ -82,7 +82,7 @@ public class TraceRSocketAutoConfiguration {
 	// OTel
 	@Bean
 	RSocketServerCustomizer tracingRSocketServerCustomizer(Propagator propagator, Tracer tracer,
-			@Value("${spring.sleuth.propagation.type:B3}") List<PropagationType> types) {
+			@Value("${spring.sleuth.propagation.type:B3}") List<String> types) {
 		return new TracingRSocketServerCustomizer(propagator, tracer, containsZipkinPropagationType(types));
 	}
 
