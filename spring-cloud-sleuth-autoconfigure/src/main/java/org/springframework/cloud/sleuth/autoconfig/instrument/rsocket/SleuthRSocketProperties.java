@@ -14,36 +14,30 @@
  * limitations under the License.
  */
 
-package org.springframework.cloud.sleuth;
+package org.springframework.cloud.sleuth.autoconfig.instrument.rsocket;
+
+import org.springframework.boot.context.properties.ConfigurationProperties;
 
 /**
- * Container object for {@link Span} and its corresponding {@link Tracer.SpanInScope}.
+ * Sleuth RSocket settings.
  *
- * @author Marcin Grzejszczak
+ * @author Oleh Dokuka
  * @since 3.1.0
  */
-public class SpanAndScope {
+@ConfigurationProperties("spring.sleuth.rsocket")
+public class SleuthRSocketProperties {
 
-	private final Span span;
+	/**
+	 * When true enables instrumentation for rsocket.
+	 */
+	private boolean enabled = true;
 
-	private final Tracer.SpanInScope scope;
-
-	public SpanAndScope(Span span, Tracer.SpanInScope scope) {
-		this.span = span;
-		this.scope = scope;
+	public boolean isEnabled() {
+		return this.enabled;
 	}
 
-	public Span getSpan() {
-		return this.span;
-	}
-
-	public Tracer.SpanInScope getScope() {
-		return this.scope;
-	}
-
-	@Override
-	public String toString() {
-		return "SpanAndScope{" + "span=" + this.span + '}';
+	public void setEnabled(boolean enabled) {
+		this.enabled = enabled;
 	}
 
 }

@@ -27,6 +27,8 @@ import brave.propagation.TraceContext;
 import brave.propagation.TraceContextOrSamplingFlags;
 import org.junit.jupiter.api.Test;
 
+import org.springframework.cloud.sleuth.internal.EncodingUtils;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.entry;
 import static org.springframework.cloud.sleuth.brave.bridge.W3CPropagation.TRACE_PARENT;
@@ -68,9 +70,9 @@ class W3CPropagationTest {
 
 	private TraceContext.Builder sampledTraceContext(String traceIdHigh, String traceId, String spanId) {
 		return TraceContext.newBuilder().sampled(SAMPLED_TRACE_OPTIONS)
-				.traceIdHigh(BigendianEncoding.longFromBase16String(traceIdHigh))
-				.traceId(BigendianEncoding.longFromBase16String(traceId))
-				.spanId(BigendianEncoding.longFromBase16String(spanId));
+				.traceIdHigh(EncodingUtils.longFromBase16String(traceIdHigh))
+				.traceId(EncodingUtils.longFromBase16String(traceId))
+				.spanId(EncodingUtils.longFromBase16String(spanId));
 	}
 
 	@Test

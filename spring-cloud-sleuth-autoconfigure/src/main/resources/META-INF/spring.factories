@@ -19,6 +19,7 @@ org.springframework.cloud.sleuth.autoconfig.instrument.messaging.TraceFunctionAu
 org.springframework.cloud.sleuth.autoconfig.instrument.messaging.TraceSpringIntegrationAutoConfiguration,\
 org.springframework.cloud.sleuth.autoconfig.instrument.messaging.TraceSpringMessagingAutoConfiguration,\
 org.springframework.cloud.sleuth.autoconfig.instrument.messaging.TraceWebSocketAutoConfiguration,\
+org.springframework.cloud.sleuth.autoconfig.instrument.rsocket.TraceRSocketAutoConfiguration, \
 org.springframework.cloud.sleuth.autoconfig.brave.BraveAutoConfiguration,\
 org.springframework.cloud.sleuth.autoconfig.brave.instrument.web.client.BraveWebClientAutoConfiguration,\
 org.springframework.cloud.sleuth.autoconfig.brave.instrument.rpc.BraveRpcAutoConfiguration,\

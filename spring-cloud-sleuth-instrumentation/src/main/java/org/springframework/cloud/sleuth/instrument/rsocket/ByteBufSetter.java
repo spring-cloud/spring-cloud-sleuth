@@ -14,36 +14,22 @@
  * limitations under the License.
  */
 
-package org.springframework.cloud.sleuth;
+package org.springframework.cloud.sleuth.instrument.rsocket;
 
-/**
- * Container object for {@link Span} and its corresponding {@link Tracer.SpanInScope}.
- *
- * @author Marcin Grzejszczak
- * @since 3.1.0
- */
-public class SpanAndScope {
+import io.netty.buffer.ByteBufAllocator;
+import io.netty.buffer.ByteBufUtil;
+import io.netty.buffer.CompositeByteBuf;
+import io.rsocket.metadata.CompositeMetadataCodec;
 
-	private final Span span;
+import org.springframework.cloud.sleuth.propagation.Propagator;
 
-	private final Tracer.SpanInScope scope;
-
-	public SpanAndScope(Span span, Tracer.SpanInScope scope) {
-		this.span = span;
-		this.scope = scope;
-	}
-
-	public Span getSpan() {
-		return this.span;
-	}
-
-	public Tracer.SpanInScope getScope() {
-		return this.scope;
-	}
+class ByteBufSetter implements Propagator.Setter<CompositeByteBuf> {
 
 	@Override
-	public String toString() {
-		return "SpanAndScope{" + "span=" + this.span + '}';
+	public void set(CompositeByteBuf carrier, String key, String value) {
+		final ByteBufAllocator alloc = carrier.alloc();
+		CompositeMetadataCodec.encodeAndAddMetadataWithCompression(carrier, alloc, key,
+				ByteBufUtil.writeUtf8(alloc, value));
 	}
 
 }

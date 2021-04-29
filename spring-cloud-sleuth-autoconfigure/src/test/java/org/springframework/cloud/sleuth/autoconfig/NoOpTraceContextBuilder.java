@@ -14,36 +14,41 @@
  * limitations under the License.
  */
 
-package org.springframework.cloud.sleuth;
+package org.springframework.cloud.sleuth.autoconfig;
+
+import org.springframework.cloud.sleuth.TraceContext;
 
 /**
- * Container object for {@link Span} and its corresponding {@link Tracer.SpanInScope}.
+ * A noop implementation. Does nothing.
  *
  * @author Marcin Grzejszczak
  * @since 3.1.0
  */
-public class SpanAndScope {
+class NoOpTraceContextBuilder implements TraceContext.Builder {
 
-	private final Span span;
-
-	private final Tracer.SpanInScope scope;
-
-	public SpanAndScope(Span span, Tracer.SpanInScope scope) {
-		this.span = span;
-		this.scope = scope;
-	}
-
-	public Span getSpan() {
-		return this.span;
-	}
-
-	public Tracer.SpanInScope getScope() {
-		return this.scope;
+	@Override
+	public TraceContext.Builder traceId(String traceId) {
+		return this;
 	}
 
 	@Override
-	public String toString() {
-		return "SpanAndScope{" + "span=" + this.span + '}';
+	public TraceContext.Builder parentId(String traceId) {
+		return this;
+	}
+
+	@Override
+	public TraceContext.Builder spanId(String spanId) {
+		return null;
+	}
+
+	@Override
+	public TraceContext.Builder sampled(Boolean sampled) {
+		return this;
+	}
+
+	@Override
+	public TraceContext build() {
+		return new NoOpTraceContext();
 	}
 
 }

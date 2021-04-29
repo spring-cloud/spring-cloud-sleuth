@@ -334,15 +334,26 @@ public abstract class ReactorSleuth {
 	public static <T> Mono<T> tracedMono(@NonNull Tracer tracer, @NonNull CurrentTraceContext currentTraceContext,
 			@NonNull String childSpanName, @NonNull Supplier<Mono<T>> supplier,
 			@NonNull Consumer<Span> spanCustomizer) {
+		return runMonoSupplierInScope(supplier, spanCustomizer).contextWrite(
+				context -> ReactorSleuth.enhanceContext(tracer, currentTraceContext, context, childSpanName));
+	}
+
+	private static <T> Mono<T> runMonoSupplierInScope(Supplier<Mono<T>> supplier, Consumer<Span> spanCustomizer) {
 		return Mono.deferContextual(contextView -> {
 			Span span = contextView.get(Span.class);
 			spanCustomizer.accept(span);
 			Tracer.SpanInScope scope = contextView.get(Tracer.SpanInScope.class);
-			return supplier.get().doOnError(span::error).doFinally(signalType -> {
-				span.end();
-				scope.close();
-			});
-		}).contextWrite(context -> ReactorSleuth.enhanceContext(tracer, currentTraceContext, context, childSpanName));
+			// @formatter:off
+			return supplier.get()
+					// TODO: Fix me when this is resolved in Reactor
+//					.doOnSubscribe(__ -> scope.close())
+					.doOnError(span::error)
+					.doFinally(signalType -> {
+						span.end();
+						scope.close();
+					});
+			// @formatter:on
+		});
 	}
 
 	/**
@@ -362,6 +373,20 @@ public abstract class ReactorSleuth {
 	}
 
 	/**
+	 * Wraps the given Mono in a trace representation. Puts the provided span to context.
+	 * @param tracer - Tracer bean
+	 * @param span - span to put in context
+	 * @param supplier - supplier of a {@link Mono} to be wrapped in tracing
+	 * @param <T> - type returned by the Mono
+	 * @return traced Mono
+	 */
+	public static <T> Mono<T> tracedMono(@NonNull Tracer tracer, @NonNull Span span,
+			@NonNull Supplier<Mono<T>> supplier) {
+		return runMonoSupplierInScope(supplier, span1 -> {
+		}).contextWrite(context -> ReactorSleuth.putSpanInScope(tracer, context, span));
+	}
+
+	/**
 	 * Wraps the given Flux in a trace representation. Retrieves the span from context,
 	 * creates a child span with the given name.
 	 * @param tracer - Tracer bean
@@ -375,15 +400,41 @@ public abstract class ReactorSleuth {
 	public static <T> Flux<T> tracedFlux(@NonNull Tracer tracer, @NonNull CurrentTraceContext currentTraceContext,
 			@NonNull String childSpanName, @NonNull Supplier<Flux<T>> supplier,
 			@NonNull Consumer<Span> spanCustomizer) {
+		return runFluxSupplierInScope(supplier, spanCustomizer).contextWrite(
+				context -> ReactorSleuth.enhanceContext(tracer, currentTraceContext, context, childSpanName));
+	}
+
+	/**
+	 * Wraps the given Flux in a trace representation. Retrieves the span from context,
+	 * creates a child span with the given name.
+	 * @param tracer - Tracer bean
+	 * @param span - span to put in context
+	 * @param supplier - supplier of a {@link Flux} to be wrapped in tracing
+	 * @param <T> - type returned by the Flux
+	 * @return traced Flux
+	 */
+	public static <T> Flux<T> tracedFlux(@NonNull Tracer tracer, @NonNull Span span,
+			@NonNull Supplier<Flux<T>> supplier) {
+		return runFluxSupplierInScope(supplier, span1 -> {
+		}).contextWrite(context -> ReactorSleuth.putSpanInScope(tracer, context, span));
+	}
+
+	private static <T> Flux<T> runFluxSupplierInScope(Supplier<Flux<T>> supplier, Consumer<Span> spanCustomizer) {
 		return Flux.deferContextual(contextView -> {
 			Span span = contextView.get(Span.class);
 			spanCustomizer.accept(span);
 			Tracer.SpanInScope scope = contextView.get(Tracer.SpanInScope.class);
-			return supplier.get().doOnError(span::error).doFinally(signalType -> {
-				span.end();
-				scope.close();
-			});
-		}).contextWrite(context -> ReactorSleuth.enhanceContext(tracer, currentTraceContext, context, childSpanName));
+			// @formatter:off
+			return supplier.get()
+					// TODO: Fix me when this is resolved in Reactor
+//					.doOnSubscribe(__ -> scope.close())
+					.doOnError(span::error)
+					.doFinally(signalType -> {
+						span.end();
+						scope.close();
+					});
+			// @formatter:on
+		});
 	}
 
 	/**
@@ -442,6 +493,10 @@ public abstract class ReactorSleuth {
 	private static Context enhanceContext(Tracer tracer, CurrentTraceContext currentTraceContext,
 			reactor.util.context.Context context, String childSpanName) {
 		Span span = spanFromContext(tracer, currentTraceContext, context, childSpanName);
+		return putSpanInScope(tracer, context, span);
+	}
+
+	private static Context putSpanInScope(Tracer tracer, Context context, Span span) {
 		return context.put(Span.class, span).put(TraceContext.class, span.context()).put(Tracer.SpanInScope.class,
 				tracer.withSpan(span));
 	}

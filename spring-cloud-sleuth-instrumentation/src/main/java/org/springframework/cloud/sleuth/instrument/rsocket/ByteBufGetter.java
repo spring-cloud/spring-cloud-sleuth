@@ -14,36 +14,25 @@
  * limitations under the License.
  */
 
-package org.springframework.cloud.sleuth;
+package org.springframework.cloud.sleuth.instrument.rsocket;
 
-/**
- * Container object for {@link Span} and its corresponding {@link Tracer.SpanInScope}.
- *
- * @author Marcin Grzejszczak
- * @since 3.1.0
- */
-public class SpanAndScope {
+import io.netty.buffer.ByteBuf;
+import io.netty.util.CharsetUtil;
+import io.rsocket.metadata.CompositeMetadata;
 
-	private final Span span;
+import org.springframework.cloud.sleuth.propagation.Propagator;
 
-	private final Tracer.SpanInScope scope;
-
-	public SpanAndScope(Span span, Tracer.SpanInScope scope) {
-		this.span = span;
-		this.scope = scope;
-	}
-
-	public Span getSpan() {
-		return this.span;
-	}
-
-	public Tracer.SpanInScope getScope() {
-		return this.scope;
-	}
+class ByteBufGetter implements Propagator.Getter<ByteBuf> {
 
 	@Override
-	public String toString() {
-		return "SpanAndScope{" + "span=" + this.span + '}';
+	public String get(ByteBuf carrier, String key) {
+		final CompositeMetadata compositeMetadata = new CompositeMetadata(carrier, false);
+		for (CompositeMetadata.Entry entry : compositeMetadata) {
+			if (key.equals(entry.getMimeType())) {
+				return entry.getContent().toString(CharsetUtil.UTF_8);
+			}
+		}
+		return null;
 	}
 
 }

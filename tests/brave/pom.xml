@@ -54,6 +54,7 @@
 		<module>spring-cloud-sleuth-instrumentation-scheduling-tests</module>
 		<module>spring-cloud-sleuth-instrumentation-task-tests</module>
 		<module>spring-cloud-sleuth-instrumentation-webflux-tests</module>
+		<module>spring-cloud-sleuth-instrumentation-rsocket-tests</module>
 		<module>spring-cloud-sleuth-zipkin-tests</module>
 	</modules>
 

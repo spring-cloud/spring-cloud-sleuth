@@ -91,6 +91,11 @@ public class BraveTracer implements Tracer {
 	}
 
 	@Override
+	public TraceContext.Builder traceContextBuilder() {
+		return new BraveTraceContextBuilder();
+	}
+
+	@Override
 	public Map<String, String> getAllBaggage() {
 		return this.braveBaggageManager.getAllBaggage();
 	}
