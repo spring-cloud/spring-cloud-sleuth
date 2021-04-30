@@ -62,6 +62,7 @@ public class TraceAsyncAspect {
 		}
 		span = span.name(spanName);
 		try (Tracer.SpanInScope ws = this.tracer.withSpan(span.start())) {
+			// TODO: Make this less generic
 			span.tag(CLASS_KEY, pjp.getTarget().getClass().getSimpleName());
 			span.tag(METHOD_KEY, pjp.getSignature().getName());
 			return pjp.proceed();

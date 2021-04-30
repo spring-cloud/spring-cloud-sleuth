@@ -41,4 +41,9 @@ public class SpanAndScope {
 		return this.scope;
 	}
 
+	@Override
+	public String toString() {
+		return "SpanAndScope{" + "span=" + this.span + '}';
+	}
+
 }

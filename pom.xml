@@ -72,6 +72,7 @@
 		<spring-cloud-netflix.version>3.0.3-SNAPSHOT</spring-cloud-netflix.version>
 		<spring-cloud-openfeign.version>3.0.3-SNAPSHOT</spring-cloud-openfeign.version>
 		<spring-cloud-task.version>2.3.2-SNAPSHOT</spring-cloud-task.version>
+		<spring-cloud-deployer.version>2.5.1</spring-cloud-deployer.version>
 		<brave.version>5.13.2</brave.version>
 		<opentracing.version>0.32.0</opentracing.version>
 		<spring-security-boot-autoconfigure.version>2.3.4.RELEASE</spring-security-boot-autoconfigure.version>
@@ -92,6 +93,7 @@
 		<awaitility.version>4.0.3</awaitility.version>
 		<brave-propagation-aws.version>0.21.3</brave-propagation-aws.version>
 		<archunit-junit5.version>0.14.1</archunit-junit5.version>
+		<testcontainers.version>1.15.3</testcontainers.version>
 	</properties>
 
 	<build>
@@ -236,13 +238,20 @@
 				<version>${spring-cloud-config.version}</version>
 				<type>pom</type>
 				<scope>import</scope>
-      </dependency>
+			</dependency>
 			<dependency>
 				<groupId>org.springframework.cloud</groupId>
 				<artifactId>spring-cloud-task-dependencies</artifactId>
 				<version>${spring-cloud-task.version}</version>
 				<type>pom</type>
 				<scope>import</scope>
+			</dependency>
+			<dependency>
+				<groupId>org.springframework.cloud</groupId>
+				<artifactId>spring-cloud-deployer-dependencies</artifactId>
+				<version>${spring-cloud-deployer.version}</version>
+				<scope>import</scope>
+				<type>pom</type>
 			</dependency>
 			<dependency>
 				<groupId>org.springframework.security.oauth.boot</groupId>
@@ -292,6 +301,13 @@
 				<groupId>com.tngtech.archunit</groupId>
 				<artifactId>archunit-junit5</artifactId>
 				<version>${archunit-junit5.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.testcontainers</groupId>
+				<artifactId>testcontainers-bom</artifactId>
+				<version>${testcontainers.version}</version>
+				<type>pom</type>
+				<scope>import</scope>
 			</dependency>
 		</dependencies>
 	</dependencyManagement>
