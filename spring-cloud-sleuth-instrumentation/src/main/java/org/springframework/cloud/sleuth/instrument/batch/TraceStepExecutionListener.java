@@ -22,6 +22,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 import org.springframework.batch.core.ExitStatus;
+import org.springframework.batch.core.Step;
 import org.springframework.batch.core.StepExecution;
 import org.springframework.batch.core.StepExecutionListener;
 import org.springframework.cloud.sleuth.Span;
@@ -41,8 +42,6 @@ class TraceStepExecutionListener implements StepExecutionListener {
 	@Override
 	public void beforeStep(StepExecution stepExecution) {
 		Span span = this.tracer.nextSpan().name(stepExecution.getStepName());
-		span.tag("step.name", stepExecution.getStepName());
-		// TODO: How to add step type?
 		Tracer.SpanInScope spanInScope = this.tracer.withSpan(span.start());
 		SPANS.put(stepExecution, new SpanAndScope(span, spanInScope));
 	}
@@ -52,7 +51,10 @@ class TraceStepExecutionListener implements StepExecutionListener {
 		SpanAndScope spanAndScope = SPANS.remove(stepExecution);
 		List<Throwable> throwables = stepExecution.getFailureExceptions();
 		Span span = spanAndScope.getSpan();
-		span.tag("status", stepExecution.getStatus().name());
+		span.tag("batch.step.name", stepExecution.getStepName());
+		span.tag("batch.step.jobExecutionId", String.valueOf(stepExecution.getJobExecutionId()));
+		span.tag("batch.step.status", stepExecution.getStatus().name());
+		span.tag("batch.step.type", stepExecution.getExecutionContext().getString(Step.STEP_TYPE_KEY));
 		Tracer.SpanInScope scope = spanAndScope.getScope();
 		if (!throwables.isEmpty()) {
 			span.error(mergedThrowables(throwables));

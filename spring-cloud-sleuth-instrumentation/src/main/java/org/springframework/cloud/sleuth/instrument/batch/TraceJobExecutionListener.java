@@ -40,8 +40,6 @@ class TraceJobExecutionListener implements JobExecutionListener {
 	@Override
 	public void beforeJob(JobExecution jobExecution) {
 		Span span = this.tracer.nextSpan().name(jobExecution.getJobInstance().getJobName());
-		span.tag("job.name", jobExecution.getJobInstance().getJobName());
-		// TODO: How to add step type?
 		Tracer.SpanInScope spanInScope = this.tracer.withSpan(span.start());
 		SPANS.put(jobExecution, new SpanAndScope(span, spanInScope));
 	}
@@ -51,7 +49,10 @@ class TraceJobExecutionListener implements JobExecutionListener {
 		SpanAndScope spanAndScope = SPANS.remove(jobExecution);
 		List<Throwable> throwables = jobExecution.getFailureExceptions();
 		Span span = spanAndScope.getSpan();
-		span.tag("status", jobExecution.getStatus().name());
+		span.tag("batch.job.name", jobExecution.getJobInstance().getJobName());
+		span.tag("batch.job.instanceId", String.valueOf(jobExecution.getJobInstance().getInstanceId()));
+		span.tag("batch.job.id", String.valueOf(jobExecution.getJobInstance().getInstanceId()));
+		span.tag("batch.job.status", jobExecution.getStatus().name());
 		Tracer.SpanInScope scope = spanAndScope.getScope();
 		if (!throwables.isEmpty()) {
 			span.error(mergedThrowables(throwables));
