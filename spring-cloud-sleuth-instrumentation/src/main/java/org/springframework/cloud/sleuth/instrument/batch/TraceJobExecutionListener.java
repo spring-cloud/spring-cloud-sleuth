@@ -51,7 +51,7 @@ class TraceJobExecutionListener implements JobExecutionListener {
 		Span span = spanAndScope.getSpan();
 		span.tag("batch.job.name", jobExecution.getJobInstance().getJobName());
 		span.tag("batch.job.instanceId", String.valueOf(jobExecution.getJobInstance().getInstanceId()));
-		span.tag("batch.job.id", String.valueOf(jobExecution.getJobInstance().getInstanceId()));
+		span.tag("batch.job.executionId", String.valueOf(jobExecution.getId()));
 		span.tag("batch.job.status", jobExecution.getStatus().name());
 		Tracer.SpanInScope scope = spanAndScope.getScope();
 		if (!throwables.isEmpty()) {
