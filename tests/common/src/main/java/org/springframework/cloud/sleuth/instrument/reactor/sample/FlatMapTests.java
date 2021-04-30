@@ -143,7 +143,7 @@ public abstract class FlatMapTests {
 		sender.port = port;
 		spans.clear();
 
-		Awaitility.await().atMost(5, TimeUnit.SECONDS).pollInterval(1, TimeUnit.SECONDS).untilAsserted(() -> {
+		Awaitility.await().atMost(15, TimeUnit.SECONDS).pollInterval(1, TimeUnit.SECONDS).untilAsserted(() -> {
 			// when
 			LOGGER.info("Start");
 			spans.clear();
