@@ -19,8 +19,6 @@ package org.springframework.cloud.sleuth.autoconfig.instrument.batch;
 import org.springframework.batch.core.configuration.annotation.JobBuilderFactory;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
-import org.springframework.boot.autoconfigure.AutoConfigureBefore;
-import org.springframework.boot.autoconfigure.batch.BatchAutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -41,7 +39,6 @@ import org.springframework.context.annotation.Configuration;
 @ConditionalOnBean(Tracer.class)
 @ConditionalOnProperty(value = "spring.sleuth.batch.enabled", matchIfMissing = true)
 @AutoConfigureAfter(BraveAutoConfiguration.class)
-@AutoConfigureBefore(BatchAutoConfiguration.class)
 public class TraceBatchAutoConfiguration {
 
 	@Bean
