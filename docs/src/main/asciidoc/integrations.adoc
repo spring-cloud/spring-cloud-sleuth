@@ -597,5 +597,5 @@ In order to disable this instrumentation set `spring.sleuth.rsocket.enabled` to 
 
 This feature is available for all tracer implementations.
 
-If you have Spring RSocket running on the classpath, we wrap the inbound and outbound communication to propagate the tracing context via the metadata.
+If you have Spring Batch running on the classpath, we wrap the `StepBuilderFactory` and the `JobBuilderFactory` to propagate the tracing context.
 In order to disable this instrumentation set `spring.sleuth.batch.enabled` to `false`.
