@@ -38,10 +38,12 @@ import org.springframework.cloud.sleuth.http.HttpClientRequest;
 import org.springframework.cloud.sleuth.http.HttpClientResponse;
 import org.springframework.cloud.sleuth.instrument.reactor.TraceContextPropagator;
 import org.springframework.context.ConfigurableApplicationContext;
+import org.springframework.http.HttpMethod;
 import org.springframework.web.reactive.function.client.ClientRequest;
 import org.springframework.web.reactive.function.client.ClientResponse;
 import org.springframework.web.reactive.function.client.ExchangeFilterFunction;
 import org.springframework.web.reactive.function.client.ExchangeFunction;
+import org.springframework.web.reactive.function.client.WebClient;
 
 /**
  * Trace representation of {@link ExchangeFilterFunction}.
@@ -52,6 +54,8 @@ import org.springframework.web.reactive.function.client.ExchangeFunction;
 public final class TraceExchangeFilterFunction implements ExchangeFilterFunction {
 
 	private static final Log log = LogFactory.getLog(TraceExchangeFilterFunction.class);
+
+	private static final String URI_TEMPLATE_ATTRIBUTE = WebClient.class.getName() + ".uriTemplate";
 
 	final ConfigurableApplicationContext springContext;
 
@@ -155,12 +159,18 @@ public final class TraceExchangeFilterFunction implements ExchangeFilterFunction
 
 		final CurrentTraceContext currentTraceContext;
 
+		final HttpMethod method;
+
+		final String httpRoute;
+
 		TraceWebClientSubscriber(CoreSubscriber<? super ClientResponse> actual, Context ctx, Span clientSpan,
 				TraceContext parent, MonoWebClientTrace mono) {
 			this.actual = actual;
 			this.parent = parent;
 			this.handler = mono.handler;
 			this.currentTraceContext = mono.currentTraceContext;
+			this.method = mono.request.method();
+			this.httpRoute = (String) mono.request.attribute(URI_TEMPLATE_ATTRIBUTE).orElse(null);
 			this.context = this.parent != null && !this.parent.equals(ctx.getOrDefault(TraceContext.class, null))
 					? ctx.put(TraceContext.class, this.parent) : ctx;
 			set(clientSpan);
@@ -186,8 +196,7 @@ public final class TraceExchangeFilterFunction implements ExchangeFilterFunction
 					if (log.isTraceEnabled()) {
 						log.trace("OnNext finally");
 					}
-					// TODO: is there a way to read the request at response time?
-					this.handler.handleReceive(new ClientResponseWrapper(response), span);
+					this.handler.handleReceive(new ClientResponseWrapper(response, this.method, this.httpRoute), span);
 				}
 			}
 		}
@@ -331,6 +340,11 @@ public final class TraceExchangeFilterFunction implements ExchangeFilterFunction
 		}
 
 		@Override
+		public String route() {
+			return (String) delegate.attribute(URI_TEMPLATE_ATTRIBUTE).orElse(null);
+		}
+
+		@Override
 		public String url() {
 			return delegate.url().toString();
 		}
@@ -355,8 +369,24 @@ public final class TraceExchangeFilterFunction implements ExchangeFilterFunction
 
 		final ClientResponse delegate;
 
-		ClientResponseWrapper(ClientResponse delegate) {
+		final HttpMethod method;
+
+		final String httpRoute;
+
+		ClientResponseWrapper(ClientResponse delegate, HttpMethod method, String httpRoute) {
 			this.delegate = delegate;
+			this.method = method;
+			this.httpRoute = httpRoute;
+		}
+
+		@Override
+		public String method() {
+			return method.name();
+		}
+
+		@Override
+		public String route() {
+			return httpRoute;
 		}
 
 		@Override
