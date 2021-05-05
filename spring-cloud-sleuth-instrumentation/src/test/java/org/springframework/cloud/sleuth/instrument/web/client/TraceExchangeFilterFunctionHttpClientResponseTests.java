@@ -29,7 +29,7 @@ public class TraceExchangeFilterFunctionHttpClientResponseTests {
 	public void should_return_0_when_invalid_status_code_is_returned() {
 		ClientResponse clientResponse = BDDMockito.mock(ClientResponse.class);
 		BDDMockito.given(clientResponse.rawStatusCode()).willReturn(-1);
-		ClientResponseWrapper response = new ClientResponseWrapper(clientResponse);
+		ClientResponseWrapper response = new ClientResponseWrapper(clientResponse, null, null);
 
 		Integer statusCode = response.statusCode();
 
@@ -40,7 +40,7 @@ public class TraceExchangeFilterFunctionHttpClientResponseTests {
 	public void should_return_status_code_when_valid_status_code_is_returned() {
 		ClientResponse clientResponse = BDDMockito.mock(ClientResponse.class);
 		BDDMockito.given(clientResponse.rawStatusCode()).willReturn(200);
-		ClientResponseWrapper response = new ClientResponseWrapper(clientResponse);
+		ClientResponseWrapper response = new ClientResponseWrapper(clientResponse, null, null);
 
 		Integer statusCode = response.statusCode();
 
