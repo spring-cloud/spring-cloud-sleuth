@@ -5,7 +5,7 @@ set -o errexit
 mkdir -p target
 
 REPO_URL="https://github.com/spring-cloud-samples/sleuth-documentation-apps.git"
-BRANCH_NAME="master"
+BRANCH_NAME="main"
 
 pushd target
 git clone "${REPO_URL}"
