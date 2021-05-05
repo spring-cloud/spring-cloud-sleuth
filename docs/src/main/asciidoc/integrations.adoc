@@ -584,11 +584,18 @@ This feature is available for all tracer implementations.
 If you have Spring Cloud Deployer running on the classpath, we wrap the `AppDeployer` in a trace representation. We are polling the application for its status at a default interval. You can change that default by setting the `spring.sleuth.deployer.status-poll-delay` property.
 In order to disable this instrumentation set `spring.sleuth.deployer.enabled` to `false`.
 
-
-[[sleuth-deployer-integration]]
+[[sleuth-rsocket-integration]]
 == Spring RSocket
 
 This feature is available for all tracer implementations.
 
 If you have Spring RSocket running on the classpath, we wrap the inbound and outbound communication to propagate the tracing context via the metadata.
 In order to disable this instrumentation set `spring.sleuth.rsocket.enabled` to `false`.
+
+[[sleuth-batch-integration]]
+== Spring Batch
+
+This feature is available for all tracer implementations.
+
+If you have Spring Batch running on the classpath, we wrap the `StepBuilderFactory` and the `JobBuilderFactory` to propagate the tracing context.
+In order to disable this instrumentation set `spring.sleuth.batch.enabled` to `false`.

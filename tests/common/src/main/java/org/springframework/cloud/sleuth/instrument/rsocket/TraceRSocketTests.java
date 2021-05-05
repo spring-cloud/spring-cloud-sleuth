@@ -108,7 +108,7 @@ public abstract class TraceRSocketTests {
 		whenNonSampledRequestFnfIsSent(rSocketRequester);
 		controller2.getReceivedFrames().take();
 		// then
-		thenNoSpanWasReported(spans, controller2, EXPECTED_TRACE_ID);
+		thenNoSpanWasReported(spans, controller2, expectedTraceId());
 		spans.clear();
 		controller2.reset();
 
@@ -116,7 +116,7 @@ public abstract class TraceRSocketTests {
 		whenNonSampledRequestResponseIsSent(rSocketRequester);
 		controller2.getReceivedFrames().take();
 		// then
-		thenNoSpanWasReported(spans, controller2, EXPECTED_TRACE_ID);
+		thenNoSpanWasReported(spans, controller2, expectedTraceId());
 		spans.clear();
 		controller2.reset();
 
@@ -124,7 +124,7 @@ public abstract class TraceRSocketTests {
 		whenNonSampledRequestStreamIsSent(rSocketRequester);
 		controller2.getReceivedFrames().take();
 		// then
-		thenNoSpanWasReported(spans, controller2, EXPECTED_TRACE_ID);
+		thenNoSpanWasReported(spans, controller2, expectedTraceId());
 		spans.clear();
 		controller2.reset();
 
@@ -132,12 +132,20 @@ public abstract class TraceRSocketTests {
 		whenNonSampledRequestChannelIsSent(rSocketRequester);
 		controller2.getReceivedFrames().take();
 		// then
-		thenNoSpanWasReported(spans, controller2, EXPECTED_TRACE_ID);
+		thenNoSpanWasReported(spans, controller2, expectedTraceId());
 		spans.clear();
 		controller2.reset();
 
 		// cleanup
 		context.close();
+	}
+
+	protected String expectedTraceId() {
+		return EXPECTED_TRACE_ID;
+	}
+
+	protected String expectedSpanId() {
+		return EXPECTED_TRACE_ID;
 	}
 
 	@Test
@@ -238,7 +246,7 @@ public abstract class TraceRSocketTests {
 	}
 
 	private void whenNonSampledRequestFnfIsSent(RSocketRequester requester) {
-		requester.route("api.c2.fnf").metadata(EXPECTED_TRACE_ID + "-" + EXPECTED_TRACE_ID + "-0", new MimeType("b3") {
+		requester.route("api.c2.fnf").metadata(expectedTraceId() + "-" + expectedSpanId() + "-0", new MimeType("b3") {
 			@Override
 			public String toString() {
 				return "b3";
@@ -247,7 +255,7 @@ public abstract class TraceRSocketTests {
 	}
 
 	private void whenNonSampledRequestResponseIsSent(RSocketRequester requester) {
-		requester.route("api.c2.rr").metadata(EXPECTED_TRACE_ID + "-" + EXPECTED_TRACE_ID + "-0", new MimeType("b3") {
+		requester.route("api.c2.rr").metadata(expectedTraceId() + "-" + expectedSpanId() + "-0", new MimeType("b3") {
 			@Override
 			public String toString() {
 				return "b3";
@@ -256,7 +264,7 @@ public abstract class TraceRSocketTests {
 	}
 
 	private void whenNonSampledRequestStreamIsSent(RSocketRequester requester) {
-		requester.route("api.c2.rs").metadata(EXPECTED_TRACE_ID + "-" + EXPECTED_TRACE_ID + "-0", new MimeType("b3") {
+		requester.route("api.c2.rs").metadata(expectedTraceId() + "-" + expectedSpanId() + "-0", new MimeType("b3") {
 			@Override
 			public String toString() {
 				return "b3";
@@ -265,7 +273,7 @@ public abstract class TraceRSocketTests {
 	}
 
 	private void whenNonSampledRequestChannelIsSent(RSocketRequester requester) {
-		requester.route("api.c2.rc").metadata(EXPECTED_TRACE_ID + "-" + EXPECTED_TRACE_ID + "-0", new MimeType("b3") {
+		requester.route("api.c2.rc").metadata(expectedTraceId() + "-" + expectedSpanId() + "-0", new MimeType("b3") {
 			@Override
 			public String toString() {
 				return "b3";
