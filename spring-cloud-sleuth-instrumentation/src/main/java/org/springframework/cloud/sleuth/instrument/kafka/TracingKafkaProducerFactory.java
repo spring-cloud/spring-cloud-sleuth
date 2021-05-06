@@ -17,6 +17,7 @@
 package org.springframework.cloud.sleuth.instrument.kafka;
 
 import org.apache.kafka.clients.producer.Producer;
+import org.apache.kafka.clients.producer.ProducerRecord;
 import reactor.kafka.sender.KafkaSender;
 import reactor.kafka.sender.SenderOptions;
 import reactor.kafka.sender.internals.ProducerFactory;
@@ -39,16 +40,19 @@ public class TracingKafkaProducerFactory extends ProducerFactory {
 
 	private final Propagator propagator;
 
-	public TracingKafkaProducerFactory(Tracer tracer, Propagator propagator) {
+	private final Propagator.Setter<ProducerRecord<?, ?>> injector;
+
+	public TracingKafkaProducerFactory(Tracer tracer, Propagator propagator,
+			Propagator.Setter<ProducerRecord<?, ?>> injector) {
 		super();
 		this.tracer = tracer;
 		this.propagator = propagator;
+		this.injector = injector;
 	}
 
 	@Override
 	public <K, V> Producer<K, V> createProducer(SenderOptions<K, V> senderOptions) {
-		return new TracingKafkaProducer<>(super.createProducer(senderOptions), tracer, propagator,
-				new TracingKafkaPropagatorSetter());
+		return new TracingKafkaProducer<>(super.createProducer(senderOptions), tracer, propagator, injector);
 	}
 
 }

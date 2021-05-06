@@ -27,6 +27,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.autoconfig.brave.BraveAutoConfiguration;
+import org.springframework.cloud.sleuth.instrument.kafka.TracingKafkaConsumerFactory;
 import org.springframework.cloud.sleuth.instrument.kafka.TracingKafkaProducerFactory;
 import org.springframework.cloud.sleuth.instrument.kafka.TracingKafkaPropagatorGetter;
 import org.springframework.cloud.sleuth.instrument.kafka.TracingKafkaPropagatorSetter;
@@ -63,8 +64,16 @@ public class TracingKafkaAutoConfiguration {
 
 	@Bean
 	@ConditionalOnMissingBean
-	TracingKafkaProducerFactory tracingKafkaProducerFactory(Tracer tracer, Propagator propagator) {
-		return new TracingKafkaProducerFactory(tracer, propagator);
+	TracingKafkaProducerFactory tracingKafkaProducerFactory(Tracer tracer, Propagator propagator,
+			Propagator.Setter<ProducerRecord<?, ?>> injector) {
+		return new TracingKafkaProducerFactory(tracer, propagator, injector);
+	}
+
+	@Bean
+	@ConditionalOnMissingBean
+	TracingKafkaConsumerFactory tracingKafkaConsumerFactory(Propagator propagator,
+			Propagator.Getter<ConsumerRecord<?, ?>> extractor) {
+		return new TracingKafkaConsumerFactory(propagator, extractor);
 	}
 
 	@Bean
@@ -77,12 +86,6 @@ public class TracingKafkaAutoConfiguration {
 	static TracingKafkaConsumerBeanPostProcessor tracingKafkaConsumerBeanPostProcessor(Propagator propagator,
 			Propagator.Getter<ConsumerRecord<?, ?>> extractor) {
 		return new TracingKafkaConsumerBeanPostProcessor(propagator, extractor);
-	}
-
-	@Bean
-	static TracingKafkaReceiverBeanPostProcessor tracingKafkaReceiverBeanPostProcessor(Propagator propagator,
-			Propagator.Getter<ConsumerRecord<?, ?>> extractor) {
-		return new TracingKafkaReceiverBeanPostProcessor(propagator, extractor);
 	}
 
 }

@@ -94,8 +94,8 @@ public abstract class KafkaReceiverTest implements TestTracingAwareSupplier {
 		ReceiverOptions<String, String> options = ReceiverOptions.create(consumerProperties);
 		options = options.withKeyDeserializer(new StringDeserializer()).withValueDeserializer(new StringDeserializer())
 				.subscription(Collections.singletonList(testTopic));
-		TracingKafkaReceiver<String, String> kafkaReceiver = new TracingKafkaReceiver<>(KafkaReceiver.create(options),
-				propagator, new TracingKafkaPropagatorGetter());
+		KafkaReceiver<String, String> kafkaReceiver = KafkaReceiver
+				.create(new TracingKafkaConsumerFactory(propagator, new TracingKafkaPropagatorGetter()), options);
 		this.consumerSubscription = kafkaReceiver.receive().subscribeOn(Schedulers.single())
 				.subscribe(record -> receivedCounter.incrementAndGet());
 		this.receivedCounter.set(0);

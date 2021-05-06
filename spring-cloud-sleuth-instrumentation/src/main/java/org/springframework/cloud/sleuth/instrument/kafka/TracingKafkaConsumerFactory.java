@@ -14,40 +14,40 @@
  * limitations under the License.
  */
 
-package org.springframework.cloud.sleuth.autoconfig.instrument.kafka;
+package org.springframework.cloud.sleuth.instrument.kafka;
 
+import org.apache.kafka.clients.consumer.Consumer;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import reactor.kafka.receiver.KafkaReceiver;
+import reactor.kafka.receiver.ReceiverOptions;
+import reactor.kafka.receiver.internals.ConsumerFactory;
 
-import org.springframework.beans.BeansException;
-import org.springframework.beans.factory.config.BeanPostProcessor;
-import org.springframework.cloud.sleuth.instrument.kafka.TracingKafkaReceiver;
 import org.springframework.cloud.sleuth.propagation.Propagator;
 
 /**
- * Bean post processor for {@link KafkaReceiver}.
+ * This decorates a Reactor Kafka {@link ConsumerFactory} to create decorated consumers of
+ * type {@link TracingKafkaConsumer}. This can be used by the {@link KafkaReceiver}
+ * factory methods to create instrumented receivers.
  *
  * @author Anders Clausen
  * @author Flaviu Muresan
  * @since 3.1.0
  */
-public class TracingKafkaReceiverBeanPostProcessor implements BeanPostProcessor {
+public class TracingKafkaConsumerFactory extends ConsumerFactory {
 
 	private final Propagator propagator;
 
 	private final Propagator.Getter<ConsumerRecord<?, ?>> extractor;
 
-	TracingKafkaReceiverBeanPostProcessor(Propagator propagator, Propagator.Getter<ConsumerRecord<?, ?>> extractor) {
+	public TracingKafkaConsumerFactory(Propagator propagator, Propagator.Getter<ConsumerRecord<?, ?>> extractor) {
+		super();
 		this.propagator = propagator;
 		this.extractor = extractor;
 	}
 
 	@Override
-	public Object postProcessAfterInitialization(Object bean, String beanName) throws BeansException {
-		if (bean instanceof KafkaReceiver) {
-			return new TracingKafkaReceiver<>((KafkaReceiver) bean, propagator, extractor);
-		}
-		return bean;
+	public <K, V> Consumer<K, V> createConsumer(ReceiverOptions<K, V> receiverOptions) {
+		return new TracingKafkaConsumer<>(super.createConsumer(receiverOptions), propagator, extractor);
 	}
 
 }

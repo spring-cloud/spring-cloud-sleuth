@@ -98,7 +98,8 @@ public abstract class KafkaSenderTest implements TestTracingAwareSupplier {
 		producerProperties.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, kafkaContainer.getBootstrapServers());
 		producerProperties.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
 		producerProperties.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
-		this.kafkaSender = KafkaSender.create(new TracingKafkaProducerFactory(tracer, propagator),
+		this.kafkaSender = KafkaSender.create(
+				new TracingKafkaProducerFactory(tracer, propagator, new TracingKafkaPropagatorSetter()),
 				SenderOptions.create(producerProperties));
 		consumerRun.set(true);
 		consumerRecords.clear();
