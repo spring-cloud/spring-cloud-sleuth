@@ -17,6 +17,7 @@
 package org.springframework.cloud.sleuth.autoconfig.instrument.messaging;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.messaging.handler.annotation.MessageMapping;
 
 /**
  * Properties for messaging.
@@ -31,6 +32,11 @@ public class SleuthMessagingProperties {
 	 * Should messaging be turned on.
 	 */
 	private boolean enabled;
+
+	/**
+	 * Aspect related properties.
+	 */
+	private Aspect aspect = new Aspect();
 
 	/**
 	 * Rabbit related properties.
@@ -55,6 +61,14 @@ public class SleuthMessagingProperties {
 		this.enabled = enabled;
 	}
 
+	public Aspect getAspect() {
+		return this.aspect;
+	}
+
+	public void setAspect(Aspect aspect) {
+		this.aspect = aspect;
+	}
+
 	public Rabbit getRabbit() {
 		return this.rabbit;
 	}
@@ -77,6 +91,26 @@ public class SleuthMessagingProperties {
 
 	public void setJms(Jms jms) {
 		this.jms = jms;
+	}
+
+	/**
+	 * Aspect configuration.
+	 */
+	public static class Aspect {
+
+		/**
+		 * Should {@link MessageMapping} wrapping be enabled.
+		 */
+		private boolean enabled;
+
+		public boolean isEnabled() {
+			return this.enabled;
+		}
+
+		public void setEnabled(boolean enabled) {
+			this.enabled = enabled;
+		}
+
 	}
 
 	/**

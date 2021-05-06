@@ -26,9 +26,9 @@ import org.apache.commons.logging.LogFactory;
 import org.springframework.aop.support.AopUtils;
 import org.springframework.beans.BeansException;
 import org.springframework.cloud.sleuth.Span;
-import org.springframework.cloud.sleuth.SpanAndScope;
 import org.springframework.cloud.sleuth.ThreadLocalSpan;
 import org.springframework.cloud.sleuth.Tracer;
+import org.springframework.cloud.sleuth.WithThreadLocalSpan;
 import org.springframework.cloud.sleuth.propagation.Propagator;
 import org.springframework.cloud.stream.binder.BinderType;
 import org.springframework.cloud.stream.binder.BinderTypeRegistry;
@@ -58,7 +58,7 @@ import org.springframework.util.StringUtils;
  * @since 3.0.0
  */
 public final class TracingChannelInterceptor extends ChannelInterceptorAdapter
-		implements ExecutorChannelInterceptor, ApplicationContextAware {
+		implements ExecutorChannelInterceptor, ApplicationContextAware, WithThreadLocalSpan {
 
 	/**
 	 * Name of the class in Spring Cloud Stream that is a direct channel.
@@ -161,13 +161,6 @@ public final class TracingChannelInterceptor extends ChannelInterceptorAdapter
 			beforeHandle(outputMessage, channel, null);
 		}
 		return outputMessage;
-	}
-
-	private void setSpanInScope(Span span) {
-		this.threadLocalSpan.set(span);
-		if (log.isDebugEnabled()) {
-			log.debug("Put span in scope " + span);
-		}
 	}
 
 	private String toRemoteServiceName(MessageHeaderAccessor headers) {
@@ -357,41 +350,9 @@ public final class TracingChannelInterceptor extends ChannelInterceptorAdapter
 		finishSpan(ex);
 	}
 
-	void finishSpan(Exception error) {
-		SpanAndScope spanAndScope = getSpanFromThreadLocal();
-		if (spanAndScope == null) {
-			return;
-		}
-		Span span = spanAndScope.getSpan();
-		Tracer.SpanInScope scope = spanAndScope.getScope();
-		if (span.isNoop()) {
-			if (log.isDebugEnabled()) {
-				log.debug("Span " + span + " is noop - will stope the scope");
-			}
-			scope.close();
-			return;
-		}
-		if (error != null) { // an error occurred, adding error to span
-			String message = error.getMessage();
-			if (message == null) {
-				message = error.getClass().getSimpleName();
-			}
-			span.tag("error", message);
-		}
-		if (log.isDebugEnabled()) {
-			log.debug("Will finish the and its corresponding scope " + span);
-		}
-		span.end();
-		scope.close();
-	}
-
-	private SpanAndScope getSpanFromThreadLocal() {
-		SpanAndScope span = this.threadLocalSpan.get();
-		if (log.isDebugEnabled()) {
-			log.debug("Took span [" + span + "] from thread local");
-		}
-		this.threadLocalSpan.remove();
-		return span;
+	@Override
+	public ThreadLocalSpan getThreadLocalSpan() {
+		return this.threadLocalSpan;
 	}
 
 	private MessageHeaderAccessor mutableHeaderAccessor(Message<?> message) {

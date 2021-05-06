@@ -10,13 +10,16 @@
 |spring.sleuth.baggage.remote-fields |  | List of fields that are referenced the same in-process as it is on the wire. For example, the field "x-vcap-request-id" would be set as-is including the prefix.
 |spring.sleuth.baggage.tag-fields |  | 
 |spring.sleuth.circuitbreaker.enabled | `true` | Enable Spring Cloud CircuitBreaker instrumentation.
+|spring.sleuth.config.server.enabled | `true` | Enable Spring Cloud Config Server instrumentation.
+|spring.sleuth.deployer.enabled | `true` | Enable Spring Cloud Deployer instrumentation.
+|spring.sleuth.deployer.status-poll-delay | `1000` | Default poll delay to retrieve the deployed application status.
 |spring.sleuth.enabled | `true` | 
 |spring.sleuth.feign.enabled | `true` | Enable span information propagation when using Feign.
 |spring.sleuth.feign.processor.enabled | `true` | Enable post processor that wraps Feign Context in its tracing representations.
 |spring.sleuth.function.enabled | `true` | Enable instrumenting of Spring Cloud Function and Spring Cloud Function based projects (e.g. Spring Cloud Stream).
 |spring.sleuth.grpc.enabled | `true` | Enable span information propagation when using GRPC.
 |spring.sleuth.http.enabled | `true` | Enables HTTP support.
-|spring.sleuth.integration.enabled | `true` | Enable Spring Integration sleuth instrumentation.
+|spring.sleuth.integration.enabled | `true` | Enable Spring Integration instrumentation.
 |spring.sleuth.integration.patterns | `[!hystrixStreamOutput*, *, !channel*]` | An array of patterns against which channel names will be matched. @see org.springframework.integration.config.GlobalChannelInterceptor#patterns() Defaults to any channel name not matching the Hystrix Stream and functional Stream channel names.
 |spring.sleuth.integration.websockets.enabled | `true` | Enable tracing for WebSockets.
 |spring.sleuth.messaging.enabled | `false` | Should messaging be turned on.
@@ -49,6 +52,7 @@
 |spring.sleuth.span-filter.enabled | `false` | Will turn on the default Sleuth handler mechanism. Might ignore exporting of certain spans;
 |spring.sleuth.span-filter.span-name-patterns-to-skip | `^catalogWatchTaskScheduler$` | List of span names to ignore. They will not be sent to external systems.
 |spring.sleuth.supports-join | `true` | True means the tracing system supports sharing a span ID between a client and server.
+|spring.sleuth.task.enabled | `true` | Enable Spring Cloud Task instrumentation.
 |spring.sleuth.trace-id128 | `false` | When true, generate 128-bit trace IDs instead of 64-bit ones.
 |spring.sleuth.tracer.mode |  | Set which tracer implementation should be picked.
 |spring.sleuth.web.additional-skip-pattern |  | Additional pattern for URLs that should be skipped in tracing. This will be appended to the {@link SleuthWebProperties#skipPattern}.
