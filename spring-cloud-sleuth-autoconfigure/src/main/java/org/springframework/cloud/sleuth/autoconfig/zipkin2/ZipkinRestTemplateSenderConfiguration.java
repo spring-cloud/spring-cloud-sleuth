@@ -16,8 +16,6 @@
 
 package org.springframework.cloud.sleuth.autoconfig.zipkin2;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import zipkin2.reporter.Sender;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -34,6 +32,7 @@ import org.springframework.cloud.sleuth.zipkin2.StaticInstanceZipkinLoadBalancer
 import org.springframework.cloud.sleuth.zipkin2.ZipkinLoadBalancer;
 import org.springframework.cloud.sleuth.zipkin2.ZipkinProperties;
 import org.springframework.cloud.sleuth.zipkin2.ZipkinRestTemplateCustomizer;
+import org.springframework.cloud.sleuth.zipkin2.ZipkinRestTemplateProvider;
 import org.springframework.cloud.sleuth.zipkin2.ZipkinRestTemplateWrapper;
 import org.springframework.cloud.sleuth.zipkin2.ZipkinUrlExtractor;
 import org.springframework.context.annotation.Bean;
@@ -47,14 +46,18 @@ import org.springframework.web.client.RestTemplate;
 @EnableConfigurationProperties(ZipkinSenderProperties.class)
 class ZipkinRestTemplateSenderConfiguration {
 
-	private static final Log log = LogFactory.getLog(ZipkinRestTemplateSenderConfiguration.class);
-
 	@Bean(ZipkinAutoConfiguration.SENDER_BEAN_NAME)
 	Sender restTemplateSender(ZipkinProperties zipkin, ZipkinRestTemplateCustomizer zipkinRestTemplateCustomizer,
-			ZipkinUrlExtractor extractor) {
-		RestTemplate restTemplate = new ZipkinRestTemplateWrapper(zipkin, extractor);
+			ZipkinRestTemplateProvider zipkinRestTemplateProvider) {
+		RestTemplate restTemplate = zipkinRestTemplateProvider.zipkinRestTemplate();
 		restTemplate = zipkinRestTemplateCustomizer.customizeTemplate(restTemplate);
 		return new RestTemplateSender(restTemplate, zipkin.getBaseUrl(), zipkin.getApiPath(), zipkin.getEncoder());
+	}
+
+	@Bean
+	@ConditionalOnMissingBean
+	ZipkinRestTemplateProvider zipkinRestTemplateProvider(ZipkinProperties zipkin, ZipkinUrlExtractor extractor) {
+		return () -> new ZipkinRestTemplateWrapper(zipkin, extractor);
 	}
 
 	@Bean

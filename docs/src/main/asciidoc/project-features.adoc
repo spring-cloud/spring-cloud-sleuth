@@ -304,15 +304,13 @@ To customize the `RestTemplate` that sends spans to Zipkin via HTTP, you can reg
 ----
 
 If, however, you would like to control the full process of creating the `RestTemplate`
-object, you will have to create a bean of `zipkin2.reporter.Sender` type.
+object, you will have to create a bean of `ZipkinRestTemplateProvider` type.
 
 [source,java,indent=0]
 ----
-	@Bean Sender myRestTemplateSender(ZipkinProperties zipkin,
-			ZipkinRestTemplateCustomizer zipkinRestTemplateCustomizer) {
-		RestTemplate restTemplate = mySuperCustomRestTemplate();
-		zipkinRestTemplateCustomizer.customize(restTemplate);
-		return myCustomSender(zipkin, restTemplate);
+	@Bean
+	ZipkinRestTemplateProvider myZipkinRestTemplateProvider() {
+		return MyRestTemplate::new;
 	}
 ----
 
