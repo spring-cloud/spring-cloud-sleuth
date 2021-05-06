@@ -77,6 +77,7 @@ Need more details about {project-full-name}'s core features?
 Finally, we have topics related to instrumentation integrations:
 
 * *Integrations:*
+<<integrations.adoc#sleuth-kafka-integration, Apache Kafka>> |
 <<integrations.adoc#sleuth-async-integration, Asynchronous Communication>> |
 <<integrations.adoc#sleuth-http-client-integration, HTTP Client Integration>> |
 <<integrations.adoc#sleuth-http-server-integration, HTTP Server Integration>> |

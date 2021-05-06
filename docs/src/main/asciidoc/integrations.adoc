@@ -5,6 +5,27 @@ include::_attributes.adoc[]
 
 In this section, we describe how to customize various parts of Spring Cloud Sleuth.
 
+[[sleuth-kafka-integration]]
+== Apache Kafka
+
+This feature is available for all tracer implementations.
+
+We decorate the Kafka clients (`KafkaProducer` and `KafkaConsumer`) to create a span for each event that is produced or consumed. You can disable this feature by setting the value of `spring.sleuth.kafka.enabled` to `false`.
+
+IMPORTANT: You have to register the `Producer` or `Consumer` as beans in order for Sleuth's auto-configuration to decorate them. When you then inject the beans, the expected type must be `Producer` or `Consumer` (and NOT e.g. `KafkaProducer`).
+
+We also provide `TracingKafkaProducerFactory` and `TracingKafkaConsumerFactory` to be used with the https://projectreactor.io/docs/kafka/release/reference/[Reactor Kafka] clients (`KafkaSender` and `KafkaReceiver`, respectively). See an example in the snippet below:
+
+[source,java,indent=0]
+----
+@Autowired TracingKafkaConsumerFactory tracingKafkaConsumerFactory;
+
+@Bean
+KafkaReceiver<String, String> reactiveKafkaReceiver() {
+    return KafkaReceiver.create(tracingKafkaConsumerFactory, kafkaReceiverOptions);
+}
+----
+
 [[sleuth-async-integration]]
 == Asynchronous Communication
 
