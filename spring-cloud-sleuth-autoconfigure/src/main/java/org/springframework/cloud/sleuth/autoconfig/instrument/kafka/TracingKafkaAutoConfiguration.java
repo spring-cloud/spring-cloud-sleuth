@@ -19,6 +19,8 @@ package org.springframework.cloud.sleuth.autoconfig.instrument.kafka;
 import org.apache.kafka.clients.KafkaClient;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.producer.ProducerRecord;
+import reactor.kafka.receiver.internals.ConsumerFactory;
+import reactor.kafka.sender.internals.ProducerFactory;
 
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
@@ -52,25 +54,27 @@ import org.springframework.context.annotation.Configuration;
 public class TracingKafkaAutoConfiguration {
 
 	@Bean
-	@ConditionalOnMissingBean
+	@ConditionalOnMissingBean(value = ProducerRecord.class, parameterizedContainer = Propagator.Setter.class)
 	Propagator.Setter<ProducerRecord<?, ?>> tracingKafkaPropagationSetter() {
 		return new TracingKafkaPropagatorSetter();
 	}
 
 	@Bean
-	@ConditionalOnMissingBean
+	@ConditionalOnMissingBean(value = ConsumerRecord.class, parameterizedContainer = Propagator.Getter.class)
 	Propagator.Getter<ConsumerRecord<?, ?>> tracingKafkaPropagationGetter() {
 		return new TracingKafkaPropagatorGetter();
 	}
 
 	@Bean
 	@ConditionalOnMissingBean
+	@ConditionalOnClass(ProducerFactory.class)
 	TracingKafkaProducerFactory tracingKafkaProducerFactory(BeanFactory beanFactory) {
 		return new TracingKafkaProducerFactory(beanFactory);
 	}
 
 	@Bean
 	@ConditionalOnMissingBean
+	@ConditionalOnClass(ConsumerFactory.class)
 	TracingKafkaConsumerFactory tracingKafkaConsumerFactory(BeanFactory beanFactory) {
 		return new TracingKafkaConsumerFactory(beanFactory);
 	}
