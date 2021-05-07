@@ -17,12 +17,11 @@
 package org.springframework.cloud.sleuth.instrument.kafka;
 
 import org.apache.kafka.clients.consumer.Consumer;
-import org.apache.kafka.clients.consumer.ConsumerRecord;
 import reactor.kafka.receiver.KafkaReceiver;
 import reactor.kafka.receiver.ReceiverOptions;
 import reactor.kafka.receiver.internals.ConsumerFactory;
 
-import org.springframework.cloud.sleuth.propagation.Propagator;
+import org.springframework.beans.factory.BeanFactory;
 
 /**
  * This decorates a Reactor Kafka {@link ConsumerFactory} to create decorated consumers of
@@ -35,19 +34,16 @@ import org.springframework.cloud.sleuth.propagation.Propagator;
  */
 public class TracingKafkaConsumerFactory extends ConsumerFactory {
 
-	private final Propagator propagator;
+	private final BeanFactory beanFactory;
 
-	private final Propagator.Getter<ConsumerRecord<?, ?>> extractor;
-
-	public TracingKafkaConsumerFactory(Propagator propagator, Propagator.Getter<ConsumerRecord<?, ?>> extractor) {
+	public TracingKafkaConsumerFactory(BeanFactory beanFactory) {
 		super();
-		this.propagator = propagator;
-		this.extractor = extractor;
+		this.beanFactory = beanFactory;
 	}
 
 	@Override
 	public <K, V> Consumer<K, V> createConsumer(ReceiverOptions<K, V> receiverOptions) {
-		return new TracingKafkaConsumer<>(super.createConsumer(receiverOptions), propagator, extractor);
+		return new TracingKafkaConsumer<>(super.createConsumer(receiverOptions), beanFactory);
 	}
 
 }

@@ -35,9 +35,12 @@ import org.apache.kafka.common.PartitionInfo;
 import org.apache.kafka.common.TopicPartition;
 import org.apache.kafka.common.errors.ProducerFencedException;
 
+import org.springframework.beans.factory.BeanFactory;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.propagation.Propagator;
+import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.core.ResolvableType;
 
 /**
  * This decorates a Kafka {@link Producer} and creates a {@link Span.Kind#PRODUCER} span
@@ -52,20 +55,44 @@ public class TracingKafkaProducer<K, V> implements Producer<K, V> {
 
 	private static final Log log = LogFactory.getLog(TracingKafkaProducer.class);
 
+	private final BeanFactory beanFactory;
+
 	private final Producer<K, V> delegate;
 
-	private final Tracer tracer;
+	private Tracer tracer;
 
-	private final Propagator propagator;
+	private Propagator propagator;
 
-	private final Propagator.Setter<ProducerRecord<?, ?>> injector;
+	private Propagator.Setter<ProducerRecord<?, ?>> injector;
 
-	public TracingKafkaProducer(Producer<K, V> producer, Tracer tracer, Propagator propagator,
-			Propagator.Setter<ProducerRecord<?, ?>> setter) {
+	public TracingKafkaProducer(Producer<K, V> producer, BeanFactory beanFactory) {
 		this.delegate = producer;
-		this.tracer = tracer;
-		this.propagator = propagator;
-		this.injector = setter;
+		this.beanFactory = beanFactory;
+	}
+
+	private Tracer tracer() {
+		if (this.tracer == null) {
+			this.tracer = this.beanFactory.getBean(Tracer.class);
+		}
+		return this.tracer;
+	}
+
+	private Propagator propagator() {
+		if (this.propagator == null) {
+			this.propagator = this.beanFactory.getBean(Propagator.class);
+		}
+		return this.propagator;
+	}
+
+	private Propagator.Setter<ProducerRecord<?, ?>> injector() {
+		if (this.injector == null) {
+			this.injector = (Propagator.Setter<ProducerRecord<?, ?>>) beanFactory
+					.getBeanProvider(ResolvableType.forClassWithGenerics(Propagator.Setter.class,
+							ResolvableType.forType(new ParameterizedTypeReference<ProducerRecord<?, ?>>() {
+							})))
+					.getIfAvailable();
+		}
+		return this.injector;
 	}
 
 	@Override
@@ -107,15 +134,15 @@ public class TracingKafkaProducer<K, V> implements Producer<K, V> {
 
 	@Override
 	public Future<RecordMetadata> send(ProducerRecord<K, V> producerRecord, Callback callback) {
-		Span.Builder spanBuilder = tracer.spanBuilder().kind(Span.Kind.PRODUCER).name("kafka.produce")
+		Span.Builder spanBuilder = tracer().spanBuilder().kind(Span.Kind.PRODUCER).name("kafka.produce")
 				.tag("kafka.topic", producerRecord.topic());
 		Span span = spanBuilder.start();
-		this.propagator.inject(span.context(), producerRecord, this.injector);
-		try (Tracer.SpanInScope spanInScope = tracer.withSpan(span)) {
+		propagator().inject(span.context(), producerRecord, injector());
+		try (Tracer.SpanInScope spanInScope = tracer().withSpan(span)) {
 			if (log.isDebugEnabled()) {
 				log.debug("Created producer span " + span);
 			}
-			return this.delegate.send(producerRecord, new KafkaTracingCallback(callback, tracer, span));
+			return this.delegate.send(producerRecord, new KafkaTracingCallback(callback, tracer(), span));
 		}
 	}
 

@@ -38,22 +38,31 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Answers;
+import org.mockito.BDDMockito;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.testcontainers.containers.KafkaContainer;
 import org.testcontainers.containers.wait.strategy.Wait;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 import org.testcontainers.utility.DockerImageName;
 
+import org.springframework.beans.factory.BeanFactory;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.exporter.FinishedSpan;
 import org.springframework.cloud.sleuth.propagation.Propagator;
 import org.springframework.cloud.sleuth.test.TestSpanHandler;
 import org.springframework.cloud.sleuth.test.TestTracingAwareSupplier;
+import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.core.ResolvableType;
 
 import static org.awaitility.Awaitility.await;
 
 @Testcontainers
+@ExtendWith(MockitoExtension.class)
 public abstract class KafkaConsumerTest implements TestTracingAwareSupplier {
 
 	protected String testTopic;
@@ -70,9 +79,12 @@ public abstract class KafkaConsumerTest implements TestTracingAwareSupplier {
 
 	protected final AtomicInteger receivedCounter = new AtomicInteger(0);
 
+	@Mock(answer = Answers.RETURNS_DEEP_STUBS)
+	BeanFactory beanFactory;
+
 	@Container
 	protected static final KafkaContainer kafkaContainer = new KafkaContainer(
-			DockerImageName.parse("confluentinc/cp-kafka:5.2.1")).withExposedPorts(9093)
+			DockerImageName.parse("confluentinc/cp-kafka:6.1.1")).withExposedPorts(9093)
 					.waitingFor(Wait.forListeningPort());
 
 	@BeforeAll
@@ -87,6 +99,10 @@ public abstract class KafkaConsumerTest implements TestTracingAwareSupplier {
 
 	@BeforeEach
 	void setup() {
+		BDDMockito.given(this.beanFactory.getBean(Propagator.class)).willReturn(this.propagator);
+		BDDMockito.given(this.beanFactory.getBeanProvider(ResolvableType.forClassWithGenerics(Propagator.Getter.class,
+				ResolvableType.forType(new ParameterizedTypeReference<ConsumerRecord<?, ?>>() {
+				}))).getIfAvailable()).willReturn(new TracingKafkaPropagatorGetter());
 		testTopic = UUID.randomUUID().toString();
 		Map<String, Object> consumerProperties = new HashMap<>();
 		consumerProperties.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, kafkaContainer.getBootstrapServers());
@@ -94,8 +110,7 @@ public abstract class KafkaConsumerTest implements TestTracingAwareSupplier {
 		consumerProperties.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
 		consumerProperties.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
 		consumerProperties.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
-		kafkaConsumer = new TracingKafkaConsumer<>(new KafkaConsumer<>(consumerProperties), propagator,
-				new TracingKafkaPropagatorGetter());
+		kafkaConsumer = new TracingKafkaConsumer<>(new KafkaConsumer<>(consumerProperties), beanFactory);
 		consumerRun.set(true);
 		Executors.newSingleThreadExecutor().execute(() -> doStartKafkaConsumer(receivedCounter));
 	}

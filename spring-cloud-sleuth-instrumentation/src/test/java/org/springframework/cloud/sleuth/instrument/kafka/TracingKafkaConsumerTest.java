@@ -35,6 +35,8 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import org.springframework.beans.factory.BeanFactory;
+import org.springframework.beans.factory.support.StaticListableBeanFactory;
 import org.springframework.cloud.sleuth.propagation.Propagator;
 
 import static org.mockito.ArgumentMatchers.eq;
@@ -48,6 +50,9 @@ public class TracingKafkaConsumerTest {
 	@Mock(answer = Answers.RETURNS_DEEP_STUBS)
 	Propagator propagator;
 
+	@Mock
+	Propagator.Getter<ConsumerRecord<?, ?>> extractor;
+
 	@Test
 	void should_delegate_poll_calls() {
 		Duration pollTimeout = Duration.of(5, ChronoUnit.SECONDS);
@@ -57,11 +62,18 @@ public class TracingKafkaConsumerTest {
 		ConsumerRecords<String, String> records = new ConsumerRecords<>(map);
 		BDDMockito.given(kafkaConsumer.poll(pollTimeout)).willReturn(records);
 		TracingKafkaConsumer<String, String> tracingKafkaConsumer = new TracingKafkaConsumer<>(kafkaConsumer,
-				propagator, new TracingKafkaPropagatorGetter());
+				beanFactory());
 
 		tracingKafkaConsumer.poll(pollTimeout);
 
 		Mockito.verify(kafkaConsumer).poll(eq(pollTimeout));
+	}
+
+	private BeanFactory beanFactory() {
+		StaticListableBeanFactory beanFactory = new StaticListableBeanFactory();
+		beanFactory.addBean("propagator", this.propagator);
+		beanFactory.addBean("extractor", this.extractor);
+		return beanFactory;
 	}
 
 }

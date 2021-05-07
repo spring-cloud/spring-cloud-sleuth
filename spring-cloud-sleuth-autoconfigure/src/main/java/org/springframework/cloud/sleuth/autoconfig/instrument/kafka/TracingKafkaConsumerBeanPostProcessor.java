@@ -17,12 +17,11 @@
 package org.springframework.cloud.sleuth.autoconfig.instrument.kafka;
 
 import org.apache.kafka.clients.consumer.Consumer;
-import org.apache.kafka.clients.consumer.ConsumerRecord;
 
 import org.springframework.beans.BeansException;
+import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.config.BeanPostProcessor;
 import org.springframework.cloud.sleuth.instrument.kafka.TracingKafkaConsumer;
-import org.springframework.cloud.sleuth.propagation.Propagator;
 
 /**
  * Bean post processor for {@link org.apache.kafka.clients.consumer.Consumer}.
@@ -33,19 +32,16 @@ import org.springframework.cloud.sleuth.propagation.Propagator;
  */
 public class TracingKafkaConsumerBeanPostProcessor implements BeanPostProcessor {
 
-	private final Propagator propagator;
+	private final BeanFactory beanFactory;
 
-	private final Propagator.Getter<ConsumerRecord<?, ?>> extractor;
-
-	TracingKafkaConsumerBeanPostProcessor(Propagator propagator, Propagator.Getter<ConsumerRecord<?, ?>> extractor) {
-		this.propagator = propagator;
-		this.extractor = extractor;
+	public TracingKafkaConsumerBeanPostProcessor(BeanFactory beanFactory) {
+		this.beanFactory = beanFactory;
 	}
 
 	@Override
 	public Object postProcessAfterInitialization(Object bean, String beanName) throws BeansException {
-		if (bean instanceof Consumer) {
-			return new TracingKafkaConsumer<>((Consumer) bean, propagator, extractor);
+		if (bean instanceof Consumer && !(bean instanceof TracingKafkaConsumer)) {
+			return new TracingKafkaConsumer<>((Consumer) bean, beanFactory);
 		}
 		return bean;
 	}

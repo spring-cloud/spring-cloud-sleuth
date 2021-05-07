@@ -42,6 +42,12 @@
       "defaultValue": true
     },
     {
+      "name": "spring.sleuth.kafka.enabled",
+      "type": "java.lang.Boolean",
+      "description": "Enable instrumenting of Apache Kafka clients.",
+      "defaultValue": true
+    },
+    {
       "name": "spring.sleuth.async.enabled",
       "type": "java.lang.Boolean",
       "description": "Enable instrumenting async related components so that the tracing information is passed between threads.",

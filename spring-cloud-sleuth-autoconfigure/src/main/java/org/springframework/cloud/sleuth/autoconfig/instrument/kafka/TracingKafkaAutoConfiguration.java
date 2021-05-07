@@ -20,6 +20,7 @@ import org.apache.kafka.clients.KafkaClient;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.producer.ProducerRecord;
 
+import org.springframework.beans.factory.BeanFactory;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
@@ -46,8 +47,8 @@ import org.springframework.context.annotation.Configuration;
 @Configuration(proxyBeanMethods = false)
 @ConditionalOnClass(KafkaClient.class)
 @ConditionalOnBean(Tracer.class)
-@ConditionalOnProperty(value = "spring.sleuth.kafka.enabled", matchIfMissing = true)
 @AutoConfigureAfter(BraveAutoConfiguration.class)
+@ConditionalOnProperty(value = "spring.sleuth.kafka.enabled", matchIfMissing = true)
 public class TracingKafkaAutoConfiguration {
 
 	@Bean
@@ -64,28 +65,24 @@ public class TracingKafkaAutoConfiguration {
 
 	@Bean
 	@ConditionalOnMissingBean
-	TracingKafkaProducerFactory tracingKafkaProducerFactory(Tracer tracer, Propagator propagator,
-			Propagator.Setter<ProducerRecord<?, ?>> injector) {
-		return new TracingKafkaProducerFactory(tracer, propagator, injector);
+	TracingKafkaProducerFactory tracingKafkaProducerFactory(BeanFactory beanFactory) {
+		return new TracingKafkaProducerFactory(beanFactory);
 	}
 
 	@Bean
 	@ConditionalOnMissingBean
-	TracingKafkaConsumerFactory tracingKafkaConsumerFactory(Propagator propagator,
-			Propagator.Getter<ConsumerRecord<?, ?>> extractor) {
-		return new TracingKafkaConsumerFactory(propagator, extractor);
+	TracingKafkaConsumerFactory tracingKafkaConsumerFactory(BeanFactory beanFactory) {
+		return new TracingKafkaConsumerFactory(beanFactory);
 	}
 
 	@Bean
-	static TracingKafkaProducerBeanPostProcessor tracingKafkaProducerBeanPostProcessor(Tracer tracer,
-			Propagator propagator, Propagator.Setter<ProducerRecord<?, ?>> injector) {
-		return new TracingKafkaProducerBeanPostProcessor(tracer, propagator, injector);
+	static TracingKafkaProducerBeanPostProcessor tracingKafkaProducerBeanPostProcessor(BeanFactory beanFactory) {
+		return new TracingKafkaProducerBeanPostProcessor(beanFactory);
 	}
 
 	@Bean
-	static TracingKafkaConsumerBeanPostProcessor tracingKafkaConsumerBeanPostProcessor(Propagator propagator,
-			Propagator.Getter<ConsumerRecord<?, ?>> extractor) {
-		return new TracingKafkaConsumerBeanPostProcessor(propagator, extractor);
+	static TracingKafkaConsumerBeanPostProcessor tracingKafkaConsumerBeanPostProcessor(BeanFactory beanFactory) {
+		return new TracingKafkaConsumerBeanPostProcessor(beanFactory);
 	}
 
 }

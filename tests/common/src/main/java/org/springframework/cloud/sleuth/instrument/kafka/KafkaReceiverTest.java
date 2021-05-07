@@ -24,6 +24,7 @@ import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.kafka.clients.consumer.ConsumerConfig;
+import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.common.serialization.StringDeserializer;
@@ -33,6 +34,11 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Answers;
+import org.mockito.BDDMockito;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.testcontainers.containers.KafkaContainer;
 import org.testcontainers.containers.wait.strategy.Wait;
 import org.testcontainers.junit.jupiter.Container;
@@ -43,16 +49,20 @@ import reactor.core.scheduler.Schedulers;
 import reactor.kafka.receiver.KafkaReceiver;
 import reactor.kafka.receiver.ReceiverOptions;
 
+import org.springframework.beans.factory.BeanFactory;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.exporter.FinishedSpan;
 import org.springframework.cloud.sleuth.propagation.Propagator;
 import org.springframework.cloud.sleuth.test.TestSpanHandler;
 import org.springframework.cloud.sleuth.test.TestTracingAwareSupplier;
+import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.core.ResolvableType;
 
 import static org.awaitility.Awaitility.await;
 
 @Testcontainers
+@ExtendWith(MockitoExtension.class)
 public abstract class KafkaReceiverTest implements TestTracingAwareSupplier {
 
 	protected String testTopic;
@@ -67,9 +77,12 @@ public abstract class KafkaReceiverTest implements TestTracingAwareSupplier {
 
 	protected final AtomicInteger receivedCounter = new AtomicInteger(0);
 
+	@Mock(answer = Answers.RETURNS_DEEP_STUBS)
+	BeanFactory beanFactory;
+
 	@Container
 	protected static final KafkaContainer kafkaContainer = new KafkaContainer(
-			DockerImageName.parse("confluentinc/cp-kafka:5.2.1")).withExposedPorts(9093)
+			DockerImageName.parse("confluentinc/cp-kafka:6.1.1")).withExposedPorts(9093)
 					.waitingFor(Wait.forListeningPort());
 
 	@BeforeAll
@@ -84,6 +97,10 @@ public abstract class KafkaReceiverTest implements TestTracingAwareSupplier {
 
 	@BeforeEach
 	void setup() {
+		BDDMockito.given(this.beanFactory.getBean(Propagator.class)).willReturn(this.propagator);
+		BDDMockito.given(this.beanFactory.getBeanProvider(ResolvableType.forClassWithGenerics(Propagator.Getter.class,
+				ResolvableType.forType(new ParameterizedTypeReference<ConsumerRecord<?, ?>>() {
+				}))).getIfAvailable()).willReturn(new TracingKafkaPropagatorGetter());
 		testTopic = UUID.randomUUID().toString();
 		Map<String, Object> consumerProperties = new HashMap<>();
 		consumerProperties.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, kafkaContainer.getBootstrapServers());
@@ -94,8 +111,8 @@ public abstract class KafkaReceiverTest implements TestTracingAwareSupplier {
 		ReceiverOptions<String, String> options = ReceiverOptions.create(consumerProperties);
 		options = options.withKeyDeserializer(new StringDeserializer()).withValueDeserializer(new StringDeserializer())
 				.subscription(Collections.singletonList(testTopic));
-		KafkaReceiver<String, String> kafkaReceiver = KafkaReceiver
-				.create(new TracingKafkaConsumerFactory(propagator, new TracingKafkaPropagatorGetter()), options);
+		KafkaReceiver<String, String> kafkaReceiver = KafkaReceiver.create(new TracingKafkaConsumerFactory(beanFactory),
+				options);
 		this.consumerSubscription = kafkaReceiver.receive().subscribeOn(Schedulers.single())
 				.subscribe(record -> receivedCounter.incrementAndGet());
 		this.receivedCounter.set(0);

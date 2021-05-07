@@ -37,8 +37,11 @@ import org.apache.kafka.common.MetricName;
 import org.apache.kafka.common.PartitionInfo;
 import org.apache.kafka.common.TopicPartition;
 
+import org.springframework.beans.factory.BeanFactory;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.propagation.Propagator;
+import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.core.ResolvableType;
 
 /**
  * This decorates a Kafka {@link Consumer}. It creates and completes a
@@ -51,17 +54,35 @@ import org.springframework.cloud.sleuth.propagation.Propagator;
  */
 public class TracingKafkaConsumer<K, V> implements Consumer<K, V> {
 
+	private final BeanFactory beanFactory;
+
 	private final Consumer<K, V> delegate;
 
-	private final Propagator propagator;
+	private Propagator propagator;
 
-	private final Propagator.Getter<ConsumerRecord<?, ?>> extractor;
+	private Propagator.Getter<ConsumerRecord<?, ?>> extractor;
 
-	public TracingKafkaConsumer(Consumer<K, V> consumer, Propagator propagator,
-			Propagator.Getter<ConsumerRecord<?, ?>> getter) {
+	public TracingKafkaConsumer(Consumer<K, V> consumer, BeanFactory beanFactory) {
 		this.delegate = consumer;
-		this.propagator = propagator;
-		this.extractor = getter;
+		this.beanFactory = beanFactory;
+	}
+
+	private Propagator propagator() {
+		if (this.propagator == null) {
+			this.propagator = this.beanFactory.getBean(Propagator.class);
+		}
+		return this.propagator;
+	}
+
+	private Propagator.Getter<ConsumerRecord<?, ?>> extractor() {
+		if (this.extractor == null) {
+			this.extractor = (Propagator.Getter<ConsumerRecord<?, ?>>) beanFactory
+					.getBeanProvider(ResolvableType.forClassWithGenerics(Propagator.Getter.class,
+							ResolvableType.forType(new ParameterizedTypeReference<ConsumerRecord<?, ?>>() {
+							})))
+					.getIfAvailable();
+		}
+		return this.extractor;
 	}
 
 	@Override
@@ -109,7 +130,7 @@ public class TracingKafkaConsumer<K, V> implements Consumer<K, V> {
 	public ConsumerRecords<K, V> poll(long l) {
 		ConsumerRecords<K, V> consumerRecords = this.delegate.poll(l);
 		for (ConsumerRecord<K, V> consumerRecord : consumerRecords) {
-			KafkaTracingUtils.buildAndFinishSpan(consumerRecord, this.propagator, this.extractor);
+			KafkaTracingUtils.buildAndFinishSpan(consumerRecord, propagator(), extractor());
 		}
 		return consumerRecords;
 	}
@@ -118,7 +139,7 @@ public class TracingKafkaConsumer<K, V> implements Consumer<K, V> {
 	public ConsumerRecords<K, V> poll(Duration duration) {
 		ConsumerRecords<K, V> consumerRecords = this.delegate.poll(duration);
 		for (ConsumerRecord<K, V> consumerRecord : consumerRecords) {
-			KafkaTracingUtils.buildAndFinishSpan(consumerRecord, this.propagator, this.extractor);
+			KafkaTracingUtils.buildAndFinishSpan(consumerRecord, propagator(), extractor());
 		}
 		return consumerRecords;
 	}

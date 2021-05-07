@@ -17,13 +17,11 @@
 package org.springframework.cloud.sleuth.instrument.kafka;
 
 import org.apache.kafka.clients.producer.Producer;
-import org.apache.kafka.clients.producer.ProducerRecord;
 import reactor.kafka.sender.KafkaSender;
 import reactor.kafka.sender.SenderOptions;
 import reactor.kafka.sender.internals.ProducerFactory;
 
-import org.springframework.cloud.sleuth.Tracer;
-import org.springframework.cloud.sleuth.propagation.Propagator;
+import org.springframework.beans.factory.BeanFactory;
 
 /**
  * This decorates a Reactor Kafka {@link ProducerFactory} to create decorated producers of
@@ -36,23 +34,16 @@ import org.springframework.cloud.sleuth.propagation.Propagator;
  */
 public class TracingKafkaProducerFactory extends ProducerFactory {
 
-	private final Tracer tracer;
+	private final BeanFactory beanFactory;
 
-	private final Propagator propagator;
-
-	private final Propagator.Setter<ProducerRecord<?, ?>> injector;
-
-	public TracingKafkaProducerFactory(Tracer tracer, Propagator propagator,
-			Propagator.Setter<ProducerRecord<?, ?>> injector) {
+	public TracingKafkaProducerFactory(BeanFactory beanFactory) {
 		super();
-		this.tracer = tracer;
-		this.propagator = propagator;
-		this.injector = injector;
+		this.beanFactory = beanFactory;
 	}
 
 	@Override
 	public <K, V> Producer<K, V> createProducer(SenderOptions<K, V> senderOptions) {
-		return new TracingKafkaProducer<>(super.createProducer(senderOptions), tracer, propagator, injector);
+		return new TracingKafkaProducer<>(super.createProducer(senderOptions), beanFactory);
 	}
 
 }

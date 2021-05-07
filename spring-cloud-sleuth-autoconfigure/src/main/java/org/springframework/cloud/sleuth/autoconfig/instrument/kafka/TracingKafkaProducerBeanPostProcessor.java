@@ -17,13 +17,11 @@
 package org.springframework.cloud.sleuth.autoconfig.instrument.kafka;
 
 import org.apache.kafka.clients.producer.Producer;
-import org.apache.kafka.clients.producer.ProducerRecord;
 
 import org.springframework.beans.BeansException;
+import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.config.BeanPostProcessor;
-import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.instrument.kafka.TracingKafkaProducer;
-import org.springframework.cloud.sleuth.propagation.Propagator;
 
 /**
  * Bean post processor for {@link org.apache.kafka.clients.producer.Producer}.
@@ -34,23 +32,16 @@ import org.springframework.cloud.sleuth.propagation.Propagator;
  */
 public class TracingKafkaProducerBeanPostProcessor implements BeanPostProcessor {
 
-	private final Tracer tracer;
+	private final BeanFactory beanFactory;
 
-	private final Propagator propagator;
-
-	private final Propagator.Setter<ProducerRecord<?, ?>> injector;
-
-	TracingKafkaProducerBeanPostProcessor(Tracer tracer, Propagator propagator,
-			Propagator.Setter<ProducerRecord<?, ?>> injector) {
-		this.tracer = tracer;
-		this.propagator = propagator;
-		this.injector = injector;
+	public TracingKafkaProducerBeanPostProcessor(BeanFactory beanFactory) {
+		this.beanFactory = beanFactory;
 	}
 
 	@Override
 	public Object postProcessAfterInitialization(Object bean, String beanName) throws BeansException {
-		if (bean instanceof Producer) {
-			return new TracingKafkaProducer<>((Producer) bean, tracer, propagator, injector);
+		if (bean instanceof Producer && !(bean instanceof TracingKafkaProducer)) {
+			return new TracingKafkaProducer<>((Producer) bean, beanFactory);
 		}
 		return bean;
 	}

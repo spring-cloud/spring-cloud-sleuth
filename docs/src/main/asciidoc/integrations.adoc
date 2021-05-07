@@ -18,10 +18,8 @@ We also provide `TracingKafkaProducerFactory` and `TracingKafkaConsumerFactory` 
 
 [source,java,indent=0]
 ----
-@Autowired TracingKafkaConsumerFactory tracingKafkaConsumerFactory;
-
 @Bean
-KafkaReceiver<String, String> reactiveKafkaReceiver() {
+KafkaReceiver<String, String> reactiveKafkaReceiver(TracingKafkaConsumerFactory tracingKafkaConsumerFactory, KafkaReceiverOptions kafkaReceiverOptions) {
     return KafkaReceiver.create(tracingKafkaConsumerFactory, kafkaReceiverOptions);
 }
 ----
