@@ -16,9 +16,7 @@
 
 package org.springframework.cloud.sleuth.autoconfig.instrument.kafka;
 
-import org.apache.kafka.clients.KafkaClient;
-import org.apache.kafka.clients.consumer.ConsumerRecord;
-import org.apache.kafka.clients.producer.ProducerRecord;
+import reactor.kafka.receiver.KafkaReceiver;
 
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
@@ -28,47 +26,36 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.autoconfig.brave.BraveAutoConfiguration;
-import org.springframework.cloud.sleuth.instrument.kafka.TracingKafkaPropagatorGetter;
-import org.springframework.cloud.sleuth.instrument.kafka.TracingKafkaPropagatorSetter;
-import org.springframework.cloud.sleuth.propagation.Propagator;
+import org.springframework.cloud.sleuth.instrument.kafka.TracingKafkaConsumerFactory;
+import org.springframework.cloud.sleuth.instrument.kafka.TracingKafkaProducerFactory;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 /**
  * {@link org.springframework.boot.autoconfigure.EnableAutoConfiguration
- * Auto-configuration} that registers instrumentation for Kafka.
+ * Auto-configuration} that registers instrumentation for Reactor Kafka.
  *
  * @author Anders Clausen
  * @author Flaviu Muresan
  * @since 3.1.0
  */
 @Configuration(proxyBeanMethods = false)
-@ConditionalOnClass(KafkaClient.class)
+@ConditionalOnClass(KafkaReceiver.class)
 @ConditionalOnBean(Tracer.class)
 @AutoConfigureAfter(BraveAutoConfiguration.class)
 @ConditionalOnProperty(value = "spring.sleuth.kafka.enabled", matchIfMissing = true)
-public class TracingKafkaAutoConfiguration {
+public class TracingReactorKafkaAutoConfiguration {
 
 	@Bean
-	@ConditionalOnMissingBean(value = ProducerRecord.class, parameterizedContainer = Propagator.Setter.class)
-	Propagator.Setter<ProducerRecord<?, ?>> tracingKafkaPropagationSetter() {
-		return new TracingKafkaPropagatorSetter();
+	@ConditionalOnMissingBean
+	TracingKafkaProducerFactory tracingKafkaProducerFactory(BeanFactory beanFactory) {
+		return new TracingKafkaProducerFactory(beanFactory);
 	}
 
 	@Bean
-	@ConditionalOnMissingBean(value = ConsumerRecord.class, parameterizedContainer = Propagator.Getter.class)
-	Propagator.Getter<ConsumerRecord<?, ?>> tracingKafkaPropagationGetter() {
-		return new TracingKafkaPropagatorGetter();
-	}
-
-	@Bean
-	static TracingKafkaProducerBeanPostProcessor tracingKafkaProducerBeanPostProcessor(BeanFactory beanFactory) {
-		return new TracingKafkaProducerBeanPostProcessor(beanFactory);
-	}
-
-	@Bean
-	static TracingKafkaConsumerBeanPostProcessor tracingKafkaConsumerBeanPostProcessor(BeanFactory beanFactory) {
-		return new TracingKafkaConsumerBeanPostProcessor(beanFactory);
+	@ConditionalOnMissingBean
+	TracingKafkaConsumerFactory tracingKafkaConsumerFactory(BeanFactory beanFactory) {
+		return new TracingKafkaConsumerFactory(beanFactory);
 	}
 
 }
