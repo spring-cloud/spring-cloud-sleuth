@@ -16,19 +16,22 @@
 
 package org.springframework.cloud.sleuth.brave.instrument.kafka;
 
-import java.util.Optional;
-import java.util.concurrent.TimeUnit;
+import java.time.Duration;
 
-import org.apache.kafka.clients.consumer.ConsumerRecord;
+import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerRecord;
-import org.apache.kafka.common.header.Header;
 import org.assertj.core.api.BDDAssertions;
 import org.junit.jupiter.api.Test;
 
+import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.brave.BraveTestTracing;
+import org.springframework.cloud.sleuth.exporter.FinishedSpan;
+import org.springframework.cloud.sleuth.instrument.kafka.KafkaTestUtils;
 import org.springframework.cloud.sleuth.test.TestTracingAware;
 
-public class KafkaProducerTest extends org.springframework.cloud.sleuth.instrument.kafka.KafkaProducerTest {
+import static org.awaitility.Awaitility.await;
+
+public class KafkaConsumerTest extends org.springframework.cloud.sleuth.instrument.kafka.KafkaConsumerTest {
 
 	BraveTestTracing testTracing;
 
@@ -41,22 +44,22 @@ public class KafkaProducerTest extends org.springframework.cloud.sleuth.instrume
 	}
 
 	@Test
-	public void should_inject_native_headers() throws InterruptedException {
+	public void should_consider_native_headers() {
+		KafkaProducer<String, String> kafkaProducer = KafkaTestUtils
+				.buildTestKafkaProducer(kafkaContainer.getBootstrapServers());
 		ProducerRecord<String, String> producerRecord = new ProducerRecord<>(testTopic, "test", "test");
-		startKafkaConsumer();
+		producerRecord.headers().add("b3", "000000000000000a-000000000000000b-1-000000000000000a".getBytes());
+		kafkaProducer.send(producerRecord);
+		kafkaProducer.close();
 
-		this.kafkaProducer.send(producerRecord);
-		ConsumerRecord<String, String> consumerRecord = consumerRecords.poll(5, TimeUnit.SECONDS);
+		await().atMost(Duration.ofSeconds(5)).until(() -> receivedCounter.intValue() == 1);
 
-		BDDAssertions.then(consumerRecord).isNotNull();
-		BDDAssertions.then(getHeaderValueOrNull(consumerRecord, "X-B3-TraceId")).isNotNull();
-		BDDAssertions.then(getHeaderValueOrNull(consumerRecord, "X-B3-SpanId")).isNotNull();
-		BDDAssertions.then(getHeaderValueOrNull(consumerRecord, "X-B3-Sampled")).isNotNull();
-	}
-
-	private static String getHeaderValueOrNull(ConsumerRecord<?, ?> consumerRecord, String header) {
-		return Optional.ofNullable(consumerRecord).map(ConsumerRecord::headers)
-				.map(headers -> headers.lastHeader(header)).map(Header::value).map(String::new).orElse(null);
+		BDDAssertions.then(this.tracer.currentSpan()).isNull();
+		BDDAssertions.then(this.spans).hasSize(1);
+		FinishedSpan span = this.spans.get(0);
+		BDDAssertions.then(span.getKind()).isEqualTo(Span.Kind.CONSUMER);
+		BDDAssertions.then(span.getTraceId()).isEqualTo("000000000000000a");
+		BDDAssertions.then(span.getParentId()).isEqualTo("000000000000000b");
 	}
 
 }

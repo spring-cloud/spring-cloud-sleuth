@@ -28,6 +28,8 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import org.springframework.beans.factory.BeanFactory;
+import org.springframework.beans.factory.support.StaticListableBeanFactory;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.propagation.Propagator;
 import org.springframework.test.util.ReflectionTestUtils;
@@ -52,8 +54,8 @@ public class TracingKafkaProducerTest {
 		ProducerRecord<String, String> testRecord = new ProducerRecord<>("test", "test");
 		Callback callback = (record, ex) -> {
 		};
-		TracingKafkaProducer<String, String> tracingKafkaProducer = new TracingKafkaProducer<>(kafkaProducer, tracer,
-				propagator, new TracingKafkaPropagatorSetter());
+		TracingKafkaProducer<String, String> tracingKafkaProducer = new TracingKafkaProducer<>(kafkaProducer,
+				beanFactory());
 
 		tracingKafkaProducer.send(testRecord, callback);
 
@@ -65,8 +67,8 @@ public class TracingKafkaProducerTest {
 		ProducerRecord<String, String> testRecord = new ProducerRecord<>("test", "test");
 		Callback callback = (record, ex) -> {
 		};
-		TracingKafkaProducer<String, String> tracingKafkaProducer = new TracingKafkaProducer<>(kafkaProducer, tracer,
-				propagator, new TracingKafkaPropagatorSetter());
+		TracingKafkaProducer<String, String> tracingKafkaProducer = new TracingKafkaProducer<>(kafkaProducer,
+				beanFactory());
 
 		tracingKafkaProducer.send(testRecord, callback);
 
@@ -74,6 +76,13 @@ public class TracingKafkaProducerTest {
 		Mockito.verify(kafkaProducer).send(any(), callbackArgument.capture());
 		BDDAssertions.then(callbackArgument.getValue()).isNotNull();
 		BDDAssertions.then(ReflectionTestUtils.getField(callbackArgument.getValue(), "callback")).isEqualTo(callback);
+	}
+
+	private BeanFactory beanFactory() {
+		StaticListableBeanFactory beanFactory = new StaticListableBeanFactory();
+		beanFactory.addBean("tracer", this.tracer);
+		beanFactory.addBean("propagator", this.propagator);
+		return beanFactory;
 	}
 
 }

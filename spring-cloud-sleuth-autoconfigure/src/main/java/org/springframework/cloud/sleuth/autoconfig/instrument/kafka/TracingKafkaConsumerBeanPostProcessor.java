@@ -14,36 +14,36 @@
  * limitations under the License.
  */
 
-package org.springframework.cloud.sleuth.instrument.kafka;
+package org.springframework.cloud.sleuth.autoconfig.instrument.kafka;
 
-import org.apache.kafka.clients.producer.Producer;
-import reactor.kafka.sender.KafkaSender;
-import reactor.kafka.sender.SenderOptions;
-import reactor.kafka.sender.internals.ProducerFactory;
+import org.apache.kafka.clients.consumer.Consumer;
 
+import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.BeanFactory;
+import org.springframework.beans.factory.config.BeanPostProcessor;
+import org.springframework.cloud.sleuth.instrument.kafka.TracingKafkaConsumer;
 
 /**
- * This decorates a Reactor Kafka {@link ProducerFactory} to create decorated producers of
- * type {@link TracingKafkaProducer}. This can be used by the {@link KafkaSender} factory
- * methods to create instrumented senders.
+ * Bean post processor for {@link org.apache.kafka.clients.consumer.Consumer}.
  *
  * @author Anders Clausen
  * @author Flaviu Muresan
  * @since 3.1.0
  */
-public class TracingKafkaProducerFactory extends ProducerFactory {
+public class TracingKafkaConsumerBeanPostProcessor implements BeanPostProcessor {
 
 	private final BeanFactory beanFactory;
 
-	public TracingKafkaProducerFactory(BeanFactory beanFactory) {
-		super();
+	public TracingKafkaConsumerBeanPostProcessor(BeanFactory beanFactory) {
 		this.beanFactory = beanFactory;
 	}
 
 	@Override
-	public <K, V> Producer<K, V> createProducer(SenderOptions<K, V> senderOptions) {
-		return new TracingKafkaProducer<>(super.createProducer(senderOptions), beanFactory);
+	public Object postProcessAfterInitialization(Object bean, String beanName) throws BeansException {
+		if (bean instanceof Consumer && !(bean instanceof TracingKafkaConsumer)) {
+			return new TracingKafkaConsumer<>((Consumer) bean, beanFactory);
+		}
+		return bean;
 	}
 
 }

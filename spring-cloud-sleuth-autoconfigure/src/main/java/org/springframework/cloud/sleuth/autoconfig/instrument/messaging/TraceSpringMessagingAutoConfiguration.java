@@ -45,13 +45,13 @@ class TraceSpringMessagingAutoConfiguration {
 	}
 
 	@Bean
-	@ConditionalOnMissingBean
+	@ConditionalOnMissingBean(value = MessageHeaderAccessor.class, parameterizedContainer = Propagator.Setter.class)
 	Propagator.Setter<MessageHeaderAccessor> traceMessagePropagationSetter() {
 		return new MessageHeaderPropagatorSetter();
 	}
 
 	@Bean
-	@ConditionalOnMissingBean
+	@ConditionalOnMissingBean(value = MessageHeaderAccessor.class, parameterizedContainer = Propagator.Getter.class)
 	Propagator.Getter<MessageHeaderAccessor> traceMessagePropagationGetter() {
 		return new MessageHeaderPropagatorGetter();
 	}

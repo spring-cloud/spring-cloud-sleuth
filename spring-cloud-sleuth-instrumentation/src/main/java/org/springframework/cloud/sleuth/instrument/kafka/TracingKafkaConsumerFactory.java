@@ -16,34 +16,34 @@
 
 package org.springframework.cloud.sleuth.instrument.kafka;
 
-import org.apache.kafka.clients.producer.Producer;
-import reactor.kafka.sender.KafkaSender;
-import reactor.kafka.sender.SenderOptions;
-import reactor.kafka.sender.internals.ProducerFactory;
+import org.apache.kafka.clients.consumer.Consumer;
+import reactor.kafka.receiver.KafkaReceiver;
+import reactor.kafka.receiver.ReceiverOptions;
+import reactor.kafka.receiver.internals.ConsumerFactory;
 
 import org.springframework.beans.factory.BeanFactory;
 
 /**
- * This decorates a Reactor Kafka {@link ProducerFactory} to create decorated producers of
- * type {@link TracingKafkaProducer}. This can be used by the {@link KafkaSender} factory
- * methods to create instrumented senders.
+ * This decorates a Reactor Kafka {@link ConsumerFactory} to create decorated consumers of
+ * type {@link TracingKafkaConsumer}. This can be used by the {@link KafkaReceiver}
+ * factory methods to create instrumented receivers.
  *
  * @author Anders Clausen
  * @author Flaviu Muresan
  * @since 3.1.0
  */
-public class TracingKafkaProducerFactory extends ProducerFactory {
+public class TracingKafkaConsumerFactory extends ConsumerFactory {
 
 	private final BeanFactory beanFactory;
 
-	public TracingKafkaProducerFactory(BeanFactory beanFactory) {
+	public TracingKafkaConsumerFactory(BeanFactory beanFactory) {
 		super();
 		this.beanFactory = beanFactory;
 	}
 
 	@Override
-	public <K, V> Producer<K, V> createProducer(SenderOptions<K, V> senderOptions) {
-		return new TracingKafkaProducer<>(super.createProducer(senderOptions), beanFactory);
+	public <K, V> Consumer<K, V> createConsumer(ReceiverOptions<K, V> receiverOptions) {
+		return new TracingKafkaConsumer<>(super.createConsumer(receiverOptions), beanFactory);
 	}
 
 }
