@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.springframework.cloud.sleuth.instrument.deployer;
+package org.springframework.cloud.sleuth.tracer;
 
 import org.springframework.cloud.sleuth.Tracer;
 
@@ -24,7 +24,7 @@ import org.springframework.cloud.sleuth.Tracer;
  * @author Marcin Grzejszczak
  * @since 3.0.0
  */
-class NoOpSpanInScope implements Tracer.SpanInScope {
+public class NoOpSpanInScope implements Tracer.SpanInScope {
 
 	@Override
 	public void close() {

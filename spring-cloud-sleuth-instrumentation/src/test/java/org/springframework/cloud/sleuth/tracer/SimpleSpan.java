@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.springframework.cloud.sleuth.instrument.deployer;
+package org.springframework.cloud.sleuth.tracer;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -28,13 +28,15 @@ import org.springframework.cloud.sleuth.TraceContext;
  * @author Marcin Grzejszczak
  * @since 3.0.0
  */
-class SimpleSpan implements Span {
+public class SimpleSpan implements Span {
 
-	Map<String, String> tags = new HashMap<>();
+	public Map<String, String> tags = new HashMap<>();
 
-	boolean started;
+	public boolean started;
 
-	boolean ended;
+	public boolean ended;
+
+	public Throwable throwable;
 
 	@Override
 	public boolean isNoop() {
@@ -47,29 +49,30 @@ class SimpleSpan implements Span {
 	}
 
 	@Override
-	public Span start() {
+	public SimpleSpan start() {
 		this.started = true;
 		return this;
 	}
 
 	@Override
-	public Span name(String name) {
+	public SimpleSpan name(String name) {
 		return this;
 	}
 
 	@Override
-	public Span event(String value) {
+	public SimpleSpan event(String value) {
 		return this;
 	}
 
 	@Override
-	public Span tag(String key, String value) {
+	public SimpleSpan tag(String key, String value) {
 		this.tags.put(key, value);
 		return this;
 	}
 
 	@Override
-	public Span error(Throwable throwable) {
+	public SimpleSpan error(Throwable throwable) {
+		this.throwable = throwable;
 		return this;
 	}
 

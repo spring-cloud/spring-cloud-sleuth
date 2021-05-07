@@ -14,13 +14,8 @@
  * limitations under the License.
  */
 
-package org.springframework.cloud.sleuth.instrument.deployer;
+package org.springframework.cloud.sleuth.tracer;
 
-import java.util.concurrent.Callable;
-import java.util.concurrent.Executor;
-import java.util.concurrent.ExecutorService;
-
-import org.springframework.cloud.sleuth.CurrentTraceContext;
 import org.springframework.cloud.sleuth.TraceContext;
 
 /**
@@ -29,43 +24,26 @@ import org.springframework.cloud.sleuth.TraceContext;
  * @author Marcin Grzejszczak
  * @since 3.0.0
  */
-class NoOpCurrentTraceContext implements CurrentTraceContext {
+public class NoOpTraceContext implements TraceContext {
 
 	@Override
-	public TraceContext context() {
-		return null;
+	public String traceId() {
+		return "";
 	}
 
 	@Override
-	public Scope newScope(TraceContext context) {
-		return () -> {
-		};
+	public String parentId() {
+		return "";
 	}
 
 	@Override
-	public Scope maybeScope(TraceContext context) {
-		return () -> {
-		};
+	public String spanId() {
+		return "";
 	}
 
 	@Override
-	public <C> Callable<C> wrap(Callable<C> task) {
-		return task;
-	}
-
-	@Override
-	public Runnable wrap(Runnable task) {
-		return task;
-	}
-
-	@Override
-	public Executor wrap(Executor delegate) {
-		return delegate;
-	}
-
-	@Override
-	public ExecutorService wrap(ExecutorService delegate) {
-		return delegate;
+	public Boolean sampled() {
+		return false;
 	}
 
 }

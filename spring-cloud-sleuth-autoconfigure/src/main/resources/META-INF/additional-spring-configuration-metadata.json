@@ -156,6 +156,12 @@
       "defaultValue": true
     },
     {
+      "name": "spring.sleuth.tx.enabled",
+      "type": "java.lang.Boolean",
+      "description": "Enable Spring TX instrumentation.",
+      "defaultValue": true
+    },
+    {
       "name": "spring.sleuth.batch.enabled",
       "type": "java.lang.Boolean",
       "description": "Enable Spring Batch instrumentation.",

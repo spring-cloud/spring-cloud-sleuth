@@ -129,13 +129,14 @@ public class TraceAppDeployer implements AppDeployer {
 	@Override
 	public Mono<AppStatus> statusReactive(String id) {
 		return ReactorSleuth.tracedMono(tracer(), currentTraceContext(), "status",
-				() -> this.delegate.statusReactive(id), span -> span.tag("deployer.app.id", id));
+				() -> this.delegate.statusReactive(id), (o, span) -> span.tag("deployer.app.id", id));
 	}
 
 	@Override
 	public Flux<AppStatus> statusesReactive(String... ids) {
 		return ReactorSleuth.tracedFlux(tracer(), currentTraceContext(), "statuses",
-				() -> this.delegate.statusesReactive(ids), span -> span.tag("deployer.app.ids", Arrays.toString(ids)));
+				() -> this.delegate.statusesReactive(ids),
+				(o, span) -> span.tag("deployer.app.ids", Arrays.toString(ids)));
 	}
 
 	@Override

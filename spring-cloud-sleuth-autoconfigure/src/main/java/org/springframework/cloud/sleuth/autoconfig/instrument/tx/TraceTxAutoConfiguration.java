@@ -14,49 +14,44 @@
  * limitations under the License.
  */
 
-package org.springframework.cloud.sleuth.autoconfig.instrument.task;
+package org.springframework.cloud.sleuth.autoconfig.instrument.tx;
 
 import org.springframework.beans.factory.BeanFactory;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.autoconfig.brave.BraveAutoConfiguration;
-import org.springframework.cloud.sleuth.instrument.task.TraceTaskExecutionListener;
-import org.springframework.cloud.task.listener.TaskExecutionListener;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 /**
  * {@link org.springframework.boot.autoconfigure.EnableAutoConfiguration
- * Auto-configuration} that registers instrumentation for Spring Cloud Task.
+ * Auto-configuration} that registers instrumentation for Spring TX.
  *
  * @author Marcin Grzejszczak
  * @since 3.1.0
  */
 @Configuration(proxyBeanMethods = false)
-@ConditionalOnClass(TaskExecutionListener.class)
-@ConditionalOnProperty(value = "spring.sleuth.task.enabled", matchIfMissing = true)
+@ConditionalOnProperty(value = "spring.sleuth.tx.enabled", matchIfMissing = true)
 @ConditionalOnBean(Tracer.class)
 @AutoConfigureAfter(BraveAutoConfiguration.class)
-public class TraceTaskAutoConfiguration {
+public class TraceTxAutoConfiguration {
 
 	@Bean
-	TraceTaskExecutionListener traceTaskExecutionListener(Tracer tracer,
-			@Value("${spring.application.name:default}") String appName) {
-		return new TraceTaskExecutionListener(tracer, appName);
+	@ConditionalOnClass(name = "org.springframework.transaction.PlatformTransactionManager")
+	static TracePlatformTransactionManagerBeanPostProcessor tracePlatformTransactionManagerBeanPostProcessor(
+			BeanFactory beanFactory) {
+		return new TracePlatformTransactionManagerBeanPostProcessor(beanFactory);
 	}
 
 	@Bean
-	static TraceCommandLineRunnerBeanPostProcessor traceCommandLineRunnerBeanPostProcessor(BeanFactory beanFactory) {
-		return new TraceCommandLineRunnerBeanPostProcessor(beanFactory);
-	}
-
-	@Bean
-	static TraceApplicationRunnerBeanPostProcessor traceApplicationRunnerBeanPostProcessor(BeanFactory beanFactory) {
-		return new TraceApplicationRunnerBeanPostProcessor(beanFactory);
+	@ConditionalOnClass(
+			name = { "org.springframework.transaction.ReactiveTransactionManager", "reactor.core.publisher.Mono" })
+	static TraceReactiveTransactionManagerBeanPostProcessor traceReactiveTransactionManagerBeanPostProcessor(
+			BeanFactory beanFactory) {
+		return new TraceReactiveTransactionManagerBeanPostProcessor(beanFactory);
 	}
 
 }
