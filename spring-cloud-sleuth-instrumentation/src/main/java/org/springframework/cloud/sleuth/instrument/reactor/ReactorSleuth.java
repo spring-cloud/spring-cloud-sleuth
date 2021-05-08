@@ -16,8 +16,8 @@
 
 package org.springframework.cloud.sleuth.instrument.reactor;
 
+import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
-import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
@@ -333,18 +333,21 @@ public abstract class ReactorSleuth {
 	 */
 	public static <T> Mono<T> tracedMono(@NonNull Tracer tracer, @NonNull CurrentTraceContext currentTraceContext,
 			@NonNull String childSpanName, @NonNull Supplier<Mono<T>> supplier,
-			@NonNull Consumer<Span> spanCustomizer) {
+			@NonNull BiConsumer<T, Span> spanCustomizer) {
 		return runMonoSupplierInScope(supplier, spanCustomizer).contextWrite(
 				context -> ReactorSleuth.enhanceContext(tracer, currentTraceContext, context, childSpanName));
 	}
 
-	private static <T> Mono<T> runMonoSupplierInScope(Supplier<Mono<T>> supplier, Consumer<Span> spanCustomizer) {
+	private static <T> Mono<T> runMonoSupplierInScope(Supplier<Mono<T>> supplier, BiConsumer<T, Span> spanCustomizer) {
 		return Mono.deferContextual(contextView -> {
 			Span span = contextView.get(Span.class);
-			spanCustomizer.accept(span);
 			Tracer.SpanInScope scope = contextView.get(Tracer.SpanInScope.class);
 			// @formatter:off
 			return supplier.get()
+					.map(t -> {
+						spanCustomizer.accept(t, span);
+						return t;
+					})
 					// TODO: Fix me when this is resolved in Reactor
 //					.doOnSubscribe(__ -> scope.close())
 					.doOnError(span::error)
@@ -368,7 +371,7 @@ public abstract class ReactorSleuth {
 	 */
 	public static <T> Mono<T> tracedMono(@NonNull Tracer tracer, @NonNull CurrentTraceContext currentTraceContext,
 			@NonNull String childSpanName, @NonNull Supplier<Mono<T>> supplier) {
-		return tracedMono(tracer, currentTraceContext, childSpanName, supplier, span -> {
+		return tracedMono(tracer, currentTraceContext, childSpanName, supplier, (o, span) -> {
 		});
 	}
 
@@ -382,7 +385,7 @@ public abstract class ReactorSleuth {
 	 */
 	public static <T> Mono<T> tracedMono(@NonNull Tracer tracer, @NonNull Span span,
 			@NonNull Supplier<Mono<T>> supplier) {
-		return runMonoSupplierInScope(supplier, span1 -> {
+		return runMonoSupplierInScope(supplier, (o, span1) -> {
 		}).contextWrite(context -> ReactorSleuth.putSpanInScope(tracer, context, span));
 	}
 
@@ -399,7 +402,7 @@ public abstract class ReactorSleuth {
 	 */
 	public static <T> Flux<T> tracedFlux(@NonNull Tracer tracer, @NonNull CurrentTraceContext currentTraceContext,
 			@NonNull String childSpanName, @NonNull Supplier<Flux<T>> supplier,
-			@NonNull Consumer<Span> spanCustomizer) {
+			@NonNull BiConsumer<T, Span> spanCustomizer) {
 		return runFluxSupplierInScope(supplier, spanCustomizer).contextWrite(
 				context -> ReactorSleuth.enhanceContext(tracer, currentTraceContext, context, childSpanName));
 	}
@@ -415,17 +418,20 @@ public abstract class ReactorSleuth {
 	 */
 	public static <T> Flux<T> tracedFlux(@NonNull Tracer tracer, @NonNull Span span,
 			@NonNull Supplier<Flux<T>> supplier) {
-		return runFluxSupplierInScope(supplier, span1 -> {
+		return runFluxSupplierInScope(supplier, (o, span1) -> {
 		}).contextWrite(context -> ReactorSleuth.putSpanInScope(tracer, context, span));
 	}
 
-	private static <T> Flux<T> runFluxSupplierInScope(Supplier<Flux<T>> supplier, Consumer<Span> spanCustomizer) {
+	private static <T> Flux<T> runFluxSupplierInScope(Supplier<Flux<T>> supplier, BiConsumer<T, Span> spanCustomizer) {
 		return Flux.deferContextual(contextView -> {
 			Span span = contextView.get(Span.class);
-			spanCustomizer.accept(span);
 			Tracer.SpanInScope scope = contextView.get(Tracer.SpanInScope.class);
 			// @formatter:off
 			return supplier.get()
+					.map(t -> {
+						spanCustomizer.accept(t, span);
+						return t;
+					})
 					// TODO: Fix me when this is resolved in Reactor
 //					.doOnSubscribe(__ -> scope.close())
 					.doOnError(span::error)
@@ -449,24 +455,21 @@ public abstract class ReactorSleuth {
 	 */
 	public static <T> Flux<T> tracedFlux(@NonNull Tracer tracer, @NonNull CurrentTraceContext currentTraceContext,
 			@NonNull String childSpanName, @NonNull Supplier<Flux<T>> supplier) {
-		return tracedFlux(tracer, currentTraceContext, childSpanName, supplier, span -> {
+		return tracedFlux(tracer, currentTraceContext, childSpanName, supplier, (o, span) -> {
 		});
 	}
 
-	private static Span spanFromContext(Tracer tracer, CurrentTraceContext currentTraceContext,
+	private static Span childSpanFromContext(Tracer tracer, CurrentTraceContext currentTraceContext,
 			reactor.util.context.Context context, String childSpanName) {
 		TraceContext traceContext = context.getOrDefault(TraceContext.class, null);
-		Span span = null;
-		if (traceContext == null) {
-			span = context.getOrDefault(Span.class, null);
-		}
+		Span span = context.getOrDefault(Span.class, null);
 		if (traceContext == null && span == null) {
 			span = tracer.nextSpan();
 			if (log.isDebugEnabled()) {
 				log.debug("There was no previous span in reactor context, created a new one [" + span + "]");
 			}
 		}
-		else if (traceContext != null) {
+		else if (traceContext != null && span == null) {
 			// there was a previous span - we create a child one
 			try (CurrentTraceContext.Scope scope = currentTraceContext.maybeScope(traceContext)) {
 				if (log.isDebugEnabled()) {
@@ -490,9 +493,19 @@ public abstract class ReactorSleuth {
 		return span.name(childSpanName).start();
 	}
 
-	private static Context enhanceContext(Tracer tracer, CurrentTraceContext currentTraceContext,
+	/**
+	 * Updates the Reactor context with tracing information. Creates a new span if there
+	 * is no current span. Creates a child span if there was an entry in the context
+	 * already.
+	 * @param tracer tracer
+	 * @param currentTraceContext current trace context
+	 * @param context Reactor context
+	 * @param childSpanName child span name when there is no span in context
+	 * @return updated Reactor context
+	 */
+	public static Context enhanceContext(Tracer tracer, CurrentTraceContext currentTraceContext,
 			reactor.util.context.Context context, String childSpanName) {
-		Span span = spanFromContext(tracer, currentTraceContext, context, childSpanName);
+		Span span = childSpanFromContext(tracer, currentTraceContext, context, childSpanName);
 		return putSpanInScope(tracer, context, span);
 	}
 

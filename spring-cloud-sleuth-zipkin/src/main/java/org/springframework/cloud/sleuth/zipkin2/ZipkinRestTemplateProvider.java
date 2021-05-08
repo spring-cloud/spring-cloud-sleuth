@@ -14,21 +14,18 @@
  * limitations under the License.
  */
 
-package org.springframework.cloud.sleuth.instrument.deployer;
+package org.springframework.cloud.sleuth.zipkin2;
 
-import org.springframework.cloud.sleuth.Tracer;
+import org.springframework.web.client.RestTemplate;
 
 /**
- * A noop implementation. Does nothing.
+ * A provider for a {@link RestTemplate} used to send spans to Zipkin.
  *
  * @author Marcin Grzejszczak
- * @since 3.0.0
+ * @since 3.1.0
  */
-class NoOpSpanInScope implements Tracer.SpanInScope {
+public interface ZipkinRestTemplateProvider {
 
-	@Override
-	public void close() {
-
-	}
+	RestTemplate zipkinRestTemplate();
 
 }

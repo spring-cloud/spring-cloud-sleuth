@@ -34,6 +34,8 @@ import org.springframework.cloud.deployer.spi.app.AppScaleRequest;
 import org.springframework.cloud.deployer.spi.app.AppStatus;
 import org.springframework.cloud.deployer.spi.core.AppDefinition;
 import org.springframework.cloud.deployer.spi.core.AppDeploymentRequest;
+import org.springframework.cloud.sleuth.tracer.NoOpCurrentTraceContext;
+import org.springframework.cloud.sleuth.tracer.SimpleTracer;
 import org.springframework.core.env.Environment;
 import org.springframework.core.io.PathResource;
 import org.springframework.mock.env.MockEnvironment;

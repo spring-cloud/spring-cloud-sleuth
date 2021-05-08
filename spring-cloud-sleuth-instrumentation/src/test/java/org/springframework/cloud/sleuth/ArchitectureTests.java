@@ -27,6 +27,8 @@ import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noClasses;
 @AnalyzeClasses(packagesOf = ArchitectureTests.class, importOptions = ArchitectureTests.ProductionCode.class)
 public class ArchitectureTests {
 
+	// TODO: Add "..org.springframework.beans.factory.config.." - BeanPostProcessors
+	// should end up in [autoconfig]
 	@ArchTest
 	public static final ArchRule should_not_contain_any_spring_configuration_reference_in_module = noClasses().should()
 			.dependOnClassesThat().resideInAnyPackage("..org.springframework.boot.context.properties..",

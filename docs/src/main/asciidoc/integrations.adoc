@@ -618,3 +618,11 @@ This feature is available for all tracer implementations.
 
 If you have Spring Batch running on the classpath, we wrap the `StepBuilderFactory` and the `JobBuilderFactory` to propagate the tracing context.
 In order to disable this instrumentation set `spring.sleuth.batch.enabled` to `false`.
+
+[[sleuth-tx-integration]]
+== Spring Tx
+
+This feature is available for all tracer implementations.
+
+If you have Spring Tx on the classpath we will instrument the `PlatformTransactionManager` and the `ReactiveTransactionManager` to create a span whenever a new transaction is created.
+In order to disable this instrumentation set `spring.sleuth.tx.enabled` to `false`.

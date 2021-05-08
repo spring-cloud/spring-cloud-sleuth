@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.springframework.cloud.sleuth.instrument.deployer;
+package org.springframework.cloud.sleuth.tracer;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -36,16 +36,16 @@ import org.springframework.cloud.sleuth.Tracer;
  * @author Marcin Grzejszczak
  * @since 3.0.0
  */
-class SimpleTracer implements Tracer {
+public class SimpleTracer implements Tracer {
 
-	List<SimpleSpan> spans = new ArrayList<>();
+	public List<SimpleSpan> spans = new ArrayList<>();
 
 	@Override
 	public Span nextSpan(Span parent) {
 		return new SimpleSpan();
 	}
 
-	SimpleSpan getOnlySpan() {
+	public SimpleSpan getOnlySpan() {
 		BDDAssertions.then(this.spans).hasSize(1);
 		SimpleSpan span = this.spans.get(0);
 		BDDAssertions.then(span.started).as("Span must be started").isTrue();
@@ -69,7 +69,7 @@ class SimpleTracer implements Tracer {
 	}
 
 	@Override
-	public Span nextSpan() {
+	public SimpleSpan nextSpan() {
 		final SimpleSpan span = new SimpleSpan();
 		this.spans.add(span);
 		return span;

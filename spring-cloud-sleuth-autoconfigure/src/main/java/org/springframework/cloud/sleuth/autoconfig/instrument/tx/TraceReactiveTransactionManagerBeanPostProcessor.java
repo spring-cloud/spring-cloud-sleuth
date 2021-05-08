@@ -14,40 +14,33 @@
  * limitations under the License.
  */
 
-package org.springframework.cloud.sleuth.instrument.web.client.feign;
-
-import feign.Client;
-import feign.okhttp.OkHttpClient;
+package org.springframework.cloud.sleuth.autoconfig.instrument.tx;
 
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.config.BeanPostProcessor;
+import org.springframework.cloud.sleuth.instrument.tx.TraceReactiveTransactionManager;
+import org.springframework.transaction.ReactiveTransactionManager;
 
 /**
- * Post processor that wraps takes care of the OkHttp Feign Client instrumentation.
+ * Post processor that wraps a {@link ReactiveTransactionManager}.
  *
  * @author Marcin Grzejszczak
- * @since 1.1.3
+ * @since 3.1.0
  */
-// TODO: Move this to autoconfigure
-public class OkHttpFeignClientBeanPostProcessor implements BeanPostProcessor {
+public class TraceReactiveTransactionManagerBeanPostProcessor implements BeanPostProcessor {
 
 	private final BeanFactory beanFactory;
 
-	public OkHttpFeignClientBeanPostProcessor(BeanFactory beanFactory) {
+	public TraceReactiveTransactionManagerBeanPostProcessor(BeanFactory beanFactory) {
 		this.beanFactory = beanFactory;
 	}
 
 	@Override
-	public Object postProcessBeforeInitialization(Object bean, String beanName) throws BeansException {
-		if (bean instanceof OkHttpClient && !(bean instanceof LazyClient)) {
-			return new LazyClient(this.beanFactory, (Client) bean);
-		}
-		return bean;
-	}
-
-	@Override
 	public Object postProcessAfterInitialization(Object bean, String beanName) throws BeansException {
+		if (bean instanceof ReactiveTransactionManager && !(bean instanceof TraceReactiveTransactionManager)) {
+			return new TraceReactiveTransactionManager((ReactiveTransactionManager) bean, this.beanFactory);
+		}
 		return bean;
 	}
 
