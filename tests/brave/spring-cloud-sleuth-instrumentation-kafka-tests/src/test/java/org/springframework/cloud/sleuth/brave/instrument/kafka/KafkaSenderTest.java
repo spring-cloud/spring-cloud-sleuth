@@ -53,7 +53,7 @@ public class KafkaSenderTest extends org.springframework.cloud.sleuth.instrument
 		Flux<SenderResult<Object>> senderResultFlux = this.kafkaSender
 				.send(Mono.just(SenderRecord.create(producerRecord, null)));
 		StepVerifier.create(senderResultFlux).expectNextCount(1).verifyComplete();
-		ConsumerRecord<String, String> consumerRecord = consumerRecords.poll(5, TimeUnit.SECONDS);
+		ConsumerRecord<String, String> consumerRecord = consumerRecords.poll(15, TimeUnit.SECONDS);
 
 		BDDAssertions.then(consumerRecord).isNotNull();
 		BDDAssertions.then(getHeaderValueOrNull(consumerRecord, "X-B3-TraceId")).isNotNull();

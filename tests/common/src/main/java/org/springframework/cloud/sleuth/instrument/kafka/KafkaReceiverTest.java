@@ -130,7 +130,7 @@ public abstract class KafkaReceiverTest implements TestTracingAwareSupplier {
 		ProducerRecord<String, String> producerRecord = new ProducerRecord<>(testTopic, "test", "test");
 		kafkaProducer.send(producerRecord);
 
-		await().atMost(Duration.ofSeconds(5)).until(() -> receivedCounter.intValue() == 1);
+		await().atMost(Duration.ofSeconds(15)).until(() -> receivedCounter.intValue() == 1);
 
 		BDDAssertions.then(this.tracer.currentSpan()).isNull();
 		BDDAssertions.then(this.spans).hasSize(1);

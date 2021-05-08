@@ -134,7 +134,7 @@ public abstract class KafkaSenderTest implements TestTracingAwareSupplier {
 		Flux<SenderResult<Object>> senderResultFlux = this.kafkaSender
 				.send(Mono.just(SenderRecord.create(producerRecord, null)));
 		StepVerifier.create(senderResultFlux).expectNextCount(1).verifyComplete();
-		consumerRecords.poll(5, TimeUnit.SECONDS);
+		consumerRecords.poll(15, TimeUnit.SECONDS);
 
 		BDDAssertions.then(this.tracer.currentSpan()).isNull();
 		BDDAssertions.then(this.spans).hasSize(1);

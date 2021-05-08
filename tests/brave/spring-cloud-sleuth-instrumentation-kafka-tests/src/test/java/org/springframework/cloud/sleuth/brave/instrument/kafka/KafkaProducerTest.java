@@ -46,7 +46,7 @@ public class KafkaProducerTest extends org.springframework.cloud.sleuth.instrume
 		startKafkaConsumer();
 
 		this.kafkaProducer.send(producerRecord);
-		ConsumerRecord<String, String> consumerRecord = consumerRecords.poll(5, TimeUnit.SECONDS);
+		ConsumerRecord<String, String> consumerRecord = consumerRecords.poll(15, TimeUnit.SECONDS);
 
 		BDDAssertions.then(consumerRecord).isNotNull();
 		BDDAssertions.then(getHeaderValueOrNull(consumerRecord, "X-B3-TraceId")).isNotNull();
