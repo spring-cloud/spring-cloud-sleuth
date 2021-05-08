@@ -128,7 +128,7 @@ public abstract class KafkaConsumerTest implements TestTracingAwareSupplier {
 		kafkaProducer.send(producerRecord);
 		kafkaProducer.close();
 
-		await().atMost(Duration.ofSeconds(5)).until(() -> receivedCounter.intValue() == 1);
+		await().atMost(Duration.ofSeconds(15)).until(() -> receivedCounter.intValue() == 1);
 
 		BDDAssertions.then(this.tracer.currentSpan()).isNull();
 		BDDAssertions.then(this.spans).hasSize(1);
