@@ -17,7 +17,7 @@ given the ability to merge pull requests.
 
 ## Code of Conduct
 This project adheres to the Contributor Covenant [code of
-conduct](https://github.com/spring-cloud/spring-cloud-build/blob/master/docs/src/main/asciidoc/code-of-conduct.adoc). By participating, you  are expected to uphold this code. Please report
+conduct](https://github.com/spring-cloud/spring-cloud-build/blob/main/docs/src/main/asciidoc/code-of-conduct.adoc). By participating, you  are expected to uphold this code. Please report
 unacceptable behavior to spring-code-of-conduct@pivotal.io.
 
 ## Code Conventions and Housekeeping
@@ -27,7 +27,7 @@ added after the original pull request but before a merge.
 * Use the Spring Framework code format conventions. If you use Eclipse
   you can import formatter settings using the
   `eclipse-code-formatter.xml` file from the
-  [Spring Cloud Build](https://raw.githubusercontent.com/spring-cloud/spring-cloud-build/master/spring-cloud-dependencies-parent/eclipse-code-formatter.xml) project. If using IntelliJ, you can use the
+  [Spring Cloud Build](https://raw.githubusercontent.com/spring-cloud/spring-cloud-build/main/spring-cloud-dependencies-parent/eclipse-code-formatter.xml) project. If using IntelliJ, you can use the
   [Eclipse Code Formatter Plugin](https://plugins.jetbrains.com/plugin/6546) to import the same file.
 * Make sure all new `.java` files to have a simple Javadoc class comment with at least an
   `@author` tag identifying you, and preferably at least a paragraph on what the class is
