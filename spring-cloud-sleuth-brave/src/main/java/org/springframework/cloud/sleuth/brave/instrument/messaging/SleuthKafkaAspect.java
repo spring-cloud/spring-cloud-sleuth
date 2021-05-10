@@ -22,8 +22,6 @@ import brave.Tracer;
 import brave.kafka.clients.KafkaTracing;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.kafka.clients.consumer.Consumer;
-import org.apache.kafka.clients.producer.Producer;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
@@ -60,18 +58,6 @@ public class SleuthKafkaAspect {
 				"recordMessageConverter");
 	}
 
-	@Pointcut("execution(public * org.springframework.kafka.core.ProducerFactory.createProducer(..))")
-	private void anyProducerFactory() {
-	} // NOSONAR
-
-	@Pointcut("execution(public * org.springframework.kafka.core.ProducerFactory.createNonTransactionalProducer(..))")
-	private void anyNonTransactionalProducerFactory() {
-	} // NOSONAR
-
-	@Pointcut("execution(public * org.springframework.kafka.core.ConsumerFactory.createConsumer(..))")
-	private void anyConsumerFactory() {
-	} // NOSONAR
-
 	@Pointcut("execution(public * org.springframework.kafka.config.KafkaListenerContainerFactory.createListenerContainer(..))")
 	private void anyCreateListenerContainer() {
 	} // NOSONAR
@@ -79,18 +65,6 @@ public class SleuthKafkaAspect {
 	@Pointcut("execution(public * org.springframework.kafka.config.KafkaListenerContainerFactory.createContainer(..))")
 	private void anyCreateContainer() {
 	} // NOSONAR
-
-	@Around("anyProducerFactory() || anyNonTransactionalProducerFactory()")
-	public Object wrapProducerFactory(ProceedingJoinPoint pjp) throws Throwable {
-		Producer producer = (Producer) pjp.proceed();
-		return this.kafkaTracing.producer(producer);
-	}
-
-	@Around("anyConsumerFactory()")
-	public Object wrapConsumerFactory(ProceedingJoinPoint pjp) throws Throwable {
-		Consumer consumer = (Consumer) pjp.proceed();
-		return this.kafkaTracing.consumer(consumer);
-	}
 
 	@Around("anyCreateListenerContainer() || anyCreateContainer()")
 	public Object wrapListenerContainerCreation(ProceedingJoinPoint pjp) throws Throwable {
