@@ -40,7 +40,7 @@ import org.springframework.test.context.TestPropertySource;
 import static org.assertj.core.api.BDDAssertions.then;
 
 @ContextConfiguration(classes = SpringCloudTaskIntegrationTests.TestConfig.class)
-@TestPropertySource(properties = "spring.application.name=MyApplication")
+@TestPropertySource(properties = { "spring.application.name=MyApplication", "spring.sleuth.tx.enabled=false" })
 public abstract class SpringCloudTaskIntegrationTests {
 
 	@Autowired
