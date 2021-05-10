@@ -26,9 +26,7 @@ import brave.sampler.SamplerFunction;
 import brave.sampler.SamplerFunctions;
 import brave.spring.rabbit.SpringRabbitTracing;
 import brave.test.TestSpanHandler;
-import org.apache.kafka.clients.consumer.Consumer;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
-import org.apache.kafka.clients.producer.Producer;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -94,16 +92,6 @@ public class BraveMessagingAutoConfigurationTests {
 
 	@Test
 	public void should_wrap_kafka() {
-		this.producerFactory.createProducer();
-		then(this.mySleuthKafkaAspect.producerWrapped).isTrue();
-		this.mySleuthKafkaAspect.producerWrapped = false;
-
-		this.producerFactory.createNonTransactionalProducer();
-		then(this.mySleuthKafkaAspect.producerWrapped).isTrue();
-
-		this.consumerFactory.createConsumer();
-		then(this.mySleuthKafkaAspect.consumerWrapped).isTrue();
-
 		then(this.mySleuthKafkaAspect.adapterWrapped).isTrue();
 	}
 
@@ -208,26 +196,10 @@ class TestSleuthRabbitBeanPostProcessor extends SleuthRabbitBeanPostProcessor {
 
 class MySleuthKafkaAspect extends SleuthKafkaAspect {
 
-	boolean producerWrapped;
-
-	boolean consumerWrapped;
-
 	boolean adapterWrapped;
 
 	MySleuthKafkaAspect(KafkaTracing kafkaTracing, Tracer tracer) {
 		super(kafkaTracing, tracer);
-	}
-
-	@Override
-	public Object wrapProducerFactory(ProceedingJoinPoint pjp) throws Throwable {
-		this.producerWrapped = true;
-		return Mockito.mock(Producer.class);
-	}
-
-	@Override
-	public Object wrapConsumerFactory(ProceedingJoinPoint pjp) throws Throwable {
-		this.consumerWrapped = true;
-		return Mockito.mock(Consumer.class);
 	}
 
 	@Override

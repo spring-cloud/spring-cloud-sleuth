@@ -55,4 +55,5 @@ class TraceConsumerPostProcessorTests {
 
 		BDDAssertions.then(apply).isSameAs(wrappedConsumer);
 	}
+
 }

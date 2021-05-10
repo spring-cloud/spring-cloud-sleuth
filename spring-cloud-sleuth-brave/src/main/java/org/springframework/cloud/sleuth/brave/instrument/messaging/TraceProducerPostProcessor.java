@@ -30,7 +30,8 @@ class TraceProducerPostProcessor<K, V> implements ProducerPostProcessor<K, V> {
 	private KafkaTracing kafkaTracing;
 
 	// Because it's not public in Brave
-	private static final Class tracingProducer = ClassUtils.resolveClassName("brave.kafka.clients.TracingProducer", null);
+	private static final Class tracingProducer = ClassUtils.resolveClassName("brave.kafka.clients.TracingProducer",
+			null);
 
 	TraceProducerPostProcessor(BeanFactory beanFactory) {
 		this.beanFactory = beanFactory;
@@ -45,7 +46,7 @@ class TraceProducerPostProcessor<K, V> implements ProducerPostProcessor<K, V> {
 
 	@Override
 	public Producer<K, V> apply(Producer<K, V> kvProducer) {
-		if (tracingProducer.isAssignableFrom(kvProducer.getClass())) {
+		if (tracingProducer.isAssignableFrom(ClassUtils.getUserClass(kvProducer.getClass()))) {
 			return kvProducer;
 		}
 		return wrapInTracing(kvProducer);

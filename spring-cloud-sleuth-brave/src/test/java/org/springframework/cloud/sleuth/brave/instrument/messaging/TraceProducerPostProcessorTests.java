@@ -55,4 +55,5 @@ class TraceProducerPostProcessorTests {
 
 		BDDAssertions.then(apply).isSameAs(wrappedProducer);
 	}
+
 }
