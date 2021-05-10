@@ -269,7 +269,11 @@ public abstract class WebClientTests {
 
 		thenThereIsNoCurrentSpan();
 		then(this.spans.reportedSpans().stream().filter(r -> r.getKind() == Span.Kind.CLIENT).map(r -> r.getName())
-				.collect(Collectors.toList())).isNotEmpty().contains("GET /prefix/{variable}/suffix");
+				.collect(Collectors.toList())).isNotEmpty().contains(templatedName());
+	}
+
+	protected String templatedName() {
+		return "GET /prefix/{variable}/suffix";
 	}
 
 	/**

@@ -166,22 +166,4 @@
 			</pluginRepositories>
 		</profile>
 	</profiles>
-	<repositories>
-		<repository>
-			<snapshots>
-				<enabled>false</enabled>
-			</snapshots>
-			<id>bintray-open-telemetry-maven</id>
-			<name>bintray</name>
-			<url>https://dl.bintray.com/open-telemetry/maven</url>
-		</repository>
-		<repository>
-			<snapshots>
-				<enabled>true</enabled>
-			</snapshots>
-			<id>bintray-open-telemetry-maven-snapshot</id>
-			<name>bintray</name>
-			<url>https://oss.jfrog.org/oss-snapshot-local/</url>
-		</repository>
-	</repositories>
 </project>
