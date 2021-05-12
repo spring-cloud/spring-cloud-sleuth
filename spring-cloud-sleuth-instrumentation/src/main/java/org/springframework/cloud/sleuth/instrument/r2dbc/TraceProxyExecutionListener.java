@@ -24,8 +24,10 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import org.springframework.beans.factory.BeanFactory;
+import org.springframework.boot.autoconfigure.r2dbc.R2dbcProperties;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.Tracer;
+import org.springframework.util.StringUtils;
 
 /**
  * Trace representation of a {@link ProxyExecutionListener}.
@@ -63,8 +65,15 @@ public class TraceProxyExecutionListener implements ProxyExecutionListener {
 	}
 
 	Span clientSpan(QueryExecutionInfo executionInfo, String name) {
-		return tracer().spanBuilder().kind(Span.Kind.CLIENT).name("query").remoteServiceName(name)
-				.tag("rd2bc.connection", name).tag("rd2bc.thread", executionInfo.getThreadName()).start();
+		R2dbcProperties r2dbcProperties = this.beanFactory.getBean(R2dbcProperties.class);
+		String url = r2dbcProperties.getUrl();
+		Span.Builder builder = tracer().spanBuilder().kind(Span.Kind.CLIENT).name("query")
+				.remoteServiceName(name)
+				.tag("rd2bc.connection", name).tag("rd2bc.thread", executionInfo.getThreadName());
+		if (StringUtils.hasText(url)) {
+			builder.remoteUrl(url);
+		}
+		return builder.start();
 	}
 
 	private void tagQueries(QueryExecutionInfo executionInfo, Span span) {

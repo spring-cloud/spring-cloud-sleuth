@@ -203,6 +203,15 @@ public interface Span extends SpanCustomizer {
 		Builder remoteServiceName(String remoteServiceName);
 
 		/**
+		 * Sets the remote URL for the span.
+		 * @param remoteUrl remote service name
+		 * @return this
+		 */
+		default Builder remoteUrl(String remoteUrl) {
+			return this;
+		}
+
+		/**
 		 * Builds and starts the span.
 		 * @return started span
 		 */
