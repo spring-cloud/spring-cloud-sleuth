@@ -626,3 +626,11 @@ This feature is available for all tracer implementations.
 
 If you have Spring Tx on the classpath we will instrument the `PlatformTransactionManager` and the `ReactiveTransactionManager` to create a span whenever a new transaction is created.
 In order to disable this instrumentation set `spring.sleuth.tx.enabled` to `false`.
+
+[[sleuth-r2dbc-integration]]
+== R2DBC
+
+This feature is available for all tracer implementations.
+
+If you have R2DBC Proxy on the classpath we will instrument the `ConnectionFactory`so that it contains a custom `ProxyExecutionListener`.
+In order to disable this instrumentation set `spring.sleuth.r2dbc.enabled` to `false`.

@@ -53,6 +53,13 @@ public class SimpleTracer implements Tracer {
 		return span;
 	}
 
+	public SimpleSpan getLastSpan() {
+		BDDAssertions.then(this.spans).isNotEmpty();
+		SimpleSpan span = this.spans.get(this.spans.size() - 1);
+		BDDAssertions.then(span.started).as("Span must be started").isTrue();
+		return span;
+	}
+
 	@Override
 	public SpanInScope withSpan(Span span) {
 		return new NoOpSpanInScope();
@@ -65,7 +72,10 @@ public class SimpleTracer implements Tracer {
 
 	@Override
 	public Span currentSpan() {
-		return new SimpleSpan();
+		if (this.spans.isEmpty()) {
+			return null;
+		}
+		return this.spans.get(spans.size() - 1);
 	}
 
 	@Override
@@ -82,7 +92,7 @@ public class SimpleTracer implements Tracer {
 
 	@Override
 	public Span.Builder spanBuilder() {
-		return null;
+		return new SimpleSpanBuilder();
 	}
 
 	@Override

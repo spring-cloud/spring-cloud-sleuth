@@ -172,6 +172,12 @@
       "type": "java.lang.Boolean",
       "description": "Enable Spring Batch instrumentation.",
       "defaultValue": true
+    },
+    {
+      "name": "spring.sleuth.r2dbc.enabled",
+      "type": "java.lang.Boolean",
+      "description": "Enable R2dbc instrumentation.",
+      "defaultValue": true
     }
   ]
 }
