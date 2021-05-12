@@ -62,8 +62,10 @@ public abstract class R2dbcIntegrationTests {
 		then(spanIds).as("There are 11 spans").hasSize(11);
 		List<String> spanNames = this.spans.reportedSpans().stream().map(FinishedSpan::getName)
 				.collect(Collectors.toList());
-		then(spanNames.stream().filter(s -> s.equalsIgnoreCase("tx")).collect(Collectors.toList())).hasSize(2);
-		then(spanNames.stream().filter(s -> s.equalsIgnoreCase("h2")).collect(Collectors.toList())).hasSize(9);
+		List<String> remoteServiceNames = this.spans.reportedSpans().stream().map(FinishedSpan::getRemoteServiceName)
+				.collect(Collectors.toList());
+		then(spanNames.stream().filter("tx"::equalsIgnoreCase).collect(Collectors.toList())).hasSize(2);
+		then(remoteServiceNames.stream().filter("h2"::equalsIgnoreCase).collect(Collectors.toList())).hasSize(9);
 	}
 
 	@Configuration(proxyBeanMethods = false)

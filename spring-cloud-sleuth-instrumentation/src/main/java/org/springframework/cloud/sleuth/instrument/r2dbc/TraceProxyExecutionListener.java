@@ -63,7 +63,7 @@ public class TraceProxyExecutionListener implements ProxyExecutionListener {
 	}
 
 	Span clientSpan(QueryExecutionInfo executionInfo, String name) {
-		return tracer().spanBuilder().kind(Span.Kind.CLIENT).name(name).remoteServiceName(name)
+		return tracer().spanBuilder().kind(Span.Kind.CLIENT).name("query").remoteServiceName(name)
 				.tag("rd2bc.connection", name).tag("rd2bc.thread", executionInfo.getThreadName()).start();
 	}
 

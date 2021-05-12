@@ -74,8 +74,8 @@ public class MultipleHopsIntegrationTests
 	}
 
 	@Configuration(proxyBeanMethods = false)
-	@EnableAutoConfiguration(
-			exclude = { MongoAutoConfiguration.class, QuartzAutoConfiguration.class, JmxAutoConfiguration.class, R2dbcAutoConfiguration.class, R2dbcDataAutoConfiguration.class })
+	@EnableAutoConfiguration(exclude = { MongoAutoConfiguration.class, QuartzAutoConfiguration.class,
+			JmxAutoConfiguration.class, R2dbcAutoConfiguration.class, R2dbcDataAutoConfiguration.class })
 	static class Config {
 
 		@Bean
