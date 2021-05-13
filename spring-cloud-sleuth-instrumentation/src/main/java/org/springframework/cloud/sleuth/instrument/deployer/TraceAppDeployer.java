@@ -37,6 +37,8 @@ import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.instrument.reactor.ReactorSleuth;
 import org.springframework.core.env.Environment;
+import org.springframework.lang.Nullable;
+import org.springframework.util.StringUtils;
 
 /**
  * Trace representation of an {@link AppDeployer}.
@@ -68,9 +70,8 @@ public class TraceAppDeployer implements AppDeployer {
 
 	@Override
 	public String deploy(AppDeploymentRequest request) {
-		Span.Builder spanBuilder = clientSpan("deploy");
+		Span.Builder spanBuilder = clientSpan("deploy", request);
 		Span span = spanBuilder.start();
-		// Span span = tracer().nextSpan().name("deploy");
 		try (Tracer.SpanInScope spanInScope = tracer().withSpan(span)) {
 			span.event("deployer.start");
 			String id = this.delegate.deploy(request);
@@ -81,12 +82,11 @@ public class TraceAppDeployer implements AppDeployer {
 	}
 
 	private Span.Builder clientSpan(String name) {
-		Span.Builder spanBuilder = tracer().spanBuilder();
-		Span currentSpan = tracer().currentSpan();
-		if (currentSpan != null) {
-			spanBuilder.setParent(currentSpan.context());
-		}
-		return clientSpanKind(name, spanBuilder);
+		return clientSpan(name, null, null);
+	}
+
+	private Span.Builder clientSpan(String name, @Nullable AppDeploymentRequest request) {
+		return clientSpan(name, null, request);
 	}
 
 	private Span.Builder clientSpanKind(String name, Span.Builder spanBuilder) {
@@ -94,12 +94,30 @@ public class TraceAppDeployer implements AppDeployer {
 	}
 
 	private Span.Builder clientSpan(String name, Span parentSpan) {
+		return clientSpan(name, parentSpan, null);
+	}
+
+	private Span.Builder clientSpan(String name, @Nullable Span parentSpan, @Nullable AppDeploymentRequest request) {
 		Span.Builder spanBuilder = tracer().spanBuilder();
 		Span currentSpan = parentSpan != null ? parentSpan : tracer().currentSpan();
 		if (currentSpan != null) {
 			spanBuilder.setParent(currentSpan.context());
 		}
 		Map<String, String> platformSpecificInfo = environmentInfo().getPlatformSpecificInfo();
+		if (request != null) {
+			String platformName = request.getDeploymentProperties().get("spring.cloud.deployer.platformName");
+			if (StringUtils.hasText(platformName)) {
+				spanBuilder.tag("deployer.platform.name", platformName);
+			}
+			String appName = request.getDeploymentProperties().get("spring.cloud.deployer.appName");
+			if (StringUtils.hasText(appName)) {
+				spanBuilder.tag("deployer.app.name", appName);
+			}
+			String group = request.getDeploymentProperties().get("spring.cloud.deployer.group");
+			if (StringUtils.hasText(group)) {
+				spanBuilder.tag("deployer.app.name", group);
+			}
+		}
 		addCfTags(spanBuilder, platformSpecificInfo);
 		addK8sTags(spanBuilder, platformSpecificInfo);
 		return clientSpanKind(name, spanBuilder);

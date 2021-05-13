@@ -29,6 +29,7 @@ import org.reactivestreams.Publisher;
 
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.support.StaticListableBeanFactory;
+import org.springframework.boot.autoconfigure.r2dbc.R2dbcProperties;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.tracer.SimpleSpan;
 import org.springframework.cloud.sleuth.tracer.SimpleTracer;
@@ -135,6 +136,7 @@ class TraceProxyExecutionListenerTests {
 	private BeanFactory beanFactory() {
 		StaticListableBeanFactory beanFactory = new StaticListableBeanFactory();
 		beanFactory.addBean("tracer", this.simpleTracer);
+		beanFactory.addBean("r2dbcProperties", new R2dbcProperties());
 		return beanFactory;
 	}
 
