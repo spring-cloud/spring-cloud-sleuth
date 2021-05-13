@@ -92,7 +92,7 @@ public class SimpleTracer implements Tracer {
 
 	@Override
 	public Span.Builder spanBuilder() {
-		return new SimpleSpanBuilder();
+		return new SimpleSpanBuilder(this);
 	}
 
 	@Override

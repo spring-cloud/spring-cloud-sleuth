@@ -44,6 +44,12 @@ class SimpleSpanBuilder implements Span.Builder {
 
 	String name;
 
+	SimpleTracer simpleTracer;
+
+	public SimpleSpanBuilder(SimpleTracer simpleTracer) {
+		this.simpleTracer = simpleTracer;
+	}
+
 	@Override
 	public Span.Builder setParent(TraceContext context) {
 		return this;
@@ -99,6 +105,8 @@ class SimpleSpanBuilder implements Span.Builder {
 		span.error(this.error);
 		span.spanKind = this.spanKind;
 		span.name(this.name);
+		span.start();
+		simpleTracer.spans.add(span);
 		return span;
 	}
 

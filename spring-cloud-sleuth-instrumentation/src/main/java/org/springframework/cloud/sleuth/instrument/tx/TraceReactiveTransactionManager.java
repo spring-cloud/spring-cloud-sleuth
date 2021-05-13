@@ -71,23 +71,21 @@ public class TraceReactiveTransactionManager implements ReactiveTransactionManag
 	@Override
 	public Mono<ReactiveTransaction> getReactiveTransaction(TransactionDefinition definition)
 			throws TransactionException {
-		return Mono.deferContextual(contextView -> {
-			return this.delegate.getReactiveTransaction(definition).map(tx -> {
-				Span span = span(contextView);
-				if (tx.isNewTransaction() || span == null) {
-					if (span == null) {
-						span = tracer().nextSpan().name("tx").start();
-					}
-					else {
-						span = tracer().nextSpan(span).name("tx").start();
-					}
-					TracePlatformTransactionManagerTags.tag(span, definition, this.delegate.getClass());
+		return Mono.deferContextual(contextView -> this.delegate.getReactiveTransaction(definition).map(tx -> {
+			Span span = span(contextView);
+			if (tx.isNewTransaction() || span == null) {
+				if (span == null) {
+					span = tracer().nextSpan().name("tx").start();
 				}
-				Tracer.SpanInScope withSpan = tracer().withSpan(span);
-				SpanAndScope spanAndScope = new SpanAndScope(span, withSpan);
-				return new TraceReactiveTransaction(tx, spanAndScope);
-			});
-		});
+				else {
+					span = tracer().nextSpan(span).name("tx").start();
+				}
+				TracePlatformTransactionManagerTags.tag(span, definition, this.delegate.getClass());
+			}
+			Tracer.SpanInScope withSpan = tracer().withSpan(span);
+			SpanAndScope spanAndScope = new SpanAndScope(span, withSpan);
+			return new TraceReactiveTransaction(tx, spanAndScope);
+		}));
 	}
 
 	private Span span(reactor.util.context.ContextView contextView) {

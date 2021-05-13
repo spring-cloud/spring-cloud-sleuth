@@ -90,7 +90,9 @@ public class TracePlatformTransactionManager implements PlatformTransactionManag
 
 	private Span taggedSpan(Span currentSpan, Span span, TransactionDefinition def, TransactionStatus status) {
 		if (status.isNewTransaction() || currentSpan == null) {
-			log.info("Creating new span cause a new transaction is started");
+			if (log.isDebugEnabled()) {
+				log.debug("Creating new span cause a new transaction is started");
+			}
 			TracePlatformTransactionManagerTags.tag(span, def, this.delegate.getClass());
 		}
 		else {
@@ -124,7 +126,7 @@ public class TracePlatformTransactionManager implements PlatformTransactionManag
 			throw e;
 		}
 		finally {
-			span.event("tx commit");
+			span.event("tx.commit");
 			span.end();
 			if (ex == null) {
 				if (log.isDebugEnabled()) {
@@ -157,7 +159,7 @@ public class TracePlatformTransactionManager implements PlatformTransactionManag
 			throw e;
 		}
 		finally {
-			span.event("tx rollback");
+			span.event("tx.rollback");
 			span.end();
 			this.threadLocalSpan.remove();
 		}
