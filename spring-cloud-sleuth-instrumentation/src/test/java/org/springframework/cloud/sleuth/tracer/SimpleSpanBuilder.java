@@ -30,21 +30,21 @@ import org.springframework.cloud.sleuth.TraceContext;
  * @author Marcin Grzejszczak
  * @since 3.0.0
  */
-class SimpleSpanBuilder implements Span.Builder {
+public class SimpleSpanBuilder implements Span.Builder {
 
-	List<String> events = new ArrayList<>();
+	public List<String> events = new ArrayList<>();
 
-	Map<String, String> tags = new HashMap<>();
+	public Map<String, String> tags = new HashMap<>();
 
-	Throwable error;
+	public Throwable error;
 
-	Span.Kind spanKind;
+	public Span.Kind spanKind;
 
-	String remoteServiceName;
+	public String remoteServiceName;
 
-	String name;
+	public String name;
 
-	SimpleTracer simpleTracer;
+	public SimpleTracer simpleTracer;
 
 	public SimpleSpanBuilder(SimpleTracer simpleTracer) {
 		this.simpleTracer = simpleTracer;
