@@ -110,7 +110,7 @@ public class TraceReactiveTransactionManager implements ReactiveTransactionManag
 	}
 
 	private Span spanFromContext(TraceContext traceContext) {
-		try (CurrentTraceContext.Scope scope = currentTraceContext.maybeScope(traceContext)) {
+		try (CurrentTraceContext.Scope scope = currentTraceContext().maybeScope(traceContext)) {
 			return tracer().currentSpan();
 		}
 	}

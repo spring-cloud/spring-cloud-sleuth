@@ -30,78 +30,76 @@ import org.springframework.cloud.sleuth.TraceContext;
  * @author Marcin Grzejszczak
  * @since 3.0.0
  */
-public class SimpleSpan implements Span {
+class SimpleSpanBuilder implements Span.Builder {
 
-	public Map<String, String> tags = new HashMap<>();
+	List<String> events = new ArrayList<>();
 
-	public boolean started;
+	Map<String, String> tags = new HashMap<>();
 
-	public boolean ended;
+	Throwable error;
 
-	public Throwable throwable;
+	Span.Kind spanKind;
 
-	public String remoteServiceName;
+	String remoteServiceName;
 
-	public Span.Kind spanKind;
-
-	public List<String> events = new ArrayList<>();
-
-	public String name;
+	String name;
 
 	@Override
-	public boolean isNoop() {
-		return true;
-	}
-
-	@Override
-	public TraceContext context() {
-		return new NoOpTraceContext();
-	}
-
-	@Override
-	public SimpleSpan start() {
-		this.started = true;
+	public Span.Builder setParent(TraceContext context) {
 		return this;
 	}
 
 	@Override
-	public SimpleSpan name(String name) {
+	public Span.Builder setNoParent() {
+		return this;
+	}
+
+	@Override
+	public Span.Builder name(String name) {
 		this.name = name;
 		return this;
 	}
 
 	@Override
-	public SimpleSpan event(String value) {
+	public Span.Builder event(String value) {
 		this.events.add(value);
 		return this;
 	}
 
 	@Override
-	public SimpleSpan tag(String key, String value) {
+	public Span.Builder tag(String key, String value) {
 		this.tags.put(key, value);
 		return this;
 	}
 
 	@Override
-	public SimpleSpan error(Throwable throwable) {
-		this.throwable = throwable;
+	public Span.Builder error(Throwable throwable) {
+		this.error = throwable;
 		return this;
 	}
 
 	@Override
-	public void end() {
-		this.ended = true;
+	public Span.Builder kind(Span.Kind spanKind) {
+		this.spanKind = spanKind;
+		return this;
 	}
 
 	@Override
-	public void abandon() {
-
-	}
-
-	@Override
-	public Span remoteServiceName(String remoteServiceName) {
+	public Span.Builder remoteServiceName(String remoteServiceName) {
 		this.remoteServiceName = remoteServiceName;
 		return this;
+	}
+
+	@Override
+	public Span start() {
+		SimpleSpan span = new SimpleSpan();
+		this.tags.forEach(span::tag);
+		this.events.forEach(span::event);
+		span.remoteServiceName(this.remoteServiceName);
+		span.error(this.error);
+		span.spanKind = this.spanKind;
+		span.name(this.name);
+		return span;
 	}
 
 }
