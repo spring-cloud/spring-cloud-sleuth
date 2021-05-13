@@ -22,6 +22,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.assertj.core.api.BDDAssertions;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.BDDMockito;
 import reactor.core.publisher.Flux;
@@ -34,6 +35,7 @@ import org.springframework.cloud.deployer.spi.app.AppScaleRequest;
 import org.springframework.cloud.deployer.spi.app.AppStatus;
 import org.springframework.cloud.deployer.spi.core.AppDefinition;
 import org.springframework.cloud.deployer.spi.core.AppDeploymentRequest;
+import org.springframework.cloud.deployer.spi.core.RuntimeEnvironmentInfo;
 import org.springframework.cloud.sleuth.tracer.NoOpCurrentTraceContext;
 import org.springframework.cloud.sleuth.tracer.SimpleTracer;
 import org.springframework.core.env.Environment;
@@ -47,6 +49,14 @@ class TraceAppDeployerTests {
 	AppDeployer delegate = BDDMockito.mock(AppDeployer.class);
 
 	TraceAppDeployer traceAppDeployer = new TraceAppDeployer(this.delegate, beanFactory(), environment());
+
+	@BeforeEach
+	void setup() {
+		BDDMockito.given(this.delegate.environmentInfo())
+				.willReturn(new RuntimeEnvironmentInfo.Builder().spiClass(Object.class).implementationName("asd")
+						.implementationVersion("asd").platformType("asd").platformApiVersion("asd")
+						.platformClientVersion("asd").platformHostVersion("asd").build());
+	}
 
 	@Test
 	void should_trace_deploy() {

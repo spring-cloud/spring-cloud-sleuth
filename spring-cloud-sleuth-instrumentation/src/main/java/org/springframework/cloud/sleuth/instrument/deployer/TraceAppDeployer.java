@@ -18,6 +18,7 @@ package org.springframework.cloud.sleuth.instrument.deployer;
 
 import java.time.Duration;
 import java.util.Arrays;
+import java.util.Map;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -67,22 +68,66 @@ public class TraceAppDeployer implements AppDeployer {
 
 	@Override
 	public String deploy(AppDeploymentRequest request) {
-		Span span = tracer().nextSpan().name("deploy");
-		// TODO: Is this secure to pass?
-		// TODO: Does it make sense?
-		// if (!request.getCommandlineArguments().isEmpty()) {
-		// span.tag("commandlineArguments", request.getCommandlineArguments().toString());
-		// }
-		// if (!request.getDeploymentProperties().isEmpty()) {
-		// span.tag("deploymentProperties", request.getDeploymentProperties().toString());
-		// }
-		try (Tracer.SpanInScope spanInScope = tracer().withSpan(span.start())) {
-			span.event("start");
+		Span.Builder spanBuilder = clientSpan("deploy");
+		Span span = spanBuilder.start();
+		// Span span = tracer().nextSpan().name("deploy");
+		try (Tracer.SpanInScope spanInScope = tracer().withSpan(span)) {
+			span.event("deployer.start");
 			String id = this.delegate.deploy(request);
 			span.tag("deployer.app.id", id);
 			registerListener(span, id);
 			return id;
 		}
+	}
+
+	private Span.Builder clientSpan(String name) {
+		Span.Builder spanBuilder = tracer().spanBuilder();
+		Span currentSpan = tracer().currentSpan();
+		if (currentSpan != null) {
+			spanBuilder.setParent(currentSpan.context());
+		}
+		return clientSpanKind(name, spanBuilder);
+	}
+
+	private Span.Builder clientSpanKind(String name, Span.Builder spanBuilder) {
+		return spanBuilder.kind(Span.Kind.CLIENT).name(name).remoteServiceName(remoteServiceName());
+	}
+
+	private Span.Builder clientSpan(String name, Span parentSpan) {
+		Span.Builder spanBuilder = tracer().spanBuilder();
+		Span currentSpan = parentSpan != null ? parentSpan : tracer().currentSpan();
+		if (currentSpan != null) {
+			spanBuilder.setParent(currentSpan.context());
+		}
+		Map<String, String> platformSpecificInfo = environmentInfo().getPlatformSpecificInfo();
+		addCfTags(spanBuilder, platformSpecificInfo);
+		addK8sTags(spanBuilder, platformSpecificInfo);
+		return clientSpanKind(name, spanBuilder);
+	}
+
+	private void addCfTags(Span.Builder spanBuilder, Map<String, String> platformSpecificInfo) {
+		if (platformSpecificInfo.containsKey("API Endpoint")) {
+			spanBuilder.tag("deployer.platform.cf.url", platformSpecificInfo.get("API Endpoint"));
+		}
+		if (platformSpecificInfo.containsKey("Organization")) {
+			spanBuilder.tag("deployer.platform.cf.org", platformSpecificInfo.get("Organization"));
+		}
+		if (platformSpecificInfo.containsKey("Space")) {
+			spanBuilder.tag("deployer.platform.cf.space", platformSpecificInfo.get("Space"));
+		}
+	}
+
+	private void addK8sTags(Span.Builder spanBuilder, Map<String, String> platformSpecificInfo) {
+		if (platformSpecificInfo.containsKey("master-url")) {
+			spanBuilder.tag("deployer.platform.k8s.url", platformSpecificInfo.get("master-url"));
+		}
+		if (platformSpecificInfo.containsKey("namespace")) {
+			spanBuilder.tag("deployer.platform.k8s.namespace", platformSpecificInfo.get("namespace"));
+		}
+	}
+
+	private String remoteServiceName() {
+		return environmentInfo().getPlatformType();
 	}
 
 	private void registerListener(Span span, String id) {
@@ -102,10 +147,11 @@ public class TraceAppDeployer implements AppDeployer {
 
 	@Override
 	public void undeploy(String id) {
-		Span span = tracer().nextSpan().name("undeploy");
+		Span.Builder spanBuilder = clientSpan("undeploy");
+		Span span = spanBuilder.start();
 		span.tag("deployer.app.id", id);
-		try (Tracer.SpanInScope spanInScope = tracer().withSpan(span.start())) {
-			span.event("start");
+		try (Tracer.SpanInScope spanInScope = tracer().withSpan(span)) {
+			span.event("deployer.start");
 			this.delegate.undeploy(id);
 			registerListener(span, id);
 		}
@@ -116,7 +162,8 @@ public class TraceAppDeployer implements AppDeployer {
 
 	@Override
 	public AppStatus status(String id) {
-		Span span = tracer().nextSpan().name("status");
+		Span.Builder spanBuilder = clientSpan("status");
+		Span span = spanBuilder.start();
 		span.tag("deployer.app.id", id);
 		try (Tracer.SpanInScope spanInScope = tracer().withSpan(span.start())) {
 			return this.delegate.status(id);
@@ -129,14 +176,16 @@ public class TraceAppDeployer implements AppDeployer {
 	@Override
 	public Mono<AppStatus> statusReactive(String id) {
 		return ReactorSleuth.tracedMono(tracer(), currentTraceContext(), "status",
-				() -> this.delegate.statusReactive(id), (o, span) -> span.tag("deployer.app.id", id));
+				() -> this.delegate.statusReactive(id), (o, span) -> span.tag("deployer.app.id", id),
+				span -> clientSpan("status", span).start());
 	}
 
 	@Override
 	public Flux<AppStatus> statusesReactive(String... ids) {
 		return ReactorSleuth.tracedFlux(tracer(), currentTraceContext(), "statuses",
 				() -> this.delegate.statusesReactive(ids),
-				(o, span) -> span.tag("deployer.app.ids", Arrays.toString(ids)));
+				(o, span) -> span.tag("deployer.app.ids", Arrays.toString(ids)),
+				span -> clientSpan("statuses", span).start());
 	}
 
 	@Override
@@ -146,9 +195,10 @@ public class TraceAppDeployer implements AppDeployer {
 
 	@Override
 	public String getLog(String id) {
-		Span span = tracer().nextSpan().name("getLog");
+		Span.Builder spanBuilder = clientSpan("getLog");
+		Span span = spanBuilder.start();
 		span.tag("deployer.app.id", id);
-		try (Tracer.SpanInScope spanInScope = tracer().withSpan(span.start())) {
+		try (Tracer.SpanInScope spanInScope = tracer().withSpan(span)) {
 			return this.delegate.getLog(id);
 		}
 		finally {
@@ -158,15 +208,10 @@ public class TraceAppDeployer implements AppDeployer {
 
 	@Override
 	public void scale(AppScaleRequest appScaleRequest) {
-		Span span = tracer().nextSpan().name("scale");
+		Span.Builder spanBuilder = clientSpan("scale");
+		Span span = spanBuilder.start();
 		span.tag("deployer.scale.deploymentId", appScaleRequest.getDeploymentId());
 		span.tag("deployer.scale.count", String.valueOf(appScaleRequest.getCount()));
-		// TODO: Is this secure to pass?
-		// TODO: Does it make sense?
-		// if (appScaleRequest.getProperties().isPresent() &&
-		// !appScaleRequest.getProperties().get().isEmpty()) {
-		// span.tag("properties", appScaleRequest.getProperties().get().toString());
-		// }
 		try (Tracer.SpanInScope spanInScope = tracer().withSpan(span.start())) {
 			this.delegate.scale(appScaleRequest);
 		}

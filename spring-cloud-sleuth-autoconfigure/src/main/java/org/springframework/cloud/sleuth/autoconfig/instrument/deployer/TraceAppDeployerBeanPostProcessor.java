@@ -14,11 +14,12 @@
  * limitations under the License.
  */
 
-package org.springframework.cloud.sleuth.instrument.deployer;
+package org.springframework.cloud.sleuth.autoconfig.instrument.deployer;
 
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.config.BeanPostProcessor;
 import org.springframework.cloud.deployer.spi.app.AppDeployer;
+import org.springframework.cloud.sleuth.instrument.deployer.TraceAppDeployer;
 import org.springframework.core.env.Environment;
 
 /**
