@@ -16,9 +16,8 @@
 
 package org.springframework.cloud.sleuth.instrument.messaging;
 
-import java.util.Iterator;
-import java.util.Map;
 import java.util.NoSuchElementException;
+import java.util.Set;
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.function.Function;
 
@@ -27,8 +26,6 @@ import org.springframework.beans.BeansException;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.propagation.Propagator;
-import org.springframework.cloud.stream.binder.BinderType;
-import org.springframework.cloud.stream.binder.BinderTypeRegistry;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.core.log.LogAccessor;
@@ -51,6 +48,7 @@ import org.springframework.util.StringUtils;
  * a handler later calls {@link MessageHandler#handleMessage(Message)}.
  *
  * @author Marcin Grzejszczak
+ * @author Artem Bilan
  * @since 3.0.0
  */
 public final class TracingChannelInterceptor implements ExecutorChannelInterceptor, ApplicationContextAware {
@@ -83,14 +81,6 @@ public final class TracingChannelInterceptor implements ExecutorChannelIntercept
 	 */
 	private static final String REMOTE_SERVICE_NAME = "broker";
 
-	final Tracer tracer;
-
-	final Propagator.Setter<MessageHeaderAccessor> injector;
-
-	final Propagator.Getter<MessageHeaderAccessor> extractor;
-
-	final MessageSpanCustomizer messageSpanCustomizer;
-
 	private static final boolean hasDirectChannelClass =
 			ClassUtils.isPresent("org.springframework.integration.channel.DirectChannel", null);
 
@@ -103,13 +93,21 @@ public final class TracingChannelInterceptor implements ExecutorChannelIntercept
 					? ClassUtils.resolveClassName(STREAM_DIRECT_CHANNEL, null)
 					: null;
 
-	private ApplicationContext applicationContext;
+	private final ThreadLocalSpan threadLocalSpan = new ThreadLocalSpan();
+
+	private final Tracer tracer;
+
+	private final Propagator.Setter<MessageHeaderAccessor> injector;
+
+	private final Propagator.Getter<MessageHeaderAccessor> extractor;
+
+	private final MessageSpanCustomizer messageSpanCustomizer;
 
 	private final Propagator propagator;
 
-	private final ThreadLocalSpan threadLocalSpan = new ThreadLocalSpan();
-
 	private final Function<String, String> remoteServiceNameMapper;
+
+	private ApplicationContext applicationContext;
 
 	public TracingChannelInterceptor(Tracer tracer, Propagator propagator,
 			Propagator.Setter<MessageHeaderAccessor> setter, Propagator.Getter<MessageHeaderAccessor> getter,
@@ -133,17 +131,15 @@ public final class TracingChannelInterceptor implements ExecutorChannelIntercept
 	 */
 	@Override
 	public Message<?> preSend(Message<?> message, MessageChannel channel) {
-		if (emptyMessage(message)) {
-			return message;
-		}
 		Message<?> retrievedMessage = getMessage(message);
 		log.debug(() -> "Received a message in pre-send " + retrievedMessage);
 		MessageHeaderAccessor headers = mutableHeaderAccessor(retrievedMessage);
 		Span.Builder spanBuilder = this.propagator.extract(headers, this.extractor);
 		MessageHeaderPropagatorSetter.removeAnyTraceHeaders(headers, this.propagator.fields());
 		spanBuilder = spanBuilder.kind(Span.Kind.PRODUCER);
-		spanBuilder = this.messageSpanCustomizer.customizeSend(spanBuilder, message, channel)
-				.remoteServiceName(toRemoteServiceName(headers));
+		spanBuilder =
+				this.messageSpanCustomizer.customizeSend(spanBuilder, message, channel)
+						.remoteServiceName(toRemoteServiceName(headers, remoteServiceNameMapper, applicationContext));
 		Span span = spanBuilder.start();
 		log.debug(() -> "Extracted result from headers " + span);
 		setSpanInScope(span);
@@ -162,19 +158,22 @@ public final class TracingChannelInterceptor implements ExecutorChannelIntercept
 		log.debug(() -> "Put span in scope " + span);
 	}
 
-	private String toRemoteServiceName(MessageHeaderAccessor headers) {
+	private static String toRemoteServiceName(MessageHeaderAccessor headers,
+			Function<String, String> remoteServiceNameMapper, ApplicationContext applicationContext) {
+
 		for (String key : headers.getMessageHeaders().keySet()) {
-			String remoteServiceName = this.remoteServiceNameMapper.apply(key);
+			String remoteServiceName = remoteServiceNameMapper.apply(key);
 			if (StringUtils.hasText(remoteServiceName)) {
 				return remoteServiceName;
 			}
 		}
-		if (hasBinderTypeRegistry && this.applicationContext != null) {
-			BinderTypeRegistry typeRegistry = this.applicationContext.getBean(BinderTypeRegistry.class);
-			Iterator<Map.Entry<String, BinderType>> iterator = typeRegistry.getAll().entrySet().iterator();
-			if (iterator.hasNext()) {
-				String binderName = iterator.next().getKey();
-				String remoteServiceName = this.remoteServiceNameMapper.apply(binderName);
+
+		if (hasBinderTypeRegistry && applicationContext != null) {
+			org.springframework.cloud.stream.binder.BinderTypeRegistry typeRegistry =
+					applicationContext.getBean(org.springframework.cloud.stream.binder.BinderTypeRegistry.class);
+			Set<String> binderNames = typeRegistry.getAll().keySet();
+			for (String binderName : binderNames) {
+				String remoteServiceName = remoteServiceNameMapper.apply(binderName);
 				if (StringUtils.hasText(remoteServiceName)) {
 					return remoteServiceName;
 				}
@@ -212,9 +211,6 @@ public final class TracingChannelInterceptor implements ExecutorChannelIntercept
 
 	@Override
 	public void afterSendCompletion(Message<?> message, MessageChannel channel, boolean sent, Exception ex) {
-		if (emptyMessage(message)) {
-			return;
-		}
 		if (isDirectChannel(channel)) {
 			afterMessageHandled(message, channel, null, ex);
 		}
@@ -228,15 +224,11 @@ public final class TracingChannelInterceptor implements ExecutorChannelIntercept
 	 */
 	@Override
 	public Message<?> postReceive(Message<?> message, MessageChannel channel) {
-		if (emptyMessage(message)) {
-			return message;
-		}
 		MessageHeaderAccessor headers = mutableHeaderAccessor(message);
 		log.debug(() -> "Received a message in post-receive " + message);
 		Span result = this.propagator.extract(headers, this.extractor).start();
 		log.debug(() -> "Extracted result from headers " + result);
 		Span span = consumerSpanReceive(message, channel, headers, result);
-		setSpanInScope(span);
 		log.debug(() -> "Created a new span that will be injected in the headers " + span);
 		this.propagator.inject(span.context(), headers, this.injector);
 		log.debug(() -> "Created a new span in post receive " + span);
@@ -255,17 +247,8 @@ public final class TracingChannelInterceptor implements ExecutorChannelIntercept
 		MessageHeaderPropagatorSetter.removeAnyTraceHeaders(headers, this.propagator.fields());
 		builder = builder.kind(Span.Kind.CONSUMER);
 		builder = this.messageSpanCustomizer.customizeReceive(builder, message, channel);
-		builder = builder.remoteServiceName(toRemoteServiceName(headers));
+		builder = builder.remoteServiceName(toRemoteServiceName(headers, remoteServiceNameMapper, applicationContext));
 		return builder.start();
-	}
-
-	@Override
-	public void afterReceiveCompletion(Message<?> message, MessageChannel channel, Exception ex) {
-		if (emptyMessage(message)) {
-			return;
-		}
-		log.debug(() -> "Will finish the current span after receive completion " + this.tracer.currentSpan());
-		finishSpan(ex);
 	}
 
 	/**
@@ -274,9 +257,6 @@ public final class TracingChannelInterceptor implements ExecutorChannelIntercept
 	 */
 	@Override
 	public Message<?> beforeHandle(Message<?> message, MessageChannel channel, MessageHandler handler) {
-		if (emptyMessage(message)) {
-			return message;
-		}
 		MessageHeaderAccessor headers = mutableHeaderAccessor(message);
 		log.debug(() -> "Received a message in before handle " + message);
 		Span consumerSpan = consumerSpan(message, channel, headers);
@@ -317,9 +297,6 @@ public final class TracingChannelInterceptor implements ExecutorChannelIntercept
 
 	@Override
 	public void afterMessageHandled(Message<?> message, MessageChannel channel, MessageHandler handler, Exception ex) {
-		if (emptyMessage(message)) {
-			return;
-		}
 		log.debug(() -> "Will finish the current span after message handled " + this.tracer.currentSpan());
 		finishSpan(ex);
 	}
@@ -355,7 +332,7 @@ public final class TracingChannelInterceptor implements ExecutorChannelIntercept
 		return span;
 	}
 
-	private MessageHeaderAccessor mutableHeaderAccessor(Message<?> message) {
+	private static MessageHeaderAccessor mutableHeaderAccessor(Message<?> message) {
 		MessageHeaderAccessor accessor = MessageHeaderAccessor.getAccessor(message, MessageHeaderAccessor.class);
 		if (accessor != null && accessor.isMutable()) {
 			return accessor;
@@ -365,7 +342,7 @@ public final class TracingChannelInterceptor implements ExecutorChannelIntercept
 		return headers;
 	}
 
-	private Message<?> getMessage(Message<?> message) {
+	private static Message<?> getMessage(Message<?> message) {
 		Object payload = message.getPayload();
 		if (payload instanceof MessagingException) {
 			MessagingException e = (MessagingException) payload;
@@ -373,10 +350,6 @@ public final class TracingChannelInterceptor implements ExecutorChannelIntercept
 			return failedMessage != null ? failedMessage : message;
 		}
 		return message;
-	}
-
-	private boolean emptyMessage(Message<?> message) {
-		return message == null;
 	}
 
 	private static class SpanAndScope {
