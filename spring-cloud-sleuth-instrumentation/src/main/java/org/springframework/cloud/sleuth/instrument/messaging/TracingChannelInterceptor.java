@@ -56,8 +56,7 @@ public final class TracingChannelInterceptor implements ExecutorChannelIntercept
 	/**
 	 * Name of the class in Spring Cloud Stream that is a direct channel.
 	 */
-	public static final String STREAM_DIRECT_CHANNEL =
-			"org.springframework.cloud.stream.messaging.DirectWithAttributesChannel";
+	public static final String STREAM_DIRECT_CHANNEL = "org.springframework.cloud.stream.messaging.DirectWithAttributesChannel";
 
 	private static final LogAccessor log = new LogAccessor(TracingChannelInterceptor.class);
 
@@ -81,17 +80,15 @@ public final class TracingChannelInterceptor implements ExecutorChannelIntercept
 	 */
 	private static final String REMOTE_SERVICE_NAME = "broker";
 
-	private static final boolean hasDirectChannelClass =
-			ClassUtils.isPresent("org.springframework.integration.channel.DirectChannel", null);
+	private static final boolean hasDirectChannelClass = ClassUtils
+			.isPresent("org.springframework.integration.channel.DirectChannel", null);
 
-	private static final boolean hasBinderTypeRegistry =
-			ClassUtils.isPresent("org.springframework.cloud.stream.binder.BinderTypeRegistry", null);
+	private static final boolean hasBinderTypeRegistry = ClassUtils
+			.isPresent("org.springframework.cloud.stream.binder.BinderTypeRegistry", null);
 
 	// special case of a Stream
-	private static final Class<?> directWithAttributesChannelClass =
-			ClassUtils.isPresent(STREAM_DIRECT_CHANNEL, null)
-					? ClassUtils.resolveClassName(STREAM_DIRECT_CHANNEL, null)
-					: null;
+	private static final Class<?> directWithAttributesChannelClass = ClassUtils.isPresent(STREAM_DIRECT_CHANNEL, null)
+			? ClassUtils.resolveClassName(STREAM_DIRECT_CHANNEL, null) : null;
 
 	private final ThreadLocalSpan threadLocalSpan = new ThreadLocalSpan();
 
@@ -137,9 +134,8 @@ public final class TracingChannelInterceptor implements ExecutorChannelIntercept
 		Span.Builder spanBuilder = this.propagator.extract(headers, this.extractor);
 		MessageHeaderPropagatorSetter.removeAnyTraceHeaders(headers, this.propagator.fields());
 		spanBuilder = spanBuilder.kind(Span.Kind.PRODUCER);
-		spanBuilder =
-				this.messageSpanCustomizer.customizeSend(spanBuilder, message, channel)
-						.remoteServiceName(toRemoteServiceName(headers, remoteServiceNameMapper, applicationContext));
+		spanBuilder = this.messageSpanCustomizer.customizeSend(spanBuilder, message, channel)
+				.remoteServiceName(toRemoteServiceName(headers, remoteServiceNameMapper, applicationContext));
 		Span span = spanBuilder.start();
 		log.debug(() -> "Extracted result from headers " + span);
 		setSpanInScope(span);
@@ -169,8 +165,8 @@ public final class TracingChannelInterceptor implements ExecutorChannelIntercept
 		}
 
 		if (hasBinderTypeRegistry && applicationContext != null) {
-			org.springframework.cloud.stream.binder.BinderTypeRegistry typeRegistry =
-					applicationContext.getBean(org.springframework.cloud.stream.binder.BinderTypeRegistry.class);
+			org.springframework.cloud.stream.binder.BinderTypeRegistry typeRegistry = applicationContext
+					.getBean(org.springframework.cloud.stream.binder.BinderTypeRegistry.class);
 			Set<String> binderNames = typeRegistry.getAll().keySet();
 			for (String binderName : binderNames) {
 				String remoteServiceName = remoteServiceNameMapper.apply(binderName);
@@ -204,8 +200,8 @@ public final class TracingChannelInterceptor implements ExecutorChannelIntercept
 
 	private static boolean isDirectChannel(MessageChannel channel) {
 		Class<?> targetClass = AopUtils.getTargetClass(channel);
-		return (directWithAttributesChannelClass == null ||
-				!directWithAttributesChannelClass.isAssignableFrom(targetClass)) && hasDirectChannelClass
+		return (directWithAttributesChannelClass == null
+				|| !directWithAttributesChannelClass.isAssignableFrom(targetClass)) && hasDirectChannelClass
 				&& org.springframework.integration.channel.DirectChannel.class.isAssignableFrom(targetClass);
 	}
 
@@ -229,6 +225,7 @@ public final class TracingChannelInterceptor implements ExecutorChannelIntercept
 		Span result = this.propagator.extract(headers, this.extractor).start();
 		log.debug(() -> "Extracted result from headers " + result);
 		Span span = consumerSpanReceive(message, channel, headers, result);
+		setSpanInScope(span);
 		log.debug(() -> "Created a new span that will be injected in the headers " + span);
 		this.propagator.inject(span.context(), headers, this.injector);
 		log.debug(() -> "Created a new span in post receive " + span);
@@ -249,6 +246,12 @@ public final class TracingChannelInterceptor implements ExecutorChannelIntercept
 		builder = this.messageSpanCustomizer.customizeReceive(builder, message, channel);
 		builder = builder.remoteServiceName(toRemoteServiceName(headers, remoteServiceNameMapper, applicationContext));
 		return builder.start();
+	}
+
+	@Override
+	public void afterReceiveCompletion(Message<?> message, MessageChannel channel, Exception ex) {
+		log.debug(() -> "Will finish the current span after receive completion " + this.tracer.currentSpan());
+		finishSpan(ex);
 	}
 
 	/**
