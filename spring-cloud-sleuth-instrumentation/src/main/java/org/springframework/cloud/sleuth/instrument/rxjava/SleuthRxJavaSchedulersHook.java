@@ -113,8 +113,6 @@ public class SleuthRxJavaSchedulersHook extends RxJavaSchedulersHook {
 	 */
 	static class TraceAction implements Action0 {
 
-		private static final String THREAD_NAME_KEY = "thread";
-
 		private final Action0 actual;
 
 		private final Tracer tracer;
@@ -149,8 +147,9 @@ public class SleuthRxJavaSchedulersHook extends RxJavaSchedulersHook {
 			Span span = this.parent;
 			boolean created = false;
 			if (span == null) {
-				span = this.tracer.nextSpan().name(RXJAVA_COMPONENT).start();
-				span.tag(THREAD_NAME_KEY, Thread.currentThread().getName());
+				span = SleuthRxJavaSpan.RX_JAVA_TRACE_ACTION_SPAN.wrap(this.tracer.nextSpan())
+						.name(SleuthRxJavaSpan.RX_JAVA_TRACE_ACTION_SPAN.getName())
+						.tag(SleuthRxJavaSpan.Tags.THREAD, Thread.currentThread().getName()).start();
 				created = true;
 			}
 			try (Tracer.SpanInScope ws = this.tracer.withSpan(span)) {

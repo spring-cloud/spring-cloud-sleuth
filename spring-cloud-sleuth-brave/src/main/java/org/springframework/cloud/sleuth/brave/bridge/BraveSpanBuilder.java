@@ -118,7 +118,8 @@ class BraveSpanBuilder implements Span.Builder {
 		try {
 			URI uri = URI.create(remoteUrl);
 			span().remoteIpAndPort(uri.getHost(), uri.getPort());
-		} catch (Exception e) {
+		}
+		catch (Exception e) {
 			if (log.isDebugEnabled()) {
 				log.debug("Failed to parse url [" + remoteUrl + "]. Will not set the value", e);
 			}

@@ -1,0 +1,142 @@
+=== ASYNC ANNOTATION SPAN
+
+> Span that wraps a @Async annotation. Either continues an existing one or creates a new one if there was no present one.
+
+**Span name** `%s` - since it contains `%s`, the name is dynamic and will be resolved at runtime.
+
+Fully qualified name of the enclosing class `org.springframework.cloud.sleuth.instrument.async.SleuthAsyncSpan`
+
+.Tag Keys
+|===
+|Name | Description
+|class|Class name where a method got annotated with @Async.
+|method|Method name that got annotated with @Async.
+|===
+
+=== FUNCTION SPAN
+
+> Span created when we wrap a  passed to the as fallback.
+
+**Span name** `%s` - since it contains `%s`, the name is dynamic and will be resolved at runtime.
+
+Fully qualified name of the enclosing class `org.springframework.cloud.sleuth.instrument.circuitbreaker.SleuthCircuitBreakerSpan`
+
+=== HANDLER INTERCEPTOR SPAN
+
+> Span around a HandlerInterceptor. Will continue the current span and tag it
+
+**Span name** `%s` - since it contains `%s`, the name is dynamic and will be resolved at runtime.
+
+Fully qualified name of the enclosing class `org.springframework.cloud.sleuth.instrument.web.mvc.SleuthMvcSpan`
+
+.Tag Keys
+|===
+|Name | Description
+|mvc.controller.class|Class name where a method got annotated with @Scheduled.
+|mvc.controller.method|Method name that got annotated with @Scheduled.
+|===
+
+=== MESSAGING SPAN
+
+> Span created when message is sent or received.
+
+**Span name** `%s` - since it contains `%s`, the name is dynamic and will be resolved at runtime.
+
+Fully qualified name of the enclosing class `org.springframework.cloud.sleuth.instrument.messaging.SleuthMessagingSpan`
+
+.Tag Keys
+|===
+|Name | Description
+|channel|Name of the Spring Integration channel.
+|===
+
+=== NEW OR CONTINUE ANNOTATION SPAN
+
+> Span that wraps a @NewSpan or @ContinueSpan annotations.
+
+**Span name** `%s` - since it contains `%s`, the name is dynamic and will be resolved at runtime.
+
+Fully qualified name of the enclosing class `org.springframework.cloud.sleuth.instrument.annotation.SleuthAnnotationSpan`
+
+.Tag Keys
+|===
+|Name | Description
+|class|Class name where a method got annotated with a Sleuth annotation.
+|method|Method name that got annotated with Sleuth annotation.
+|===
+
+.Event Values
+|===
+|Name | Description
+|%s.before|Annotated before executing a method annotated with @ContinueSpan or @NewSpan. (since the name contains `%s` the final value will be resolved at runtime)
+|%s.after|Annotated after executing a method annotated with @ContinueSpan or @NewSpan. (since the name contains `%s` the final value will be resolved at runtime)
+|%s.afterFailure|Annotated after throwing an exception from a method annotated with @ContinueSpan or @NewSpan. (since the name contains `%s` the final value will be resolved at runtime)
+|===
+
+=== SCHEDULED ANNOTATION SPAN
+
+> Span that wraps a  annotated method. Either creates a new span or continues an existing one.
+
+**Span name** `%s` - since it contains `%s`, the name is dynamic and will be resolved at runtime.
+
+Fully qualified name of the enclosing class `org.springframework.cloud.sleuth.instrument.scheduling.SleuthSchedulingSpan`
+
+.Tag Keys
+|===
+|Name | Description
+|class|Class name where a method got annotated with @Scheduled.
+|method|Method name that got annotated with @Scheduled.
+|===
+
+=== SUPPLIER SPAN
+
+> Span created when we wrap a  passed to the .
+
+**Span name** `%s` - since it contains `%s`, the name is dynamic and will be resolved at runtime.
+
+Fully qualified name of the enclosing class `org.springframework.cloud.sleuth.instrument.circuitbreaker.SleuthCircuitBreakerSpan`
+
+=== TRACE ACTION SPAN
+
+> Span that wraps a Rx Java .
+
+**Span name** `rxjava`.
+
+Fully qualified name of the enclosing class `org.springframework.cloud.sleuth.instrument.rxjava.SleuthRxJavaSpan`
+
+.Tag Keys
+|===
+|Name | Description
+|thread|Name of the thread.
+|===
+
+=== TRIGGER SPAN
+
+> Span created when trigger is fired and then completed.
+
+**Span name** `%s` - since it contains `%s`, the name is dynamic and will be resolved at runtime.
+
+Fully qualified name of the enclosing class `org.springframework.cloud.sleuth.instrument.quartz.SleuthQuartzSpan`
+
+.Tag Keys
+|===
+|Name | Description
+|quartz.trigger|Name of the trigger.
+|===
+
+=== WEB FILTER SPAN
+
+> Span around a . Will continue the current span or create a new one and tag it
+
+**Span name** `%s` - since it contains `%s`, the name is dynamic and will be resolved at runtime.
+
+Fully qualified name of the enclosing class `org.springframework.cloud.sleuth.instrument.web.SleuthWebSpan`
+
+.Tag Keys
+|===
+|Name | Description
+|mvc.controller.class|Name of the class that is processing the request.
+|mvc.controller.method|Name of the method that is processing the request.
+|http.status_code|Response status code.
+|===
+

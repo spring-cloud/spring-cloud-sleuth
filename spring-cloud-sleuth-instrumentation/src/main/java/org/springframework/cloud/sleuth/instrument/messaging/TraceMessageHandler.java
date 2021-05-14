@@ -187,7 +187,8 @@ class TraceMessageHandler {
 
 	private void addTags(Span.Builder result, String destinationName) {
 		if (StringUtils.hasText(destinationName)) {
-			result.tag("channel", SpanNameUtil.shorten(destinationName));
+			SleuthMessagingSpan.MESSAGING_SPAN.wrap(result).tag(SleuthMessagingSpan.Tags.CHANNEL,
+					SpanNameUtil.shorten(destinationName));
 		}
 	}
 
@@ -318,6 +319,7 @@ class TraceMessageHandler {
 			if (message == null) {
 				message = error.getClass().getSimpleName();
 			}
+			// TODO: Go with span.error(...)
 			span.tag("error", message);
 		}
 		span.end();

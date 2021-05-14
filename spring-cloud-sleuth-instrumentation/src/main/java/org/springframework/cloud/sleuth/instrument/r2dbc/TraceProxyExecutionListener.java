@@ -67,8 +67,7 @@ public class TraceProxyExecutionListener implements ProxyExecutionListener {
 	Span clientSpan(QueryExecutionInfo executionInfo, String name) {
 		R2dbcProperties r2dbcProperties = this.beanFactory.getBean(R2dbcProperties.class);
 		String url = r2dbcProperties.getUrl();
-		Span.Builder builder = tracer().spanBuilder().kind(Span.Kind.CLIENT).name("query")
-				.remoteServiceName(name)
+		Span.Builder builder = tracer().spanBuilder().kind(Span.Kind.CLIENT).name("query").remoteServiceName(name)
 				.tag("rd2bc.connection", name).tag("rd2bc.thread", executionInfo.getThreadName());
 		if (StringUtils.hasText(url)) {
 			builder.remoteUrl(url);

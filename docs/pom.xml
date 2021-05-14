@@ -32,6 +32,10 @@
 		<main.basedir>${basedir}/..</main.basedir>
 		<configprops.inclusionPattern>spring.sleuth.*|spring.zipkin.*</configprops.inclusionPattern>
 		<upload-docs-zip.phase>deploy</upload-docs-zip.phase>
+
+		<!-- Tag generation script -->
+		<roaster.version>2.22.3.Final</roaster.version>
+		<module.inclusionPattern>.*/spring-cloud-sleuth-instrumentation/.*|.*/spring-cloud-sleuth-brave/.*</module.inclusionPattern>
 	</properties>
 	<dependencies>
 		<dependency>
@@ -42,9 +46,43 @@
 			<groupId>${project.groupId}</groupId>
 			<artifactId>spring-cloud-sleuth-zipkin</artifactId>
 		</dependency>
+		<dependency>
+			<groupId>org.jboss.forge.roaster</groupId>
+			<artifactId>roaster-api</artifactId>
+			<version>${roaster.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.jboss.forge.roaster</groupId>
+			<artifactId>roaster-jdt</artifactId>
+			<version>${roaster.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-test</artifactId>
+			<scope>test</scope>
+		</dependency>
 	</dependencies>
 	<build>
-		<sourceDirectory>src/main/asciidoc</sourceDirectory>
+		<plugins>
+			<plugin>
+				<groupId>org.codehaus.mojo</groupId>
+				<artifactId>build-helper-maven-plugin</artifactId>
+				<version>3.0.0</version>
+				<executions>
+					<execution>
+						<phase>generate-sources</phase>
+						<goals>
+							<goal>add-source</goal>
+						</goals>
+						<configuration>
+							<sources>
+								<source>src/main/asciidoc</source>
+							</sources>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+		</plugins>
 	</build>
 	<profiles>
 		<profile>
@@ -64,6 +102,25 @@
 					<plugin>
 						<groupId>org.codehaus.mojo</groupId>
 						<artifactId>exec-maven-plugin</artifactId>
+						<executions>
+							<execution>
+								<id>build-tags-and-spans</id>
+								<phase>prepare-package</phase>
+								<goals>
+									<goal>java</goal>
+								</goals>
+								<configuration>
+									<mainClass>org.springframework.cloud.sleuth.documentation.DocsFromSources</mainClass>
+									<arguments>
+										<argument>${maven.multiModuleProjectDirectory}</argument>
+										<argument>${module.inclusionPattern}</argument>
+										<argument>${maven.multiModuleProjectDirectory}/docs/src/main/asciidoc/</argument>
+									</arguments>
+									<includeProjectDependencies>true</includeProjectDependencies>
+									<includePluginDependencies>true</includePluginDependencies>
+								</configuration>
+							</execution>
+						</executions>
 					</plugin>
 					<plugin>
 						<groupId>org.asciidoctor</groupId>

@@ -47,22 +47,26 @@ class BraveScopedSpan implements ScopedSpan {
 
 	@Override
 	public ScopedSpan name(String name) {
-		return new BraveScopedSpan(this.span.name(name));
+		this.span.name(name);
+		return this;
 	}
 
 	@Override
 	public ScopedSpan tag(String key, String value) {
-		return new BraveScopedSpan(this.span.tag(key, value));
+		this.span.tag(key, value);
+		return this;
 	}
 
 	@Override
 	public ScopedSpan event(String value) {
-		return new BraveScopedSpan(this.span.annotate(value));
+		this.span.annotate(value);
+		return this;
 	}
 
 	@Override
 	public ScopedSpan error(Throwable throwable) {
-		return new BraveScopedSpan(this.span.error(throwable));
+		this.span.error(throwable);
+		return this;
 	}
 
 	@Override

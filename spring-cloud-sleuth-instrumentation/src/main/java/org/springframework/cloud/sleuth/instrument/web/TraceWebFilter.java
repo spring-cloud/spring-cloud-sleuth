@@ -62,12 +62,7 @@ public class TraceWebFilter implements WebFilter, Ordered, ApplicationContextAwa
 	// Remember that this can be used in other packages
 	protected static final String TRACE_REQUEST_ATTR = Span.class.getName();
 
-	static final String MVC_CONTROLLER_CLASS_KEY = "mvc.controller.class";
-	static final String MVC_CONTROLLER_METHOD_KEY = "mvc.controller.method";
-
 	private static final Log log = LogFactory.getLog(TraceWebFilter.class);
-
-	private static final String STATUS_CODE_KEY = "http.status_code";
 
 	private static final String TRACE_SPAN_WITHOUT_PARENT = TraceWebFilter.class.getName() + ".SPAN_WITH_NO_PARENT";
 
@@ -302,7 +297,7 @@ public class TraceWebFilter implements WebFilter, Ordered, ApplicationContextAwa
 			private void addClassMethodTag(Object handler, Span span) {
 				if (handler instanceof HandlerMethod) {
 					String methodName = ((HandlerMethod) handler).getMethod().getName();
-					span.tag(MVC_CONTROLLER_METHOD_KEY, methodName);
+					SleuthWebSpan.WEB_FILTER_SPAN.wrap(span).tag(SleuthWebSpan.Tags.METHOD, methodName);
 					if (log.isDebugEnabled()) {
 						log.debug("Adding a method tag with value [" + methodName + "] to a span " + span);
 					}
@@ -323,13 +318,14 @@ public class TraceWebFilter implements WebFilter, Ordered, ApplicationContextAwa
 				if (log.isDebugEnabled()) {
 					log.debug("Adding a class tag with value [" + className + "] to a span " + span);
 				}
-				span.tag(MVC_CONTROLLER_CLASS_KEY, className);
+				SleuthWebSpan.WEB_FILTER_SPAN.wrap(span).tag(SleuthWebSpan.Tags.CLASS, className);
 			}
 
 			private void addResponseTagsForSpanWithoutParent(ServerWebExchange exchange, ServerHttpResponse response,
 					Span span) {
 				if (spanWithoutParent(exchange) && response.getStatusCode() != null && span != null) {
-					span.tag(STATUS_CODE_KEY, String.valueOf(response.getStatusCode().value()));
+					SleuthWebSpan.WEB_FILTER_SPAN.wrap(span).tag(SleuthWebSpan.Tags.CLASS,
+							String.valueOf(response.getStatusCode().value()));
 				}
 			}
 
