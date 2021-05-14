@@ -16,6 +16,10 @@
 
 package org.springframework.cloud.sleuth.docs;
 
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+
 /**
  * Represents a tag key.
  *
@@ -28,5 +32,18 @@ public interface TagKey {
 	 * @return tag key
 	 */
 	String getKey();
+
+	/**
+	 * Merges arrays of tags.
+	 * @param tags array of tags
+	 * @return a merged array of tags
+	 */
+	static TagKey[] merge(TagKey[]... tags) {
+		return Arrays.stream(tags).reduce((tagKeys, tagKeys2) -> {
+			List<TagKey> keys = Arrays.asList(tagKeys2);
+			Collections.addAll(keys, tagKeys2);
+			return keys.toArray(new TagKey[0]);
+		}).orElse(new TagKey[0]);
+	}
 
 }

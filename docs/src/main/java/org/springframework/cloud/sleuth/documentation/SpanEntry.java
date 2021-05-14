@@ -16,7 +16,9 @@
 
 package org.springframework.cloud.sleuth.documentation;
 
-import java.util.List;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Locale;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
@@ -33,12 +35,12 @@ class SpanEntry implements Comparable<SpanEntry> {
 
 	final String description;
 
-	final List<KeyValueEntry> tagKeys;
+	final Collection<KeyValueEntry> tagKeys;
 
-	final List<KeyValueEntry> events;
+	final Collection<KeyValueEntry> events;
 
-	SpanEntry(String name, String enclosingClass, String enumName, String description, List<KeyValueEntry> tagKeys,
-			List<KeyValueEntry> events) {
+	SpanEntry(String name, String enclosingClass, String enumName, String description,
+			Collection<KeyValueEntry> tagKeys, Collection<KeyValueEntry> events) {
 		Assert.isTrue(StringUtils.hasText(name), "Span name must not be empty");
 		Assert.isTrue(StringUtils.hasText(description), "Span description must not be empty");
 		this.name = name;
@@ -77,7 +79,7 @@ class SpanEntry implements Comparable<SpanEntry> {
 	//@formatter:off
 	public String toString() {
 		StringBuilder text = new StringBuilder()
-				.append("=== ").append(enumName.replace("_", " "))
+				.append("=== ").append(Arrays.stream(enumName.replace("_", " ").split(" ")).map(s -> StringUtils.capitalize(s.toLowerCase(Locale.ROOT))).collect(Collectors.joining(" ")))
 				.append("\n\n> ").append(description).append("\n\n")
 				.append("**Span name** `").append(name).append("`");
 		if (name.contains("%s")) {

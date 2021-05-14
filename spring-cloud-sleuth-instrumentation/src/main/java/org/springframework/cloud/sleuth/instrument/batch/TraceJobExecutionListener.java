@@ -26,6 +26,7 @@ import org.springframework.batch.core.JobExecutionListener;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.SpanAndScope;
 import org.springframework.cloud.sleuth.Tracer;
+import org.springframework.cloud.sleuth.docs.AssertingSpan;
 
 class TraceJobExecutionListener implements JobExecutionListener {
 
@@ -39,7 +40,8 @@ class TraceJobExecutionListener implements JobExecutionListener {
 
 	@Override
 	public void beforeJob(JobExecution jobExecution) {
-		Span span = this.tracer.nextSpan().name(jobExecution.getJobInstance().getJobName());
+		Span span = this.tracer.nextSpan();
+		AssertingSpan.of(SleuthBatchSpan.BATCH_JOB_SPAN, span).name(jobExecution.getJobInstance().getJobName());
 		Tracer.SpanInScope spanInScope = this.tracer.withSpan(span.start());
 		SPANS.put(jobExecution, new SpanAndScope(span, spanInScope));
 	}
@@ -48,10 +50,11 @@ class TraceJobExecutionListener implements JobExecutionListener {
 	public void afterJob(JobExecution jobExecution) {
 		SpanAndScope spanAndScope = SPANS.remove(jobExecution);
 		List<Throwable> throwables = jobExecution.getFailureExceptions();
-		Span span = spanAndScope.getSpan();
-		span.tag("batch.job.name", jobExecution.getJobInstance().getJobName());
-		span.tag("batch.job.instanceId", String.valueOf(jobExecution.getJobInstance().getInstanceId()));
-		span.tag("batch.job.executionId", String.valueOf(jobExecution.getId()));
+		AssertingSpan span = AssertingSpan.of(SleuthBatchSpan.BATCH_JOB_SPAN, spanAndScope.getSpan());
+		span.tag(SleuthBatchSpan.JobTags.JOB_NAME, jobExecution.getJobInstance().getJobName());
+		span.tag(SleuthBatchSpan.JobTags.JOB_INSTANCE_ID,
+				String.valueOf(jobExecution.getJobInstance().getInstanceId()));
+		span.tag(SleuthBatchSpan.JobTags.JOB_EXECUTION_ID, String.valueOf(jobExecution.getId()));
 		Tracer.SpanInScope scope = spanAndScope.getScope();
 		if (!throwables.isEmpty()) {
 			span.error(mergedThrowables(throwables));

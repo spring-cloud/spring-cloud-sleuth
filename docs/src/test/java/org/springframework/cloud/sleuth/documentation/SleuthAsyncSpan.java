@@ -49,7 +49,7 @@ enum SleuthAsyncSpan implements DocumentedSpan {
 
 		@Override
 		public TagKey[] getTagKeys() {
-			return TestSpanTags.values();
+			return TagKey.merge(TestSpanTags.values(), AsyncSpanTags.values());
 		}
 
 	};

@@ -21,9 +21,8 @@ import java.io.IOException;
 import java.nio.file.FileVisitor;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import java.util.Collection;
+import java.util.TreeSet;
 import java.util.regex.Pattern;
 
 public class DocsFromSources {
@@ -52,18 +51,19 @@ public class DocsFromSources {
 		Path path = this.projectRoot.toPath();
 		Pattern pattern = Pattern.compile(this.inclusionPattern);
 		System.out.println("Inclusion pattern is [" + this.inclusionPattern + "]");
-		List<SpanEntry> spanEntries = new ArrayList<>();
+		Collection<SpanEntry> spanEntries = new TreeSet<>();
 		FileVisitor<Path> fv = new SpanSearchingFileVisitor(pattern, spanEntries);
 		try {
 			Files.walkFileTree(path, fv);
 			Path output = new File(this.outputDir, "_spans.adoc").toPath();
 			StringBuilder stringBuilder = new StringBuilder();
+			System.out.println("======================================");
+			System.out.println("Summary of sources analysis");
 			System.out.println("Found [" + spanEntries.size() + "] spans");
-			System.out.println("Found ["
-					+ spanEntries.stream().map(e -> e.tagKeys.size()).reduce(Integer::sum).orElse(0) + "] tags");
-			System.out.println("Found [" + spanEntries.stream().map(e -> e.events.size()).reduce(Integer::sum).orElse(0)
-					+ "] events");
-			Collections.sort(spanEntries);
+			System.out.println(
+					"Found [" + spanEntries.stream().flatMap(e -> e.tagKeys.stream()).distinct().count() + "] tags");
+			System.out.println(
+					"Found [" + spanEntries.stream().flatMap(e -> e.events.stream()).distinct().count() + "] events");
 			spanEntries.forEach(spanEntry -> stringBuilder.append(spanEntry.toString()).append("\n\n"));
 			Files.write(output, stringBuilder.toString().getBytes());
 		}

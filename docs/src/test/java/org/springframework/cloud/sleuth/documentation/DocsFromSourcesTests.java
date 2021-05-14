@@ -33,12 +33,12 @@ class DocsFromSourcesTests {
 		new DocsFromSources(root, ".*", output).generate();
 
 		BDDAssertions.then(new String(Files.readAllBytes(new File(output, "_spans.adoc").toPath())))
-				.contains("=== ASYNC ANNOTATION SPAN").contains("> Span that wraps a")
+				.contains("=== Async Annotation Span").contains("> Span that wraps a")
 				.contains("**Span name** `%s` - since").contains("Fully qualified name of")
 				.contains("|class|Class name where a method got annotated with @Async.")
-				.contains("=== ANNOTATION NEW OR CONTINUE SPAN")
+				.contains("=== Annotation New Or Continue Span")
 				.contains("|%s.before|Annotated before executing a method annotated with @ContinueSpan or @NewSpan.")
-				.contains("=== TEST SPAN").contains("**Span name** `fixed`.").contains("|foooooo|Test foo");
+				.contains("=== Test Span").contains("**Span name** `fixed`.").contains("|foooooo|Test foo");
 	}
 
 }

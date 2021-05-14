@@ -28,6 +28,7 @@ import org.springframework.batch.core.StepExecutionListener;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.SpanAndScope;
 import org.springframework.cloud.sleuth.Tracer;
+import org.springframework.cloud.sleuth.docs.AssertingSpan;
 
 class TraceStepExecutionListener implements StepExecutionListener {
 
@@ -50,11 +51,11 @@ class TraceStepExecutionListener implements StepExecutionListener {
 	public ExitStatus afterStep(StepExecution stepExecution) {
 		SpanAndScope spanAndScope = SPANS.remove(stepExecution);
 		List<Throwable> throwables = stepExecution.getFailureExceptions();
-		Span span = spanAndScope.getSpan();
-		span.tag("batch.step.name", stepExecution.getStepName());
-		span.tag("batch.job.executionId", String.valueOf(stepExecution.getJobExecutionId()));
-		span.tag("batch.step.executionId", String.valueOf(stepExecution.getId()));
-		span.tag("batch.step.type", stepExecution.getExecutionContext().getString(Step.STEP_TYPE_KEY));
+		AssertingSpan span = AssertingSpan.of(SleuthBatchSpan.BATCH_STEP_SPAN, spanAndScope.getSpan());
+		span.tag(SleuthBatchSpan.StepTags.STEP_NAME, stepExecution.getStepName());
+		span.tag(SleuthBatchSpan.StepTags.JOB_EXECUTION_ID, String.valueOf(stepExecution.getJobExecutionId()));
+		span.tag(SleuthBatchSpan.StepTags.STEP_EXECUTION_ID, String.valueOf(stepExecution.getId()));
+		span.tag(SleuthBatchSpan.StepTags.STEP_TYPE, stepExecution.getExecutionContext().getString(Step.STEP_TYPE_KEY));
 		Tracer.SpanInScope scope = spanAndScope.getScope();
 		if (!throwables.isEmpty()) {
 			span.error(mergedThrowables(throwables));

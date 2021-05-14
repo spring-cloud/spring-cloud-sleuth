@@ -14,30 +14,50 @@
  * limitations under the License.
  */
 
-package org.springframework.cloud.sleuth.instrument.circuitbreaker;
+package org.springframework.cloud.sleuth.instrument.config;
 
 import org.springframework.cloud.sleuth.docs.DocumentedSpan;
+import org.springframework.cloud.sleuth.docs.TagKey;
 
-enum SleuthCircuitBreakerSpan implements DocumentedSpan {
-
-	/**
-	 * Span created when we wrap a Supplier passed to the CircuitBreaker.
-	 */
-	CIRCUIT_BREAKER_SUPPLIER_SPAN {
-		@Override
-		public String getName() {
-			return "%s";
-		}
-	},
+enum SleuthConfigSpan implements DocumentedSpan {
 
 	/**
-	 * Span created when we wrap a Function passed to the CircuitBreaker. as fallback.
+	 * Span created around an EnvironmentRepository.
 	 */
-	CIRCUIT_BREAKER_FUNCTION_SPAN {
+	CONFIG_SPAN {
 		@Override
 		public String getName() {
-			return "%s";
+			return "find";
 		}
+
+		@Override
+		public TagKey[] getTagKeys() {
+			return Tags.values();
+		}
+	};
+
+	enum Tags implements TagKey {
+
+		/**
+		 * Implementation of the EnvironmentRepository.
+		 */
+		ENVIRONMENT_CLASS {
+			@Override
+			public String getKey() {
+				return "config.environment.class";
+			}
+		},
+
+		/**
+		 * Method executed on the EnvironmentRepository.
+		 */
+		ENVIRONMENT_METHOD {
+			@Override
+			public String getKey() {
+				return "config.environment.method";
+			}
+		}
+
 	}
 
 }
