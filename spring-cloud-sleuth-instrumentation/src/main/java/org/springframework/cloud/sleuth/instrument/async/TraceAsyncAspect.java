@@ -57,15 +57,14 @@ public class TraceAsyncAspect {
 		if (span == null) {
 			span = this.tracer.nextSpan();
 		}
-		span = span.name(spanName);
-		AssertingSpan assertingSpan = SleuthAsyncSpan.ASYNC_ANNOTATION_SPAN.wrap(span);
+		AssertingSpan assertingSpan = SleuthAsyncSpan.ASYNC_ANNOTATION_SPAN.wrap(span).name(spanName);
 		try (Tracer.SpanInScope ws = this.tracer.withSpan(assertingSpan.start())) {
 			assertingSpan.tag(SleuthAsyncSpan.Tags.CLASS, pjp.getTarget().getClass().getSimpleName())
 					.tag(SleuthAsyncSpan.Tags.METHOD, pjp.getSignature().getName());
 			return pjp.proceed();
 		}
 		finally {
-			span.end();
+			assertingSpan.end();
 		}
 	}
 

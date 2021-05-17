@@ -37,6 +37,8 @@ final class DocumentedSpanAssertions {
 
 	private static final Map<String, Pattern> PATTERN_CACHE = new ConcurrentHashMap<>();
 
+	private static final Pattern SPECIAL_REGEX_CHARS = Pattern.compile("[{}()\\[\\].+*?^$\\\\|]");
+
 	private DocumentedSpanAssertions() {
 		throw new IllegalStateException("Can't instantiate utility class");
 	}
@@ -49,7 +51,8 @@ final class DocumentedSpanAssertions {
 							&& hasRequiredPrefix(key, documentedSpan.prefix()));
 			if (!validTagKey) {
 				throw new AssertionError("The key [" + key + "] is invalid. You can use only one matching "
-						+ Arrays.stream(allowedKeys).map(TagKey::getKey).collect(Collectors.toList()));
+						+ Arrays.stream(allowedKeys).map(TagKey::getKey).collect(Collectors.toList())
+						+ ". Also it has start with [" + documentedSpan.prefix() + "] prefix.");
 			}
 		}
 	}
@@ -57,6 +60,9 @@ final class DocumentedSpanAssertions {
 	static void assertThatKeyIsValid(TagKey key, DocumentedSpan documentedSpan) {
 		if (SLEUTH_SPAN_ASSERTIONS_ON) {
 			TagKey[] allowedKeys = documentedSpan.getTagKeys();
+			if (allowedKeys.length == 0) {
+				return;
+			}
 			if (Arrays.stream(allowedKeys).noneMatch(tagKey -> tagKey == key)) {
 				throw new AssertionError("The key [" + key + "] is invalid. You can use only one matching "
 						+ Arrays.stream(allowedKeys).map(TagKey::getKey).collect(Collectors.toList()));
@@ -75,6 +81,9 @@ final class DocumentedSpanAssertions {
 	static void assertThatEventIsValid(String eventValue, DocumentedSpan documentedSpan) {
 		if (SLEUTH_SPAN_ASSERTIONS_ON) {
 			EventValue[] allowed = documentedSpan.getEvents();
+			if (allowed.length == 0) {
+				return;
+			}
 			boolean valid = Arrays.stream(allowed).anyMatch(value -> patternOrValueMatches(eventValue, value.getValue())
 					&& hasRequiredPrefix(eventValue, documentedSpan.prefix()));
 			if (!valid) {
@@ -87,8 +96,10 @@ final class DocumentedSpanAssertions {
 	static void assertThatEventIsValid(EventValue eventValue, DocumentedSpan documentedSpan) {
 		if (SLEUTH_SPAN_ASSERTIONS_ON) {
 			EventValue[] allowed = documentedSpan.getEvents();
-			boolean valid = Arrays.stream(allowed).noneMatch(value -> value == eventValue);
-			if (!valid) {
+			if (allowed.length == 0) {
+				return;
+			}
+			if (Arrays.stream(allowed).noneMatch(value -> value == eventValue)) {
 				throw new AssertionError("The event [" + eventValue + "] is invalid. You can use only one matching "
 						+ Arrays.toString(allowed));
 			}
@@ -103,7 +114,7 @@ final class DocumentedSpanAssertions {
 
 	private static boolean patternOrValueMatches(String pickedValue, String allowedValue) {
 		if (allowedValue.contains("%s")) {
-			String stringPattern = allowedValue.replaceAll("%s", ".*?");
+			String stringPattern = escapeSpecialRegexWithSingleEscape(allowedValue).replaceAll("%s", ".*?");
 			Pattern pattern = PATTERN_CACHE.computeIfAbsent(stringPattern, Pattern::compile);
 			return pattern.matcher(pickedValue).matches();
 		}
@@ -111,7 +122,14 @@ final class DocumentedSpanAssertions {
 	}
 
 	private static boolean hasRequiredPrefix(String value, String prefix) {
-		return StringUtils.hasText(prefix) && value.startsWith(prefix);
+		if (StringUtils.hasText(prefix)) {
+			return value.startsWith(prefix);
+		}
+		return true;
+	}
+
+	private static String escapeSpecialRegexWithSingleEscape(String str) {
+		return SPECIAL_REGEX_CHARS.matcher(str).replaceAll("\\\\$0");
 	}
 
 }

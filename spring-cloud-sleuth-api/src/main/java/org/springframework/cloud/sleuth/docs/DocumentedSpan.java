@@ -74,6 +74,12 @@ public interface DocumentedSpan {
 	 * @return wrapped span
 	 */
 	default AssertingSpan wrap(Span span) {
+		if (span == null) {
+			return null;
+		}
+		else if (span instanceof AssertingSpan) {
+			return (AssertingSpan) span;
+		}
 		return AssertingSpan.of(this, span);
 	}
 
@@ -83,6 +89,12 @@ public interface DocumentedSpan {
 	 * @return wrapped span
 	 */
 	default AssertingSpanCustomizer wrap(SpanCustomizer span) {
+		if (span == null) {
+			return null;
+		}
+		else if (span instanceof AssertingSpanCustomizer) {
+			return (AssertingSpanCustomizer) span;
+		}
 		return AssertingSpanCustomizer.of(this, span);
 	}
 
@@ -92,6 +104,12 @@ public interface DocumentedSpan {
 	 * @return wrapped span
 	 */
 	default AssertingSpanBuilder wrap(Span.Builder span) {
+		if (span == null) {
+			return null;
+		}
+		else if (span instanceof AssertingSpanBuilder) {
+			return (AssertingSpanBuilder) span;
+		}
 		return AssertingSpanBuilder.of(this, span);
 	}
 

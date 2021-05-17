@@ -32,7 +32,7 @@ class TraceJobExecutionListener implements JobExecutionListener {
 
 	private final Tracer tracer;
 
-	private static Map<JobExecution, SpanAndScope> SPANS = new ConcurrentHashMap<>();
+	private static final Map<JobExecution, SpanAndScope> SPANS = new ConcurrentHashMap<>();
 
 	TraceJobExecutionListener(Tracer tracer) {
 		this.tracer = tracer;
@@ -40,8 +40,8 @@ class TraceJobExecutionListener implements JobExecutionListener {
 
 	@Override
 	public void beforeJob(JobExecution jobExecution) {
-		Span span = this.tracer.nextSpan();
-		AssertingSpan.of(SleuthBatchSpan.BATCH_JOB_SPAN, span).name(jobExecution.getJobInstance().getJobName());
+		Span span = SleuthBatchSpan.BATCH_JOB_SPAN.wrap(this.tracer.nextSpan())
+				.name(jobExecution.getJobInstance().getJobName());
 		Tracer.SpanInScope spanInScope = this.tracer.withSpan(span.start());
 		SPANS.put(jobExecution, new SpanAndScope(span, spanInScope));
 	}
@@ -50,11 +50,13 @@ class TraceJobExecutionListener implements JobExecutionListener {
 	public void afterJob(JobExecution jobExecution) {
 		SpanAndScope spanAndScope = SPANS.remove(jobExecution);
 		List<Throwable> throwables = jobExecution.getFailureExceptions();
-		AssertingSpan span = AssertingSpan.of(SleuthBatchSpan.BATCH_JOB_SPAN, spanAndScope.getSpan());
-		span.tag(SleuthBatchSpan.JobTags.JOB_NAME, jobExecution.getJobInstance().getJobName());
-		span.tag(SleuthBatchSpan.JobTags.JOB_INSTANCE_ID,
-				String.valueOf(jobExecution.getJobInstance().getInstanceId()));
-		span.tag(SleuthBatchSpan.JobTags.JOB_EXECUTION_ID, String.valueOf(jobExecution.getId()));
+		// @formatter:off
+		AssertingSpan span = SleuthBatchSpan.BATCH_JOB_SPAN.wrap(spanAndScope.getSpan())
+		.tag(SleuthBatchSpan.JobTags.JOB_NAME, jobExecution.getJobInstance().getJobName())
+		.tag(SleuthBatchSpan.JobTags.JOB_INSTANCE_ID,
+				String.valueOf(jobExecution.getJobInstance().getInstanceId()))
+		.tag(SleuthBatchSpan.JobTags.JOB_EXECUTION_ID, String.valueOf(jobExecution.getId()));
+		// formatter:on
 		Tracer.SpanInScope scope = spanAndScope.getScope();
 		if (!throwables.isEmpty()) {
 			span.error(mergedThrowables(throwables));

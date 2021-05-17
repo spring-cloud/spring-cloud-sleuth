@@ -21,7 +21,6 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 
 import org.springframework.cloud.sleuth.Span;
-import org.springframework.cloud.sleuth.docs.AssertingSpan;
 import org.springframework.cloud.sleuth.docs.AssertingSpanBuilder;
 import org.springframework.cloud.sleuth.propagation.Propagator;
 

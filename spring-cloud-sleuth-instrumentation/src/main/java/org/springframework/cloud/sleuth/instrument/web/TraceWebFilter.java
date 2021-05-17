@@ -33,6 +33,7 @@ import org.springframework.cloud.sleuth.CurrentTraceContext;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.TraceContext;
 import org.springframework.cloud.sleuth.Tracer;
+import org.springframework.cloud.sleuth.docs.AssertingSpan;
 import org.springframework.cloud.sleuth.http.HttpServerHandler;
 import org.springframework.cloud.sleuth.http.HttpServerRequest;
 import org.springframework.cloud.sleuth.http.HttpServerResponse;
@@ -198,6 +199,7 @@ public class TraceWebFilter implements WebFilter, Ordered, ApplicationContextAwa
 
 		private Span findOrCreateSpan(Context c) {
 			Span span;
+			AssertingSpan assertingSpan = null;
 			if (c.hasKey(Span.class)) {
 				Span parent = c.get(Span.class);
 				try (Tracer.SpanInScope spanInScope = this.tracer.withSpan(parent)) {
@@ -226,9 +228,13 @@ public class TraceWebFilter implements WebFilter, Ordered, ApplicationContextAwa
 				else if (log.isDebugEnabled()) {
 					log.debug("Found tracer specific span in reactor context [" + span + "]");
 				}
-				this.exchange.getAttributes().put(TRACE_REQUEST_ATTR, span);
+				assertingSpan = SleuthWebSpan.WEB_FILTER_SPAN.wrap(span);
+				this.exchange.getAttributes().put(TRACE_REQUEST_ATTR, assertingSpan);
 			}
-			return span;
+			if (assertingSpan == null) {
+				assertingSpan = SleuthWebSpan.WEB_FILTER_SPAN.wrap(span);
+			}
+			return assertingSpan;
 		}
 
 		static final class WebFilterTraceSubscriber implements CoreSubscriber<Void> {

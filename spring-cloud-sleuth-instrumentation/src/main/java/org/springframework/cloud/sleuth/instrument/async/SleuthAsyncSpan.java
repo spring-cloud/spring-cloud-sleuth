@@ -36,6 +36,28 @@ enum SleuthAsyncSpan implements DocumentedSpan {
 			return Tags.values();
 		}
 
+	},
+
+	/**
+	 * Span created whenever a Runnable needs to be instrumented.
+	 */
+	ASYNC_RUNNABLE_SPAN {
+		@Override
+		public String getName() {
+			return "%s";
+		}
+
+	},
+
+	/**
+	 * Span created whenever a Callable needs to be instrumented.
+	 */
+	ASYNC_CALLABLE_SPAN {
+		@Override
+		public String getName() {
+			return "%s";
+		}
+
 	};
 
 	enum Tags implements TagKey {

@@ -39,6 +39,7 @@ import reactor.util.context.ContextView;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.TraceContext;
 import org.springframework.cloud.sleuth.Tracer;
+import org.springframework.cloud.sleuth.docs.AssertingSpanBuilder;
 import org.springframework.cloud.sleuth.internal.EncodingUtils;
 import org.springframework.cloud.sleuth.propagation.Propagator;
 
@@ -89,9 +90,10 @@ public class TracingRequesterRSocketProxy extends RSocketProxy {
 			final RoutingMetadata routingMetadata = new RoutingMetadata(extracted);
 			final Iterator<String> iterator = routingMetadata.iterator();
 			String route = iterator.next();
-			Span span = spanBuilder.kind(Span.Kind.PRODUCER).name(frameType.name() + " " + route).start();
-			span.tag("rsocket.route", route);
-			span.tag("rsocket.request-type", frameType.name());
+			Span span = AssertingSpanBuilder
+					.of(SleuthRSocketSpan.RSOCKET_REQUESTER_SPAN, spanBuilder.kind(Span.Kind.PRODUCER))
+					.name(frameType.name() + " " + route).tag(SleuthRSocketSpan.Tags.ROUTE, route)
+					.tag(SleuthRSocketSpan.Tags.REQUEST_TYPE, frameType.name()).start();
 			if (log.isDebugEnabled()) {
 				log.debug("Extracted result from context or thread local " + span);
 			}
@@ -156,7 +158,9 @@ public class TracingRequesterRSocketProxy extends RSocketProxy {
 		final RoutingMetadata routingMetadata = new RoutingMetadata(CompositeMetadataUtils
 				.extract(payload.sliceMetadata(), WellKnownMimeType.MESSAGE_RSOCKET_ROUTING.getString()));
 		final Iterator<String> iterator = routingMetadata.iterator();
-		Span span = spanBuilder.kind(Span.Kind.PRODUCER).name(iterator.next()).start();
+		Span span = AssertingSpanBuilder
+				.of(SleuthRSocketSpan.RSOCKET_REQUESTER_SPAN, spanBuilder.kind(Span.Kind.PRODUCER))
+				.name(iterator.next()).start();
 		if (log.isDebugEnabled()) {
 			log.debug("Extracted result from context or thread local " + span);
 		}

@@ -83,7 +83,7 @@ public class TraceSchedulingAspect {
 		if (currentSpan != null) {
 			return currentSpan;
 		}
-		return this.tracer.nextSpan();
+		return SleuthSchedulingSpan.SCHEDULED_ANNOTATION_SPAN.wrap(this.tracer.nextSpan());
 	}
 
 }

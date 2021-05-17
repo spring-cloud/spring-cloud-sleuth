@@ -40,10 +40,12 @@ public class TraceEnvironmentRepositoryAspect {
 
 	@Around("execution (* org.springframework.cloud.config.server.environment.EnvironmentRepository.*(..))")
 	public Object traceFindEnvironment(final ProceedingJoinPoint pjp) throws Throwable {
-		AssertingSpan findOneSpan = AssertingSpan.of(SleuthConfigSpan.CONFIG_SPAN, this.tracer.nextSpan())
-				.name(SleuthConfigSpan.CONFIG_SPAN.getName());
-		findOneSpan.tag(SleuthConfigSpan.Tags.ENVIRONMENT_CLASS, pjp.getTarget().getClass().getName());
-		findOneSpan.tag(SleuthConfigSpan.Tags.ENVIRONMENT_METHOD, pjp.getSignature().getName());
+		// @formatter:off
+		AssertingSpan findOneSpan = SleuthConfigSpan.CONFIG_SPAN.wrap(this.tracer.nextSpan())
+			.name(SleuthConfigSpan.CONFIG_SPAN.getName())
+			.tag(SleuthConfigSpan.Tags.ENVIRONMENT_CLASS, pjp.getTarget().getClass().getName())
+			.tag(SleuthConfigSpan.Tags.ENVIRONMENT_METHOD, pjp.getSignature().getName());
+		// @formatter:on
 		try (Tracer.SpanInScope ws = this.tracer.withSpan(findOneSpan.start())) {
 			return pjp.proceed();
 		}

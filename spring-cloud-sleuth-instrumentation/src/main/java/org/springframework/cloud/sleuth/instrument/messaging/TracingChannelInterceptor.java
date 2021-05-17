@@ -305,7 +305,7 @@ public final class TracingChannelInterceptor extends ChannelInterceptorAdapter
 		}
 		Span consumerSpan = consumerSpan(message, channel, headers);
 		// create and scope a span for the message processor
-		Span handle = this.tracer.nextSpan(consumerSpan);
+		Span handle = SleuthMessagingSpan.MESSAGING_SPAN.wrap(this.tracer.nextSpan(consumerSpan));
 		handle = this.messageSpanCustomizer.customizeHandle(handle, message, channel).start();
 		if (log.isDebugEnabled()) {
 			log.debug("Created consumer span " + handle);

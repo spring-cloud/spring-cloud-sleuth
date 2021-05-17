@@ -24,6 +24,7 @@ enum SleuthTxSpan implements DocumentedSpan {
 
 	/**
 	 * Span created when there was no previous transaction. If there was one, we will
+	 * continue it unless propagation is required.
 	 */
 	TX_SPAN {
 		@Override

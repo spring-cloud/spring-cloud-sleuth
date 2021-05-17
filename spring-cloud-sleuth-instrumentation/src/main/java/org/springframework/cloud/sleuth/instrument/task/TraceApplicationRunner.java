@@ -46,7 +46,7 @@ public class TraceApplicationRunner implements ApplicationRunner {
 
 	@Override
 	public void run(ApplicationArguments args) throws Exception {
-		Span span = tracer().nextSpan().name(this.beanName);
+		Span span = SleuthTaskSpan.TASK_RUNNER_SPAN.wrap(tracer().nextSpan()).name(this.beanName);
 		try (Tracer.SpanInScope spanInScope = tracer().withSpan(span.start())) {
 			this.delegate.run(args);
 		}

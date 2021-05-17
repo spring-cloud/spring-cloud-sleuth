@@ -24,6 +24,7 @@ import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.support.StaticListableBeanFactory;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.SpanAndScope;
+import org.springframework.cloud.sleuth.docs.AssertingSpan;
 import org.springframework.cloud.sleuth.tracer.SimpleSpan;
 import org.springframework.cloud.sleuth.tracer.SimpleTracer;
 import org.springframework.transaction.PlatformTransactionManager;
@@ -186,7 +187,7 @@ class TracePlatformTransactionManagerTests {
 	private SimpleSpan thenATaggedSpanWasCreated(TracePlatformTransactionManager manager) {
 		SpanAndScope spanAndScope = manager.threadLocalSpan.get();
 		then(spanAndScope).isNotNull();
-		SimpleSpan span = (SimpleSpan) spanAndScope.getSpan();
+		SimpleSpan span = AssertingSpan.unwrap(spanAndScope.getSpan());
 		then(span.started).isTrue();
 		then(span.tags).isNotEmpty();
 		return span;

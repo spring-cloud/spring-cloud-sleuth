@@ -16,8 +16,8 @@
 
 package org.springframework.cloud.sleuth.docs;
 
+import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 
 /**
@@ -40,8 +40,9 @@ public interface TagKey {
 	 */
 	static TagKey[] merge(TagKey[]... tags) {
 		return Arrays.stream(tags).reduce((tagKeys, tagKeys2) -> {
-			List<TagKey> keys = Arrays.asList(tagKeys2);
-			Collections.addAll(keys, tagKeys2);
+			List<TagKey> keys = new ArrayList<>(Arrays.asList(tagKeys));
+			List<TagKey> keys2 = new ArrayList<>(Arrays.asList(tagKeys2));
+			keys.addAll(keys2);
 			return keys.toArray(new TagKey[0]);
 		}).orElse(new TagKey[0]);
 	}

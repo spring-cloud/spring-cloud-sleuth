@@ -51,7 +51,8 @@ public class TraceTaskExecutionListener implements TaskExecutionListener, Ordere
 
 	@Override
 	public void onTaskStartup(TaskExecution taskExecution) {
-		Span span = this.tracer.nextSpan().name(this.projectName).start();
+		Span span = SleuthTaskSpan.TASK_EXECUTION_LISTENER_SPAN.wrap(this.tracer.nextSpan()).name(this.projectName)
+				.start();
 		this.threadLocalSpan.set(span);
 		if (log.isDebugEnabled()) {
 			log.debug("Put the span [" + span + "] to thread local");

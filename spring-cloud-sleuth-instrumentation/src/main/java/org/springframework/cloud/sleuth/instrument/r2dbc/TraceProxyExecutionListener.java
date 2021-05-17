@@ -29,6 +29,7 @@ import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.docs.AssertingSpan;
 import org.springframework.cloud.sleuth.docs.AssertingSpanBuilder;
+import org.springframework.cloud.sleuth.internal.ContextUtil;
 import org.springframework.util.StringUtils;
 
 /**
@@ -54,7 +55,13 @@ public class TraceProxyExecutionListener implements ProxyExecutionListener {
 
 	@Override
 	public void beforeQuery(QueryExecutionInfo executionInfo) {
-		if (tracer().currentSpan() == null) {
+		if (isContextUnusable()) {
+			if (log.isDebugEnabled()) {
+				log.debug("Context is not ready - won't do anything");
+			}
+			return;
+		}
+		else if (tracer().currentSpan() == null) {
 			return;
 		}
 		String name = this.connectionFactory.getMetadata().getName();
@@ -85,13 +92,19 @@ public class TraceProxyExecutionListener implements ProxyExecutionListener {
 	private void tagQueries(QueryExecutionInfo executionInfo, AssertingSpan span) {
 		int i = 0;
 		for (QueryInfo queryInfo : executionInfo.getQueries()) {
-			span.tag(String.format(SleuthR2dbcSpan.Tags.QUERY.getKey(), Integer.toString(i)), queryInfo.getQuery());
+			span.tag(String.format(SleuthR2dbcSpan.Tags.QUERY.getKey(), i), queryInfo.getQuery());
 			i = i + 1;
 		}
 	}
 
 	@Override
 	public void afterQuery(QueryExecutionInfo executionInfo) {
+		if (isContextUnusable()) {
+			if (log.isDebugEnabled()) {
+				log.debug("Context is not ready - won't do anything");
+			}
+			return;
+		}
 		Span span = executionInfo.getValueStore().get(Span.class, Span.class);
 		if (span != null) {
 			if (log.isDebugEnabled()) {
@@ -107,13 +120,23 @@ public class TraceProxyExecutionListener implements ProxyExecutionListener {
 
 	@Override
 	public void eachQueryResult(QueryExecutionInfo executionInfo) {
+		if (isContextUnusable()) {
+			if (log.isDebugEnabled()) {
+				log.debug("Context is not ready - won't do anything");
+			}
+			return;
+		}
 		Span span = executionInfo.getValueStore().get(Span.class, Span.class);
 		if (span != null) {
 			if (log.isDebugEnabled()) {
 				log.debug("Marking after query result for span [" + span + "]");
 			}
-			AssertingSpan.of(SleuthR2dbcSpan.R2DBC_QUERY_SPAN, span).event(SleuthR2dbcSpan.Events.QUERY_RESULT);
+			SleuthR2dbcSpan.R2DBC_QUERY_SPAN.wrap(span).event(SleuthR2dbcSpan.Events.QUERY_RESULT);
 		}
+	}
+
+	boolean isContextUnusable() {
+		return ContextUtil.isContextUnusable(this.beanFactory);
 	}
 
 	private Tracer tracer() {

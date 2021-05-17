@@ -91,7 +91,10 @@ public interface AssertingSpanCustomizer extends SpanCustomizer {
 	 * @return unwrapped object
 	 */
 	static <T extends SpanCustomizer> T unwrap(SpanCustomizer span) {
-		if (span instanceof AssertingSpanCustomizer) {
+		if (span == null) {
+			return null;
+		}
+		else if (span instanceof AssertingSpanCustomizer) {
 			return (T) ((AssertingSpanCustomizer) span).getDelegate();
 		}
 		return (T) span;

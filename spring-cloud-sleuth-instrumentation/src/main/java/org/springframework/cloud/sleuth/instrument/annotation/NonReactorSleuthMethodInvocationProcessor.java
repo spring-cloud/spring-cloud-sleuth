@@ -44,7 +44,7 @@ public class NonReactorSleuthMethodInvocationProcessor extends AbstractSleuthMet
 		// close it on completion
 		boolean startNewSpan = newSpan != null || span == null;
 		if (startNewSpan) {
-			span = tracer().nextSpan();
+			span = SleuthAnnotationSpan.ANNOTATION_NEW_OR_CONTINUE_SPAN.wrap(tracer().nextSpan());
 			newSpanParser().parse(invocation, newSpan, span);
 			span.start();
 		}

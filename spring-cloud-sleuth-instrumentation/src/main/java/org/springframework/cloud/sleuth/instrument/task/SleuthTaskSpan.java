@@ -14,50 +14,30 @@
  * limitations under the License.
  */
 
-package org.springframework.cloud.sleuth.instrument.messaging;
+package org.springframework.cloud.sleuth.instrument.task;
 
 import org.springframework.cloud.sleuth.docs.DocumentedSpan;
-import org.springframework.cloud.sleuth.docs.TagKey;
 
-enum SleuthMessagingSpan implements DocumentedSpan {
+enum SleuthTaskSpan implements DocumentedSpan {
 
 	/**
-	 * Span created when message is sent or received.
+	 * Span created when a task runner is executed.
 	 */
-	MESSAGING_SPAN {
+	TASK_RUNNER_SPAN {
 		@Override
 		public String getName() {
 			return "%s";
 		}
+	},
 
+	/**
+	 * Span created within the lifecycle of a task.
+	 */
+	TASK_EXECUTION_LISTENER_SPAN {
 		@Override
-		public TagKey[] getTagKeys() {
-			return Tags.values();
+		public String getName() {
+			return "%s";
 		}
-	};
-
-	enum Tags implements TagKey {
-
-		/**
-		 * Name of the Spring Integration channel.
-		 */
-		CHANNEL {
-			@Override
-			public String getKey() {
-				return "channel";
-			}
-		},
-
-		/**
-		 * User provided keys via customization options.
-		 */
-		CUSTOM {
-			@Override
-			public String getKey() {
-				return "%s";
-			}
-		}
-
 	}
 
 }

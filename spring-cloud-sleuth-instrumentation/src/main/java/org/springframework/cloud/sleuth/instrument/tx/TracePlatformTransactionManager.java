@@ -26,7 +26,6 @@ import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.SpanAndScope;
 import org.springframework.cloud.sleuth.ThreadLocalSpan;
 import org.springframework.cloud.sleuth.Tracer;
-import org.springframework.cloud.sleuth.docs.AssertingSpan;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.TransactionDefinition;
 import org.springframework.transaction.TransactionException;
@@ -86,7 +85,7 @@ public class TracePlatformTransactionManager implements PlatformTransactionManag
 	}
 
 	Span fallbackSpan() {
-		return AssertingSpan.of(SleuthTxSpan.TX_SPAN, tracer().nextSpan()).name(SleuthTxSpan.TX_SPAN.getName()).start();
+		return SleuthTxSpan.TX_SPAN.wrap(tracer().nextSpan()).name(SleuthTxSpan.TX_SPAN.getName()).start();
 	}
 
 	private Span taggedSpan(Span currentSpan, Span span, TransactionDefinition def, TransactionStatus status) {
@@ -127,7 +126,7 @@ public class TracePlatformTransactionManager implements PlatformTransactionManag
 			throw e;
 		}
 		finally {
-			AssertingSpan.of(SleuthTxSpan.TX_SPAN, span).event(SleuthTxSpan.Events.COMMIT);
+			SleuthTxSpan.TX_SPAN.wrap(span).event(SleuthTxSpan.Events.COMMIT);
 			span.end();
 			if (ex == null) {
 				if (log.isDebugEnabled()) {
@@ -160,7 +159,7 @@ public class TracePlatformTransactionManager implements PlatformTransactionManag
 			throw e;
 		}
 		finally {
-			AssertingSpan.of(SleuthTxSpan.TX_SPAN, span).event(SleuthTxSpan.Events.ROLLBACK);
+			SleuthTxSpan.TX_SPAN.wrap(span).event(SleuthTxSpan.Events.ROLLBACK);
 			span.end();
 			this.threadLocalSpan.remove();
 		}

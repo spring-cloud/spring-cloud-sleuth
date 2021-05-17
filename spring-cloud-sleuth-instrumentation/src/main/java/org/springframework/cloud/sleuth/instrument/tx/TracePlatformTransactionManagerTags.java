@@ -30,7 +30,7 @@ final class TracePlatformTransactionManagerTags {
 
 	static void tag(Span span, TransactionDefinition def, Class transactionManagerClass) {
 		// @formatter:off
-		AssertingSpan assertingSpan = AssertingSpan.of(SleuthTxSpan.TX_SPAN, span)
+		AssertingSpan assertingSpan = SleuthTxSpan.TX_SPAN.wrap(span)
 				.tag(SleuthTxSpan.Tags.TRANSACTION_MANAGER, ClassUtils.getQualifiedName(transactionManagerClass))
 				.tag(SleuthTxSpan.Tags.READ_ONLY, String.valueOf(def.isReadOnly()))
 				.tag(SleuthTxSpan.Tags.PROPAGATION_LEVEL, propagationLevel(def))

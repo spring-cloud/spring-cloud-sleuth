@@ -72,13 +72,14 @@ public class TraceReactiveTransactionManager implements ReactiveTransactionManag
 	public Mono<ReactiveTransaction> getReactiveTransaction(TransactionDefinition definition)
 			throws TransactionException {
 		return Mono.deferContextual(contextView -> this.delegate.getReactiveTransaction(definition).map(tx -> {
-			Span span = span(contextView);
+			Span span = SleuthTxSpan.TX_SPAN.wrap(span(contextView));
 			if (tx.isNewTransaction() || span == null) {
 				if (span == null) {
-					span = tracer().nextSpan().name(SleuthTxSpan.TX_SPAN.getName()).start();
+					span = SleuthTxSpan.TX_SPAN.wrap(tracer().nextSpan()).name(SleuthTxSpan.TX_SPAN.getName()).start();
 				}
 				else {
-					span = tracer().nextSpan(span).name(SleuthTxSpan.TX_SPAN.getName()).start();
+					span = SleuthTxSpan.TX_SPAN.wrap(tracer().nextSpan(span)).name(SleuthTxSpan.TX_SPAN.getName())
+							.start();
 				}
 				TracePlatformTransactionManagerTags.tag(span, definition, this.delegate.getClass());
 			}
@@ -109,7 +110,7 @@ public class TraceReactiveTransactionManager implements ReactiveTransactionManag
 
 	private Span spanFromContext(TraceContext traceContext) {
 		try (CurrentTraceContext.Scope scope = currentTraceContext().maybeScope(traceContext)) {
-			return tracer().currentSpan();
+			return SleuthTxSpan.TX_SPAN.wrap(tracer().currentSpan()).start();
 		}
 	}
 

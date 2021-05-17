@@ -138,7 +138,10 @@ public interface AssertingSpan extends Span {
 	 * @return asserting span
 	 */
 	static AssertingSpan of(DocumentedSpan documentedSpan, Span span) {
-		if (span instanceof AssertingSpan) {
+		if (span == null) {
+			return null;
+		}
+		else if (span instanceof AssertingSpan) {
 			return (AssertingSpan) span;
 		}
 		return new ImmutableAssertingSpan(documentedSpan, span);
@@ -151,7 +154,10 @@ public interface AssertingSpan extends Span {
 	 * @return unwrapped object
 	 */
 	static <T extends Span> T unwrap(Span span) {
-		if (span instanceof AssertingSpan) {
+		if (span == null) {
+			return null;
+		}
+		else if (span instanceof AssertingSpan) {
 			return (T) ((AssertingSpan) span).getDelegate();
 		}
 		return (T) span;

@@ -34,7 +34,7 @@ class TraceStepExecutionListener implements StepExecutionListener {
 
 	private final Tracer tracer;
 
-	private static Map<StepExecution, SpanAndScope> SPANS = new ConcurrentHashMap<>();
+	private static final Map<StepExecution, SpanAndScope> SPANS = new ConcurrentHashMap<>();
 
 	TraceStepExecutionListener(Tracer tracer) {
 		this.tracer = tracer;
@@ -42,7 +42,7 @@ class TraceStepExecutionListener implements StepExecutionListener {
 
 	@Override
 	public void beforeStep(StepExecution stepExecution) {
-		Span span = this.tracer.nextSpan().name(stepExecution.getStepName());
+		Span span = SleuthBatchSpan.BATCH_STEP_SPAN.wrap(this.tracer.nextSpan()).name(stepExecution.getStepName());
 		Tracer.SpanInScope spanInScope = this.tracer.withSpan(span.start());
 		SPANS.put(stepExecution, new SpanAndScope(span, spanInScope));
 	}
@@ -51,11 +51,13 @@ class TraceStepExecutionListener implements StepExecutionListener {
 	public ExitStatus afterStep(StepExecution stepExecution) {
 		SpanAndScope spanAndScope = SPANS.remove(stepExecution);
 		List<Throwable> throwables = stepExecution.getFailureExceptions();
-		AssertingSpan span = AssertingSpan.of(SleuthBatchSpan.BATCH_STEP_SPAN, spanAndScope.getSpan());
-		span.tag(SleuthBatchSpan.StepTags.STEP_NAME, stepExecution.getStepName());
-		span.tag(SleuthBatchSpan.StepTags.JOB_EXECUTION_ID, String.valueOf(stepExecution.getJobExecutionId()));
-		span.tag(SleuthBatchSpan.StepTags.STEP_EXECUTION_ID, String.valueOf(stepExecution.getId()));
-		span.tag(SleuthBatchSpan.StepTags.STEP_TYPE, stepExecution.getExecutionContext().getString(Step.STEP_TYPE_KEY));
+		// @formatter:off
+		AssertingSpan span = SleuthBatchSpan.BATCH_STEP_SPAN.wrap(spanAndScope.getSpan())
+		.tag(SleuthBatchSpan.StepTags.STEP_NAME, stepExecution.getStepName())
+		.tag(SleuthBatchSpan.StepTags.JOB_EXECUTION_ID, String.valueOf(stepExecution.getJobExecutionId()))
+		.tag(SleuthBatchSpan.StepTags.STEP_EXECUTION_ID, String.valueOf(stepExecution.getId()))
+		.tag(SleuthBatchSpan.StepTags.STEP_TYPE, stepExecution.getExecutionContext().getString(Step.STEP_TYPE_KEY));
+		// @formatter:on
 		Tracer.SpanInScope scope = spanAndScope.getScope();
 		if (!throwables.isEmpty()) {
 			span.error(mergedThrowables(throwables));

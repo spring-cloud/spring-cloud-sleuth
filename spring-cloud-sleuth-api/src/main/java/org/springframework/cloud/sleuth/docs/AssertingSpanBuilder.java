@@ -126,7 +126,10 @@ public interface AssertingSpanBuilder extends Span.Builder {
 	}
 
 	static AssertingSpanBuilder of(DocumentedSpan documentedSpan, Span.Builder builder) {
-		if (builder instanceof AssertingSpanBuilder) {
+		if (builder == null) {
+			return null;
+		}
+		else if (builder instanceof AssertingSpanBuilder) {
 			return (AssertingSpanBuilder) builder;
 		}
 		return new ImmutableAssertingSpanBuilder(documentedSpan, builder);

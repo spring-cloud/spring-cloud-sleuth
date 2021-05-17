@@ -36,6 +36,22 @@ Fully qualified name of the enclosing class `org.springframework.cloud.sleuth.in
 |method|Method name that got annotated with @Async.
 |===
 
+=== Async Callable Span
+
+> Span created whenever a Callable needs to be instrumented.
+
+**Span name** `%s` - since it contains `%s`, the name is dynamic and will be resolved at runtime.
+
+Fully qualified name of the enclosing class `org.springframework.cloud.sleuth.instrument.async.SleuthAsyncSpan`
+
+=== Async Runnable Span
+
+> Span created whenever a Runnable needs to be instrumented.
+
+**Span name** `%s` - since it contains `%s`, the name is dynamic and will be resolved at runtime.
+
+Fully qualified name of the enclosing class `org.springframework.cloud.sleuth.instrument.async.SleuthAsyncSpan`
+
 === Batch Job Span
 
 > Span created around a Job execution.
@@ -287,6 +303,7 @@ Fully qualified name of the enclosing class `org.springframework.cloud.sleuth.in
 .Tag Keys
 |===
 |Name | Description
+|%s|User provided keys via customization options. (since the name contains `%s` the final value will be resolved at runtime)
 |channel|Name of the Spring Integration channel.
 |===
 
@@ -319,6 +336,14 @@ Fully qualified name of the enclosing class `org.springframework.cloud.sleuth.in
 |quartz.trigger|Name of the trigger.
 |===
 
+=== Rsocket Responder Span
+
+> Span created on the RSocket responder side.
+
+**Span name** `%s` - since it contains `%s`, the name is dynamic and will be resolved at runtime.
+
+Fully qualified name of the enclosing class `org.springframework.cloud.sleuth.instrument.rsocket.SleuthRSocketSpan`
+
 === Rx Java Trace Action Span
 
 > Span that wraps a Rx Java .
@@ -347,6 +372,22 @@ Fully qualified name of the enclosing class `org.springframework.cloud.sleuth.in
 |class|Class name where a method got annotated with @Scheduled.
 |method|Method name that got annotated with @Scheduled.
 |===
+
+=== Task Execution Listener Span
+
+> Span created within the lifecycle of a task.
+
+**Span name** `%s` - since it contains `%s`, the name is dynamic and will be resolved at runtime.
+
+Fully qualified name of the enclosing class `org.springframework.cloud.sleuth.instrument.task.SleuthTaskSpan`
+
+=== Task Runner Span
+
+> Span created when a task runner is executed.
+
+**Span name** `%s` - since it contains `%s`, the name is dynamic and will be resolved at runtime.
+
+Fully qualified name of the enclosing class `org.springframework.cloud.sleuth.instrument.task.SleuthTaskSpan`
 
 === Web Filter Span
 

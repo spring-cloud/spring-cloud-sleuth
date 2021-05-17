@@ -14,17 +14,27 @@
  * limitations under the License.
  */
 
-package org.springframework.cloud.sleuth.instrument.messaging;
+package org.springframework.cloud.sleuth.instrument.rsocket;
 
 import org.springframework.cloud.sleuth.docs.DocumentedSpan;
 import org.springframework.cloud.sleuth.docs.TagKey;
 
-enum SleuthMessagingSpan implements DocumentedSpan {
+enum SleuthRSocketSpan implements DocumentedSpan {
 
 	/**
-	 * Span created when message is sent or received.
+	 * Span created on the RSocket responder side.
 	 */
-	MESSAGING_SPAN {
+	RSOCKET_RESPONDER_SPAN {
+		@Override
+		public String getName() {
+			return "%s";
+		}
+	},
+
+	/**
+	 * Span created on the RSocket responder side.
+	 */
+	RSOCKET_REQUESTER_SPAN {
 		@Override
 		public String getName() {
 			return "%s";
@@ -34,27 +44,32 @@ enum SleuthMessagingSpan implements DocumentedSpan {
 		public TagKey[] getTagKeys() {
 			return Tags.values();
 		}
+
+		@Override
+		public String prefix() {
+			return "rsocket.";
+		}
 	};
 
 	enum Tags implements TagKey {
 
 		/**
-		 * Name of the Spring Integration channel.
+		 * Name of the RSocket route.
 		 */
-		CHANNEL {
+		ROUTE {
 			@Override
 			public String getKey() {
-				return "channel";
+				return "rsocket.route";
 			}
 		},
 
 		/**
-		 * User provided keys via customization options.
+		 * Name of the R2DBC thread.
 		 */
-		CUSTOM {
+		REQUEST_TYPE {
 			@Override
 			public String getKey() {
-				return "%s";
+				return "rsocket.request-type";
 			}
 		}
 
