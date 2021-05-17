@@ -42,13 +42,16 @@ public interface AssertingSpan extends Span {
 	 */
 	Span getDelegate();
 
+	/**
+	 * @return {@code true} when this span was started
+	 */
 	default boolean isStarted() {
 		return false;
 	}
 
 	@Override
 	default AssertingSpan tag(String key, String value) {
-		DocumentedSpanAssertions.assertThatKeyIsValid(key, getDocumentedSpan().getTagKeys());
+		DocumentedSpanAssertions.assertThatKeyIsValid(key, getDocumentedSpan());
 		getDelegate().tag(key, value);
 		return this;
 	}
@@ -60,14 +63,14 @@ public interface AssertingSpan extends Span {
 	 * @return this for chaining
 	 */
 	default AssertingSpan tag(TagKey key, String value) {
-		DocumentedSpanAssertions.assertThatKeyIsValid(key, getDocumentedSpan().getTagKeys());
+		DocumentedSpanAssertions.assertThatKeyIsValid(key, getDocumentedSpan());
 		getDelegate().tag(key.getKey(), value);
 		return this;
 	}
 
 	@Override
 	default AssertingSpan event(String value) {
-		DocumentedSpanAssertions.assertThatEventIsValid(value, getDocumentedSpan().getEvents());
+		DocumentedSpanAssertions.assertThatEventIsValid(value, getDocumentedSpan());
 		getDelegate().event(value);
 		return this;
 	}
@@ -78,14 +81,14 @@ public interface AssertingSpan extends Span {
 	 * @return this for chaining
 	 */
 	default AssertingSpan event(EventValue value) {
-		DocumentedSpanAssertions.assertThatEventIsValid(value, getDocumentedSpan().getEvents());
+		DocumentedSpanAssertions.assertThatEventIsValid(value, getDocumentedSpan());
 		getDelegate().event(value.getValue());
 		return this;
 	}
 
 	@Override
 	default AssertingSpan name(String name) {
-		DocumentedSpanAssertions.assertThatNameIsValid(name, getDocumentedSpan().getName());
+		DocumentedSpanAssertions.assertThatNameIsValid(name, getDocumentedSpan());
 		getDelegate().name(name);
 		return this;
 	}
@@ -135,6 +138,9 @@ public interface AssertingSpan extends Span {
 	 * @return asserting span
 	 */
 	static AssertingSpan of(DocumentedSpan documentedSpan, Span span) {
+		if (span instanceof AssertingSpan) {
+			return (AssertingSpan) span;
+		}
 		return new ImmutableAssertingSpan(documentedSpan, span);
 	}
 

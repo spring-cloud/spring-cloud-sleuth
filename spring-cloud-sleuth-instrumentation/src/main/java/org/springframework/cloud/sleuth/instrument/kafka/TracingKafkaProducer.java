@@ -38,6 +38,7 @@ import org.apache.kafka.common.errors.ProducerFencedException;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.Tracer;
+import org.springframework.cloud.sleuth.docs.AssertingSpanBuilder;
 import org.springframework.cloud.sleuth.propagation.Propagator;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.core.ResolvableType;
@@ -134,8 +135,10 @@ public class TracingKafkaProducer<K, V> implements Producer<K, V> {
 
 	@Override
 	public Future<RecordMetadata> send(ProducerRecord<K, V> producerRecord, Callback callback) {
-		Span.Builder spanBuilder = tracer().spanBuilder().kind(Span.Kind.PRODUCER).name("kafka.produce")
-				.tag("kafka.topic", producerRecord.topic());
+		Span.Builder spanBuilder = AssertingSpanBuilder
+				.of(SleuthKafkaSpan.KAFKA_PRODUCER_SPAN, tracer().spanBuilder().kind(Span.Kind.PRODUCER))
+				.name(SleuthKafkaSpan.KAFKA_PRODUCER_SPAN.getName())
+				.tag(SleuthKafkaSpan.ProducerTags.TOPIC, producerRecord.topic());
 		Span span = spanBuilder.start();
 		propagator().inject(span.context(), producerRecord, injector());
 		try (Tracer.SpanInScope spanInScope = tracer().withSpan(span)) {

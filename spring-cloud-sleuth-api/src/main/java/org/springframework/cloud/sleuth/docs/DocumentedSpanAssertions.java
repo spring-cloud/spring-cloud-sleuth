@@ -22,6 +22,8 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+import org.springframework.util.StringUtils;
+
 /**
  * In order to turn on the assertions you need to either turn on the
  * {@code spring.cloud.sleuth.assertions.enabled} system property or
@@ -39,10 +41,12 @@ final class DocumentedSpanAssertions {
 		throw new IllegalStateException("Can't instantiate utility class");
 	}
 
-	static void assertThatKeyIsValid(String key, TagKey[] allowedKeys) {
+	static void assertThatKeyIsValid(String key, DocumentedSpan documentedSpan) {
 		if (SLEUTH_SPAN_ASSERTIONS_ON) {
+			TagKey[] allowedKeys = documentedSpan.getTagKeys();
 			boolean validTagKey = Arrays.stream(allowedKeys)
-					.anyMatch(tagKey -> patternOrValueMatches(key, tagKey.getKey()));
+					.anyMatch(tagKey -> patternOrValueMatches(key, tagKey.getKey())
+							&& hasRequiredPrefix(key, documentedSpan.prefix()));
 			if (!validTagKey) {
 				throw new AssertionError("The key [" + key + "] is invalid. You can use only one matching "
 						+ Arrays.stream(allowedKeys).map(TagKey::getKey).collect(Collectors.toList()));
@@ -50,8 +54,9 @@ final class DocumentedSpanAssertions {
 		}
 	}
 
-	static void assertThatKeyIsValid(TagKey key, TagKey[] allowedKeys) {
+	static void assertThatKeyIsValid(TagKey key, DocumentedSpan documentedSpan) {
 		if (SLEUTH_SPAN_ASSERTIONS_ON) {
+			TagKey[] allowedKeys = documentedSpan.getTagKeys();
 			if (Arrays.stream(allowedKeys).noneMatch(tagKey -> tagKey == key)) {
 				throw new AssertionError("The key [" + key + "] is invalid. You can use only one matching "
 						+ Arrays.stream(allowedKeys).map(TagKey::getKey).collect(Collectors.toList()));
@@ -59,17 +64,19 @@ final class DocumentedSpanAssertions {
 		}
 	}
 
-	static void assertThatNameIsValid(String name, String allowedName) {
+	static void assertThatNameIsValid(String name, DocumentedSpan documentedSpan) {
+		String allowedName = documentedSpan.getName();
 		if (SLEUTH_SPAN_ASSERTIONS_ON && !patternOrValueMatches(name, allowedName)) {
 			throw new AssertionError(
 					"The name [" + name + "] is invalid. You can use only one matching [" + allowedName + "]");
 		}
 	}
 
-	static void assertThatEventIsValid(String eventValue, EventValue[] allowed) {
+	static void assertThatEventIsValid(String eventValue, DocumentedSpan documentedSpan) {
 		if (SLEUTH_SPAN_ASSERTIONS_ON) {
-			boolean valid = Arrays.stream(allowed)
-					.anyMatch(value -> patternOrValueMatches(eventValue, value.getValue()));
+			EventValue[] allowed = documentedSpan.getEvents();
+			boolean valid = Arrays.stream(allowed).anyMatch(value -> patternOrValueMatches(eventValue, value.getValue())
+					&& hasRequiredPrefix(eventValue, documentedSpan.prefix()));
 			if (!valid) {
 				throw new AssertionError("The event [" + eventValue + "] is invalid. You can use only one matching "
 						+ Arrays.stream(allowed).map(EventValue::getValue).collect(Collectors.toList()));
@@ -77,8 +84,9 @@ final class DocumentedSpanAssertions {
 		}
 	}
 
-	static void assertThatEventIsValid(EventValue eventValue, EventValue[] allowed) {
+	static void assertThatEventIsValid(EventValue eventValue, DocumentedSpan documentedSpan) {
 		if (SLEUTH_SPAN_ASSERTIONS_ON) {
+			EventValue[] allowed = documentedSpan.getEvents();
 			boolean valid = Arrays.stream(allowed).noneMatch(value -> value == eventValue);
 			if (!valid) {
 				throw new AssertionError("The event [" + eventValue + "] is invalid. You can use only one matching "
@@ -93,13 +101,17 @@ final class DocumentedSpanAssertions {
 		}
 	}
 
-	static boolean patternOrValueMatches(String pickedValue, String allowedValue) {
+	private static boolean patternOrValueMatches(String pickedValue, String allowedValue) {
 		if (allowedValue.contains("%s")) {
 			String stringPattern = allowedValue.replaceAll("%s", ".*?");
 			Pattern pattern = PATTERN_CACHE.computeIfAbsent(stringPattern, Pattern::compile);
 			return pattern.matcher(pickedValue).matches();
 		}
 		return allowedValue.equals(pickedValue);
+	}
+
+	private static boolean hasRequiredPrefix(String value, String prefix) {
+		return StringUtils.hasText(prefix) && value.startsWith(prefix);
 	}
 
 }

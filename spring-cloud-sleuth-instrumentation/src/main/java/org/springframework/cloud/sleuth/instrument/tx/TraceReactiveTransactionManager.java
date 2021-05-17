@@ -75,10 +75,10 @@ public class TraceReactiveTransactionManager implements ReactiveTransactionManag
 			Span span = span(contextView);
 			if (tx.isNewTransaction() || span == null) {
 				if (span == null) {
-					span = tracer().nextSpan().name("tx").start();
+					span = tracer().nextSpan().name(SleuthTxSpan.TX_SPAN.getName()).start();
 				}
 				else {
-					span = tracer().nextSpan(span).name("tx").start();
+					span = tracer().nextSpan(span).name(SleuthTxSpan.TX_SPAN.getName()).start();
 				}
 				TracePlatformTransactionManagerTags.tag(span, definition, this.delegate.getClass());
 			}

@@ -42,33 +42,33 @@ public interface AssertingSpanBuilder extends Span.Builder {
 
 	@Override
 	default AssertingSpanBuilder tag(String key, String value) {
-		DocumentedSpanAssertions.assertThatKeyIsValid(key, getDocumentedSpan().getTagKeys());
+		DocumentedSpanAssertions.assertThatKeyIsValid(key, getDocumentedSpan());
 		getDelegate().tag(key, value);
 		return this;
 	}
 
 	default AssertingSpanBuilder tag(TagKey key, String value) {
-		DocumentedSpanAssertions.assertThatKeyIsValid(key, getDocumentedSpan().getTagKeys());
+		DocumentedSpanAssertions.assertThatKeyIsValid(key, getDocumentedSpan());
 		getDelegate().tag(key.getKey(), value);
 		return this;
 	}
 
 	@Override
 	default AssertingSpanBuilder event(String value) {
-		DocumentedSpanAssertions.assertThatEventIsValid(value, getDocumentedSpan().getEvents());
+		DocumentedSpanAssertions.assertThatEventIsValid(value, getDocumentedSpan());
 		getDelegate().event(value);
 		return this;
 	}
 
 	default AssertingSpanBuilder event(EventValue value) {
-		DocumentedSpanAssertions.assertThatEventIsValid(value, getDocumentedSpan().getEvents());
+		DocumentedSpanAssertions.assertThatEventIsValid(value, getDocumentedSpan());
 		getDelegate().event(value.getValue());
 		return this;
 	}
 
 	@Override
 	default AssertingSpanBuilder name(String name) {
-		DocumentedSpanAssertions.assertThatNameIsValid(name, getDocumentedSpan().getName());
+		DocumentedSpanAssertions.assertThatNameIsValid(name, getDocumentedSpan());
 		getDelegate().name(name);
 		return this;
 	}
@@ -126,6 +126,9 @@ public interface AssertingSpanBuilder extends Span.Builder {
 	}
 
 	static AssertingSpanBuilder of(DocumentedSpan documentedSpan, Span.Builder builder) {
+		if (builder instanceof AssertingSpanBuilder) {
+			return (AssertingSpanBuilder) builder;
+		}
 		return new ImmutableAssertingSpanBuilder(documentedSpan, builder);
 	}
 

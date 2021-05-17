@@ -45,17 +45,27 @@ public interface DocumentedSpan {
 	String getName();
 
 	/**
-	 * @return tag keys
+	 * @return allowed tag keys
 	 */
 	default TagKey[] getTagKeys() {
 		return new TagKey[0];
 	}
 
 	/**
-	 * @return events
+	 * @return allowed events
 	 */
 	default EventValue[] getEvents() {
 		return new EventValue[0];
+	}
+
+	/**
+	 * Returns required prefix to be there for events and tags. Example {@code foo.} would
+	 * require the tags and events to have a {code foo} prefix like this for tags:
+	 * {@code foo.bar=true} and {@code foo.started} for events.
+	 * @return required prefix
+	 */
+	default String prefix() {
+		return "";
 	}
 
 	/**

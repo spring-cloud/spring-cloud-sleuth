@@ -41,33 +41,33 @@ public interface AssertingSpanCustomizer extends SpanCustomizer {
 
 	@Override
 	default AssertingSpanCustomizer tag(String key, String value) {
-		DocumentedSpanAssertions.assertThatKeyIsValid(key, getDocumentedSpan().getTagKeys());
+		DocumentedSpanAssertions.assertThatKeyIsValid(key, getDocumentedSpan());
 		getDelegate().tag(key, value);
 		return this;
 	}
 
 	default AssertingSpanCustomizer tag(TagKey key, String value) {
-		DocumentedSpanAssertions.assertThatKeyIsValid(key, getDocumentedSpan().getTagKeys());
+		DocumentedSpanAssertions.assertThatKeyIsValid(key, getDocumentedSpan());
 		getDelegate().tag(key.getKey(), value);
 		return this;
 	}
 
 	@Override
 	default AssertingSpanCustomizer event(String value) {
-		DocumentedSpanAssertions.assertThatEventIsValid(value, getDocumentedSpan().getEvents());
+		DocumentedSpanAssertions.assertThatEventIsValid(value, getDocumentedSpan());
 		getDelegate().event(value);
 		return this;
 	}
 
 	default AssertingSpanCustomizer event(EventValue value) {
-		DocumentedSpanAssertions.assertThatEventIsValid(value, getDocumentedSpan().getEvents());
+		DocumentedSpanAssertions.assertThatEventIsValid(value, getDocumentedSpan());
 		getDelegate().event(value.getValue());
 		return this;
 	}
 
 	@Override
 	default AssertingSpanCustomizer name(String name) {
-		DocumentedSpanAssertions.assertThatNameIsValid(name, getDocumentedSpan().getName());
+		DocumentedSpanAssertions.assertThatNameIsValid(name, getDocumentedSpan());
 		getDelegate().name(name);
 		return this;
 	}
@@ -78,6 +78,9 @@ public interface AssertingSpanCustomizer extends SpanCustomizer {
 	 * @return asserting span customizer
 	 */
 	static AssertingSpanCustomizer of(DocumentedSpan documentedSpan, SpanCustomizer span) {
+		if (span instanceof AssertingSpanCustomizer) {
+			return (AssertingSpanCustomizer) span;
+		}
 		return new ImmutableAssertingSpanCustomizer(documentedSpan, span);
 	}
 
