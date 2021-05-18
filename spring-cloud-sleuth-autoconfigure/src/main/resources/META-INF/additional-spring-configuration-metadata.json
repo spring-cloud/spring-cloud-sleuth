@@ -178,6 +178,12 @@
       "type": "java.lang.Boolean",
       "description": "Enable R2dbc instrumentation.",
       "defaultValue": true
+    },
+    {
+      "name": "spring.sleuth.vault.enabled",
+      "type": "java.lang.Boolean",
+      "description": "Enable Spring Vault instrumentation.",
+      "defaultValue": true
     }
   ]
 }

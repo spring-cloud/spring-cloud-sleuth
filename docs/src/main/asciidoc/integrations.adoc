@@ -634,3 +634,12 @@ This feature is available for all tracer implementations.
 
 If you have R2DBC Proxy on the classpath we will instrument the `ConnectionFactory`so that it contains a custom `ProxyExecutionListener`.
 In order to disable this instrumentation set `spring.sleuth.r2dbc.enabled` to `false`.
+
+
+[[sleuth-vault-integration]]
+== Spring Vault
+
+This feature is available for all tracer implementations.
+
+We're instrumenting the `RestTemplate` or `WebClient` instances used by Spring Vault to communicate with Vault.
+In order to disable this instrumentation set `spring.sleuth.vault.enabled` to `false`.
