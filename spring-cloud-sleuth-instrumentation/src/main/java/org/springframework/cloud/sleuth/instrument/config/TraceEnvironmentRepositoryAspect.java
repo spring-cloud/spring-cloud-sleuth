@@ -20,8 +20,8 @@ import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 
-import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.Tracer;
+import org.springframework.cloud.sleuth.docs.AssertingSpan;
 
 /**
  * Aspect wrapping resolution of properties.
@@ -40,9 +40,12 @@ public class TraceEnvironmentRepositoryAspect {
 
 	@Around("execution (* org.springframework.cloud.config.server.environment.EnvironmentRepository.*(..))")
 	public Object traceFindEnvironment(final ProceedingJoinPoint pjp) throws Throwable {
-		Span findOneSpan = this.tracer.nextSpan().name("find");
-		findOneSpan.tag("config.environment.class", pjp.getTarget().getClass().getName());
-		findOneSpan.tag("config.environment.method", pjp.getSignature().getName());
+		// @formatter:off
+		AssertingSpan findOneSpan = SleuthConfigSpan.CONFIG_SPAN.wrap(this.tracer.nextSpan())
+			.name(SleuthConfigSpan.CONFIG_SPAN.getName())
+			.tag(SleuthConfigSpan.Tags.ENVIRONMENT_CLASS, pjp.getTarget().getClass().getName())
+			.tag(SleuthConfigSpan.Tags.ENVIRONMENT_METHOD, pjp.getSignature().getName());
+		// @formatter:on
 		try (Tracer.SpanInScope ws = this.tracer.withSpan(findOneSpan.start())) {
 			return pjp.proceed();
 		}

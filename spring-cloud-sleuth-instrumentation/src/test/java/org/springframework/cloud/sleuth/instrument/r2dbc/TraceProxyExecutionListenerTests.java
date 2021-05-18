@@ -31,6 +31,7 @@ import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.support.StaticListableBeanFactory;
 import org.springframework.boot.autoconfigure.r2dbc.R2dbcProperties;
 import org.springframework.cloud.sleuth.Span;
+import org.springframework.cloud.sleuth.docs.AssertingSpan;
 import org.springframework.cloud.sleuth.tracer.SimpleSpan;
 import org.springframework.cloud.sleuth.tracer.SimpleTracer;
 
@@ -42,7 +43,12 @@ class TraceProxyExecutionListenerTests {
 
 	ConnectionFactory connectionFactory = connectionFactory();
 
-	TraceProxyExecutionListener listener = new TraceProxyExecutionListener(beanFactory(), connectionFactory);
+	TraceProxyExecutionListener listener = new TraceProxyExecutionListener(beanFactory(), connectionFactory) {
+		@Override
+		boolean isContextUnusable() {
+			return false;
+		}
+	};
 
 	@Test
 	void should_do_nothing_on_before_query_when_there_was_no_previous_span() {
@@ -81,8 +87,8 @@ class TraceProxyExecutionListenerTests {
 		AtomicReference<Span> clientSpan = new AtomicReference<>();
 		listener = new TraceProxyExecutionListener(beanFactory(), connectionFactory) {
 			@Override
-			Span clientSpan(QueryExecutionInfo executionInfo, String name) {
-				Span span = super.clientSpan(executionInfo, name);
+			AssertingSpan clientSpan(QueryExecutionInfo executionInfo, String name) {
+				AssertingSpan span = super.clientSpan(executionInfo, name);
 				clientSpan.set(span);
 				return span;
 			}

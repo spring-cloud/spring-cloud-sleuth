@@ -61,7 +61,8 @@ public class TraceCallable<V> implements Callable<V> {
 
 	@Override
 	public V call() throws Exception {
-		Span childSpan = this.tracer.nextSpan(this.parent).name(this.spanName);
+		Span childSpan = SleuthAsyncSpan.ASYNC_CALLABLE_SPAN.wrap(this.tracer.nextSpan(this.parent))
+				.name(this.spanName);
 		try (Tracer.SpanInScope ws = this.tracer.withSpan(childSpan.start())) {
 			return this.delegate.call();
 		}

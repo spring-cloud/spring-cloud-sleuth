@@ -85,7 +85,7 @@ public class TracePlatformTransactionManager implements PlatformTransactionManag
 	}
 
 	Span fallbackSpan() {
-		return tracer().nextSpan().name("tx").start();
+		return SleuthTxSpan.TX_SPAN.wrap(tracer().nextSpan()).name(SleuthTxSpan.TX_SPAN.getName()).start();
 	}
 
 	private Span taggedSpan(Span currentSpan, Span span, TransactionDefinition def, TransactionStatus status) {
@@ -126,7 +126,7 @@ public class TracePlatformTransactionManager implements PlatformTransactionManag
 			throw e;
 		}
 		finally {
-			span.event("tx.commit");
+			SleuthTxSpan.TX_SPAN.wrap(span).event(SleuthTxSpan.Events.COMMIT);
 			span.end();
 			if (ex == null) {
 				if (log.isDebugEnabled()) {
@@ -159,7 +159,7 @@ public class TracePlatformTransactionManager implements PlatformTransactionManag
 			throw e;
 		}
 		finally {
-			span.event("tx.rollback");
+			SleuthTxSpan.TX_SPAN.wrap(span).event(SleuthTxSpan.Events.ROLLBACK);
 			span.end();
 			this.threadLocalSpan.remove();
 		}

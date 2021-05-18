@@ -132,7 +132,7 @@ public class ReactorSleuthMethodInvocationProcessor extends AbstractSleuthMethod
 			if (this.span == null) {
 				// If we aren't continuing a trace from this flow, use nextSpan so that it
 				// can consider the "current span" (typically, backed by a thread-local)
-				span = tracer.nextSpan();
+				span = SleuthAnnotationSpan.ANNOTATION_NEW_OR_CONTINUE_SPAN.wrap(tracer.nextSpan());
 				this.processor.newSpanParser().parse(this.invocation, this.newSpan, span);
 				span.start();
 			}
@@ -177,7 +177,7 @@ public class ReactorSleuthMethodInvocationProcessor extends AbstractSleuthMethod
 			Span span;
 			Tracer tracer = this.processor.tracer();
 			if (this.span == null) {
-				span = tracer.nextSpan();
+				span = SleuthAnnotationSpan.ANNOTATION_NEW_OR_CONTINUE_SPAN.wrap(tracer.nextSpan());
 				this.processor.newSpanParser().parse(this.invocation, this.newSpan, span);
 				span.start();
 			}

@@ -17,6 +17,7 @@
 package org.springframework.cloud.sleuth.brave.bridge;
 
 import org.springframework.cloud.sleuth.SpanCustomizer;
+import org.springframework.cloud.sleuth.docs.AssertingSpanCustomizer;
 
 /**
  * Brave implementation of a {@link SpanCustomizer}.
@@ -48,7 +49,7 @@ public class BraveSpanCustomizer implements SpanCustomizer {
 	}
 
 	static brave.SpanCustomizer toBrave(SpanCustomizer spanCustomizer) {
-		return ((BraveSpanCustomizer) spanCustomizer).spanCustomizer;
+		return ((BraveSpanCustomizer) AssertingSpanCustomizer.unwrap(spanCustomizer)).spanCustomizer;
 	}
 
 	static SpanCustomizer fromBrave(brave.SpanCustomizer spanCustomizer) {

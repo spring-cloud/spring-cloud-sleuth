@@ -39,10 +39,6 @@ abstract class AbstractSleuthMethodInvocationProcessor implements SleuthMethodIn
 
 	private static final Log logger = LogFactory.getLog(AbstractSleuthMethodInvocationProcessor.class);
 
-	private static final String CLASS_KEY = "class";
-
-	private static final String METHOD_KEY = "method";
-
 	BeanFactory beanFactory;
 
 	private NewSpanParser newSpanParser;
@@ -81,8 +77,9 @@ abstract class AbstractSleuthMethodInvocationProcessor implements SleuthMethodIn
 	}
 
 	void addTags(MethodInvocation invocation, Span span) {
-		span.tag(CLASS_KEY, invocation.getThis().getClass().getSimpleName());
-		span.tag(METHOD_KEY, invocation.getMethod().getName());
+		SleuthAnnotationSpan.ANNOTATION_NEW_OR_CONTINUE_SPAN.wrap(span)
+				.tag(SleuthAnnotationSpan.Tags.CLASS, invocation.getThis().getClass().getSimpleName())
+				.tag(SleuthAnnotationSpan.Tags.METHOD, invocation.getMethod().getName());
 	}
 
 	void logEvent(Span span, String name) {
@@ -92,7 +89,7 @@ abstract class AbstractSleuthMethodInvocationProcessor implements SleuthMethodIn
 					+ "the same class then the aspect will not be properly resolved");
 			return;
 		}
-		span.event(name);
+		SleuthAnnotationSpan.ANNOTATION_NEW_OR_CONTINUE_SPAN.wrap(span).event(name);
 	}
 
 	String log(ContinueSpan continueSpan) {

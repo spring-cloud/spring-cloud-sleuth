@@ -9,10 +9,11 @@
 |spring.sleuth.baggage.local-fields |  | 
 |spring.sleuth.baggage.remote-fields |  | List of fields that are referenced the same in-process as it is on the wire. For example, the field "x-vcap-request-id" would be set as-is including the prefix.
 |spring.sleuth.baggage.tag-fields |  | 
+|spring.sleuth.batch.enabled | `true` | Enable Spring Batch instrumentation.
 |spring.sleuth.circuitbreaker.enabled | `true` | Enable Spring Cloud CircuitBreaker instrumentation.
 |spring.sleuth.config.server.enabled | `true` | Enable Spring Cloud Config Server instrumentation.
 |spring.sleuth.deployer.enabled | `true` | Enable Spring Cloud Deployer instrumentation.
-|spring.sleuth.deployer.status-poll-delay | `1000` | Default poll delay to retrieve the deployed application status.
+|spring.sleuth.deployer.status-poll-delay | `500` | Default poll delay to retrieve the deployed application status.
 |spring.sleuth.enabled | `true` | 
 |spring.sleuth.feign.enabled | `true` | Enable span information propagation when using Feign.
 |spring.sleuth.feign.processor.enabled | `true` | Enable post processor that wraps Feign Context in its tracing representations.
@@ -22,6 +23,8 @@
 |spring.sleuth.integration.enabled | `true` | Enable Spring Integration instrumentation.
 |spring.sleuth.integration.patterns | `[!hystrixStreamOutput*, *, !channel*]` | An array of patterns against which channel names will be matched. @see org.springframework.integration.config.GlobalChannelInterceptor#patterns() Defaults to any channel name not matching the Hystrix Stream and functional Stream channel names.
 |spring.sleuth.integration.websockets.enabled | `true` | Enable tracing for WebSockets.
+|spring.sleuth.kafka.enabled | `true` | Enable instrumenting of Apache Kafka clients.
+|spring.sleuth.messaging.aspect.enabled | `false` | Should {@link MessageMapping} wrapping be enabled.
 |spring.sleuth.messaging.enabled | `false` | Should messaging be turned on.
 |spring.sleuth.messaging.jms.enabled | `true` | Enable tracing of JMS.
 |spring.sleuth.messaging.jms.remote-service-name | `jms` | JMS remote service name.
@@ -35,12 +38,14 @@
 |spring.sleuth.opentracing.enabled | `true` | Enables OpenTracing support.
 |spring.sleuth.propagation.type |  | Tracing context propagation types.
 |spring.sleuth.quartz.enabled | `true` | Enable tracing for Quartz.
+|spring.sleuth.r2dbc.enabled | `true` | Enable R2dbc instrumentation.
 |spring.sleuth.reactor.decorate-on-each | `true` | When true decorates on each operator, will be less performing, but logging will always contain the tracing entries in each operator. When false decorates on last operator, will be more performing, but logging might not always contain the tracing entries. @deprecated use explicit value via {@link SleuthReactorProperties#instrumentationType}
 |spring.sleuth.reactor.enabled | `true` | When true enables instrumentation for reactor.
 |spring.sleuth.reactor.instrumentation-type |  | 
 |spring.sleuth.redis.enabled | `true` | Enable span information propagation when using Redis.
 |spring.sleuth.redis.remote-service-name | `redis` | Service name for the remote Redis endpoint.
 |spring.sleuth.rpc.enabled | `true` | Enable tracing of RPC.
+|spring.sleuth.rsocket.enabled | `true` | When true enables instrumentation for rsocket.
 |spring.sleuth.rxjava.schedulers.hook.enabled | `true` | Enable support for RxJava via RxJavaSchedulersHook.
 |spring.sleuth.rxjava.schedulers.ignoredthreads | `[HystrixMetricPoller, ^RxComputation.*$]` | Thread names for which spans will not be sampled.
 |spring.sleuth.sampler.probability |  | Probability of requests that should be sampled. E.g. 1.0 - 100% requests should be sampled. The precision is whole-numbers only (i.e. there's no support for 0.1% of the traces).
@@ -55,6 +60,7 @@
 |spring.sleuth.task.enabled | `true` | Enable Spring Cloud Task instrumentation.
 |spring.sleuth.trace-id128 | `false` | When true, generate 128-bit trace IDs instead of 64-bit ones.
 |spring.sleuth.tracer.mode |  | Set which tracer implementation should be picked.
+|spring.sleuth.tx.enabled | `true` | Enable Spring TX instrumentation.
 |spring.sleuth.web.additional-skip-pattern |  | Additional pattern for URLs that should be skipped in tracing. This will be appended to the {@link SleuthWebProperties#skipPattern}.
 |spring.sleuth.web.client.enabled | `true` | Enable interceptor injecting into {@link org.springframework.web.client.RestTemplate}.
 |spring.sleuth.web.client.skip-pattern |  | Pattern for URLs that should be skipped in client side tracing.

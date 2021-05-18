@@ -27,6 +27,9 @@ import org.springframework.beans.factory.BeanFactory;
 import org.springframework.boot.autoconfigure.r2dbc.R2dbcProperties;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.Tracer;
+import org.springframework.cloud.sleuth.docs.AssertingSpan;
+import org.springframework.cloud.sleuth.docs.AssertingSpanBuilder;
+import org.springframework.cloud.sleuth.internal.ContextUtil;
 import org.springframework.util.StringUtils;
 
 /**
@@ -52,11 +55,17 @@ public class TraceProxyExecutionListener implements ProxyExecutionListener {
 
 	@Override
 	public void beforeQuery(QueryExecutionInfo executionInfo) {
-		if (tracer().currentSpan() == null) {
+		if (isContextUnusable()) {
+			if (log.isDebugEnabled()) {
+				log.debug("Context is not ready - won't do anything");
+			}
+			return;
+		}
+		else if (tracer().currentSpan() == null) {
 			return;
 		}
 		String name = this.connectionFactory.getMetadata().getName();
-		Span span = clientSpan(executionInfo, name);
+		AssertingSpan span = clientSpan(executionInfo, name);
 		if (log.isDebugEnabled()) {
 			log.debug("Created a new child span before query [" + span + "]");
 		}
@@ -64,28 +73,38 @@ public class TraceProxyExecutionListener implements ProxyExecutionListener {
 		executionInfo.getValueStore().put(Span.class, span);
 	}
 
-	Span clientSpan(QueryExecutionInfo executionInfo, String name) {
+	AssertingSpan clientSpan(QueryExecutionInfo executionInfo, String name) {
 		R2dbcProperties r2dbcProperties = this.beanFactory.getBean(R2dbcProperties.class);
 		String url = r2dbcProperties.getUrl();
-		Span.Builder builder = tracer().spanBuilder().kind(Span.Kind.CLIENT).name("query")
-				.remoteServiceName(name)
-				.tag("rd2bc.connection", name).tag("rd2bc.thread", executionInfo.getThreadName());
+		// @formatter:off
+		AssertingSpanBuilder builder = AssertingSpanBuilder.of(SleuthR2dbcSpan.R2DBC_QUERY_SPAN, tracer.spanBuilder())
+				.kind(Span.Kind.CLIENT)
+				.name(SleuthR2dbcSpan.R2DBC_QUERY_SPAN.getName()).remoteServiceName(name)
+				.tag(SleuthR2dbcSpan.Tags.CONNECTION, name)
+				.tag(SleuthR2dbcSpan.Tags.THREAD, executionInfo.getThreadName());
+		// @formatter:on
 		if (StringUtils.hasText(url)) {
 			builder.remoteUrl(url);
 		}
 		return builder.start();
 	}
 
-	private void tagQueries(QueryExecutionInfo executionInfo, Span span) {
+	private void tagQueries(QueryExecutionInfo executionInfo, AssertingSpan span) {
 		int i = 0;
 		for (QueryInfo queryInfo : executionInfo.getQueries()) {
-			span.tag("r2dbc.query[" + i + "]", queryInfo.getQuery());
+			span.tag(String.format(SleuthR2dbcSpan.Tags.QUERY.getKey(), i), queryInfo.getQuery());
 			i = i + 1;
 		}
 	}
 
 	@Override
 	public void afterQuery(QueryExecutionInfo executionInfo) {
+		if (isContextUnusable()) {
+			if (log.isDebugEnabled()) {
+				log.debug("Context is not ready - won't do anything");
+			}
+			return;
+		}
 		Span span = executionInfo.getValueStore().get(Span.class, Span.class);
 		if (span != null) {
 			if (log.isDebugEnabled()) {
@@ -101,13 +120,23 @@ public class TraceProxyExecutionListener implements ProxyExecutionListener {
 
 	@Override
 	public void eachQueryResult(QueryExecutionInfo executionInfo) {
+		if (isContextUnusable()) {
+			if (log.isDebugEnabled()) {
+				log.debug("Context is not ready - won't do anything");
+			}
+			return;
+		}
 		Span span = executionInfo.getValueStore().get(Span.class, Span.class);
 		if (span != null) {
 			if (log.isDebugEnabled()) {
 				log.debug("Marking after query result for span [" + span + "]");
 			}
-			span.event("r2dbc.query_result");
+			SleuthR2dbcSpan.R2DBC_QUERY_SPAN.wrap(span).event(SleuthR2dbcSpan.Events.QUERY_RESULT);
 		}
+	}
+
+	boolean isContextUnusable() {
+		return ContextUtil.isContextUnusable(this.beanFactory);
 	}
 
 	private Tracer tracer() {

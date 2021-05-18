@@ -50,7 +50,6 @@ import org.springframework.cloud.sleuth.test.TestTracingAwareSupplier;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.cloud.sleuth.instrument.quartz.TracingJobListener.CONTEXT_SPAN_IN_SCOPE_KEY;
 import static org.springframework.cloud.sleuth.instrument.quartz.TracingJobListener.CONTEXT_SPAN_KEY;
-import static org.springframework.cloud.sleuth.instrument.quartz.TracingJobListener.TRIGGER_TAG_KEY;
 
 /**
  * @author Branden Cash
@@ -125,7 +124,8 @@ public abstract class TracingJobListenerTest implements TestTracingAwareSupplier
 		// expect
 		FinishedSpan span = tracerTest().handler().takeLocalSpan();
 		assertThat(span.getName()).isEqualToIgnoringCase(SUCCESSFUL_JOB_KEY.toString());
-		assertThat(span.getTags().get(TRIGGER_TAG_KEY)).isEqualToIgnoringCase(TRIGGER_KEY.toString());
+		assertThat(span.getTags().get(SleuthQuartzSpan.Tags.TRIGGER.getKey()))
+				.isEqualToIgnoringCase(TRIGGER_KEY.toString());
 	}
 
 	@Test

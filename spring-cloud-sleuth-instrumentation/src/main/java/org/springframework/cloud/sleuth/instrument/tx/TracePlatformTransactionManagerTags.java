@@ -17,6 +17,7 @@
 package org.springframework.cloud.sleuth.instrument.tx;
 
 import org.springframework.cloud.sleuth.Span;
+import org.springframework.cloud.sleuth.docs.AssertingSpan;
 import org.springframework.transaction.TransactionDefinition;
 import org.springframework.util.ClassUtils;
 import org.springframework.util.StringUtils;
@@ -28,16 +29,19 @@ final class TracePlatformTransactionManagerTags {
 	}
 
 	static void tag(Span span, TransactionDefinition def, Class transactionManagerClass) {
-		span.tag("tx.transaction-manager", ClassUtils.getQualifiedName(transactionManagerClass));
-		span.tag("tx.read-only", String.valueOf(def.isReadOnly()));
-		span.tag("tx.propagation-level", propagationLevel(def));
-		span.tag("tx.isolation-level", isolationLevel(def));
+		// @formatter:off
+		AssertingSpan assertingSpan = SleuthTxSpan.TX_SPAN.wrap(span)
+				.tag(SleuthTxSpan.Tags.TRANSACTION_MANAGER, ClassUtils.getQualifiedName(transactionManagerClass))
+				.tag(SleuthTxSpan.Tags.READ_ONLY, String.valueOf(def.isReadOnly()))
+				.tag(SleuthTxSpan.Tags.PROPAGATION_LEVEL, propagationLevel(def))
+				.tag(SleuthTxSpan.Tags.ISOLATION_LEVEL, isolationLevel(def));
 		if (def.getTimeout() > 0) {
-			span.tag("tx.timeout", String.valueOf(def.getTimeout()));
+			assertingSpan.tag(SleuthTxSpan.Tags.TIMEOUT, String.valueOf(def.getTimeout()));
 		}
 		if (StringUtils.hasText(def.getName())) {
-			span.tag("tx.name", def.getName());
+			assertingSpan.tag(SleuthTxSpan.Tags.NAME, def.getName());
 		}
+		// @formatter:on
 	}
 
 	private static String propagationLevel(TransactionDefinition def) {

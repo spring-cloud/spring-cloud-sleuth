@@ -35,6 +35,9 @@ import org.springframework.cloud.deployer.spi.core.RuntimeEnvironmentInfo;
 import org.springframework.cloud.sleuth.CurrentTraceContext;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.Tracer;
+import org.springframework.cloud.sleuth.docs.AssertingSpan;
+import org.springframework.cloud.sleuth.docs.AssertingSpanBuilder;
+import org.springframework.cloud.sleuth.docs.DocumentedSpan;
 import org.springframework.cloud.sleuth.instrument.reactor.ReactorSleuth;
 import org.springframework.core.env.Environment;
 import org.springframework.lang.Nullable;
@@ -70,35 +73,37 @@ public class TraceAppDeployer implements AppDeployer {
 
 	@Override
 	public String deploy(AppDeploymentRequest request) {
-		Span.Builder spanBuilder = clientSpan("deploy", request);
-		Span span = spanBuilder.start();
+		AssertingSpanBuilder spanBuilder = clientSpan(SleuthDeployerSpan.DEPLOYER_DEPLOY_SPAN, request);
+		AssertingSpan span = spanBuilder.start();
 		try (Tracer.SpanInScope spanInScope = tracer().withSpan(span)) {
-			span.event("deployer.start");
+			span.event(SleuthDeployerSpan.Events.DEPLOYER_START);
 			String id = this.delegate.deploy(request);
-			span.tag("deployer.app.id", id);
+			span.tag(SleuthDeployerSpan.Tags.APP_ID, id);
 			registerListener(span, id);
 			return id;
 		}
 	}
 
-	private Span.Builder clientSpan(String name) {
-		return clientSpan(name, null, null);
+	private AssertingSpanBuilder clientSpan(DocumentedSpan documentedSpan) {
+		return clientSpan(documentedSpan, null, null);
 	}
 
-	private Span.Builder clientSpan(String name, @Nullable AppDeploymentRequest request) {
-		return clientSpan(name, null, request);
+	private AssertingSpanBuilder clientSpan(DocumentedSpan documentedSpan, @Nullable AppDeploymentRequest request) {
+		return clientSpan(documentedSpan, null, request);
 	}
 
-	private Span.Builder clientSpanKind(String name, Span.Builder spanBuilder) {
+	private AssertingSpanBuilder clientSpanKind(String name, AssertingSpanBuilder spanBuilder) {
 		return spanBuilder.kind(Span.Kind.CLIENT).name(name).remoteServiceName(remoteServiceName());
 	}
 
-	private Span.Builder clientSpan(String name, Span parentSpan) {
-		return clientSpan(name, parentSpan, null);
+	private AssertingSpanBuilder clientSpan(DocumentedSpan documentedSpan, Span parentSpan) {
+		return clientSpan(documentedSpan, parentSpan, null);
 	}
 
-	private Span.Builder clientSpan(String name, @Nullable Span parentSpan, @Nullable AppDeploymentRequest request) {
-		Span.Builder spanBuilder = tracer().spanBuilder();
+	private AssertingSpanBuilder clientSpan(DocumentedSpan documentedSpan, @Nullable Span parentSpan,
+			@Nullable AppDeploymentRequest request) {
+		String name = documentedSpan.getName();
+		AssertingSpanBuilder spanBuilder = AssertingSpanBuilder.of(documentedSpan, tracer().spanBuilder());
 		Span currentSpan = parentSpan != null ? parentSpan : tracer().currentSpan();
 		if (currentSpan != null) {
 			spanBuilder.setParent(currentSpan.context());
@@ -107,15 +112,15 @@ public class TraceAppDeployer implements AppDeployer {
 		if (request != null) {
 			String platformName = request.getDeploymentProperties().get("spring.cloud.deployer.platformName");
 			if (StringUtils.hasText(platformName)) {
-				spanBuilder.tag("deployer.platform.name", platformName);
+				spanBuilder.tag(SleuthDeployerSpan.Tags.PLATFORM_NAME, platformName);
 			}
 			String appName = request.getDeploymentProperties().get("spring.cloud.deployer.appName");
 			if (StringUtils.hasText(appName)) {
-				spanBuilder.tag("deployer.app.name", appName);
+				spanBuilder.tag(SleuthDeployerSpan.Tags.APP_NAME, appName);
 			}
 			String group = request.getDeploymentProperties().get("spring.cloud.deployer.group");
 			if (StringUtils.hasText(group)) {
-				spanBuilder.tag("deployer.app.name", group);
+				spanBuilder.tag(SleuthDeployerSpan.Tags.APP_GROUP, group);
 			}
 		}
 		addCfTags(spanBuilder, platformSpecificInfo);
@@ -123,24 +128,24 @@ public class TraceAppDeployer implements AppDeployer {
 		return clientSpanKind(name, spanBuilder);
 	}
 
-	private void addCfTags(Span.Builder spanBuilder, Map<String, String> platformSpecificInfo) {
+	private void addCfTags(AssertingSpanBuilder spanBuilder, Map<String, String> platformSpecificInfo) {
 		if (platformSpecificInfo.containsKey("API Endpoint")) {
-			spanBuilder.tag("deployer.platform.cf.url", platformSpecificInfo.get("API Endpoint"));
+			spanBuilder.tag(SleuthDeployerSpan.Tags.CF_URL, platformSpecificInfo.get("API Endpoint"));
 		}
 		if (platformSpecificInfo.containsKey("Organization")) {
-			spanBuilder.tag("deployer.platform.cf.org", platformSpecificInfo.get("Organization"));
+			spanBuilder.tag(SleuthDeployerSpan.Tags.CF_ORG, platformSpecificInfo.get("Organization"));
 		}
 		if (platformSpecificInfo.containsKey("Space")) {
-			spanBuilder.tag("deployer.platform.cf.space", platformSpecificInfo.get("Space"));
+			spanBuilder.tag(SleuthDeployerSpan.Tags.CF_SPACE, platformSpecificInfo.get("Space"));
 		}
 	}
 
-	private void addK8sTags(Span.Builder spanBuilder, Map<String, String> platformSpecificInfo) {
+	private void addK8sTags(AssertingSpanBuilder spanBuilder, Map<String, String> platformSpecificInfo) {
 		if (platformSpecificInfo.containsKey("master-url")) {
-			spanBuilder.tag("deployer.platform.k8s.url", platformSpecificInfo.get("master-url"));
+			spanBuilder.tag(SleuthDeployerSpan.Tags.K8S_URL, platformSpecificInfo.get("master-url"));
 		}
 		if (platformSpecificInfo.containsKey("namespace")) {
-			spanBuilder.tag("deployer.platform.k8s.namespace", platformSpecificInfo.get("namespace"));
+			spanBuilder.tag(SleuthDeployerSpan.Tags.K8S_NAMESPACE, platformSpecificInfo.get("namespace"));
 		}
 	}
 
@@ -165,11 +170,11 @@ public class TraceAppDeployer implements AppDeployer {
 
 	@Override
 	public void undeploy(String id) {
-		Span.Builder spanBuilder = clientSpan("undeploy");
-		Span span = spanBuilder.start();
-		span.tag("deployer.app.id", id);
+		AssertingSpanBuilder spanBuilder = clientSpan(SleuthDeployerSpan.DEPLOYER_UNDEPLOY_SPAN);
+		AssertingSpan span = spanBuilder.start();
+		span.tag(SleuthDeployerSpan.Tags.APP_ID, id);
 		try (Tracer.SpanInScope spanInScope = tracer().withSpan(span)) {
-			span.event("deployer.start");
+			span.event(SleuthDeployerSpan.Events.DEPLOYER_START);
 			this.delegate.undeploy(id);
 			registerListener(span, id);
 		}
@@ -180,9 +185,9 @@ public class TraceAppDeployer implements AppDeployer {
 
 	@Override
 	public AppStatus status(String id) {
-		Span.Builder spanBuilder = clientSpan("status");
-		Span span = spanBuilder.start();
-		span.tag("deployer.app.id", id);
+		AssertingSpanBuilder spanBuilder = clientSpan(SleuthDeployerSpan.DEPLOYER_STATUS_SPAN);
+		AssertingSpan span = spanBuilder.start();
+		span.tag(SleuthDeployerSpan.Tags.APP_ID, id);
 		try (Tracer.SpanInScope spanInScope = tracer().withSpan(span.start())) {
 			return this.delegate.status(id);
 		}
@@ -193,17 +198,18 @@ public class TraceAppDeployer implements AppDeployer {
 
 	@Override
 	public Mono<AppStatus> statusReactive(String id) {
-		return ReactorSleuth.tracedMono(tracer(), currentTraceContext(), "status",
-				() -> this.delegate.statusReactive(id), (o, span) -> span.tag("deployer.app.id", id),
-				span -> clientSpan("status", span).start());
+		return ReactorSleuth.tracedMono(tracer(), currentTraceContext(),
+				SleuthDeployerSpan.DEPLOYER_STATUS_SPAN.getName(), () -> this.delegate.statusReactive(id),
+				(o, span) -> span.tag(SleuthDeployerSpan.Tags.APP_ID.getKey(), id),
+				span -> clientSpan(SleuthDeployerSpan.DEPLOYER_STATUS_SPAN, span).start());
 	}
 
 	@Override
 	public Flux<AppStatus> statusesReactive(String... ids) {
-		return ReactorSleuth.tracedFlux(tracer(), currentTraceContext(), "statuses",
-				() -> this.delegate.statusesReactive(ids),
-				(o, span) -> span.tag("deployer.app.ids", Arrays.toString(ids)),
-				span -> clientSpan("statuses", span).start());
+		return ReactorSleuth.tracedFlux(tracer(), currentTraceContext(),
+				SleuthDeployerSpan.DEPLOYER_STATUSES_SPAN.getName(), () -> this.delegate.statusesReactive(ids),
+				(o, span) -> span.tag(SleuthDeployerSpan.Tags.APP_ID.getKey(), Arrays.toString(ids)),
+				span -> clientSpan(SleuthDeployerSpan.DEPLOYER_STATUSES_SPAN, span).start());
 	}
 
 	@Override
@@ -213,9 +219,9 @@ public class TraceAppDeployer implements AppDeployer {
 
 	@Override
 	public String getLog(String id) {
-		Span.Builder spanBuilder = clientSpan("getLog");
-		Span span = spanBuilder.start();
-		span.tag("deployer.app.id", id);
+		AssertingSpanBuilder spanBuilder = clientSpan(SleuthDeployerSpan.DEPLOYER_GET_LOG_SPAN);
+		AssertingSpan span = spanBuilder.start();
+		span.tag(SleuthDeployerSpan.Tags.APP_ID, id);
 		try (Tracer.SpanInScope spanInScope = tracer().withSpan(span)) {
 			return this.delegate.getLog(id);
 		}
@@ -226,10 +232,10 @@ public class TraceAppDeployer implements AppDeployer {
 
 	@Override
 	public void scale(AppScaleRequest appScaleRequest) {
-		Span.Builder spanBuilder = clientSpan("scale");
-		Span span = spanBuilder.start();
-		span.tag("deployer.scale.deploymentId", appScaleRequest.getDeploymentId());
-		span.tag("deployer.scale.count", String.valueOf(appScaleRequest.getCount()));
+		AssertingSpanBuilder spanBuilder = clientSpan(SleuthDeployerSpan.DEPLOYER_SCALE_SPAN);
+		AssertingSpan span = spanBuilder.start();
+		span.tag(SleuthDeployerSpan.ScaleTags.DEPLOYER_SCALE_DEPLOYMENT_ID, appScaleRequest.getDeploymentId());
+		span.tag(SleuthDeployerSpan.ScaleTags.DEPLOYER_SCALE_COUNT, String.valueOf(appScaleRequest.getCount()));
 		try (Tracer.SpanInScope spanInScope = tracer().withSpan(span.start())) {
 			this.delegate.scale(appScaleRequest);
 		}
@@ -297,7 +303,7 @@ public class TraceAppDeployer implements AppDeployer {
 			if (log.isDebugEnabled()) {
 				log.debug("Will annotate its state with [" + name + "]");
 			}
-			this.span.event(name);
+			this.span.event(String.format(SleuthDeployerSpan.Events.DEPLOYER_STATUS_CHANGE.getValue(), name));
 		}
 
 		private boolean statusChanged() {

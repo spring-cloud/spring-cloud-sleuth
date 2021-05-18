@@ -39,6 +39,7 @@ import org.springframework.cloud.sleuth.ThreadLocalSpan;
 import org.springframework.cloud.sleuth.TraceContext;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.WithThreadLocalSpan;
+import org.springframework.cloud.sleuth.docs.AssertingSpanBuilder;
 import org.springframework.cloud.sleuth.instrument.reactor.ReactorSleuth;
 import org.springframework.cloud.sleuth.internal.EncodingUtils;
 import org.springframework.cloud.sleuth.propagation.Propagator;
@@ -140,7 +141,9 @@ public class TracingResponderRSocketProxy extends RSocketProxy implements WithTh
 			final Iterator<String> iterator = routingMetadata.iterator();
 			name = requestType.name() + " " + iterator.next();
 		}
-		return consumerSpanBuilder.kind(Span.Kind.CONSUMER).name(name).start();
+		return AssertingSpanBuilder
+				.of(SleuthRSocketSpan.RSOCKET_RESPONDER_SPAN, consumerSpanBuilder.kind(Span.Kind.CONSUMER)).name(name)
+				.start();
 	}
 
 	private Span.Builder consumerSpanBuilder(ByteBuf headers) {

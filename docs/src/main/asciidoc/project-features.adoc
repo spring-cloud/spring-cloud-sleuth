@@ -480,6 +480,11 @@ That Logback configuration file:
 NOTE: If you use a custom `logback-spring.xml`, you must pass the `spring.application.name` in the  `bootstrap` rather than the `application` property file.
 Otherwise, your custom logback file does not properly read the property.
 
+[[features-self-documenting-spans]]
+== Self Documenting Spans
+
+A declarative format of representing span configuration was introduced via the `DocumentedSpan` abstraction. By analyzing Sleuth's source code an appendix with all span characteristics is created (including allowed tag keys and event names). You can check the <<appendix.adoc#sleuth-spans, Sleuth Spans appendix>> for more information.
+
 [[features-whats-next]]
 == What to Read Next
 

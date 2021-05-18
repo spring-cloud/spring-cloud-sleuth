@@ -26,6 +26,7 @@ import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.SpanCustomizer;
 import org.springframework.cloud.sleuth.TraceContext;
 import org.springframework.cloud.sleuth.Tracer;
+import org.springframework.cloud.sleuth.docs.AssertingSpan;
 
 /**
  * Brave implementation of a {@link Tracer}.
@@ -58,7 +59,8 @@ public class BraveTracer implements Tracer {
 
 	@Override
 	public SpanInScope withSpan(Span span) {
-		return new BraveSpanInScope(tracer.withSpanInScope(span == null ? null : ((BraveSpan) span).delegate));
+		return new BraveSpanInScope(
+				tracer.withSpanInScope(span == null ? null : ((BraveSpan) AssertingSpan.unwrap(span)).delegate));
 	}
 
 	@Override

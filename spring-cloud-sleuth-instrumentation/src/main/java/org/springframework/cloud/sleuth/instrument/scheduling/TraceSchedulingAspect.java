@@ -24,6 +24,7 @@ import org.aspectj.lang.annotation.Aspect;
 
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.Tracer;
+import org.springframework.cloud.sleuth.docs.AssertingSpan;
 import org.springframework.cloud.sleuth.internal.SpanNameUtil;
 import org.springframework.lang.Nullable;
 
@@ -42,10 +43,6 @@ import org.springframework.lang.Nullable;
  */
 @Aspect
 public class TraceSchedulingAspect {
-
-	private static final String CLASS_KEY = "class";
-
-	private static final String METHOD_KEY = "method";
 
 	private final Tracer tracer;
 
@@ -66,10 +63,10 @@ public class TraceSchedulingAspect {
 			return pjp.proceed();
 		}
 		String spanName = SpanNameUtil.toLowerHyphen(pjp.getSignature().getName());
-		Span span = startOrContinueRenamedSpan(spanName);
+		AssertingSpan span = SleuthSchedulingSpan.SCHEDULED_ANNOTATION_SPAN.wrap(startOrContinueSpan()).name(spanName);
 		try (Tracer.SpanInScope ws = this.tracer.withSpan(span.start())) {
-			span.tag(CLASS_KEY, pjp.getTarget().getClass().getSimpleName());
-			span.tag(METHOD_KEY, pjp.getSignature().getName());
+			span.tag(SleuthSchedulingSpan.Tags.CLASS, pjp.getTarget().getClass().getSimpleName())
+					.tag(SleuthSchedulingSpan.Tags.METHOD, pjp.getSignature().getName());
 			return pjp.proceed();
 		}
 		catch (Throwable ex) {
@@ -81,12 +78,12 @@ public class TraceSchedulingAspect {
 		}
 	}
 
-	private Span startOrContinueRenamedSpan(String spanName) {
+	private Span startOrContinueSpan() {
 		Span currentSpan = this.tracer.currentSpan();
 		if (currentSpan != null) {
-			return currentSpan.name(spanName);
+			return currentSpan;
 		}
-		return this.tracer.nextSpan().name(spanName);
+		return SleuthSchedulingSpan.SCHEDULED_ANNOTATION_SPAN.wrap(this.tracer.nextSpan());
 	}
 
 }
