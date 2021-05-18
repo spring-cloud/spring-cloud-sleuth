@@ -19,6 +19,7 @@ package org.springframework.cloud.sleuth.documentation;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.util.regex.Pattern;
 
 import org.assertj.core.api.BDDAssertions;
 import org.junit.jupiter.api.Test;
@@ -30,7 +31,7 @@ class DocsFromSourcesTests {
 		File root = new File(".");
 		File output = new File(root, "target");
 
-		new DocsFromSources(root, ".*", output).generate();
+		new DocsFromSources(root, Pattern.compile(".*"), output).generate();
 
 		BDDAssertions.then(new String(Files.readAllBytes(new File(output, "_spans.adoc").toPath())))
 				.contains("=== Async Annotation Span").contains("> Span that wraps a")

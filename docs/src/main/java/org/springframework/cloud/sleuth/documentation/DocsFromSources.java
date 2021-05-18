@@ -29,11 +29,11 @@ public class DocsFromSources {
 
 	private final File projectRoot;
 
-	private final String inclusionPattern;
+	private final Pattern inclusionPattern;
 
 	private final File outputDir;
 
-	public DocsFromSources(File projectRoot, String inclusionPattern, File outputDir) {
+	public DocsFromSources(File projectRoot, Pattern inclusionPattern, File outputDir) {
 		this.projectRoot = projectRoot;
 		this.inclusionPattern = inclusionPattern;
 		this.outputDir = outputDir;
@@ -44,15 +44,14 @@ public class DocsFromSources {
 		String inclusionPattern = args[1];
 		inclusionPattern = inclusionPattern.replace("/", File.separator);
 		String output = args[2];
-		new DocsFromSources(new File(projectRoot), inclusionPattern, new File(output)).generate();
+		new DocsFromSources(new File(projectRoot), Pattern.compile(inclusionPattern), new File(output)).generate();
 	}
 
 	public void generate() {
 		Path path = this.projectRoot.toPath();
-		Pattern pattern = Pattern.compile(this.inclusionPattern);
 		System.out.println("Inclusion pattern is [" + this.inclusionPattern + "]");
 		Collection<SpanEntry> spanEntries = new TreeSet<>();
-		FileVisitor<Path> fv = new SpanSearchingFileVisitor(pattern, spanEntries);
+		FileVisitor<Path> fv = new SpanSearchingFileVisitor(this.inclusionPattern, spanEntries);
 		try {
 			Files.walkFileTree(path, fv);
 			Path output = new File(this.outputDir, "_spans.adoc").toPath();
@@ -68,7 +67,7 @@ public class DocsFromSources {
 			Files.write(output, stringBuilder.toString().getBytes());
 		}
 		catch (IOException e) {
-			throw new IllegalStateException(e);
+			throw new IllegalArgumentException(e);
 		}
 	}
 
