@@ -115,10 +115,14 @@ public class BraveSpan implements Span {
 		if (this == o) {
 			return true;
 		}
-		if (o == null || getClass() != o.getClass()) {
+		Object unwrapped = o;
+		if (o instanceof AssertingSpan) {
+			unwrapped = ((AssertingSpan) o).getDelegate();
+		}
+		if (unwrapped == null || getClass() != unwrapped.getClass()) {
 			return false;
 		}
-		BraveSpan braveSpan = (BraveSpan) o;
+		BraveSpan braveSpan = (BraveSpan) unwrapped;
 		return Objects.equals(this.delegate, braveSpan.delegate);
 	}
 
