@@ -70,6 +70,7 @@
 |spring.sleuth.web.ignore-auto-configured-skip-patterns | `false` | If set to true, auto-configured skip patterns will be ignored.
 |spring.sleuth.web.servlet.enabled | `true` | Enable servlet instrumentation.
 |spring.sleuth.web.skip-pattern | `/api-docs.*\|/swagger.*\|.*\.png\|.*\.css\|.*\.js\|.*\.html\|/favicon.ico\|/hystrix.stream` | Pattern for URLs that should be skipped in tracing.
+|spring.sleuth.web.tomcat.enabled | `true` | Enable tracing instrumentation for Tomcat.
 |spring.sleuth.web.webclient.enabled | `true` | Enable tracing instrumentation for WebClient.
 |spring.zipkin.activemq.message-max-bytes | `100000` | Maximum number of bytes for a given message with spans sent to Zipkin over ActiveMQ.
 |spring.zipkin.activemq.queue | `zipkin` | Name of the ActiveMQ queue where spans should be sent to Zipkin.

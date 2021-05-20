@@ -31,8 +31,7 @@ import org.springframework.lang.Nullable;
  *
  * @since 5.10
  */
-// Public for use in sparkjava or other frameworks that re-use servlet types
-class HttpServletRequestWrapper implements HttpServerRequest {
+public class HttpServletRequestWrapper implements HttpServerRequest {
 
 	/** @since 5.10 */
 	public static HttpServerRequest create(HttpServletRequest request) {

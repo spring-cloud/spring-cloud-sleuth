@@ -29,21 +29,25 @@ import org.springframework.cloud.sleuth.TraceContext;
  * @author Marcin Grzejszczak
  * @since 3.0.0
  */
-public class NoOpCurrentTraceContext implements CurrentTraceContext {
+public class SimpleCurrentTraceContext implements CurrentTraceContext {
+
+	public TraceContext traceContext;
 
 	@Override
 	public TraceContext context() {
-		return null;
+		return this.traceContext;
 	}
 
 	@Override
 	public Scope newScope(TraceContext context) {
+		this.traceContext = context;
 		return () -> {
 		};
 	}
 
 	@Override
 	public Scope maybeScope(TraceContext context) {
+		this.traceContext = context;
 		return () -> {
 		};
 	}

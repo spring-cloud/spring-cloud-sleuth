@@ -31,8 +31,7 @@ import org.springframework.lang.Nullable;
  *
  * @since 5.10
  */
-// Public for use in sparkjava or other frameworks that re-use servlet types
-class HttpServletResponseWrapper implements HttpServerResponse {
+public class HttpServletResponseWrapper implements HttpServerResponse {
 
 	// not final for inner
 	// subtype

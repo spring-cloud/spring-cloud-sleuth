@@ -117,7 +117,7 @@ public class TraceFilterWebIntegrationTests {
 	}
 
 	@Test
-	public void exception_logging_span_handler_logs_synchronous_exceptions(CapturedOutput capture) {
+	public void should_instrument_logs_for_tomcat_entries(CapturedOutput capture) {
 		try {
 			new RestTemplate().getForObject("http://localhost:" + port() + "/", String.class);
 			BDDAssertions.fail("should fail due to runtime exception");
@@ -127,7 +127,7 @@ public class TraceFilterWebIntegrationTests {
 
 		then(this.currentTraceContext.get()).isNull();
 		MutableSpan fromFirstTraceFilterFlow = spanHandler.takeRemoteSpanWithErrorMessage(Kind.SERVER,
-				"Request processing failed; nested exception is java.lang.RuntimeException: Throwing exception");
+				"Throwing exception");
 		then(fromFirstTraceFilterFlow.tags()).containsEntry("http.method", "GET").containsEntry("mvc.controller.class",
 				"BasicErrorController");
 		// Trace IDs in logs: issue#714
@@ -137,7 +137,7 @@ public class TraceFilterWebIntegrationTests {
 
 	private void thenLogsForExceptionLoggingFilterContainTracingInformation(CapturedOutput capture, String hex) {
 		String[] split = capture.toString().split("\n");
-		List<String> list = Arrays.stream(split).filter(s -> s.contains("Uncaught exception thrown"))
+		List<String> list = Arrays.stream(split).filter(s -> s.contains("Servlet.service() for servlet"))
 				.filter(s -> s.contains(hex + "," + hex + "]")).collect(Collectors.toList());
 		then(list).isNotEmpty();
 	}

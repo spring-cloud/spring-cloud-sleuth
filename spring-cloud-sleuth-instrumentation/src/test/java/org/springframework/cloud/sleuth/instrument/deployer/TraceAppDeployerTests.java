@@ -36,7 +36,7 @@ import org.springframework.cloud.deployer.spi.app.AppStatus;
 import org.springframework.cloud.deployer.spi.core.AppDefinition;
 import org.springframework.cloud.deployer.spi.core.AppDeploymentRequest;
 import org.springframework.cloud.deployer.spi.core.RuntimeEnvironmentInfo;
-import org.springframework.cloud.sleuth.tracer.NoOpCurrentTraceContext;
+import org.springframework.cloud.sleuth.tracer.SimpleCurrentTraceContext;
 import org.springframework.cloud.sleuth.tracer.SimpleTracer;
 import org.springframework.core.env.Environment;
 import org.springframework.core.io.PathResource;
@@ -145,7 +145,7 @@ class TraceAppDeployerTests {
 	private BeanFactory beanFactory() {
 		StaticListableBeanFactory beanFactory = new StaticListableBeanFactory();
 		beanFactory.addBean("tracer", this.simpleTracer);
-		beanFactory.addBean("currentTraceContext", new NoOpCurrentTraceContext());
+		beanFactory.addBean("currentTraceContext", new SimpleCurrentTraceContext());
 		return beanFactory;
 	}
 

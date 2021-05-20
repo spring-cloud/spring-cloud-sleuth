@@ -132,6 +132,12 @@
       "defaultValue": true
     },
     {
+      "name": "spring.sleuth.web.tomcat.enabled",
+      "type": "java.lang.Boolean",
+      "description": "Enable tracing instrumentation for Tomcat.",
+      "defaultValue": true
+    },
+    {
       "name": "spring.sleuth.integration.enabled",
       "type": "java.lang.Boolean",
       "description": "Enable Spring Integration instrumentation.",
