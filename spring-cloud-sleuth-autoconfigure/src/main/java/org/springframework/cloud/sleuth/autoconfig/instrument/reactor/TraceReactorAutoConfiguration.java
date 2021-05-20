@@ -23,8 +23,6 @@ import java.util.Iterator;
 import java.util.Queue;
 import java.util.function.Function;
 
-import brave.propagation.CurrentTraceContext;
-import brave.propagation.TraceContext;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.reactivestreams.Publisher;
@@ -44,6 +42,8 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.cloud.context.scope.refresh.RefreshScope;
 import org.springframework.cloud.context.scope.refresh.RefreshScopeRefreshedEvent;
+import org.springframework.cloud.sleuth.CurrentTraceContext;
+import org.springframework.cloud.sleuth.TraceContext;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.autoconfig.brave.BraveAutoConfiguration;
 import org.springframework.cloud.sleuth.instrument.reactor.ReactorSleuth;
@@ -294,7 +294,7 @@ class HookRegisteringBeanDefinitionRegistryPostProcessor implements BeanDefiniti
 
 			@Override
 			public boolean offer(Object o) {
-				TraceContext traceContext = currentTraceContext.get();
+				TraceContext traceContext = currentTraceContext.context();
 				return envelopeQueue.offer(new Envelope(o, traceContext));
 			}
 
