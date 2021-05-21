@@ -14,41 +14,28 @@
  * limitations under the License.
  */
 
-package org.springframework.cloud.sleuth;
+package org.springframework.cloud.sleuth.instrument.jdbc;
+
+import java.util.concurrent.ConcurrentHashMap;
+
+import javax.sql.CommonDataSource;
 
 /**
- * Container object for {@link Span} and its corresponding {@link Tracer.SpanInScope}.
+ * {@link CommonDataSource} name resolver based on bean name.
  *
- * @author Marcin Grzejszczak
+ * @author Arthur Gavlyukovskiy
  * @since 3.1.0
  */
-public class SpanAndScope {
+public class TraceDataSourceNameResolver {
 
-	private final Span span;
+	private final ConcurrentHashMap<CommonDataSource, String> cachedNames = new ConcurrentHashMap<>();
 
-	private final Tracer.SpanInScope scope;
-
-	public SpanAndScope(Span span, Tracer.SpanInScope scope) {
-		this.span = span;
-		this.scope = scope;
+	public void addDataSource(String name, CommonDataSource dataSource) {
+		cachedNames.putIfAbsent(dataSource, name);
 	}
 
-	public Span getSpan() {
-		return this.span;
-	}
-
-	public Tracer.SpanInScope getScope() {
-		return this.scope;
-	}
-
-	public void end() {
-		this.scope.close();
-		this.span.end();
-	}
-
-	@Override
-	public String toString() {
-		return "SpanAndScope{" + "span=" + this.span + '}';
+	public String resolveDataSourceName(CommonDataSource dataSource) {
+		return cachedNames.getOrDefault(dataSource, "dataSource");
 	}
 
 }

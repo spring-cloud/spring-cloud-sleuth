@@ -84,6 +84,10 @@
 		<cglib-nodep.version>3.3.0</cglib-nodep.version>
 		<objenesis.version>3.0.1</objenesis.version>
 		<spring-security-oauth2.version>2.2.0.RELEASE</spring-security-oauth2.version>
+		<p6spy.version>3.9.1</p6spy.version>
+		<datasource-proxy.version>1.7</datasource-proxy.version>
+		<tomcat-jdbc.version>10.0.6</tomcat-jdbc.version>
+		<commons-dbcp2.version>2.8.0</commons-dbcp2.version>
 
 		<!-- Until we switch it to true in sc-build -->
 		<javadoc.failOnError>true</javadoc.failOnError>
@@ -292,6 +296,51 @@
 				<groupId>io.zipkin.aws</groupId>
 				<artifactId>brave-propagation-aws</artifactId>
 				<version>${brave-propagation-aws.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>p6spy</groupId>
+				<artifactId>p6spy</artifactId>
+				<version>${p6spy.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>net.ttddyy</groupId>
+				<artifactId>datasource-proxy</artifactId>
+				<version>${datasource-proxy.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>com.vladmihalcea.flexy-pool</groupId>
+				<artifactId>flexy-pool-core</artifactId>
+				<version>${flexy-pool.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>com.vladmihalcea.flexy-pool</groupId>
+				<artifactId>flexy-dbcp2</artifactId>
+				<version>${flexy-pool.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>com.vladmihalcea.flexy-pool</groupId>
+				<artifactId>flexy-hikaricp</artifactId>
+				<version>${flexy-pool.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>com.vladmihalcea.flexy-pool</groupId>
+				<artifactId>flexy-tomcatcp</artifactId>
+				<version>${flexy-pool.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>com.vladmihalcea.flexy-pool</groupId>
+				<artifactId>flexy-micrometer-metrics</artifactId>
+				<version>${flexy-pool.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.apache.commons</groupId>
+				<artifactId>commons-dbcp2</artifactId>
+				<version>${commons-dbcp2.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.apache.tomcat</groupId>
+				<artifactId>tomcat-jdbc</artifactId>
+				<version>${tomcat-jdbc.version}</version>
 			</dependency>
 			<dependency>
 				<groupId>org.hamcrest</groupId>

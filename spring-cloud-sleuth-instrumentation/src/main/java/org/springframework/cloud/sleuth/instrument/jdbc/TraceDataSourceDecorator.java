@@ -14,41 +14,25 @@
  * limitations under the License.
  */
 
-package org.springframework.cloud.sleuth;
+package org.springframework.cloud.sleuth.instrument.jdbc;
+
+import javax.sql.DataSource;
 
 /**
- * Container object for {@link Span} and its corresponding {@link Tracer.SpanInScope}.
+ * Decorator for context {@link DataSource} beans.
  *
- * @author Marcin Grzejszczak
+ * @author Arthur Gavlyukovskiy
  * @since 3.1.0
  */
-public class SpanAndScope {
+public interface TraceDataSourceDecorator {
 
-	private final Span span;
-
-	private final Tracer.SpanInScope scope;
-
-	public SpanAndScope(Span span, Tracer.SpanInScope scope) {
-		this.span = span;
-		this.scope = scope;
-	}
-
-	public Span getSpan() {
-		return this.span;
-	}
-
-	public Tracer.SpanInScope getScope() {
-		return this.scope;
-	}
-
-	public void end() {
-		this.scope.close();
-		this.span.end();
-	}
-
-	@Override
-	public String toString() {
-		return "SpanAndScope{" + "span=" + this.span + '}';
-	}
+	/**
+	 * Decorates given {@link DataSource} instance. Should either return wrapped
+	 * {@link DataSource} or same instance.
+	 * @param beanName name of a bean
+	 * @param dataSource bean instance
+	 * @return decorated {@link DataSource} or given {@link DataSource} without changes.
+	 */
+	DataSource decorate(String beanName, DataSource dataSource);
 
 }

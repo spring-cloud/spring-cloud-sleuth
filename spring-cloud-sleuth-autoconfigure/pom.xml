@@ -188,7 +188,31 @@
 			<artifactId>spring-vault-core</artifactId>
 			<optional>true</optional>
 		</dependency>
-
+		<dependency>
+			<groupId>p6spy</groupId>
+			<artifactId>p6spy</artifactId>
+			<optional>true</optional>
+		</dependency>
+		<dependency>
+			<groupId>net.ttddyy</groupId>
+			<artifactId>datasource-proxy</artifactId>
+			<optional>true</optional>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.commons</groupId>
+			<artifactId>commons-dbcp2</artifactId>
+			<optional>true</optional>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.tomcat</groupId>
+			<artifactId>tomcat-jdbc</artifactId>
+			<optional>true</optional>
+		</dependency>
+		<dependency>
+			<groupId>com.zaxxer</groupId>
+			<artifactId>HikariCP</artifactId>
+			<optional>true</optional>
+		</dependency>
 		<!-- BRAVE -->
 		<dependency>
 			<groupId>org.springframework.cloud</groupId>
