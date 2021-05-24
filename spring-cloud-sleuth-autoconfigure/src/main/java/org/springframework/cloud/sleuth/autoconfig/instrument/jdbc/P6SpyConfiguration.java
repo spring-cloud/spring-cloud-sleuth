@@ -65,8 +65,7 @@ class P6SpyConfiguration {
 	@Bean
 	TraceJdbcEventListener tracingJdbcEventListener(Tracer tracer, DataSourceNameResolver dataSourceNameResolver,
 			TraceDataSourceDecoratorProperties dataSourceDecoratorProperties) {
-		return new TraceJdbcEventListener(tracer, dataSourceNameResolver,
-				dataSourceDecoratorProperties.getSleuth().getInclude(),
+		return new TraceJdbcEventListener(tracer, dataSourceNameResolver, dataSourceDecoratorProperties.getIncludes(),
 				dataSourceDecoratorProperties.getP6spy().getTracing().isIncludeParameterValues());
 	}
 

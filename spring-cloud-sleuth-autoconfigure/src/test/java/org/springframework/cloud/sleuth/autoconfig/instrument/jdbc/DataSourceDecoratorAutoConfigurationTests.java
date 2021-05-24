@@ -76,7 +76,7 @@ class DataSourceDecoratorAutoConfigurationTests {
 	@Test
 	void testNoDecoratingForExcludeBeans() {
 		ApplicationContextRunner contextRunner = this.contextRunner
-				.withPropertyValues("spring.sleuth.jdbc.decorator.datasource.exclude-beans:dataSource");
+				.withPropertyValues("spring.sleuth.jdbc.decorator.datasource.excluded-beans:dataSource");
 
 		contextRunner.run(context -> {
 			DataSource dataSource = context.getBean(DataSource.class);
@@ -196,7 +196,7 @@ class DataSourceDecoratorAutoConfigurationTests {
 	@Test
 	void testDecoratingCanBeDisabledForSpecificBeans() {
 		ApplicationContextRunner contextRunner = this.contextRunner
-				.withPropertyValues("spring.sleuth.jdbc.decorator.datasource.exclude-beans:secondDataSource")
+				.withPropertyValues("spring.sleuth.jdbc.decorator.datasource.excluded-beans:secondDataSource")
 				.withUserConfiguration(TestMultiDataSourceConfiguration.class);
 
 		contextRunner.run(context -> {

@@ -458,7 +458,7 @@ abstract class TracingListenerStrategyTests {
 
 	@Test
 	void testShouldIncludeOnlyConnectionTraces() {
-		contextRunner.withPropertyValues("spring.sleuth.jdbc.decorator.datasource.sleuth.include: connection")
+		contextRunner.withPropertyValues("spring.sleuth.jdbc.decorator.datasource.includes: connection")
 				.run(context -> {
 					DataSource dataSource = context.getBean(DataSource.class);
 					TestSpanHandler spanReporter = context.getBean(TestSpanHandler.class);
@@ -479,49 +479,47 @@ abstract class TracingListenerStrategyTests {
 
 	@Test
 	void testShouldIncludeOnlyQueryTraces() {
-		contextRunner.withPropertyValues("spring.sleuth.jdbc.decorator.datasource.sleuth.include: query")
-				.run(context -> {
-					DataSource dataSource = context.getBean(DataSource.class);
-					TestSpanHandler spanReporter = context.getBean(TestSpanHandler.class);
+		contextRunner.withPropertyValues("spring.sleuth.jdbc.decorator.datasource.includes: query").run(context -> {
+			DataSource dataSource = context.getBean(DataSource.class);
+			TestSpanHandler spanReporter = context.getBean(TestSpanHandler.class);
 
-					Connection connection = dataSource.getConnection();
-					Statement statement = connection.createStatement();
-					ResultSet resultSet = statement.executeQuery("SELECT 1 FROM dual");
-					resultSet.next();
-					resultSet.close();
-					statement.close();
-					connection.close();
+			Connection connection = dataSource.getConnection();
+			Statement statement = connection.createStatement();
+			ResultSet resultSet = statement.executeQuery("SELECT 1 FROM dual");
+			resultSet.next();
+			resultSet.close();
+			statement.close();
+			connection.close();
 
-					assertThat(spanReporter.spans()).hasSize(1);
-					MutableSpan statementSpan = spanReporter.spans().get(0);
-					assertThat(statementSpan.name()).isEqualTo("jdbc:/test/query");
-				});
+			assertThat(spanReporter.spans()).hasSize(1);
+			MutableSpan statementSpan = spanReporter.spans().get(0);
+			assertThat(statementSpan.name()).isEqualTo("jdbc:/test/query");
+		});
 	}
 
 	@Test
 	void testShouldIncludeOnlyFetchTraces() {
-		contextRunner.withPropertyValues("spring.sleuth.jdbc.decorator.datasource.sleuth.include: fetch")
-				.run(context -> {
-					DataSource dataSource = context.getBean(DataSource.class);
-					TestSpanHandler spanReporter = context.getBean(TestSpanHandler.class);
+		contextRunner.withPropertyValues("spring.sleuth.jdbc.decorator.datasource.includes: fetch").run(context -> {
+			DataSource dataSource = context.getBean(DataSource.class);
+			TestSpanHandler spanReporter = context.getBean(TestSpanHandler.class);
 
-					Connection connection = dataSource.getConnection();
-					Statement statement = connection.createStatement();
-					ResultSet resultSet = statement.executeQuery("SELECT 1 FROM dual");
-					resultSet.next();
-					resultSet.close();
-					statement.close();
-					connection.close();
+			Connection connection = dataSource.getConnection();
+			Statement statement = connection.createStatement();
+			ResultSet resultSet = statement.executeQuery("SELECT 1 FROM dual");
+			resultSet.next();
+			resultSet.close();
+			statement.close();
+			connection.close();
 
-					assertThat(spanReporter.spans()).hasSize(1);
-					MutableSpan resultSetSpan = spanReporter.spans().get(0);
-					assertThat(resultSetSpan.name()).isEqualTo("jdbc:/test/fetch");
-				});
+			assertThat(spanReporter.spans()).hasSize(1);
+			MutableSpan resultSetSpan = spanReporter.spans().get(0);
+			assertThat(resultSetSpan.name()).isEqualTo("jdbc:/test/fetch");
+		});
 	}
 
 	@Test
 	void testShouldIncludeOnlyConnectionAndQueryTraces() {
-		contextRunner.withPropertyValues("spring.sleuth.jdbc.decorator.datasource.sleuth.include: connection, query")
+		contextRunner.withPropertyValues("spring.sleuth.jdbc.decorator.datasource.includes: connection, query")
 				.run(context -> {
 					DataSource dataSource = context.getBean(DataSource.class);
 					TestSpanHandler spanReporter = context.getBean(TestSpanHandler.class);
@@ -544,7 +542,7 @@ abstract class TracingListenerStrategyTests {
 
 	@Test
 	void testShouldIncludeOnlyConnectionAndFetchTraces() {
-		contextRunner.withPropertyValues("spring.sleuth.jdbc.decorator.datasource.sleuth.include: connection, fetch")
+		contextRunner.withPropertyValues("spring.sleuth.jdbc.decorator.datasource.includes: connection, fetch")
 				.run(context -> {
 					DataSource dataSource = context.getBean(DataSource.class);
 					TestSpanHandler spanReporter = context.getBean(TestSpanHandler.class);
@@ -567,7 +565,7 @@ abstract class TracingListenerStrategyTests {
 
 	@Test
 	void testShouldIncludeOnlyQueryAndFetchTraces() {
-		contextRunner.withPropertyValues("spring.sleuth.jdbc.decorator.datasource.sleuth.include: query, fetch")
+		contextRunner.withPropertyValues("spring.sleuth.jdbc.decorator.datasource.includes: query, fetch")
 				.run(context -> {
 					DataSource dataSource = context.getBean(DataSource.class);
 					TestSpanHandler spanReporter = context.getBean(TestSpanHandler.class);

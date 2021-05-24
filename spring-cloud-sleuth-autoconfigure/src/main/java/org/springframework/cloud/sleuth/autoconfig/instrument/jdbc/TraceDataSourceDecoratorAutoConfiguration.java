@@ -50,7 +50,7 @@ public class TraceDataSourceDecoratorAutoConfiguration {
 	@ConditionalOnBean(TraceDataSourceDecorator.class)
 	static TraceDataSourceDecoratorBeanPostProcessor dataSourceDecoratorBeanPostProcessor(
 			TraceDataSourceDecoratorProperties dataSourceDecoratorProperties) {
-		return new TraceDataSourceDecoratorBeanPostProcessor(dataSourceDecoratorProperties.getExcludeBeans());
+		return new TraceDataSourceDecoratorBeanPostProcessor(dataSourceDecoratorProperties.getExcludedBeans());
 	}
 
 	@Bean

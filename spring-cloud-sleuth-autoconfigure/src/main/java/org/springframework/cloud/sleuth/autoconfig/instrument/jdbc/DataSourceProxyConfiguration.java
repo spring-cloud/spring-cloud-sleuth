@@ -93,7 +93,7 @@ class DataSourceProxyConfiguration {
 	@Bean
 	TraceQueryExecutionListener traceQueryExecutionListener(Tracer tracer,
 			TraceDataSourceDecoratorProperties dataSourceDecoratorProperties) {
-		return new TraceQueryExecutionListener(tracer, dataSourceDecoratorProperties.getSleuth().getInclude());
+		return new TraceQueryExecutionListener(tracer, dataSourceDecoratorProperties.getIncludes());
 	}
 
 	@Bean

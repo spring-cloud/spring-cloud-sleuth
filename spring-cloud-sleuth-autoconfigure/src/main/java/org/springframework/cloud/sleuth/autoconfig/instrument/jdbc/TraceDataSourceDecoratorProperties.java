@@ -16,13 +16,16 @@
 
 package org.springframework.cloud.sleuth.autoconfig.instrument.jdbc;
 
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.List;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.context.properties.NestedConfigurationProperty;
 import org.springframework.cloud.sleuth.instrument.jdbc.DataSourceProxyProperties;
 import org.springframework.cloud.sleuth.instrument.jdbc.P6SpyProperties;
+import org.springframework.cloud.sleuth.instrument.jdbc.TraceType;
 
 /**
  * Properties for configuring proxy providers.
@@ -41,7 +44,12 @@ public class TraceDataSourceDecoratorProperties {
 	/**
 	 * Beans that won't be decorated.
 	 */
-	private Collection<String> excludeBeans = Collections.emptyList();
+	private Collection<String> excludedBeans = Collections.emptyList();
+
+	/**
+	 * Which types of tracing we would like to include.
+	 */
+	private List<TraceType> includes = Arrays.asList(TraceType.CONNECTION, TraceType.QUERY, TraceType.FETCH);
 
 	@NestedConfigurationProperty
 	private DataSourceProxyProperties datasourceProxy = new DataSourceProxyProperties();
@@ -49,15 +57,20 @@ public class TraceDataSourceDecoratorProperties {
 	@NestedConfigurationProperty
 	private P6SpyProperties p6spy = new P6SpyProperties();
 
-	@NestedConfigurationProperty
-	private SleuthProperties sleuth = new SleuthProperties();
-
 	public boolean isEnabled() {
 		return enabled;
 	}
 
-	public Collection<String> getExcludeBeans() {
-		return excludeBeans;
+	public Collection<String> getExcludedBeans() {
+		return excludedBeans;
+	}
+
+	public List<TraceType> getIncludes() {
+		return includes;
+	}
+
+	public void setIncludes(List<TraceType> includes) {
+		this.includes = includes;
 	}
 
 	public DataSourceProxyProperties getDatasourceProxy() {
@@ -68,16 +81,12 @@ public class TraceDataSourceDecoratorProperties {
 		return p6spy;
 	}
 
-	public SleuthProperties getSleuth() {
-		return sleuth;
-	}
-
 	public void setEnabled(boolean enabled) {
 		this.enabled = enabled;
 	}
 
-	public void setExcludeBeans(Collection<String> excludeBeans) {
-		this.excludeBeans = excludeBeans;
+	public void setExcludedBeans(Collection<String> excludedBeans) {
+		this.excludedBeans = excludedBeans;
 	}
 
 	public void setDatasourceProxy(DataSourceProxyProperties datasourceProxy) {
@@ -86,10 +95,6 @@ public class TraceDataSourceDecoratorProperties {
 
 	public void setP6spy(P6SpyProperties p6spy) {
 		this.p6spy = p6spy;
-	}
-
-	public void setSleuth(SleuthProperties sleuth) {
-		this.sleuth = sleuth;
 	}
 
 }
