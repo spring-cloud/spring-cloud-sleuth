@@ -1,11 +1,11 @@
 /*
- * Copyright 2021 the original author or authors.
+ * Copyright 2013-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.springframework.cloud.sleuth.autoconfig.instrument.jdbc;
+package org.springframework.cloud.sleuth.instrument.jdbc;
 
 import java.util.regex.Pattern;
 
@@ -24,7 +24,7 @@ import java.util.regex.Pattern;
  * @author Arthur Gavlyukovskiy
  * @since 3.1.0
  */
-class P6SpyProperties {
+public class P6SpyProperties {
 
 	/**
 	 * Enables logging JDBC events.
@@ -54,13 +54,13 @@ class P6SpyProperties {
 	private String logFormat;
 
 	/**
-	 * Tracing related properties
+	 * Tracing related properties.
 	 */
 	private P6SpyTracing tracing = new P6SpyTracing();
 
 	/**
 	 * Class file to use (only with logging=custom). The class must implement
-	 * {@link com.p6spy.engine.spy.appender.FormattedLogger}
+	 * {@link com.p6spy.engine.spy.appender.FormattedLogger}.
 	 */
 	private String customAppenderClass;
 
@@ -133,9 +133,30 @@ class P6SpyProperties {
 		this.logFilter = logFilter;
 	}
 
+	/**
+	 * P6Spy logging options.
+	 */
 	public enum P6SpyLogging {
 
-		SYSOUT, SLF4J, FILE, CUSTOM
+		/**
+		 * Log using System.out.
+		 */
+		SYSOUT,
+
+		/**
+		 * Log using SLF4J.
+		 */
+		SLF4J,
+
+		/**
+		 * Log to file.
+		 */
+		FILE,
+
+		/**
+		 * Custom logging.
+		 */
+		CUSTOM
 
 	}
 

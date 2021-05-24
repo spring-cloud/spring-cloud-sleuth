@@ -26,8 +26,8 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.cloud.sleuth.Tracer;
+import org.springframework.cloud.sleuth.instrument.jdbc.DataSourceNameResolver;
 import org.springframework.cloud.sleuth.instrument.jdbc.TraceDataSourceDecorator;
-import org.springframework.cloud.sleuth.instrument.jdbc.TraceDataSourceNameResolver;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
@@ -55,8 +55,8 @@ public class TraceDataSourceDecoratorAutoConfiguration {
 
 	@Bean
 	@ConditionalOnMissingBean
-	TraceDataSourceNameResolver dataSourceNameResolver() {
-		return new TraceDataSourceNameResolver();
+	DataSourceNameResolver dataSourceNameResolver() {
+		return new DataSourceNameResolver();
 	}
 
 }

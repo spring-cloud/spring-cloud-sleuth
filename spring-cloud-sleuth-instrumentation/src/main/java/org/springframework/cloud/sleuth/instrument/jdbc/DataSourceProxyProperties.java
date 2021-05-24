@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.springframework.cloud.sleuth.autoconfig.instrument.jdbc;
+package org.springframework.cloud.sleuth.instrument.jdbc;
 
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
@@ -25,10 +25,10 @@ import net.ttddyy.dsproxy.listener.logging.SLF4JLogLevel;
 import net.ttddyy.dsproxy.support.ProxyDataSourceBuilder;
 
 /**
- * Properties for datasource-proxy
+ * Properties for datasource-proxy.
  *
  * @author Arthur Gavlyukovskiy
- * @since 1.1
+ * @since 3.1.0
  */
 public class DataSourceProxyProperties {
 
@@ -226,9 +226,31 @@ public class DataSourceProxyProperties {
 
 	}
 
+	/**
+	 * Query logging listener is the most used listener that logs executing query with
+	 * actual parameters to. You can pick one of the following proxy logging mechanisms.
+	 */
 	public enum DataSourceProxyLogging {
 
-		SYSOUT, SLF4J, COMMONS, JUL
+		/**
+		 * Log using System.out.
+		 */
+		SYSOUT,
+
+		/**
+		 * Log using SLF4J.
+		 */
+		SLF4J,
+
+		/**
+		 * Log using Commons.
+		 */
+		COMMONS,
+
+		/**
+		 * Log using Java Util Logging.
+		 */
+		JUL
 
 	}
 

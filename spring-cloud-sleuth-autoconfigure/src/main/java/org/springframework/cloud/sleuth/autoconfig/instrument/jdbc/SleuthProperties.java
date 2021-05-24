@@ -25,7 +25,7 @@ import org.springframework.cloud.sleuth.instrument.jdbc.TraceType;
  * Configuration for integration with spring-cloud-sleuth.
  *
  * @author Arthur Gavlyukovskiy
- * @since 1.4.0
+ * @since 3.1.0
  */
 public class SleuthProperties {
 

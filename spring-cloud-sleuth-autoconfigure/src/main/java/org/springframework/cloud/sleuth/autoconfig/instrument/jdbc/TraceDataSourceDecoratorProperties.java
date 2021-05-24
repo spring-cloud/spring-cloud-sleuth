@@ -21,6 +21,8 @@ import java.util.Collections;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.context.properties.NestedConfigurationProperty;
+import org.springframework.cloud.sleuth.instrument.jdbc.DataSourceProxyProperties;
+import org.springframework.cloud.sleuth.instrument.jdbc.P6SpyProperties;
 
 /**
  * Properties for configuring proxy providers.

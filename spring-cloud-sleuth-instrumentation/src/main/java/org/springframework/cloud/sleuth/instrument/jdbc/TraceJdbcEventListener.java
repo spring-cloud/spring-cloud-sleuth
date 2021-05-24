@@ -37,13 +37,13 @@ import org.springframework.util.StringUtils;
  */
 public class TraceJdbcEventListener extends SimpleJdbcEventListener implements Ordered {
 
-	private final TraceDataSourceNameResolver dataSourceNameResolver;
+	private final DataSourceNameResolver dataSourceNameResolver;
 
 	private final TraceListenerStrategy<ConnectionInformation, StatementInformation, ResultSetInformation> strategy;
 
 	private final boolean includeParameterValues;
 
-	public TraceJdbcEventListener(Tracer tracer, TraceDataSourceNameResolver dataSourceNameResolver,
+	public TraceJdbcEventListener(Tracer tracer, DataSourceNameResolver dataSourceNameResolver,
 			List<TraceType> traceTypes, boolean includeParameterValues) {
 		this.dataSourceNameResolver = dataSourceNameResolver;
 		this.includeParameterValues = includeParameterValues;
@@ -52,33 +52,35 @@ public class TraceJdbcEventListener extends SimpleJdbcEventListener implements O
 
 	@Override
 	public void onBeforeGetConnection(ConnectionInformation connectionInformation) {
-		String dataSourceName = dataSourceNameResolver.resolveDataSourceName(connectionInformation.getDataSource());
-		strategy.beforeGetConnection(connectionInformation, dataSourceName);
+		String dataSourceName = this.dataSourceNameResolver
+				.resolveDataSourceName(connectionInformation.getDataSource());
+		this.strategy.beforeGetConnection(connectionInformation, dataSourceName);
 	}
 
 	@Override
 	public void onAfterGetConnection(ConnectionInformation connectionInformation, SQLException e) {
-		strategy.afterGetConnection(connectionInformation, e);
+		this.strategy.afterGetConnection(connectionInformation, e);
 	}
 
 	@Override
 	public void onBeforeAnyExecute(StatementInformation statementInformation) {
-		String dataSourceName = dataSourceNameResolver
+		String dataSourceName = this.dataSourceNameResolver
 				.resolveDataSourceName(statementInformation.getConnectionInformation().getDataSource());
-		strategy.beforeQuery(statementInformation.getConnectionInformation(), statementInformation, dataSourceName);
+		this.strategy.beforeQuery(statementInformation.getConnectionInformation(), statementInformation,
+				dataSourceName);
 	}
 
 	@Override
 	public void onAfterAnyExecute(StatementInformation statementInformation, long timeElapsedNanos, SQLException e) {
-		strategy.afterQuery(statementInformation.getConnectionInformation(), statementInformation,
+		this.strategy.afterQuery(statementInformation.getConnectionInformation(), statementInformation,
 				getSql(statementInformation), e);
 	}
 
 	@Override
 	public void onBeforeResultSetNext(ResultSetInformation resultSetInformation) {
-		String dataSourceName = dataSourceNameResolver
+		String dataSourceName = this.dataSourceNameResolver
 				.resolveDataSourceName(resultSetInformation.getConnectionInformation().getDataSource());
-		strategy.beforeResultSetNext(resultSetInformation.getConnectionInformation(),
+		this.strategy.beforeResultSetNext(resultSetInformation.getConnectionInformation(),
 				resultSetInformation.getStatementInformation(), resultSetInformation, dataSourceName);
 	}
 
@@ -86,7 +88,8 @@ public class TraceJdbcEventListener extends SimpleJdbcEventListener implements O
 	public void onAfterExecuteUpdate(PreparedStatementInformation statementInformation, long timeElapsedNanos,
 			int rowCount, SQLException e) {
 		if (e == null) {
-			strategy.addQueryRowCount(statementInformation.getConnectionInformation(), statementInformation, rowCount);
+			this.strategy.addQueryRowCount(statementInformation.getConnectionInformation(), statementInformation,
+					rowCount);
 		}
 		super.onAfterExecuteUpdate(statementInformation, timeElapsedNanos, rowCount, e);
 	}
@@ -95,39 +98,40 @@ public class TraceJdbcEventListener extends SimpleJdbcEventListener implements O
 	public void onAfterExecuteUpdate(StatementInformation statementInformation, long timeElapsedNanos, String sql,
 			int rowCount, SQLException e) {
 		if (e == null) {
-			strategy.addQueryRowCount(statementInformation.getConnectionInformation(), statementInformation, rowCount);
+			this.strategy.addQueryRowCount(statementInformation.getConnectionInformation(), statementInformation,
+					rowCount);
 		}
 		super.onAfterExecuteUpdate(statementInformation, timeElapsedNanos, sql, rowCount, e);
 	}
 
 	@Override
 	public void onAfterStatementClose(StatementInformation statementInformation, SQLException e) {
-		strategy.afterStatementClose(statementInformation.getConnectionInformation(), statementInformation);
+		this.strategy.afterStatementClose(statementInformation.getConnectionInformation(), statementInformation);
 	}
 
 	@Override
 	public void onAfterResultSetClose(ResultSetInformation resultSetInformation, SQLException e) {
-		strategy.afterResultSetClose(resultSetInformation.getConnectionInformation(), resultSetInformation,
+		this.strategy.afterResultSetClose(resultSetInformation.getConnectionInformation(), resultSetInformation,
 				resultSetInformation.getCurrRow() + 1, e);
 	}
 
 	@Override
 	public void onAfterCommit(ConnectionInformation connectionInformation, long timeElapsedNanos, SQLException e) {
-		strategy.afterCommit(connectionInformation, e);
+		this.strategy.afterCommit(connectionInformation, e);
 	}
 
 	@Override
 	public void onAfterRollback(ConnectionInformation connectionInformation, long timeElapsedNanos, SQLException e) {
-		strategy.afterRollback(connectionInformation, e);
+		this.strategy.afterRollback(connectionInformation, e);
 	}
 
 	@Override
 	public void onAfterConnectionClose(ConnectionInformation connectionInformation, SQLException e) {
-		strategy.afterConnectionClose(connectionInformation, e);
+		this.strategy.afterConnectionClose(connectionInformation, e);
 	}
 
 	private String getSql(StatementInformation statementInformation) {
-		return includeParameterValues && StringUtils.hasText(statementInformation.getSqlWithValues())
+		return this.includeParameterValues && StringUtils.hasText(statementInformation.getSqlWithValues())
 				? statementInformation.getSqlWithValues() : statementInformation.getSql();
 	}
 

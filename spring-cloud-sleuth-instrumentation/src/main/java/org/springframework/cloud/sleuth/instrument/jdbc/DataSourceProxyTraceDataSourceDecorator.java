@@ -14,45 +14,38 @@
  * limitations under the License.
  */
 
-package org.springframework.cloud.sleuth.autoconfig.instrument.jdbc;
+package org.springframework.cloud.sleuth.instrument.jdbc;
 
 import javax.sql.DataSource;
 
 import net.ttddyy.dsproxy.support.ProxyDataSource;
 import net.ttddyy.dsproxy.support.ProxyDataSourceBuilder;
 
-import org.springframework.cloud.sleuth.instrument.jdbc.TraceDataSourceDecorator;
-import org.springframework.cloud.sleuth.instrument.jdbc.TraceDataSourceNameResolver;
 import org.springframework.core.Ordered;
 
 /**
  * {@link Ordered} decorator for {@link ProxyDataSource}.
  *
  * @author Arthur Gavlyukovskiy
+ * @since 3.1.0
  */
-public class TraceDataSourceProxyTraceDataSourceDecorator implements TraceDataSourceDecorator, Ordered {
+public class DataSourceProxyTraceDataSourceDecorator implements TraceDataSourceDecorator, Ordered {
 
-	private final TraceDataSourceDecoratorProperties dataSourceDecoratorProperties;
+	private final DataSourceProxyBuilderCustomizer dataSourceProxyBuilderCustomizer;
 
-	private final DataSourceProxyBuilderConfigurer dataSourceProxyBuilderConfigurer;
+	private final DataSourceNameResolver dataSourceNameResolver;
 
-	private final TraceDataSourceNameResolver dataSourceNameResolver;
-
-	public TraceDataSourceProxyTraceDataSourceDecorator(
-			TraceDataSourceDecoratorProperties dataSourceDecoratorProperties,
-			DataSourceProxyBuilderConfigurer dataSourceProxyBuilderConfigurer,
-			TraceDataSourceNameResolver dataSourceNameResolver) {
-		this.dataSourceDecoratorProperties = dataSourceDecoratorProperties;
-		this.dataSourceProxyBuilderConfigurer = dataSourceProxyBuilderConfigurer;
+	public DataSourceProxyTraceDataSourceDecorator(DataSourceProxyBuilderCustomizer dataSourceProxyBuilderCustomizer,
+			DataSourceNameResolver dataSourceNameResolver) {
+		this.dataSourceProxyBuilderCustomizer = dataSourceProxyBuilderCustomizer;
 		this.dataSourceNameResolver = dataSourceNameResolver;
 	}
 
 	@Override
 	public DataSource decorate(String beanName, DataSource dataSource) {
 		ProxyDataSourceBuilder proxyDataSourceBuilder = ProxyDataSourceBuilder.create();
-		DataSourceProxyProperties datasourceProxy = dataSourceDecoratorProperties.getDatasourceProxy();
-		dataSourceProxyBuilderConfigurer.configure(proxyDataSourceBuilder, datasourceProxy);
-		String dataSourceName = dataSourceNameResolver.resolveDataSourceName(dataSource);
+		proxyDataSourceBuilder = this.dataSourceProxyBuilderCustomizer.customize(proxyDataSourceBuilder);
+		String dataSourceName = this.dataSourceNameResolver.resolveDataSourceName(dataSource);
 		return proxyDataSourceBuilder.dataSource(dataSource).name(dataSourceName).build();
 	}
 

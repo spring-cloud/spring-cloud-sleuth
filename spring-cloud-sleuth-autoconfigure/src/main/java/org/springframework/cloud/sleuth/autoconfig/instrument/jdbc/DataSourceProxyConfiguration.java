@@ -16,6 +16,9 @@
 
 package org.springframework.cloud.sleuth.autoconfig.instrument.jdbc;
 
+import java.util.List;
+
+import net.ttddyy.dsproxy.listener.MethodExecutionListener;
 import net.ttddyy.dsproxy.listener.QueryCountStrategy;
 import net.ttddyy.dsproxy.listener.QueryExecutionListener;
 import net.ttddyy.dsproxy.listener.SingleQueryCountHolder;
@@ -26,12 +29,15 @@ import net.ttddyy.dsproxy.support.ProxyDataSource;
 import net.ttddyy.dsproxy.transform.ParameterTransformer;
 import net.ttddyy.dsproxy.transform.QueryTransformer;
 
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.cloud.sleuth.Tracer;
-import org.springframework.cloud.sleuth.instrument.jdbc.TraceDataSourceNameResolver;
+import org.springframework.cloud.sleuth.instrument.jdbc.DataSourceNameResolver;
+import org.springframework.cloud.sleuth.instrument.jdbc.DataSourceProxyBuilderCustomizer;
+import org.springframework.cloud.sleuth.instrument.jdbc.DataSourceProxyConnectionIdManagerProvider;
+import org.springframework.cloud.sleuth.instrument.jdbc.DataSourceProxyTraceDataSourceDecorator;
 import org.springframework.cloud.sleuth.instrument.jdbc.TraceQueryExecutionListener;
 import org.springframework.context.annotation.Bean;
 
@@ -45,9 +51,6 @@ import org.springframework.context.annotation.Bean;
 @ConditionalOnClass(ProxyDataSource.class)
 class DataSourceProxyConfiguration {
 
-	@Autowired
-	private TraceDataSourceDecoratorProperties dataSourceDecoratorProperties;
-
 	@Bean
 	@ConditionalOnMissingBean
 	DataSourceProxyConnectionIdManagerProvider connectionIdManagerProvider() {
@@ -55,34 +58,47 @@ class DataSourceProxyConfiguration {
 	}
 
 	@Bean
-	DataSourceProxyBuilderConfigurer proxyDataSourceBuilderConfigurer() {
-		return new DataSourceProxyBuilderConfigurer();
+	DataSourceProxyBuilderCustomizer proxyDataSourceBuilderConfigurer(
+			ObjectProvider<QueryCountStrategy> queryCountStrategy,
+			ObjectProvider<List<QueryExecutionListener>> listeners,
+			ObjectProvider<List<MethodExecutionListener>> methodExecutionListeners,
+			ObjectProvider<ParameterTransformer> parameterTransformer,
+			ObjectProvider<QueryTransformer> queryTransformer,
+			ObjectProvider<ResultSetProxyLogicFactory> resultSetProxyLogicFactory,
+			ObjectProvider<DataSourceProxyConnectionIdManagerProvider> dataSourceProxyConnectionIdManagerProvider,
+			TraceDataSourceDecoratorProperties dataSourceDecoratorProperties) {
+		return new DataSourceProxyBuilderCustomizer(queryCountStrategy.getIfAvailable(() -> null),
+				listeners.getIfAvailable(() -> null), methodExecutionListeners.getIfAvailable(() -> null),
+				parameterTransformer.getIfAvailable(() -> null), queryTransformer.getIfAvailable(() -> null),
+				resultSetProxyLogicFactory.getIfAvailable(() -> null),
+				dataSourceProxyConnectionIdManagerProvider.getIfAvailable(() -> null),
+				dataSourceDecoratorProperties.getDatasourceProxy());
 	}
 
 	@Bean
-	TraceDataSourceProxyTraceDataSourceDecorator proxyDataSourceDecorator(
-			DataSourceProxyBuilderConfigurer dataSourceProxyBuilderConfigurer,
-			TraceDataSourceNameResolver dataSourceNameResolver) {
-		return new TraceDataSourceProxyTraceDataSourceDecorator(dataSourceDecoratorProperties,
-				dataSourceProxyBuilderConfigurer, dataSourceNameResolver);
+	DataSourceProxyTraceDataSourceDecorator proxyDataSourceDecorator(
+			DataSourceProxyBuilderCustomizer dataSourceProxyBuilderCustomizer,
+			DataSourceNameResolver dataSourceNameResolver) {
+		return new DataSourceProxyTraceDataSourceDecorator(dataSourceProxyBuilderCustomizer, dataSourceNameResolver);
 	}
 
 	@Bean
 	@ConditionalOnMissingBean
 	@ConditionalOnProperty(value = "spring.sleuth.jdbc.decorator.datasource.datasource-proxy.count-query",
 			havingValue = "true")
-	public QueryCountStrategy queryCountStrategy() {
+	QueryCountStrategy queryCountStrategy() {
 		return new SingleQueryCountHolder();
 	}
 
 	@Bean
-	public TraceQueryExecutionListener traceQueryExecutionListener(Tracer tracer) {
+	TraceQueryExecutionListener traceQueryExecutionListener(Tracer tracer,
+			TraceDataSourceDecoratorProperties dataSourceDecoratorProperties) {
 		return new TraceQueryExecutionListener(tracer, dataSourceDecoratorProperties.getSleuth().getInclude());
 	}
 
 	@Bean
 	@ConditionalOnMissingBean
-	public ResultSetProxyLogicFactory traceResultSetProxyLogicFactory() {
+	ResultSetProxyLogicFactory traceResultSetProxyLogicFactory() {
 		return new SimpleResultSetProxyLogicFactory();
 	}
 

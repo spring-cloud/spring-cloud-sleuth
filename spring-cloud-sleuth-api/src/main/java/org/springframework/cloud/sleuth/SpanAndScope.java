@@ -16,13 +16,15 @@
 
 package org.springframework.cloud.sleuth;
 
+import java.io.Closeable;
+
 /**
  * Container object for {@link Span} and its corresponding {@link Tracer.SpanInScope}.
  *
  * @author Marcin Grzejszczak
  * @since 3.1.0
  */
-public class SpanAndScope {
+public class SpanAndScope implements Closeable {
 
 	private final Span span;
 
@@ -41,14 +43,15 @@ public class SpanAndScope {
 		return this.scope;
 	}
 
-	public void end() {
-		this.scope.close();
-		this.span.end();
-	}
-
 	@Override
 	public String toString() {
 		return "SpanAndScope{" + "span=" + this.span + '}';
+	}
+
+	@Override
+	public void close() {
+		this.scope.close();
+		this.span.end();
 	}
 
 }

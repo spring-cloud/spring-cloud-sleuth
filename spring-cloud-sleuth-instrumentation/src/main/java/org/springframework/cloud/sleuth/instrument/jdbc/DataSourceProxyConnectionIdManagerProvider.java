@@ -14,12 +14,18 @@
  * limitations under the License.
  */
 
-package org.springframework.cloud.sleuth.autoconfig.instrument.jdbc;
+package org.springframework.cloud.sleuth.instrument.jdbc;
 
 import java.util.function.Supplier;
 
 import net.ttddyy.dsproxy.ConnectionIdManager;
 
+/**
+ * Supplier of a {@link ConnectionIdManager}.
+ *
+ * @author Arthur Gavlyukovskiy
+ * @since 3.1.0
+ */
 public interface DataSourceProxyConnectionIdManagerProvider extends Supplier<ConnectionIdManager> {
 
 }

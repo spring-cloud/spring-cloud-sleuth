@@ -23,6 +23,28 @@
 |spring.sleuth.integration.enabled | `true` | Enable Spring Integration instrumentation.
 |spring.sleuth.integration.patterns | `[!hystrixStreamOutput*, *, !channel*]` | An array of patterns against which channel names will be matched. @see org.springframework.integration.config.GlobalChannelInterceptor#patterns() Defaults to any channel name not matching the Hystrix Stream and functional Stream channel names.
 |spring.sleuth.integration.websockets.enabled | `true` | Enable tracing for WebSockets.
+|spring.sleuth.jdbc.decorator.datasource.datasource-proxy.count-query |  | 
+|spring.sleuth.jdbc.decorator.datasource.datasource-proxy.json-format |  | 
+|spring.sleuth.jdbc.decorator.datasource.datasource-proxy.logging |  | 
+|spring.sleuth.jdbc.decorator.datasource.datasource-proxy.multiline |  | 
+|spring.sleuth.jdbc.decorator.datasource.datasource-proxy.query.enable-logging |  | 
+|spring.sleuth.jdbc.decorator.datasource.datasource-proxy.query.log-level |  | 
+|spring.sleuth.jdbc.decorator.datasource.datasource-proxy.query.logger-name |  | 
+|spring.sleuth.jdbc.decorator.datasource.datasource-proxy.slow-query.log-level |  | 
+|spring.sleuth.jdbc.decorator.datasource.datasource-proxy.slow-query.logger-name |  | 
+|spring.sleuth.jdbc.decorator.datasource.datasource-proxy.slow-query.threshold |  | 
+|spring.sleuth.jdbc.decorator.datasource.enabled | `true` | Enables data source decorating.
+|spring.sleuth.jdbc.decorator.datasource.exclude-beans |  | Beans that won't be decorated.
+|spring.sleuth.jdbc.decorator.datasource.p6spy.custom-appender-class |  | 
+|spring.sleuth.jdbc.decorator.datasource.p6spy.enable-logging |  | 
+|spring.sleuth.jdbc.decorator.datasource.p6spy.log-file |  | 
+|spring.sleuth.jdbc.decorator.datasource.p6spy.log-filter.pattern |  | 
+|spring.sleuth.jdbc.decorator.datasource.p6spy.log-format |  | 
+|spring.sleuth.jdbc.decorator.datasource.p6spy.logging |  | 
+|spring.sleuth.jdbc.decorator.datasource.p6spy.multiline |  | 
+|spring.sleuth.jdbc.decorator.datasource.p6spy.tracing.include-parameter-values |  | 
+|spring.sleuth.jdbc.decorator.datasource.sleuth.enabled | `true` | Creates span for every connection and query. Works only with p6spy or datasource-proxy.
+|spring.sleuth.jdbc.decorator.datasource.sleuth.include |  | 
 |spring.sleuth.kafka.enabled | `true` | Enable instrumenting of Apache Kafka clients.
 |spring.sleuth.messaging.aspect.enabled | `false` | Should {@link MessageMapping} wrapping be enabled.
 |spring.sleuth.messaging.enabled | `false` | Should messaging be turned on.

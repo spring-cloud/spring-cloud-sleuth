@@ -30,12 +30,11 @@ import org.springframework.util.Assert;
  * @author Arthur Gavlyukovskiy
  * @since 3.1.0
  */
-public class TraceP6SpyContextJdbcEventListenerFactory implements JdbcEventListenerFactory {
+public class P6SpyContextJdbcEventListenerFactory implements JdbcEventListenerFactory {
 
 	private final CompoundJdbcEventListener compoundJdbcEventListener;
 
-	public TraceP6SpyContextJdbcEventListenerFactory(JdbcEventListenerFactory delegate,
-			List<JdbcEventListener> listeners) {
+	public P6SpyContextJdbcEventListenerFactory(JdbcEventListenerFactory delegate, List<JdbcEventListener> listeners) {
 		Assert.notNull(delegate, "JdbcEventListenerFactory should not be null");
 		Assert.notEmpty(listeners, "Listeners should not be empty");
 

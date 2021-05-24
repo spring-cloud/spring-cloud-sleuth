@@ -26,13 +26,15 @@ import java.util.stream.Collectors;
 import javax.sql.DataSource;
 
 import com.zaxxer.hikari.HikariDataSource;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 import org.springframework.aop.scope.ScopedProxyUtils;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.config.BeanPostProcessor;
-import org.springframework.cloud.sleuth.instrument.jdbc.TraceDataSource;
+import org.springframework.cloud.sleuth.instrument.jdbc.DataSourceNameResolver;
+import org.springframework.cloud.sleuth.instrument.jdbc.DataSourceWrapper;
 import org.springframework.cloud.sleuth.instrument.jdbc.TraceDataSourceDecorator;
-import org.springframework.cloud.sleuth.instrument.jdbc.TraceDataSourceNameResolver;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.core.Ordered;
@@ -48,12 +50,14 @@ import org.springframework.util.ClassUtils;
  */
 public class TraceDataSourceDecoratorBeanPostProcessor implements BeanPostProcessor, Ordered, ApplicationContextAware {
 
+	private static final Log log = LogFactory.getLog(TraceDataSourceDecoratorBeanPostProcessor.class);
+
 	private final static boolean HIKARI_AVAILABLE = ClassUtils.isPresent("com.zaxxer.hikari.HikariDataSource",
-			TraceDataSourceNameResolver.class.getClassLoader());
+			DataSourceNameResolver.class.getClassLoader());
 
 	private ApplicationContext applicationContext;
 
-	private TraceDataSourceNameResolver dataSourceNameResolver;
+	private DataSourceNameResolver dataSourceNameResolver;
 
 	private final Collection<String> excludedBeans;
 
@@ -69,12 +73,11 @@ public class TraceDataSourceDecoratorBeanPostProcessor implements BeanPostProces
 	@Override
 	public Object postProcessAfterInitialization(Object bean, String beanName) throws BeansException {
 		if (bean instanceof DataSource && !ScopedProxyUtils.isScopedTarget(beanName)
-				&& !excludedBeans.contains(beanName)) {
-			Map<String, TraceDataSourceDecorator> decorators = applicationContext
+				&& !this.excludedBeans.contains(beanName)) {
+			Map<String, TraceDataSourceDecorator> decorators = this.applicationContext
 					.getBeansOfType(TraceDataSourceDecorator.class).entrySet().stream()
 					.sorted(Entry.comparingByValue(AnnotationAwareOrderComparator.INSTANCE))
 					.collect(Collectors.toMap(Entry::getKey, Entry::getValue, (v1, v2) -> v2, LinkedHashMap::new));
-
 			return decorate((DataSource) bean, getDataSourceName(bean, beanName), decorators);
 		}
 		else {
@@ -89,7 +92,6 @@ public class TraceDataSourceDecoratorBeanPostProcessor implements BeanPostProces
 				return hikariDataSource.getPoolName();
 			}
 		}
-
 		return beanName;
 	}
 
@@ -99,29 +101,28 @@ public class TraceDataSourceDecoratorBeanPostProcessor implements BeanPostProces
 		for (Entry<String, TraceDataSourceDecorator> decoratorEntry : decorators.entrySet()) {
 			String decoratorBeanName = decoratorEntry.getKey();
 			TraceDataSourceDecorator decorator = decoratorEntry.getValue();
-
 			DataSource dataSourceBeforeDecorating = decoratedDataSource;
 			decoratedDataSource = Objects.requireNonNull(decorator.decorate(name, decoratedDataSource),
 					"DataSourceDecorator (" + decoratorBeanName + ", " + decorator + ") should not return null");
-
 			if (dataSourceBeforeDecorating != decoratedDataSource) {
 				getDataSourceNameResolver().addDataSource(name, decoratedDataSource);
 			}
 		}
-
 		if (dataSource != decoratedDataSource) {
-			decoratedDataSource = new TraceDataSource(dataSource, decoratedDataSource);
+			if (log.isDebugEnabled()) {
+				log.debug("The decorated data source [" + decoratedDataSource + "] will replace the original one ["
+						+ dataSource + "]");
+			}
+			decoratedDataSource = new DataSourceWrapper(dataSource, decoratedDataSource);
 			getDataSourceNameResolver().addDataSource(name, decoratedDataSource);
 		}
-
 		return decoratedDataSource;
 	}
 
-	private TraceDataSourceNameResolver getDataSourceNameResolver() {
+	private DataSourceNameResolver getDataSourceNameResolver() {
 		if (this.dataSourceNameResolver == null) {
-			this.dataSourceNameResolver = applicationContext.getBean(TraceDataSourceNameResolver.class);
+			this.dataSourceNameResolver = this.applicationContext.getBean(DataSourceNameResolver.class);
 		}
-
 		return this.dataSourceNameResolver;
 	}
 

@@ -26,16 +26,16 @@ import javax.sql.CommonDataSource;
  * @author Arthur Gavlyukovskiy
  * @since 3.1.0
  */
-public class TraceDataSourceNameResolver {
+public class DataSourceNameResolver {
 
 	private final ConcurrentHashMap<CommonDataSource, String> cachedNames = new ConcurrentHashMap<>();
 
 	public void addDataSource(String name, CommonDataSource dataSource) {
-		cachedNames.putIfAbsent(dataSource, name);
+		this.cachedNames.put(dataSource, name);
 	}
 
 	public String resolveDataSourceName(CommonDataSource dataSource) {
-		return cachedNames.getOrDefault(dataSource, "dataSource");
+		return this.cachedNames.getOrDefault(dataSource, "dataSource");
 	}
 
 }

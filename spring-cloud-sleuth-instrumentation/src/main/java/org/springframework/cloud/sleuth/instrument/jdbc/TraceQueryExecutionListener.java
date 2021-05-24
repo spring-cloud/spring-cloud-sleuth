@@ -50,16 +50,17 @@ public class TraceQueryExecutionListener implements QueryExecutionListener, Meth
 
 	@Override
 	public void beforeQuery(ExecutionInfo execInfo, List<QueryInfo> queryInfoList) {
-		strategy.beforeQuery(execInfo.getConnectionId(), execInfo.getStatement(), execInfo.getDataSourceName());
+		this.strategy.beforeQuery(execInfo.getConnectionId(), execInfo.getStatement(), execInfo.getDataSourceName());
 	}
 
 	@Override
 	public void afterQuery(ExecutionInfo execInfo, List<QueryInfo> queryInfoList) {
 		if (execInfo.getMethod().getName().equals("executeUpdate") && execInfo.getThrowable() == null) {
-			strategy.addQueryRowCount(execInfo.getConnectionId(), execInfo.getStatement(), (int) execInfo.getResult());
+			this.strategy.addQueryRowCount(execInfo.getConnectionId(), execInfo.getStatement(),
+					(int) execInfo.getResult());
 		}
 		String sql = queryInfoList.stream().map(QueryInfo::getQuery).collect(Collectors.joining("\n"));
-		strategy.afterQuery(execInfo.getConnectionId(), execInfo.getStatement(), sql, execInfo.getThrowable());
+		this.strategy.afterQuery(execInfo.getConnectionId(), execInfo.getStatement(), sql, execInfo.getThrowable());
 	}
 
 	@Override
@@ -68,16 +69,15 @@ public class TraceQueryExecutionListener implements QueryExecutionListener, Meth
 		String methodName = executionContext.getMethod().getName();
 		String dataSourceName = executionContext.getProxyConfig().getDataSourceName();
 		String connectionId = executionContext.getConnectionInfo().getConnectionId();
-		if (target instanceof DataSource) {
-			if (methodName.equals("getConnection")) {
-				strategy.beforeGetConnection(connectionId, dataSourceName);
-			}
+		if (target instanceof DataSource && methodName.equals("getConnection")) {
+			this.strategy.beforeGetConnection(connectionId, dataSourceName);
 		}
 		else if (target instanceof ResultSet) {
 			ResultSet resultSet = (ResultSet) target;
 			if (methodName.equals("next")) {
 				try {
-					strategy.beforeResultSetNext(connectionId, resultSet.getStatement(), resultSet, dataSourceName);
+					this.strategy.beforeResultSetNext(connectionId, resultSet.getStatement(), resultSet,
+							dataSourceName);
 				}
 				catch (SQLException ignore) {
 				}
@@ -91,32 +91,28 @@ public class TraceQueryExecutionListener implements QueryExecutionListener, Meth
 		String methodName = executionContext.getMethod().getName();
 		String connectionId = executionContext.getConnectionInfo().getConnectionId();
 		Throwable t = executionContext.getThrown();
-		if (target instanceof DataSource) {
-			if (methodName.equals("getConnection")) {
-				strategy.afterGetConnection(connectionId, t);
-			}
+		if (target instanceof DataSource && methodName.equals("getConnection")) {
+			this.strategy.afterGetConnection(connectionId, t);
 		}
 		else if (target instanceof Connection) {
-			if (methodName.equals("commit")) {
-				strategy.afterCommit(connectionId, t);
-			}
-			else if (methodName.equals("rollback")) {
-				strategy.afterRollback(connectionId, t);
-			}
-			else if (methodName.equals("close")) {
-				strategy.afterConnectionClose(connectionId, t);
-			}
-		}
-		else if (target instanceof Statement) {
-			if (methodName.equals("close")) {
-				strategy.afterStatementClose(connectionId, (Statement) target);
+			switch (methodName) {
+			case "commit":
+				this.strategy.afterCommit(connectionId, t);
+				break;
+			case "rollback":
+				this.strategy.afterRollback(connectionId, t);
+				break;
+			case "close":
+				this.strategy.afterConnectionClose(connectionId, t);
+				break;
 			}
 		}
-		else if (target instanceof ResultSet) {
-			if (methodName.equals("close")) {
-				ResultSet resultSet = (ResultSet) target;
-				strategy.afterResultSetClose(connectionId, resultSet, -1, t);
-			}
+		else if (target instanceof Statement && methodName.equals("close")) {
+			this.strategy.afterStatementClose(connectionId, (Statement) target);
+		}
+		else if (target instanceof ResultSet && methodName.equals("close")) {
+			ResultSet resultSet = (ResultSet) target;
+			this.strategy.afterResultSetClose(connectionId, resultSet, -1, t);
 		}
 	}
 

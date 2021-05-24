@@ -45,7 +45,7 @@ import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration;
 import org.springframework.boot.test.context.FilteredClassLoader;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
 import org.springframework.cloud.sleuth.autoconfig.brave.BraveAutoConfiguration;
-import org.springframework.cloud.sleuth.instrument.jdbc.TraceDataSource;
+import org.springframework.cloud.sleuth.instrument.jdbc.DataSourceWrapper;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -77,7 +77,7 @@ public class P6SpyConfigurationTests {
 			JdbcEventListenerFactory jdbcEventListenerFactory = context.getBean(JdbcEventListenerFactory.class);
 			GetCountingListener getCountingListener = context.getBean(GetCountingListener.class);
 			ClosingCountingListener closingCountingListener = context.getBean(ClosingCountingListener.class);
-			P6DataSource p6DataSource = (P6DataSource) ((TraceDataSource) dataSource).getDecoratedDataSource();
+			P6DataSource p6DataSource = (P6DataSource) ((DataSourceWrapper) dataSource).getDecoratedDataSource();
 			assertThat(p6DataSource).extracting("jdbcEventListenerFactory").isEqualTo(jdbcEventListenerFactory);
 
 			CompoundJdbcEventListener jdbcEventListener = (CompoundJdbcEventListener) jdbcEventListenerFactory

@@ -50,7 +50,7 @@ class TraceListenerStrategy<CON, STMT, RS> {
 
 	void beforeGetConnection(CON connectionKey, String dataSourceName) {
 		SpanAndScope SpanAndScope = null;
-		if (traceTypes.contains(TraceType.CONNECTION)) {
+		if (this.traceTypes.contains(TraceType.CONNECTION)) {
 			Span.Builder connectionSpanBuilder = tracer.spanBuilder()
 					.name("jdbc:/" + dataSourceName + SPAN_CONNECTION_POSTFIX);
 			connectionSpanBuilder.remoteServiceName(dataSourceName);
@@ -60,15 +60,15 @@ class TraceListenerStrategy<CON, STMT, RS> {
 			SpanAndScope = new SpanAndScope(connectionSpan, tracer.withSpan(connectionSpan));
 		}
 		ConnectionInfo connectionInfo = new ConnectionInfo(SpanAndScope);
-		openConnections.put(connectionKey, connectionInfo);
+		this.openConnections.put(connectionKey, connectionInfo);
 	}
 
 	void afterGetConnection(CON connectionKey, Throwable t) {
 		if (t != null) {
-			ConnectionInfo connectionInfo = openConnections.remove(connectionKey);
+			ConnectionInfo connectionInfo = this.openConnections.remove(connectionKey);
 			connectionInfo.getSpan().ifPresent(connectionSpan -> {
 				connectionSpan.getSpan().error(t);
-				connectionSpan.end();
+				connectionSpan.close();
 			});
 		}
 	}
@@ -118,7 +118,7 @@ class TraceListenerStrategy<CON, STMT, RS> {
 			if (t != null) {
 				statementSpan.getSpan().error(t);
 			}
-			statementSpan.end();
+			statementSpan.close();
 		});
 	}
 
@@ -170,7 +170,7 @@ class TraceListenerStrategy<CON, STMT, RS> {
 		if (t != null) {
 			resultSetSpan.getSpan().error(t);
 		}
-		resultSetSpan.end();
+		resultSetSpan.close();
 	}
 
 	void afterStatementClose(CON connectionKey, STMT statementKey) {
@@ -183,7 +183,7 @@ class TraceListenerStrategy<CON, STMT, RS> {
 		if (statementInfo != null) {
 			statementInfo.getNestedResultSetSpans().forEach((resultSetKey, span) -> {
 				connectionInfo.getNestedResultSetSpans().remove(resultSetKey);
-				span.end();
+				span.close();
 			});
 			statementInfo.getNestedResultSetSpans().clear();
 		}
@@ -226,14 +226,14 @@ class TraceListenerStrategy<CON, STMT, RS> {
 			// connection is already closed
 			return;
 		}
-		connectionInfo.getNestedResultSetSpans().values().forEach(SpanAndScope::end);
+		connectionInfo.getNestedResultSetSpans().values().forEach(SpanAndScope::close);
 		connectionInfo.getNestedStatements().values()
-				.forEach(statementInfo -> statementInfo.getSpan().ifPresent(SpanAndScope::end));
+				.forEach(statementInfo -> statementInfo.getSpan().ifPresent(SpanAndScope::close));
 		connectionInfo.getSpan().ifPresent(connectionSpan -> {
 			if (t != null) {
 				connectionSpan.getSpan().error(t);
 			}
-			connectionSpan.end();
+			connectionSpan.close();
 		});
 	}
 

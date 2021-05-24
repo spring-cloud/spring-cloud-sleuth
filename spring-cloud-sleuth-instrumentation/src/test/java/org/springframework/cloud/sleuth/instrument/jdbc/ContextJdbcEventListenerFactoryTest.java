@@ -43,7 +43,7 @@ class ContextJdbcEventListenerFactoryTest {
 		SimpleJdbcEventListener listener2 = new SimpleJdbcEventListener() {
 		};
 		Mockito.when(delegate.createJdbcEventListener()).thenReturn(listener1);
-		TraceP6SpyContextJdbcEventListenerFactory contextJdbcEventListenerFactory = new TraceP6SpyContextJdbcEventListenerFactory(
+		P6SpyContextJdbcEventListenerFactory contextJdbcEventListenerFactory = new P6SpyContextJdbcEventListenerFactory(
 				delegate, Collections.singletonList(listener2));
 
 		CompoundJdbcEventListener jdbcEventListener = (CompoundJdbcEventListener) contextJdbcEventListenerFactory
@@ -57,7 +57,7 @@ class ContextJdbcEventListenerFactoryTest {
 		SimpleJdbcEventListener listener1 = new SimpleJdbcEventListener() {
 		};
 		Mockito.when(delegate.createJdbcEventListener()).thenReturn(new CompoundJdbcEventListener());
-		TraceP6SpyContextJdbcEventListenerFactory contextJdbcEventListenerFactory = new TraceP6SpyContextJdbcEventListenerFactory(
+		P6SpyContextJdbcEventListenerFactory contextJdbcEventListenerFactory = new P6SpyContextJdbcEventListenerFactory(
 				delegate, Collections.singletonList(listener1));
 
 		CompoundJdbcEventListener jdbcEventListener = (CompoundJdbcEventListener) contextJdbcEventListenerFactory

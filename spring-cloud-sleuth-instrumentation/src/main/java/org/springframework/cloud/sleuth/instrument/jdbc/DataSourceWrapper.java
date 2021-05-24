@@ -29,11 +29,11 @@ import org.springframework.jdbc.datasource.DelegatingDataSource;
  * @author Arthur Gavlyukovskiy
  * @since 3.1.0
  */
-public class TraceDataSource extends DelegatingDataSource {
+public class DataSourceWrapper extends DelegatingDataSource {
 
 	private final DataSource originalDataSource;
 
-	public TraceDataSource(DataSource originalDataSource, DataSource decoratedDataSource) {
+	public DataSourceWrapper(DataSource originalDataSource, DataSource decoratedDataSource) {
 		super(decoratedDataSource);
 		this.originalDataSource = originalDataSource;
 	}

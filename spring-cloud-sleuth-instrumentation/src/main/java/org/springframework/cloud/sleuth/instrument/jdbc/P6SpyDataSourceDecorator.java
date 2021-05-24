@@ -28,24 +28,29 @@ import org.springframework.core.Ordered;
  *
  * @author Arthur Gavlyukovskiy
  */
-public class TraceP6SpyDataSourceDecorator implements TraceDataSourceDecorator, Ordered {
+public class P6SpyDataSourceDecorator implements TraceDataSourceDecorator, Ordered {
+
+	/**
+	 * Bean order.
+	 */
+	public static final int ORDER = 30;
 
 	private final JdbcEventListenerFactory jdbcEventListenerFactory;
 
-	public TraceP6SpyDataSourceDecorator(JdbcEventListenerFactory jdbcEventListenerFactory) {
+	public P6SpyDataSourceDecorator(JdbcEventListenerFactory jdbcEventListenerFactory) {
 		this.jdbcEventListenerFactory = jdbcEventListenerFactory;
 	}
 
 	@Override
 	public DataSource decorate(String beanName, DataSource dataSource) {
 		P6DataSource p6DataSource = new P6DataSource(dataSource);
-		p6DataSource.setJdbcEventListenerFactory(jdbcEventListenerFactory);
+		p6DataSource.setJdbcEventListenerFactory(this.jdbcEventListenerFactory);
 		return p6DataSource;
 	}
 
 	@Override
 	public int getOrder() {
-		return 30;
+		return P6SpyDataSourceDecorator.ORDER;
 	}
 
 }

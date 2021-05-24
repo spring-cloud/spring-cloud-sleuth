@@ -30,7 +30,7 @@ import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration;
 import org.springframework.boot.test.context.FilteredClassLoader;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
 import org.springframework.cloud.sleuth.autoconfig.brave.BraveAutoConfiguration;
-import org.springframework.cloud.sleuth.instrument.jdbc.TraceDataSource;
+import org.springframework.cloud.sleuth.instrument.jdbc.DataSourceWrapper;
 import org.springframework.cloud.sleuth.instrument.jdbc.TraceQueryExecutionListener;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -49,7 +49,8 @@ class SleuthProxyDataSourceListenerAutoConfigurationTests {
 	void testAddsDatasourceProxyListener() {
 		contextRunner.run(context -> {
 			DataSource dataSource = context.getBean(DataSource.class);
-			ProxyDataSource proxyDataSource = (ProxyDataSource) ((TraceDataSource) dataSource).getDecoratedDataSource();
+			ProxyDataSource proxyDataSource = (ProxyDataSource) ((DataSourceWrapper) dataSource)
+					.getDecoratedDataSource();
 			ChainListener chainListener = proxyDataSource.getProxyConfig().getQueryListener();
 			assertThat(chainListener.getListeners()).extracting("class").contains(TraceQueryExecutionListener.class);
 		});
@@ -60,7 +61,7 @@ class SleuthProxyDataSourceListenerAutoConfigurationTests {
 		ApplicationContextRunner contextRunner = this.contextRunner.withPropertyValues("spring.sleuth.enabled:false");
 
 		contextRunner.run(context -> {
-			assertThat(context).doesNotHaveBean(TraceDataSource.class);
+			assertThat(context).doesNotHaveBean(DataSourceWrapper.class);
 		});
 	}
 

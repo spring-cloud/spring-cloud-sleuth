@@ -46,7 +46,8 @@ import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration;
 import org.springframework.boot.test.context.FilteredClassLoader;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
 import org.springframework.cloud.sleuth.autoconfig.brave.BraveAutoConfiguration;
-import org.springframework.cloud.sleuth.instrument.jdbc.TraceDataSource;
+import org.springframework.cloud.sleuth.instrument.jdbc.DataSourceProxyConnectionIdManagerProvider;
+import org.springframework.cloud.sleuth.instrument.jdbc.DataSourceWrapper;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
@@ -67,7 +68,8 @@ class ProxyDataSourceConfigurationTests {
 	void testRegisterLogAndSlowQueryLogByDefaultToSlf4j() {
 		contextRunner.run(context -> {
 			DataSource dataSource = context.getBean(DataSource.class);
-			ProxyDataSource proxyDataSource = (ProxyDataSource) ((TraceDataSource) dataSource).getDecoratedDataSource();
+			ProxyDataSource proxyDataSource = (ProxyDataSource) ((DataSourceWrapper) dataSource)
+					.getDecoratedDataSource();
 			ChainListener chainListener = proxyDataSource.getProxyConfig().getQueryListener();
 			assertThat(chainListener.getListeners()).extracting("class").contains(SLF4JSlowQueryListener.class);
 			assertThat(chainListener.getListeners()).extracting("class").contains(SLF4JQueryLoggingListener.class);
@@ -81,7 +83,8 @@ class ProxyDataSourceConfigurationTests {
 
 		contextRunner.run(context -> {
 			DataSource dataSource = context.getBean(DataSource.class);
-			ProxyDataSource proxyDataSource = (ProxyDataSource) ((TraceDataSource) dataSource).getDecoratedDataSource();
+			ProxyDataSource proxyDataSource = (ProxyDataSource) ((DataSourceWrapper) dataSource)
+					.getDecoratedDataSource();
 			ChainListener chainListener = proxyDataSource.getProxyConfig().getQueryListener();
 			assertThat(chainListener.getListeners()).extracting("class").contains(SLF4JSlowQueryListener.class);
 			assertThat(chainListener.getListeners()).extracting("class").contains(SLF4JQueryLoggingListener.class);
@@ -95,7 +98,8 @@ class ProxyDataSourceConfigurationTests {
 
 		contextRunner.run(context -> {
 			DataSource dataSource = context.getBean(DataSource.class);
-			ProxyDataSource proxyDataSource = (ProxyDataSource) ((TraceDataSource) dataSource).getDecoratedDataSource();
+			ProxyDataSource proxyDataSource = (ProxyDataSource) ((DataSourceWrapper) dataSource)
+					.getDecoratedDataSource();
 			ChainListener chainListener = proxyDataSource.getProxyConfig().getQueryListener();
 			assertThat(chainListener.getListeners()).extracting("class").contains(SystemOutSlowQueryListener.class);
 			assertThat(chainListener.getListeners()).extracting("class").contains(SystemOutQueryLoggingListener.class);
@@ -109,7 +113,8 @@ class ProxyDataSourceConfigurationTests {
 
 		contextRunner.run(context -> {
 			DataSource dataSource = context.getBean(DataSource.class);
-			ProxyDataSource proxyDataSource = (ProxyDataSource) ((TraceDataSource) dataSource).getDecoratedDataSource();
+			ProxyDataSource proxyDataSource = (ProxyDataSource) ((DataSourceWrapper) dataSource)
+					.getDecoratedDataSource();
 			ChainListener chainListener = proxyDataSource.getProxyConfig().getQueryListener();
 			assertThat(chainListener.getListeners()).extracting("class").contains(JULSlowQueryListener.class);
 			assertThat(chainListener.getListeners()).extracting("class").contains(JULQueryLoggingListener.class);
@@ -123,7 +128,8 @@ class ProxyDataSourceConfigurationTests {
 
 		contextRunner.run(context -> {
 			DataSource dataSource = context.getBean(DataSource.class);
-			ProxyDataSource proxyDataSource = (ProxyDataSource) ((TraceDataSource) dataSource).getDecoratedDataSource();
+			ProxyDataSource proxyDataSource = (ProxyDataSource) ((DataSourceWrapper) dataSource)
+					.getDecoratedDataSource();
 			ChainListener chainListener = proxyDataSource.getProxyConfig().getQueryListener();
 			assertThat(chainListener.getListeners()).extracting("class").contains(CommonsSlowQueryListener.class);
 			assertThat(chainListener.getListeners()).extracting("class").contains(CommonsQueryLoggingListener.class);
@@ -137,7 +143,8 @@ class ProxyDataSourceConfigurationTests {
 
 		contextRunner.run(context -> {
 			DataSource dataSource = context.getBean(DataSource.class);
-			ProxyDataSource proxyDataSource = (ProxyDataSource) ((TraceDataSource) dataSource).getDecoratedDataSource();
+			ProxyDataSource proxyDataSource = (ProxyDataSource) ((DataSourceWrapper) dataSource)
+					.getDecoratedDataSource();
 			ParameterTransformer parameterTransformer = context.getBean(ParameterTransformer.class);
 			QueryTransformer queryTransformer = context.getBean(QueryTransformer.class);
 			assertThat(proxyDataSource.getProxyConfig().getParameterTransformer()).isSameAs(parameterTransformer);
@@ -152,7 +159,8 @@ class ProxyDataSourceConfigurationTests {
 
 		contextRunner.run(context -> {
 			DataSource dataSource = context.getBean(DataSource.class);
-			ProxyDataSource proxyDataSource = (ProxyDataSource) ((TraceDataSource) dataSource).getDecoratedDataSource();
+			ProxyDataSource proxyDataSource = (ProxyDataSource) ((DataSourceWrapper) dataSource)
+					.getDecoratedDataSource();
 			QueryExecutionListener queryExecutionListener = context.getBean(QueryExecutionListener.class);
 
 			ChainListener chainListener = proxyDataSource.getProxyConfig().getQueryListener();
@@ -164,7 +172,8 @@ class ProxyDataSourceConfigurationTests {
 	void testGlobalConnectionIdManagerByDefault() {
 		contextRunner.run(context -> {
 			DataSource dataSource = context.getBean(DataSource.class);
-			ProxyDataSource proxyDataSource = (ProxyDataSource) ((TraceDataSource) dataSource).getDecoratedDataSource();
+			ProxyDataSource proxyDataSource = (ProxyDataSource) ((DataSourceWrapper) dataSource)
+					.getDecoratedDataSource();
 
 			assertThat(proxyDataSource.getConnectionIdManager()).isInstanceOf(GlobalConnectionIdManager.class);
 		});
@@ -177,7 +186,8 @@ class ProxyDataSourceConfigurationTests {
 
 		contextRunner.run(context -> {
 			DataSource dataSource = context.getBean(DataSource.class);
-			ProxyDataSource proxyDataSource = (ProxyDataSource) ((TraceDataSource) dataSource).getDecoratedDataSource();
+			ProxyDataSource proxyDataSource = (ProxyDataSource) ((DataSourceWrapper) dataSource)
+					.getDecoratedDataSource();
 
 			assertThat(proxyDataSource.getConnectionIdManager()).isInstanceOf(DefaultConnectionIdManager.class);
 		});

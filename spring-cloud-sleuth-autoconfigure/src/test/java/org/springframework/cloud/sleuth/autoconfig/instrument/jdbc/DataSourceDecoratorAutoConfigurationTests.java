@@ -36,7 +36,7 @@ import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration;
 import org.springframework.boot.test.context.FilteredClassLoader;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
 import org.springframework.cloud.sleuth.autoconfig.brave.BraveAutoConfiguration;
-import org.springframework.cloud.sleuth.instrument.jdbc.TraceDataSource;
+import org.springframework.cloud.sleuth.instrument.jdbc.DataSourceWrapper;
 import org.springframework.cloud.sleuth.instrument.jdbc.TraceDataSourceDecorator;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -61,11 +61,11 @@ class DataSourceDecoratorAutoConfigurationTests {
 	void testDecoratingInDefaultOrder() {
 		contextRunner.run(context -> {
 			DataSource dataSource = context.getBean(DataSource.class);
-			assertThat(dataSource).isInstanceOf(TraceDataSource.class);
+			assertThat(dataSource).isInstanceOf(DataSourceWrapper.class);
 
-			TraceDataSource TraceDataSource = (org.springframework.cloud.sleuth.instrument.jdbc.TraceDataSource) dataSource;
-			assertThat(TraceDataSource.getDecoratedDataSource()).isInstanceOf(P6DataSource.class);
-			P6DataSource p6DataSource = (P6DataSource) TraceDataSource.getDecoratedDataSource();
+			DataSourceWrapper DataSourceWrapper = (DataSourceWrapper) dataSource;
+			assertThat(DataSourceWrapper.getDecoratedDataSource()).isInstanceOf(P6DataSource.class);
+			P6DataSource p6DataSource = (P6DataSource) DataSourceWrapper.getDecoratedDataSource();
 
 			DataSource p6WrappedDataSource = (DataSource) ReflectionTestUtils.getField(p6DataSource, "realDataSource");
 			assertThat(p6WrappedDataSource).isInstanceOf(ProxyDataSource.class);
@@ -93,11 +93,11 @@ class DataSourceDecoratorAutoConfigurationTests {
 		contextRunner.run(context -> {
 			DataSource dataSource = context.getBean(DataSource.class);
 
-			assertThat(((TraceDataSource) dataSource).getOriginalDataSource()).isInstanceOf(HikariDataSource.class);
+			assertThat(((DataSourceWrapper) dataSource).getOriginalDataSource()).isInstanceOf(HikariDataSource.class);
 
-			TraceDataSource TraceDataSource = (org.springframework.cloud.sleuth.instrument.jdbc.TraceDataSource) dataSource;
-			assertThat(TraceDataSource.getDecoratedDataSource()).isInstanceOf(P6DataSource.class);
-			P6DataSource p6DataSource = (P6DataSource) TraceDataSource.getDecoratedDataSource();
+			DataSourceWrapper DataSourceWrapper = (DataSourceWrapper) dataSource;
+			assertThat(DataSourceWrapper.getDecoratedDataSource()).isInstanceOf(P6DataSource.class);
+			P6DataSource p6DataSource = (P6DataSource) DataSourceWrapper.getDecoratedDataSource();
 
 			DataSource p6WrappedDataSource = (DataSource) ReflectionTestUtils.getField(p6DataSource, "realDataSource");
 			assertThat(p6WrappedDataSource).isInstanceOf(ProxyDataSource.class);
@@ -105,7 +105,7 @@ class DataSourceDecoratorAutoConfigurationTests {
 
 			DataSource dsProxyWrappedDataSource = (DataSource) ReflectionTestUtils.getField(proxyDataSource,
 					"dataSource");
-			assertThat(dsProxyWrappedDataSource).isEqualTo(TraceDataSource.getOriginalDataSource());
+			assertThat(dsProxyWrappedDataSource).isEqualTo(DataSourceWrapper.getOriginalDataSource());
 		});
 	}
 
@@ -118,8 +118,8 @@ class DataSourceDecoratorAutoConfigurationTests {
 		contextRunner.run(context -> {
 			DataSource dataSource = context.getBean(DataSource.class);
 			assertThat(dataSource).isNotNull();
-			assertThat(dataSource).isInstanceOf(TraceDataSource.class);
-			DataSource realDataSource = ((TraceDataSource) dataSource).getOriginalDataSource();
+			assertThat(dataSource).isInstanceOf(DataSourceWrapper.class);
+			DataSource realDataSource = ((DataSourceWrapper) dataSource).getOriginalDataSource();
 			assertThat(realDataSource).isInstanceOf(HikariDataSource.class);
 			assertThat(((HikariDataSource) realDataSource).getCatalog()).isEqualTo("test_catalog");
 		});
@@ -132,8 +132,8 @@ class DataSourceDecoratorAutoConfigurationTests {
 
 		contextRunner.run(context -> {
 			DataSource dataSource = context.getBean(DataSource.class);
-			assertThat(dataSource).isInstanceOf(TraceDataSource.class);
-			DataSource realDataSource = ((TraceDataSource) dataSource).getOriginalDataSource();
+			assertThat(dataSource).isInstanceOf(DataSourceWrapper.class);
+			DataSource realDataSource = ((DataSourceWrapper) dataSource).getOriginalDataSource();
 			assertThat(realDataSource).isInstanceOf(BasicDataSource.class);
 		});
 	}
@@ -145,8 +145,8 @@ class DataSourceDecoratorAutoConfigurationTests {
 
 		contextRunner.run(context -> {
 			assertThat(context).getBeanNames(DataSource.class).containsOnly("dataSource", "scopedTarget.dataSource");
-			assertThat(context).getBean("dataSource").isInstanceOf(TraceDataSource.class);
-			assertThat(context).getBean("scopedTarget.dataSource").isNotInstanceOf(TraceDataSource.class);
+			assertThat(context).getBean("dataSource").isInstanceOf(DataSourceWrapper.class);
+			assertThat(context).getBean("scopedTarget.dataSource").isNotInstanceOf(DataSourceWrapper.class);
 		});
 	}
 
@@ -159,18 +159,18 @@ class DataSourceDecoratorAutoConfigurationTests {
 			DataSource dataSource = context.getBean(DataSource.class);
 			assertThat(dataSource).isNotNull();
 
-			DataSource customDataSource = ((TraceDataSource) dataSource).getDecoratedDataSource();
+			DataSource customDataSource = ((DataSourceWrapper) dataSource).getDecoratedDataSource();
 			assertThat(customDataSource).isInstanceOf(CustomDataSourceProxy.class);
 
-			DataSource realDataSource = ((TraceDataSource) dataSource).getOriginalDataSource();
+			DataSource realDataSource = ((DataSourceWrapper) dataSource).getOriginalDataSource();
 			assertThat(realDataSource).isInstanceOf(HikariDataSource.class);
 
-			assertThat(dataSource).isInstanceOf(TraceDataSource.class);
+			assertThat(dataSource).isInstanceOf(DataSourceWrapper.class);
 
-			TraceDataSource TraceDataSource = (org.springframework.cloud.sleuth.instrument.jdbc.TraceDataSource) dataSource;
+			DataSourceWrapper DataSourceWrapper = (DataSourceWrapper) dataSource;
 
-			assertThat(TraceDataSource.getDecoratedDataSource()).isInstanceOf(CustomDataSourceProxy.class);
-			CustomDataSourceProxy customDataSourceProxy = (CustomDataSourceProxy) TraceDataSource
+			assertThat(DataSourceWrapper.getDecoratedDataSource()).isInstanceOf(CustomDataSourceProxy.class);
+			CustomDataSourceProxy customDataSourceProxy = (CustomDataSourceProxy) DataSourceWrapper
 					.getDecoratedDataSource();
 
 			assertThat(customDataSourceProxy.delegate).isInstanceOf(P6DataSource.class);
@@ -201,7 +201,7 @@ class DataSourceDecoratorAutoConfigurationTests {
 
 		contextRunner.run(context -> {
 			DataSource dataSource = context.getBean("dataSource", DataSource.class);
-			assertThat(dataSource).isInstanceOf(TraceDataSource.class);
+			assertThat(dataSource).isInstanceOf(DataSourceWrapper.class);
 
 			DataSource secondDataSource = context.getBean("secondDataSource", DataSource.class);
 			assertThat(secondDataSource).isInstanceOf(BasicDataSource.class);
@@ -213,7 +213,7 @@ class DataSourceDecoratorAutoConfigurationTests {
 		contextRunner.run(context -> {
 			DataSource dataSource = context.getBean(DataSource.class);
 
-			TraceDataSource dataSource1 = context.getBean(TraceDataSource.class);
+			DataSourceWrapper dataSource1 = context.getBean(DataSourceWrapper.class);
 			assertThat(dataSource1).isNotNull();
 
 			DataSource p6DataSource = dataSource1.getDecoratedDataSource();
@@ -238,11 +238,11 @@ class DataSourceDecoratorAutoConfigurationTests {
 		contextRunner.run(context -> {
 			DataSource dataSource1 = context.getBean("ds1", DataSource.class);
 			assertThat(dataSource1).isNotNull();
-			assertThat(dataSource1).isInstanceOf(TraceDataSource.class);
+			assertThat(dataSource1).isInstanceOf(DataSourceWrapper.class);
 
 			DataSource dataSource2 = context.getBean("ds2", DataSource.class);
 			assertThat(dataSource2).isNotNull();
-			assertThat(dataSource2).isInstanceOf(TraceDataSource.class);
+			assertThat(dataSource2).isInstanceOf(DataSourceWrapper.class);
 		});
 	}
 

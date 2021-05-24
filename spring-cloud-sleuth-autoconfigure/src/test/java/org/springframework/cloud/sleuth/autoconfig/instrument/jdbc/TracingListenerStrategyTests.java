@@ -1,11 +1,11 @@
 /*
- * Copyright 2021 the original author or authors.
+ * Copyright 2013-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -41,7 +41,7 @@ import org.springframework.cloud.sleuth.instrument.jdbc.TraceQueryExecutionListe
 import org.springframework.context.annotation.Bean;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 abstract class TracingListenerStrategyTests {
 
@@ -308,10 +308,10 @@ abstract class TracingListenerStrategyTests {
 			TestSpanHandler spanReporter = context.getBean(TestSpanHandler.class);
 
 			Connection connection = dataSource.getConnection();
-			assertThrows(SQLException.class, () -> {
+			assertThatThrownBy(() -> {
 				connection.close();
 				connection.prepareStatement("SELECT NOW()");
-			});
+			}).isInstanceOf(SQLException.class);
 
 			assertThat(spanReporter.spans()).hasSize(1);
 			MutableSpan connectionSpan = spanReporter.spans().get(0);
@@ -326,10 +326,10 @@ abstract class TracingListenerStrategyTests {
 
 			Connection connection = dataSource.getConnection();
 			Statement statement = connection.createStatement();
-			assertThrows(SQLException.class, () -> {
+			assertThatThrownBy(() -> {
 				statement.close();
 				statement.executeQuery("SELECT NOW()");
-			});
+			}).isInstanceOf(SQLException.class);
 			connection.close();
 		});
 	}
@@ -342,10 +342,10 @@ abstract class TracingListenerStrategyTests {
 			Connection connection = dataSource.getConnection();
 			Statement statement = connection.createStatement();
 			ResultSet resultSet = statement.executeQuery("SELECT NOW()");
-			assertThrows(SQLException.class, () -> {
+			assertThatThrownBy(() -> {
 				resultSet.close();
 				resultSet.next();
-			});
+			}).isInstanceOf(SQLException.class);
 			statement.close();
 			connection.close();
 		});
@@ -597,7 +597,8 @@ abstract class TracingListenerStrategyTests {
 			Connection connection = dataSource.getConnection();
 			PreparedStatement statement = connection.prepareStatement("SELECT NOW()");
 			connection.close();
-			assertThrows(SQLException.class, statement::executeQuery);
+
+			assertThatThrownBy(statement::executeQuery).isInstanceOf(SQLException.class);
 
 			assertThat(spanReporter.spans()).hasSize(1);
 			MutableSpan connectionSpan = spanReporter.spans().get(0);
@@ -614,7 +615,7 @@ abstract class TracingListenerStrategyTests {
 			Connection connection = dataSource.getConnection();
 			PreparedStatement statement = connection.prepareStatement("SELECT NOW()");
 			statement.close();
-			assertThrows(SQLException.class, statement::executeQuery);
+			assertThatThrownBy(statement::executeQuery).isInstanceOf(SQLException.class);
 			connection.close();
 
 			assertThat(spanReporter.spans()).hasSize(2);
@@ -635,7 +636,7 @@ abstract class TracingListenerStrategyTests {
 			Statement statement = connection.createStatement();
 			ResultSet resultSet = statement.executeQuery("SELECT NOW()");
 			resultSet.close();
-			assertThrows(SQLException.class, resultSet::next);
+			assertThatThrownBy(resultSet::next).isInstanceOf(SQLException.class);
 			statement.close();
 			connection.close();
 
