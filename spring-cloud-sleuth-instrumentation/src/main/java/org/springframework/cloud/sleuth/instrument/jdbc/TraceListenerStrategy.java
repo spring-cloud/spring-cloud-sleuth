@@ -52,7 +52,7 @@ class TraceListenerStrategy<CON, STMT, RS> {
 
 	public static final String SPAN_QUERY_NAME = "query";
 
-	public static final String SPAN_FETCH_NAME = "fetch";
+	public static final String SPAN_FETCH_NAME = "result-set";
 
 	private final Map<CON, ConnectionInfo> openConnections = new ConcurrentHashMap<>();
 
