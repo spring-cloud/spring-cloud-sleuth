@@ -1,13 +1,6 @@
 :numbered!:
 
 [[appendix]]
-[[sleuth-spans]]
-== Spring Cloud Sleuth Spans
-
-Below you can find a list of all the spans that are created by Spring Cloud Sleuth.
-
-include::_spans.adoc[]
-
 [[common-application-properties]]
 == Common application properties
 
@@ -20,3 +13,10 @@ NOTE: Property contributions can come from additional jar files on your classpat
 Also, you can define your own properties.
 
 include::_configprops.adoc[]
+
+[[sleuth-spans]]
+== Spring Cloud Sleuth Spans
+
+Below you can find a list of all the spans that are created by Spring Cloud Sleuth.
+
+include::_spans.adoc[]

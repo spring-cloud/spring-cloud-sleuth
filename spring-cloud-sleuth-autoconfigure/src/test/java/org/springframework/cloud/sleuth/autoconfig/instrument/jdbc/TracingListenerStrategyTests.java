@@ -69,8 +69,8 @@ abstract class TracingListenerStrategyTests {
 			MutableSpan connectionSpan = spanReporter.spans().get(0);
 			assertThat(connectionSpan.name()).isEqualTo("connection");
 			assertThat(connectionSpan.remoteServiceName()).isEqualTo("TESTDB-BAZ");
-			assertThat(connectionSpan.annotations()).extracting("value").contains("commit");
-			assertThat(connectionSpan.annotations()).extracting("value").contains("rollback");
+			assertThat(connectionSpan.annotations()).extracting("value").contains("sql.commit");
+			assertThat(connectionSpan.annotations()).extracting("value").contains("sql.rollback");
 		});
 	}
 
@@ -90,8 +90,8 @@ abstract class TracingListenerStrategyTests {
 					MutableSpan connectionSpan = spanReporter.spans().get(0);
 					assertThat(connectionSpan.name()).isEqualTo("connection");
 					assertThat(connectionSpan.remoteServiceName()).isEqualTo("aaaabbbb");
-					assertThat(connectionSpan.annotations()).extracting("value").contains("commit");
-					assertThat(connectionSpan.annotations()).extracting("value").contains("rollback");
+					assertThat(connectionSpan.annotations()).extracting("value").contains("sql.commit");
+					assertThat(connectionSpan.annotations()).extracting("value").contains("sql.rollback");
 				});
 	}
 

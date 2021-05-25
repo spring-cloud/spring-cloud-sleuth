@@ -308,31 +308,6 @@
 				<version>${datasource-proxy.version}</version>
 			</dependency>
 			<dependency>
-				<groupId>com.vladmihalcea.flexy-pool</groupId>
-				<artifactId>flexy-pool-core</artifactId>
-				<version>${flexy-pool.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>com.vladmihalcea.flexy-pool</groupId>
-				<artifactId>flexy-dbcp2</artifactId>
-				<version>${flexy-pool.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>com.vladmihalcea.flexy-pool</groupId>
-				<artifactId>flexy-hikaricp</artifactId>
-				<version>${flexy-pool.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>com.vladmihalcea.flexy-pool</groupId>
-				<artifactId>flexy-tomcatcp</artifactId>
-				<version>${flexy-pool.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>com.vladmihalcea.flexy-pool</groupId>
-				<artifactId>flexy-micrometer-metrics</artifactId>
-				<version>${flexy-pool.version}</version>
-			</dependency>
-			<dependency>
 				<groupId>org.apache.commons</groupId>
 				<artifactId>commons-dbcp2</artifactId>
 				<version>${commons-dbcp2.version}</version>

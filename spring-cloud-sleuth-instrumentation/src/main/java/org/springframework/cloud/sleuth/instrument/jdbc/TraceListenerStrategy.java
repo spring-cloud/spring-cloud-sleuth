@@ -31,6 +31,8 @@ import javax.sql.CommonDataSource;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.SpanAndScope;
 import org.springframework.cloud.sleuth.Tracer;
+import org.springframework.cloud.sleuth.docs.AssertingSpan;
+import org.springframework.cloud.sleuth.docs.AssertingSpanBuilder;
 import org.springframework.lang.Nullable;
 import org.springframework.util.StringUtils;
 
@@ -43,16 +45,6 @@ import org.springframework.util.StringUtils;
  * @param <RS> result set
  */
 class TraceListenerStrategy<CON, STMT, RS> {
-
-	public static final String SPAN_SQL_QUERY_TAG_NAME = "sql.query";
-
-	public static final String SPAN_ROW_COUNT_TAG_NAME = "sql.row-count";
-
-	public static final String SPAN_CONNECTION_NAME = "connection";
-
-	public static final String SPAN_QUERY_NAME = "query";
-
-	public static final String SPAN_FETCH_NAME = "result-set";
 
 	private final Map<CON, ConnectionInfo> openConnections = new ConcurrentHashMap<>();
 
@@ -76,11 +68,13 @@ class TraceListenerStrategy<CON, STMT, RS> {
 	void beforeGetConnection(CON connectionKey, @Nullable CommonDataSource dataSource, String dataSourceName) {
 		SpanAndScope spanAndScope = null;
 		if (this.traceTypes.contains(TraceType.CONNECTION)) {
-			Span.Builder connectionSpanBuilder = tracer.spanBuilder().name(SPAN_CONNECTION_NAME);
+			AssertingSpanBuilder connectionSpanBuilder = AssertingSpanBuilder
+					.of(SleuthJdbcSpan.JDBC_CONNECTION_SPAN, tracer.spanBuilder())
+					.name(SleuthJdbcSpan.JDBC_CONNECTION_SPAN.getName());
 			connectionSpanBuilder.remoteServiceName(dataSourceName);
 			connectionSpanBuilder.kind(Span.Kind.CLIENT);
-			this.customizers.stream().filter(cust -> cust.isApplicable(dataSource))
-					.forEach(cust -> cust.customizeConnectionSpan(dataSource, connectionSpanBuilder));
+			this.customizers.stream().filter(customizer -> customizer.isApplicable(dataSource))
+					.forEach(customizer -> customizer.customizeConnectionSpan(dataSource, connectionSpanBuilder));
 			Span connectionSpan = connectionSpanBuilder.start();
 			spanAndScope = new SpanAndScope(connectionSpan, tracer.withSpan(connectionSpan));
 		}
@@ -106,7 +100,9 @@ class TraceListenerStrategy<CON, STMT, RS> {
 	void beforeQuery(CON connectionKey, Connection connection, STMT statementKey, String dataSourceName) {
 		SpanAndScope SpanAndScope = null;
 		if (traceTypes.contains(TraceType.QUERY)) {
-			Span.Builder statementSpanBuilder = tracer.spanBuilder().name(SPAN_QUERY_NAME);
+			Span.Builder statementSpanBuilder = AssertingSpanBuilder
+					.of(SleuthJdbcSpan.JDBC_QUERY_SPAN, tracer.spanBuilder())
+					.name(SleuthJdbcSpan.JDBC_QUERY_SPAN.getName());
 			statementSpanBuilder.remoteServiceName(dataSourceName);
 			parseServerIpAndPort(connection, statementSpanBuilder);
 			statementSpanBuilder.kind(Span.Kind.CLIENT);
@@ -130,9 +126,9 @@ class TraceListenerStrategy<CON, STMT, RS> {
 			return;
 		}
 		StatementInfo statementInfo = connectionInfo.getNestedStatements().get(statementKey);
-		statementInfo.getSpan().ifPresent(statementSpan -> {
-			statementSpan.getSpan().tag(SPAN_ROW_COUNT_TAG_NAME, String.valueOf(rowCount));
-		});
+		statementInfo.getSpan()
+				.ifPresent(statementSpan -> AssertingSpan.of(SleuthJdbcSpan.JDBC_QUERY_SPAN, statementSpan.getSpan())
+						.tag(SleuthJdbcSpan.QueryTags.ROW_COUNT, String.valueOf(rowCount)));
 	}
 
 	void afterQuery(CON connectionKey, STMT statementKey, String sql, Throwable t) {
@@ -144,7 +140,8 @@ class TraceListenerStrategy<CON, STMT, RS> {
 		}
 		StatementInfo statementInfo = connectionInfo.getNestedStatements().get(statementKey);
 		statementInfo.getSpan().ifPresent(statementSpan -> {
-			statementSpan.getSpan().tag(SPAN_SQL_QUERY_TAG_NAME, sql).name(spanName(sql));
+			AssertingSpan.of(SleuthJdbcSpan.JDBC_QUERY_SPAN, statementSpan.getSpan())
+					.tag(SleuthJdbcSpan.QueryTags.QUERY, sql).name(spanName(sql));
 			if (t != null) {
 				statementSpan.getSpan().error(t);
 			}
@@ -166,7 +163,9 @@ class TraceListenerStrategy<CON, STMT, RS> {
 			// ResultSet span is already created
 			return;
 		}
-		Span.Builder resultSetSpanBuilder = tracer.spanBuilder().name(SPAN_FETCH_NAME);
+		AssertingSpanBuilder resultSetSpanBuilder = AssertingSpanBuilder
+				.of(SleuthJdbcSpan.JDBC_RESULT_SET_SPAN, tracer.spanBuilder())
+				.name(SleuthJdbcSpan.JDBC_RESULT_SET_SPAN.getName());
 		resultSetSpanBuilder.remoteServiceName(dataSourceName);
 		resultSetSpanBuilder.kind(Span.Kind.CLIENT);
 		parseServerIpAndPort(connection, resultSetSpanBuilder);
@@ -195,7 +194,8 @@ class TraceListenerStrategy<CON, STMT, RS> {
 			return;
 		}
 		if (rowCount != -1) {
-			resultSetSpan.getSpan().tag(SPAN_ROW_COUNT_TAG_NAME, String.valueOf(rowCount));
+			AssertingSpan.of(SleuthJdbcSpan.JDBC_RESULT_SET_SPAN, resultSetSpan.getSpan())
+					.tag(SleuthJdbcSpan.QueryTags.ROW_COUNT, String.valueOf(rowCount));
 		}
 		if (t != null) {
 			resultSetSpan.getSpan().error(t);
@@ -229,7 +229,8 @@ class TraceListenerStrategy<CON, STMT, RS> {
 			if (t != null) {
 				connectionSpan.getSpan().error(t);
 			}
-			connectionSpan.getSpan().event("commit");
+			AssertingSpan.of(SleuthJdbcSpan.JDBC_QUERY_SPAN, connectionSpan.getSpan())
+					.event(SleuthJdbcSpan.QueryEvents.COMMIT);
 		});
 	}
 
@@ -244,9 +245,10 @@ class TraceListenerStrategy<CON, STMT, RS> {
 				connectionSpan.getSpan().error(t);
 			}
 			else {
-				connectionSpan.getSpan().tag("error", "Transaction rolled back");
+				connectionSpan.getSpan().error(new JdbcException("Transaction rolled back"));
 			}
-			connectionSpan.getSpan().event("rollback");
+			AssertingSpan.of(SleuthJdbcSpan.JDBC_QUERY_SPAN, connectionSpan.getSpan())
+					.event(SleuthJdbcSpan.QueryEvents.ROLLBACK);
 		});
 	}
 
@@ -312,17 +314,7 @@ class TraceListenerStrategy<CON, STMT, RS> {
 			Matcher matcher = URL_SERVICE_NAME_FINDER.matcher(url.toString());
 			if (matcher.find() && matcher.groupCount() == 1) {
 				String parsedServiceName = matcher.group(1);
-				if (parsedServiceName != null && !parsedServiceName.isEmpty()) { // Do not
-																					// override
-																					// global
-																					// service
-																					// name
-																					// if
-																					// parsed
-																					// service
-																					// name
-																					// is
-																					// invalid
+				if (parsedServiceName != null && !parsedServiceName.isEmpty()) {
 					remoteServiceName = parsedServiceName;
 				}
 			}
@@ -348,7 +340,7 @@ class TraceListenerStrategy<CON, STMT, RS> {
 
 		private final Map<RS, SpanAndScope> nestedResultSetSpans = new ConcurrentHashMap<>();
 
-		private ConnectionInfo(SpanAndScope span) {
+		private ConnectionInfo(@Nullable SpanAndScope span) {
 			this.span = span;
 		}
 
@@ -388,14 +380,21 @@ class TraceListenerStrategy<CON, STMT, RS> {
 
 	private final class UrlAndRemoteServiceName {
 
-		@Nullable
 		final URI url;
 
 		final String remoteServiceName;
 
-		private UrlAndRemoteServiceName(URI url, String remoteServiceName) {
+		private UrlAndRemoteServiceName(@Nullable URI url, String remoteServiceName) {
 			this.url = url;
 			this.remoteServiceName = remoteServiceName;
+		}
+
+	}
+
+	private static final class JdbcException extends RuntimeException {
+
+		JdbcException(String message) {
+			super(message);
 		}
 
 	}

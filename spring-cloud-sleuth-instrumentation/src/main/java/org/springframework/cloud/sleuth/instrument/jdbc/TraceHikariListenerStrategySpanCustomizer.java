@@ -21,6 +21,7 @@ import javax.sql.CommonDataSource;
 import com.zaxxer.hikari.HikariDataSource;
 
 import org.springframework.cloud.sleuth.Span;
+import org.springframework.cloud.sleuth.docs.AssertingSpanBuilder;
 import org.springframework.util.StringUtils;
 
 /**
@@ -34,11 +35,14 @@ public class TraceHikariListenerStrategySpanCustomizer
 
 	@Override
 	public void customizeConnectionSpan(HikariDataSource hikariDataSource, Span.Builder spanBuilder) {
+		AssertingSpanBuilder assertingSpanBuilder = AssertingSpanBuilder.of(SleuthJdbcSpan.JDBC_CONNECTION_SPAN,
+				spanBuilder);
 		if (StringUtils.hasText(hikariDataSource.getDriverClassName())) {
-			spanBuilder.tag("sql.datasource.driver", hikariDataSource.getDriverClassName());
+			assertingSpanBuilder.tag(SleuthJdbcSpan.ConnectionTags.DATASOURCE_DRIVER,
+					hikariDataSource.getDriverClassName());
 		}
 		if (StringUtils.hasText(hikariDataSource.getPoolName())) {
-			spanBuilder.tag("sql.datasource.pool", hikariDataSource.getPoolName());
+			assertingSpanBuilder.tag(SleuthJdbcSpan.ConnectionTags.DATASOURCE_POOL, hikariDataSource.getPoolName());
 		}
 	}
 

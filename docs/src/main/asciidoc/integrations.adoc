@@ -650,3 +650,49 @@ This feature is available for all tracer implementations.
 
 We're adding an instrumented Tomcat's `Valve` that originates the span.
 In order to disable this instrumentation set `spring.sleuth.web.tomcat.enabled` to `false`.
+
+
+[[sleuth-jdbc-integration]]
+== Spring JDBC
+
+This feature is available for all tracer implementations. It has been ported from the https://github.com/gavlyukovskiy/spring-boot-data-source-decorator/[spring-boot-datasource-decorator] project.
+
+We're decorating  `DataSource`s in a trace representation. We delegate actual proxying to either https://github.com/p6spy/p6spy[p6spy] or https://github.com/ttddyy/datasource-proxy[datasource-proxy]. In order to use this feature you need to have them on the classpath.
+
+====
+[source,xml,indent=0,subs="verbatim,attributes",role="primary"]
+.P6Spy Maven
+----
+<dependency>
+    <groupId>p6spy</groupId>
+    <artifactId>p6spy</artifactId>
+    <version>${p6spy.version}</version>
+    <scope>runtime</scope>
+</dependency>
+----
+
+[source,yml,indent=0,subs="verbatim,attributes",role="secondary"]
+.P6Spy Gradle
+----
+runtimeOnly "p6spy:p6spy:${p6spyVersion}"
+----
+
+[source,xml,indent=0,subs="verbatim,attributes",role="secondary"]
+.Datasource Proxy Maven
+----
+<dependency>
+    <groupId>net.ttddyy</groupId>
+    <artifactId>datasource-proxy</artifactId>
+    <version>${datasource-proxy.version}</version>
+    <scope>runtime</scope>
+</dependency>
+----
+
+[source,groovy,indent=0,subs="verbatim,attributes",role="secondary"]
+.Datasource Proxy Gradle
+----
+runtimeOnly "net.ttddyy:datasource-proxy:${datasourceProxyVersion}"
+----
+====
+
+In order to disable this instrumentation set `spring.sleuth.jdbc.decorator.datasource.enabled` to `false`.

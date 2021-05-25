@@ -37,8 +37,14 @@ public class DataSourceProxyProperties {
 	 */
 	private DataSourceProxyLogging logging = DataSourceProxyLogging.SLF4J;
 
+	/**
+	 * Query configuration.
+	 */
 	private Query query = new Query();
 
+	/**
+	 * Slow query configuration.
+	 */
 	private SlowQuery slowQuery = new SlowQuery();
 
 	/**
@@ -119,7 +125,7 @@ public class DataSourceProxyProperties {
 	 * @see ProxyDataSourceBuilder#logQueryByCommons(CommonsLogLevel, String)
 	 * @see ProxyDataSourceBuilder#logQueryByJUL(Level, String)
 	 */
-	static class Query {
+	public static class Query {
 
 		/**
 		 * Enable logging all queries to the log.
