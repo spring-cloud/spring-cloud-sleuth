@@ -19,6 +19,8 @@ package org.springframework.cloud.sleuth.instrument.jdbc;
 import java.sql.SQLException;
 import java.util.List;
 
+import javax.sql.CommonDataSource;
+
 import com.p6spy.engine.common.ConnectionInformation;
 import com.p6spy.engine.common.PreparedStatementInformation;
 import com.p6spy.engine.common.ResultSetInformation;
@@ -37,6 +39,11 @@ import org.springframework.util.StringUtils;
  */
 public class TraceJdbcEventListener extends SimpleJdbcEventListener implements Ordered {
 
+	/**
+	 * Bean order.
+	 */
+	public static final int ORDER = Ordered.HIGHEST_PRECEDENCE + 10;
+
 	private final DataSourceNameResolver dataSourceNameResolver;
 
 	private final TraceListenerStrategy<ConnectionInformation, StatementInformation, ResultSetInformation> strategy;
@@ -44,30 +51,31 @@ public class TraceJdbcEventListener extends SimpleJdbcEventListener implements O
 	private final boolean includeParameterValues;
 
 	public TraceJdbcEventListener(Tracer tracer, DataSourceNameResolver dataSourceNameResolver,
-			List<TraceType> traceTypes, boolean includeParameterValues) {
+			List<TraceType> traceTypes, boolean includeParameterValues,
+			List<TraceListenerStrategySpanCustomizer> customizers) {
 		this.dataSourceNameResolver = dataSourceNameResolver;
 		this.includeParameterValues = includeParameterValues;
-		this.strategy = new TraceListenerStrategy<>(tracer, traceTypes);
+		this.strategy = new TraceListenerStrategy<>(tracer, traceTypes, customizers);
 	}
 
 	@Override
 	public void onBeforeGetConnection(ConnectionInformation connectionInformation) {
-		String dataSourceName = this.dataSourceNameResolver
-				.resolveDataSourceName(connectionInformation.getDataSource());
-		this.strategy.beforeGetConnection(connectionInformation, dataSourceName);
+		CommonDataSource dataSource = connectionInformation.getDataSource();
+		String dataSourceName = this.dataSourceNameResolver.resolveDataSourceName(dataSource);
+		this.strategy.beforeGetConnection(connectionInformation, dataSource, dataSourceName);
 	}
 
 	@Override
 	public void onAfterGetConnection(ConnectionInformation connectionInformation, SQLException e) {
-		this.strategy.afterGetConnection(connectionInformation, e);
+		this.strategy.afterGetConnection(connectionInformation, connectionInformation.getConnection(), e);
 	}
 
 	@Override
 	public void onBeforeAnyExecute(StatementInformation statementInformation) {
 		String dataSourceName = this.dataSourceNameResolver
 				.resolveDataSourceName(statementInformation.getConnectionInformation().getDataSource());
-		this.strategy.beforeQuery(statementInformation.getConnectionInformation(), statementInformation,
-				dataSourceName);
+		this.strategy.beforeQuery(statementInformation.getConnectionInformation(),
+				statementInformation.getConnectionInformation().getConnection(), statementInformation, dataSourceName);
 	}
 
 	@Override
@@ -81,6 +89,7 @@ public class TraceJdbcEventListener extends SimpleJdbcEventListener implements O
 		String dataSourceName = this.dataSourceNameResolver
 				.resolveDataSourceName(resultSetInformation.getConnectionInformation().getDataSource());
 		this.strategy.beforeResultSetNext(resultSetInformation.getConnectionInformation(),
+				resultSetInformation.getConnectionInformation().getConnection(),
 				resultSetInformation.getStatementInformation(), resultSetInformation, dataSourceName);
 	}
 
@@ -137,7 +146,7 @@ public class TraceJdbcEventListener extends SimpleJdbcEventListener implements O
 
 	@Override
 	public int getOrder() {
-		return Ordered.HIGHEST_PRECEDENCE + 10;
+		return ORDER;
 	}
 
 }

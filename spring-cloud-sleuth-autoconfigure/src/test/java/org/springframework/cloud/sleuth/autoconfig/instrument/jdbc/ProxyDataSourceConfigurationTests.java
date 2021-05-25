@@ -62,7 +62,7 @@ class ProxyDataSourceConfigurationTests {
 					TestSpanHandlerConfiguration.class, PropertyPlaceholderAutoConfiguration.class))
 			.withPropertyValues("spring.datasource.initialization-mode=never",
 					"spring.datasource.url:jdbc:h2:mem:testdb-" + ThreadLocalRandom.current().nextInt())
-			.withClassLoader(new FilteredClassLoader("com.vladmihalcea.flexypool", "com.p6spy"));
+			.withClassLoader(new FilteredClassLoader("com.p6spy"));
 
 	@Test
 	void testRegisterLogAndSlowQueryLogByDefaultToSlf4j() {

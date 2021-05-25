@@ -16,6 +16,7 @@
 
 package org.springframework.cloud.sleuth.autoconfig.instrument.jdbc;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import net.ttddyy.dsproxy.listener.MethodExecutionListener;
@@ -37,7 +38,8 @@ import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.instrument.jdbc.DataSourceNameResolver;
 import org.springframework.cloud.sleuth.instrument.jdbc.DataSourceProxyBuilderCustomizer;
 import org.springframework.cloud.sleuth.instrument.jdbc.DataSourceProxyConnectionIdManagerProvider;
-import org.springframework.cloud.sleuth.instrument.jdbc.DataSourceProxyTraceDataSourceDecorator;
+import org.springframework.cloud.sleuth.instrument.jdbc.DataSourceProxyDataSourceDecorator;
+import org.springframework.cloud.sleuth.instrument.jdbc.TraceListenerStrategySpanCustomizer;
 import org.springframework.cloud.sleuth.instrument.jdbc.TraceQueryExecutionListener;
 import org.springframework.context.annotation.Bean;
 
@@ -53,7 +55,7 @@ class DataSourceProxyConfiguration {
 
 	@Bean
 	@ConditionalOnMissingBean
-	DataSourceProxyConnectionIdManagerProvider connectionIdManagerProvider() {
+	DataSourceProxyConnectionIdManagerProvider traceConnectionIdManagerProvider() {
 		return GlobalConnectionIdManager::new;
 	}
 
@@ -76,10 +78,10 @@ class DataSourceProxyConfiguration {
 	}
 
 	@Bean
-	DataSourceProxyTraceDataSourceDecorator proxyDataSourceDecorator(
+	DataSourceProxyDataSourceDecorator proxyDataSourceDecorator(
 			DataSourceProxyBuilderCustomizer dataSourceProxyBuilderCustomizer,
 			DataSourceNameResolver dataSourceNameResolver) {
-		return new DataSourceProxyTraceDataSourceDecorator(dataSourceProxyBuilderCustomizer, dataSourceNameResolver);
+		return new DataSourceProxyDataSourceDecorator(dataSourceProxyBuilderCustomizer, dataSourceNameResolver);
 	}
 
 	@Bean
@@ -92,8 +94,10 @@ class DataSourceProxyConfiguration {
 
 	@Bean
 	TraceQueryExecutionListener traceQueryExecutionListener(Tracer tracer,
-			TraceDataSourceDecoratorProperties dataSourceDecoratorProperties) {
-		return new TraceQueryExecutionListener(tracer, dataSourceDecoratorProperties.getIncludes());
+			TraceDataSourceDecoratorProperties dataSourceDecoratorProperties,
+			ObjectProvider<List<TraceListenerStrategySpanCustomizer>> customizers) {
+		return new TraceQueryExecutionListener(tracer, dataSourceDecoratorProperties.getIncludes(),
+				customizers.getIfAvailable(ArrayList::new));
 	}
 
 	@Bean

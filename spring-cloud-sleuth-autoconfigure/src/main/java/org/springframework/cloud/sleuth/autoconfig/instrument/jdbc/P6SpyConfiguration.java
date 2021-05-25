@@ -16,6 +16,7 @@
 
 package org.springframework.cloud.sleuth.autoconfig.instrument.jdbc;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import com.p6spy.engine.event.JdbcEventListener;
@@ -31,6 +32,7 @@ import org.springframework.cloud.sleuth.instrument.jdbc.DataSourceNameResolver;
 import org.springframework.cloud.sleuth.instrument.jdbc.P6SpyContextJdbcEventListenerFactory;
 import org.springframework.cloud.sleuth.instrument.jdbc.P6SpyDataSourceDecorator;
 import org.springframework.cloud.sleuth.instrument.jdbc.TraceJdbcEventListener;
+import org.springframework.cloud.sleuth.instrument.jdbc.TraceListenerStrategySpanCustomizer;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.Bean;
 
@@ -64,9 +66,11 @@ class P6SpyConfiguration {
 
 	@Bean
 	TraceJdbcEventListener tracingJdbcEventListener(Tracer tracer, DataSourceNameResolver dataSourceNameResolver,
-			TraceDataSourceDecoratorProperties dataSourceDecoratorProperties) {
+			TraceDataSourceDecoratorProperties dataSourceDecoratorProperties,
+			ObjectProvider<List<TraceListenerStrategySpanCustomizer>> customizers) {
 		return new TraceJdbcEventListener(tracer, dataSourceNameResolver, dataSourceDecoratorProperties.getIncludes(),
-				dataSourceDecoratorProperties.getP6spy().getTracing().isIncludeParameterValues());
+				dataSourceDecoratorProperties.getP6spy().getTracing().isIncludeParameterValues(),
+				customizers.getIfAvailable(ArrayList::new));
 	}
 
 }

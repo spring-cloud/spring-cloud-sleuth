@@ -51,7 +51,7 @@ import org.springframework.context.annotation.Configuration;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-public class P6SpyConfigurationTests {
+class P6SpyConfigurationTests {
 
 	private final ApplicationContextRunner contextRunner = new ApplicationContextRunner()
 			.withConfiguration(AutoConfigurations.of(DataSourceAutoConfiguration.class,
@@ -59,7 +59,7 @@ public class P6SpyConfigurationTests {
 					TestSpanHandlerConfiguration.class, PropertyPlaceholderAutoConfiguration.class))
 			.withPropertyValues("spring.datasource.initialization-mode=never",
 					"spring.datasource.url:jdbc:h2:mem:testdb-" + ThreadLocalRandom.current().nextInt())
-			.withClassLoader(new FilteredClassLoader("com.vladmihalcea.flexypool", "net.ttddyy.dsproxy"));
+			.withClassLoader(new FilteredClassLoader("net.ttddyy.dsproxy"));
 
 	@BeforeEach
 	@AfterEach

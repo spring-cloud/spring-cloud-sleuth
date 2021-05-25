@@ -28,7 +28,7 @@ import org.springframework.core.Ordered;
  *
  * @author Arthur Gavlyukovskiy
  */
-public class P6SpyDataSourceDecorator implements TraceDataSourceDecorator, Ordered {
+public class P6SpyDataSourceDecorator implements DataSourceDecorator, Ordered {
 
 	/**
 	 * Bean order.

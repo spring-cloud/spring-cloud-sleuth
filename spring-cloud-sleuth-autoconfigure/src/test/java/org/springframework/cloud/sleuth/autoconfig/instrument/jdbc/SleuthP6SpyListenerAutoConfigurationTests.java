@@ -40,7 +40,7 @@ class SleuthP6SpyListenerAutoConfigurationTests {
 					TestSpanHandlerConfiguration.class, PropertyPlaceholderAutoConfiguration.class))
 			.withPropertyValues("spring.datasource.initialization-mode=never",
 					"spring.datasource.url:jdbc:h2:mem:testdb-" + ThreadLocalRandom.current().nextInt())
-			.withClassLoader(new FilteredClassLoader("com.vladmihalcea.flexypool", "net.ttddyy.dsproxy"));
+			.withClassLoader(new FilteredClassLoader("net.ttddyy.dsproxy"));
 
 	@Test
 	void testAddsP6SpyListener() {

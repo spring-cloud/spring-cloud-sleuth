@@ -16,23 +16,28 @@
 
 package org.springframework.cloud.sleuth.instrument.jdbc;
 
-import javax.sql.DataSource;
+import javax.sql.CommonDataSource;
+
+import org.springframework.cloud.sleuth.Span;
 
 /**
- * Decorator for context {@link DataSource} beans.
+ * Customizer for {@link TraceListenerStrategy} client span.
  *
- * @author Arthur Gavlyukovskiy
+ * @author Marcin Grzejszczak
  * @since 3.1.0
  */
-public interface TraceDataSourceDecorator {
+public interface TraceListenerStrategySpanCustomizer<T extends CommonDataSource> {
 
 	/**
-	 * Decorates given {@link DataSource} instance. Should either return wrapped
-	 * {@link DataSource} or same instance.
-	 * @param beanName name of a bean
-	 * @param dataSource bean instance
-	 * @return decorated {@link DataSource} or given {@link DataSource} without changes.
+	 * Customizes the client database span.
+	 * @param spanBuilder span builder
 	 */
-	DataSource decorate(String beanName, DataSource dataSource);
+	void customizeConnectionSpan(T dataSource, Span.Builder spanBuilder);
+
+	/**
+	 * @param dataSource data source for which we're building the span
+	 * @return {@code true} when this customizer can be applied
+	 */
+	boolean isApplicable(CommonDataSource dataSource);
 
 }

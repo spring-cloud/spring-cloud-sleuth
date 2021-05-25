@@ -32,9 +32,9 @@ import org.apache.commons.logging.LogFactory;
 import org.springframework.aop.scope.ScopedProxyUtils;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.config.BeanPostProcessor;
+import org.springframework.cloud.sleuth.instrument.jdbc.DataSourceDecorator;
 import org.springframework.cloud.sleuth.instrument.jdbc.DataSourceNameResolver;
 import org.springframework.cloud.sleuth.instrument.jdbc.DataSourceWrapper;
-import org.springframework.cloud.sleuth.instrument.jdbc.TraceDataSourceDecorator;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.core.Ordered;
@@ -74,8 +74,9 @@ public class TraceDataSourceDecoratorBeanPostProcessor implements BeanPostProces
 	public Object postProcessAfterInitialization(Object bean, String beanName) throws BeansException {
 		if (bean instanceof DataSource && !ScopedProxyUtils.isScopedTarget(beanName)
 				&& !this.excludedBeans.contains(beanName)) {
-			Map<String, TraceDataSourceDecorator> decorators = this.applicationContext
-					.getBeansOfType(TraceDataSourceDecorator.class).entrySet().stream()
+			// TODO: This might be a problem
+			Map<String, DataSourceDecorator> decorators = this.applicationContext
+					.getBeansOfType(DataSourceDecorator.class).entrySet().stream()
 					.sorted(Entry.comparingByValue(AnnotationAwareOrderComparator.INSTANCE))
 					.collect(Collectors.toMap(Entry::getKey, Entry::getValue, (v1, v2) -> v2, LinkedHashMap::new));
 			return decorate((DataSource) bean, getDataSourceName(bean, beanName), decorators);
@@ -95,12 +96,12 @@ public class TraceDataSourceDecoratorBeanPostProcessor implements BeanPostProces
 		return beanName;
 	}
 
-	private DataSource decorate(DataSource dataSource, String name, Map<String, TraceDataSourceDecorator> decorators) {
+	private DataSource decorate(DataSource dataSource, String name, Map<String, DataSourceDecorator> decorators) {
 		getDataSourceNameResolver().addDataSource(name, dataSource);
 		DataSource decoratedDataSource = dataSource;
-		for (Entry<String, TraceDataSourceDecorator> decoratorEntry : decorators.entrySet()) {
+		for (Entry<String, DataSourceDecorator> decoratorEntry : decorators.entrySet()) {
 			String decoratorBeanName = decoratorEntry.getKey();
-			TraceDataSourceDecorator decorator = decoratorEntry.getValue();
+			DataSourceDecorator decorator = decoratorEntry.getValue();
 			DataSource dataSourceBeforeDecorating = decoratedDataSource;
 			decoratedDataSource = Objects.requireNonNull(decorator.decorate(name, decoratedDataSource),
 					"DataSourceDecorator (" + decoratorBeanName + ", " + decorator + ") should not return null");

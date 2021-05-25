@@ -16,12 +16,8 @@
 
 package org.springframework.cloud.sleuth.brave.bridge;
 
-import java.net.URI;
-
 import brave.Tracer;
 import brave.propagation.TraceContextOrSamplingFlags;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.TraceContext;
@@ -33,8 +29,6 @@ import org.springframework.cloud.sleuth.TraceContext;
  * @since 3.0.0
  */
 class BraveSpanBuilder implements Span.Builder {
-
-	private static final Log log = LogFactory.getLog(BraveSpanBuilder.class);
 
 	brave.Span delegate;
 
@@ -114,16 +108,8 @@ class BraveSpanBuilder implements Span.Builder {
 	}
 
 	@Override
-	public Span.Builder remoteUrl(String remoteUrl) {
-		try {
-			URI uri = URI.create(remoteUrl);
-			span().remoteIpAndPort(uri.getHost(), uri.getPort());
-		}
-		catch (Exception e) {
-			if (log.isDebugEnabled()) {
-				log.debug("Failed to parse url [" + remoteUrl + "]. Will not set the value", e);
-			}
-		}
+	public Span.Builder remoteUrl(String ip, int port) {
+		span().remoteIpAndPort(ip, port);
 		return this;
 	}
 

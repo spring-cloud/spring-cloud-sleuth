@@ -16,69 +16,99 @@
 
 package org.springframework.cloud.sleuth.instrument.jdbc;
 
+import java.net.URI;
+import java.sql.Connection;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+import javax.sql.CommonDataSource;
 
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.SpanAndScope;
 import org.springframework.cloud.sleuth.Tracer;
+import org.springframework.lang.Nullable;
+import org.springframework.util.StringUtils;
 
+/**
+ * Partially taken from
+ * https://github.com/openzipkin/brave/blob/v5.6.4/instrumentation/p6spy/src/main/java/brave/p6spy/TracingJdbcEventListener.java.
+ *
+ * @param <CON> connection type
+ * @param <STMT> statement
+ * @param <RS> result set
+ */
 class TraceListenerStrategy<CON, STMT, RS> {
 
-	public static final String SPAN_SQL_QUERY_TAG_NAME = "sql";
+	public static final String SPAN_SQL_QUERY_TAG_NAME = "sql.query";
 
-	public static final String SPAN_ROW_COUNT_TAG_NAME = "row-count";
+	public static final String SPAN_ROW_COUNT_TAG_NAME = "sql.row-count";
 
-	public static final String SPAN_CONNECTION_POSTFIX = "/connection";
+	public static final String SPAN_CONNECTION_NAME = "connection";
 
-	public static final String SPAN_QUERY_POSTFIX = "/query";
+	public static final String SPAN_QUERY_NAME = "query";
 
-	public static final String SPAN_FETCH_POSTFIX = "/fetch";
+	public static final String SPAN_FETCH_NAME = "fetch";
 
 	private final Map<CON, ConnectionInfo> openConnections = new ConcurrentHashMap<>();
+
+	// Captures all the characters between = and either the next & or the end of the
+	// string.
+	private static final Pattern URL_SERVICE_NAME_FINDER = Pattern.compile("sleuthServiceName=(.*?)(?:&|$)");
 
 	private final Tracer tracer;
 
 	private final List<TraceType> traceTypes;
 
-	TraceListenerStrategy(Tracer tracer, List<TraceType> traceTypes) {
+	private final List<TraceListenerStrategySpanCustomizer> customizers;
+
+	TraceListenerStrategy(Tracer tracer, List<TraceType> traceTypes,
+			List<TraceListenerStrategySpanCustomizer> customizers) {
 		this.tracer = tracer;
 		this.traceTypes = traceTypes;
+		this.customizers = customizers;
 	}
 
-	void beforeGetConnection(CON connectionKey, String dataSourceName) {
-		SpanAndScope SpanAndScope = null;
+	void beforeGetConnection(CON connectionKey, @Nullable CommonDataSource dataSource, String dataSourceName) {
+		SpanAndScope spanAndScope = null;
 		if (this.traceTypes.contains(TraceType.CONNECTION)) {
-			Span.Builder connectionSpanBuilder = tracer.spanBuilder()
-					.name("jdbc:/" + dataSourceName + SPAN_CONNECTION_POSTFIX);
+			Span.Builder connectionSpanBuilder = tracer.spanBuilder().name(SPAN_CONNECTION_NAME);
 			connectionSpanBuilder.remoteServiceName(dataSourceName);
 			connectionSpanBuilder.kind(Span.Kind.CLIENT);
-			connectionSpanBuilder.start();
+			this.customizers.stream().filter(cust -> cust.isApplicable(dataSource))
+					.forEach(cust -> cust.customizeConnectionSpan(dataSource, connectionSpanBuilder));
 			Span connectionSpan = connectionSpanBuilder.start();
-			SpanAndScope = new SpanAndScope(connectionSpan, tracer.withSpan(connectionSpan));
+			spanAndScope = new SpanAndScope(connectionSpan, tracer.withSpan(connectionSpan));
 		}
-		ConnectionInfo connectionInfo = new ConnectionInfo(SpanAndScope);
+		ConnectionInfo connectionInfo = new ConnectionInfo(spanAndScope);
 		this.openConnections.put(connectionKey, connectionInfo);
 	}
 
-	void afterGetConnection(CON connectionKey, Throwable t) {
+	void afterGetConnection(CON connectionKey, Connection connection, Throwable t) {
 		if (t != null) {
 			ConnectionInfo connectionInfo = this.openConnections.remove(connectionKey);
 			connectionInfo.getSpan().ifPresent(connectionSpan -> {
+				parseServerIpAndPort(connection, connectionSpan.getSpan());
 				connectionSpan.getSpan().error(t);
 				connectionSpan.close();
 			});
+			return;
 		}
+		this.openConnections.get(connectionKey).getSpan().ifPresent(spanAndScope -> {
+			parseServerIpAndPort(connection, spanAndScope.getSpan());
+		});
 	}
 
-	void beforeQuery(CON connectionKey, STMT statementKey, String dataSourceName) {
+	void beforeQuery(CON connectionKey, Connection connection, STMT statementKey, String dataSourceName) {
 		SpanAndScope SpanAndScope = null;
 		if (traceTypes.contains(TraceType.QUERY)) {
-			Span.Builder statementSpanBuilder = tracer.spanBuilder()
-					.name("jdbc:/" + dataSourceName + SPAN_QUERY_POSTFIX);
+			Span.Builder statementSpanBuilder = tracer.spanBuilder().name(SPAN_QUERY_NAME);
 			statementSpanBuilder.remoteServiceName(dataSourceName);
+			parseServerIpAndPort(connection, statementSpanBuilder);
 			statementSpanBuilder.kind(Span.Kind.CLIENT);
 			Span statementSpan = statementSpanBuilder.start();
 			SpanAndScope = new SpanAndScope(statementSpan, tracer.withSpan(statementSpan));
@@ -114,7 +144,7 @@ class TraceListenerStrategy<CON, STMT, RS> {
 		}
 		StatementInfo statementInfo = connectionInfo.getNestedStatements().get(statementKey);
 		statementInfo.getSpan().ifPresent(statementSpan -> {
-			statementSpan.getSpan().tag(SPAN_SQL_QUERY_TAG_NAME, sql);
+			statementSpan.getSpan().tag(SPAN_SQL_QUERY_TAG_NAME, sql).name(spanName(sql));
 			if (t != null) {
 				statementSpan.getSpan().error(t);
 			}
@@ -122,7 +152,8 @@ class TraceListenerStrategy<CON, STMT, RS> {
 		});
 	}
 
-	void beforeResultSetNext(CON connectionKey, STMT statementKey, RS resultSetKey, String dataSourceName) {
+	void beforeResultSetNext(CON connectionKey, Connection connection, STMT statementKey, RS resultSetKey,
+			String dataSourceName) {
 		if (!traceTypes.contains(TraceType.FETCH)) {
 			return;
 		}
@@ -135,13 +166,13 @@ class TraceListenerStrategy<CON, STMT, RS> {
 			// ResultSet span is already created
 			return;
 		}
-		Span.Builder resultSetSpanBuilder = tracer.spanBuilder().name("jdbc:/" + dataSourceName + SPAN_FETCH_POSTFIX);
+		Span.Builder resultSetSpanBuilder = tracer.spanBuilder().name(SPAN_FETCH_NAME);
 		resultSetSpanBuilder.remoteServiceName(dataSourceName);
 		resultSetSpanBuilder.kind(Span.Kind.CLIENT);
+		parseServerIpAndPort(connection, resultSetSpanBuilder);
 		Span resultSetSpan = resultSetSpanBuilder.start();
 		SpanAndScope SpanAndScope = new SpanAndScope(resultSetSpan, tracer.withSpan(resultSetSpan));
 		connectionInfo.getNestedResultSetSpans().put(resultSetKey, SpanAndScope);
-
 		StatementInfo statementInfo = connectionInfo.getNestedStatements().get(statementKey);
 		// StatementInfo may be null when Statement is proxied and instance returned from
 		// ResultSet is different from instance returned in query method
@@ -163,7 +194,6 @@ class TraceListenerStrategy<CON, STMT, RS> {
 		if (resultSetSpan == null) {
 			return;
 		}
-
 		if (rowCount != -1) {
 			resultSetSpan.getSpan().tag(SPAN_ROW_COUNT_TAG_NAME, String.valueOf(rowCount));
 		}
@@ -237,6 +267,79 @@ class TraceListenerStrategy<CON, STMT, RS> {
 		});
 	}
 
+	private String spanName(String sql) {
+		return sql.substring(0, sql.indexOf(' ')).toLowerCase(Locale.ROOT);
+	}
+
+	private void parseServerIpAndPort(Connection connection, Span.Builder span) {
+		if (connection == null) {
+			return;
+		}
+		UrlAndRemoteServiceName urlAndRemoteServiceName = parseServerIpAndPort(connection);
+		span.remoteServiceName(urlAndRemoteServiceName.remoteServiceName);
+		URI url = urlAndRemoteServiceName.url;
+		if (url != null) {
+			span.remoteUrl(url.getHost(), url.getPort());
+		}
+	}
+
+	private void parseServerIpAndPort(Connection connection, Span span) {
+		if (connection == null) {
+			return;
+		}
+		UrlAndRemoteServiceName urlAndRemoteServiceName = parseServerIpAndPort(connection);
+		span.remoteServiceName(urlAndRemoteServiceName.remoteServiceName);
+		URI url = urlAndRemoteServiceName.url;
+		if (url != null) {
+			span.remoteUrl(url.getHost(), url.getPort());
+		}
+	}
+
+	/**
+	 * This attempts to get the ip and port from the JDBC URL. Ex. localhost and 5555 from
+	 * {@code
+	 * jdbc:mysql://localhost:5555/mydatabase}.
+	 *
+	 * Taken from Brave.
+	 */
+	private UrlAndRemoteServiceName parseServerIpAndPort(Connection connection) {
+		String remoteServiceName = "";
+		try {
+			String urlAsString = connection.getMetaData().getURL().substring(5); // strip
+																					// "jdbc:"
+			URI url = URI.create(urlAsString.replace(" ", "")); // Remove all white space
+																// according to RFC 2396
+			Matcher matcher = URL_SERVICE_NAME_FINDER.matcher(url.toString());
+			if (matcher.find() && matcher.groupCount() == 1) {
+				String parsedServiceName = matcher.group(1);
+				if (parsedServiceName != null && !parsedServiceName.isEmpty()) { // Do not
+																					// override
+																					// global
+																					// service
+																					// name
+																					// if
+																					// parsed
+																					// service
+																					// name
+																					// is
+																					// invalid
+					remoteServiceName = parsedServiceName;
+				}
+			}
+			if (!StringUtils.hasText(remoteServiceName)) {
+				String databaseName = connection.getCatalog();
+				if (databaseName != null && !databaseName.isEmpty()) {
+					remoteServiceName = databaseName;
+				}
+			}
+			return new UrlAndRemoteServiceName(url, remoteServiceName);
+		}
+		catch (Exception e) {
+			// remote address is optional
+			return new UrlAndRemoteServiceName(null, remoteServiceName);
+		}
+	}
+
 	private final class ConnectionInfo {
 
 		private final SpanAndScope span;
@@ -279,6 +382,20 @@ class TraceListenerStrategy<CON, STMT, RS> {
 
 		Map<RS, SpanAndScope> getNestedResultSetSpans() {
 			return nestedResultSetSpans;
+		}
+
+	}
+
+	private final class UrlAndRemoteServiceName {
+
+		@Nullable
+		final URI url;
+
+		final String remoteServiceName;
+
+		private UrlAndRemoteServiceName(URI url, String remoteServiceName) {
+			this.url = url;
+			this.remoteServiceName = remoteServiceName;
 		}
 
 	}

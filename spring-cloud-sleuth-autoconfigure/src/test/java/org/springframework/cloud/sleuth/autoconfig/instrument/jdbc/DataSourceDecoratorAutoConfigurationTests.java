@@ -33,11 +33,10 @@ import org.springframework.beans.DirectFieldAccessor;
 import org.springframework.boot.autoconfigure.AutoConfigurations;
 import org.springframework.boot.autoconfigure.context.PropertyPlaceholderAutoConfiguration;
 import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration;
-import org.springframework.boot.test.context.FilteredClassLoader;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
 import org.springframework.cloud.sleuth.autoconfig.brave.BraveAutoConfiguration;
+import org.springframework.cloud.sleuth.instrument.jdbc.DataSourceDecorator;
 import org.springframework.cloud.sleuth.instrument.jdbc.DataSourceWrapper;
-import org.springframework.cloud.sleuth.instrument.jdbc.TraceDataSourceDecorator;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
@@ -87,8 +86,7 @@ class DataSourceDecoratorAutoConfigurationTests {
 
 	@Test
 	void testDecoratingWhenDefaultProxyProviderNotAvailable() {
-		ApplicationContextRunner contextRunner = this.contextRunner
-				.withClassLoader(new FilteredClassLoader("com.vladmihalcea.flexypool"));
+		ApplicationContextRunner contextRunner = this.contextRunner;
 
 		contextRunner.run(context -> {
 			DataSource dataSource = context.getBean(DataSource.class);
@@ -264,7 +262,7 @@ class DataSourceDecoratorAutoConfigurationTests {
 	static class TestDataSourceDecoratorConfiguration {
 
 		@Bean
-		public TraceDataSourceDecorator customDataSourceDecorator() {
+		public DataSourceDecorator customDataSourceDecorator() {
 			return (beanName, dataSource) -> new CustomDataSourceProxy(dataSource);
 		}
 

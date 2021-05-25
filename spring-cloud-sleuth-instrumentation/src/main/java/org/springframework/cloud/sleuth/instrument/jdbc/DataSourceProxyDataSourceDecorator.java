@@ -29,13 +29,13 @@ import org.springframework.core.Ordered;
  * @author Arthur Gavlyukovskiy
  * @since 3.1.0
  */
-public class DataSourceProxyTraceDataSourceDecorator implements TraceDataSourceDecorator, Ordered {
+public class DataSourceProxyDataSourceDecorator implements DataSourceDecorator, Ordered {
 
 	private final DataSourceProxyBuilderCustomizer dataSourceProxyBuilderCustomizer;
 
 	private final DataSourceNameResolver dataSourceNameResolver;
 
-	public DataSourceProxyTraceDataSourceDecorator(DataSourceProxyBuilderCustomizer dataSourceProxyBuilderCustomizer,
+	public DataSourceProxyDataSourceDecorator(DataSourceProxyBuilderCustomizer dataSourceProxyBuilderCustomizer,
 			DataSourceNameResolver dataSourceNameResolver) {
 		this.dataSourceProxyBuilderCustomizer = dataSourceProxyBuilderCustomizer;
 		this.dataSourceNameResolver = dataSourceNameResolver;

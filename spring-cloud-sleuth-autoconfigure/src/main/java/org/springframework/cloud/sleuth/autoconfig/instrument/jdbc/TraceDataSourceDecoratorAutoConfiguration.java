@@ -21,13 +21,16 @@ import javax.sql.DataSource;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.cloud.sleuth.Tracer;
+import org.springframework.cloud.sleuth.instrument.jdbc.DataSourceDecorator;
 import org.springframework.cloud.sleuth.instrument.jdbc.DataSourceNameResolver;
-import org.springframework.cloud.sleuth.instrument.jdbc.TraceDataSourceDecorator;
+import org.springframework.cloud.sleuth.instrument.jdbc.TraceHikariListenerStrategySpanCustomizer;
+import org.springframework.cloud.sleuth.instrument.jdbc.TraceListenerStrategySpanCustomizer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
@@ -47,16 +50,22 @@ import org.springframework.context.annotation.Import;
 public class TraceDataSourceDecoratorAutoConfiguration {
 
 	@Bean
-	@ConditionalOnBean(TraceDataSourceDecorator.class)
-	static TraceDataSourceDecoratorBeanPostProcessor dataSourceDecoratorBeanPostProcessor(
+	@ConditionalOnBean(DataSourceDecorator.class)
+	static TraceDataSourceDecoratorBeanPostProcessor traceDataSourceDecoratorBeanPostProcessor(
 			TraceDataSourceDecoratorProperties dataSourceDecoratorProperties) {
 		return new TraceDataSourceDecoratorBeanPostProcessor(dataSourceDecoratorProperties.getExcludedBeans());
 	}
 
 	@Bean
 	@ConditionalOnMissingBean
-	DataSourceNameResolver dataSourceNameResolver() {
+	DataSourceNameResolver traceDataSourceNameResolver() {
 		return new DataSourceNameResolver();
+	}
+
+	@Bean
+	@ConditionalOnClass(name = "com.zaxxer.hikari.HikariDataSource")
+	TraceListenerStrategySpanCustomizer hikariTraceListenerStrategySpanCustomizer() {
+		return new TraceHikariListenerStrategySpanCustomizer();
 	}
 
 }

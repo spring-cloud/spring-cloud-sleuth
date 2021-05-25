@@ -140,6 +140,7 @@ public class TraceAsyncIntegrationTests {
 
 	private void thenTraceIdIsPassedFromTheCurrentThreadToTheAsyncOneAndSpanHasCustomName(final Span span) {
 		Awaitility.await().atMost(5, SECONDS).untilAsserted(() -> {
+			then(TraceAsyncIntegrationTests.this.classPerformingAsyncLogic.getSpan()).isNotNull();
 			then(TraceAsyncIntegrationTests.this.classPerformingAsyncLogic.getSpan().context().traceId())
 					.isEqualTo(span.context().traceId());
 			then(this.spans).hasSize(2);

@@ -23,6 +23,7 @@ import java.sql.Statement;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import javax.sql.CommonDataSource;
 import javax.sql.DataSource;
 
 import net.ttddyy.dsproxy.ExecutionInfo;
@@ -30,6 +31,9 @@ import net.ttddyy.dsproxy.QueryInfo;
 import net.ttddyy.dsproxy.listener.MethodExecutionContext;
 import net.ttddyy.dsproxy.listener.MethodExecutionListener;
 import net.ttddyy.dsproxy.listener.QueryExecutionListener;
+import net.ttddyy.dsproxy.support.ProxyDataSource;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.core.Ordered;
@@ -42,15 +46,31 @@ import org.springframework.core.Ordered;
  */
 public class TraceQueryExecutionListener implements QueryExecutionListener, MethodExecutionListener, Ordered {
 
+	private static final Log log = LogFactory.getLog(TraceQueryExecutionListener.class);
+
 	private final TraceListenerStrategy<String, Statement, ResultSet> strategy;
 
-	public TraceQueryExecutionListener(Tracer tracer, List<TraceType> traceTypes) {
-		this.strategy = new TraceListenerStrategy<>(tracer, traceTypes);
+	public TraceQueryExecutionListener(Tracer tracer, List<TraceType> traceTypes,
+			List<TraceListenerStrategySpanCustomizer> customizers) {
+		this.strategy = new TraceListenerStrategy<>(tracer, traceTypes, customizers);
 	}
 
 	@Override
 	public void beforeQuery(ExecutionInfo execInfo, List<QueryInfo> queryInfoList) {
-		this.strategy.beforeQuery(execInfo.getConnectionId(), execInfo.getStatement(), execInfo.getDataSourceName());
+		this.strategy.beforeQuery(execInfo.getConnectionId(), connection(execInfo), execInfo.getStatement(),
+				execInfo.getDataSourceName());
+	}
+
+	private Connection connection(ExecutionInfo execInfo) {
+		try {
+			return execInfo.getStatement().getConnection();
+		}
+		catch (Exception ex) {
+			if (log.isDebugEnabled()) {
+				log.debug("Can't retrieve the connection - will return null", ex);
+			}
+			return null;
+		}
 	}
 
 	@Override
@@ -70,18 +90,44 @@ public class TraceQueryExecutionListener implements QueryExecutionListener, Meth
 		String dataSourceName = executionContext.getProxyConfig().getDataSourceName();
 		String connectionId = executionContext.getConnectionInfo().getConnectionId();
 		if (target instanceof DataSource && methodName.equals("getConnection")) {
-			this.strategy.beforeGetConnection(connectionId, dataSourceName);
+			this.strategy.beforeGetConnection(connectionId, toCommonDataSource(target), dataSourceName);
 		}
 		else if (target instanceof ResultSet) {
 			ResultSet resultSet = (ResultSet) target;
 			if (methodName.equals("next")) {
 				try {
-					this.strategy.beforeResultSetNext(connectionId, resultSet.getStatement(), resultSet,
-							dataSourceName);
+					this.strategy.beforeResultSetNext(connectionId, resultSet.getStatement().getConnection(),
+							resultSet.getStatement(), resultSet, dataSourceName);
 				}
 				catch (SQLException ignore) {
 				}
 			}
+		}
+	}
+
+	private CommonDataSource toCommonDataSource(Object target) {
+		try {
+			return ((DataSource) target).unwrap(CommonDataSource.class);
+		}
+		catch (Exception ex) {
+			if (log.isDebugEnabled()) {
+				log.debug("Failed to cast to common data source. Will return null", ex);
+			}
+			return null;
+		}
+	}
+
+	private Connection getConnection(DataSource targetDataSource) {
+		try {
+			DataSource source = targetDataSource instanceof ProxyDataSource
+					? (targetDataSource).unwrap(DataSource.class) : targetDataSource;
+			return source.getConnection();
+		}
+		catch (Exception ex) {
+			if (log.isDebugEnabled()) {
+				log.debug("Failed to retrieve connection. Will return null", ex);
+			}
+			return null;
 		}
 	}
 
@@ -92,7 +138,7 @@ public class TraceQueryExecutionListener implements QueryExecutionListener, Meth
 		String connectionId = executionContext.getConnectionInfo().getConnectionId();
 		Throwable t = executionContext.getThrown();
 		if (target instanceof DataSource && methodName.equals("getConnection")) {
-			this.strategy.afterGetConnection(connectionId, t);
+			this.strategy.afterGetConnection(connectionId, getConnection((DataSource) target), t);
 		}
 		else if (target instanceof Connection) {
 			switch (methodName) {

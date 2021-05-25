@@ -16,8 +16,6 @@
 
 package org.springframework.cloud.sleuth.autoconfig.instrument.jdbc;
 
-import java.util.concurrent.ThreadLocalRandom;
-
 import org.springframework.boot.autoconfigure.AutoConfigurations;
 import org.springframework.boot.autoconfigure.context.PropertyPlaceholderAutoConfiguration;
 import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration;
@@ -33,9 +31,8 @@ class TracingQueryExecutionListenerTests extends TracingListenerStrategyTests {
 						TraceDataSourceDecoratorAutoConfiguration.class, BraveAutoConfiguration.class,
 						TestSpanHandlerConfiguration.class, PropertyPlaceholderAutoConfiguration.class))
 				.withPropertyValues("spring.datasource.initialization-mode=never",
-						"spring.datasource.url:jdbc:h2:mem:testdb-" + ThreadLocalRandom.current().nextInt(),
-						"spring.datasource.hikari.pool-name=test")
-				.withClassLoader(new FilteredClassLoader("com.vladmihalcea.flexypool", "com.p6spy")));
+						"spring.datasource.url:jdbc:h2:mem:testdb-baz", "spring.datasource.hikari.pool-name=test")
+				.withClassLoader(new FilteredClassLoader("com.p6spy")));
 	}
 
 }

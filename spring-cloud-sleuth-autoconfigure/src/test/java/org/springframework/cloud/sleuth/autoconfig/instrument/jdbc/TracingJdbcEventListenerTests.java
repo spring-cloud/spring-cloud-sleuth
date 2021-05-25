@@ -18,7 +18,6 @@ package org.springframework.cloud.sleuth.autoconfig.instrument.jdbc;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
-import java.util.concurrent.ThreadLocalRandom;
 
 import javax.sql.DataSource;
 
@@ -42,9 +41,8 @@ class TracingJdbcEventListenerTests extends TracingListenerStrategyTests {
 					TraceDataSourceDecoratorAutoConfiguration.class, BraveAutoConfiguration.class,
 					TestSpanHandlerConfiguration.class, PropertyPlaceholderAutoConfiguration.class))
 			.withPropertyValues("spring.datasource.initialization-mode=never",
-					"spring.datasource.url:jdbc:h2:mem:testdb-" + ThreadLocalRandom.current().nextInt(),
-					"spring.datasource.hikari.pool-name=test")
-			.withClassLoader(new FilteredClassLoader("com.vladmihalcea.flexypool", "net.ttddyy.dsproxy"));
+					"spring.datasource.url:jdbc:h2:mem:testdb-baz", "spring.datasource.hikari.pool-name=test")
+			.withClassLoader(new FilteredClassLoader("net.ttddyy.dsproxy"));
 
 	protected TracingJdbcEventListenerTests() {
 		super(new ApplicationContextRunner()
@@ -52,9 +50,8 @@ class TracingJdbcEventListenerTests extends TracingListenerStrategyTests {
 						TraceDataSourceDecoratorAutoConfiguration.class, BraveAutoConfiguration.class,
 						TestSpanHandlerConfiguration.class, PropertyPlaceholderAutoConfiguration.class))
 				.withPropertyValues("spring.datasource.initialization-mode=never",
-						"spring.datasource.url:jdbc:h2:mem:testdb-" + ThreadLocalRandom.current().nextInt(),
-						"spring.datasource.hikari.pool-name=test")
-				.withClassLoader(new FilteredClassLoader("com.vladmihalcea.flexypool", "net.ttddyy.dsproxy")));
+						"spring.datasource.url:jdbc:h2:mem:testdb-baz", "spring.datasource.hikari.pool-name=test")
+				.withClassLoader(new FilteredClassLoader("net.ttddyy.dsproxy")));
 	}
 
 	@Test
@@ -77,8 +74,8 @@ class TracingJdbcEventListenerTests extends TracingListenerStrategyTests {
 					assertThat(spanReporter.spans()).hasSize(2);
 					MutableSpan connectionSpan = spanReporter.spans().get(1);
 					MutableSpan statementSpan = spanReporter.spans().get(0);
-					assertThat(connectionSpan.name()).isEqualTo("jdbc:/test/connection");
-					assertThat(statementSpan.name()).isEqualTo("jdbc:/test/query");
+					assertThat(connectionSpan.name()).isEqualTo("connection");
+					assertThat(statementSpan.name()).isEqualTo("update");
 					assertThat(statementSpan.tags()).containsEntry(SPAN_SQL_QUERY_TAG_NAME,
 							"UPDATE INFORMATION_SCHEMA.TABLES SET table_Name = ? WHERE 0 = ?");
 					assertThat(statementSpan.tags()).containsEntry(SPAN_ROW_COUNT_TAG_NAME, "0");

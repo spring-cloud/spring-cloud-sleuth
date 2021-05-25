@@ -23,7 +23,6 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ThreadLocalRandom;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -45,15 +44,9 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 abstract class TracingListenerStrategyTests {
 
-	public static final String SPAN_SQL_QUERY_TAG_NAME = "sql";
+	public static final String SPAN_SQL_QUERY_TAG_NAME = "sql.query";
 
-	public static final String SPAN_ROW_COUNT_TAG_NAME = "row-count";
-
-	public static final String SPAN_CONNECTION_POSTFIX = "/connection";
-
-	public static final String SPAN_QUERY_POSTFIX = "/query";
-
-	public static final String SPAN_FETCH_POSTFIX = "/fetch";
+	public static final String SPAN_ROW_COUNT_TAG_NAME = "sql.row-count";
 
 	protected final ApplicationContextRunner contextRunner;
 
@@ -74,11 +67,32 @@ abstract class TracingListenerStrategyTests {
 
 			assertThat(spanReporter.spans()).hasSize(1);
 			MutableSpan connectionSpan = spanReporter.spans().get(0);
-			assertThat(connectionSpan.name()).isEqualTo("jdbc:/test/connection");
-			assertThat(connectionSpan.remoteServiceName()).isEqualTo("test");
+			assertThat(connectionSpan.name()).isEqualTo("connection");
+			assertThat(connectionSpan.remoteServiceName()).isEqualTo("TESTDB-BAZ");
 			assertThat(connectionSpan.annotations()).extracting("value").contains("commit");
 			assertThat(connectionSpan.annotations()).extracting("value").contains("rollback");
 		});
+	}
+
+	@Test
+	void testShouldAddSpanForConnectionWithFixedRemoteServiceName() {
+		contextRunner.withPropertyValues("spring.datasource.url:jdbc:h2:mem:testdb-baz?sleuthServiceName=aaaabbbb")
+				.run(context -> {
+					DataSource dataSource = context.getBean(DataSource.class);
+					TestSpanHandler spanReporter = context.getBean(TestSpanHandler.class);
+
+					Connection connection = dataSource.getConnection();
+					connection.commit();
+					connection.rollback();
+					connection.close();
+
+					assertThat(spanReporter.spans()).hasSize(1);
+					MutableSpan connectionSpan = spanReporter.spans().get(0);
+					assertThat(connectionSpan.name()).isEqualTo("connection");
+					assertThat(connectionSpan.remoteServiceName()).isEqualTo("aaaabbbb");
+					assertThat(connectionSpan.annotations()).extracting("value").contains("commit");
+					assertThat(connectionSpan.annotations()).extracting("value").contains("rollback");
+				});
 	}
 
 	@Test
@@ -94,9 +108,9 @@ abstract class TracingListenerStrategyTests {
 			assertThat(spanReporter.spans()).hasSize(2);
 			MutableSpan connectionSpan = spanReporter.spans().get(1);
 			MutableSpan statementSpan = spanReporter.spans().get(0);
-			assertThat(connectionSpan.name()).isEqualTo("jdbc:/test/connection");
-			assertThat(statementSpan.name()).isEqualTo("jdbc:/test/query");
-			assertThat(statementSpan.remoteServiceName()).isEqualTo("test");
+			assertThat(connectionSpan.name()).isEqualTo("connection");
+			assertThat(statementSpan.name()).isEqualTo("select");
+			assertThat(statementSpan.remoteServiceName()).isEqualTo("TESTDB-BAZ");
 			assertThat(statementSpan.tags()).containsEntry(SPAN_SQL_QUERY_TAG_NAME, "SELECT NOW()");
 		});
 	}
@@ -115,8 +129,8 @@ abstract class TracingListenerStrategyTests {
 			assertThat(spanReporter.spans()).hasSize(2);
 			MutableSpan connectionSpan = spanReporter.spans().get(1);
 			MutableSpan statementSpan = spanReporter.spans().get(0);
-			assertThat(connectionSpan.name()).isEqualTo("jdbc:/test/connection");
-			assertThat(statementSpan.name()).isEqualTo("jdbc:/test/query");
+			assertThat(connectionSpan.name()).isEqualTo("connection");
+			assertThat(statementSpan.name()).isEqualTo("update");
 			assertThat(statementSpan.tags()).containsEntry(SPAN_SQL_QUERY_TAG_NAME,
 					"UPDATE INFORMATION_SCHEMA.TABLES SET table_Name = '' WHERE 0 = 1");
 			assertThat(statementSpan.tags()).containsEntry(SPAN_ROW_COUNT_TAG_NAME, "0");
@@ -137,8 +151,8 @@ abstract class TracingListenerStrategyTests {
 			assertThat(spanReporter.spans()).hasSize(2);
 			MutableSpan connectionSpan = spanReporter.spans().get(1);
 			MutableSpan statementSpan = spanReporter.spans().get(0);
-			assertThat(connectionSpan.name()).isEqualTo("jdbc:/test/connection");
-			assertThat(statementSpan.name()).isEqualTo("jdbc:/test/query");
+			assertThat(connectionSpan.name()).isEqualTo("connection");
+			assertThat(statementSpan.name()).isEqualTo("update");
 			assertThat(statementSpan.tags()).containsEntry(SPAN_SQL_QUERY_TAG_NAME,
 					"UPDATE INFORMATION_SCHEMA.TABLES SET table_Name = '' WHERE 0 = 1");
 			assertThat(statementSpan.tags()).containsEntry(SPAN_ROW_COUNT_TAG_NAME, "0");
@@ -152,7 +166,7 @@ abstract class TracingListenerStrategyTests {
 			TestSpanHandler spanReporter = context.getBean(TestSpanHandler.class);
 
 			Connection connection = dataSource.getConnection();
-			ResultSet resultSet = connection.prepareStatement("SELECT NOW() UNION ALL SELECT NOW()").executeQuery();
+			ResultSet resultSet = connection.prepareStatement("SELECT NOW() UNION ALL select NOW()").executeQuery();
 			resultSet.next();
 			resultSet.next();
 			resultSet.close();
@@ -162,12 +176,12 @@ abstract class TracingListenerStrategyTests {
 			MutableSpan connectionSpan = spanReporter.spans().get(2);
 			MutableSpan resultSetSpan = spanReporter.spans().get(1);
 			MutableSpan statementSpan = spanReporter.spans().get(0);
-			assertThat(connectionSpan.name()).isEqualTo("jdbc:/test/connection");
-			assertThat(statementSpan.name()).isEqualTo("jdbc:/test/query");
+			assertThat(connectionSpan.name()).isEqualTo("connection");
+			assertThat(statementSpan.name()).isEqualTo("select");
 			assertThat(statementSpan.tags()).containsEntry(SPAN_SQL_QUERY_TAG_NAME,
-					"SELECT NOW() UNION ALL SELECT NOW()");
-			assertThat(resultSetSpan.name()).isEqualTo("jdbc:/test/fetch");
-			assertThat(resultSetSpan.remoteServiceName()).isEqualTo("test");
+					"SELECT NOW() UNION ALL select NOW()");
+			assertThat(resultSetSpan.name()).isEqualTo("fetch");
+			assertThat(resultSetSpan.remoteServiceName()).isEqualTo("TESTDB-BAZ");
 			if (isP6Spy(context)) {
 				assertThat(resultSetSpan.tags()).containsEntry(SPAN_ROW_COUNT_TAG_NAME, "2");
 			}
@@ -191,10 +205,10 @@ abstract class TracingListenerStrategyTests {
 			MutableSpan connectionSpan = spanReporter.spans().get(2);
 			MutableSpan resultSetSpan = spanReporter.spans().get(1);
 			MutableSpan statementSpan = spanReporter.spans().get(0);
-			assertThat(connectionSpan.name()).isEqualTo("jdbc:/test/connection");
-			assertThat(statementSpan.name()).isEqualTo("jdbc:/test/query");
+			assertThat(connectionSpan.name()).isEqualTo("connection");
+			assertThat(statementSpan.name()).isEqualTo("select");
 			assertThat(statementSpan.tags()).containsEntry(SPAN_SQL_QUERY_TAG_NAME, "SELECT NOW()");
-			assertThat(resultSetSpan.name()).isEqualTo("jdbc:/test/fetch");
+			assertThat(resultSetSpan.name()).isEqualTo("fetch");
 			if (isP6Spy(context)) {
 				assertThat(resultSetSpan.tags()).containsEntry(SPAN_ROW_COUNT_TAG_NAME, "1");
 			}
@@ -218,9 +232,9 @@ abstract class TracingListenerStrategyTests {
 			MutableSpan connectionSpan = spanReporter.spans().get(2);
 			MutableSpan resultSetSpan = spanReporter.spans().get(1);
 			MutableSpan statementSpan = spanReporter.spans().get(0);
-			assertThat(connectionSpan.name()).isEqualTo("jdbc:/test/connection");
-			assertThat(statementSpan.name()).isEqualTo("jdbc:/test/query");
-			assertThat(resultSetSpan.name()).isEqualTo("jdbc:/test/fetch");
+			assertThat(connectionSpan.name()).isEqualTo("connection");
+			assertThat(statementSpan.name()).isEqualTo("select");
+			assertThat(resultSetSpan.name()).isEqualTo("fetch");
 			assertThat(statementSpan.tags()).containsEntry(SPAN_SQL_QUERY_TAG_NAME, "SELECT NOW()");
 		});
 	}
@@ -241,9 +255,9 @@ abstract class TracingListenerStrategyTests {
 			MutableSpan connectionSpan = spanReporter.spans().get(2);
 			MutableSpan resultSetSpan = spanReporter.spans().get(1);
 			MutableSpan statementSpan = spanReporter.spans().get(0);
-			assertThat(connectionSpan.name()).isEqualTo("jdbc:/test/connection");
-			assertThat(statementSpan.name()).isEqualTo("jdbc:/test/query");
-			assertThat(resultSetSpan.name()).isEqualTo("jdbc:/test/fetch");
+			assertThat(connectionSpan.name()).isEqualTo("connection");
+			assertThat(statementSpan.name()).isEqualTo("select");
+			assertThat(resultSetSpan.name()).isEqualTo("fetch");
 			assertThat(statementSpan.tags()).containsEntry(SPAN_SQL_QUERY_TAG_NAME, "SELECT NOW()");
 		});
 	}
@@ -266,9 +280,9 @@ abstract class TracingListenerStrategyTests {
 			MutableSpan connectionSpan = spanReporter.spans().get(2);
 			MutableSpan resultSetSpan = spanReporter.spans().get(1);
 			MutableSpan statementSpan = spanReporter.spans().get(0);
-			assertThat(connectionSpan.name()).isEqualTo("jdbc:/test/connection");
-			assertThat(statementSpan.name()).isEqualTo("jdbc:/test/query");
-			assertThat(resultSetSpan.name()).isEqualTo("jdbc:/test/fetch");
+			assertThat(connectionSpan.name()).isEqualTo("connection");
+			assertThat(statementSpan.name()).isEqualTo("select");
+			assertThat(resultSetSpan.name()).isEqualTo("fetch");
 			assertThat(statementSpan.tags()).containsEntry(SPAN_SQL_QUERY_TAG_NAME, "SELECT NOW()");
 		});
 	}
@@ -294,9 +308,9 @@ abstract class TracingListenerStrategyTests {
 			MutableSpan connectionSpan = spanReporter.spans().get(2);
 			MutableSpan resultSetSpan = spanReporter.spans().get(1);
 			MutableSpan statementSpan = spanReporter.spans().get(0);
-			assertThat(connectionSpan.name()).isEqualTo("jdbc:/test/connection");
-			assertThat(statementSpan.name()).isEqualTo("jdbc:/test/query");
-			assertThat(resultSetSpan.name()).isEqualTo("jdbc:/test/fetch");
+			assertThat(connectionSpan.name()).isEqualTo("connection");
+			assertThat(statementSpan.name()).isEqualTo("select");
+			assertThat(resultSetSpan.name()).isEqualTo("fetch");
 			assertThat(statementSpan.tags()).containsEntry(SPAN_SQL_QUERY_TAG_NAME, "SELECT NOW()");
 		});
 	}
@@ -315,7 +329,7 @@ abstract class TracingListenerStrategyTests {
 
 			assertThat(spanReporter.spans()).hasSize(1);
 			MutableSpan connectionSpan = spanReporter.spans().get(0);
-			assertThat(connectionSpan.name()).isEqualTo("jdbc:/test/connection");
+			assertThat(connectionSpan.name()).isEqualTo("connection");
 		});
 	}
 
@@ -365,8 +379,8 @@ abstract class TracingListenerStrategyTests {
 			assertThat(spanReporter.spans()).hasSize(2);
 			MutableSpan connection1Span = spanReporter.spans().get(0);
 			MutableSpan connection2Span = spanReporter.spans().get(1);
-			assertThat(connection1Span.name()).isEqualTo("jdbc:/test/connection");
-			assertThat(connection2Span.name()).isEqualTo("jdbc:/test/connection");
+			assertThat(connection1Span.name()).isEqualTo("connection");
+			assertThat(connection2Span.name()).isEqualTo("connection");
 		});
 	}
 
@@ -388,9 +402,9 @@ abstract class TracingListenerStrategyTests {
 			MutableSpan connectionSpan = spanReporter.spans().get(2);
 			MutableSpan resultSetSpan = spanReporter.spans().get(1);
 			MutableSpan statementSpan = spanReporter.spans().get(0);
-			assertThat(connectionSpan.name()).isEqualTo("jdbc:/test/connection");
-			assertThat(statementSpan.name()).isEqualTo("jdbc:/test/query");
-			assertThat(resultSetSpan.name()).isEqualTo("jdbc:/test/fetch");
+			assertThat(connectionSpan.name()).isEqualTo("connection");
+			assertThat(statementSpan.name()).isEqualTo("select");
+			assertThat(resultSetSpan.name()).isEqualTo("fetch");
 			assertThat(statementSpan.tags()).containsEntry(SPAN_SQL_QUERY_TAG_NAME, "SELECT NOW()");
 		});
 	}
@@ -406,7 +420,7 @@ abstract class TracingListenerStrategyTests {
 
 					Connection connection = dataSource.getConnection();
 					Statement statement = connection.createStatement();
-					ResultSet resultSet = statement.executeQuery("SELECT 1 FROM dual");
+					ResultSet resultSet = statement.executeQuery("select 1 FROM dual");
 					resultSet.next();
 					resultSet.close();
 					statement.close();
@@ -451,8 +465,7 @@ abstract class TracingListenerStrategyTests {
 			connection.close();
 
 			assertThat(spanReporter.spans()).hasSize(1 + 2 * 5);
-			assertThat(spanReporter.spans()).extracting("name").contains("jdbc:/test/query", "jdbc:/test/fetch",
-					"jdbc:/test/connection");
+			assertThat(spanReporter.spans()).extracting("name").contains("select", "fetch", "connection");
 		});
 	}
 
@@ -465,7 +478,7 @@ abstract class TracingListenerStrategyTests {
 
 					Connection connection = dataSource.getConnection();
 					Statement statement = connection.createStatement();
-					ResultSet resultSet = statement.executeQuery("SELECT 1 FROM dual");
+					ResultSet resultSet = statement.executeQuery("select 1 FROM dual");
 					resultSet.next();
 					resultSet.close();
 					statement.close();
@@ -473,7 +486,7 @@ abstract class TracingListenerStrategyTests {
 
 					assertThat(spanReporter.spans()).hasSize(1);
 					MutableSpan connectionSpan = spanReporter.spans().get(0);
-					assertThat(connectionSpan.name()).isEqualTo("jdbc:/test/connection");
+					assertThat(connectionSpan.name()).isEqualTo("connection");
 				});
 	}
 
@@ -485,7 +498,7 @@ abstract class TracingListenerStrategyTests {
 
 			Connection connection = dataSource.getConnection();
 			Statement statement = connection.createStatement();
-			ResultSet resultSet = statement.executeQuery("SELECT 1 FROM dual");
+			ResultSet resultSet = statement.executeQuery("select 1 FROM dual");
 			resultSet.next();
 			resultSet.close();
 			statement.close();
@@ -493,7 +506,7 @@ abstract class TracingListenerStrategyTests {
 
 			assertThat(spanReporter.spans()).hasSize(1);
 			MutableSpan statementSpan = spanReporter.spans().get(0);
-			assertThat(statementSpan.name()).isEqualTo("jdbc:/test/query");
+			assertThat(statementSpan.name()).isEqualTo("select");
 		});
 	}
 
@@ -505,7 +518,7 @@ abstract class TracingListenerStrategyTests {
 
 			Connection connection = dataSource.getConnection();
 			Statement statement = connection.createStatement();
-			ResultSet resultSet = statement.executeQuery("SELECT 1 FROM dual");
+			ResultSet resultSet = statement.executeQuery("select 1 FROM dual");
 			resultSet.next();
 			resultSet.close();
 			statement.close();
@@ -513,7 +526,7 @@ abstract class TracingListenerStrategyTests {
 
 			assertThat(spanReporter.spans()).hasSize(1);
 			MutableSpan resultSetSpan = spanReporter.spans().get(0);
-			assertThat(resultSetSpan.name()).isEqualTo("jdbc:/test/fetch");
+			assertThat(resultSetSpan.name()).isEqualTo("fetch");
 		});
 	}
 
@@ -526,7 +539,7 @@ abstract class TracingListenerStrategyTests {
 
 					Connection connection = dataSource.getConnection();
 					Statement statement = connection.createStatement();
-					ResultSet resultSet = statement.executeQuery("SELECT 1 FROM dual");
+					ResultSet resultSet = statement.executeQuery("select 1 FROM dual");
 					resultSet.next();
 					resultSet.close();
 					statement.close();
@@ -535,8 +548,8 @@ abstract class TracingListenerStrategyTests {
 					assertThat(spanReporter.spans()).hasSize(2);
 					MutableSpan connectionSpan = spanReporter.spans().get(1);
 					MutableSpan statementSpan = spanReporter.spans().get(0);
-					assertThat(connectionSpan.name()).isEqualTo("jdbc:/test/connection");
-					assertThat(statementSpan.name()).isEqualTo("jdbc:/test/query");
+					assertThat(connectionSpan.name()).isEqualTo("connection");
+					assertThat(statementSpan.name()).isEqualTo("select");
 				});
 	}
 
@@ -549,7 +562,7 @@ abstract class TracingListenerStrategyTests {
 
 					Connection connection = dataSource.getConnection();
 					Statement statement = connection.createStatement();
-					ResultSet resultSet = statement.executeQuery("SELECT 1 FROM dual");
+					ResultSet resultSet = statement.executeQuery("select 1 FROM dual");
 					resultSet.next();
 					resultSet.close();
 					statement.close();
@@ -558,8 +571,8 @@ abstract class TracingListenerStrategyTests {
 					assertThat(spanReporter.spans()).hasSize(2);
 					MutableSpan connectionSpan = spanReporter.spans().get(1);
 					MutableSpan resultSetSpan = spanReporter.spans().get(0);
-					assertThat(connectionSpan.name()).isEqualTo("jdbc:/test/connection");
-					assertThat(resultSetSpan.name()).isEqualTo("jdbc:/test/fetch");
+					assertThat(connectionSpan.name()).isEqualTo("connection");
+					assertThat(resultSetSpan.name()).isEqualTo("fetch");
 				});
 	}
 
@@ -572,7 +585,7 @@ abstract class TracingListenerStrategyTests {
 
 					Connection connection = dataSource.getConnection();
 					Statement statement = connection.createStatement();
-					ResultSet resultSet = statement.executeQuery("SELECT 1 FROM dual");
+					ResultSet resultSet = statement.executeQuery("select 1 FROM dual");
 					resultSet.next();
 					resultSet.close();
 					statement.close();
@@ -581,8 +594,8 @@ abstract class TracingListenerStrategyTests {
 					assertThat(spanReporter.spans()).hasSize(2);
 					MutableSpan resultSetSpan = spanReporter.spans().get(1);
 					MutableSpan statementSpan = spanReporter.spans().get(0);
-					assertThat(statementSpan.name()).isEqualTo("jdbc:/test/query");
-					assertThat(resultSetSpan.name()).isEqualTo("jdbc:/test/fetch");
+					assertThat(statementSpan.name()).isEqualTo("select");
+					assertThat(resultSetSpan.name()).isEqualTo("fetch");
 				});
 	}
 
@@ -600,7 +613,7 @@ abstract class TracingListenerStrategyTests {
 
 			assertThat(spanReporter.spans()).hasSize(1);
 			MutableSpan connectionSpan = spanReporter.spans().get(0);
-			assertThat(connectionSpan.name()).isEqualTo("jdbc:/test/connection");
+			assertThat(connectionSpan.name()).isEqualTo("connection");
 		});
 	}
 
@@ -619,8 +632,8 @@ abstract class TracingListenerStrategyTests {
 			assertThat(spanReporter.spans()).hasSize(2);
 			MutableSpan connectionSpan = spanReporter.spans().get(1);
 			MutableSpan statementSpan = spanReporter.spans().get(0);
-			assertThat(connectionSpan.name()).isEqualTo("jdbc:/test/connection");
-			assertThat(statementSpan.name()).isEqualTo("jdbc:/test/query");
+			assertThat(connectionSpan.name()).isEqualTo("connection");
+			assertThat(statementSpan.name()).isEqualTo("select");
 		});
 	}
 
@@ -642,9 +655,9 @@ abstract class TracingListenerStrategyTests {
 			MutableSpan connectionSpan = spanReporter.spans().get(2);
 			MutableSpan resultSetSpan = spanReporter.spans().get(1);
 			MutableSpan statementSpan = spanReporter.spans().get(0);
-			assertThat(connectionSpan.name()).isEqualTo("jdbc:/test/connection");
-			assertThat(statementSpan.name()).isEqualTo("jdbc:/test/query");
-			assertThat(resultSetSpan.name()).isEqualTo("jdbc:/test/fetch");
+			assertThat(connectionSpan.name()).isEqualTo("connection");
+			assertThat(statementSpan.name()).isEqualTo("select");
+			assertThat(resultSetSpan.name()).isEqualTo("fetch");
 			assertThat(statementSpan.tags()).containsEntry(SPAN_SQL_QUERY_TAG_NAME, "SELECT NOW()");
 		});
 	}
@@ -689,7 +702,7 @@ abstract class TracingListenerStrategyTests {
 		@Bean
 		public HikariDataSource test1() {
 			HikariDataSource dataSource = new HikariDataSource();
-			dataSource.setJdbcUrl("jdbc:h2:mem:testdb-1-" + ThreadLocalRandom.current().nextInt());
+			dataSource.setJdbcUrl("jdbc:h2:mem:testdb-1-foo");
 			dataSource.setPoolName("test1");
 			return dataSource;
 		}
@@ -697,7 +710,7 @@ abstract class TracingListenerStrategyTests {
 		@Bean
 		public HikariDataSource test2() {
 			HikariDataSource dataSource = new HikariDataSource();
-			dataSource.setJdbcUrl("jdbc:h2:mem:testdb-2-" + ThreadLocalRandom.current().nextInt());
+			dataSource.setJdbcUrl("jdbc:h2:mem:testdb-2-bar");
 			dataSource.setPoolName("test2");
 			return dataSource;
 		}
