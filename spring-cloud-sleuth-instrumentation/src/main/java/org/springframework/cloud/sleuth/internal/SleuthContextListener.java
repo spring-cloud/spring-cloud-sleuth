@@ -40,7 +40,7 @@ import org.springframework.context.event.SmartApplicationListener;
  */
 public class SleuthContextListener implements SmartApplicationListener {
 
-	static final Map<BeanFactory, SleuthContextListener> CACHE = new ConcurrentHashMap<>();
+	static final Map<Integer, SleuthContextListener> CACHE = new ConcurrentHashMap<>();
 
 	private static final Log log = LogFactory.getLog(SleuthContextListener.class);
 
@@ -69,7 +69,7 @@ public class SleuthContextListener implements SmartApplicationListener {
 		if (bf instanceof ConfigurableApplicationContext) {
 			bf = ((ConfigurableApplicationContext) bf).getBeanFactory();
 		}
-		return CACHE.getOrDefault(bf, new SleuthContextListener());
+		return CACHE.getOrDefault(bf.hashCode(), new SleuthContextListener());
 	}
 
 	@Override
@@ -90,10 +90,10 @@ public class SleuthContextListener implements SmartApplicationListener {
 			if (context instanceof ConfigurableApplicationContext) {
 				beanFactory = ((ConfigurableApplicationContext) context).getBeanFactory();
 			}
-			SleuthContextListener listener = CACHE.getOrDefault(beanFactory, this);
+			SleuthContextListener listener = CACHE.getOrDefault(beanFactory.hashCode(), this);
 			listener.refreshed.compareAndSet(false, event instanceof ContextRefreshedEvent);
 			listener.closed.compareAndSet(false, event instanceof ContextClosedEvent);
-			CACHE.put(beanFactory, listener);
+			CACHE.put(beanFactory.hashCode(), listener);
 		}
 	}
 
