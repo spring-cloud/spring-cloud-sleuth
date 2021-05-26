@@ -29,6 +29,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
+import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.cloud.sleuth.exporter.FinishedSpan;
 import org.springframework.cloud.sleuth.test.TestSpanHandler;
 import org.springframework.context.annotation.Bean;
@@ -44,7 +45,8 @@ import org.springframework.test.context.TestPropertySource;
 import static org.assertj.core.api.BDDAssertions.then;
 
 @ContextConfiguration(classes = R2dbcIntegrationTests.TestConfig.class)
-@TestPropertySource(properties = "spring.application.name=MyApplication")
+@TestPropertySource(properties = { "spring.application.name=MyApplication", "jdbc:h2:mem:test;DB_CLOSE_DELAY=-1" })
+@AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.ANY)
 public abstract class R2dbcIntegrationTests {
 
 	@Autowired

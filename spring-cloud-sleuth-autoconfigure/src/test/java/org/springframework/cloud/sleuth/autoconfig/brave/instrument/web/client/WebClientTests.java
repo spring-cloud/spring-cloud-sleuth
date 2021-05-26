@@ -41,7 +41,9 @@ import org.junit.jupiter.api.Test;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
+import org.springframework.boot.autoconfigure.data.mongo.MongoDataAutoConfiguration;
 import org.springframework.boot.autoconfigure.data.r2dbc.R2dbcDataAutoConfiguration;
+import org.springframework.boot.autoconfigure.mongo.MongoAutoConfiguration;
 import org.springframework.boot.autoconfigure.r2dbc.R2dbcAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.web.server.LocalServerPort;
@@ -62,8 +64,8 @@ import static org.assertj.core.api.BDDAssertions.then;
 
 @SpringBootTest(classes = WebClientTests.TestConfiguration.class,
 		webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
-		properties = { "spring.sleuth.web.servlet.enabled=false", "spring.application.name=fooservice",
-				"spring.sleuth.web.client.skip-pattern=/skip.*" })
+		properties = {"spring.sleuth.web.servlet.enabled=false", "spring.application.name=fooservice",
+				"spring.sleuth.web.client.skip-pattern=/skip.*"})
 @DirtiesContext
 public class WebClientTests {
 
@@ -147,8 +149,8 @@ public class WebClientTests {
 	}
 
 	@Configuration(proxyBeanMethods = false)
-	@EnableAutoConfiguration(exclude = { GatewayClassPathWarningAutoConfiguration.class, GatewayAutoConfiguration.class,
-			R2dbcAutoConfiguration.class, R2dbcDataAutoConfiguration.class })
+	@EnableAutoConfiguration(exclude = {GatewayClassPathWarningAutoConfiguration.class, GatewayAutoConfiguration.class,
+			R2dbcAutoConfiguration.class, R2dbcDataAutoConfiguration.class, MongoAutoConfiguration.class, MongoDataAutoConfiguration.class})
 	@DisableSecurity
 	public static class TestConfiguration {
 

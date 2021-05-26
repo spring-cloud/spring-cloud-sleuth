@@ -23,6 +23,7 @@ import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.common.header.Header;
 import org.assertj.core.api.BDDAssertions;
+import org.awaitility.Awaitility;
 import org.junit.jupiter.api.Test;
 
 import org.springframework.cloud.sleuth.brave.BraveTestTracing;
@@ -46,12 +47,15 @@ public class KafkaProducerTest extends org.springframework.cloud.sleuth.instrume
 		startKafkaConsumer();
 
 		this.kafkaProducer.send(producerRecord);
-		ConsumerRecord<String, String> consumerRecord = consumerRecords.poll(15, TimeUnit.SECONDS);
 
-		BDDAssertions.then(consumerRecord).isNotNull();
-		BDDAssertions.then(getHeaderValueOrNull(consumerRecord, "X-B3-TraceId")).isNotNull();
-		BDDAssertions.then(getHeaderValueOrNull(consumerRecord, "X-B3-SpanId")).isNotNull();
-		BDDAssertions.then(getHeaderValueOrNull(consumerRecord, "X-B3-Sampled")).isNotNull();
+		Awaitility.await().atMost(1, TimeUnit.MINUTES).pollInterval(1, TimeUnit.SECONDS).untilAsserted(() -> {
+			ConsumerRecord<String, String> consumerRecord = consumerRecords.poll(15, TimeUnit.SECONDS);
+
+			BDDAssertions.then(consumerRecord).isNotNull();
+			BDDAssertions.then(getHeaderValueOrNull(consumerRecord, "X-B3-TraceId")).isNotNull();
+			BDDAssertions.then(getHeaderValueOrNull(consumerRecord, "X-B3-SpanId")).isNotNull();
+			BDDAssertions.then(getHeaderValueOrNull(consumerRecord, "X-B3-Sampled")).isNotNull();
+		});
 	}
 
 	private static String getHeaderValueOrNull(ConsumerRecord<?, ?> consumerRecord, String header) {
