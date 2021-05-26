@@ -136,9 +136,6 @@ public class DataSourceProxyBuilderCustomizer {
 		if (this.datasourceProxy.isJsonFormat()) {
 			proxyDataSourceBuilder.asJson();
 		}
-		if (this.datasourceProxy.isCountQuery()) {
-			ifAvailable(this.queryCountStrategy, proxyDataSourceBuilder::countQuery);
-		}
 		ifAvailable(this.listeners, l -> l.forEach(proxyDataSourceBuilder::listener));
 		ifAvailable(this.methodExecutionListeners, m -> m.forEach(proxyDataSourceBuilder::methodListener));
 		ifAvailable(this.parameterTransformer, proxyDataSourceBuilder::parameterTransformer);

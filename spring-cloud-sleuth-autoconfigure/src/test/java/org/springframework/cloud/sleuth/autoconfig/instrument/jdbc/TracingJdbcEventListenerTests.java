@@ -50,9 +50,7 @@ class TracingJdbcEventListenerTests extends TracingListenerStrategyTests {
 
 	@Test
 	void testShouldUsePlaceholderInSqlTagOfSpansForPreparedStatementIfIncludeParameterValuesIsSetToFalse() {
-		contextRunner
-				.withPropertyValues(
-						"spring.sleuth.jdbc.decorator.datasource.p6spy.tracing.include-parameter-values=false")
+		contextRunner.withPropertyValues("spring.sleuth.jdbc.p6spy.tracing.include-parameter-values=false")
 				.run(context -> {
 					DataSource dataSource = context.getBean(DataSource.class);
 					TestSpanHandler spanReporter = context.getBean(TestSpanHandler.class);

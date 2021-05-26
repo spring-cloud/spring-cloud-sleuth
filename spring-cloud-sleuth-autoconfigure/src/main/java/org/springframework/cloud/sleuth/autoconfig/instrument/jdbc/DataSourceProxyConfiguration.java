@@ -97,8 +97,7 @@ class DataSourceProxyConfiguration {
 
 	@Bean
 	@ConditionalOnMissingBean
-	@ConditionalOnProperty(value = "spring.sleuth.jdbc.decorator.datasource.datasource-proxy.count-query",
-			havingValue = "true")
+	@ConditionalOnProperty(value = "spring.sleuth.jdbc.datasource-proxy.count-query", havingValue = "true")
 	QueryCountStrategy queryCountStrategy() {
 		return new SingleQueryCountHolder();
 	}

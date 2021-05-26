@@ -64,8 +64,8 @@ import static org.assertj.core.api.BDDAssertions.then;
 
 @SpringBootTest(classes = WebClientTests.TestConfiguration.class,
 		webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
-		properties = {"spring.sleuth.web.servlet.enabled=false", "spring.application.name=fooservice",
-				"spring.sleuth.web.client.skip-pattern=/skip.*"})
+		properties = { "spring.sleuth.web.servlet.enabled=false", "spring.application.name=fooservice",
+				"spring.sleuth.web.client.skip-pattern=/skip.*" })
 @DirtiesContext
 public class WebClientTests {
 
@@ -149,8 +149,9 @@ public class WebClientTests {
 	}
 
 	@Configuration(proxyBeanMethods = false)
-	@EnableAutoConfiguration(exclude = {GatewayClassPathWarningAutoConfiguration.class, GatewayAutoConfiguration.class,
-			R2dbcAutoConfiguration.class, R2dbcDataAutoConfiguration.class, MongoAutoConfiguration.class, MongoDataAutoConfiguration.class})
+	@EnableAutoConfiguration(exclude = { GatewayClassPathWarningAutoConfiguration.class, GatewayAutoConfiguration.class,
+			R2dbcAutoConfiguration.class, R2dbcDataAutoConfiguration.class, MongoAutoConfiguration.class,
+			MongoDataAutoConfiguration.class })
 	@DisableSecurity
 	public static class TestConfiguration {
 

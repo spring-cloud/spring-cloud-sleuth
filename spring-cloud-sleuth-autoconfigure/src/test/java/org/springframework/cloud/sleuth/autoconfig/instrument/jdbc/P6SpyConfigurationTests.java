@@ -112,7 +112,7 @@ class P6SpyConfigurationTests {
 	@Test
 	void testDoesNotRegisterLoggingListenerIfDisabled() {
 		ApplicationContextRunner contextRunner = this.contextRunner
-				.withPropertyValues("spring.sleuth.jdbc.decorator.datasource.p6spy.enable-logging:false");
+				.withPropertyValues("spring.sleuth.jdbc.p6spy.enable-logging:false");
 
 		contextRunner.run(context -> {
 			JdbcEventListenerFactory jdbcEventListenerFactory = context.getBean(JdbcEventListenerFactory.class);
@@ -127,7 +127,7 @@ class P6SpyConfigurationTests {
 	@Test
 	void testCanSetCustomLoggingFormat() {
 		ApplicationContextRunner contextRunner = this.contextRunner
-				.withPropertyValues("spring.sleuth.jdbc.decorator.datasource.p6spy.log-format:test %{connectionId}");
+				.withPropertyValues("spring.sleuth.jdbc.p6spy.log-format:test %{connectionId}");
 
 		contextRunner.run(context -> {
 			JdbcEventListenerFactory jdbcEventListenerFactory = context.getBean(JdbcEventListenerFactory.class);
@@ -145,7 +145,7 @@ class P6SpyConfigurationTests {
 		System.setProperty("p6spy.config.logMessageFormat", "com.p6spy.engine.spy.appender.CustomLineFormat");
 		System.setProperty("p6spy.config.excludecategories", "debug");
 		ApplicationContextRunner contextRunner = this.contextRunner
-				.withPropertyValues("spring.sleuth.jdbc.decorator.datasource.p6spy.multiline:true");
+				.withPropertyValues("spring.sleuth.jdbc.p6spy.multiline:true");
 
 		contextRunner.run(context -> {
 			JdbcEventListenerFactory jdbcEventListenerFactory = context.getBean(JdbcEventListenerFactory.class);
@@ -161,9 +161,8 @@ class P6SpyConfigurationTests {
 	@Test
 	void testUseCustomLogger() {
 		ApplicationContextRunner contextRunner = this.contextRunner.withPropertyValues(
-				"spring.sleuth.jdbc.decorator.datasource.p6spy.logging:custom",
-				"spring.sleuth.jdbc.decorator.datasource.p6spy.custom-appender-class:"
-						+ LogAccumulator.class.getName());
+				"spring.sleuth.jdbc.p6spy.logging:custom",
+				"spring.sleuth.jdbc.p6spy.custom-appender-class:" + LogAccumulator.class.getName());
 
 		contextRunner.run(context -> {
 			DataSource dataSource = context.getBean(DataSource.class);
@@ -176,9 +175,9 @@ class P6SpyConfigurationTests {
 	@Test
 	void testLogFilterPattern() {
 		ApplicationContextRunner contextRunner = this.contextRunner.withPropertyValues(
-				"spring.sleuth.jdbc.decorator.datasource.p6spy.logging:custom",
-				"spring.sleuth.jdbc.decorator.datasource.p6spy.custom-appender-class:" + LogAccumulator.class.getName(),
-				"spring.sleuth.jdbc.decorator.datasource.p6spy.log-filter.pattern:.*table1.*");
+				"spring.sleuth.jdbc.p6spy.logging:custom",
+				"spring.sleuth.jdbc.p6spy.custom-appender-class:" + LogAccumulator.class.getName(),
+				"spring.sleuth.jdbc.p6spy.log-filter.pattern:.*table1.*");
 
 		contextRunner.run(context -> {
 			DataSource dataSource = context.getBean(DataSource.class);
@@ -197,9 +196,9 @@ class P6SpyConfigurationTests {
 	@Test
 	void testLogFilterPatternMatchAll() {
 		ApplicationContextRunner contextRunner = this.contextRunner.withPropertyValues(
-				"spring.sleuth.jdbc.decorator.datasource.p6spy.logging:custom",
-				"spring.sleuth.jdbc.decorator.datasource.p6spy.custom-appender-class:" + LogAccumulator.class.getName(),
-				"spring.sleuth.jdbc.decorator.datasource.p6spy.log-filter.pattern:.*");
+				"spring.sleuth.jdbc.p6spy.logging:custom",
+				"spring.sleuth.jdbc.p6spy.custom-appender-class:" + LogAccumulator.class.getName(),
+				"spring.sleuth.jdbc.p6spy.log-filter.pattern:.*");
 
 		contextRunner.run(context -> {
 			DataSource dataSource = context.getBean(DataSource.class);

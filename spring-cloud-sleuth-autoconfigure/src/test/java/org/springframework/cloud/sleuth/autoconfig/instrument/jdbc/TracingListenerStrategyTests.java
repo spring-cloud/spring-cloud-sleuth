@@ -490,29 +490,28 @@ abstract class TracingListenerStrategyTests {
 
 	@Test
 	void testShouldIncludeOnlyConnectionTraces() {
-		contextRunner.withPropertyValues("spring.sleuth.jdbc.decorator.datasource.includes: connection")
-				.run(context -> {
-					DataSource dataSource = context.getBean(DataSource.class);
-					TestSpanHandler spanReporter = context.getBean(TestSpanHandler.class);
+		contextRunner.withPropertyValues("spring.sleuth.jdbc.includes: connection").run(context -> {
+			DataSource dataSource = context.getBean(DataSource.class);
+			TestSpanHandler spanReporter = context.getBean(TestSpanHandler.class);
 
-					Connection connection = dataSource.getConnection();
-					Statement statement = connection.createStatement();
-					ResultSet resultSet = statement.executeQuery("select 1 FROM dual");
-					resultSet.next();
-					resultSet.close();
-					statement.close();
-					connection.close();
+			Connection connection = dataSource.getConnection();
+			Statement statement = connection.createStatement();
+			ResultSet resultSet = statement.executeQuery("select 1 FROM dual");
+			resultSet.next();
+			resultSet.close();
+			statement.close();
+			connection.close();
 
-					assertThat(spanReporter.spans()).hasSize(1);
-					MutableSpan connectionSpan = spanReporter.spans().get(0);
-					assertThat(connectionSpan.name()).isEqualTo("connection");
-					assertThat(context.getBean(Tracer.class).currentSpan()).isNull();
-				});
+			assertThat(spanReporter.spans()).hasSize(1);
+			MutableSpan connectionSpan = spanReporter.spans().get(0);
+			assertThat(connectionSpan.name()).isEqualTo("connection");
+			assertThat(context.getBean(Tracer.class).currentSpan()).isNull();
+		});
 	}
 
 	@Test
 	void testShouldIncludeOnlyQueryTraces() {
-		contextRunner.withPropertyValues("spring.sleuth.jdbc.decorator.datasource.includes: query").run(context -> {
+		contextRunner.withPropertyValues("spring.sleuth.jdbc.includes: query").run(context -> {
 			DataSource dataSource = context.getBean(DataSource.class);
 			TestSpanHandler spanReporter = context.getBean(TestSpanHandler.class);
 
@@ -533,7 +532,7 @@ abstract class TracingListenerStrategyTests {
 
 	@Test
 	void testShouldIncludeOnlyFetchTraces() {
-		contextRunner.withPropertyValues("spring.sleuth.jdbc.decorator.datasource.includes: fetch").run(context -> {
+		contextRunner.withPropertyValues("spring.sleuth.jdbc.includes: fetch").run(context -> {
 			DataSource dataSource = context.getBean(DataSource.class);
 			TestSpanHandler spanReporter = context.getBean(TestSpanHandler.class);
 
@@ -554,74 +553,71 @@ abstract class TracingListenerStrategyTests {
 
 	@Test
 	void testShouldIncludeOnlyConnectionAndQueryTraces() {
-		contextRunner.withPropertyValues("spring.sleuth.jdbc.decorator.datasource.includes: connection, query")
-				.run(context -> {
-					DataSource dataSource = context.getBean(DataSource.class);
-					TestSpanHandler spanReporter = context.getBean(TestSpanHandler.class);
+		contextRunner.withPropertyValues("spring.sleuth.jdbc.includes: connection, query").run(context -> {
+			DataSource dataSource = context.getBean(DataSource.class);
+			TestSpanHandler spanReporter = context.getBean(TestSpanHandler.class);
 
-					Connection connection = dataSource.getConnection();
-					Statement statement = connection.createStatement();
-					ResultSet resultSet = statement.executeQuery("select 1 FROM dual");
-					resultSet.next();
-					resultSet.close();
-					statement.close();
-					connection.close();
+			Connection connection = dataSource.getConnection();
+			Statement statement = connection.createStatement();
+			ResultSet resultSet = statement.executeQuery("select 1 FROM dual");
+			resultSet.next();
+			resultSet.close();
+			statement.close();
+			connection.close();
 
-					assertThat(spanReporter.spans()).hasSize(2);
-					MutableSpan connectionSpan = spanReporter.spans().get(1);
-					MutableSpan statementSpan = spanReporter.spans().get(0);
-					assertThat(connectionSpan.name()).isEqualTo("connection");
-					assertThat(statementSpan.name()).isEqualTo("select");
-					assertThat(context.getBean(Tracer.class).currentSpan()).isNull();
-				});
+			assertThat(spanReporter.spans()).hasSize(2);
+			MutableSpan connectionSpan = spanReporter.spans().get(1);
+			MutableSpan statementSpan = spanReporter.spans().get(0);
+			assertThat(connectionSpan.name()).isEqualTo("connection");
+			assertThat(statementSpan.name()).isEqualTo("select");
+			assertThat(context.getBean(Tracer.class).currentSpan()).isNull();
+		});
 	}
 
 	@Test
 	void testShouldIncludeOnlyConnectionAndFetchTraces() {
-		contextRunner.withPropertyValues("spring.sleuth.jdbc.decorator.datasource.includes: connection, fetch")
-				.run(context -> {
-					DataSource dataSource = context.getBean(DataSource.class);
-					TestSpanHandler spanReporter = context.getBean(TestSpanHandler.class);
+		contextRunner.withPropertyValues("spring.sleuth.jdbc.includes: connection, fetch").run(context -> {
+			DataSource dataSource = context.getBean(DataSource.class);
+			TestSpanHandler spanReporter = context.getBean(TestSpanHandler.class);
 
-					Connection connection = dataSource.getConnection();
-					Statement statement = connection.createStatement();
-					ResultSet resultSet = statement.executeQuery("select 1 FROM dual");
-					resultSet.next();
-					resultSet.close();
-					statement.close();
-					connection.close();
+			Connection connection = dataSource.getConnection();
+			Statement statement = connection.createStatement();
+			ResultSet resultSet = statement.executeQuery("select 1 FROM dual");
+			resultSet.next();
+			resultSet.close();
+			statement.close();
+			connection.close();
 
-					assertThat(spanReporter.spans()).hasSize(2);
-					MutableSpan connectionSpan = spanReporter.spans().get(1);
-					MutableSpan resultSetSpan = spanReporter.spans().get(0);
-					assertThat(connectionSpan.name()).isEqualTo("connection");
-					assertThat(resultSetSpan.name()).isEqualTo("result-set");
-					assertThat(context.getBean(Tracer.class).currentSpan()).isNull();
-				});
+			assertThat(spanReporter.spans()).hasSize(2);
+			MutableSpan connectionSpan = spanReporter.spans().get(1);
+			MutableSpan resultSetSpan = spanReporter.spans().get(0);
+			assertThat(connectionSpan.name()).isEqualTo("connection");
+			assertThat(resultSetSpan.name()).isEqualTo("result-set");
+			assertThat(context.getBean(Tracer.class).currentSpan()).isNull();
+		});
 	}
 
 	@Test
 	void testShouldIncludeOnlyQueryAndFetchTraces() {
-		contextRunner.withPropertyValues("spring.sleuth.jdbc.decorator.datasource.includes: query, fetch")
-				.run(context -> {
-					DataSource dataSource = context.getBean(DataSource.class);
-					TestSpanHandler spanReporter = context.getBean(TestSpanHandler.class);
+		contextRunner.withPropertyValues("spring.sleuth.jdbc.includes: query, fetch").run(context -> {
+			DataSource dataSource = context.getBean(DataSource.class);
+			TestSpanHandler spanReporter = context.getBean(TestSpanHandler.class);
 
-					Connection connection = dataSource.getConnection();
-					Statement statement = connection.createStatement();
-					ResultSet resultSet = statement.executeQuery("select 1 FROM dual");
-					resultSet.next();
-					resultSet.close();
-					statement.close();
-					connection.close();
+			Connection connection = dataSource.getConnection();
+			Statement statement = connection.createStatement();
+			ResultSet resultSet = statement.executeQuery("select 1 FROM dual");
+			resultSet.next();
+			resultSet.close();
+			statement.close();
+			connection.close();
 
-					assertThat(spanReporter.spans()).hasSize(2);
-					MutableSpan resultSetSpan = spanReporter.spans().get(1);
-					MutableSpan statementSpan = spanReporter.spans().get(0);
-					assertThat(statementSpan.name()).isEqualTo("select");
-					assertThat(resultSetSpan.name()).isEqualTo("result-set");
-					assertThat(context.getBean(Tracer.class).currentSpan()).isNull();
-				});
+			assertThat(spanReporter.spans()).hasSize(2);
+			MutableSpan resultSetSpan = spanReporter.spans().get(1);
+			MutableSpan statementSpan = spanReporter.spans().get(0);
+			assertThat(statementSpan.name()).isEqualTo("select");
+			assertThat(resultSetSpan.name()).isEqualTo("result-set");
+			assertThat(context.getBean(Tracer.class).currentSpan()).isNull();
+		});
 	}
 
 	@Test

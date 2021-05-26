@@ -42,8 +42,7 @@ import org.springframework.context.annotation.Import;
  */
 @Configuration(proxyBeanMethods = false)
 @EnableConfigurationProperties(TraceDataSourceDecoratorProperties.class)
-@ConditionalOnProperty(name = "spring.sleuth.jdbc.decorator.datasource.enabled", havingValue = "true",
-		matchIfMissing = true)
+@ConditionalOnProperty(name = "spring.sleuth.jdbc.enabled", havingValue = "true", matchIfMissing = true)
 @ConditionalOnBean({ DataSource.class, Tracer.class })
 @AutoConfigureAfter(DataSourceAutoConfiguration.class)
 @Import({ P6SpyConfiguration.class, DataSourceProxyConfiguration.class })

@@ -113,7 +113,9 @@ public class TraceAsyncDefaultAutoConfiguration {
 				return this.beanFactory.getBean(TaskExecutor.class);
 			}
 			catch (NoUniqueBeanDefinitionException ex) {
-				log.debug("Could not find unique TaskExecutor bean", ex);
+				if (log.isDebugEnabled()) {
+					log.debug("Could not find unique TaskExecutor bean", ex);
+				}
 				try {
 					return this.beanFactory.getBean(AsyncExecutionAspectSupport.DEFAULT_TASK_EXECUTOR_BEAN_NAME,
 							Executor.class);

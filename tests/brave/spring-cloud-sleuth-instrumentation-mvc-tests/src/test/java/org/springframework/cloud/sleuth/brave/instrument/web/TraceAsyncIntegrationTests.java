@@ -16,8 +16,10 @@
 
 package org.springframework.cloud.sleuth.brave.instrument.web;
 
+import java.util.List;
 import java.util.concurrent.Executor;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.stream.Collectors;
 
 import brave.Span;
 import brave.Tracer;
@@ -119,11 +121,13 @@ public class TraceAsyncIntegrationTests {
 		Awaitility.await().atMost(5, SECONDS).untilAsserted(() -> {
 			then(TraceAsyncIntegrationTests.this.classPerformingAsyncLogic.getSpan().context().traceId())
 					.isEqualTo(span.context().traceId());
-			then(this.spans).hasSize(2);
+			List<MutableSpan> webSpans = this.spans.spans().stream().filter(mutableSpan -> mutableSpan.traceId().equalsIgnoreCase(span.context().traceIdString()))
+					.collect(Collectors.toList());
+			then(webSpans).hasSize(2);
 			// HTTP
-			then(this.spans.get(0).name()).isEqualTo("http:existing");
+			then(webSpans.get(0).name()).isEqualTo("http:existing");
 			// ASYNC
-			then(this.spans.get(1).tags()).containsEntry("class", "ClassPerformingAsyncLogic").containsEntry("method",
+			then(webSpans.get(1).tags()).containsEntry("class", "ClassPerformingAsyncLogic").containsEntry("method",
 					"invokeAsynchronousLogic");
 		});
 	}

@@ -22,7 +22,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.regex.Pattern;
 
-import net.ttddyy.dsproxy.QueryCountHolder;
 import net.ttddyy.dsproxy.support.ProxyDataSourceBuilder;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
@@ -34,7 +33,7 @@ import org.springframework.cloud.sleuth.instrument.jdbc.TraceType;
  * @author Arthur Gavlyukovskiy
  * @since 3.1.0
  */
-@ConfigurationProperties(prefix = "spring.sleuth.jdbc.decorator.datasource")
+@ConfigurationProperties(prefix = "spring.sleuth.jdbc")
 public class TraceDataSourceDecoratorProperties {
 
 	/**
@@ -130,14 +129,6 @@ public class TraceDataSourceDecoratorProperties {
 		 */
 		private boolean jsonFormat = false;
 
-		/**
-		 * Creates listener to count queries.
-		 *
-		 * @see ProxyDataSourceBuilder#countQuery()
-		 * @see QueryCountHolder
-		 */
-		private boolean countQuery = false;
-
 		public DataSourceProxyLogging getLogging() {
 			return logging;
 		}
@@ -176,14 +167,6 @@ public class TraceDataSourceDecoratorProperties {
 
 		public void setJsonFormat(boolean jsonFormat) {
 			this.jsonFormat = jsonFormat;
-		}
-
-		public boolean isCountQuery() {
-			return countQuery;
-		}
-
-		public void setCountQuery(boolean countQuery) {
-			this.countQuery = countQuery;
 		}
 
 		/**

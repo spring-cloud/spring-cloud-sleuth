@@ -695,8 +695,8 @@ runtimeOnly "net.ttddyy:datasource-proxy:${datasourceProxyVersion}"
 ----
 ====
 
-Please check the <<appendix.adoc#appendix,appendix>> page under `spring.sleuth.jdbc.decorator.datasource.p6spy` for all p6spy configuration options and `spring.sleuth.jdbc.decorator.datasource.datasource-proxy` for all datasource proxy configuration options.
+Please check the <<appendix.adoc#appendix,appendix>> page under `spring.sleuth.jdbc.p6spy` for all p6spy configuration options and `spring.sleuth.jdbc.datasource-proxy` for all datasource proxy configuration options.
 
 You can configure P6Spy manually using one of available configuration methods. For more information please refer to the http://p6spy.readthedocs.io/en/latest/configandusage.html[P6Spy Configuration Guide].
 
-In order to disable this instrumentation set `spring.sleuth.jdbc.decorator.datasource.enabled` to `false`.
+In order to disable this instrumentation set `spring.sleuth.jdbc.enabled` to `false`.

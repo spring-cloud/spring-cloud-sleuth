@@ -21,10 +21,7 @@ import javax.sql.DataSource;
 import org.springframework.jdbc.datasource.DelegatingDataSource;
 
 /**
- * Interface that implicitly added to the CGLIB proxy of {@link DataSource}.
- *
- * Returns link of both real {@link DataSource}, decorated {@link DataSource} and all
- * decorating chain including decorator bean name, instance and result of decorating.
+ * Returns link of both real {@link DataSource}, decorated {@link DataSource}.
  *
  * @author Arthur Gavlyukovskiy
  * @since 3.1.0

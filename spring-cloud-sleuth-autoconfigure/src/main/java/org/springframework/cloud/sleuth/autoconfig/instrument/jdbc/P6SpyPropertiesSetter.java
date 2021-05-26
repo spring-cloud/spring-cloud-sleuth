@@ -66,8 +66,8 @@ class P6SpyPropertiesSetter implements BeanDefinitionRegistryPostProcessor, Clos
 	public void postProcessBeanFactory(ConfigurableListableBeanFactory beanFactory) throws BeansException {
 		ConfigurableEnvironment environment = this.context.getEnvironment();
 		String customModuleList = initialP6SpyOptions.get("modulelist");
-		boolean isEnableLogging = environment
-				.getProperty("spring.sleuth.jdbc.decorator.datasource.p6spy.enable-logging", Boolean.class, true);
+		boolean isEnableLogging = environment.getProperty("spring.sleuth.jdbc.p6spy.enable-logging", Boolean.class,
+				true);
 		if (customModuleList != null) {
 			log.info("P6Spy modulelist is overridden, some p6spy configuration features will not be applied");
 		}
@@ -94,7 +94,7 @@ class P6SpyPropertiesSetter implements BeanDefinitionRegistryPostProcessor, Clos
 		if (isEnableLogging && !initialP6SpyOptions.containsKey("appender")) {
 			TraceDataSourceDecoratorProperties.P6SpyProperties.P6SpyLogging logging = TraceDataSourceDecoratorProperties.P6SpyProperties.P6SpyLogging
 					.valueOf(environment
-							.getProperty("spring.sleuth.jdbc.decorator.datasource.p6spy.logging", String.class,
+							.getProperty("spring.sleuth.jdbc.p6spy.logging", String.class,
 									TraceDataSourceDecoratorProperties.P6SpyProperties.P6SpyLogging.SLF4J.toString())
 							.toUpperCase());
 			switch (logging) {
@@ -108,19 +108,17 @@ class P6SpyPropertiesSetter implements BeanDefinitionRegistryPostProcessor, Clos
 				System.setProperty("p6spy.config.appender", "com.p6spy.engine.spy.appender.FileLogger");
 				break;
 			case CUSTOM:
-				String customAppender = environment.getProperty(
-						"spring.sleuth.jdbc.decorator.datasource.p6spy.custom-appender-class", String.class, "");
+				String customAppender = environment.getProperty("spring.sleuth.jdbc.p6spy.custom-appender-class",
+						String.class, "");
 				System.setProperty("p6spy.config.appender", customAppender);
 				break;
 			}
 		}
 		if (!initialP6SpyOptions.containsKey("logfile")) {
-			String logFile = environment.getProperty("spring.sleuth.jdbc.decorator.datasource.p6spy.log-file",
-					String.class, "spy.log");
+			String logFile = environment.getProperty("spring.sleuth.jdbc.p6spy.log-file", String.class, "spy.log");
 			System.setProperty("p6spy.config.logfile", logFile);
 		}
-		String pattern = environment.getProperty("spring.sleuth.jdbc.decorator.datasource.p6spy.log-filter.pattern",
-				String.class);
+		String pattern = environment.getProperty("spring.sleuth.jdbc.p6spy.log-filter.pattern", String.class);
 		if (pattern != null) {
 			System.setProperty("p6spy.config.filter", "true");
 			System.setProperty("p6spy.config.sqlexpression", pattern);
@@ -133,11 +131,11 @@ class P6SpyPropertiesSetter implements BeanDefinitionRegistryPostProcessor, Clos
 	}
 
 	private Boolean multiLine(ConfigurableEnvironment environment) {
-		return environment.getProperty("spring.sleuth.jdbc.decorator.datasource.p6spy.multiline", Boolean.class, true);
+		return environment.getProperty("spring.sleuth.jdbc.p6spy.multiline", Boolean.class, true);
 	}
 
 	private String logFormat(ConfigurableEnvironment environment) {
-		return environment.getProperty("spring.sleuth.jdbc.decorator.datasource.p6spy.log-format", String.class);
+		return environment.getProperty("spring.sleuth.jdbc.p6spy.log-format", String.class);
 	}
 
 	@Override

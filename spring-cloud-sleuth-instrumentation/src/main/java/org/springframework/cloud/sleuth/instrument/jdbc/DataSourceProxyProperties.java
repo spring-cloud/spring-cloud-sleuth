@@ -19,7 +19,6 @@ package org.springframework.cloud.sleuth.instrument.jdbc;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 
-import net.ttddyy.dsproxy.QueryCountHolder;
 import net.ttddyy.dsproxy.listener.logging.CommonsLogLevel;
 import net.ttddyy.dsproxy.listener.logging.SLF4JLogLevel;
 import net.ttddyy.dsproxy.support.ProxyDataSourceBuilder;
@@ -61,14 +60,6 @@ public class DataSourceProxyProperties {
 	 */
 	private boolean jsonFormat = false;
 
-	/**
-	 * Creates listener to count queries.
-	 *
-	 * @see ProxyDataSourceBuilder#countQuery()
-	 * @see QueryCountHolder
-	 */
-	private boolean countQuery = false;
-
 	public DataSourceProxyLogging getLogging() {
 		return logging;
 	}
@@ -107,14 +98,6 @@ public class DataSourceProxyProperties {
 
 	public void setJsonFormat(boolean jsonFormat) {
 		this.jsonFormat = jsonFormat;
-	}
-
-	public boolean isCountQuery() {
-		return countQuery;
-	}
-
-	public void setCountQuery(boolean countQuery) {
-		this.countQuery = countQuery;
 	}
 
 	/**

@@ -80,7 +80,7 @@ class ProxyDataSourceConfigurationTests {
 	@Test
 	void testRegisterLogAndSlowQueryLogByUsingSlf4j() {
 		ApplicationContextRunner contextRunner = this.contextRunner
-				.withPropertyValues("spring.sleuth.jdbc.decorator.datasource.datasource-proxy.logging:slf4j");
+				.withPropertyValues("spring.sleuth.jdbc.datasource-proxy.logging:slf4j");
 
 		contextRunner.run(context -> {
 			DataSource dataSource = context.getBean(DataSource.class);
@@ -95,7 +95,7 @@ class ProxyDataSourceConfigurationTests {
 	@Test
 	void testRegisterLogAndSlowQueryLogUsingSystemOut() {
 		ApplicationContextRunner contextRunner = this.contextRunner
-				.withPropertyValues("spring.sleuth.jdbc.decorator.datasource.datasource-proxy.logging:sysout");
+				.withPropertyValues("spring.sleuth.jdbc.datasource-proxy.logging:sysout");
 
 		contextRunner.run(context -> {
 			DataSource dataSource = context.getBean(DataSource.class);
@@ -111,7 +111,7 @@ class ProxyDataSourceConfigurationTests {
 	@Test
 	void testRegisterLogAndSlowQueryLogUsingJUL() {
 		ApplicationContextRunner contextRunner = this.contextRunner
-				.withPropertyValues("spring.sleuth.jdbc.decorator.datasource.datasourceProxy.logging:jul");
+				.withPropertyValues("spring.sleuth.jdbc.datasourceProxy.logging:jul");
 
 		contextRunner.run(context -> {
 			DataSource dataSource = context.getBean(DataSource.class);
@@ -127,7 +127,7 @@ class ProxyDataSourceConfigurationTests {
 	@Test
 	void testRegisterLogAndSlowQueryLogUsingApacheCommons() {
 		ApplicationContextRunner contextRunner = this.contextRunner
-				.withPropertyValues("spring.sleuth.jdbc.decorator.datasource.datasourceProxy.logging:commons");
+				.withPropertyValues("spring.sleuth.jdbc.datasourceProxy.logging:commons");
 
 		contextRunner.run(context -> {
 			DataSource dataSource = context.getBean(DataSource.class);
