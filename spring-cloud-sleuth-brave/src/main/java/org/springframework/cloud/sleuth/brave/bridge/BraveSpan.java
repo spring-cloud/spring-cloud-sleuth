@@ -98,7 +98,7 @@ public class BraveSpan implements Span {
 	}
 
 	@Override
-	public Span remoteUrl(String ip, int port) {
+	public Span remoteIpAndPort(String ip, int port) {
 		this.delegate.remoteIpAndPort(ip, port);
 		return this;
 	}

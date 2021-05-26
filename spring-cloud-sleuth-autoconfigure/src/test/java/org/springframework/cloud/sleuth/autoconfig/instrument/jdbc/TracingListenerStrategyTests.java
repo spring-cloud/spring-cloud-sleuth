@@ -44,9 +44,9 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 abstract class TracingListenerStrategyTests {
 
-	public static final String SPAN_SQL_QUERY_TAG_NAME = "sql.query";
+	public static final String SPAN_SQL_QUERY_TAG_NAME = "jdbc.query";
 
-	public static final String SPAN_ROW_COUNT_TAG_NAME = "sql.row-count";
+	public static final String SPAN_ROW_COUNT_TAG_NAME = "jdbc.row-count";
 
 	protected final ApplicationContextRunner contextRunner;
 
@@ -69,8 +69,8 @@ abstract class TracingListenerStrategyTests {
 			MutableSpan connectionSpan = spanReporter.spans().get(0);
 			assertThat(connectionSpan.name()).isEqualTo("connection");
 			assertThat(connectionSpan.remoteServiceName()).isEqualTo("TESTDB-BAZ");
-			assertThat(connectionSpan.annotations()).extracting("value").contains("sql.commit");
-			assertThat(connectionSpan.annotations()).extracting("value").contains("sql.rollback");
+			assertThat(connectionSpan.annotations()).extracting("value").contains("jdbc.commit");
+			assertThat(connectionSpan.annotations()).extracting("value").contains("jdbc.rollback");
 		});
 	}
 
@@ -90,8 +90,8 @@ abstract class TracingListenerStrategyTests {
 					MutableSpan connectionSpan = spanReporter.spans().get(0);
 					assertThat(connectionSpan.name()).isEqualTo("connection");
 					assertThat(connectionSpan.remoteServiceName()).isEqualTo("aaaabbbb");
-					assertThat(connectionSpan.annotations()).extracting("value").contains("sql.commit");
-					assertThat(connectionSpan.annotations()).extracting("value").contains("sql.rollback");
+					assertThat(connectionSpan.annotations()).extracting("value").contains("jdbc.commit");
+					assertThat(connectionSpan.annotations()).extracting("value").contains("jdbc.rollback");
 				});
 	}
 

@@ -281,7 +281,7 @@ class TraceListenerStrategy<CON, STMT, RS> {
 		span.remoteServiceName(urlAndRemoteServiceName.remoteServiceName);
 		URI url = urlAndRemoteServiceName.url;
 		if (url != null) {
-			span.remoteUrl(url.getHost(), url.getPort());
+			span.remoteIpAndPort(url.getHost(), url.getPort());
 		}
 	}
 
@@ -293,7 +293,7 @@ class TraceListenerStrategy<CON, STMT, RS> {
 		span.remoteServiceName(urlAndRemoteServiceName.remoteServiceName);
 		URI url = urlAndRemoteServiceName.url;
 		if (url != null) {
-			span.remoteUrl(url.getHost(), url.getPort());
+			span.remoteIpAndPort(url.getHost(), url.getPort());
 		}
 	}
 

@@ -106,7 +106,7 @@ public interface Span extends SpanCustomizer {
 	 * @return this span
 	 * @since 3.1.0
 	 */
-	default Span remoteUrl(String ip, int port) {
+	default Span remoteIpAndPort(String ip, int port) {
 		return this;
 	}
 
@@ -219,7 +219,7 @@ public interface Span extends SpanCustomizer {
 		 * @param port remote service port
 		 * @return this
 		 */
-		default Builder remoteUrl(String ip, int port) {
+		default Builder remoteIpAndPort(String ip, int port) {
 			return this;
 		}
 

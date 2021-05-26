@@ -43,7 +43,7 @@ enum SleuthJdbcSpan implements DocumentedSpan {
 
 		@Override
 		public String prefix() {
-			return "sql.";
+			return "jdbc.";
 		}
 	},
 
@@ -68,7 +68,7 @@ enum SleuthJdbcSpan implements DocumentedSpan {
 
 		@Override
 		public String prefix() {
-			return "sql.";
+			return "jdbc.";
 		}
 	},
 
@@ -88,7 +88,7 @@ enum SleuthJdbcSpan implements DocumentedSpan {
 
 		@Override
 		public String prefix() {
-			return "sql.";
+			return "jdbc.";
 		}
 	};
 
@@ -100,7 +100,7 @@ enum SleuthJdbcSpan implements DocumentedSpan {
 		DATASOURCE_DRIVER {
 			@Override
 			public String getKey() {
-				return "sql.datasource.driver";
+				return "jdbc.datasource.driver";
 			}
 		},
 
@@ -110,7 +110,7 @@ enum SleuthJdbcSpan implements DocumentedSpan {
 		DATASOURCE_POOL {
 			@Override
 			public String getKey() {
-				return "sql.datasource.pool";
+				return "jdbc.datasource.pool";
 			}
 		},
 
@@ -124,7 +124,7 @@ enum SleuthJdbcSpan implements DocumentedSpan {
 		QUERY {
 			@Override
 			public String getKey() {
-				return "sql.query";
+				return "jdbc.query";
 			}
 		},
 
@@ -134,7 +134,7 @@ enum SleuthJdbcSpan implements DocumentedSpan {
 		ROW_COUNT {
 			@Override
 			public String getKey() {
-				return "sql.row-count";
+				return "jdbc.row-count";
 			}
 		}
 
@@ -148,7 +148,7 @@ enum SleuthJdbcSpan implements DocumentedSpan {
 		COMMIT {
 			@Override
 			public String getValue() {
-				return "sql.commit";
+				return "jdbc.commit";
 			}
 		},
 
@@ -158,7 +158,7 @@ enum SleuthJdbcSpan implements DocumentedSpan {
 		ROLLBACK {
 			@Override
 			public String getValue() {
-				return "sql.rollback";
+				return "jdbc.rollback";
 			}
 		}
 

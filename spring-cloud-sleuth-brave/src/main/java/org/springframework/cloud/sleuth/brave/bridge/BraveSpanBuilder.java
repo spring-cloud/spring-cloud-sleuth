@@ -108,7 +108,7 @@ class BraveSpanBuilder implements Span.Builder {
 	}
 
 	@Override
-	public Span.Builder remoteUrl(String ip, int port) {
+	public Span.Builder remoteIpAndPort(String ip, int port) {
 		span().remoteIpAndPort(ip, port);
 		return this;
 	}

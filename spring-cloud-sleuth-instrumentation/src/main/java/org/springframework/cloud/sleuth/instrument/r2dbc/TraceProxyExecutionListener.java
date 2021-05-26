@@ -88,7 +88,7 @@ public class TraceProxyExecutionListener implements ProxyExecutionListener {
 		if (StringUtils.hasText(url)) {
 			try {
 				URI uri = URI.create(url);
-				builder.remoteUrl(uri.getHost(), uri.getPort());
+				builder.remoteIpAndPort(uri.getHost(), uri.getPort());
 			}
 			catch (Exception e) {
 				if (log.isDebugEnabled()) {
