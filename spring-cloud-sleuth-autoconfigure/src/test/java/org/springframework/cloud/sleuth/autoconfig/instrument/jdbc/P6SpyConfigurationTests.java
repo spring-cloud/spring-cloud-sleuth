@@ -44,6 +44,7 @@ import org.springframework.boot.autoconfigure.context.PropertyPlaceholderAutoCon
 import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration;
 import org.springframework.boot.test.context.FilteredClassLoader;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
+import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.autoconfig.brave.BraveAutoConfiguration;
 import org.springframework.cloud.sleuth.instrument.jdbc.DataSourceWrapper;
 import org.springframework.context.annotation.Bean;
@@ -95,13 +96,16 @@ class P6SpyConfigurationTests {
 
 			assertThat(getCountingListener.connectionCount).isEqualTo(2);
 
-			connection1.close();
+			// order matters!
+			connection2.close();
 
 			assertThat(closingCountingListener.connectionCount).isEqualTo(1);
 
-			connection2.close();
+			// order matters!
+			connection1.close();
 
 			assertThat(closingCountingListener.connectionCount).isEqualTo(2);
+			assertThat(context.getBean(Tracer.class).currentSpan()).isNull();
 		});
 	}
 

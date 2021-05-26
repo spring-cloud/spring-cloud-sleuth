@@ -18,6 +18,9 @@ package org.springframework.cloud.sleuth;
 
 import java.io.Closeable;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 /**
  * Container object for {@link Span} and its corresponding {@link Tracer.SpanInScope}.
  *
@@ -25,6 +28,8 @@ import java.io.Closeable;
  * @since 3.1.0
  */
 public class SpanAndScope implements Closeable {
+
+	private static final Log log = LogFactory.getLog(SpanAndScope.class);
 
 	private final Span span;
 
@@ -50,6 +55,9 @@ public class SpanAndScope implements Closeable {
 
 	@Override
 	public void close() {
+		if (log.isTraceEnabled()) {
+			log.trace("Closing span [" + this.span + "]");
+		}
 		this.scope.close();
 		this.span.end();
 	}

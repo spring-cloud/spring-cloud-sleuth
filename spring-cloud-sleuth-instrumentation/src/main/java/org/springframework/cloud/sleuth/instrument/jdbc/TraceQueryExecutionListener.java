@@ -121,6 +121,9 @@ public class TraceQueryExecutionListener implements QueryExecutionListener, Meth
 		try {
 			DataSource source = targetDataSource instanceof ProxyDataSource
 					? (targetDataSource).unwrap(DataSource.class) : targetDataSource;
+			if (source == null) {
+				return null;
+			}
 			return source.getConnection();
 		}
 		catch (Exception ex) {

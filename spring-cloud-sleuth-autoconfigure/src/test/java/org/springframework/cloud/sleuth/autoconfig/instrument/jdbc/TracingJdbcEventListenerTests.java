@@ -36,22 +36,16 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 class TracingJdbcEventListenerTests extends TracingListenerStrategyTests {
 
-	private final ApplicationContextRunner contextRunner = new ApplicationContextRunner()
+	private static final ApplicationContextRunner contextRunner = new ApplicationContextRunner()
 			.withConfiguration(AutoConfigurations.of(DataSourceAutoConfiguration.class,
 					TraceDataSourceDecoratorAutoConfiguration.class, BraveAutoConfiguration.class,
 					TestSpanHandlerConfiguration.class, PropertyPlaceholderAutoConfiguration.class))
 			.withPropertyValues("spring.datasource.initialization-mode=never",
-					"spring.datasource.url:jdbc:h2:mem:testdb-baz", "spring.datasource.hikari.pool-name=test")
+					"spring.datasource.url=jdbc:h2:mem:testdb-baz", "spring.datasource.hikari.pool-name=test")
 			.withClassLoader(new FilteredClassLoader("net.ttddyy.dsproxy"));
 
 	protected TracingJdbcEventListenerTests() {
-		super(new ApplicationContextRunner()
-				.withConfiguration(AutoConfigurations.of(DataSourceAutoConfiguration.class,
-						TraceDataSourceDecoratorAutoConfiguration.class, BraveAutoConfiguration.class,
-						TestSpanHandlerConfiguration.class, PropertyPlaceholderAutoConfiguration.class))
-				.withPropertyValues("spring.datasource.initialization-mode=never",
-						"spring.datasource.url:jdbc:h2:mem:testdb-baz", "spring.datasource.hikari.pool-name=test")
-				.withClassLoader(new FilteredClassLoader("net.ttddyy.dsproxy")));
+		super(contextRunner);
 	}
 
 	@Test

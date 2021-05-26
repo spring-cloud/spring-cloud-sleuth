@@ -45,6 +45,7 @@ import org.springframework.boot.autoconfigure.context.PropertyPlaceholderAutoCon
 import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration;
 import org.springframework.boot.test.context.FilteredClassLoader;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
+import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.autoconfig.brave.BraveAutoConfiguration;
 import org.springframework.cloud.sleuth.instrument.jdbc.DataSourceProxyConnectionIdManagerProvider;
 import org.springframework.cloud.sleuth.instrument.jdbc.DataSourceWrapper;
@@ -103,6 +104,7 @@ class ProxyDataSourceConfigurationTests {
 			ChainListener chainListener = proxyDataSource.getProxyConfig().getQueryListener();
 			assertThat(chainListener.getListeners()).extracting("class").contains(SystemOutSlowQueryListener.class);
 			assertThat(chainListener.getListeners()).extracting("class").contains(SystemOutQueryLoggingListener.class);
+			assertThat(context.getBean(Tracer.class).currentSpan()).isNull();
 		});
 	}
 
@@ -118,6 +120,7 @@ class ProxyDataSourceConfigurationTests {
 			ChainListener chainListener = proxyDataSource.getProxyConfig().getQueryListener();
 			assertThat(chainListener.getListeners()).extracting("class").contains(JULSlowQueryListener.class);
 			assertThat(chainListener.getListeners()).extracting("class").contains(JULQueryLoggingListener.class);
+			assertThat(context.getBean(Tracer.class).currentSpan()).isNull();
 		});
 	}
 
@@ -133,6 +136,7 @@ class ProxyDataSourceConfigurationTests {
 			ChainListener chainListener = proxyDataSource.getProxyConfig().getQueryListener();
 			assertThat(chainListener.getListeners()).extracting("class").contains(CommonsSlowQueryListener.class);
 			assertThat(chainListener.getListeners()).extracting("class").contains(CommonsQueryLoggingListener.class);
+			assertThat(context.getBean(Tracer.class).currentSpan()).isNull();
 		});
 	}
 
@@ -149,6 +153,7 @@ class ProxyDataSourceConfigurationTests {
 			QueryTransformer queryTransformer = context.getBean(QueryTransformer.class);
 			assertThat(proxyDataSource.getProxyConfig().getParameterTransformer()).isSameAs(parameterTransformer);
 			assertThat(proxyDataSource.getProxyConfig().getQueryTransformer()).isSameAs(queryTransformer);
+			assertThat(context.getBean(Tracer.class).currentSpan()).isNull();
 		});
 	}
 
@@ -165,6 +170,7 @@ class ProxyDataSourceConfigurationTests {
 
 			ChainListener chainListener = proxyDataSource.getProxyConfig().getQueryListener();
 			assertThat(chainListener.getListeners()).contains(queryExecutionListener);
+			assertThat(context.getBean(Tracer.class).currentSpan()).isNull();
 		});
 	}
 
@@ -176,6 +182,7 @@ class ProxyDataSourceConfigurationTests {
 					.getDecoratedDataSource();
 
 			assertThat(proxyDataSource.getConnectionIdManager()).isInstanceOf(GlobalConnectionIdManager.class);
+			assertThat(context.getBean(Tracer.class).currentSpan()).isNull();
 		});
 	}
 
@@ -190,6 +197,7 @@ class ProxyDataSourceConfigurationTests {
 					.getDecoratedDataSource();
 
 			assertThat(proxyDataSource.getConnectionIdManager()).isInstanceOf(DefaultConnectionIdManager.class);
+			assertThat(context.getBean(Tracer.class).currentSpan()).isNull();
 		});
 	}
 

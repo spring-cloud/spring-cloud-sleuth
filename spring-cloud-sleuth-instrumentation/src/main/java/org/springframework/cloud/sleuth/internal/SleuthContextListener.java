@@ -81,8 +81,8 @@ public class SleuthContextListener implements SmartApplicationListener {
 	@Override
 	public void onApplicationEvent(ApplicationEvent event) {
 		if (event instanceof ContextRefreshedEvent || event instanceof ContextClosedEvent) {
-			if (log.isDebugEnabled()) {
-				log.debug("Context refreshed or closed [" + event + "]");
+			if (log.isTraceEnabled()) {
+				log.trace("Context refreshed or closed [" + event + "]");
 			}
 			ApplicationContextEvent contextEvent = (ApplicationContextEvent) event;
 			ApplicationContext context = contextEvent.getApplicationContext();

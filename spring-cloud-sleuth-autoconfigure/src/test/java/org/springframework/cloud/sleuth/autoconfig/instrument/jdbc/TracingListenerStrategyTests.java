@@ -35,6 +35,7 @@ import org.junit.jupiter.api.Test;
 
 import org.springframework.boot.test.context.assertj.AssertableApplicationContext;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
+import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.instrument.jdbc.TraceJdbcEventListener;
 import org.springframework.cloud.sleuth.instrument.jdbc.TraceQueryExecutionListener;
 import org.springframework.context.annotation.Bean;
@@ -71,6 +72,7 @@ abstract class TracingListenerStrategyTests {
 			assertThat(connectionSpan.remoteServiceName()).isEqualTo("TESTDB-BAZ");
 			assertThat(connectionSpan.annotations()).extracting("value").contains("jdbc.commit");
 			assertThat(connectionSpan.annotations()).extracting("value").contains("jdbc.rollback");
+			assertThat(context.getBean(Tracer.class).currentSpan()).isNull();
 		});
 	}
 
@@ -92,6 +94,7 @@ abstract class TracingListenerStrategyTests {
 					assertThat(connectionSpan.remoteServiceName()).isEqualTo("aaaabbbb");
 					assertThat(connectionSpan.annotations()).extracting("value").contains("jdbc.commit");
 					assertThat(connectionSpan.annotations()).extracting("value").contains("jdbc.rollback");
+					assertThat(context.getBean(Tracer.class).currentSpan()).isNull();
 				});
 	}
 
@@ -112,6 +115,7 @@ abstract class TracingListenerStrategyTests {
 			assertThat(statementSpan.name()).isEqualTo("select");
 			assertThat(statementSpan.remoteServiceName()).isEqualTo("TESTDB-BAZ");
 			assertThat(statementSpan.tags()).containsEntry(SPAN_SQL_QUERY_TAG_NAME, "SELECT NOW()");
+			assertThat(context.getBean(Tracer.class).currentSpan()).isNull();
 		});
 	}
 
@@ -134,6 +138,7 @@ abstract class TracingListenerStrategyTests {
 			assertThat(statementSpan.tags()).containsEntry(SPAN_SQL_QUERY_TAG_NAME,
 					"UPDATE INFORMATION_SCHEMA.TABLES SET table_Name = '' WHERE 0 = 1");
 			assertThat(statementSpan.tags()).containsEntry(SPAN_ROW_COUNT_TAG_NAME, "0");
+			assertThat(context.getBean(Tracer.class).currentSpan()).isNull();
 		});
 	}
 
@@ -156,6 +161,7 @@ abstract class TracingListenerStrategyTests {
 			assertThat(statementSpan.tags()).containsEntry(SPAN_SQL_QUERY_TAG_NAME,
 					"UPDATE INFORMATION_SCHEMA.TABLES SET table_Name = '' WHERE 0 = 1");
 			assertThat(statementSpan.tags()).containsEntry(SPAN_ROW_COUNT_TAG_NAME, "0");
+			assertThat(context.getBean(Tracer.class).currentSpan()).isNull();
 		});
 	}
 
@@ -185,6 +191,7 @@ abstract class TracingListenerStrategyTests {
 			if (isP6Spy(context)) {
 				assertThat(resultSetSpan.tags()).containsEntry(SPAN_ROW_COUNT_TAG_NAME, "2");
 			}
+			assertThat(context.getBean(Tracer.class).currentSpan()).isNull();
 		});
 	}
 
@@ -212,6 +219,7 @@ abstract class TracingListenerStrategyTests {
 			if (isP6Spy(context)) {
 				assertThat(resultSetSpan.tags()).containsEntry(SPAN_ROW_COUNT_TAG_NAME, "1");
 			}
+			assertThat(context.getBean(Tracer.class).currentSpan()).isNull();
 		});
 	}
 
@@ -236,6 +244,7 @@ abstract class TracingListenerStrategyTests {
 			assertThat(statementSpan.name()).isEqualTo("select");
 			assertThat(resultSetSpan.name()).isEqualTo("result-set");
 			assertThat(statementSpan.tags()).containsEntry(SPAN_SQL_QUERY_TAG_NAME, "SELECT NOW()");
+			assertThat(context.getBean(Tracer.class).currentSpan()).isNull();
 		});
 	}
 
@@ -259,6 +268,7 @@ abstract class TracingListenerStrategyTests {
 			assertThat(statementSpan.name()).isEqualTo("select");
 			assertThat(resultSetSpan.name()).isEqualTo("result-set");
 			assertThat(statementSpan.tags()).containsEntry(SPAN_SQL_QUERY_TAG_NAME, "SELECT NOW()");
+			assertThat(context.getBean(Tracer.class).currentSpan()).isNull();
 		});
 	}
 
@@ -284,6 +294,7 @@ abstract class TracingListenerStrategyTests {
 			assertThat(statementSpan.name()).isEqualTo("select");
 			assertThat(resultSetSpan.name()).isEqualTo("result-set");
 			assertThat(statementSpan.tags()).containsEntry(SPAN_SQL_QUERY_TAG_NAME, "SELECT NOW()");
+			assertThat(context.getBean(Tracer.class).currentSpan()).isNull();
 		});
 	}
 
@@ -312,6 +323,7 @@ abstract class TracingListenerStrategyTests {
 			assertThat(statementSpan.name()).isEqualTo("select");
 			assertThat(resultSetSpan.name()).isEqualTo("result-set");
 			assertThat(statementSpan.tags()).containsEntry(SPAN_SQL_QUERY_TAG_NAME, "SELECT NOW()");
+			assertThat(context.getBean(Tracer.class).currentSpan()).isNull();
 		});
 	}
 
@@ -330,6 +342,7 @@ abstract class TracingListenerStrategyTests {
 			assertThat(spanReporter.spans()).hasSize(1);
 			MutableSpan connectionSpan = spanReporter.spans().get(0);
 			assertThat(connectionSpan.name()).isEqualTo("connection");
+			assertThat(context.getBean(Tracer.class).currentSpan()).isNull();
 		});
 	}
 
@@ -345,6 +358,7 @@ abstract class TracingListenerStrategyTests {
 				statement.executeQuery("SELECT NOW()");
 			}).isInstanceOf(SQLException.class);
 			connection.close();
+			assertThat(context.getBean(Tracer.class).currentSpan()).isNull();
 		});
 	}
 
@@ -362,6 +376,7 @@ abstract class TracingListenerStrategyTests {
 			}).isInstanceOf(SQLException.class);
 			statement.close();
 			connection.close();
+			assertThat(context.getBean(Tracer.class).currentSpan()).isNull();
 		});
 	}
 
@@ -373,14 +388,15 @@ abstract class TracingListenerStrategyTests {
 
 			Connection connection1 = dataSource.getConnection();
 			Connection connection2 = dataSource.getConnection();
-			connection1.close();
 			connection2.close();
+			connection1.close();
 
 			assertThat(spanReporter.spans()).hasSize(2);
 			MutableSpan connection1Span = spanReporter.spans().get(0);
 			MutableSpan connection2Span = spanReporter.spans().get(1);
 			assertThat(connection1Span.name()).isEqualTo("connection");
 			assertThat(connection2Span.name()).isEqualTo("connection");
+			assertThat(context.getBean(Tracer.class).currentSpan()).isNull();
 		});
 	}
 
@@ -406,6 +422,7 @@ abstract class TracingListenerStrategyTests {
 			assertThat(statementSpan.name()).isEqualTo("select");
 			assertThat(resultSetSpan.name()).isEqualTo("result-set");
 			assertThat(statementSpan.tags()).containsEntry(SPAN_SQL_QUERY_TAG_NAME, "SELECT NOW()");
+			assertThat(context.getBean(Tracer.class).currentSpan()).isNull();
 		});
 	}
 
@@ -428,6 +445,7 @@ abstract class TracingListenerStrategyTests {
 
 					assertThat(listener).extracting("strategy").extracting("openConnections")
 							.isInstanceOfSatisfying(Map.class, map -> assertThat(map).isEmpty());
+					assertThat(context.getBean(Tracer.class).currentSpan()).isNull();
 				});
 	}
 
@@ -466,6 +484,7 @@ abstract class TracingListenerStrategyTests {
 
 			assertThat(spanReporter.spans()).hasSize(1 + 2 * 5);
 			assertThat(spanReporter.spans()).extracting("name").contains("select", "result-set", "connection");
+			assertThat(context.getBean(Tracer.class).currentSpan()).isNull();
 		});
 	}
 
@@ -487,6 +506,7 @@ abstract class TracingListenerStrategyTests {
 					assertThat(spanReporter.spans()).hasSize(1);
 					MutableSpan connectionSpan = spanReporter.spans().get(0);
 					assertThat(connectionSpan.name()).isEqualTo("connection");
+					assertThat(context.getBean(Tracer.class).currentSpan()).isNull();
 				});
 	}
 
@@ -507,6 +527,7 @@ abstract class TracingListenerStrategyTests {
 			assertThat(spanReporter.spans()).hasSize(1);
 			MutableSpan statementSpan = spanReporter.spans().get(0);
 			assertThat(statementSpan.name()).isEqualTo("select");
+			assertThat(context.getBean(Tracer.class).currentSpan()).isNull();
 		});
 	}
 
@@ -527,6 +548,7 @@ abstract class TracingListenerStrategyTests {
 			assertThat(spanReporter.spans()).hasSize(1);
 			MutableSpan resultSetSpan = spanReporter.spans().get(0);
 			assertThat(resultSetSpan.name()).isEqualTo("result-set");
+			assertThat(context.getBean(Tracer.class).currentSpan()).isNull();
 		});
 	}
 
@@ -550,6 +572,7 @@ abstract class TracingListenerStrategyTests {
 					MutableSpan statementSpan = spanReporter.spans().get(0);
 					assertThat(connectionSpan.name()).isEqualTo("connection");
 					assertThat(statementSpan.name()).isEqualTo("select");
+					assertThat(context.getBean(Tracer.class).currentSpan()).isNull();
 				});
 	}
 
@@ -573,6 +596,7 @@ abstract class TracingListenerStrategyTests {
 					MutableSpan resultSetSpan = spanReporter.spans().get(0);
 					assertThat(connectionSpan.name()).isEqualTo("connection");
 					assertThat(resultSetSpan.name()).isEqualTo("result-set");
+					assertThat(context.getBean(Tracer.class).currentSpan()).isNull();
 				});
 	}
 
@@ -596,6 +620,7 @@ abstract class TracingListenerStrategyTests {
 					MutableSpan statementSpan = spanReporter.spans().get(0);
 					assertThat(statementSpan.name()).isEqualTo("select");
 					assertThat(resultSetSpan.name()).isEqualTo("result-set");
+					assertThat(context.getBean(Tracer.class).currentSpan()).isNull();
 				});
 	}
 
@@ -608,12 +633,14 @@ abstract class TracingListenerStrategyTests {
 			Connection connection = dataSource.getConnection();
 			PreparedStatement statement = connection.prepareStatement("SELECT NOW()");
 			connection.close();
+			assertThat(context.getBean(Tracer.class).currentSpan()).isNull();
 
 			assertThatThrownBy(statement::executeQuery).isInstanceOf(SQLException.class);
 
 			assertThat(spanReporter.spans()).hasSize(1);
 			MutableSpan connectionSpan = spanReporter.spans().get(0);
 			assertThat(connectionSpan.name()).isEqualTo("connection");
+			assertThat(context.getBean(Tracer.class).currentSpan()).isNull();
 		});
 	}
 
@@ -634,6 +661,7 @@ abstract class TracingListenerStrategyTests {
 			MutableSpan statementSpan = spanReporter.spans().get(0);
 			assertThat(connectionSpan.name()).isEqualTo("connection");
 			assertThat(statementSpan.name()).isEqualTo("select");
+			assertThat(context.getBean(Tracer.class).currentSpan()).isNull();
 		});
 	}
 
@@ -659,6 +687,7 @@ abstract class TracingListenerStrategyTests {
 			assertThat(statementSpan.name()).isEqualTo("select");
 			assertThat(resultSetSpan.name()).isEqualTo("result-set");
 			assertThat(statementSpan.tags()).containsEntry(SPAN_SQL_QUERY_TAG_NAME, "SELECT NOW()");
+			assertThat(context.getBean(Tracer.class).currentSpan()).isNull();
 		});
 	}
 

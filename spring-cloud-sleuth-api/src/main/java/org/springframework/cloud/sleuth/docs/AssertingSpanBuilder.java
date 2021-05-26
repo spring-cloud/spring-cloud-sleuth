@@ -130,6 +130,11 @@ public interface AssertingSpanBuilder extends Span.Builder {
 			public boolean isStarted() {
 				return true;
 			}
+
+			@Override
+			public String toString() {
+				return getDelegate().toString();
+			}
 		};
 	}
 
