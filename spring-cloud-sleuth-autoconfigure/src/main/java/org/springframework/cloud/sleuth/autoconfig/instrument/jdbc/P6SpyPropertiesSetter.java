@@ -38,7 +38,6 @@ import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
 import org.springframework.beans.factory.support.BeanDefinitionRegistry;
 import org.springframework.beans.factory.support.BeanDefinitionRegistryPostProcessor;
-import org.springframework.cloud.sleuth.instrument.jdbc.P6SpyProperties;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.core.env.ConfigurableEnvironment;
 
@@ -93,9 +92,11 @@ class P6SpyPropertiesSetter implements BeanDefinitionRegistryPostProcessor, Clos
 			}
 		}
 		if (isEnableLogging && !initialP6SpyOptions.containsKey("appender")) {
-			P6SpyProperties.P6SpyLogging logging = P6SpyProperties.P6SpyLogging
-					.valueOf(environment.getProperty("spring.sleuth.jdbc.decorator.datasource.p6spy.logging",
-							String.class, P6SpyProperties.P6SpyLogging.SLF4J.toString()).toUpperCase());
+			TraceDataSourceDecoratorProperties.P6SpyProperties.P6SpyLogging logging = TraceDataSourceDecoratorProperties.P6SpyProperties.P6SpyLogging
+					.valueOf(environment
+							.getProperty("spring.sleuth.jdbc.decorator.datasource.p6spy.logging", String.class,
+									TraceDataSourceDecoratorProperties.P6SpyProperties.P6SpyLogging.SLF4J.toString())
+							.toUpperCase());
 			switch (logging) {
 			case SYSOUT:
 				System.setProperty("p6spy.config.appender", "com.p6spy.engine.spy.appender.StdoutLogger");

@@ -30,6 +30,7 @@ import net.ttddyy.dsproxy.support.ProxyDataSource;
 import net.ttddyy.dsproxy.transform.ParameterTransformer;
 import net.ttddyy.dsproxy.transform.QueryTransformer;
 
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -39,6 +40,7 @@ import org.springframework.cloud.sleuth.instrument.jdbc.DataSourceNameResolver;
 import org.springframework.cloud.sleuth.instrument.jdbc.DataSourceProxyBuilderCustomizer;
 import org.springframework.cloud.sleuth.instrument.jdbc.DataSourceProxyConnectionIdManagerProvider;
 import org.springframework.cloud.sleuth.instrument.jdbc.DataSourceProxyDataSourceDecorator;
+import org.springframework.cloud.sleuth.instrument.jdbc.DataSourceProxyProperties;
 import org.springframework.cloud.sleuth.instrument.jdbc.TraceListenerStrategySpanCustomizer;
 import org.springframework.cloud.sleuth.instrument.jdbc.TraceQueryExecutionListener;
 import org.springframework.context.annotation.Bean;
@@ -74,7 +76,16 @@ class DataSourceProxyConfiguration {
 				parameterTransformer.getIfAvailable(() -> null), queryTransformer.getIfAvailable(() -> null),
 				resultSetProxyLogicFactory.getIfAvailable(() -> null),
 				dataSourceProxyConnectionIdManagerProvider.getIfAvailable(() -> null),
-				dataSourceDecoratorProperties.getDatasourceProxy());
+				props(dataSourceDecoratorProperties));
+	}
+
+	private DataSourceProxyProperties props(TraceDataSourceDecoratorProperties dataSourceDecoratorProperties) {
+		TraceDataSourceDecoratorProperties.DataSourceProxyProperties originalProxy = dataSourceDecoratorProperties
+				.getDatasourceProxy();
+		DataSourceProxyProperties props = new DataSourceProxyProperties();
+		BeanUtils.copyProperties(originalProxy, props);
+		props.setLogging(DataSourceProxyProperties.DataSourceProxyLogging.valueOf(originalProxy.getLogging().name()));
+		return props;
 	}
 
 	@Bean

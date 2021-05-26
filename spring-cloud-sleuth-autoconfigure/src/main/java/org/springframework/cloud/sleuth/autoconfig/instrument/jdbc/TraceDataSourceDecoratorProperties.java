@@ -20,11 +20,12 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.regex.Pattern;
+
+import net.ttddyy.dsproxy.QueryCountHolder;
+import net.ttddyy.dsproxy.support.ProxyDataSourceBuilder;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.boot.context.properties.NestedConfigurationProperty;
-import org.springframework.cloud.sleuth.instrument.jdbc.DataSourceProxyProperties;
-import org.springframework.cloud.sleuth.instrument.jdbc.P6SpyProperties;
 import org.springframework.cloud.sleuth.instrument.jdbc.TraceType;
 
 /**
@@ -51,10 +52,8 @@ public class TraceDataSourceDecoratorProperties {
 	 */
 	private List<TraceType> includes = Arrays.asList(TraceType.CONNECTION, TraceType.QUERY, TraceType.FETCH);
 
-	@NestedConfigurationProperty
 	private DataSourceProxyProperties datasourceProxy = new DataSourceProxyProperties();
 
-	@NestedConfigurationProperty
 	private P6SpyProperties p6spy = new P6SpyProperties();
 
 	public boolean isEnabled() {
@@ -95,6 +94,409 @@ public class TraceDataSourceDecoratorProperties {
 
 	public void setP6spy(P6SpyProperties p6spy) {
 		this.p6spy = p6spy;
+	}
+
+	/**
+	 * Properties for datasource-proxy.
+	 */
+	public static class DataSourceProxyProperties {
+
+		/**
+		 * Logging to use for logging queries.
+		 */
+		private DataSourceProxyLogging logging = DataSourceProxyLogging.SLF4J;
+
+		/**
+		 * Query configuration.
+		 */
+		private Query query = new Query();
+
+		/**
+		 * Slow query configuration.
+		 */
+		private SlowQuery slowQuery = new SlowQuery();
+
+		/**
+		 * Use multiline output for logging query.
+		 *
+		 * @see ProxyDataSourceBuilder#multiline()
+		 */
+		private boolean multiline = true;
+
+		/**
+		 * Use json output for logging query.
+		 *
+		 * @see ProxyDataSourceBuilder#asJson()
+		 */
+		private boolean jsonFormat = false;
+
+		/**
+		 * Creates listener to count queries.
+		 *
+		 * @see ProxyDataSourceBuilder#countQuery()
+		 * @see QueryCountHolder
+		 */
+		private boolean countQuery = false;
+
+		public DataSourceProxyLogging getLogging() {
+			return logging;
+		}
+
+		public void setLogging(DataSourceProxyLogging logging) {
+			this.logging = logging;
+		}
+
+		public Query getQuery() {
+			return query;
+		}
+
+		public void setQuery(Query query) {
+			this.query = query;
+		}
+
+		public SlowQuery getSlowQuery() {
+			return slowQuery;
+		}
+
+		public void setSlowQuery(SlowQuery slowQuery) {
+			this.slowQuery = slowQuery;
+		}
+
+		public boolean isMultiline() {
+			return multiline;
+		}
+
+		public void setMultiline(boolean multiline) {
+			this.multiline = multiline;
+		}
+
+		public boolean isJsonFormat() {
+			return jsonFormat;
+		}
+
+		public void setJsonFormat(boolean jsonFormat) {
+			this.jsonFormat = jsonFormat;
+		}
+
+		public boolean isCountQuery() {
+			return countQuery;
+		}
+
+		public void setCountQuery(boolean countQuery) {
+			this.countQuery = countQuery;
+		}
+
+		/**
+		 * Properties to configure query logging listener.
+		 */
+		public static class Query {
+
+			/**
+			 * Enable logging all queries to the log.
+			 */
+			private boolean enableLogging = true;
+
+			/**
+			 * Name of query logger.
+			 */
+			private String loggerName;
+
+			/**
+			 * Severity of query logger.
+			 */
+			private String logLevel = "DEBUG";
+
+			public boolean isEnableLogging() {
+				return enableLogging;
+			}
+
+			public void setEnableLogging(boolean enableLogging) {
+				this.enableLogging = enableLogging;
+			}
+
+			public String getLoggerName() {
+				return loggerName;
+			}
+
+			public void setLoggerName(String loggerName) {
+				this.loggerName = loggerName;
+			}
+
+			public String getLogLevel() {
+				return logLevel;
+			}
+
+			public void setLogLevel(String logLevel) {
+				this.logLevel = logLevel;
+			}
+
+		}
+
+		/**
+		 * Properties to configure slow query logging listener.
+		 */
+		public static class SlowQuery {
+
+			/**
+			 * Enable logging slow queries to the log.
+			 */
+			private boolean enableLogging = true;
+
+			/**
+			 * Name of slow query logger.
+			 */
+			private String loggerName;
+
+			/**
+			 * Severity of slow query logger.
+			 */
+			private String logLevel = "WARN";
+
+			/**
+			 * Number of seconds to consider query as slow.
+			 */
+			private long threshold = 300;
+
+			boolean isEnableLogging() {
+				return enableLogging;
+			}
+
+			public void setEnableLogging(boolean enableLogging) {
+				this.enableLogging = enableLogging;
+			}
+
+			public String getLoggerName() {
+				return loggerName;
+			}
+
+			public void setLoggerName(String loggerName) {
+				this.loggerName = loggerName;
+			}
+
+			public String getLogLevel() {
+				return logLevel;
+			}
+
+			public void setLogLevel(String logLevel) {
+				this.logLevel = logLevel;
+			}
+
+			public long getThreshold() {
+				return threshold;
+			}
+
+			public void setThreshold(long threshold) {
+				this.threshold = threshold;
+			}
+
+		}
+
+		/**
+		 * Query logging listener is the most used listener that logs executing query with
+		 * actual parameters to. You can pick one of the following proxy logging
+		 * mechanisms.
+		 */
+		public enum DataSourceProxyLogging {
+
+			/**
+			 * Log using System.out.
+			 */
+			SYSOUT,
+
+			/**
+			 * Log using SLF4J.
+			 */
+			SLF4J,
+
+			/**
+			 * Log using Commons.
+			 */
+			COMMONS,
+
+			/**
+			 * Log using Java Util Logging.
+			 */
+			JUL
+
+		}
+
+	}
+
+	/**
+	 * Properties for configuring p6spy.
+	 */
+	public static class P6SpyProperties {
+
+		/**
+		 * Enables logging JDBC events.
+		 */
+		private boolean enableLogging = true;
+
+		/**
+		 * Enables multiline output.
+		 */
+		private boolean multiline = true;
+
+		/**
+		 * Logging to use for logging queries.
+		 */
+		private P6SpyLogging logging = P6SpyLogging.SLF4J;
+
+		/**
+		 * Name of log file to use (only with logging=file).
+		 */
+		private String logFile = "spy.log";
+
+		/**
+		 * Custom log format.
+		 */
+		private String logFormat;
+
+		/**
+		 * Tracing related properties.
+		 */
+		private P6SpyTracing tracing = new P6SpyTracing();
+
+		/**
+		 * Class file to use (only with logging=custom). The class must implement
+		 * {@link com.p6spy.engine.spy.appender.FormattedLogger}.
+		 */
+		private String customAppenderClass;
+
+		/**
+		 * Log filtering related properties.
+		 */
+		private P6SpyLogFilter logFilter = new P6SpyLogFilter();
+
+		public boolean isEnableLogging() {
+			return enableLogging;
+		}
+
+		public void setEnableLogging(boolean enableLogging) {
+			this.enableLogging = enableLogging;
+		}
+
+		public boolean isMultiline() {
+			return multiline;
+		}
+
+		public void setMultiline(boolean multiline) {
+			this.multiline = multiline;
+		}
+
+		public P6SpyLogging getLogging() {
+			return logging;
+		}
+
+		public void setLogging(P6SpyLogging logging) {
+			this.logging = logging;
+		}
+
+		public String getLogFile() {
+			return logFile;
+		}
+
+		public void setLogFile(String logFile) {
+			this.logFile = logFile;
+		}
+
+		public String getLogFormat() {
+			return logFormat;
+		}
+
+		public void setLogFormat(String logFormat) {
+			this.logFormat = logFormat;
+		}
+
+		public P6SpyTracing getTracing() {
+			return tracing;
+		}
+
+		public void setTracing(P6SpyTracing tracing) {
+			this.tracing = tracing;
+		}
+
+		public String getCustomAppenderClass() {
+			return customAppenderClass;
+		}
+
+		public void setCustomAppenderClass(String customAppenderClass) {
+			this.customAppenderClass = customAppenderClass;
+		}
+
+		public P6SpyLogFilter getLogFilter() {
+			return logFilter;
+		}
+
+		public void setLogFilter(P6SpyLogFilter logFilter) {
+			this.logFilter = logFilter;
+		}
+
+		/**
+		 * P6Spy logging options.
+		 */
+		public enum P6SpyLogging {
+
+			/**
+			 * Log using System.out.
+			 */
+			SYSOUT,
+
+			/**
+			 * Log using SLF4J.
+			 */
+			SLF4J,
+
+			/**
+			 * Log to file.
+			 */
+			FILE,
+
+			/**
+			 * Custom logging.
+			 */
+			CUSTOM
+
+		}
+
+		public static class P6SpyTracing {
+
+			/**
+			 * Report the effective sql string (with '?' replaced with real values) to
+			 * tracing systems.
+			 * <p>
+			 * NOTE this setting does not affect the logging message.
+			 */
+			private boolean includeParameterValues = true;
+
+			public boolean isIncludeParameterValues() {
+				return includeParameterValues;
+			}
+
+			public void setIncludeParameterValues(boolean includeParameterValues) {
+				this.includeParameterValues = includeParameterValues;
+			}
+
+		}
+
+		public static class P6SpyLogFilter {
+
+			/**
+			 * Use regex pattern to filter log messages. Only matched messages will be
+			 * logged.
+			 */
+			private Pattern pattern;
+
+			public Pattern getPattern() {
+				return pattern;
+			}
+
+			public void setPattern(Pattern pattern) {
+				this.pattern = pattern;
+			}
+
+		}
+
 	}
 
 }

@@ -300,13 +300,13 @@ Fully qualified name of the enclosing class `org.springframework.cloud.sleuth.in
 
 Fully qualified name of the enclosing class `org.springframework.cloud.sleuth.instrument.jdbc.SleuthJdbcSpan`
 
-IMPORTANT: All tags and events must be prefixed with `sql.` prefix!
+IMPORTANT: All tags and events must be prefixed with `jdbc.` prefix!
 
 .Tag Keys
 |===
 |Name | Description
-|sql.datasource.driver|Name of the JDBC datasource driver.
-|sql.datasource.pool|Name of the JDBC datasource pool.
+|jdbc.datasource.driver|Name of the JDBC datasource driver.
+|jdbc.datasource.pool|Name of the JDBC datasource pool.
 |===
 
 === Jdbc Query Span
@@ -317,20 +317,20 @@ IMPORTANT: All tags and events must be prefixed with `sql.` prefix!
 
 Fully qualified name of the enclosing class `org.springframework.cloud.sleuth.instrument.jdbc.SleuthJdbcSpan`
 
-IMPORTANT: All tags and events must be prefixed with `sql.` prefix!
+IMPORTANT: All tags and events must be prefixed with `jdbc.` prefix!
 
 .Tag Keys
 |===
 |Name | Description
-|sql.query|The SQL query value.
-|sql.row-count|Number of SQL rows.
+|jdbc.query|The SQL query value.
+|jdbc.row-count|Number of SQL rows.
 |===
 
 .Event Values
 |===
 |Name | Description
-|sql.commit|When the transaction gets commited.
-|sql.rollback|When the transaction gets rolled back.
+|jdbc.commit|When the transaction gets commited.
+|jdbc.rollback|When the transaction gets rolled back.
 |===
 
 === Jdbc Result Set Span
@@ -341,20 +341,20 @@ IMPORTANT: All tags and events must be prefixed with `sql.` prefix!
 
 Fully qualified name of the enclosing class `org.springframework.cloud.sleuth.instrument.jdbc.SleuthJdbcSpan`
 
-IMPORTANT: All tags and events must be prefixed with `sql.` prefix!
+IMPORTANT: All tags and events must be prefixed with `jdbc.` prefix!
 
 .Tag Keys
 |===
 |Name | Description
-|sql.query|The SQL query value.
-|sql.row-count|Number of SQL rows.
+|jdbc.query|The SQL query value.
+|jdbc.row-count|Number of SQL rows.
 |===
 
 .Event Values
 |===
 |Name | Description
-|sql.commit|When the transaction gets commited.
-|sql.rollback|When the transaction gets rolled back.
+|jdbc.commit|When the transaction gets commited.
+|jdbc.rollback|When the transaction gets rolled back.
 |===
 
 === Kafka Consumer Span

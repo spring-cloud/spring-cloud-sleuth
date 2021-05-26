@@ -3,7 +3,7 @@
 
 include::_attributes.adoc[]
 
-In this section, we describe how to customize various parts of Spring Cloud Sleuth.
+In this section, we describe how to customize various parts of Spring Cloud Sleuth. Please check the <<appendix.adoc#sleuth-spans,appendix>> for the list of spans, tags and events.
 
 [[sleuth-kafka-integration]]
 == Apache Kafka
@@ -694,5 +694,9 @@ runtimeOnly "p6spy:p6spy:${p6spyVersion}"
 runtimeOnly "net.ttddyy:datasource-proxy:${datasourceProxyVersion}"
 ----
 ====
+
+Please check the <<appendix.adoc#appendix,appendix>> page under `spring.sleuth.jdbc.decorator.datasource.p6spy` for all p6spy configuration options and `spring.sleuth.jdbc.decorator.datasource.datasource-proxy` for all datasource proxy configuration options.
+
+You can configure P6Spy manually using one of available configuration methods. For more information please refer to the http://p6spy.readthedocs.io/en/latest/configandusage.html[P6Spy Configuration Guide].
 
 In order to disable this instrumentation set `spring.sleuth.jdbc.decorator.datasource.enabled` to `false`.
