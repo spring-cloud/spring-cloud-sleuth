@@ -15,4 +15,4 @@ The reference documentation consists of the following sections:
 <<project-features.adoc#features,{project-full-name} Features>> :: Span creation, context propagation, and more.
 <<howto.adoc#howto,"`How-to`" Guides>> :: Add sampling, propagate remote tags, and more.
 <<integrations.adoc#sleuth-integration,{project-full-name} Integrations>> :: Instrumentation configuration, context propagation, and more.
-<<appendix.adoc#appendix,Appendices>> :: Configuration properties.
+<<appendix.adoc#appendix,Appendices>> :: Span definitions and configuration properties.

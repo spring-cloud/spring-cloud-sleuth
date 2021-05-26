@@ -3,7 +3,7 @@
 
 include::_attributes.adoc[]
 
-In this section, we describe how to customize various parts of Spring Cloud Sleuth.
+In this section, we describe how to customize various parts of Spring Cloud Sleuth. Please check the <<appendix.adoc#sleuth-spans,appendix>> for the list of spans, tags and events.
 
 [[sleuth-kafka-integration]]
 == Apache Kafka
@@ -650,3 +650,53 @@ This feature is available for all tracer implementations.
 
 We're adding an instrumented Tomcat's `Valve` that originates the span.
 In order to disable this instrumentation set `spring.sleuth.web.tomcat.enabled` to `false`.
+
+
+[[sleuth-jdbc-integration]]
+== Spring JDBC
+
+This feature is available for all tracer implementations. It has been ported from the https://github.com/gavlyukovskiy/spring-boot-data-source-decorator/[spring-boot-datasource-decorator] project.
+
+We're decorating  `DataSource`s in a trace representation. We delegate actual proxying to either https://github.com/p6spy/p6spy[p6spy] or https://github.com/ttddyy/datasource-proxy[datasource-proxy]. In order to use this feature you need to have them on the classpath.
+
+====
+[source,xml,indent=0,subs="verbatim,attributes",role="primary"]
+.P6Spy Maven
+----
+<dependency>
+    <groupId>p6spy</groupId>
+    <artifactId>p6spy</artifactId>
+    <version>${p6spy.version}</version>
+    <scope>runtime</scope>
+</dependency>
+----
+
+[source,yml,indent=0,subs="verbatim,attributes",role="secondary"]
+.P6Spy Gradle
+----
+runtimeOnly "p6spy:p6spy:${p6spyVersion}"
+----
+
+[source,xml,indent=0,subs="verbatim,attributes",role="secondary"]
+.Datasource Proxy Maven
+----
+<dependency>
+    <groupId>net.ttddyy</groupId>
+    <artifactId>datasource-proxy</artifactId>
+    <version>${datasource-proxy.version}</version>
+    <scope>runtime</scope>
+</dependency>
+----
+
+[source,groovy,indent=0,subs="verbatim,attributes",role="secondary"]
+.Datasource Proxy Gradle
+----
+runtimeOnly "net.ttddyy:datasource-proxy:${datasourceProxyVersion}"
+----
+====
+
+Please check the <<appendix.adoc#appendix,appendix>> page under `spring.sleuth.jdbc.decorator.datasource.p6spy` for all p6spy configuration options and `spring.sleuth.jdbc.decorator.datasource.datasource-proxy` for all datasource proxy configuration options.
+
+You can configure P6Spy manually using one of available configuration methods. For more information please refer to the http://p6spy.readthedocs.io/en/latest/configandusage.html[P6Spy Configuration Guide].
+
+In order to disable this instrumentation set `spring.sleuth.jdbc.decorator.datasource.enabled` to `false`.

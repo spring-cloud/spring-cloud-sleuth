@@ -36,19 +36,24 @@ public class SleuthBaggageProperties {
 	private boolean correlationEnabled = true;
 
 	/**
+	 * List of fields that should be propagated over the wire.
 	 */
 	private List<String> correlationFields = new ArrayList<>();
 
+	/**
+	 * List of fields that should be accessible within the JVM process but not propagated
+	 * over the wire.
+	 */
 	private List<String> localFields = new ArrayList<>();
 
 	/**
 	 * List of fields that are referenced the same in-process as it is on the wire. For
 	 * example, the field "x-vcap-request-id" would be set as-is including the prefix.
-	 *
 	 */
 	private List<String> remoteFields = new ArrayList<>();
 
 	/**
+	 * List of fields that should automatically become tags.
 	 */
 	private List<String> tagFields = new ArrayList<>();
 

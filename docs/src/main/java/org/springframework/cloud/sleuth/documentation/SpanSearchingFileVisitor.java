@@ -99,6 +99,7 @@ class SpanSearchingFileVisitor extends SimpleFileVisitor<Path> {
 		}
 		String name = "";
 		String description = enumConstant.getJavaDoc().getText();
+		String prefix = "";
 		Collection<KeyValueEntry> tags = new TreeSet<>();
 		Collection<KeyValueEntry> events = new TreeSet<>();
 		for (MemberSource<EnumConstantSource.Body, ?> member : members) {
@@ -117,11 +118,12 @@ class SpanSearchingFileVisitor extends SimpleFileVisitor<Path> {
 			else if ("getEvents".equals(methodName)) {
 				events.addAll(keyValueEntries(myEnum, methodDeclaration, EventValue.class));
 			}
-			else {
-				return null;
+			else if ("prefix".equals(methodName)) {
+				prefix = readStringReturnValue(methodDeclaration);
 			}
 		}
-		return new SpanEntry(name, myEnum.getCanonicalName(), enumConstant.getName(), description, tags, events);
+		return new SpanEntry(name, myEnum.getCanonicalName(), enumConstant.getName(), description, prefix, tags,
+				events);
 	}
 
 	private Collection<KeyValueEntry> keyValueEntries(JavaEnumImpl myEnum, MethodDeclaration methodDeclaration,

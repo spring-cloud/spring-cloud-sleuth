@@ -292,6 +292,105 @@ Fully qualified name of the enclosing class `org.springframework.cloud.sleuth.in
 |deployer.start|When deployer started deploying the application.
 |===
 
+=== Jdbc Connection Span
+
+> Span created when a JDBC connection takes place.
+
+**Span name** `connection`.
+
+Fully qualified name of the enclosing class `org.springframework.cloud.sleuth.instrument.jdbc.SleuthJdbcSpan`
+
+IMPORTANT: All tags and events must be prefixed with `jdbc.` prefix!
+
+.Tag Keys
+|===
+|Name | Description
+|jdbc.datasource.driver|Name of the JDBC datasource driver.
+|jdbc.datasource.pool|Name of the JDBC datasource pool.
+|===
+
+=== Jdbc Query Span
+
+> Span created when a JDBC query gets executed.
+
+**Span name** `%s` - since it contains `%s`, the name is dynamic and will be resolved at runtime.
+
+Fully qualified name of the enclosing class `org.springframework.cloud.sleuth.instrument.jdbc.SleuthJdbcSpan`
+
+IMPORTANT: All tags and events must be prefixed with `jdbc.` prefix!
+
+.Tag Keys
+|===
+|Name | Description
+|jdbc.query|The SQL query value.
+|jdbc.row-count|Number of SQL rows.
+|===
+
+.Event Values
+|===
+|Name | Description
+|jdbc.commit|When the transaction gets commited.
+|jdbc.rollback|When the transaction gets rolled back.
+|===
+
+=== Jdbc Result Set Span
+
+> Span created when working with JDBC result set.
+
+**Span name** `result-set`.
+
+Fully qualified name of the enclosing class `org.springframework.cloud.sleuth.instrument.jdbc.SleuthJdbcSpan`
+
+IMPORTANT: All tags and events must be prefixed with `jdbc.` prefix!
+
+.Tag Keys
+|===
+|Name | Description
+|jdbc.query|The SQL query value.
+|jdbc.row-count|Number of SQL rows.
+|===
+
+.Event Values
+|===
+|Name | Description
+|jdbc.commit|When the transaction gets commited.
+|jdbc.rollback|When the transaction gets rolled back.
+|===
+
+=== Kafka Consumer Span
+
+> Span created on the Kafka consumer side.
+
+**Span name** `kafka.consume`.
+
+Fully qualified name of the enclosing class `org.springframework.cloud.sleuth.instrument.kafka.SleuthKafkaSpan`
+
+IMPORTANT: All tags and events must be prefixed with `kafka.` prefix!
+
+.Tag Keys
+|===
+|Name | Description
+|kafka.offset|Kafka offset number.
+|kafka.partition|Kafka partition number.
+|kafka.topic|Name of the Kafka topic.
+|===
+
+=== Kafka Producer Span
+
+> Span created on the Kafka consumer side.
+
+**Span name** `kafka.produce`.
+
+Fully qualified name of the enclosing class `org.springframework.cloud.sleuth.instrument.kafka.SleuthKafkaSpan`
+
+IMPORTANT: All tags and events must be prefixed with `kafka.` prefix!
+
+.Tag Keys
+|===
+|Name | Description
+|kafka.topic|Name of the Kafka topic.
+|===
+
 === Messaging Span
 
 > Span created when message is sent or received.
@@ -334,6 +433,41 @@ Fully qualified name of the enclosing class `org.springframework.cloud.sleuth.in
 |===
 |Name | Description
 |quartz.trigger|Name of the trigger.
+|===
+
+=== R2dbc Query Span
+
+> Span created on the Kafka consumer side.
+
+**Span name** `query`.
+
+Fully qualified name of the enclosing class `org.springframework.cloud.sleuth.instrument.r2dbc.SleuthR2dbcSpan`
+
+IMPORTANT: All tags and events must be prefixed with `r2dbc.` prefix!
+
+.Tag Keys
+|===
+|Name | Description
+|r2dbc.connection|Name of the R2DBC connection.
+|r2dbc.query[%s]|Name of the R2DBC query. (since the name contains `%s` the final value will be resolved at runtime)
+|r2dbc.thread|Name of the R2DBC thread.
+|===
+
+=== Rsocket Requester Span
+
+> Span created on the RSocket responder side.
+
+**Span name** `%s` - since it contains `%s`, the name is dynamic and will be resolved at runtime.
+
+Fully qualified name of the enclosing class `org.springframework.cloud.sleuth.instrument.rsocket.SleuthRSocketSpan`
+
+IMPORTANT: All tags and events must be prefixed with `rsocket.` prefix!
+
+.Tag Keys
+|===
+|Name | Description
+|rsocket.request-type|Name of the R2DBC thread.
+|rsocket.route|Name of the RSocket route.
 |===
 
 === Rsocket Responder Span
@@ -388,6 +522,27 @@ Fully qualified name of the enclosing class `org.springframework.cloud.sleuth.in
 **Span name** `%s` - since it contains `%s`, the name is dynamic and will be resolved at runtime.
 
 Fully qualified name of the enclosing class `org.springframework.cloud.sleuth.instrument.task.SleuthTaskSpan`
+
+=== Tx Span
+
+> Span created when there was no previous transaction. If there was one, we will continue it unless propagation is required.
+
+**Span name** `tx`.
+
+Fully qualified name of the enclosing class `org.springframework.cloud.sleuth.instrument.tx.SleuthTxSpan`
+
+IMPORTANT: All tags and events must be prefixed with `tx.` prefix!
+
+.Tag Keys
+|===
+|Name | Description
+|tx.isolation-level|Transaction isolation level.
+|tx.name|Transaction name.
+|tx.propagation-level|Transaction propagation level.
+|tx.read-only|Whether the transaction is read-only.
+|tx.timeout|Transaction timeout.
+|tx.transaction-manager|Name of the TransactionManager.
+|===
 
 === Web Filter Span
 

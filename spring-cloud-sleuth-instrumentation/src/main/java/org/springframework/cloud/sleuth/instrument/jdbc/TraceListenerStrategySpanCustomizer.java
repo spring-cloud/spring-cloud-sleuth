@@ -14,44 +14,30 @@
  * limitations under the License.
  */
 
-package org.springframework.cloud.sleuth;
+package org.springframework.cloud.sleuth.instrument.jdbc;
 
-import java.io.Closeable;
+import javax.sql.CommonDataSource;
+
+import org.springframework.cloud.sleuth.Span;
 
 /**
- * Container object for {@link Span} and its corresponding {@link Tracer.SpanInScope}.
+ * Customizer for {@link TraceListenerStrategy} client span.
  *
  * @author Marcin Grzejszczak
  * @since 3.1.0
  */
-public class SpanAndScope implements Closeable {
+public interface TraceListenerStrategySpanCustomizer<T extends CommonDataSource> {
 
-	private final Span span;
+	/**
+	 * Customizes the client database span.
+	 * @param spanBuilder span builder
+	 */
+	void customizeConnectionSpan(T dataSource, Span.Builder spanBuilder);
 
-	private final Tracer.SpanInScope scope;
-
-	public SpanAndScope(Span span, Tracer.SpanInScope scope) {
-		this.span = span;
-		this.scope = scope;
-	}
-
-	public Span getSpan() {
-		return this.span;
-	}
-
-	public Tracer.SpanInScope getScope() {
-		return this.scope;
-	}
-
-	@Override
-	public String toString() {
-		return "SpanAndScope{" + "span=" + this.span + '}';
-	}
-
-	@Override
-	public void close() {
-		this.scope.close();
-		this.span.end();
-	}
+	/**
+	 * @param dataSource data source for which we're building the span
+	 * @return {@code true} when this customizer can be applied
+	 */
+	boolean isApplicable(CommonDataSource dataSource);
 
 }

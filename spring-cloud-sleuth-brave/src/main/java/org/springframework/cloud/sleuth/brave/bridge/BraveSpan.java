@@ -98,6 +98,12 @@ public class BraveSpan implements Span {
 	}
 
 	@Override
+	public Span remoteIpAndPort(String ip, int port) {
+		this.delegate.remoteIpAndPort(ip, port);
+		return this;
+	}
+
+	@Override
 	public String toString() {
 		return this.delegate != null ? this.delegate.toString() : "null";
 	}

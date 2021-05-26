@@ -16,6 +16,8 @@
 
 package org.springframework.cloud.sleuth.instrument.r2dbc;
 
+import java.net.URI;
+
 import io.r2dbc.proxy.core.QueryExecutionInfo;
 import io.r2dbc.proxy.core.QueryInfo;
 import io.r2dbc.proxy.listener.ProxyExecutionListener;
@@ -84,7 +86,15 @@ public class TraceProxyExecutionListener implements ProxyExecutionListener {
 				.tag(SleuthR2dbcSpan.Tags.THREAD, executionInfo.getThreadName());
 		// @formatter:on
 		if (StringUtils.hasText(url)) {
-			builder.remoteUrl(url);
+			try {
+				URI uri = URI.create(url);
+				builder.remoteIpAndPort(uri.getHost(), uri.getPort());
+			}
+			catch (Exception e) {
+				if (log.isDebugEnabled()) {
+					log.debug("Failed to parse the url [" + url + "]. Won't set this value as atag");
+				}
+			}
 		}
 		return builder.start();
 	}

@@ -35,11 +35,13 @@ class SpanEntry implements Comparable<SpanEntry> {
 
 	final String description;
 
+	final String prefix;
+
 	final Collection<KeyValueEntry> tagKeys;
 
 	final Collection<KeyValueEntry> events;
 
-	SpanEntry(String name, String enclosingClass, String enumName, String description,
+	SpanEntry(String name, String enclosingClass, String enumName, String description, String prefix,
 			Collection<KeyValueEntry> tagKeys, Collection<KeyValueEntry> events) {
 		Assert.isTrue(StringUtils.hasText(name), "Span name must not be empty");
 		Assert.isTrue(StringUtils.hasText(description), "Span description must not be empty");
@@ -47,6 +49,7 @@ class SpanEntry implements Comparable<SpanEntry> {
 		this.enclosingClass = enclosingClass;
 		this.enumName = enumName;
 		this.description = description;
+		this.prefix = prefix;
 		this.tagKeys = tagKeys;
 		this.events = events;
 	}
@@ -89,6 +92,9 @@ class SpanEntry implements Comparable<SpanEntry> {
 			text.append(".");
 		}
 		text.append("\n\n").append("Fully qualified name of the enclosing class `").append(this.enclosingClass).append("`");
+		if (StringUtils.hasText(prefix)) {
+			text.append("\n\nIMPORTANT: All tags and events must be prefixed with `").append(this.prefix).append("` prefix!");
+		}
 		if (!tagKeys.isEmpty()) {
 			text.append("\n\n.Tag Keys\n|===\n|Name | Description\n").append(this.tagKeys.stream().map(KeyValueEntry::toString).collect(Collectors.joining("\n")))
 					.append("\n|===");
