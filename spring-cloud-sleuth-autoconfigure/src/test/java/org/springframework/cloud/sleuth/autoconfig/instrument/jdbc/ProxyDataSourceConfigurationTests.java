@@ -45,8 +45,7 @@ import org.springframework.boot.autoconfigure.context.PropertyPlaceholderAutoCon
 import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration;
 import org.springframework.boot.test.context.FilteredClassLoader;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
-import org.springframework.cloud.sleuth.Tracer;
-import org.springframework.cloud.sleuth.autoconfig.brave.BraveAutoConfiguration;
+import org.springframework.cloud.sleuth.autoconfig.TraceNoOpAutoConfiguration;
 import org.springframework.cloud.sleuth.instrument.jdbc.DataSourceProxyConnectionIdManagerProvider;
 import org.springframework.cloud.sleuth.instrument.jdbc.DataSourceWrapper;
 import org.springframework.context.annotation.Bean;
@@ -59,9 +58,10 @@ class ProxyDataSourceConfigurationTests {
 
 	private final ApplicationContextRunner contextRunner = new ApplicationContextRunner()
 			.withConfiguration(AutoConfigurations.of(DataSourceAutoConfiguration.class,
-					TraceDataSourceDecoratorAutoConfiguration.class, BraveAutoConfiguration.class,
-					TestSpanHandlerConfiguration.class, PropertyPlaceholderAutoConfiguration.class))
+					TraceJdbcAutoConfiguration.class, TraceNoOpAutoConfiguration.class,
+					PropertyPlaceholderAutoConfiguration.class))
 			.withPropertyValues("spring.datasource.initialization-mode=never",
+					"spring.sleuth.noop.enabled=true",
 					"spring.datasource.url:jdbc:h2:mem:testdb-" + ThreadLocalRandom.current().nextInt())
 			.withClassLoader(new FilteredClassLoader("com.p6spy"));
 
@@ -80,7 +80,7 @@ class ProxyDataSourceConfigurationTests {
 	@Test
 	void testRegisterLogAndSlowQueryLogByUsingSlf4j() {
 		ApplicationContextRunner contextRunner = this.contextRunner
-				.withPropertyValues("spring.sleuth.jdbc.datasource-proxy.logging:slf4j");
+				.withPropertyValues("spring.sleuth.jdbc.datasource-proxy.logging=slf4j");
 
 		contextRunner.run(context -> {
 			DataSource dataSource = context.getBean(DataSource.class);
@@ -95,7 +95,7 @@ class ProxyDataSourceConfigurationTests {
 	@Test
 	void testRegisterLogAndSlowQueryLogUsingSystemOut() {
 		ApplicationContextRunner contextRunner = this.contextRunner
-				.withPropertyValues("spring.sleuth.jdbc.datasource-proxy.logging:sysout");
+				.withPropertyValues("spring.sleuth.jdbc.datasource-proxy.logging=sysout");
 
 		contextRunner.run(context -> {
 			DataSource dataSource = context.getBean(DataSource.class);
@@ -104,14 +104,13 @@ class ProxyDataSourceConfigurationTests {
 			ChainListener chainListener = proxyDataSource.getProxyConfig().getQueryListener();
 			assertThat(chainListener.getListeners()).extracting("class").contains(SystemOutSlowQueryListener.class);
 			assertThat(chainListener.getListeners()).extracting("class").contains(SystemOutQueryLoggingListener.class);
-			assertThat(context.getBean(Tracer.class).currentSpan()).isNull();
 		});
 	}
 
 	@Test
 	void testRegisterLogAndSlowQueryLogUsingJUL() {
 		ApplicationContextRunner contextRunner = this.contextRunner
-				.withPropertyValues("spring.sleuth.jdbc.datasourceProxy.logging:jul");
+				.withPropertyValues("spring.sleuth.jdbc.datasourceProxy.logging=jul");
 
 		contextRunner.run(context -> {
 			DataSource dataSource = context.getBean(DataSource.class);
@@ -120,14 +119,13 @@ class ProxyDataSourceConfigurationTests {
 			ChainListener chainListener = proxyDataSource.getProxyConfig().getQueryListener();
 			assertThat(chainListener.getListeners()).extracting("class").contains(JULSlowQueryListener.class);
 			assertThat(chainListener.getListeners()).extracting("class").contains(JULQueryLoggingListener.class);
-			assertThat(context.getBean(Tracer.class).currentSpan()).isNull();
 		});
 	}
 
 	@Test
 	void testRegisterLogAndSlowQueryLogUsingApacheCommons() {
 		ApplicationContextRunner contextRunner = this.contextRunner
-				.withPropertyValues("spring.sleuth.jdbc.datasourceProxy.logging:commons");
+				.withPropertyValues("spring.sleuth.jdbc.datasourceProxy.logging=commons");
 
 		contextRunner.run(context -> {
 			DataSource dataSource = context.getBean(DataSource.class);
@@ -136,7 +134,6 @@ class ProxyDataSourceConfigurationTests {
 			ChainListener chainListener = proxyDataSource.getProxyConfig().getQueryListener();
 			assertThat(chainListener.getListeners()).extracting("class").contains(CommonsSlowQueryListener.class);
 			assertThat(chainListener.getListeners()).extracting("class").contains(CommonsQueryLoggingListener.class);
-			assertThat(context.getBean(Tracer.class).currentSpan()).isNull();
 		});
 	}
 
@@ -153,7 +150,6 @@ class ProxyDataSourceConfigurationTests {
 			QueryTransformer queryTransformer = context.getBean(QueryTransformer.class);
 			assertThat(proxyDataSource.getProxyConfig().getParameterTransformer()).isSameAs(parameterTransformer);
 			assertThat(proxyDataSource.getProxyConfig().getQueryTransformer()).isSameAs(queryTransformer);
-			assertThat(context.getBean(Tracer.class).currentSpan()).isNull();
 		});
 	}
 
@@ -170,7 +166,6 @@ class ProxyDataSourceConfigurationTests {
 
 			ChainListener chainListener = proxyDataSource.getProxyConfig().getQueryListener();
 			assertThat(chainListener.getListeners()).contains(queryExecutionListener);
-			assertThat(context.getBean(Tracer.class).currentSpan()).isNull();
 		});
 	}
 
@@ -182,7 +177,6 @@ class ProxyDataSourceConfigurationTests {
 					.getDecoratedDataSource();
 
 			assertThat(proxyDataSource.getConnectionIdManager()).isInstanceOf(GlobalConnectionIdManager.class);
-			assertThat(context.getBean(Tracer.class).currentSpan()).isNull();
 		});
 	}
 
@@ -197,7 +191,6 @@ class ProxyDataSourceConfigurationTests {
 					.getDecoratedDataSource();
 
 			assertThat(proxyDataSource.getConnectionIdManager()).isInstanceOf(DefaultConnectionIdManager.class);
-			assertThat(context.getBean(Tracer.class).currentSpan()).isNull();
 		});
 	}
 

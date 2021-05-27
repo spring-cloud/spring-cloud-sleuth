@@ -74,7 +74,7 @@ public class TraceDataSourceDecoratorBeanPostProcessor implements BeanPostProces
 	public Object postProcessAfterInitialization(Object bean, String beanName) throws BeansException {
 		if (bean instanceof DataSource && !ScopedProxyUtils.isScopedTarget(beanName)
 				&& !this.excludedBeans.contains(beanName)) {
-			// TODO: This might be a problem
+			// TODO: This might be a problem - it can lead to eager bean init
 			Map<String, DataSourceDecorator> decorators = this.applicationContext
 					.getBeansOfType(DataSourceDecorator.class).entrySet().stream()
 					.sorted(Entry.comparingByValue(AnnotationAwareOrderComparator.INSTANCE))

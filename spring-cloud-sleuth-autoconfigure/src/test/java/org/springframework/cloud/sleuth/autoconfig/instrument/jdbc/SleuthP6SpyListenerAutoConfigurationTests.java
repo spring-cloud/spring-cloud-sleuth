@@ -27,8 +27,7 @@ import org.springframework.boot.autoconfigure.context.PropertyPlaceholderAutoCon
 import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration;
 import org.springframework.boot.test.context.FilteredClassLoader;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
-import org.springframework.cloud.sleuth.Tracer;
-import org.springframework.cloud.sleuth.autoconfig.brave.BraveAutoConfiguration;
+import org.springframework.cloud.sleuth.autoconfig.TraceNoOpAutoConfiguration;
 import org.springframework.cloud.sleuth.instrument.jdbc.TraceJdbcEventListener;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -37,10 +36,11 @@ class SleuthP6SpyListenerAutoConfigurationTests {
 
 	private final ApplicationContextRunner contextRunner = new ApplicationContextRunner()
 			.withConfiguration(AutoConfigurations.of(DataSourceAutoConfiguration.class,
-					TraceDataSourceDecoratorAutoConfiguration.class, BraveAutoConfiguration.class,
-					TestSpanHandlerConfiguration.class, PropertyPlaceholderAutoConfiguration.class))
+					TraceJdbcAutoConfiguration.class, TraceNoOpAutoConfiguration.class,
+					PropertyPlaceholderAutoConfiguration.class))
 			.withPropertyValues("spring.datasource.initialization-mode=never",
-					"spring.datasource.url:jdbc:h2:mem:testdb-" + ThreadLocalRandom.current().nextInt())
+					"spring.sleuth.noop.enabled=true",
+					"spring.datasource.url=jdbc:h2:mem:testdb-" + ThreadLocalRandom.current().nextInt())
 			.withClassLoader(new FilteredClassLoader("net.ttddyy.dsproxy"));
 
 	@Test
@@ -51,13 +51,12 @@ class SleuthP6SpyListenerAutoConfigurationTests {
 					.createJdbcEventListener();
 			assertThat(jdbcEventListener.getEventListeners()).extracting("class")
 					.contains(TraceJdbcEventListener.class);
-			assertThat(context.getBean(Tracer.class).currentSpan()).isNull();
 		});
 	}
 
 	@Test
 	void testDoesNotAddP6SpyListenerIfNoTracer() {
-		ApplicationContextRunner contextRunner = this.contextRunner.withPropertyValues("spring.sleuth.enabled:false");
+		ApplicationContextRunner contextRunner = this.contextRunner.withPropertyValues("spring.sleuth.enabled=false");
 
 		contextRunner.run(context -> {
 			assertThat(context).doesNotHaveBean(JdbcEventListenerFactory.class);

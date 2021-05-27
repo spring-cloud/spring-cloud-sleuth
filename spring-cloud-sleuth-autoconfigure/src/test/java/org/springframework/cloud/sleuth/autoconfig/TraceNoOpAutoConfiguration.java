@@ -16,6 +16,12 @@
 
 package org.springframework.cloud.sleuth.autoconfig;
 
+import java.lang.annotation.Documented;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
+
 import org.springframework.boot.autoconfigure.AutoConfigureBefore;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -42,6 +48,7 @@ import org.springframework.context.annotation.Import;
  * @since 2.0.0
  */
 @Configuration(proxyBeanMethods = false)
+@ConditionalOnSleuth
 @ConditionalOnProperty("spring.sleuth.noop.enabled")
 @AutoConfigureBefore(BraveAutoConfiguration.class)
 @Import(TraceConfiguration.class)
@@ -84,5 +91,14 @@ public class TraceNoOpAutoConfiguration {
 		}
 
 	}
+}
+
+@Retention(RetentionPolicy.RUNTIME)
+@Target({ ElementType.TYPE, ElementType.METHOD })
+@Documented
+@ConditionalOnProperty(value = "spring.sleuth.enabled", matchIfMissing = true)
+@interface ConditionalOnSleuth {
 
 }
+
+

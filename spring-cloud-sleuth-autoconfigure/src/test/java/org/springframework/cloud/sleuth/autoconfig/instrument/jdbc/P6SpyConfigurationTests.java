@@ -45,7 +45,7 @@ import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration;
 import org.springframework.boot.test.context.FilteredClassLoader;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
 import org.springframework.cloud.sleuth.Tracer;
-import org.springframework.cloud.sleuth.autoconfig.brave.BraveAutoConfiguration;
+import org.springframework.cloud.sleuth.autoconfig.TraceNoOpAutoConfiguration;
 import org.springframework.cloud.sleuth.instrument.jdbc.DataSourceWrapper;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -56,9 +56,10 @@ class P6SpyConfigurationTests {
 
 	private final ApplicationContextRunner contextRunner = new ApplicationContextRunner()
 			.withConfiguration(AutoConfigurations.of(DataSourceAutoConfiguration.class,
-					TraceDataSourceDecoratorAutoConfiguration.class, BraveAutoConfiguration.class,
-					TestSpanHandlerConfiguration.class, PropertyPlaceholderAutoConfiguration.class))
+					TraceJdbcAutoConfiguration.class, TraceNoOpAutoConfiguration.class,
+					PropertyPlaceholderAutoConfiguration.class))
 			.withPropertyValues("spring.datasource.initialization-mode=never",
+					"spring.sleuth.noop.enabled=true",
 					"spring.datasource.url:jdbc:h2:mem:testdb-" + ThreadLocalRandom.current().nextInt())
 			.withClassLoader(new FilteredClassLoader("net.ttddyy.dsproxy"));
 
@@ -105,14 +106,13 @@ class P6SpyConfigurationTests {
 			connection1.close();
 
 			assertThat(closingCountingListener.connectionCount).isEqualTo(2);
-			assertThat(context.getBean(Tracer.class).currentSpan()).isNull();
 		});
 	}
 
 	@Test
 	void testDoesNotRegisterLoggingListenerIfDisabled() {
 		ApplicationContextRunner contextRunner = this.contextRunner
-				.withPropertyValues("spring.sleuth.jdbc.p6spy.enable-logging:false");
+				.withPropertyValues("spring.sleuth.jdbc.p6spy.enable-logging=false");
 
 		contextRunner.run(context -> {
 			JdbcEventListenerFactory jdbcEventListenerFactory = context.getBean(JdbcEventListenerFactory.class);
@@ -161,7 +161,7 @@ class P6SpyConfigurationTests {
 	@Test
 	void testUseCustomLogger() {
 		ApplicationContextRunner contextRunner = this.contextRunner.withPropertyValues(
-				"spring.sleuth.jdbc.p6spy.logging:custom",
+				"spring.sleuth.jdbc.p6spy.logging=custom",
 				"spring.sleuth.jdbc.p6spy.custom-appender-class:" + LogAccumulator.class.getName());
 
 		contextRunner.run(context -> {
@@ -175,7 +175,7 @@ class P6SpyConfigurationTests {
 	@Test
 	void testLogFilterPattern() {
 		ApplicationContextRunner contextRunner = this.contextRunner.withPropertyValues(
-				"spring.sleuth.jdbc.p6spy.logging:custom",
+				"spring.sleuth.jdbc.p6spy.logging=custom",
 				"spring.sleuth.jdbc.p6spy.custom-appender-class:" + LogAccumulator.class.getName(),
 				"spring.sleuth.jdbc.p6spy.log-filter.pattern:.*table1.*");
 
@@ -196,7 +196,7 @@ class P6SpyConfigurationTests {
 	@Test
 	void testLogFilterPatternMatchAll() {
 		ApplicationContextRunner contextRunner = this.contextRunner.withPropertyValues(
-				"spring.sleuth.jdbc.p6spy.logging:custom",
+				"spring.sleuth.jdbc.p6spy.logging=custom",
 				"spring.sleuth.jdbc.p6spy.custom-appender-class:" + LogAccumulator.class.getName(),
 				"spring.sleuth.jdbc.p6spy.log-filter.pattern:.*");
 

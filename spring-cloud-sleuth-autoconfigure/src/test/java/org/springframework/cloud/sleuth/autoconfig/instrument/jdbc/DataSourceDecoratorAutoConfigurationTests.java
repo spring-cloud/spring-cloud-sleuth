@@ -34,7 +34,7 @@ import org.springframework.boot.autoconfigure.AutoConfigurations;
 import org.springframework.boot.autoconfigure.context.PropertyPlaceholderAutoConfiguration;
 import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
-import org.springframework.cloud.sleuth.autoconfig.brave.BraveAutoConfiguration;
+import org.springframework.cloud.sleuth.autoconfig.TraceNoOpAutoConfiguration;
 import org.springframework.cloud.sleuth.instrument.jdbc.DataSourceDecorator;
 import org.springframework.cloud.sleuth.instrument.jdbc.DataSourceWrapper;
 import org.springframework.context.annotation.Bean;
@@ -51,9 +51,10 @@ class DataSourceDecoratorAutoConfigurationTests {
 
 	private final ApplicationContextRunner contextRunner = new ApplicationContextRunner()
 			.withConfiguration(AutoConfigurations.of(DataSourceAutoConfiguration.class,
-					TraceDataSourceDecoratorAutoConfiguration.class, BraveAutoConfiguration.class,
-					TestSpanHandlerConfiguration.class, PropertyPlaceholderAutoConfiguration.class))
+					TraceJdbcAutoConfiguration.class, TraceNoOpAutoConfiguration.class,
+					PropertyPlaceholderAutoConfiguration.class))
 			.withPropertyValues("spring.datasource.initialization-mode=never",
+					"spring.sleuth.noop.enabled=true",
 					"spring.datasource.url:jdbc:h2:mem:testdb-" + ThreadLocalRandom.current().nextInt());
 
 	@Test
@@ -75,7 +76,7 @@ class DataSourceDecoratorAutoConfigurationTests {
 	@Test
 	void testNoDecoratingForExcludeBeans() {
 		ApplicationContextRunner contextRunner = this.contextRunner
-				.withPropertyValues("spring.sleuth.jdbc.excluded-beans:dataSource");
+				.withPropertyValues("spring.sleuth.jdbc.excluded-data-source-bean-names:dataSource");
 
 		contextRunner.run(context -> {
 			DataSource dataSource = context.getBean(DataSource.class);
@@ -194,7 +195,7 @@ class DataSourceDecoratorAutoConfigurationTests {
 	@Test
 	void testDecoratingCanBeDisabledForSpecificBeans() {
 		ApplicationContextRunner contextRunner = this.contextRunner
-				.withPropertyValues("spring.sleuth.jdbc.excluded-beans:secondDataSource")
+				.withPropertyValues("spring.sleuth.jdbc.excluded-data-source-bean-names:secondDataSource")
 				.withUserConfiguration(TestMultiDataSourceConfiguration.class);
 
 		contextRunner.run(context -> {

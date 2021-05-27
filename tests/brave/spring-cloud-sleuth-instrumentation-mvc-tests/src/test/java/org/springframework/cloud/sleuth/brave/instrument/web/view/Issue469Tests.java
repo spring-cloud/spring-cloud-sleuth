@@ -17,6 +17,7 @@
 package org.springframework.cloud.sleuth.brave.instrument.web.view;
 
 import brave.test.TestSpanHandler;
+import org.awaitility.Awaitility;
 import org.junit.jupiter.api.Test;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -49,7 +50,7 @@ public class Issue469Tests {
 			then(e).hasMessageContaining("404");
 		}
 
-		then(this.spans).isNotEmpty();
+		Awaitility.await().untilAsserted(() -> then(this.spans).isNotEmpty());
 	}
 
 	private int port() {

@@ -92,10 +92,10 @@ class P6SpyPropertiesSetter implements BeanDefinitionRegistryPostProcessor, Clos
 			}
 		}
 		if (isEnableLogging && !initialP6SpyOptions.containsKey("appender")) {
-			TraceDataSourceDecoratorProperties.P6SpyProperties.P6SpyLogging logging = TraceDataSourceDecoratorProperties.P6SpyProperties.P6SpyLogging
+			TraceJdbcProperties.P6SpyProperties.P6SpyLogging logging = TraceJdbcProperties.P6SpyProperties.P6SpyLogging
 					.valueOf(environment
 							.getProperty("spring.sleuth.jdbc.p6spy.logging", String.class,
-									TraceDataSourceDecoratorProperties.P6SpyProperties.P6SpyLogging.SLF4J.toString())
+									TraceJdbcProperties.P6SpyProperties.P6SpyLogging.SLF4J.toString())
 							.toUpperCase());
 			switch (logging) {
 			case SYSOUT:

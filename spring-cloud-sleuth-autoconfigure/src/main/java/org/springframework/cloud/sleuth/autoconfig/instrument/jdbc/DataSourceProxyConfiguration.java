@@ -22,7 +22,6 @@ import java.util.List;
 import net.ttddyy.dsproxy.listener.MethodExecutionListener;
 import net.ttddyy.dsproxy.listener.QueryCountStrategy;
 import net.ttddyy.dsproxy.listener.QueryExecutionListener;
-import net.ttddyy.dsproxy.listener.SingleQueryCountHolder;
 import net.ttddyy.dsproxy.proxy.GlobalConnectionIdManager;
 import net.ttddyy.dsproxy.proxy.ResultSetProxyLogicFactory;
 import net.ttddyy.dsproxy.proxy.SimpleResultSetProxyLogicFactory;
@@ -53,6 +52,7 @@ import org.springframework.context.annotation.Bean;
  * @author Arthur Gavlyukovskiy
  */
 @ConditionalOnClass(ProxyDataSource.class)
+@ConditionalOnProperty(name = "spring.sleuth.jdbc.datasource-proxy.enabled", havingValue = "true", matchIfMissing = true)
 class DataSourceProxyConfiguration {
 
 	@Bean
@@ -70,17 +70,17 @@ class DataSourceProxyConfiguration {
 			ObjectProvider<QueryTransformer> queryTransformer,
 			ObjectProvider<ResultSetProxyLogicFactory> resultSetProxyLogicFactory,
 			ObjectProvider<DataSourceProxyConnectionIdManagerProvider> dataSourceProxyConnectionIdManagerProvider,
-			TraceDataSourceDecoratorProperties dataSourceDecoratorProperties) {
+			TraceJdbcProperties traceJdbcProperties) {
 		return new DataSourceProxyBuilderCustomizer(queryCountStrategy.getIfAvailable(() -> null),
 				listeners.getIfAvailable(() -> null), methodExecutionListeners.getIfAvailable(() -> null),
 				parameterTransformer.getIfAvailable(() -> null), queryTransformer.getIfAvailable(() -> null),
 				resultSetProxyLogicFactory.getIfAvailable(() -> null),
 				dataSourceProxyConnectionIdManagerProvider.getIfAvailable(() -> null),
-				props(dataSourceDecoratorProperties));
+				props(traceJdbcProperties));
 	}
 
-	private DataSourceProxyProperties props(TraceDataSourceDecoratorProperties dataSourceDecoratorProperties) {
-		TraceDataSourceDecoratorProperties.DataSourceProxyProperties originalProxy = dataSourceDecoratorProperties
+	private DataSourceProxyProperties props(TraceJdbcProperties traceJdbcProperties) {
+		TraceJdbcProperties.DataSourceProxyProperties originalProxy = traceJdbcProperties
 				.getDatasourceProxy();
 		DataSourceProxyProperties props = new DataSourceProxyProperties();
 		BeanUtils.copyProperties(originalProxy, props);
@@ -96,15 +96,8 @@ class DataSourceProxyConfiguration {
 	}
 
 	@Bean
-	@ConditionalOnMissingBean
-	@ConditionalOnProperty(value = "spring.sleuth.jdbc.datasource-proxy.count-query", havingValue = "true")
-	QueryCountStrategy queryCountStrategy() {
-		return new SingleQueryCountHolder();
-	}
-
-	@Bean
 	TraceQueryExecutionListener traceQueryExecutionListener(Tracer tracer,
-			TraceDataSourceDecoratorProperties dataSourceDecoratorProperties,
+			TraceJdbcProperties dataSourceDecoratorProperties,
 			ObjectProvider<List<TraceListenerStrategySpanCustomizer>> customizers) {
 		return new TraceQueryExecutionListener(tracer, dataSourceDecoratorProperties.getIncludes(),
 				customizers.getIfAvailable(ArrayList::new));
