@@ -28,8 +28,9 @@ public abstract class TracingQueryExecutionListenerTests extends TracingListener
 	@Override
 	ApplicationContextRunner parentContextRunner() {
 		return new ApplicationContextRunner()
-				.withConfiguration(AutoConfigurations.of(DataSourceAutoConfiguration.class,
-						TraceJdbcAutoConfiguration.class, autoConfiguration(), PropertyPlaceholderAutoConfiguration.class))
+				.withConfiguration(
+						AutoConfigurations.of(DataSourceAutoConfiguration.class, TraceJdbcAutoConfiguration.class,
+								autoConfiguration(), PropertyPlaceholderAutoConfiguration.class))
 				.withUserConfiguration(testConfiguration())
 				.withPropertyValues("spring.datasource.initialization-mode=never",
 						"spring.datasource.url:jdbc:h2:mem:testdb-baz", "spring.datasource.hikari.pool-name=test")

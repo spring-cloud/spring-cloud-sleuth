@@ -52,7 +52,8 @@ import org.springframework.context.annotation.Bean;
  * @author Arthur Gavlyukovskiy
  */
 @ConditionalOnClass(ProxyDataSource.class)
-@ConditionalOnProperty(name = "spring.sleuth.jdbc.datasource-proxy.enabled", havingValue = "true", matchIfMissing = true)
+@ConditionalOnProperty(name = "spring.sleuth.jdbc.datasource-proxy.enabled", havingValue = "true",
+		matchIfMissing = true)
 class DataSourceProxyConfiguration {
 
 	@Bean
@@ -75,13 +76,11 @@ class DataSourceProxyConfiguration {
 				listeners.getIfAvailable(() -> null), methodExecutionListeners.getIfAvailable(() -> null),
 				parameterTransformer.getIfAvailable(() -> null), queryTransformer.getIfAvailable(() -> null),
 				resultSetProxyLogicFactory.getIfAvailable(() -> null),
-				dataSourceProxyConnectionIdManagerProvider.getIfAvailable(() -> null),
-				props(traceJdbcProperties));
+				dataSourceProxyConnectionIdManagerProvider.getIfAvailable(() -> null), props(traceJdbcProperties));
 	}
 
 	private DataSourceProxyProperties props(TraceJdbcProperties traceJdbcProperties) {
-		TraceJdbcProperties.DataSourceProxyProperties originalProxy = traceJdbcProperties
-				.getDatasourceProxy();
+		TraceJdbcProperties.DataSourceProxyProperties originalProxy = traceJdbcProperties.getDatasourceProxy();
 		DataSourceProxyProperties props = new DataSourceProxyProperties();
 		BeanUtils.copyProperties(originalProxy, props);
 		props.setLogging(DataSourceProxyProperties.DataSourceProxyLogging.valueOf(originalProxy.getLogging().name()));

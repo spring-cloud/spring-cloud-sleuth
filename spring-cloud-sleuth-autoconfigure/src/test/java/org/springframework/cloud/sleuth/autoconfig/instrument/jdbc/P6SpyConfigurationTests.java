@@ -44,7 +44,6 @@ import org.springframework.boot.autoconfigure.context.PropertyPlaceholderAutoCon
 import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration;
 import org.springframework.boot.test.context.FilteredClassLoader;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
-import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.autoconfig.TraceNoOpAutoConfiguration;
 import org.springframework.cloud.sleuth.instrument.jdbc.DataSourceWrapper;
 import org.springframework.context.annotation.Bean;
@@ -55,11 +54,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 class P6SpyConfigurationTests {
 
 	private final ApplicationContextRunner contextRunner = new ApplicationContextRunner()
-			.withConfiguration(AutoConfigurations.of(DataSourceAutoConfiguration.class,
-					TraceJdbcAutoConfiguration.class, TraceNoOpAutoConfiguration.class,
-					PropertyPlaceholderAutoConfiguration.class))
-			.withPropertyValues("spring.datasource.initialization-mode=never",
-					"spring.sleuth.noop.enabled=true",
+			.withConfiguration(
+					AutoConfigurations.of(DataSourceAutoConfiguration.class, TraceJdbcAutoConfiguration.class,
+							TraceNoOpAutoConfiguration.class, PropertyPlaceholderAutoConfiguration.class))
+			.withPropertyValues("spring.datasource.initialization-mode=never", "spring.sleuth.noop.enabled=true",
 					"spring.datasource.url:jdbc:h2:mem:testdb-" + ThreadLocalRandom.current().nextInt())
 			.withClassLoader(new FilteredClassLoader("net.ttddyy.dsproxy"));
 

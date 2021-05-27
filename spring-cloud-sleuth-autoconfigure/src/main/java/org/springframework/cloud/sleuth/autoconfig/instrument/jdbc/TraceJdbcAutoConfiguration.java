@@ -52,7 +52,8 @@ public class TraceJdbcAutoConfiguration {
 	@ConditionalOnBean(DataSourceDecorator.class)
 	static TraceDataSourceDecoratorBeanPostProcessor traceDataSourceDecoratorBeanPostProcessor(
 			TraceJdbcProperties dataSourceDecoratorProperties) {
-		return new TraceDataSourceDecoratorBeanPostProcessor(dataSourceDecoratorProperties.getExcludedDataSourceBeanNames());
+		return new TraceDataSourceDecoratorBeanPostProcessor(
+				dataSourceDecoratorProperties.getExcludedDataSourceBeanNames());
 	}
 
 	@Bean

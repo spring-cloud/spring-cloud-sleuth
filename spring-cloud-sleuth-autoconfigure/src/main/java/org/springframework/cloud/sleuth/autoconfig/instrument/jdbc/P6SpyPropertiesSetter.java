@@ -93,10 +93,11 @@ class P6SpyPropertiesSetter implements BeanDefinitionRegistryPostProcessor, Clos
 		}
 		if (isEnableLogging && !initialP6SpyOptions.containsKey("appender")) {
 			TraceJdbcProperties.P6SpyProperties.P6SpyLogging logging = TraceJdbcProperties.P6SpyProperties.P6SpyLogging
-					.valueOf(environment
-							.getProperty("spring.sleuth.jdbc.p6spy.logging", String.class,
-									TraceJdbcProperties.P6SpyProperties.P6SpyLogging.SLF4J.toString())
-							.toUpperCase());
+					.valueOf(
+							environment
+									.getProperty("spring.sleuth.jdbc.p6spy.logging", String.class,
+											TraceJdbcProperties.P6SpyProperties.P6SpyLogging.SLF4J.toString())
+									.toUpperCase());
 			switch (logging) {
 			case SYSOUT:
 				System.setProperty("p6spy.config.appender", "com.p6spy.engine.spy.appender.StdoutLogger");

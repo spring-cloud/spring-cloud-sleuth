@@ -76,7 +76,8 @@ abstract class TracingListenerStrategyTests {
 
 	@Test
 	void testShouldAddSpanForConnectionWithFixedRemoteServiceName() {
-		parentContextRunner().withPropertyValues("spring.datasource.url:jdbc:h2:mem:testdb-baz?sleuthServiceName=aaaabbbb")
+		parentContextRunner()
+				.withPropertyValues("spring.datasource.url:jdbc:h2:mem:testdb-baz?sleuthServiceName=aaaabbbb")
 				.run(context -> {
 					DataSource dataSource = context.getBean(DataSource.class);
 					TestSpanHandler spanReporter = context.getBean(TestSpanHandler.class);

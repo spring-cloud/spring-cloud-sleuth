@@ -91,6 +91,7 @@ public class TraceNoOpAutoConfiguration {
 		}
 
 	}
+
 }
 
 @Retention(RetentionPolicy.RUNTIME)
@@ -100,5 +101,3 @@ public class TraceNoOpAutoConfiguration {
 @interface ConditionalOnSleuth {
 
 }
-
-

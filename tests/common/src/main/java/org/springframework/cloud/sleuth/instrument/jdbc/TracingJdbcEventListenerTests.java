@@ -38,8 +38,7 @@ public abstract class TracingJdbcEventListenerTests extends TracingListenerStrat
 
 	protected final ApplicationContextRunner contextRunner = new ApplicationContextRunner()
 			.withConfiguration(AutoConfigurations.of(DataSourceAutoConfiguration.class,
-					TraceJdbcAutoConfiguration.class, autoConfiguration(),
-					PropertyPlaceholderAutoConfiguration.class))
+					TraceJdbcAutoConfiguration.class, autoConfiguration(), PropertyPlaceholderAutoConfiguration.class))
 			.withUserConfiguration(testConfiguration())
 			.withPropertyValues("spring.datasource.initialization-mode=never",
 					"spring.datasource.url=jdbc:h2:mem:testdb-baz", "spring.datasource.hikari.pool-name=test")

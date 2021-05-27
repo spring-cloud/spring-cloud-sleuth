@@ -121,7 +121,8 @@ public class TraceAsyncIntegrationTests {
 		Awaitility.await().atMost(5, SECONDS).untilAsserted(() -> {
 			then(TraceAsyncIntegrationTests.this.classPerformingAsyncLogic.getSpan().context().traceId())
 					.isEqualTo(span.context().traceId());
-			List<MutableSpan> webSpans = this.spans.spans().stream().filter(mutableSpan -> mutableSpan.traceId().equalsIgnoreCase(span.context().traceIdString()))
+			List<MutableSpan> webSpans = this.spans.spans().stream()
+					.filter(mutableSpan -> mutableSpan.traceId().equalsIgnoreCase(span.context().traceIdString()))
 					.collect(Collectors.toList());
 			then(webSpans).hasSize(2);
 			// HTTP
