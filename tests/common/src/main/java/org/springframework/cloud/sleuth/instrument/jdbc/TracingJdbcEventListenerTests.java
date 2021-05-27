@@ -21,8 +21,6 @@ import java.sql.PreparedStatement;
 
 import javax.sql.DataSource;
 
-import brave.handler.MutableSpan;
-import brave.test.TestSpanHandler;
 import org.junit.jupiter.api.Test;
 
 import org.springframework.boot.autoconfigure.AutoConfigurations;
@@ -31,6 +29,8 @@ import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration;
 import org.springframework.boot.test.context.FilteredClassLoader;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
 import org.springframework.cloud.sleuth.autoconfig.instrument.jdbc.TraceJdbcAutoConfiguration;
+import org.springframework.cloud.sleuth.exporter.FinishedSpan;
+import org.springframework.cloud.sleuth.test.TestSpanHandler;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -64,14 +64,14 @@ public abstract class TracingJdbcEventListenerTests extends TracingListenerStrat
 					preparedStatement.executeUpdate();
 					connection.close();
 
-					assertThat(spanReporter.spans()).hasSize(2);
-					MutableSpan connectionSpan = spanReporter.spans().get(1);
-					MutableSpan statementSpan = spanReporter.spans().get(0);
-					assertThat(connectionSpan.name()).isEqualTo("connection");
-					assertThat(statementSpan.name()).isEqualTo("update");
-					assertThat(statementSpan.tags()).containsEntry(SPAN_SQL_QUERY_TAG_NAME,
+					assertThat(spanReporter.reportedSpans()).hasSize(2);
+					FinishedSpan connectionSpan = spanReporter.reportedSpans().get(1);
+					FinishedSpan statementSpan = spanReporter.reportedSpans().get(0);
+					assertThat(connectionSpan.getName()).isEqualTo("connection");
+					assertThat(statementSpan.getName()).isEqualTo("update");
+					assertThat(statementSpan.getTags()).containsEntry(SPAN_SQL_QUERY_TAG_NAME,
 							"UPDATE INFORMATION_SCHEMA.TABLES SET table_Name = ? WHERE 0 = ?");
-					assertThat(statementSpan.tags()).containsEntry(SPAN_ROW_COUNT_TAG_NAME, "0");
+					assertThat(statementSpan.getTags()).containsEntry(SPAN_ROW_COUNT_TAG_NAME, "0");
 				});
 	}
 

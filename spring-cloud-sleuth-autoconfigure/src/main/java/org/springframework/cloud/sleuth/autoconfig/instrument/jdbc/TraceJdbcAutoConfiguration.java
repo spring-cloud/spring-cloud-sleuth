@@ -27,6 +27,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.cloud.sleuth.Tracer;
+import org.springframework.cloud.sleuth.autoconfig.brave.BraveAutoConfiguration;
 import org.springframework.cloud.sleuth.instrument.jdbc.DataSourceDecorator;
 import org.springframework.cloud.sleuth.instrument.jdbc.DataSourceNameResolver;
 import org.springframework.cloud.sleuth.instrument.jdbc.TraceHikariListenerStrategySpanCustomizer;
@@ -44,7 +45,7 @@ import org.springframework.context.annotation.Import;
 @EnableConfigurationProperties(TraceJdbcProperties.class)
 @ConditionalOnProperty(name = "spring.sleuth.jdbc.enabled", havingValue = "true", matchIfMissing = true)
 @ConditionalOnBean({ DataSource.class, Tracer.class })
-@AutoConfigureAfter(DataSourceAutoConfiguration.class)
+@AutoConfigureAfter({ DataSourceAutoConfiguration.class, BraveAutoConfiguration.class })
 @Import({ P6SpyConfiguration.class, DataSourceProxyConfiguration.class })
 public class TraceJdbcAutoConfiguration {
 
