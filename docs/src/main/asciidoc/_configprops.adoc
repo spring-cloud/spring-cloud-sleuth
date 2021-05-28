@@ -27,7 +27,7 @@
 |spring.sleuth.jdbc.datasource-proxy.json-format | `false` | Use json output for logging query. @see ProxyDataSourceBuilder#asJson()
 |spring.sleuth.jdbc.datasource-proxy.logging |  | Logging to use for logging queries.
 |spring.sleuth.jdbc.datasource-proxy.multiline | `true` | Use multiline output for logging query. @see ProxyDataSourceBuilder#multiline()
-|spring.sleuth.jdbc.datasource-proxy.query.enable-logging | `true` | Enable logging all queries to the log.
+|spring.sleuth.jdbc.datasource-proxy.query.enable-logging | `false` | Enable logging all queries to the log.
 |spring.sleuth.jdbc.datasource-proxy.query.log-level | `DEBUG` | Severity of query logger.
 |spring.sleuth.jdbc.datasource-proxy.query.logger-name |  | Name of query logger.
 |spring.sleuth.jdbc.datasource-proxy.slow-query.log-level | `WARN` | Severity of slow query logger.
@@ -37,7 +37,7 @@
 |spring.sleuth.jdbc.excluded-data-source-bean-names |  | List of DataSource bean names that will not be decorated.
 |spring.sleuth.jdbc.includes |  | Which types of tracing we would like to include.
 |spring.sleuth.jdbc.p6spy.custom-appender-class |  | Class file to use (only with logging=custom). The class must implement {@link com.p6spy.engine.spy.appender.FormattedLogger}.
-|spring.sleuth.jdbc.p6spy.enable-logging | `true` | Enables logging JDBC events.
+|spring.sleuth.jdbc.p6spy.enable-logging | `false` | Enables logging JDBC events.
 |spring.sleuth.jdbc.p6spy.enabled | `true` | Should the p6spy tracing be enabled?
 |spring.sleuth.jdbc.p6spy.log-file | `spy.log` | Name of log file to use (only with logging=file).
 |spring.sleuth.jdbc.p6spy.log-filter.pattern |  | Use regex pattern to filter log messages. Only matched messages will be logged.

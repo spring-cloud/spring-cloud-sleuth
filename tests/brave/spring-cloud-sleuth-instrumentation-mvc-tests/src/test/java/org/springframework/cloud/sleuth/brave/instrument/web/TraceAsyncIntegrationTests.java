@@ -135,7 +135,9 @@ public class TraceAsyncIntegrationTests {
 
 	private void thenANewAsyncSpanGetsCreated() {
 		Awaitility.await().atMost(5, SECONDS).untilAsserted(() -> {
-			List<MutableSpan> spans = this.spans.spans().stream().filter(mutableSpan -> mutableSpan.name().equals("invoke-asynchronous-logic")).collect(Collectors.toList());
+			List<MutableSpan> spans = this.spans.spans().stream()
+					.filter(mutableSpan -> mutableSpan.name().equals("invoke-asynchronous-logic"))
+					.collect(Collectors.toList());
 			then(spans).hasSize(1);
 			MutableSpan storedSpan = spans.get(0);
 			then(storedSpan.name()).isEqualTo("invoke-asynchronous-logic");

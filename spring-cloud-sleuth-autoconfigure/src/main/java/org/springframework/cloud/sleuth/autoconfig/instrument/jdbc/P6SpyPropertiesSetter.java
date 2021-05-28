@@ -67,7 +67,7 @@ class P6SpyPropertiesSetter implements BeanDefinitionRegistryPostProcessor, Clos
 		ConfigurableEnvironment environment = this.context.getEnvironment();
 		String customModuleList = initialP6SpyOptions.get("modulelist");
 		boolean isEnableLogging = environment.getProperty("spring.sleuth.jdbc.p6spy.enable-logging", Boolean.class,
-				true);
+				false);
 		if (customModuleList != null) {
 			log.info("P6Spy modulelist is overridden, some p6spy configuration features will not be applied");
 		}

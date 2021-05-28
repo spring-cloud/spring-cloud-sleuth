@@ -57,7 +57,8 @@ class P6SpyConfigurationTests {
 			.withConfiguration(
 					AutoConfigurations.of(DataSourceAutoConfiguration.class, TraceJdbcAutoConfiguration.class,
 							TraceNoOpAutoConfiguration.class, PropertyPlaceholderAutoConfiguration.class))
-			.withPropertyValues("spring.datasource.initialization-mode=never", "spring.sleuth.noop.enabled=true",
+			.withPropertyValues("spring.datasource.initialization-mode=never",
+					"spring.sleuth.jdbc.p6spy.enable-logging=true", "spring.sleuth.noop.enabled=true",
 					"spring.datasource.url:jdbc:h2:mem:testdb-" + ThreadLocalRandom.current().nextInt())
 			.withClassLoader(new FilteredClassLoader("net.ttddyy.dsproxy"));
 
