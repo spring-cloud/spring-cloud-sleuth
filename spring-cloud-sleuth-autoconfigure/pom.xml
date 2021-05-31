@@ -213,6 +213,11 @@
 			<artifactId>HikariCP</artifactId>
 			<optional>true</optional>
 		</dependency>
+		<dependency>
+			<groupId>org.springframework.session</groupId>
+			<artifactId>spring-session-data-redis</artifactId>
+			<optional>true</optional>
+		</dependency>
 		<!-- BRAVE -->
 		<dependency>
 			<groupId>org.springframework.cloud</groupId>

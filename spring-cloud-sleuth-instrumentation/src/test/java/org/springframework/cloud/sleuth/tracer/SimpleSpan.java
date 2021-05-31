@@ -104,4 +104,11 @@ public class SimpleSpan implements Span {
 		return this;
 	}
 
+	@Override
+	public String toString() {
+		return "SimpleSpan{" + "tags=" + tags + ", started=" + started + ", ended=" + ended + ", throwable=" + throwable
+				+ ", remoteServiceName='" + remoteServiceName + '\'' + ", spanKind=" + spanKind + ", events=" + events
+				+ ", name='" + name + '\'' + '}';
+	}
+
 }
