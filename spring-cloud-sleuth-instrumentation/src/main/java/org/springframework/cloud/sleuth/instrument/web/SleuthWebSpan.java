@@ -33,7 +33,7 @@ enum SleuthWebSpan implements DocumentedSpan {
 
 		@Override
 		public TagKey[] getTagKeys() {
-			return Tags.values();
+			return TagKey.merge(Tags.values(), SecurityTags.values());
 		}
 
 	};
@@ -73,6 +73,76 @@ enum SleuthWebSpan implements DocumentedSpan {
 			@Override
 			public String getKey() {
 				return "http.status_code";
+			}
+		}
+
+	}
+
+	/**
+	 * Tags related to security.
+	 *
+	 * @author Marcin Grzejszczak
+	 * @since 3.1.0
+	 */
+	enum SecurityTags implements TagKey {
+
+		/**
+		 * Authorities assigned to the user.
+		 */
+		AUTHORITIES {
+			@Override
+			public String getKey() {
+				return "security.authentication.authorities";
+			}
+		},
+
+		/**
+		 * Whether user is authenticated.
+		 */
+		AUTHENTICATED {
+			@Override
+			public String getKey() {
+				return "security.authentication.authenticated";
+			}
+		},
+
+		/**
+		 * Whether principal is enabled.
+		 */
+		PRINCIPAL_ENABLED {
+			@Override
+			public String getKey() {
+				return "security.principal.enabled";
+			}
+		},
+
+		/**
+		 * Principal's authorities.
+		 */
+		PRINCIPAL_AUTHORITIES {
+			@Override
+			public String getKey() {
+				return "security.principal.authorities";
+			}
+		},
+
+		/**
+		 * Whether principal's account is non expired.
+		 */
+		PRINCIPAL_ACCOUNT_NON_EXPIRED {
+			@Override
+			public String getKey() {
+				return "security.principal.account-non-expired";
+			}
+		},
+
+		/**
+		 * Whether principal's credentials are non expired.
+		 */
+		PRINCIPAL_CREDENTIALS_NON_EXPIRED {
+			@Override
+			public String getKey() {
+				return "security.principal.credentials-non-expired";
 			}
 		}
 

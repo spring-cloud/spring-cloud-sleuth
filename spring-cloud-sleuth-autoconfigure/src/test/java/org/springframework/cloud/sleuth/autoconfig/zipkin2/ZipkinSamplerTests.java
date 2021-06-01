@@ -53,10 +53,12 @@ public class ZipkinSamplerTests {
 	}
 
 	@Configuration(proxyBeanMethods = false)
-	@EnableAutoConfiguration(exclude = { GatewayClassPathWarningAutoConfiguration.class, GatewayAutoConfiguration.class,
-			GatewayMetricsAutoConfiguration.class, ManagementWebSecurityAutoConfiguration.class,
-			MongoAutoConfiguration.class, QuartzAutoConfiguration.class, R2dbcAutoConfiguration.class,
-			R2dbcDataAutoConfiguration.class })
+	@EnableAutoConfiguration(
+			exclude = { GatewayClassPathWarningAutoConfiguration.class, GatewayAutoConfiguration.class,
+					GatewayMetricsAutoConfiguration.class, ManagementWebSecurityAutoConfiguration.class,
+					MongoAutoConfiguration.class, QuartzAutoConfiguration.class, R2dbcAutoConfiguration.class,
+					R2dbcDataAutoConfiguration.class },
+			excludeName = "org.springframework.cloud.gateway.config.GatewayRedisAutoConfiguration")
 	static class TestConfig {
 
 	}

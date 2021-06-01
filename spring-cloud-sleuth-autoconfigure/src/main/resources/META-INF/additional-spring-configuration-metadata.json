@@ -190,6 +190,12 @@
       "type": "java.lang.Boolean",
       "description": "Enable Spring Vault instrumentation.",
       "defaultValue": true
+    },
+    {
+      "name": "spring.sleuth.security.enabled",
+      "type": "java.lang.Boolean",
+      "description": "Enable Spring Security instrumentation.",
+      "defaultValue": true
     }
   ]
 }

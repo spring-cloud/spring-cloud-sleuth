@@ -17,6 +17,7 @@
 package org.springframework.cloud.sleuth.autoconfig.instrument.web;
 
 import org.springframework.beans.factory.BeanFactory;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
 import org.springframework.cloud.sleuth.CurrentTraceContext;
@@ -25,6 +26,7 @@ import org.springframework.cloud.sleuth.http.HttpServerHandler;
 import org.springframework.cloud.sleuth.instrument.web.TraceWebFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.config.web.server.ServerHttpSecurity;
 
 /**
  * {@link org.springframework.boot.autoconfigure.EnableAutoConfiguration
@@ -50,6 +52,18 @@ class TraceWebFluxConfiguration {
 	static TraceHandlerFunctionAdapterBeanPostProcessor traceHandlerFunctionAdapterBeanPostProcessor(
 			BeanFactory beanFactory) {
 		return new TraceHandlerFunctionAdapterBeanPostProcessor(beanFactory);
+	}
+
+	@Configuration(proxyBeanMethods = false)
+	@ConditionalOnClass(ServerHttpSecurity.class)
+	@ConditionalOnProperty(value = "spring.sleuth.security.enabled", matchIfMissing = true)
+	protected static class TraceSecurityWebFluxAutoConfiguration {
+
+		@Bean
+		static TraceWebFluxSecurityBeanPostProcessor traceWebFluxSecurityBeanPostProcessor() {
+			return new TraceWebFluxSecurityBeanPostProcessor();
+		}
+
 	}
 
 }

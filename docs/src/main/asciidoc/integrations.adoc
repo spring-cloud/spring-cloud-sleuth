@@ -651,6 +651,13 @@ This feature is available for all tracer implementations.
 We're adding an instrumented Tomcat's `Valve` that originates the span.
 In order to disable this instrumentation set `spring.sleuth.web.tomcat.enabled` to `false`.
 
+[[sleuth-security-integration]]
+== Spring Security
+
+This feature is available for all tracer implementations.
+
+We're injecting a custom filter into the Spring Security filter chains and we're tagging the existing span with security related tags.
+In order to disable this instrumentation set `spring.sleuth.security.enabled` to `false`.
 
 [[sleuth-jdbc-integration]]
 == Spring JDBC

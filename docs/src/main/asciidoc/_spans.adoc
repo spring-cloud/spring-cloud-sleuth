@@ -558,5 +558,11 @@ Fully qualified name of the enclosing class `org.springframework.cloud.sleuth.in
 |http.status_code|Response status code.
 |mvc.controller.class|Name of the class that is processing the request.
 |mvc.controller.method|Name of the method that is processing the request.
+|security.authentication.authenticated|Whether user is authenticated.
+|security.authentication.authorities|Authorities assigned to the user.
+|security.principal.account-non-expired|Whether principal's account is non expired.
+|security.principal.authorities|Principal's authorities.
+|security.principal.credentials-non-expired|Whether principal's credentials are non expired.
+|security.principal.enabled|Whether principal is enabled.
 |===
 

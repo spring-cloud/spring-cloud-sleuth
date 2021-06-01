@@ -16,15 +16,7 @@
 
 package org.springframework.cloud.sleuth.autoconfig.instrument.web;
 
-import java.io.IOException;
-
 import javax.servlet.DispatcherType;
-import javax.servlet.Filter;
-import javax.servlet.FilterChain;
-import javax.servlet.FilterConfig;
-import javax.servlet.ServletException;
-import javax.servlet.ServletRequest;
-import javax.servlet.ServletResponse;
 
 import org.apache.catalina.Valve;
 
@@ -41,13 +33,13 @@ import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.http.HttpServerHandler;
 import org.springframework.cloud.sleuth.instrument.web.TraceWebAspect;
 import org.springframework.cloud.sleuth.instrument.web.mvc.SpanCustomizingAsyncHandlerInterceptor;
-import org.springframework.cloud.sleuth.instrument.web.servlet.TracingFilter;
 import org.springframework.cloud.sleuth.instrument.web.tomcat.TraceValve;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
+import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 import org.springframework.web.servlet.handler.HandlerInterceptorAdapter;
 
@@ -93,6 +85,18 @@ class TraceWebServletConfiguration {
 	}
 
 	@Configuration(proxyBeanMethods = false)
+	@ConditionalOnClass(HttpSecurity.class)
+	@ConditionalOnProperty(value = "spring.sleuth.security.enabled", matchIfMissing = true)
+	protected static class TraceSecurityWebMvcAutoConfiguration {
+
+		@Bean
+		static TraceServletSecurityBeanPostProcessor traceServletSecurityBeanPostProcessor(BeanFactory beanFactory) {
+			return new TraceServletSecurityBeanPostProcessor(beanFactory);
+		}
+
+	}
+
+	@Configuration(proxyBeanMethods = false)
 	@ConditionalOnClass({ Valve.class, ConfigurableTomcatWebServerFactory.class })
 	@ConditionalOnProperty(value = "spring.sleuth.web.tomcat.enabled", matchIfMissing = true)
 	protected static class TraceTomcatConfiguration {
@@ -104,42 +108,6 @@ class TraceWebServletConfiguration {
 		WebServerFactoryCustomizer<ConfigurableTomcatWebServerFactory> traceTomcatWebServerFactoryCustomizer(
 				HttpServerHandler httpServerHandler, CurrentTraceContext currentTraceContext) {
 			return factory -> factory.addEngineValves(new TraceValve(httpServerHandler, currentTraceContext));
-		}
-
-	}
-
-	static final class LazyTracingFilter implements Filter {
-
-		private final BeanFactory beanFactory;
-
-		private Filter tracingFilter;
-
-		LazyTracingFilter(BeanFactory beanFactory) {
-			this.beanFactory = beanFactory;
-		}
-
-		@Override
-		public void init(FilterConfig filterConfig) throws ServletException {
-			tracingFilter().init(filterConfig);
-		}
-
-		@Override
-		public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain)
-				throws IOException, ServletException {
-			tracingFilter().doFilter(request, response, chain);
-		}
-
-		@Override
-		public void destroy() {
-			tracingFilter().destroy();
-		}
-
-		private Filter tracingFilter() {
-			if (this.tracingFilter == null) {
-				this.tracingFilter = TracingFilter.create(this.beanFactory.getBean(CurrentTraceContext.class),
-						this.beanFactory.getBean(HttpServerHandler.class));
-			}
-			return this.tracingFilter;
 		}
 
 	}
