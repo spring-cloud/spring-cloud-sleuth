@@ -79,7 +79,7 @@ import org.springframework.util.Assert;
  */
 final class ReactorHooksHelper {
 
-	public static final String LIFTER_NAME = "org.springframework.cloud.sleuth.instrument.reactor.ReactorHooksHelper.ScopePassingLifter";
+	static final String LIFTER_NAME = "org.springframework.cloud.sleuth.instrument.reactor.ReactorHooksHelper.ScopePassingLifter";
 
 	// need a way to determine SYNC sources to not add redundant scope passing decorator
 	// most of reactor-core SYNC sources are marked with SourceProducer interface
