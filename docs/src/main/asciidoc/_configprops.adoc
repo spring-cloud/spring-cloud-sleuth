@@ -75,6 +75,7 @@
 |spring.sleuth.sampler.refresh.enabled | `true` | Enable refresh scope for sampler.
 |spring.sleuth.scheduled.enabled | `true` | Enable tracing for {@link org.springframework.scheduling.annotation.Scheduled}.
 |spring.sleuth.scheduled.skip-pattern |  | Pattern for the fully qualified name of a class that should be skipped.
+|spring.sleuth.session.enabled | `true` | Enable Spring Session instrumentation.
 |spring.sleuth.span-filter.additional-span-name-patterns-to-ignore |  | Additional list of span names to ignore. Will be appended to {@link #spanNamePatternsToSkip}.
 |spring.sleuth.span-filter.enabled | `false` | Will turn on the default Sleuth handler mechanism. Might ignore exporting of certain spans;
 |spring.sleuth.span-filter.span-name-patterns-to-skip | `^catalogWatchTaskScheduler$` | List of span names to ignore. They will not be sent to external systems.

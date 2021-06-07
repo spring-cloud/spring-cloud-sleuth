@@ -33,6 +33,7 @@ import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.config.BeanPostProcessor;
 import org.springframework.cloud.sleuth.autoconfig.brave.instrument.redis.TraceRedisProperties;
+import org.springframework.cloud.sleuth.brave.instrument.redis.TraceLettuceClientResourcesBuilderCustomizer;
 import org.springframework.cloud.sleuth.internal.ContextUtil;
 
 /**
@@ -40,6 +41,7 @@ import org.springframework.cloud.sleuth.internal.ContextUtil;
  *
  * @author Marcin Grzejszczak
  * @since 3.0.0
+ * @deprecated please use {@link TraceLettuceClientResourcesBuilderCustomizer}.
  */
 public class TraceLettuceClientResourcesBeanPostProcessor implements BeanPostProcessor {
 
@@ -90,26 +92,27 @@ class LazyTracing implements io.lettuce.core.tracing.Tracing {
 
 	@Override
 	public TracerProvider getTracerProvider() {
-		if (ContextUtil.isContextUnusable(this.beanFactory)) {
-			return this.noOpTracing.getTracerProvider();
-		}
-		return braveTracing().getTracerProvider();
+		return () -> {
+			if (ContextUtil.isContextUnusable(beanFactory)) {
+				return noOpTracing.getTracerProvider().getTracer();
+			}
+			return braveTracing().getTracerProvider().getTracer();
+		};
 	}
 
 	@Override
 	public TraceContextProvider initialTraceContextProvider() {
-		if (ContextUtil.isContextUnusable(this.beanFactory)) {
-			return this.noOpTracing.initialTraceContextProvider();
-		}
-		return braveTracing().initialTraceContextProvider();
+		return () -> {
+			if (ContextUtil.isContextUnusable(beanFactory)) {
+				return noOpTracing.initialTraceContextProvider().getTraceContext();
+			}
+			return braveTracing().initialTraceContextProvider().getTraceContext();
+		};
 	}
 
 	@Override
 	public boolean isEnabled() {
-		if (ContextUtil.isContextUnusable(this.beanFactory)) {
-			return this.noOpTracing.isEnabled();
-		}
-		return braveTracing().isEnabled();
+		return true;
 	}
 
 	@Override
