@@ -17,7 +17,6 @@
 package org.springframework.cloud.sleuth.brave.instrument.redis;
 
 import io.lettuce.core.resource.ClientResources;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import org.springframework.beans.factory.annotation.Autowired;

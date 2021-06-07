@@ -19,8 +19,6 @@ package org.springframework.cloud.sleuth.brave.instrument.redis;
 import brave.Tracing;
 import io.lettuce.core.resource.ClientResources;
 import io.lettuce.core.tracing.BraveTracing;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 
 import org.springframework.beans.factory.config.BeanPostProcessor;
 
@@ -35,13 +33,13 @@ public class TraceLettuceClientResourcesBuilderCustomizer implements ClientResou
 	private final BraveTracing tracing;
 
 	public TraceLettuceClientResourcesBuilderCustomizer(Tracing tracing, String serviceName) {
-		this.tracing = BraveTracing.builder().tracing(tracing)
-				.excludeCommandArgsFromSpanTags()
-				.serviceName(serviceName).build();
+		this.tracing = BraveTracing.builder().tracing(tracing).excludeCommandArgsFromSpanTags().serviceName(serviceName)
+				.build();
 	}
 
 	@Override
 	public void customize(ClientResources.Builder builder) {
 		builder.tracing(this.tracing);
 	}
+
 }

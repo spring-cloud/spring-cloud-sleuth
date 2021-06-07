@@ -31,4 +31,5 @@ public interface ClientResourcesBuilderCustomizer {
 	 * @param builder builder to customize
 	 */
 	void customize(ClientResources.Builder builder);
+
 }

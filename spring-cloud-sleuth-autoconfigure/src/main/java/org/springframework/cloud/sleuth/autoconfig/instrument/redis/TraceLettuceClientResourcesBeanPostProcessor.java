@@ -241,4 +241,3 @@ enum NoOpTracing implements io.lettuce.core.tracing.Tracing, TraceContextProvide
 	}
 
 }
-
