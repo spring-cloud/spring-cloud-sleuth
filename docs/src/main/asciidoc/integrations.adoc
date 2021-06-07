@@ -415,7 +415,21 @@ include::{project-root}/benchmarks/src/main/java/org/springframework/cloud/sleut
 
 This feature is available for Brave tracer implementation.
 
-We set `tracing` property to Lettuce `ClientResources` instance to enable Brave tracing built in Lettuce .
+We set `tracing` property to Lettuce `ClientResources` instance to enable Brave tracing built in Lettuce.
+
+Spring Cloud Sleuth will provide a traced version of the `ClientResources` bean. If you have your own implementation of that bean, remember to customize the `ClientResources.Builder` with a stream of `ClientResourcesBuilderCustomizer`s like presented below:
+
+[source,java,indent=0]
+----
+	@Bean(destroyMethod = "shutdown")
+	DefaultClientResources myLettuceClientResources(ObjectProvider<ClientResourcesBuilderCustomizer> customizer) {
+		DefaultClientResources.Builder builder = DefaultClientResources.builder();
+		// setting up the builder manually
+		customizer.stream().forEach(c -> c.customize(builder));
+		return builder.build();
+	}
+----
+
 To disable Redis support, set the `spring.sleuth.redis.enabled` property to `false`.
 
 [[sleuth-runnablecallable-integration]]

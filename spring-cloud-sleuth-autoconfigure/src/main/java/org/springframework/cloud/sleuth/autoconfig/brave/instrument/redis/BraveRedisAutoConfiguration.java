@@ -17,17 +17,23 @@
 package org.springframework.cloud.sleuth.autoconfig.brave.instrument.redis;
 
 import brave.Tracing;
+import brave.sampler.Sampler;
 import io.lettuce.core.resource.ClientResources;
+import io.lettuce.core.resource.DefaultClientResources;
 import io.lettuce.core.tracing.BraveTracing;
 
-import org.springframework.beans.factory.BeanFactory;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
+import org.springframework.boot.autoconfigure.AutoConfigureBefore;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.cloud.sleuth.autoconfig.brave.BraveAutoConfiguration;
-import org.springframework.cloud.sleuth.autoconfig.instrument.redis.TraceLettuceClientResourcesBeanPostProcessor;
+import org.springframework.cloud.sleuth.brave.instrument.redis.ClientResourcesBuilderCustomizer;
+import org.springframework.cloud.sleuth.brave.instrument.redis.TraceLettuceClientResourcesBuilderCustomizer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -40,16 +46,37 @@ import org.springframework.context.annotation.Configuration;
  */
 @Configuration(proxyBeanMethods = false)
 @ConditionalOnProperty(value = "spring.sleuth.redis.enabled", matchIfMissing = true)
-@ConditionalOnBean({ Tracing.class, ClientResources.class })
+@ConditionalOnBean(Tracing.class)
 @AutoConfigureAfter({ BraveAutoConfiguration.class })
+@AutoConfigureBefore({ RedisAutoConfiguration.class })
 @EnableConfigurationProperties(TraceRedisProperties.class)
 @ConditionalOnClass(BraveTracing.class)
 public class BraveRedisAutoConfiguration {
 
+	// TODO: The customization auto configuration should come from Spring Boot
+	@Bean(destroyMethod = "shutdown")
+	@ConditionalOnMissingBean(ClientResources.class)
+	DefaultClientResources traceLettuceClientResources(ObjectProvider<ClientResourcesBuilderCustomizer> customizer) {
+		DefaultClientResources.Builder builder = DefaultClientResources.builder();
+		customizer.stream().forEach(c -> c.customize(builder));
+		return builder.build();
+	}
+
 	@Bean
-	static TraceLettuceClientResourcesBeanPostProcessor traceLettuceClientResourcesBeanPostProcessor(
-			BeanFactory beanFactory) {
-		return new TraceLettuceClientResourcesBeanPostProcessor(beanFactory);
+	TraceLettuceClientResourcesBuilderCustomizer traceLettuceClientResourcesBuilderCustomizer(Tracing tracing,
+			TraceRedisProperties traceRedisProperties, Sampler sampler) {
+		eagerlyInitializePotentiallyRefreshScopeSampler(sampler);
+		return new TraceLettuceClientResourcesBuilderCustomizer(tracing, traceRedisProperties.getRemoteServiceName());
+	}
+
+	/**
+	 * We need to do the eager method invocation. Since this might be @RefreshScope, a
+	 * proxy is being created. Trying to resolve the proxy from a different thread than
+	 * main can lead to cross thread locking.
+	 * @param sampler potentially refresh scope sampler
+	 */
+	private void eagerlyInitializePotentiallyRefreshScopeSampler(Sampler sampler) {
+		sampler.isSampled(0L);
 	}
 
 }

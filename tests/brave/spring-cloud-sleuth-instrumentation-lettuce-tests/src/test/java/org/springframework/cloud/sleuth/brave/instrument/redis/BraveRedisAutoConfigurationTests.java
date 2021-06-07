@@ -17,15 +17,12 @@
 package org.springframework.cloud.sleuth.brave.instrument.redis;
 
 import io.lettuce.core.resource.ClientResources;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
-import org.springframework.beans.BeansException;
-import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.cloud.sleuth.autoconfig.instrument.redis.TraceLettuceClientResourcesBeanPostProcessor;
-import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 import static org.assertj.core.api.BDDAssertions.then;
@@ -42,47 +39,18 @@ public class BraveRedisAutoConfigurationTests {
 	ClientResources clientResources;
 
 	@Autowired
-	TestTraceLettuceClientResourcesBeanPostProcessor traceLettuceClientResourcesBeanPostProcessor;
+	TraceLettuceClientResourcesBuilderCustomizer customizer;
 
 	@Test
 	public void tracing_should_be_set() {
-		then(this.traceLettuceClientResourcesBeanPostProcessor.tracingCalled).isTrue();
 		then(this.clientResources.tracing().isEnabled()).isTrue();
+		then(this.customizer).isNotNull();
 	}
 
 	@Configuration(proxyBeanMethods = false)
 	@EnableAutoConfiguration
 	protected static class Config {
 
-		@Bean
-		ClientResources clientResources() {
-			ClientResources clientResources = ClientResources.create();
-			then(clientResources.tracing().isEnabled()).isFalse();
-			return clientResources;
-		}
-
-		@Bean
-		static TestTraceLettuceClientResourcesBeanPostProcessor testTraceLettuceClientResourcesBeanPostProcessor(
-				BeanFactory beanFactory) {
-			return new TestTraceLettuceClientResourcesBeanPostProcessor(beanFactory);
-		}
-
-	}
-
-}
-
-class TestTraceLettuceClientResourcesBeanPostProcessor extends TraceLettuceClientResourcesBeanPostProcessor {
-
-	boolean tracingCalled = false;
-
-	TestTraceLettuceClientResourcesBeanPostProcessor(BeanFactory beanFactory) {
-		super(beanFactory);
-	}
-
-	@Override
-	public Object postProcessAfterInitialization(Object bean, String beanName) throws BeansException {
-		this.tracingCalled = true;
-		return super.postProcessAfterInitialization(bean, beanName);
 	}
 
 }
