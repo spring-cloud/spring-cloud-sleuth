@@ -56,6 +56,10 @@ import static org.springframework.cloud.sleuth.instrument.reactor.ReactorSleuth.
 public abstract class FlowsScopePassingSpanSubscriberTests {
 
 	static final String HOOK_KEY = "org.springframework.cloud.sleuth.autoconfig.instrument.reactor.TraceReactorAutoConfiguration.TraceReactorConfiguration";
+
+	// Cannot access
+	// org.springframework.cloud.sleuth.instrument.reactor.ReactorHooksHelper.LIFTER_NAME
+	// directly from this test so copy its value
 	static final String LIFTER_NAME = "org.springframework.cloud.sleuth.instrument.reactor.ReactorHooksHelper.ScopePassingLifter";
 
 	static {
