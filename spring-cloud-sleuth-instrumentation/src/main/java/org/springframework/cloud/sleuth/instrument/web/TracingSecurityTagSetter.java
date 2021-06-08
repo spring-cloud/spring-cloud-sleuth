@@ -39,19 +39,34 @@ final class TracingSecurityTagSetter {
 			log.debug("Will set security tags on span [" + span + "]");
 		}
 		AssertingSpan assertingSpan = AssertingSpan.of(SleuthWebSpan.WEB_FILTER_SPAN, span);
+
 		assertingSpan.tag(SecurityTags.AUTHORITIES,
 				StringUtils.collectionToCommaDelimitedString(authentication.getAuthorities()));
+
+		// we might have true even though it's an annonymous user - check
+		// AuthenticationTrustResolver
+		// instead of authenticated - is annonymous
+		// add also remember-me from AuthenticationTrustResolver
 		assertingSpan.tag(SecurityTags.AUTHENTICATED, String.valueOf(authentication.isAuthenticated()));
 		Object principal = authentication.getPrincipal();
 		if (principal instanceof User) {
 			User user = (User) principal;
 			assertingSpan.tag(SecurityTags.PRINCIPAL_ENABLED, String.valueOf(user.isEnabled()));
-			assertingSpan.tag(SecurityTags.PRINCIPAL_AUTHORITIES,
-					StringUtils.collectionToCommaDelimitedString(user.getAuthorities()));
 			assertingSpan.tag(SecurityTags.PRINCIPAL_ACCOUNT_NON_EXPIRED, String.valueOf(user.isAccountNonExpired()));
 			assertingSpan.tag(SecurityTags.PRINCIPAL_CREDENTIALS_NON_EXPIRED,
 					String.valueOf(user.isCredentialsNonExpired()));
 		}
+
+		/*
+		 *
+		 * Add the customizer interface UserSpanCustomizer {
+		 *
+		 * void customize(Span currentSpan, SecurityContextHolder contextHolder) {
+		 *
+		 * } }
+		 *
+		 */
+
 	}
 
 }

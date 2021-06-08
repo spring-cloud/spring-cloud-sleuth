@@ -117,16 +117,6 @@ enum SleuthWebSpan implements DocumentedSpan {
 		},
 
 		/**
-		 * Principal's authorities.
-		 */
-		PRINCIPAL_AUTHORITIES {
-			@Override
-			public String getKey() {
-				return "security.principal.authorities";
-			}
-		},
-
-		/**
 		 * Whether principal's account is non expired.
 		 */
 		PRINCIPAL_ACCOUNT_NON_EXPIRED {

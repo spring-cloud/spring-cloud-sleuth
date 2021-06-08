@@ -37,6 +37,7 @@ import org.springframework.web.filter.GenericFilterBean;
  * @author Marcin Grzejszczak
  * @since 3.1.0
  */
+// TODO: Check the DelegatingFilterProxy
 public class TracingSecurityServletFilter extends GenericFilterBean {
 
 	private final Tracer tracer;
@@ -48,11 +49,23 @@ public class TracingSecurityServletFilter extends GenericFilterBean {
 	@Override
 	public void doFilter(ServletRequest servletRequest, ServletResponse servletResponse, FilterChain filterChain)
 			throws ServletException, IOException {
+
+		// SecurityContextHolder.setContext();
+
+		// Object contextCleared;
+		// tracer.currentSpan().event("contexSet");
+
+		// actual clearing happens
+
 		SecurityContext securityContext = getContext();
 		if (securityContext != null) {
 			Span span = this.tracer.currentSpan();
 			if (span != null) {
-				TracingSecurityTagSetter.setSecurityTags(span, securityContext.getAuthentication());
+				Span nextSpan = this.tracer.nextSpan().start();
+				TracingSecurityTagSetter.setSecurityTags(nextSpan, securityContext.getAuthentication());
+				nextSpan.end();
+
+
 			}
 		}
 		filterChain.doFilter(servletRequest, servletResponse);

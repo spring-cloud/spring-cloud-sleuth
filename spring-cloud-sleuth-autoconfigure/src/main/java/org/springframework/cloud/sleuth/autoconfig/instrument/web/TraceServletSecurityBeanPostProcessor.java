@@ -35,6 +35,8 @@ class TraceServletSecurityBeanPostProcessor implements BeanPostProcessor {
 	public Object postProcessAfterInitialization(Object bean, String beanName) throws BeansException {
 		if (bean instanceof HttpSecurity) {
 			HttpSecurity httpSecurity = (HttpSecurity) bean;
+			// httpSecurity.addFilterAfter(TracingSecurityServletFilter.lazy(this.beanFactory),
+			// SecurityContextHolderAwareRequestFilter.class);
 			httpSecurity.addFilterAfter(TracingSecurityServletFilter.lazy(this.beanFactory), SwitchUserFilter.class);
 		}
 		return bean;
