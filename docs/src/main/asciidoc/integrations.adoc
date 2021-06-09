@@ -714,3 +714,11 @@ Please check the <<appendix.adoc#appendix,appendix>> page under `spring.sleuth.j
 You can configure P6Spy manually using one of available configuration methods. For more information please refer to the http://p6spy.readthedocs.io/en/latest/configandusage.html[P6Spy Configuration Guide].
 
 In order to disable this instrumentation set `spring.sleuth.jdbc.enabled` to `false`.
+
+[[sleuth-session-integration]]
+== Spring Session
+
+This feature is available for all tracer implementations.
+
+We're instrumenting the `Session` repositories that wraps all operations in a span.
+In order to disable this instrumentation set `spring.sleuth.session.enabled` to `false`.

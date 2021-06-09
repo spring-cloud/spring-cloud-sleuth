@@ -24,7 +24,7 @@ import org.springframework.cloud.client.circuitbreaker.CircuitBreaker;
 import org.springframework.cloud.sleuth.Tracer;
 
 /**
- * Aspec around {@link CircuitBreaker} creation.
+ * Aspect around {@link CircuitBreaker} creation.
  *
  * @author Marcin Grzejszczak
  * @since 3.0.0

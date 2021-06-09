@@ -43,6 +43,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.data.mongo.MongoDataAutoConfiguration;
 import org.springframework.boot.autoconfigure.data.r2dbc.R2dbcDataAutoConfiguration;
+import org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration;
 import org.springframework.boot.autoconfigure.mongo.MongoAutoConfiguration;
 import org.springframework.boot.autoconfigure.r2dbc.R2dbcAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -150,8 +151,8 @@ public class WebClientTests {
 
 	@Configuration(proxyBeanMethods = false)
 	@EnableAutoConfiguration(exclude = { GatewayClassPathWarningAutoConfiguration.class, GatewayAutoConfiguration.class,
-			R2dbcAutoConfiguration.class, R2dbcDataAutoConfiguration.class, MongoAutoConfiguration.class,
-			MongoDataAutoConfiguration.class })
+			R2dbcAutoConfiguration.class, R2dbcDataAutoConfiguration.class, RedisAutoConfiguration.class,
+			MongoAutoConfiguration.class, MongoDataAutoConfiguration.class })
 	@DisableSecurity
 	public static class TestConfiguration {
 

@@ -186,6 +186,12 @@
       "defaultValue": true
     },
     {
+      "name": "spring.sleuth.session.enabled",
+      "type": "java.lang.Boolean",
+      "description": "Enable Spring Session instrumentation.",
+      "defaultValue": true
+    },
+    {
       "name": "spring.sleuth.vault.enabled",
       "type": "java.lang.Boolean",
       "description": "Enable Spring Vault instrumentation.",

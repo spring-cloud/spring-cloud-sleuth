@@ -507,6 +507,46 @@ Fully qualified name of the enclosing class `org.springframework.cloud.sleuth.in
 |method|Method name that got annotated with @Scheduled.
 |===
 
+=== Session Create Span
+
+> Span created when a new session has to be created.
+
+**Span name** `session.create`.
+
+Fully qualified name of the enclosing class `org.springframework.cloud.sleuth.instrument.session.SleuthSessionSpan`
+
+=== Session Delete Span
+
+> Span created when a session is deleted.
+
+**Span name** `session.delete`.
+
+Fully qualified name of the enclosing class `org.springframework.cloud.sleuth.instrument.session.SleuthSessionSpan`
+
+=== Session Find Span
+
+> Span created when a new session is searched for.
+
+**Span name** `session.find`.
+
+Fully qualified name of the enclosing class `org.springframework.cloud.sleuth.instrument.session.SleuthSessionSpan`
+
+IMPORTANT: All tags and events must be prefixed with `session.` prefix!
+
+.Tag Keys
+|===
+|Name | Description
+|session.index.name|
+|===
+
+=== Session Save Span
+
+> Span created when a new session is saved.
+
+**Span name** `session.save`.
+
+Fully qualified name of the enclosing class `org.springframework.cloud.sleuth.instrument.session.SleuthSessionSpan`
+
 === Task Execution Listener Span
 
 > Span created within the lifecycle of a task.
