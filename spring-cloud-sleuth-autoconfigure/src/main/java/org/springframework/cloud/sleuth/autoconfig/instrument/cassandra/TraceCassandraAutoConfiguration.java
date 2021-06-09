@@ -16,11 +16,14 @@
 
 package org.springframework.cloud.sleuth.autoconfig.instrument.cassandra;
 
+import com.datastax.oss.driver.api.core.CqlSession;
+
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.AutoConfigureBefore;
 import org.springframework.boot.autoconfigure.cassandra.CassandraAutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.autoconfig.brave.BraveAutoConfiguration;
@@ -41,6 +44,7 @@ import org.springframework.context.annotation.Configuration;
 @ConditionalOnProperty(value = "spring.sleuth.cassandra.enabled", matchIfMissing = true)
 @AutoConfigureAfter(BraveAutoConfiguration.class)
 @AutoConfigureBefore(CassandraAutoConfiguration.class)
+@ConditionalOnClass(CqlSession.class)
 public class TraceCassandraAutoConfiguration {
 
 	@Bean

@@ -26,6 +26,7 @@ import org.springframework.boot.actuate.autoconfigure.security.servlet.Managemen
 import org.springframework.boot.autoconfigure.AutoConfigurations;
 import org.springframework.boot.autoconfigure.AutoConfigureBefore;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
+import org.springframework.boot.autoconfigure.cassandra.CassandraAutoConfiguration;
 import org.springframework.boot.autoconfigure.data.r2dbc.R2dbcDataAutoConfiguration;
 import org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration;
 import org.springframework.boot.autoconfigure.mongo.MongoAutoConfiguration;
@@ -120,7 +121,7 @@ public class TraceQuartzAutoConfigurationTest {
 			exclude = { GatewayClassPathWarningAutoConfiguration.class, GatewayAutoConfiguration.class,
 					GatewayMetricsAutoConfiguration.class, ManagementWebSecurityAutoConfiguration.class,
 					MongoAutoConfiguration.class, QuartzAutoConfiguration.class, R2dbcAutoConfiguration.class,
-					R2dbcDataAutoConfiguration.class, RedisAutoConfiguration.class },
+					R2dbcDataAutoConfiguration.class, RedisAutoConfiguration.class, CassandraAutoConfiguration.class },
 			excludeName = "org.springframework.cloud.gateway.config.GatewayRedisAutoConfiguration")
 	public static class EnableAutoConfig {
 
