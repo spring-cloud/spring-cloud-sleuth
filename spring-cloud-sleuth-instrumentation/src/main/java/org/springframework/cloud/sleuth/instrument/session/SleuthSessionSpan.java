@@ -73,24 +73,10 @@ enum SleuthSessionSpan implements DocumentedSpan {
 
 	enum Tags implements TagKey {
 
-		PRINCIPAL_NAME {
-			@Override
-			public String getKey() {
-				return "session.principal.name";
-			}
-		},
-
 		INDEX_NAME {
 			@Override
 			public String getKey() {
 				return "session.index.name";
-			}
-		},
-
-		INDEX_VALUE {
-			@Override
-			public String getKey() {
-				return "session.index.value";
 			}
 		}
 

@@ -22,6 +22,7 @@ import brave.sampler.Sampler;
 
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.data.r2dbc.R2dbcDataAutoConfiguration;
+import org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration;
 import org.springframework.boot.autoconfigure.jmx.JmxAutoConfiguration;
 import org.springframework.boot.autoconfigure.mongo.MongoAutoConfiguration;
 import org.springframework.boot.autoconfigure.quartz.QuartzAutoConfiguration;
@@ -74,8 +75,9 @@ public class MultipleHopsIntegrationTests
 	}
 
 	@Configuration(proxyBeanMethods = false)
-	@EnableAutoConfiguration(exclude = { MongoAutoConfiguration.class, QuartzAutoConfiguration.class,
-			JmxAutoConfiguration.class, R2dbcAutoConfiguration.class, R2dbcDataAutoConfiguration.class })
+	@EnableAutoConfiguration(
+			exclude = { MongoAutoConfiguration.class, QuartzAutoConfiguration.class, JmxAutoConfiguration.class,
+					R2dbcAutoConfiguration.class, R2dbcDataAutoConfiguration.class, RedisAutoConfiguration.class })
 	static class Config {
 
 		@Bean

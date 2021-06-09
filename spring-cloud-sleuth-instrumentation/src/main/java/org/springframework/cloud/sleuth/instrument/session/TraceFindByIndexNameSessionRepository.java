@@ -35,7 +35,6 @@ class TraceFindByIndexNameSessionRepository extends TraceSessionRepository imple
 	public Map findByPrincipalName(String principalName) {
 		AssertingSpan span = newSessionFindSpan();
 		try (Tracer.SpanInScope ws = this.tracer.withSpan(span.start())) {
-			span.tag(SleuthSessionSpan.Tags.PRINCIPAL_NAME, principalName);
 			return this.delegate.findByPrincipalName(principalName);
 		}
 		finally {
@@ -53,7 +52,6 @@ class TraceFindByIndexNameSessionRepository extends TraceSessionRepository imple
 		AssertingSpan span = newSessionFindSpan();
 		try (Tracer.SpanInScope ws = this.tracer.withSpan(span.start())) {
 			span.tag(SleuthSessionSpan.Tags.INDEX_NAME, indexName);
-			span.tag(SleuthSessionSpan.Tags.INDEX_VALUE, indexValue);
 			return this.delegate.findByIndexNameAndIndexValue(indexName, indexValue);
 		}
 		finally {

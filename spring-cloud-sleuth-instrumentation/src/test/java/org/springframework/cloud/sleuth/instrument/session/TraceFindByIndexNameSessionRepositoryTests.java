@@ -41,7 +41,6 @@ class TraceFindByIndexNameSessionRepositoryTests extends TraceSessionRepositoryT
 		verify(this.delegate).findByPrincipalName(any());
 		SimpleSpan lastSpan = this.simpleTracer.getLastSpan();
 		then(lastSpan.name).isEqualTo(SleuthSessionSpan.SESSION_FIND_SPAN.getName());
-		then(lastSpan.tags).containsEntry(SleuthSessionSpan.Tags.PRINCIPAL_NAME.getKey(), "foo");
 	}
 
 	@Test
@@ -51,8 +50,7 @@ class TraceFindByIndexNameSessionRepositoryTests extends TraceSessionRepositoryT
 		verify(this.delegate).findByIndexNameAndIndexValue(any(), any());
 		SimpleSpan lastSpan = this.simpleTracer.getLastSpan();
 		then(lastSpan.name).isEqualTo(SleuthSessionSpan.SESSION_FIND_SPAN.getName());
-		then(lastSpan.tags).containsEntry(SleuthSessionSpan.Tags.INDEX_NAME.getKey(), "indexName1")
-				.containsEntry(SleuthSessionSpan.Tags.INDEX_VALUE.getKey(), "indexValue1");
+		then(lastSpan.tags).containsEntry(SleuthSessionSpan.Tags.INDEX_NAME.getKey(), "indexName1");
 	}
 
 	@Override

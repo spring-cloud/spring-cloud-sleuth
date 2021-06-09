@@ -537,8 +537,6 @@ IMPORTANT: All tags and events must be prefixed with `session.` prefix!
 |===
 |Name | Description
 |session.index.name|
-|session.index.value|
-|session.principal.name|
 |===
 
 === Session Save Span
