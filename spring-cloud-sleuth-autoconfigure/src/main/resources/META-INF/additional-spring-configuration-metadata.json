@@ -192,6 +192,12 @@
       "defaultValue": true
     },
     {
+      "name": "spring.sleuth.cassandra.enabled",
+      "type": "java.lang.Boolean",
+      "description": "Enable Cassandra instrumentation.",
+      "defaultValue": true
+    },
+    {
       "name": "spring.sleuth.vault.enabled",
       "type": "java.lang.Boolean",
       "description": "Enable Spring Vault instrumentation.",
