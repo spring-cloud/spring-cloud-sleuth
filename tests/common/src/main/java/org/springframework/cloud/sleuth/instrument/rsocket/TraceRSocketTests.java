@@ -220,10 +220,8 @@ public abstract class TraceRSocketTests {
 	protected abstract Class testConfiguration();
 
 	private void thenSpanWasReportedWithTags(TestSpanHandler spans, String path, FrameType frameType) {
-		then(spans).hasSize(1);
-		// TODO: Preferred option would be : [api.c2.{name}]
-		FinishedSpan span = spans.get(0);
-		then(span.getName()).isEqualTo(frameType.name() + " " + path);
+		String expectedName = frameType.name() + " " + path;
+		FinishedSpan span = spans.reportedSpans().stream().filter(finished -> expectedName.equals(finished.getName())).findFirst().orElseThrow(() -> new AssertionError("Span with name [" + expectedName + "] not found"));
 		then(span.getTags()).containsEntry("messaging.controller.class",
 				"org.springframework.cloud.sleuth.instrument.rsocket.TraceRSocketTests$TestController");
 		then(span.getTags()).containsKey("messaging.controller.method");
