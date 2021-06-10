@@ -57,6 +57,11 @@ public abstract class FlowsScopePassingSpanSubscriberTests {
 
 	static final String HOOK_KEY = "org.springframework.cloud.sleuth.autoconfig.instrument.reactor.TraceReactorAutoConfiguration.TraceReactorConfiguration";
 
+	// Cannot access
+	// org.springframework.cloud.sleuth.instrument.reactor.ReactorHooksHelper.LIFTER_NAME
+	// directly from this test so copy its value
+	static final String LIFTER_NAME = "org.springframework.cloud.sleuth.instrument.reactor.ReactorHooksHelper.ScopePassingLifter";
+
 	static {
 		// AssertJ will recognise QueueSubscription implements queue and try to invoke
 		// iterator. That's not allowed, and will cause an exception
@@ -171,9 +176,9 @@ public abstract class FlowsScopePassingSpanSubscriberTests {
 		Hooks.onLastOperator("test", p -> {
 			// check only first onLast Hook
 			if (once.compareAndSet(false, true)) {
-				assertThat(p).isInstanceOf(TraceContextPropagator.class);
+				assertThat(Scannable.from(p).scanUnsafe(Scannable.Attr.LIFTER)).isEqualTo(LIFTER_NAME);
 				Object parent = Scannable.from(p).scanUnsafe(Scannable.Attr.PARENT);
-				assertThat(parent).isNotInstanceOf(TraceContextPropagator.class);
+				assertThat(Scannable.from(parent).scanUnsafe(Scannable.Attr.LIFTER)).isNotEqualTo(LIFTER_NAME);
 			}
 			return p;
 		});

@@ -18,24 +18,11 @@ package org.springframework.cloud.sleuth.instrument.reactor;
 
 import java.util.Objects;
 import java.util.function.BiFunction;
-import java.util.function.Consumer;
-import java.util.function.Function;
-import java.util.function.Predicate;
 
 import org.reactivestreams.Processor;
 import org.reactivestreams.Publisher;
-import reactor.core.CoreSubscriber;
-import reactor.core.Disposable;
 import reactor.core.Fuseable;
 import reactor.core.Scannable;
-import reactor.core.publisher.ConnectableFlux;
-import reactor.core.publisher.Flux;
-import reactor.core.publisher.FluxOperator;
-import reactor.core.publisher.GroupedFlux;
-import reactor.core.publisher.Mono;
-import reactor.core.publisher.MonoOperator;
-import reactor.core.publisher.Operators;
-import reactor.core.publisher.ParallelFlux;
 import reactor.util.annotation.Nullable;
 
 import org.springframework.util.Assert;
@@ -87,8 +74,12 @@ import org.springframework.util.Assert;
  *    })
  * 	.subscribe();
  *}</pre>
+ *
+ * @author Roman Matiushchenko
  */
 final class ReactorHooksHelper {
+
+	static final String LIFTER_NAME = "org.springframework.cloud.sleuth.instrument.reactor.ReactorHooksHelper.ScopePassingLifter";
 
 	// need a way to determine SYNC sources to not add redundant scope passing decorator
 	// most of reactor-core SYNC sources are marked with SourceProducer interface
@@ -132,6 +123,10 @@ final class ReactorHooksHelper {
 			}
 
 			if (!isSync(current)) {
+				boolean isLifter = getLifterName(current) != null;
+				if (isLifter) {
+					return shouldDecorateLifter(current);
+				}
 				return true;
 			}
 
@@ -143,8 +138,41 @@ final class ReactorHooksHelper {
 		}
 	}
 
-	static boolean isTraceContextPropagator(Publisher<?> current) {
-		return current instanceof TraceContextPropagator;
+	/**
+	 * xxxLift Publishers get their RunStyle from source Publisher. So need to check
+	 * whether current chain was decorated with scope passing operator.
+	 * @param p first not sync lifter Publisher in the chain.
+	 * @return {@code true} if Publisher chain does not contain lifter with
+	 * {@link #LIFTER_NAME} name.
+	 */
+	private static boolean shouldDecorateLifter(Publisher<?> p) {
+		Publisher<?> current = getParent(p);
+		while (true) {
+			if (current == null) {
+				// is start of the chain, Publisher without source or foreign Publisher
+				return true;
+			}
+			String lifterName = getLifterName(current);
+			if (isScopePassingLifter(lifterName)) {
+				return false;
+			}
+			if (lifterName == null) {
+				return true;
+			}
+			current = getParent(current);
+		}
+	}
+
+	private static boolean isScopePassingLifter(String lifterName) {
+		return lifterName == LIFTER_NAME;
+	}
+
+	private static String getLifterName(Publisher<?> current) {
+		return Scannable.from(current).scan(Scannable.Attr.LIFTER);
+	}
+
+	public static boolean isTraceContextPropagator(Publisher<?> current) {
+		return current instanceof TraceContextPropagator || isScopePassingLifter(getLifterName(current));
 	}
 
 	private static boolean isSourceProducer(Publisher<?> p) {
@@ -166,299 +194,39 @@ final class ReactorHooksHelper {
 	}
 
 	/**
-	 * Decorates {@link Publisher} with {@link TraceContextPropagator} {@code Publisher}.
-	 * Mostly it is a copy of reactor-core logic from
-	 * {@code reactor.core.publisher.Operators#liftPublisher()}.
-	 * @param filter the Predicate that the raw Publisher must pass for the transformation
-	 * to occur
-	 * @param lifter the {@link BiFunction} taking the raw {@link Publisher} and
-	 * {@link CoreSubscriber}. The function must return a receiving {@link CoreSubscriber}
-	 * that will immediately subscribe to the {@link Publisher}.
-	 * @param <O> the input and output type.
-	 * @return a new {@link Function}.
+	 * @param name function name.
+	 * @param delegate delegate function.
+	 * @param <T> the type of the first argument to the function
+	 * @param <U> the type of the second argument to the function
+	 * @param <R> the type of the result of the function
+	 * @return function that {@link Object#toString()} returns provided name which is used
+	 * as a value of {@link Scannable.Attr#LIFTER} attribute.
 	 */
-	public static <O> Function<? super Publisher<O>, ? extends Publisher<O>> liftPublisher(Predicate<Publisher> filter,
-			BiFunction<Publisher, ? super CoreSubscriber<? super O>, ? extends CoreSubscriber<? super O>> lifter) {
-		Assert.notNull(lifter, "lifter is null");
-		return publisher -> {
-			if (filter != null && !filter.test(publisher)) {
-				return (Publisher<O>) publisher;
-			}
-
-			if (publisher instanceof Mono) {
-				return new SleuthMonoLift<>(publisher, lifter);
-			}
-			if (publisher instanceof ParallelFlux) {
-				return new SleuthParallelLift<>((ParallelFlux<O>) publisher, lifter);
-			}
-			if (publisher instanceof ConnectableFlux) {
-				return new SleuthConnectableLift<>((ConnectableFlux<O>) publisher, lifter);
-			}
-			if (publisher instanceof GroupedFlux) {
-				return new SleuthGroupedLift<>((GroupedFlux<?, O>) publisher, lifter);
-			}
-			return new SleuthFluxLift<>(publisher, lifter);
-		};
+	static <T, U, R> BiFunction<T, U, R> named(String name, BiFunction<T, U, R> delegate) {
+		return new NamedLifter<>(name, delegate);
 	}
 
-}
+	static class NamedLifter<T, U, R> implements BiFunction<T, U, R> {
 
-/**
- * Copy of {@code reactor.core.publisher.MonoLift} which implements
- * {@link TraceContextPropagator}.
- */
-final class SleuthMonoLift<I, O> extends MonoOperator<I, O> implements TraceContextPropagator {
+		private final BiFunction<T, U, R> delegate;
 
-	final BiFunction<Publisher, ? super CoreSubscriber<? super O>, ? extends CoreSubscriber<? super I>> lifter;
+		private final String name;
 
-	SleuthMonoLift(Publisher<I> p,
-			BiFunction<Publisher, ? super CoreSubscriber<? super O>, ? extends CoreSubscriber<? super I>> lifter) {
-		super(Mono.from(p));
-		this.lifter = lifter;
-	}
-
-	@Override
-	public void subscribe(CoreSubscriber<? super O> actual) {
-		CoreSubscriber input = actual;
-		try {
-			input = Objects.requireNonNull(lifter.apply(source, actual), "Lifted subscriber MUST NOT be null");
-
-			source.subscribe(input);
-		}
-		catch (Throwable e) {
-			Operators.reportThrowInSubscribe(input, e);
-			return;
-		}
-	}
-
-	@Override
-	public Object scanUnsafe(Attr key) {
-		if (key == Attr.RUN_STYLE) {
-			return Attr.RunStyle.SYNC;
-		}
-		return super.scanUnsafe(key);
-	}
-
-}
-
-/**
- * Copy of {@code reactor.core.publisher.FluxLift} which implements
- * {@link TraceContextPropagator}.
- */
-final class SleuthFluxLift<I, O> extends FluxOperator<I, O> implements TraceContextPropagator {
-
-	final BiFunction<Publisher, ? super CoreSubscriber<? super O>, ? extends CoreSubscriber<? super I>> lifter;
-
-	SleuthFluxLift(Publisher<I> p,
-			BiFunction<Publisher, ? super CoreSubscriber<? super O>, ? extends CoreSubscriber<? super I>> lifter) {
-		super(Flux.from(p));
-		this.lifter = lifter;
-	}
-
-	@Override
-	public void subscribe(CoreSubscriber<? super O> actual) {
-		CoreSubscriber input = actual;
-		try {
-			input = Objects.requireNonNull(lifter.apply(source, actual), "Lifted subscriber MUST NOT be null");
-
-			source.subscribe(input);
-		}
-		catch (Throwable e) {
-			Operators.reportThrowInSubscribe(input, e);
-			return;
-		}
-	}
-
-	@Override
-	public Object scanUnsafe(Attr key) {
-		if (key == Attr.RUN_STYLE) {
-			return Attr.RunStyle.SYNC;
-		}
-		return super.scanUnsafe(key);
-	}
-
-}
-
-/**
- * Copy of {@code reactor.core.publisher.ConnectableLift} which implements
- * {@link TraceContextPropagator}.
- */
-final class SleuthConnectableLift<I, O> extends ConnectableFlux<O> implements Scannable, TraceContextPropagator {
-
-	final ConnectableFlux<I> source;
-
-	final BiFunction<Publisher, ? super CoreSubscriber<? super O>, ? extends CoreSubscriber<? super I>> lifter;
-
-	SleuthConnectableLift(ConnectableFlux<I> p,
-			BiFunction<Publisher, ? super CoreSubscriber<? super O>, ? extends CoreSubscriber<? super I>> lifter) {
-		this.source = Objects.requireNonNull(p, "source");
-		this.lifter = lifter;
-	}
-
-	@Override
-	public int getPrefetch() {
-		return source.getPrefetch();
-	}
-
-	@Override
-	public void connect(Consumer<? super Disposable> cancelSupport) {
-		this.source.connect(cancelSupport);
-	}
-
-	@Override
-	@Nullable
-	public Object scanUnsafe(Attr key) {
-		if (key == Attr.PREFETCH) {
-			return source.getPrefetch();
-		}
-		if (key == Attr.PARENT) {
-			return source;
-		}
-		if (key == Attr.RUN_STYLE) {
-			return Attr.RunStyle.SYNC;
-		}
-		return null;
-	}
-
-	@Override
-	public void subscribe(CoreSubscriber<? super O> actual) {
-		CoreSubscriber input = actual;
-		try {
-			input = Objects.requireNonNull(lifter.apply(source, actual), "Lifted subscriber MUST NOT be null");
-
-			source.subscribe(input);
-		}
-		catch (Throwable e) {
-			Operators.reportThrowInSubscribe(input, e);
-			return;
-		}
-	}
-
-}
-
-/**
- * Copy of {@code reactor.core.publisher.GroupedLift} which implements
- * {@link TraceContextPropagator}.
- */
-final class SleuthGroupedLift<K, I, O> extends GroupedFlux<K, O> implements Scannable, TraceContextPropagator {
-
-	final BiFunction<Publisher, ? super CoreSubscriber<? super O>, ? extends CoreSubscriber<? super I>> lifter;
-
-	final GroupedFlux<K, I> source;
-
-	SleuthGroupedLift(GroupedFlux<K, I> p,
-			BiFunction<Publisher, ? super CoreSubscriber<? super O>, ? extends CoreSubscriber<? super I>> lifter) {
-		this.source = Objects.requireNonNull(p, "source");
-		this.lifter = lifter;
-	}
-
-	@Override
-	public int getPrefetch() {
-		return source.getPrefetch();
-	}
-
-	@Override
-	public K key() {
-		return source.key();
-	}
-
-	@Override
-	@Nullable
-	public Object scanUnsafe(Attr key) {
-		if (key == Attr.PARENT) {
-			return source;
-		}
-		if (key == Attr.PREFETCH) {
-			return getPrefetch();
-		}
-		if (key == Attr.RUN_STYLE) {
-			return Attr.RunStyle.SYNC;
+		NamedLifter(String name, BiFunction<T, U, R> delegate) {
+			this.name = Objects.requireNonNull(name, "name");
+			this.delegate = Objects.requireNonNull(delegate, "delegate");
 		}
 
-		return null;
-	}
-
-	@Override
-	public String stepName() {
-		if (source instanceof Scannable) {
-			return Scannable.from(source).stepName();
-		}
-		return Scannable.super.stepName();
-	}
-
-	@Override
-	public void subscribe(CoreSubscriber<? super O> actual) {
-		CoreSubscriber<? super I> input = lifter.apply(source, actual);
-
-		Objects.requireNonNull(input, "Lifted subscriber MUST NOT be null");
-
-		source.subscribe(input);
-	}
-
-}
-
-/**
- * Copy of {@code reactor.core.publisher.ParallelLift} which implements
- * {@link TraceContextPropagator}.
- */
-final class SleuthParallelLift<I, O> extends ParallelFlux<O> implements Scannable, TraceContextPropagator {
-
-	final BiFunction<Publisher, ? super CoreSubscriber<? super O>, ? extends CoreSubscriber<? super I>> lifter;
-
-	final ParallelFlux<I> source;
-
-	SleuthParallelLift(ParallelFlux<I> p,
-			BiFunction<Publisher, ? super CoreSubscriber<? super O>, ? extends CoreSubscriber<? super I>> lifter) {
-		this.source = Objects.requireNonNull(p, "source");
-		this.lifter = lifter;
-	}
-
-	@Override
-	public int getPrefetch() {
-		return source.getPrefetch();
-	}
-
-	@Override
-	public int parallelism() {
-		return source.parallelism();
-	}
-
-	@Override
-	@Nullable
-	public Object scanUnsafe(Attr key) {
-		if (key == Attr.PARENT) {
-			return source;
-		}
-		if (key == Attr.PREFETCH) {
-			return getPrefetch();
-		}
-		if (key == Attr.RUN_STYLE) {
-			return Attr.RunStyle.SYNC;
+		@Override
+		public R apply(T t, U u) {
+			return delegate.apply(t, u);
 		}
 
-		return null;
-	}
-
-	@Override
-	public String stepName() {
-		if (source instanceof Scannable) {
-			return Scannable.from(source).stepName();
-		}
-		return Scannable.super.stepName();
-	}
-
-	@Override
-	public void subscribe(CoreSubscriber<? super O>[] s) {
-		@SuppressWarnings("unchecked")
-		CoreSubscriber<? super I>[] subscribers = new CoreSubscriber[parallelism()];
-
-		int i = 0;
-		while (i < subscribers.length) {
-			subscribers[i] = Objects.requireNonNull(lifter.apply(source, s[i]), "Lifted subscriber MUST NOT be null");
-			i++;
+		@Override
+		public String toString() {
+			return name;
 		}
 
-		source.subscribe(subscribers);
 	}
 
 }
