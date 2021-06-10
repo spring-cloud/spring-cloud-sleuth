@@ -94,6 +94,12 @@ public interface AssertingSpanBuilder extends Span.Builder {
 	}
 
 	@Override
+	default Span.Builder remoteIpAndPort(String ip, int port) {
+		getDelegate().remoteIpAndPort(ip, port);
+		return this;
+	}
+
+	@Override
 	default AssertingSpanBuilder setParent(TraceContext context) {
 		getDelegate().setParent(context);
 		return this;
