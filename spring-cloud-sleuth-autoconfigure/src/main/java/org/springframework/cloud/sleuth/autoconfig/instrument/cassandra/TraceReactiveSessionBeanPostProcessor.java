@@ -27,7 +27,7 @@ import org.springframework.data.cassandra.ReactiveSession;
  * representation.
  *
  * @author Marcin Grzejszczak
- * @since 2.0.0
+ * @since 3.1.0
  */
 public class TraceReactiveSessionBeanPostProcessor implements BeanPostProcessor {
 
