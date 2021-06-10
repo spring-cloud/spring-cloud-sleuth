@@ -72,4 +72,13 @@ public class SimpleCurrentTraceContext implements CurrentTraceContext {
 		return delegate;
 	}
 
+	public static SimpleCurrentTraceContext withTracer(SimpleTracer simpleTracer) {
+		return new SimpleCurrentTraceContext() {
+			@Override
+			public TraceContext context() {
+				return simpleTracer.currentSpan() != null ? simpleTracer.currentSpan().context() : null;
+			}
+		};
+	}
+
 }

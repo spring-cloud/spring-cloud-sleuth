@@ -32,6 +32,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import org.springframework.beans.factory.BeanFactory;
+import org.springframework.cloud.sleuth.CurrentTraceContext;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.docs.AssertingSpanBuilder;
@@ -58,6 +59,8 @@ class TraceCqlSessionInterceptor implements MethodInterceptor {
 	private final BeanFactory beanFactory;
 
 	private Tracer tracer;
+
+	private CurrentTraceContext currentTraceContext;
 
 	TraceCqlSessionInterceptor(CqlSession delegate, BeanFactory beanFactory) {
 		this.delegate = delegate;
@@ -121,10 +124,7 @@ class TraceCqlSessionInterceptor implements MethodInterceptor {
 		Statement<?> proxied = TraceStatement.isTraceStatement(statement) ? statement
 				: TraceStatement.createProxy(span, statement);
 		((CassandraSpanCustomizer) proxied).customizeSpan(defaultSpanName);
-
-		// TODO change to current trace context, reactive associates tracer with span
-		// already
-		try (Tracer.SpanInScope ws = tracer().withSpan(span)) {
+		try (CurrentTraceContext.Scope ws = currentTraceContext().maybeScope(span.context())) {
 			log.debug("Will execute statement");
 			return function.apply(proxied);
 		}
@@ -154,6 +154,13 @@ class TraceCqlSessionInterceptor implements MethodInterceptor {
 			this.tracer = this.beanFactory.getBean(Tracer.class);
 		}
 		return this.tracer;
+	}
+
+	private CurrentTraceContext currentTraceContext() {
+		if (this.currentTraceContext == null) {
+			this.currentTraceContext = this.beanFactory.getBean(CurrentTraceContext.class);
+		}
+		return this.currentTraceContext;
 	}
 
 }

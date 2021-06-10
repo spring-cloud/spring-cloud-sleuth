@@ -30,6 +30,7 @@ import org.springframework.beans.factory.BeanFactory;
 public final class TraceCqlSession {
 
 	private TraceCqlSession() {
+		throw new IllegalStateException("Can't instantiate a utility class");
 	}
 
 	public static CqlSession create(CqlSession session, BeanFactory beanFactory) {

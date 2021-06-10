@@ -28,13 +28,13 @@ import com.datastax.oss.driver.api.core.metadata.EndPoint;
 import com.datastax.oss.driver.api.core.metadata.Node;
 import com.datastax.oss.driver.api.core.metadata.token.Token;
 import com.datastax.oss.driver.api.core.session.Request;
-import edu.umd.cs.findbugs.annotations.NonNull;
-import edu.umd.cs.findbugs.annotations.Nullable;
 import org.junit.jupiter.api.Test;
 import org.mockito.BDDMockito;
 
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.tracer.SimpleSpan;
+import org.springframework.lang.NonNull;
+import org.springframework.lang.Nullable;
 
 import static org.assertj.core.api.BDDAssertions.then;
 
@@ -76,6 +76,8 @@ class TraceRequestTrackerTests {
 		then(span.events).contains(SleuthCassandraSpan.Events.NODE_ERROR.getValue());
 		then(span.tags).containsEntry("cassandra.node[localhost/127.0.0.1:1234].error",
 				"java.lang.IllegalStateException: Foo");
+		then(span.ip).isNotEmpty();
+		then(span.port).isPositive();
 	}
 
 	@Test
@@ -89,6 +91,8 @@ class TraceRequestTrackerTests {
 				"");
 
 		then(span.events).contains(SleuthCassandraSpan.Events.NODE_SUCCESS.getValue());
+		then(span.ip).isNotEmpty();
+		then(span.port).isPositive();
 	}
 
 	private EndPoint endpoint() {

@@ -29,6 +29,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.aop.framework.ProxyFactory;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.support.StaticListableBeanFactory;
+import org.springframework.cloud.sleuth.tracer.SimpleCurrentTraceContext;
 import org.springframework.cloud.sleuth.tracer.SimpleSpan;
 import org.springframework.cloud.sleuth.tracer.SimpleTracer;
 
@@ -39,6 +40,8 @@ import static org.mockito.Mockito.mock;
 class TraceCqlSessionInterceptorTests {
 
 	SimpleTracer simpleTracer = new SimpleTracer();
+
+	SimpleCurrentTraceContext simpleCurrentTraceContext = SimpleCurrentTraceContext.withTracer(this.simpleTracer);
 
 	BeanFactory beanFactory = beanFactory();
 
@@ -75,6 +78,7 @@ class TraceCqlSessionInterceptorTests {
 	private BeanFactory beanFactory() {
 		StaticListableBeanFactory beanFactory = new StaticListableBeanFactory();
 		beanFactory.addBean("tracer", this.simpleTracer);
+		beanFactory.addBean("currentTraceContext", this.simpleCurrentTraceContext);
 		return beanFactory;
 	}
 

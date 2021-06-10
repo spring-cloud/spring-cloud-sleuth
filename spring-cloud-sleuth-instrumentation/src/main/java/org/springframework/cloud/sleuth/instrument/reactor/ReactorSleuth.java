@@ -542,6 +542,7 @@ public abstract class ReactorSleuth {
 	 * Updates the Reactor context with tracing information. Creates a new span if there
 	 * is no current span. Creates a child span if there was an entry in the context
 	 * already.
+	 * @param tracer tracer
 	 * @param currentTraceContext current trace context
 	 * @param context Reactor context
 	 * @param childSpanName child span name when there is no span in context
@@ -570,9 +571,47 @@ public abstract class ReactorSleuth {
 		return putSpanInScope(tracer, context, span);
 	}
 
-	private static Context putSpanInScope(Tracer tracer, Context context, Span span) {
+	/**
+	 * Puts the provided span in scope and in Reactor context.
+	 * @param tracer tracer
+	 * @param context Reactor context
+	 * @param span span to put in Reactor context
+	 * @return mutated context
+	 */
+	public static Context putSpanInScope(Tracer tracer, Context context, Span span) {
 		return context.put(Span.class, span).put(TraceContext.class, span.context()).put(Tracer.SpanInScope.class,
 				tracer.withSpan(span));
+	}
+
+	/**
+	 * Retrieves span from Reactor context.
+	 * @param tracer tracer
+	 * @param currentTraceContext current trace context
+	 * @param context context view
+	 * @return span from Reactor context or creates a new one if missing
+	 */
+	public static Span spanFromContext(Tracer tracer, CurrentTraceContext currentTraceContext, ContextView context) {
+		Span span = context.getOrDefault(Span.class, null);
+		if (span != null) {
+			if (log.isDebugEnabled()) {
+				log.debug("Found a span in reactor context [" + span + "]");
+			}
+			return span;
+		}
+		TraceContext traceContext = context.getOrDefault(TraceContext.class, null);
+		if (traceContext != null) {
+			try (CurrentTraceContext.Scope scope = currentTraceContext.maybeScope(traceContext)) {
+				if (log.isDebugEnabled()) {
+					log.debug("Found a trace context in reactor context [" + traceContext + "]");
+				}
+				return tracer.currentSpan();
+			}
+		}
+		Span newSpan = tracer.nextSpan().start();
+		if (log.isDebugEnabled()) {
+			log.debug("No span was found - will create a new one [" + newSpan + "]");
+		}
+		return newSpan;
 	}
 
 }

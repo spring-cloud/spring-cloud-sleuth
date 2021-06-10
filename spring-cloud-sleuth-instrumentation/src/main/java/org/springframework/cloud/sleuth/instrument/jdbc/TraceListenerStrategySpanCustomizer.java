@@ -30,6 +30,7 @@ public interface TraceListenerStrategySpanCustomizer<T extends CommonDataSource>
 
 	/**
 	 * Customizes the client database span.
+	 * @param dataSource data source for which we're building the span
 	 * @param spanBuilder span builder
 	 */
 	void customizeConnectionSpan(T dataSource, Span.Builder spanBuilder);

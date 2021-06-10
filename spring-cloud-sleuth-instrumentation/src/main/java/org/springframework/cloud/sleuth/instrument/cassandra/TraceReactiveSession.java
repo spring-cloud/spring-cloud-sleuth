@@ -40,8 +40,9 @@ import org.springframework.data.cassandra.ReactiveSession;
  *
  * @author Mark Paluch
  * @author Marcin Grzejszczak
+ * @since 3.1.0
  */
-public final class TraceReactiveSession implements ReactiveSession {
+public class TraceReactiveSession implements ReactiveSession {
 
 	private final ReactiveSession delegate;
 
@@ -51,11 +52,17 @@ public final class TraceReactiveSession implements ReactiveSession {
 
 	private CurrentTraceContext currentTraceContext;
 
-	private TraceReactiveSession(ReactiveSession delegate, BeanFactory beanFactory) {
+	TraceReactiveSession(ReactiveSession delegate, BeanFactory beanFactory) {
 		this.delegate = delegate;
 		this.beanFactory = beanFactory;
 	}
 
+	/**
+	 * Factory method for creation of a {@link TraceReactiveSession}.
+	 * @param session reactive session
+	 * @param beanFactory bean factory
+	 * @return traced representation of a {@link ReactiveSession}.
+	 */
 	public static ReactiveSession create(ReactiveSession session, BeanFactory beanFactory) {
 		return new TraceReactiveSession(session, beanFactory);
 	}
@@ -88,11 +95,9 @@ public final class TraceReactiveSession implements ReactiveSession {
 	@Override
 	public Mono<ReactiveResultSet> execute(Statement<?> statement) {
 		return Mono.deferContextual(contextView -> {
-			Span span = null;
+			Span span = ReactorSleuth.spanFromContext(tracer(), currentTraceContext(), contextView);
 			return this.delegate.execute(proxiedStatement(span, statement, "execute"));
-		}).contextWrite(context -> {
-			return ReactorSleuth.putSpanInScope(tracer(), context, createSpan(context));
-		});
+		}).contextWrite(context -> ReactorSleuth.putSpanInScope(tracer(), context, createSpan(context)));
 	}
 
 	@Override
