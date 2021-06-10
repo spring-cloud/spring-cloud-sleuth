@@ -21,6 +21,7 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingDeque;
 
 import io.rsocket.frame.FrameType;
+import org.awaitility.Awaitility;
 import org.junit.jupiter.api.Test;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -221,11 +222,13 @@ public abstract class TraceRSocketTests {
 
 	private void thenSpanWasReportedWithTags(TestSpanHandler spans, String path, FrameType frameType) {
 		String expectedName = frameType.name() + " " + path;
-		FinishedSpan span = spans.reportedSpans().stream().filter(finished -> expectedName.equals(finished.getName()))
-				.findFirst().orElseThrow(() -> new AssertionError("Span with name [" + expectedName + "] not found"));
-		then(span.getTags()).containsEntry("messaging.controller.class",
-				"org.springframework.cloud.sleuth.instrument.rsocket.TraceRSocketTests$TestController");
-		then(span.getTags()).containsKey("messaging.controller.method");
+		Awaitility.await().untilAsserted(() -> {
+			FinishedSpan span = spans.reportedSpans().stream().filter(finished -> expectedName.equals(finished.getName()))
+					.findFirst().orElseThrow(() -> new AssertionError("Span with name [" + expectedName + "] not found"));
+			then(span.getTags()).containsEntry("messaging.controller.class",
+					"org.springframework.cloud.sleuth.instrument.rsocket.TraceRSocketTests$TestController");
+			then(span.getTags()).containsKey("messaging.controller.method");
+		});
 	}
 
 	private Mono<Void> whenRequestFnFIsSent(RSocketRequester requester, String path) {
@@ -282,8 +285,10 @@ public abstract class TraceRSocketTests {
 
 	private void thenNoSpanWasReported(TestSpanHandler spans, TestController controller2, String expectedTraceId) {
 		// then(spans).isEmpty(); // FIXME: does not work for request case
-		then(controller2.getSpan()).isNotNull();
-		then(controller2.getSpan().context().traceId()).isEqualTo(expectedTraceId);
+		Awaitility.await().untilAsserted(() -> {
+			then(controller2.getSpan()).isNotNull();
+			then(controller2.getSpan().context().traceId()).isEqualTo(expectedTraceId);
+		});
 	}
 
 	@Configuration(proxyBeanMethods = false)
