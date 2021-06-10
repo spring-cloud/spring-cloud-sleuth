@@ -28,7 +28,7 @@ import org.springframework.cloud.sleuth.instrument.cassandra.TraceCqlSession;
  *
  * @author Marcin Grzejszczak
  * @author Mark Paluch
- * @since 2.0.0
+ * @since 3.1.0
  */
 public class TraceCqlSessionBeanPostProcessor implements BeanPostProcessor {
 
