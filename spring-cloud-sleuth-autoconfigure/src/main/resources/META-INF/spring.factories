@@ -6,6 +6,8 @@ org.springframework.cloud.sleuth.autoconfig.instrument.async.TraceAsyncAutoConfi
 org.springframework.cloud.sleuth.autoconfig.instrument.async.TraceAsyncCustomAutoConfiguration,\
 org.springframework.cloud.sleuth.autoconfig.instrument.async.TraceAsyncDefaultAutoConfiguration,\
 org.springframework.cloud.sleuth.autoconfig.instrument.batch.TraceBatchAutoConfiguration,\
+org.springframework.cloud.sleuth.autoconfig.instrument.cassandra.TraceCassandraAutoConfiguration,\
+org.springframework.cloud.sleuth.autoconfig.instrument.cassandra.TraceCassandraReactiveAutoConfiguration,\
 org.springframework.cloud.sleuth.autoconfig.instrument.config.TraceSpringCloudConfigAutoConfiguration,\
 org.springframework.cloud.sleuth.autoconfig.instrument.circuitbreaker.TraceCircuitBreakerAutoConfiguration,\
 org.springframework.cloud.sleuth.autoconfig.instrument.deployer.TraceDeployerAutoConfiguration,\

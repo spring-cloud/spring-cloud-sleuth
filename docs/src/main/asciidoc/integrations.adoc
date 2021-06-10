@@ -665,6 +665,13 @@ This feature is available for all tracer implementations.
 We're adding an instrumented Tomcat's `Valve` that originates the span.
 In order to disable this instrumentation set `spring.sleuth.web.tomcat.enabled` to `false`.
 
+[[sleuth-cassandra-integration]]
+== Spring Data Cassandra
+
+This feature is available for all tracer implementations.
+
+We're instrumenting Casandra's `CqlSession` and `ReactiveSession` interfaces and we're providing our own implementation of the `RequestTracker`.
+In order to disable this instrumentation set `spring.sleuth.cassandra.enabled` to `false`.
 
 [[sleuth-jdbc-integration]]
 == Spring JDBC

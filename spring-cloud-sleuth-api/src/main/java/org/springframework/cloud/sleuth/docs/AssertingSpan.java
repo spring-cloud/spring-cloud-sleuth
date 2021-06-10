@@ -132,6 +132,12 @@ public interface AssertingSpan extends Span {
 		return this;
 	}
 
+	@Override
+	default Span remoteIpAndPort(String ip, int port) {
+		getDelegate().remoteIpAndPort(ip, port);
+		return this;
+	}
+
 	/**
 	 * @param documentedSpan span configuration
 	 * @param span span to wrap in assertions

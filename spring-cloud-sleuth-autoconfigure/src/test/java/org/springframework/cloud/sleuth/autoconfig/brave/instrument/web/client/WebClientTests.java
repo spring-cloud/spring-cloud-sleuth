@@ -41,6 +41,7 @@ import org.junit.jupiter.api.Test;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
+import org.springframework.boot.autoconfigure.cassandra.CassandraAutoConfiguration;
 import org.springframework.boot.autoconfigure.data.mongo.MongoDataAutoConfiguration;
 import org.springframework.boot.autoconfigure.data.r2dbc.R2dbcDataAutoConfiguration;
 import org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration;
@@ -152,7 +153,7 @@ public class WebClientTests {
 	@Configuration(proxyBeanMethods = false)
 	@EnableAutoConfiguration(exclude = { GatewayClassPathWarningAutoConfiguration.class, GatewayAutoConfiguration.class,
 			R2dbcAutoConfiguration.class, R2dbcDataAutoConfiguration.class, RedisAutoConfiguration.class,
-			MongoAutoConfiguration.class, MongoDataAutoConfiguration.class })
+			CassandraAutoConfiguration.class, MongoAutoConfiguration.class, MongoDataAutoConfiguration.class })
 	@DisableSecurity
 	public static class TestConfiguration {
 

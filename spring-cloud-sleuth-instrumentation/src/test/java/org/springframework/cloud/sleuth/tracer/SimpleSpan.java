@@ -48,6 +48,10 @@ public class SimpleSpan implements Span {
 
 	public String name;
 
+	public String ip;
+
+	public int port;
+
 	@Override
 	public boolean isNoop() {
 		return true;
@@ -85,6 +89,13 @@ public class SimpleSpan implements Span {
 	@Override
 	public SimpleSpan error(Throwable throwable) {
 		this.throwable = throwable;
+		return this;
+	}
+
+	@Override
+	public Span remoteIpAndPort(String ip, int port) {
+		this.ip = ip;
+		this.port = port;
 		return this;
 	}
 

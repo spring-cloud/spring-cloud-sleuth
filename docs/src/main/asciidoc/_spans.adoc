@@ -85,6 +85,31 @@ Fully qualified name of the enclosing class `org.springframework.cloud.sleuth.in
 |batch.step.type|Type of the Spring Batch job.
 |===
 
+=== Cassandra Span
+
+> Span created around CqlSession executions.
+
+**Span name** `%s` - since it contains `%s`, the name is dynamic and will be resolved at runtime.
+
+Fully qualified name of the enclosing class `org.springframework.cloud.sleuth.instrument.cassandra.SleuthCassandraSpan`
+
+IMPORTANT: All tags and events must be prefixed with `cassandra.` prefix!
+
+.Tag Keys
+|===
+|Name | Description
+|cassandra.cql|A tag containing Cassandra CQL.
+|cassandra.keyspace|Name of the Cassandra keyspace.
+|cassandra.node[%s].error|A tag containing error that occurred for the given node. (since the name contains `%s` the final value will be resolved at runtime)
+|===
+
+.Event Values
+|===
+|Name | Description
+|cassandra.node.error|Set whenever an error occurred for the given node.
+|cassandra.node.success|Set when a success occurred for the session processing.
+|===
+
 === Circuit Breaker Function Span
 
 > Span created when we wrap a Function passed to the CircuitBreaker. as fallback.

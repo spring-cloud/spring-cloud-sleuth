@@ -35,6 +35,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.AutoConfigurations;
 import org.springframework.boot.autoconfigure.AutoConfigureBefore;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
+import org.springframework.boot.autoconfigure.cassandra.CassandraAutoConfiguration;
 import org.springframework.boot.autoconfigure.data.r2dbc.R2dbcDataAutoConfiguration;
 import org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration;
 import org.springframework.boot.autoconfigure.jms.activemq.ActiveMQAutoConfiguration;
@@ -169,9 +170,9 @@ public class JmsTracingConfigurationTest {
 }
 
 @Configuration(proxyBeanMethods = false)
-@EnableAutoConfiguration(
-		exclude = { KafkaAutoConfiguration.class, MongoAutoConfiguration.class, QuartzAutoConfiguration.class,
-				R2dbcAutoConfiguration.class, R2dbcDataAutoConfiguration.class, RedisAutoConfiguration.class })
+@EnableAutoConfiguration(exclude = { KafkaAutoConfiguration.class, MongoAutoConfiguration.class,
+		QuartzAutoConfiguration.class, R2dbcAutoConfiguration.class, R2dbcDataAutoConfiguration.class,
+		RedisAutoConfiguration.class, CassandraAutoConfiguration.class })
 class JmsTestTracingConfiguration {
 
 }
