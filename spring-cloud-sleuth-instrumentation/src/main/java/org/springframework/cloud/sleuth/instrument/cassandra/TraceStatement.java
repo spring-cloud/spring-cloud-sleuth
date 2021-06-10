@@ -41,16 +41,40 @@ import org.springframework.util.ClassUtils;
  * @author Marcin Grzejszczak
  * @since 3.1.0
  */
-// TODO: Package scope?
-public class TraceStatement implements MethodInterceptor {
+final class TraceStatement implements MethodInterceptor {
 
 	private final Span span;
 
 	private Statement<?> delegate;
 
-	public TraceStatement(Span span, Statement<?> delegate) {
+	private TraceStatement(Span span, Statement<?> delegate) {
 		this.span = span;
 		this.delegate = delegate;
+	}
+
+	/**
+	 * Creates a proxy with {@link TraceStatement} attached to it.
+	 * @param span current span
+	 * @param target target to proxy
+	 * @param <T> type of target
+	 * @return proxied object with trace advice
+	 */
+	@SuppressWarnings("unchecked")
+	public static <T> T createProxy(Span span, T target) {
+		ProxyFactory factory = new ProxyFactory(ClassUtils.getAllInterfaces(target));
+		factory.addInterface(CassandraSpanCustomizer.class);
+		factory.addInterface(CassandraSpanSupplier.class);
+		factory.setTarget(target);
+		factory.addAdvice(new TraceStatement(span, (Statement<?>) target));
+		return (T) factory.getProxy();
+	}
+
+	/**
+	 * @param statement target statement to inspect
+	 * @return whether the given {@code statement} is a traced statement wrapper
+	 */
+	public static boolean isTraceStatement(Statement<?> statement) {
+		return statement instanceof CassandraSpanCustomizer && statement instanceof CassandraSpanSupplier;
 	}
 
 	/**
@@ -83,7 +107,7 @@ public class TraceStatement implements MethodInterceptor {
 		}
 		else if (this.delegate instanceof BatchStatement) {
 			StringJoiner joiner = new StringJoiner(";");
-			for (BatchableStatement bs : (BatchStatement) this.delegate) {
+			for (BatchableStatement<?> bs : (BatchStatement) this.delegate) {
 				joiner.add(getQuery(bs));
 			}
 			query = joiner.toString();
@@ -99,22 +123,6 @@ public class TraceStatement implements MethodInterceptor {
 			return ((BoundStatement) statement).getPreparedStatement().getQuery();
 		}
 		return "";
-	}
-
-	/**
-	 * Creates a proxy with {@link TraceStatement} attached to it.
-	 * @param span current span
-	 * @param target target to proxy
-	 * @param <T> type of target
-	 * @return proxied object with trace advice
-	 */
-	public static <T> T createProxy(Span span, T target) {
-		ProxyFactory factory = new ProxyFactory(ClassUtils.getAllInterfaces(target));
-		factory.addInterface(CassandraSpanCustomizer.class);
-		factory.addInterface(CassandraSpanSupplier.class);
-		factory.setTarget(target);
-		factory.addAdvice(new TraceStatement(span, (Statement<?>) target));
-		return (T) factory.getProxy();
 	}
 
 	@Nullable

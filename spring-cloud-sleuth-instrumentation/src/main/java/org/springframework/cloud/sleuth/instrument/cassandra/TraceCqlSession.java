@@ -16,22 +16,28 @@
 
 package org.springframework.cloud.sleuth.instrument.cassandra;
 
-import com.datastax.oss.driver.api.core.CqlSessionBuilder;
+import com.datastax.oss.driver.api.core.CqlSession;
 
-import org.springframework.boot.autoconfigure.cassandra.CqlSessionBuilderCustomizer;
+import org.springframework.aop.framework.ProxyFactory;
+import org.springframework.beans.factory.BeanFactory;
 
 /**
- * Adds tracing mechanism to the {@link CqlSessionBuilder}.
+ * Factory to create a {@link TraceCqlSession}.
  *
  * @author Mark Paluch
- * @author Marcin Grzejszczak
  * @since 3.1.0
  */
-public class TraceCqlSessionBuilderCustomizer implements CqlSessionBuilderCustomizer {
+public final class TraceCqlSession {
 
-	@Override
-	public void customize(CqlSessionBuilder cqlSessionBuilder) {
-		cqlSessionBuilder.withRequestTracker(TraceRequestTracker.INSTANCE);
+	private TraceCqlSession() {
+	}
+
+	public static CqlSession create(CqlSession session, BeanFactory beanFactory) {
+		ProxyFactory proxyFactory = new ProxyFactory();
+		proxyFactory.setTarget(session);
+		proxyFactory.addAdvice(new TraceCqlSessionInterceptor(session, beanFactory));
+		proxyFactory.addInterface(CqlSession.class);
+		return (CqlSession) proxyFactory.getProxy();
 	}
 
 }

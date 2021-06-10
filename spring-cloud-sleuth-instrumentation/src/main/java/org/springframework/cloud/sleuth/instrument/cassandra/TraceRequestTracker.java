@@ -44,7 +44,9 @@ import static org.springframework.cloud.sleuth.instrument.cassandra.SleuthCassan
  * @author Marcin Grzejszczak
  * @since 3.1.0
  */
-public class TraceRequestTracker implements RequestTracker {
+enum TraceRequestTracker implements RequestTracker {
+
+	INSTANCE;
 
 	private static final Log log = LogFactory.getLog(TraceRequestTracker.class);
 

@@ -42,7 +42,7 @@ class TraceRequestTrackerTests {
 
 	@Test
 	void should_end_span_on_success() {
-		TraceRequestTracker traceRequestTracker = new TraceRequestTracker();
+		TraceRequestTracker traceRequestTracker = TraceRequestTracker.INSTANCE;
 		SimpleSpan span = new SimpleSpan();
 
 		traceRequestTracker.onSuccess(new MyRequest(span), 1L, BDDMockito.mock(DriverExecutionProfile.class),
@@ -53,7 +53,7 @@ class TraceRequestTrackerTests {
 
 	@Test
 	void should_end_span_on_error() {
-		TraceRequestTracker traceRequestTracker = new TraceRequestTracker();
+		TraceRequestTracker traceRequestTracker = TraceRequestTracker.INSTANCE;
 		SimpleSpan span = new SimpleSpan();
 
 		traceRequestTracker.onError(new MyRequest(span), new IllegalStateException("Foo"), 1L,
@@ -65,7 +65,7 @@ class TraceRequestTrackerTests {
 
 	@Test
 	void should_customize_span_on_node_error() {
-		TraceRequestTracker traceRequestTracker = new TraceRequestTracker();
+		TraceRequestTracker traceRequestTracker = TraceRequestTracker.INSTANCE;
 		SimpleSpan span = new SimpleSpan();
 		Node node = BDDMockito.mock(Node.class);
 		BDDMockito.given(node.getEndPoint()).willReturn(endpoint());
@@ -80,7 +80,7 @@ class TraceRequestTrackerTests {
 
 	@Test
 	void should_customize_span_on_node_success() {
-		TraceRequestTracker traceRequestTracker = new TraceRequestTracker();
+		TraceRequestTracker traceRequestTracker = TraceRequestTracker.INSTANCE;
 		SimpleSpan span = new SimpleSpan();
 		Node node = BDDMockito.mock(Node.class);
 		BDDMockito.given(node.getEndPoint()).willReturn(endpoint());

@@ -41,7 +41,7 @@ import org.springframework.data.cassandra.ReactiveSession;
  * @author Mark Paluch
  * @author Marcin Grzejszczak
  */
-public class TraceReactiveSession implements ReactiveSession {
+public final class TraceReactiveSession implements ReactiveSession {
 
 	private final ReactiveSession delegate;
 
@@ -51,9 +51,13 @@ public class TraceReactiveSession implements ReactiveSession {
 
 	private CurrentTraceContext currentTraceContext;
 
-	public TraceReactiveSession(ReactiveSession delegate, BeanFactory beanFactory) {
+	private TraceReactiveSession(ReactiveSession delegate, BeanFactory beanFactory) {
 		this.delegate = delegate;
 		this.beanFactory = beanFactory;
+	}
+
+	public static ReactiveSession create(ReactiveSession session, BeanFactory beanFactory) {
+		return new TraceReactiveSession(session, beanFactory);
 	}
 
 	@Override
@@ -99,12 +103,9 @@ public class TraceReactiveSession implements ReactiveSession {
 	@Override
 	public Mono<PreparedStatement> prepare(SimpleStatement statement) {
 		return Mono.deferContextual(contextView -> {
-			Span span = ReactorSleuth
-					.spanFromContext(tracer(), currentTraceContext(), contextView);
-			return this.delegate
-					.prepare((SimpleStatement) proxiedStatement(span, statement, "prepare"));
-		}).contextWrite(context -> ReactorSleuth
-				.putSpanInScope(tracer(), context, createSpan(context)));
+			Span span = ReactorSleuth.spanFromContext(tracer(), currentTraceContext(), contextView);
+			return this.delegate.prepare((SimpleStatement) proxiedStatement(span, statement, "prepare"));
+		}).contextWrite(context -> ReactorSleuth.putSpanInScope(tracer(), context, createSpan(context)));
 	}
 
 	private Statement<?> proxiedStatement(Span span, Statement<?> statement, String defaultName) {
@@ -119,10 +120,8 @@ public class TraceReactiveSession implements ReactiveSession {
 	}
 
 	private Span createSpan(ContextView contextView) {
-		return TraceCqlSessionInterceptor
-				.cassandraClientSpan(spanBuilder(contextView), getContext()
-								.getSessionName(),
-						Optional.empty() /* todo @since 3.2.2 */);
+		return TraceCqlSessionInterceptor.cassandraClientSpan(spanBuilder(contextView), getContext().getSessionName(),
+				Optional.empty() /* todo @since 3.2.2 */);
 	}
 
 	private Span.Builder spanBuilder(ContextView contextView) {

@@ -18,16 +18,16 @@ package org.springframework.cloud.sleuth.autoconfig.instrument.cassandra;
 
 import com.datastax.oss.driver.api.core.CqlSession;
 
-import org.springframework.aop.framework.ProxyFactory;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.config.BeanPostProcessor;
-import org.springframework.cloud.sleuth.instrument.cassandra.TraceCqlSessionInterceptor;
+import org.springframework.cloud.sleuth.instrument.cassandra.TraceCqlSession;
 
 /**
  * {@link BeanPostProcessor} to wrap a {@link CqlSession} instance into its trace
  * representation.
  *
  * @author Marcin Grzejszczak
+ * @author Mark Paluch
  * @since 2.0.0
  */
 public class TraceCqlSessionBeanPostProcessor implements BeanPostProcessor {
@@ -52,11 +52,7 @@ public class TraceCqlSessionBeanPostProcessor implements BeanPostProcessor {
 	}
 
 	private CqlSession create(CqlSession session) {
-		ProxyFactory proxyFactory = new ProxyFactory();
-		proxyFactory.setTarget(session);
-		proxyFactory.addAdvice(new TraceCqlSessionInterceptor(session, this.beanFactory));
-		proxyFactory.addInterface(CqlSession.class);
-		return (CqlSession) proxyFactory.getProxy();
+		return TraceCqlSession.create(session, this.beanFactory);
 	}
 
 }

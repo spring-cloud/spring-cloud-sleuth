@@ -50,8 +50,8 @@ public class TraceReactiveSessionBeanPostProcessor implements BeanPostProcessor 
 		return bean;
 	}
 
-	private ReactiveSession create(ReactiveSession delegate) {
-		return new TraceReactiveSession(delegate, this.beanFactory);
+	private ReactiveSession create(ReactiveSession session) {
+		return TraceReactiveSession.create(session, this.beanFactory);
 	}
 
 }

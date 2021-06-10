@@ -17,6 +17,7 @@
 package org.springframework.cloud.sleuth.instrument.cassandra;
 
 import java.lang.reflect.Method;
+import java.util.Arrays;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Function;
@@ -40,24 +41,26 @@ import org.springframework.lang.Nullable;
 
 /**
  * A {@link MethodInterceptor} that wraps calls around {@link CqlSession} in a trace
- * representation.
+ * representation. This interceptor wraps statements for {@code execute} and
+ * {@code prepare} (including their asynchronous variants) only. Graph and reactive
+ * {@link CqlSession} method remain called as-is.
  *
  * @author Mark Paluch
  * @author Marcin Grzejszczak
  * @since 3.1.0
  */
-public class TraceCqlSessionInterceptor implements MethodInterceptor {
+class TraceCqlSessionInterceptor implements MethodInterceptor {
 
 	private static final Log log = LogFactory.getLog(TraceCqlSessionInterceptor.class);
 
-	private final CqlSession session;
+	private final CqlSession delegate;
 
 	private final BeanFactory beanFactory;
 
 	private Tracer tracer;
 
-	public TraceCqlSessionInterceptor(CqlSession session, BeanFactory beanFactory) {
-		this.session = session;
+	TraceCqlSessionInterceptor(CqlSession delegate, BeanFactory beanFactory) {
+		this.delegate = delegate;
 		this.beanFactory = beanFactory;
 	}
 
@@ -71,77 +74,51 @@ public class TraceCqlSessionInterceptor implements MethodInterceptor {
 		}
 		if (method.getName().equals("execute")) {
 			if (args.length > 0) {
-				if (args[0] instanceof Statement) {
-					return tracedExecute((Statement) args[0]);
-				}
-				else if (args[0] instanceof String && args.length == 1) {
-					return tracedExecute(SimpleStatement.newInstance((String) args[0]));
-				}
-				else if (args[0] instanceof String && args.length == 2) {
-					String query = (String) args[0];
-					SimpleStatement statement = args[1] instanceof Map
-							? SimpleStatement.newInstance(query, (Map) args[1])
-							: SimpleStatement.newInstance(query, (Object[]) args[1]);
-					return tracedExecute(statement);
-				}
+				return tracedCall(createStatement(args), "execute", this.delegate::execute);
 			}
 		}
 		if (method.getName().equals("executeAsync")) {
 			if (args.length > 0) {
-				if (args[0] instanceof Statement) {
-					return tracedExecuteAsync((Statement) args[0]);
-				}
-				else if (args[0] instanceof String && args.length == 1) {
-					return tracedExecuteAsync(SimpleStatement.newInstance((String) args[0]));
-				}
-				else if (args[0] instanceof String && args.length == 2) {
-					String query = (String) args[0];
-					SimpleStatement statement = args[1] instanceof Map
-							? SimpleStatement.newInstance(query, (Map) args[1])
-							: SimpleStatement.newInstance(query, (Object[]) args[1]);
-					return tracedExecuteAsync(statement);
-				}
+				return tracedCall(createStatement(args), "executeAsync", this.delegate::executeAsync);
 			}
 		}
 		if (method.getName().equals("prepare")) {
 			if (args.length > 0) {
-				if (args[0] instanceof SimpleStatement) {
-					return tracedPrepare((SimpleStatement) args[0]);
-				}
-				else if (args[0] instanceof String && args.length == 1) {
-					return tracedPrepare(SimpleStatement.newInstance((String) args[0]));
-				}
-				else if (args[0] instanceof String && args.length == 2) {
-					String query = (String) args[0];
-					SimpleStatement statement = args[1] instanceof Map
-							? SimpleStatement.newInstance(query, (Map) args[1])
-							: SimpleStatement.newInstance(query, (Object[]) args[1]);
-					return tracedPrepare(statement);
-				}
+				return tracedCall(createStatement(args), "prepare",
+						statement -> this.delegate.prepare((SimpleStatement) statement));
+			}
+		}
+		if (method.getName().equals("prepareAsync")) {
+			if (args.length > 0) {
+				return tracedCall(createStatement(args), "prepareAsync",
+						statement -> this.delegate.prepareAsync((SimpleStatement) statement));
 			}
 		}
 		return invocation.proceed();
+	}
+
+	private static Statement<?> createStatement(Object[] args) {
+		if (args[0] instanceof Statement) {
+			return (Statement<?>) (args[0]);
+		}
+		else if (args[0] instanceof String && args.length == 1) {
+			return SimpleStatement.newInstance((String) args[0]);
+		}
+		else if (args[0] instanceof String && args.length == 2) {
+			String query = (String) args[0];
+			return args[1] instanceof Map ? SimpleStatement.newInstance(query, (Map) args[1])
+					: SimpleStatement.newInstance(query, (Object[]) args[1]);
+		}
+		throw new IllegalArgumentException(String.format("Unsupported arguments %s", Arrays.toString(args)));
 	}
 
 	boolean isContextUnusable() {
 		return ContextUtil.isContextUnusable(this.beanFactory);
 	}
 
-	private Object tracedExecute(Statement statement) {
-		return tracedCall(statement, "execute", session::execute);
-	}
-
-	private Object tracedExecuteAsync(Statement statement) {
-		return tracedCall(statement, "executeAsync", session::executeAsync);
-	}
-
-	private Object tracedPrepare(SimpleStatement statement) {
-		return tracedCall(statement, "prepare", proxied -> session.prepare((SimpleStatement) proxied));
-	}
-
-	private Object tracedCall(Statement statement, String defaultSpanName, Function<Statement<?>, Object> function) {
+	private Object tracedCall(Statement<?> statement, String defaultSpanName, Function<Statement<?>, Object> function) {
 		Span span = cassandraClientSpan();
-		Statement<?> proxied = statement instanceof TraceStatement ? statement
+		Statement<?> proxied = TraceStatement.isTraceStatement(statement) ? statement
 				: TraceStatement.createProxy(span, statement);
 		((CassandraSpanCustomizer) proxied).customizeSpan(defaultSpanName);
 
@@ -165,11 +142,11 @@ public class TraceCqlSessionInterceptor implements MethodInterceptor {
 	}
 
 	String getSessionName() {
-		return session.getContext().getSessionName();
+		return this.delegate.getContext().getSessionName();
 	}
 
 	Optional<CqlIdentifier> getKeyspace() {
-		return session.getKeyspace();
+		return this.delegate.getKeyspace();
 	}
 
 	private Tracer tracer() {
