@@ -24,7 +24,6 @@ package org.springframework.cloud.sleuth.instrument.cassandra;
  * @author Marcin Grzejszczak
  * @since 3.1.0
  */
-// TODO: Package scope?
 public interface CassandraSpanCustomizer {
 
 	/**

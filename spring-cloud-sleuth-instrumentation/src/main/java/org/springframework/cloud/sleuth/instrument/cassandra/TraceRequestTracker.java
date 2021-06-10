@@ -87,6 +87,28 @@ public class TraceRequestTracker implements RequestTracker {
 		}
 	}
 
+	@Override
+	public void onNodeSuccess(@NonNull Request request, long latencyNanos,
+			@NonNull DriverExecutionProfile executionProfile, @NonNull Node node, @NonNull String requestLogPrefix) {
+		if (request instanceof CassandraSpanSupplier) {
+			AssertingSpan span = AssertingSpan.of(CASSANDRA_SPAN, ((CassandraSpanSupplier) request).getSpan());
+			span.event(NODE_SUCCESS);
+			tryAddingRemoteIpAndPort(node, span);
+			if (log.isDebugEnabled()) {
+				log.debug("Marking node success for [" + span + "]");
+			}
+		}
+	}
+
+	@Override
+	public void onSessionReady(@NonNull Session session) {
+	}
+
+	@Override
+	public void close() throws Exception {
+
+	}
+
 	private void tryAddingRemoteIpAndPort(Node node, Span span) {
 		try {
 			SocketAddress socketAddress = node.getEndPoint().resolve();
@@ -106,28 +128,6 @@ public class TraceRequestTracker implements RequestTracker {
 		catch (Exception e) {
 			log.debug("Exception occurred while trying to set ip and port", e);
 		}
-	}
-
-	@Override
-	public void onNodeSuccess(@NonNull Request request, long latencyNanos,
-			@NonNull DriverExecutionProfile executionProfile, @NonNull Node node, @NonNull String requestLogPrefix) {
-		if (request instanceof CassandraSpanSupplier) {
-			AssertingSpan span = AssertingSpan.of(CASSANDRA_SPAN, ((CassandraSpanSupplier) request).getSpan());
-			span.event(NODE_SUCCESS);
-			tryAddingRemoteIpAndPort(node, span);
-			if (log.isDebugEnabled()) {
-				log.debug("Marking node error for [" + span + "]");
-			}
-		}
-	}
-
-	@Override
-	public void onSessionReady(@NonNull Session session) {
-	}
-
-	@Override
-	public void close() throws Exception {
-
 	}
 
 }

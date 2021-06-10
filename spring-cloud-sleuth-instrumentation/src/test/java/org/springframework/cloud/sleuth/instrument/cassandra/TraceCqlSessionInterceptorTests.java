@@ -36,7 +36,7 @@ import static org.assertj.core.api.BDDAssertions.then;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.mock;
 
-class TraceCassandraInterceptorTests {
+class TraceCqlSessionInterceptorTests {
 
 	SimpleTracer simpleTracer = new SimpleTracer();
 
@@ -81,7 +81,7 @@ class TraceCassandraInterceptorTests {
 	private CqlSession proxied(CqlSession session) {
 		ProxyFactory proxyFactory = new ProxyFactory();
 		proxyFactory.setTarget(session);
-		proxyFactory.addAdvice(new TraceCassandraInterceptor(session, this.beanFactory) {
+		proxyFactory.addAdvice(new TraceCqlSessionInterceptor(session, this.beanFactory) {
 			@Override
 			boolean isContextUnusable() {
 				return false;

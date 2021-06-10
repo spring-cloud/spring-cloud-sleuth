@@ -16,25 +16,24 @@
 
 package org.springframework.cloud.sleuth.autoconfig.instrument.cassandra;
 
-import com.datastax.oss.driver.api.core.CqlSession;
-
-import org.springframework.aop.framework.ProxyFactory;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.config.BeanPostProcessor;
-import org.springframework.cloud.sleuth.instrument.cassandra.TraceCqlSessionInterceptor;
+import org.springframework.cloud.sleuth.instrument.cassandra.TraceReactiveSession;
+import org.springframework.data.cassandra.ReactiveSession;
 
 /**
- * {@link BeanPostProcessor} to wrap a {@link CqlSession} instance into its trace
+ * {@link BeanPostProcessor} to wrap a
+ * {@link org.springframework.data.cassandra.ReactiveSession} instance into its trace
  * representation.
  *
  * @author Marcin Grzejszczak
  * @since 2.0.0
  */
-public class TraceCqlSessionBeanPostProcessor implements BeanPostProcessor {
+public class TraceReactiveSessionBeanPostProcessor implements BeanPostProcessor {
 
 	private final BeanFactory beanFactory;
 
-	public TraceCqlSessionBeanPostProcessor(BeanFactory beanFactory) {
+	public TraceReactiveSessionBeanPostProcessor(BeanFactory beanFactory) {
 		this.beanFactory = beanFactory;
 	}
 
@@ -45,18 +44,14 @@ public class TraceCqlSessionBeanPostProcessor implements BeanPostProcessor {
 
 	@Override
 	public Object postProcessAfterInitialization(Object bean, String beanName) {
-		if (bean instanceof CqlSession) {
-			return create((CqlSession) bean);
+		if (bean instanceof ReactiveSession) {
+			return create((ReactiveSession) bean);
 		}
 		return bean;
 	}
 
-	private CqlSession create(CqlSession session) {
-		ProxyFactory proxyFactory = new ProxyFactory();
-		proxyFactory.setTarget(session);
-		proxyFactory.addAdvice(new TraceCqlSessionInterceptor(session, this.beanFactory));
-		proxyFactory.addInterface(CqlSession.class);
-		return (CqlSession) proxyFactory.getProxy();
+	private ReactiveSession create(ReactiveSession delegate) {
+		return new TraceReactiveSession(delegate, this.beanFactory);
 	}
 
 }

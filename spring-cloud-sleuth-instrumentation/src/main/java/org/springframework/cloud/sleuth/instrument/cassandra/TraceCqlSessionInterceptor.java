@@ -46,9 +46,9 @@ import org.springframework.lang.Nullable;
  * @author Marcin Grzejszczak
  * @since 3.1.0
  */
-public class TraceCassandraInterceptor implements MethodInterceptor {
+public class TraceCqlSessionInterceptor implements MethodInterceptor {
 
-	private static final Log log = LogFactory.getLog(TraceCassandraInterceptor.class);
+	private static final Log log = LogFactory.getLog(TraceCqlSessionInterceptor.class);
 
 	private final CqlSession session;
 
@@ -56,7 +56,7 @@ public class TraceCassandraInterceptor implements MethodInterceptor {
 
 	private Tracer tracer;
 
-	public TraceCassandraInterceptor(CqlSession session, BeanFactory beanFactory) {
+	public TraceCqlSessionInterceptor(CqlSession session, BeanFactory beanFactory) {
 		this.session = session;
 		this.beanFactory = beanFactory;
 	}
@@ -141,8 +141,12 @@ public class TraceCassandraInterceptor implements MethodInterceptor {
 
 	private Object tracedCall(Statement statement, String defaultSpanName, Function<Statement<?>, Object> function) {
 		Span span = cassandraClientSpan();
-		Statement<?> proxied = TraceStatement.createProxy(span, statement);
+		Statement<?> proxied = statement instanceof TraceStatement ? statement
+				: TraceStatement.createProxy(span, statement);
 		((CassandraSpanCustomizer) proxied).customizeSpan(defaultSpanName);
+
+		// TODO change to current trace context, reactive associates tracer with span
+		// already
 		try (Tracer.SpanInScope ws = tracer().withSpan(span)) {
 			log.debug("Will execute statement");
 			return function.apply(proxied);
@@ -150,10 +154,13 @@ public class TraceCassandraInterceptor implements MethodInterceptor {
 	}
 
 	private Span cassandraClientSpan() {
-		return AssertingSpanBuilder.of(SleuthCassandraSpan.CASSANDRA_SPAN, tracer().spanBuilder())
-				.kind(Span.Kind.CLIENT).remoteServiceName("cassandra-" + getSessionName())
-				.tag(SleuthCassandraSpan.Tags.KEYSPACE_NAME,
-						getKeyspace().map(CqlIdentifier::asInternal).orElse("unknown"))
+		return cassandraClientSpan(tracer().spanBuilder(), getSessionName(), getKeyspace());
+	}
+
+	static Span cassandraClientSpan(Span.Builder builder, String sessionName, Optional<CqlIdentifier> keyspace) {
+		return AssertingSpanBuilder.of(SleuthCassandraSpan.CASSANDRA_SPAN, builder).kind(Span.Kind.CLIENT)
+				.remoteServiceName("cassandra-" + sessionName)
+				.tag(SleuthCassandraSpan.Tags.KEYSPACE_NAME, keyspace.map(CqlIdentifier::asInternal).orElse("unknown"))
 				.start();
 	}
 

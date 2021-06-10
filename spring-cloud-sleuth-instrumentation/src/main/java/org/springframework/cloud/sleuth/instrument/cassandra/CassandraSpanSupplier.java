@@ -27,7 +27,6 @@ import org.springframework.cloud.sleuth.Span;
  * @author Marcin Grzejszczak
  * @since 3.1.0
  */
-// TODO: Package scope?
 public interface CassandraSpanSupplier {
 
 	/**
