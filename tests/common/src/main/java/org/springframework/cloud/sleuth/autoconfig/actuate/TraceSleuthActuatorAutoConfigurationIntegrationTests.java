@@ -16,28 +16,19 @@
 
 package org.springframework.cloud.sleuth.autoconfig.actuate;
 
-import brave.sampler.Sampler;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.actuate.autoconfigure.security.servlet.ManagementWebSecurityAutoConfiguration;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
-import org.springframework.boot.autoconfigure.data.r2dbc.R2dbcDataAutoConfiguration;
-import org.springframework.boot.autoconfigure.mongo.MongoAutoConfiguration;
-import org.springframework.boot.autoconfigure.quartz.QuartzAutoConfiguration;
-import org.springframework.boot.autoconfigure.r2dbc.R2dbcAutoConfiguration;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.cloud.gateway.config.GatewayAutoConfiguration;
-import org.springframework.cloud.gateway.config.GatewayClassPathWarningAutoConfiguration;
-import org.springframework.cloud.gateway.config.GatewayMetricsAutoConfiguration;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.Tracer;
-import org.springframework.cloud.sleuth.autoconfig.zipkin2.ZipkinAutoConfiguration;
-import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.MediaType;
+import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.ResultMatcher;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 
@@ -49,10 +40,10 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@SpringBootTest(classes = TraceSleuthActuatorAutoConfigurationIntegrationTests.Config.class,
-		properties = { "spring.jackson.serialization.indent_output=true", "management.endpoints.web.exposure.include=*",
-				"spring.jackson.default-property-inclusion=non_null" })
-class TraceSleuthActuatorAutoConfigurationIntegrationTests {
+@ContextConfiguration(classes = TraceSleuthActuatorAutoConfigurationIntegrationTests.TestConfig.class)
+@TestPropertySource(properties = { "spring.jackson.serialization.indent_output=true",
+		"management.endpoints.web.exposure.include=*", "spring.jackson.default-property-inclusion=non_null" })
+public abstract class TraceSleuthActuatorAutoConfigurationIntegrationTests {
 
 	protected MockMvc mockMvc;
 
@@ -83,9 +74,7 @@ class TraceSleuthActuatorAutoConfigurationIntegrationTests {
 	void tracesSnapshot() throws Exception {
 		then(this.bufferingSpanReporter.spans).isNotEmpty();
 
-		this.mockMvc.perform(get("/actuator/traces")).andExpect(status().isOk())
-				.andExpect(content().string(allOf(containsString("\"name\":\"first\""),
-						containsString("\"name\":\"second\""), containsString("\"name\":\"third\""))));
+		this.mockMvc.perform(get("/actuator/traces")).andExpect(status().isOk()).andExpect(zipkinJsonBody());
 
 		then(this.bufferingSpanReporter.spans).isNotEmpty();
 	}
@@ -95,23 +84,19 @@ class TraceSleuthActuatorAutoConfigurationIntegrationTests {
 		then(this.bufferingSpanReporter.spans).isNotEmpty();
 
 		this.mockMvc.perform(post("/actuator/traces").contentType(MediaType.APPLICATION_JSON_VALUE))
-				.andExpect(status().isOk()).andExpect(content().string(allOf(containsString("\"name\":\"first\""),
-						containsString("\"name\":\"second\""), containsString("\"name\":\"third\""))));
+				.andExpect(status().isOk()).andExpect(zipkinJsonBody());
 
 		then(this.bufferingSpanReporter.spans).isEmpty();
 	}
 
-	@Configuration(proxyBeanMethods = false)
-	@EnableAutoConfiguration(exclude = { GatewayClassPathWarningAutoConfiguration.class, GatewayAutoConfiguration.class,
-			GatewayMetricsAutoConfiguration.class, ManagementWebSecurityAutoConfiguration.class,
-			MongoAutoConfiguration.class, QuartzAutoConfiguration.class, R2dbcAutoConfiguration.class,
-			R2dbcDataAutoConfiguration.class, ZipkinAutoConfiguration.class })
-	static class Config {
+	protected ResultMatcher zipkinJsonBody() {
+		return content().string(allOf(containsString("\"name\":\"first\""), containsString("\"name\":\"second\""),
+				containsString("\"name\":\"third\"")));
+	}
 
-		@Bean
-		Sampler mySampler() {
-			return Sampler.ALWAYS_SAMPLE;
-		}
+	@Configuration(proxyBeanMethods = false)
+	@EnableAutoConfiguration
+	static class TestConfig {
 
 	}
 
