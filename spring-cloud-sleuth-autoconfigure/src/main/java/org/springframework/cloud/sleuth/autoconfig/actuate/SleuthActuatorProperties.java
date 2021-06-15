@@ -24,26 +24,13 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * @author Marcin Grzejszczak
  * @since 3.1.0
  */
-@ConfigurationProperties(prefix = "spring.sleuth.actuator")
+@ConfigurationProperties(prefix = "management.endpoint.traces")
 public class SleuthActuatorProperties {
-
-	/**
-	 * Enable Sleuth actuator.
-	 */
-	private boolean enabled;
 
 	/**
 	 * Max capacity of the span queue.
 	 */
 	private int capacity = 10_000;
-
-	public boolean isEnabled() {
-		return this.enabled;
-	}
-
-	public void setEnabled(boolean enabled) {
-		this.enabled = enabled;
-	}
 
 	public int getCapacity() {
 		return this.capacity;
@@ -52,4 +39,5 @@ public class SleuthActuatorProperties {
 	public void setCapacity(int capacity) {
 		this.capacity = capacity;
 	}
+
 }

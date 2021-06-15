@@ -18,8 +18,6 @@ package org.springframework.cloud.sleuth.autoconfig.actuate;
 
 import java.util.List;
 
-import org.jetbrains.annotations.NotNull;
-
 import org.springframework.boot.actuate.endpoint.annotation.Endpoint;
 import org.springframework.boot.actuate.endpoint.annotation.ReadOperation;
 import org.springframework.boot.actuate.endpoint.annotation.WriteOperation;
@@ -27,9 +25,11 @@ import org.springframework.boot.actuate.endpoint.web.WebEndpointResponse;
 import org.springframework.boot.actuate.endpoint.web.annotation.WebEndpoint;
 import org.springframework.cloud.sleuth.exporter.FinishedSpan;
 import org.springframework.http.HttpStatus;
+import org.springframework.lang.NonNull;
 
 /**
- * {@link Endpoint @Endpoint} that outputs spans in a format that can be scraped by a collector.
+ * {@link Endpoint @Endpoint} that outputs spans in a format that can be scraped by a
+ * collector.
  *
  * @author Marcin Grzejszczak
  * @since 3.1.0
@@ -52,11 +52,12 @@ public class TracesScrapeEndpoint {
 		return response(format, finishedSpans);
 	}
 
-	@NotNull
+	@NonNull
 	private WebEndpointResponse<String> response(TextOutputFormat format, List<FinishedSpan> finishedSpans) {
 		String spans = this.finishedSpanWriter.write(format, finishedSpans);
 		if (spans == null) {
-			return new WebEndpointResponse<>("The format [" + format.getProducedMimeType().toString()  + " ] is not supported", HttpStatus.UNSUPPORTED_MEDIA_TYPE.value());
+			return new WebEndpointResponse<>("The format [" + format.getProducedMimeType() + " ] is not supported",
+					HttpStatus.NOT_ACCEPTABLE.value());
 		}
 		return new WebEndpointResponse<>(spans, format);
 	}
@@ -66,4 +67,5 @@ public class TracesScrapeEndpoint {
 		List<FinishedSpan> finishedSpans = this.bufferingSpanReporter.drainFinishedSpans();
 		return response(format, finishedSpans);
 	}
+
 }

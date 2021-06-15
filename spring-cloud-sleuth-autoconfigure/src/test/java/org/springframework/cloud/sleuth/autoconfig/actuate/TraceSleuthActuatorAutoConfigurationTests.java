@@ -25,11 +25,24 @@ import org.springframework.boot.test.context.runner.ApplicationContextRunner;
 class TraceSleuthActuatorAutoConfigurationTests {
 
 	private final ApplicationContextRunner contextRunner = new ApplicationContextRunner()
+			.withPropertyValues("management.endpoints.web.exposure.include=traces")
 			.withConfiguration(AutoConfigurations.of(TraceSleuthActuatorAutoConfiguration.class));
 
 	@Test
-	void should_not_register_actuator_when_property_disabled() {
-		this.contextRunner.withPropertyValues("spring.sleuth.actuator.enabled=false")
+	void should_register_actuator_by_default() {
+		this.contextRunner.run(context -> BDDAssertions.then(context).hasSingleBean(TracesScrapeEndpoint.class));
+	}
+
+	@Test
+	void should_not_register_actuator_when_endpoint_disabled() {
+		this.contextRunner.withPropertyValues("management.endpoint.traces.enabled=false")
 				.run(context -> BDDAssertions.then(context).doesNotHaveBean(TracesScrapeEndpoint.class));
 	}
+
+	@Test
+	void should_not_register_actuator_when_sleuth_disabled() {
+		this.contextRunner.withPropertyValues("spring.sleuth.enabled=false")
+				.run(context -> BDDAssertions.then(context).doesNotHaveBean(TracesScrapeEndpoint.class));
+	}
+
 }

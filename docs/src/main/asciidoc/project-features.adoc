@@ -485,6 +485,15 @@ Otherwise, your custom logback file does not properly read the property.
 
 A declarative format of representing span configuration was introduced via the `DocumentedSpan` abstraction. By analyzing Sleuth's source code an appendix with all span characteristics is created (including allowed tag keys and event names). You can check the <<appendix.adoc#sleuth-spans, Sleuth Spans appendix>> for more information.
 
+[[features-traces-actuator]]
+== Traces Actuator Endpoint
+
+Spring Cloud Sleuth comes with a `traces` Actuator endpoint that can store finished spans. The endpoint can be queried either via an HTTP Get method to simply retrieve the list of stored spans or via HTTP Post method to retrieve the list and clear it.
+
+The size of the queue where the spans are stored can be configured via the `management.endpoint.traces.queue-size` property.
+
+Please read the https://docs.spring.io/spring-boot/docs/current/reference/htmlsingle/#actuator[Spring Boot Actuator: Production-ready Features] section of the documentation to read more about the Actuator endpoints configuration options.
+
 [[features-whats-next]]
 == What to Read Next
 

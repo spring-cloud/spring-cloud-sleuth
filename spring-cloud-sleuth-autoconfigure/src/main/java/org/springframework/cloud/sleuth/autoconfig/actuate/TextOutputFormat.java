@@ -16,18 +16,16 @@
 
 package org.springframework.cloud.sleuth.autoconfig.actuate;
 
-import com.google.protobuf.TextFormat;
-
 import org.springframework.boot.actuate.endpoint.Producible;
 import org.springframework.http.MediaType;
 import org.springframework.util.MimeType;
 import org.springframework.util.MimeTypeUtils;
 
 /**
- * A {@link Producible} enum for supported Prometheus {@link TextFormat}.
+ * A {@link Producible} enum for supported span outputs.
  *
- * @author Andy Wilkinson
- * @since 2.5.0
+ * @author Marcin Grzejszczak
+ * @since 3.1.0
  */
 public enum TextOutputFormat implements Producible<TextOutputFormat> {
 

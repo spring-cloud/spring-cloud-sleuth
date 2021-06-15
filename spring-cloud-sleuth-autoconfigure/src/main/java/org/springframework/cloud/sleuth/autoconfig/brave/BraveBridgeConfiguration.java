@@ -77,8 +77,10 @@ class BraveBridgeConfiguration {
 
 	// Name is important for sampling conditions
 	@Bean(name = "traceCompositeSpanHandler")
-	SpanHandler compositeSpanHandler(ObjectProvider<List<SpanFilter>> exporters, ObjectProvider<List<SpanReporter>> reporters) {
-		return new CompositeSpanHandler(exporters.getIfAvailable(ArrayList::new), reporters.getIfAvailable(ArrayList::new));
+	SpanHandler compositeSpanHandler(ObjectProvider<List<SpanFilter>> exporters,
+			ObjectProvider<List<SpanReporter>> reporters) {
+		return new CompositeSpanHandler(exporters.getIfAvailable(ArrayList::new),
+				reporters.getIfAvailable(ArrayList::new));
 	}
 
 }

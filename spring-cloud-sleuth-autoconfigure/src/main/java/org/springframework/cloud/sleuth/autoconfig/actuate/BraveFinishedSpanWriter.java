@@ -33,11 +33,14 @@ import org.springframework.cloud.sleuth.exporter.SpanReporter;
  * @since 3.1.0
  */
 class BraveFinishedSpanWriter implements FinishedSpanWriter {
+
 	@Override
 	public String write(TextOutputFormat format, List<FinishedSpan> spans) {
 		if (format == TextOutputFormat.CONTENT_TYPE_OPENZIPKIN_JSON_V2) {
-			return new String(MutableSpanBytesEncoder.zipkinJsonV2(Tags.ERROR).encodeList(spans.stream().map(BraveFinishedSpan::toBrave).collect(Collectors.toList())));
+			return new String(MutableSpanBytesEncoder.zipkinJsonV2(Tags.ERROR)
+					.encodeList(spans.stream().map(BraveFinishedSpan::toBrave).collect(Collectors.toList())));
 		}
 		return null;
 	}
+
 }

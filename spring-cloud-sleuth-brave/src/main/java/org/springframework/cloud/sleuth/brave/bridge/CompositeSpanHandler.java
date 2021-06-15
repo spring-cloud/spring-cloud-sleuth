@@ -27,19 +27,19 @@ import org.springframework.cloud.sleuth.exporter.SpanFilter;
 import org.springframework.cloud.sleuth.exporter.SpanReporter;
 
 /**
- * Merges {@link SpanFilter}s into a {@link SpanHandler}.
+ * Merges {@link SpanFilter}s and {@link SpanReporter}s into a {@link SpanHandler}.
  *
  * @author Marcin Grzejszczak
  * @since 3.0.0
  */
 public class CompositeSpanHandler extends SpanHandler {
 
-	private final List<SpanFilter> exporters;
+	private final List<SpanFilter> filters;
 
 	private final List<SpanReporter> reporters;
 
-	public CompositeSpanHandler(List<SpanFilter> exporters, List<SpanReporter> reporters) {
-		this.exporters = exporters == null ? Collections.emptyList() : exporters;
+	public CompositeSpanHandler(List<SpanFilter> filters, List<SpanReporter> reporters) {
+		this.filters = filters == null ? Collections.emptyList() : filters;
 		this.reporters = reporters == null ? Collections.emptyList() : reporters;
 	}
 
@@ -61,7 +61,7 @@ public class CompositeSpanHandler extends SpanHandler {
 	}
 
 	private boolean shouldProcess(MutableSpan span) {
-		for (SpanFilter exporter : this.exporters) {
+		for (SpanFilter exporter : this.filters) {
 			if (!exporter.isExportable(BraveFinishedSpan.fromBrave(span))) {
 				return false;
 			}

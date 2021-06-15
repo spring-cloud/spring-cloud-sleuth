@@ -16,25 +16,27 @@
 
 package org.springframework.cloud.sleuth.autoconfig.actuate;
 
-import java.util.List;
+import org.assertj.core.api.BDDAssertions;
+import org.junit.jupiter.api.Test;
 
 import org.springframework.cloud.sleuth.exporter.FinishedSpan;
 
-/**
- * Writes finished spans to string.
- *
- * @author Marcin Grzejszczak
- * @since 3.1.0
- */
-public interface FinishedSpanWriter {
+import static org.mockito.Mockito.mock;
 
-	/**
-	 * Writes the spans in a given format to String.
-	 * @param format format in which spans should be stored
-	 * @param spans spans to store
-	 * @return string representation of spans or {@code null} if {@link TextOutputFormat}
-	 * is not supported.
-	 */
-	String write(TextOutputFormat format, List<FinishedSpan> spans);
+class BufferingSpanReporterTests {
+
+	@Test
+	void should_overwrite_the_oldest_element_with_the_newest_when_queue_is_full() {
+		BufferingSpanReporter reporter = new BufferingSpanReporter(2);
+		FinishedSpan oldest = mock(FinishedSpan.class, "oldest");
+		FinishedSpan second = mock(FinishedSpan.class, "second");
+		FinishedSpan youngest = mock(FinishedSpan.class, "youngest");
+
+		reporter.report(oldest);
+		reporter.report(second);
+		reporter.report(youngest);
+
+		BDDAssertions.then(reporter.spans).containsExactly(second, youngest);
+	}
 
 }

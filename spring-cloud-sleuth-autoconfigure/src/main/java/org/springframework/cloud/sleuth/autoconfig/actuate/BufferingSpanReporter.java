@@ -79,5 +79,11 @@ public class BufferingSpanReporter implements SpanReporter {
 			this.estimatedSize.incrementAndGet();
 			this.spans.add(span);
 		}
+		else {
+			this.spans.poll();
+			this.estimatedSize.decrementAndGet();
+			report(span);
+		}
 	}
+
 }

@@ -50,8 +50,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest(classes = TraceSleuthActuatorAutoConfigurationIntegrationTests.Config.class,
-		properties = {"spring.jackson.serialization.indent_output=true",
-				"management.endpoints.web.exposure.include=*", "spring.jackson.default-property-inclusion=non_null"})
+		properties = { "spring.jackson.serialization.indent_output=true", "management.endpoints.web.exposure.include=*",
+				"spring.jackson.default-property-inclusion=non_null" })
 class TraceSleuthActuatorAutoConfigurationIntegrationTests {
 
 	protected MockMvc mockMvc;
@@ -83,9 +83,9 @@ class TraceSleuthActuatorAutoConfigurationIntegrationTests {
 	void tracesSnapshot() throws Exception {
 		then(this.bufferingSpanReporter.spans).isNotEmpty();
 
-		this.mockMvc.perform(get("/actuator/traces"))
-				.andExpect(status().isOk())
-				.andExpect(content().string(allOf(containsString("\"name\":\"first\""), containsString("\"name\":\"second\""), containsString("\"name\":\"third\""))));
+		this.mockMvc.perform(get("/actuator/traces")).andExpect(status().isOk())
+				.andExpect(content().string(allOf(containsString("\"name\":\"first\""),
+						containsString("\"name\":\"second\""), containsString("\"name\":\"third\""))));
 
 		then(this.bufferingSpanReporter.spans).isNotEmpty();
 	}
@@ -95,8 +95,8 @@ class TraceSleuthActuatorAutoConfigurationIntegrationTests {
 		then(this.bufferingSpanReporter.spans).isNotEmpty();
 
 		this.mockMvc.perform(post("/actuator/traces").contentType(MediaType.APPLICATION_JSON_VALUE))
-				.andExpect(status().isOk())
-				.andExpect(content().string(allOf(containsString("\"name\":\"first\""), containsString("\"name\":\"second\""), containsString("\"name\":\"third\""))));
+				.andExpect(status().isOk()).andExpect(content().string(allOf(containsString("\"name\":\"first\""),
+						containsString("\"name\":\"second\""), containsString("\"name\":\"third\""))));
 
 		then(this.bufferingSpanReporter.spans).isEmpty();
 	}
@@ -112,5 +112,7 @@ class TraceSleuthActuatorAutoConfigurationIntegrationTests {
 		Sampler mySampler() {
 			return Sampler.ALWAYS_SAMPLE;
 		}
+
 	}
+
 }

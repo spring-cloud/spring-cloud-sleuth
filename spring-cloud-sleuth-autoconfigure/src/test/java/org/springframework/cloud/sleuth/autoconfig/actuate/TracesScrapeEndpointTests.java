@@ -17,32 +17,38 @@
 package org.springframework.cloud.sleuth.autoconfig.actuate;
 
 import java.util.Collections;
+import java.util.List;
 
-import brave.handler.MutableSpan;
-import brave.propagation.TraceContext;
 import org.junit.jupiter.api.Test;
 
-import org.springframework.cloud.sleuth.brave.bridge.BraveFinishedSpan;
+import org.springframework.boot.actuate.endpoint.web.WebEndpointResponse;
 import org.springframework.cloud.sleuth.exporter.FinishedSpan;
+import org.springframework.http.HttpStatus;
+import org.springframework.lang.NonNull;
 
 import static org.assertj.core.api.BDDAssertions.then;
 
-class BraveFinishedSpanWriterTests {
+class TracesScrapeEndpointTests {
 
 	@Test
-	void should_convert_finished_spans_to_zipkin_json() {
-		FinishedSpan finishedSpan = new BraveFinishedSpan(
-				new MutableSpan(TraceContext.newBuilder().spanId(1L).traceId(2L).build(), null));
+	void should_return_not_acceptable_when_no_finished_span_writer_is_applicable() {
+		TracesScrapeEndpoint tracesScrapeEndpoint = new TracesScrapeEndpoint(bufferingSpanReporter(),
+				(format, spans) -> null);
 
-		String json = new BraveFinishedSpanWriter().write(TextOutputFormat.CONTENT_TYPE_OPENZIPKIN_JSON_V2,
-				Collections.singletonList(finishedSpan));
+		WebEndpointResponse<String> response = tracesScrapeEndpoint
+				.spansSnapshot(TextOutputFormat.CONTENT_TYPE_OPENZIPKIN_JSON_V2);
 
-		then(json).isEqualTo("[{\"traceId\":\"0000000000000002\",\"id\":\"0000000000000001\"}]");
+		then(response.getStatus()).isEqualTo(HttpStatus.NOT_ACCEPTABLE.value());
 	}
 
-	@Test
-	void should_return_null_when_format_not_supported() {
-		then(new BraveFinishedSpanWriter().write(null, Collections.emptyList())).isNull();
+	@NonNull
+	private BufferingSpanReporter bufferingSpanReporter() {
+		return new BufferingSpanReporter(1) {
+			@Override
+			public List<FinishedSpan> getFinishedSpans() {
+				return Collections.emptyList();
+			}
+		};
 	}
 
 }

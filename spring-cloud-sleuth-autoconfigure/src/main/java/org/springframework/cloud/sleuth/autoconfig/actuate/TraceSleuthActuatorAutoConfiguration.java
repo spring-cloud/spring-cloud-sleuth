@@ -18,6 +18,8 @@ package org.springframework.cloud.sleuth.autoconfig.actuate;
 
 import brave.handler.SpanHandler;
 
+import org.springframework.boot.actuate.autoconfigure.endpoint.condition.ConditionalOnAvailableEndpoint;
+import org.springframework.boot.actuate.endpoint.Producible;
 import org.springframework.boot.autoconfigure.AutoConfigureBefore;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -36,10 +38,11 @@ import org.springframework.context.annotation.Configuration;
  * @since 3.1.0
  */
 @Configuration(proxyBeanMethods = false)
-@ConditionalOnProperty(value = {"spring.sleuth.enabled", "spring.sleuth.actuator.enabled"}, matchIfMissing = true)
-//@ConditionalOnAvailableEndpoint(endpoint = TracesScrapeEndpoint.class)
+@ConditionalOnProperty(value = "spring.sleuth.enabled", matchIfMissing = true)
+@ConditionalOnAvailableEndpoint(endpoint = TracesScrapeEndpoint.class)
 @AutoConfigureBefore(BraveAutoConfiguration.class)
 @EnableConfigurationProperties(SleuthActuatorProperties.class)
+@ConditionalOnClass(Producible.class)
 public class TraceSleuthActuatorAutoConfiguration {
 
 	@Bean
@@ -50,7 +53,8 @@ public class TraceSleuthActuatorAutoConfiguration {
 
 	@Bean
 	@ConditionalOnMissingBean
-	public TracesScrapeEndpoint tracesScrapeEndpoint(BufferingSpanReporter bufferingSpanReporter, FinishedSpanWriter finishedSpanWriter) {
+	TracesScrapeEndpoint sleuthTracesScrapeEndpoint(BufferingSpanReporter bufferingSpanReporter,
+			FinishedSpanWriter finishedSpanWriter) {
 		return new TracesScrapeEndpoint(bufferingSpanReporter, finishedSpanWriter);
 	}
 
@@ -61,16 +65,23 @@ public class TraceSleuthActuatorAutoConfiguration {
 
 		@Bean
 		@ConditionalOnMissingBean
-		FinishedSpanWriter braveFinishedSpanWriter() {
+		FinishedSpanWriter sleuthBraveFinishedSpanWriter() {
 			return new BraveFinishedSpanWriter();
 		}
 
+		/**
+		 * We need to register at least one {@link SpanHandler} for sampling to hook in.
+		 * If there are no span handlers all spans will be noop and no spans will get
+		 * reported.
+		 * @return a noop span handler
+		 */
 		@Bean
-		SpanHandler braveCustomSpanHandler() {
+		SpanHandler sleuthBraveCustomSpanHandler() {
 			return new SpanHandler() {
 
 			};
 		}
+
 	}
 
 }
