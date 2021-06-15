@@ -19,7 +19,6 @@ package org.springframework.cloud.sleuth.autoconfig.actuate;
 import org.springframework.boot.actuate.endpoint.Producible;
 import org.springframework.http.MediaType;
 import org.springframework.util.MimeType;
-import org.springframework.util.MimeTypeUtils;
 
 /**
  * A {@link Producible} enum for supported span outputs.
@@ -32,12 +31,12 @@ public enum TextOutputFormat implements Producible<TextOutputFormat> {
 	/**
 	 * OpenZipkin text.
 	 */
-	CONTENT_TYPE_OPENZIPKIN_JSON_V2(MediaType.APPLICATION_JSON_VALUE);
+	CONTENT_TYPE_OPENZIPKIN_JSON_V2(MediaType.APPLICATION_JSON);
 
 	private final MimeType mimeType;
 
-	TextOutputFormat(String mimeType) {
-		this.mimeType = MimeTypeUtils.parseMimeType(mimeType);
+	TextOutputFormat(MimeType mimeType) {
+		this.mimeType = mimeType;
 	}
 
 	@Override
