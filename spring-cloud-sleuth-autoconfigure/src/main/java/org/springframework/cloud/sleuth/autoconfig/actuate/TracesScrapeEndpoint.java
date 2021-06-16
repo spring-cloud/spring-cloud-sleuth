@@ -47,14 +47,14 @@ public class TracesScrapeEndpoint {
 	}
 
 	@ReadOperation(producesFrom = TextOutputFormat.class)
-	public WebEndpointResponse<String> spansSnapshot(TextOutputFormat format) {
+	public WebEndpointResponse<Object> spansSnapshot(TextOutputFormat format) {
 		List<FinishedSpan> finishedSpans = this.bufferingSpanReporter.getFinishedSpans();
 		return response(format, finishedSpans);
 	}
 
 	@NonNull
-	private WebEndpointResponse<String> response(TextOutputFormat format, List<FinishedSpan> finishedSpans) {
-		String spans = this.finishedSpanWriter.write(format, finishedSpans);
+	private WebEndpointResponse<Object> response(TextOutputFormat format, List<FinishedSpan> finishedSpans) {
+		Object spans = this.finishedSpanWriter.write(format, finishedSpans);
 		if (spans == null) {
 			return new WebEndpointResponse<>("The format [" + format.getProducedMimeType() + " ] is not supported",
 					HttpStatus.NOT_ACCEPTABLE.value());
@@ -63,7 +63,7 @@ public class TracesScrapeEndpoint {
 	}
 
 	@WriteOperation(producesFrom = TextOutputFormat.class)
-	public WebEndpointResponse<String> spans(TextOutputFormat format) {
+	public WebEndpointResponse<Object> spans(TextOutputFormat format) {
 		List<FinishedSpan> finishedSpans = this.bufferingSpanReporter.drainFinishedSpans();
 		return response(format, finishedSpans);
 	}

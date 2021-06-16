@@ -41,6 +41,17 @@ class BraveFinishedSpanWriterTests {
 	}
 
 	@Test
+	void should_not_support_any_other_format_than_openzipkin() {
+		FinishedSpan finishedSpan = new BraveFinishedSpan(
+				new MutableSpan(TraceContext.newBuilder().spanId(1L).traceId(2L).build(), null));
+
+		String json = new BraveFinishedSpanWriter().write(TextOutputFormat.CONTENT_TYPE_OTLP_PROTOBUF,
+				Collections.singletonList(finishedSpan));
+
+		then(json).isNull();
+	}
+
+	@Test
 	void should_return_null_when_format_not_supported() {
 		then(new BraveFinishedSpanWriter().write(null, Collections.emptyList())).isNull();
 	}

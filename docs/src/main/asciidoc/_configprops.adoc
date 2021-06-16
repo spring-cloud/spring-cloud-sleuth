@@ -10,6 +10,7 @@
 |spring.sleuth.baggage.remote-fields |  | List of fields that are referenced the same in-process as it is on the wire. For example, the field "x-vcap-request-id" would be set as-is including the prefix.
 |spring.sleuth.baggage.tag-fields |  | List of fields that should automatically become tags.
 |spring.sleuth.batch.enabled | `true` | Enable Spring Batch instrumentation.
+|spring.sleuth.cassandra.enabled | `true` | Enable Cassandra instrumentation.
 |spring.sleuth.circuitbreaker.enabled | `true` | Enable Spring Cloud CircuitBreaker instrumentation.
 |spring.sleuth.config.server.enabled | `true` | Enable Spring Cloud Config Server instrumentation.
 |spring.sleuth.deployer.enabled | `true` | Enable Spring Cloud Deployer instrumentation.
@@ -75,6 +76,7 @@
 |spring.sleuth.sampler.refresh.enabled | `true` | Enable refresh scope for sampler.
 |spring.sleuth.scheduled.enabled | `true` | Enable tracing for {@link org.springframework.scheduling.annotation.Scheduled}.
 |spring.sleuth.scheduled.skip-pattern |  | Pattern for the fully qualified name of a class that should be skipped.
+|spring.sleuth.session.enabled | `true` | Enable Spring Session instrumentation.
 |spring.sleuth.span-filter.additional-span-name-patterns-to-ignore |  | Additional list of span names to ignore. Will be appended to {@link #spanNamePatternsToSkip}.
 |spring.sleuth.span-filter.enabled | `false` | Will turn on the default Sleuth handler mechanism. Might ignore exporting of certain spans;
 |spring.sleuth.span-filter.span-name-patterns-to-skip | `^catalogWatchTaskScheduler$` | List of span names to ignore. They will not be sent to external systems.

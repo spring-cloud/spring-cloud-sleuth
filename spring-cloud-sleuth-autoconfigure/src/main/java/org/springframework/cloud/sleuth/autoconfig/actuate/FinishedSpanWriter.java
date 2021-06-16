@@ -26,7 +26,7 @@ import org.springframework.cloud.sleuth.exporter.FinishedSpan;
  * @author Marcin Grzejszczak
  * @since 3.1.0
  */
-public interface FinishedSpanWriter {
+public interface FinishedSpanWriter<T> {
 
 	/**
 	 * Writes the spans in a given format to String.
@@ -35,6 +35,6 @@ public interface FinishedSpanWriter {
 	 * @return string representation of spans or {@code null} if {@link TextOutputFormat}
 	 * is not supported.
 	 */
-	String write(TextOutputFormat format, List<FinishedSpan> spans);
+	T write(TextOutputFormat format, List<FinishedSpan> spans);
 
 }

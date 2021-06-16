@@ -31,7 +31,12 @@ public enum TextOutputFormat implements Producible<TextOutputFormat> {
 	/**
 	 * OpenZipkin text.
 	 */
-	CONTENT_TYPE_OPENZIPKIN_JSON_V2(MediaType.APPLICATION_JSON);
+	CONTENT_TYPE_OPENZIPKIN_JSON_V2(MediaType.APPLICATION_JSON),
+
+	/**
+	 * OTLP protobuf format.
+	 */
+	CONTENT_TYPE_OTLP_PROTOBUF(MediaType.parseMediaType("application/x-protobuf"));
 
 	private final MimeType mimeType;
 

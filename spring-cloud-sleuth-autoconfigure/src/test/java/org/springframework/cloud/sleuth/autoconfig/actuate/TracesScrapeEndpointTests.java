@@ -35,7 +35,7 @@ class TracesScrapeEndpointTests {
 		TracesScrapeEndpoint tracesScrapeEndpoint = new TracesScrapeEndpoint(bufferingSpanReporter(),
 				(format, spans) -> null);
 
-		WebEndpointResponse<String> response = tracesScrapeEndpoint
+		WebEndpointResponse<Object> response = tracesScrapeEndpoint
 				.spansSnapshot(TextOutputFormat.CONTENT_TYPE_OPENZIPKIN_JSON_V2);
 
 		then(response.getStatus()).isEqualTo(HttpStatus.NOT_ACCEPTABLE.value());

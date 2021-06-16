@@ -32,7 +32,7 @@ import org.springframework.cloud.sleuth.exporter.SpanReporter;
  * @author Marcin Grzejszczak
  * @since 3.1.0
  */
-class BraveFinishedSpanWriter implements FinishedSpanWriter {
+class BraveFinishedSpanWriter implements FinishedSpanWriter<String> {
 
 	@Override
 	public String write(TextOutputFormat format, List<FinishedSpan> spans) {

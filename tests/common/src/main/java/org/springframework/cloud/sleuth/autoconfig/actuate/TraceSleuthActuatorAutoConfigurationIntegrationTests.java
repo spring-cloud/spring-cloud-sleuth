@@ -16,6 +16,8 @@
 
 package org.springframework.cloud.sleuth.autoconfig.actuate;
 
+import java.util.concurrent.ConcurrentLinkedQueue;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -23,6 +25,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.Tracer;
+import org.springframework.cloud.sleuth.exporter.FinishedSpan;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ContextConfiguration;
@@ -33,6 +36,7 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 
 import static org.assertj.core.api.BDDAssertions.then;
+import static org.awaitility.Awaitility.await;
 import static org.hamcrest.Matchers.allOf;
 import static org.hamcrest.Matchers.containsString;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -51,10 +55,10 @@ public abstract class TraceSleuthActuatorAutoConfigurationIntegrationTests {
 	WebApplicationContext applicationContext;
 
 	@Autowired
-	Tracer tracer;
+	protected Tracer tracer;
 
 	@Autowired
-	BufferingSpanReporter bufferingSpanReporter;
+	protected BufferingSpanReporter bufferingSpanReporter;
 
 	@BeforeEach
 	void setup() throws InterruptedException {
@@ -71,27 +75,40 @@ public abstract class TraceSleuthActuatorAutoConfigurationIntegrationTests {
 	}
 
 	@Test
-	void tracesSnapshot() throws Exception {
-		then(this.bufferingSpanReporter.spans).isNotEmpty();
-
-		this.mockMvc.perform(get("/actuator/traces")).andExpect(status().isOk()).andExpect(zipkinJsonBody());
-
-		then(this.bufferingSpanReporter.spans).isNotEmpty();
+	void tracesZipkinSnapshot() throws Exception {
+		tracesSnapshot(MediaType.APPLICATION_JSON, zipkinJsonBody());
 	}
 
 	@Test
-	void traces() throws Exception {
-		then(this.bufferingSpanReporter.spans).isNotEmpty();
+	void tracesZipkin() throws Exception {
+		traces(MediaType.APPLICATION_JSON, zipkinJsonBody());
+	}
 
-		this.mockMvc.perform(post("/actuator/traces").contentType(MediaType.APPLICATION_JSON_VALUE))
-				.andExpect(status().isOk()).andExpect(zipkinJsonBody());
+	protected void tracesSnapshot(MediaType contentType, ResultMatcher resultMatcher) throws Exception {
+		await().untilAsserted(() -> then(bufferedSpans()).isNotEmpty());
 
-		then(this.bufferingSpanReporter.spans).isEmpty();
+		this.mockMvc.perform(get("/actuator/traces").accept(contentType)).andExpect(status().isOk())
+				.andExpect(resultMatcher);
+
+		then(bufferedSpans()).isNotEmpty();
+	}
+
+	protected void traces(MediaType acceptType, ResultMatcher resultMatcher) throws Exception {
+		await().untilAsserted(() -> then(bufferedSpans()).isNotEmpty());
+
+		this.mockMvc.perform(post("/actuator/traces").contentType(MediaType.APPLICATION_JSON).accept(acceptType))
+				.andExpect(status().isOk()).andExpect(resultMatcher);
+
+		then(bufferedSpans()).isEmpty();
 	}
 
 	protected ResultMatcher zipkinJsonBody() {
 		return content().string(allOf(containsString("\"name\":\"first\""), containsString("\"name\":\"second\""),
 				containsString("\"name\":\"third\"")));
+	}
+
+	protected ConcurrentLinkedQueue<FinishedSpan> bufferedSpans() {
+		return this.bufferingSpanReporter.spans;
 	}
 
 	@Configuration(proxyBeanMethods = false)
