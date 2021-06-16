@@ -16,12 +16,14 @@
 
 package org.springframework.cloud.sleuth.autoconfig.brave;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import brave.Tracing;
 import brave.handler.SpanHandler;
 
 import org.springframework.beans.factory.BeanFactory;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.cloud.sleuth.SpanCustomizer;
@@ -35,10 +37,10 @@ import org.springframework.cloud.sleuth.brave.bridge.CompositePropagationFactory
 import org.springframework.cloud.sleuth.brave.bridge.CompositeSpanHandler;
 import org.springframework.cloud.sleuth.brave.propagation.PropagationFactorySupplier;
 import org.springframework.cloud.sleuth.exporter.SpanFilter;
+import org.springframework.cloud.sleuth.exporter.SpanReporter;
 import org.springframework.cloud.sleuth.propagation.Propagator;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.lang.Nullable;
 
 @Configuration(proxyBeanMethods = false)
 @EnableConfigurationProperties(SleuthPropagationProperties.class)
@@ -75,8 +77,10 @@ class BraveBridgeConfiguration {
 
 	// Name is important for sampling conditions
 	@Bean(name = "traceCompositeSpanHandler")
-	SpanHandler compositeSpanHandler(@Nullable List<SpanFilter> exporters) {
-		return new CompositeSpanHandler(exporters);
+	SpanHandler compositeSpanHandler(ObjectProvider<List<SpanFilter>> exporters,
+			ObjectProvider<List<SpanReporter>> reporters) {
+		return new CompositeSpanHandler(exporters.getIfAvailable(ArrayList::new),
+				reporters.getIfAvailable(ArrayList::new));
 	}
 
 }

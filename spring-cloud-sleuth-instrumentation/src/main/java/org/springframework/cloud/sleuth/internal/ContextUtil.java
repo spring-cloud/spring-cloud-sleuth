@@ -36,7 +36,7 @@ public final class ContextUtil {
 	private static final Log log = LogFactory.getLog(ContextUtil.class);
 
 	/**
-	 * @param beanFactory bean facotry
+	 * @param beanFactory bean factory
 	 * @return {@code true} when context is not ready to be used
 	 */
 	public static boolean isContextUnusable(BeanFactory beanFactory) {

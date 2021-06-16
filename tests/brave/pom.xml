@@ -35,6 +35,7 @@
 	</parent>
 
 	<modules>
+		<module>spring-cloud-sleuth-instrumentation-actuator-tests</module>
 		<module>spring-cloud-sleuth-instrumentation-annotation-tests</module>
 		<module>spring-cloud-sleuth-instrumentation-async-tests</module>
 		<module>spring-cloud-sleuth-instrumentation-baggage-tests</module>
