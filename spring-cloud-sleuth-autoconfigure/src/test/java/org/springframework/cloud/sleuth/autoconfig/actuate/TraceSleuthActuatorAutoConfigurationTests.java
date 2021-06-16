@@ -29,7 +29,7 @@ class TraceSleuthActuatorAutoConfigurationTests {
 			.withConfiguration(AutoConfigurations.of(TraceSleuthActuatorAutoConfiguration.class));
 
 	@Test
-	void should_register_actuator_by_default() {
+	void should_register_actuator_when_management_endpoint_included() {
 		this.contextRunner.run(context -> BDDAssertions.then(context).hasSingleBean(TracesScrapeEndpoint.class));
 	}
 

@@ -47,7 +47,7 @@ public class TraceSleuthActuatorAutoConfiguration {
 
 	@Bean
 	@ConditionalOnMissingBean
-	BufferingSpanReporter traceBufferingSpanReporter(SleuthActuatorProperties sleuthActuatorProperties) {
+	BufferingSpanReporter sleuthBufferingSpanReporter(SleuthActuatorProperties sleuthActuatorProperties) {
 		return new BufferingSpanReporter(sleuthActuatorProperties.getCapacity());
 	}
 

@@ -21,7 +21,7 @@ import java.util.List;
 import org.springframework.cloud.sleuth.exporter.FinishedSpan;
 
 /**
- * Writes finished spans to string.
+ * Writes finished spans in a provided format.
  *
  * @author Marcin Grzejszczak
  * @since 3.1.0
