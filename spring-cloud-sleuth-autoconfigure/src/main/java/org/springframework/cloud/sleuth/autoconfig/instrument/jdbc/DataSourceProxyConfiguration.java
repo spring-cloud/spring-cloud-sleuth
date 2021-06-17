@@ -84,6 +84,8 @@ class DataSourceProxyConfiguration {
 		DataSourceProxyProperties props = new DataSourceProxyProperties();
 		BeanUtils.copyProperties(originalProxy, props);
 		props.setLogging(DataSourceProxyProperties.DataSourceProxyLogging.valueOf(originalProxy.getLogging().name()));
+		BeanUtils.copyProperties(originalProxy.getQuery(), props.getQuery());
+		BeanUtils.copyProperties(originalProxy.getSlowQuery(), props.getSlowQuery());
 		return props;
 	}
 

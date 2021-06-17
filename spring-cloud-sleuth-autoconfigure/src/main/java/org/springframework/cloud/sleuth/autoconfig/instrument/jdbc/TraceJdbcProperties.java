@@ -190,7 +190,7 @@ public class TraceJdbcProperties {
 			/**
 			 * Enable logging all queries to the log.
 			 */
-			private boolean enableLogging = false;
+			private boolean enableLogging = true;
 
 			/**
 			 * Name of query logger.
@@ -236,7 +236,7 @@ public class TraceJdbcProperties {
 			/**
 			 * Enable logging slow queries to the log.
 			 */
-			private boolean enableLogging = false;
+			private boolean enableLogging = true;
 
 			/**
 			 * Name of slow query logger.

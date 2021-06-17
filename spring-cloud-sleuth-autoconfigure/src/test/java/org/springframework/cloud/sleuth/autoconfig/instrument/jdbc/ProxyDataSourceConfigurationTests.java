@@ -29,6 +29,7 @@ import net.ttddyy.dsproxy.listener.logging.CommonsQueryLoggingListener;
 import net.ttddyy.dsproxy.listener.logging.CommonsSlowQueryListener;
 import net.ttddyy.dsproxy.listener.logging.JULQueryLoggingListener;
 import net.ttddyy.dsproxy.listener.logging.JULSlowQueryListener;
+import net.ttddyy.dsproxy.listener.logging.SLF4JLogLevel;
 import net.ttddyy.dsproxy.listener.logging.SLF4JQueryLoggingListener;
 import net.ttddyy.dsproxy.listener.logging.SLF4JSlowQueryListener;
 import net.ttddyy.dsproxy.listener.logging.SystemOutQueryLoggingListener;
@@ -53,6 +54,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.filter;
 
 class ProxyDataSourceConfigurationTests {
 
@@ -190,6 +192,23 @@ class ProxyDataSourceConfigurationTests {
 					.getDecoratedDataSource();
 
 			assertThat(proxyDataSource.getConnectionIdManager()).isInstanceOf(DefaultConnectionIdManager.class);
+		});
+	}
+
+	@Test
+	void testLogLevelIsCustomizable() {
+		ApplicationContextRunner contextRunner = this.contextRunner.withPropertyValues(
+				"spring.sleuth.jdbc.datasource-proxy.logging=slf4j",
+				"spring.sleuth.jdbc.datasource-proxy.query.log-level=INFO");
+
+		contextRunner.run(context -> {
+			DataSource dataSource = context.getBean(DataSource.class);
+			ProxyDataSource proxyDataSource = (ProxyDataSource) ((DataSourceWrapper) dataSource)
+					.getDecoratedDataSource();
+			ChainListener chainListener = proxyDataSource.getProxyConfig().getQueryListener();
+			assertThat(chainListener.getListeners()).extracting("class").contains(SLF4JQueryLoggingListener.class);
+			assertThat(filter(chainListener.getListeners()).with("class").equalsTo(SLF4JQueryLoggingListener.class)
+					.with("logLevel").equalsTo(SLF4JLogLevel.INFO).get()).hasSize(1);
 		});
 	}
 
