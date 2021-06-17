@@ -75,6 +75,7 @@
 		<dependency>
 			<groupId>org.springframework.cloud</groupId>
 			<artifactId>spring-cloud-function-context</artifactId>
+			<version>3.1.4-SNAPSHOT</version>
 			<optional>true</optional>
 		</dependency>
 		<dependency>
