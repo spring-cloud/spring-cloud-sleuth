@@ -19,13 +19,15 @@ package org.springframework.cloud.sleuth.instrument.kotlin
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.reactor.ReactorContext
 import kotlinx.coroutines.runBlocking
-import org.assertj.core.api.BDDAssertions
 import org.assertj.core.api.BDDAssertions.then
-import org.assertj.core.api.ObjectAssert
 import org.junit.jupiter.api.Test
+import org.springframework.boot.test.context.FilteredClassLoader
 import org.springframework.cloud.sleuth.Span
+import org.springframework.cloud.sleuth.Tracer
 import org.springframework.cloud.sleuth.tracer.SimpleTracer
+import reactor.util.context.Context
 
 internal class AsContextElementKtTests {
 
@@ -46,6 +48,51 @@ internal class AsContextElementKtTests {
 
 		then(spanInGlobalScopeLaunch).isSameAs(nextSpan)
 		then(spanInGlobalScopeAsync).isSameAs(nextSpan)
+	}
+
+	@Test
+	fun `should return span from coroutine context when KotlinContextElement present`(): Unit = runBlocking {
+		val simpleTracer = SimpleTracer()
+		val nextSpan = simpleTracer.nextSpan().start()
+		val element = KotlinContextElement(simpleTracer)
+
+		then(element.getCurrentSpan()).isSameAs(nextSpan)
+	}
+
+	@Test
+	fun `should return null from coroutine context when KotlinContextElement and Reactor extensions are missing`(): Unit = runBlocking {
+		val contextClassLoader = Thread.currentThread().contextClassLoader
+		try {
+			Thread.currentThread().contextClassLoader = FilteredClassLoader("kotlinx.coroutines.reactor.ReactorContext")
+			then(coroutineContext.getCurrentSpan()).isNull()
+		} finally {
+			Thread.currentThread().contextClassLoader = contextClassLoader
+		}
+	}
+
+	@Test
+	fun `should return Span from Reactor extensions when KotlinContextElement missing`(): Unit = runBlocking {
+		val simpleTracer = SimpleTracer()
+		val nextSpan = simpleTracer.nextSpan().start()
+		val reactorContext = ReactorContext(Context.of(Span::class.java, nextSpan))
+
+		then(reactorContext.getCurrentSpan()).isSameAs(nextSpan);
+	}
+
+	@Test
+	fun `should return Span from Reactor extensions Tracer when KotlinContextElement missing and there is no Span in context`(): Unit = runBlocking {
+		val simpleTracer = SimpleTracer()
+		val nextSpan = simpleTracer.nextSpan().start()
+		val reactorContext = ReactorContext(Context.of(Tracer::class.java, simpleTracer))
+
+		then(reactorContext.getCurrentSpan()).isSameAs(nextSpan);
+	}
+
+	@Test
+	fun `should return null when no span is found`(): Unit = runBlocking {
+		val reactorContext = ReactorContext(Context.empty())
+
+		then(reactorContext.getCurrentSpan()).isNull()
 	}
 
 }
