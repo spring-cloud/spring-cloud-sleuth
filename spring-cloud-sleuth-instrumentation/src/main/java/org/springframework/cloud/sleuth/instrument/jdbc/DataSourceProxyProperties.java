@@ -113,7 +113,7 @@ public class DataSourceProxyProperties {
 		/**
 		 * Enable logging all queries to the log.
 		 */
-		private boolean enableLogging = true;
+		private boolean enableLogging = false;
 
 		/**
 		 * Name of query logger.
@@ -164,7 +164,7 @@ public class DataSourceProxyProperties {
 		/**
 		 * Enable logging slow queries to the log.
 		 */
-		private boolean enableLogging = true;
+		private boolean enableLogging = false;
 
 		/**
 		 * Name of slow query logger.
