@@ -31,7 +31,7 @@ import org.springframework.boot.web.server.LocalServerPort
 import org.springframework.cloud.sleuth.Span
 import org.springframework.cloud.sleuth.Tracer
 import org.springframework.cloud.sleuth.instrument.kotlin.asContextElement
-import org.springframework.cloud.sleuth.instrument.kotlin.getCurrentSpan
+import org.springframework.cloud.sleuth.instrument.kotlin.currentSpan
 import org.springframework.context.annotation.Bean
 import org.springframework.test.context.ContextConfiguration
 import org.springframework.web.bind.annotation.GetMapping
@@ -96,15 +96,15 @@ class WebController(val tracer: Tracer) {
 
 	@GetMapping("/hello")
 	suspend fun hello(): String? {
-		spanInController = coroutineContext.getCurrentSpan()
+		spanInController = coroutineContext.currentSpan()
 		GlobalScope.launch(tracer.asContextElement()) {
-			log.info("in Coroutines context (launch) - current span {}", coroutineContext.getCurrentSpan())
-			spanInGlobalScopeLaunch = coroutineContext.getCurrentSpan()
+			log.info("in Coroutines context (launch) - current span {}", coroutineContext.currentSpan())
+			spanInGlobalScopeLaunch = coroutineContext.currentSpan()
 		}
 		GlobalScope.async(tracer.asContextElement()) {
-			log.info("in Coroutines context (async)- current span {}", coroutineContext.getCurrentSpan())
-			spanInGlobalScopeAsync = coroutineContext.getCurrentSpan()
+			log.info("in Coroutines context (async)- current span {}", coroutineContext.currentSpan())
+			spanInGlobalScopeAsync = coroutineContext.currentSpan()
 		}.await()
-		return coroutineContext.getCurrentSpan()?.context()?.traceId()
+		return coroutineContext.currentSpan()?.context()?.traceId()
 	}
 }

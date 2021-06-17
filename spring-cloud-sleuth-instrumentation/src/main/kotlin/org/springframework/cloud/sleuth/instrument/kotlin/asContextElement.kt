@@ -17,6 +17,7 @@
 package org.springframework.cloud.sleuth.instrument.kotlin
 
 import kotlinx.coroutines.reactor.ReactorContext
+import org.springframework.cloud.sleuth.CurrentTraceContext
 import org.springframework.cloud.sleuth.Span
 import org.springframework.cloud.sleuth.TraceContext
 import org.springframework.cloud.sleuth.Tracer
@@ -41,7 +42,7 @@ fun Tracer.asContextElement(): CoroutineContext {
  * Inspired by OpenTelemetry's asContextElement.
  * @since 3.1.0
  */
-fun CoroutineContext.getCurrentSpan(): Span? {
+fun CoroutineContext.currentSpan(): Span? {
 	val element = get(KotlinContextElement.KEY)
 	if (element is KotlinContextElement) {
 		return element.span
@@ -53,6 +54,12 @@ fun CoroutineContext.getCurrentSpan(): Span? {
 	if (reactorContext != null) {
 		if (reactorContext.context.hasKey(Span::class.java)) {
 			return reactorContext.context.get(Span::class.java)
+		}
+		else if (reactorContext.context.hasKey(TraceContext::class.java) && reactorContext.context.hasKey(Tracer::class.java) && reactorContext.context.hasKey(CurrentTraceContext::class.java)) {
+			val traceContext = reactorContext.context.get(TraceContext::class.java)
+			reactorContext.context.get(CurrentTraceContext::class.java).maybeScope(traceContext).use {
+				return reactorContext.context.get(Tracer::class.java).currentSpan()
+			}
 		}
 		else if (reactorContext.context.hasKey(Tracer::class.java)) {
 			return reactorContext.context.get(Tracer::class.java).currentSpan()

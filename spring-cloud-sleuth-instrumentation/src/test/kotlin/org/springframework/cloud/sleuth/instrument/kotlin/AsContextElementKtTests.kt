@@ -24,8 +24,11 @@ import kotlinx.coroutines.runBlocking
 import org.assertj.core.api.BDDAssertions.then
 import org.junit.jupiter.api.Test
 import org.springframework.boot.test.context.FilteredClassLoader
+import org.springframework.cloud.sleuth.CurrentTraceContext
 import org.springframework.cloud.sleuth.Span
+import org.springframework.cloud.sleuth.TraceContext
 import org.springframework.cloud.sleuth.Tracer
+import org.springframework.cloud.sleuth.tracer.SimpleCurrentTraceContext
 import org.springframework.cloud.sleuth.tracer.SimpleTracer
 import reactor.util.context.Context
 
@@ -40,10 +43,10 @@ internal class AsContextElementKtTests {
 		val asContextElement = simpleTracer.asContextElement()
 
 		GlobalScope.launch(asContextElement) {
-			spanInGlobalScopeLaunch = coroutineContext.getCurrentSpan()
+			spanInGlobalScopeLaunch = coroutineContext.currentSpan()
 		}
 		GlobalScope.async(asContextElement) {
-			spanInGlobalScopeAsync = coroutineContext.getCurrentSpan()
+			spanInGlobalScopeAsync = coroutineContext.currentSpan()
 		}.await()
 
 		then(spanInGlobalScopeLaunch).isSameAs(nextSpan)
@@ -56,7 +59,7 @@ internal class AsContextElementKtTests {
 		val nextSpan = simpleTracer.nextSpan().start()
 		val element = KotlinContextElement(simpleTracer)
 
-		then(element.getCurrentSpan()).isSameAs(nextSpan)
+		then(element.currentSpan()).isSameAs(nextSpan)
 	}
 
 	@Test
@@ -64,7 +67,7 @@ internal class AsContextElementKtTests {
 		val contextClassLoader = Thread.currentThread().contextClassLoader
 		try {
 			Thread.currentThread().contextClassLoader = FilteredClassLoader("kotlinx.coroutines.reactor.ReactorContext")
-			then(coroutineContext.getCurrentSpan()).isNull()
+			then(coroutineContext.currentSpan()).isNull()
 		} finally {
 			Thread.currentThread().contextClassLoader = contextClassLoader
 		}
@@ -76,7 +79,17 @@ internal class AsContextElementKtTests {
 		val nextSpan = simpleTracer.nextSpan().start()
 		val reactorContext = ReactorContext(Context.of(Span::class.java, nextSpan))
 
-		then(reactorContext.getCurrentSpan()).isSameAs(nextSpan);
+		then(reactorContext.currentSpan()).isSameAs(nextSpan);
+	}
+
+	@Test
+	fun `should return Span from Reactor extensions CurrentTraceContext when KotlinContextElement missing and there is TraceContext in Reactor context`(): Unit = runBlocking {
+		val currentTraceContext = SimpleCurrentTraceContext()
+		val simpleTracer = SimpleTracer()
+		val nextSpan = simpleTracer.nextSpan().start()
+		val reactorContext = ReactorContext(Context.of(Tracer::class.java, simpleTracer, CurrentTraceContext::class.java, currentTraceContext, TraceContext::class.java, nextSpan.context()))
+
+		then(reactorContext.currentSpan()).isSameAs(nextSpan);
 	}
 
 	@Test
@@ -85,14 +98,14 @@ internal class AsContextElementKtTests {
 		val nextSpan = simpleTracer.nextSpan().start()
 		val reactorContext = ReactorContext(Context.of(Tracer::class.java, simpleTracer))
 
-		then(reactorContext.getCurrentSpan()).isSameAs(nextSpan);
+		then(reactorContext.currentSpan()).isSameAs(nextSpan);
 	}
 
 	@Test
 	fun `should return null when no span is found`(): Unit = runBlocking {
 		val reactorContext = ReactorContext(Context.empty())
 
-		then(reactorContext.getCurrentSpan()).isNull()
+		then(reactorContext.currentSpan()).isNull()
 	}
 
 }
