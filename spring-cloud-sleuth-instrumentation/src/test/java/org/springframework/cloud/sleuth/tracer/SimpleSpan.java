@@ -52,9 +52,11 @@ public class SimpleSpan implements Span {
 
 	public int port;
 
+	public boolean noOp;
+
 	@Override
 	public boolean isNoop() {
-		return true;
+		return this.noOp;
 	}
 
 	@Override
