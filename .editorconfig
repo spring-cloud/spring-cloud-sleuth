@@ -9,6 +9,11 @@ indent_style = tab
 indent_size = 4
 continuation_indent_size = 8
 
+[*.kt]
+indent_style = tab
+indent_size = 4
+continuation_indent_size = 8
+
 [*.groovy]
 indent_style = tab
 indent_size = 4
