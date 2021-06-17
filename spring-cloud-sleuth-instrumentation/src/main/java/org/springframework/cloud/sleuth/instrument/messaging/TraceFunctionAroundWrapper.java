@@ -123,47 +123,6 @@ public class TraceFunctionAroundWrapper extends FunctionAroundWrapper
 		}
 		traceMessageHandler.afterMessageHandled(wrappedOutputMessage.span, null);
 		return wrappedOutputMessage.msg;
-
-		// if (log.isDebugEnabled()) {
-		// log.debug("Will retrieve the tracing headers from the message");
-		// }
-		// MessageAndSpans wrappedInputMessage =
-		// traceMessageHandler.wrapInputMessage(message,
-		// inputDestination(targetFunction.getFunctionDefinition()));
-		// if (log.isDebugEnabled()) {
-		// log.debug("Wrapped input msg " + wrappedInputMessage);
-		// }
-		// Object result;
-		// Throwable throwable = null;
-		// try (Tracer.SpanInScope ws =
-		// tracer.withSpan(wrappedInputMessage.childSpan.start())) {
-		// result = targetFunction.apply(wrappedInputMessage.msg);
-		// }
-		// catch (Exception e) {
-		// throwable = e;
-		// throw e;
-		// }
-		// finally {
-		// traceMessageHandler.afterMessageHandled(wrappedInputMessage.childSpan,
-		// throwable);
-		// }
-		// if (result == null) {
-		// if (log.isDebugEnabled()) {
-		// log.debug("Returned message is null - we have a consumer");
-		// }
-		// return null;
-		// }
-		// Message msgResult = toMessage(result);
-		// MessageAndSpan wrappedOutputMessage =
-		// traceMessageHandler.wrapOutputMessage(msgResult,
-		// wrappedInputMessage.parentSpan,
-		// outputDestination(targetFunction.getFunctionDefinition()));
-		// if (log.isDebugEnabled()) {
-		// log.debug("Wrapped output msg " + wrappedOutputMessage);
-		// }
-		// traceMessageHandler.afterMessageHandled(wrappedOutputMessage.span, null);
-		// return wrappedOutputMessage.msg;
-
 	}
 
 	MessageAndSpan getMessageAndSpans(Message<?> resultMessage, String name, Span spanFromMessage) {
