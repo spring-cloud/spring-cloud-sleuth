@@ -50,6 +50,7 @@ import org.springframework.context.annotation.Bean;
  * {@link QueryTransformer}.
  *
  * @author Arthur Gavlyukovskiy
+ * @author Chintan Radia
  */
 @ConditionalOnClass(ProxyDataSource.class)
 @ConditionalOnProperty(name = "spring.sleuth.jdbc.datasource-proxy.enabled", havingValue = "true",
@@ -84,6 +85,8 @@ class DataSourceProxyConfiguration {
 		DataSourceProxyProperties props = new DataSourceProxyProperties();
 		BeanUtils.copyProperties(originalProxy, props);
 		props.setLogging(DataSourceProxyProperties.DataSourceProxyLogging.valueOf(originalProxy.getLogging().name()));
+		BeanUtils.copyProperties(originalProxy.getQuery(), props.getQuery());
+		BeanUtils.copyProperties(originalProxy.getSlowQuery(), props.getSlowQuery());
 		return props;
 	}
 
