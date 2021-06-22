@@ -81,10 +81,12 @@ class TraceMessageHandler {
 
 	private final Function<Span, Span.Builder> outputMessageSpanFunction;
 
+	private final List<FunctionMessageSpanCustomizer> customizers;
+
 	TraceMessageHandler(Tracer tracer, Propagator propagator, Propagator.Setter<MessageHeaderAccessor> injector,
 			Propagator.Getter<MessageHeaderAccessor> extractor, Function<Span, Span> preSendFunction,
 			TriConsumer<MessageHeaderAccessor, Span, Span> preSendMessageManipulator,
-			Function<Span, Span.Builder> outputMessageSpanFunction) {
+			Function<Span, Span.Builder> outputMessageSpanFunction, List<FunctionMessageSpanCustomizer> customizers) {
 		this.tracer = tracer;
 		this.propagator = propagator;
 		this.injector = injector;
@@ -93,10 +95,12 @@ class TraceMessageHandler {
 		this.preSendFunction = preSendFunction;
 		this.preSendMessageManipulator = preSendMessageManipulator;
 		this.outputMessageSpanFunction = outputMessageSpanFunction;
+		this.customizers = customizers;
 	}
 
 	static TraceMessageHandler forNonSpringIntegration(Tracer tracer, Propagator propagator,
-			Propagator.Setter<MessageHeaderAccessor> injector, Propagator.Getter<MessageHeaderAccessor> extractor) {
+			Propagator.Setter<MessageHeaderAccessor> injector, Propagator.Getter<MessageHeaderAccessor> extractor,
+			List<FunctionMessageSpanCustomizer> customizers) {
 		Function<Span, Span> preSendFunction = span -> tracer.nextSpan(span).name("handle").start();
 		TriConsumer<MessageHeaderAccessor, Span, Span> preSendMessageManipulator = (headers, parentSpan, childSpan) -> {
 			headers.setHeader("traceHandlerParentSpan", parentSpan);
@@ -104,7 +108,7 @@ class TraceMessageHandler {
 		};
 		Function<Span, Span.Builder> postReceiveFunction = span -> tracer.spanBuilder().setParent(span.context());
 		return new TraceMessageHandler(tracer, propagator, injector, extractor, preSendFunction,
-				preSendMessageManipulator, postReceiveFunction);
+				preSendMessageManipulator, postReceiveFunction, customizers);
 	}
 
 	@SuppressWarnings("unchecked")
@@ -112,7 +116,7 @@ class TraceMessageHandler {
 		Propagator.Setter<MessageHeaderAccessor> setter = firstBeanOrException(beanFactory, Propagator.Setter.class);
 		Propagator.Getter<MessageHeaderAccessor> getter = firstBeanOrException(beanFactory, Propagator.Getter.class);
 		return forNonSpringIntegration(beanFactory.getBean(Tracer.class), beanFactory.getBean(Propagator.class), setter,
-				getter);
+				getter, customizers(beanFactory));
 	}
 
 	private static <T> T firstBeanOrException(BeanFactory beanFactory, Class<T> clazz) {
@@ -123,6 +127,16 @@ class TraceMessageHandler {
 			throw new NoSuchBeanDefinitionException("No Propagator.Setter has been defined");
 		}
 		return object;
+	}
+
+	private static List<FunctionMessageSpanCustomizer> customizers(BeanFactory beanFactory) {
+		List<FunctionMessageSpanCustomizer> customizers = new ArrayList<>();
+		ObjectProvider<FunctionMessageSpanCustomizer> provider = beanFactory
+				.getBeanProvider(FunctionMessageSpanCustomizer.class);
+		for (FunctionMessageSpanCustomizer functionMessageSpanCustomizer : provider) {
+			customizers.add(functionMessageSpanCustomizer);
+		}
+		return customizers;
 	}
 
 	/**
@@ -137,7 +151,7 @@ class TraceMessageHandler {
 		Span extracted = this.propagator.extract(headers, this.extractor).start();
 		// Start and finish a consumer span as we will immediately process it.
 		Span.Builder consumerSpanBuilder = this.tracer.spanBuilder().setParent(extracted.context());
-		Span consumerSpan = consumerSpan(destinationName, extracted, consumerSpanBuilder);
+		Span consumerSpan = consumerSpan(destinationName, extracted, consumerSpanBuilder, message);
 		// create and scope a span for the message processor
 		Span span = this.preSendFunction.apply(consumerSpan);
 		// remove any trace headers, but don't re-inject as we are synchronously
@@ -157,13 +171,15 @@ class TraceMessageHandler {
 				consumerSpan, span);
 	}
 
-	private Span consumerSpan(String destinationName, Span extracted, Span.Builder consumerSpanBuilder) {
+	private Span consumerSpan(String destinationName, Span extracted, Span.Builder consumerSpanBuilder,
+			Message<?> message) {
 		Span consumerSpan;
 		if (!extracted.isNoop()) {
 			consumerSpanBuilder.kind(Span.Kind.CONSUMER).start();
 			addTags(consumerSpanBuilder, destinationName);
 			consumerSpanBuilder.remoteServiceName(REMOTE_SERVICE_NAME);
 			consumerSpan = consumerSpanBuilder.start();
+			this.customizers.forEach(customizer -> customizer.customizeInputMessageSpan(consumerSpan, message));
 			consumerSpan.end();
 		}
 		else {
@@ -233,7 +249,7 @@ class TraceMessageHandler {
 		MessageHeaderAccessor headers = mutableHeaderAccessor(retrievedMessage);
 		Span.Builder span = this.outputMessageSpanFunction.apply(parentSpan);
 		clearTracingHeaders(headers);
-		Span producerSpan = createProducerSpan(headers, span, destinationName);
+		Span producerSpan = createProducerSpan(headers, span, destinationName, message);
 		this.propagator.inject(producerSpan.context(), headers, this.injector);
 		if (log.isDebugEnabled()) {
 			log.debug("Created a new span output message " + span);
@@ -241,12 +257,14 @@ class TraceMessageHandler {
 		return new MessageAndSpan(outputMessage(message, retrievedMessage, headers), producerSpan);
 	}
 
-	private Span createProducerSpan(MessageHeaderAccessor headers, Span.Builder spanBuilder, String destinationName) {
+	private Span createProducerSpan(MessageHeaderAccessor headers, Span.Builder spanBuilder, String destinationName,
+			Message<?> message) {
 		spanBuilder.kind(Span.Kind.PRODUCER).name("send").remoteServiceName(toRemoteServiceName(headers));
 		Span span = spanBuilder.start();
 		if (!span.isNoop()) {
 			addTags(spanBuilder, destinationName);
 		}
+		this.customizers.forEach(customizer -> customizer.customizeOutputMessageSpan(span, message));
 		return span;
 	}
 

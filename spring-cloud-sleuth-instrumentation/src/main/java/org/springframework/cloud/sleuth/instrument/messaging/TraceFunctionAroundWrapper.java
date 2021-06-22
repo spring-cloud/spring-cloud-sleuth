@@ -16,6 +16,8 @@
 
 package org.springframework.cloud.sleuth.instrument.messaging;
 
+import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -58,17 +60,26 @@ public class TraceFunctionAroundWrapper extends FunctionAroundWrapper
 
 	private final TraceMessageHandler traceMessageHandler;
 
+	private final List<FunctionMessageSpanCustomizer> customizers;
+
 	final Map<String, String> functionToDestinationCache = new ConcurrentHashMap<>();
 
 	public TraceFunctionAroundWrapper(Environment environment, Tracer tracer, Propagator propagator,
 			Propagator.Setter<MessageHeaderAccessor> injector, Propagator.Getter<MessageHeaderAccessor> extractor) {
+		this(environment, tracer, propagator, injector, extractor, Collections.emptyList());
+	}
+
+	public TraceFunctionAroundWrapper(Environment environment, Tracer tracer, Propagator propagator,
+			Propagator.Setter<MessageHeaderAccessor> injector, Propagator.Getter<MessageHeaderAccessor> extractor,
+			List<FunctionMessageSpanCustomizer> customizers) {
 		this.environment = environment;
 		this.tracer = tracer;
 		this.propagator = propagator;
 		this.injector = injector;
 		this.extractor = extractor;
+		this.customizers = customizers;
 		this.traceMessageHandler = TraceMessageHandler.forNonSpringIntegration(this.tracer, this.propagator,
-				this.injector, this.extractor);
+				this.injector, this.extractor, this.customizers);
 	}
 
 	@Override
@@ -76,13 +87,17 @@ public class TraceFunctionAroundWrapper extends FunctionAroundWrapper
 		MessageAndSpans invocationMessage = null;
 		Span span;
 		if (message == null && targetFunction.isSupplier()) { // Supplier
-			span = traceMessageHandler.tracer.nextSpan().name(targetFunction.getFunctionDefinition());
+			if (log.isDebugEnabled()) {
+				log.debug("Creating a span for a supplier");
+			}
+			span = this.tracer.nextSpan().name(targetFunction.getFunctionDefinition());
+			customizedInputMessageSpan(span, null);
 		}
 		else {
 			if (log.isDebugEnabled()) {
 				log.debug("Will retrieve the tracing headers from the message");
 			}
-			invocationMessage = traceMessageHandler.wrapInputMessage(message,
+			invocationMessage = this.traceMessageHandler.wrapInputMessage(message,
 					inputDestination(targetFunction.getFunctionDefinition()));
 			if (log.isDebugEnabled()) {
 				log.debug("Wrapped input msg " + invocationMessage);
@@ -109,8 +124,10 @@ public class TraceFunctionAroundWrapper extends FunctionAroundWrapper
 			return null;
 		}
 		Message<?> msgResult = toMessage(result);
-
 		MessageAndSpan wrappedOutputMessage;
+		if (log.isDebugEnabled()) {
+			log.debug("Will instrument the output message");
+		}
 		if (invocationMessage != null) {
 			wrappedOutputMessage = traceMessageHandler.wrapOutputMessage(msgResult, invocationMessage.parentSpan,
 					outputDestination(targetFunction.getFunctionDefinition()));
@@ -127,6 +144,10 @@ public class TraceFunctionAroundWrapper extends FunctionAroundWrapper
 
 	MessageAndSpan getMessageAndSpans(Message<?> resultMessage, String name, Span spanFromMessage) {
 		return traceMessageHandler.wrapOutputMessage(resultMessage, spanFromMessage, outputDestination(name));
+	}
+
+	private void customizedInputMessageSpan(Span spanToCustomize, Message<?> msg) {
+		this.customizers.forEach(cust -> cust.customizeInputMessageSpan(spanToCustomize, msg));
 	}
 
 	private Message<?> toMessage(Object result) {
