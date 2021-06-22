@@ -38,6 +38,15 @@ public interface FunctionMessageSpanCustomizer {
 	}
 
 	/**
+	 * Customizes the span wrapping the function execution.
+	 * @param span current span to customize
+	 * @param message message to be sent
+	 */
+	default void customizeFunctionSpan(Span span, Message<?> message) {
+
+	}
+
+	/**
 	 * Customizes the span created for the output message
 	 * @param span current span to customize
 	 * @param message message to be sent

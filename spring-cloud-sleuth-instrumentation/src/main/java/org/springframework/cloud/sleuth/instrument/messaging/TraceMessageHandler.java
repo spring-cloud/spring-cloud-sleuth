@@ -101,7 +101,7 @@ class TraceMessageHandler {
 	static TraceMessageHandler forNonSpringIntegration(Tracer tracer, Propagator propagator,
 			Propagator.Setter<MessageHeaderAccessor> injector, Propagator.Getter<MessageHeaderAccessor> extractor,
 			List<FunctionMessageSpanCustomizer> customizers) {
-		Function<Span, Span> preSendFunction = span -> tracer.nextSpan(span).name("handle").start();
+		Function<Span, Span> preSendFunction = span -> tracer.nextSpan(span).name("function").start();
 		TriConsumer<MessageHeaderAccessor, Span, Span> preSendMessageManipulator = (headers, parentSpan, childSpan) -> {
 			headers.setHeader("traceHandlerParentSpan", parentSpan);
 			headers.setHeader(Span.class.getName(), childSpan);
@@ -148,43 +148,33 @@ class TraceMessageHandler {
 	 */
 	MessageAndSpans wrapInputMessage(Message<?> message, String destinationName) {
 		MessageHeaderAccessor headers = mutableHeaderAccessor(message);
-		Span extracted = this.propagator.extract(headers, this.extractor).start();
-		// Start and finish a consumer span as we will immediately process it.
-		Span.Builder consumerSpanBuilder = this.tracer.spanBuilder().setParent(extracted.context());
-		Span consumerSpan = consumerSpan(destinationName, extracted, consumerSpanBuilder, message);
-		// create and scope a span for the message processor
-		Span span = this.preSendFunction.apply(consumerSpan);
-		// remove any trace headers, but don't re-inject as we are synchronously
-		// processing the
-		// message and can rely on scoping to access this span later.
-		clearTracingHeaders(headers);
-		this.preSendMessageManipulator.accept(headers, consumerSpan, span);
+		Span.Builder consumerSpanBuilder = this.propagator.extract(headers, this.extractor);
+		Span consumerSpan = consumerSpan(destinationName, consumerSpanBuilder, message);
 		if (log.isDebugEnabled()) {
-			log.debug("Created a handle span after retrieving the message " + consumerSpanBuilder);
+			log.debug("Built a consumer span " + consumerSpan);
 		}
+		Span childSpan = this.preSendFunction.apply(consumerSpan);
+		clearTracingHeaders(headers);
+		this.preSendMessageManipulator.accept(headers, consumerSpan, childSpan);
+		this.customizers.forEach(customizer -> customizer.customizeFunctionSpan(childSpan, message));
 		if (message instanceof ErrorMessage) {
 			return new MessageAndSpans(new ErrorMessage((Throwable) message.getPayload(), headers.getMessageHeaders()),
-					consumerSpan, span);
+					consumerSpan, childSpan);
 		}
 		headers.setImmutable();
 		return new MessageAndSpans(new GenericMessage<>(message.getPayload(), headers.getMessageHeaders()),
-				consumerSpan, span);
+				consumerSpan, childSpan);
 	}
 
-	private Span consumerSpan(String destinationName, Span extracted, Span.Builder consumerSpanBuilder,
-			Message<?> message) {
-		Span consumerSpan;
-		if (!extracted.isNoop()) {
-			consumerSpanBuilder.kind(Span.Kind.CONSUMER).start();
-			addTags(consumerSpanBuilder, destinationName);
-			consumerSpanBuilder.remoteServiceName(REMOTE_SERVICE_NAME);
-			consumerSpan = consumerSpanBuilder.start();
-			this.customizers.forEach(customizer -> customizer.customizeInputMessageSpan(consumerSpan, message));
-			consumerSpan.end();
-		}
-		else {
-			consumerSpan = consumerSpanBuilder.start();
-		}
+	private Span consumerSpan(String destinationName, Span.Builder consumerSpanBuilder, Message<?> message) {
+		consumerSpanBuilder.kind(Span.Kind.CONSUMER).name("handle");
+		addTags(consumerSpanBuilder, destinationName);
+		consumerSpanBuilder.remoteServiceName(REMOTE_SERVICE_NAME);
+		// this is the consumer part of the producer->consumer mechanism
+		Span consumerSpan = consumerSpanBuilder.start();
+		this.customizers.forEach(customizer -> customizer.customizeInputMessageSpan(consumerSpan, message));
+		// we're ending this immediately just to have a properly nested graph
+		consumerSpan.end();
 		return consumerSpan;
 	}
 
@@ -202,12 +192,6 @@ class TraceMessageHandler {
 	}
 
 	private void addTags(Span.Builder result, String destinationName) {
-		if (StringUtils.hasText(destinationName)) {
-			result.tag("channel", SpanNameUtil.shorten(destinationName));
-		}
-	}
-
-	private void addTags(Span result, String destinationName) {
 		if (StringUtils.hasText(destinationName)) {
 			result.tag("channel", SpanNameUtil.shorten(destinationName));
 		}

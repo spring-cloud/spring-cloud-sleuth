@@ -104,7 +104,6 @@ public class TraceFunctionAroundWrapper extends FunctionAroundWrapper
 			}
 			span = invocationMessage.childSpan;
 		}
-
 		Object result;
 		Throwable throwable = null;
 		try (Tracer.SpanInScope ws = tracer.withSpan(span.start())) {

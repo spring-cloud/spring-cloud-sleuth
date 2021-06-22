@@ -54,7 +54,6 @@ public class BravePropagator implements Propagator {
 	public <C> Span.Builder extract(C carrier, Getter<C> getter) {
 		TraceContextOrSamplingFlags extract = this.tracing.propagation().extractor(getter::get).extract(carrier);
 		if (extract.samplingFlags() == SamplingFlags.EMPTY) {
-			this.tracing.tracer().nextSpan();
 			return new BraveSpanBuilder(this.tracing.tracer());
 		}
 		return BraveSpanBuilder.toBuilder(this.tracing.tracer(), extract);
