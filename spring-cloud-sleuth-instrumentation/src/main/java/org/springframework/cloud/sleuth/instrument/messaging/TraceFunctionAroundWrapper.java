@@ -106,7 +106,7 @@ public class TraceFunctionAroundWrapper extends FunctionAroundWrapper
 		}
 		Object result;
 		Throwable throwable = null;
-		try (Tracer.SpanInScope ws = tracer.withSpan(span.start())) {
+		try (Tracer.SpanInScope ws = this.tracer.withSpan(span.start())) {
 			result = invocationMessage == null ? targetFunction.get() : targetFunction.apply(invocationMessage.msg);
 		}
 		catch (Exception e) {
@@ -114,7 +114,7 @@ public class TraceFunctionAroundWrapper extends FunctionAroundWrapper
 			throw e;
 		}
 		finally {
-			traceMessageHandler.afterMessageHandled(span, throwable);
+			this.traceMessageHandler.afterMessageHandled(span, throwable);
 		}
 		if (result == null) {
 			if (log.isDebugEnabled()) {
@@ -128,7 +128,7 @@ public class TraceFunctionAroundWrapper extends FunctionAroundWrapper
 			log.debug("Will instrument the output message");
 		}
 		if (invocationMessage != null) {
-			wrappedOutputMessage = traceMessageHandler.wrapOutputMessage(msgResult, invocationMessage.parentSpan,
+			wrappedOutputMessage = this.traceMessageHandler.wrapOutputMessage(msgResult, invocationMessage.parentSpan,
 					outputDestination(targetFunction.getFunctionDefinition()));
 		}
 		else {

@@ -26,6 +26,8 @@ import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.cloud.function.context.FunctionCatalog;
 import org.springframework.cloud.function.context.catalog.SimpleFunctionRegistry.FunctionInvocationWrapper;
 import org.springframework.cloud.sleuth.test.TestSpanHandler;
+import org.springframework.cloud.sleuth.test.TestTracer;
+import org.springframework.cloud.sleuth.test.TestTracingBeanPostProcessor;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.messaging.Message;
@@ -49,10 +51,13 @@ public abstract class TraceFunctionAroundWrapperTests {
 			FunctionCatalog catalog = context.getBean(FunctionCatalog.class);
 			FunctionInvocationWrapper function = catalog.lookup("greeter");
 			function.setSkipOutputConversion(true);
+
 			Message<?> result = (Message<?>) function.get();
+
 			assertThat(result.getPayload()).isEqualTo("hello");
 			assertThat(spanHandler.reportedSpans().size()).isEqualTo(2);
 			assertThat(((String) result.getHeaders().get("b3"))).contains(spanHandler.get(0).getTraceId());
+			spanHandler.assertAllSpansWereFinishedOrAbandoned(context.getBean(TestTracer.class).createdSpans());
 		}
 	}
 
@@ -66,10 +71,13 @@ public abstract class TraceFunctionAroundWrapperTests {
 			FunctionCatalog catalog = context.getBean(FunctionCatalog.class);
 			FunctionInvocationWrapper function = catalog.lookup("uppercase");
 			function.setSkipOutputConversion(true);
+
 			Message<?> result = (Message<?>) function.apply(MessageBuilder.withPayload("hello").build());
+
 			assertThat(result.getPayload()).isEqualTo("HELLO");
 			assertThat(spanHandler.reportedSpans().size()).isEqualTo(3);
 			assertThat(((String) result.getHeaders().get("b3"))).contains(spanHandler.get(0).getTraceId());
+			spanHandler.assertAllSpansWereFinishedOrAbandoned(context.getBean(TestTracer.class).createdSpans());
 		}
 	}
 
@@ -86,6 +94,11 @@ public abstract class TraceFunctionAroundWrapperTests {
 		@Bean
 		public Function<String, String> uppercase() {
 			return v -> v.toUpperCase();
+		}
+
+		@Bean
+		static TestTracingBeanPostProcessor testTracerBeanPostProcessor() {
+			return new TestTracingBeanPostProcessor();
 		}
 
 	}

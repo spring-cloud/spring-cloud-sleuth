@@ -47,7 +47,7 @@ public interface FunctionMessageSpanCustomizer {
 	}
 
 	/**
-	 * Customizes the span created for the output message
+	 * Customizes the span created for the output message.
 	 * @param span current span to customize
 	 * @param message message to be sent
 	 */

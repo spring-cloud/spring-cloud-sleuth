@@ -17,6 +17,7 @@
 package org.springframework.cloud.sleuth.test;
 
 import java.util.List;
+import java.util.Queue;
 
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.exporter.FinishedSpan;
@@ -34,5 +35,7 @@ public interface TestSpanHandler extends Iterable<FinishedSpan> {
 	FinishedSpan takeRemoteSpanWithError(Span.Kind kind);
 
 	FinishedSpan get(int index);
+
+	void assertAllSpansWereFinishedOrAbandoned(Queue<Span> createdSpans);
 
 }

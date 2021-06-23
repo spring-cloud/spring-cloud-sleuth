@@ -69,8 +69,7 @@ public class TraceFunctionAutoConfiguration {
 
 		@Configuration(proxyBeanMethods = false)
 		@ConditionalOnClass(name = "org.springframework.cloud.stream.binder.kafka.config.KafkaBinderConfiguration")
-		@ConditionalOnMissingClass(
-				value = "org.springframework.cloud.stream.binder.rabbit.properties.RabbitBinderConfigurationProperties")
+		@ConditionalOnMissingClass("org.springframework.cloud.stream.binder.rabbit.properties.RabbitBinderConfigurationProperties")
 		static class KafkaOnlyStreamConfiguration {
 
 			@Bean
@@ -93,8 +92,7 @@ public class TraceFunctionAutoConfiguration {
 		@Configuration(proxyBeanMethods = false)
 		@ConditionalOnClass(
 				name = "org.springframework.cloud.stream.binder.rabbit.properties.RabbitBinderConfigurationProperties")
-		@ConditionalOnMissingClass(
-				value = "org.springframework.cloud.stream.binder.kafka.config.KafkaBinderConfiguration")
+		@ConditionalOnMissingClass("org.springframework.cloud.stream.binder.kafka.config.KafkaBinderConfiguration")
 		static class RabbitOnlyStreamConfiguration {
 
 			@Bean
