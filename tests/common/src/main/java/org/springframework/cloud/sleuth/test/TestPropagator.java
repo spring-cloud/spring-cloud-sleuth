@@ -14,49 +14,41 @@
  * limitations under the License.
  */
 
-package org.springframework.cloud.sleuth.brave.bridge;
+package org.springframework.cloud.sleuth.test;
 
 import java.util.List;
-
-import brave.Tracing;
-import brave.propagation.SamplingFlags;
-import brave.propagation.TraceContextOrSamplingFlags;
 
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.TraceContext;
 import org.springframework.cloud.sleuth.propagation.Propagator;
 
 /**
- * Brave implementation of a {@link Propagator}.
- *
- * @author Marcin Grzejszczak
- * @since 3.0.0
+ * {@link Propagator} that stores information about started spans.
  */
-public class BravePropagator implements Propagator {
+public class TestPropagator implements Propagator {
 
-	private final Tracing tracing;
+	private final Propagator delegate;
 
-	public BravePropagator(Tracing tracing) {
-		this.tracing = tracing;
+	private final TestTracer testTracer;
+
+	public TestPropagator(Propagator delegate, TestTracer testTracer) {
+		this.delegate = delegate;
+		this.testTracer = testTracer;
 	}
 
 	@Override
 	public List<String> fields() {
-		return this.tracing.propagation().keys();
+		return this.delegate.fields();
 	}
 
 	@Override
-	public <C> void inject(TraceContext traceContext, C carrier, Setter<C> setter) {
-		this.tracing.propagation().injector(setter::set).inject(BraveTraceContext.toBrave(traceContext), carrier);
+	public <C> void inject(TraceContext context, C carrier, Setter<C> setter) {
+		this.delegate.inject(context, carrier, setter);
 	}
 
 	@Override
 	public <C> Span.Builder extract(C carrier, Getter<C> getter) {
-		TraceContextOrSamplingFlags extract = this.tracing.propagation().extractor(getter::get).extract(carrier);
-		if (extract.samplingFlags() == SamplingFlags.EMPTY) {
-			return new BraveSpanBuilder(this.tracing.tracer());
-		}
-		return BraveSpanBuilder.toBuilder(this.tracing.tracer(), extract);
+		return new TestSpanBuilder(this.delegate.extract(carrier, getter), this.testTracer);
 	}
 
 }
