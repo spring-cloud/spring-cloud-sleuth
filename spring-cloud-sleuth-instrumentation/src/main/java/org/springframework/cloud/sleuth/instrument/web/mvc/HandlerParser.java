@@ -23,6 +23,7 @@ import org.springframework.cloud.sleuth.SpanCustomizer;
 import org.springframework.cloud.sleuth.docs.AssertingSpanCustomizer;
 import org.springframework.web.method.HandlerMethod;
 import org.springframework.web.servlet.HandlerInterceptor;
+import org.springframework.web.servlet.ModelAndView;
 
 /**
  * Spring MVC specific type used to customize traced requests based on the handler.
@@ -40,6 +41,10 @@ public class HandlerParser {
 	public static final HandlerParser NOOP = new HandlerParser() {
 		@Override
 		protected void preHandle(HttpServletRequest request, Object handler, SpanCustomizer customizer) {
+		}
+
+		@Override
+		protected void postHandle(HttpServletRequest request, Object handler, ModelAndView modelAndView, SpanCustomizer customizer) {
 		}
 	};
 
@@ -72,6 +77,17 @@ public class HandlerParser {
 		else {
 			span.tag(SleuthMvcSpan.Tags.CLASS, handler.getClass().getSimpleName());
 		}
+	}
+
+	/**
+	 * Invoked posterior to request invocation during
+	 * {@link HandlerInterceptor#postHandle(HttpServletRequest, HttpServletResponse, Object, ModelAndView)}.
+	 *
+	 * @param request request
+	 * @param handler handler
+	 * @param customizer span customizer
+	 */
+	protected void postHandle(HttpServletRequest request, Object handler, ModelAndView modelAndView, SpanCustomizer customizer) {
 	}
 
 	/*
