@@ -38,7 +38,6 @@ import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.ThreadLocalSpan;
 import org.springframework.cloud.sleuth.TraceContext;
 import org.springframework.cloud.sleuth.Tracer;
-import org.springframework.cloud.sleuth.WithThreadLocalSpan;
 import org.springframework.cloud.sleuth.docs.AssertingSpanBuilder;
 import org.springframework.cloud.sleuth.instrument.reactor.ReactorSleuth;
 import org.springframework.cloud.sleuth.internal.EncodingUtils;
@@ -51,7 +50,7 @@ import org.springframework.cloud.sleuth.propagation.Propagator;
  * @author Oleh Dokuka
  * @since 3.1.0
  */
-public class TracingResponderRSocketProxy extends RSocketProxy implements WithThreadLocalSpan {
+public class TracingResponderRSocketProxy extends RSocketProxy {
 
 	private static final Log log = LogFactory.getLog(TracingResponderRSocketProxy.class);
 
@@ -163,11 +162,6 @@ public class TracingResponderRSocketProxy extends RSocketProxy implements WithTh
 			}
 		}
 		return this.propagator.extract(headers, this.getter);
-	}
-
-	@Override
-	public ThreadLocalSpan getThreadLocalSpan() {
-		return this.threadLocalSpan;
 	}
 
 }
