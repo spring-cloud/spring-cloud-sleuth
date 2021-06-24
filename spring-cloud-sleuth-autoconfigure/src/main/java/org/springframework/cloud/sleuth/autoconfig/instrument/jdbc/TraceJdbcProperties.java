@@ -253,7 +253,7 @@ public class TraceJdbcProperties {
 			 */
 			private long threshold = 300;
 
-			boolean isEnableLogging() {
+			public boolean isEnableLogging() {
 				return enableLogging;
 			}
 

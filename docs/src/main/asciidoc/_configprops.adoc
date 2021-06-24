@@ -31,6 +31,7 @@
 |spring.sleuth.jdbc.datasource-proxy.query.enable-logging | `false` | Enable logging all queries to the log.
 |spring.sleuth.jdbc.datasource-proxy.query.log-level | `DEBUG` | Severity of query logger.
 |spring.sleuth.jdbc.datasource-proxy.query.logger-name |  | Name of query logger.
+|spring.sleuth.jdbc.datasource-proxy.slow-query.enable-logging | `false` | Enable logging slow queries to the log.
 |spring.sleuth.jdbc.datasource-proxy.slow-query.log-level | `WARN` | Severity of slow query logger.
 |spring.sleuth.jdbc.datasource-proxy.slow-query.logger-name |  | Name of slow query logger.
 |spring.sleuth.jdbc.datasource-proxy.slow-query.threshold | `300` | Number of seconds to consider query as slow.
