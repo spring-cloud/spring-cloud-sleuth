@@ -28,7 +28,7 @@ import org.springframework.cloud.sleuth.TraceContext;
  * A noop implementation. Does nothing.
  *
  * @author Marcin Grzejszczak
- * @since 3.0.0
+ * @since 3.0.4
  */
 public class SimpleSpan implements Span {
 
@@ -52,9 +52,11 @@ public class SimpleSpan implements Span {
 
 	public int port;
 
+	public boolean noOp;
+
 	@Override
 	public boolean isNoop() {
-		return true;
+		return this.noOp;
 	}
 
 	@Override
