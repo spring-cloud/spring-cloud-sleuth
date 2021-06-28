@@ -50,11 +50,10 @@ public abstract class TraceFunctionAroundWrapperTests {
 			assertThat(spanHandler.reportedSpans()).isEmpty();
 			FunctionCatalog catalog = context.getBean(FunctionCatalog.class);
 			FunctionInvocationWrapper function = catalog.lookup("greeter");
-			function.setSkipOutputConversion(true);
 
 			Message<?> result = (Message<?>) function.get();
 
-			assertThat(result.getPayload()).isEqualTo("hello");
+			assertThat(result.getPayload()).isEqualTo("hello".getBytes());
 			assertThat(spanHandler.reportedSpans().size()).isEqualTo(2);
 			assertThat(((String) result.getHeaders().get("b3"))).contains(spanHandler.get(0).getTraceId());
 			spanHandler.assertAllSpansWereFinishedOrAbandoned(context.getBean(TestTracer.class).createdSpans());
@@ -70,7 +69,6 @@ public abstract class TraceFunctionAroundWrapperTests {
 			assertThat(spanHandler.reportedSpans()).isEmpty();
 			FunctionCatalog catalog = context.getBean(FunctionCatalog.class);
 			FunctionInvocationWrapper function = catalog.lookup("uppercase");
-			function.setSkipOutputConversion(true);
 
 			Message<?> result = (Message<?>) function.apply(MessageBuilder.withPayload("hello").build());
 
