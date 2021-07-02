@@ -23,6 +23,7 @@ import java.util.concurrent.TimeUnit;
 
 import brave.Tracing;
 import jmh.mbr.junit5.Microbenchmark;
+import org.awaitility.Awaitility;
 import org.junit.platform.commons.annotation.Testable;
 import org.openjdk.jmh.annotations.Benchmark;
 import org.openjdk.jmh.annotations.BenchmarkMode;
@@ -114,12 +115,12 @@ public class MicroBenchmarkStreamTests {
 
 		void run() {
 			sendInputMessage();
-			assertThatOutputMessageGotReceived();
+			Awaitility.await().untilAsserted(this::assertThatOutputMessageGotReceived);
 		}
 
 		private void assertThatOutputMessageGotReceived() {
 			// System.out.println("Retrieving the message for tests");
-			Message<byte[]> message = output.receive(200L);
+			Message<byte[]> message = output.receive(1L);
 			// System.out.println("Got the message from output");
 			assertThat(message).isNotNull();
 			// System.out.println("Message is not null");

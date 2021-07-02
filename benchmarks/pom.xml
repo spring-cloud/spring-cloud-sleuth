@@ -41,7 +41,6 @@
 		<okhttp.version>4.9.0</okhttp.version>
 		<microbenchmark-runner.version>0.2.0.RELEASE</microbenchmark-runner.version>
 		<jmh.version>1.26</jmh.version>
-		<spring-cloud-stream.version>3.1.4-SNAPSHOT</spring-cloud-stream.version>
 	</properties>
 
 	<dependencyManagement>
@@ -55,8 +54,8 @@
 			</dependency>
 			<dependency>
 				<groupId>org.springframework.cloud</groupId>
-				<artifactId>spring-cloud-stream-dependencies</artifactId>
-				<version>${spring-cloud-stream.version}</version>
+				<artifactId>spring-cloud-sleuth</artifactId>
+				<version>${project.version}</version>
 				<type>pom</type>
 				<scope>import</scope>
 			</dependency>
@@ -65,7 +64,7 @@
 
 	<dependencies>
 		<dependency>
-			<groupId>${project.groupId}</groupId>
+			<groupId>org.springframework.cloud</groupId>
 			<artifactId>spring-cloud-starter-sleuth</artifactId>
 		</dependency>
 		<dependency>
@@ -150,7 +149,7 @@
 		<dependency>
 			<groupId>org.awaitility</groupId>
 			<artifactId>awaitility</artifactId>
-			<scope>test</scope>
+			<scope>compile</scope>
 		</dependency>
 	</dependencies>
 
