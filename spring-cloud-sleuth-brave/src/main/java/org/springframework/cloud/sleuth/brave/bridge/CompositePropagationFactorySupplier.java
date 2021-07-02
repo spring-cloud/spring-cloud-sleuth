@@ -84,7 +84,7 @@ class CompositePropagationFactory extends Propagation.Factory implements Propaga
 		W3CPropagation w3CPropagation = new W3CPropagation(braveBaggageManager, localFields);
 		this.mapping.put(PropagationType.W3C, new AbstractMap.SimpleEntry<>(w3CPropagation, w3CPropagation.get()));
 		LazyPropagationFactory lazyPropagationFactory = new LazyPropagationFactory(
-				beanFactory.getBeanProvider(Factory.class));
+				beanFactory.getBeanProvider(PropagationFactorySupplier.class));
 		this.mapping.put(PropagationType.CUSTOM,
 				new AbstractMap.SimpleEntry<>(lazyPropagationFactory, lazyPropagationFactory.get()));
 	}
@@ -161,17 +161,17 @@ class CompositePropagationFactory extends Propagation.Factory implements Propaga
 	@SuppressWarnings("unchecked")
 	private static final class LazyPropagationFactory extends Propagation.Factory {
 
-		private final ObjectProvider<Propagation.Factory> delegate;
+		private final ObjectProvider<PropagationFactorySupplier> delegate;
 
 		private volatile Propagation.Factory propagationFactory;
 
-		private LazyPropagationFactory(ObjectProvider<Propagation.Factory> delegate) {
+		private LazyPropagationFactory(ObjectProvider<PropagationFactorySupplier> delegate) {
 			this.delegate = delegate;
 		}
 
 		private Propagation.Factory propagationFactory() {
 			if (this.propagationFactory == null) {
-				this.propagationFactory = this.delegate.getIfAvailable(() -> NoOpPropagation.INSTANCE);
+				this.propagationFactory = this.delegate.getIfAvailable(() -> () -> NoOpPropagation.INSTANCE).get();
 			}
 			return this.propagationFactory;
 		}

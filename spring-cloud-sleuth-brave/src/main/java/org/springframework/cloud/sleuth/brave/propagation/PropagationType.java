@@ -40,7 +40,8 @@ public enum PropagationType {
 	W3C,
 
 	/**
-	 * Custom propagation type.
+	 * Custom propagation type. If picked, requires bean registration overriding the
+	 * default propagation mechanisms.
 	 */
 	CUSTOM
 

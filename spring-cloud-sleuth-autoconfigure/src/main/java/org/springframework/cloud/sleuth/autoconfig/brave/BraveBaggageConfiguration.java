@@ -105,7 +105,11 @@ class BraveBaggageConfiguration {
 	// See #1643
 	@Bean
 	@ConditionalOnMissingBean
-	PropagationFactorySupplier defaultPropagationFactorySupplier() {
+	PropagationFactorySupplier defaultPropagationFactorySupplier(SleuthPropagationProperties properties) {
+		if (properties.getType().contains(PropagationType.CUSTOM)) {
+			throw new IllegalStateException(
+					"Please register a bean with the following signature [extends Propagation.Factory implements Propagation<String>] to override the default Sleuth behaviour or [implements PropagationFactorySupplier] to reuse it.");
+		}
 		return () -> B3Propagation.newFactoryBuilder().injectFormat(B3Propagation.Format.SINGLE_NO_PARENT).build();
 	}
 
@@ -131,7 +135,6 @@ class BraveBaggageConfiguration {
 			@Qualifier(PROPAGATION_KEYS) List<String> propagationKeys, SleuthBaggageProperties sleuthBaggageProperties,
 			SleuthPropagationProperties sleuthPropagationProperties, PropagationFactorySupplier supplier,
 			@Nullable List<BaggagePropagationCustomizer> baggagePropagationCustomizers) {
-
 		Set<String> localFields = redirectOldPropertyToNew(LOCAL_KEYS, localKeys, "spring.sleuth.baggage.local-fields",
 				sleuthBaggageProperties.getLocalFields());
 		for (String fieldName : localFields) {
