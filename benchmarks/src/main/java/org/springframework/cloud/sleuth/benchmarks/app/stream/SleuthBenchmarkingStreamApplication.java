@@ -23,6 +23,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 
+import org.awaitility.Awaitility;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import reactor.core.publisher.Flux;
@@ -60,15 +61,16 @@ public class SleuthBenchmarkingStreamApplication {
 		// "DECORATE_ON_LAST");
 		// System.setProperty("spring.sleuth.reactor.instrumentation-type", "MANUAL");
 		System.setProperty("spring.sleuth.reactor.instrumentation-type", "DECORATE_QUEUES");
+		System.setProperty("spring.sleuth.integration.enabled", "true");
 		System.setProperty("spring.sleuth.function.type", "DECORATE_QUEUES");
 		ConfigurableApplicationContext context = SpringApplication.run(SleuthBenchmarkingStreamApplication.class, args);
-		for (int i = 0; i < 1; i++) {
-			InputDestination input = context.getBean(InputDestination.class);
-			input.send(MessageBuilder.withPayload("hello".getBytes())
-					.setHeader("b3", "4883117762eb9420-4883117762eb9420-1").build());
-			log.info("Retrieving the message for tests");
-			OutputDestination output = context.getBean(OutputDestination.class);
-			Message<byte[]> message = output.receive(200L);
+		InputDestination input = context.getBean(InputDestination.class);
+		input.send(MessageBuilder.withPayload("hello".getBytes())
+				.setHeader("b3", "4883117762eb9420-4883117762eb9420-1").build());
+		log.info("Retrieving the message for tests");
+		OutputDestination output = context.getBean(OutputDestination.class);
+		Awaitility.await().untilAsserted( () -> {
+			Message<byte[]> message = output.receive(1L);
 			log.info("Got the message from output");
 			assertThat(message).isNotNull();
 			log.info("Message is not null");
@@ -77,7 +79,9 @@ public class SleuthBenchmarkingStreamApplication {
 			String b3 = message.getHeaders().get("b3", String.class);
 			log.info("Checking the b3 header [" + b3 + "]");
 			assertThat(b3).startsWith("4883117762eb9420");
-		}
+		});
+		context.close();
+		System.exit(0);
 	}
 
 	@Bean

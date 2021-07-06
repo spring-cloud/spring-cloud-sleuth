@@ -109,7 +109,6 @@ public final class TracingChannelInterceptor implements ExecutorChannelIntercept
 	public TracingChannelInterceptor(Tracer tracer, Propagator propagator,
 			Propagator.Setter<MessageHeaderAccessor> setter, Propagator.Getter<MessageHeaderAccessor> getter,
 			Function<String, String> remoteServiceNameMapper, MessageSpanCustomizer messageSpanCustomizer) {
-
 		this.tracer = tracer;
 		this.propagator = propagator;
 		this.injector = setter;

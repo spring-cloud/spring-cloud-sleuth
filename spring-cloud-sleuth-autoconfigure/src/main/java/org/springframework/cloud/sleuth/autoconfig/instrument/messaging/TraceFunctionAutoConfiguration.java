@@ -16,19 +16,28 @@
 
 package org.springframework.cloud.sleuth.autoconfig.instrument.messaging;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.cloud.context.scope.refresh.RefreshScopeRefreshedEvent;
 import org.springframework.cloud.function.context.catalog.FunctionAroundWrapper;
+import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.autoconfig.brave.BraveAutoConfiguration;
+import org.springframework.cloud.sleuth.instrument.messaging.FunctionMessageSpanCustomizer;
 import org.springframework.cloud.sleuth.instrument.messaging.TraceFunctionAroundWrapper;
 import org.springframework.cloud.sleuth.propagation.Propagator;
+import org.springframework.cloud.stream.messaging.DirectWithAttributesChannel;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.env.Environment;
+import org.springframework.messaging.Message;
 import org.springframework.messaging.support.MessageHeaderAccessor;
 
 /**
@@ -48,8 +57,61 @@ public class TraceFunctionAutoConfiguration {
 
 	@Bean
 	TraceFunctionAroundWrapper traceFunctionAroundWrapper(Environment environment, Tracer tracer, Propagator propagator,
-			Propagator.Setter<MessageHeaderAccessor> injector, Propagator.Getter<MessageHeaderAccessor> extractor) {
-		return new TraceFunctionAroundWrapper(environment, tracer, propagator, injector, extractor);
+			Propagator.Setter<MessageHeaderAccessor> injector, Propagator.Getter<MessageHeaderAccessor> extractor,
+			ObjectProvider<List<FunctionMessageSpanCustomizer>> customizers) {
+		return new TraceFunctionAroundWrapper(environment, tracer, propagator, injector, extractor,
+				customizers.getIfAvailable(ArrayList::new));
+	}
+
+	@Configuration(proxyBeanMethods = false)
+	@ConditionalOnClass(DirectWithAttributesChannel.class)
+	static class TraceFunctionStreamConfiguration {
+
+		@Configuration(proxyBeanMethods = false)
+		@ConditionalOnClass(name = "org.springframework.cloud.stream.binder.kafka.config.KafkaBinderConfiguration")
+		@ConditionalOnMissingClass("org.springframework.cloud.stream.binder.rabbit.properties.RabbitBinderConfigurationProperties")
+		static class KafkaOnlyStreamConfiguration {
+
+			@Bean
+			FunctionMessageSpanCustomizer traceKafkaFunctionMessageSpanCustomizer() {
+				return new FunctionMessageSpanCustomizer() {
+					@Override
+					public void customizeInputMessageSpan(Span span, Message<?> message) {
+						span.remoteServiceName("kafka");
+					}
+
+					@Override
+					public void customizeOutputMessageSpan(Span span, Message<?> message) {
+						span.remoteServiceName("kafka");
+					}
+				};
+			}
+
+		}
+
+		@Configuration(proxyBeanMethods = false)
+		@ConditionalOnClass(
+				name = "org.springframework.cloud.stream.binder.rabbit.properties.RabbitBinderConfigurationProperties")
+		@ConditionalOnMissingClass("org.springframework.cloud.stream.binder.kafka.config.KafkaBinderConfiguration")
+		static class RabbitOnlyStreamConfiguration {
+
+			@Bean
+			FunctionMessageSpanCustomizer traceRabbitFunctionMessageSpanCustomizer() {
+				return new FunctionMessageSpanCustomizer() {
+					@Override
+					public void customizeInputMessageSpan(Span span, Message<?> message) {
+						span.remoteServiceName("rabbitmq");
+					}
+
+					@Override
+					public void customizeOutputMessageSpan(Span span, Message<?> message) {
+						span.remoteServiceName("rabbitmq");
+					}
+				};
+			}
+
+		}
+
 	}
 
 }

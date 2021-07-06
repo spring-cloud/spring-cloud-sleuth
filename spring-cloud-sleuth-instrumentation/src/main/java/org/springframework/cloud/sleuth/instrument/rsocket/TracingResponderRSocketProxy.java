@@ -159,8 +159,7 @@ public class TracingResponderRSocketProxy extends RSocketProxy {
 					traceId = EncodingUtils.fromLong(traceIdHigh) + traceId;
 				}
 				TraceContext.Builder parentBuilder = this.tracer.traceContextBuilder()
-						.sampled(tracingMetadata.isDebug() || tracingMetadata.isSampled())
-						.traceId(traceId)
+						.sampled(tracingMetadata.isDebug() || tracingMetadata.isSampled()).traceId(traceId)
 						.spanId(EncodingUtils.fromLong(tracingMetadata.spanId()))
 						.parentId(EncodingUtils.fromLong(tracingMetadata.parentId()));
 				return builder.setParent(parentBuilder.build());

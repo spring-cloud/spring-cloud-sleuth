@@ -188,6 +188,23 @@ public final class MessagingSleuthOperators {
 	 * @return instrumented message
 	 */
 	public static <T> Message<T> handleOutputMessage(BeanFactory beanFactory, Message<T> message, Throwable throwable) {
+		return handleOutputMessage(beanFactory, message, span -> {
+		}, throwable);
+	}
+
+	/**
+	 * Creates an output message with tracer headers and reports the corresponding
+	 * producer span. If the message contains a header called {@code destination} it will
+	 * be used to tag the span with destination name.
+	 * @param beanFactory - bean factory
+	 * @param message - message to which tracer headers should be injected
+	 * @param spanCustomizer - customizer of the output span
+	 * @param throwable - exception that took place while processing the message
+	 * @param <T> - message payload
+	 * @return instrumented message
+	 */
+	public static <T> Message<T> handleOutputMessage(BeanFactory beanFactory, Message<T> message,
+			Consumer<Span> spanCustomizer, Throwable throwable) {
 		TraceMessageHandler traceMessageHandler = TraceMessageHandler.forNonSpringIntegration(beanFactory);
 		Span span = traceMessageHandler.parentSpan(message);
 		span = span != null ? span : traceMessageHandler.consumerSpan(message);
@@ -198,6 +215,7 @@ public final class MessagingSleuthOperators {
 		}
 		MessageAndSpan messageAndSpan = traceMessageHandler.wrapOutputMessage(message, span,
 				String.valueOf(message.getHeaders().getOrDefault("destination", "")));
+		spanCustomizer.accept(messageAndSpan.span);
 		traceMessageHandler.afterMessageHandled(messageAndSpan.span, throwable);
 		return messageAndSpan.msg;
 	}
