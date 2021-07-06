@@ -93,6 +93,11 @@ public class TestTracer implements Tracer, AutoCloseable {
 	}
 
 	@Override
+	public TraceContext.Builder traceContextBuilder() {
+		return delegate.traceContextBuilder();
+	}
+
+	@Override
 	@Nullable
 	public SpanCustomizer currentSpanCustomizer() {
 		return delegate.currentSpanCustomizer();
