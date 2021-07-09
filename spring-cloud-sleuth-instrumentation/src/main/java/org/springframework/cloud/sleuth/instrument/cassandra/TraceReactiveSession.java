@@ -19,10 +19,12 @@ package org.springframework.cloud.sleuth.instrument.cassandra;
 import java.util.Map;
 import java.util.Optional;
 
+import com.datastax.oss.driver.api.core.CqlIdentifier;
 import com.datastax.oss.driver.api.core.context.DriverContext;
 import com.datastax.oss.driver.api.core.cql.PreparedStatement;
 import com.datastax.oss.driver.api.core.cql.SimpleStatement;
 import com.datastax.oss.driver.api.core.cql.Statement;
+import com.datastax.oss.driver.api.core.metadata.Metadata;
 import reactor.core.publisher.Mono;
 import reactor.util.context.ContextView;
 
@@ -75,6 +77,16 @@ public class TraceReactiveSession implements ReactiveSession {
 	@Override
 	public DriverContext getContext() {
 		return this.delegate.getContext();
+	}
+
+	@Override
+	public Optional<CqlIdentifier> getKeyspace() {
+		return this.delegate.getKeyspace();
+	}
+
+	@Override
+	public Metadata getMetadata() {
+		return this.delegate.getMetadata();
 	}
 
 	@Override
