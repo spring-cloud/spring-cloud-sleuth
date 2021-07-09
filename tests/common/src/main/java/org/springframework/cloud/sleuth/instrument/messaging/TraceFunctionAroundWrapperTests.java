@@ -20,6 +20,8 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 
 import org.junit.jupiter.api.Test;
+import org.reactivestreams.Publisher;
+import reactor.core.publisher.Flux;
 
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.builder.SpringApplicationBuilder;
@@ -61,6 +63,25 @@ public abstract class TraceFunctionAroundWrapperTests {
 	}
 
 	@Test
+	public void test_tracing_with_reactive_supplier() {
+		try (ConfigurableApplicationContext context = new SpringApplicationBuilder(configuration(),
+				SampleConfiguration.class).run("--logging.level.org.springframework.cloud.function=DEBUG",
+						"--spring.main.lazy-initialization=true");) {
+			TestSpanHandler spanHandler = context.getBean(TestSpanHandler.class);
+			assertThat(spanHandler.reportedSpans()).isEmpty();
+			FunctionCatalog catalog = context.getBean(FunctionCatalog.class);
+			FunctionInvocationWrapper function = catalog.lookup("reactiveGreeter");
+			function.setSkipOutputConversion(true);
+			Object result = function.get();
+			assertThat(result).isInstanceOf(Publisher.class);
+			/* TODO
+			 * We'll need more assertions but for now this one will ensure that wrapper does not change the type of return value
+			 * specifically for reactive cases where Flux became Message<Flux> due to the current code in TraceFunctionAroundWrapper
+			 */
+		}
+	}
+
+	@Test
 	public void test_tracing_with_function() {
 		try (ConfigurableApplicationContext context = new SpringApplicationBuilder(configuration(),
 				SampleConfiguration.class).run("--logging.level.org.springframework.cloud.function=DEBUG",
@@ -87,6 +108,11 @@ public abstract class TraceFunctionAroundWrapperTests {
 		@Bean
 		public Supplier<String> greeter() {
 			return () -> "hello";
+		}
+
+		@Bean
+		public Supplier<Flux<String>> reactiveGreeter() {
+			return () -> Flux.just("hello");
 		}
 
 		@Bean
