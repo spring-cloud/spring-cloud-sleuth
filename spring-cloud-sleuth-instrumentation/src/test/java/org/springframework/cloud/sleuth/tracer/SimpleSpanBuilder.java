@@ -28,7 +28,7 @@ import org.springframework.cloud.sleuth.TraceContext;
  * A noop implementation. Does nothing.
  *
  * @author Marcin Grzejszczak
- * @since 3.0.4
+ * @since 3.0.0
  */
 public class SimpleSpanBuilder implements Span.Builder {
 

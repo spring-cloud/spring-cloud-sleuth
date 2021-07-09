@@ -21,9 +21,13 @@ import brave.baggage.BaggagePropagationConfig;
 import brave.sampler.Sampler;
 
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
+import org.springframework.boot.autoconfigure.cassandra.CassandraAutoConfiguration;
+import org.springframework.boot.autoconfigure.data.r2dbc.R2dbcDataAutoConfiguration;
+import org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration;
 import org.springframework.boot.autoconfigure.jmx.JmxAutoConfiguration;
 import org.springframework.boot.autoconfigure.mongo.MongoAutoConfiguration;
 import org.springframework.boot.autoconfigure.quartz.QuartzAutoConfiguration;
+import org.springframework.boot.autoconfigure.r2dbc.R2dbcAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.brave.BraveTestSpanHandler;
@@ -72,8 +76,9 @@ public class MultipleHopsIntegrationTests
 	}
 
 	@Configuration(proxyBeanMethods = false)
-	@EnableAutoConfiguration(
-			exclude = { MongoAutoConfiguration.class, QuartzAutoConfiguration.class, JmxAutoConfiguration.class })
+	@EnableAutoConfiguration(exclude = { MongoAutoConfiguration.class, QuartzAutoConfiguration.class,
+			JmxAutoConfiguration.class, R2dbcAutoConfiguration.class, R2dbcDataAutoConfiguration.class,
+			RedisAutoConfiguration.class, CassandraAutoConfiguration.class })
 	static class Config {
 
 		@Bean

@@ -70,6 +70,11 @@ class NoOpTracer implements Tracer {
 	}
 
 	@Override
+	public TraceContext.Builder traceContextBuilder() {
+		return new NoOpTraceContextBuilder();
+	}
+
+	@Override
 	public Map<String, String> getAllBaggage() {
 		return new HashMap<>();
 	}

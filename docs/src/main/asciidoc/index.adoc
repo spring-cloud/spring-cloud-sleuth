@@ -1,1 +1,1 @@
-spring-cloud-sleuth.adoc
+include::spring-cloud-sleuth.adoc[]

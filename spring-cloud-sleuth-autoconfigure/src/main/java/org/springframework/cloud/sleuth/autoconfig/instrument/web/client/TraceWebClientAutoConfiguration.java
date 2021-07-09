@@ -20,7 +20,6 @@ import reactor.netty.http.client.HttpClient;
 
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.ListableBeanFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.AutoConfigureBefore;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
@@ -29,7 +28,6 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.autoconfigure.security.oauth2.resource.UserInfoRestTemplateCustomizer;
-import org.springframework.boot.web.client.RestTemplateCustomizer;
 import org.springframework.cloud.commons.httpclient.HttpClientConfiguration;
 import org.springframework.cloud.gateway.filter.headers.HttpHeadersFilter;
 import org.springframework.cloud.sleuth.CurrentTraceContext;
@@ -50,6 +48,7 @@ import org.springframework.cloud.sleuth.propagation.Propagator;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.security.oauth2.client.OAuth2RestTemplate;
 import org.springframework.web.client.RestTemplate;
@@ -81,22 +80,27 @@ class TraceWebClientAutoConfiguration {
 					httpClientHandler);
 		}
 
+		@Bean
+		@Order
+		TraceRestTemplateCustomizer traceRestTemplateCustomizer(BeanFactory beanFactory) {
+			return new TraceRestTemplateCustomizer(new LazyTraceClientHttpRequestInterceptor(beanFactory));
+		}
+
+		@Bean
+		static TraceRestTemplateBeanPostProcessor traceRestTemplateBeanPostProcessor(ListableBeanFactory beanFactory) {
+			return new TraceRestTemplateBeanPostProcessor(beanFactory);
+		}
+
 		@Configuration(proxyBeanMethods = false)
-		protected static class TraceInterceptorConfiguration {
-
-			@Autowired
-			private BeanFactory beanFactory;
-
-			@Bean
-			static TraceRestTemplateBeanPostProcessor traceRestTemplateBeanPostProcessor(
-					ListableBeanFactory beanFactory) {
-				return new TraceRestTemplateBeanPostProcessor(beanFactory);
-			}
+		@ConditionalOnClass(org.springframework.vault.client.RestTemplateCustomizer.class)
+		@ConditionalOnProperty(value = "spring.sleuth.vault.enabled", matchIfMissing = true)
+		static class VaultRestTemplateCustomizerConfiguration {
 
 			@Bean
-			@Order
-			RestTemplateCustomizer traceRestTemplateCustomizer() {
-				return new TraceRestTemplateCustomizer(new LazyTraceClientHttpRequestInterceptor(this.beanFactory));
+			@Order(Ordered.HIGHEST_PRECEDENCE)
+			org.springframework.vault.client.RestTemplateCustomizer traceVaultRestTemplateCustomizer(
+					TraceRestTemplateCustomizer restTemplateCustomizer) {
+				return restTemplateCustomizer::customize;
 			}
 
 		}
@@ -142,6 +146,21 @@ class TraceWebClientAutoConfiguration {
 		static TraceWebClientBeanPostProcessor traceWebClientBeanPostProcessor(
 				ConfigurableApplicationContext springContext) {
 			return new TraceWebClientBeanPostProcessor(springContext);
+		}
+
+		@Configuration(proxyBeanMethods = false)
+		@ConditionalOnClass(org.springframework.vault.client.WebClientCustomizer.class)
+		@ConditionalOnProperty(value = "spring.sleuth.vault.enabled", matchIfMissing = true)
+		static class VaultWebClientCustomizerConfiguration {
+
+			@Bean
+			@Order(Ordered.HIGHEST_PRECEDENCE)
+			org.springframework.vault.client.WebClientCustomizer traceVaultWebClientCustomizer(
+					ConfigurableApplicationContext springContext) {
+				return webClientBuilder -> new TraceWebClientBeanPostProcessor(springContext)
+						.postProcessAfterInitialization(webClientBuilder, "");
+			}
+
 		}
 
 	}

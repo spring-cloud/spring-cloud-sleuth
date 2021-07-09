@@ -101,7 +101,8 @@ class TraceMessageHandler {
 	static TraceMessageHandler forNonSpringIntegration(Tracer tracer, Propagator propagator,
 			Propagator.Setter<MessageHeaderAccessor> injector, Propagator.Getter<MessageHeaderAccessor> extractor,
 			List<FunctionMessageSpanCustomizer> customizers) {
-		Function<Span, Span> preSendFunction = span -> tracer.nextSpan(span).name("function").start();
+		Function<Span, Span> preSendFunction = span -> SleuthMessagingSpan.MESSAGING_SPAN.wrap(tracer.nextSpan(span))
+				.name("function").start();
 		TriConsumer<MessageHeaderAccessor, Span, Span> preSendMessageManipulator = (headers, parentSpan, childSpan) -> {
 			headers.setHeader("traceHandlerParentSpan", parentSpan);
 			headers.setHeader(Span.class.getName(), childSpan);
@@ -148,8 +149,10 @@ class TraceMessageHandler {
 	 */
 	MessageAndSpans wrapInputMessage(Message<?> message, String destinationName) {
 		MessageHeaderAccessor headers = mutableHeaderAccessor(message);
-		Span.Builder consumerSpanBuilder = this.propagator.extract(headers, this.extractor);
+		Span.Builder consumerSpanBuilder = SleuthMessagingSpan.MESSAGING_SPAN
+				.wrap(this.propagator.extract(headers, this.extractor));
 		Span consumerSpan = consumerSpan(destinationName, consumerSpanBuilder, message);
+
 		if (log.isDebugEnabled()) {
 			log.debug("Built a consumer span " + consumerSpan);
 		}
@@ -193,7 +196,8 @@ class TraceMessageHandler {
 
 	private void addTags(Span.Builder result, String destinationName) {
 		if (StringUtils.hasText(destinationName)) {
-			result.tag("channel", SpanNameUtil.shorten(destinationName));
+			SleuthMessagingSpan.MESSAGING_SPAN.wrap(result).tag(SleuthMessagingSpan.Tags.CHANNEL,
+					SpanNameUtil.shorten(destinationName));
 		}
 	}
 
@@ -326,6 +330,7 @@ class TraceMessageHandler {
 			if (message == null) {
 				message = error.getClass().getSimpleName();
 			}
+			// TODO: Go with span.error(...)
 			span.tag("error", message);
 		}
 		span.end();

@@ -28,6 +28,7 @@ import org.junit.jupiter.api.Test;
 
 import org.springframework.boot.actuate.autoconfigure.security.servlet.ManagementWebSecurityAutoConfiguration;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
+import org.springframework.boot.autoconfigure.cassandra.CassandraAutoConfiguration;
 import org.springframework.boot.autoconfigure.mongo.MongoAutoConfiguration;
 import org.springframework.boot.autoconfigure.quartz.QuartzAutoConfiguration;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
@@ -49,7 +50,9 @@ public class CustomPropagationFactoryTests {
 	@Test
 	void should_start_the_context_when_propagation_type_custom_and_no_custom_propagation_provided() {
 		new ApplicationContextRunner().withUserConfiguration(CustomConfig.class)
-				.withPropertyValues("spring.sleuth.propagation.type=custom").run(context -> BDDAssertions.then(context)
+				.withPropertyValues("spring.sleuth.propagation.type=custom")
+				.withPropertyValues("spring.cloud.gateway.redis.enabled=false")
+				.withPropertyValues("spring.r2dbc.pool.enabled=true").run(context -> BDDAssertions.then(context)
 						.hasNotFailed().getBean(CustomConfig.CustomPropagation.class));
 	}
 
@@ -64,7 +67,7 @@ public class CustomPropagationFactoryTests {
 	@Configuration(proxyBeanMethods = false)
 	@EnableAutoConfiguration(exclude = { GatewayClassPathWarningAutoConfiguration.class, GatewayAutoConfiguration.class,
 			GatewayMetricsAutoConfiguration.class, ManagementWebSecurityAutoConfiguration.class,
-			MongoAutoConfiguration.class, QuartzAutoConfiguration.class })
+			MongoAutoConfiguration.class, QuartzAutoConfiguration.class, CassandraAutoConfiguration.class })
 	static class CustomConfig {
 
 		@Bean

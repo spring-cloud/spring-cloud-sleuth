@@ -100,13 +100,15 @@ public class DefaultMessageSpanCustomizer implements MessageSpanCustomizer {
 
 	private void addTags(SpanCustomizer result, MessageChannel channel) {
 		if (channel != null) {
-			result.tag("channel", messageChannelName(channel));
+			SleuthMessagingSpan.MESSAGING_SPAN.wrap(result).tag(SleuthMessagingSpan.Tags.CHANNEL,
+					messageChannelName(channel));
 		}
 	}
 
 	private void addTags(Span.Builder result, MessageChannel channel) {
 		if (channel != null) {
-			result.tag("channel", messageChannelName(channel));
+			SleuthMessagingSpan.MESSAGING_SPAN.wrap(result).tag(SleuthMessagingSpan.Tags.CHANNEL,
+					messageChannelName(channel));
 		}
 	}
 

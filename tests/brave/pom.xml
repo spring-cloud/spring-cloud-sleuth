@@ -30,26 +30,36 @@
 	<parent>
 		<groupId>org.springframework.cloud</groupId>
 		<artifactId>spring-cloud-sleuth-tests</artifactId>
-		<version>3.0.4-SNAPSHOT</version>
+		<version>3.1.0-SNAPSHOT</version>
 		<relativePath>..</relativePath>
 	</parent>
 
 	<modules>
+		<module>spring-cloud-sleuth-instrumentation-actuator-tests</module>
 		<module>spring-cloud-sleuth-instrumentation-annotation-tests</module>
 		<module>spring-cloud-sleuth-instrumentation-async-tests</module>
 		<module>spring-cloud-sleuth-instrumentation-baggage-tests</module>
+		<module>spring-cloud-sleuth-instrumentation-batch-tests</module>
+		<module>spring-cloud-sleuth-instrumentation-config-server-tests</module>
 		<module>spring-cloud-sleuth-instrumentation-circuitbreaker-tests</module>
+		<module>spring-cloud-sleuth-instrumentation-circuitbreaker-reactive-tests</module>
 		<module>spring-cloud-sleuth-instrumentation-feign-tests</module>
 		<module>spring-cloud-sleuth-instrumentation-gateway-tests</module>
 		<module>spring-cloud-sleuth-instrumentation-grpc-tests</module>
+		<module>spring-cloud-sleuth-instrumentation-jdbc-tests</module>
+		<module>spring-cloud-sleuth-instrumentation-kafka-tests</module>
+		<module>spring-cloud-sleuth-instrumentation-kotlin-tests</module>
 		<module>spring-cloud-sleuth-instrumentation-lettuce-tests</module>
 		<module>spring-cloud-sleuth-instrumentation-messaging-tests</module>
 		<module>spring-cloud-sleuth-instrumentation-mvc-tests</module>
 		<module>spring-cloud-sleuth-instrumentation-quartz-tests</module>
 		<module>spring-cloud-sleuth-instrumentation-reactor-tests</module>
 		<module>spring-cloud-sleuth-instrumentation-rxjava-tests</module>
+		<module>spring-cloud-sleuth-instrumentation-r2dbc-tests</module>
 		<module>spring-cloud-sleuth-instrumentation-scheduling-tests</module>
+		<module>spring-cloud-sleuth-instrumentation-task-tests</module>
 		<module>spring-cloud-sleuth-instrumentation-webflux-tests</module>
+		<module>spring-cloud-sleuth-instrumentation-rsocket-tests</module>
 		<module>spring-cloud-sleuth-zipkin-tests</module>
 	</modules>
 

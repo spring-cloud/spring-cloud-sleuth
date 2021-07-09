@@ -29,6 +29,7 @@ import org.springframework.beans.factory.config.BeanPostProcessor;
  * @author Marcin Grzejszczak
  * @since 1.1.3
  */
+// TODO: Move this to autoconfigure
 public class OkHttpFeignClientBeanPostProcessor implements BeanPostProcessor {
 
 	private final BeanFactory beanFactory;

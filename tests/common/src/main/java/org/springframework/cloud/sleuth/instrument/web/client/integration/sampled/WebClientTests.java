@@ -68,6 +68,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -250,6 +251,29 @@ public abstract class WebClientTests {
 		thenThereIsNoCurrentSpan();
 		then(this.spans.reportedSpans().stream().filter(r -> r.getKind() != null).map(r -> r.getKind().name())
 				.collect(Collectors.toList())).isNotEmpty().contains("CLIENT");
+	}
+
+	@Test
+	@SuppressWarnings("unchecked")
+	public void shouldUseUriTemplateInSpanName() {
+		Span span = this.tracer.nextSpan().name("foo").start();
+
+		try (Tracer.SpanInScope ws = this.tracer.withSpan(span)) {
+			this.webClientBuilder.baseUrl("http://localhost:" + this.port).build().get()
+					.uri("/prefix/{variable}/suffix", "value").retrieve().bodyToMono(String.class)
+					.block(Duration.ofSeconds(5));
+		}
+		finally {
+			span.end();
+		}
+
+		thenThereIsNoCurrentSpan();
+		then(this.spans.reportedSpans().stream().filter(r -> r.getKind() == Span.Kind.CLIENT).map(r -> r.getName())
+				.collect(Collectors.toList())).isNotEmpty().contains(templatedName());
+	}
+
+	protected String templatedName() {
+		return "GET /prefix/{variable}/suffix";
 	}
 
 	/**
@@ -547,6 +571,11 @@ public abstract class WebClientTests {
 		@RequestMapping(value = { "/skip", "/doNotSkip" }, method = RequestMethod.GET)
 		String skip() {
 			return "ok";
+		}
+
+		@RequestMapping(value = "/prefix/{variable}/suffix", method = RequestMethod.GET)
+		String pathVariable(@PathVariable("variable") String variable) {
+			return "variable = " + variable;
 		}
 
 	}

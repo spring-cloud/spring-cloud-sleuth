@@ -21,7 +21,7 @@
 	<modelVersion>4.0.0</modelVersion>
 
 	<artifactId>spring-cloud-sleuth</artifactId>
-	<version>3.0.4-SNAPSHOT</version>
+	<version>3.1.0-SNAPSHOT</version>
 	<packaging>pom</packaging>
 	<name>Spring Cloud Sleuth</name>
 	<description>Spring Cloud Sleuth</description>
@@ -29,7 +29,7 @@
 	<parent>
 		<groupId>org.springframework.cloud</groupId>
 		<artifactId>spring-cloud-build</artifactId>
-		<version>3.0.4-SNAPSHOT</version>
+		<version>3.1.0-SNAPSHOT</version>
 		<relativePath/>
 		<!-- lookup parent from repository -->
 	</parent>
@@ -62,14 +62,17 @@
 		<maven.compiler.source>1.8</maven.compiler.source>
 		<maven.compiler.testTarget>1.8</maven.compiler.testTarget>
 		<maven.compiler.testSource>1.8</maven.compiler.testSource>
-		<spring-cloud-build.version>3.0.4-SNAPSHOT</spring-cloud-build.version>
+		<spring-cloud-build.version>3.1.0-SNAPSHOT</spring-cloud-build.version>
 		<spring-cloud-commons.version>3.0.4-SNAPSHOT</spring-cloud-commons.version>
 		<spring-cloud-gateway.version>3.0.4-SNAPSHOT</spring-cloud-gateway.version>
+		<spring-cloud-config.version>3.0.4-SNAPSHOT</spring-cloud-config.version>
 		<spring-cloud-circuitbreaker.version>2.0.3-SNAPSHOT</spring-cloud-circuitbreaker.version>
 		<spring-cloud-stream.version>3.1.4-SNAPSHOT</spring-cloud-stream.version>
 		<spring-cloud-function.version>3.1.4-SNAPSHOT</spring-cloud-function.version>
 		<spring-cloud-netflix.version>3.0.4-SNAPSHOT</spring-cloud-netflix.version>
 		<spring-cloud-openfeign.version>3.0.4-SNAPSHOT</spring-cloud-openfeign.version>
+		<spring-cloud-task.version>2.3.2-SNAPSHOT</spring-cloud-task.version>
+		<spring-cloud-deployer.version>2.5.1</spring-cloud-deployer.version>
 		<brave.version>5.13.2</brave.version>
 		<opentracing.version>0.32.0</opentracing.version>
 		<spring-security-boot-autoconfigure.version>2.3.4.RELEASE</spring-security-boot-autoconfigure.version>
@@ -81,6 +84,11 @@
 		<cglib-nodep.version>3.3.0</cglib-nodep.version>
 		<objenesis.version>3.0.1</objenesis.version>
 		<spring-security-oauth2.version>2.2.0.RELEASE</spring-security-oauth2.version>
+		<p6spy.version>3.9.1</p6spy.version>
+		<datasource-proxy.version>1.7</datasource-proxy.version>
+		<tomcat-jdbc.version>10.0.6</tomcat-jdbc.version>
+		<commons-dbcp2.version>2.8.0</commons-dbcp2.version>
+		<kotlin.version>1.5.10</kotlin.version>
 
 		<!-- Until we switch it to true in sc-build -->
 		<javadoc.failOnError>true</javadoc.failOnError>
@@ -90,6 +98,8 @@
 		<awaitility.version>4.0.3</awaitility.version>
 		<brave-propagation-aws.version>0.21.3</brave-propagation-aws.version>
 		<archunit-junit5.version>0.14.1</archunit-junit5.version>
+		<testcontainers.version>1.15.3</testcontainers.version>
+		<build-helper-maven-plugin.version>3.2.0</build-helper-maven-plugin.version>
 	</properties>
 
 	<build>
@@ -145,6 +155,14 @@
 				<plugin>
 					<artifactId>maven-deploy-plugin</artifactId>
 					<version>2.8.2</version>
+				</plugin>
+				<plugin>
+					<artifactId>maven-surefire-plugin</artifactId>
+					<configuration>
+						<systemPropertyVariables>
+							<spring.cloud.sleuth.assertions.enabled>true</spring.cloud.sleuth.assertions.enabled>
+						</systemPropertyVariables>
+					</configuration>
 				</plugin>
 			</plugins>
 		</pluginManagement>
@@ -229,6 +247,27 @@
 				<scope>import</scope>
 			</dependency>
 			<dependency>
+				<groupId>org.springframework.cloud</groupId>
+				<artifactId>spring-cloud-config-dependencies</artifactId>
+				<version>${spring-cloud-config.version}</version>
+				<type>pom</type>
+				<scope>import</scope>
+			</dependency>
+			<dependency>
+				<groupId>org.springframework.cloud</groupId>
+				<artifactId>spring-cloud-task-dependencies</artifactId>
+				<version>${spring-cloud-task.version}</version>
+				<type>pom</type>
+				<scope>import</scope>
+			</dependency>
+			<dependency>
+				<groupId>org.springframework.cloud</groupId>
+				<artifactId>spring-cloud-deployer-dependencies</artifactId>
+				<version>${spring-cloud-deployer.version}</version>
+				<scope>import</scope>
+				<type>pom</type>
+			</dependency>
+			<dependency>
 				<groupId>org.springframework.security.oauth.boot</groupId>
 				<artifactId>spring-security-oauth2-autoconfigure</artifactId>
 				<version>${spring-security-boot-autoconfigure.version}</version>
@@ -261,6 +300,26 @@
 				<version>${brave-propagation-aws.version}</version>
 			</dependency>
 			<dependency>
+				<groupId>p6spy</groupId>
+				<artifactId>p6spy</artifactId>
+				<version>${p6spy.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>net.ttddyy</groupId>
+				<artifactId>datasource-proxy</artifactId>
+				<version>${datasource-proxy.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.apache.commons</groupId>
+				<artifactId>commons-dbcp2</artifactId>
+				<version>${commons-dbcp2.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.apache.tomcat</groupId>
+				<artifactId>tomcat-jdbc</artifactId>
+				<version>${tomcat-jdbc.version}</version>
+			</dependency>
+			<dependency>
 				<groupId>org.hamcrest</groupId>
 				<artifactId>hamcrest-core</artifactId>
 				<version>${hamcrest-core.version}</version>
@@ -276,6 +335,13 @@
 				<groupId>com.tngtech.archunit</groupId>
 				<artifactId>archunit-junit5</artifactId>
 				<version>${archunit-junit5.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.testcontainers</groupId>
+				<artifactId>testcontainers-bom</artifactId>
+				<version>${testcontainers.version}</version>
+				<type>pom</type>
+				<scope>import</scope>
 			</dependency>
 		</dependencies>
 	</dependencyManagement>

@@ -24,19 +24,23 @@ import brave.handler.SpanHandler;
 import brave.propagation.TraceContext;
 
 import org.springframework.cloud.sleuth.exporter.SpanFilter;
+import org.springframework.cloud.sleuth.exporter.SpanReporter;
 
 /**
- * Merges {@link SpanFilter}s into a {@link SpanHandler}.
+ * Merges {@link SpanFilter}s and {@link SpanReporter}s into a {@link SpanHandler}.
  *
  * @author Marcin Grzejszczak
  * @since 3.0.0
  */
 public class CompositeSpanHandler extends SpanHandler {
 
-	private final List<SpanFilter> exporters;
+	private final List<SpanFilter> filters;
 
-	public CompositeSpanHandler(List<SpanFilter> exporters) {
-		this.exporters = exporters == null ? Collections.emptyList() : exporters;
+	private final List<SpanReporter> reporters;
+
+	public CompositeSpanHandler(List<SpanFilter> filters, List<SpanReporter> reporters) {
+		this.filters = filters == null ? Collections.emptyList() : filters;
+		this.reporters = reporters == null ? Collections.emptyList() : reporters;
 	}
 
 	@Override
@@ -48,11 +52,16 @@ public class CompositeSpanHandler extends SpanHandler {
 		if (!shouldProcess) {
 			return false;
 		}
-		return super.end(context, span, cause);
+		shouldProcess = super.end(context, span, cause);
+		if (!shouldProcess) {
+			return false;
+		}
+		this.reporters.forEach(r -> r.report(BraveFinishedSpan.fromBrave(span)));
+		return true;
 	}
 
 	private boolean shouldProcess(MutableSpan span) {
-		for (SpanFilter exporter : this.exporters) {
+		for (SpanFilter exporter : this.filters) {
 			if (!exporter.isExportable(BraveFinishedSpan.fromBrave(span))) {
 				return false;
 			}

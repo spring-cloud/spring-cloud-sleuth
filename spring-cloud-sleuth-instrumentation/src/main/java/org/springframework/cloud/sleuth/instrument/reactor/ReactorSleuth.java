@@ -16,9 +16,11 @@
 
 package org.springframework.cloud.sleuth.instrument.reactor;
 
+import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.function.Predicate;
+import java.util.function.Supplier;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -28,16 +30,21 @@ import org.reactivestreams.Subscription;
 import reactor.core.CoreSubscriber;
 import reactor.core.Fuseable;
 import reactor.core.Scannable;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Hooks;
+import reactor.core.publisher.Mono;
 import reactor.core.publisher.Operators;
-import reactor.util.annotation.Nullable;
 import reactor.util.context.Context;
+import reactor.util.context.ContextView;
 
 import org.springframework.cloud.sleuth.CurrentTraceContext;
+import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.TraceContext;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.internal.LazyBean;
 import org.springframework.context.ConfigurableApplicationContext;
+import org.springframework.lang.NonNull;
+import org.springframework.lang.Nullable;
 
 import static org.springframework.cloud.sleuth.instrument.reactor.ReactorHooksHelper.named;
 
@@ -315,6 +322,299 @@ public abstract class ReactorSleuth {
 			}
 			return delegate;
 		};
+	}
+
+	/**
+	 * Wraps the given Mono in a trace representation. Retrieves the span from context,
+	 * creates a child span with the given name.
+	 * @param tracer - Tracer bean
+	 * @param currentTraceContext - CurrentTraceContext bean
+	 * @param childSpanName - name of the created child span
+	 * @param supplier - supplier of a {@link Mono} to be wrapped in tracing
+	 * @param <T> - type returned by the Mono
+	 * @param spanCustomizer - customizer for the child span
+	 * @return traced Mono
+	 */
+	public static <T> Mono<T> tracedMono(@NonNull Tracer tracer, @NonNull CurrentTraceContext currentTraceContext,
+			@NonNull String childSpanName, @NonNull Supplier<Mono<T>> supplier,
+			@NonNull BiConsumer<T, Span> spanCustomizer) {
+		return runMonoSupplierInScope(supplier, spanCustomizer).contextWrite(
+				context -> ReactorSleuth.enhanceContext(tracer, currentTraceContext, context, childSpanName));
+	}
+
+	/**
+	 * Wraps the given Mono in a trace representation. Retrieves the span from context,
+	 * creates a child span with the given name.
+	 * @param tracer - Tracer bean
+	 * @param currentTraceContext - CurrentTraceContext bean
+	 * @param childSpanName - name of the created child span
+	 * @param supplier - supplier of a {@link Mono} to be wrapped in tracing
+	 * @param <T> - type returned by the Mono
+	 * @param spanCustomizer - customizer for the child span
+	 * @param spanFunction - function that creates a new or child span
+	 * @return traced Mono
+	 */
+	public static <T> Mono<T> tracedMono(@NonNull Tracer tracer, @NonNull CurrentTraceContext currentTraceContext,
+			@NonNull String childSpanName, @NonNull Supplier<Mono<T>> supplier,
+			@NonNull BiConsumer<T, Span> spanCustomizer, @NonNull Function<Span, Span> spanFunction) {
+		return runMonoSupplierInScope(supplier, spanCustomizer).contextWrite(context -> ReactorSleuth
+				.enhanceContext(tracer, currentTraceContext, context, childSpanName, spanFunction));
+	}
+
+	private static <T> Mono<T> runMonoSupplierInScope(Supplier<Mono<T>> supplier, BiConsumer<T, Span> spanCustomizer) {
+		return Mono.deferContextual(contextView -> {
+			Span span = contextView.get(Span.class);
+			Tracer.SpanInScope scope = contextView.get(Tracer.SpanInScope.class);
+			// @formatter:off
+			return supplier.get()
+					.map(t -> {
+						spanCustomizer.accept(t, span);
+						return t;
+					})
+					// TODO: Fix me when this is resolved in Reactor
+//					.doOnSubscribe(__ -> scope.close())
+					.doOnError(span::error)
+					.doFinally(signalType -> {
+						span.end();
+						scope.close();
+					});
+			// @formatter:on
+		});
+	}
+
+	/**
+	 * Wraps the given Mono in a trace representation. Retrieves the span from context,
+	 * creates a child span with the given name.
+	 * @param tracer - Tracer bean
+	 * @param currentTraceContext - CurrentTraceContext bean
+	 * @param childSpanName - name of the created child span
+	 * @param supplier - supplier of a {@link Mono} to be wrapped in tracing
+	 * @param <T> - type returned by the Mono
+	 * @return traced Mono
+	 */
+	public static <T> Mono<T> tracedMono(@NonNull Tracer tracer, @NonNull CurrentTraceContext currentTraceContext,
+			@NonNull String childSpanName, @NonNull Supplier<Mono<T>> supplier) {
+		return tracedMono(tracer, currentTraceContext, childSpanName, supplier, (o, span) -> {
+		});
+	}
+
+	/**
+	 * Wraps the given Mono in a trace representation. Puts the provided span to context.
+	 * @param tracer - Tracer bean
+	 * @param span - span to put in context
+	 * @param supplier - supplier of a {@link Mono} to be wrapped in tracing
+	 * @param <T> - type returned by the Mono
+	 * @return traced Mono
+	 */
+	public static <T> Mono<T> tracedMono(@NonNull Tracer tracer, @NonNull Span span,
+			@NonNull Supplier<Mono<T>> supplier) {
+		return runMonoSupplierInScope(supplier, (o, span1) -> {
+		}).contextWrite(context -> ReactorSleuth.putSpanInScope(tracer, context, span));
+	}
+
+	/**
+	 * Wraps the given Flux in a trace representation. Retrieves the span from context,
+	 * creates a child span with the given name.
+	 * @param tracer - Tracer bean
+	 * @param currentTraceContext - CurrentTraceContext bean
+	 * @param childSpanName - name of the created child span
+	 * @param supplier - supplier of a {@link Flux} to be wrapped in tracing
+	 * @param <T> - type returned by the Flux
+	 * @param spanCustomizer - customizer for the child span
+	 * @return traced Flux
+	 */
+	public static <T> Flux<T> tracedFlux(@NonNull Tracer tracer, @NonNull CurrentTraceContext currentTraceContext,
+			@NonNull String childSpanName, @NonNull Supplier<Flux<T>> supplier,
+			@NonNull BiConsumer<T, Span> spanCustomizer) {
+		return runFluxSupplierInScope(supplier, spanCustomizer).contextWrite(
+				context -> ReactorSleuth.enhanceContext(tracer, currentTraceContext, context, childSpanName));
+	}
+
+	/**
+	 * Wraps the given Flux in a trace representation. Retrieves the span from context,
+	 * creates a child span with the given name.
+	 * @param tracer - Tracer bean
+	 * @param currentTraceContext - CurrentTraceContext bean
+	 * @param childSpanName - name of the created child span
+	 * @param supplier - supplier of a {@link Flux} to be wrapped in tracing
+	 * @param <T> - type returned by the Flux
+	 * @param spanCustomizer - customizer for the child span
+	 * @param spanFunction - function that creates a new or child span
+	 * @return traced Flux
+	 */
+	public static <T> Flux<T> tracedFlux(@NonNull Tracer tracer, @NonNull CurrentTraceContext currentTraceContext,
+			@NonNull String childSpanName, @NonNull Supplier<Flux<T>> supplier,
+			@NonNull BiConsumer<T, Span> spanCustomizer, @NonNull Function<Span, Span> spanFunction) {
+		return runFluxSupplierInScope(supplier, spanCustomizer).contextWrite(context -> ReactorSleuth
+				.enhanceContext(tracer, currentTraceContext, context, childSpanName, spanFunction));
+	}
+
+	/**
+	 * Wraps the given Flux in a trace representation. Retrieves the span from context,
+	 * creates a child span with the given name.
+	 * @param tracer - Tracer bean
+	 * @param span - span to put in context
+	 * @param supplier - supplier of a {@link Flux} to be wrapped in tracing
+	 * @param <T> - type returned by the Flux
+	 * @return traced Flux
+	 */
+	public static <T> Flux<T> tracedFlux(@NonNull Tracer tracer, @NonNull Span span,
+			@NonNull Supplier<Flux<T>> supplier) {
+		return runFluxSupplierInScope(supplier, (o, span1) -> {
+		}).contextWrite(context -> ReactorSleuth.putSpanInScope(tracer, context, span));
+	}
+
+	private static <T> Flux<T> runFluxSupplierInScope(Supplier<Flux<T>> supplier, BiConsumer<T, Span> spanCustomizer) {
+		return Flux.deferContextual(contextView -> {
+			Span span = contextView.get(Span.class);
+			Tracer.SpanInScope scope = contextView.get(Tracer.SpanInScope.class);
+			// @formatter:off
+			return supplier.get()
+					.map(t -> {
+						spanCustomizer.accept(t, span);
+						return t;
+					})
+					// TODO: Fix me when this is resolved in Reactor
+//					.doOnSubscribe(__ -> scope.close())
+					.doOnError(span::error)
+					.doFinally(signalType -> {
+						span.end();
+						scope.close();
+					});
+			// @formatter:on
+		});
+	}
+
+	/**
+	 * Wraps the given Flux in a trace representation. Retrieves the span from context,
+	 * creates a child span with the given name.
+	 * @param tracer - Tracer bean
+	 * @param currentTraceContext - CurrentTraceContext bean
+	 * @param childSpanName - name of the created child span
+	 * @param supplier - supplier of a {@link Flux} to be wrapped in tracing
+	 * @param <T> - type returned by the Flux
+	 * @return traced Flux
+	 */
+	public static <T> Flux<T> tracedFlux(@NonNull Tracer tracer, @NonNull CurrentTraceContext currentTraceContext,
+			@NonNull String childSpanName, @NonNull Supplier<Flux<T>> supplier) {
+		return tracedFlux(tracer, currentTraceContext, childSpanName, supplier, (o, span) -> {
+		});
+	}
+
+	private static Span childSpanFromContext(Tracer tracer, CurrentTraceContext currentTraceContext,
+			reactor.util.context.Context context, String childSpanName) {
+		return childSpanFromContext(currentTraceContext, context, childSpanName,
+				span -> span == null ? tracer.nextSpan() : tracer.nextSpan(span));
+	}
+
+	private static Span childSpanFromContext(CurrentTraceContext currentTraceContext,
+			reactor.util.context.Context context, String childSpanName, Function<Span, Span> spanSupplier) {
+		TraceContext traceContext = context.getOrDefault(TraceContext.class, null);
+		Span span = context.getOrDefault(Span.class, null);
+		if (traceContext == null && span == null) {
+			span = spanSupplier.apply(null);
+			if (log.isDebugEnabled()) {
+				log.debug("There was no previous span in reactor context, created a new one [" + span + "]");
+			}
+		}
+		else if (traceContext != null && span == null) {
+			// there was a previous span - we create a child one
+			try (CurrentTraceContext.Scope scope = currentTraceContext.maybeScope(traceContext)) {
+				if (log.isDebugEnabled()) {
+					log.debug("Found a trace context in reactor context [" + traceContext + "]");
+				}
+				span = spanSupplier.apply(null);
+				if (log.isDebugEnabled()) {
+					log.debug("Created a child span [" + span + "]");
+				}
+			}
+		}
+		else {
+			if (log.isDebugEnabled()) {
+				log.debug("Found a span in reactor context [" + span + "]");
+			}
+			span = spanSupplier.apply(span);
+			if (log.isDebugEnabled()) {
+				log.debug("Created a child span [" + span + "]");
+			}
+		}
+		return span.name(childSpanName).start();
+	}
+
+	/**
+	 * Updates the Reactor context with tracing information. Creates a new span if there
+	 * is no current span. Creates a child span if there was an entry in the context
+	 * already.
+	 * @param tracer tracer
+	 * @param currentTraceContext current trace context
+	 * @param context Reactor context
+	 * @param childSpanName child span name when there is no span in context
+	 * @param spanSupplier function that creates a new or child span
+	 * @return updated Reactor context
+	 */
+	public static Context enhanceContext(Tracer tracer, CurrentTraceContext currentTraceContext,
+			reactor.util.context.Context context, String childSpanName, Function<Span, Span> spanSupplier) {
+		Span span = childSpanFromContext(currentTraceContext, context, childSpanName, spanSupplier);
+		return putSpanInScope(tracer, context, span);
+	}
+
+	/**
+	 * Updates the Reactor context with tracing information. Creates a new span if there
+	 * is no current span. Creates a child span if there was an entry in the context
+	 * already.
+	 * @param tracer tracer
+	 * @param currentTraceContext current trace context
+	 * @param context Reactor context
+	 * @param childSpanName child span name when there is no span in context
+	 * @return updated Reactor context
+	 */
+	public static Context enhanceContext(Tracer tracer, CurrentTraceContext currentTraceContext,
+			reactor.util.context.Context context, String childSpanName) {
+		Span span = childSpanFromContext(tracer, currentTraceContext, context, childSpanName);
+		return putSpanInScope(tracer, context, span);
+	}
+
+	/**
+	 * Puts the provided span in scope and in Reactor context.
+	 * @param tracer tracer
+	 * @param context Reactor context
+	 * @param span span to put in Reactor context
+	 * @return mutated context
+	 */
+	public static Context putSpanInScope(Tracer tracer, Context context, Span span) {
+		return context.put(Span.class, span).put(TraceContext.class, span.context()).put(Tracer.SpanInScope.class,
+				tracer.withSpan(span));
+	}
+
+	/**
+	 * Retrieves span from Reactor context.
+	 * @param tracer tracer
+	 * @param currentTraceContext current trace context
+	 * @param context context view
+	 * @return span from Reactor context or creates a new one if missing
+	 */
+	public static Span spanFromContext(Tracer tracer, CurrentTraceContext currentTraceContext, ContextView context) {
+		Span span = context.getOrDefault(Span.class, null);
+		if (span != null) {
+			if (log.isDebugEnabled()) {
+				log.debug("Found a span in reactor context [" + span + "]");
+			}
+			return span;
+		}
+		TraceContext traceContext = context.getOrDefault(TraceContext.class, null);
+		if (traceContext != null) {
+			try (CurrentTraceContext.Scope scope = currentTraceContext.maybeScope(traceContext)) {
+				if (log.isDebugEnabled()) {
+					log.debug("Found a trace context in reactor context [" + traceContext + "]");
+				}
+				return tracer.currentSpan();
+			}
+		}
+		Span newSpan = tracer.nextSpan().start();
+		if (log.isDebugEnabled()) {
+			log.debug("No span was found - will create a new one [" + newSpan + "]");
+		}
+		return newSpan;
 	}
 
 }

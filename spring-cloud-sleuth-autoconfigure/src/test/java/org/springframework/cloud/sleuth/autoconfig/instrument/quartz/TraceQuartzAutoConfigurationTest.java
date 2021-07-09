@@ -26,14 +26,16 @@ import org.springframework.boot.actuate.autoconfigure.security.servlet.Managemen
 import org.springframework.boot.autoconfigure.AutoConfigurations;
 import org.springframework.boot.autoconfigure.AutoConfigureBefore;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.boot.autoconfigure.cassandra.CassandraAutoConfiguration;
+import org.springframework.boot.autoconfigure.data.r2dbc.R2dbcDataAutoConfiguration;
+import org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration;
 import org.springframework.boot.autoconfigure.mongo.MongoAutoConfiguration;
 import org.springframework.boot.autoconfigure.quartz.QuartzAutoConfiguration;
+import org.springframework.boot.autoconfigure.r2dbc.R2dbcAutoConfiguration;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
 import org.springframework.cloud.gateway.config.GatewayAutoConfiguration;
 import org.springframework.cloud.gateway.config.GatewayClassPathWarningAutoConfiguration;
 import org.springframework.cloud.gateway.config.GatewayMetricsAutoConfiguration;
-import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.instrument.quartz.TracingJobListener;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -45,8 +47,8 @@ import org.springframework.context.annotation.Primary;
 public class TraceQuartzAutoConfigurationTest {
 
 	private final ApplicationContextRunner contextRunner = new ApplicationContextRunner()
-			.withPropertyValues("spring.sleuth.noop.enabled=true").withConfiguration(
-					AutoConfigurations.of(SchedulerConfig.class, TracingConfig.class, EnableAutoConfig.class));
+			.withPropertyValues("spring.sleuth.noop.enabled=true")
+			.withConfiguration(AutoConfigurations.of(SchedulerConfig.class, EnableAutoConfig.class));
 
 	@Test
 	public void should_create_job_listener_bean_when_all_conditions_are_met() {
@@ -92,9 +94,10 @@ public class TraceQuartzAutoConfigurationTest {
 
 	@Test
 	public void should_not_create_listener_when_scheduler_bean_is_not_present() {
-		new ApplicationContextRunner().withConfiguration(AutoConfigurations
-				// given
-				.of(TracingConfig.class, TraceQuartzAutoConfiguration.class))
+		new ApplicationContextRunner().withPropertyValues("spring.sleuth.noop.enabled=true")
+				.withConfiguration(AutoConfigurations
+						// given
+						.of(TraceQuartzAutoConfiguration.class))
 
 				// when
 				.run(context -> {
@@ -114,9 +117,12 @@ public class TraceQuartzAutoConfigurationTest {
 	}
 
 	@Configuration(proxyBeanMethods = false)
-	@EnableAutoConfiguration(exclude = { GatewayClassPathWarningAutoConfiguration.class, GatewayAutoConfiguration.class,
-			GatewayMetricsAutoConfiguration.class, ManagementWebSecurityAutoConfiguration.class,
-			MongoAutoConfiguration.class, QuartzAutoConfiguration.class })
+	@EnableAutoConfiguration(
+			exclude = { GatewayClassPathWarningAutoConfiguration.class, GatewayAutoConfiguration.class,
+					GatewayMetricsAutoConfiguration.class, ManagementWebSecurityAutoConfiguration.class,
+					MongoAutoConfiguration.class, QuartzAutoConfiguration.class, R2dbcAutoConfiguration.class,
+					R2dbcDataAutoConfiguration.class, RedisAutoConfiguration.class, CassandraAutoConfiguration.class },
+			excludeName = "org.springframework.cloud.gateway.config.GatewayRedisAutoConfiguration")
 	public static class EnableAutoConfig {
 
 	}
@@ -131,18 +137,6 @@ public class TraceQuartzAutoConfigurationTest {
 			Scheduler scheduler = Mockito.mock(Scheduler.class);
 			Mockito.when(scheduler.getListenerManager()).thenReturn(Mockito.mock(ListenerManager.class));
 			return scheduler;
-		}
-
-	}
-
-	@Configuration(proxyBeanMethods = false)
-	@AutoConfigureBefore(TraceQuartzAutoConfiguration.class)
-	@ConditionalOnProperty("spring.sleuth.noop.enabled")
-	public static class TracingConfig {
-
-		@Bean
-		public Tracer testTracer() {
-			return Mockito.mock(Tracer.class);
 		}
 
 	}

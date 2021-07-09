@@ -42,6 +42,12 @@
       "defaultValue": true
     },
     {
+      "name": "spring.sleuth.kafka.enabled",
+      "type": "java.lang.Boolean",
+      "description": "Enable instrumenting of Apache Kafka clients.",
+      "defaultValue": true
+    },
+    {
       "name": "spring.sleuth.async.enabled",
       "type": "java.lang.Boolean",
       "description": "Enable instrumenting async related components so that the tracing information is passed between threads.",
@@ -126,9 +132,75 @@
       "defaultValue": true
     },
     {
+      "name": "spring.sleuth.web.tomcat.enabled",
+      "type": "java.lang.Boolean",
+      "description": "Enable tracing instrumentation for Tomcat.",
+      "defaultValue": true
+    },
+    {
       "name": "spring.sleuth.integration.enabled",
       "type": "java.lang.Boolean",
-      "description": "Enable Spring Integration sleuth instrumentation.",
+      "description": "Enable Spring Integration instrumentation.",
+      "defaultValue": true
+    },
+    {
+      "name": "spring.sleuth.task.enabled",
+      "type": "java.lang.Boolean",
+      "description": "Enable Spring Cloud Task instrumentation.",
+      "defaultValue": true
+    },
+    {
+      "name": "spring.sleuth.deployer.enabled",
+      "type": "java.lang.Boolean",
+      "description": "Enable Spring Cloud Deployer instrumentation.",
+      "defaultValue": true
+    },
+    {
+      "name": "spring.sleuth.deployer.status-poll-delay",
+      "type": "java.lang.Long",
+      "description": "Default poll delay to retrieve the deployed application status.",
+      "defaultValue": 500
+    },
+    {
+      "name": "spring.sleuth.config.server.enabled",
+      "type": "java.lang.Boolean",
+      "description": "Enable Spring Cloud Config Server instrumentation.",
+      "defaultValue": true
+    },
+    {
+      "name": "spring.sleuth.tx.enabled",
+      "type": "java.lang.Boolean",
+      "description": "Enable Spring TX instrumentation.",
+      "defaultValue": true
+    },
+    {
+      "name": "spring.sleuth.batch.enabled",
+      "type": "java.lang.Boolean",
+      "description": "Enable Spring Batch instrumentation.",
+      "defaultValue": true
+    },
+    {
+      "name": "spring.sleuth.r2dbc.enabled",
+      "type": "java.lang.Boolean",
+      "description": "Enable R2dbc instrumentation.",
+      "defaultValue": true
+    },
+    {
+      "name": "spring.sleuth.session.enabled",
+      "type": "java.lang.Boolean",
+      "description": "Enable Spring Session instrumentation.",
+      "defaultValue": true
+    },
+    {
+      "name": "spring.sleuth.cassandra.enabled",
+      "type": "java.lang.Boolean",
+      "description": "Enable Cassandra instrumentation.",
+      "defaultValue": true
+    },
+    {
+      "name": "spring.sleuth.vault.enabled",
+      "type": "java.lang.Boolean",
+      "description": "Enable Spring Vault instrumentation.",
       "defaultValue": true
     }
   ]

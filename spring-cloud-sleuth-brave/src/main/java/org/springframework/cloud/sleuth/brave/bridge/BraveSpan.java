@@ -20,6 +20,7 @@ import java.util.Objects;
 
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.TraceContext;
+import org.springframework.cloud.sleuth.docs.AssertingSpan;
 
 /**
  * Brave implementation of a {@link Span}.
@@ -50,22 +51,26 @@ public class BraveSpan implements Span {
 
 	@Override
 	public Span start() {
-		return new BraveSpan(this.delegate.start());
+		this.delegate.start();
+		return this;
 	}
 
 	@Override
 	public Span name(String name) {
-		return new BraveSpan(this.delegate.name(name));
+		this.delegate.name(name);
+		return this;
 	}
 
 	@Override
 	public Span event(String value) {
-		return new BraveSpan(this.delegate.annotate(value));
+		this.delegate.annotate(value);
+		return this;
 	}
 
 	@Override
 	public Span tag(String key, String value) {
-		return new BraveSpan(this.delegate.tag(key, value));
+		this.delegate.tag(key, value);
+		return this;
 	}
 
 	@Override
@@ -73,7 +78,7 @@ public class BraveSpan implements Span {
 		String message = throwable.getMessage() == null ? throwable.getClass().getSimpleName() : throwable.getMessage();
 		this.delegate.tag("error", message);
 		this.delegate.error(throwable);
-		return new BraveSpan(this.delegate);
+		return this;
 	}
 
 	@Override
@@ -93,12 +98,18 @@ public class BraveSpan implements Span {
 	}
 
 	@Override
+	public Span remoteIpAndPort(String ip, int port) {
+		this.delegate.remoteIpAndPort(ip, port);
+		return this;
+	}
+
+	@Override
 	public String toString() {
 		return this.delegate != null ? this.delegate.toString() : "null";
 	}
 
 	public static brave.Span toBrave(Span span) {
-		return ((BraveSpan) span).delegate;
+		return ((BraveSpan) AssertingSpan.unwrap(span)).delegate;
 	}
 
 	public static Span fromBrave(brave.Span span) {
@@ -110,10 +121,14 @@ public class BraveSpan implements Span {
 		if (this == o) {
 			return true;
 		}
-		if (o == null || getClass() != o.getClass()) {
+		Object unwrapped = o;
+		if (o instanceof AssertingSpan) {
+			unwrapped = ((AssertingSpan) o).getDelegate();
+		}
+		if (unwrapped == null || getClass() != unwrapped.getClass()) {
 			return false;
 		}
-		BraveSpan braveSpan = (BraveSpan) o;
+		BraveSpan braveSpan = (BraveSpan) unwrapped;
 		return Objects.equals(this.delegate, braveSpan.delegate);
 	}
 

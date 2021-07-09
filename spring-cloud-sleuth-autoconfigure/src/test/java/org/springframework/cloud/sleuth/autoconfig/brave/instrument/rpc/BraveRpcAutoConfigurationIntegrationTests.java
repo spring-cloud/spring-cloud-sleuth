@@ -29,8 +29,12 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.actuate.autoconfigure.security.servlet.ManagementWebSecurityAutoConfiguration;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
+import org.springframework.boot.autoconfigure.cassandra.CassandraAutoConfiguration;
+import org.springframework.boot.autoconfigure.data.r2dbc.R2dbcDataAutoConfiguration;
+import org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration;
 import org.springframework.boot.autoconfigure.mongo.MongoAutoConfiguration;
 import org.springframework.boot.autoconfigure.quartz.QuartzAutoConfiguration;
+import org.springframework.boot.autoconfigure.r2dbc.R2dbcAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.cloud.gateway.config.GatewayAutoConfiguration;
 import org.springframework.cloud.gateway.config.GatewayClassPathWarningAutoConfiguration;
@@ -59,7 +63,8 @@ public class BraveRpcAutoConfigurationIntegrationTests {
 
 	@EnableAutoConfiguration(exclude = { GatewayClassPathWarningAutoConfiguration.class, GatewayAutoConfiguration.class,
 			GatewayMetricsAutoConfiguration.class, ManagementWebSecurityAutoConfiguration.class,
-			MongoAutoConfiguration.class, QuartzAutoConfiguration.class })
+			MongoAutoConfiguration.class, QuartzAutoConfiguration.class, R2dbcAutoConfiguration.class,
+			R2dbcDataAutoConfiguration.class, RedisAutoConfiguration.class, CassandraAutoConfiguration.class })
 	@Configuration(proxyBeanMethods = false)
 	public static class Config {
 

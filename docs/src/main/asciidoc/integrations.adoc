@@ -3,7 +3,26 @@
 
 include::_attributes.adoc[]
 
-In this section, we describe how to customize various parts of Spring Cloud Sleuth.
+In this section, we describe how to customize various parts of Spring Cloud Sleuth. Please check the <<appendix.adoc#sleuth-spans,appendix>> for the list of spans, tags and events.
+
+[[sleuth-kafka-integration]]
+== Apache Kafka
+
+This feature is available for all tracer implementations.
+
+We decorate the Kafka clients (`KafkaProducer` and `KafkaConsumer`) to create a span for each event that is produced or consumed. You can disable this feature by setting the value of `spring.sleuth.kafka.enabled` to `false`.
+
+IMPORTANT: You have to register the `Producer` or `Consumer` as beans in order for Sleuth's auto-configuration to decorate them. When you then inject the beans, the expected type must be `Producer` or `Consumer` (and NOT e.g. `KafkaProducer`).
+
+We also provide `TracingKafkaProducerFactory` and `TracingKafkaConsumerFactory` to be used with the https://projectreactor.io/docs/kafka/release/reference/[Reactor Kafka] clients (`KafkaSender` and `KafkaReceiver`, respectively). See an example in the snippet below:
+
+[source,java,indent=0]
+----
+@Bean
+KafkaReceiver<String, String> reactiveKafkaReceiver(TracingKafkaConsumerFactory tracingKafkaConsumerFactory, KafkaReceiverOptions kafkaReceiverOptions) {
+    return KafkaReceiver.create(tracingKafkaConsumerFactory, kafkaReceiverOptions);
+}
+----
 
 [[sleuth-async-integration]]
 == Asynchronous Communication
@@ -579,5 +598,144 @@ IMPORTANT: The suggested approach to reactive programming and Sleuth is to use t
 
 This feature is available for all tracer implementations.
 
-If you have Spring Cloud CircuitBreaker on the classpath, we will wrap the passed command `Supplier` and the fallback `Function` in its trace representations.
+If you have Spring Cloud CircuitBreaker on the classpath, we will wrap the passed command `Supplier` and the fallback `Function` in its trace representations. We will also instrument the reactive implementation of the CircuitBreaker.
 In order to disable this instrumentation set `spring.sleuth.circuitbreaker.enabled` to `false`.
+
+[[sleuth-config-server-integration]]
+== Spring Cloud Config Server
+
+This feature is available for all tracer implementations.
+
+If you have Spring Cloud Config Server running on the classpath, we will wrap the `EnvironmentRepository` in a span.
+In order to disable this instrumentation set `spring.sleuth.config.server.enabled` to `false`.
+
+[[sleuth-deployer-integration]]
+== Spring Cloud Deployer
+
+This feature is available for all tracer implementations.
+
+If you have Spring Cloud Deployer running on the classpath, we wrap the `AppDeployer` in a trace representation. We are polling the application for its status at a default interval. You can change that default by setting the `spring.sleuth.deployer.status-poll-delay` property.
+In order to disable this instrumentation set `spring.sleuth.deployer.enabled` to `false`.
+
+[[sleuth-rsocket-integration]]
+== Spring RSocket
+
+This feature is available for all tracer implementations.
+
+If you have Spring RSocket running on the classpath, we wrap the inbound and outbound communication to propagate the tracing context via the metadata.
+In order to disable this instrumentation set `spring.sleuth.rsocket.enabled` to `false`.
+
+[[sleuth-batch-integration]]
+== Spring Batch
+
+This feature is available for all tracer implementations.
+
+If you have Spring Batch running on the classpath, we wrap the `StepBuilderFactory` and the `JobBuilderFactory` to propagate the tracing context.
+In order to disable this instrumentation set `spring.sleuth.batch.enabled` to `false`.
+
+[[sleuth-tx-integration]]
+== Spring Tx
+
+This feature is available for all tracer implementations.
+
+If you have Spring Tx on the classpath we will instrument the `PlatformTransactionManager` and the `ReactiveTransactionManager` to create a span whenever a new transaction is created.
+In order to disable this instrumentation set `spring.sleuth.tx.enabled` to `false`.
+
+[[sleuth-r2dbc-integration]]
+== R2DBC
+
+This feature is available for all tracer implementations.
+
+If you have R2DBC Proxy on the classpath we will instrument the `ConnectionFactory`so that it contains a custom `ProxyExecutionListener`.
+In order to disable this instrumentation set `spring.sleuth.r2dbc.enabled` to `false`.
+
+[[sleuth-vault-integration]]
+== Spring Vault
+
+This feature is available for all tracer implementations.
+
+We're instrumenting the `RestTemplate` or `WebClient` instances used by Spring Vault to communicate with Vault.
+In order to disable this instrumentation set `spring.sleuth.vault.enabled` to `false`.
+
+[[sleuth-tomcat-integration]]
+== Spring Tomcat
+
+This feature is available for all tracer implementations.
+
+We're adding an instrumented Tomcat's `Valve` that originates the span.
+In order to disable this instrumentation set `spring.sleuth.web.tomcat.enabled` to `false`.
+
+[[sleuth-cassandra-integration]]
+== Spring Data Cassandra
+
+This feature is available for all tracer implementations.
+
+We're instrumenting Casandra's `CqlSession` and `ReactiveSession` interfaces and we're providing our own implementation of the `RequestTracker`.
+In order to disable this instrumentation set `spring.sleuth.cassandra.enabled` to `false`.
+
+[[sleuth-jdbc-integration]]
+== Spring JDBC
+
+This feature is available for all tracer implementations. It has been ported from the https://github.com/gavlyukovskiy/spring-boot-data-source-decorator/[spring-boot-datasource-decorator] project.
+
+We're decorating  `DataSource`s in a trace representation. We delegate actual proxying to either https://github.com/p6spy/p6spy[p6spy] or https://github.com/ttddyy/datasource-proxy[datasource-proxy]. In order to use this feature you need to have them on the classpath.
+
+====
+[source,xml,indent=0,subs="verbatim,attributes",role="primary"]
+.P6Spy Maven
+----
+<dependency>
+    <groupId>p6spy</groupId>
+    <artifactId>p6spy</artifactId>
+    <version>${p6spy.version}</version>
+    <scope>runtime</scope>
+</dependency>
+----
+
+[source,yml,indent=0,subs="verbatim,attributes",role="secondary"]
+.P6Spy Gradle
+----
+runtimeOnly "p6spy:p6spy:${p6spyVersion}"
+----
+
+[source,xml,indent=0,subs="verbatim,attributes",role="secondary"]
+.Datasource Proxy Maven
+----
+<dependency>
+    <groupId>net.ttddyy</groupId>
+    <artifactId>datasource-proxy</artifactId>
+    <version>${datasource-proxy.version}</version>
+    <scope>runtime</scope>
+</dependency>
+----
+
+[source,groovy,indent=0,subs="verbatim,attributes",role="secondary"]
+.Datasource Proxy Gradle
+----
+runtimeOnly "net.ttddyy:datasource-proxy:${datasourceProxyVersion}"
+----
+====
+
+Please check the <<appendix.adoc#appendix,appendix>> page under `spring.sleuth.jdbc.p6spy` for all p6spy configuration options and `spring.sleuth.jdbc.datasource-proxy` for all datasource proxy configuration options.
+
+You can configure P6Spy manually using one of available configuration methods. For more information please refer to the http://p6spy.readthedocs.io/en/latest/configandusage.html[P6Spy Configuration Guide].
+
+By default logging queries will be disabled, set `spring.sleuth.jdbc.datasource-proxy.slow-query.enable-logging` to `true` to enable logging slow queries
+and set `spring.sleuth.jdbc.datasource-proxy.query.enable-logging` to `true` to enable logging all queries.
+
+In order to disable this instrumentation set `spring.sleuth.jdbc.enabled` to `false`.
+
+[[sleuth-session-integration]]
+== Spring Session
+
+This feature is available for all tracer implementations.
+
+We're instrumenting the `Session` repositories that wraps all operations in a span.
+In order to disable this instrumentation set `spring.sleuth.session.enabled` to `false`.
+
+[[sleuth-kotlin-integration]]
+== Kotlin Coroutines
+
+This feature is available for all tracer implementations.
+
+We're adding Kotlin Coroutines that allow you to retrieve the current span via the `Tracer` bean. You can either pass the bean to the Kotlin Coroutine context via `Tracer.asContextElement()` method execution or if you have Reactor Kotlin Coroutine integration on the classpath, we will retrieve it from Reactor's context. To retrieve the current span you can call the `currentSpan()` method within the Kotlin Coroutine.

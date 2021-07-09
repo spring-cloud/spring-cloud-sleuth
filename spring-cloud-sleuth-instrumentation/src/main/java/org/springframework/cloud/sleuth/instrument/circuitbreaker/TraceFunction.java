@@ -19,8 +19,8 @@ package org.springframework.cloud.sleuth.instrument.circuitbreaker;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
 
-import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.Tracer;
+import org.springframework.cloud.sleuth.docs.AssertingSpan;
 
 /**
  * Trace representation of a {@link Function}.
@@ -34,18 +34,20 @@ class TraceFunction<T> implements Function<Throwable, T> {
 
 	private final Function<Throwable, T> delegate;
 
-	private final AtomicReference<Span> span;
+	private final AtomicReference<AssertingSpan> span;
 
 	TraceFunction(Tracer tracer, Function<Throwable, T> delegate) {
 		this.tracer = tracer;
 		this.delegate = delegate;
-		this.span = new AtomicReference<>(this.tracer.nextSpan());
+		this.span = new AtomicReference<>(
+				SleuthCircuitBreakerSpan.CIRCUIT_BREAKER_FUNCTION_SPAN.wrap(this.tracer.nextSpan()));
 	}
 
 	@Override
 	public T apply(Throwable throwable) {
+		// TODO: This name needs to be better
 		String name = this.delegate.getClass().getSimpleName();
-		Span span = this.span.get().name(name);
+		AssertingSpan span = this.span.get().name(name);
 		Throwable tr = null;
 		try (Tracer.SpanInScope ws = this.tracer.withSpan(span.start())) {
 			return this.delegate.apply(throwable);

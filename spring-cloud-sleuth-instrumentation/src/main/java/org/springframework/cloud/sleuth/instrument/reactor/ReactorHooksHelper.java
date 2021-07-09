@@ -47,13 +47,13 @@ import org.springframework.util.Assert;
  * 	.scan((l, r) -> l + r) // (-)
  * 	.doOnNext(it -> { // (-)
  * 		//log
- * 	})
+ *    })
  * 	.doFirst(() -> { // (-)
  * 		//log
- * 	})
+ *    })
  * 	.doFinally(signalType -> { // (-)
  * 		//log
- * 	})
+ *    })
  * 	.subscribeOn(Schedulers.parallel()) //(+)
  * 	.subscribe();//(*)
  * 	(*) - captures tracing context if it differs from what was captured before at subscription and propagates it.
@@ -71,7 +71,7 @@ import org.springframework.util.Assert;
  * 	.map(it -> ...) // (+) is SYNC but should add hook as previous Processor/operator does not use hooks
  * 	.doOnNext(it -> { // (-) is SYNC no need to wrap
  * 		//log
- * 	})
+ *    })
  * 	.subscribe();
  *}</pre>
  *
@@ -84,6 +84,7 @@ final class ReactorHooksHelper {
 	// need a way to determine SYNC sources to not add redundant scope passing decorator
 	// most of reactor-core SYNC sources are marked with SourceProducer interface
 	static final Class<?> sourceProducerClass;
+
 	static {
 		Class<?> c;
 		try {

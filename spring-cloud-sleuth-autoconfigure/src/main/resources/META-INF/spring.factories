@@ -1,21 +1,35 @@
 # Auto Configuration
 org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
+org.springframework.cloud.sleuth.autoconfig.actuate.TraceSleuthActuatorAutoConfiguration,\
+org.springframework.cloud.sleuth.autoconfig.instrument.kafka.TracingKafkaAutoConfiguration,\
+org.springframework.cloud.sleuth.autoconfig.instrument.kafka.TracingReactorKafkaAutoConfiguration,\
 org.springframework.cloud.sleuth.autoconfig.instrument.async.TraceAsyncAutoConfiguration,\
 org.springframework.cloud.sleuth.autoconfig.instrument.async.TraceAsyncCustomAutoConfiguration,\
 org.springframework.cloud.sleuth.autoconfig.instrument.async.TraceAsyncDefaultAutoConfiguration,\
+org.springframework.cloud.sleuth.autoconfig.instrument.batch.TraceBatchAutoConfiguration,\
+org.springframework.cloud.sleuth.autoconfig.instrument.cassandra.TraceCassandraAutoConfiguration,\
+org.springframework.cloud.sleuth.autoconfig.instrument.cassandra.TraceCassandraReactiveAutoConfiguration,\
+org.springframework.cloud.sleuth.autoconfig.instrument.config.TraceSpringCloudConfigAutoConfiguration,\
 org.springframework.cloud.sleuth.autoconfig.instrument.circuitbreaker.TraceCircuitBreakerAutoConfiguration,\
+org.springframework.cloud.sleuth.autoconfig.instrument.deployer.TraceDeployerAutoConfiguration,\
+org.springframework.cloud.sleuth.autoconfig.instrument.jdbc.TraceJdbcAutoConfiguration,\
 org.springframework.cloud.sleuth.autoconfig.instrument.rxjava.TraceRxJavaAutoConfiguration,\
 org.springframework.cloud.sleuth.autoconfig.instrument.quartz.TraceQuartzAutoConfiguration,\
+org.springframework.cloud.sleuth.autoconfig.instrument.task.TraceTaskAutoConfiguration,\
 org.springframework.cloud.sleuth.autoconfig.instrument.web.TraceWebAutoConfiguration,\
 org.springframework.cloud.sleuth.autoconfig.instrument.web.client.TraceWebClientAutoConfiguration,\
 org.springframework.cloud.sleuth.autoconfig.instrument.web.client.feign.TraceFeignClientAutoConfiguration,\
 org.springframework.cloud.sleuth.autoconfig.instrument.web.client.TraceWebAsyncClientAutoConfiguration,\
 org.springframework.cloud.sleuth.autoconfig.instrument.scheduling.TraceSchedulingAutoConfiguration,\
+org.springframework.cloud.sleuth.autoconfig.instrument.session.TraceSessionAutoConfiguration,\
 org.springframework.cloud.sleuth.autoconfig.instrument.reactor.TraceReactorAutoConfiguration,\
 org.springframework.cloud.sleuth.autoconfig.instrument.messaging.TraceFunctionAutoConfiguration,\
 org.springframework.cloud.sleuth.autoconfig.instrument.messaging.TraceSpringIntegrationAutoConfiguration,\
 org.springframework.cloud.sleuth.autoconfig.instrument.messaging.TraceSpringMessagingAutoConfiguration,\
 org.springframework.cloud.sleuth.autoconfig.instrument.messaging.TraceWebSocketAutoConfiguration,\
+org.springframework.cloud.sleuth.autoconfig.instrument.rsocket.TraceRSocketAutoConfiguration, \
+org.springframework.cloud.sleuth.autoconfig.instrument.r2dbc.TraceR2dbcAutoConfiguration, \
+org.springframework.cloud.sleuth.autoconfig.instrument.tx.TraceTxAutoConfiguration, \
 org.springframework.cloud.sleuth.autoconfig.brave.BraveAutoConfiguration,\
 org.springframework.cloud.sleuth.autoconfig.brave.instrument.web.client.BraveWebClientAutoConfiguration,\
 org.springframework.cloud.sleuth.autoconfig.brave.instrument.rpc.BraveRpcAutoConfiguration,\

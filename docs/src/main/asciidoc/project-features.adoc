@@ -304,15 +304,13 @@ To customize the `RestTemplate` that sends spans to Zipkin via HTTP, you can reg
 ----
 
 If, however, you would like to control the full process of creating the `RestTemplate`
-object, you will have to create a bean of `zipkin2.reporter.Sender` type.
+object, you will have to create a bean of `ZipkinRestTemplateProvider` type.
 
 [source,java,indent=0]
 ----
-	@Bean Sender myRestTemplateSender(ZipkinProperties zipkin,
-			ZipkinRestTemplateCustomizer zipkinRestTemplateCustomizer) {
-		RestTemplate restTemplate = mySuperCustomRestTemplate();
-		zipkinRestTemplateCustomizer.customize(restTemplate);
-		return myCustomSender(zipkin, restTemplate);
+	@Bean
+	ZipkinRestTemplateProvider myZipkinRestTemplateProvider() {
+		return MyRestTemplate::new;
 	}
 ----
 
@@ -481,6 +479,20 @@ That Logback configuration file:
 
 NOTE: If you use a custom `logback-spring.xml`, you must pass the `spring.application.name` in the  `bootstrap` rather than the `application` property file.
 Otherwise, your custom logback file does not properly read the property.
+
+[[features-self-documenting-spans]]
+== Self Documenting Spans
+
+A declarative format of representing span configuration was introduced via the `DocumentedSpan` abstraction. By analyzing Sleuth's source code an appendix with all span characteristics is created (including allowed tag keys and event names). You can check the <<appendix.adoc#sleuth-spans, Sleuth Spans appendix>> for more information.
+
+[[features-traces-actuator]]
+== Traces Actuator Endpoint
+
+Spring Cloud Sleuth comes with a `traces` Actuator endpoint that can store finished spans. The endpoint can be queried either via an HTTP Get method to simply retrieve the list of stored spans or via HTTP Post method to retrieve the list and clear it.
+
+The size of the queue where the spans are stored can be configured via the `management.endpoint.traces.queue-size` property.
+
+Please read the https://docs.spring.io/spring-boot/docs/current/reference/htmlsingle/#actuator[Spring Boot Actuator: Production-ready Features] section of the documentation to read more about the Actuator endpoints configuration options.
 
 [[features-whats-next]]
 == What to Read Next

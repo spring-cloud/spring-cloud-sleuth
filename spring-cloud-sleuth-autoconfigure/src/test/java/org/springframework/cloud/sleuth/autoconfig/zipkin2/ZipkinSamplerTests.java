@@ -22,8 +22,12 @@ import org.junit.jupiter.api.Test;
 import org.springframework.boot.actuate.autoconfigure.security.servlet.ManagementWebSecurityAutoConfiguration;
 import org.springframework.boot.autoconfigure.AutoConfigurations;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
+import org.springframework.boot.autoconfigure.cassandra.CassandraAutoConfiguration;
+import org.springframework.boot.autoconfigure.data.r2dbc.R2dbcDataAutoConfiguration;
+import org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration;
 import org.springframework.boot.autoconfigure.mongo.MongoAutoConfiguration;
 import org.springframework.boot.autoconfigure.quartz.QuartzAutoConfiguration;
+import org.springframework.boot.autoconfigure.r2dbc.R2dbcAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
 import org.springframework.cloud.gateway.config.GatewayAutoConfiguration;
@@ -51,9 +55,12 @@ public class ZipkinSamplerTests {
 	}
 
 	@Configuration(proxyBeanMethods = false)
-	@EnableAutoConfiguration(exclude = { GatewayClassPathWarningAutoConfiguration.class, GatewayAutoConfiguration.class,
-			GatewayMetricsAutoConfiguration.class, ManagementWebSecurityAutoConfiguration.class,
-			MongoAutoConfiguration.class, QuartzAutoConfiguration.class })
+	@EnableAutoConfiguration(
+			exclude = { GatewayClassPathWarningAutoConfiguration.class, GatewayAutoConfiguration.class,
+					GatewayMetricsAutoConfiguration.class, ManagementWebSecurityAutoConfiguration.class,
+					MongoAutoConfiguration.class, QuartzAutoConfiguration.class, R2dbcAutoConfiguration.class,
+					R2dbcDataAutoConfiguration.class, RedisAutoConfiguration.class, CassandraAutoConfiguration.class },
+			excludeName = "org.springframework.cloud.gateway.config.GatewayRedisAutoConfiguration")
 	static class TestConfig {
 
 	}

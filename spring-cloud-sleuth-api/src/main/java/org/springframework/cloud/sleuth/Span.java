@@ -100,6 +100,17 @@ public interface Span extends SpanCustomizer {
 	}
 
 	/**
+	 * Sets the remote url on the span.
+	 * @param ip remote ip
+	 * @param port remote port
+	 * @return this span
+	 * @since 3.1.0
+	 */
+	default Span remoteIpAndPort(String ip, int port) {
+		return this;
+	}
+
+	/**
 	 * Type of span. Can be used to specify additional relationships between spans in
 	 * addition to a parent/child relationship.
 	 *
@@ -201,6 +212,16 @@ public interface Span extends SpanCustomizer {
 		 * @return this
 		 */
 		Builder remoteServiceName(String remoteServiceName);
+
+		/**
+		 * Sets the remote URL for the span.
+		 * @param ip remote service ip
+		 * @param port remote service port
+		 * @return this
+		 */
+		default Builder remoteIpAndPort(String ip, int port) {
+			return this;
+		}
 
 		/**
 		 * Builds and starts the span.

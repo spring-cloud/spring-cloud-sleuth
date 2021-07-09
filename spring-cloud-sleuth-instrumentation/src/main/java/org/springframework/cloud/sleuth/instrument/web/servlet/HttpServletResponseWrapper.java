@@ -31,14 +31,14 @@ import org.springframework.lang.Nullable;
  *
  * @since 5.10
  */
-// Public for use in sparkjava or other frameworks that re-use servlet types
-class HttpServletResponseWrapper implements HttpServerResponse {
+public class HttpServletResponseWrapper implements HttpServerResponse {
 
 	// not final for inner
 	// subtype
 	/**
+	 * Returns the trace representation of a response.
 	 * @param caught an exception caught serving the request.
-	 * @since 5.10
+	 * @return wrapped response
 	 */
 	public static HttpServerResponse create(@Nullable HttpServletRequest request, HttpServletResponse response,
 			@Nullable Throwable caught) {

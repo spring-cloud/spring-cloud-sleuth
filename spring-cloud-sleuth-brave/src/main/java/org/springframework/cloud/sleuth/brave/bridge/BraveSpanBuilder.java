@@ -108,6 +108,12 @@ class BraveSpanBuilder implements Span.Builder {
 	}
 
 	@Override
+	public Span.Builder remoteIpAndPort(String ip, int port) {
+		span().remoteIpAndPort(ip, port);
+		return this;
+	}
+
+	@Override
 	public Span start() {
 		if (this.startTimestamp > 0) {
 			span().start(this.startTimestamp);

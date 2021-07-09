@@ -58,7 +58,8 @@ public class TraceRunnable implements Runnable {
 
 	@Override
 	public void run() {
-		Span childSpan = this.tracer.nextSpan(this.parent).name(this.spanName);
+		Span childSpan = SleuthAsyncSpan.ASYNC_RUNNABLE_SPAN.wrap(this.tracer.nextSpan(this.parent))
+				.name(this.spanName);
 		try (Tracer.SpanInScope ws = this.tracer.withSpan(childSpan.start())) {
 			this.delegate.run();
 		}

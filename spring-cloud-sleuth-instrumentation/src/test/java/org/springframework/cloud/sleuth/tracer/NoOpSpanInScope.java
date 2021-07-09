@@ -22,7 +22,7 @@ import org.springframework.cloud.sleuth.Tracer;
  * A noop implementation. Does nothing.
  *
  * @author Marcin Grzejszczak
- * @since 3.0.4
+ * @since 3.0.0
  */
 public class NoOpSpanInScope implements Tracer.SpanInScope {
 
