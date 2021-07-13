@@ -68,7 +68,7 @@ class BraveKafkaStreamsAutoConfiguration {
 	 * {@link StreamsBuilderFactoryBean#setClientSupplier(org.apache.kafka.streams.KafkaClientSupplier)}
 	 * with Brave's TracingKafkaClientSupplier.
 	 * @param objectProvider provides KafkaStreamsTracing; prevents eager initialization
-	 * @return
+	 * @return post processor
 	 */
 	@Bean
 	static KafkaStreamsBuilderFactoryBeanPostProcessor kafkaStreamsBuilderFactoryBeanPostProcessor(
