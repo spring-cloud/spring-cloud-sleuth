@@ -21,7 +21,6 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import io.r2dbc.spi.ConnectionFactory;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -29,24 +28,19 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
-import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.cloud.sleuth.exporter.FinishedSpan;
 import org.springframework.cloud.sleuth.test.TestSpanHandler;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.core.io.ClassPathResource;
 import org.springframework.dao.DataAccessException;
-import org.springframework.r2dbc.connection.init.ConnectionFactoryInitializer;
-import org.springframework.r2dbc.connection.init.ResourceDatabasePopulator;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
 
 import static org.assertj.core.api.BDDAssertions.then;
 
 @ContextConfiguration(classes = R2dbcIntegrationTests.TestConfig.class)
-@TestPropertySource(properties = { "spring.application.name=MyApplication", "jdbc:h2:mem:test;DB_CLOSE_DELAY=-1" })
-@AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.ANY)
+@TestPropertySource(properties = "spring.application.name=MyApplication")
 public abstract class R2dbcIntegrationTests {
 
 	@Autowired
@@ -87,14 +81,6 @@ public abstract class R2dbcIntegrationTests {
 					log.info("Expected to throw an exception so that we see if rollback works", e);
 				}
 			};
-		}
-
-		@Bean
-		ConnectionFactoryInitializer initializer(ConnectionFactory connectionFactory) {
-			ConnectionFactoryInitializer initializer = new ConnectionFactoryInitializer();
-			initializer.setConnectionFactory(connectionFactory);
-			initializer.setDatabasePopulator(new ResourceDatabasePopulator(new ClassPathResource("schema.sql")));
-			return initializer;
 		}
 
 	}
