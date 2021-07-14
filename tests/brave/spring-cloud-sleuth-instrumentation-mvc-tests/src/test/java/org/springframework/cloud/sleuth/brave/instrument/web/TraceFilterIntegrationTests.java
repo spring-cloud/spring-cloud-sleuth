@@ -353,7 +353,7 @@ public class TraceFilterIntegrationTests extends AbstractMvcIntegrationTest {
 			@Primary
 			ManagementServerProperties managementServerProperties() {
 				ManagementServerProperties managementServerProperties = new ManagementServerProperties();
-				managementServerProperties.getServlet().setContextPath("/additionalContextPath");
+				managementServerProperties.setBasePath("/additionalContextPath");
 				return managementServerProperties;
 			}
 

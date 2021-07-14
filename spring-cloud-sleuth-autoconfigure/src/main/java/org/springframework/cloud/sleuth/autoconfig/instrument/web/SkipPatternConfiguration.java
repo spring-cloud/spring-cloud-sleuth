@@ -111,19 +111,19 @@ class SkipPatternConfiguration {
 
 	@Configuration(proxyBeanMethods = false)
 	@ConditionalOnClass(ManagementServerProperties.class)
-	@ConditionalOnProperty(value = "spring.sleuth.web.ignoreAutoConfiguredSkipPatterns", havingValue = "false",
+	@ConditionalOnProperty(value = "spring.sleuth.web.ignore-auto-configured-skip-patterns", havingValue = "false",
 			matchIfMissing = true)
 	protected static class ManagementSkipPatternProviderConfig {
 
 		/**
-		 * Sets or appends {@link ManagementServerProperties#getServlet()} to the skip
+		 * Sets or appends {@link ManagementServerProperties#getBasePath()} to the skip
 		 * pattern. If neither is available then sets the default one
 		 * @param managementServerProperties properties
 		 * @return optional skip pattern
 		 */
 		static Optional<Pattern> getPatternForManagementServerProperties(Environment environment,
 				ManagementServerProperties managementServerProperties) {
-			String contextPath = managementServerProperties.getServlet().getContextPath();
+			String contextPath = managementServerProperties.getBasePath();
 			if (StringUtils.hasText(contextPath)) {
 				return Optional.of(Pattern.compile(environment.resolvePlaceholders(contextPath) + ".*"));
 			}
@@ -142,7 +142,7 @@ class SkipPatternConfiguration {
 	@Configuration(proxyBeanMethods = false)
 	@ConditionalOnClass({ ServerProperties.class, EndpointsSupplier.class, ExposableWebEndpoint.class })
 	@ConditionalOnBean(ServerProperties.class)
-	@ConditionalOnProperty(value = "spring.sleuth.web.ignoreAutoConfiguredSkipPatterns", havingValue = "false",
+	@ConditionalOnProperty(value = "spring.sleuth.web.ignore-auto-configured-skip-patterns", havingValue = "false",
 			matchIfMissing = true)
 	protected static class ActuatorSkipPatternProviderConfig {
 

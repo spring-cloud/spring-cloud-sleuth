@@ -88,7 +88,7 @@
 		<datasource-proxy.version>1.7</datasource-proxy.version>
 		<tomcat-jdbc.version>10.0.6</tomcat-jdbc.version>
 		<commons-dbcp2.version>2.8.0</commons-dbcp2.version>
-		<kotlin.version>1.5.10</kotlin.version>
+		<kotlin.version>1.5.20</kotlin.version>
 
 		<!-- Until we switch it to true in sc-build -->
 		<javadoc.failOnError>true</javadoc.failOnError>
