@@ -24,6 +24,7 @@ import org.springframework.cloud.sleuth.SpanCustomizer;
 import org.springframework.cloud.sleuth.instrument.web.servlet.TracingFilter;
 import org.springframework.web.servlet.AsyncHandlerInterceptor;
 import org.springframework.web.servlet.HandlerInterceptor;
+import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.handler.HandlerInterceptorAdapter;
 
 import static org.springframework.cloud.sleuth.instrument.web.mvc.SpanCustomizingHandlerInterceptor.setErrorAttribute;
@@ -49,6 +50,15 @@ public final class SpanCustomizingAsyncHandlerInterceptor extends HandlerInterce
 			handlerParser.preHandle(request, o, (SpanCustomizer) span);
 		}
 		return true;
+	}
+
+	@Override
+	public void postHandle(HttpServletRequest request, HttpServletResponse response, Object handler,
+						   ModelAndView modelAndView) {
+		Object span = request.getAttribute(SpanCustomizer.class.getName());
+		if (span instanceof SpanCustomizer) {
+			handlerParser.postHandle(request, handler, modelAndView, (SpanCustomizer) span);
+		}
 	}
 
 	/**

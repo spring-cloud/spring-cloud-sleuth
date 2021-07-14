@@ -65,6 +65,10 @@ public final class SpanCustomizingHandlerInterceptor implements HandlerIntercept
 	@Override
 	public void postHandle(HttpServletRequest request, HttpServletResponse response, Object handler,
 			ModelAndView modelAndView) {
+		Object span = request.getAttribute(SpanCustomizer.class.getName());
+		if (span instanceof SpanCustomizer) {
+			handlerParser.postHandle(request, handler, modelAndView, (SpanCustomizer) span);
+		}
 	}
 
 	/** Sets the "error" attribute so that the {@link TracingFilter} can read it. */
