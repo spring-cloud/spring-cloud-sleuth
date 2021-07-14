@@ -54,7 +54,7 @@ public final class SpanCustomizingAsyncHandlerInterceptor extends HandlerInterce
 
 	@Override
 	public void postHandle(HttpServletRequest request, HttpServletResponse response, Object handler,
-						   ModelAndView modelAndView) {
+			ModelAndView modelAndView) {
 		Object span = request.getAttribute(SpanCustomizer.class.getName());
 		if (span instanceof SpanCustomizer) {
 			handlerParser.postHandle(request, handler, modelAndView, (SpanCustomizer) span);

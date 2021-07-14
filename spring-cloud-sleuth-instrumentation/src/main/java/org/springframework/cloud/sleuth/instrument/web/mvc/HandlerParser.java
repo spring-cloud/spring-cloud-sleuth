@@ -44,7 +44,8 @@ public class HandlerParser {
 		}
 
 		@Override
-		protected void postHandle(HttpServletRequest request, Object handler, ModelAndView modelAndView, SpanCustomizer customizer) {
+		protected void postHandle(HttpServletRequest request, Object handler, ModelAndView modelAndView,
+				SpanCustomizer customizer) {
 		}
 	};
 
@@ -82,12 +83,12 @@ public class HandlerParser {
 	/**
 	 * Invoked posterior to request invocation during
 	 * {@link HandlerInterceptor#postHandle(HttpServletRequest, HttpServletResponse, Object, ModelAndView)}.
-	 *
 	 * @param request request
 	 * @param handler handler
 	 * @param customizer span customizer
 	 */
-	protected void postHandle(HttpServletRequest request, Object handler, ModelAndView modelAndView, SpanCustomizer customizer) {
+	protected void postHandle(HttpServletRequest request, Object handler, ModelAndView modelAndView,
+			SpanCustomizer customizer) {
 	}
 
 	/*
