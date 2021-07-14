@@ -23,7 +23,6 @@ import org.apache.kafka.common.serialization.ByteArraySerializer;
 import zipkin2.reporter.Sender;
 import zipkin2.reporter.kafka.KafkaSender;
 
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -32,6 +31,7 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Conditional;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.env.Environment;
 
 @Configuration(proxyBeanMethods = false)
 @ConditionalOnClass(ByteArraySerializer.class)
@@ -43,9 +43,6 @@ class ZipkinKafkaSenderConfiguration {
 	@Configuration(proxyBeanMethods = false)
 	@EnableConfigurationProperties(KafkaProperties.class)
 	static class ZipkinKafkaSenderBeanConfiguration {
-
-		@Value("${spring.zipkin.kafka.topic:zipkin}")
-		private String topic;
 
 		static String join(List<?> parts) {
 			StringBuilder to = new StringBuilder();
@@ -59,7 +56,12 @@ class ZipkinKafkaSenderConfiguration {
 		}
 
 		@Bean(ZipkinAutoConfiguration.SENDER_BEAN_NAME)
-		Sender kafkaSender(KafkaProperties config) {
+		Sender kafkaSender(KafkaProperties config, Environment environment) {
+			// Need to get property value from Environment
+			// because when using @VaultPropertySource in reactive web app
+			// this bean is initiated before @Value is resolved
+			// See gh-1990
+			String topic = environment.getProperty("spring.zipkin.kafka.topic", "zipkin");
 			Map<String, Object> properties = config.buildProducerProperties();
 			properties.put("key.serializer", ByteArraySerializer.class.getName());
 			properties.put("value.serializer", ByteArraySerializer.class.getName());
@@ -68,7 +70,7 @@ class ZipkinKafkaSenderConfiguration {
 			if (bootstrapServers instanceof List) {
 				properties.put("bootstrap.servers", join((List) bootstrapServers));
 			}
-			return KafkaSender.newBuilder().topic(this.topic).overrides(properties).build();
+			return KafkaSender.newBuilder().topic(topic).overrides(properties).build();
 		}
 
 	}
