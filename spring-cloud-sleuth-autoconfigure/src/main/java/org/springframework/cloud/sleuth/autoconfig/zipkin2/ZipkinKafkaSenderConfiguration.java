@@ -20,7 +20,6 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.kafka.common.serialization.ByteArraySerializer;
-import org.springframework.core.env.Environment;
 import zipkin2.reporter.Sender;
 import zipkin2.reporter.kafka.KafkaSender;
 
@@ -32,6 +31,7 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Conditional;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.env.Environment;
 
 @Configuration(proxyBeanMethods = false)
 @ConditionalOnClass(ByteArraySerializer.class)
