@@ -25,6 +25,7 @@ import org.apache.catalina.connector.Connector;
 import org.apache.catalina.connector.Request;
 import org.apache.catalina.connector.Response;
 import org.apache.catalina.valves.ValveBase;
+import org.assertj.core.api.BDDAssertions;
 import org.junit.jupiter.api.Test;
 
 import org.springframework.cloud.sleuth.Span;
@@ -63,6 +64,13 @@ class TraceValveTests {
 
 		then(request.getAttribute(TraceContext.class.getName())).isNotNull();
 		thenSpanIsStartedAndStopped();
+	}
+
+	@Test
+	void should_have_async_supported_by_default() throws ServletException, IOException {
+		TraceValve traceValve = new TraceValve(null, null);
+
+		BDDAssertions.then(traceValve.isAsyncSupported()).isTrue();
 	}
 
 	private void thenSpanIsStartedAndStopped() {

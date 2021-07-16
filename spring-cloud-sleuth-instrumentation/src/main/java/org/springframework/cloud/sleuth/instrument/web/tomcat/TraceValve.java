@@ -51,6 +51,7 @@ public class TraceValve extends ValveBase {
 	public TraceValve(HttpServerHandler httpServerHandler, CurrentTraceContext currentTraceContext) {
 		this.httpServerHandler = httpServerHandler;
 		this.currentTraceContext = currentTraceContext;
+		setAsyncSupported(true);
 	}
 
 	@Override
