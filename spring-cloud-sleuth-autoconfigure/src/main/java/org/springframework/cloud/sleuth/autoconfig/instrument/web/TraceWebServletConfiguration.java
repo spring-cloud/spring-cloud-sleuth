@@ -93,7 +93,7 @@ class TraceWebServletConfiguration {
 	}
 
 	@Configuration(proxyBeanMethods = false)
-	@ConditionalOnClass({Valve.class, ConfigurableTomcatWebServerFactory.class})
+	@ConditionalOnClass({ Valve.class, ConfigurableTomcatWebServerFactory.class })
 	@ConditionalOnProperty(value = "spring.sleuth.web.tomcat.enabled", matchIfMissing = true)
 	protected static class TraceTomcatConfiguration {
 
