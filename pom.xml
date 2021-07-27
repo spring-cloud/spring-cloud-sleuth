@@ -101,6 +101,7 @@
 		<archunit-junit5.version>0.14.1</archunit-junit5.version>
 		<testcontainers.version>1.15.3</testcontainers.version>
 		<build-helper-maven-plugin.version>3.2.0</build-helper-maven-plugin.version>
+		<mongodb.version>4.4.0-SNAPSHOT</mongodb.version>
 	</properties>
 
 	<build>
@@ -295,6 +296,26 @@
 				<artifactId>objenesis</artifactId>
 				<version>${objenesis.version}</version>
 				<!-- not test because we need it in stream -->
+			</dependency>
+			<dependency>
+				<groupId>org.mongodb</groupId>
+				<artifactId>mongodb-driver-core</artifactId>
+				<version>${mongodb.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.mongodb</groupId>
+				<artifactId>mongodb-driver-sync</artifactId>
+				<version>${mongodb.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.mongodb</groupId>
+				<artifactId>mongodb-driver-legacy</artifactId>
+				<version>${mongodb.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.mongodb</groupId>
+				<artifactId>mongodb-driver-reactivestreams</artifactId>
+				<version>${mongodb.version}</version>
 			</dependency>
 			<dependency>
 				<groupId>com.squareup.okhttp3</groupId>

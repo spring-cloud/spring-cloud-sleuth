@@ -16,8 +16,6 @@
 
 package org.springframework.cloud.sleuth.autoconfig.brave.instrument.mongodb;
 
-import brave.Tracing;
-import brave.mongodb.MongoDBTracing;
 import com.mongodb.MongoClientSettings;
 
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
@@ -25,10 +23,11 @@ import org.springframework.boot.autoconfigure.AutoConfigureBefore;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.autoconfigure.mongo.MongoAutoConfiguration;
 import org.springframework.boot.autoconfigure.mongo.MongoClientSettingsBuilderCustomizer;
+import org.springframework.cloud.sleuth.CurrentTraceContext;
+import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.autoconfig.brave.BraveAutoConfiguration;
 import org.springframework.cloud.sleuth.brave.instrument.mongodb.TraceMongoClientSettingsBuilderCustomizer;
 import org.springframework.context.annotation.Bean;
@@ -42,19 +41,20 @@ import org.springframework.context.annotation.Configuration;
  * @since 3.0.0
  */
 @Configuration(proxyBeanMethods = false)
-@ConditionalOnMissingClass("com.mongodb.reactivestreams.client.MongoClient")
-@ConditionalOnBean(Tracing.class)
+// TODO: to ponizej
+@ConditionalOnBean(Tracer.class)
 @AutoConfigureAfter(BraveAutoConfiguration.class)
 @AutoConfigureBefore(MongoAutoConfiguration.class)
 @ConditionalOnProperty(value = "spring.sleuth.mongodb.enabled", matchIfMissing = true)
-@ConditionalOnClass({ MongoClientSettings.Builder.class, MongoDBTracing.class })
+@ConditionalOnClass(MongoClientSettings.Builder.class)
 public class BraveMongoDbAutoConfiguration {
 
 	@Bean
 	// for tests
 	@ConditionalOnMissingBean(TraceMongoClientSettingsBuilderCustomizer.class)
-	MongoClientSettingsBuilderCustomizer traceMongoClientSettingsBuilderCustomizer(Tracing tracing) {
-		return new TraceMongoClientSettingsBuilderCustomizer(tracing);
+	MongoClientSettingsBuilderCustomizer traceMongoClientSettingsBuilderCustomizer(Tracer tracer,
+			CurrentTraceContext currentTraceContext) {
+		return new TraceMongoClientSettingsBuilderCustomizer(tracer, currentTraceContext);
 	}
 
 }

@@ -16,11 +16,20 @@
 
 package org.springframework.cloud.sleuth.brave.instrument.mongodb;
 
-import brave.Tracing;
-import brave.mongodb.MongoDBTracing;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Stream;
+
 import com.mongodb.MongoClientSettings;
+import com.mongodb.RequestContext;
+import com.mongodb.reactivestreams.client.ReactiveContextProvider;
+import reactor.core.CoreSubscriber;
+import reactor.util.context.Context;
+import reactor.util.context.ContextView;
 
 import org.springframework.boot.autoconfigure.mongo.MongoClientSettingsBuilderCustomizer;
+import org.springframework.cloud.sleuth.CurrentTraceContext;
+import org.springframework.cloud.sleuth.Tracer;
 
 /**
  * Trace representation of a {@link MongoClientSettingsBuilderCustomizer}.
@@ -30,15 +39,73 @@ import org.springframework.boot.autoconfigure.mongo.MongoClientSettingsBuilderCu
  */
 public class TraceMongoClientSettingsBuilderCustomizer implements MongoClientSettingsBuilderCustomizer {
 
-	private final Tracing tracing;
+	private final Tracer tracer;
 
-	public TraceMongoClientSettingsBuilderCustomizer(Tracing tracing) {
-		this.tracing = tracing;
+	private final CurrentTraceContext currentTraceContext;
+
+	public TraceMongoClientSettingsBuilderCustomizer(Tracer tracer, CurrentTraceContext currentTraceContext) {
+		this.tracer = tracer;
+		this.currentTraceContext = currentTraceContext;
 	}
 
 	@Override
 	public void customize(MongoClientSettings.Builder clientSettingsBuilder) {
-		clientSettingsBuilder.addCommandListener(MongoDBTracing.create(this.tracing).commandListener());
+		// TODO: This only when reactor is present
+		clientSettingsBuilder.contextProvider((ReactiveContextProvider) subscriber -> {
+			if (subscriber instanceof CoreSubscriber) {
+				return new TraceRequestContext(((CoreSubscriber<?>) subscriber).currentContext());
+			}
+			return new TraceRequestContext(Context.empty());
+		});
+
+		// TODO: This only when reactor is missing
+		clientSettingsBuilder.addCommandListener(new TraceMongoCommandListener(this.tracer, this.currentTraceContext));
+
+	}
+
+	static class TraceRequestContext implements RequestContext {
+
+		private final Map<Object, Object> map = new ConcurrentHashMap<>();
+
+		TraceRequestContext(ContextView context) {
+			context.stream().forEach(entry -> map.put(entry.getKey(), entry.getValue()));
+		}
+
+		@Override
+		public <T> T get(Object key) {
+			return (T) map.get(key);
+		}
+
+		@Override
+		public boolean hasKey(Object key) {
+			return map.containsKey(key);
+		}
+
+		@Override
+		public boolean isEmpty() {
+			return map.isEmpty();
+		}
+
+		@Override
+		public void put(Object key, Object value) {
+			map.put(key, value);
+		}
+
+		@Override
+		public void delete(Object key) {
+			map.remove(key);
+		}
+
+		@Override
+		public int size() {
+			return map.size();
+		}
+
+		@Override
+		public Stream<Map.Entry<Object, Object>> stream() {
+			return map.entrySet().stream();
+		}
+
 	}
 
 }

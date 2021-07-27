@@ -16,7 +16,6 @@
 
 package org.springframework.cloud.sleuth.autoconfig.brave.instrument.mongodb;
 
-import brave.Tracing;
 import brave.handler.MutableSpan;
 import brave.test.TestSpanHandler;
 import com.mongodb.MongoClientSettings;
@@ -31,7 +30,9 @@ import org.mockito.BDDMockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.cloud.sleuth.CurrentTraceContext;
 import org.springframework.cloud.sleuth.DisableSecurity;
+import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.brave.instrument.mongodb.TraceMongoClientSettingsBuilderCustomizer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -61,8 +62,9 @@ class BraveMongoDbAutoConfigurationTests {
 		}
 
 		@Bean
-		TraceMongoClientSettingsBuilderCustomizer testMongoClientSettingsBuilderCustomizer(Tracing tracing) {
-			return new TestMongoClientSettingsBuilderCustomizer(tracing);
+		TraceMongoClientSettingsBuilderCustomizer testMongoClientSettingsBuilderCustomizer(Tracer tracer,
+				CurrentTraceContext currentTraceContext) {
+			return new TestMongoClientSettingsBuilderCustomizer(tracer, currentTraceContext);
 		}
 
 	}
@@ -71,16 +73,17 @@ class BraveMongoDbAutoConfigurationTests {
 
 class TestMongoClientSettingsBuilderCustomizer extends TraceMongoClientSettingsBuilderCustomizer {
 
-	TestMongoClientSettingsBuilderCustomizer(Tracing tracing) {
-		super(tracing);
+	TestMongoClientSettingsBuilderCustomizer(Tracer tracer, CurrentTraceContext currentTraceContext) {
+		super(tracer, currentTraceContext);
 	}
 
 	@Override
 	public void customize(MongoClientSettings.Builder clientSettingsBuilder) {
 		super.customize(clientSettingsBuilder);
 		CommandListener listener = clientSettingsBuilder.build().getCommandListeners().get(0);
-		listener.commandStarted(new CommandStartedEvent(0, null, "", "", BDDMockito.mock(BsonDocument.class)));
-		listener.commandSucceeded(new CommandSucceededEvent(1, null, "", BDDMockito.mock(BsonDocument.class), 100));
+		listener.commandStarted(new CommandStartedEvent(null, 0, null, "", "", BDDMockito.mock(BsonDocument.class)));
+		listener.commandSucceeded(
+				new CommandSucceededEvent(null, 1, null, "", BDDMockito.mock(BsonDocument.class), 100));
 	}
 
 }
