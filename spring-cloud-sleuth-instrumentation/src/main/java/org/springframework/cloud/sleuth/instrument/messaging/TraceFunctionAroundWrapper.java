@@ -26,6 +26,7 @@ import org.apache.commons.logging.LogFactory;
 
 import org.springframework.cloud.context.scope.refresh.RefreshScopeRefreshedEvent;
 import org.springframework.cloud.function.context.catalog.FunctionAroundWrapper;
+import org.springframework.cloud.function.context.catalog.FunctionTypeUtils;
 import org.springframework.cloud.function.context.catalog.SimpleFunctionRegistry;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.Tracer;
@@ -84,6 +85,22 @@ public class TraceFunctionAroundWrapper extends FunctionAroundWrapper
 
 	@Override
 	protected Object doApply(Message<byte[]> message, SimpleFunctionRegistry.FunctionInvocationWrapper targetFunction) {
+
+		/*
+		 * This code is temporary to disable conditions for which this interceptor is not ready.
+		 * For example,
+		 * 	- it does not handle properly input or output of type Publisher
+		 * 	- it wraps output in Message when function returns a Collection<Message> which it should not do.
+		 *
+		 */
+		if (	(!FunctionTypeUtils.isCollectionOfMessage(targetFunction.getOutputType()) && !targetFunction.isOutputTypePublisher())
+				 || (targetFunction.isSupplier() && !targetFunction.isOutputTypePublisher())
+					) {
+				return targetFunction.apply(message); // no instrumentation
+		}
+
+
+
 		MessageAndSpans invocationMessage = null;
 		Span span;
 		if (message == null && targetFunction.isSupplier()) { // Supplier
