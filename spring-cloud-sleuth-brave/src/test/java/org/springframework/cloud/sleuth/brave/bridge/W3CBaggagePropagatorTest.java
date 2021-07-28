@@ -51,7 +51,7 @@ class W3CBaggagePropagatorTest {
 
 		TraceContextOrSamplingFlags contextWithBaggage = propagator.contextWithBaggage(carrier, context, Map::get);
 
-		assertThat(contextWithBaggage).isSameAs(context);
+		assertThat(contextWithBaggage).isEqualTo(context);
 	}
 
 	@Test
@@ -62,7 +62,7 @@ class W3CBaggagePropagatorTest {
 
 		TraceContextOrSamplingFlags contextWithBaggage = propagator.contextWithBaggage(carrier, context, Map::get);
 
-		assertThat(contextWithBaggage).isSameAs(context);
+		assertThat(contextWithBaggage).isEqualTo(context);
 	}
 
 	@Test

@@ -28,6 +28,8 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import brave.baggage.BaggageField;
+import brave.baggage.BaggagePropagation;
+import brave.baggage.BaggagePropagationConfig;
 import brave.internal.baggage.BaggageFields;
 import brave.internal.propagation.StringPropagationAdapter;
 import brave.propagation.Propagation;
@@ -37,6 +39,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import org.springframework.cloud.sleuth.BaggageInScope;
+import org.springframework.util.StringUtils;
 
 import static java.util.Collections.singletonList;
 
@@ -117,8 +120,11 @@ class W3CPropagation extends Propagation.Factory implements Propagation<String> 
 
 	private final W3CBaggagePropagator baggagePropagator;
 
+	private final BraveBaggageManager braveBaggageManager;
+
 	W3CPropagation(BraveBaggageManager braveBaggageManager, List<String> localFields) {
 		this.baggagePropagator = new W3CBaggagePropagator(braveBaggageManager, localFields);
+		this.braveBaggageManager = braveBaggageManager;
 	}
 
 	@Override
@@ -152,9 +158,23 @@ class W3CPropagation extends Propagation.Factory implements Propagation<String> 
 			chars[TRACE_OPTION_OFFSET - 1] = TRACEPARENT_DELIMITER;
 			copyTraceFlagsHexTo(chars, TRACE_OPTION_OFFSET, context);
 			setter.put(carrier, TRACE_PARENT, new String(chars, 0, TRACEPARENT_HEADER_SIZE));
-			// Add baggage
+			addTraceState(setter, context, carrier);
 			this.baggagePropagator.injector(setter).inject(context, carrier);
 		};
+	}
+
+	private <R> void addTraceState(Setter<R, String> setter, TraceContext context, R carrier) {
+		if (carrier != null) {
+			BaggageInScope baggage = this.braveBaggageManager.getBaggage(BraveTraceContext.fromBrave(context),
+					TRACE_STATE);
+			if (baggage == null) {
+				return;
+			}
+			String traceState = baggage.get(BraveTraceContext.fromBrave(context));
+			if (StringUtils.hasText(traceState)) {
+				setter.put(carrier, TRACE_STATE, traceState);
+			}
+		}
 	}
 
 	private String padLeftWithZeros(String string, int length) {
@@ -202,14 +222,15 @@ class W3CPropagation extends Propagation.Factory implements Propagation<String> 
 	}
 
 	TraceContextOrSamplingFlags context(TraceContext contextFromParentHeader, String traceStateHeader) {
-		if (traceStateHeader == null || traceStateHeader.isEmpty()) {
+		if (!StringUtils.hasText(traceStateHeader)) {
 			return TraceContextOrSamplingFlags.create(contextFromParentHeader);
 		}
 		try {
 			return TraceContextOrSamplingFlags
-					.create(TraceContext.newBuilder().traceId(contextFromParentHeader.traceId())
+					.newBuilder(TraceContext.newBuilder().traceId(contextFromParentHeader.traceId())
 							.traceIdHigh(contextFromParentHeader.traceIdHigh()).spanId(contextFromParentHeader.spanId())
-							.sampled(contextFromParentHeader.sampled()).shared(true).build());
+							.sampled(contextFromParentHeader.sampled()).shared(true).build())
+					.build();
 		}
 		catch (IllegalArgumentException e) {
 			logger.info("Unparseable tracestate header. Returning span context without state.");
@@ -279,6 +300,10 @@ class W3CBaggagePropagator {
 
 	private static final Log log = LogFactory.getLog(W3CBaggagePropagator.class);
 
+	private static final String TRACE_STATE = "tracestate";
+
+	private static final BaggageField TRACE_STATE_BAGGAGE = BaggageField.create(TRACE_STATE);
+
 	private static final String FIELD = "baggage";
 
 	private static final List<String> FIELDS = singletonList(FIELD);
@@ -290,6 +315,15 @@ class W3CBaggagePropagator {
 	W3CBaggagePropagator(BraveBaggageManager braveBaggageManager, List<String> localFields) {
 		this.braveBaggageManager = braveBaggageManager;
 		this.localFields = localFields;
+	}
+
+	private BaggagePropagation.FactoryBuilder factory() {
+		return BaggagePropagation.newFactoryBuilder(new Propagation.Factory() {
+			@Override
+			public <K> Propagation<K> create(Propagation.KeyFactory<K> keyFactory) {
+				return null;
+			}
+		});
 	}
 
 	public List<String> keys() {
@@ -307,6 +341,9 @@ class W3CBaggagePropagator {
 			String[] strings = this.localFields.toArray(new String[0]);
 			Map<String, String> filtered = extra.toMapFilteringFieldNames(strings);
 			for (Map.Entry<String, String> entry : filtered.entrySet()) {
+				if (TRACE_STATE.equalsIgnoreCase(entry.getKey())) {
+					continue;
+				}
 				headerContent.append(entry.getKey()).append("=").append(entry.getValue());
 				// TODO: [OTEL] No metadata support
 				// String metadataValue = entry.getEntryMetadata().getValue();
@@ -322,28 +359,37 @@ class W3CBaggagePropagator {
 		};
 	}
 
-	<R> TraceContextOrSamplingFlags contextWithBaggage(R carrier, TraceContextOrSamplingFlags context,
+	<R> TraceContextOrSamplingFlags contextWithBaggage(R carrier, TraceContextOrSamplingFlags flags,
 			Propagation.Getter<R, String> getter) {
+		BaggagePropagation.FactoryBuilder factoryBuilder = factory();
+		String traceState = getter.get(carrier, TRACE_STATE);
+		boolean hasTraceState = StringUtils.hasText(traceState);
+		if (hasTraceState) {
+			factoryBuilder = factoryBuilder
+					.add(BaggagePropagationConfig.SingleBaggageField.remote(TRACE_STATE_BAGGAGE));
+		}
 		String baggageHeader = getter.get(carrier, FIELD);
-		if (baggageHeader == null) {
-			return context;
+		List<AbstractMap.SimpleEntry<BaggageInScope, String>> pairs = baggageHeader == null || baggageHeader.isEmpty()
+				? Collections.emptyList() : addBaggageToContext(baggageHeader);
+		Set<String> names = pairs.stream().map(e -> e.getKey().name()).collect(Collectors.toSet());
+		for (String name : names) {
+			factoryBuilder = factoryBuilder.add(BaggagePropagationConfig.SingleBaggageField
+					.remote(((BraveBaggageInScope) this.braveBaggageManager.createBaggage(name)).unwrap()));
 		}
-		if (baggageHeader.isEmpty()) {
-			return context;
+		TraceContext decoratedContext = factoryBuilder.build().decorate(flags.context());
+		if (hasTraceState) {
+			BaggageInScope baggageInScope = this.braveBaggageManager.createBaggage(TRACE_STATE);
+			baggageInScope.set(new BraveTraceContext(decoratedContext), traceState);
 		}
-		TraceContextOrSamplingFlags.Builder builder = context.toBuilder();
-		List<AbstractMap.SimpleEntry<BaggageField, String>> pairs = addBaggageToContext(baggageHeader, builder);
-		TraceContextOrSamplingFlags built = builder.build();
 		pairs.forEach(e -> {
-			BaggageField baggage = e.getKey();
-			baggage.updateValue(built, e.getValue());
+			BaggageField baggage = ((BraveBaggageInScope) e.getKey()).unwrap();
+			baggage.updateValue(decoratedContext, e.getValue());
 		});
-		return built;
+		return TraceContextOrSamplingFlags.create(decoratedContext);
 	}
 
-	List<AbstractMap.SimpleEntry<BaggageField, String>> addBaggageToContext(String baggageHeader,
-			TraceContextOrSamplingFlags.Builder builder) {
-		List<AbstractMap.SimpleEntry<BaggageField, String>> pairs = new ArrayList<>();
+	List<AbstractMap.SimpleEntry<BaggageInScope, String>> addBaggageToContext(String baggageHeader) {
+		List<AbstractMap.SimpleEntry<BaggageInScope, String>> pairs = new ArrayList<>();
 		String[] entries = baggageHeader.split(",");
 		for (String entry : entries) {
 			int beginningOfMetadata = entry.indexOf(";");
@@ -356,8 +402,7 @@ class W3CBaggagePropagator {
 					String key = keyAndValue[i].trim();
 					String value = keyAndValue[i + 1].trim();
 					BaggageInScope baggage = this.braveBaggageManager.createBaggage(key);
-					BaggageField field = ((BraveBaggageInScope) baggage).unwrap();
-					pairs.add(new AbstractMap.SimpleEntry<>(field, value));
+					pairs.add(new AbstractMap.SimpleEntry<>(baggage, value));
 				}
 				catch (Exception e) {
 					if (log.isDebugEnabled()) {
@@ -367,11 +412,6 @@ class W3CBaggagePropagator {
 				}
 			}
 		}
-		// TODO: [OTEL] Magic number for max dynamic entries
-		builder.addExtra(BaggageFields
-				.newFactory(pairs.stream().map(AbstractMap.SimpleEntry::getKey).collect(Collectors.toList()),
-						pairs.size() * 2)
-				.create());
 		return pairs;
 	}
 

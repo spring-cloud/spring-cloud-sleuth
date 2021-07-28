@@ -47,7 +47,11 @@ public class BraveBaggageManager implements Closeable, BaggageManager {
 
 	@Override
 	public BaggageInScope getBaggage(TraceContext traceContext, String name) {
-		return new BraveBaggageInScope(BaggageField.getByName(BraveTraceContext.toBrave(traceContext), name));
+		BaggageField baggageField = BaggageField.getByName(BraveTraceContext.toBrave(traceContext), name);
+		if (baggageField == null) {
+			return null;
+		}
+		return new BraveBaggageInScope(baggageField);
 	}
 
 	@Override
