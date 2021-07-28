@@ -74,9 +74,11 @@ public abstract class TraceFunctionAroundWrapperTests {
 			function.setSkipOutputConversion(true);
 			Object result = function.get();
 			assertThat(result).isInstanceOf(Publisher.class);
-			/* TODO
-			 * We'll need more assertions but for now this one will ensure that wrapper does not change the type of return value
-			 * specifically for reactive cases where Flux became Message<Flux> due to the current code in TraceFunctionAroundWrapper
+			/*
+			 * TODO We'll need more assertions but for now this one will ensure that
+			 * wrapper does not change the type of return value specifically for reactive
+			 * cases where Flux became Message<Flux> due to the current code in
+			 * TraceFunctionAroundWrapper
 			 */
 		}
 	}
