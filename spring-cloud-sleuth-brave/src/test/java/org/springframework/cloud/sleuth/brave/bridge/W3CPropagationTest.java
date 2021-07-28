@@ -17,11 +17,14 @@
 package org.springframework.cloud.sleuth.brave.bridge;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+import brave.baggage.BaggageField;
+import brave.internal.baggage.BaggageFields;
 import brave.propagation.Propagation;
 import brave.propagation.TraceContext;
 import brave.propagation.TraceContextOrSamplingFlags;
@@ -54,6 +57,8 @@ class W3CPropagationTest {
 
 	private static final String TRACESTATE_NOT_DEFAULT_ENCODING_WITH_SPACES = "bar=baz   ,    foo=bar";
 
+	private static final String TRACESTATE_HEADER = "sappp=CwAAmEnGj0gThK52TCXZ270X8nBhc3Nwb3J0LWFwcABQT1NU";
+
 	private final W3CPropagation w3CPropagation = new W3CPropagation(new BraveBaggageManager(), new ArrayList<>());
 
 	@Test
@@ -81,6 +86,20 @@ class W3CPropagationTest {
 		TraceContext traceContext = sampledTraceContext().build();
 		w3CPropagation.injector((ignored, key, value) -> carrier.put(key, value)).inject(traceContext, carrier);
 		assertThat(carrier).containsExactly(entry(TRACE_PARENT, TRACEPARENT_HEADER_SAMPLED));
+	}
+
+	@Test
+	void inject_tracestate() {
+		Map<String, String> carrier = new LinkedHashMap<>();
+		BaggageField traceStateField = BaggageField.create(TRACE_STATE);
+		BaggageField mybaggageField = BaggageField.create("mybaggage");
+		TraceContext traceContext = sampledTraceContext()
+				.addExtra(BaggageFields.newFactory(Arrays.asList(traceStateField, mybaggageField), 2).create()).build();
+		traceStateField.updateValue(traceContext, TRACESTATE_HEADER);
+		mybaggageField.updateValue(traceContext, "mybaggagevalue");
+		w3CPropagation.injector((ignored, key, value) -> carrier.put(key, value)).inject(traceContext, carrier);
+		assertThat(carrier).containsEntry("baggage", "mybaggage=mybaggagevalue").containsEntry("tracestate",
+				"sappp=CwAAmEnGj0gThK52TCXZ270X8nBhc3Nwb3J0LWFwcABQT1NU");
 	}
 
 	@Test
@@ -161,6 +180,19 @@ class W3CPropagationTest {
 		carrier.put(TRACE_STATE, TRACESTATE_NOT_DEFAULT_ENCODING_WITH_SPACES);
 		assertThat(w3CPropagation.extractor(getter).extract(carrier).context())
 				.isEqualTo(sharedTraceContext().sampled(false).build());
+	}
+
+	@Test
+	void extract_tracestate_shouldNotBePartOfBaggage() {
+		Map<String, String> carrier = new LinkedHashMap<>();
+		carrier.put(TRACE_PARENT, TRACEPARENT_HEADER_NOT_SAMPLED);
+		carrier.put(TRACE_STATE, TRACESTATE_HEADER);
+		carrier.put("baggage", "mybaggage=mybaggagevalue");
+
+		TraceContext context = w3CPropagation.extractor(getter).extract(carrier).context();
+
+		assertThat(BaggageField.getByName(context, TRACE_STATE)).isNotNull();
+		assertThat(BaggageField.getByName(context, "mybaggage").getValue(context)).isEqualTo("mybaggagevalue");
 	}
 
 	@Test

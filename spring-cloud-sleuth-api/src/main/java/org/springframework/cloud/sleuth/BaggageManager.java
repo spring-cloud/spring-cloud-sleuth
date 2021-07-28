@@ -18,6 +18,8 @@ package org.springframework.cloud.sleuth;
 
 import java.util.Map;
 
+import org.springframework.lang.Nullable;
+
 /**
  * Manages {@link BaggageInScope} entries. Upon retrieval / creation of a baggage entry
  * puts it in scope. Scope must be closed.
@@ -38,6 +40,7 @@ public interface BaggageManager {
 	 * @param name baggage name
 	 * @return baggage or {@code null} if not present
 	 */
+	@Nullable
 	BaggageInScope getBaggage(String name);
 
 	/**
@@ -46,6 +49,7 @@ public interface BaggageManager {
 	 * @param name baggage name
 	 * @return baggage or {@code null} if not present
 	 */
+	@Nullable
 	BaggageInScope getBaggage(TraceContext traceContext, String name);
 
 	/**
