@@ -65,6 +65,11 @@ public abstract class ReactorSleuth {
 	}
 
 	/**
+	 * Function that does additional wrapping of the Reactor context.
+	 */
+	public static Function<Context, Context> contextWrappingFunction = Function.identity();
+
+	/**
 	 * Return a span operator pointcut given a Tracing. This can be used in reactor via
 	 * {@link reactor.core.publisher.Flux#transform(Function)},
 	 * {@link reactor.core.publisher.Mono#transform(Function)},
@@ -582,8 +587,18 @@ public abstract class ReactorSleuth {
 	 * @return mutated context
 	 */
 	public static Context putSpanInScope(Tracer tracer, Context context, Span span) {
-		return context.put(Span.class, span).put(TraceContext.class, span.context()).put(Tracer.SpanInScope.class,
-				tracer.withSpan(span));
+		Context newContext = context.put(Span.class, span).put(TraceContext.class, span.context())
+				.put(Tracer.SpanInScope.class, tracer.withSpan(span));
+		return wrapContext(newContext);
+	}
+
+	/**
+	 * Mutates the Reactor context depending on the classpath contents.
+	 * @param context Reactor context
+	 * @return mutated context
+	 */
+	public static Context wrapContext(Context context) {
+		return contextWrappingFunction.apply(context);
 	}
 
 	/**

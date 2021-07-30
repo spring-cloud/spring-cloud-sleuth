@@ -36,6 +36,7 @@ import org.springframework.cloud.sleuth.TraceContext;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.annotation.ContinueSpan;
 import org.springframework.cloud.sleuth.annotation.NewSpan;
+import org.springframework.cloud.sleuth.instrument.reactor.ReactorSleuth;
 import org.springframework.cloud.sleuth.instrument.reactor.TraceContextPropagator;
 import org.springframework.util.StringUtils;
 
@@ -228,7 +229,8 @@ public class ReactorSleuthMethodInvocationProcessor extends AbstractSleuthMethod
 			this.log = log;
 			this.hasLog = hasLog;
 			this.processor = processor;
-			this.context = actual.currentContext().put(Span.class, span).put(TraceContext.class, span.context());
+			this.context = ReactorSleuth
+					.wrapContext(actual.currentContext().put(Span.class, span).put(TraceContext.class, span.context()));
 			this.tracer = processor.tracer();
 			processor.before(invocation, this.span, this.log, this.hasLog);
 		}

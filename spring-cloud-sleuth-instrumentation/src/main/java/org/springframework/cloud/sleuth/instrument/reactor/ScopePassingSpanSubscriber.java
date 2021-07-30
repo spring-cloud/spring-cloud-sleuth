@@ -53,8 +53,9 @@ final class ScopePassingSpanSubscriber<T> implements SpanSubscription<T>, Scanna
 		this.subscriber = subscriber;
 		this.currentTraceContext = currentTraceContext;
 		this.parent = parent;
-		this.context = parent != null && !parent.equals(ctx.getOrDefault(TraceContext.class, null))
+		Context context = parent != null && !parent.equals(ctx.getOrDefault(TraceContext.class, null))
 				? ctx.put(TraceContext.class, parent) : ctx;
+		this.context = ReactorSleuth.wrapContext(context);
 		if (log.isTraceEnabled()) {
 			log.trace("Parent span [" + parent + "], context [" + this.context + "]");
 		}

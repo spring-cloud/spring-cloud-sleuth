@@ -37,6 +37,7 @@ import org.springframework.cloud.sleuth.docs.AssertingSpan;
 import org.springframework.cloud.sleuth.http.HttpServerHandler;
 import org.springframework.cloud.sleuth.http.HttpServerRequest;
 import org.springframework.cloud.sleuth.http.HttpServerResponse;
+import org.springframework.cloud.sleuth.instrument.reactor.ReactorSleuth;
 import org.springframework.cloud.sleuth.instrument.reactor.TraceContextPropagator;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
@@ -253,7 +254,7 @@ public class TraceWebFilter implements WebFilter, Ordered, ApplicationContextAwa
 					MonoWebFilterTrace parent) {
 				this.actual = actual;
 				this.span = span;
-				this.context = context.put(TraceContext.class, span.context());
+				this.context = ReactorSleuth.wrapContext(context.put(TraceContext.class, span.context()));
 				this.exchange = parent.exchange;
 				this.handler = parent.handler;
 			}

@@ -36,6 +36,7 @@ import org.springframework.cloud.sleuth.TraceContext;
 import org.springframework.cloud.sleuth.http.HttpClientHandler;
 import org.springframework.cloud.sleuth.http.HttpClientRequest;
 import org.springframework.cloud.sleuth.http.HttpClientResponse;
+import org.springframework.cloud.sleuth.instrument.reactor.ReactorSleuth;
 import org.springframework.cloud.sleuth.instrument.reactor.TraceContextPropagator;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.http.HttpMethod;
@@ -171,8 +172,9 @@ public final class TraceExchangeFilterFunction implements ExchangeFilterFunction
 			this.currentTraceContext = mono.currentTraceContext;
 			this.method = mono.request.method();
 			this.httpRoute = (String) mono.request.attribute(URI_TEMPLATE_ATTRIBUTE).orElse(null);
-			this.context = this.parent != null && !this.parent.equals(ctx.getOrDefault(TraceContext.class, null))
+			Context context = this.parent != null && !this.parent.equals(ctx.getOrDefault(TraceContext.class, null))
 					? ctx.put(TraceContext.class, this.parent) : ctx;
+			this.context = ReactorSleuth.wrapContext(context);
 			set(clientSpan);
 		}
 

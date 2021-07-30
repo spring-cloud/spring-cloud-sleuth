@@ -109,7 +109,11 @@ public class BraveSpan implements Span {
 	}
 
 	public static brave.Span toBrave(Span span) {
-		return ((BraveSpan) AssertingSpan.unwrap(span)).delegate;
+		BraveSpan unwrap = (BraveSpan) AssertingSpan.unwrap(span);
+		if (unwrap == null) {
+			return null;
+		}
+		return unwrap.delegate;
 	}
 
 	public static Span fromBrave(brave.Span span) {

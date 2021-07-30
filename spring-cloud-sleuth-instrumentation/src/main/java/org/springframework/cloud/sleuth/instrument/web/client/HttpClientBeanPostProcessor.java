@@ -40,6 +40,7 @@ import org.springframework.cloud.sleuth.CurrentTraceContext;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.TraceContext;
 import org.springframework.cloud.sleuth.http.HttpClientHandler;
+import org.springframework.cloud.sleuth.instrument.reactor.ReactorSleuth;
 import org.springframework.cloud.sleuth.internal.LazyBean;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.lang.Nullable;
@@ -112,7 +113,7 @@ public class HttpClientBeanPostProcessor implements BeanPostProcessor {
 				TraceContext invocationContext = currentTraceContext.get();
 				if (invocationContext != null) {
 					// Read in this processor and also in ScopePassingSpanSubscriber
-					context = context.put(TraceContext.class, invocationContext);
+					context = ReactorSleuth.wrapContext(context.put(TraceContext.class, invocationContext));
 				}
 				return context.put(PendingSpan.class, pendingSpan);
 			}).doOnCancel(() -> {
