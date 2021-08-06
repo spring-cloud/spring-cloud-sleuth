@@ -429,6 +429,8 @@ Example:
 include::{project-root}/benchmarks/src/main/java/org/springframework/cloud/sleuth/benchmarks/app/webflux/SleuthBenchmarkingSpringWebFluxApp.java[tags=simple_manual,indent=0]
 -----
 
+To disable Reactor support, set the `spring.sleuth.reactor.enabled` property to `false`.
+
 [[sleuth-redis-integration]]
 == Redis
 
