@@ -19,6 +19,7 @@ package org.springframework.cloud.sleuth.instrument.web;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import javax.servlet.Filter;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
@@ -40,6 +41,7 @@ import org.springframework.cloud.sleuth.test.TestSpanHandler;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
+import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -72,8 +74,11 @@ public abstract class HttpServerParserTests {
 
 	@Test
 	public void should_set_tags_via_server_parsers() {
-		BDDAssertions.then(new RestTemplate().getForObject("http://localhost:" + this.port + "/hello", String.class))
-				.isEqualTo("hello");
+		ResponseEntity<String> entity = new RestTemplate().getForEntity("http://localhost:" + this.port + "/hello",
+				String.class);
+
+		BDDAssertions.then(entity.getBody()).isEqualTo("hello");
+		BDDAssertions.then(entity.getHeaders()).containsKey("mytraceid");
 
 		Awaitility.await()
 				.untilAsserted(() -> then(serverSideTags()).containsEntry("ServerRequest", "Tag")
@@ -148,6 +153,18 @@ public abstract class HttpServerParserTests {
 					// Span customization
 					span.tag("ServerResponseServlet", String.valueOf(resp.getStatus()));
 				}
+			};
+		}
+
+		@Bean
+		Filter traceIdInResponseFilter(Tracer tracer) {
+			return (request, response, chain) -> {
+				Span currentSpan = tracer.currentSpan();
+				if (currentSpan != null) {
+					HttpServletResponse resp = (HttpServletResponse) response;
+					resp.addHeader("mytraceid", currentSpan.context().traceId());
+				}
+				chain.doFilter(request, response);
 			};
 		}
 

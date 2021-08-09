@@ -368,30 +368,46 @@ class MyService {
 [[how-to-add-headers-to-the-http-server-response]]
 == How to Add Headers to the HTTP Server Response?
 
-Register a bean of `HttpResponseParser` type whose name is `HttpServerResponseParser.NAME`.
+Register an HTTP Filter that
 
 ====
 [source,java,indent=0]
 ----
-import org.springframework.cloud.sleuth.http.HttpResponseParser;
-import org.springframework.cloud.sleuth.instrument.web.HttpServerResponseParser;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
+import org.springframework.cloud.sleuth.Span;
+import org.springframework.cloud.sleuth.Tracer;
+
+import javax.servlet.Filter;
+import org.springframework.web.server.WebFilter;
 
 @Configuration(proxyBeanMethods = false)
 class MyConfig {
 
-	@Bean(name = HttpServerResponseParser.NAME)
-	HttpResponseParser myHttpResponseParser() {
-		return (response, context, span) -> {
-			Object unwrap = response.unwrap();
-			if (unwrap instanceof HttpServletResponse) {
-				HttpServletResponse resp = (HttpServletResponse) unwrap;
-				resp.addHeader("MyCustom", "Header");
-			}
-		};
-	}
+		// Example of a servlet Filter for non-reactive applications
+		@Bean
+		Filter traceIdInResponseFilter(Tracer tracer) {
+			return (request, response, chain) -> {
+				Span currentSpan = tracer.currentSpan();
+				if (currentSpan != null) {
+					HttpServletResponse resp = (HttpServletResponse) response;
+					// putting trace id value in [mytraceid] response header
+					resp.addHeader("mytraceid", currentSpan.context().traceId());
+				}
+				chain.doFilter(request, response);
+			};
+		}
 
+		// Example of a reactive WebFilter for reactive applications
+		@Bean
+		WebFilter traceIdInResponseFilter(Tracer tracer) {
+			return (exchange, chain) -> {
+				Span currentSpan = tracer.currentSpan();
+				if (currentSpan != null) {
+					// putting trace id value in [mytraceid] response header
+					exchange.getResponse().getHeaders().add("mytraceid", currentSpan.context().traceId());
+				}
+				return chain.filter(exchange);
+			};
+		}
 }
 
 ----

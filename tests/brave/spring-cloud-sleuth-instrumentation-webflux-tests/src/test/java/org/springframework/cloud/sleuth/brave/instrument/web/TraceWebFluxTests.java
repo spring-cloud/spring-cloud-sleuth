@@ -44,6 +44,7 @@ import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.server.RouterFunction;
 import org.springframework.web.reactive.function.server.RouterFunctions;
 import org.springframework.web.reactive.function.server.ServerResponse;
+import org.springframework.web.server.WebFilter;
 
 import static org.assertj.core.api.BDDAssertions.then;
 
@@ -69,6 +70,8 @@ public class TraceWebFluxTests {
 		ClientResponse response = whenRequestIsSent(port, "/api/c2/10");
 		// then
 		thenSpanWasReportedWithTags(spans, response);
+		// then #2002
+		then(response.headers().header("mytraceid")).isNotEmpty();
 		clean(spans, controller2);
 
 		// when
@@ -211,6 +214,17 @@ public class TraceWebFluxTests {
 		RouterFunction<ServerResponse> route() {
 			return RouterFunctions.route().GET("/api/fn/{id}",
 					serverRequest -> ServerResponse.ok().bodyValue(serverRequest.pathVariable("id"))).build();
+		}
+
+		@Bean
+		WebFilter traceIdInResponseFilter(Tracer tracer) {
+			return (exchange, chain) -> {
+				Span currentSpan = tracer.currentSpan();
+				if (currentSpan != null) {
+					exchange.getResponse().getHeaders().add("mytraceid", currentSpan.context().traceIdString());
+				}
+				return chain.filter(exchange);
+			};
 		}
 
 	}
