@@ -368,7 +368,7 @@ class MyService {
 [[how-to-add-headers-to-the-http-server-response]]
 == How to Add Headers to the HTTP Server Response?
 
-Register an HTTP Filter that
+Register a filter that will set the server response.
 
 ====
 [source,java,indent=0]
