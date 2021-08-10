@@ -3,6 +3,7 @@ org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
 org.springframework.cloud.sleuth.autoconfig.actuate.TraceSleuthActuatorAutoConfiguration,\
 org.springframework.cloud.sleuth.autoconfig.instrument.kafka.TracingKafkaAutoConfiguration,\
 org.springframework.cloud.sleuth.autoconfig.instrument.kafka.TracingReactorKafkaAutoConfiguration,\
+org.springframework.cloud.sleuth.autoconfig.instrument.kafka.SpringKafkaAutoConfiguration,\
 org.springframework.cloud.sleuth.autoconfig.instrument.async.TraceAsyncAutoConfiguration,\
 org.springframework.cloud.sleuth.autoconfig.instrument.async.TraceAsyncCustomAutoConfiguration,\
 org.springframework.cloud.sleuth.autoconfig.instrument.async.TraceAsyncDefaultAutoConfiguration,\
