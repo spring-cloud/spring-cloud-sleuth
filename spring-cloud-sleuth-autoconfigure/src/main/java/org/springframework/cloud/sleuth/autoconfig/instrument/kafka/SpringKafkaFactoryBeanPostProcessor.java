@@ -16,8 +16,6 @@
 
 package org.springframework.cloud.sleuth.autoconfig.instrument.kafka;
 
-import org.apache.kafka.clients.producer.Producer;
-
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.config.BeanPostProcessor;
@@ -25,7 +23,8 @@ import org.springframework.kafka.core.ConsumerFactory;
 import org.springframework.kafka.core.ProducerFactory;
 
 /**
- * Bean post processor for {@link Producer}.
+ * Bean post processor for {@link org.springframework.kafka.core.ProducerFactory} and
+ * {@link org.springframework.kafka.core.ConsumerFactory}.
  *
  * @author Anders Clausen
  * @author Flaviu Muresan
@@ -46,7 +45,8 @@ public class SpringKafkaFactoryBeanPostProcessor implements BeanPostProcessor {
 			if (factory.getPostProcessors().stream().noneMatch(o -> o instanceof SpringKafkaConsumerPostProcessor)) {
 				factory.addPostProcessor(new SpringKafkaConsumerPostProcessor(this.beanFactory));
 			}
-		} else if (bean instanceof ProducerFactory) {
+		}
+		else if (bean instanceof ProducerFactory) {
 			ProducerFactory factory = (ProducerFactory) bean;
 			if (factory.getPostProcessors().stream().noneMatch(o -> o instanceof SpringKafkaProducerPostProcessor)) {
 				factory.addPostProcessor(new SpringKafkaProducerPostProcessor(this.beanFactory));
