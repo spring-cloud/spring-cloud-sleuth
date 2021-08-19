@@ -208,7 +208,7 @@ By default, Maven compiles sources from `src/main/java`, so you need to create t
 	@EnableAutoConfiguration
 	public class Example {
 
-		private static final Logger log = LoggerFactory.getLogger(Backend.class);
+		private static final Logger log = LoggerFactory.getLogger(Example.class);
 
 		@RequestMapping("/")
 		String home() {
