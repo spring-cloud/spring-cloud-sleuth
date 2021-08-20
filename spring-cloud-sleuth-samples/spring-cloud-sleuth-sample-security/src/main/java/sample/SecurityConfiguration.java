@@ -25,7 +25,6 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.core.context.SecurityContextChangedListener;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.User;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
 
@@ -47,18 +46,16 @@ public class SecurityConfiguration {
 
 	@Bean
 	SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-		return http.authorizeRequests(requests -> requests
-						.antMatchers("/favicon.ico").permitAll()
-						.anyRequest().authenticated()
-				)
-				.httpBasic(withDefaults())
-				.formLogin(withDefaults())
-				.build();
+		return http
+				.authorizeRequests(
+						requests -> requests.antMatchers("/favicon.ico").permitAll().anyRequest().authenticated())
+				.httpBasic(withDefaults()).formLogin(withDefaults()).build();
 	}
 
 	@Bean
 	public InMemoryUserDetailsManager userDetailsService() {
-		return new InMemoryUserDetailsManager(User.withDefaultPasswordEncoder().username("user").password("password").roles("USER").build());
+		return new InMemoryUserDetailsManager(
+				User.withDefaultPasswordEncoder().username("user").password("password").roles("USER").build());
 	}
 
 }
