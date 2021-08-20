@@ -46,41 +46,22 @@ public class TracingSecurityContextChangedListener implements SecurityContextCha
 	public void securityContextChanged(SecurityContextChangedEvent securityContextChangedEvent) {
 		SecurityContext previousContext = securityContextChangedEvent.getPreviousContext();
 		SecurityContext currentContext = securityContextChangedEvent.getCurrentContext();
+		Authentication previousAuthentication = previousContext != null ? previousContext.getAuthentication() : null;
+		Authentication currentAuthentication = currentContext != null ? currentContext.getAuthentication() : null;
 
-		if (previousContext != null) {
-			if (currentContext != null) {
-				handleReplaceContextEvent(previousContext.getAuthentication(), currentContext.getAuthentication());
+		if (previousAuthentication != null) {
+			if (currentAuthentication != null) {
+				attachEvent("Authentication replaced " + toString(previousAuthentication) + " -> "
+						+ toString(currentAuthentication));
 			}
 			else {
-				handleClearContextEvent(previousContext.getAuthentication());
+				attachEvent("Authentication cleared " + toString(previousAuthentication));
 			}
 		}
-		else {
-			if (currentContext != null) {
-				handleCreateContextEvent(currentContext.getAuthentication());
-			}
-			else {
-				handleNoContextEvent();
-			}
+		else if (currentAuthentication != null) {
+			attachEvent("Authentication set " + toString(currentAuthentication));
 		}
-	}
-
-	private void handleCreateContextEvent(Authentication authentication) {
-		attachEvent("security-context set " + toString(authentication));
-	}
-
-	private void handleClearContextEvent(Authentication authentication) {
-		attachEvent("security-context clear " + toString(authentication));
-	}
-
-	private void handleReplaceContextEvent(Authentication previousAuthentication,
-			Authentication currentAuthentication) {
-		attachEvent("security-context replace " + toString(previousAuthentication) + " -> "
-				+ toString(currentAuthentication));
-	}
-
-	private void handleNoContextEvent() {
-		attachEvent("security-context noop");
+		// null-null is not handled since we won't create an event for that case
 	}
 
 	private String toString(Authentication authentication) {
