@@ -263,7 +263,7 @@ Consider the following annotated method:
 include::{common_tests_path}/src/main/java/org/springframework/cloud/sleuth/instrument/annotation/SpanTagAnnotationHandlerTests.java[tags=spel,indent=0]
 ----
 
-No custom implementation of a `TagValueExpressionResolver` leads to evaluation of the SPEL expression, and a tag with a value of `4 characters` is set on the span.
+No custom implementation of a `TagValueExpressionResolver` leads to evaluation of the SPEL expression, and a tag with a value of `hello characters` is set on the span.
 If you want to use some other expression resolution mechanism, you can create your own implementation of the bean.
 
 [[using-annotations-to-string]]
