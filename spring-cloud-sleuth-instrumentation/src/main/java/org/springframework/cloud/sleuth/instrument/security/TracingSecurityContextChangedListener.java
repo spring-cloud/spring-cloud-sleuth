@@ -26,6 +26,13 @@ import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextChangedEvent;
 import org.springframework.security.core.context.SecurityContextChangedListener;
 
+import static java.lang.String.format;
+import static org.springframework.cloud.sleuth.instrument.security.SleuthSecuritySpan.SECURITY_CONTEXT_CHANGE;
+import static org.springframework.cloud.sleuth.instrument.security.SleuthSecuritySpan.SleuthSecurityEvent;
+import static org.springframework.cloud.sleuth.instrument.security.SleuthSecuritySpan.SleuthSecurityEvent.AUTHENTICATION_CLEARED;
+import static org.springframework.cloud.sleuth.instrument.security.SleuthSecuritySpan.SleuthSecurityEvent.AUTHENTICATION_REPLACED;
+import static org.springframework.cloud.sleuth.instrument.security.SleuthSecuritySpan.SleuthSecurityEvent.AUTHENTICATION_SET;
+
 /**
  * {@link SecurityContextChangedListener} that adds tracing support for Spring Security.
  *
@@ -51,17 +58,20 @@ public class TracingSecurityContextChangedListener implements SecurityContextCha
 
 		if (previousAuthentication != null) {
 			if (currentAuthentication != null) {
-				attachEvent("Authentication replaced " + toString(previousAuthentication) + " -> "
-						+ toString(currentAuthentication));
+				attachEvent(AUTHENTICATION_REPLACED, toString(previousAuthentication, currentAuthentication));
 			}
 			else {
-				attachEvent("Authentication cleared " + toString(previousAuthentication));
+				attachEvent(AUTHENTICATION_CLEARED, toString(previousAuthentication));
 			}
 		}
 		else if (currentAuthentication != null) {
-			attachEvent("Authentication set " + toString(currentAuthentication));
+			attachEvent(AUTHENTICATION_SET, toString(currentAuthentication));
 		}
 		// null-null is not handled since we won't create an event for that case
+	}
+
+	private String toString(Authentication previousAuthentication, Authentication currentAuthentication) {
+		return toString(previousAuthentication) + " -> " + toString(currentAuthentication);
 	}
 
 	private String toString(Authentication authentication) {
@@ -69,11 +79,12 @@ public class TracingSecurityContextChangedListener implements SecurityContextCha
 				: "null";
 	}
 
-	private void attachEvent(String name) {
+	private void attachEvent(SleuthSecurityEvent sleuthSecurityEvent, String... params) {
 		Span span = this.tracer.currentSpan();
 		if (span != null) {
-			LOGGER.info(name);
-			span.event(name);
+			String event = format(sleuthSecurityEvent.getValue(), (Object[]) params);
+			LOGGER.info(event);
+			SECURITY_CONTEXT_CHANGE.wrap(span).event(event);
 		}
 	}
 
