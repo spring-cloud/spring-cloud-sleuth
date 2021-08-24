@@ -39,7 +39,6 @@
 		<module>spring-cloud-sleuth-sample-websocket</module>
 		<module>spring-cloud-sleuth-sample-feign</module>
 		<module>spring-cloud-sleuth-sample-zipkin</module>
-		<module>spring-cloud-sleuth-sample-security</module>
 	</modules>
 
 	<build>
