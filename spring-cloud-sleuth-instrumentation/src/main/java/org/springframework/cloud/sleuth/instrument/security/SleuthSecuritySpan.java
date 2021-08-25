@@ -18,12 +18,9 @@ package org.springframework.cloud.sleuth.instrument.security;
 
 import org.springframework.cloud.sleuth.docs.DocumentedSpan;
 import org.springframework.cloud.sleuth.docs.EventValue;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContext;
-import org.springframework.security.core.context.SecurityContextChangedEvent;
 
 /**
- * {@link DocumentedSpan} for Spring Security Instrumentation.
+ * DocumentedSpan for Spring Security Instrumentation.
  *
  * @author Jonatan Ivanov
  * @since 3.1.0
@@ -31,8 +28,7 @@ import org.springframework.security.core.context.SecurityContextChangedEvent;
 enum SleuthSecuritySpan implements DocumentedSpan {
 
 	/**
-	 * Indicates that a {@link SecurityContextChangedEvent} happened during the current
-	 * span.
+	 * Indicates that a SecurityContextChangedEvent happened during the current span.
 	 */
 	SECURITY_CONTEXT_CHANGE {
 		@Override
@@ -49,8 +45,7 @@ enum SleuthSecuritySpan implements DocumentedSpan {
 	enum SleuthSecurityEvent implements EventValue {
 
 		/**
-		 * Event created when an {@link Authentication} object is added to the
-		 * {@link SecurityContext}.
+		 * Event created when an Authentication object is added to the SecurityContext.
 		 */
 		AUTHENTICATION_SET {
 			@Override
@@ -60,8 +55,8 @@ enum SleuthSecuritySpan implements DocumentedSpan {
 		},
 
 		/**
-		 * Event created when an {@link Authentication} object is replaced with a new one
-		 * in the {@link SecurityContext}.
+		 * Event created when an Authentication object is replaced with a new one in the
+		 * SecurityContext.
 		 */
 		AUTHENTICATION_REPLACED {
 			@Override
@@ -71,8 +66,8 @@ enum SleuthSecuritySpan implements DocumentedSpan {
 		},
 
 		/**
-		 * Event created when an {@link Authentication} object is removed from the
-		 * {@link SecurityContext}.
+		 * Event created when an Authentication object is removed from the
+		 * SecurityContext.
 		 */
 		AUTHENTICATION_CLEARED {
 			@Override
