@@ -22,6 +22,12 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextChangedEvent;
 
+/**
+ * {@link DocumentedSpan} for Spring Security Instrumentation.
+ *
+ * @author Jonatan Ivanov
+ * @since 3.1.0
+ */
 enum SleuthSecuritySpan implements DocumentedSpan {
 
 	/**

@@ -1,3 +1,19 @@
+/*
+ * Copyright 2021-2021 the original author or authors.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package org.springframework.cloud.sleuth.instrument.security;
 
 import java.util.Collection;
@@ -29,6 +45,9 @@ import org.springframework.web.bind.annotation.RestController;
 import static org.assertj.core.api.BDDAssertions.then;
 import static org.springframework.cloud.sleuth.Span.Kind.SERVER;
 
+/**
+ * @author Jonatan Ivanov
+ */
 @ContextConfiguration(classes = SpringSecurityTests.Config.class)
 public abstract class SpringSecurityTests {
 
@@ -46,23 +65,20 @@ public abstract class SpringSecurityTests {
 	@Test
 	void authenticated_user_should_trigger_events() {
 		long beforeStart = TimeUnit.MILLISECONDS.toMicros(System.currentTimeMillis());
-		ResponseEntity<String> entity = restTemplate
-				.withBasicAuth("user", "password")
-				.getForEntity("/", String.class);
+		ResponseEntity<String> entity = restTemplate.withBasicAuth("user", "password").getForEntity("/", String.class);
 		long afterStop = TimeUnit.MILLISECONDS.toMicros(System.currentTimeMillis());
 
 		then(entity.getStatusCode().is2xxSuccessful()).isTrue();
 		then(entity.getBody()).isEqualTo("authenticated");
 
 		List<Map.Entry<Long, String>> authEvents = getAuthEvents(testSpanHandler.reportedSpans());
-		then(authEvents)
-				.isNotEmpty()
+		then(authEvents).isNotEmpty()
 				.allSatisfy(authEvent -> then(authEvent.getKey()).isStrictlyBetween(beforeStart, afterStop));
 
 		for (int i = 0; i < authEvents.size(); i += 2) {
 			String setEvent = authEvents.get(i).getValue();
 			then(setEvent).isEqualTo("Authentication set UsernamePasswordAuthenticationToken[USER]");
-			String clearEvent = authEvents.get(i+1).getValue();
+			String clearEvent = authEvents.get(i + 1).getValue();
 			then(clearEvent).isEqualTo("Authentication cleared UsernamePasswordAuthenticationToken[USER]");
 		}
 	}
@@ -77,8 +93,7 @@ public abstract class SpringSecurityTests {
 		then(entity.getBody()).contains("html", "form");
 
 		List<Map.Entry<Long, String>> authEvents = getAuthEvents(testSpanHandler.reportedSpans());
-		then(authEvents)
-				.isNotEmpty()
+		then(authEvents).isNotEmpty()
 				.allSatisfy(authEvent -> then(authEvent.getKey()).isStrictlyBetween(beforeStart, afterStop));
 
 		for (int i = 0; i < authEvents.size(); i += 2) {
@@ -90,17 +105,16 @@ public abstract class SpringSecurityTests {
 	}
 
 	private List<Map.Entry<Long, String>> getAuthEvents(List<FinishedSpan> spans) {
-		return spans.stream()
-				.filter(span -> span.getKind() == SERVER)
-				.map(FinishedSpan::getEvents)
-				.flatMap(Collection::stream)
-				.filter(event -> event.getValue().contains("Authentication"))
+		return spans.stream().filter(span -> span.getKind() == SERVER).map(FinishedSpan::getEvents)
+				.flatMap(Collection::stream).filter(event -> event.getValue().contains("Authentication"))
 				.collect(Collectors.toList());
 	}
 
-	@EnableAutoConfiguration(excludeName = "org.springframework.cloud.sleuth.autoconfig.instrument.web.client.TraceWebClientAutoConfiguration")
+	@EnableAutoConfiguration(
+			excludeName = "org.springframework.cloud.sleuth.autoconfig.instrument.web.client.TraceWebClientAutoConfiguration")
 	@Configuration(proxyBeanMethods = false)
 	static class Config {
+
 		// TODO: Remove this after Spring Boot auto-configuration is available
 		Config(List<SecurityContextChangedListener> listeners) {
 			listeners.forEach(SecurityContextHolder::addListener);
@@ -108,26 +122,25 @@ public abstract class SpringSecurityTests {
 
 		@Bean
 		UserDetailsService userDetailsService() {
-			return new InMemoryUserDetailsManager(
-					User.withDefaultPasswordEncoder()
-							.username("user")
-							.password("password")
-							.authorities("USER")
-							.build()
-			);
+			return new InMemoryUserDetailsManager(User.withDefaultPasswordEncoder().username("user")
+					.password("password").authorities("USER").build());
 		}
 
 		@Bean
 		HomeController homeController() {
 			return new HomeController();
 		}
+
 	}
 
 	@RestController
 	static class HomeController {
+
 		@GetMapping
 		String home() {
 			return "authenticated";
 		}
+
 	}
+
 }
