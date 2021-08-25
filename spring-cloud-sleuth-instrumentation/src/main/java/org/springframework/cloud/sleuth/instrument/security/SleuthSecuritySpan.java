@@ -34,17 +34,17 @@ enum SleuthSecuritySpan implements DocumentedSpan {
 	 * Indicates that a {@link SecurityContextChangedEvent} happened during the current
 	 * span.
 	 */
-	SECURITY_CONTEXT_CHANGE;
+	SECURITY_CONTEXT_CHANGE {
+		@Override
+		public String getName() {
+			return "Security Context Change";
+		}
 
-	@Override
-	public String getName() {
-		return "security context change";
-	}
-
-	@Override
-	public EventValue[] getEvents() {
-		return SleuthSecurityEvent.values();
-	}
+		@Override
+		public EventValue[] getEvents() {
+			return SleuthSecurityEvent.values();
+		}
+	};
 
 	enum SleuthSecurityEvent implements EventValue {
 
