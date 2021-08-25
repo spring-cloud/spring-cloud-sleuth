@@ -532,6 +532,22 @@ Fully qualified name of the enclosing class `org.springframework.cloud.sleuth.in
 |method|Method name that got annotated with @Scheduled.
 |===
 
+=== Security Context Change
+
+> Indicates that a SecurityContextChangedEvent happened during the current span.
+
+**Span name** `Security Context Change`.
+
+Fully qualified name of the enclosing class `org.springframework.cloud.sleuth.instrument.security.SleuthSecuritySpan`
+
+.Event Values
+|===
+|Name | Description
+|Authentication cleared %s|Event created when an Authentication object is removed from the SecurityContext. (since the name contains `%s` the final value will be resolved at runtime)
+|Authentication replaced %s|Event created when an Authentication object is replaced with a new one in the SecurityContext. (since the name contains `%s` the final value will be resolved at runtime)
+|Authentication set %s|Event created when an Authentication object is added to the SecurityContext. (since the name contains `%s` the final value will be resolved at runtime)
+|===
+
 === Session Create Span
 
 > Span created when a new session has to be created.
