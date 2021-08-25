@@ -1,4 +1,4 @@
 logging.level.org.springframework.cloud: DEBUG
 logging.level.org.springframework.cloud.sleuth.autoconfig.instrument.reactor: TRACE
 logging.level.com.netflix.discovery.InstanceInfoReplicator: ERROR
-logging.level.org.springframework.cloud.sleuth.brave.instrument.web.client.feign: TRACE
+logging.level.org.springframework.cloud.sleuth.instrument.web.client.feign: TRACE
