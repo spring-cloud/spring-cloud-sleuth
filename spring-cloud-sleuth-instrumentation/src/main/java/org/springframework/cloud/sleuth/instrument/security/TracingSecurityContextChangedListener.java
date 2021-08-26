@@ -83,7 +83,9 @@ public class TracingSecurityContextChangedListener implements SecurityContextCha
 		Span span = this.tracer.currentSpan();
 		if (span != null) {
 			String event = format(sleuthSecurityEvent.getValue(), (Object[]) params);
-			LOGGER.info(event);
+			if (LOGGER.isDebugEnabled()) {
+				LOGGER.debug(event);
+			}
 			SECURITY_CONTEXT_CHANGE.wrap(span).event(event);
 		}
 	}
