@@ -19,7 +19,6 @@ package org.springframework.cloud.sleuth.instrument.security;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -64,17 +63,12 @@ public abstract class SpringSecurityTests {
 
 	@Test
 	void authenticated_user_should_trigger_events() {
-		long beforeStart = TimeUnit.MILLISECONDS.toMicros(System.currentTimeMillis());
 		ResponseEntity<String> entity = restTemplate.withBasicAuth("user", "password").getForEntity("/", String.class);
-		long afterStop = TimeUnit.MILLISECONDS.toMicros(System.currentTimeMillis());
 
 		then(entity.getStatusCode().is2xxSuccessful()).isTrue();
 		then(entity.getBody()).isEqualTo("authenticated");
 
 		List<Map.Entry<Long, String>> authEvents = getAuthEvents(testSpanHandler.reportedSpans());
-		then(authEvents).isNotEmpty()
-				.allSatisfy(authEvent -> then(authEvent.getKey()).isStrictlyBetween(beforeStart, afterStop));
-
 		for (int i = 0; i < authEvents.size(); i += 2) {
 			String setEvent = authEvents.get(i).getValue();
 			then(setEvent).isEqualTo("Authentication set UsernamePasswordAuthenticationToken[USER]");
@@ -84,18 +78,13 @@ public abstract class SpringSecurityTests {
 	}
 
 	@Test
-	void anonymous_should_trigger_events() {
-		long beforeStart = TimeUnit.MILLISECONDS.toMicros(System.currentTimeMillis());
+	void anonymous_user_should_trigger_events() {
 		ResponseEntity<String> entity = restTemplate.getForEntity("/", String.class);
-		long afterStop = TimeUnit.MILLISECONDS.toMicros(System.currentTimeMillis());
 
 		then(entity.getStatusCode().is2xxSuccessful()).isTrue();
 		then(entity.getBody()).contains("html", "form");
 
 		List<Map.Entry<Long, String>> authEvents = getAuthEvents(testSpanHandler.reportedSpans());
-		then(authEvents).isNotEmpty()
-				.allSatisfy(authEvent -> then(authEvent.getKey()).isStrictlyBetween(beforeStart, afterStop));
-
 		for (int i = 0; i < authEvents.size(); i += 2) {
 			String setEvent = authEvents.get(i).getValue();
 			then(setEvent).isEqualTo("Authentication set AnonymousAuthenticationToken[ROLE_ANONYMOUS]");
