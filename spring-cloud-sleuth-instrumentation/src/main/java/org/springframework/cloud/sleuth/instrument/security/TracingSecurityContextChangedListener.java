@@ -16,8 +16,8 @@
 
 package org.springframework.cloud.sleuth.instrument.security;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.Tracer;
@@ -41,7 +41,7 @@ import static org.springframework.cloud.sleuth.instrument.security.SleuthSecurit
  */
 public class TracingSecurityContextChangedListener implements SecurityContextChangedListener {
 
-	private static final Logger LOGGER = LoggerFactory.getLogger(TracingSecurityContextChangedListener.class);
+	private static final Log log = LogFactory.getLog(TracingSecurityContextChangedListener.class);
 
 	private final Tracer tracer;
 
@@ -83,8 +83,8 @@ public class TracingSecurityContextChangedListener implements SecurityContextCha
 		Span span = this.tracer.currentSpan();
 		if (span != null) {
 			String event = format(sleuthSecurityEvent.getValue(), (Object[]) params);
-			if (LOGGER.isDebugEnabled()) {
-				LOGGER.debug(event);
+			if (log.isDebugEnabled()) {
+				log.debug(event);
 			}
 			SECURITY_CONTEXT_CHANGE.wrap(span).event(event);
 		}
