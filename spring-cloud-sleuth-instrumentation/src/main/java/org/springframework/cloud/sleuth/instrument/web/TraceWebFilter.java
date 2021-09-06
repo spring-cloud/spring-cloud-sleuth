@@ -21,8 +21,12 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.reactivestreams.Subscriber;
 import org.reactivestreams.Subscription;
+import org.springframework.core.io.buffer.DataBuffer;
+import org.springframework.http.server.reactive.ServerHttpRequestDecorator;
 import reactor.core.CoreSubscriber;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.core.publisher.MonoOperator;
 import reactor.util.annotation.Nullable;
@@ -96,12 +100,18 @@ public class TraceWebFilter implements WebFilter, Ordered, ApplicationContextAwa
 	@Override
 	public Mono<Void> filter(ServerWebExchange exchange, WebFilterChain chain) {
 		String uri = exchange.getRequest().getPath().pathWithinApplication().value();
-		Mono<Void> source = chain.filter(exchange);
+		ServerWebExchange finalExchange = exchange.mutate().request(new ServerHttpRequestDecorator(exchange.getRequest()) {
+			@Override
+			public Flux<DataBuffer> getBody() {
+				return new TracedFlux<>(super.getBody(), exchange.getAttribute(TRACE_REQUEST_ATTR), currentTraceContext());
+			}
+		}).build();
+		Mono<Void> source = chain.filter(finalExchange);
 		boolean tracePresent = isTracePresent();
 		if (log.isDebugEnabled()) {
 			log.debug("Received a request to uri [" + uri + "]");
 		}
-		return new MonoWebFilterTrace(source, exchange, tracePresent, this, spanFromContextRetriever());
+		return new MonoWebFilterTrace(source, finalExchange, tracePresent, this, spanFromContextRetriever());
 	}
 
 	private boolean isTracePresent() {
@@ -141,6 +151,63 @@ public class TraceWebFilter implements WebFilter, Ordered, ApplicationContextAwa
 					});
 		}
 		return this.spanFromContextRetriever;
+	}
+
+	private static class TracedFlux<T> extends Flux<T> {
+		private final Flux<T> delegate;
+		private final Span span;
+		private final CurrentTraceContext currentTraceContext;
+
+		public TracedFlux(Flux<T> delegate, Span span, CurrentTraceContext currentTraceContext) {
+			this.delegate = delegate;
+			this.span = span;
+			this.currentTraceContext = currentTraceContext;
+		}
+
+		@Override
+		public void subscribe(CoreSubscriber<? super T> actual) {
+			delegate.subscribe(new TracedCoreSubscriber(actual, span, currentTraceContext));
+		}
+	}
+
+	private static class TracedCoreSubscriber<T> implements Subscriber<T> {
+		private final Subscriber<T> delegate;
+		private final Span span;
+		private final CurrentTraceContext currentTraceContext;
+
+		TracedCoreSubscriber(Subscriber<T> delegate, Span span, CurrentTraceContext currentTraceContext) {
+			this.delegate = delegate;
+			this.span = span;
+			this.currentTraceContext = currentTraceContext;
+		}
+
+		@Override
+		public void onSubscribe(Subscription s) {
+			try (CurrentTraceContext.Scope scope = this.currentTraceContext.maybeScope(span.context())) {
+				delegate.onSubscribe(s);
+			}
+		}
+
+		@Override
+		public void onError(Throwable t) {
+			try (CurrentTraceContext.Scope scope = this.currentTraceContext.maybeScope(span.context())) {
+				delegate.onError(t);
+			}
+		}
+
+		@Override
+		public void onComplete() {
+			try (CurrentTraceContext.Scope scope = this.currentTraceContext.maybeScope(span.context())) {
+				delegate.onComplete();
+			}
+		}
+
+		@Override
+		public void onNext(T o) {
+			try (CurrentTraceContext.Scope scope = this.currentTraceContext.maybeScope(span.context())) {
+				delegate.onNext(o);
+			}
+		}
 	}
 
 	private static class MonoWebFilterTrace extends MonoOperator<Void, Void> implements TraceContextPropagator {
