@@ -34,7 +34,7 @@ import org.springframework.stereotype.Service;
  * @author Marcin Grzejszczak
  */
 @SpringBootTest(classes = { EndpointWithCyclicDependenciesTests.ClientConfig.class },
-		properties = "spring.sleuth.tracer.mode=BRAVE")
+		properties = { "spring.sleuth.tracer.mode=BRAVE", "spring.main.allow-circular-references=true" })
 public class EndpointWithCyclicDependenciesTests {
 
 	@Test

@@ -27,8 +27,16 @@ import brave.test.TestSpanHandler;
 import org.junit.jupiter.api.Test;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.actuate.autoconfigure.security.servlet.ManagementWebSecurityAutoConfiguration;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
+import org.springframework.boot.autoconfigure.cassandra.CassandraAutoConfiguration;
+import org.springframework.boot.autoconfigure.mongo.MongoAutoConfiguration;
+import org.springframework.boot.autoconfigure.quartz.QuartzAutoConfiguration;
+import org.springframework.boot.autoconfigure.r2dbc.R2dbcAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.cloud.gateway.config.GatewayAutoConfiguration;
+import org.springframework.cloud.gateway.config.GatewayClassPathWarningAutoConfiguration;
+import org.springframework.cloud.gateway.config.GatewayMetricsAutoConfiguration;
 import org.springframework.cloud.sleuth.brave.instrument.messaging.ConsumerSampler;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -49,7 +57,10 @@ public class BraveMessagingAutoConfigurationIntegrationTests {
 		then(this.sampler).isNotNull();
 	}
 
-	@EnableAutoConfiguration
+	@EnableAutoConfiguration(exclude = { GatewayClassPathWarningAutoConfiguration.class, GatewayAutoConfiguration.class,
+			GatewayMetricsAutoConfiguration.class, ManagementWebSecurityAutoConfiguration.class,
+			MongoAutoConfiguration.class, QuartzAutoConfiguration.class, R2dbcAutoConfiguration.class, CassandraAutoConfiguration.class },
+			excludeName = "org.springframework.cloud.gateway.config.GatewayRedisAutoConfiguration")
 	@Configuration(proxyBeanMethods = false)
 	public static class Config {
 
