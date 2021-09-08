@@ -25,10 +25,19 @@ import org.junit.jupiter.api.extension.ExtendWith;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.actuate.autoconfigure.security.servlet.ManagementWebSecurityAutoConfiguration;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
+import org.springframework.boot.autoconfigure.cassandra.CassandraAutoConfiguration;
+import org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration;
+import org.springframework.boot.autoconfigure.mongo.MongoAutoConfiguration;
+import org.springframework.boot.autoconfigure.quartz.QuartzAutoConfiguration;
+import org.springframework.boot.autoconfigure.r2dbc.R2dbcAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.system.CapturedOutput;
 import org.springframework.boot.test.system.OutputCaptureExtension;
+import org.springframework.cloud.gateway.config.GatewayAutoConfiguration;
+import org.springframework.cloud.gateway.config.GatewayClassPathWarningAutoConfiguration;
+import org.springframework.cloud.gateway.config.GatewayMetricsAutoConfiguration;
 import org.springframework.cloud.sleuth.DisableSecurity;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.test.context.ActiveProfiles;
@@ -62,7 +71,7 @@ public class BraveAutoConfigurationWithDisabledSleuthTests {
 	public void shouldNotContainAnyTracingInfoInTheLogs(CapturedOutput capture) {
 		log.info("hello");
 
-		// prove bootstrap-disabled.yml loaded
+		// prove application-disabled.yml loaded
 		assertThat(applicationName).isEqualTo("disabledapplication");
 
 		// spring.application.name is put in the log format by
@@ -71,7 +80,12 @@ public class BraveAutoConfigurationWithDisabledSleuthTests {
 		BDDAssertions.then(capture.toString()).doesNotContain("[disabledapplication");
 	}
 
-	@EnableAutoConfiguration
+	@EnableAutoConfiguration(
+			exclude = { GatewayClassPathWarningAutoConfiguration.class, GatewayAutoConfiguration.class,
+					GatewayMetricsAutoConfiguration.class, ManagementWebSecurityAutoConfiguration.class,
+					MongoAutoConfiguration.class, QuartzAutoConfiguration.class, R2dbcAutoConfiguration.class,
+					RedisAutoConfiguration.class, CassandraAutoConfiguration.class },
+			excludeName = "org.springframework.cloud.gateway.config.GatewayRedisAutoConfiguration")
 	@Configuration(proxyBeanMethods = false)
 	@DisableSecurity
 	static class Config {

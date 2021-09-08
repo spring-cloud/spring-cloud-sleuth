@@ -30,8 +30,16 @@ import org.slf4j.MDC;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringBootConfiguration;
+import org.springframework.boot.actuate.autoconfigure.security.servlet.ManagementWebSecurityAutoConfiguration;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
+import org.springframework.boot.autoconfigure.cassandra.CassandraAutoConfiguration;
+import org.springframework.boot.autoconfigure.mongo.MongoAutoConfiguration;
+import org.springframework.boot.autoconfigure.quartz.QuartzAutoConfiguration;
+import org.springframework.boot.autoconfigure.r2dbc.R2dbcAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.cloud.gateway.config.GatewayAutoConfiguration;
+import org.springframework.cloud.gateway.config.GatewayClassPathWarningAutoConfiguration;
+import org.springframework.cloud.gateway.config.GatewayMetricsAutoConfiguration;
 
 import static brave.propagation.CurrentTraceContext.Scope.NOOP;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -42,9 +50,14 @@ import static org.assertj.core.api.Assertions.assertThat;
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.NONE,
 		properties = { "spring.sleuth.baggage.remote-fields=x-vcap-request-id,country-code",
 				"spring.sleuth.baggage.local-fields=bp", "spring.sleuth.baggage.correlation-fields=country-code,bp",
-				"spring.sleuth.tracer.mode=BRAVE" })
+				"spring.sleuth.tracer.mode=BRAVE", "debug=true" })
 @SpringBootConfiguration
-@EnableAutoConfiguration
+@EnableAutoConfiguration(
+		exclude = { GatewayClassPathWarningAutoConfiguration.class, GatewayAutoConfiguration.class,
+				GatewayMetricsAutoConfiguration.class, ManagementWebSecurityAutoConfiguration.class,
+				MongoAutoConfiguration.class, QuartzAutoConfiguration.class, R2dbcAutoConfiguration.class,
+				CassandraAutoConfiguration.class },
+		excludeName = "org.springframework.cloud.gateway.config.GatewayRedisAutoConfiguration")
 public class CorrelationScopeDecoratorTest {
 
 	static final BaggageField COUNTRY_CODE = BaggageField.create("country-code");
