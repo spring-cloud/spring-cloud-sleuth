@@ -183,29 +183,39 @@ public class TraceWebFilter implements WebFilter, Ordered, ApplicationContextAwa
 
 		@Override
 		public void onSubscribe(Subscription s) {
-			try (CurrentTraceContext.Scope scope = this.currentTraceContext.maybeScope(span.context())) {
+			executeWithinScope(() -> {
 				delegate.onSubscribe(s);
-			}
+			});
 		}
 
 		@Override
 		public void onError(Throwable t) {
-			try (CurrentTraceContext.Scope scope = this.currentTraceContext.maybeScope(span.context())) {
+			executeWithinScope(() -> {
 				delegate.onError(t);
-			}
+			});
 		}
 
 		@Override
 		public void onComplete() {
-			try (CurrentTraceContext.Scope scope = this.currentTraceContext.maybeScope(span.context())) {
+			executeWithinScope(() -> {
 				delegate.onComplete();
-			}
+			});
 		}
 
 		@Override
 		public void onNext(T o) {
-			try (CurrentTraceContext.Scope scope = this.currentTraceContext.maybeScope(span.context())) {
+			executeWithinScope(() -> {
 				delegate.onNext(o);
+			});
+		}
+
+		private void executeWithinScope(Runnable runnable) {
+			if (currentTraceContext.context() == null) {
+				try (CurrentTraceContext.Scope scope = this.currentTraceContext.maybeScope(this.span.context())) {
+					runnable.run();
+				}
+			} else {
+				runnable.run();
 			}
 		}
 	}
