@@ -23,8 +23,6 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.reactivestreams.Subscriber;
 import org.reactivestreams.Subscription;
-import org.springframework.core.io.buffer.DataBuffer;
-import org.springframework.http.server.reactive.ServerHttpRequestDecorator;
 import reactor.core.CoreSubscriber;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -45,9 +43,11 @@ import org.springframework.cloud.sleuth.instrument.reactor.ReactorSleuth;
 import org.springframework.cloud.sleuth.instrument.reactor.TraceContextPropagator;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
+import org.springframework.core.io.buffer.DataBuffer;
 import org.springframework.core.Ordered;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.server.reactive.ServerHttpRequest;
+import org.springframework.http.server.reactive.ServerHttpRequestDecorator;
 import org.springframework.http.server.reactive.ServerHttpResponse;
 import org.springframework.web.method.HandlerMethod;
 import org.springframework.web.reactive.HandlerMapping;
@@ -158,7 +158,7 @@ public class TraceWebFilter implements WebFilter, Ordered, ApplicationContextAwa
 		private final Span span;
 		private final CurrentTraceContext currentTraceContext;
 
-		public TracedFlux(Flux<T> delegate, Span span, CurrentTraceContext currentTraceContext) {
+		TracedFlux(Flux<T> delegate, Span span, CurrentTraceContext currentTraceContext) {
 			this.delegate = delegate;
 			this.span = span;
 			this.currentTraceContext = currentTraceContext;
