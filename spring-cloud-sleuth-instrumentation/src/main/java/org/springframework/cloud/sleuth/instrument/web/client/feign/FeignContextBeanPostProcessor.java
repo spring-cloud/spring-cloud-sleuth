@@ -16,10 +16,17 @@
 
 package org.springframework.cloud.sleuth.instrument.web.client.feign;
 
+import java.lang.reflect.Field;
+
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.config.BeanPostProcessor;
+import org.springframework.cloud.context.named.NamedContextFactory;
 import org.springframework.cloud.openfeign.FeignContext;
+import org.springframework.context.ApplicationContext;
 
 /**
  * Post processor that wraps Feign Context in its tracing representations.
@@ -28,6 +35,17 @@ import org.springframework.cloud.openfeign.FeignContext;
  * @since 1.0.2
  */
 public class FeignContextBeanPostProcessor implements BeanPostProcessor {
+	private static final Field PARENT;
+	private static final Log logger = LogFactory.getLog(FeignContextBeanPostProcessor.class);
+
+	static {
+		try {
+			PARENT = NamedContextFactory.class.getDeclaredField("parent");
+			PARENT.setAccessible(true);
+		} catch (Exception e) {
+			throw new Error(e);
+		}
+	}
 
 	private final BeanFactory beanFactory;
 
@@ -43,7 +61,14 @@ public class FeignContextBeanPostProcessor implements BeanPostProcessor {
 	@Override
 	public Object postProcessAfterInitialization(Object bean, String beanName) throws BeansException {
 		if (bean instanceof FeignContext && !(bean instanceof TraceFeignContext)) {
-			return new TraceFeignContext(traceFeignObjectWrapper(), (FeignContext) bean);
+			FeignContext feignContext = (FeignContext) bean;
+			TraceFeignContext traceFeignContext = new TraceFeignContext(traceFeignObjectWrapper(), feignContext);
+			try {
+				traceFeignContext.setApplicationContext((ApplicationContext) PARENT.get(bean));
+			} catch (IllegalAccessException e) {
+				logger.warn("Cannot find parent in FeignContext: " + beanName);
+			}
+			return traceFeignContext;
 		}
 		return bean;
 	}
