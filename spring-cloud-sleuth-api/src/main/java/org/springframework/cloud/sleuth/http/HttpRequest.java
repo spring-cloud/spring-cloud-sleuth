@@ -21,7 +21,7 @@ import org.springframework.lang.Nullable;
 /**
  * This API is taken from OpenZipkin Brave.
  *
- * Abstract response type used for parsing and sampling. Represents an HTTP request.
+ * Abstract request type used for parsing and sampling. Represents an HTTP request.
  *
  * @author OpenZipkin Brave Authors
  * @author Marcin Grzejszczak

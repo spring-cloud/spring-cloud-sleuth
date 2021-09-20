@@ -24,8 +24,10 @@ import org.springframework.cloud.sleuth.annotation.NewSpan;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.TestPropertySource;
 
 @ContextConfiguration(classes = SleuthSpanCreatorCircularDependencyTests.TestConfiguration.class)
+@TestPropertySource(properties = "spring.main.allow-circular-references=true")
 public abstract class SleuthSpanCreatorCircularDependencyTests {
 
 	@Test

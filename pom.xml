@@ -76,6 +76,8 @@
 		<brave.version>5.13.2</brave.version>
 		<opentracing.version>0.32.0</opentracing.version>
 		<spring-security-boot-autoconfigure.version>2.3.4.RELEASE</spring-security-boot-autoconfigure.version>
+		<spring-security-oauth2.version>2.2.0.RELEASE</spring-security-oauth2.version>
+		<spring-security-version>5.6.0-M2</spring-security-version>
 		<disable.nohttp.checks>false</disable.nohttp.checks>
 		<okhttp.version>4.9.0</okhttp.version>
 		<mockwebserver.version>4.8.0</mockwebserver.version>
@@ -83,7 +85,6 @@
 		<javax.resource-api.version>1.7.1</javax.resource-api.version>
 		<cglib-nodep.version>3.3.0</cglib-nodep.version>
 		<objenesis.version>3.0.1</objenesis.version>
-		<spring-security-oauth2.version>2.2.0.RELEASE</spring-security-oauth2.version>
 		<p6spy.version>3.9.1</p6spy.version>
 		<datasource-proxy.version>1.7</datasource-proxy.version>
 		<tomcat-jdbc.version>10.0.6</tomcat-jdbc.version>
@@ -268,10 +269,21 @@
 				<type>pom</type>
 			</dependency>
 			<dependency>
+				<groupId>org.springframework.security</groupId>
+				<artifactId>spring-security-bom</artifactId>
+				<version>${spring-security-version}</version>
+				<type>pom</type>
+				<scope>import</scope>
+			</dependency>
+			<dependency>
 				<groupId>org.springframework.security.oauth.boot</groupId>
 				<artifactId>spring-security-oauth2-autoconfigure</artifactId>
 				<version>${spring-security-boot-autoconfigure.version}</version>
-				<optional>true</optional>
+			</dependency>
+			<dependency>
+				<groupId>org.springframework.security.oauth</groupId>
+				<artifactId>spring-security-oauth2</artifactId>
+				<version>${spring-security-oauth2.version}</version>
 			</dependency>
 			<dependency>
 				<groupId>cglib</groupId>
@@ -288,11 +300,6 @@
 				<groupId>com.squareup.okhttp3</groupId>
 				<artifactId>mockwebserver</artifactId>
 				<version>${mockwebserver.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>org.springframework.security.oauth</groupId>
-				<artifactId>spring-security-oauth2</artifactId>
-				<version>${spring-security-oauth2.version}</version>
 			</dependency>
 			<dependency>
 				<groupId>io.zipkin.aws</groupId>

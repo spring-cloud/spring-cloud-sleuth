@@ -31,6 +31,7 @@ import org.springframework.cloud.openfeign.EnableFeignClients;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Component;
@@ -77,16 +78,6 @@ class SleuthSampleApplication {
 	@Autowired
 	private ParticipantsBean participantsBean;
 
-	@Bean
-	public RestTemplate getRestTemplate() {
-		return new RestTemplate();
-	}
-
-	@Bean
-	public Sampler defaultSampler() {
-		return Sampler.ALWAYS_SAMPLE;
-	}
-
 	@RequestMapping("/")
 	public String home() {
 		LOG.info("you called home");
@@ -101,6 +92,21 @@ class SleuthSampleApplication {
 
 	private int port() {
 		return this.environment.getProperty("local.server.port", Integer.class);
+	}
+
+	@Configuration(proxyBeanMethods = false)
+	static class Config {
+
+		@Bean
+		public RestTemplate getRestTemplate() {
+			return new RestTemplate();
+		}
+
+		@Bean
+		public Sampler defaultSampler() {
+			return Sampler.ALWAYS_SAMPLE;
+		}
+
 	}
 
 }

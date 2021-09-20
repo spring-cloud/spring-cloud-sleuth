@@ -47,22 +47,17 @@ public class TraceQuartzAutoConfiguration implements InitializingBean {
 
 	private final Scheduler scheduler;
 
-	private final Tracer tracer;
+	private final BeanFactory beanFactory;
 
-	private final Propagator propagator;
-
+	@Deprecated
 	public TraceQuartzAutoConfiguration(Scheduler scheduler, Tracer tracer, Propagator propagator) {
-		this.scheduler = scheduler;
-		this.tracer = tracer;
-		this.propagator = propagator;
+		this(scheduler, null);
 	}
 
 	@Autowired
-	BeanFactory beanFactory;
-
-	@Bean
-	TracingJobListener tracingJobListener() {
-		return new TracingJobListener(this.tracer, this.propagator);
+	public TraceQuartzAutoConfiguration(Scheduler scheduler, BeanFactory beanFactory) {
+		this.scheduler = scheduler;
+		this.beanFactory = beanFactory;
 	}
 
 	@Override
@@ -70,6 +65,16 @@ public class TraceQuartzAutoConfiguration implements InitializingBean {
 		TracingJobListener tracingJobListener = this.beanFactory.getBean(TracingJobListener.class);
 		this.scheduler.getListenerManager().addTriggerListener(tracingJobListener);
 		this.scheduler.getListenerManager().addJobListener(tracingJobListener);
+	}
+
+	@Configuration(proxyBeanMethods = false)
+	static class Config {
+
+		@Bean
+		TracingJobListener tracingJobListener(Tracer tracer, Propagator propagator) {
+			return new TracingJobListener(tracer, propagator);
+		}
+
 	}
 
 }

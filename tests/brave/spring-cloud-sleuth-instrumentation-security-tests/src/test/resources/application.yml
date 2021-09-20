@@ -1,0 +1,3 @@
+spring.application.name: spring-security-test-app
+
+#logging.level.org.springframework.security: TRACE

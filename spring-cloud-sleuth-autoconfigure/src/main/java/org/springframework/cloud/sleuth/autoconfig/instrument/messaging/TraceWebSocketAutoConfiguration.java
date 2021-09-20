@@ -16,7 +16,6 @@
 
 package org.springframework.cloud.sleuth.autoconfig.instrument.messaging;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
@@ -53,31 +52,31 @@ import org.springframework.web.socket.config.annotation.StompEndpointRegistry;
 @AutoConfigureAfter(BraveAutoConfiguration.class)
 class TraceWebSocketAutoConfiguration extends AbstractWebSocketMessageBrokerConfigurer {
 
-	@Autowired
-	Tracer tracer;
+	private final Tracer tracer;
 
-	@Autowired
-	Propagator propagator;
+	private final Propagator propagator;
 
-	@Autowired
-	Propagator.Setter<MessageHeaderAccessor> setter;
+	private final Propagator.Setter<MessageHeaderAccessor> setter;
 
-	@Autowired
-	Propagator.Getter<MessageHeaderAccessor> getter;
+	private final Propagator.Getter<MessageHeaderAccessor> getter;
 
-	@Autowired
-	SleuthMessagingProperties sleuthMessagingProperties;
+	private final SleuthMessagingProperties sleuthMessagingProperties;
 
-	@Autowired
-	MessageSpanCustomizer messageSpanCustomizer;
+	private final MessageSpanCustomizer messageSpanCustomizer;
 
-	@Autowired
-	ApplicationContext applicationContext;
+	private final ApplicationContext applicationContext;
 
-	@Bean
-	@ConditionalOnMissingBean
-	MessageSpanCustomizer defaultMessageSpanCustomizer() {
-		return new DefaultMessageSpanCustomizer();
+	TraceWebSocketAutoConfiguration(Tracer tracer, Propagator propagator,
+			Propagator.Setter<MessageHeaderAccessor> setter, Propagator.Getter<MessageHeaderAccessor> getter,
+			SleuthMessagingProperties sleuthMessagingProperties, MessageSpanCustomizer messageSpanCustomizer,
+			ApplicationContext applicationContext) {
+		this.tracer = tracer;
+		this.propagator = propagator;
+		this.setter = setter;
+		this.getter = getter;
+		this.sleuthMessagingProperties = sleuthMessagingProperties;
+		this.messageSpanCustomizer = messageSpanCustomizer;
+		this.applicationContext = applicationContext;
 	}
 
 	@Override
@@ -107,6 +106,17 @@ class TraceWebSocketAutoConfiguration extends AbstractWebSocketMessageBrokerConf
 	@Override
 	public void configureClientInboundChannel(ChannelRegistration registration) {
 		registration.interceptors(tracingChannelInterceptor());
+	}
+
+	@Configuration(proxyBeanMethods = false)
+	static class Config {
+
+		@Bean
+		@ConditionalOnMissingBean
+		MessageSpanCustomizer defaultMessageSpanCustomizer() {
+			return new DefaultMessageSpanCustomizer();
+		}
+
 	}
 
 }
