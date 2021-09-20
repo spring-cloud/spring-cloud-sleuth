@@ -24,6 +24,8 @@ KafkaReceiver<String, String> reactiveKafkaReceiver(TracingKafkaConsumerFactory 
 }
 ----
 
+Additionally, we decorate any https://docs.spring.io/spring-kafka/docs/current/reference/html/[Spring Kafka] `ProducerFactory` and `ConsumerFactory` available in the context. However, this is disabled if Brave instrumentation is on the classpath.
+
 [[sleuth-async-integration]]
 == Asynchronous Communication
 

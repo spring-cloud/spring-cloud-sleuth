@@ -19,11 +19,13 @@ package org.springframework.cloud.sleuth.autoconfig.instrument.kafka;
 import java.util.ArrayList;
 import java.util.List;
 
+import brave.kafka.clients.KafkaTracing;
 import org.apache.kafka.clients.consumer.Consumer;
 import org.apache.kafka.clients.producer.Producer;
 import org.junit.jupiter.api.Test;
 
 import org.springframework.boot.autoconfigure.AutoConfigurations;
+import org.springframework.boot.test.context.FilteredClassLoader;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
 import org.springframework.cloud.sleuth.autoconfig.TraceNoOpAutoConfiguration;
 import org.springframework.kafka.core.ConsumerFactory;
@@ -41,8 +43,15 @@ class SpringKafkaAutoConfigurationTests {
 							TracingReactorKafkaAutoConfiguration.class, SpringKafkaAutoConfiguration.class));
 
 	@Test
+	void should_be_disabled_when_brave_on_classpath() {
+		this.contextRunner
+				.run((context) -> assertThat(context).doesNotHaveBean(SpringKafkaFactoryBeanPostProcessor.class));
+	}
+
+	@Test
 	void should_decorate_spring_kafka_producer_factory() {
-		this.contextRunner.withBean(ProducerFactory.class, TestProducerFactory::new)
+		this.contextRunner.withClassLoader(new FilteredClassLoader(KafkaTracing.class))
+				.withBean(ProducerFactory.class, TestProducerFactory::new)
 				.run(context -> assertThat(context).getBean(ProducerFactory.class)
 						.extracting(ProducerFactory::getPostProcessors).matches(postProcessors -> postProcessors
 								.stream().filter(p -> p instanceof SpringKafkaProducerPostProcessor).count() == 1));
@@ -50,7 +59,8 @@ class SpringKafkaAutoConfigurationTests {
 
 	@Test
 	void should_decorate_spring_kafka_consumer_factory() {
-		this.contextRunner.withBean(ConsumerFactory.class, TestConsumerFactory::new)
+		this.contextRunner.withClassLoader(new FilteredClassLoader(KafkaTracing.class))
+				.withBean(ConsumerFactory.class, TestConsumerFactory::new)
 				.run(context -> assertThat(context).getBean(ConsumerFactory.class)
 						.extracting(ConsumerFactory::getPostProcessors).matches(postProcessors -> postProcessors
 								.stream().filter(p -> p instanceof SpringKafkaConsumerPostProcessor).count() == 1));

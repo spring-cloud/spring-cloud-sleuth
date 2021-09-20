@@ -20,6 +20,7 @@ import org.springframework.beans.factory.BeanFactory;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.autoconfig.brave.BraveAutoConfiguration;
@@ -37,6 +38,7 @@ import org.springframework.kafka.core.ProducerFactory;
  */
 @Configuration(proxyBeanMethods = false)
 @ConditionalOnClass(ProducerFactory.class)
+@ConditionalOnMissingClass("brave.kafka.clients.KafkaTracing")
 @ConditionalOnBean(Tracer.class)
 @AutoConfigureAfter(BraveAutoConfiguration.class)
 @ConditionalOnProperty(value = "spring.sleuth.kafka.enabled", matchIfMissing = true)
