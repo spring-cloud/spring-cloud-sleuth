@@ -45,7 +45,7 @@ public class FeignContextBeanPostProcessor implements BeanPostProcessor {
 		if (bean instanceof FeignContext && !(bean instanceof TraceFeignContext)) {
 			FeignContext feignContext = (FeignContext) bean;
 			TraceFeignContext traceFeignContext = new TraceFeignContext(traceFeignObjectWrapper(), feignContext);
-			traceFeignContext.setApplicationContext(bean.getParent());
+			traceFeignContext.setApplicationContext(feignContext.getParent());
 			return traceFeignContext;
 		}
 		return bean;
