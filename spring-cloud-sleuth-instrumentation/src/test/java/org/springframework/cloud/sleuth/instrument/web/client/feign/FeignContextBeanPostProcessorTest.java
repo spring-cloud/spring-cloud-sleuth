@@ -33,20 +33,21 @@ import static org.assertj.core.api.Assertions.assertThat;
 @ExtendWith(MockitoExtension.class)
 class FeignContextBeanPostProcessorTest {
 
-    @Mock
-    BeanFactory beanFactory;
+	@Mock
+	BeanFactory beanFactory;
 
-    @Mock
-    ApplicationContext parent;
+	@Mock
+	ApplicationContext parent;
 
-    @Test
-    void should_pass_feign_application_context_to_the_trace_representation() {
-        FeignContextBeanPostProcessor feignContextBeanPostProcessor = new FeignContextBeanPostProcessor(beanFactory);
-        FeignContext feignContext = new FeignContext();
-        feignContext.setApplicationContext(parent);
-        TraceFeignContext traceFeignContext = (TraceFeignContext) feignContextBeanPostProcessor.postProcessAfterInitialization(feignContext, "test");
-        assertThat(traceFeignContext.getParent()).isNotNull();
-        assertThat(traceFeignContext.getParent()).isSameAs(parent);
-    }
+	@Test
+	void should_pass_feign_application_context_to_the_trace_representation() {
+		FeignContextBeanPostProcessor feignContextBeanPostProcessor = new FeignContextBeanPostProcessor(beanFactory);
+		FeignContext feignContext = new FeignContext();
+		feignContext.setApplicationContext(parent);
+		TraceFeignContext traceFeignContext = (TraceFeignContext) feignContextBeanPostProcessor
+				.postProcessAfterInitialization(feignContext, "test");
+		assertThat(traceFeignContext.getParent()).isNotNull();
+		assertThat(traceFeignContext.getParent()).isSameAs(parent);
+	}
 
 }
