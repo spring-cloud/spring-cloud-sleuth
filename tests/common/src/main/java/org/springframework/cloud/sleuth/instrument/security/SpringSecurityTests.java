@@ -32,8 +32,10 @@ import org.springframework.cloud.sleuth.test.TestSpanHandler;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.context.ListeningSecurityContextHolderStrategy;
 import org.springframework.security.core.context.SecurityContextChangedListener;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.context.SecurityContextHolderStrategy;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.provisioning.InMemoryUserDetailsManager;
@@ -106,7 +108,9 @@ public abstract class SpringSecurityTests {
 
 		// TODO: Remove this after Spring Boot auto-configuration is available
 		Config(List<SecurityContextChangedListener> listeners) {
-			listeners.forEach(SecurityContextHolder::addListener);
+			SecurityContextHolderStrategy strategy = new ListeningSecurityContextHolderStrategy(
+					SecurityContextHolder.getContextHolderStrategy(), listeners);
+			SecurityContextHolder.setContextHolderStrategy(strategy);
 		}
 
 		@Bean

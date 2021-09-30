@@ -51,8 +51,8 @@ public class TracingSecurityContextChangedListener implements SecurityContextCha
 
 	@Override
 	public void securityContextChanged(SecurityContextChangedEvent securityContextChangedEvent) {
-		SecurityContext previousContext = securityContextChangedEvent.getPreviousContext();
-		SecurityContext currentContext = securityContextChangedEvent.getCurrentContext();
+		SecurityContext previousContext = securityContextChangedEvent.getOldContext();
+		SecurityContext currentContext = securityContextChangedEvent.getNewContext();
 		Authentication previousAuthentication = previousContext != null ? previousContext.getAuthentication() : null;
 		Authentication currentAuthentication = currentContext != null ? currentContext.getAuthentication() : null;
 
