@@ -16,7 +16,9 @@
 
 package org.springframework.cloud.sleuth.instrument.async;
 
+import java.util.Map;
 import java.util.concurrent.Callable;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
@@ -34,12 +36,37 @@ import org.springframework.cloud.sleuth.internal.ContextUtil;
 // public as most types in this package were documented for use
 public class TraceableScheduledExecutorService extends TraceableExecutorService implements ScheduledExecutorService {
 
+	private static final Map<ExecutorService, TraceableScheduledExecutorService> CACHE = new ConcurrentHashMap<>();
+
 	public TraceableScheduledExecutorService(BeanFactory beanFactory, final ExecutorService delegate) {
 		super(beanFactory, delegate);
 	}
 
 	public TraceableScheduledExecutorService(BeanFactory beanFactory, final ExecutorService delegate, String beanName) {
 		super(beanFactory, delegate, beanName);
+	}
+
+	/**
+	 * Wraps the Executor in a trace instance.
+	 * @param beanFactory bean factory
+	 * @param delegate delegate to wrap
+	 * @param beanName bean name
+	 * @return traced instance
+	 */
+	public static TraceableScheduledExecutorService wrap(BeanFactory beanFactory, ExecutorService delegate,
+			String beanName) {
+		return CACHE.computeIfAbsent(delegate,
+				e -> new TraceableScheduledExecutorService(beanFactory, delegate, beanName));
+	}
+
+	/**
+	 * Wraps the Executor in a trace instance.
+	 * @param beanFactory bean factory
+	 * @param delegate delegate to wrap
+	 * @return traced instance
+	 */
+	public static TraceableScheduledExecutorService wrap(BeanFactory beanFactory, ExecutorService delegate) {
+		return CACHE.computeIfAbsent(delegate, e -> new TraceableScheduledExecutorService(beanFactory, delegate, null));
 	}
 
 	private ScheduledExecutorService getScheduledExecutorService() {
