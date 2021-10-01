@@ -92,7 +92,7 @@ public class TraceAsyncDefaultAutoConfiguration {
 		@Override
 		public Executor getAsyncExecutor() {
 			Executor delegate = getDefaultExecutor();
-			return new LazyTraceExecutor(this.beanFactory, delegate);
+			return LazyTraceExecutor.wrap(this.beanFactory, delegate);
 		}
 
 		/**

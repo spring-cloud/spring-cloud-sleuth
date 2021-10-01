@@ -20,6 +20,7 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.Date;
 import java.util.concurrent.Callable;
+import java.util.concurrent.Executors;
 import java.util.concurrent.RejectedExecutionHandler;
 import java.util.concurrent.ThreadFactory;
 
@@ -94,6 +95,8 @@ public abstract class LazyTraceThreadPoolTaskSchedulerTests implements TestTraci
 
 	@Test
 	public void getScheduledExecutor() {
+		BDDMockito.given(this.delegate.getScheduledExecutor()).willReturn(Executors.newScheduledThreadPool(1));
+
 		this.executor.getScheduledExecutor();
 
 		BDDMockito.then(this.delegate).should().getScheduledExecutor();

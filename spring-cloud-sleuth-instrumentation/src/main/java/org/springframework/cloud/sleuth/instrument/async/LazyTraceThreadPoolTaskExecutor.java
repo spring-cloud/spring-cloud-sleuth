@@ -16,7 +16,9 @@
 
 package org.springframework.cloud.sleuth.instrument.async;
 
+import java.util.Map;
 import java.util.concurrent.Callable;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Future;
 import java.util.concurrent.RejectedExecutionHandler;
 import java.util.concurrent.ThreadFactory;
@@ -32,6 +34,7 @@ import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.internal.ContextUtil;
 import org.springframework.cloud.sleuth.internal.DefaultSpanNamer;
 import org.springframework.core.task.TaskDecorator;
+import org.springframework.lang.NonNull;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.util.concurrent.ListenableFuture;
 
@@ -45,6 +48,8 @@ import org.springframework.util.concurrent.ListenableFuture;
 public class LazyTraceThreadPoolTaskExecutor extends ThreadPoolTaskExecutor {
 
 	private static final Log log = LogFactory.getLog(LazyTraceThreadPoolTaskExecutor.class);
+
+	private static final Map<ThreadPoolTaskExecutor, LazyTraceThreadPoolTaskExecutor> CACHE = new ConcurrentHashMap<>();
 
 	private final BeanFactory beanFactory;
 
@@ -66,6 +71,30 @@ public class LazyTraceThreadPoolTaskExecutor extends ThreadPoolTaskExecutor {
 		this.beanFactory = beanFactory;
 		this.delegate = delegate;
 		this.beanName = beanName;
+	}
+
+	/**
+	 * Wraps the Executor in a trace instance.
+	 * @param beanFactory bean factory
+	 * @param delegate delegate to wrap
+	 * @param beanName bean name
+	 * @return traced instance
+	 */
+	public static LazyTraceThreadPoolTaskExecutor wrap(BeanFactory beanFactory,
+			@NonNull ThreadPoolTaskExecutor delegate, String beanName) {
+		return CACHE.computeIfAbsent(delegate,
+				e -> new LazyTraceThreadPoolTaskExecutor(beanFactory, delegate, beanName));
+	}
+
+	/**
+	 * Wraps the Executor in a trace instance.
+	 * @param beanFactory bean factory
+	 * @param delegate delegate to wrap
+	 * @return traced instance
+	 */
+	public static LazyTraceThreadPoolTaskExecutor wrap(BeanFactory beanFactory,
+			@NonNull ThreadPoolTaskExecutor delegate) {
+		return CACHE.computeIfAbsent(delegate, e -> new LazyTraceThreadPoolTaskExecutor(beanFactory, delegate, null));
 	}
 
 	@Override
