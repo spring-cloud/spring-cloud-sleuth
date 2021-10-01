@@ -20,8 +20,10 @@ import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.Callable;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.RejectedExecutionHandler;
@@ -42,6 +44,7 @@ import org.springframework.cloud.sleuth.SpanNamer;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.internal.ContextUtil;
 import org.springframework.cloud.sleuth.internal.DefaultSpanNamer;
+import org.springframework.lang.NonNull;
 import org.springframework.util.ReflectionUtils;
 
 /**
@@ -55,6 +58,8 @@ import org.springframework.util.ReflectionUtils;
 class LazyTraceScheduledThreadPoolExecutor extends ScheduledThreadPoolExecutor {
 
 	private static final Log log = LogFactory.getLog(LazyTraceScheduledThreadPoolExecutor.class);
+
+	private static final Map<ScheduledThreadPoolExecutor, LazyTraceScheduledThreadPoolExecutor> CACHE = new ConcurrentHashMap<>();
 
 	private final BeanFactory beanFactory;
 
@@ -173,6 +178,19 @@ class LazyTraceScheduledThreadPoolExecutor extends ScheduledThreadPoolExecutor {
 		Method newTaskForCallable = ReflectionUtils.findMethod(ScheduledThreadPoolExecutor.class, "newTaskFor",
 				Callable.class);
 		this.newTaskForCallable = makeAccessibleIfNotNullAndOverridden(newTaskForCallable);
+	}
+
+	static LazyTraceScheduledThreadPoolExecutor wrap(int corePoolSize, BeanFactory beanFactory,
+			@NonNull ScheduledThreadPoolExecutor delegate, String beanName) {
+		return CACHE.computeIfAbsent(delegate,
+				e -> new LazyTraceScheduledThreadPoolExecutor(corePoolSize, beanFactory, delegate, beanName));
+	}
+
+	static LazyTraceScheduledThreadPoolExecutor wrap(int corePoolSize, ThreadFactory threadFactory,
+			RejectedExecutionHandler handler, BeanFactory beanFactory, @NonNull ScheduledThreadPoolExecutor delegate,
+			String beanName) {
+		return CACHE.computeIfAbsent(delegate, e -> new LazyTraceScheduledThreadPoolExecutor(corePoolSize,
+				threadFactory, handler, beanFactory, delegate, beanName));
 	}
 
 	private Runnable traceRunnableWhenContextReady(Runnable delegate) {

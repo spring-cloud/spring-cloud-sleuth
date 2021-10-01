@@ -17,10 +17,12 @@
 package org.springframework.cloud.sleuth.instrument.async;
 
 import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
 
 import org.assertj.core.api.BDDAssertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.BDDMockito;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -45,6 +47,8 @@ public class LazyTraceAsyncCustomizerTest {
 
 	@Test
 	public void should_wrap_async_executor_in_trace_version() throws Exception {
+		BDDMockito.given(this.asyncConfigurer.getAsyncExecutor()).willReturn(Executors.newSingleThreadExecutor());
+
 		Executor executor = this.lazyTraceAsyncCustomizer.getAsyncExecutor();
 
 		BDDAssertions.then(executor).isExactlyInstanceOf(LazyTraceExecutor.class);

@@ -16,6 +16,8 @@
 
 package org.springframework.cloud.sleuth.instrument.async;
 
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executor;
 
 import org.apache.commons.logging.Log;
@@ -27,6 +29,7 @@ import org.springframework.cloud.sleuth.SpanNamer;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.internal.ContextUtil;
 import org.springframework.cloud.sleuth.internal.DefaultSpanNamer;
+import org.springframework.lang.NonNull;
 
 /**
  * {@link Executor} that wraps {@link Runnable} in a trace representation.
@@ -38,6 +41,8 @@ import org.springframework.cloud.sleuth.internal.DefaultSpanNamer;
 public class LazyTraceExecutor implements Executor {
 
 	private static final Log log = LogFactory.getLog(LazyTraceExecutor.class);
+
+	private static final Map<Executor, LazyTraceExecutor> CACHE = new ConcurrentHashMap<>();
 
 	private final BeanFactory beanFactory;
 
@@ -59,6 +64,27 @@ public class LazyTraceExecutor implements Executor {
 		this.beanFactory = beanFactory;
 		this.delegate = delegate;
 		this.beanName = beanName;
+	}
+
+	/**
+	 * Wraps the Executor in a trace instance.
+	 * @param beanFactory bean factory
+	 * @param delegate delegate to wrap
+	 * @param beanName bean name
+	 * @return traced instance
+	 */
+	public static LazyTraceExecutor wrap(BeanFactory beanFactory, @NonNull Executor delegate, String beanName) {
+		return CACHE.computeIfAbsent(delegate, e -> new LazyTraceExecutor(beanFactory, delegate, beanName));
+	}
+
+	/**
+	 * Wraps the Executor in a trace instance.
+	 * @param beanFactory bean factory
+	 * @param delegate delegate to wrap
+	 * @return traced instance
+	 */
+	public static LazyTraceExecutor wrap(BeanFactory beanFactory, @NonNull Executor delegate) {
+		return CACHE.computeIfAbsent(delegate, e -> new LazyTraceExecutor(beanFactory, delegate, null));
 	}
 
 	@Override

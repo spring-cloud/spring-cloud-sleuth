@@ -16,7 +16,9 @@
 
 package org.springframework.cloud.sleuth.instrument.async;
 
+import java.util.Map;
 import java.util.concurrent.Callable;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Future;
 
 import org.apache.commons.logging.Log;
@@ -29,6 +31,7 @@ import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.internal.ContextUtil;
 import org.springframework.cloud.sleuth.internal.DefaultSpanNamer;
 import org.springframework.core.task.AsyncTaskExecutor;
+import org.springframework.lang.NonNull;
 
 /**
  * {@link AsyncTaskExecutor} that wraps {@link Runnable} and {@link Callable} in a trace
@@ -39,6 +42,8 @@ import org.springframework.core.task.AsyncTaskExecutor;
  */
 // public as most types in this package were documented for use
 public class LazyTraceAsyncTaskExecutor implements AsyncTaskExecutor {
+
+	private static final Map<AsyncTaskExecutor, LazyTraceAsyncTaskExecutor> CACHE = new ConcurrentHashMap<>();
 
 	private static final Log log = LogFactory.getLog(LazyTraceAsyncTaskExecutor.class);
 
@@ -62,6 +67,28 @@ public class LazyTraceAsyncTaskExecutor implements AsyncTaskExecutor {
 		this.beanFactory = beanFactory;
 		this.delegate = delegate;
 		this.beanName = beanName;
+	}
+
+	/**
+	 * Wraps the Executor in a trace instance.
+	 * @param beanFactory bean factory
+	 * @param delegate delegate to wrap
+	 * @param beanName bean name
+	 * @return traced instance
+	 */
+	public static LazyTraceAsyncTaskExecutor wrap(BeanFactory beanFactory, @NonNull AsyncTaskExecutor delegate,
+			String beanName) {
+		return CACHE.computeIfAbsent(delegate, e -> new LazyTraceAsyncTaskExecutor(beanFactory, delegate, beanName));
+	}
+
+	/**
+	 * Wraps the Executor in a trace instance.
+	 * @param beanFactory bean factory
+	 * @param delegate delegate to wrap
+	 * @return traced instance
+	 */
+	public static LazyTraceAsyncTaskExecutor wrap(BeanFactory beanFactory, @NonNull AsyncTaskExecutor delegate) {
+		return CACHE.computeIfAbsent(delegate, e -> new LazyTraceAsyncTaskExecutor(beanFactory, delegate, null));
 	}
 
 	@Override

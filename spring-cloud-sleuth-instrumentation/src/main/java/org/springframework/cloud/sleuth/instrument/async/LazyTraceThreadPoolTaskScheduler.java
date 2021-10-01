@@ -20,7 +20,9 @@ import java.lang.reflect.Method;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Date;
+import java.util.Map;
 import java.util.concurrent.Callable;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 import java.util.concurrent.RejectedExecutionHandler;
@@ -39,6 +41,7 @@ import org.springframework.cloud.sleuth.SpanNamer;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.internal.ContextUtil;
 import org.springframework.cloud.sleuth.internal.DefaultSpanNamer;
+import org.springframework.lang.NonNull;
 import org.springframework.lang.Nullable;
 import org.springframework.scheduling.Trigger;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
@@ -58,6 +61,8 @@ import org.springframework.util.concurrent.ListenableFuture;
 class LazyTraceThreadPoolTaskScheduler extends ThreadPoolTaskScheduler {
 
 	private static final Log log = LogFactory.getLog(LazyTraceThreadPoolTaskScheduler.class);
+
+	private static final Map<ThreadPoolTaskScheduler, LazyTraceThreadPoolTaskScheduler> CACHE = new ConcurrentHashMap<>();
 
 	private final BeanFactory beanFactory;
 
@@ -95,6 +100,19 @@ class LazyTraceThreadPoolTaskScheduler extends ThreadPoolTaskScheduler {
 		this.getDefaultThreadNamePrefix = ReflectionUtils.findMethod(CustomizableThreadCreator.class,
 				"getDefaultThreadNamePrefix", null);
 		makeAccessibleIfNotNull(this.getDefaultThreadNamePrefix);
+	}
+
+	/**
+	 * Wraps the Executor in a trace instance.
+	 * @param beanFactory bean factory
+	 * @param delegate delegate to wrap
+	 * @param beanName bean name
+	 * @return traced instance
+	 */
+	static LazyTraceThreadPoolTaskScheduler wrap(BeanFactory beanFactory, @NonNull ThreadPoolTaskScheduler delegate,
+			String beanName) {
+		return CACHE.computeIfAbsent(delegate,
+				e -> new LazyTraceThreadPoolTaskScheduler(beanFactory, delegate, beanName));
 	}
 
 	private void makeAccessibleIfNotNull(Method method) {
@@ -147,7 +165,7 @@ class LazyTraceThreadPoolTaskScheduler extends ThreadPoolTaskScheduler {
 		if (executorService instanceof TraceableScheduledExecutorService) {
 			return executorService;
 		}
-		return new TraceableExecutorService(this.beanFactory, executorService, this.beanName);
+		return TraceableExecutorService.wrap(this.beanFactory, executorService, this.beanName);
 	}
 
 	private RejectedExecutionHandler traceRejectedExecutionHandler(RejectedExecutionHandler rejectedExecutionHandler) {
@@ -172,14 +190,14 @@ class LazyTraceThreadPoolTaskScheduler extends ThreadPoolTaskScheduler {
 		if (executorService instanceof TraceableScheduledExecutorService) {
 			return executorService;
 		}
-		return new TraceableScheduledExecutorService(this.beanFactory, executorService, this.beanName);
+		return TraceableScheduledExecutorService.wrap(this.beanFactory, executorService, this.beanName);
 	}
 
 	@Override
 	public ScheduledExecutorService getScheduledExecutor() throws IllegalStateException {
 		ScheduledExecutorService executor = this.delegate.getScheduledExecutor();
 		return executor instanceof TraceableScheduledExecutorService ? executor
-				: new TraceableScheduledExecutorService(this.beanFactory, executor, this.beanName);
+				: TraceableScheduledExecutorService.wrap(this.beanFactory, executor, this.beanName);
 	}
 
 	@Override
@@ -188,7 +206,7 @@ class LazyTraceThreadPoolTaskScheduler extends ThreadPoolTaskScheduler {
 		if (executor instanceof LazyTraceScheduledThreadPoolExecutor) {
 			return executor;
 		}
-		return new LazyTraceScheduledThreadPoolExecutor(executor.getCorePoolSize(), executor.getThreadFactory(),
+		return LazyTraceScheduledThreadPoolExecutor.wrap(executor.getCorePoolSize(), executor.getThreadFactory(),
 				executor.getRejectedExecutionHandler(), this.beanFactory, executor, this.beanName);
 	}
 

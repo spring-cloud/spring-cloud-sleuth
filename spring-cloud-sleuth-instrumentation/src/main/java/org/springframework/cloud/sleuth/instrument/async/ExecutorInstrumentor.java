@@ -20,10 +20,13 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
+import java.util.function.Function;
 import java.util.function.Supplier;
 
 import org.aopalliance.aop.Advice;
@@ -176,43 +179,43 @@ public class ExecutorInstrumentor {
 	Object createThreadPoolTaskExecutorProxy(Object bean, boolean cglibProxy, ThreadPoolTaskExecutor executor,
 			String beanName) {
 		if (!cglibProxy) {
-			return new LazyTraceThreadPoolTaskExecutor(this.beanFactory, executor, beanName);
+			return LazyTraceThreadPoolTaskExecutor.wrap(this.beanFactory, executor, beanName);
 		}
 		return getProxiedObject(bean, beanName, true, executor,
-				() -> new LazyTraceThreadPoolTaskExecutor(this.beanFactory, executor, beanName));
+				() -> LazyTraceThreadPoolTaskExecutor.wrap(this.beanFactory, executor, beanName));
 	}
 
 	Supplier<Executor> createThreadPoolTaskSchedulerProxy(ThreadPoolTaskScheduler executor, String beanName) {
-		return () -> new LazyTraceThreadPoolTaskScheduler(this.beanFactory, executor, beanName);
+		return () -> LazyTraceThreadPoolTaskScheduler.wrap(this.beanFactory, executor, beanName);
 	}
 
 	Supplier<Executor> createScheduledThreadPoolExecutorProxy(ScheduledThreadPoolExecutor executor, String beanName) {
-		return () -> new LazyTraceScheduledThreadPoolExecutor(executor.getCorePoolSize(), executor.getThreadFactory(),
+		return () -> LazyTraceScheduledThreadPoolExecutor.wrap(executor.getCorePoolSize(), executor.getThreadFactory(),
 				executor.getRejectedExecutionHandler(), this.beanFactory, executor, beanName);
 	}
 
 	Object createExecutorServiceProxy(Object bean, boolean cglibProxy, ExecutorService executor, String beanName) {
 		return getProxiedObject(bean, beanName, cglibProxy, executor, () -> {
 			if (executor instanceof ScheduledExecutorService) {
-				return new TraceableScheduledExecutorService(this.beanFactory, executor, beanName);
+				return TraceableScheduledExecutorService.wrap(this.beanFactory, executor, beanName);
 			}
-			return new TraceableExecutorService(this.beanFactory, executor, beanName);
+			return TraceableExecutorService.wrap(this.beanFactory, executor, beanName);
 		});
 	}
 
 	Object createScheduledExecutorServiceProxy(Object bean, boolean cglibProxy, ScheduledExecutorService executor,
 			String beanName) {
 		return getProxiedObject(bean, beanName, cglibProxy, executor,
-				() -> new TraceableScheduledExecutorService(this.beanFactory, executor, beanName));
+				() -> TraceableScheduledExecutorService.wrap(this.beanFactory, executor, beanName));
 	}
 
 	Object createAsyncTaskExecutorProxy(Object bean, boolean cglibProxy, AsyncTaskExecutor executor, String beanName) {
 		return getProxiedObject(bean, beanName, cglibProxy, executor, () -> {
 			if (bean instanceof ThreadPoolTaskScheduler) {
-				return new LazyTraceThreadPoolTaskScheduler(this.beanFactory, (ThreadPoolTaskScheduler) executor,
+				return LazyTraceThreadPoolTaskScheduler.wrap(this.beanFactory, (ThreadPoolTaskScheduler) executor,
 						beanName);
 			}
-			return new LazyTraceAsyncTaskExecutor(this.beanFactory, executor, beanName);
+			return LazyTraceAsyncTaskExecutor.wrap(this.beanFactory, executor, beanName);
 		});
 	}
 
@@ -259,7 +262,7 @@ public class ExecutorInstrumentor {
 		factory.addAdvice(new ExecutorMethodInterceptor<Executor>(executor, this.beanFactory, beanName) {
 			@Override
 			Executor executor(BeanFactory beanFactory, Executor executor, String beanName) {
-				return supplier.get();
+				return executorFromCache(beanFactory, executor, beanName, e -> supplier.get());
 			}
 		});
 		factory.setTarget(bean);
@@ -316,6 +319,8 @@ class ExecutorMethodInterceptor<T extends Executor> implements MethodInterceptor
 
 	private final String beanName;
 
+	private static final Map<Executor, Executor> CACHE = new ConcurrentHashMap<>();
+
 	ExecutorMethodInterceptor(T delegate, BeanFactory beanFactory, String beanName) {
 		this.delegate = delegate;
 		this.beanFactory = beanFactory;
@@ -344,8 +349,15 @@ class ExecutorMethodInterceptor<T extends Executor> implements MethodInterceptor
 		return ReflectionUtils.findMethod(object.getClass(), method.getName(), method.getParameterTypes());
 	}
 
+	@SuppressWarnings("unchecked")
 	T executor(BeanFactory beanFactory, T executor, String beanName) {
-		return (T) new LazyTraceExecutor(beanFactory, executor, beanName);
+		return executorFromCache(beanFactory, executor, beanName,
+				e -> (T) LazyTraceExecutor.wrap(beanFactory, e, beanName));
+	}
+
+	@SuppressWarnings("unchecked")
+	T executorFromCache(BeanFactory beanFactory, T executor, String beanName, Function<Executor, Executor> function) {
+		return (T) CACHE.computeIfAbsent(executor, function);
 	}
 
 }
