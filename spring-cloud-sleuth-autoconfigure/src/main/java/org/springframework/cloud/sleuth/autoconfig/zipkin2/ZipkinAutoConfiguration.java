@@ -135,6 +135,22 @@ public class ZipkinAutoConfiguration {
 				.messageTimeout(zipkin.getMessageTimeout(), TimeUnit.SECONDS).metrics(reporterMetrics)
 				.build(zipkin.getEncoder());
 
+		Runtime.getRuntime().addShutdownHook(new Thread() {
+			@Override
+			public void run() {
+				log.info("Flushing remaining spans on shutdown");
+				asyncReporter.flush();
+				try {
+					Thread.sleep(TimeUnit.SECONDS.toMillis(zipkin.getMessageTimeout()) + 500);
+					log.debug("Flushing done - closing the reporter");
+					asyncReporter.close();
+				}
+				catch (Exception e) {
+					throw new IllegalStateException(e);
+				}
+			}
+		});
+
 		return asyncReporter;
 	}
 
