@@ -23,19 +23,24 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-
+import org.reactivestreams.Publisher;
 import org.springframework.cloud.context.scope.refresh.RefreshScopeRefreshedEvent;
 import org.springframework.cloud.function.context.catalog.FunctionAroundWrapper;
 import org.springframework.cloud.function.context.catalog.FunctionTypeUtils;
 import org.springframework.cloud.function.context.catalog.SimpleFunctionRegistry;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.Tracer;
+import org.springframework.cloud.sleuth.instrument.reactor.ReactorSleuth;
 import org.springframework.cloud.sleuth.propagation.Propagator;
 import org.springframework.context.ApplicationListener;
 import org.springframework.core.env.Environment;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.support.MessageBuilder;
 import org.springframework.messaging.support.MessageHeaderAccessor;
+
+import reactor.core.CorePublisher;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 /**
  * Trace representation of a {@link FunctionAroundWrapper}.
@@ -84,21 +89,95 @@ public class TraceFunctionAroundWrapper extends FunctionAroundWrapper
 	}
 
 	@Override
-	protected Object doApply(Message<byte[]> message, SimpleFunctionRegistry.FunctionInvocationWrapper targetFunction) {
-
-		/*
-		 * This code is temporary to disable conditions for which this interceptor is not
-		 * ready. For example, - it does not handle properly input or output of type
-		 * Publisher - it wraps output in Message when function returns a
-		 * Collection<Message> which it should not do.
-		 *
-		 */
-		if ((FunctionTypeUtils.isCollectionOfMessage(targetFunction.getOutputType())
-				|| targetFunction.isOutputTypePublisher())
-				|| (targetFunction.isSupplier() && targetFunction.isOutputTypePublisher())) {
+	protected Object doApply(Object message, SimpleFunctionRegistry.FunctionInvocationWrapper targetFunction) {
+		if (FunctionTypeUtils.isCollectionOfMessage(targetFunction.getOutputType())) {
 			return targetFunction.apply(message); // no instrumentation
 		}
+		else if (targetFunction.isOutputTypePublisher()) {
+			return reactorStream((Publisher<?>) message, targetFunction);
+		}
+		return nonReactorStream((Message<byte[]>) message, targetFunction);
+	}
 
+	private Object reactorStream(Publisher<?> message,
+			SimpleFunctionRegistry.FunctionInvocationWrapper targetFunction) {
+		if (message == null && targetFunction.isSupplier()) { // Supplier
+			return reactorStreamSupplier(message, targetFunction);
+		} else if (!targetFunction.getRawInputType().equals(Message.class)) {
+			if (log.isDebugEnabled()) {
+				log.debug("Target function [" + targetFunction.getFunctionDefinition() + "] has raw input type [" + targetFunction.getRawInputType() + "] and should be [" + Message.class + "]. Will not wrap it.");
+				return targetFunction.apply(message);
+			}
+		}
+		// wyciagnij wiadomosc na wejsciu i utworz child span
+		// wsadz child span do kontekstu
+		// powtorz to co jest w supplierze
+		Publisher<Message> publisher = (Publisher<Message>) targetFunction.get();
+
+		if (publisher instanceof Mono) {
+			Mono<Message> mono = (Mono<Message>) publisher;
+			publisher = mono
+				.map(msg -> this.traceMessageHandler.wrapInputMessage(msg, inputDestination(targetFunction.getFunctionDefinition())))
+				.flatMap(msg -> Mono.deferContextual(Mono::just)
+					.doOnNext(contextView -> {
+						Span span = contextView.get(Span.class);
+						Tracer.SpanInScope scope = contextView.get(Tracer.SpanInScope.class);
+						customizedInputMessageSpan(span, msg.msg);
+						// @formatter:off
+						return targetFunction.apply(msg.msg)
+								// TODO: Fix me when this is resolved in Reactor
+			//					.doOnSubscribe(__ -> scope.close())
+								.doOnError(span::error)
+								.doFinally(signalType -> {
+									span.end();
+									scope.close();
+								}));
+						// @formatter:on
+					})
+					.contextWrite(context -> {
+						return ReactorSleuth.putSpanInScope(tracer, context, msg.childSpan);
+					});
+					
+		} else {
+			Flux flux = (Flux) publisher;
+
+		}
+		return publisher;
+	}
+
+	private Object reactorStreamSupplier(Publisher<?> message,
+			SimpleFunctionRegistry.FunctionInvocationWrapper targetFunction) {
+		Publisher<?> publisher = (Publisher<?>) targetFunction.get();
+		if (publisher instanceof Mono) {
+			Mono mono = (Mono) publisher;
+			publisher = ReactorSleuth.tracedMono(tracer, tracer.currentTraceContext(),
+					targetFunction.getFunctionDefinition(), () -> mono, (msg, s) -> {
+						customizedInputMessageSpan(s, msg instanceof Message ? (Message) msg : null); // (1)
+					}).map(object -> toMessage(object))
+					.map(object -> this.getMessageAndSpans((Message) object, targetFunction.getFunctionDefinition(),
+							tracer.currentSpan()))
+					.doOnNext(wrappedOutputMessage -> traceMessageHandler
+							.afterMessageHandled(((MessageAndSpan) wrappedOutputMessage).span, null))
+					.map(wrappedOutputMessage -> ((MessageAndSpan) wrappedOutputMessage).msg);
+		}
+		else {
+			Flux flux = (Flux) publisher;
+			// (1) zaczyna
+			publisher = ReactorSleuth.tracedFlux(tracer, tracer.currentTraceContext(),
+					targetFunction.getFunctionDefinition(), () -> flux, (msg, s) -> {
+						customizedInputMessageSpan(s, msg instanceof Message ? (Message) msg : null); // (1)
+					}).map(object -> toMessage(object))
+					.map(object -> this.getMessageAndSpans((Message) object, targetFunction.getFunctionDefinition(),
+							tracer.currentSpan()))
+					.doOnNext(wrappedOutputMessage -> traceMessageHandler
+							.afterMessageHandled(((MessageAndSpan) wrappedOutputMessage).span, null))
+					.map(wrappedOutputMessage -> ((MessageAndSpan) wrappedOutputMessage).msg);
+		}
+		return publisher;
+	}
+
+	private Object nonReactorStream(Message<byte[]> message,
+			SimpleFunctionRegistry.FunctionInvocationWrapper targetFunction) {
 		MessageAndSpans invocationMessage = null;
 		Span span;
 		if (message == null && targetFunction.isSupplier()) { // Supplier

@@ -24,6 +24,7 @@ import java.util.Map;
 import org.assertj.core.api.BDDAssertions;
 
 import org.springframework.cloud.sleuth.BaggageInScope;
+import org.springframework.cloud.sleuth.CurrentTraceContext;
 import org.springframework.cloud.sleuth.ScopedSpan;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.SpanCustomizer;
@@ -122,6 +123,11 @@ public class SimpleTracer implements Tracer {
 
 	@Override
 	public BaggageInScope createBaggage(String name, String value) {
+		return null;
+	}
+
+	@Override
+	public CurrentTraceContext currentTraceContext() {
 		return null;
 	}
 
