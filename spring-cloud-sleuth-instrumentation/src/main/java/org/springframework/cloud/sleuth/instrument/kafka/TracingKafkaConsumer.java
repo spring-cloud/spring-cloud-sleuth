@@ -20,8 +20,8 @@ import java.time.Duration;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.OptionalLong;
 import java.util.Set;
-import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 
 import org.apache.kafka.clients.consumer.Consumer;
@@ -317,12 +317,6 @@ public class TracingKafkaConsumer<K, V> implements Consumer<K, V> {
 	}
 
 	@Override
-	@Deprecated
-	public void close(long l, TimeUnit timeUnit) {
-		this.delegate.close(l, timeUnit);
-	}
-
-	@Override
 	public void close(Duration duration) {
 		this.delegate.close(duration);
 	}
@@ -330,6 +324,11 @@ public class TracingKafkaConsumer<K, V> implements Consumer<K, V> {
 	@Override
 	public void wakeup() {
 		this.delegate.wakeup();
+	}
+
+	@Override
+	public OptionalLong currentLag(TopicPartition topicPartition) {
+		return this.delegate.currentLag(topicPartition);
 	}
 
 }
