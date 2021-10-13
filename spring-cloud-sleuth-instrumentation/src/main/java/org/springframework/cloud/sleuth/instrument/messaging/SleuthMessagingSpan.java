@@ -49,6 +49,16 @@ enum SleuthMessagingSpan implements DocumentedSpan {
 		},
 
 		/**
+		 * Name of the Spring Cloud Function function name.
+		 */
+		FUNCTION_NAME {
+			@Override
+			public String getKey() {
+				return "function.name";
+			}
+		},
+
+		/**
 		 * User provided keys via customization options.
 		 */
 		CUSTOM {

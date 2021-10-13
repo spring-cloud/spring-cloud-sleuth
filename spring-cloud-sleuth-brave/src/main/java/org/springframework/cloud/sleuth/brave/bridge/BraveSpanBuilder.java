@@ -128,4 +128,10 @@ class BraveSpanBuilder implements Span.Builder {
 		return new BraveSpanBuilder(tracer, context);
 	}
 
+	@Override
+	public String toString() {
+		return "{" + " delegate='" + this.delegate + "'" + ", parentContext='" + this.parentContext + "'"
+				+ ", startTimestamp='" + this.startTimestamp + "'" + "}";
+	}
+
 }

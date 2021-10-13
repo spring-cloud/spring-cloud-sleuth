@@ -152,7 +152,6 @@ class TraceMessageHandler {
 		Span.Builder consumerSpanBuilder = SleuthMessagingSpan.MESSAGING_SPAN
 				.wrap(this.propagator.extract(headers, this.extractor));
 		Span consumerSpan = consumerSpan(destinationName, consumerSpanBuilder, message);
-
 		if (log.isDebugEnabled()) {
 			log.debug("Built a consumer span " + consumerSpan);
 		}
