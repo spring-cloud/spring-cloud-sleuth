@@ -17,10 +17,14 @@
 package org.springframework.cloud.sleuth.instrument.messaging;
 
 import java.util.Collections;
+import java.util.List;
+import java.util.function.Function;
 import java.util.function.Supplier;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
+import org.mockito.Answers;
+import org.mockito.BDDMockito;
 
 import org.springframework.cloud.function.context.FunctionRegistration;
 import org.springframework.cloud.function.context.FunctionType;
@@ -29,8 +33,14 @@ import org.springframework.cloud.function.context.catalog.SimpleFunctionRegistry
 import org.springframework.cloud.function.context.config.JsonMessageConverter;
 import org.springframework.cloud.function.json.JacksonMapper;
 import org.springframework.cloud.sleuth.Span;
+import org.springframework.cloud.sleuth.TraceContext;
+import org.springframework.cloud.sleuth.Span.Builder;
+import org.springframework.cloud.sleuth.propagation.Propagator;
+import org.springframework.cloud.sleuth.propagation.Propagator.Getter;
+import org.springframework.cloud.sleuth.propagation.Propagator.Setter;
 import org.springframework.cloud.sleuth.tracer.SimpleTracer;
 import org.springframework.core.convert.support.DefaultConversionService;
+import org.springframework.integration.support.MessageBuilder;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.converter.CompositeMessageConverter;
 import org.springframework.mock.env.MockEnvironment;
@@ -39,28 +49,74 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.BDDAssertions.then;
 
 class TraceFunctionAroundWrapperTests {
+	
+	CompositeMessageConverter messageConverter = new CompositeMessageConverter(
+			Collections.singletonList(new JsonMessageConverter(new JacksonMapper(new ObjectMapper()))));
+	
+	SimpleFunctionRegistry catalog = new SimpleFunctionRegistry(new DefaultConversionService(), messageConverter,
+			new JacksonMapper(new ObjectMapper()));
 
-	@Test
-	void test_tracing_with_supplier() {
-		CompositeMessageConverter messageConverter = new CompositeMessageConverter(
-				Collections.singletonList(new JsonMessageConverter(new JacksonMapper(new ObjectMapper()))));
+	SimpleTracer tracer = new SimpleTracer();
+	
+	MockEnvironment mockEnvironment = mockEnvironment();
 
-		SimpleTracer tracer = new SimpleTracer();
-		TraceFunctionAroundWrapper wrapper = new TraceFunctionAroundWrapper(null, tracer, null, null, null) {
+	TraceFunctionAroundWrapper wrapper = new TraceFunctionAroundWrapper(mockEnvironment, tracer, testPropagator(), 
+			new MessageHeaderPropagatorSetter(), new MessageHeaderPropagatorGetter()) {
+		@Override
+		MessageAndSpan getMessageAndSpans(Message<?> resultMessage, String name, Span spanFromMessage) {
+			return new MessageAndSpan(resultMessage, spanFromMessage);
+		}
+	};
+
+	/**
+	 * @return
+	 */
+	private Propagator testPropagator() {
+		return new Propagator() {
+			
 			@Override
-			MessageAndSpan getMessageAndSpans(Message<?> resultMessage, String name, Span spanFromMessage) {
-				return new MessageAndSpan(resultMessage, spanFromMessage);
+			public <C> void inject(TraceContext context, C carrier, Setter<C> setter) {
+				setter.set(carrier, "superHeader", "test");
+			}
+			
+			@Override
+			public List<String> fields() {
+				return Collections.singletonList("superHeader");
+			}
+			
+			@Override
+			public <C> Builder extract(C carrier, Getter<C> getter) {
+				Builder builder = BDDMockito.mock(Builder.class, Answers.RETURNS_SELF);
+				BDDMockito.given(builder.start()).willReturn(tracer.nextSpan());
+				return builder;
 			}
 		};
-
+	}
+	
+	@Test
+	void test_tracing_with_supplier() {
 		FunctionRegistration<Greeter> registration = new FunctionRegistration<>(new Greeter(), "greeter")
 				.type(FunctionType.of(Greeter.class));
-		SimpleFunctionRegistry catalog = new SimpleFunctionRegistry(new DefaultConversionService(), messageConverter,
-				new JacksonMapper(new ObjectMapper()));
 		catalog.register(registration);
 		FunctionInvocationWrapper function = catalog.lookup("greeter");
+		
 		Message<?> result = (Message<?>) wrapper.apply(null, function);
+		
 		assertThat(result.getPayload()).isEqualTo("hello");
+		assertThat(tracer.getOnlySpan().name).isEqualTo("greeter");
+	}
+	
+	@Test
+	void test_tracing_with_function() {
+		FunctionRegistration<GreeterFunction> registration = new FunctionRegistration<>(new GreeterFunction(), "greeter")
+				.type(FunctionType.of(GreeterFunction.class));
+		catalog.register(registration);
+		FunctionInvocationWrapper function = catalog.lookup("greeter");
+		
+		Message<?> result = (Message<?>) wrapper.apply(MessageBuilder
+				.withPayload("hello").setHeader("superHeader", "someValue").build(), function);
+		
+		assertThat(result.getPayload()).isEqualTo("HELLO");
 		assertThat(tracer.getOnlySpan().name).isEqualTo("greeter");
 	}
 
@@ -104,6 +160,13 @@ class TraceFunctionAroundWrapperTests {
 
 		assertThat(wrapper.outputDestination("marcin")).isEqualTo("bob");
 	}
+	
+	private MockEnvironment mockEnvironment() {
+		MockEnvironment mockEnvironment = new MockEnvironment();
+		mockEnvironment.setProperty("spring.cloud.stream.bindings.greeter-in-0.destination", "oleg");
+		mockEnvironment.setProperty("spring.cloud.stream.bindings.greeter-out-0.destination", "bob");
+		return mockEnvironment;
+	}
 
 	private static class Greeter implements Supplier<String> {
 
@@ -112,6 +175,15 @@ class TraceFunctionAroundWrapperTests {
 			return "hello";
 		}
 
+	}
+	
+	private static class GreeterFunction implements Function<String, String> {
+		
+		@Override
+		public String apply(String in) {
+			return in.toUpperCase();
+		}
+		
 	}
 
 }
