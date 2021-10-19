@@ -191,6 +191,19 @@
 
 	<dependencyManagement>
 		<dependencies>
+			<!-- TODO: remove reactor and kafka-clients versions -->
+			<dependency>
+				<groupId>io.projectreactor</groupId>
+				<artifactId>reactor-bom</artifactId>
+				<version>2020.0.12</version>
+				<type>pom</type>
+				<scope>import</scope>
+			</dependency>
+			<dependency>
+				<groupId>org.apache.kafka</groupId>
+				<artifactId>kafka-clients</artifactId>
+				<version>3.0.0</version>
+			</dependency>
 			<dependency>
 				<groupId>org.springframework.cloud</groupId>
 				<artifactId>spring-cloud-sleuth-dependencies</artifactId>
