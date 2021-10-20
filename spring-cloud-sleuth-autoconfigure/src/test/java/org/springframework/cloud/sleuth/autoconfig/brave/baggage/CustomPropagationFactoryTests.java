@@ -52,8 +52,8 @@ public class CustomPropagationFactoryTests {
 		new ApplicationContextRunner().withUserConfiguration(CustomConfig.class)
 				.withPropertyValues("spring.sleuth.propagation.type=custom")
 				.withPropertyValues("spring.cloud.gateway.redis.enabled=false")
-				.withPropertyValues("spring.r2dbc.pool.enabled=true").run(context -> BDDAssertions.then(context)
-						.hasNotFailed().getBean(CustomConfig.CustomPropagation.class));
+				.withPropertyValues("spring.r2dbc.url=r2dbc:proxy:h2:mem:///test").run(context -> BDDAssertions
+						.then(context).hasNotFailed().getBean(CustomConfig.CustomPropagation.class));
 	}
 
 	@Configuration(proxyBeanMethods = false)
