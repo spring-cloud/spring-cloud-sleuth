@@ -53,9 +53,9 @@ public abstract class TraceFunctionAroundWrapperTests {
 			FunctionCatalog catalog = context.getBean(FunctionCatalog.class);
 			FunctionInvocationWrapper function = catalog.lookup("greeter");
 
-			Message<?> result = (Message<?>) function.get();
+			Message<String> result = (Message<String>) function.get();
 
-			assertThat(result.getPayload()).isEqualTo("hello".getBytes());
+			assertThat(result.getPayload()).isEqualTo("hello");
 			assertThat(spanHandler.reportedSpans().size()).isEqualTo(2);
 			assertThat(((String) result.getHeaders().get("b3"))).contains(spanHandler.get(0).getTraceId());
 			spanHandler.assertAllSpansWereFinishedOrAbandoned(context.getBean(TestTracer.class).createdSpans());
