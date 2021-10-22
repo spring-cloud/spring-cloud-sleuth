@@ -47,8 +47,7 @@ import org.springframework.lang.Nullable;
 
 /**
  * Altered the Brave MongoDb instrumentation code.
- * 
- * https://github.com/openzipkin/brave/blob/release-5.13.0/instrumentation/mongodb/src/main/java/brave/mongodb/TraceMongoCommandListener.java
+ * The code is available here: https://github.com/openzipkin/brave/blob/release-5.13.0/instrumentation/mongodb/src/main/java/brave/mongodb/TraceMongoCommandListener.java
  *
  * @author OpenZipkin Brave Authors
  */
