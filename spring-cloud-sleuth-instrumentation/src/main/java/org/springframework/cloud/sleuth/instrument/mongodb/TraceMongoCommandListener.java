@@ -47,6 +47,8 @@ import org.springframework.lang.Nullable;
 
 /**
  * Altered the Brave MongoDb instrumentation code.
+ * 
+ * https://github.com/openzipkin/brave/blob/release-5.13.0/instrumentation/mongodb/src/main/java/brave/mongodb/TraceMongoCommandListener.java
  *
  * @author OpenZipkin Brave Authors
  */
@@ -168,6 +170,9 @@ final class TraceMongoCommandListener implements CommandListener {
 		if (span == null) {
 			return;
 		}
+		if (log.isDebugEnabled()) {
+			log.debug("Command succeeded - will close span [" + span + "]");
+		}
 		span.end();
 		requestContext.delete(Span.class);
 		requestContext.delete(TraceContext.class);
@@ -182,6 +187,9 @@ final class TraceMongoCommandListener implements CommandListener {
 		Span span = requestContext.getOrDefault(Span.class, null);
 		if (span == null) {
 			return;
+		}
+		if (log.isDebugEnabled()) {
+			log.debug("Command failed - will close span [" + span + "]");
 		}
 		span.error(event.getThrowable());
 		span.end();

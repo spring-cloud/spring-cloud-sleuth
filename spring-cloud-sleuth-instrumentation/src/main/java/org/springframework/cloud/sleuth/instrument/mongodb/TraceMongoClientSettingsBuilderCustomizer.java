@@ -16,13 +16,7 @@
 
 package org.springframework.cloud.sleuth.instrument.mongodb;
 
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.stream.Stream;
-
 import com.mongodb.MongoClientSettings;
-import com.mongodb.RequestContext;
-import reactor.util.context.ContextView;
 
 import org.springframework.boot.autoconfigure.mongo.MongoClientSettingsBuilderCustomizer;
 import org.springframework.cloud.sleuth.CurrentTraceContext;
@@ -48,51 +42,6 @@ public class TraceMongoClientSettingsBuilderCustomizer implements MongoClientSet
 	@Override
 	public void customize(MongoClientSettings.Builder clientSettingsBuilder) {
 		clientSettingsBuilder.addCommandListener(new TraceMongoCommandListener(this.tracer, this.currentTraceContext));
-	}
-
-	static class TraceRequestContext implements RequestContext {
-
-		private final Map<Object, Object> map = new ConcurrentHashMap<>();
-
-		TraceRequestContext(ContextView context) {
-			context.stream().forEach(entry -> map.put(entry.getKey(), entry.getValue()));
-		}
-
-		@Override
-		public <T> T get(Object key) {
-			return (T) map.get(key);
-		}
-
-		@Override
-		public boolean hasKey(Object key) {
-			return map.containsKey(key);
-		}
-
-		@Override
-		public boolean isEmpty() {
-			return map.isEmpty();
-		}
-
-		@Override
-		public void put(Object key, Object value) {
-			map.put(key, value);
-		}
-
-		@Override
-		public void delete(Object key) {
-			map.remove(key);
-		}
-
-		@Override
-		public int size() {
-			return map.size();
-		}
-
-		@Override
-		public Stream<Map.Entry<Object, Object>> stream() {
-			return map.entrySet().stream();
-		}
-
 	}
 
 }

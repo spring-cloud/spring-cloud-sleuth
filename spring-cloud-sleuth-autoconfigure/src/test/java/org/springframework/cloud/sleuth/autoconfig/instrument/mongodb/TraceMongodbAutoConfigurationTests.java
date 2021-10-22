@@ -50,9 +50,4 @@ class TraceMongodbAutoConfigurationTests {
 						.hasSingleBean(TraceReactiveMongoClientSettingsBuilderCustomizer.class));
 	}
 
-	@Configuration
-	class TestConfig {
-
-	}
-
 }
