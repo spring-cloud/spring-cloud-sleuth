@@ -14,10 +14,8 @@
  * limitations under the License.
  */
 
-package org.springframework.cloud.sleuth.autoconfig.brave.instrument.mongodb;
+package org.springframework.cloud.sleuth.autoconfig.instrument.mongodb;
 
-import brave.Tracing;
-import brave.mongodb.MongoDBTracing;
 import com.mongodb.MongoClientSettings;
 
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
@@ -25,13 +23,13 @@ import org.springframework.boot.autoconfigure.AutoConfigureBefore;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.autoconfigure.mongo.MongoAutoConfiguration;
-import org.springframework.boot.autoconfigure.mongo.MongoClientSettingsBuilderCustomizer;
+import org.springframework.cloud.sleuth.CurrentTraceContext;
+import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.autoconfig.brave.BraveAutoConfiguration;
-import org.springframework.cloud.sleuth.autoconfig.instrument.mongodb.TraceMongoDbAutoConfiguration;
-import org.springframework.cloud.sleuth.brave.instrument.mongodb.TraceMongoClientSettingsBuilderCustomizer;
+import org.springframework.cloud.sleuth.instrument.mongodb.TraceMongoClientSettingsBuilderCustomizer;
+import org.springframework.cloud.sleuth.instrument.mongodb.TraceReactiveMongoClientSettingsBuilderCustomizer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -39,29 +37,31 @@ import org.springframework.context.annotation.Configuration;
  * {@link org.springframework.boot.autoconfigure.EnableAutoConfiguration
  * Auto-configuration} enables MongoDb span information propagation.
  *
- * Will only be applied if for some reason the main {@link TraceMongoDbAutoConfiguration}
- * will not be applied.
- *
  * @author Marcin Grzejszczak
- * @since 3.0.0
- * @deprecated use {@link TraceMongoDbAutoConfiguration}
+ * @since 3.1.0
  */
 @Configuration(proxyBeanMethods = false)
-@ConditionalOnMissingClass("com.mongodb.reactivestreams.client.MongoClient")
-@ConditionalOnBean(Tracing.class)
-@AutoConfigureAfter({ BraveAutoConfiguration.class, TraceMongoDbAutoConfiguration.class })
+@ConditionalOnBean(Tracer.class)
+@AutoConfigureAfter(BraveAutoConfiguration.class)
 @AutoConfigureBefore(MongoAutoConfiguration.class)
 @ConditionalOnProperty(value = "spring.sleuth.mongodb.enabled", matchIfMissing = true)
-@ConditionalOnClass({ MongoClientSettings.Builder.class, MongoDBTracing.class })
-@Deprecated
-public class BraveMongoDbAutoConfiguration {
+@ConditionalOnClass(MongoClientSettings.Builder.class)
+public class TraceMongoDbAutoConfiguration {
 
 	@Bean
 	// for tests
-	@ConditionalOnMissingBean({ TraceMongoClientSettingsBuilderCustomizer.class,
-			org.springframework.cloud.sleuth.instrument.mongodb.TraceMongoClientSettingsBuilderCustomizer.class })
-	MongoClientSettingsBuilderCustomizer braveTraceMongoClientSettingsBuilderCustomizer(Tracing tracing) {
-		return new TraceMongoClientSettingsBuilderCustomizer(tracing);
+	@ConditionalOnMissingBean
+	TraceMongoClientSettingsBuilderCustomizer traceMongoClientSettingsBuilderCustomizer(Tracer tracer,
+			CurrentTraceContext currentTraceContext) {
+		return new TraceMongoClientSettingsBuilderCustomizer(tracer, currentTraceContext);
+	}
+
+	@Bean
+	// for tests
+	@ConditionalOnMissingBean
+	@ConditionalOnClass(name = "com.mongodb.reactivestreams.client.ReactiveContextProvider")
+	TraceReactiveMongoClientSettingsBuilderCustomizer traceReactiveMongoClientSettingsBuilderCustomizer() {
+		return new TraceReactiveMongoClientSettingsBuilderCustomizer();
 	}
 
 }

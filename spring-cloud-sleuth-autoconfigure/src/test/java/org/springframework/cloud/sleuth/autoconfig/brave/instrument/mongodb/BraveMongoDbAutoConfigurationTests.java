@@ -16,6 +16,7 @@
 
 package org.springframework.cloud.sleuth.autoconfig.brave.instrument.mongodb;
 
+import brave.Tracing;
 import brave.handler.MutableSpan;
 import brave.test.TestSpanHandler;
 import com.mongodb.MongoClientSettings;
@@ -25,14 +26,13 @@ import com.mongodb.event.CommandSucceededEvent;
 import org.assertj.core.api.BDDAssertions;
 import org.bson.BsonDocument;
 import org.junit.jupiter.api.Test;
-import org.mockito.BDDMockito;
+import org.mockito.Mockito;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.cloud.sleuth.CurrentTraceContext;
 import org.springframework.cloud.sleuth.DisableSecurity;
-import org.springframework.cloud.sleuth.Tracer;
+import org.springframework.cloud.sleuth.autoconfig.instrument.mongodb.TraceMongoDbAutoConfiguration;
 import org.springframework.cloud.sleuth.brave.instrument.mongodb.TraceMongoClientSettingsBuilderCustomizer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -52,7 +52,7 @@ class BraveMongoDbAutoConfigurationTests {
 	}
 
 	@Configuration(proxyBeanMethods = false)
-	@EnableAutoConfiguration
+	@EnableAutoConfiguration(exclude = TraceMongoDbAutoConfiguration.class)
 	@DisableSecurity
 	static class TestTraceMongoDbAutoConfiguration {
 
@@ -62,9 +62,8 @@ class BraveMongoDbAutoConfigurationTests {
 		}
 
 		@Bean
-		TraceMongoClientSettingsBuilderCustomizer testMongoClientSettingsBuilderCustomizer(Tracer tracer,
-				CurrentTraceContext currentTraceContext) {
-			return new TestMongoClientSettingsBuilderCustomizer(tracer, currentTraceContext);
+		TraceMongoClientSettingsBuilderCustomizer testMongoClientSettingsBuilderCustomizer(Tracing tracing) {
+			return new TestMongoClientSettingsBuilderCustomizer(tracing);
 		}
 
 	}
@@ -73,17 +72,16 @@ class BraveMongoDbAutoConfigurationTests {
 
 class TestMongoClientSettingsBuilderCustomizer extends TraceMongoClientSettingsBuilderCustomizer {
 
-	TestMongoClientSettingsBuilderCustomizer(Tracer tracer, CurrentTraceContext currentTraceContext) {
-		super(tracer, currentTraceContext);
+	TestMongoClientSettingsBuilderCustomizer(Tracing tracing) {
+		super(tracing);
 	}
 
 	@Override
 	public void customize(MongoClientSettings.Builder clientSettingsBuilder) {
 		super.customize(clientSettingsBuilder);
 		CommandListener listener = clientSettingsBuilder.build().getCommandListeners().get(0);
-		listener.commandStarted(new CommandStartedEvent(null, 0, null, "", "", BDDMockito.mock(BsonDocument.class)));
-		listener.commandSucceeded(
-				new CommandSucceededEvent(null, 1, null, "", BDDMockito.mock(BsonDocument.class), 100));
+		listener.commandStarted(new CommandStartedEvent(null, 0, null, "", "", Mockito.mock(BsonDocument.class)));
+		listener.commandSucceeded(new CommandSucceededEvent(null, 1, null, "", Mockito.mock(BsonDocument.class), 100));
 	}
 
 }

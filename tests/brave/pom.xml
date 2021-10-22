@@ -51,6 +51,7 @@
 		<module>spring-cloud-sleuth-instrumentation-kotlin-tests</module>
 		<module>spring-cloud-sleuth-instrumentation-lettuce-tests</module>
 		<module>spring-cloud-sleuth-instrumentation-messaging-tests</module>
+		<module>spring-cloud-sleuth-instrumentation-mongodb-tests</module>
 		<module>spring-cloud-sleuth-instrumentation-mvc-tests</module>
 		<module>spring-cloud-sleuth-instrumentation-quartz-tests</module>
 		<module>spring-cloud-sleuth-instrumentation-reactor-tests</module>

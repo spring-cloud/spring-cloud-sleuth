@@ -1,4 +1,20 @@
-package org.springframework.cloud.sleuth.brave.instrument.mongodb;
+/*
+ * Copyright 2013-2021 the original author or authors.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package org.springframework.cloud.sleuth.instrument.mongodb;
 
 import java.net.InetSocketAddress;
 import java.util.Arrays;
@@ -15,6 +31,8 @@ import com.mongodb.event.CommandFailedEvent;
 import com.mongodb.event.CommandListener;
 import com.mongodb.event.CommandStartedEvent;
 import com.mongodb.event.CommandSucceededEvent;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.bson.BsonDocument;
 import org.bson.BsonValue;
 import reactor.util.context.ContextView;
@@ -28,9 +46,13 @@ import org.springframework.lang.NonNull;
 import org.springframework.lang.Nullable;
 
 /**
- * TODO: Javadocs
+ * Altered the Brave MongoDb instrumentation code.
+ *
+ * @author OpenZipkin Brave Authors
  */
 final class TraceMongoCommandListener implements CommandListener {
+
+	private static final Log log = LogFactory.getLog(TraceMongoCommandListener.class);
 
 	// See https://docs.mongodb.com/manual/reference/command for the command reference
 	static final Set<String> COMMANDS_WITH_COLLECTION_NAME = new LinkedHashSet<>(
@@ -49,6 +71,9 @@ final class TraceMongoCommandListener implements CommandListener {
 
 	@Override
 	public void commandStarted(CommandStartedEvent event) {
+		if (log.isDebugEnabled()) {
+			log.debug("Instrumenting the command started event");
+		}
 		String databaseName = event.getDatabaseName();
 		if ("admin".equals(databaseName)) {
 			return; // don't trace commands like "endSessions"
@@ -59,6 +84,9 @@ final class TraceMongoCommandListener implements CommandListener {
 			return;
 		}
 		Span parent = ReactorSleuth.spanFromContext(this.tracer, this.currentTraceContext, context(requestContext));
+		if (log.isDebugEnabled()) {
+			log.debug("Found the following span passed from the Reactor context [" + parent + "]");
+		}
 		Span.Builder childSpanBuilder = this.tracer.spanBuilder();
 		if (parent != null) {
 			childSpanBuilder.setParent(parent.context());
@@ -94,6 +122,10 @@ final class TraceMongoCommandListener implements CommandListener {
 		Span childSpan = childSpanBuilder.start();
 		requestContext.put(Span.class, childSpan);
 		requestContext.put(TraceContext.class, childSpan.context());
+		if (log.isDebugEnabled()) {
+			log.debug("Created a child span  [" + childSpan
+					+ "] for mongo instrumentation and put it in Reactor context");
+		}
 	}
 
 	@NonNull

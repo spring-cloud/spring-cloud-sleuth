@@ -241,6 +241,16 @@
 			<artifactId>kotlinx-coroutines-reactor</artifactId>
 			<optional>true</optional>
 		</dependency>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-data-mongodb</artifactId>
+			<optional>true</optional>
+		</dependency>
+		<dependency>
+			<groupId>org.mongodb</groupId>
+			<artifactId>mongodb-driver-reactivestreams</artifactId>
+			<optional>true</optional>
+		</dependency>
 
 		<dependency>
 			<groupId>p6spy</groupId>
