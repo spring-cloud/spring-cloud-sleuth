@@ -32,8 +32,8 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.cloud.sleuth.autoconfig.brave.BraveAutoConfiguration;
-import org.springframework.cloud.sleuth.brave.instrument.redis.ClientResourcesBuilderCustomizer;
-import org.springframework.cloud.sleuth.brave.instrument.redis.TraceLettuceClientResourcesBuilderCustomizer;
+import org.springframework.cloud.sleuth.instrument.redis.ClientResourcesBuilderCustomizer;
+import org.springframework.cloud.sleuth.instrument.redis.TraceLettuceClientResourcesBuilderCustomizer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -66,7 +66,9 @@ public class BraveRedisAutoConfiguration {
 	TraceLettuceClientResourcesBuilderCustomizer traceLettuceClientResourcesBuilderCustomizer(Tracing tracing,
 			TraceRedisProperties traceRedisProperties, Sampler sampler) {
 		eagerlyInitializePotentiallyRefreshScopeSampler(sampler);
-		return new TraceLettuceClientResourcesBuilderCustomizer(tracing, traceRedisProperties.getRemoteServiceName());
+		BraveTracing braveTracing = BraveTracing.builder().tracing(tracing).excludeCommandArgsFromSpanTags()
+				.serviceName(traceRedisProperties.getRemoteServiceName()).build();
+		return new TraceLettuceClientResourcesBuilderCustomizer(braveTracing);
 	}
 
 	/**

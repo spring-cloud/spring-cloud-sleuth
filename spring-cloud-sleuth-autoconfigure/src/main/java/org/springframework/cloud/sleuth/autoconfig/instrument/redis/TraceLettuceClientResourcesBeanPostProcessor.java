@@ -33,7 +33,7 @@ import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.config.BeanPostProcessor;
 import org.springframework.cloud.sleuth.autoconfig.brave.instrument.redis.TraceRedisProperties;
-import org.springframework.cloud.sleuth.brave.instrument.redis.TraceLettuceClientResourcesBuilderCustomizer;
+import org.springframework.cloud.sleuth.instrument.redis.TraceLettuceClientResourcesBuilderCustomizer;
 import org.springframework.cloud.sleuth.internal.ContextUtil;
 
 /**

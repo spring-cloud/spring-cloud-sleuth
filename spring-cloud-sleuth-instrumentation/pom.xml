@@ -186,6 +186,12 @@
 			<groupId>org.aspectj</groupId>
 			<artifactId>aspectjrt</artifactId>
 		</dependency>
+		<!-- Instrumentation of Lettuce -->
+		<dependency>
+			<groupId>io.lettuce</groupId>
+			<artifactId>lettuce-core</artifactId>
+			<optional>true</optional>
+		</dependency>
 		<!-- For Instrumentation of Quartz -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
