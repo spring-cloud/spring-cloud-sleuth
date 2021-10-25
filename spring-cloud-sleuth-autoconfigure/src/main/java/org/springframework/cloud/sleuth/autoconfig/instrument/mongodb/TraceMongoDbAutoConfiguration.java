@@ -23,13 +23,16 @@ import org.springframework.boot.autoconfigure.AutoConfigureBefore;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.autoconfigure.mongo.MongoAutoConfiguration;
 import org.springframework.cloud.sleuth.CurrentTraceContext;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.autoconfig.brave.BraveAutoConfiguration;
+import org.springframework.cloud.sleuth.instrument.mongodb.TraceAllTypesMongoClientSettingsBuilderCustomizer;
 import org.springframework.cloud.sleuth.instrument.mongodb.TraceMongoClientSettingsBuilderCustomizer;
 import org.springframework.cloud.sleuth.instrument.mongodb.TraceReactiveMongoClientSettingsBuilderCustomizer;
+import org.springframework.cloud.sleuth.instrument.mongodb.TraceSynchronousMongoClientSettingsBuilderCustomizer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -59,9 +62,29 @@ public class TraceMongoDbAutoConfiguration {
 	@Bean
 	// for tests
 	@ConditionalOnMissingBean
+	@ConditionalOnMissingClass("com.mongodb.client.SynchronousContextProvider")
 	@ConditionalOnClass(name = "com.mongodb.reactivestreams.client.ReactiveContextProvider")
 	TraceReactiveMongoClientSettingsBuilderCustomizer traceReactiveMongoClientSettingsBuilderCustomizer() {
 		return new TraceReactiveMongoClientSettingsBuilderCustomizer();
+	}
+
+	@Bean
+	// for tests
+	@ConditionalOnMissingBean
+	@ConditionalOnMissingClass("com.mongodb.reactivestreams.client.ReactiveContextProvider")
+	@ConditionalOnClass(name = "com.mongodb.client.SynchronousContextProvider")
+	TraceSynchronousMongoClientSettingsBuilderCustomizer traceSynchronousMongoClientSettingsBuilderCustomizer(
+			Tracer tracer) {
+		return new TraceSynchronousMongoClientSettingsBuilderCustomizer(tracer);
+	}
+
+	@Bean
+	// for tests
+	@ConditionalOnMissingBean
+	@ConditionalOnClass(name = { "com.mongodb.client.SynchronousContextProvider",
+			"com.mongodb.reactivestreams.client.ReactiveContextProvider" })
+	TraceAllTypesMongoClientSettingsBuilderCustomizer traceAllTypesMongoClientSettingsBuilderCustomizer(Tracer tracer) {
+		return new TraceAllTypesMongoClientSettingsBuilderCustomizer(tracer);
 	}
 
 }

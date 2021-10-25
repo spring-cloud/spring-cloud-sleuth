@@ -49,8 +49,7 @@ import static org.assertj.core.api.BDDAssertions.then;
 @Testcontainers
 public abstract class ReactiveMongoDbIntegrationTests {
 
-	private static final Log log = LogFactory
-			.getLog(ReactiveMongoDbIntegrationTests.class);
+	private static final Log log = LogFactory.getLog(ReactiveMongoDbIntegrationTests.class);
 
 	@Autowired
 	TestSpanHandler spans;
@@ -62,8 +61,7 @@ public abstract class ReactiveMongoDbIntegrationTests {
 	BasicUserRepository basicUserRepository;
 
 	@Container
-	static MongoDBContainer mongoDBContainer = new MongoDBContainer(
-			DockerImageName.parse("mongo").withTag("4.4.7"));
+	static MongoDBContainer mongoDBContainer = new MongoDBContainer(DockerImageName.parse("mongo").withTag("4.4.7"));
 
 	@DynamicPropertySource
 	static void setProperties(DynamicPropertyRegistry registry) {
@@ -82,29 +80,22 @@ public abstract class ReactiveMongoDbIntegrationTests {
 		Span nextSpan = this.tracer.nextSpan().name("mongo-reactive-app");
 
 		// when
-		Mono.just(nextSpan).doOnNext(span -> this.tracer.withSpan(nextSpan.start()))
-				.flatMap(span -> {
-					log.info("Hello from flat map");
-					return this.basicUserRepository
-							.save(new User("foo", "bar", "baz", null))
-							.flatMap(user -> this.basicUserRepository
-									.findUserByUsername("foo"));
-				})
-				.contextWrite(context -> context.put(Span.class, nextSpan)
-						.put(TraceContext.class, nextSpan.context()))
+		Mono.just(nextSpan).doOnNext(span -> this.tracer.withSpan(nextSpan.start())).flatMap(span -> {
+			log.info("Hello from flat map");
+			return this.basicUserRepository.save(new User("foo", "bar", "baz", null))
+					.flatMap(user -> this.basicUserRepository.findUserByUsername("foo"));
+		}).contextWrite(context -> context.put(Span.class, nextSpan).put(TraceContext.class, nextSpan.context()))
 				.doFinally(signalType -> nextSpan.end()).block(Duration.ofMinutes(1));
 
 		// then
 		List<FinishedSpan> reportedSpans = this.spans.reportedSpans();
-		then(reportedSpans.stream().map(FinishedSpan::getTraceId)
-				.collect(Collectors.toSet())).as("There must be only 1 trace id")
-						.hasSize(1);
+		then(reportedSpans.stream().map(FinishedSpan::getTraceId).collect(Collectors.toSet()))
+				.as("There must be only 1 trace id").hasSize(1);
 		List<String> mongoSpanNames = reportedSpans.stream()
-				.filter(fs -> fs.getName().equals("insert user")
-						|| fs.getName().equals("find user"))
+				.filter(fs -> fs.getName().equals("insert user") || fs.getName().equals("find user"))
 				.map(FinishedSpan::getName).collect(Collectors.toList());
-		then(mongoSpanNames).as("There must be first an insert then a find")
-				.containsExactly("insert user", "find user");
+		then(mongoSpanNames).as("There must be first an insert then a find").containsExactly("insert user",
+				"find user");
 	}
 
 	@Configuration(proxyBeanMethods = false)

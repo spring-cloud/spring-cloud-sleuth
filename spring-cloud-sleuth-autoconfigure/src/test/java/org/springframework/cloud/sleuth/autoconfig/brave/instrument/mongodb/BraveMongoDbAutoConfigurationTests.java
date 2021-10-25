@@ -26,7 +26,7 @@ import com.mongodb.event.CommandSucceededEvent;
 import org.assertj.core.api.BDDAssertions;
 import org.bson.BsonDocument;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mockito;
+import org.mockito.BDDMockito;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
@@ -80,8 +80,9 @@ class TestMongoClientSettingsBuilderCustomizer extends TraceMongoClientSettingsB
 	public void customize(MongoClientSettings.Builder clientSettingsBuilder) {
 		super.customize(clientSettingsBuilder);
 		CommandListener listener = clientSettingsBuilder.build().getCommandListeners().get(0);
-		listener.commandStarted(new CommandStartedEvent(null, 0, null, "", "", Mockito.mock(BsonDocument.class)));
-		listener.commandSucceeded(new CommandSucceededEvent(null, 1, null, "", Mockito.mock(BsonDocument.class), 100));
+		listener.commandStarted(new CommandStartedEvent(null, 0, null, "", "", BDDMockito.mock(BsonDocument.class)));
+		listener.commandSucceeded(
+				new CommandSucceededEvent(null, 1, null, "", BDDMockito.mock(BsonDocument.class), 100));
 	}
 
 }

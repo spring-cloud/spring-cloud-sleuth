@@ -16,12 +16,11 @@
 
 package org.springframework.cloud.sleuth.instrument.mongodb;
 
-import java.util.Map;
+import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.stream.Stream;
+import java.util.stream.Collectors;
 
 import com.mongodb.MongoClientSettings;
-import com.mongodb.RequestContext;
 import com.mongodb.reactivestreams.client.ReactiveContextProvider;
 import reactor.core.CoreSubscriber;
 import reactor.util.context.Context;
@@ -40,55 +39,22 @@ public class TraceReactiveMongoClientSettingsBuilderCustomizer implements MongoC
 
 	@Override
 	public void customize(MongoClientSettings.Builder clientSettingsBuilder) {
-		clientSettingsBuilder.contextProvider((ReactiveContextProvider) subscriber -> {
-			if (subscriber instanceof CoreSubscriber) {
-				return new TraceRequestContext(((CoreSubscriber<?>) subscriber).currentContext());
-			}
-			return new TraceRequestContext(Context.empty());
-		});
+		clientSettingsBuilder.contextProvider(contextProvider());
 	}
 
-	static class TraceRequestContext implements RequestContext {
+	static ReactiveContextProvider contextProvider() {
+		return (ReactiveContextProvider) subscriber -> {
+			if (subscriber instanceof CoreSubscriber) {
+				return new ReactiveTraceRequestContext(((CoreSubscriber<?>) subscriber).currentContext());
+			}
+			return new ReactiveTraceRequestContext(Context.empty());
+		};
+	}
 
-		private final Map<Object, Object> map = new ConcurrentHashMap<>();
+	static class ReactiveTraceRequestContext extends TraceRequestContext {
 
-		TraceRequestContext(ContextView context) {
-			context.stream().forEach(entry -> map.put(entry.getKey(), entry.getValue()));
-		}
-
-		@Override
-		public <T> T get(Object key) {
-			return (T) map.get(key);
-		}
-
-		@Override
-		public boolean hasKey(Object key) {
-			return map.containsKey(key);
-		}
-
-		@Override
-		public boolean isEmpty() {
-			return map.isEmpty();
-		}
-
-		@Override
-		public void put(Object key, Object value) {
-			map.put(key, value);
-		}
-
-		@Override
-		public void delete(Object key) {
-			map.remove(key);
-		}
-
-		@Override
-		public int size() {
-			return map.size();
-		}
-
-		@Override
-		public Stream<Map.Entry<Object, Object>> stream() {
-			return map.entrySet().stream();
+		ReactiveTraceRequestContext(ContextView context) {
+			super(new ConcurrentHashMap<>(context.stream().collect(Collectors.toMap(Entry::getKey, Entry::getValue))));
 		}
 
 	}

@@ -19,9 +19,7 @@ package org.springframework.cloud.sleuth.instrument.mongodb;
 import java.net.InetSocketAddress;
 import java.util.Arrays;
 import java.util.LinkedHashSet;
-import java.util.Map;
 import java.util.Set;
-import java.util.stream.Stream;
 
 import com.mongodb.MongoSocketException;
 import com.mongodb.RequestContext;
@@ -35,19 +33,16 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.bson.BsonDocument;
 import org.bson.BsonValue;
-import reactor.util.context.ContextView;
 
 import org.springframework.cloud.sleuth.CurrentTraceContext;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.TraceContext;
 import org.springframework.cloud.sleuth.Tracer;
-import org.springframework.cloud.sleuth.instrument.reactor.ReactorSleuth;
-import org.springframework.lang.NonNull;
 import org.springframework.lang.Nullable;
 
 /**
- * Altered the Brave MongoDb instrumentation code.
- * The code is available here: https://github.com/openzipkin/brave/blob/release-5.13.0/instrumentation/mongodb/src/main/java/brave/mongodb/TraceMongoCommandListener.java
+ * Altered the Brave MongoDb instrumentation code. The code is available here:
+ * https://github.com/openzipkin/brave/blob/release-5.13.0/instrumentation/mongodb/src/main/java/brave/mongodb/TraceMongoCommandListener.java
  *
  * @author OpenZipkin Brave Authors
  */
@@ -84,9 +79,9 @@ final class TraceMongoCommandListener implements CommandListener {
 		if (requestContext == null) {
 			return;
 		}
-		Span parent = ReactorSleuth.spanFromContext(this.tracer, this.currentTraceContext, context(requestContext));
+		Span parent = spanFromContext(this.tracer, this.currentTraceContext, requestContext);
 		if (log.isDebugEnabled()) {
-			log.debug("Found the following span passed from the Reactor context [" + parent + "]");
+			log.debug("Found the following span passed from the mongo context [" + parent + "]");
 		}
 		Span.Builder childSpanBuilder = this.tracer.spanBuilder();
 		if (parent != null) {
@@ -116,11 +111,14 @@ final class TraceMongoCommandListener implements CommandListener {
 				childSpanBuilder.remoteIpAndPort(socketAddress.getAddress().getHostAddress(), socketAddress.getPort());
 			}
 			catch (MongoSocketException ignored) {
-
+				if (log.isDebugEnabled()) {
+					log.debug("Ignored exception when setting remote ip and port", ignored);
+				}
 			}
 		}
 
 		Span childSpan = childSpanBuilder.start();
+		// TODO: What about retries? We might override the parent span
 		requestContext.put(Span.class, childSpan);
 		requestContext.put(TraceContext.class, childSpan.context());
 		if (log.isDebugEnabled()) {
@@ -129,34 +127,29 @@ final class TraceMongoCommandListener implements CommandListener {
 		}
 	}
 
-	@NonNull
-	private ContextView context(RequestContext requestContext) {
-		return new ContextView() {
-			@Override
-			public <T> T get(Object key) {
-				return requestContext.get(key);
+	private static Span spanFromContext(Tracer tracer, CurrentTraceContext currentTraceContext,
+			RequestContext context) {
+		Span span = context.getOrDefault(Span.class, null);
+		if (span != null) {
+			if (log.isDebugEnabled()) {
+				log.debug("Found a span in mongo context [" + span + "]");
 			}
-
-			@Override
-			public <T> T getOrDefault(Object key, T defaultValue) {
-				return requestContext.getOrDefault(key, defaultValue);
+			return span;
+		}
+		TraceContext traceContext = context.getOrDefault(TraceContext.class, null);
+		if (traceContext != null) {
+			try (CurrentTraceContext.Scope scope = currentTraceContext.maybeScope(traceContext)) {
+				if (log.isDebugEnabled()) {
+					log.debug("Found a trace context in mongo context [" + traceContext + "]");
+				}
+				return tracer.currentSpan();
 			}
-
-			@Override
-			public boolean hasKey(Object key) {
-				return requestContext.hasKey(key);
-			}
-
-			@Override
-			public int size() {
-				return requestContext.size();
-			}
-
-			@Override
-			public Stream<Map.Entry<Object, Object>> stream() {
-				return requestContext.stream();
-			}
-		};
+		}
+		Span newSpan = tracer.nextSpan().start();
+		if (log.isDebugEnabled()) {
+			log.debug("No span was found - will create a new one [" + newSpan + "]");
+		}
+		return newSpan;
 	}
 
 	@Override
