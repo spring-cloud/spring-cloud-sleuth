@@ -21,6 +21,8 @@ import com.mongodb.reactivestreams.client.ReactiveContextProvider;
 import org.junit.jupiter.api.Test;
 
 import org.springframework.boot.autoconfigure.AutoConfigurations;
+import org.springframework.boot.autoconfigure.logging.ConditionEvaluationReportLoggingListener;
+import org.springframework.boot.logging.LogLevel;
 import org.springframework.boot.test.context.FilteredClassLoader;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
 import org.springframework.cloud.sleuth.autoconfig.TraceNoOpAutoConfiguration;
@@ -33,8 +35,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 class TraceMongoDbAutoConfigurationTests {
 
 	private final ApplicationContextRunner contextRunner = new ApplicationContextRunner()
-			.withPropertyValues("spring.sleuth.noop.enabled=true").withConfiguration(
-					AutoConfigurations.of(TraceNoOpAutoConfiguration.class, TraceMongoDbAutoConfiguration.class));
+			.withPropertyValues("spring.sleuth.noop.enabled=true")
+			.withConfiguration(
+					AutoConfigurations.of(TraceNoOpAutoConfiguration.class, TraceMongoDbAutoConfiguration.class))
+			.withInitializer(new ConditionEvaluationReportLoggingListener(LogLevel.INFO));
 
 	@Test
 	void should_create_synchronous_customizer_when_reactive_context_missing() {
@@ -45,7 +49,7 @@ class TraceMongoDbAutoConfigurationTests {
 	}
 
 	@Test
-	void should_create_reactive_customizer_when_reactive_context_missing() {
+	void should_create_reactive_customizer_when_synchronous_context_missing() {
 		this.contextRunner.withClassLoader(new FilteredClassLoader(SynchronousContextProvider.class))
 				.run((context) -> assertThat(context).hasSingleBean(TraceMongoClientSettingsBuilderCustomizer.class)
 						.hasSingleBean(TraceReactiveMongoClientSettingsBuilderCustomizer.class)
@@ -53,7 +57,7 @@ class TraceMongoDbAutoConfigurationTests {
 	}
 
 	@Test
-	void should_create_all_types_customizer_when_reactive_context_missing() {
+	void should_create_all_types_customizer_when_both_contexts_are_present() {
 		this.contextRunner
 				.run((context) -> assertThat(context).hasSingleBean(TraceMongoClientSettingsBuilderCustomizer.class)
 						.hasSingleBean(TraceAllTypesMongoClientSettingsBuilderCustomizer.class)
@@ -61,11 +65,11 @@ class TraceMongoDbAutoConfigurationTests {
 	}
 
 	@Test
-	void should_create_both_customizers_when_reactive_context_present() {
+	void should_not_create_any_command_listeners_when_there_is_no_context_provider() {
 		this.contextRunner
 				.withClassLoader(
 						new FilteredClassLoader(ReactiveContextProvider.class, SynchronousContextProvider.class))
-				.run((context) -> assertThat(context).hasSingleBean(TraceMongoClientSettingsBuilderCustomizer.class)
+				.run((context) -> assertThat(context).doesNotHaveBean(TraceMongoClientSettingsBuilderCustomizer.class)
 						.doesNotHaveBean(TraceAllTypesMongoClientSettingsBuilderCustomizer.class)
 						.doesNotHaveBean(TraceReactiveMongoClientSettingsBuilderCustomizer.class));
 	}

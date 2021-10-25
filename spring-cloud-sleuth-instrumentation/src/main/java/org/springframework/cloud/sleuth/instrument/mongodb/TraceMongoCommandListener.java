@@ -83,10 +83,11 @@ final class TraceMongoCommandListener implements CommandListener {
 		if (log.isDebugEnabled()) {
 			log.debug("Found the following span passed from the mongo context [" + parent + "]");
 		}
-		Span.Builder childSpanBuilder = this.tracer.spanBuilder();
-		if (parent != null) {
-			childSpanBuilder.setParent(parent.context());
+		if (parent == null) {
+			return;
 		}
+		Span.Builder childSpanBuilder = this.tracer.spanBuilder();
+		childSpanBuilder.setParent(parent.context());
 
 		String commandName = event.getCommandName();
 		BsonDocument command = event.getCommand();
@@ -145,11 +146,10 @@ final class TraceMongoCommandListener implements CommandListener {
 				return tracer.currentSpan();
 			}
 		}
-		Span newSpan = tracer.nextSpan().start();
 		if (log.isDebugEnabled()) {
-			log.debug("No span was found - will create a new one [" + newSpan + "]");
+			log.debug("No span was found - will not create any child spans");
 		}
-		return newSpan;
+		return null;
 	}
 
 	@Override
