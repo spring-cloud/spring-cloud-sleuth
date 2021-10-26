@@ -32,6 +32,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.cloud.sleuth.DisableSecurity;
+import org.springframework.cloud.sleuth.autoconfig.instrument.mongodb.TraceMongoDbAutoConfiguration;
 import org.springframework.cloud.sleuth.brave.instrument.mongodb.TraceMongoClientSettingsBuilderCustomizer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -51,7 +52,7 @@ class BraveMongoDbAutoConfigurationTests {
 	}
 
 	@Configuration(proxyBeanMethods = false)
-	@EnableAutoConfiguration
+	@EnableAutoConfiguration(exclude = TraceMongoDbAutoConfiguration.class)
 	@DisableSecurity
 	static class TestTraceMongoDbAutoConfiguration {
 
@@ -79,8 +80,9 @@ class TestMongoClientSettingsBuilderCustomizer extends TraceMongoClientSettingsB
 	public void customize(MongoClientSettings.Builder clientSettingsBuilder) {
 		super.customize(clientSettingsBuilder);
 		CommandListener listener = clientSettingsBuilder.build().getCommandListeners().get(0);
-		listener.commandStarted(new CommandStartedEvent(0, null, "", "", BDDMockito.mock(BsonDocument.class)));
-		listener.commandSucceeded(new CommandSucceededEvent(1, null, "", BDDMockito.mock(BsonDocument.class), 100));
+		listener.commandStarted(new CommandStartedEvent(null, 0, null, "", "", BDDMockito.mock(BsonDocument.class)));
+		listener.commandSucceeded(
+				new CommandSucceededEvent(null, 1, null, "", BDDMockito.mock(BsonDocument.class), 100));
 	}
 
 }

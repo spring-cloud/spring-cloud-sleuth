@@ -30,6 +30,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.autoconfigure.mongo.MongoAutoConfiguration;
 import org.springframework.boot.autoconfigure.mongo.MongoClientSettingsBuilderCustomizer;
 import org.springframework.cloud.sleuth.autoconfig.brave.BraveAutoConfiguration;
+import org.springframework.cloud.sleuth.autoconfig.instrument.mongodb.TraceMongoDbAutoConfiguration;
 import org.springframework.cloud.sleuth.brave.instrument.mongodb.TraceMongoClientSettingsBuilderCustomizer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -38,22 +39,28 @@ import org.springframework.context.annotation.Configuration;
  * {@link org.springframework.boot.autoconfigure.EnableAutoConfiguration
  * Auto-configuration} enables MongoDb span information propagation.
  *
+ * Will only be applied if for some reason the main {@link TraceMongoDbAutoConfiguration}
+ * will not be applied.
+ *
  * @author Marcin Grzejszczak
  * @since 3.0.0
+ * @deprecated use {@link TraceMongoDbAutoConfiguration}
  */
 @Configuration(proxyBeanMethods = false)
 @ConditionalOnMissingClass("com.mongodb.reactivestreams.client.MongoClient")
 @ConditionalOnBean(Tracing.class)
-@AutoConfigureAfter(BraveAutoConfiguration.class)
+@AutoConfigureAfter({ BraveAutoConfiguration.class, TraceMongoDbAutoConfiguration.class })
 @AutoConfigureBefore(MongoAutoConfiguration.class)
 @ConditionalOnProperty(value = "spring.sleuth.mongodb.enabled", matchIfMissing = true)
 @ConditionalOnClass({ MongoClientSettings.Builder.class, MongoDBTracing.class })
+@Deprecated
 public class BraveMongoDbAutoConfiguration {
 
 	@Bean
 	// for tests
-	@ConditionalOnMissingBean(TraceMongoClientSettingsBuilderCustomizer.class)
-	MongoClientSettingsBuilderCustomizer traceMongoClientSettingsBuilderCustomizer(Tracing tracing) {
+	@ConditionalOnMissingBean({ TraceMongoClientSettingsBuilderCustomizer.class,
+			org.springframework.cloud.sleuth.instrument.mongodb.TraceMongoClientSettingsBuilderCustomizer.class })
+	MongoClientSettingsBuilderCustomizer braveTraceMongoClientSettingsBuilderCustomizer(Tracing tracing) {
 		return new TraceMongoClientSettingsBuilderCustomizer(tracing);
 	}
 
