@@ -135,7 +135,6 @@ class TraceFunctionAroundWrapperTests {
 		assertThat(tracer.spans.get(1).name).isEqualTo("greeter");
 	}
 
-	@Disabled("TODO: don't we want to support this?")
 	@Test
 	void should_trace_when_reactive_mono_supplier() {
 		FunctionRegistration<ReactiveMonoGreeter> registration = new FunctionRegistration<>(new ReactiveMonoGreeter(),
@@ -167,7 +166,7 @@ class TraceFunctionAroundWrapperTests {
 		assertThat(tracer.spans.get(2).name).isEqualTo("send");
 	}
 
-	@Disabled("TODO: don't we want to support this?")
+	@Disabled("Cast exceptions in Spring Cloud Function")
 	@Test
 	void should_trace_when_reactive_mono_consumer() {
 		ReactiveMonoGreeterConsumer consumer = new ReactiveMonoGreeterConsumer();
@@ -185,7 +184,6 @@ class TraceFunctionAroundWrapperTests {
 		assertThat(tracer.spans.get(1).name).isEqualTo("greeter");
 	}
 
-	@Disabled("TODO: don't we want to support this?")
 	@Test
 	void should_trace_when_reactive_flux_supplier() {
 		FunctionRegistration<ReactiveFluxGreeter> registration = new FunctionRegistration<>(new ReactiveFluxGreeter(),
