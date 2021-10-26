@@ -151,7 +151,7 @@ class TraceFunctionAroundWrapperTests {
 		assertThat(tracer.getOnlySpan().name).isEqualTo("greeter");
 		assertThatAllSpansAreStartedAndStopped();
 	}
-	
+
 	@Test
 	void should_trace_when_reactive_mono_function() {
 		FunctionRegistration<ReactiveMonoGreeterFunction> registration = new FunctionRegistration<>(
@@ -269,10 +269,10 @@ class TraceFunctionAroundWrapperTests {
 		mockEnvironment.setProperty("spring.cloud.stream.bindings.greeter-out-0.destination", "bob");
 		return mockEnvironment;
 	}
-	
+
 	private void assertThatAllSpansAreStartedAndStopped() {
-		assertThat(tracer.spans.stream()
-				.allMatch(s -> s.started && s.ended)).as("All spans must be started and stopped").isTrue();
+		assertThat(tracer.spans.stream().allMatch(s -> s.started && s.ended))
+				.as("All spans must be started and stopped").isTrue();
 	}
 
 	private static class Greeter implements Supplier<String> {
@@ -343,9 +343,9 @@ class TraceFunctionAroundWrapperTests {
 	private static class ReactiveFluxGreeterConsumer implements Consumer<Flux<Message<String>>> {
 
 		String result;
-		
+
 		private final Tracer tracer;
-		
+
 		ReactiveFluxGreeterConsumer(Tracer tracer) {
 			this.tracer = tracer;
 		}
@@ -354,12 +354,10 @@ class TraceFunctionAroundWrapperTests {
 		public void accept(Flux<Message<String>> in) {
 			in.map(s -> s.getPayload().toUpperCase()).doOnNext(s -> {
 				result = s;
-			})
-			.doOnNext(s -> {
+			}).doOnNext(s -> {
 				tracer.currentSpan().end();
 				tracer.withSpan(null);
-			})
-			.subscribe();
+			}).subscribe();
 		}
 
 	}
