@@ -20,6 +20,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.springframework.cloud.sleuth.BaggageInScope;
+import org.springframework.cloud.sleuth.CurrentTraceContext;
 import org.springframework.cloud.sleuth.ScopedSpan;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.SpanCustomizer;
@@ -97,6 +98,11 @@ class NoOpTracer implements Tracer {
 	@Override
 	public BaggageInScope createBaggage(String name, String value) {
 		return new NoOpBaggageInScope();
+	}
+
+	@Override
+	public CurrentTraceContext currentTraceContext() {
+		return new NoOpCurrentTraceContext();
 	}
 
 }

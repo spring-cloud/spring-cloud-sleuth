@@ -43,7 +43,8 @@ import org.springframework.messaging.support.MessageBuilder;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-@SpringBootTest(classes = StreamMessageOperatorsTests.Config.class, webEnvironment = SpringBootTest.WebEnvironment.NONE)
+@SpringBootTest(classes = StreamMessageOperatorsTests.Config.class, webEnvironment = SpringBootTest.WebEnvironment.NONE,
+		properties = "spring.sleuth.function.enabled=false")
 public class StreamMessageOperatorsTests {
 
 	@Autowired(required = false)
@@ -60,8 +61,7 @@ public class StreamMessageOperatorsTests {
 
 	@Test
 	void should_instrument_a_simple_message_to_message_function() {
-		assertThat(tracingChannelInterceptor).as("Ensure that we're doing instrumentation via function wrapper")
-				.isNull();
+		assertThat(this.tracingChannelInterceptor).as("Ensure that we're doing instrumentation manually").isNull();
 
 		this.inputDestination.send(MessageBuilder.withPayload("hello".getBytes())
 				.setHeader("b3", "4883117762eb9420-4883117762eb9420-1").build());

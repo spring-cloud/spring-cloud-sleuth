@@ -21,6 +21,7 @@ import java.util.Map;
 import java.util.Queue;
 
 import org.springframework.cloud.sleuth.BaggageInScope;
+import org.springframework.cloud.sleuth.CurrentTraceContext;
 import org.springframework.cloud.sleuth.ScopedSpan;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.SpanCustomizer;
@@ -116,6 +117,11 @@ public class TestTracer implements Tracer, AutoCloseable {
 
 	public Queue<Span> createdSpans() {
 		return createdSpans;
+	}
+
+	@Override
+	public CurrentTraceContext currentTraceContext() {
+		return this.delegate.currentTraceContext();
 	}
 
 }

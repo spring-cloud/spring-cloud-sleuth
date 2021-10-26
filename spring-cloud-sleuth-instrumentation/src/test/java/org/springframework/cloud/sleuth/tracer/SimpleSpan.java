@@ -54,6 +54,8 @@ public class SimpleSpan implements Span {
 
 	public boolean noOp;
 
+	public Span parent;
+
 	@Override
 	public boolean isNoop() {
 		return this.noOp;

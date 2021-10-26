@@ -16,6 +16,7 @@
 
 package org.springframework.cloud.sleuth.instrument.messaging;
 
+import java.lang.reflect.Type;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -23,6 +24,9 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.reactivestreams.Publisher;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 import org.springframework.cloud.context.scope.refresh.RefreshScopeRefreshedEvent;
 import org.springframework.cloud.function.context.catalog.FunctionAroundWrapper;
@@ -30,6 +34,7 @@ import org.springframework.cloud.function.context.catalog.FunctionTypeUtils;
 import org.springframework.cloud.function.context.catalog.SimpleFunctionRegistry;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.Tracer;
+import org.springframework.cloud.sleuth.instrument.reactor.ReactorSleuth;
 import org.springframework.cloud.sleuth.propagation.Propagator;
 import org.springframework.context.ApplicationListener;
 import org.springframework.core.env.Environment;
@@ -84,28 +89,201 @@ public class TraceFunctionAroundWrapper extends FunctionAroundWrapper
 	}
 
 	@Override
-	protected Object doApply(Message<byte[]> message, SimpleFunctionRegistry.FunctionInvocationWrapper targetFunction) {
-
-		/*
-		 * This code is temporary to disable conditions for which this interceptor is not
-		 * ready. For example, - it does not handle properly input or output of type
-		 * Publisher - it wraps output in Message when function returns a
-		 * Collection<Message> which it should not do.
-		 *
-		 */
-		if ((FunctionTypeUtils.isCollectionOfMessage(targetFunction.getOutputType())
-				|| targetFunction.isOutputTypePublisher())
-				|| (targetFunction.isSupplier() && targetFunction.isOutputTypePublisher())) {
+	protected Object doApply(Object message, SimpleFunctionRegistry.FunctionInvocationWrapper targetFunction) {
+		if (FunctionTypeUtils.isCollectionOfMessage(targetFunction.getOutputType())) {
 			return targetFunction.apply(message); // no instrumentation
 		}
+		else if (targetFunction.isInputTypePublisher() || targetFunction.isOutputTypePublisher()) {
+			return reactorStream((Publisher) message, targetFunction);
+		}
+		return nonReactorStream((Message<byte[]>) message, targetFunction);
+	}
 
+	private Object reactorStream(Publisher messageStream,
+			SimpleFunctionRegistry.FunctionInvocationWrapper targetFunction) {
+		if (messageStream == null && targetFunction.isSupplier()) { // Supplier
+			return reactorStreamSupplier(messageStream, targetFunction);
+		}
+		Type itemType = FunctionTypeUtils.getGenericType(targetFunction.getInputType());
+		Class<?> itemTypeClass = FunctionTypeUtils.getRawType(itemType);
+		if (!itemTypeClass.equals(Message.class)) {
+			if (log.isDebugEnabled()) {
+				log.debug("Target function [" + targetFunction.getFunctionDefinition() + "] has raw input type ["
+						+ itemType + "] and should be [" + Message.class + "]. Will not wrap it.");
+				return targetFunction.apply(messageStream);
+			}
+		}
+		Publisher<Message> messagePublisher = messageStream;
+		if (FunctionTypeUtils.isMono(targetFunction.getInputType())) {
+			return reactorMonoStream(targetFunction, messagePublisher);
+		}
+		return reactorFluxStream(targetFunction, messagePublisher);
+	}
+
+	private Object reactorMonoStream(SimpleFunctionRegistry.FunctionInvocationWrapper targetFunction,
+			Publisher<Message> messagePublisher) {
+		if (log.isDebugEnabled()) {
+			log.debug("Will instrument a stream Mono function");
+		}
+		Mono<Message> mono = Mono.from(messagePublisher)
+				// ensure there are no previous spans
+				.doOnNext(m -> tracer.withSpan(null))
+				.map(msg -> this.traceMessageHandler.wrapInputMessage(msg,
+						inputDestination(targetFunction.getFunctionDefinition())))
+				.flatMap(msg -> Mono.deferContextual(ctx -> {
+					MessageAndSpansAndScope messageAndSpansAndScope = ctx.get(MessageAndSpansAndScope.class);
+					messageAndSpansAndScope.messageAndSpans = msg;
+					messageAndSpansAndScope.span = msg.childSpan;
+					setNameAndTag(targetFunction, msg.childSpan);
+					messageAndSpansAndScope.scope = tracer.withSpan(msg.childSpan);
+					return Mono.just(msg.msg);
+				}));
+		if (targetFunction.isConsumer()) {
+			return targetFunction.apply(reactorStreamConsumer(mono));
+		}
+		final Mono<Message> function = ((Mono<Message>) targetFunction.apply(mono));
+		return Mono.deferContextual(contextView -> {
+			MessageAndSpansAndScope msg = contextView.get(MessageAndSpansAndScope.class);
+			return function.doOnNext(message -> {
+				msg.end();
+				msg.handle();
+			}).map(msgResult -> {
+				MessageAndSpan messageAndSpan = traceMessageHandler.wrapOutputMessage(msgResult,
+						msg.messageAndSpans.parentSpan, outputDestination(targetFunction.getFunctionDefinition()));
+				traceMessageHandler.afterMessageHandled(messageAndSpan.span, null);
+				return messageAndSpan.msg;
+			})
+					// TODO: Fix me when this is resolved in Reactor
+					// .doOnSubscribe(__ -> scope.close())
+					.doOnError(msg::error).doFinally(signalType -> {
+						if (!msg.isHandled()) {
+							msg.end();
+						}
+					});
+		}).contextWrite(contextView -> contextView.put(MessageAndSpansAndScope.class, new MessageAndSpansAndScope()));
+	}
+
+	private Object reactorFluxStream(SimpleFunctionRegistry.FunctionInvocationWrapper targetFunction,
+			Publisher<Message> messagePublisher) {
+		if (log.isDebugEnabled()) {
+			log.debug("Will instrument a stream Flux function");
+		}
+		Flux<Message> flux = Flux.from(messagePublisher)
+				// ensure there are no previous spans
+				.doOnNext(m -> tracer.withSpan(null))
+				.map(msg -> this.traceMessageHandler.wrapInputMessage(msg,
+						inputDestination(targetFunction.getFunctionDefinition())))
+				.flatMap(msg -> Flux.deferContextual(ctx -> {
+					MessageAndSpansAndScope messageAndSpansAndScope = ctx.get(MessageAndSpansAndScope.class);
+					messageAndSpansAndScope.messageAndSpans = msg;
+					messageAndSpansAndScope.span = msg.childSpan;
+					setNameAndTag(targetFunction, msg.childSpan);
+					messageAndSpansAndScope.scope = tracer.withSpan(msg.childSpan);
+					return Mono.just(msg.msg);
+				}));
+		if (targetFunction.isConsumer()) {
+			return targetFunction.apply(reactorStreamConsumer(flux));
+		}
+		final Flux<Message> function = ((Flux<Message>) targetFunction.apply(flux));
+		return Flux.deferContextual(contextView -> {
+			MessageAndSpansAndScope msg = contextView.get(MessageAndSpansAndScope.class);
+			return function.doOnNext(message -> {
+				msg.end();
+				msg.handle();
+			}).map(msgResult -> {
+				MessageAndSpan messageAndSpan = traceMessageHandler.wrapOutputMessage(msgResult,
+						msg.messageAndSpans.parentSpan, outputDestination(targetFunction.getFunctionDefinition()));
+				traceMessageHandler.afterMessageHandled(messageAndSpan.span, null);
+				return messageAndSpan.msg;
+			})
+					// TODO: Fix me when this is resolved in Reactor
+					// .doOnSubscribe(__ -> scope.close())
+					.doOnError(msg::error).doFinally(signalType -> {
+						if (!msg.isHandled()) {
+							msg.end();
+						}
+					});
+		}).contextWrite(contextView -> contextView.put(MessageAndSpansAndScope.class, new MessageAndSpansAndScope()));
+	}
+
+	private Object reactorStreamConsumer(Object result) {
+		if (result instanceof Mono) {
+			return Mono.deferContextual(contextView -> {
+				MessageAndSpansAndScope msg = contextView.get(MessageAndSpansAndScope.class);
+				return ((Mono<Message>) result)
+						// TODO: Fix me when this is resolved in Reactor
+						// .doOnSubscribe(__ -> scope.close())
+						.doOnError(msg::error).doFinally(signalType -> {
+							msg.end();
+						});
+			}).contextWrite(
+					contextView -> contextView.put(MessageAndSpansAndScope.class, new MessageAndSpansAndScope()));
+		}
+		return Flux.deferContextual(contextView -> {
+			MessageAndSpansAndScope msg = contextView.get(MessageAndSpansAndScope.class);
+			return ((Flux<Message>) result)
+					// TODO: Fix me when this is resolved in Reactor
+					// .doOnSubscribe(__ -> scope.close())
+					.doOnError(msg::error).doFinally(signalType -> {
+						msg.end();
+					});
+		}).contextWrite(contextView -> contextView.put(MessageAndSpansAndScope.class, new MessageAndSpansAndScope()));
+	}
+
+	private Object reactorStreamSupplier(Publisher<?> message,
+			SimpleFunctionRegistry.FunctionInvocationWrapper targetFunction) {
+		Publisher<?> publisher = (Publisher<?>) targetFunction.get();
+		if (publisher instanceof Mono) {
+			if (log.isDebugEnabled()) {
+				log.debug("Will instrument a stream Mono supplier");
+			}
+			Mono mono = (Mono) publisher;
+			publisher = ReactorSleuth.tracedMono(tracer, tracer.currentTraceContext(),
+					targetFunction.getFunctionDefinition(), () -> mono, (msg, s) -> {
+						customizedInputMessageSpan(s, msg instanceof Message ? (Message) msg : null);
+					}).map(object -> toMessage(object))
+					.map(object -> this.getMessageAndSpans((Message) object, targetFunction.getFunctionDefinition(),
+							setNameAndTag(targetFunction, tracer.currentSpan())))
+					.doOnNext(wrappedOutputMessage -> customizedOutputMessageSpan(
+							((MessageAndSpan) wrappedOutputMessage).span, ((MessageAndSpan) wrappedOutputMessage).msg))
+					.doOnNext(wrappedOutputMessage -> traceMessageHandler
+							.afterMessageHandled(((MessageAndSpan) wrappedOutputMessage).span, null))
+					.map(wrappedOutputMessage -> ((MessageAndSpan) wrappedOutputMessage).msg);
+		}
+		else {
+			if (log.isDebugEnabled()) {
+				log.debug("Will instrument a stream Flux supplier");
+			}
+			Flux flux = (Flux) publisher;
+			publisher = ReactorSleuth.tracedFlux(tracer, tracer.currentTraceContext(),
+					targetFunction.getFunctionDefinition(), () -> flux, (msg, s) -> {
+						customizedInputMessageSpan(s, msg instanceof Message ? (Message) msg : null);
+					}).map(object -> toMessage(object))
+					.map(object -> this.getMessageAndSpans((Message) object, targetFunction.getFunctionDefinition(),
+							setNameAndTag(targetFunction, tracer.currentSpan())))
+					.doOnNext(wrappedOutputMessage -> customizedOutputMessageSpan(
+							((MessageAndSpan) wrappedOutputMessage).span, ((MessageAndSpan) wrappedOutputMessage).msg))
+					.doOnNext(wrappedOutputMessage -> traceMessageHandler
+							.afterMessageHandled(((MessageAndSpan) wrappedOutputMessage).span, null))
+					.map(wrappedOutputMessage -> ((MessageAndSpan) wrappedOutputMessage).msg);
+		}
+		return publisher;
+	}
+
+	private Span setNameAndTag(SimpleFunctionRegistry.FunctionInvocationWrapper targetFunction, Span span) {
+		return span.name(targetFunction.getFunctionDefinition()).tag(SleuthMessagingSpan.Tags.FUNCTION_NAME.getKey(),
+				targetFunction.getFunctionDefinition());
+	}
+
+	private Object nonReactorStream(Message<byte[]> message,
+			SimpleFunctionRegistry.FunctionInvocationWrapper targetFunction) {
 		MessageAndSpans invocationMessage = null;
 		Span span;
 		if (message == null && targetFunction.isSupplier()) { // Supplier
 			if (log.isDebugEnabled()) {
 				log.debug("Creating a span for a supplier");
 			}
-			span = this.tracer.nextSpan().name(targetFunction.getFunctionDefinition());
+			span = setNameAndTag(targetFunction, this.tracer.nextSpan());
 			customizedInputMessageSpan(span, null);
 		}
 		else {
@@ -117,7 +295,7 @@ public class TraceFunctionAroundWrapper extends FunctionAroundWrapper
 			if (log.isDebugEnabled()) {
 				log.debug("Wrapped input msg " + invocationMessage);
 			}
-			span = invocationMessage.childSpan;
+			span = setNameAndTag(targetFunction, invocationMessage.childSpan);
 		}
 		Object result;
 		Throwable throwable = null;
@@ -164,6 +342,10 @@ public class TraceFunctionAroundWrapper extends FunctionAroundWrapper
 		this.customizers.forEach(cust -> cust.customizeInputMessageSpan(spanToCustomize, msg));
 	}
 
+	private void customizedOutputMessageSpan(Span spanToCustomize, Message<?> msg) {
+		this.customizers.forEach(cust -> cust.customizeOutputMessageSpan(spanToCustomize, msg));
+	}
+
 	private Message<?> toMessage(Object result) {
 		if (!(result instanceof Message)) {
 			return MessageBuilder.withPayload(result).build();
@@ -195,6 +377,41 @@ public class TraceFunctionAroundWrapper extends FunctionAroundWrapper
 			log.debug("Context refreshed, will reset the cache");
 		}
 		this.functionToDestinationCache.clear();
+	}
+
+	static class MessageAndSpansAndScope {
+
+		MessageAndSpans messageAndSpans;
+
+		Span span;
+
+		Tracer.SpanInScope scope;
+
+		boolean handled;
+
+		void error(Throwable throwable) {
+			if (this.span != null) {
+				this.span.error(throwable);
+			}
+		}
+
+		void handle() {
+			this.handled = true;
+		}
+
+		boolean isHandled() {
+			return this.handled;
+		}
+
+		void end() {
+			if (this.span != null) {
+				this.span.end();
+			}
+			if (this.scope != null) {
+				this.scope.close();
+			}
+		}
+
 	}
 
 }

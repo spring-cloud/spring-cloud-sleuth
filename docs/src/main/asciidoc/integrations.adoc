@@ -315,16 +315,39 @@ include::{common_tests_path}/src/main/java/org/springframework/cloud/sleuth/inst
 
 This feature is available for all tracer implementations.
 
-Spring Cloud Sleuth can instrument Spring Cloud Function.
+Spring Cloud Sleuth can instrument Spring Cloud Function. Since Spring Cloud Stream uses Spring Cloud Function
+you will get the messaging instrumentation out of the box.
+
 The way to achieve it is to provide a `Function` or `Consumer` or `Supplier` that takes in a `Message` as a parameter e.g. `Function<Message<String>, Message<Integer>>`.
-If the type is not `Message` then instrumentation will not take place.
-Out of the box instrumentation will not take place when dealing with Reactor based streams - e.g. `Function<Flux<Message<String>>, Flux<Message<Integer>>>`.
+If the type **is not** `Message` then instrumentation **will not** take place.
 
-Since Spring Cloud Stream reuses Spring Cloud Function, you'll get the instrumentation out of the box.
+For a reactive `Consumer<Flux<Message<?>>>` remember to manually close the span and clear the context before you call `.subscribe()`. Example:
 
-You can disable this behavior by setting the value of `spring.sleuth.function.enabled` to `false`.
+[source,java,indent=0]
+----
+@Bean
+	Consumer<Flux<Message<String>>> channel(Tracer tracer) {
+		// For the reactive consumer remember to call "subscribe()" at the end, otherwise
+		// you'll get the "Dispatcher has no subscribers" error
+		return i -> i
+					.doOnNext(s -> log.info("HELLO"))
+					// You must finish the span yourself and clear the tracing context like presented below. 
+					// Otherwise you will be missing out the span that wraps the function execution.
+					.doOnNext(s -> {
+						tracer.currentSpan().end();
+						tracer.withSpan(null);
+					})
+					.subscribe();
+	}
+}
+----
 
-In order to work with reactive Stream functions you can leverage the `MessagingSleuthOperators` utility class that allows you to manipulate the input and output messages in order to continue the tracing context and to execute custom code within the tracing context.
+You can disable Spring Cloud Stream integration by setting the value of `spring.sleuth.function.enabled` to `false`.
+
+If you want to fully control the life cycle of spans within the reactive messaging context of Spring Cloud Stream
+remember to disable the Spring Cloud Stream integration and leverage the `MessagingSleuthOperators` utility 
+class that allows you to manipulate the input and output messages in order to continue the tracing context and to execute custom code within the tracing context. 
+
 
 [source,java,indent=0]
 -----
