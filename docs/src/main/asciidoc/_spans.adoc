@@ -429,6 +429,7 @@ Fully qualified name of the enclosing class `org.springframework.cloud.sleuth.in
 |Name | Description
 |%s|User provided keys via customization options. (since the name contains `%s` the final value will be resolved at runtime)
 |channel|Name of the Spring Integration channel.
+|function.name|Name of the Spring Cloud Function function name.
 |===
 
 === Mvc Handler Interceptor Span
