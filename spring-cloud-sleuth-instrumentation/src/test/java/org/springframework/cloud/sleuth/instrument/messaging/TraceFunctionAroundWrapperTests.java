@@ -24,7 +24,6 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -347,7 +346,7 @@ class TraceFunctionAroundWrapperTests {
 		
 		private final Tracer tracer;
 		
-		public ReactiveFluxGreeterConsumer(Tracer tracer) {
+		ReactiveFluxGreeterConsumer(Tracer tracer) {
 			this.tracer = tracer;
 		}
 
