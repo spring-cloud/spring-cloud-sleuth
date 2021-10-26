@@ -33,7 +33,7 @@
 	</parent>
 	
 	<properties>
-		<kotlin.compiler.incremental>true</kotlin.compiler.incremental>
+		<!-- <kotlin.compiler.incremental>true</kotlin.compiler.incremental> -->
 	</properties>
 
 	<dependencies>
