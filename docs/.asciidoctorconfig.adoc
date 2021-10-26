@@ -1,0 +1,12 @@
+// +++++++++++++++++++++++++++++++++++++++++++++++++++++++
+// +  Initial AsciiDoc editor configuration file - V1.0  +
+// ++++++++++++++++++++++++++++++++++++++++++++++++++++++
+// 
+// Did not found any configuration files, so create this at project root level.
+// If you do not like those files to be generated - you can turn it off inside Asciidoctor Editor preferences.
+// 
+// You can define editor specific parts here.
+// For example: with next line you could set imagesdir attribute to subfolder "images" relative to the folder where this config file is located.
+// :imagesdir: {asciidoctorconfigdir}/images
+// 
+// For more information please take a look at https://github.com/de-jcup/eclipse-asciidoctor-editor/wiki/Asciidoctor-configfiles
