@@ -43,7 +43,9 @@ public class SimpleTracer implements Tracer {
 
 	@Override
 	public Span nextSpan(Span parent) {
-		return new SimpleSpan();
+		SimpleSpan span = nextSpan();
+		span.parent = parent;
+		return span;
 	}
 
 	public SimpleSpan getOnlySpan() {
