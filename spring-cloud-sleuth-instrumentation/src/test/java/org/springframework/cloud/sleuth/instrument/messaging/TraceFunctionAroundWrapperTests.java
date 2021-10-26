@@ -38,6 +38,7 @@ import org.springframework.cloud.function.json.JacksonMapper;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.Span.Builder;
 import org.springframework.cloud.sleuth.TraceContext;
+import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.propagation.Propagator;
 import org.springframework.cloud.sleuth.tracer.SimpleTracer;
 import org.springframework.core.convert.support.DefaultConversionService;
@@ -100,6 +101,7 @@ class TraceFunctionAroundWrapperTests {
 
 		assertThat(result.getPayload()).isEqualTo("hello");
 		assertThat(tracer.getOnlySpan().name).isEqualTo("greeter");
+		assertThatAllSpansAreStartedAndStopped();
 	}
 
 	@Test
@@ -117,6 +119,7 @@ class TraceFunctionAroundWrapperTests {
 		assertThat(tracer.spans.get(0).name).isEqualTo("handle");
 		assertThat(tracer.spans.get(1).name).isEqualTo("greeter");
 		assertThat(tracer.spans.get(2).name).isEqualTo("send");
+		assertThatAllSpansAreStartedAndStopped();
 	}
 
 	@Test
@@ -133,6 +136,7 @@ class TraceFunctionAroundWrapperTests {
 		assertThat(tracer.spans).hasSize(2);
 		assertThat(tracer.spans.get(0).name).isEqualTo("handle");
 		assertThat(tracer.spans.get(1).name).isEqualTo("greeter");
+		assertThatAllSpansAreStartedAndStopped();
 	}
 
 	@Test
@@ -146,8 +150,9 @@ class TraceFunctionAroundWrapperTests {
 
 		assertThat(result.getPayload()).isEqualTo("hello");
 		assertThat(tracer.getOnlySpan().name).isEqualTo("greeter");
+		assertThatAllSpansAreStartedAndStopped();
 	}
-
+	
 	@Test
 	void should_trace_when_reactive_mono_function() {
 		FunctionRegistration<ReactiveMonoGreeterFunction> registration = new FunctionRegistration<>(
@@ -164,24 +169,7 @@ class TraceFunctionAroundWrapperTests {
 		assertThat(tracer.spans.get(0).name).isEqualTo("handle");
 		assertThat(tracer.spans.get(1).name).isEqualTo("greeter");
 		assertThat(tracer.spans.get(2).name).isEqualTo("send");
-	}
-
-	@Disabled("Cast exceptions in Spring Cloud Function")
-	@Test
-	void should_trace_when_reactive_mono_consumer() {
-		ReactiveMonoGreeterConsumer consumer = new ReactiveMonoGreeterConsumer();
-		FunctionRegistration<ReactiveMonoGreeterConsumer> registration = new FunctionRegistration<>(consumer, "greeter")
-				.type(FunctionType.of(ReactiveMonoGreeterConsumer.class));
-		catalog.register(registration);
-		FunctionInvocationWrapper function = catalog.lookup("greeter");
-
-		wrapper.apply(Mono.just(MessageBuilder.withPayload("hello").setHeader("superHeader", "someValue").build()),
-				function);
-
-		assertThat(consumer.result).isEqualTo("HELLO");
-		assertThat(tracer.spans).hasSize(2);
-		assertThat(tracer.spans.get(0).name).isEqualTo("handle");
-		assertThat(tracer.spans.get(1).name).isEqualTo("greeter");
+		assertThatAllSpansAreStartedAndStopped();
 	}
 
 	@Test
@@ -195,6 +183,7 @@ class TraceFunctionAroundWrapperTests {
 
 		assertThat(result.getPayload()).isEqualTo("hello");
 		assertThat(tracer.getOnlySpan().name).isEqualTo("greeter");
+		assertThatAllSpansAreStartedAndStopped();
 	}
 
 	@Test
@@ -213,11 +202,12 @@ class TraceFunctionAroundWrapperTests {
 		assertThat(tracer.spans.get(0).name).isEqualTo("handle");
 		assertThat(tracer.spans.get(1).name).isEqualTo("greeter");
 		assertThat(tracer.spans.get(2).name).isEqualTo("send");
+		assertThatAllSpansAreStartedAndStopped();
 	}
 
 	@Test
 	void should_trace_when_reactive_flux_consumer() {
-		ReactiveFluxGreeterConsumer consumer = new ReactiveFluxGreeterConsumer();
+		ReactiveFluxGreeterConsumer consumer = new ReactiveFluxGreeterConsumer(this.tracer);
 		FunctionRegistration<ReactiveFluxGreeterConsumer> registration = new FunctionRegistration<>(consumer, "greeter")
 				.type(FunctionType.of(ReactiveFluxGreeterConsumer.class));
 		catalog.register(registration);
@@ -230,6 +220,7 @@ class TraceFunctionAroundWrapperTests {
 		assertThat(tracer.spans).hasSize(2);
 		assertThat(tracer.spans.get(0).name).isEqualTo("handle");
 		assertThat(tracer.spans.get(1).name).isEqualTo("greeter");
+		assertThatAllSpansAreStartedAndStopped();
 	}
 
 	@Test
@@ -279,6 +270,11 @@ class TraceFunctionAroundWrapperTests {
 		mockEnvironment.setProperty("spring.cloud.stream.bindings.greeter-out-0.destination", "bob");
 		return mockEnvironment;
 	}
+	
+	private void assertThatAllSpansAreStartedAndStopped() {
+		assertThat(tracer.spans.stream()
+				.allMatch(s -> s.started && s.ended)).as("All spans must be started and stopped").isTrue();
+	}
 
 	private static class Greeter implements Supplier<String> {
 
@@ -327,19 +323,6 @@ class TraceFunctionAroundWrapperTests {
 
 	}
 
-	private static class ReactiveMonoGreeterConsumer implements Consumer<Mono<Message<String>>> {
-
-		String result;
-
-		@Override
-		public void accept(Mono<Message<String>> in) {
-			in.map(s -> s.getPayload().toUpperCase()).doOnNext(s -> {
-				result = s;
-			}).subscribe();
-		}
-
-	}
-
 	private static class ReactiveFluxGreeter implements Supplier<Flux<Message<String>>> {
 
 		@Override
@@ -361,12 +344,23 @@ class TraceFunctionAroundWrapperTests {
 	private static class ReactiveFluxGreeterConsumer implements Consumer<Flux<Message<String>>> {
 
 		String result;
+		
+		private final Tracer tracer;
+		
+		public ReactiveFluxGreeterConsumer(Tracer tracer) {
+			this.tracer = tracer;
+		}
 
 		@Override
 		public void accept(Flux<Message<String>> in) {
 			in.map(s -> s.getPayload().toUpperCase()).doOnNext(s -> {
 				result = s;
-			}).subscribe();
+			})
+			.doOnNext(s -> {
+				tracer.currentSpan().end();
+				tracer.withSpan(null);
+			})
+			.subscribe();
 		}
 
 	}
