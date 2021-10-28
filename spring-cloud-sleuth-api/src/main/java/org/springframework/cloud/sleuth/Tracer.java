@@ -146,7 +146,9 @@ public interface Tracer extends BaggageManager {
 	 * @return current trace context
 	 */
 	@Nullable
-	CurrentTraceContext currentTraceContext();
+	default CurrentTraceContext currentTraceContext() {
+		return null;
+	}
 
 	/**
 	 * Allows to customize the current span in scope.
