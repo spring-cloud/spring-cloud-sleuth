@@ -36,7 +36,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.cloud.client.loadbalancer.LoadBalancerClient;
-import org.springframework.cloud.client.loadbalancer.LoadBalancerProperties;
+import org.springframework.cloud.client.loadbalancer.LoadBalancerClientsProperties;
 import org.springframework.cloud.loadbalancer.support.LoadBalancerClientFactory;
 import org.springframework.cloud.openfeign.EnableFeignClients;
 import org.springframework.cloud.openfeign.FeignClient;
@@ -102,7 +102,7 @@ public class ManuallyCreatedLoadBalancerFeignClientTests {
 class Application {
 
 	@Bean
-	public Client client(LoadBalancerClient blockingLoadBalancerClient, LoadBalancerProperties properties,
+	public Client client(LoadBalancerClient blockingLoadBalancerClient, LoadBalancerClientsProperties properties,
 			LoadBalancerClientFactory loadBalancerClientFactory) {
 		return new MyBlockingClient(new MyDelegateClient(), blockingLoadBalancerClient, properties,
 				loadBalancerClientFactory);
@@ -128,7 +128,7 @@ class Application {
 
 class MyBlockingClient extends FeignBlockingLoadBalancerClient {
 
-	MyBlockingClient(Client delegate, LoadBalancerClient loadBalancerClient, LoadBalancerProperties properties,
+	MyBlockingClient(Client delegate, LoadBalancerClient loadBalancerClient, LoadBalancerClientsProperties properties,
 			LoadBalancerClientFactory loadBalancerClientFactory) {
 		super(delegate, loadBalancerClient, properties, loadBalancerClientFactory);
 	}

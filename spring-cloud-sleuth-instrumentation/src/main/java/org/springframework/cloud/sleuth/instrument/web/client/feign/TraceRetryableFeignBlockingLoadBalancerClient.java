@@ -26,7 +26,7 @@ import org.apache.commons.logging.LogFactory;
 
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.cloud.client.loadbalancer.LoadBalancedRetryFactory;
-import org.springframework.cloud.client.loadbalancer.LoadBalancerProperties;
+import org.springframework.cloud.client.loadbalancer.LoadBalancerClientsProperties;
 import org.springframework.cloud.loadbalancer.blocking.client.BlockingLoadBalancerClient;
 import org.springframework.cloud.loadbalancer.support.LoadBalancerClientFactory;
 import org.springframework.cloud.openfeign.loadbalancer.RetryableFeignBlockingLoadBalancerClient;
@@ -58,7 +58,7 @@ class TraceRetryableFeignBlockingLoadBalancerClient extends RetryableFeignBlocki
 	TracingFeignClient tracingFeignClient;
 
 	TraceRetryableFeignBlockingLoadBalancerClient(Client delegate, BlockingLoadBalancerClient loadBalancerClient,
-			LoadBalancedRetryFactory retryFactory, LoadBalancerProperties properties,
+			LoadBalancedRetryFactory retryFactory, LoadBalancerClientsProperties properties,
 			LoadBalancerClientFactory loadBalancerClientFactory, BeanFactory beanFactory) {
 		super(delegate, loadBalancerClient, retryFactory, properties, loadBalancerClientFactory);
 		this.beanFactory = beanFactory;

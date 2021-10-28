@@ -26,7 +26,7 @@ import org.springframework.aop.support.AopUtils;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.cloud.client.loadbalancer.LoadBalancedRetryFactory;
 import org.springframework.cloud.client.loadbalancer.LoadBalancerClient;
-import org.springframework.cloud.client.loadbalancer.LoadBalancerProperties;
+import org.springframework.cloud.client.loadbalancer.LoadBalancerClientsProperties;
 import org.springframework.cloud.loadbalancer.blocking.client.BlockingLoadBalancerClient;
 import org.springframework.cloud.loadbalancer.support.LoadBalancerClientFactory;
 import org.springframework.cloud.openfeign.loadbalancer.FeignBlockingLoadBalancerClient;
@@ -64,7 +64,7 @@ final class TraceFeignObjectWrapper {
 
 	private Object loadBalancerClient;
 
-	private LoadBalancerProperties loadBalancerProperties;
+	private LoadBalancerClientsProperties loadBalancerProperties;
 
 	private Object loadBalancerRetryFactory;
 
@@ -98,7 +98,7 @@ final class TraceFeignObjectWrapper {
 			FeignBlockingLoadBalancerClient client = ProxyUtils.getTargetObject(bean);
 			return new TraceFeignBlockingLoadBalancerClient(
 					(Client) new TraceFeignObjectWrapper(this.beanFactory).wrap(client.getDelegate()),
-					(LoadBalancerClient) loadBalancerClient(), loadBalancerProperties(),
+					(LoadBalancerClient) loadBalancerClient(), loadBalancerClientsProperties(),
 					(LoadBalancerClientFactory) loadBalancerClientFactory(), this.beanFactory);
 		}
 		else {
@@ -112,7 +112,7 @@ final class TraceFeignObjectWrapper {
 				log.warn(EXCEPTION_WARNING, e);
 			}
 			return new TraceFeignBlockingLoadBalancerClient(client, (LoadBalancerClient) loadBalancerClient(),
-					loadBalancerProperties(), (LoadBalancerClientFactory) loadBalancerClientFactory(),
+					loadBalancerClientsProperties(), (LoadBalancerClientFactory) loadBalancerClientFactory(),
 					this.beanFactory);
 		}
 	}
@@ -123,7 +123,7 @@ final class TraceFeignObjectWrapper {
 			return new TraceRetryableFeignBlockingLoadBalancerClient(
 					(Client) new TraceFeignObjectWrapper(beanFactory).wrap(client.getDelegate()),
 					(BlockingLoadBalancerClient) loadBalancerClient(),
-					(LoadBalancedRetryFactory) loadBalancerRetryFactory(), loadBalancerProperties(),
+					(LoadBalancedRetryFactory) loadBalancerRetryFactory(), loadBalancerClientsProperties(),
 					(LoadBalancerClientFactory) loadBalancerClientFactory(), beanFactory);
 		}
 		else {
@@ -138,7 +138,7 @@ final class TraceFeignObjectWrapper {
 			}
 			return new TraceRetryableFeignBlockingLoadBalancerClient(client,
 					(BlockingLoadBalancerClient) loadBalancerClient(),
-					(LoadBalancedRetryFactory) loadBalancerRetryFactory(), loadBalancerProperties(),
+					(LoadBalancedRetryFactory) loadBalancerRetryFactory(), loadBalancerClientsProperties(),
 					(LoadBalancerClientFactory) loadBalancerClientFactory(), beanFactory);
 		}
 	}
@@ -150,9 +150,9 @@ final class TraceFeignObjectWrapper {
 		return loadBalancerClient;
 	}
 
-	private LoadBalancerProperties loadBalancerProperties() {
+	private LoadBalancerClientsProperties loadBalancerClientsProperties() {
 		if (loadBalancerProperties == null) {
-			loadBalancerProperties = beanFactory.getBean(LoadBalancerProperties.class);
+			loadBalancerProperties = beanFactory.getBean(LoadBalancerClientsProperties.class);
 		}
 		return loadBalancerProperties;
 	}

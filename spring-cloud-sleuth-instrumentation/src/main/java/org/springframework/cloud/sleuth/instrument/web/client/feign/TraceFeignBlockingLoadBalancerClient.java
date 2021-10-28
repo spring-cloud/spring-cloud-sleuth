@@ -26,7 +26,7 @@ import org.apache.commons.logging.LogFactory;
 
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.cloud.client.loadbalancer.LoadBalancerClient;
-import org.springframework.cloud.client.loadbalancer.LoadBalancerProperties;
+import org.springframework.cloud.client.loadbalancer.LoadBalancerClientsProperties;
 import org.springframework.cloud.loadbalancer.support.LoadBalancerClientFactory;
 import org.springframework.cloud.openfeign.loadbalancer.FeignBlockingLoadBalancerClient;
 import org.springframework.cloud.sleuth.CurrentTraceContext;
@@ -56,7 +56,7 @@ class TraceFeignBlockingLoadBalancerClient extends FeignBlockingLoadBalancerClie
 	TracingFeignClient tracingFeignClient;
 
 	TraceFeignBlockingLoadBalancerClient(Client delegate, LoadBalancerClient loadBalancerClient,
-			LoadBalancerProperties loadBalancerProperties, LoadBalancerClientFactory loadBalancerClientFactory,
+			LoadBalancerClientsProperties loadBalancerProperties, LoadBalancerClientFactory loadBalancerClientFactory,
 			BeanFactory beanFactory) {
 		super(delegate, loadBalancerClient, loadBalancerProperties, loadBalancerClientFactory);
 		this.beanFactory = beanFactory;
