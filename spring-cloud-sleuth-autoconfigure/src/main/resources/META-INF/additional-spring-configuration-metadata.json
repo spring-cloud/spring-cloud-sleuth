@@ -112,6 +112,12 @@
       "type": "java.lang.Boolean",
       "description": "Enable tracing for MongoDb.",
       "defaultValue": true
+    },    
+    {
+      "name": "spring.sleuth.mongodb.socket-address-span-customizer.enabled",
+      "type": "java.lang.Boolean",
+      "description": "Enable setting of SocketAddress information on the Mongo span.",
+      "defaultValue": false
     },
     {
       "name": "spring.sleuth.rpc.enabled",

@@ -16,15 +16,12 @@
 
 package org.springframework.cloud.sleuth.instrument.mongodb;
 
-import java.net.InetSocketAddress;
 import java.util.Arrays;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Set;
 
-import com.mongodb.MongoSocketException;
 import com.mongodb.RequestContext;
-import com.mongodb.connection.ConnectionDescription;
-import com.mongodb.connection.ConnectionId;
 import com.mongodb.event.CommandFailedEvent;
 import com.mongodb.event.CommandListener;
 import com.mongodb.event.CommandStartedEvent;
@@ -60,9 +57,12 @@ final class TraceMongoCommandListener implements CommandListener {
 
 	private final CurrentTraceContext currentTraceContext;
 
-	TraceMongoCommandListener(Tracer tracer, CurrentTraceContext currentTraceContext) {
+	private final List<TraceMongoSpanCustomizer> customizers;
+
+	TraceMongoCommandListener(Tracer tracer, List<TraceMongoSpanCustomizer> customizers) {
 		this.tracer = tracer;
-		this.currentTraceContext = currentTraceContext;
+		this.currentTraceContext = tracer.currentTraceContext();
+		this.customizers = customizers;
 	}
 
 	@Override
@@ -100,23 +100,7 @@ final class TraceMongoCommandListener implements CommandListener {
 			childSpanBuilder.tag("mongodb.collection", collectionName);
 		}
 
-		ConnectionDescription connectionDescription = event.getConnectionDescription();
-		if (connectionDescription != null) {
-			ConnectionId connectionId = connectionDescription.getConnectionId();
-			if (connectionId != null) {
-				childSpanBuilder.tag("mongodb.cluster_id", connectionId.getServerId().getClusterId().getValue());
-			}
-
-			try {
-				InetSocketAddress socketAddress = connectionDescription.getServerAddress().getSocketAddress();
-				childSpanBuilder.remoteIpAndPort(socketAddress.getAddress().getHostAddress(), socketAddress.getPort());
-			}
-			catch (MongoSocketException ignored) {
-				if (log.isDebugEnabled()) {
-					log.debug("Ignored exception when setting remote ip and port", ignored);
-				}
-			}
-		}
+		this.customizers.forEach(customizer -> customizer.customizeCommandStartSpan(event, childSpanBuilder));
 
 		Span childSpan = childSpanBuilder.start();
 		// TODO: What about retries? We might override the parent span

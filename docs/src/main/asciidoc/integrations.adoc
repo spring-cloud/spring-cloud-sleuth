@@ -752,6 +752,16 @@ and set `spring.sleuth.jdbc.datasource-proxy.query.enable-logging` to `true` to 
 
 In order to disable this instrumentation set `spring.sleuth.jdbc.enabled` to `false`.
 
+[[sleuth-mongodb-integration]]
+== MongoDB
+
+This feature is available for all tracer implementations.
+
+We're adding command listeners that wrap all commands in a span.
+If you want to have additional socket address related tags on the span set the `spring.sleuth.mongodb.socket-address-span-customizer.enabled` to `true`.
+
+In order to disable this instrumentation set ``spring.sleuth.mongodb.enabled`` to `false`.
+
 [[sleuth-session-integration]]
 == Spring Session
 

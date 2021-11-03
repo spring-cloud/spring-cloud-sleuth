@@ -43,6 +43,7 @@ public class BraveTracer implements Tracer {
 
 	private final CurrentTraceContext currentTraceContext;
 
+	@Deprecated
 	public BraveTracer(brave.Tracer tracer, BraveBaggageManager braveBaggageManager) {
 		this.tracer = tracer;
 		this.braveBaggageManager = braveBaggageManager;

@@ -59,6 +59,7 @@
 |spring.sleuth.messaging.rabbit.enabled | `true` | Enable tracing of RabbitMQ.
 |spring.sleuth.messaging.rabbit.remote-service-name | `rabbitmq` | Rabbit remote service name.
 |spring.sleuth.mongodb.enabled | `true` | Enable tracing for MongoDb.
+|spring.sleuth.mongodb.socket-address-span-customizer.enabled | `false` | Enable setting of SocketAddress information on the Mongo span.
 |spring.sleuth.opentracing.enabled | `true` | Enables OpenTracing support.
 |spring.sleuth.propagation.type |  | Tracing context propagation types.
 |spring.sleuth.quartz.enabled | `true` | Enable tracing for Quartz.

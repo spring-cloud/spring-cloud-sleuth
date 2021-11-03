@@ -59,8 +59,9 @@ import org.springframework.context.annotation.Configuration;
 class BraveBridgeConfiguration {
 
 	@Bean
-	org.springframework.cloud.sleuth.Tracer braveTracer(brave.Tracer tracer) {
-		return new BraveTracer(tracer, new BraveBaggageManager());
+	org.springframework.cloud.sleuth.Tracer braveTracer(brave.Tracer tracer,
+			org.springframework.cloud.sleuth.CurrentTraceContext braveCurrentTraceContext) {
+		return new BraveTracer(tracer, braveCurrentTraceContext, new BraveBaggageManager());
 	}
 
 	@Bean

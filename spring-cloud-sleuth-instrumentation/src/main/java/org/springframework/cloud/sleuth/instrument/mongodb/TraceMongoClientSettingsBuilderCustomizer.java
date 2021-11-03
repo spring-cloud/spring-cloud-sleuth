@@ -16,10 +16,11 @@
 
 package org.springframework.cloud.sleuth.instrument.mongodb;
 
+import java.util.List;
+
 import com.mongodb.MongoClientSettings;
 
 import org.springframework.boot.autoconfigure.mongo.MongoClientSettingsBuilderCustomizer;
-import org.springframework.cloud.sleuth.CurrentTraceContext;
 import org.springframework.cloud.sleuth.Tracer;
 
 /**
@@ -32,16 +33,16 @@ public class TraceMongoClientSettingsBuilderCustomizer implements MongoClientSet
 
 	private final Tracer tracer;
 
-	private final CurrentTraceContext currentTraceContext;
+	private final List<TraceMongoSpanCustomizer> customizers;
 
-	public TraceMongoClientSettingsBuilderCustomizer(Tracer tracer, CurrentTraceContext currentTraceContext) {
+	public TraceMongoClientSettingsBuilderCustomizer(Tracer tracer, List<TraceMongoSpanCustomizer> customizers) {
 		this.tracer = tracer;
-		this.currentTraceContext = currentTraceContext;
+		this.customizers = customizers;
 	}
 
 	@Override
 	public void customize(MongoClientSettings.Builder clientSettingsBuilder) {
-		clientSettingsBuilder.addCommandListener(new TraceMongoCommandListener(this.tracer, this.currentTraceContext));
+		clientSettingsBuilder.addCommandListener(new TraceMongoCommandListener(this.tracer, this.customizers));
 	}
 
 }

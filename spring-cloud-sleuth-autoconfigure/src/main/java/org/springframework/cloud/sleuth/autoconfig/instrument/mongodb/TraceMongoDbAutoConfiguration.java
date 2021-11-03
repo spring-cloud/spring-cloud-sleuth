@@ -16,8 +16,12 @@
 
 package org.springframework.cloud.sleuth.autoconfig.instrument.mongodb;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import com.mongodb.MongoClientSettings;
 
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.AutoConfigureBefore;
 import org.springframework.boot.autoconfigure.condition.AnyNestedCondition;
@@ -27,11 +31,13 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.autoconfigure.mongo.MongoAutoConfiguration;
-import org.springframework.cloud.sleuth.CurrentTraceContext;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.autoconfig.brave.BraveAutoConfiguration;
 import org.springframework.cloud.sleuth.instrument.mongodb.TraceAllTypesMongoClientSettingsBuilderCustomizer;
 import org.springframework.cloud.sleuth.instrument.mongodb.TraceMongoClientSettingsBuilderCustomizer;
+import org.springframework.cloud.sleuth.instrument.mongodb.TraceMongoClusterIdSpanCustomizer;
+import org.springframework.cloud.sleuth.instrument.mongodb.TraceMongoSocketAddressSpanCustomizer;
+import org.springframework.cloud.sleuth.instrument.mongodb.TraceMongoSpanCustomizer;
 import org.springframework.cloud.sleuth.instrument.mongodb.TraceReactiveMongoClientSettingsBuilderCustomizer;
 import org.springframework.cloud.sleuth.instrument.mongodb.TraceSynchronousMongoClientSettingsBuilderCustomizer;
 import org.springframework.context.annotation.Bean;
@@ -57,8 +63,8 @@ public class TraceMongoDbAutoConfiguration {
 	@ConditionalOnMissingBean
 	@Conditional(EitherSynchronousOrReactiveContextProviderPresent.class)
 	TraceMongoClientSettingsBuilderCustomizer traceMongoClientSettingsBuilderCustomizer(Tracer tracer,
-			CurrentTraceContext currentTraceContext) {
-		return new TraceMongoClientSettingsBuilderCustomizer(tracer, currentTraceContext);
+			ObjectProvider<List<TraceMongoSpanCustomizer>> customizers) {
+		return new TraceMongoClientSettingsBuilderCustomizer(tracer, customizers.getIfAvailable(ArrayList::new));
 	}
 
 	@Bean
@@ -84,6 +90,22 @@ public class TraceMongoDbAutoConfiguration {
 			"com.mongodb.reactivestreams.client.ReactiveContextProvider" })
 	TraceAllTypesMongoClientSettingsBuilderCustomizer traceAllTypesMongoClientSettingsBuilderCustomizer(Tracer tracer) {
 		return new TraceAllTypesMongoClientSettingsBuilderCustomizer(tracer);
+	}
+
+	@Configuration(proxyBeanMethods = false)
+	static class MongoCustomizersConfiguration {
+
+		@Bean
+		TraceMongoSpanCustomizer traceMongoClusterIdSpanCustomizer() {
+			return new TraceMongoClusterIdSpanCustomizer();
+		}
+
+		@Bean
+		@ConditionalOnProperty("spring.sleuth.mongodb.socket-address-span-customizer.enabled")
+		TraceMongoSpanCustomizer traceMongoSocketAddressSpanCustomizer() {
+			return new TraceMongoSocketAddressSpanCustomizer();
+		}
+
 	}
 
 	static class EitherSynchronousOrReactiveContextProviderPresent extends AnyNestedCondition {
