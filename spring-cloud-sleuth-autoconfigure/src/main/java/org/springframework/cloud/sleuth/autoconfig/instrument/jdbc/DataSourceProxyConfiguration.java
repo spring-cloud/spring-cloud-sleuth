@@ -19,6 +19,8 @@ package org.springframework.cloud.sleuth.autoconfig.instrument.jdbc;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.sql.CommonDataSource;
+
 import net.ttddyy.dsproxy.listener.MethodExecutionListener;
 import net.ttddyy.dsproxy.listener.QueryCountStrategy;
 import net.ttddyy.dsproxy.listener.QueryExecutionListener;
@@ -43,8 +45,6 @@ import org.springframework.cloud.sleuth.instrument.jdbc.DataSourceProxyPropertie
 import org.springframework.cloud.sleuth.instrument.jdbc.TraceListenerStrategySpanCustomizer;
 import org.springframework.cloud.sleuth.instrument.jdbc.TraceQueryExecutionListener;
 import org.springframework.context.annotation.Bean;
-
-import javax.sql.CommonDataSource;
 
 /**
  * Configuration for integration with datasource-proxy, allows to use define custom

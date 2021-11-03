@@ -19,6 +19,8 @@ package org.springframework.cloud.sleuth.autoconfig.instrument.jdbc;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.sql.CommonDataSource;
+
 import com.p6spy.engine.event.JdbcEventListener;
 import com.p6spy.engine.spy.DefaultJdbcEventListenerFactory;
 import com.p6spy.engine.spy.JdbcEventListenerFactory;
@@ -36,8 +38,6 @@ import org.springframework.cloud.sleuth.instrument.jdbc.TraceJdbcEventListener;
 import org.springframework.cloud.sleuth.instrument.jdbc.TraceListenerStrategySpanCustomizer;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.Bean;
-
-import javax.sql.CommonDataSource;
 
 /**
  * Configuration for integration with p6spy, allows to define custom
