@@ -18,6 +18,7 @@ package org.springframework.cloud.sleuth.autoconfig.instrument.jdbc;
 
 import javax.sql.DataSource;
 
+import com.zaxxer.hikari.HikariDataSource;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
@@ -65,7 +66,7 @@ public class TraceJdbcAutoConfiguration {
 
 	@Bean
 	@ConditionalOnClass(name = "com.zaxxer.hikari.HikariDataSource")
-	TraceListenerStrategySpanCustomizer hikariTraceListenerStrategySpanCustomizer() {
+	TraceHikariListenerStrategySpanCustomizer traceHikariListenerStrategySpanCustomizer() {
 		return new TraceHikariListenerStrategySpanCustomizer();
 	}
 

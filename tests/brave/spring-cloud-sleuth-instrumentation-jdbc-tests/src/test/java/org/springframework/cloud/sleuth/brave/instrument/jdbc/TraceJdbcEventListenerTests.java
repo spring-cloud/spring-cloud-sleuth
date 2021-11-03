@@ -24,16 +24,16 @@ import org.springframework.cloud.sleuth.test.TestSpanHandler;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-public class TracingJdbcEventListenerTests
-		extends org.springframework.cloud.sleuth.instrument.jdbc.TracingJdbcEventListenerTests {
+public class TraceJdbcEventListenerTests
+		extends org.springframework.cloud.sleuth.instrument.jdbc.TraceJdbcEventListenerTests {
 
 	@Override
-	protected Class autoConfiguration() {
+	protected Class<?> autoConfiguration() {
 		return BraveAutoConfiguration.class;
 	}
 
 	@Override
-	protected Class testConfiguration() {
+	protected Class<?> testConfiguration() {
 		return Config.class;
 	}
 

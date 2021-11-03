@@ -18,10 +18,11 @@ package org.springframework.cloud.sleuth.instrument.jdbc;
 
 import java.net.URI;
 import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.Statement;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -40,31 +41,45 @@ import org.springframework.lang.Nullable;
 import org.springframework.util.StringUtils;
 
 /**
+ * Trace listener strategy makes the best effort at tracking all open JDBC resources (and therefore spans/scopes)
+ * because of two main reasons:
+ * 1. JDBC allows to not close child resources, in which case closing the parent will close everything - {@link Connection#close()}
+ * closes all underlying {@link Statement}s and {@link Statement#close()} close all underlying {@link ResultSet}s.
+ * Ideally this should not happen, but practically some applications (and some frameworks) rely on this mechanism.
+ * 2. While most JDBC drivers don't support concurrency, multiple connections might be opened at the same time in the same thread.
+ * JDBC treats those connections as completely separate resources, and we cannot rely on the order of closing those connections.
+ *
+ * Tracking covers such cases as long as resources are closed in the same thread they were opened.
+ *
  * Partially taken from
- * https://github.com/openzipkin/brave/blob/v5.6.4/instrumentation/p6spy/src/main/java/brave/p6spy/TracingJdbcEventListener.java.
+ * https://github.com/openzipkin/brave/blob/v5.6.4/instrumentation/p6spy/src/main/java/brave/p6spy/TracingJdbcEventListener.java
+ * and https://github.com/gavlyukovskiy/spring-boot-data-source-decorator/blob/master/datasource-decorator-spring-boot-autoconfigure/src/main/java/com/github/gavlyukovskiy/cloud/sleuth/TracingListenerStrategy.java.
  *
  * @param <CON> connection type
  * @param <STMT> statement
  * @param <RS> result set
+ * @author Arthur Gavlyukovskiy
  */
 class TraceListenerStrategy<CON, STMT, RS> {
 
 	private static final Log log = LogFactory.getLog(TraceListenerStrategy.class);
 
-	private final Map<CON, ConnectionInfo> openConnections = new ConcurrentHashMap<>();
-
 	// Captures all the characters between = and either the next & or the end of the
 	// string.
 	private static final Pattern URL_SERVICE_NAME_FINDER = Pattern.compile("sleuthServiceName=(.*?)(?:&|$)");
+
+	private final Map<CON, ConnectionInfo> openConnections = new ConcurrentHashMap<>();
+
+	private final ThreadLocal<ConnectionInfo> currentConnection = new ThreadLocal<>();
 
 	private final Tracer tracer;
 
 	private final List<TraceType> traceTypes;
 
-	private final List<TraceListenerStrategySpanCustomizer> customizers;
+	private final List<TraceListenerStrategySpanCustomizer<? super CommonDataSource>> customizers;
 
 	TraceListenerStrategy(Tracer tracer, List<TraceType> traceTypes,
-			List<TraceListenerStrategySpanCustomizer> customizers) {
+			List<TraceListenerStrategySpanCustomizer<? super CommonDataSource>> customizers) {
 		this.tracer = tracer;
 		this.traceTypes = traceTypes;
 		this.customizers = customizers;
@@ -85,27 +100,42 @@ class TraceListenerStrategy<CON, STMT, RS> {
 			this.customizers.stream().filter(customizer -> customizer.isApplicable(dataSource))
 					.forEach(customizer -> customizer.customizeConnectionSpan(dataSource, connectionSpanBuilder));
 			Span connectionSpan = connectionSpanBuilder.start();
-			spanAndScope = new SpanAndScope(connectionSpan, tracer.withSpan(connectionSpan));
+			Tracer.SpanInScope scope = isCurrent(null) ? tracer.withSpan(connectionSpan) : null;
+			spanAndScope = new SpanAndScope(connectionSpan, scope);
 			if (log.isTraceEnabled()) {
 				log.trace("Started client span before connection [" + connectionSpan + "] - current span is ["
 						+ tracer.currentSpan() + "]");
 			}
 		}
 		ConnectionInfo connectionInfo = new ConnectionInfo(spanAndScope);
+		connectionInfo.remoteServiceName = dataSourceName;
 		this.openConnections.put(connectionKey, connectionInfo);
+		if (isCurrent(null)) {
+			this.currentConnection.set(connectionInfo);
+		}
 	}
 
-	void afterGetConnection(CON connectionKey, Connection connection, Throwable t) {
+	void afterGetConnection(CON connectionKey, @Nullable Connection connection, String dataSourceName, @Nullable Throwable t) {
 		if (log.isTraceEnabled()) {
 			log.trace("After get connection [" + connectionKey + "]. Current span is [" + tracer.currentSpan() + "]");
 		}
-		this.openConnections.get(connectionKey).getSpan().ifPresent(spanAndScope -> {
-			parseServerIpAndPort(connection, spanAndScope.getSpan());
-		});
-		if (t != null) {
-			ConnectionInfo connectionInfo = this.openConnections.remove(connectionKey);
-			connectionInfo.getSpan().ifPresent(connectionSpan -> {
-				parseServerIpAndPort(connection, connectionSpan.getSpan());
+		ConnectionInfo connectionInfo = this.openConnections.get(connectionKey);
+		SpanAndScope connectionSpan = connectionInfo.span;
+		if (connection != null) {
+			log.info("TODO before removeServiceName=" + connectionInfo.remoteServiceName);
+			parseAndSetServerIpAndPort(connectionInfo, connection, dataSourceName);
+			log.info("TODO after removeServiceName=" + connectionInfo.remoteServiceName);
+			if (connectionSpan != null) {
+				connectionSpan.getSpan().remoteServiceName(connectionInfo.remoteServiceName);
+				connectionSpan.getSpan().remoteIpAndPort(connectionInfo.url.getHost(), connectionInfo.url.getPort());
+			}
+		}
+		else if (t != null) {
+			this.openConnections.remove(connectionKey);
+			if (isCurrent(connectionInfo)) {
+				this.currentConnection.set(null);
+			}
+			if (connectionSpan != null) {
 				if (log.isTraceEnabled()) {
 					log.trace("Closing client span due to exception [" + connectionSpan.getSpan()
 							+ "] - current span is [" + tracer.currentSpan() + "]");
@@ -115,16 +145,23 @@ class TraceListenerStrategy<CON, STMT, RS> {
 				if (log.isTraceEnabled()) {
 					log.trace("Current span [" + tracer.currentSpan() + "]");
 				}
-			});
+			}
 		}
 	}
 
-	void beforeQuery(CON connectionKey, Connection connection, STMT statementKey, String dataSourceName) {
+	/**
+	 * Returns true if connection belong to the one, that is currently in scope.
+	 */
+	private boolean isCurrent(@Nullable ConnectionInfo connectionInfo) {
+		return this.currentConnection.get() == connectionInfo;
+	}
+
+	void beforeQuery(CON connectionKey, STMT statementKey) {
 		if (log.isTraceEnabled()) {
 			log.trace("Before query - connection [" + connectionKey + "] and current span [" + tracer.currentSpan()
 					+ "]");
 		}
-		ConnectionInfo connectionInfo = openConnections.get(connectionKey);
+		ConnectionInfo connectionInfo = this.openConnections.get(connectionKey);
 		if (connectionInfo == null) {
 			if (log.isTraceEnabled()) {
 				log.trace("Connection may be closed after statement preparation, but before statement execution");
@@ -136,42 +173,47 @@ class TraceListenerStrategy<CON, STMT, RS> {
 			Span.Builder statementSpanBuilder = AssertingSpanBuilder
 					.of(SleuthJdbcSpan.JDBC_QUERY_SPAN, tracer.spanBuilder())
 					.name(String.format(SleuthJdbcSpan.JDBC_QUERY_SPAN.getName(), "query"));
-			statementSpanBuilder.remoteServiceName(dataSourceName);
-			parseServerIpAndPort(connection, statementSpanBuilder);
+			statementSpanBuilder.remoteServiceName(connectionInfo.remoteServiceName);
+			if (connectionInfo.url != null) {
+				statementSpanBuilder.remoteIpAndPort(connectionInfo.url.getHost(), connectionInfo.url.getPort());
+			}
 			statementSpanBuilder.kind(Span.Kind.CLIENT);
 			Span statementSpan = statementSpanBuilder.start();
-			spanAndScope = new SpanAndScope(statementSpan, tracer.withSpan(statementSpan));
+			Tracer.SpanInScope scope = isCurrent(connectionInfo) ? tracer.withSpan(statementSpan) : null;
+			spanAndScope = new SpanAndScope(statementSpan, scope);
 			if (log.isTraceEnabled()) {
 				log.trace("Started client span before query [" + statementSpan + "] - current span is ["
 						+ tracer.currentSpan() + "]");
 			}
 		}
 		StatementInfo statementInfo = new StatementInfo(spanAndScope);
-		connectionInfo.getNestedStatements().put(statementKey, statementInfo);
+		connectionInfo.nestedStatements.put(statementKey, statementInfo);
 	}
 
 	void addQueryRowCount(CON connectionKey, STMT statementKey, int rowCount) {
 		if (log.isTraceEnabled()) {
 			log.trace("Add query row count for connection key [" + connectionKey + "]");
 		}
-		ConnectionInfo connectionInfo = openConnections.get(connectionKey);
+		ConnectionInfo connectionInfo = this.openConnections.get(connectionKey);
 		if (connectionInfo == null) {
 			if (log.isTraceEnabled()) {
 				log.trace("Connection is already closed");
 			}
 			return;
 		}
-		StatementInfo statementInfo = connectionInfo.getNestedStatements().get(statementKey);
-		statementInfo.getSpan()
-				.ifPresent(statementSpan -> AssertingSpan.of(SleuthJdbcSpan.JDBC_QUERY_SPAN, statementSpan.getSpan())
-						.tag(SleuthJdbcSpan.QueryTags.ROW_COUNT, String.valueOf(rowCount)));
+		StatementInfo statementInfo = connectionInfo.nestedStatements.get(statementKey);
+		SpanAndScope statementSpan = statementInfo.span;
+		if (statementSpan != null) {
+			AssertingSpan.of(SleuthJdbcSpan.JDBC_QUERY_SPAN, statementSpan.getSpan())
+					.tag(SleuthJdbcSpan.QueryTags.ROW_COUNT, String.valueOf(rowCount));
+		}
 	}
 
-	void afterQuery(CON connectionKey, STMT statementKey, String sql, Throwable t) {
+	void afterQuery(CON connectionKey, STMT statementKey, String sql, @Nullable Throwable t) {
 		if (log.isTraceEnabled()) {
 			log.trace("After query for connection key [" + connectionKey + "]");
 		}
-		ConnectionInfo connectionInfo = openConnections.get(connectionKey);
+		ConnectionInfo connectionInfo = this.openConnections.get(connectionKey);
 		if (connectionInfo == null) {
 			if (log.isTraceEnabled()) {
 				log.trace(
@@ -180,37 +222,33 @@ class TraceListenerStrategy<CON, STMT, RS> {
 			}
 			return;
 		}
-		StatementInfo statementInfo = connectionInfo.getNestedStatements().get(statementKey);
-		statementInfo.getSpan().ifPresent(statementSpan -> {
-			updateQuerySpan(sql, t, statementSpan);
+		StatementInfo statementInfo = connectionInfo.nestedStatements.get(statementKey);
+		SpanAndScope statementSpan = statementInfo.span;
+		if (statementSpan != null) {
+			AssertingSpan.of(SleuthJdbcSpan.JDBC_QUERY_SPAN, statementSpan.getSpan())
+					.tag(SleuthJdbcSpan.QueryTags.QUERY, sql).name(spanName(sql));
+			if (t != null) {
+				statementSpan.getSpan().error(t);
+			}
+			if (log.isTraceEnabled()) {
+				log.trace("Closing statement span [" + statementSpan + "] - current span is ["
+								  + tracer.currentSpan() + "]");
+			}
 			statementSpan.close();
 			if (log.isTraceEnabled()) {
 				log.trace("Current span [" + tracer.currentSpan() + "]");
 			}
-		});
-	}
-
-	private void updateQuerySpan(String sql, Throwable t, SpanAndScope statementSpan) {
-		AssertingSpan.of(SleuthJdbcSpan.JDBC_QUERY_SPAN, statementSpan.getSpan())
-				.tag(SleuthJdbcSpan.QueryTags.QUERY, sql).name(spanName(sql));
-		if (t != null) {
-			statementSpan.getSpan().error(t);
-		}
-		if (log.isTraceEnabled()) {
-			log.trace(
-					"Closing statement span [" + statementSpan + "] - current span is [" + tracer.currentSpan() + "]");
 		}
 	}
 
-	void beforeResultSetNext(CON connectionKey, Connection connection, STMT statementKey, RS resultSetKey,
-			String dataSourceName) {
+	void beforeResultSetNext(CON connectionKey, STMT statementKey, RS resultSetKey) {
 		if (log.isTraceEnabled()) {
 			log.trace("Before result set next");
 		}
 		if (!traceTypes.contains(TraceType.FETCH)) {
 			return;
 		}
-		ConnectionInfo connectionInfo = openConnections.get(connectionKey);
+		ConnectionInfo connectionInfo = this.openConnections.get(connectionKey);
 		// ConnectionInfo may be null if Connection was closed before ResultSet
 		if (connectionInfo == null) {
 			if (log.isTraceEnabled()) {
@@ -218,7 +256,7 @@ class TraceListenerStrategy<CON, STMT, RS> {
 			}
 			return;
 		}
-		if (connectionInfo.getNestedResultSetSpans().containsKey(resultSetKey)) {
+		if (connectionInfo.nestedResultSetSpans.containsKey(resultSetKey)) {
 			if (log.isTraceEnabled()) {
 				log.trace("ResultSet span is already created");
 			}
@@ -227,36 +265,65 @@ class TraceListenerStrategy<CON, STMT, RS> {
 		AssertingSpanBuilder resultSetSpanBuilder = AssertingSpanBuilder
 				.of(SleuthJdbcSpan.JDBC_RESULT_SET_SPAN, tracer.spanBuilder())
 				.name(SleuthJdbcSpan.JDBC_RESULT_SET_SPAN.getName());
-		resultSetSpanBuilder.remoteServiceName(dataSourceName);
 		resultSetSpanBuilder.kind(Span.Kind.CLIENT);
-		parseServerIpAndPort(connection, resultSetSpanBuilder);
+		resultSetSpanBuilder.remoteServiceName(connectionInfo.remoteServiceName);
+		if (connectionInfo.url != null) {
+			resultSetSpanBuilder.remoteIpAndPort(connectionInfo.url.getHost(), connectionInfo.url.getPort());
+		}
 		Span resultSetSpan = resultSetSpanBuilder.start();
-		SpanAndScope SpanAndScope = new SpanAndScope(resultSetSpan, tracer.withSpan(resultSetSpan));
+		Tracer.SpanInScope scope = isCurrent(connectionInfo) ? tracer.withSpan(resultSetSpan) : null;
+		SpanAndScope spanAndScope = new SpanAndScope(resultSetSpan, scope);
 		if (log.isTraceEnabled()) {
 			log.trace("Started client result set span [" + resultSetSpan + "] - current span is ["
 					+ tracer.currentSpan() + "]");
 		}
-		connectionInfo.getNestedResultSetSpans().put(resultSetKey, SpanAndScope);
-		StatementInfo statementInfo = connectionInfo.getNestedStatements().get(statementKey);
+		connectionInfo.nestedResultSetSpans.put(resultSetKey, spanAndScope);
+		StatementInfo statementInfo = connectionInfo.nestedStatements.get(statementKey);
 		// StatementInfo may be null when Statement is proxied and instance returned from
 		// ResultSet is different from instance returned in query method
 		// in this case if Statement is closed before ResultSet span won't be finished
 		// immediately, but when Connection is closed
 		if (statementInfo != null) {
-			statementInfo.getNestedResultSetSpans().put(resultSetKey, SpanAndScope);
+			statementInfo.nestedResultSetSpans.put(resultSetKey, spanAndScope);
 		}
 	}
 
-	void afterResultSetClose(CON connectionKey, RS resultSetKey, int rowCount, Throwable t) {
+	void afterStatementClose(CON connectionKey, STMT statementKey) {
+		if (log.isTraceEnabled()) {
+			log.trace("After statement close");
+		}
+		ConnectionInfo connectionInfo = this.openConnections.get(connectionKey);
+		// ConnectionInfo may be null if Connection was closed before Statement
+		if (connectionInfo == null) {
+			return;
+		}
+		StatementInfo statementInfo = connectionInfo.nestedStatements.remove(statementKey);
+		if (statementInfo != null) {
+			statementInfo.nestedResultSetSpans.forEach((resultSetKey, span) -> {
+				connectionInfo.nestedResultSetSpans.remove(resultSetKey);
+				if (log.isTraceEnabled()) {
+					log.trace("Closing span after statement close [" + span.getSpan() + "] - current span is ["
+							+ tracer.currentSpan() + "]");
+				}
+				span.close();
+				if (log.isTraceEnabled()) {
+					log.trace("Current span [" + tracer.currentSpan() + "]");
+				}
+			});
+			statementInfo.nestedResultSetSpans.clear();
+		}
+	}
+
+	void afterResultSetClose(CON connectionKey, RS resultSetKey, int rowCount, @Nullable Throwable t) {
 		if (log.isTraceEnabled()) {
 			log.trace("After result set close");
 		}
-		ConnectionInfo connectionInfo = openConnections.get(connectionKey);
+		ConnectionInfo connectionInfo = this.openConnections.get(connectionKey);
 		// ConnectionInfo may be null if Connection was closed before ResultSet
 		if (connectionInfo == null) {
 			return;
 		}
-		SpanAndScope resultSetSpan = connectionInfo.getNestedResultSetSpans().remove(resultSetKey);
+		SpanAndScope resultSetSpan = connectionInfo.nestedResultSetSpans.remove(resultSetKey);
 		// ResultSet span may be null if Statement or ResultSet were already closed
 		if (resultSetSpan == null) {
 			return;
@@ -270,7 +337,7 @@ class TraceListenerStrategy<CON, STMT, RS> {
 		}
 		if (log.isTraceEnabled()) {
 			log.trace("Closing client result set span [" + resultSetSpan + "] - current span is ["
-					+ tracer.currentSpan() + "]");
+							  + tracer.currentSpan() + "]");
 		}
 		resultSetSpan.close();
 		if (log.isTraceEnabled()) {
@@ -278,60 +345,36 @@ class TraceListenerStrategy<CON, STMT, RS> {
 		}
 	}
 
-	void afterStatementClose(CON connectionKey, STMT statementKey) {
-		if (log.isTraceEnabled()) {
-			log.trace("After statement close");
-		}
-		ConnectionInfo connectionInfo = openConnections.get(connectionKey);
-		// ConnectionInfo may be null if Connection was closed before Statement
-		if (connectionInfo == null) {
-			return;
-		}
-		StatementInfo statementInfo = connectionInfo.getNestedStatements().remove(statementKey);
-		if (statementInfo != null) {
-			statementInfo.getNestedResultSetSpans().forEach((resultSetKey, span) -> {
-				connectionInfo.getNestedResultSetSpans().remove(resultSetKey);
-				if (log.isTraceEnabled()) {
-					log.trace("Closing span after statement close [" + span.getSpan() + "] - current span is ["
-							+ tracer.currentSpan() + "]");
-				}
-				span.close();
-				if (log.isTraceEnabled()) {
-					log.trace("Current span [" + tracer.currentSpan() + "]");
-				}
-			});
-			statementInfo.getNestedResultSetSpans().clear();
-		}
-	}
-
-	void afterCommit(CON connectionKey, Throwable t) {
+	void afterCommit(CON connectionKey, @Nullable Throwable t) {
 		if (log.isTraceEnabled()) {
 			log.trace("After commit");
 		}
-		ConnectionInfo connectionInfo = openConnections.get(connectionKey);
+		ConnectionInfo connectionInfo = this.openConnections.get(connectionKey);
 		if (connectionInfo == null) {
 			// Connection is already closed
 			return;
 		}
-		connectionInfo.getSpan().ifPresent(connectionSpan -> {
+		SpanAndScope connectionSpan = connectionInfo.span;
+		if (connectionSpan != null) {
 			if (t != null) {
 				connectionSpan.getSpan().error(t);
 			}
 			AssertingSpan.of(SleuthJdbcSpan.JDBC_QUERY_SPAN, connectionSpan.getSpan())
 					.event(SleuthJdbcSpan.QueryEvents.COMMIT);
-		});
+		}
 	}
 
-	void afterRollback(CON connectionKey, Throwable t) {
+	void afterRollback(CON connectionKey, @Nullable Throwable t) {
 		if (log.isTraceEnabled()) {
 			log.trace("After rollback");
 		}
-		ConnectionInfo connectionInfo = openConnections.get(connectionKey);
+		ConnectionInfo connectionInfo = this.openConnections.get(connectionKey);
 		if (connectionInfo == null) {
 			// Connection is already closed
 			return;
 		}
-		connectionInfo.getSpan().ifPresent(connectionSpan -> {
+		SpanAndScope connectionSpan = connectionInfo.span;
+		if (connectionSpan != null) {
 			if (t != null) {
 				connectionSpan.getSpan().error(t);
 			}
@@ -340,25 +383,33 @@ class TraceListenerStrategy<CON, STMT, RS> {
 			}
 			AssertingSpan.of(SleuthJdbcSpan.JDBC_QUERY_SPAN, connectionSpan.getSpan())
 					.event(SleuthJdbcSpan.QueryEvents.ROLLBACK);
-		});
+		}
 	}
 
-	void afterConnectionClose(CON connectionKey, Throwable t) {
+	void afterConnectionClose(CON connectionKey, @Nullable Throwable t) {
 		if (log.isTraceEnabled()) {
 			log.trace("After connection close with key [" + connectionKey + "]");
 		}
-		ConnectionInfo connectionInfo = openConnections.remove(connectionKey);
+		ConnectionInfo connectionInfo = this.openConnections.remove(connectionKey);
+		if (isCurrent(connectionInfo)) {
+			this.currentConnection.set(null);
+		}
 		if (connectionInfo == null) {
 			// connection is already closed
 			return;
 		}
-		connectionInfo.getNestedResultSetSpans().values().forEach(SpanAndScope::close);
-		connectionInfo.getNestedStatements().values()
-				.forEach(statementInfo -> statementInfo.getSpan().ifPresent(SpanAndScope::close));
+		connectionInfo.nestedResultSetSpans.values().forEach(SpanAndScope::close);
+		connectionInfo.nestedStatements.values().forEach(statementInfo -> {
+			SpanAndScope statementSpan = statementInfo.span;
+			if (statementSpan != null) {
+				statementSpan.close();
+			}
+		});
 		if (log.isTraceEnabled()) {
 			log.trace("Current span after closing statements [" + tracer.currentSpan() + "]");
 		}
-		connectionInfo.getSpan().ifPresent(connectionSpan -> {
+		SpanAndScope connectionSpan = connectionInfo.span;
+		if (connectionSpan != null) {
 			if (t != null) {
 				connectionSpan.getSpan().error(t);
 			}
@@ -370,35 +421,11 @@ class TraceListenerStrategy<CON, STMT, RS> {
 			if (log.isTraceEnabled()) {
 				log.trace("Current span [" + tracer.currentSpan() + "]");
 			}
-		});
+		}
 	}
 
 	private String spanName(String sql) {
 		return sql.substring(0, sql.indexOf(' ')).toLowerCase(Locale.ROOT);
-	}
-
-	private void parseServerIpAndPort(Connection connection, Span.Builder span) {
-		if (connection == null) {
-			return;
-		}
-		UrlAndRemoteServiceName urlAndRemoteServiceName = parseServerIpAndPort(connection);
-		span.remoteServiceName(urlAndRemoteServiceName.remoteServiceName);
-		URI url = urlAndRemoteServiceName.url;
-		if (url != null) {
-			span.remoteIpAndPort(url.getHost(), url.getPort());
-		}
-	}
-
-	private void parseServerIpAndPort(Connection connection, Span span) {
-		if (connection == null) {
-			return;
-		}
-		UrlAndRemoteServiceName urlAndRemoteServiceName = parseServerIpAndPort(connection);
-		span.remoteServiceName(urlAndRemoteServiceName.remoteServiceName);
-		URI url = urlAndRemoteServiceName.url;
-		if (url != null) {
-			span.remoteIpAndPort(url.getHost(), url.getPort());
-		}
 	}
 
 	/**
@@ -408,13 +435,14 @@ class TraceListenerStrategy<CON, STMT, RS> {
 	 *
 	 * Taken from Brave.
 	 */
-	private UrlAndRemoteServiceName parseServerIpAndPort(Connection connection) {
+	private void parseAndSetServerIpAndPort(ConnectionInfo connectionInfo, Connection connection, String dataSourceName) {
+		URI url = null;
 		String remoteServiceName = "";
 		try {
 			String urlAsString = connection.getMetaData().getURL().substring(5); // strip
 																					// "jdbc:"
-			URI url = URI.create(urlAsString.replace(" ", "")); // Remove all white space
-																// according to RFC 2396
+			url = URI.create(urlAsString.replace(" ", "")); // Remove all white space
+																// according to RFC 2396;
 			Matcher matcher = URL_SERVICE_NAME_FINDER.matcher(url.toString());
 			if (matcher.find() && matcher.groupCount() == 1) {
 				String parsedServiceName = matcher.group(1);
@@ -428,69 +456,44 @@ class TraceListenerStrategy<CON, STMT, RS> {
 					remoteServiceName = databaseName;
 				}
 			}
-			return new UrlAndRemoteServiceName(url, remoteServiceName);
 		}
 		catch (Exception e) {
 			// remote address is optional
-			return new UrlAndRemoteServiceName(null, remoteServiceName);
+		}
+		connectionInfo.url = url;
+		if (StringUtils.hasText(remoteServiceName)) {
+			connectionInfo.remoteServiceName = remoteServiceName;
+		}
+		else {
+			connectionInfo.remoteServiceName = dataSourceName;
 		}
 	}
 
 	private final class ConnectionInfo {
 
-		private final SpanAndScope span;
+		final SpanAndScope span;
 
-		private final Map<STMT, StatementInfo> nestedStatements = new ConcurrentHashMap<>();
+		final Map<STMT, StatementInfo> nestedStatements = new ConcurrentHashMap<>();
 
-		private final Map<RS, SpanAndScope> nestedResultSetSpans = new ConcurrentHashMap<>();
+		final Map<RS, SpanAndScope> nestedResultSetSpans = new ConcurrentHashMap<>();
 
-		private ConnectionInfo(@Nullable SpanAndScope span) {
+		URI url;
+
+		String remoteServiceName;
+
+		ConnectionInfo(@Nullable SpanAndScope span) {
 			this.span = span;
 		}
-
-		Optional<SpanAndScope> getSpan() {
-			return Optional.ofNullable(span);
-		}
-
-		Map<STMT, StatementInfo> getNestedStatements() {
-			return nestedStatements;
-		}
-
-		Map<RS, SpanAndScope> getNestedResultSetSpans() {
-			return nestedResultSetSpans;
-		}
-
 	}
 
 	private final class StatementInfo {
 
-		private final SpanAndScope span;
+		final SpanAndScope span;
 
-		private final Map<RS, SpanAndScope> nestedResultSetSpans = new ConcurrentHashMap<>();
+		final Map<RS, SpanAndScope> nestedResultSetSpans = new ConcurrentHashMap<>();
 
-		private StatementInfo(SpanAndScope span) {
+		StatementInfo(SpanAndScope span) {
 			this.span = span;
-		}
-
-		Optional<SpanAndScope> getSpan() {
-			return Optional.ofNullable(span);
-		}
-
-		Map<RS, SpanAndScope> getNestedResultSetSpans() {
-			return nestedResultSetSpans;
-		}
-
-	}
-
-	private final class UrlAndRemoteServiceName {
-
-		final URI url;
-
-		final String remoteServiceName;
-
-		private UrlAndRemoteServiceName(@Nullable URI url, String remoteServiceName) {
-			this.url = url;
-			this.remoteServiceName = remoteServiceName;
 		}
 
 	}

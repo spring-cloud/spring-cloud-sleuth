@@ -44,6 +44,8 @@ import org.springframework.cloud.sleuth.instrument.jdbc.TraceListenerStrategySpa
 import org.springframework.cloud.sleuth.instrument.jdbc.TraceQueryExecutionListener;
 import org.springframework.context.annotation.Bean;
 
+import javax.sql.CommonDataSource;
+
 /**
  * Configuration for integration with datasource-proxy, allows to use define custom
  * {@link QueryExecutionListener}, {@link ParameterTransformer} and
@@ -100,7 +102,7 @@ class DataSourceProxyConfiguration {
 	@Bean
 	TraceQueryExecutionListener traceQueryExecutionListener(Tracer tracer,
 			TraceJdbcProperties dataSourceDecoratorProperties,
-			ObjectProvider<List<TraceListenerStrategySpanCustomizer>> customizers) {
+			ObjectProvider<List<TraceListenerStrategySpanCustomizer<? super CommonDataSource>>> customizers) {
 		return new TraceQueryExecutionListener(tracer, dataSourceDecoratorProperties.getIncludes(),
 				customizers.getIfAvailable(ArrayList::new));
 	}

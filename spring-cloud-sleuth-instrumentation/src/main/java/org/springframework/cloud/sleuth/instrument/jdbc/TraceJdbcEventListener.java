@@ -52,7 +52,7 @@ public class TraceJdbcEventListener extends SimpleJdbcEventListener implements O
 
 	public TraceJdbcEventListener(Tracer tracer, DataSourceNameResolver dataSourceNameResolver,
 			List<TraceType> traceTypes, boolean includeParameterValues,
-			List<TraceListenerStrategySpanCustomizer> customizers) {
+			List<TraceListenerStrategySpanCustomizer<? super CommonDataSource>> customizers) {
 		this.dataSourceNameResolver = dataSourceNameResolver;
 		this.includeParameterValues = includeParameterValues;
 		this.strategy = new TraceListenerStrategy<>(tracer, traceTypes, customizers);
@@ -67,15 +67,14 @@ public class TraceJdbcEventListener extends SimpleJdbcEventListener implements O
 
 	@Override
 	public void onAfterGetConnection(ConnectionInformation connectionInformation, SQLException e) {
-		this.strategy.afterGetConnection(connectionInformation, connectionInformation.getConnection(), e);
+		CommonDataSource dataSource = connectionInformation.getDataSource();
+		String dataSourceName = this.dataSourceNameResolver.resolveDataSourceName(dataSource);
+		this.strategy.afterGetConnection(connectionInformation, connectionInformation.getConnection(), dataSourceName, e);
 	}
 
 	@Override
 	public void onBeforeAnyExecute(StatementInformation statementInformation) {
-		String dataSourceName = this.dataSourceNameResolver
-				.resolveDataSourceName(statementInformation.getConnectionInformation().getDataSource());
-		this.strategy.beforeQuery(statementInformation.getConnectionInformation(),
-				statementInformation.getConnectionInformation().getConnection(), statementInformation, dataSourceName);
+		this.strategy.beforeQuery(statementInformation.getConnectionInformation(), statementInformation);
 	}
 
 	@Override
@@ -86,11 +85,9 @@ public class TraceJdbcEventListener extends SimpleJdbcEventListener implements O
 
 	@Override
 	public void onBeforeResultSetNext(ResultSetInformation resultSetInformation) {
-		String dataSourceName = this.dataSourceNameResolver
-				.resolveDataSourceName(resultSetInformation.getConnectionInformation().getDataSource());
 		this.strategy.beforeResultSetNext(resultSetInformation.getConnectionInformation(),
-				resultSetInformation.getConnectionInformation().getConnection(),
-				resultSetInformation.getStatementInformation(), resultSetInformation, dataSourceName);
+										  resultSetInformation.getStatementInformation(),
+										  resultSetInformation);
 	}
 
 	@Override

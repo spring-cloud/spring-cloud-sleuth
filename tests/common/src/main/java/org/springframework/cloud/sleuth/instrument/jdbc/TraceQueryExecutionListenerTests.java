@@ -23,7 +23,7 @@ import org.springframework.boot.test.context.FilteredClassLoader;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
 import org.springframework.cloud.sleuth.autoconfig.instrument.jdbc.TraceJdbcAutoConfiguration;
 
-public abstract class TracingQueryExecutionListenerTests extends TracingListenerStrategyTests {
+public abstract class TraceQueryExecutionListenerTests extends TraceListenerStrategyTests {
 
 	@Override
 	ApplicationContextRunner parentContextRunner() {

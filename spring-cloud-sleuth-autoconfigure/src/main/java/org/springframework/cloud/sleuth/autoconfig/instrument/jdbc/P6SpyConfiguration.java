@@ -37,6 +37,8 @@ import org.springframework.cloud.sleuth.instrument.jdbc.TraceListenerStrategySpa
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.Bean;
 
+import javax.sql.CommonDataSource;
+
 /**
  * Configuration for integration with p6spy, allows to define custom
  * {@link JdbcEventListener}.
@@ -56,7 +58,7 @@ class P6SpyConfiguration {
 	@ConditionalOnMissingBean
 	JdbcEventListenerFactory traceJdbcEventListenerFactory(ObjectProvider<List<JdbcEventListener>> listeners) {
 		JdbcEventListenerFactory jdbcEventListenerFactory = new DefaultJdbcEventListenerFactory();
-		List<JdbcEventListener> listenerList = listeners.getIfAvailable(() -> null);
+		List<JdbcEventListener> listenerList = listeners.getIfAvailable();
 		return listenerList != null ? new P6SpyContextJdbcEventListenerFactory(jdbcEventListenerFactory, listenerList)
 				: jdbcEventListenerFactory;
 	}
@@ -69,7 +71,7 @@ class P6SpyConfiguration {
 	@Bean
 	TraceJdbcEventListener tracingJdbcEventListener(Tracer tracer, DataSourceNameResolver dataSourceNameResolver,
 			TraceJdbcProperties traceJdbcProperties,
-			ObjectProvider<List<TraceListenerStrategySpanCustomizer>> customizers) {
+			ObjectProvider<List<TraceListenerStrategySpanCustomizer<? super CommonDataSource>>> customizers) {
 		return new TraceJdbcEventListener(tracer, dataSourceNameResolver, traceJdbcProperties.getIncludes(),
 				traceJdbcProperties.getP6spy().getTracing().isIncludeParameterValues(),
 				customizers.getIfAvailable(ArrayList::new));
