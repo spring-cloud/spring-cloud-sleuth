@@ -41,19 +41,24 @@ import org.springframework.lang.Nullable;
 import org.springframework.util.StringUtils;
 
 /**
- * Trace listener strategy makes the best effort at tracking all open JDBC resources (and therefore spans/scopes)
- * because of two main reasons:
- * 1. JDBC allows to not close child resources, in which case closing the parent will close everything - {@link Connection#close()}
- * closes all underlying {@link Statement}s and {@link Statement#close()} close all underlying {@link ResultSet}s.
- * Ideally this should not happen, but practically some applications (and some frameworks) rely on this mechanism.
- * 2. While most JDBC drivers don't support concurrency, multiple connections might be opened at the same time in the same thread.
- * JDBC treats those connections as completely separate resources, and we cannot rely on the order of closing those connections.
+ * Trace listener strategy makes the best effort at tracking all open JDBC resources (and
+ * therefore spans/scopes) because of two main reasons: 1. JDBC allows to not close child
+ * resources, in which case closing the parent will close everything -
+ * {@link Connection#close()} closes all underlying {@link Statement}s and
+ * {@link Statement#close()} close all underlying {@link ResultSet}s. Ideally this should
+ * not happen, but practically some applications (and some frameworks) rely on this
+ * mechanism. 2. While most JDBC drivers don't support concurrency, multiple connections
+ * might be opened at the same time in the same thread. JDBC treats those connections as
+ * completely separate resources, and we cannot rely on the order of closing those
+ * connections.
  *
- * Tracking covers such cases as long as resources are closed in the same thread they were opened.
+ * Tracking covers such cases as long as resources are closed in the same thread they were
+ * opened.
  *
  * Partially taken from
  * https://github.com/openzipkin/brave/blob/v5.6.4/instrumentation/p6spy/src/main/java/brave/p6spy/TracingJdbcEventListener.java
- * and https://github.com/gavlyukovskiy/spring-boot-data-source-decorator/blob/master/datasource-decorator-spring-boot-autoconfigure/src/main/java/com/github/gavlyukovskiy/cloud/sleuth/TracingListenerStrategy.java.
+ * and
+ * https://github.com/gavlyukovskiy/spring-boot-data-source-decorator/blob/master/datasource-decorator-spring-boot-autoconfigure/src/main/java/com/github/gavlyukovskiy/cloud/sleuth/TracingListenerStrategy.java.
  *
  * @param <CON> connection type
  * @param <STMT> statement
@@ -115,7 +120,8 @@ class TraceListenerStrategy<CON, STMT, RS> {
 		}
 	}
 
-	void afterGetConnection(CON connectionKey, @Nullable Connection connection, String dataSourceName, @Nullable Throwable t) {
+	void afterGetConnection(CON connectionKey, @Nullable Connection connection, String dataSourceName,
+			@Nullable Throwable t) {
 		if (log.isTraceEnabled()) {
 			log.trace("After get connection [" + connectionKey + "]. Current span is [" + tracer.currentSpan() + "]");
 		}
@@ -231,8 +237,8 @@ class TraceListenerStrategy<CON, STMT, RS> {
 				statementSpan.getSpan().error(t);
 			}
 			if (log.isTraceEnabled()) {
-				log.trace("Closing statement span [" + statementSpan + "] - current span is ["
-								  + tracer.currentSpan() + "]");
+				log.trace("Closing statement span [" + statementSpan + "] - current span is [" + tracer.currentSpan()
+						+ "]");
 			}
 			statementSpan.close();
 			if (log.isTraceEnabled()) {
@@ -337,7 +343,7 @@ class TraceListenerStrategy<CON, STMT, RS> {
 		}
 		if (log.isTraceEnabled()) {
 			log.trace("Closing client result set span [" + resultSetSpan + "] - current span is ["
-							  + tracer.currentSpan() + "]");
+					+ tracer.currentSpan() + "]");
 		}
 		resultSetSpan.close();
 		if (log.isTraceEnabled()) {
@@ -435,14 +441,15 @@ class TraceListenerStrategy<CON, STMT, RS> {
 	 *
 	 * Taken from Brave.
 	 */
-	private void parseAndSetServerIpAndPort(ConnectionInfo connectionInfo, Connection connection, String dataSourceName) {
+	private void parseAndSetServerIpAndPort(ConnectionInfo connectionInfo, Connection connection,
+			String dataSourceName) {
 		URI url = null;
 		String remoteServiceName = "";
 		try {
 			String urlAsString = connection.getMetaData().getURL().substring(5); // strip
 																					// "jdbc:"
 			url = URI.create(urlAsString.replace(" ", "")); // Remove all white space
-																// according to RFC 2396;
+															// according to RFC 2396;
 			Matcher matcher = URL_SERVICE_NAME_FINDER.matcher(url.toString());
 			if (matcher.find() && matcher.groupCount() == 1) {
 				String parsedServiceName = matcher.group(1);
@@ -484,6 +491,7 @@ class TraceListenerStrategy<CON, STMT, RS> {
 		ConnectionInfo(@Nullable SpanAndScope span) {
 			this.span = span;
 		}
+
 	}
 
 	private final class StatementInfo {

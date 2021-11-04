@@ -69,7 +69,8 @@ public class TraceJdbcEventListener extends SimpleJdbcEventListener implements O
 	public void onAfterGetConnection(ConnectionInformation connectionInformation, SQLException e) {
 		CommonDataSource dataSource = connectionInformation.getDataSource();
 		String dataSourceName = this.dataSourceNameResolver.resolveDataSourceName(dataSource);
-		this.strategy.afterGetConnection(connectionInformation, connectionInformation.getConnection(), dataSourceName, e);
+		this.strategy.afterGetConnection(connectionInformation, connectionInformation.getConnection(), dataSourceName,
+				e);
 	}
 
 	@Override
@@ -86,8 +87,7 @@ public class TraceJdbcEventListener extends SimpleJdbcEventListener implements O
 	@Override
 	public void onBeforeResultSetNext(ResultSetInformation resultSetInformation) {
 		this.strategy.beforeResultSetNext(resultSetInformation.getConnectionInformation(),
-										  resultSetInformation.getStatementInformation(),
-										  resultSetInformation);
+				resultSetInformation.getStatementInformation(), resultSetInformation);
 	}
 
 	@Override
