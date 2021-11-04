@@ -19,6 +19,8 @@ package org.springframework.cloud.sleuth.autoconfig.instrument.jdbc;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.sql.CommonDataSource;
+
 import com.p6spy.engine.event.JdbcEventListener;
 import com.p6spy.engine.spy.DefaultJdbcEventListenerFactory;
 import com.p6spy.engine.spy.JdbcEventListenerFactory;
@@ -56,7 +58,7 @@ class P6SpyConfiguration {
 	@ConditionalOnMissingBean
 	JdbcEventListenerFactory traceJdbcEventListenerFactory(ObjectProvider<List<JdbcEventListener>> listeners) {
 		JdbcEventListenerFactory jdbcEventListenerFactory = new DefaultJdbcEventListenerFactory();
-		List<JdbcEventListener> listenerList = listeners.getIfAvailable(() -> null);
+		List<JdbcEventListener> listenerList = listeners.getIfAvailable();
 		return listenerList != null ? new P6SpyContextJdbcEventListenerFactory(jdbcEventListenerFactory, listenerList)
 				: jdbcEventListenerFactory;
 	}
@@ -69,7 +71,7 @@ class P6SpyConfiguration {
 	@Bean
 	TraceJdbcEventListener tracingJdbcEventListener(Tracer tracer, DataSourceNameResolver dataSourceNameResolver,
 			TraceJdbcProperties traceJdbcProperties,
-			ObjectProvider<List<TraceListenerStrategySpanCustomizer>> customizers) {
+			ObjectProvider<List<TraceListenerStrategySpanCustomizer<? super CommonDataSource>>> customizers) {
 		return new TraceJdbcEventListener(tracer, dataSourceNameResolver, traceJdbcProperties.getIncludes(),
 				traceJdbcProperties.getP6spy().getTracing().isIncludeParameterValues(),
 				customizers.getIfAvailable(ArrayList::new));

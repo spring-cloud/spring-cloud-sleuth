@@ -25,6 +25,7 @@ import org.apache.commons.logging.LogFactory;
  * Container object for {@link Span} and its corresponding {@link Tracer.SpanInScope}.
  *
  * @author Marcin Grzejszczak
+ * @author Arthur Gavlyukovskiy
  * @since 3.1.0
  */
 public class SpanAndScope implements Closeable {
@@ -58,7 +59,9 @@ public class SpanAndScope implements Closeable {
 		if (log.isTraceEnabled()) {
 			log.trace("Closing span [" + this.span + "]");
 		}
-		this.scope.close();
+		if (this.scope != null) {
+			this.scope.close();
+		}
 		this.span.end();
 	}
 

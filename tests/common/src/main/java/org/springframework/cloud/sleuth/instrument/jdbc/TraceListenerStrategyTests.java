@@ -41,7 +41,7 @@ import org.springframework.context.annotation.Bean;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-abstract class TracingListenerStrategyTests {
+abstract class TraceListenerStrategyTests {
 
 	public static final String SPAN_SQL_QUERY_TAG_NAME = "jdbc.query";
 
@@ -49,9 +49,9 @@ abstract class TracingListenerStrategyTests {
 
 	abstract ApplicationContextRunner parentContextRunner();
 
-	protected abstract Class autoConfiguration();
+	protected abstract Class<?> autoConfiguration();
 
-	protected abstract Class testConfiguration();
+	protected abstract Class<?> testConfiguration();
 
 	@Test
 	void testShouldAddSpanForConnection() {
@@ -387,8 +387,8 @@ abstract class TracingListenerStrategyTests {
 
 			Connection connection1 = dataSource.getConnection();
 			Connection connection2 = dataSource.getConnection();
-			connection2.close();
 			connection1.close();
+			connection2.close();
 
 			assertThat(spanReporter.reportedSpans()).hasSize(2);
 			FinishedSpan connection1Span = spanReporter.reportedSpans().get(0);

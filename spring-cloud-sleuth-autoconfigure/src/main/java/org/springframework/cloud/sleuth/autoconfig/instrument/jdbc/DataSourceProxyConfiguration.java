@@ -19,6 +19,8 @@ package org.springframework.cloud.sleuth.autoconfig.instrument.jdbc;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.sql.CommonDataSource;
+
 import net.ttddyy.dsproxy.listener.MethodExecutionListener;
 import net.ttddyy.dsproxy.listener.QueryCountStrategy;
 import net.ttddyy.dsproxy.listener.QueryExecutionListener;
@@ -100,7 +102,7 @@ class DataSourceProxyConfiguration {
 	@Bean
 	TraceQueryExecutionListener traceQueryExecutionListener(Tracer tracer,
 			TraceJdbcProperties dataSourceDecoratorProperties,
-			ObjectProvider<List<TraceListenerStrategySpanCustomizer>> customizers) {
+			ObjectProvider<List<TraceListenerStrategySpanCustomizer<? super CommonDataSource>>> customizers) {
 		return new TraceQueryExecutionListener(tracer, dataSourceDecoratorProperties.getIncludes(),
 				customizers.getIfAvailable(ArrayList::new));
 	}

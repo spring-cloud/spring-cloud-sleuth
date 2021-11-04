@@ -62,23 +62,19 @@ public class TraceTaskExecutionListener implements TaskExecutionListener, Ordere
 	@Override
 	public void onTaskEnd(TaskExecution taskExecution) {
 		SpanAndScope spanAndScope = this.threadLocalSpan.get();
-		Span span = spanAndScope.getSpan();
-		span.end();
-		spanAndScope.getScope().close();
+		spanAndScope.close();
 		if (log.isDebugEnabled()) {
-			log.debug("Removed the [" + span + "] from thread local");
+			log.debug("Removed the [" + spanAndScope.getSpan() + "] from thread local");
 		}
 	}
 
 	@Override
 	public void onTaskFailed(TaskExecution taskExecution, Throwable throwable) {
 		SpanAndScope spanAndScope = this.threadLocalSpan.get();
-		Span span = spanAndScope.getSpan();
-		span.error(throwable);
-		span.end();
-		spanAndScope.getScope().close();
+		spanAndScope.getSpan().error(throwable);
+		spanAndScope.close();
 		if (log.isDebugEnabled()) {
-			log.debug("Removed the [" + span + "] from thread local and added error");
+			log.debug("Removed the [" + spanAndScope.getSpan() + "] from thread local and added error");
 		}
 	}
 

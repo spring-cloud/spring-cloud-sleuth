@@ -34,7 +34,7 @@ import org.springframework.cloud.sleuth.test.TestSpanHandler;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-public abstract class TracingJdbcEventListenerTests extends TracingListenerStrategyTests {
+public abstract class TraceJdbcEventListenerTests extends TraceListenerStrategyTests {
 
 	protected final ApplicationContextRunner contextRunner = new ApplicationContextRunner()
 			.withConfiguration(AutoConfigurations.of(DataSourceAutoConfiguration.class,
