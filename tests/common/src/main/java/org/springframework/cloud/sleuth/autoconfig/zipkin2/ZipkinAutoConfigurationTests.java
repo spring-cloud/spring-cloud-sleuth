@@ -125,6 +125,7 @@ public abstract class ZipkinAutoConfigurationTests {
 
 			Awaitility.await().atMost(5, TimeUnit.SECONDS).untilAsserted(() -> {
 				RecordedRequest request = this.server.takeRequest(1, TimeUnit.SECONDS);
+				then(request).isNotNull();
 				then(request.getPath()).isEqualTo("/api/v2/spans");
 				then(request.getBody().readUtf8()).contains("localEndpoint");
 			});
@@ -152,6 +153,7 @@ public abstract class ZipkinAutoConfigurationTests {
 
 					Awaitility.await().atMost(5, TimeUnit.SECONDS).untilAsserted(() -> {
 						RecordedRequest request = this.server.takeRequest(1, TimeUnit.SECONDS);
+						then(request).isNotNull();
 						then(request.getPath()).isEqualTo("/api/v1/spans");
 						then(request.getBody().readUtf8()).contains("binaryAnnotations");
 					});
