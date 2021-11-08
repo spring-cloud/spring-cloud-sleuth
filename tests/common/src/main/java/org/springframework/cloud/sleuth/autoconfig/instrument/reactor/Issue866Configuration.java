@@ -21,7 +21,6 @@ import org.apache.commons.logging.LogFactory;
 
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
-import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -41,10 +40,9 @@ public class Issue866Configuration {
 	public static TestHook hook;
 
 	@Bean
-	HookRegisteringBeanDefinitionRegistryPostProcessor overridingProcessorForTests(
-			ConfigurableApplicationContext context) {
-		log.info("Registering a HookRegisteringBeanDefinitionRegistryPostProcessor for context [" + context + "]");
-		TestHook hook = new TestHook(context);
+	HookRegisteringBeanFactoryPostProcessor overridingProcessorForTests() {
+		log.info("Registering a HookRegisteringBeanDefinitionRegistryPostProcessor.");
+		TestHook hook = new TestHook();
 		Issue866Configuration.hook = hook;
 		return hook;
 	}
@@ -52,15 +50,15 @@ public class Issue866Configuration {
 	/**
 	 * Test Hook.
 	 */
-	public static class TestHook extends HookRegisteringBeanDefinitionRegistryPostProcessor {
+	public static class TestHook extends HookRegisteringBeanFactoryPostProcessor {
 
 		/**
 		 * Whether the hook was called.
 		 */
 		public boolean executed = false;
 
-		public TestHook(ConfigurableApplicationContext context) {
-			super(context);
+		public TestHook() {
+			super();
 		}
 
 		@Override
