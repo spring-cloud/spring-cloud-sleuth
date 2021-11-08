@@ -159,15 +159,15 @@ public class MicroBenchmarkStreamTests {
 			noSleuthSimple(Pair.noSleuth(), function("simple")),
 			sleuthSimpleOnQueues(function("simple"), Pair.onHook()),
 			sleuthSimpleManual(function("simple_manual"), Pair.manual(), functionDisabled(), integrationDisabled()),
-			sleuthSimpleNoFunctionInstrumentationManual(function("simple_manual"), Pair.manual(), functionDisabled(), integrationEnabled()),
+			sleuthSimpleNoFunctionInstrumentationManual(function("simple_manual"), Pair.manual(), functionDisabled(), integrationDisabled()),
 			sleuthSimpleOnEach(function("simple"), Pair.onEach()),
 			sleuthSimpleOnLast(function("simple"), Pair.onLast()),
 			sleuthSimpleWithAroundOnQueues(function("simple_function_with_around")),
 			noSleuthReactiveSimple(function("reactive_simple"), Pair.noSleuth()),
-			sleuthReactiveSimpleOnQueues(function("DECORATE_QUEUES"), Pair.decorateQueues(), integrationEnabled()),
-			sleuthReactiveSimpleOnEach(function("DECORATE_ON_EACH"), Pair.onEach(), integrationEnabled()),
+			sleuthReactiveSimpleOnQueues(function("DECORATE_QUEUES"), Pair.decorateQueues()),
+			sleuthReactiveSimpleOnEach(function("DECORATE_ON_EACH"), Pair.onEach()),
 			sleuthReactiveSimpleManual(function("reactive_simple_manual"), Pair.manual()),
-			sleuthReactiveSimpleNoFunctionInstrumentationManual(function("reactive_simple_manual"), Pair.manual(), integrationEnabled(), functionDisabled());
+			sleuthReactiveSimpleNoFunctionInstrumentationManual(function("reactive_simple_manual"), Pair.manual(), integrationDisabled(), functionDisabled());
 			// @formatter:on
 
 			private final List<Pair> pairs;
