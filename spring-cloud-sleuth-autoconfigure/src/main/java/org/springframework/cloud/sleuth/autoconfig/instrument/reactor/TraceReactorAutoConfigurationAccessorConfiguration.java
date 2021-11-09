@@ -39,7 +39,7 @@ public final class TraceReactorAutoConfigurationAccessorConfiguration {
 			log.trace("Cleaning up hooks");
 		}
 		try {
-			new HookRegisteringBeanDefinitionRegistryPostProcessor(null).close();
+			new HookRegisteringBeanFactoryPostProcessor().close();
 		}
 		catch (IOException e) {
 			throw new IllegalStateException(e);
@@ -50,7 +50,7 @@ public final class TraceReactorAutoConfigurationAccessorConfiguration {
 		if (log.isTraceEnabled()) {
 			log.trace("Setting up hooks");
 		}
-		HookRegisteringBeanDefinitionRegistryPostProcessor.setupHooks(context);
+		HookRegisteringBeanFactoryPostProcessor.setupHooks(context);
 	}
 
 }

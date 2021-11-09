@@ -30,10 +30,10 @@ import reactor.core.publisher.Hooks;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 
+import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.config.BeanFactoryPostProcessor;
 import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
-import org.springframework.beans.factory.support.BeanDefinitionRegistry;
-import org.springframework.beans.factory.support.BeanDefinitionRegistryPostProcessor;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
@@ -47,6 +47,8 @@ import org.springframework.cloud.sleuth.TraceContext;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.autoconfig.brave.BraveAutoConfiguration;
 import org.springframework.cloud.sleuth.instrument.reactor.ReactorSleuth;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.ApplicationContextAware;
 import org.springframework.context.ApplicationListener;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.Bean;
@@ -64,6 +66,7 @@ import static org.springframework.cloud.sleuth.instrument.reactor.ReactorSleuth.
  *
  * @author Stephane Maldini
  * @author Marcin Grzejszczak
+ * @author Olga Maciaszek-Sharma
  * @since 2.0.0
  */
 @Configuration(proxyBeanMethods = false)
@@ -91,12 +94,11 @@ public class TraceReactorAutoConfiguration {
 
 		@Bean
 		@ConditionalOnMissingBean
-		HookRegisteringBeanDefinitionRegistryPostProcessor traceHookRegisteringBeanDefinitionRegistryPostProcessor(
-				ConfigurableApplicationContext context) {
+		HookRegisteringBeanFactoryPostProcessor traceHookRegisteringBeanFactoryPostProcessor() {
 			if (log.isTraceEnabled()) {
-				log.trace("Registering bean definition registry post processor for context [" + context + "]");
+				log.trace("Registering HookRegisteringBeanFactoryPostProcessor");
 			}
-			return new HookRegisteringBeanDefinitionRegistryPostProcessor(context);
+			return new HookRegisteringBeanFactoryPostProcessor();
 		}
 
 		private static boolean isQueueWrapperOnTheClasspath() {
@@ -147,7 +149,7 @@ class HooksRefresher implements ApplicationListener<RefreshScopeRefreshedEvent> 
 				if (log.isTraceEnabled()) {
 					log.trace("Adding queue wrapper instrumentation");
 				}
-				HookRegisteringBeanDefinitionRegistryPostProcessor.addQueueWrapper(context);
+				HookRegisteringBeanFactoryPostProcessor.addQueueWrapper(context);
 				Hooks.onLastOperator(SLEUTH_TRACE_REACTOR_KEY, ReactorSleuth.scopePassingSpanOperator(this.context));
 				Schedulers.onScheduleHook(TraceReactorAutoConfiguration.SLEUTH_REACTOR_EXECUTOR_SERVICE_KEY,
 						ReactorSleuth.scopePassingOnScheduleHook(this.context));
@@ -177,23 +179,17 @@ class HooksRefresher implements ApplicationListener<RefreshScopeRefreshedEvent> 
 
 }
 
-class HookRegisteringBeanDefinitionRegistryPostProcessor implements BeanDefinitionRegistryPostProcessor, Closeable {
+class HookRegisteringBeanFactoryPostProcessor implements BeanFactoryPostProcessor, Closeable, ApplicationContextAware {
 
-	private static final Log log = LogFactory.getLog(HookRegisteringBeanDefinitionRegistryPostProcessor.class);
+	private static final Log log = LogFactory.getLog(HookRegisteringBeanFactoryPostProcessor.class);
 
-	final ConfigurableApplicationContext springContext;
-
-	HookRegisteringBeanDefinitionRegistryPostProcessor(ConfigurableApplicationContext springContext) {
-		this.springContext = springContext;
-	}
-
-	@Override
-	public void postProcessBeanDefinitionRegistry(BeanDefinitionRegistry registry) {
-	}
+	private ConfigurableApplicationContext springContext;
 
 	@Override
 	public void postProcessBeanFactory(ConfigurableListableBeanFactory beanFactory) {
-		setupHooks(this.springContext);
+		if (springContext != null) {
+			setupHooks(springContext);
+		}
 	}
 
 	static void setupHooks(ConfigurableApplicationContext springContext) {
@@ -352,6 +348,21 @@ class HookRegisteringBeanDefinitionRegistryPostProcessor implements BeanDefiniti
 				};
 			}
 		};
+	}
+
+	@Override
+	public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
+		if (log.isTraceEnabled()) {
+			log.trace("Setting context for HookRegisteringBeanFactoryPostProcessor: [" + applicationContext + "]");
+		}
+		if (!(applicationContext instanceof ConfigurableApplicationContext)) {
+			if (log.isErrorEnabled()) {
+				log.error("Cannot set up tracing hooks for non-configurable application context: [" + applicationContext
+						+ "]");
+			}
+			return;
+		}
+		springContext = (ConfigurableApplicationContext) applicationContext;
 	}
 
 	static class Envelope {
