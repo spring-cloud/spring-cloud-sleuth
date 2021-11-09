@@ -187,7 +187,9 @@ class HookRegisteringBeanFactoryPostProcessor implements BeanFactoryPostProcesso
 
 	@Override
 	public void postProcessBeanFactory(ConfigurableListableBeanFactory beanFactory) {
-		setupHooks(springContext);
+		if (springContext != null) {
+			setupHooks(springContext);
+		}
 	}
 
 	static void setupHooks(ConfigurableApplicationContext springContext) {
@@ -352,6 +354,13 @@ class HookRegisteringBeanFactoryPostProcessor implements BeanFactoryPostProcesso
 	public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
 		if (log.isTraceEnabled()) {
 			log.trace("Setting context for HookRegisteringBeanFactoryPostProcessor: [" + applicationContext + "]");
+		}
+		if (!(applicationContext instanceof ConfigurableApplicationContext)) {
+			if (log.isErrorEnabled()) {
+				log.error("Cannot set up tracing hooks for non-configurable application context: [" + applicationContext
+						+ "]");
+			}
+			return;
 		}
 		springContext = (ConfigurableApplicationContext) applicationContext;
 	}
