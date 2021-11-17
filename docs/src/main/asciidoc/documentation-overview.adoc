@@ -51,7 +51,7 @@ Ready to actually start using {project-full-name}? <<using.adoc#using, We have y
 
 * <<using.adoc#using-span-lifecycle,Span Lifecycle with Spring Cloud Sleuth's API>>
 * <<using.adoc#using-naming-spans,Naming Spans>>
-* <<using.adoc#using-annotations,Managins Spans with Annotations>>
+* <<using.adoc#using-annotations,Managing Spans with Annotations>>
 
 [[sleuth-documentation-features]]
 == Learning about {project-full-name} Features
