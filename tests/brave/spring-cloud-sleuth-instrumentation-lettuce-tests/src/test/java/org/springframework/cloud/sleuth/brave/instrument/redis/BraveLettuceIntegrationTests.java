@@ -17,6 +17,8 @@
 package org.springframework.cloud.sleuth.brave.instrument.redis;
 
 import brave.sampler.Sampler;
+import io.lettuce.core.tracing.BraveTracing;
+import io.lettuce.core.tracing.Tracing;
 
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.cloud.sleuth.brave.BraveTestSpanHandler;
@@ -29,6 +31,11 @@ import org.springframework.test.context.ContextConfiguration;
 @ContextConfiguration(classes = BraveLettuceIntegrationTests.Config.class)
 public class BraveLettuceIntegrationTests
 		extends org.springframework.cloud.sleuth.instrument.redis.LettuceIntegrationTests {
+
+	@Override
+	protected Class<? extends Tracing> tracing() {
+		return BraveTracing.class;
+	}
 
 	@Configuration(proxyBeanMethods = false)
 	static class Config {

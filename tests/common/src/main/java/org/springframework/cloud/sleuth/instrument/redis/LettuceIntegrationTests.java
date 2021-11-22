@@ -17,7 +17,7 @@
 package org.springframework.cloud.sleuth.instrument.redis;
 
 import io.lettuce.core.resource.ClientResources;
-import io.lettuce.core.tracing.BraveTracing;
+import io.lettuce.core.tracing.Tracing;
 import org.junit.jupiter.api.Test;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -42,14 +42,17 @@ public abstract class LettuceIntegrationTests {
 	TraceLettuceClientResourcesBuilderCustomizer customizer;
 
 	@Autowired
-	BraveTracing braveTracing;
+	Tracing tracing;
 
 	@Test
 	void tracing_should_be_set() {
 		then(this.clientResources).isNull();
 		then(this.customizer).isNotNull();
-		then(this.braveTracing.isEnabled()).isTrue();
+		then(this.tracing.isEnabled()).isTrue();
+		then(this.tracing).isInstanceOf(tracing());
 	}
+
+	protected abstract Class<? extends Tracing> tracing();
 
 	@Configuration(proxyBeanMethods = false)
 	@EnableAutoConfiguration
