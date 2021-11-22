@@ -66,7 +66,9 @@ public class TraceLettuceClientResourcesBeanPostProcessor implements BeanPostPro
 				if (log.isDebugEnabled()) {
 					log.debug("Lettuce ClientResources bean is auto-configured to enable tracing.");
 				}
-				return cr.mutate().tracing(new LazyTracing(this.beanFactory)).build();
+				ClientResources crWithTracing = cr.mutate().tracing(new LazyTracing(this.beanFactory)).build();
+				cr.shutdown();
+				return crWithTracing;
 			}
 			else if (log.isDebugEnabled()) {
 				log.debug(
