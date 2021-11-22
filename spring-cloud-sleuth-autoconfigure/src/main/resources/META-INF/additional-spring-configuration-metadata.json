@@ -120,6 +120,12 @@
       "defaultValue": false
     },
     {
+      "name": "spring.sleuth.redis.legacy.enabled",
+      "type": "java.lang.Boolean",
+      "description": "Enable legacy tracing of Redis that works only via Brave.",
+      "defaultValue": false
+    },
+    {
       "name": "spring.sleuth.rpc.enabled",
       "type": "java.lang.Boolean",
       "description": "Enable tracing of RPC.",

@@ -26,6 +26,7 @@ org.springframework.cloud.sleuth.autoconfig.instrument.scheduling.TraceSchedulin
 org.springframework.cloud.sleuth.autoconfig.instrument.session.TraceSessionAutoConfiguration,\
 org.springframework.cloud.sleuth.autoconfig.instrument.security.TraceSecurityAutoConfiguration,\
 org.springframework.cloud.sleuth.autoconfig.instrument.reactor.TraceReactorAutoConfiguration,\
+org.springframework.cloud.sleuth.autoconfig.instrument.redis.TraceRedisAutoConfiguration,\
 org.springframework.cloud.sleuth.autoconfig.instrument.messaging.TraceFunctionAutoConfiguration,\
 org.springframework.cloud.sleuth.autoconfig.instrument.messaging.TraceSpringIntegrationAutoConfiguration,\
 org.springframework.cloud.sleuth.autoconfig.instrument.messaging.TraceSpringMessagingAutoConfiguration,\

@@ -291,6 +291,12 @@
 			<artifactId>brave-instrumentation-grpc</artifactId>
 			<optional>true</optional>
 		</dependency>
+		<!-- Instrumentation of Lettuce -->
+		<dependency>
+			<groupId>io.lettuce</groupId>
+			<artifactId>lettuce-core</artifactId>
+			<optional>true</optional>
+		</dependency>
 		<dependency>
 			<groupId>io.zipkin.reporter2</groupId>
 			<artifactId>zipkin-reporter-metrics-micrometer</artifactId>

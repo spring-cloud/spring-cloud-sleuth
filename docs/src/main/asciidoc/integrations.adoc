@@ -459,7 +459,16 @@ To disable Reactor support, set the `spring.sleuth.reactor.enabled` property to 
 [[sleuth-redis-integration]]
 == Redis
 
-This feature is available for Brave tracer implementation.
+This feature is available for all tracer implementations.
+
+We're using the `Tracing` abstraction from Lettuce. If Brave is on the classpath we configure `Tracing` to be `BraveTracing`.
+
+To disable Redis support, set the `spring.sleuth.redis.enabled` property to `false`.
+
+[[sleuth-redis-legacy-integration]]
+=== Redis With Legacy Brave Only Support
+
+To use the Brave only supported feature you need to set the value of `spring.sleuth.redis.legacy.enabled` to `true`. This is the default mechanism available up till version 3.1.0 of Spring Cloud Sleuth.
 
 We set `tracing` property to Lettuce `ClientResources` instance to enable Brave tracing built in Lettuce.
 
@@ -475,8 +484,6 @@ Spring Cloud Sleuth will provide a traced version of the `ClientResources` bean.
 		return builder.build();
 	}
 ----
-
-To disable Redis support, set the `spring.sleuth.redis.enabled` property to `false`.
 
 [[sleuth-runnablecallable-integration]]
 == Runnable and Callable

@@ -14,41 +14,46 @@
  * limitations under the License.
  */
 
-package org.springframework.cloud.sleuth.brave.instrument.redis;
+package org.springframework.cloud.sleuth.instrument.redis;
 
 import io.lettuce.core.resource.ClientResources;
+import io.lettuce.core.tracing.BraveTracing;
 import org.junit.jupiter.api.Test;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.TestPropertySource;
 
 import static org.assertj.core.api.BDDAssertions.then;
 
 /**
  * @author Chao Chang
  */
-@SpringBootTest(classes = BraveRedisAutoConfigurationTests.Config.class,
-		webEnvironment = SpringBootTest.WebEnvironment.NONE, properties = { "spring.sleuth.redis.enabled=true",
-				"spring.sleuth.redis.legacy.enabled=true", "spring.sleuth.redis.remote-service-name=redis-foo" })
-class BraveRedisAutoConfigurationTests {
+@ContextConfiguration(classes = LettuceIntegrationTests.TestConfig.class)
+@TestPropertySource(properties = "spring.sleuth.redis.remote-service-name=redis-foo")
+public abstract class LettuceIntegrationTests {
 
-	@Autowired
+	@Autowired(required = false)
 	ClientResources clientResources;
 
 	@Autowired
 	TraceLettuceClientResourcesBuilderCustomizer customizer;
 
+	@Autowired
+	BraveTracing braveTracing;
+
 	@Test
 	void tracing_should_be_set() {
-		then(this.clientResources.tracing().isEnabled()).isTrue();
+		then(this.clientResources).isNull();
 		then(this.customizer).isNotNull();
+		then(this.braveTracing.isEnabled()).isTrue();
 	}
 
 	@Configuration(proxyBeanMethods = false)
 	@EnableAutoConfiguration
-	protected static class Config {
+	protected static class TestConfig {
 
 	}
 

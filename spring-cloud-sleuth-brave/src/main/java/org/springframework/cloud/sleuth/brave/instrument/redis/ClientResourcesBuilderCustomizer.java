@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.springframework.cloud.sleuth.instrument.redis;
+package org.springframework.cloud.sleuth.brave.instrument.redis;
 
 import io.lettuce.core.resource.ClientResources;
 

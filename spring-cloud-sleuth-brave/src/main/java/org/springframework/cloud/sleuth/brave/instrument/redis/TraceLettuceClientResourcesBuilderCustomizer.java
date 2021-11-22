@@ -14,12 +14,11 @@
  * limitations under the License.
  */
 
-package org.springframework.cloud.sleuth.instrument.redis;
+package org.springframework.cloud.sleuth.brave.instrument.redis;
 
+import brave.Tracing;
 import io.lettuce.core.resource.ClientResources;
-import io.lettuce.core.tracing.Tracing;
-
-import org.springframework.boot.autoconfigure.data.redis.ClientResourcesBuilderCustomizer;
+import io.lettuce.core.tracing.BraveTracing;
 
 /**
  * {@link ClientResourcesBuilderCustomizer} for wrapping Lettuce components in a tracing
@@ -27,14 +26,15 @@ import org.springframework.boot.autoconfigure.data.redis.ClientResourcesBuilderC
  *
  * @author Marcin Grzejszczak
  * @author Thomas Vitale
- * @since 3.1.0
+ * @since 3.0.4
  */
 public class TraceLettuceClientResourcesBuilderCustomizer implements ClientResourcesBuilderCustomizer {
 
-	private final Tracing tracing;
+	private final BraveTracing tracing;
 
-	public TraceLettuceClientResourcesBuilderCustomizer(Tracing tracing) {
-		this.tracing = tracing;
+	public TraceLettuceClientResourcesBuilderCustomizer(Tracing tracing, String serviceName) {
+		this.tracing = BraveTracing.builder().tracing(tracing).excludeCommandArgsFromSpanTags().serviceName(serviceName)
+				.build();
 	}
 
 	@Override

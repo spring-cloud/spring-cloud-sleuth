@@ -68,6 +68,7 @@
 |spring.sleuth.reactor.enabled | `true` | When true enables instrumentation for reactor.
 |spring.sleuth.reactor.instrumentation-type |  | 
 |spring.sleuth.redis.enabled | `true` | Enable span information propagation when using Redis.
+|spring.sleuth.redis.legacy.enabled | `false` | Enable legacy tracing of Redis that works only via Brave.
 |spring.sleuth.redis.remote-service-name | `redis` | Service name for the remote Redis endpoint.
 |spring.sleuth.rpc.enabled | `true` | Enable tracing of RPC.
 |spring.sleuth.rsocket.enabled | `true` | When true enables instrumentation for rsocket.
