@@ -22,8 +22,7 @@ import brave.kafka.clients.KafkaTracing;
 import brave.sampler.Sampler;
 import brave.test.TestSpanHandler;
 import org.aspectj.lang.ProceedingJoinPoint;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -40,7 +39,6 @@ import static org.assertj.core.api.BDDAssertions.then;
 /**
  * @author Roberto Tassi
  */
-@RunWith(SpringRunner.class)
 @SpringBootTest(classes = BraveMessagingAutoConfiguration1664Tests.Config.class,
 		webEnvironment = SpringBootTest.WebEnvironment.NONE)
 public class BraveMessagingAutoConfiguration1664Tests {

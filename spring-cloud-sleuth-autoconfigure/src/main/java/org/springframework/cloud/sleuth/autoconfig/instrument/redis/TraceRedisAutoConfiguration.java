@@ -20,6 +20,7 @@ import io.lettuce.core.tracing.Tracing;
 
 import org.springframework.boot.autoconfigure.AutoConfigureBefore;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -39,6 +40,7 @@ import org.springframework.context.annotation.Configuration;
 @Configuration(proxyBeanMethods = false)
 @ConditionalOnProperty(value = "spring.sleuth.redis.enabled", matchIfMissing = true)
 @ConditionalOnBean(Tracer.class)
+@ConditionalOnClass(Tracing.class)
 @AutoConfigureBefore({ RedisAutoConfiguration.class })
 @EnableConfigurationProperties(TraceRedisProperties.class)
 public class TraceRedisAutoConfiguration {

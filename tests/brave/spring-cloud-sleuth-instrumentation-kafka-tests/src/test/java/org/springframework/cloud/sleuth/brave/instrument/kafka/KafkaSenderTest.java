@@ -51,9 +51,9 @@ public class KafkaSenderTest extends org.springframework.cloud.sleuth.instrument
 		ProducerRecord<String, String> producerRecord = new ProducerRecord<>(testTopic, "test", "test");
 		startKafkaConsumer();
 
-			Flux<SenderResult<Object>> senderResultFlux = this.kafkaSender
-					.send(Mono.just(SenderRecord.create(producerRecord, null)));
-			StepVerifier.create(senderResultFlux).expectNextCount(1).verifyComplete();
+		Flux<SenderResult<Object>> senderResultFlux = this.kafkaSender
+				.send(Mono.just(SenderRecord.create(producerRecord, null)));
+		StepVerifier.create(senderResultFlux).expectNextCount(1).verifyComplete();
 
 		Awaitility.await().untilAsserted(() -> {
 			ConsumerRecord<String, String> consumerRecord = consumerRecords.poll(1, TimeUnit.SECONDS);

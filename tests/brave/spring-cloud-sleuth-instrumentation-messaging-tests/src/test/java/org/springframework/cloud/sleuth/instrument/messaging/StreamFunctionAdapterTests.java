@@ -63,7 +63,7 @@ public class StreamFunctionAdapterTests {
 
 		Message<byte[]> message = this.outputDestination.receive(200L);
 		assertThat(message).isNotNull();
-		assertThat(message.getPayload()).isEqualTo("\"HELLO\"".getBytes());
+		assertThat(message.getPayload()).containsAnyOf("HELLO".getBytes());
 		String b3 = message.getHeaders().get("b3", String.class);
 		assertThat(b3).startsWith("4883117762eb9420");
 
