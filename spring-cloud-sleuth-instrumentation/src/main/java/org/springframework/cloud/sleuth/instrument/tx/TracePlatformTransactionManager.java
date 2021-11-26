@@ -41,7 +41,7 @@ public class TracePlatformTransactionManager implements PlatformTransactionManag
 
 	private static final Log log = LogFactory.getLog(TracePlatformTransactionManager.class);
 
-	private final PlatformTransactionManager delegate;
+	protected final PlatformTransactionManager delegate;
 
 	private final BeanFactory beanFactory;
 

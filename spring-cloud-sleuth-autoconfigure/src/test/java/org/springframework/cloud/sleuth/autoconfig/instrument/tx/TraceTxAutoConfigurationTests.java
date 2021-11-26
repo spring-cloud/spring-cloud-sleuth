@@ -36,8 +36,20 @@ class TraceTxAutoConfigurationTests {
 	@Test
 	void should_register_bean_post_processors() {
 		this.contextRunner.run(context -> Assertions.assertThat(context)
-				.hasSingleBean(TracePlatformTransactionManagerBeanPostProcessor.class)
+				.hasSingleBean(TraceKafkaPlatformTransactionManagerBeanPostProcessor.class)
+				.doesNotHaveBean(TracePlatformTransactionManagerBeanPostProcessor.class)
 				.hasSingleBean(TraceReactiveTransactionManagerBeanPostProcessor.class));
+	}
+
+	@Test
+	void should_register_non_kafka_bean_post_processors_when_kafka_not_on_classpath() {
+		this.contextRunner
+				.withClassLoader(
+						new FilteredClassLoader("org.springframework.kafka.transaction.KafkaAwareTransactionManager"))
+				.run(context -> Assertions.assertThat(context)
+						.doesNotHaveBean(TraceKafkaPlatformTransactionManagerBeanPostProcessor.class)
+						.hasSingleBean(TracePlatformTransactionManagerBeanPostProcessor.class)
+						.hasSingleBean(TraceReactiveTransactionManagerBeanPostProcessor.class));
 	}
 
 	@Test

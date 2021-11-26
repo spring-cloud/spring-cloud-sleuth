@@ -20,6 +20,7 @@ import org.springframework.beans.factory.BeanFactory;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.autoconfig.brave.BraveAutoConfiguration;
@@ -41,9 +42,18 @@ public class TraceTxAutoConfiguration {
 
 	@Bean
 	@ConditionalOnClass(name = "org.springframework.transaction.PlatformTransactionManager")
+	@ConditionalOnMissingClass("org.springframework.kafka.transaction.KafkaAwareTransactionManager")
 	static TracePlatformTransactionManagerBeanPostProcessor tracePlatformTransactionManagerBeanPostProcessor(
 			BeanFactory beanFactory) {
 		return new TracePlatformTransactionManagerBeanPostProcessor(beanFactory);
+	}
+
+	@Bean
+	@ConditionalOnClass(name = { "org.springframework.transaction.PlatformTransactionManager",
+			"org.springframework.kafka.transaction.KafkaAwareTransactionManager" })
+	static TraceKafkaPlatformTransactionManagerBeanPostProcessor traceKafkaPlatformTransactionManagerBeanPostProcessor(
+			BeanFactory beanFactory) {
+		return new TraceKafkaPlatformTransactionManagerBeanPostProcessor(beanFactory);
 	}
 
 	@Bean

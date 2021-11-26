@@ -108,7 +108,7 @@ class TracePlatformTransactionManagerTests {
 	@Test
 	void should_report_a_fallback_span_when_exception_occurred_while_getting_transaction() {
 		TracePlatformTransactionManager manager = manager();
-		BDDMockito.given(this.delegate.getTransaction(BDDMockito.any()))
+		BDDMockito.given(getDelegate().getTransaction(BDDMockito.any()))
 				.willThrow(new TransactionTimedOutException("boom"));
 		thenThreadLocalIsClear(manager);
 
@@ -121,7 +121,7 @@ class TracePlatformTransactionManagerTests {
 	@Test
 	void should_report_a_span_when_exception_occurred_while_committing_transaction() {
 		TracePlatformTransactionManager manager = manager();
-		BDDMockito.willThrow(new TransactionTimedOutException("boom")).given(this.delegate).commit(BDDMockito.any());
+		BDDMockito.willThrow(new TransactionTimedOutException("boom")).given(getDelegate()).commit(BDDMockito.any());
 		threadLocalSpan(manager);
 
 		BDDAssertions.thenThrownBy(() -> manager.commit(null)).isInstanceOf(TransactionTimedOutException.class);
@@ -135,7 +135,7 @@ class TracePlatformTransactionManagerTests {
 	@Test
 	void should_report_a_span_when_exception_occurred_while_rolling_back_transaction() {
 		TracePlatformTransactionManager manager = manager();
-		BDDMockito.willThrow(new TransactionTimedOutException("boom")).given(this.delegate).rollback(BDDMockito.any());
+		BDDMockito.willThrow(new TransactionTimedOutException("boom")).given(getDelegate()).rollback(BDDMockito.any());
 		threadLocalSpan(manager);
 
 		BDDAssertions.thenThrownBy(() -> manager.rollback(null)).isInstanceOf(TransactionTimedOutException.class);
@@ -147,7 +147,7 @@ class TracePlatformTransactionManagerTests {
 	}
 
 	private void setupTransactionStatusWithNewTransactionStatusEqualTo(boolean transactionStatus) {
-		BDDMockito.given(this.delegate.getTransaction(BDDMockito.any()))
+		BDDMockito.given(getDelegate().getTransaction(BDDMockito.any()))
 				.willReturn(new SimpleTransactionStatus(transactionStatus));
 	}
 
@@ -165,15 +165,15 @@ class TracePlatformTransactionManagerTests {
 		then(tracer.getOnlySpan()).as("The previously created span was reported").isSameAs(firstSpan);
 	}
 
-	private TracePlatformTransactionManager manager() {
-		final TracePlatformTransactionManager manager = new TracePlatformTransactionManager(this.delegate,
+	TracePlatformTransactionManager manager() {
+		final TracePlatformTransactionManager manager = new TracePlatformTransactionManager(getDelegate(),
 				beanFactory());
 		manager.initialize();
 		return manager;
 	}
 
 	private TracePlatformTransactionManager managerWithManualFallback() {
-		final TracePlatformTransactionManager manager = new TracePlatformTransactionManager(this.delegate,
+		final TracePlatformTransactionManager manager = new TracePlatformTransactionManager(getDelegate(),
 				beanFactory()) {
 			@Override
 			Span fallbackSpan() {
@@ -193,10 +193,14 @@ class TracePlatformTransactionManagerTests {
 		return span;
 	}
 
-	private BeanFactory beanFactory() {
+	BeanFactory beanFactory() {
 		StaticListableBeanFactory beanFactory = new StaticListableBeanFactory();
 		beanFactory.addBean("tracer", tracer);
 		return beanFactory;
+	}
+
+	PlatformTransactionManager getDelegate() {
+		return this.delegate;
 	}
 
 }
