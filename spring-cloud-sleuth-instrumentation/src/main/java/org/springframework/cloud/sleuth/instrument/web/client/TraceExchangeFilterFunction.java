@@ -157,7 +157,8 @@ public final class TraceExchangeFilterFunction implements ExchangeFilterFunction
 
 		final Context context;
 
-		@Nullable final TraceContext parent;
+		@Nullable
+		final TraceContext parent;
 
 		final HttpClientHandler handler;
 
