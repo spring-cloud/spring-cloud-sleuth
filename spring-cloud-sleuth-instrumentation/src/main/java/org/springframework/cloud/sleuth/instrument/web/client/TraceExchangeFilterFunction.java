@@ -38,6 +38,7 @@ import org.springframework.cloud.sleuth.http.HttpClientRequest;
 import org.springframework.cloud.sleuth.http.HttpClientResponse;
 import org.springframework.cloud.sleuth.instrument.reactor.ReactorSleuth;
 import org.springframework.cloud.sleuth.instrument.reactor.TraceContextPropagator;
+import org.springframework.cloud.sleuth.internal.ContextUtil;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.http.HttpMethod;
 import org.springframework.web.reactive.function.client.ClientRequest;
@@ -70,11 +71,32 @@ public final class TraceExchangeFilterFunction implements ExchangeFilterFunction
 	}
 
 	public static ExchangeFilterFunction create(ConfigurableApplicationContext springContext) {
-		return new TraceExchangeFilterFunction(springContext);
+		return new ExchangeFilterFunction() {
+
+			TraceExchangeFilterFunction traceExchangeFilterFunction;
+
+			@Override
+			public Mono<ClientResponse> filter(ClientRequest request, ExchangeFunction next) {
+				if (ContextUtil.isContextUnusable(springContext)) {
+					return next.exchange(request);
+				}
+				return traceExchangeFilterFunction().filter(request, next);
+			}
+
+			private TraceExchangeFilterFunction traceExchangeFilterFunction() {
+				if (this.traceExchangeFilterFunction == null) {
+					this.traceExchangeFilterFunction = new TraceExchangeFilterFunction(springContext);
+				}
+				return this.traceExchangeFilterFunction;
+			}
+		};
 	}
 
 	@Override
 	public Mono<ClientResponse> filter(ClientRequest request, ExchangeFunction next) {
+		if (ContextUtil.isContextUnusable(this.springContext)) {
+			return next.exchange(request);
+		}
 		return new MonoWebClientTrace(next, request, this);
 	}
 
