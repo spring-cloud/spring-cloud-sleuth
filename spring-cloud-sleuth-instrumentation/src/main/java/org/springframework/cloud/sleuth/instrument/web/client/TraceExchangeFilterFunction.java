@@ -71,25 +71,7 @@ public final class TraceExchangeFilterFunction implements ExchangeFilterFunction
 	}
 
 	public static ExchangeFilterFunction create(ConfigurableApplicationContext springContext) {
-		return new ExchangeFilterFunction() {
-
-			TraceExchangeFilterFunction traceExchangeFilterFunction;
-
-			@Override
-			public Mono<ClientResponse> filter(ClientRequest request, ExchangeFunction next) {
-				if (ContextUtil.isContextUnusable(springContext)) {
-					return next.exchange(request);
-				}
-				return traceExchangeFilterFunction().filter(request, next);
-			}
-
-			private TraceExchangeFilterFunction traceExchangeFilterFunction() {
-				if (this.traceExchangeFilterFunction == null) {
-					this.traceExchangeFilterFunction = new TraceExchangeFilterFunction(springContext);
-				}
-				return this.traceExchangeFilterFunction;
-			}
-		};
+		return new TraceExchangeFilterFunction(springContext);
 	}
 
 	@Override
@@ -175,8 +157,7 @@ public final class TraceExchangeFilterFunction implements ExchangeFilterFunction
 
 		final Context context;
 
-		@Nullable
-		final TraceContext parent;
+		@Nullable final TraceContext parent;
 
 		final HttpClientHandler handler;
 
