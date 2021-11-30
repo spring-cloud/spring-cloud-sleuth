@@ -23,6 +23,7 @@ import java.util.stream.Collectors;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.testcontainers.containers.MongoDBContainer;
 import org.testcontainers.junit.jupiter.Container;
@@ -47,6 +48,7 @@ import static org.assertj.core.api.BDDAssertions.then;
 
 @ContextConfiguration(classes = ReactiveMongoDbIntegrationTests.TestConfig.class)
 @Testcontainers
+@Tag("DockerRequired")
 public abstract class ReactiveMongoDbIntegrationTests {
 
 	private static final Log log = LogFactory.getLog(ReactiveMongoDbIntegrationTests.class);
