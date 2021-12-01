@@ -77,7 +77,7 @@
 		<opentracing.version>0.32.0</opentracing.version>
 		<spring-security-boot-autoconfigure.version>2.3.4.RELEASE</spring-security-boot-autoconfigure.version>
 		<spring-security-oauth2.version>2.2.0.RELEASE</spring-security-oauth2.version>
-		<spring-security-version>5.6.0-M3</spring-security-version>
+		<spring-security-version>5.6.0</spring-security-version>
 		<disable.nohttp.checks>false</disable.nohttp.checks>
 		<okhttp.version>4.9.0</okhttp.version>
 		<mockwebserver.version>4.8.0</mockwebserver.version>
