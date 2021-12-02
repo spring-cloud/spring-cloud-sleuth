@@ -65,6 +65,10 @@
 		<module>spring-cloud-sleuth-zipkin-tests</module>
 	</modules>
 
+	<properties>
+		<skipNexusStagingDeployMojo>true</skipNexusStagingDeployMojo>
+	</properties>
+
 	<build>
 		<pluginManagement>
 			<plugins>
