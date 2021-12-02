@@ -29,7 +29,7 @@
 	<parent>
 		<groupId>org.springframework.cloud</groupId>
 		<artifactId>spring-cloud-build</artifactId>
-		<version>3.1.0</version>
+		<version>3.1.1-SNAPSHOT</version>
 		<relativePath/>
 		<!-- lookup parent from repository -->
 	</parent>
@@ -62,7 +62,7 @@
 		<maven.compiler.source>1.8</maven.compiler.source>
 		<maven.compiler.testTarget>1.8</maven.compiler.testTarget>
 		<maven.compiler.testSource>1.8</maven.compiler.testSource>
-		<spring-cloud-build.version>3.1.0</spring-cloud-build.version>
+		<spring-cloud-build.version>3.1.1-SNAPSHOT</spring-cloud-build.version>
 		<spring-cloud-commons.version>3.1.1-SNAPSHOT</spring-cloud-commons.version>
 		<spring-cloud-gateway.version>3.1.1-SNAPSHOT</spring-cloud-gateway.version>
 		<spring-cloud-config.version>3.1.1-SNAPSHOT</spring-cloud-config.version>
