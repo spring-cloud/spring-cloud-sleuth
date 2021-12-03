@@ -128,9 +128,7 @@ class TraceListenerStrategy<CON, STMT, RS> {
 		ConnectionInfo connectionInfo = this.openConnections.get(connectionKey);
 		SpanAndScope connectionSpan = connectionInfo.span;
 		if (connection != null) {
-			log.info("TODO before removeServiceName=" + connectionInfo.remoteServiceName);
 			parseAndSetServerIpAndPort(connectionInfo, connection, dataSourceName);
-			log.info("TODO after removeServiceName=" + connectionInfo.remoteServiceName);
 			if (connectionSpan != null) {
 				connectionSpan.getSpan().remoteServiceName(connectionInfo.remoteServiceName);
 				connectionSpan.getSpan().remoteIpAndPort(connectionInfo.url.getHost(), connectionInfo.url.getPort());
