@@ -96,6 +96,14 @@ public class TraceFunctionAroundWrapper extends FunctionAroundWrapper
 		else if (targetFunction.isInputTypePublisher() || targetFunction.isOutputTypePublisher()) {
 			return reactorStream((Publisher) message, targetFunction);
 		}
+		else if (message != null && !(message instanceof Message)) {
+			if (log.isDebugEnabled()) {
+				String messageClass = message.getClass().getName();
+				log.debug("We only support tracing for Message types. You need to wrap your function type ["
+						+ messageClass + "] into [Message<" + messageClass + ">]");
+			}
+			return targetFunction.apply(message); // no instrumentation
+		}
 		return nonReactorStream((Message<byte[]>) message, targetFunction);
 	}
 

@@ -122,6 +122,19 @@ class TraceFunctionAroundWrapperTests {
 	}
 
 	@Test
+	void test_tracing_with_function_and_input_as_non_message() {
+		FunctionRegistration<GreeterFunction> registration = new FunctionRegistration<>(new GreeterFunction(),
+				"greeter").type(FunctionType.of(GreeterFunction.class));
+		catalog.register(registration);
+		FunctionInvocationWrapper function = catalog.lookup("greeter");
+
+		String result = (String) wrapper.apply("hello", function);
+
+		assertThat(result).isEqualTo("HELLO");
+		assertThat(tracer.spans).isEmpty();
+	}
+
+	@Test
 	void test_tracing_with_consumer() {
 		GreeterConsumer consumer = new GreeterConsumer();
 		FunctionRegistration<GreeterConsumer> registration = new FunctionRegistration<>(consumer, "greeter")
