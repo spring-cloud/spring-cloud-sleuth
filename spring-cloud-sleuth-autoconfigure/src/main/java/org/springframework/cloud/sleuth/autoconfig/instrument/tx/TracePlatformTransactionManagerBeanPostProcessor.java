@@ -27,7 +27,11 @@ import org.springframework.transaction.PlatformTransactionManager;
  *
  * @author Marcin Grzejszczak
  * @since 3.1.0
+ * @deprecated will use
+ * {@link org.springframework.cloud.sleuth.instrument.tx.TracePlatformTransactionManagerAspect}
+ * instead
  */
+@Deprecated
 public class TracePlatformTransactionManagerBeanPostProcessor implements BeanPostProcessor {
 
 	private final BeanFactory beanFactory;
