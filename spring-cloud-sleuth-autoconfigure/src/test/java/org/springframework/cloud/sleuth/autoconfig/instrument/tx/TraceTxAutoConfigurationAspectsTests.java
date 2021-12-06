@@ -16,46 +16,39 @@
 
 package org.springframework.cloud.sleuth.autoconfig.instrument.tx;
 
-import org.aspectj.lang.ProceedingJoinPoint;
 import org.junit.jupiter.api.Test;
+import reactor.core.publisher.Mono;
 
-import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.ImportAutoConfiguration;
 import org.springframework.boot.autoconfigure.aop.AopAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.autoconfig.TraceNoOpAutoConfiguration;
-import org.springframework.cloud.sleuth.instrument.tx.TracePlatformTransactionManagerAspect;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.ReactiveTransaction;
+import org.springframework.transaction.ReactiveTransactionManager;
 import org.springframework.transaction.TransactionDefinition;
 import org.springframework.transaction.TransactionException;
 import org.springframework.transaction.TransactionStatus;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.BDDAssertions.then;
 
 @SpringBootTest(properties = "spring.sleuth.noop.enabled=true",
 		classes = TraceTxAutoConfigurationAspectsTests.Config.class)
 class TraceTxAutoConfigurationAspectsTests {
 
 	@Autowired
-	MyPlatformTransactionManager myPlatformTransactionManager;
+	MyReactiveTransactionManager myReactiveTransactionManager;
 
 	@Autowired
-	TestPlatformAspect testPlatformAspect;
+	MyPlatformTransactionManager myPlatformTransactionManager;
 
 	@Test
-	void should_make_aspects_work_for_platform() {
-		myPlatformTransactionManager.getTransaction(null);
-		assertThat(testPlatformAspect.getTransactionCalled).isTrue();
-
-		myPlatformTransactionManager.commit(null);
-		assertThat(testPlatformAspect.commitCalled).isTrue();
-
-		myPlatformTransactionManager.rollback(null);
-		assertThat(testPlatformAspect.rollbackCalled).isTrue();
+	void should_make_proxies_work_for_platform() {
+		then(this.myReactiveTransactionManager).isNotNull().isInstanceOf(MyReactiveTransactionManager.class);
+		then(this.myPlatformTransactionManager).isNotNull().isInstanceOf(MyPlatformTransactionManager.class);
 	}
 
 	@Configuration(proxyBeanMethods = false)
@@ -64,45 +57,13 @@ class TraceTxAutoConfigurationAspectsTests {
 	static class Config {
 
 		@Bean
-		MyPlatformTransactionManager myPlatformTransactionManager() {
-			return new MyPlatformTransactionManager();
+		MyReactiveTransactionManager myReactiveTransactionManager() {
+			return new MyReactiveTransactionManager();
 		}
 
 		@Bean
-		TestPlatformAspect testPlatformAspect(Tracer tracer, BeanFactory beanFactory) {
-			return new TestPlatformAspect(tracer, beanFactory);
-		}
-
-	}
-
-	static class TestPlatformAspect extends TracePlatformTransactionManagerAspect {
-
-		boolean commitCalled;
-
-		boolean rollbackCalled;
-
-		boolean getTransactionCalled;
-
-		TestPlatformAspect(Tracer tracer, BeanFactory beanFactory) {
-			super(tracer, beanFactory);
-		}
-
-		@Override
-		public Object traceCommit(ProceedingJoinPoint pjp, PlatformTransactionManager manager) {
-			this.commitCalled = true;
-			return null;
-		}
-
-		@Override
-		public Object traceRollback(ProceedingJoinPoint pjp, PlatformTransactionManager manager) {
-			this.rollbackCalled = true;
-			return null;
-		}
-
-		@Override
-		public Object traceGetTransaction(ProceedingJoinPoint pjp, PlatformTransactionManager manager) {
-			this.getTransactionCalled = true;
-			return null;
+		MyPlatformTransactionManager myPlatformTransactionManager() {
+			return new MyPlatformTransactionManager();
 		}
 
 	}
@@ -122,6 +83,26 @@ class TraceTxAutoConfigurationAspectsTests {
 		@Override
 		public void rollback(TransactionStatus status) throws TransactionException {
 
+		}
+
+	}
+
+	static class MyReactiveTransactionManager implements ReactiveTransactionManager {
+
+		@Override
+		public Mono<ReactiveTransaction> getReactiveTransaction(TransactionDefinition definition)
+				throws TransactionException {
+			return null;
+		}
+
+		@Override
+		public Mono<Void> commit(ReactiveTransaction transaction) throws TransactionException {
+			return null;
+		}
+
+		@Override
+		public Mono<Void> rollback(ReactiveTransaction transaction) throws TransactionException {
+			return null;
 		}
 
 	}

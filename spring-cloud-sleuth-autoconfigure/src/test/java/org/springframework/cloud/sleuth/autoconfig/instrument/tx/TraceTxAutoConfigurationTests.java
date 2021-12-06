@@ -16,6 +16,7 @@
 
 package org.springframework.cloud.sleuth.autoconfig.instrument.tx;
 
+import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 import reactor.core.publisher.Mono;
 
@@ -23,11 +24,8 @@ import org.springframework.boot.autoconfigure.AutoConfigurations;
 import org.springframework.boot.test.context.FilteredClassLoader;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
 import org.springframework.cloud.sleuth.autoconfig.TraceNoOpAutoConfiguration;
-import org.springframework.cloud.sleuth.instrument.tx.TracePlatformTransactionManagerAspect;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.ReactiveTransactionManager;
-
-import static org.assertj.core.api.Assertions.assertThat;
 
 class TraceTxAutoConfigurationTests {
 
@@ -36,27 +34,30 @@ class TraceTxAutoConfigurationTests {
 			.withConfiguration(AutoConfigurations.of(TraceNoOpAutoConfiguration.class, TraceTxAutoConfiguration.class));
 
 	@Test
-	void should_register_infrastructure_beans() {
-		this.contextRunner.run(context -> assertThat(context).hasSingleBean(TracePlatformTransactionManagerAspect.class)
+	void should_register_bean_post_processors() {
+		this.contextRunner.run(context -> Assertions.assertThat(context)
+				.hasSingleBean(TracePlatformTransactionManagerBeanPostProcessor.class)
 				.hasSingleBean(TraceReactiveTransactionManagerBeanPostProcessor.class));
 	}
 
 	@Test
-	void should_not_register_aspect_when_tx_not_on_classpath() {
+	void should_not_register_bean_post_processor_when_tx_not_on_classpath() {
 		this.contextRunner.withClassLoader(new FilteredClassLoader(PlatformTransactionManager.class))
-				.run(context -> assertThat(context).doesNotHaveBean(TracePlatformTransactionManagerAspect.class));
+				.run(context -> Assertions.assertThat(context)
+						.doesNotHaveBean(TracePlatformTransactionManagerBeanPostProcessor.class));
 	}
 
 	@Test
 	void should_not_register_reactive_bean_post_processor_when_reactive_tx_not_on_classpath() {
-		this.contextRunner.withClassLoader(new FilteredClassLoader(ReactiveTransactionManager.class)).run(
-				context -> assertThat(context).doesNotHaveBean(TraceReactiveTransactionManagerBeanPostProcessor.class));
+		this.contextRunner.withClassLoader(new FilteredClassLoader(ReactiveTransactionManager.class))
+				.run(context -> Assertions.assertThat(context)
+						.doesNotHaveBean(TraceReactiveTransactionManagerBeanPostProcessor.class));
 	}
 
 	@Test
-	void should_not_register_reactive_aspect_when_reactor_not_on_classpath() {
-		this.contextRunner.withClassLoader(new FilteredClassLoader(Mono.class)).run(
-				context -> assertThat(context).doesNotHaveBean(TraceReactiveTransactionManagerBeanPostProcessor.class));
+	void should_not_register_reactive_bean_post_processor_when_reactor_not_on_classpath() {
+		this.contextRunner.withClassLoader(new FilteredClassLoader(Mono.class)).run(context -> Assertions
+				.assertThat(context).doesNotHaveBean(TraceReactiveTransactionManagerBeanPostProcessor.class));
 	}
 
 }

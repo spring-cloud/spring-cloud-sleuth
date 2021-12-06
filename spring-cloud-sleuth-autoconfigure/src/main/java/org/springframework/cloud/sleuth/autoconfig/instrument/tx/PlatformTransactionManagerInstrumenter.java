@@ -16,28 +16,25 @@
 
 package org.springframework.cloud.sleuth.autoconfig.instrument.tx;
 
-import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.BeanFactory;
-import org.springframework.beans.factory.config.BeanPostProcessor;
+import org.springframework.cloud.sleuth.instrument.tx.TracePlatformTransactionManager;
 import org.springframework.transaction.PlatformTransactionManager;
 
-/**
- * Post processor that wraps a {@link PlatformTransactionManager}.
- *
- * @author Marcin Grzejszczak
- * @since 3.1.0
- */
-public class TracePlatformTransactionManagerBeanPostProcessor implements BeanPostProcessor {
+class PlatformTransactionManagerInstrumenter
+		extends AbstractTransactionManagerInstrumenter<PlatformTransactionManager> {
 
-	private final PlatformTransactionManagerInstrumenter platformTransactionManagerInstrumenter;
-
-	public TracePlatformTransactionManagerBeanPostProcessor(BeanFactory beanFactory) {
-		this.platformTransactionManagerInstrumenter = new PlatformTransactionManagerInstrumenter(beanFactory);
+	PlatformTransactionManagerInstrumenter(BeanFactory beanFactory) {
+		super(beanFactory, PlatformTransactionManager.class);
 	}
 
 	@Override
-	public Object postProcessAfterInitialization(Object bean, String beanName) throws BeansException {
-		return this.platformTransactionManagerInstrumenter.instrument(bean, beanName);
+	Class tracedClass() {
+		return TracePlatformTransactionManager.class;
+	}
+
+	@Override
+	PlatformTransactionManager wrap(PlatformTransactionManager transactionManager) {
+		return new TracePlatformTransactionManager(transactionManager, this.beanFactory);
 	}
 
 }

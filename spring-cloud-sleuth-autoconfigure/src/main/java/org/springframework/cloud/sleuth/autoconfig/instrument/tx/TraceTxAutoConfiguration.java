@@ -23,7 +23,6 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.autoconfig.brave.BraveAutoConfiguration;
-import org.springframework.cloud.sleuth.instrument.tx.TracePlatformTransactionManagerAspect;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -42,9 +41,9 @@ public class TraceTxAutoConfiguration {
 
 	@Bean
 	@ConditionalOnClass(name = "org.springframework.transaction.PlatformTransactionManager")
-	TracePlatformTransactionManagerAspect tracePlatformTransactionManagerAspect(Tracer tracer,
+	static TracePlatformTransactionManagerBeanPostProcessor tracePlatformTransactionManagerBeanPostProcessor(
 			BeanFactory beanFactory) {
-		return new TracePlatformTransactionManagerAspect(tracer, beanFactory);
+		return new TracePlatformTransactionManagerBeanPostProcessor(beanFactory);
 	}
 
 	@Bean

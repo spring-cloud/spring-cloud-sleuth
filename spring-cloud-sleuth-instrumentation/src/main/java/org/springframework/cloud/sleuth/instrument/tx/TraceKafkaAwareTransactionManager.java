@@ -25,7 +25,7 @@ import org.springframework.kafka.transaction.KafkaAwareTransactionManager;
  *
  * @author Marcin Grzejszczak
  * @since 3.1.0
- * @deprecated will use {@link TracePlatformTransactionManagerAspect} instead
+ * @deprecated scheduled for removal
  */
 @Deprecated
 public class TraceKafkaAwareTransactionManager extends TracePlatformTransactionManager
