@@ -27,7 +27,9 @@ import org.springframework.kafka.transaction.KafkaAwareTransactionManager;
  *
  * @author Marcin Grzejszczak
  * @since 3.1.0
+ * @deprecated scheduled for removal
  */
+@Deprecated
 public class TraceKafkaPlatformTransactionManagerBeanPostProcessor implements BeanPostProcessor {
 
 	private final BeanFactory beanFactory;
