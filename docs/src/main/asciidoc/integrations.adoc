@@ -768,9 +768,11 @@ runtimeOnly "net.ttddyy:datasource-proxy:${datasourceProxyVersion}"
 
 Please check the <<appendix.adoc#appendix,appendix>> page under `spring.sleuth.jdbc.p6spy` for all p6spy configuration options and `spring.sleuth.jdbc.datasource-proxy` for all datasource proxy configuration options.
 
+For P6Spy by default logging parameter values will be disabled, set `spring.sleuth.jdbc.p6spy.tracing.include-parameter-values` to `true` to enable it.
+
 You can configure P6Spy manually using one of available configuration methods. For more information please refer to the http://p6spy.readthedocs.io/en/latest/configandusage.html[P6Spy Configuration Guide].
 
-By default logging queries will be disabled, set `spring.sleuth.jdbc.datasource-proxy.slow-query.enable-logging` to `true` to enable logging slow queries
+For Datasource Proxy by default logging queries will be disabled, set `spring.sleuth.jdbc.datasource-proxy.slow-query.enable-logging` to `true` to enable logging slow queries
 and set `spring.sleuth.jdbc.datasource-proxy.query.enable-logging` to `true` to enable logging all queries.
 
 In order to disable this instrumentation set `spring.sleuth.jdbc.enabled` to `false`.

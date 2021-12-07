@@ -51,7 +51,32 @@ public abstract class TraceJdbcEventListenerTests extends TraceListenerStrategyT
 
 	@Test
 	void testShouldUsePlaceholderInSqlTagOfSpansForPreparedStatementIfIncludeParameterValuesIsSetToFalse() {
-		contextRunner.withPropertyValues("spring.sleuth.jdbc.p6spy.tracing.include-parameter-values=false")
+		contextRunner.run(context -> {
+			DataSource dataSource = context.getBean(DataSource.class);
+			TestSpanHandler spanReporter = context.getBean(TestSpanHandler.class);
+
+			Connection connection = dataSource.getConnection();
+			PreparedStatement preparedStatement = connection
+					.prepareStatement("UPDATE INFORMATION_SCHEMA.TABLES SET table_Name = ? WHERE 0 = ?");
+			preparedStatement.setString(1, "");
+			preparedStatement.setInt(2, 1);
+			preparedStatement.executeUpdate();
+			connection.close();
+
+			assertThat(spanReporter.reportedSpans()).hasSize(2);
+			FinishedSpan connectionSpan = spanReporter.reportedSpans().get(1);
+			FinishedSpan statementSpan = spanReporter.reportedSpans().get(0);
+			assertThat(connectionSpan.getName()).isEqualTo("connection");
+			assertThat(statementSpan.getName()).isEqualTo("update");
+			assertThat(statementSpan.getTags()).containsEntry(SPAN_SQL_QUERY_TAG_NAME,
+					"UPDATE INFORMATION_SCHEMA.TABLES SET table_Name = ? WHERE 0 = ?");
+			assertThat(statementSpan.getTags()).containsEntry(SPAN_ROW_COUNT_TAG_NAME, "0");
+		});
+	}
+
+	@Test
+	void testShouldNotUsePlaceholderInSqlTagOfSpansForPreparedStatementIfIncludeParameterValuesIsSetToTrue() {
+		contextRunner.withPropertyValues("spring.sleuth.jdbc.p6spy.tracing.include-parameter-values=true")
 				.run(context -> {
 					DataSource dataSource = context.getBean(DataSource.class);
 					TestSpanHandler spanReporter = context.getBean(TestSpanHandler.class);
@@ -70,7 +95,7 @@ public abstract class TraceJdbcEventListenerTests extends TraceListenerStrategyT
 					assertThat(connectionSpan.getName()).isEqualTo("connection");
 					assertThat(statementSpan.getName()).isEqualTo("update");
 					assertThat(statementSpan.getTags()).containsEntry(SPAN_SQL_QUERY_TAG_NAME,
-							"UPDATE INFORMATION_SCHEMA.TABLES SET table_Name = ? WHERE 0 = ?");
+							"UPDATE INFORMATION_SCHEMA.TABLES SET table_Name = '' WHERE 0 = 1");
 					assertThat(statementSpan.getTags()).containsEntry(SPAN_ROW_COUNT_TAG_NAME, "0");
 				});
 	}

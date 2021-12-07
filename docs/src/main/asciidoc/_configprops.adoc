@@ -46,7 +46,7 @@
 |spring.sleuth.jdbc.p6spy.log-format |  | Custom log format.
 |spring.sleuth.jdbc.p6spy.logging |  | Logging to use for logging queries.
 |spring.sleuth.jdbc.p6spy.multiline | `true` | Enables multiline output.
-|spring.sleuth.jdbc.p6spy.tracing.include-parameter-values | `true` | Report the effective sql string (with '?' replaced with real values) to tracing systems. <p> NOTE this setting does not affect the logging message.
+|spring.sleuth.jdbc.p6spy.tracing.include-parameter-values | `false` | Report the effective sql string (with '?' replaced with real values) to tracing systems. <p> NOTE this setting does not affect the logging message.
 |spring.sleuth.kafka.enabled | `true` | Enable instrumenting of Apache Kafka clients.
 |spring.sleuth.messaging.aspect.enabled | `false` | Should {@link MessageMapping} wrapping be enabled.
 |spring.sleuth.messaging.enabled | `false` | Should messaging be turned on.

@@ -476,7 +476,7 @@ public class TraceJdbcProperties {
 			 * <p>
 			 * NOTE this setting does not affect the logging message.
 			 */
-			private boolean includeParameterValues = true;
+			private boolean includeParameterValues;
 
 			public boolean isIncludeParameterValues() {
 				return this.includeParameterValues;
