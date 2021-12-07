@@ -82,17 +82,8 @@ abstract class AbstractTransactionManagerInstrumenter<T extends TransactionManag
 
 	abstract T wrap(T transactionManager);
 
-	/**
-	 * Wraps an {@link Executor} bean in its trace representation.
-	 * @param bean a bean (might be of {@link Executor} type
-	 * @param beanName name of the bean
-	 * @return wrapped bean or just bean if not {@link Executor} or already instrumented
-	 */
-	Object instrument(Object bean, String beanName) {
+	Object instrument(Object bean) {
 		if (!isApplicableForInstrumentation(bean)) {
-			if (log.isTraceEnabled()) {
-				log.trace("Bean is already instrumented or is not applicable for instrumentation " + beanName);
-			}
 			return bean;
 		}
 		return wrapManager(bean);

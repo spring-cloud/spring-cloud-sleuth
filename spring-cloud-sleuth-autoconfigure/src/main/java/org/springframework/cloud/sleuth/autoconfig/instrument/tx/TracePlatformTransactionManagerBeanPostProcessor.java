@@ -37,7 +37,7 @@ public class TracePlatformTransactionManagerBeanPostProcessor implements BeanPos
 
 	@Override
 	public Object postProcessAfterInitialization(Object bean, String beanName) throws BeansException {
-		return this.platformTransactionManagerInstrumenter.instrument(bean, beanName);
+		return this.platformTransactionManagerInstrumenter.instrument(bean);
 	}
 
 }
