@@ -21,10 +21,12 @@ import org.junit.jupiter.api.Test;
 import static org.assertj.core.api.BDDAssertions.then;
 
 class DataSourceNameResolverTests {
+
 	@Test
 	void should_return_default_string_exception_when_datasource_is_null() {
 		DataSourceNameResolver resolver = new DataSourceNameResolver();
 
 		then(resolver.resolveDataSourceName(null)).isNotBlank();
 	}
+
 }
