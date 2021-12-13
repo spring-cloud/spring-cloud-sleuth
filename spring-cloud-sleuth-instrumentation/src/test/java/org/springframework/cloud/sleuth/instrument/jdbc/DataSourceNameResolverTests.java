@@ -16,29 +16,15 @@
 
 package org.springframework.cloud.sleuth.instrument.jdbc;
 
-import java.util.concurrent.ConcurrentHashMap;
+import org.junit.jupiter.api.Test;
 
-import javax.sql.CommonDataSource;
+import static org.assertj.core.api.BDDAssertions.then;
 
-/**
- * {@link CommonDataSource} name resolver based on bean name.
- *
- * @author Arthur Gavlyukovskiy
- * @since 3.1.0
- */
-public class DataSourceNameResolver {
+class DataSourceNameResolverTests {
+	@Test
+	void should_return_default_string_exception_when_datasource_is_null() {
+		DataSourceNameResolver resolver = new DataSourceNameResolver();
 
-	private final ConcurrentHashMap<CommonDataSource, String> cachedNames = new ConcurrentHashMap<>();
-
-	public void addDataSource(String name, CommonDataSource dataSource) {
-		this.cachedNames.put(dataSource, name);
+		then(resolver.resolveDataSourceName(null)).isNotBlank();
 	}
-
-	public String resolveDataSourceName(CommonDataSource dataSource) {
-		if (dataSource == null) {
-			return "dataSource";
-		}
-		return this.cachedNames.getOrDefault(dataSource, "dataSource");
-	}
-
 }
