@@ -134,7 +134,7 @@ public class SleuthBenchmarkingStreamApplication {
 	@Bean(name = "myFlux")
 	@ConditionalOnProperty(value = "spring.sleuth.function.type", havingValue = "DECORATE_ON_EACH",
 			matchIfMissing = true)
-	public Function<Flux<Message<String>>, Flux<Message<String>>> onEachFunction() {
+	public Function<Flux<String>, Flux<String>> onEachFunction() {
 		log.info("on each function");
 		return new SleuthFunction();
 	}
@@ -142,14 +142,14 @@ public class SleuthBenchmarkingStreamApplication {
 	@Bean(name = "myFlux")
 	@ConditionalOnProperty(value = "spring.sleuth.function.type", havingValue = "DECORATE_QUEUES",
 			matchIfMissing = true)
-	public Function<Flux<Message<String>>, Flux<Message<String>>> decorateQueuesFunction() {
+	public Function<Flux<String>, Flux<String>> decorateQueuesFunction() {
 		log.info("decorate queues function");
 		return new SleuthFunction();
 	}
 
 	@Bean(name = "myFlux")
 	@ConditionalOnProperty(value = "spring.sleuth.function.type", havingValue = "DECORATE_ON_LAST")
-	public Function<Flux<Message<String>>, Flux<Message<String>>> onLastFunction() {
+	public Function<Flux<String>, Flux<String>> onLastFunction() {
 		log.info("on last function");
 		return new SleuthFunction();
 	}
@@ -269,18 +269,18 @@ class SleuthNonReactiveFunction implements Function<String, String> {
 
 }
 
-class SleuthFunction implements Function<Flux<Message<String>>, Flux<Message<String>>> {
+class SleuthFunction implements Function<Flux<String>, Flux<String>> {
 
 	private static final Logger log = LoggerFactory.getLogger(SleuthFunction.class);
 
 	static final Scheduler SCHEDULER = Schedulers.newParallel("sleuthFunction");
 
 	@Override
-	public Flux<Message<String>> apply(Flux<Message<String>> input) {
+	public Flux<String> apply(Flux<String> input) {
 		return input.doOnEach(signal -> log.info("Got a message"))
 				.flatMap(s -> Mono.delay(Duration.ofMillis(1), SCHEDULER).map(aLong -> {
 					log.info("Logging [{}] from flat map", s);
-					return MessageBuilder.withPayload(s.getPayload().toUpperCase()).build();
+					return s.toUpperCase();
 				}));
 	}
 

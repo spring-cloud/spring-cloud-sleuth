@@ -25,8 +25,12 @@ import java.util.function.Supplier;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Scheduler;
+import reactor.core.scheduler.Schedulers;
 
 import org.springframework.cloud.function.context.FunctionRegistration;
 import org.springframework.cloud.function.context.FunctionType;
@@ -129,6 +133,19 @@ class TraceFunctionAroundWrapperTests {
 		FunctionInvocationWrapper function = catalog.lookup("greeter");
 
 		String result = (String) wrapper.apply("hello", function);
+
+		assertThat(result).isEqualTo("HELLO");
+		assertThat(tracer.spans).isEmpty();
+	}
+
+	@Test
+	void test_tracing_with_flux_to_flux_without_message() {
+		FunctionRegistration<FluxToFluxFunction> registration = new FunctionRegistration<>(new FluxToFluxFunction(),
+				"greeter").type(FunctionType.of(FluxToFluxFunction.class));
+		catalog.register(registration);
+		FunctionInvocationWrapper function = catalog.lookup("greeter");
+
+		String result = (String) ((Flux) wrapper.apply("hello", function)).blockFirst();
 
 		assertThat(result).isEqualTo("HELLO");
 		assertThat(tracer.spans).isEmpty();
@@ -371,6 +388,23 @@ class TraceFunctionAroundWrapperTests {
 				tracer.currentSpan().end();
 				tracer.withSpan(null);
 			}).subscribe();
+		}
+
+	}
+
+	static class FluxToFluxFunction implements Function<Flux<String>, Flux<String>> {
+
+		private static final Logger log = LoggerFactory.getLogger(FluxToFluxFunction.class);
+
+		static final Scheduler SCHEDULER = Schedulers.newParallel("sleuthFunction");
+
+		@Override
+		public Flux<String> apply(Flux<String> input) {
+			return input.doOnEach(signal -> log.info("Got a message"))
+					.flatMap(s -> Mono.delay(Duration.ofMillis(1), SCHEDULER).map(aLong -> {
+						log.info("Logging [{}] from flat map", s);
+						return s.toUpperCase();
+					}));
 		}
 
 	}
