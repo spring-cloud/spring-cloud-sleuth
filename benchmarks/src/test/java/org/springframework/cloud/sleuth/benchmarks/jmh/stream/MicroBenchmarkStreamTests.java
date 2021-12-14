@@ -56,9 +56,9 @@ import org.springframework.messaging.support.MessageBuilder;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-@Measurement(iterations = 10, time = 1)
-@Warmup(iterations = 10, time = 1)
-@Fork(4)
+@Measurement(iterations = 1, time = 1)
+@Warmup(iterations = 1, time = 1)
+@Fork(1)
 @BenchmarkMode(Mode.SampleTime)
 @OutputTimeUnit(TimeUnit.MILLISECONDS)
 @Microbenchmark
@@ -156,14 +156,14 @@ public class MicroBenchmarkStreamTests {
 		public enum Instrumentation {
 
 			// @formatter:off
-			noSleuthSimple(Pair.noSleuth(), function("simple")),
-			sleuthSimpleOnQueues(function("simple"), Pair.onHook()),
-			sleuthSimpleManual(function("simple_manual"), Pair.manual(), functionDisabled(), integrationDisabled()),
-			sleuthSimpleNoFunctionInstrumentationManual(function("simple_manual"), Pair.manual(), functionDisabled(), integrationDisabled()),
-			sleuthSimpleOnEach(function("simple"), Pair.onEach()),
-			sleuthSimpleOnLast(function("simple"), Pair.onLast()),
-			sleuthSimpleWithAroundOnQueues(function("simple_function_with_around")),
-			noSleuthReactiveSimple(function("reactive_simple"), Pair.noSleuth()),
+//			noSleuthSimple(Pair.noSleuth(), function("simple")),
+//			sleuthSimpleOnQueues(function("simple"), Pair.onHook()),
+//			sleuthSimpleManual(function("simple_manual"), Pair.manual(), functionDisabled(), integrationDisabled()),
+//			sleuthSimpleNoFunctionInstrumentationManual(function("simple_manual"), Pair.manual(), functionDisabled(), integrationDisabled()),
+//			sleuthSimpleOnEach(function("simple"), Pair.onEach()),
+//			sleuthSimpleOnLast(function("simple"), Pair.onLast()),
+//			sleuthSimpleWithAroundOnQueues(function("simple_function_with_around")),
+//			noSleuthReactiveSimple(function("reactive_simple"), Pair.noSleuth()),
 			sleuthReactiveSimpleOnQueues(function("DECORATE_QUEUES"), Pair.decorateQueues()),
 			sleuthReactiveSimpleOnEach(function("DECORATE_ON_EACH"), Pair.onEach()),
 			sleuthReactiveSimpleManual(function("reactive_simple_manual"), Pair.manual()),
