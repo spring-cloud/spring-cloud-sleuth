@@ -55,7 +55,7 @@ public abstract class TraceFunctionAroundWrapperTests {
 
 			Message<?> result = (Message<?>) function.get();
 
-			assertThat(result.getPayload()).isEqualTo("hello".getBytes());
+			assertThat(result.getPayload()).isEqualTo("hello");
 			assertThat(spanHandler.reportedSpans().size()).isEqualTo(2);
 			assertThat(((String) result.getHeaders().get("b3"))).contains(spanHandler.get(0).getTraceId());
 			spanHandler.assertAllSpansWereFinishedOrAbandoned(context.getBean(TestTracer.class).createdSpans());
