@@ -68,7 +68,7 @@ class TraceValveTests {
 
 	@Test
 	void should_have_async_supported_by_default() throws ServletException, IOException {
-		TraceValve traceValve = new TraceValve(null, null);
+		TraceValve traceValve = new TraceValve((HttpServerHandler) null, null);
 
 		BDDAssertions.then(traceValve.isAsyncSupported()).isTrue();
 	}

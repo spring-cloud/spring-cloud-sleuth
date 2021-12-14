@@ -29,6 +29,7 @@ import javax.servlet.ServletResponse;
 import org.apache.catalina.Valve;
 
 import org.springframework.beans.factory.BeanFactory;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
@@ -102,7 +103,8 @@ class TraceWebServletConfiguration {
 		@Bean(name = CUSTOMIZER_NAME)
 		@Order(Ordered.HIGHEST_PRECEDENCE)
 		WebServerFactoryCustomizer<ConfigurableTomcatWebServerFactory> traceTomcatWebServerFactoryCustomizer(
-				HttpServerHandler httpServerHandler, CurrentTraceContext currentTraceContext) {
+				ObjectProvider<HttpServerHandler> httpServerHandler,
+				ObjectProvider<CurrentTraceContext> currentTraceContext) {
 			return factory -> factory.addEngineValves(new TraceValve(httpServerHandler, currentTraceContext));
 		}
 

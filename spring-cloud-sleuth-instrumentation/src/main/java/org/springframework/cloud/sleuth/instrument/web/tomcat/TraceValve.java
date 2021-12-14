@@ -25,6 +25,7 @@ import org.apache.catalina.connector.Request;
 import org.apache.catalina.connector.Response;
 import org.apache.catalina.valves.ValveBase;
 
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.cloud.sleuth.CurrentTraceContext;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.SpanCustomizer;
@@ -33,6 +34,7 @@ import org.springframework.cloud.sleuth.http.HttpServerHandler;
 import org.springframework.cloud.sleuth.instrument.web.servlet.HttpServletRequestWrapper;
 import org.springframework.cloud.sleuth.instrument.web.servlet.HttpServletResponseWrapper;
 import org.springframework.core.log.LogAccessor;
+import org.springframework.lang.NonNull;
 
 /**
  * A trace representation of a {@link Valve}.
@@ -44,28 +46,42 @@ public class TraceValve extends ValveBase {
 
 	private static final LogAccessor log = new LogAccessor(TraceValve.class);
 
-	private final HttpServerHandler httpServerHandler;
+	private HttpServerHandler httpServerHandler;
 
-	private final CurrentTraceContext currentTraceContext;
+	private CurrentTraceContext currentTraceContext;
 
-	public TraceValve(HttpServerHandler httpServerHandler, CurrentTraceContext currentTraceContext) {
+	private final ObjectProvider<HttpServerHandler> httpServerHandlerProvider;
+
+	private final ObjectProvider<CurrentTraceContext> currentTraceContextProvider;
+
+	public TraceValve(@NonNull HttpServerHandler httpServerHandler, @NonNull CurrentTraceContext currentTraceContext) {
 		this.httpServerHandler = httpServerHandler;
 		this.currentTraceContext = currentTraceContext;
+		this.httpServerHandlerProvider = null;
+		this.currentTraceContextProvider = null;
+		setAsyncSupported(true);
+	}
+
+	public TraceValve(@NonNull ObjectProvider<HttpServerHandler> httpServerHandler,
+			@NonNull ObjectProvider<CurrentTraceContext> currentTraceContext) {
+		this.httpServerHandler = null;
+		this.currentTraceContext = null;
+		this.httpServerHandlerProvider = httpServerHandler;
+		this.currentTraceContextProvider = currentTraceContext;
 		setAsyncSupported(true);
 	}
 
 	@Override
 	public void invoke(Request request, Response response) throws IOException, ServletException {
 		Exception ex = null;
-		Span handleReceive = this.httpServerHandler
-				.handleReceive(HttpServletRequestWrapper.create(request.getRequest()));
+		Span handleReceive = httpServerHandler().handleReceive(HttpServletRequestWrapper.create(request.getRequest()));
 		if (log.isDebugEnabled()) {
 			log.debug("Created a server receive span [" + handleReceive + "]");
 		}
 		request.setAttribute(SpanCustomizer.class.getName(), handleReceive);
 		request.setAttribute(TraceContext.class.getName(), handleReceive.context());
 		request.setAttribute(Span.class.getName(), handleReceive);
-		try (CurrentTraceContext.Scope ws = this.currentTraceContext.maybeScope(handleReceive.context())) {
+		try (CurrentTraceContext.Scope ws = currentTraceContext().maybeScope(handleReceive.context())) {
 			Valve next = getNext();
 			if (null == next) {
 				// no next valve
@@ -78,12 +94,26 @@ public class TraceValve extends ValveBase {
 			throw exception;
 		}
 		finally {
-			this.httpServerHandler.handleSend(
+			httpServerHandler().handleSend(
 					HttpServletResponseWrapper.create(request.getRequest(), response.getResponse(), ex), handleReceive);
 			if (log.isDebugEnabled()) {
 				log.debug("Handled send of span [" + handleReceive + "]");
 			}
 		}
+	}
+
+	private HttpServerHandler httpServerHandler() {
+		if (this.httpServerHandler == null) {
+			this.httpServerHandler = this.httpServerHandlerProvider.getIfAvailable();
+		}
+		return this.httpServerHandler;
+	}
+
+	private CurrentTraceContext currentTraceContext() {
+		if (this.currentTraceContext == null) {
+			this.currentTraceContext = this.currentTraceContextProvider.getIfAvailable();
+		}
+		return this.currentTraceContext;
 	}
 
 }
