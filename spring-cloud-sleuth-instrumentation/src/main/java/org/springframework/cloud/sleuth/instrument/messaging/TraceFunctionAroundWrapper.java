@@ -47,6 +47,7 @@ import org.springframework.messaging.support.MessageHeaderAccessor;
  *
  * @author Marcin Grzejszczak
  * @author Oleg Zhurakousky
+ * @author Tim Ysewyn
  * @since 3.0.0
  */
 public class TraceFunctionAroundWrapper extends FunctionAroundWrapper
@@ -126,8 +127,8 @@ public class TraceFunctionAroundWrapper extends FunctionAroundWrapper
 			if (log.isDebugEnabled()) {
 				log.debug("Target function [" + targetFunction.getFunctionDefinition() + "] has raw input type ["
 						+ itemType + "] and should be [" + Message.class + "]. Will not wrap it.");
-				return targetFunction.apply(messageStream);
 			}
+			return targetFunction.apply(messageStream);
 		}
 		Publisher<Message> messagePublisher = messageStream;
 		if (FunctionTypeUtils.isMono(targetFunction.getInputType())) {
