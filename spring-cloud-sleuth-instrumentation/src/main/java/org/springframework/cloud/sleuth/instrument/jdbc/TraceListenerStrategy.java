@@ -429,7 +429,11 @@ class TraceListenerStrategy<CON, STMT, RS> {
 	}
 
 	private String spanName(String sql) {
-		return sql.substring(0, sql.indexOf(' ')).toLowerCase(Locale.ROOT);
+		String spanName = sql.toLowerCase(Locale.ROOT);
+		if (spanName.contains(" ")) {
+			spanName = spanName.substring(0, spanName.indexOf(" "));
+		}
+		return spanName;
 	}
 
 	/**
