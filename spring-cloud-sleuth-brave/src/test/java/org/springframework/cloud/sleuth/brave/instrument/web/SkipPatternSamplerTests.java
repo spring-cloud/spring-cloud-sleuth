@@ -63,6 +63,19 @@ public class SkipPatternSamplerTests {
 	}
 
 	@Test
+	public void should_not_sample_if_pattern_is_null() {
+		BDDMockito.given(this.request.path()).willReturn(null);
+		SkipPatternSampler sampler = new SkipPatternSampler() {
+			@Override
+			Pattern getPattern() {
+				throw new IllegalStateException("Should not call getPattern()");
+			}
+		};
+
+		then(sampler.trySample(this.request)).isFalse();
+	}
+
+	@Test
 	public void should_not_get_pattern_twice() {
 		BDDMockito.given(this.request.path()).willReturn("url");
 		SkipPatternSampler sampler = new SkipPatternSampler() {
