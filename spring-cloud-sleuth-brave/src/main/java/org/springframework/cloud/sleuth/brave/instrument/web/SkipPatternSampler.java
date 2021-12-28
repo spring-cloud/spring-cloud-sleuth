@@ -34,6 +34,10 @@ abstract class SkipPatternSampler implements SamplerFunction<HttpRequest> {
 	@Override
 	public final Boolean trySample(HttpRequest request) {
 		String url = request.path();
+		if (url == null) {
+			return null;
+		}
+
 		boolean shouldSkip = pattern().matcher(url).matches();
 		if (shouldSkip) {
 			return false;

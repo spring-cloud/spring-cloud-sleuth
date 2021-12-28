@@ -86,4 +86,16 @@ public class SkipPatternSamplerTests {
 		then(sampler.trySample(this.request)).isFalse();
 	}
 
+	@Test
+	public void should_delegate_sampling_decision_if_path_is_null() {
+		BDDMockito.given(this.request.path()).willReturn(null);
+		SkipPatternSampler sampler = new SkipPatternSampler() {
+			@Override
+			Pattern getPattern() {
+				return Pattern.compile("foo");
+			}
+		};
+
+		then(sampler.trySample(this.request)).isNull();
+	}
 }
