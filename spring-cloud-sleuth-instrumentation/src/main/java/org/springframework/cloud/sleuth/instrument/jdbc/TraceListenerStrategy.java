@@ -20,6 +20,7 @@ import java.net.URI;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.Statement;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -72,6 +73,10 @@ class TraceListenerStrategy<CON, STMT, RS> {
 	// Captures all the characters between = and either the next & or the end of the
 	// string.
 	private static final Pattern URL_SERVICE_NAME_FINDER = Pattern.compile("sleuthServiceName=(.*?)(?:&|$)");
+
+	private static final String DEFAULT_SPAN_NAME = "query";
+
+	private static final List<String> KNOWN_SPAN_NAMES = Arrays.asList("select", "insert", "update", "delete");
 
 	private final Map<CON, ConnectionInfo> openConnections = new ConcurrentHashMap<>();
 
@@ -429,7 +434,15 @@ class TraceListenerStrategy<CON, STMT, RS> {
 	}
 
 	private String spanName(String sql) {
-		return sql.substring(0, sql.indexOf(' ')).toLowerCase(Locale.ROOT);
+		String lowercaseSql = sql.toLowerCase(Locale.ROOT);
+		String spanName = DEFAULT_SPAN_NAME;
+		for (String spanNameCandidate : KNOWN_SPAN_NAMES) {
+			if (lowercaseSql.startsWith(spanNameCandidate)) {
+				spanName = spanNameCandidate;
+				break;
+			}
+		}
+		return spanName;
 	}
 
 	/**
