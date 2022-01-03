@@ -54,4 +54,13 @@ public class LazyTraceAsyncCustomizerTest {
 		BDDAssertions.then(executor).isExactlyInstanceOf(LazyTraceExecutor.class);
 	}
 
+	@Test
+	public void should_return_null_when_executor_null() throws Exception {
+		BDDMockito.given(this.asyncConfigurer.getAsyncExecutor()).willReturn(null);
+
+		Executor executor = this.lazyTraceAsyncCustomizer.getAsyncExecutor();
+
+		BDDAssertions.then(executor).isNull();
+	}
+
 }
