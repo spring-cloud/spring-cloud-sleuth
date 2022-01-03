@@ -98,4 +98,5 @@ public class SkipPatternSamplerTests {
 
 		then(sampler.trySample(this.request)).isNull();
 	}
+
 }

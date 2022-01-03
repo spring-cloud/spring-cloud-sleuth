@@ -400,6 +400,24 @@ IMPORTANT: All tags and events must be prefixed with `kafka.` prefix!
 |kafka.topic|Name of the Kafka topic.
 |===
 
+=== Kafka On Message Span
+
+> Span created on the Kafka consumer side when using a MessageListener.
+
+**Span name** `kafka.on-message`.
+
+Fully qualified name of the enclosing class `org.springframework.cloud.sleuth.instrument.kafka.SleuthKafkaSpan`
+
+IMPORTANT: All tags and events must be prefixed with `kafka.` prefix!
+
+.Tag Keys
+|===
+|Name | Description
+|kafka.offset|Kafka offset number.
+|kafka.partition|Kafka partition number.
+|kafka.topic|Name of the Kafka topic.
+|===
+
 === Kafka Producer Span
 
 > Span created on the Kafka consumer side.
