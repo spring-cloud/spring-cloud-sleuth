@@ -70,7 +70,7 @@ public class TracePlatformTransactionManager implements PlatformTransactionManag
 		try {
 			TransactionDefinition def = (definition != null ? definition : TransactionDefinition.withDefaults());
 			TransactionStatus status = this.delegate.getTransaction(definition);
-			span = taggedSpan(currentSpan, span, def, status);
+			taggedSpan(currentSpan, span, def, status);
 			return status;
 		}
 		catch (Exception e) {
@@ -89,17 +89,18 @@ public class TracePlatformTransactionManager implements PlatformTransactionManag
 	}
 
 	private Span taggedSpan(Span currentSpan, Span span, TransactionDefinition def, TransactionStatus status) {
+		Span taggedSpan = span;
 		if (status.isNewTransaction() || currentSpan == null) {
 			if (log.isDebugEnabled()) {
-				log.debug("Creating new span cause a new transaction is started");
+				log.debug("Creating new span [" + taggedSpan + "] cause a new transaction is started");
 			}
-			TracePlatformTransactionManagerTags.tag(span, def, this.delegate.getClass());
+			TracePlatformTransactionManagerTags.tag(taggedSpan, def, this.delegate.getClass());
 		}
 		else {
-			span = currentSpan;
+			taggedSpan = currentSpan;
 		}
-		this.threadLocalSpan.set(span);
-		return span;
+		this.threadLocalSpan.set(taggedSpan);
+		return taggedSpan;
 	}
 
 	@Override
@@ -127,12 +128,15 @@ public class TracePlatformTransactionManager implements PlatformTransactionManag
 		}
 		finally {
 			SleuthTxSpan.TX_SPAN.wrap(span).event(SleuthTxSpan.Events.COMMIT);
-			span.end();
+			spanAndScope.close();
 			if (ex == null) {
 				if (log.isDebugEnabled()) {
 					log.debug("No exception was found - will clear thread local span");
 				}
 				this.threadLocalSpan.remove();
+			}
+			if (log.isDebugEnabled()) {
+				log.debug("Restored thread local span [" + this.threadLocalSpan.get() + "]");
 			}
 		}
 	}
@@ -160,8 +164,11 @@ public class TracePlatformTransactionManager implements PlatformTransactionManag
 		}
 		finally {
 			SleuthTxSpan.TX_SPAN.wrap(span).event(SleuthTxSpan.Events.ROLLBACK);
-			span.end();
+			spanAndScope.close();
 			this.threadLocalSpan.remove();
+			if (log.isDebugEnabled()) {
+				log.debug("Restored thread local span [" + this.threadLocalSpan.get() + "]");
+			}
 		}
 	}
 
