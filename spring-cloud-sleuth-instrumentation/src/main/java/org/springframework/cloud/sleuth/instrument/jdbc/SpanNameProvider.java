@@ -16,20 +16,17 @@
 
 package org.springframework.cloud.sleuth.instrument.jdbc;
 
-import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import static java.util.Arrays.asList;
 import static java.util.regex.Pattern.compile;
 
 class SpanNameProvider {
 
 	private static final String DEFAULT_SPAN_NAME = "query";
 	private static final Pattern PATTERN_MATCHING_FIRST_WORD_OF_SQL = compile("^([a-zA-Z]+)[^a-zA-Z]?.*$");
-	private static final List<String> KNOWN_SPAN_NAMES = asList("select", "update", "insert", "delete");
 
 	String getSpanNameFor(String sql) {
 		String spanName = DEFAULT_SPAN_NAME;
@@ -45,10 +42,7 @@ class SpanNameProvider {
 		Matcher matcher = PATTERN_MATCHING_FIRST_WORD_OF_SQL.matcher(sql);
 
 		if (matcher.matches()) {
-			String firstWordOfSql = matcher.group(1).toLowerCase(Locale.ROOT);
-			if (KNOWN_SPAN_NAMES.contains(firstWordOfSql)) {
-				spanName = firstWordOfSql;
-			}
+			spanName = matcher.group(1).toLowerCase(Locale.ROOT);
 		}
 
 		return spanName;

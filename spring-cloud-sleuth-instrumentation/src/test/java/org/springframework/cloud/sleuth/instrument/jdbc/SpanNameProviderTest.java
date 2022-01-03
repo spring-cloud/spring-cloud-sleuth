@@ -15,7 +15,6 @@
  */
 
 package org.springframework.cloud.sleuth.instrument.jdbc;
-
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -116,12 +115,13 @@ public class SpanNameProviderTest {
 	}
 
 	@Test
-	public void should_return_default_for_input_starting_with_not_handled_word() {
+	public void should_return_lower_case_input_for_input_containing_only_one_word() {
 		SpanNameProvider provider = new SpanNameProvider();
-		String sql = "WITH a AS SELECT * FROM test_table SELECT * FROM a;";
+		String sql = "BEGIN";
+		String expectedResult = "begin";
 
 		String result = provider.getSpanNameFor(sql);
 
-		assertThat(result).isEqualTo(DEFAULT_SPAN_NAME);
+		assertThat(result).isEqualTo(expectedResult);
 	}
 }
