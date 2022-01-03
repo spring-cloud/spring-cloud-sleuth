@@ -15,6 +15,7 @@
  */
 
 package org.springframework.cloud.sleuth.instrument.jdbc;
+
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -22,9 +23,13 @@ import static org.assertj.core.api.Assertions.assertThat;
 public class SpanNameProviderTest {
 
 	private static final String DEFAULT_SPAN_NAME = "query";
+
 	private static final String SPAN_NAME_FOR_SELECTS = "select";
+
 	private static final String SPAN_NAME_FOR_UPDATES = "update";
+
 	private static final String SPAN_NAME_FOR_INSERTS = "insert";
+
 	private static final String SPAN_NAME_FOR_DELETES = "delete";
 
 	@Test
@@ -124,4 +129,5 @@ public class SpanNameProviderTest {
 
 		assertThat(result).isEqualTo(expectedResult);
 	}
+
 }

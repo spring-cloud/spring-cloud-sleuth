@@ -26,6 +26,7 @@ import static java.util.regex.Pattern.compile;
 class SpanNameProvider {
 
 	private static final String DEFAULT_SPAN_NAME = "query";
+
 	private static final Pattern PATTERN_MATCHING_FIRST_WORD_OF_SQL = compile("^([a-zA-Z]+)[^a-zA-Z]?.*$");
 
 	String getSpanNameFor(String sql) {
@@ -47,4 +48,5 @@ class SpanNameProvider {
 
 		return spanName;
 	}
+
 }
