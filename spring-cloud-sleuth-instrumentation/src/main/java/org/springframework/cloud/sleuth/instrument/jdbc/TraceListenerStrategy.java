@@ -20,9 +20,7 @@ import java.net.URI;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.Statement;
-import java.util.Arrays;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Matcher;
@@ -74,9 +72,7 @@ class TraceListenerStrategy<CON, STMT, RS> {
 	// string.
 	private static final Pattern URL_SERVICE_NAME_FINDER = Pattern.compile("sleuthServiceName=(.*?)(?:&|$)");
 
-	private static final String DEFAULT_SPAN_NAME = "query";
-
-	private static final List<String> KNOWN_SPAN_NAMES = Arrays.asList("select", "insert", "update", "delete");
+	private static final SpanNameProvider SPAN_NAME_PROVIDER = new SpanNameProvider();
 
 	private final Map<CON, ConnectionInfo> openConnections = new ConcurrentHashMap<>();
 
@@ -235,7 +231,7 @@ class TraceListenerStrategy<CON, STMT, RS> {
 		SpanAndScope statementSpan = statementInfo.span;
 		if (statementSpan != null) {
 			AssertingSpan.of(SleuthJdbcSpan.JDBC_QUERY_SPAN, statementSpan.getSpan())
-					.tag(SleuthJdbcSpan.QueryTags.QUERY, sql).name(spanName(sql));
+					.tag(SleuthJdbcSpan.QueryTags.QUERY, sql).name(SPAN_NAME_PROVIDER.getSpanNameFor(sql));
 			if (t != null) {
 				statementSpan.getSpan().error(t);
 			}
@@ -431,18 +427,6 @@ class TraceListenerStrategy<CON, STMT, RS> {
 				log.trace("Current span [" + tracer.currentSpan() + "]");
 			}
 		}
-	}
-
-	private String spanName(String sql) {
-		String lowercaseSql = sql.toLowerCase(Locale.ROOT);
-		String spanName = DEFAULT_SPAN_NAME;
-		for (String spanNameCandidate : KNOWN_SPAN_NAMES) {
-			if (lowercaseSql.startsWith(spanNameCandidate)) {
-				spanName = spanNameCandidate;
-				break;
-			}
-		}
-		return spanName;
 	}
 
 	/**
