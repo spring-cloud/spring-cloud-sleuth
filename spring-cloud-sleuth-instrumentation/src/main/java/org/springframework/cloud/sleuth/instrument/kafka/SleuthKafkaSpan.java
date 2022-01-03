@@ -42,6 +42,26 @@ enum SleuthKafkaSpan implements DocumentedSpan {
 	},
 
 	/**
+	 * Span created on the Kafka consumer side when using a MessageListener.
+	 */
+	KAFKA_ON_MESSAGE_SPAN {
+		@Override
+		public String getName() {
+			return "kafka.on-message";
+		}
+
+		@Override
+		public TagKey[] getTagKeys() {
+			return ConsumerTags.values();
+		}
+
+		@Override
+		public String prefix() {
+			return "kafka.";
+		}
+	},
+
+	/**
 	 * Span created on the Kafka consumer side.
 	 */
 	KAFKA_PRODUCER_SPAN {

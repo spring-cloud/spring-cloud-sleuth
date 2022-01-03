@@ -114,7 +114,7 @@ public class BraveMessagingAutoConfiguration {
 
 	@Configuration(proxyBeanMethods = false)
 	@ConditionalOnProperty(value = "spring.sleuth.messaging.kafka.enabled", matchIfMissing = true)
-	@ConditionalOnClass(ProducerFactory.class)
+	@ConditionalOnClass({ KafkaTracing.class, ProducerFactory.class })
 	protected static class SleuthKafkaConfiguration {
 
 		@Bean

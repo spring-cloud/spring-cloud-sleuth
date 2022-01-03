@@ -16,6 +16,8 @@
 
 package org.springframework.cloud.sleuth.autoconfig.instrument.kafka;
 
+import org.apache.kafka.clients.consumer.ConsumerRecord;
+
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
@@ -24,6 +26,8 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingClas
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.autoconfig.brave.BraveAutoConfiguration;
+import org.springframework.cloud.sleuth.instrument.kafka.TracingKafkaAspect;
+import org.springframework.cloud.sleuth.propagation.Propagator;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.kafka.core.ProducerFactory;
@@ -47,6 +51,12 @@ public class SpringKafkaAutoConfiguration {
 	@Bean
 	static SpringKafkaFactoryBeanPostProcessor springKafkaFactoryBeanPostProcessor(BeanFactory beanFactory) {
 		return new SpringKafkaFactoryBeanPostProcessor(beanFactory);
+	}
+
+	@Bean
+	TracingKafkaAspect tracingKafkaAspect(Tracer tracer, Propagator propagator,
+			Propagator.Getter<ConsumerRecord<?, ?>> extractor) {
+		return new TracingKafkaAspect(tracer, propagator, extractor);
 	}
 
 }

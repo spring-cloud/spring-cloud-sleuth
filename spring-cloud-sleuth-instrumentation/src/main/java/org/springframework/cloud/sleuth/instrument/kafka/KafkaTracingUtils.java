@@ -31,20 +31,25 @@ final class KafkaTracingUtils {
 	private KafkaTracingUtils() {
 	}
 
-	static <K, V> void buildAndFinishSpan(ConsumerRecord<K, V> consumerRecord, Propagator propagator,
-			Propagator.Getter<ConsumerRecord<?, ?>> extractor) {
-		// @formatter:off
-		Span.Builder spanBuilder = AssertingSpanBuilder.of(SleuthKafkaSpan.KAFKA_CONSUMER_SPAN, propagator.extract(consumerRecord, extractor).kind(Span.Kind.CONSUMER))
-				.name(SleuthKafkaSpan.KAFKA_CONSUMER_SPAN.getName())
-				.tag(SleuthKafkaSpan.ConsumerTags.TOPIC, consumerRecord.topic())
-				.tag(SleuthKafkaSpan.ConsumerTags.OFFSET, Long.toString(consumerRecord.offset()))
-				.tag(SleuthKafkaSpan.ConsumerTags.PARTITION, Integer.toString(consumerRecord.partition()));
-		// @formatter:on
-		Span span = spanBuilder.start();
+	static <K, V> void buildAndFinishSpan(SleuthKafkaSpan sleuthKafkaSpan, ConsumerRecord<K, V> consumerRecord,
+			Propagator propagator, Propagator.Getter<ConsumerRecord<?, ?>> extractor) {
+		Span span = buildSpan(sleuthKafkaSpan, consumerRecord, propagator, extractor);
 		if (log.isDebugEnabled()) {
 			log.debug("Extracted span from event headers " + span);
 		}
 		span.end();
+	}
+
+	static <K, V> Span buildSpan(SleuthKafkaSpan sleuthKafkaSpan, ConsumerRecord<K, V> consumerRecord,
+			Propagator propagator, Propagator.Getter<ConsumerRecord<?, ?>> extractor) {
+		// @formatter:off
+		Span.Builder spanBuilder = AssertingSpanBuilder.of(sleuthKafkaSpan, propagator.extract(consumerRecord, extractor).kind(Span.Kind.CONSUMER))
+				.name(sleuthKafkaSpan.getName())
+				.tag(SleuthKafkaSpan.ConsumerTags.TOPIC, consumerRecord.topic())
+				.tag(SleuthKafkaSpan.ConsumerTags.OFFSET, Long.toString(consumerRecord.offset()))
+				.tag(SleuthKafkaSpan.ConsumerTags.PARTITION, Integer.toString(consumerRecord.partition()));
+		// @formatter:on
+		return spanBuilder.start();
 	}
 
 }

@@ -28,6 +28,7 @@ import org.springframework.boot.autoconfigure.AutoConfigurations;
 import org.springframework.boot.test.context.FilteredClassLoader;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
 import org.springframework.cloud.sleuth.autoconfig.TraceNoOpAutoConfiguration;
+import org.springframework.cloud.sleuth.instrument.kafka.TracingKafkaAspect;
 import org.springframework.kafka.core.ConsumerFactory;
 import org.springframework.kafka.core.ConsumerPostProcessor;
 import org.springframework.kafka.core.ProducerFactory;
@@ -44,8 +45,8 @@ class SpringKafkaAutoConfigurationTests {
 
 	@Test
 	void should_be_disabled_when_brave_on_classpath() {
-		this.contextRunner
-				.run((context) -> assertThat(context).doesNotHaveBean(SpringKafkaFactoryBeanPostProcessor.class));
+		this.contextRunner.run((context) -> assertThat(context)
+				.doesNotHaveBean(SpringKafkaFactoryBeanPostProcessor.class).doesNotHaveBean(TracingKafkaAspect.class));
 	}
 
 	@Test
@@ -64,6 +65,12 @@ class SpringKafkaAutoConfigurationTests {
 				.run(context -> assertThat(context).getBean(ConsumerFactory.class)
 						.extracting(ConsumerFactory::getPostProcessors).matches(postProcessors -> postProcessors
 								.stream().filter(p -> p instanceof SpringKafkaConsumerPostProcessor).count() == 1));
+	}
+
+	@Test
+	void should_register_tracing_kafka_aspect() {
+		this.contextRunner.withClassLoader(new FilteredClassLoader(KafkaTracing.class))
+				.run((context) -> assertThat(context).hasSingleBean(TracingKafkaAspect.class));
 	}
 
 	class TestConsumerFactory implements ConsumerFactory {

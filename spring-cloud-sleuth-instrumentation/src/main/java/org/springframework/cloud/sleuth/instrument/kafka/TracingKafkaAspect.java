@@ -14,18 +14,19 @@
  * limitations under the License.
  */
 
-package org.springframework.cloud.sleuth.brave.instrument.messaging;
+package org.springframework.cloud.sleuth.instrument.kafka;
 
-import brave.Tracer;
-import brave.kafka.clients.KafkaTracing;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Pointcut;
 
 import org.springframework.aop.framework.ProxyFactoryBean;
+import org.springframework.cloud.sleuth.Tracer;
+import org.springframework.cloud.sleuth.propagation.Propagator;
 import org.springframework.kafka.listener.AbstractMessageListenerContainer;
 import org.springframework.kafka.listener.MessageListener;
 import org.springframework.kafka.listener.MessageListenerContainer;
@@ -33,21 +34,24 @@ import org.springframework.kafka.listener.MessageListenerContainer;
 /**
  * Instruments Kafka related components.
  *
- * @since 3.0.0
+ * @since 3.1.1
  * @author Marcin Grzejszczak
  */
 @Aspect
-public class SleuthKafkaAspect {
+public class TracingKafkaAspect {
 
-	private static final Log log = LogFactory.getLog(SleuthKafkaAspect.class);
-
-	private final KafkaTracing kafkaTracing;
+	private static final Log log = LogFactory.getLog(TracingKafkaAspect.class);
 
 	private final Tracer tracer;
 
-	public SleuthKafkaAspect(KafkaTracing kafkaTracing, Tracer tracer) {
-		this.kafkaTracing = kafkaTracing;
+	private final Propagator propagator;
+
+	private final Propagator.Getter<ConsumerRecord<?, ?>> extractor;
+
+	public TracingKafkaAspect(Tracer tracer, Propagator propagator, Propagator.Getter<ConsumerRecord<?, ?>> extractor) {
 		this.tracer = tracer;
+		this.propagator = propagator;
+		this.extractor = extractor;
 	}
 
 	@Pointcut("execution(public * org.springframework.kafka.config.KafkaListenerContainerFactory.createListenerContainer(..))")
@@ -90,7 +94,7 @@ public class SleuthKafkaAspect {
 	Object createProxy(Object bean) {
 		ProxyFactoryBean factory = new ProxyFactoryBean();
 		factory.setProxyTargetClass(true);
-		factory.addAdvice(new MessageListenerMethodInterceptor(this.kafkaTracing, this.tracer));
+		factory.addAdvice(new TracingMessageListenerMethodInterceptor(this.tracer, propagator, extractor));
 		factory.setTarget(bean);
 		return factory.getObject();
 	}

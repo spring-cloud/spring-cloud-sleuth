@@ -130,7 +130,8 @@ public class TracingKafkaConsumer<K, V> implements Consumer<K, V> {
 	public ConsumerRecords<K, V> poll(long l) {
 		ConsumerRecords<K, V> consumerRecords = this.delegate.poll(l);
 		for (ConsumerRecord<K, V> consumerRecord : consumerRecords) {
-			KafkaTracingUtils.buildAndFinishSpan(consumerRecord, propagator(), extractor());
+			KafkaTracingUtils.buildAndFinishSpan(SleuthKafkaSpan.KAFKA_CONSUMER_SPAN, consumerRecord, propagator(),
+					extractor());
 		}
 		return consumerRecords;
 	}
@@ -139,7 +140,8 @@ public class TracingKafkaConsumer<K, V> implements Consumer<K, V> {
 	public ConsumerRecords<K, V> poll(Duration duration) {
 		ConsumerRecords<K, V> consumerRecords = this.delegate.poll(duration);
 		for (ConsumerRecord<K, V> consumerRecord : consumerRecords) {
-			KafkaTracingUtils.buildAndFinishSpan(consumerRecord, propagator(), extractor());
+			KafkaTracingUtils.buildAndFinishSpan(SleuthKafkaSpan.KAFKA_CONSUMER_SPAN, consumerRecord, propagator(),
+					extractor());
 		}
 		return consumerRecords;
 	}
