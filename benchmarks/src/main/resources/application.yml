@@ -1,5 +1,0 @@
-logging.level:
-  org.springframework: ERROR
-  org.springframework.sleuth: ERROR
-  org.springframework.sleuth.benchmarks: INFO
-  brave: ERROR
