@@ -36,7 +36,7 @@ import org.springframework.core.env.PropertySource;
  */
 class TraceEnvironmentPostProcessor implements EnvironmentPostProcessor {
 
-	private static final String PROPERTY_SOURCE_NAME = "defaultProperties";
+	static final String PROPERTY_SOURCE_NAME = "defaultProperties";
 
 	@Override
 	public void postProcessEnvironment(ConfigurableEnvironment environment, SpringApplication application) {
@@ -46,6 +46,10 @@ class TraceEnvironmentPostProcessor implements EnvironmentPostProcessor {
 		if (Boolean.parseBoolean(environment.getProperty("spring.sleuth.enabled", "true"))) {
 			map.put("logging.pattern.level",
 					"%5p [${spring.zipkin.service.name:" + "${spring.application.name:}},%X{traceId:-},%X{spanId:-}]");
+			String neverRefereshables = environment.getProperty("spring.cloud.refresh.never-refreshable",
+					"com.zaxxer.hikari.HikariDataSource");
+			map.put("spring.cloud.refresh.never-refreshable",
+					neverRefereshables + ",org.springframework.cloud.sleuth.instrument.jdbc.DataSourceWrapper");
 		}
 		addOrReplace(environment.getPropertySources(), map);
 	}
