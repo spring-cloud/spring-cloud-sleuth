@@ -24,6 +24,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.jetbrains.annotations.NotNull;
 import org.reactivestreams.Publisher;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -158,7 +159,16 @@ public class TraceFunctionAroundWrapper extends FunctionAroundWrapper
 		if (targetFunction.isConsumer()) {
 			return targetFunction.apply(reactorStreamConsumer(mono));
 		}
-		final Mono<Message> function = ((Mono<Message>) targetFunction.apply(mono));
+		final Publisher<Message> function = ((Publisher<Message>) targetFunction.apply(mono));
+		if (function instanceof Mono) {
+			return messageMono(targetFunction, (Mono<Message>) function);
+		}
+		return messageFlux(targetFunction, (Flux<Message>) function);
+	}
+
+	@NotNull
+	private Mono<Message> messageMono(SimpleFunctionRegistry.FunctionInvocationWrapper targetFunction,
+			Mono<Message> function) {
 		return Mono.deferContextual(contextView -> {
 			MessageAndSpansAndScope msg = contextView.get(MessageAndSpansAndScope.class);
 			return function.doOnNext(message -> {
@@ -201,7 +211,16 @@ public class TraceFunctionAroundWrapper extends FunctionAroundWrapper
 		if (targetFunction.isConsumer()) {
 			return targetFunction.apply(reactorStreamConsumer(flux));
 		}
-		final Flux<Message> function = ((Flux<Message>) targetFunction.apply(flux));
+		final Publisher<Message> function = ((Publisher<Message>) targetFunction.apply(flux));
+		if (function instanceof Mono) {
+			return messageMono(targetFunction, (Mono<Message>) function);
+		}
+		return messageFlux(targetFunction, (Flux<Message>) function);
+	}
+
+	@NotNull
+	private Flux<Message> messageFlux(SimpleFunctionRegistry.FunctionInvocationWrapper targetFunction,
+			Flux<Message> function) {
 		return Flux.deferContextual(contextView -> {
 			MessageAndSpansAndScope msg = contextView.get(MessageAndSpansAndScope.class);
 			return function.doOnNext(message -> {

@@ -202,6 +202,25 @@ class TraceFunctionAroundWrapperTests {
 	}
 
 	@Test
+	void should_trace_when_reactive_mono_to_flux_function() {
+		FunctionRegistration<ReactiveMonoToFluxFunction> registration = new FunctionRegistration<>(
+				new ReactiveMonoToFluxFunction(), "greeter").type(FunctionType.of(ReactiveMonoToFluxFunction.class));
+		catalog.register(registration);
+		FunctionInvocationWrapper function = catalog.lookup("greeter");
+
+		Message result = ((Flux<Message>) wrapper.apply(
+				Mono.just(MessageBuilder.withPayload("hello").setHeader("superHeader", "someValue").build()), function))
+						.blockFirst(Duration.ofSeconds(5));
+
+		assertThat(result.getPayload()).isEqualTo("HELLO");
+		assertThat(tracer.spans).hasSize(3);
+		assertThat(tracer.spans.get(0).name).isEqualTo("handle");
+		assertThat(tracer.spans.get(1).name).isEqualTo("greeter");
+		assertThat(tracer.spans.get(2).name).isEqualTo("send");
+		assertThatAllSpansAreStartedAndStopped();
+	}
+
+	@Test
 	void should_trace_when_reactive_flux_supplier() {
 		FunctionRegistration<ReactiveFluxGreeter> registration = new FunctionRegistration<>(new ReactiveFluxGreeter(),
 				"greeter").type(FunctionType.of(ReactiveFluxGreeter.class));
@@ -231,6 +250,23 @@ class TraceFunctionAroundWrapperTests {
 		assertThat(tracer.spans.get(0).name).isEqualTo("handle");
 		assertThat(tracer.spans.get(1).name).isEqualTo("greeter");
 		assertThat(tracer.spans.get(2).name).isEqualTo("send");
+		assertThatAllSpansAreStartedAndStopped();
+	}
+
+	@Test
+	void should_trace_when_reactive_flux_function_returns_mono() {
+		FunctionRegistration<ReactiveFluxToMonoFunction> registration = new FunctionRegistration<>(
+				new ReactiveFluxToMonoFunction(), "greeter").type(FunctionType.of(ReactiveFluxToMonoFunction.class));
+		catalog.register(registration);
+		FunctionInvocationWrapper function = catalog.lookup("greeter");
+
+		((Mono<Void>) wrapper.apply(
+				Flux.just(MessageBuilder.withPayload("hello").setHeader("superHeader", "someValue").build()), function))
+						.block(Duration.ofSeconds(5));
+
+		assertThat(tracer.spans).hasSize(2);
+		assertThat(tracer.spans.get(0).name).isEqualTo("handle");
+		assertThat(tracer.spans.get(1).name).isEqualTo("greeter");
 		assertThatAllSpansAreStartedAndStopped();
 	}
 
@@ -352,6 +388,16 @@ class TraceFunctionAroundWrapperTests {
 
 	}
 
+	private static class ReactiveMonoToFluxFunction implements Function<Mono<Message<String>>, Flux<Message<String>>> {
+
+		@Override
+		public Flux<Message<String>> apply(Mono<Message<String>> in) {
+			return Flux
+					.from(in.map(s -> MessageBuilder.fromMessage(s).withPayload(s.getPayload().toUpperCase()).build()));
+		}
+
+	}
+
 	private static class ReactiveFluxGreeter implements Supplier<Flux<Message<String>>> {
 
 		@Override
@@ -366,6 +412,16 @@ class TraceFunctionAroundWrapperTests {
 		@Override
 		public Flux<Message<String>> apply(Flux<Message<String>> in) {
 			return in.map(s -> MessageBuilder.fromMessage(s).withPayload(s.getPayload().toUpperCase()).build());
+		}
+
+	}
+
+	private static class ReactiveFluxToMonoFunction implements Function<Flux<Message<String>>, Mono<Void>> {
+
+		@Override
+		public Mono<Void> apply(Flux<Message<String>> in) {
+			return in.map(s -> MessageBuilder.fromMessage(s).withPayload(s.getPayload().toUpperCase()).build())
+					.then(Mono.empty());
 		}
 
 	}
