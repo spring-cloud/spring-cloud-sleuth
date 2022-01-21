@@ -42,7 +42,7 @@
 	</scm>
 
 	<properties>
-		<brave.version>5.13.6</brave.version>
+		<brave.version>5.13.7</brave.version>
 		<brave.opentracing.version>0.37.4</brave.opentracing.version>
 		<grpc.spring.boot.version>4.2.2</grpc.spring.boot.version>
 	</properties>
