@@ -38,9 +38,11 @@ import org.springframework.context.annotation.ConditionContext;
 import org.springframework.context.annotation.Conditional;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.ConfigurationCondition;
+import org.springframework.core.Ordered;
 import org.springframework.core.type.AnnotatedTypeMetadata;
 import org.springframework.integration.channel.interceptor.GlobalChannelInterceptorWrapper;
 import org.springframework.integration.config.GlobalChannelInterceptor;
+import org.springframework.messaging.support.ImmutableMessageChannelInterceptor;
 import org.springframework.messaging.support.MessageHeaderAccessor;
 import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
@@ -84,6 +86,16 @@ public class TraceSpringIntegrationAutoConfiguration {
 			SleuthMessagingProperties properties, MessageSpanCustomizer messageSpanCustomizer) {
 		return new TracingChannelInterceptor(tracer, propagator, traceMessagePropagationSetter,
 				traceMessagePropagationGetter, remoteServiceNameMapper(properties), messageSpanCustomizer);
+	}
+
+	@Bean
+	GlobalChannelInterceptorWrapper afterSleuthImmutableMessageChannelInterceptor(
+			SleuthIntegrationMessagingProperties properties) {
+		GlobalChannelInterceptorWrapper interceptor = new GlobalChannelInterceptorWrapper(
+				new ImmutableMessageChannelInterceptor());
+		interceptor.setOrder(Ordered.LOWEST_PRECEDENCE);
+		interceptor.setPatterns(properties.getPatterns());
+		return interceptor;
 	}
 
 	static Function<String, String> remoteServiceNameMapper(SleuthMessagingProperties properties) {
