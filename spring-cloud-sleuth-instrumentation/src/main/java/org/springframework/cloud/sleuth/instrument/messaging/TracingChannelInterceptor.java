@@ -16,10 +16,13 @@
 
 package org.springframework.cloud.sleuth.instrument.messaging;
 
-import java.util.NoSuchElementException;
+import java.io.Closeable;
+import java.util.ArrayDeque;
 import java.util.Set;
-import java.util.concurrent.LinkedBlockingDeque;
 import java.util.function.Function;
+
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 import org.springframework.aop.support.AopUtils;
 import org.springframework.beans.BeansException;
@@ -90,7 +93,7 @@ public final class TracingChannelInterceptor implements ExecutorChannelIntercept
 	private static final Class<?> directWithAttributesChannelClass = ClassUtils.isPresent(STREAM_DIRECT_CHANNEL, null)
 			? ClassUtils.resolveClassName(STREAM_DIRECT_CHANNEL, null) : null;
 
-	private final ThreadLocalSpan threadLocalSpan = new ThreadLocalSpan();
+	private final ThreadLocalSpan threadLocalSpan;
 
 	private final Tracer tracer;
 
@@ -115,6 +118,7 @@ public final class TracingChannelInterceptor implements ExecutorChannelIntercept
 		this.extractor = getter;
 		this.remoteServiceNameMapper = remoteServiceNameMapper;
 		this.messageSpanCustomizer = messageSpanCustomizer;
+		this.threadLocalSpan = new ThreadLocalSpan(tracer);
 	}
 
 	@Override
@@ -148,8 +152,7 @@ public final class TracingChannelInterceptor implements ExecutorChannelIntercept
 	}
 
 	private void setSpanInScope(Span span) {
-		Tracer.SpanInScope spanInScope = this.tracer.withSpan(span);
-		this.threadLocalSpan.set(new SpanAndScope(span, spanInScope));
+		this.threadLocalSpan.set(span);
 		log.debug(() -> "Put span in scope " + span);
 	}
 
@@ -308,8 +311,8 @@ public final class TracingChannelInterceptor implements ExecutorChannelIntercept
 		if (spanAndScope == null) {
 			return;
 		}
-		Span span = spanAndScope.span;
-		Tracer.SpanInScope scope = spanAndScope.scope;
+		Span span = spanAndScope.getSpan();
+		Tracer.SpanInScope scope = spanAndScope.getScope();
 		if (span.isNoop()) {
 			log.debug(() -> "Span " + span + " is noop - will stop the scope");
 			scope.close();
@@ -354,55 +357,93 @@ public final class TracingChannelInterceptor implements ExecutorChannelIntercept
 		return message;
 	}
 
-	private static class SpanAndScope {
+	static class SpanAndScope implements Closeable {
 
-		final Span span;
+		private static final Log log = LogFactory.getLog(SpanAndScope.class);
 
-		final Tracer.SpanInScope scope;
+		private final Span span;
+
+		private final Tracer.SpanInScope scope;
 
 		SpanAndScope(Span span, Tracer.SpanInScope scope) {
 			this.span = span;
 			this.scope = scope;
 		}
 
+		public Span getSpan() {
+			return this.span;
+		}
+
+		public Tracer.SpanInScope getScope() {
+			return this.scope;
+		}
+
+		@Override
+		public String toString() {
+			return "SpanAndScope{" + "span=" + this.span + '}';
+		}
+
+		@Override
+		public void close() {
+			if (log.isDebugEnabled()) {
+				log.debug("Closing span [" + this.span + "], scope is not null [" + (this.scope != null) + "]");
+			}
+			if (this.scope != null) {
+				this.scope.close();
+			}
+			this.span.end();
+		}
+
 	}
 
-	private static class ThreadLocalSpan {
+	static class ThreadLocalSpan {
 
-		private static final LogAccessor log = new LogAccessor(ThreadLocalSpan.class);
+		private final ThreadLocal<ArrayDeque<SpanAndScope>> currentSpanInScopeStack = new ThreadLocal<>();
 
-		private final ThreadLocal<SpanAndScope> threadLocalSpan = new ThreadLocal<>();
+		private final Tracer tracer;
 
-		private final LinkedBlockingDeque<SpanAndScope> spans = new LinkedBlockingDeque<>();
-
-		ThreadLocalSpan() {
+		ThreadLocalSpan(Tracer tracer) {
+			this.tracer = tracer;
 		}
 
-		void set(SpanAndScope spanAndScope) {
-			SpanAndScope scope = this.threadLocalSpan.get();
-			if (scope != null) {
-				this.spans.addFirst(scope);
-			}
-			this.threadLocalSpan.set(spanAndScope);
+		/**
+		 * Sets given span and scope.
+		 * @param span - span to be put in scope
+		 */
+		public void set(Span span) {
+			Tracer.SpanInScope spanInScope = this.tracer.withSpan(span);
+			SpanAndScope newSpanAndScope = new SpanAndScope(span, spanInScope);
+			getCurrentSpanInScopeStack().addFirst(newSpanAndScope);
 		}
 
-		SpanAndScope get() {
-			return this.threadLocalSpan.get();
+		/**
+		 * @return currently stored span and scope
+		 */
+		public SpanAndScope get() {
+			return getCurrentSpanInScopeStack().peekFirst();
 		}
 
-		void remove() {
-			this.threadLocalSpan.remove();
-			if (this.spans.isEmpty()) {
+		/**
+		 * Removes the current span from thread local and brings back the previous span to
+		 * the current thread local.
+		 */
+		public void remove() {
+			SpanAndScope spanAndScope = getCurrentSpanInScopeStack().pollFirst();
+			if (spanAndScope == null) {
 				return;
 			}
-			try {
-				SpanAndScope span = this.spans.removeFirst();
-				log.debug(() -> "Took span [" + span + "] from thread local");
-				this.threadLocalSpan.set(span);
+			if (spanAndScope.getScope() != null) {
+				spanAndScope.getScope().close();
 			}
-			catch (NoSuchElementException ex) {
-				log.trace(ex, () -> "Failed to remove a span from the queue");
+		}
+
+		private ArrayDeque<SpanAndScope> getCurrentSpanInScopeStack() {
+			ArrayDeque<SpanAndScope> stack = this.currentSpanInScopeStack.get();
+			if (stack == null) {
+				stack = new ArrayDeque<>();
+				this.currentSpanInScopeStack.set(stack);
 			}
+			return stack;
 		}
 
 	}
