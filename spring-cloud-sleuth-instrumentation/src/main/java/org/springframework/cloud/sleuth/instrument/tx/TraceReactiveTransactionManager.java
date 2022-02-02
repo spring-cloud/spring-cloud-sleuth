@@ -26,6 +26,7 @@ import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.SpanAndScope;
 import org.springframework.cloud.sleuth.TraceContext;
 import org.springframework.cloud.sleuth.Tracer;
+import org.springframework.cloud.sleuth.docs.AssertingSpan;
 import org.springframework.transaction.ReactiveTransaction;
 import org.springframework.transaction.ReactiveTransactionManager;
 import org.springframework.transaction.TransactionDefinition;
@@ -72,10 +73,10 @@ public class TraceReactiveTransactionManager implements ReactiveTransactionManag
 	public Mono<ReactiveTransaction> getReactiveTransaction(TransactionDefinition definition)
 			throws TransactionException {
 		return Mono.deferContextual(contextView -> this.delegate.getReactiveTransaction(definition).map(tx -> {
-			Span span = SleuthTxSpan.TX_SPAN.wrap(span(contextView));
+			Span span = AssertingSpan.continueSpan(SleuthTxSpan.TX_SPAN, SleuthTxSpan.TX_SPAN.wrap(span(contextView)));
 			if (tx.isNewTransaction() || span == null) {
 				if (log.isDebugEnabled()) {
-					log.debug("New transaction is required");
+					log.debug("New transaction is required, span in context [" + span + "]");
 				}
 				if (span == null) {
 					span = SleuthTxSpan.TX_SPAN.wrap(tracer().nextSpan()).name(SleuthTxSpan.TX_SPAN.getName()).start();
@@ -132,11 +133,12 @@ public class TraceReactiveTransactionManager implements ReactiveTransactionManag
 		SpanAndScope spanAndScope = reactiveTransaction.spanAndScope;
 		Span span = spanAndScope.getSpan();
 		if (log.isDebugEnabled()) {
-			log.debug("Commiting the transaction for span [" + spanAndScope + "]");
+			log.debug("Committing the transaction for span [" + spanAndScope + "]");
 		}
+		spanAndScope.getScope().close(); // Otherwise we have a leak
 		return this.delegate.commit(reactiveTransaction.delegate)
 				// TODO: Fix me when this is resolved in Reactor
-				// .doOnSubscribe(__ -> scope.close())
+				// .doOnSubscribe(__ -> spanAndScope.getScope().close())
 				.doOnError(span::error).doOnSuccess(signalType -> spanAndScope.close());
 	}
 
@@ -151,6 +153,7 @@ public class TraceReactiveTransactionManager implements ReactiveTransactionManag
 		if (log.isDebugEnabled()) {
 			log.debug("Rolling back the transaction for span [" + spanAndScope + "]");
 		}
+		spanAndScope.getScope().close(); // Otherwise we have a leak
 		return this.delegate.rollback(reactiveTransaction.delegate)
 				// TODO: Fix me when this is resolved in Reactor
 				// .doOnSubscribe(__ -> scope.close())

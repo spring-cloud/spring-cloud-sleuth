@@ -56,8 +56,8 @@ public class SpanAndScope implements Closeable {
 
 	@Override
 	public void close() {
-		if (log.isTraceEnabled()) {
-			log.trace("Closing span [" + this.span + "]");
+		if (log.isDebugEnabled()) {
+			log.debug("Closing span [" + this.span + "], scope is not null [" + (this.scope != null) + "]");
 		}
 		if (this.scope != null) {
 			this.scope.close();

@@ -41,7 +41,8 @@ import org.springframework.test.context.TestPropertySource;
 import static org.assertj.core.api.BDDAssertions.then;
 
 @ContextConfiguration(classes = R2dbcIntegrationTests.TestConfig.class)
-@TestPropertySource(properties = "spring.application.name=MyApplication")
+@TestPropertySource(properties = { "spring.application.name=MyApplication",
+		"spring.sleuth.reactor.instrumentation-type=decorate_queues" })
 public abstract class R2dbcIntegrationTests {
 
 	@Autowired
@@ -66,8 +67,7 @@ public abstract class R2dbcIntegrationTests {
 				.collect(Collectors.toList());
 		then(spanNames.stream().filter("tx"::equalsIgnoreCase).collect(Collectors.toList())).hasSize(2);
 		then(remoteServiceNames.stream().filter("h2"::equalsIgnoreCase).collect(Collectors.toList())).hasSize(9);
-		// TODO: First fix the SpanAndScope stacking
-		// then(tracer.currentSpan()).isNull();
+		then(tracer.currentSpan()).isNull();
 	}
 
 	@Configuration(proxyBeanMethods = false)

@@ -16,14 +16,14 @@
 
 package org.springframework.cloud.sleuth.instrument.messaging;
 
-import java.util.NoSuchElementException;
 import java.util.Set;
-import java.util.concurrent.LinkedBlockingDeque;
 import java.util.function.Function;
 
 import org.springframework.aop.support.AopUtils;
 import org.springframework.beans.BeansException;
 import org.springframework.cloud.sleuth.Span;
+import org.springframework.cloud.sleuth.SpanAndScope;
+import org.springframework.cloud.sleuth.ThreadLocalSpan;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.propagation.Propagator;
 import org.springframework.context.ApplicationContext;
@@ -90,7 +90,7 @@ public final class TracingChannelInterceptor implements ExecutorChannelIntercept
 	private static final Class<?> directWithAttributesChannelClass = ClassUtils.isPresent(STREAM_DIRECT_CHANNEL, null)
 			? ClassUtils.resolveClassName(STREAM_DIRECT_CHANNEL, null) : null;
 
-	private final ThreadLocalSpan threadLocalSpan = new ThreadLocalSpan();
+	private final ThreadLocalSpan threadLocalSpan;
 
 	private final Tracer tracer;
 
@@ -115,6 +115,7 @@ public final class TracingChannelInterceptor implements ExecutorChannelIntercept
 		this.extractor = getter;
 		this.remoteServiceNameMapper = remoteServiceNameMapper;
 		this.messageSpanCustomizer = messageSpanCustomizer;
+		this.threadLocalSpan = new ThreadLocalSpan(tracer);
 	}
 
 	@Override
@@ -148,8 +149,7 @@ public final class TracingChannelInterceptor implements ExecutorChannelIntercept
 	}
 
 	private void setSpanInScope(Span span) {
-		Tracer.SpanInScope spanInScope = this.tracer.withSpan(span);
-		this.threadLocalSpan.set(new SpanAndScope(span, spanInScope));
+		this.threadLocalSpan.set(span);
 		log.debug(() -> "Put span in scope " + span);
 	}
 
@@ -308,8 +308,8 @@ public final class TracingChannelInterceptor implements ExecutorChannelIntercept
 		if (spanAndScope == null) {
 			return;
 		}
-		Span span = spanAndScope.span;
-		Tracer.SpanInScope scope = spanAndScope.scope;
+		Span span = spanAndScope.getSpan();
+		Tracer.SpanInScope scope = spanAndScope.getScope();
 		if (span.isNoop()) {
 			log.debug(() -> "Span " + span + " is noop - will stop the scope");
 			scope.close();
@@ -352,59 +352,6 @@ public final class TracingChannelInterceptor implements ExecutorChannelIntercept
 			return failedMessage != null ? failedMessage : message;
 		}
 		return message;
-	}
-
-	private static class SpanAndScope {
-
-		final Span span;
-
-		final Tracer.SpanInScope scope;
-
-		SpanAndScope(Span span, Tracer.SpanInScope scope) {
-			this.span = span;
-			this.scope = scope;
-		}
-
-	}
-
-	private static class ThreadLocalSpan {
-
-		private static final LogAccessor log = new LogAccessor(ThreadLocalSpan.class);
-
-		private final ThreadLocal<SpanAndScope> threadLocalSpan = new ThreadLocal<>();
-
-		private final LinkedBlockingDeque<SpanAndScope> spans = new LinkedBlockingDeque<>();
-
-		ThreadLocalSpan() {
-		}
-
-		void set(SpanAndScope spanAndScope) {
-			SpanAndScope scope = this.threadLocalSpan.get();
-			if (scope != null) {
-				this.spans.addFirst(scope);
-			}
-			this.threadLocalSpan.set(spanAndScope);
-		}
-
-		SpanAndScope get() {
-			return this.threadLocalSpan.get();
-		}
-
-		void remove() {
-			this.threadLocalSpan.remove();
-			if (this.spans.isEmpty()) {
-				return;
-			}
-			try {
-				SpanAndScope span = this.spans.removeFirst();
-				log.debug(() -> "Took span [" + span + "] from thread local");
-				this.threadLocalSpan.set(span);
-			}
-			catch (NoSuchElementException ex) {
-				log.trace(ex, () -> "Failed to remove a span from the queue");
-			}
-		}
-
 	}
 
 }

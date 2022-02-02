@@ -28,7 +28,7 @@ import org.springframework.test.context.TestPropertySource;
 
 @SpringBootTest
 @ContextConfiguration(classes = R2dbcIntegrationTests.Config.class)
-@TestPropertySource(properties = "logging.level.org.springframework.cloud=TRACE")
+@TestPropertySource(properties = "logging.level.org.springframework.cloud=DEBUG")
 public class R2dbcIntegrationTests extends org.springframework.cloud.sleuth.instrument.r2dbc.R2dbcIntegrationTests {
 
 	@Configuration(proxyBeanMethods = false)

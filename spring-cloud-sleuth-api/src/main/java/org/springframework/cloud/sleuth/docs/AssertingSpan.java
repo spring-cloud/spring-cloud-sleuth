@@ -154,6 +154,20 @@ public interface AssertingSpan extends Span {
 	}
 
 	/**
+	 * @param documentedSpan span configuration
+	 * @param span span to wrap in assertions
+	 * @return asserting span
+	 */
+	static AssertingSpan continueSpan(DocumentedSpan documentedSpan, Span span) {
+		AssertingSpan assertingSpan = of(documentedSpan, span);
+		if (assertingSpan == null) {
+			return null;
+		}
+		((ImmutableAssertingSpan) assertingSpan).isStarted = true;
+		return assertingSpan;
+	}
+
+	/**
 	 * Returns the underlying delegate. Used when casting is necessary.
 	 * @param span span to check for wrapping
 	 * @param <T> type extending a span

@@ -16,12 +16,7 @@
 
 package org.springframework.cloud.sleuth;
 
-import java.util.Deque;
-import java.util.NoSuchElementException;
-import java.util.concurrent.LinkedBlockingDeque;
-
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import java.util.ArrayDeque;
 
 /**
  * Represents a {@link Span} stored in thread local.
@@ -31,11 +26,7 @@ import org.apache.commons.logging.LogFactory;
  */
 public class ThreadLocalSpan {
 
-	private static final Log log = LogFactory.getLog(ThreadLocalSpan.class);
-
-	private final ThreadLocal<SpanAndScope> threadLocalSpan = new ThreadLocal<>();
-
-	private final Deque<SpanAndScope> spans = new LinkedBlockingDeque<>();
+	private final ThreadLocal<ArrayDeque<SpanAndScope>> currentSpanInScopeStack = new ThreadLocal<>();
 
 	private final Tracer tracer;
 
@@ -50,18 +41,14 @@ public class ThreadLocalSpan {
 	public void set(Span span) {
 		Tracer.SpanInScope spanInScope = this.tracer.withSpan(span);
 		SpanAndScope newSpanAndScope = new SpanAndScope(span, spanInScope);
-		SpanAndScope scope = this.threadLocalSpan.get();
-		if (scope != null) {
-			this.spans.addFirst(scope);
-		}
-		this.threadLocalSpan.set(newSpanAndScope);
+		getCurrentSpanInScopeStack().addFirst(newSpanAndScope);
 	}
 
 	/**
 	 * @return currently stored span and scope
 	 */
 	public SpanAndScope get() {
-		return this.threadLocalSpan.get();
+		return getCurrentSpanInScopeStack().peekFirst();
 	}
 
 	/**
@@ -69,22 +56,22 @@ public class ThreadLocalSpan {
 	 * current thread local.
 	 */
 	public void remove() {
-		this.threadLocalSpan.remove();
-		if (this.spans.isEmpty()) {
+		SpanAndScope spanAndScope = getCurrentSpanInScopeStack().pollFirst();
+		if (spanAndScope == null) {
 			return;
 		}
-		try {
-			SpanAndScope span = this.spans.removeFirst();
-			if (log.isDebugEnabled()) {
-				log.debug("Took span [" + span + "] from thread local");
-			}
-			this.threadLocalSpan.set(span);
+		if (spanAndScope.getScope() != null) {
+			spanAndScope.getScope().close();
 		}
-		catch (NoSuchElementException ex) {
-			if (log.isTraceEnabled()) {
-				log.trace("Failed to remove a span from the queue", ex);
-			}
+	}
+
+	private ArrayDeque<SpanAndScope> getCurrentSpanInScopeStack() {
+		ArrayDeque<SpanAndScope> stack = this.currentSpanInScopeStack.get();
+		if (stack == null) {
+			stack = new ArrayDeque<>();
+			this.currentSpanInScopeStack.set(stack);
 		}
+		return stack;
 	}
 
 }
