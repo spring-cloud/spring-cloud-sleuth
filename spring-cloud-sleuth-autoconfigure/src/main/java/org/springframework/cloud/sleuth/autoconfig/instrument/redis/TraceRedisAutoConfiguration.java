@@ -16,6 +16,7 @@
 
 package org.springframework.cloud.sleuth.autoconfig.instrument.redis;
 
+import brave.sampler.Sampler;
 import io.lettuce.core.tracing.Tracing;
 
 import org.springframework.boot.autoconfigure.AutoConfigureBefore;
@@ -51,8 +52,20 @@ public class TraceRedisAutoConfiguration {
 
 		@Bean
 		@ConditionalOnBean(Tracing.class)
-		TraceLettuceClientResourcesBuilderCustomizer traceLettuceClientResourcesBuilderCustomizer(Tracing tracing) {
+		TraceLettuceClientResourcesBuilderCustomizer traceLettuceClientResourcesBuilderCustomizer(Tracing tracing,
+				Sampler sampler) {
+			eagerlyInitializePotentiallyRefreshScopeSampler(sampler);
 			return new TraceLettuceClientResourcesBuilderCustomizer(tracing);
+		}
+
+		/**
+		 * We need to do the eager method invocation. Since this might be @RefreshScope, a
+		 * proxy is being created. Trying to resolve the proxy from a different thread
+		 * than main can lead to cross thread locking.
+		 * @param sampler potentially refresh scope sampler
+		 */
+		private void eagerlyInitializePotentiallyRefreshScopeSampler(Sampler sampler) {
+			sampler.isSampled(0L);
 		}
 
 	}

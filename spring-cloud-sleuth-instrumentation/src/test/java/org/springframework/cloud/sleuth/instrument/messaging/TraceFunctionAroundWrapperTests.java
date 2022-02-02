@@ -152,6 +152,19 @@ class TraceFunctionAroundWrapperTests {
 	}
 
 	@Test
+	void test_tracing_with_message_flux_to_flux_without_message() {
+		FunctionRegistration<MessageFluxToFluxFunction> registration = new FunctionRegistration<>(
+				new MessageFluxToFluxFunction(), "greeter").type(FunctionType.of(MessageFluxToFluxFunction.class));
+		catalog.register(registration);
+		FunctionInvocationWrapper function = catalog.lookup("greeter");
+
+		Object result = (Object) ((Flux) wrapper.apply("hello", function)).blockFirst();
+
+		assertThat(result).isEqualTo("hello");
+		assertThat(tracer.spans).isEmpty();
+	}
+
+	@Test
 	void test_tracing_with_consumer() {
 		GreeterConsumer consumer = new GreeterConsumer();
 		FunctionRegistration<GreeterConsumer> registration = new FunctionRegistration<>(consumer, "greeter")
@@ -461,6 +474,20 @@ class TraceFunctionAroundWrapperTests {
 						log.info("Logging [{}] from flat map", s);
 						return s.toUpperCase();
 					}));
+		}
+
+	}
+
+	static class MessageFluxToFluxFunction implements Function<Flux<Message<?>>, Flux<?>> {
+
+		private static final Logger log = LoggerFactory.getLogger(MessageFluxToFluxFunction.class);
+
+		@Override
+		public Flux<?> apply(Flux<Message<?>> input) {
+			return input.map(s -> {
+				log.info("Logging [{}] from map", s);
+				return s.getPayload();
+			});
 		}
 
 	}
