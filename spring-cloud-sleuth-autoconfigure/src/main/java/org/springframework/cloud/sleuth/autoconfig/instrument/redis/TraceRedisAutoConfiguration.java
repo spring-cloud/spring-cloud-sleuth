@@ -19,13 +19,16 @@ package org.springframework.cloud.sleuth.autoconfig.instrument.redis;
 import brave.sampler.Sampler;
 import io.lettuce.core.tracing.Tracing;
 
+import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.AutoConfigureBefore;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.cloud.sleuth.Tracer;
+import org.springframework.cloud.sleuth.autoconfig.brave.BraveAutoConfiguration;
 import org.springframework.cloud.sleuth.autoconfig.brave.instrument.redis.TraceRedisProperties;
 import org.springframework.cloud.sleuth.instrument.redis.TraceLettuceClientResourcesBuilderCustomizer;
 import org.springframework.context.annotation.Bean;
@@ -43,18 +46,26 @@ import org.springframework.context.annotation.Configuration;
 @ConditionalOnBean(Tracer.class)
 @ConditionalOnClass(Tracing.class)
 @AutoConfigureBefore({ RedisAutoConfiguration.class })
+@AutoConfigureAfter(BraveAutoConfiguration.class)
 @EnableConfigurationProperties(TraceRedisProperties.class)
 public class TraceRedisAutoConfiguration {
 
 	@Configuration(proxyBeanMethods = false)
 	@ConditionalOnProperty(value = "spring.sleuth.redis.legacy.enabled", havingValue = "false", matchIfMissing = true)
+	@ConditionalOnBean(Tracing.class)
 	static class LettuceConfiguration {
 
 		@Bean
-		@ConditionalOnBean(Tracing.class)
-		TraceLettuceClientResourcesBuilderCustomizer traceLettuceClientResourcesBuilderCustomizer(Tracing tracing,
+		@ConditionalOnClass(name = "brave.sampler.Sampler")
+		TraceLettuceClientResourcesBuilderCustomizer braveTraceLettuceClientResourcesBuilderCustomizer(Tracing tracing,
 				Sampler sampler) {
 			eagerlyInitializePotentiallyRefreshScopeSampler(sampler);
+			return new TraceLettuceClientResourcesBuilderCustomizer(tracing);
+		}
+
+		@Bean
+		@ConditionalOnMissingClass("brave.sampler.Sampler")
+		TraceLettuceClientResourcesBuilderCustomizer otherTracersTraceLettuceClientResourcesBuilderCustomizer(Tracing tracing) {
 			return new TraceLettuceClientResourcesBuilderCustomizer(tracing);
 		}
 
