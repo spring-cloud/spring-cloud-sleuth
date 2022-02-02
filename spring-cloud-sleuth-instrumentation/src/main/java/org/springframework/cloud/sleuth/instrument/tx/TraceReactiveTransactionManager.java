@@ -85,7 +85,8 @@ public class TraceReactiveTransactionManager implements ReactiveTransactionManag
 							.start();
 				}
 				TracePlatformTransactionManagerTags.tag(span, definition, this.delegate.getClass());
-			} else if (log.isDebugEnabled()) {
+			}
+			else if (log.isDebugEnabled()) {
 				log.debug("Will continue the transaction for span [" + span + "]");
 			}
 			Tracer.SpanInScope withSpan = tracer().withSpan(span);
