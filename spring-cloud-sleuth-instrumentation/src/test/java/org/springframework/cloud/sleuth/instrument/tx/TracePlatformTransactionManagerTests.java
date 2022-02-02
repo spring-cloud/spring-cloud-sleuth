@@ -56,6 +56,8 @@ class TracePlatformTransactionManagerTests {
 		manager.commit(transaction);
 		// then
 		thenOneSpanWasReported(manager, span);
+		thenThreadLocalIsClear(manager);
+		then(tracer.currentSpan()).isNull();
 	}
 
 	@Test
@@ -74,6 +76,8 @@ class TracePlatformTransactionManagerTests {
 		manager.rollback(transaction);
 		// then
 		thenOneSpanWasReported(manager, span);
+		thenThreadLocalIsClear(manager);
+		then(tracer.currentSpan()).isNull();
 	}
 
 	@Test
@@ -97,6 +101,7 @@ class TracePlatformTransactionManagerTests {
 		then(firstSpan).isSameAs(manager.threadLocalSpan.get().getSpan());
 		manager.threadLocalSpan.remove();
 		thenThreadLocalIsClear(manager);
+		then(tracer.currentSpan()).isNull();
 	}
 
 	private SimpleSpan threadLocalSpan(TracePlatformTransactionManager manager) {
@@ -130,6 +135,7 @@ class TracePlatformTransactionManagerTests {
 		then(span.throwable).isInstanceOf(TransactionTimedOutException.class);
 		manager.threadLocalSpan.remove();
 		thenThreadLocalIsClear(manager);
+		then(tracer.currentSpan()).isNull();
 	}
 
 	@Test
@@ -144,6 +150,7 @@ class TracePlatformTransactionManagerTests {
 		then(span.throwable).isInstanceOf(TransactionTimedOutException.class);
 		manager.threadLocalSpan.remove();
 		thenThreadLocalIsClear(manager);
+		then(tracer.currentSpan()).isNull();
 	}
 
 	private void setupTransactionStatusWithNewTransactionStatusEqualTo(boolean transactionStatus) {

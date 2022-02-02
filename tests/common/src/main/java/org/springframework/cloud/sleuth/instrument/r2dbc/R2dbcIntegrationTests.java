@@ -28,6 +28,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
+import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.exporter.FinishedSpan;
 import org.springframework.cloud.sleuth.test.TestSpanHandler;
 import org.springframework.context.annotation.Bean;
@@ -46,6 +47,9 @@ public abstract class R2dbcIntegrationTests {
 	@Autowired
 	TestSpanHandler spans;
 
+	@Autowired
+	Tracer tracer;
+
 	@Test
 	public void should_pass_tracing_information_when_using_r2dbc() {
 		Set<String> traceIds = this.spans.reportedSpans().stream().map(FinishedSpan::getTraceId)
@@ -62,6 +66,8 @@ public abstract class R2dbcIntegrationTests {
 				.collect(Collectors.toList());
 		then(spanNames.stream().filter("tx"::equalsIgnoreCase).collect(Collectors.toList())).hasSize(2);
 		then(remoteServiceNames.stream().filter("h2"::equalsIgnoreCase).collect(Collectors.toList())).hasSize(9);
+		// TODO: First fix the SpanAndScope stacking
+		// then(tracer.currentSpan()).isNull();
 	}
 
 	@Configuration(proxyBeanMethods = false)

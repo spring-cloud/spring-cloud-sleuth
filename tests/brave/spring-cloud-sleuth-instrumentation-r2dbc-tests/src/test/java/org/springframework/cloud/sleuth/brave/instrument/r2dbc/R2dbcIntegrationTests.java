@@ -24,9 +24,11 @@ import org.springframework.cloud.sleuth.test.TestSpanHandler;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.TestPropertySource;
 
 @SpringBootTest
 @ContextConfiguration(classes = R2dbcIntegrationTests.Config.class)
+@TestPropertySource(properties = "logging.level.org.springframework.cloud=TRACE")
 public class R2dbcIntegrationTests extends org.springframework.cloud.sleuth.instrument.r2dbc.R2dbcIntegrationTests {
 
 	@Configuration(proxyBeanMethods = false)

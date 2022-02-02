@@ -70,7 +70,7 @@ public class TracePlatformTransactionManager implements PlatformTransactionManag
 		try {
 			TransactionDefinition def = (definition != null ? definition : TransactionDefinition.withDefaults());
 			TransactionStatus status = this.delegate.getTransaction(definition);
-			span = taggedSpan(currentSpan, span, def, status);
+			taggedSpan(currentSpan, span, def, status);
 			return status;
 		}
 		catch (Exception e) {
@@ -127,7 +127,7 @@ public class TracePlatformTransactionManager implements PlatformTransactionManag
 		}
 		finally {
 			SleuthTxSpan.TX_SPAN.wrap(span).event(SleuthTxSpan.Events.COMMIT);
-			span.end();
+			spanAndScope.close();
 			if (ex == null) {
 				if (log.isDebugEnabled()) {
 					log.debug("No exception was found - will clear thread local span");
@@ -160,7 +160,7 @@ public class TracePlatformTransactionManager implements PlatformTransactionManag
 		}
 		finally {
 			SleuthTxSpan.TX_SPAN.wrap(span).event(SleuthTxSpan.Events.ROLLBACK);
-			span.end();
+			spanAndScope.close();
 			this.threadLocalSpan.remove();
 		}
 	}

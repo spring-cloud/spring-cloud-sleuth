@@ -41,6 +41,8 @@ public class SimpleTracer implements Tracer {
 
 	public List<SimpleSpan> spans = new ArrayList<>();
 
+	public Span currentSpan;
+
 	@Override
 	public Span nextSpan(Span parent) {
 		SimpleSpan span = nextSpan();
@@ -65,7 +67,8 @@ public class SimpleTracer implements Tracer {
 
 	@Override
 	public SpanInScope withSpan(Span span) {
-		return new NoOpSpanInScope();
+		this.currentSpan = span;
+		return () -> currentSpan = null;
 	}
 
 	@Override
@@ -75,10 +78,7 @@ public class SimpleTracer implements Tracer {
 
 	@Override
 	public Span currentSpan() {
-		if (this.spans.isEmpty()) {
-			return null;
-		}
-		return this.spans.get(spans.size() - 1);
+		return this.currentSpan;
 	}
 
 	@Override

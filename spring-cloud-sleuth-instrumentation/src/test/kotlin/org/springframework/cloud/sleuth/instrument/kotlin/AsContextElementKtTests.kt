@@ -38,6 +38,7 @@ internal class AsContextElementKtTests {
 	fun `should return current span from context`(): Unit = runBlocking {
 		val simpleTracer = SimpleTracer()
 		val nextSpan = simpleTracer.nextSpan().start()
+		val inScope = simpleTracer.withSpan(nextSpan)
 		var spanInGlobalScopeLaunch: Span? = null
 		var spanInGlobalScopeAsync: Span? = null
 		val asContextElement = simpleTracer.asContextElement()
@@ -49,6 +50,8 @@ internal class AsContextElementKtTests {
 			spanInGlobalScopeAsync = coroutineContext.currentSpan()
 		}.await()
 
+		inScope.close();
+
 		then(spanInGlobalScopeLaunch).isSameAs(nextSpan)
 		then(spanInGlobalScopeAsync).isSameAs(nextSpan)
 	}
@@ -57,9 +60,11 @@ internal class AsContextElementKtTests {
 	fun `should return span from coroutine context when KotlinContextElement present`(): Unit = runBlocking {
 		val simpleTracer = SimpleTracer()
 		val nextSpan = simpleTracer.nextSpan().start()
+		val inScope = simpleTracer.withSpan(nextSpan)
 		val element = KotlinContextElement(simpleTracer)
 
 		then(element.currentSpan()).isSameAs(nextSpan)
+		inScope.close()
 	}
 
 	@Test
@@ -87,9 +92,11 @@ internal class AsContextElementKtTests {
 		val currentTraceContext = SimpleCurrentTraceContext()
 		val simpleTracer = SimpleTracer()
 		val nextSpan = simpleTracer.nextSpan().start()
+		val inScope = simpleTracer.withSpan(nextSpan)
 		val reactorContext = ReactorContext(Context.of(Tracer::class.java, simpleTracer, CurrentTraceContext::class.java, currentTraceContext, TraceContext::class.java, nextSpan.context()))
 
 		then(reactorContext.currentSpan()).isSameAs(nextSpan);
+		inScope.close()
 	}
 
 	@Test
@@ -97,8 +104,10 @@ internal class AsContextElementKtTests {
 		val simpleTracer = SimpleTracer()
 		val nextSpan = simpleTracer.nextSpan().start()
 		val reactorContext = ReactorContext(Context.of(Tracer::class.java, simpleTracer))
+		val inScope = simpleTracer.withSpan(nextSpan)
 
 		then(reactorContext.currentSpan()).isSameAs(nextSpan);
+		inScope.close()
 	}
 
 	@Test

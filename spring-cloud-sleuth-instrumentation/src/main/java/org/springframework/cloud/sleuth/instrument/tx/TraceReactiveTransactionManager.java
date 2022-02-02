@@ -74,6 +74,9 @@ public class TraceReactiveTransactionManager implements ReactiveTransactionManag
 		return Mono.deferContextual(contextView -> this.delegate.getReactiveTransaction(definition).map(tx -> {
 			Span span = SleuthTxSpan.TX_SPAN.wrap(span(contextView));
 			if (tx.isNewTransaction() || span == null) {
+				if (log.isDebugEnabled()) {
+					log.debug("New transaction is required");
+				}
 				if (span == null) {
 					span = SleuthTxSpan.TX_SPAN.wrap(tracer().nextSpan()).name(SleuthTxSpan.TX_SPAN.getName()).start();
 				}
@@ -82,9 +85,14 @@ public class TraceReactiveTransactionManager implements ReactiveTransactionManag
 							.start();
 				}
 				TracePlatformTransactionManagerTags.tag(span, definition, this.delegate.getClass());
+			} else if (log.isDebugEnabled()) {
+				log.debug("Will continue the transaction for span [" + span + "]");
 			}
 			Tracer.SpanInScope withSpan = tracer().withSpan(span);
 			SpanAndScope spanAndScope = new SpanAndScope(span, withSpan);
+			if (log.isDebugEnabled()) {
+				log.debug("Got transaction for span [" + spanAndScope + "]");
+			}
 			return new TraceReactiveTransaction(tx, spanAndScope);
 		}));
 	}
@@ -122,14 +130,13 @@ public class TraceReactiveTransactionManager implements ReactiveTransactionManag
 		TraceReactiveTransaction reactiveTransaction = (TraceReactiveTransaction) transaction;
 		SpanAndScope spanAndScope = reactiveTransaction.spanAndScope;
 		Span span = spanAndScope.getSpan();
-		Tracer.SpanInScope scope = spanAndScope.getScope();
+		if (log.isDebugEnabled()) {
+			log.debug("Commiting the transaction for span [" + spanAndScope + "]");
+		}
 		return this.delegate.commit(reactiveTransaction.delegate)
 				// TODO: Fix me when this is resolved in Reactor
 				// .doOnSubscribe(__ -> scope.close())
-				.doOnError(span::error).doOnSuccess(signalType -> {
-					span.end();
-					scope.close();
-				});
+				.doOnError(span::error).doOnSuccess(signalType -> spanAndScope.close());
 	}
 
 	@Override
@@ -140,16 +147,13 @@ public class TraceReactiveTransactionManager implements ReactiveTransactionManag
 		TraceReactiveTransaction reactiveTransaction = (TraceReactiveTransaction) transaction;
 		SpanAndScope spanAndScope = reactiveTransaction.spanAndScope;
 		Span span = spanAndScope.getSpan();
-		Tracer.SpanInScope scope = spanAndScope.getScope();
+		if (log.isDebugEnabled()) {
+			log.debug("Rolling back the transaction for span [" + spanAndScope + "]");
+		}
 		return this.delegate.rollback(reactiveTransaction.delegate)
 				// TODO: Fix me when this is resolved in Reactor
 				// .doOnSubscribe(__ -> scope.close())
-				.doOnError(span::error).doFinally(signalType -> {
-					span.end();
-					if (scope != null) {
-						scope.close();
-					}
-				});
+				.doOnError(span::error).doFinally(signalType -> spanAndScope.close());
 	}
 
 	static class TraceReactiveTransaction implements ReactiveTransaction {
