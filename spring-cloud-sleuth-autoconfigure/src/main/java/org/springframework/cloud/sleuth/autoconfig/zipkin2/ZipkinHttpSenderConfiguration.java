@@ -19,50 +19,81 @@ package org.springframework.cloud.sleuth.autoconfig.zipkin2;
 import zipkin2.reporter.Sender;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.condition.AnyNestedCondition;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingClass;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnNotWebApplication;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.cloud.client.loadbalancer.LoadBalancerClient;
 import org.springframework.cloud.sleuth.zipkin2.CachingZipkinUrlExtractor;
 import org.springframework.cloud.sleuth.zipkin2.LoadBalancerClientZipkinLoadBalancer;
 import org.springframework.cloud.sleuth.zipkin2.RestTemplateSender;
 import org.springframework.cloud.sleuth.zipkin2.StaticInstanceZipkinLoadBalancer;
+import org.springframework.cloud.sleuth.zipkin2.WebClientSender;
 import org.springframework.cloud.sleuth.zipkin2.ZipkinLoadBalancer;
 import org.springframework.cloud.sleuth.zipkin2.ZipkinProperties;
 import org.springframework.cloud.sleuth.zipkin2.ZipkinRestTemplateCustomizer;
 import org.springframework.cloud.sleuth.zipkin2.ZipkinRestTemplateProvider;
 import org.springframework.cloud.sleuth.zipkin2.ZipkinRestTemplateWrapper;
 import org.springframework.cloud.sleuth.zipkin2.ZipkinUrlExtractor;
+import org.springframework.cloud.sleuth.zipkin2.ZipkinWebClientBuilderProvider;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Conditional;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.reactive.function.client.WebClient;
 
 @Configuration(proxyBeanMethods = false)
 @ConditionalOnMissingBean(name = ZipkinAutoConfiguration.SENDER_BEAN_NAME)
 @Conditional(ZipkinSenderCondition.class)
 @EnableConfigurationProperties(ZipkinSenderProperties.class)
-class ZipkinRestTemplateSenderConfiguration {
+class ZipkinHttpSenderConfiguration {
 
-	@Bean(ZipkinAutoConfiguration.SENDER_BEAN_NAME)
-	Sender restTemplateSender(ZipkinProperties zipkin, ZipkinRestTemplateCustomizer zipkinRestTemplateCustomizer,
-			ZipkinRestTemplateProvider zipkinRestTemplateProvider) {
-		RestTemplate restTemplate = zipkinRestTemplateProvider.zipkinRestTemplate();
-		restTemplate = zipkinRestTemplateCustomizer.customizeTemplate(restTemplate);
-		return new RestTemplateSender(restTemplate, zipkin.getBaseUrl(), zipkin.getApiPath(), zipkin.getEncoder());
+	@Configuration(proxyBeanMethods = false)
+	@Conditional(NonWebApplicationOrServletCondition.class)
+	static class ZipkinServletConfiguration {
+
+		@Bean(ZipkinAutoConfiguration.SENDER_BEAN_NAME)
+		Sender restTemplateSender(ZipkinProperties zipkin, ZipkinRestTemplateCustomizer zipkinRestTemplateCustomizer,
+				ZipkinRestTemplateProvider zipkinRestTemplateProvider) {
+			RestTemplate restTemplate = zipkinRestTemplateProvider.zipkinRestTemplate();
+			restTemplate = zipkinRestTemplateCustomizer.customizeTemplate(restTemplate);
+			return new RestTemplateSender(restTemplate, zipkin.getBaseUrl(), zipkin.getApiPath(), zipkin.getEncoder());
+		}
+
+		@Bean
+		@ConditionalOnMissingBean
+		ZipkinRestTemplateProvider zipkinRestTemplateProvider(ZipkinProperties zipkin, ZipkinUrlExtractor extractor) {
+			return () -> new ZipkinRestTemplateWrapper(zipkin, extractor);
+		}
+
+		@Bean
+		ZipkinUrlExtractor defaultZipkinUrlExtractor(final ZipkinLoadBalancer zipkinLoadBalancer) {
+			return new CachingZipkinUrlExtractor(zipkinLoadBalancer);
+		}
+
 	}
 
-	@Bean
-	@ConditionalOnMissingBean
-	ZipkinRestTemplateProvider zipkinRestTemplateProvider(ZipkinProperties zipkin, ZipkinUrlExtractor extractor) {
-		return () -> new ZipkinRestTemplateWrapper(zipkin, extractor);
-	}
+	@Configuration(proxyBeanMethods = false)
+	@ConditionalOnWebApplication(type = ConditionalOnWebApplication.Type.REACTIVE)
+	static class ZipkinReactiveConfiguration {
 
-	@Bean
-	ZipkinUrlExtractor defaultZipkinUrlExtractor(final ZipkinLoadBalancer zipkinLoadBalancer) {
-		return new CachingZipkinUrlExtractor(zipkinLoadBalancer);
+		@Bean(ZipkinAutoConfiguration.SENDER_BEAN_NAME)
+		Sender webClientSender(ZipkinProperties zipkin, ZipkinWebClientBuilderProvider zipkinWebClientBuilderProvider) {
+			WebClient.Builder webClientBuilder = zipkinWebClientBuilderProvider.zipkinWebClientBuilder();
+			return new WebClientSender(webClientBuilder.build(), zipkin.getBaseUrl(), zipkin.getApiPath(),
+					zipkin.getEncoder());
+		}
+
+		@Bean
+		@ConditionalOnMissingBean
+		ZipkinWebClientBuilderProvider defaultZipkinWebClientProvider() {
+			return WebClient::builder;
+		}
+
 	}
 
 	@Configuration(proxyBeanMethods = false)
@@ -114,4 +145,21 @@ class ZipkinRestTemplateSenderConfiguration {
 
 	}
 
+	static class NonWebApplicationOrServletCondition extends AnyNestedCondition {
+
+		private NonWebApplicationOrServletCondition() {
+			super(ConfigurationPhase.REGISTER_BEAN);
+		}
+
+		@ConditionalOnNotWebApplication
+		static class OnNonWeb {
+
+		}
+
+		@ConditionalOnWebApplication(type = ConditionalOnWebApplication.Type.SERVLET)
+		static class OnServlet {
+
+		}
+
+	}
 }

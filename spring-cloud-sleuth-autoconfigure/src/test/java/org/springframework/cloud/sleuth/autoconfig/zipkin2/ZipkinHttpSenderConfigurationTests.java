@@ -18,8 +18,10 @@ package org.springframework.cloud.sleuth.autoconfig.zipkin2;
 
 import org.assertj.core.api.BDDAssertions;
 import org.junit.jupiter.api.Test;
+import zipkin2.reporter.Sender;
 
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
+import org.springframework.cloud.sleuth.zipkin2.WebClientSender;
 import org.springframework.cloud.sleuth.zipkin2.ZipkinProperties;
 import org.springframework.cloud.sleuth.zipkin2.ZipkinRestTemplateCustomizer;
 import org.springframework.cloud.sleuth.zipkin2.ZipkinRestTemplateProvider;
@@ -29,16 +31,28 @@ import org.springframework.web.client.RestTemplate;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-class ZipkinRestTemplateSenderConfigurationTests {
+class ZipkinHttpSenderConfigurationTests {
 
 	@Test
 	void should_override_the_default_rest_template() {
 		ApplicationContextRunner runner = new ApplicationContextRunner().withUserConfiguration(Config.class,
-				ZipkinRestTemplateSenderConfiguration.class, ZipkinProperties.class);
+				ZipkinHttpSenderConfiguration.class, ZipkinProperties.class);
 
 		runner.run(context -> {
 			Config config = context.getBean(Config.class);
 			assertThat(config.customizerCalled).isTrue();
+		});
+	}
+
+	@Test
+	void should_use_web_client_when_reactive_type() {
+		ApplicationContextRunner runner = new ApplicationContextRunner().withUserConfiguration(
+				ZipkinHttpSenderConfiguration.class, ZipkinProperties.class)
+				.withPropertyValues("spring.main.web-application-type=REACTIVE");
+
+		runner.run(context -> {
+			Sender sender = context.getBean(Sender.class);
+			assertThat(sender).isInstanceOf(WebClientSender.class);
 		});
 	}
 

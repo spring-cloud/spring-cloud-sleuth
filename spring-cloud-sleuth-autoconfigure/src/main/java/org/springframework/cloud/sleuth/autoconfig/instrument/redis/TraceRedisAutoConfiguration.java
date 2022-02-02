@@ -65,7 +65,8 @@ public class TraceRedisAutoConfiguration {
 
 		@Bean
 		@ConditionalOnMissingClass("brave.sampler.Sampler")
-		TraceLettuceClientResourcesBuilderCustomizer otherTracersTraceLettuceClientResourcesBuilderCustomizer(Tracing tracing) {
+		TraceLettuceClientResourcesBuilderCustomizer otherTracersTraceLettuceClientResourcesBuilderCustomizer(
+				Tracing tracing) {
 			return new TraceLettuceClientResourcesBuilderCustomizer(tracing);
 		}
 

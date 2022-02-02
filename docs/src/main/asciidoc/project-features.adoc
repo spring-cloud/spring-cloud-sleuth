@@ -286,6 +286,8 @@ The following example shows setting the sender type for `web`:
 spring.zipkin.sender.type: web
 ----
 
+If you're running a non-reactive application we will use a `RestTemplate` based span sender. Otherwise a `WebClient` based span sender will be chosen.
+
 To customize the `RestTemplate` that sends spans to Zipkin via HTTP, you can register the `ZipkinRestTemplateCustomizer` bean.
 
 [source,java,indent=0]
@@ -319,6 +321,17 @@ By default, api path will be set to `api/v2/spans` or `api/v1/spans` depending o
 [source,yaml]
 ----
 spring.zipkin.api-path: v2/path2
+----
+
+In case of a reactive application, we're creating a simple `WebClient.Builder` instance. If you want to provide your own or reuse an existing one you need to create an instance of a `ZipkinWebClientBuilderProvider` bean.
+
+[source,java,indent=0]
+----
+	@Bean
+	ZipkinWebClientBuilderProvider myZipkinWebClientBuilderProvider() {
+	    // create your own instance or inject one from the Spring Context
+		return () -> WebClient.builder();
+	}
 ----
 
 [[features-zipkin-custom-service-name]]
