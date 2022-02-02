@@ -145,7 +145,7 @@ class ZipkinHttpSenderConfiguration {
 
 	}
 
-	static class NonWebApplicationOrServletCondition extends AnyNestedCondition {
+	static final class NonWebApplicationOrServletCondition extends AnyNestedCondition {
 
 		private NonWebApplicationOrServletCondition() {
 			super(ConfigurationPhase.REGISTER_BEAN);
@@ -162,4 +162,5 @@ class ZipkinHttpSenderConfiguration {
 		}
 
 	}
+
 }
