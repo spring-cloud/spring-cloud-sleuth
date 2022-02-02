@@ -16,9 +16,9 @@
 
 package org.springframework.cloud.sleuth.instrument.messaging;
 
+import java.util.ArrayDeque;
 import java.util.NoSuchElementException;
 import java.util.Set;
-import java.util.concurrent.LinkedBlockingDeque;
 import java.util.function.Function;
 
 import org.springframework.aop.support.AopUtils;
@@ -371,38 +371,39 @@ public final class TracingChannelInterceptor implements ExecutorChannelIntercept
 
 		private static final LogAccessor log = new LogAccessor(ThreadLocalSpan.class);
 
-		private final ThreadLocal<SpanAndScope> threadLocalSpan = new ThreadLocal<>();
-
-		private final LinkedBlockingDeque<SpanAndScope> spans = new LinkedBlockingDeque<>();
+		private final ThreadLocal<ArrayDeque<SpanAndScope>> spanInScopeStack = new ThreadLocal<>();
 
 		ThreadLocalSpan() {
 		}
 
 		void set(SpanAndScope spanAndScope) {
-			SpanAndScope scope = this.threadLocalSpan.get();
-			if (scope != null) {
-				this.spans.addFirst(scope);
-			}
-			this.threadLocalSpan.set(spanAndScope);
+			this.getSpanInScopeStack().addFirst(spanAndScope);
 		}
 
 		SpanAndScope get() {
-			return this.threadLocalSpan.get();
+			return this.getSpanInScopeStack().getFirst();
 		}
 
 		void remove() {
-			this.threadLocalSpan.remove();
-			if (this.spans.isEmpty()) {
+			if (getSpanInScopeStack().isEmpty()) {
 				return;
 			}
 			try {
-				SpanAndScope span = this.spans.removeFirst();
+				SpanAndScope span = this.getSpanInScopeStack().pollFirst();
 				log.debug(() -> "Took span [" + span + "] from thread local");
-				this.threadLocalSpan.set(span);
 			}
 			catch (NoSuchElementException ex) {
 				log.trace(ex, () -> "Failed to remove a span from the queue");
 			}
+		}
+
+		private ArrayDeque<SpanAndScope> getSpanInScopeStack() {
+			ArrayDeque<SpanAndScope> stack = this.spanInScopeStack.get();
+			if (stack == null) {
+				stack = new ArrayDeque<>();
+				this.spanInScopeStack.set(stack);
+			}
+			return stack;
 		}
 
 	}
