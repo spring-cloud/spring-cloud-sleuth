@@ -54,11 +54,24 @@ class SleuthSpanContextSupplierTests {
 	}
 
 	@Test
-	void should_provide_values_from_tracer_if_span_is_available() {
+	void should_provide_null_values_if_span_is_available_but_not_sampled() {
 		Span span = mock(Span.class);
 		TraceContext context = mock(TraceContext.class);
 		when(tracer.currentSpan()).thenReturn(span);
 		when(span.context()).thenReturn(context);
+		when(context.sampled()).thenReturn(false);
+
+		assertThat(spanContextSupplier.getTraceId()).isNull();
+		assertThat(spanContextSupplier.getSpanId()).isNull();
+	}
+
+	@Test
+	void should_provide_values_from_tracer_if_span_is_available_and_sampled() {
+		Span span = mock(Span.class);
+		TraceContext context = mock(TraceContext.class);
+		when(tracer.currentSpan()).thenReturn(span);
+		when(span.context()).thenReturn(context);
+		when(context.sampled()).thenReturn(true);
 		when(context.traceId()).thenReturn("42");
 		when(context.spanId()).thenReturn("24");
 

@@ -43,13 +43,13 @@ public class SleuthSpanContextSupplier implements SpanContextSupplier {
 	@Override
 	public String getTraceId() {
 		Span span = tracer.currentSpan();
-		return span != null ? span.context().traceId() : null;
+		return (span != null && span.context().sampled()) ? span.context().traceId() : null;
 	}
 
 	@Override
 	public String getSpanId() {
 		Span span = tracer.currentSpan();
-		return span != null ? span.context().spanId() : null;
+		return (span != null && span.context().sampled()) ? span.context().spanId() : null;
 	}
 
 }
