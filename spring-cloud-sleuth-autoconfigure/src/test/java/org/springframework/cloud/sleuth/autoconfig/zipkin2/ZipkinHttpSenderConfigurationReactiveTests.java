@@ -48,7 +48,8 @@ class ZipkinHttpSenderConfigurationReactiveTests {
 		SpringApplication springApplication = new SpringApplication(Config.class);
 		springApplication.setWebApplicationType(WebApplicationType.REACTIVE);
 
-		try (ConfigurableApplicationContext context = springApplication.run("--spring.sleuth.noop.enabled=true")) {
+		try (ConfigurableApplicationContext context = springApplication.run("--spring.sleuth.noop.enabled=true",
+				"--server.port=0")) {
 			then(context.getBean(Sender.class)).isInstanceOf(WebClientSender.class);
 		}
 	}

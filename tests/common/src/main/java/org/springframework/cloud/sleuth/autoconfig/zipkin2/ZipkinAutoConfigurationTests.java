@@ -18,6 +18,8 @@ package org.springframework.cloud.sleuth.autoconfig.zipkin2;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
@@ -77,6 +79,8 @@ public abstract class ZipkinAutoConfigurationTests {
 
 	protected abstract Class tracerConfiguration();
 
+	ExecutorService zipkinExecutor = Executors.newSingleThreadExecutor();
+
 	@BeforeEach
 	void setup() throws IOException {
 		server.start();
@@ -85,6 +89,7 @@ public abstract class ZipkinAutoConfigurationTests {
 	@AfterEach
 	void clean() throws IOException {
 		server.close();
+		zipkinExecutor.shutdown();
 	}
 
 	@Test
@@ -226,7 +231,7 @@ public abstract class ZipkinAutoConfigurationTests {
 		Sender sender = mock(Sender.class);
 		when(sender.check()).thenReturn(CheckResult.OK);
 
-		assertThat(ZipkinAutoConfiguration.checkResult(sender, 200).ok()).isTrue();
+		assertThat(ZipkinAutoConfiguration.checkResult(zipkinExecutor, sender, 200).ok()).isTrue();
 	}
 
 	@Test
@@ -235,7 +240,7 @@ public abstract class ZipkinAutoConfigurationTests {
 		RuntimeException exception = new RuntimeException("dead");
 		when(sender.check()).thenReturn(CheckResult.failed(exception));
 
-		assertThat(ZipkinAutoConfiguration.checkResult(sender, 200).error()).isSameAs(exception);
+		assertThat(ZipkinAutoConfiguration.checkResult(zipkinExecutor, sender, 200).error()).isSameAs(exception);
 	}
 
 	/** Bug in {@link Sender} as it shouldn't throw */
@@ -245,12 +250,12 @@ public abstract class ZipkinAutoConfigurationTests {
 		RuntimeException exception = new RuntimeException("dead");
 		when(sender.check()).thenThrow(exception);
 
-		assertThat(ZipkinAutoConfiguration.checkResult(sender, 200).error()).isSameAs(exception);
+		assertThat(ZipkinAutoConfiguration.checkResult(zipkinExecutor, sender, 200).error()).hasCause(exception);
 	}
 
 	@Test
 	public void checkResult_slow() {
-		assertThat(ZipkinAutoConfiguration.checkResult(new Sender() {
+		assertThat(ZipkinAutoConfiguration.checkResult(zipkinExecutor, new Sender() {
 			@Override
 			public CheckResult check() {
 				try {
@@ -286,7 +291,7 @@ public abstract class ZipkinAutoConfigurationTests {
 			public String toString() {
 				return "FakeSender{}";
 			}
-		}, 200).error()).isInstanceOf(TimeoutException.class).hasMessage("FakeSender{} check() timed out after 200ms");
+		}, 200).error()).isInstanceOf(TimeoutException.class).hasMessage("Timed out after 200ms");
 	}
 
 	@Configuration(proxyBeanMethods = false)

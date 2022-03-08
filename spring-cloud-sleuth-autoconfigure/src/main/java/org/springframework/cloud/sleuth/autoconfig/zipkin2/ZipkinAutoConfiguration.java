@@ -16,8 +16,13 @@
 
 package org.springframework.cloud.sleuth.autoconfig.zipkin2;
 
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+
+import javax.annotation.PreDestroy;
 
 import io.micrometer.core.instrument.MeterRegistry;
 import org.apache.commons.logging.Log;
@@ -79,6 +84,8 @@ import org.springframework.web.client.RestTemplate;
 @Import({ ZipkinSenderConfigurationImportSelector.class, ZipkinBraveConfiguration.class })
 public class ZipkinAutoConfiguration {
 
+	private final ExecutorService zipkinExecutor = Executors.newSingleThreadExecutor();
+
 	/**
 	 * Zipkin reporter bean name. Name of the bean matters for supporting multiple tracing
 	 * systems.
@@ -93,32 +100,21 @@ public class ZipkinAutoConfiguration {
 
 	private static final Log log = LogFactory.getLog(ZipkinAutoConfiguration.class);
 
+	@PreDestroy
+	void cleanup() {
+		this.zipkinExecutor.shutdown();
+	}
+
 	/** Limits {@link Sender#check()} to {@code deadlineMillis}. */
-	static CheckResult checkResult(Sender sender, long deadlineMillis) {
-		CheckResult[] outcome = new CheckResult[1];
-		Thread thread = new Thread(sender + " check()") {
-			@Override
-			public void run() {
-				try {
-					outcome[0] = sender.check();
-				}
-				catch (Throwable e) {
-					outcome[0] = CheckResult.failed(e);
-				}
-			}
-		};
-		thread.start();
+	static CheckResult checkResult(ExecutorService zipkinExecutor, Sender sender, long deadlineMillis) {
+		Future<CheckResult> future = zipkinExecutor.submit(sender::check);
 		try {
-			thread.join(deadlineMillis);
-			if (outcome[0] != null) {
-				return outcome[0];
-			}
-			thread.interrupt();
-			return CheckResult
-					.failed(new TimeoutException(thread.getName() + " timed out after " + deadlineMillis + "ms"));
+			return future.get(deadlineMillis, TimeUnit.MILLISECONDS);
 		}
-		catch (InterruptedException e) {
-			Thread.currentThread().interrupt();
+		catch (TimeoutException e) {
+			return CheckResult.failed(new TimeoutException("Timed out after " + deadlineMillis + "ms"));
+		}
+		catch (Exception e) {
 			return CheckResult.failed(e);
 		}
 	}
@@ -127,7 +123,7 @@ public class ZipkinAutoConfiguration {
 	@ConditionalOnMissingBean(name = REPORTER_BEAN_NAME)
 	Reporter<Span> reporter(ReporterMetrics reporterMetrics, ZipkinProperties zipkin,
 			@Qualifier(SENDER_BEAN_NAME) Sender sender) {
-		CheckResult checkResult = checkResult(sender, 1_000L);
+		CheckResult checkResult = checkResult(zipkinExecutor, sender, 1_000L);
 		logCheckResult(sender, checkResult);
 
 		// historical constraint. Note: AsyncReporter supports memory bounds
