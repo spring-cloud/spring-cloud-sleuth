@@ -79,7 +79,9 @@ import org.springframework.web.client.RestTemplate;
 @EnableConfigurationProperties(ZipkinProperties.class)
 @ConditionalOnClass({ Sender.class, EndpointLocator.class })
 @ConditionalOnProperty(value = { "spring.sleuth.enabled", "spring.zipkin.enabled" }, matchIfMissing = true)
-@AutoConfigureAfter(name = "org.springframework.cloud.autoconfigure.RefreshAutoConfiguration")
+@AutoConfigureAfter(name = { "org.springframework.cloud.autoconfigure.RefreshAutoConfiguration",
+		"org.springframework.boot.autoconfigure.amqp.RabbitAutoConfiguration",
+		"org.springframework.boot.autoconfigure.kafka.KafkaAutoConfiguration" })
 @AutoConfigureBefore(BraveAutoConfiguration.class)
 @Import({ ZipkinSenderConfigurationImportSelector.class, ZipkinBraveConfiguration.class })
 public class ZipkinAutoConfiguration {
