@@ -15,6 +15,7 @@ org.springframework.cloud.sleuth.autoconfig.instrument.circuitbreaker.TraceCircu
 org.springframework.cloud.sleuth.autoconfig.instrument.deployer.TraceDeployerAutoConfiguration,\
 org.springframework.cloud.sleuth.autoconfig.instrument.jdbc.TraceJdbcAutoConfiguration,\
 org.springframework.cloud.sleuth.autoconfig.instrument.mongodb.TraceMongoDbAutoConfiguration,\
+org.springframework.cloud.sleuth.autoconfig.instrument.prometheus.PrometheusExemplarsAutoConfiguration,\
 org.springframework.cloud.sleuth.autoconfig.instrument.rxjava.TraceRxJavaAutoConfiguration,\
 org.springframework.cloud.sleuth.autoconfig.instrument.quartz.TraceQuartzAutoConfiguration,\
 org.springframework.cloud.sleuth.autoconfig.instrument.task.TraceTaskAutoConfiguration,\
