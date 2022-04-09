@@ -50,7 +50,10 @@ public class LazySleuthSpanContextSupplier implements SpanContextSupplier, Smart
 
 	@Override
 	public void afterSingletonsInstantiated() {
-		this.delegate = new SleuthSpanContextSupplier(tracerProvider.getIfAvailable());
+		Tracer tracer = tracerProvider.getIfAvailable();
+		if (tracer != null) {
+			this.delegate = new SleuthSpanContextSupplier(tracer);
+		}
 	}
 
 }
