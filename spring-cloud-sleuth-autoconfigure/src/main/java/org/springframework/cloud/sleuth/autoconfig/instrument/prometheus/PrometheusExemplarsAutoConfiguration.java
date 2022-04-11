@@ -44,7 +44,7 @@ public class PrometheusExemplarsAutoConfiguration {
 	@Bean
 	@ConditionalOnMissingBean
 	@ConditionalOnProperty(value = "spring.sleuth.prometheus.exemplars.enabled", matchIfMissing = true)
-	SpanContextSupplier spanContextSupplier(ObjectProvider<Tracer> tracerProvider) {
+	SpanContextSupplier sleuthSpanContextSupplier(ObjectProvider<Tracer> tracerProvider) {
 		return new LazySleuthSpanContextSupplier(tracerProvider);
 	}
 
