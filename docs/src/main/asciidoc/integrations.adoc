@@ -801,3 +801,11 @@ In order to disable this instrumentation set `spring.sleuth.session.enabled` to 
 This feature is available for all tracer implementations.
 
 We're adding Kotlin Coroutines that allow you to retrieve the current span via the `Tracer` bean. You can either pass the bean to the Kotlin Coroutine context via `Tracer.asContextElement()` method execution or if you have Reactor Kotlin Coroutine integration on the classpath, we will retrieve it from Reactor's context. To retrieve the current span you can call the `currentSpan()` method within the Kotlin Coroutine.
+
+[[sleuth-prometheus-exemplars-integration]]
+== Prometheus Exemplars
+
+This feature is available for all tracer implementations.
+
+https://prometheus.io/docs/prometheus/latest/feature_flags/#exemplars-storage[Prometheus Exemplars] are supported through `SpanContextSupplier`. If you use https://micrometer.io[Micrometer], this will be auto-configured for you, but you can register `SpanContextSupplier` directly to Prometheus if you want. +
+Please check the https://prometheus.io/docs/prometheus/latest/feature_flags/#exemplars-storage[Prometheus Docs], since this feature needs to be explicitly enabled on Prometheus' side, and it is only supported using the https://github.com/OpenObservability/OpenMetrics/blob/v1.0.0/specification/OpenMetrics.md#exemplars[OpenMetrics] format.
