@@ -37,8 +37,8 @@ public class WebClientSender extends HttpSender {
 	}
 
 	private static void post(String url, MediaType mediaType, byte[] json, WebClient webClient) {
-		webClient.post().uri(URI.create(url)).accept(mediaType).bodyValue(json).retrieve().toBodilessEntity()
-				.subscribe();
+		webClient.post().uri(URI.create(url)).accept(mediaType).contentType(mediaType).bodyValue(json).retrieve()
+				.toBodilessEntity().subscribe();
 	}
 
 	@Override

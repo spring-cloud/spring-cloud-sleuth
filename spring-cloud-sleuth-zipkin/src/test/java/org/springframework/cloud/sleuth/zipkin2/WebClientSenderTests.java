@@ -18,39 +18,43 @@ package org.springframework.cloud.sleuth.zipkin2;
 
 import zipkin2.reporter.Sender;
 
-import org.springframework.web.client.RestTemplate;
+import org.springframework.http.client.reactive.ReactorClientHttpConnector;
+import org.springframework.web.reactive.function.client.WebClient;
 
 import static zipkin2.codec.SpanBytesEncoder.JSON_V2;
 import static zipkin2.codec.SpanBytesEncoder.PROTO3;
 
-class RestTemplateSenderTest extends AbstractSenderTest {
+class WebClientSenderTests extends AbstractSenderTest {
 
 	@Override
 	Sender jsonSender() {
-		return new RestTemplateSender(new RestTemplate(), this.endpoint, null, JSON_V2);
+		return new WebClientSender(WebClient.builder().clientConnector(new ReactorClientHttpConnector()).build(),
+				this.endpoint, null, JSON_V2);
 	}
 
 	@Override
 	Sender jsonSender(String mockedApiPath) {
-		return new RestTemplateSender(new RestTemplate(), this.endpoint, mockedApiPath, JSON_V2);
+		return new WebClientSender(WebClient.builder().clientConnector(new ReactorClientHttpConnector()).build(),
+				this.endpoint, mockedApiPath, JSON_V2);
 	}
 
 	@Override
 	Sender protoSender() {
-		return new RestTemplateSender(new RestTemplate(), this.endpoint, "", PROTO3);
+		return new WebClientSender(WebClient.builder().clientConnector(new ReactorClientHttpConnector()).build(),
+				this.endpoint, "", PROTO3);
 	}
 
 	@Override
 	String expectedToString() {
-		return "RestTemplateSender{" + this.endpoint + "/api/v2/spans}";
+		return "WebClientSender{" + this.endpoint + "/api/v2/spans}";
 	}
 
 	@Override
 	String expectedToStringWithNonEmptyApiPath(String mockedApiPath) {
 		if ("".equals(mockedApiPath)) {
-			return "RestTemplateSender{" + this.endpoint + "}";
+			return "WebClientSender{" + this.endpoint + "}";
 		}
-		return "RestTemplateSender{" + this.endpoint + mockedApiPath + "}";
+		return "WebClientSender{" + this.endpoint + mockedApiPath + "}";
 	}
 
 }
