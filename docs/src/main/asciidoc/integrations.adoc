@@ -680,7 +680,7 @@ In order to disable this instrumentation set `spring.sleuth.task.enabled` to `fa
 
 This feature is available for all tracer implementations.
 
-If you have Spring Tx on the classpath we will instrument the `PlatformTransactionManager` and the `ReactiveTransactionManager` to create a span whenever a new transaction is created.
+If you have Spring Tx on the classpath we will instrument the `PlatformTransactionManager` and the `ReactiveTransactionManager` to create a span whenever a new transaction is created. Due to technical constraints we will not instrument classes that extend Spring's `AbstractPlatformTransactionManager`.
 In order to disable this instrumentation set `spring.sleuth.tx.enabled` to `false`.
 
 [[sleuth-security-integration]]

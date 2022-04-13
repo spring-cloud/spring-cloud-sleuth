@@ -19,12 +19,18 @@ package org.springframework.cloud.sleuth.autoconfig.instrument.tx;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.cloud.sleuth.instrument.tx.TracePlatformTransactionManager;
 import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.support.AbstractPlatformTransactionManager;
 
 class PlatformTransactionManagerInstrumenter
 		extends AbstractTransactionManagerInstrumenter<PlatformTransactionManager> {
 
 	PlatformTransactionManagerInstrumenter(BeanFactory beanFactory) {
 		super(beanFactory, PlatformTransactionManager.class);
+	}
+
+	@Override
+	boolean isApplicableForInstrumentation(Object bean) {
+		return super.isApplicableForInstrumentation(bean) && !(bean instanceof AbstractPlatformTransactionManager);
 	}
 
 	@Override
