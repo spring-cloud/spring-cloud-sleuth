@@ -23,6 +23,9 @@ import java.util.StringJoiner;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 import org.springframework.beans.factory.BeanCreationException;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.actuate.autoconfigure.endpoint.web.WebEndpointProperties;
@@ -59,6 +62,8 @@ import org.springframework.util.StringUtils;
 @EnableConfigurationProperties(SleuthWebProperties.class)
 class SkipPatternConfiguration {
 
+	private static final Log log = LogFactory.getLog(SkipPatternConfiguration.class);
+
 	@Bean
 	@ConditionalOnMissingBean
 	SkipPatternProvider sleuthSkipPatternProvider(@Nullable List<SingleSkipPattern> patterns) {
@@ -84,8 +89,9 @@ class SkipPatternConfiguration {
 			return () -> result;
 		}
 		catch (BeanCreationException e) {
-			// Most likely, there is an actuator endpoint that indirectly references an
-			// instrumented HTTP client.
+			log.warn(
+					"Most likely, there is an actuator endpoint that indirectly references an instrumented HTTP client. An exception was thrown during bean initialization. Will ignore that exception",
+					e);
 			return () -> consolidateSkipPatterns(patterns);
 		}
 	}
