@@ -271,6 +271,26 @@ include::{project-root}/benchmarks/src/main/java/org/springframework/cloud/sleut
 To change the order of tracing filter registration, please set the
 `spring.sleuth.web.filter-order` property.
 
+[[sleuth-reactor-netty-http-server-integration]]
+=== Reactor Netty HttpServer
+
+If you're using Reactor Netty and would like to have your access logs instrumented you need to add the `io.projectreactor.netty:reactor-netty-http-brave` (this will work only for the Brave Tracer). Also add the following configuration to your project.
+
+[source,java,indent=0]
+-----
+import brave.http.HttpTracing;
+import reactor.netty.http.brave.ReactorNettyHttpTracing;
+
+@Configuration(proxyBeanMethods = false)
+class TraceNettyConfig {
+
+	@Bean
+	NettyServerCustomizer traceNettyServerCustomizer(ObjectProvider<HttpTracing> tracing) {
+		return server -> ReactorNettyHttpTracing.create(tracing.getObject()).decorateHttpServer(server);
+	}
+}
+-----
+
 [[sleuth-messaging-integration]]
 == Messaging
 
