@@ -38,12 +38,12 @@ final class PayloadUtils {
 	static Payload cleanTracingMetadata(Payload payload, Set<String> fields) {
 		Set<String> fieldsWithDefaultZipkin = new HashSet<>(fields);
 		fieldsWithDefaultZipkin.add(WellKnownMimeType.MESSAGE_RSOCKET_TRACING_ZIPKIN.getString());
-		final CompositeMetadata entries = new CompositeMetadata(payload.metadata(), true);
+		final CompositeMetadata entries = new CompositeMetadata(payload.metadata(), false);
 		final CompositeByteBuf metadata = ByteBufAllocator.DEFAULT.compositeBuffer();
 		for (Entry entry : entries) {
 			if (!fieldsWithDefaultZipkin.contains(entry.getMimeType())) {
 				CompositeMetadataCodec.encodeAndAddMetadataWithCompression(metadata, ByteBufAllocator.DEFAULT,
-						entry.getMimeType(), entry.getContent());
+						entry.getMimeType(), entry.getContent().retain());
 			}
 		}
 		return payload(payload, metadata);
@@ -53,10 +53,10 @@ final class PayloadUtils {
 		final Payload newPayload;
 		try {
 			if (payload instanceof ByteBufPayload) {
-				newPayload = ByteBufPayload.create(payload.data().retain(), metadata.retain());
+				newPayload = ByteBufPayload.create(payload.data().retain(), metadata);
 			}
 			else {
-				newPayload = DefaultPayload.create(payload.data().retain(), metadata.retain());
+				newPayload = DefaultPayload.create(payload.data().retain(), metadata);
 			}
 		}
 		finally {
