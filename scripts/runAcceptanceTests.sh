@@ -4,9 +4,9 @@ set -o errexit
 
 mkdir -p target
 
-SCRIPT_URL="https://raw.githubusercontent.com/spring-cloud-samples/brewery/main/runAcceptanceTests.sh"
+BRANCH_NAME="2021.0.x"
+SCRIPT_URL="https://raw.githubusercontent.com/spring-cloud-samples/brewery/${BRANCH_NAME}/runAcceptanceTests.sh"
 AT_WHAT_TO_TEST="SLEUTH"
-BRANCH_NAME="main"
 
 cd target
 
