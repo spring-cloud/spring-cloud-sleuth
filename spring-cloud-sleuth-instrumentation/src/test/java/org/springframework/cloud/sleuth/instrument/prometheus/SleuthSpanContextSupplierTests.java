@@ -25,7 +25,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.TraceContext;
 import org.springframework.cloud.sleuth.Tracer;
-import org.springframework.cloud.sleuth.instrument.prometheus.prometheus.SleuthSpanContextSupplier;
 
 import static org.assertj.core.api.BDDAssertions.assertThat;
 import static org.mockito.BDDMockito.mock;

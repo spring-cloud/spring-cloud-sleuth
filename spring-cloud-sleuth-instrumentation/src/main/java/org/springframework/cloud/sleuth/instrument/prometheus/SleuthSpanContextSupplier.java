@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.springframework.cloud.sleuth.instrument.prometheus.prometheus;
+package org.springframework.cloud.sleuth.instrument.prometheus;
 
 import io.prometheus.client.exemplars.tracer.common.SpanContextSupplier;
 
