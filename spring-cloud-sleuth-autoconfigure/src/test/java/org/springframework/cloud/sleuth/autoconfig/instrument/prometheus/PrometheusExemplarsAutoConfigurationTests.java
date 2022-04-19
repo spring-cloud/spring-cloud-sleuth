@@ -23,7 +23,7 @@ import org.springframework.boot.autoconfigure.AutoConfigurations;
 import org.springframework.boot.test.context.FilteredClassLoader;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
 import org.springframework.cloud.sleuth.autoconfig.TraceNoOpAutoConfiguration;
-import org.springframework.cloud.sleuth.instrument.prometheus.prometheus.SleuthSpanContextSupplier;
+import org.springframework.cloud.sleuth.instrument.prometheus.SleuthSpanContextSupplier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 

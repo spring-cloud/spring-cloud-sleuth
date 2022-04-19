@@ -22,7 +22,6 @@ import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.TraceContext;
 import org.springframework.cloud.sleuth.Tracer;
-import org.springframework.cloud.sleuth.instrument.prometheus.prometheus.LazySleuthSpanContextSupplier;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
