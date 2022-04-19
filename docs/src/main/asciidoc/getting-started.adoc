@@ -292,4 +292,4 @@ If you are really impatient, you could also jump ahead and read about
 <<project-features.adoc#project-features, {project-full-name} features>>.
 
 You can find the default project samples at
-https://github.com/spring-cloud/spring-cloud-sleuth/tree/{branch}/spring-cloud-sleuth-samples[samples].
+https://github.com/spring-cloud-samples/spring-cloud-sleuth-samples/[samples].
