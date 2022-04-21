@@ -24,6 +24,7 @@ import java.util.concurrent.TimeUnit;
 import brave.Tracing;
 import jmh.mbr.junit5.Microbenchmark;
 import org.awaitility.Awaitility;
+import org.junit.jupiter.api.Disabled;
 import org.junit.platform.commons.annotation.Testable;
 import org.openjdk.jmh.annotations.Benchmark;
 import org.openjdk.jmh.annotations.BenchmarkMode;
@@ -62,6 +63,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 @BenchmarkMode(Mode.SampleTime)
 @OutputTimeUnit(TimeUnit.MILLISECONDS)
 @Microbenchmark
+@Disabled("Issues with test binder and getting of a message")
 public class MicroBenchmarkStreamTests {
 
 	@Benchmark
