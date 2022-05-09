@@ -55,8 +55,7 @@ public class SleuthRabbitBeanPostProcessor implements BeanPostProcessor {
 					.decorateDirectRabbitListenerContainerFactory((DirectRabbitListenerContainerFactory) bean);
 		}
 		else if (bean instanceof SimpleMessageListenerContainer || bean instanceof DirectMessageListenerContainer) {
-			return rabbitTracing()
-					.decorateMessageListenerContainer((AbstractMessageListenerContainer) bean);
+			return rabbitTracing().decorateMessageListenerContainer((AbstractMessageListenerContainer) bean);
 		}
 		return bean;
 	}
