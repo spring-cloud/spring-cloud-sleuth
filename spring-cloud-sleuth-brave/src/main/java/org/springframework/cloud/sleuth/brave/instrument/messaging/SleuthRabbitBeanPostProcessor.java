@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2021 the original author or authors.
+ * Copyright 2013-2022 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,14 +18,18 @@ package org.springframework.cloud.sleuth.brave.instrument.messaging;
 
 import brave.spring.rabbit.SpringRabbitTracing;
 
+import org.springframework.amqp.rabbit.config.DirectRabbitListenerContainerFactory;
 import org.springframework.amqp.rabbit.config.SimpleRabbitListenerContainerFactory;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
+import org.springframework.amqp.rabbit.listener.AbstractMessageListenerContainer;
+import org.springframework.amqp.rabbit.listener.DirectMessageListenerContainer;
+import org.springframework.amqp.rabbit.listener.SimpleMessageListenerContainer;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.config.BeanPostProcessor;
 
 /**
- *
+ * Instruments spring-rabbit related components.
  */
 public class SleuthRabbitBeanPostProcessor implements BeanPostProcessor {
 
@@ -45,6 +49,14 @@ public class SleuthRabbitBeanPostProcessor implements BeanPostProcessor {
 		else if (bean instanceof SimpleRabbitListenerContainerFactory) {
 			return rabbitTracing()
 					.decorateSimpleRabbitListenerContainerFactory((SimpleRabbitListenerContainerFactory) bean);
+		}
+		else if (bean instanceof DirectRabbitListenerContainerFactory) {
+			return rabbitTracing()
+					.decorateDirectRabbitListenerContainerFactory((DirectRabbitListenerContainerFactory) bean);
+		}
+		else if (bean instanceof SimpleMessageListenerContainer || bean instanceof DirectMessageListenerContainer) {
+			return rabbitTracing()
+					.decorateMessageListenerContainer((AbstractMessageListenerContainer) bean);
 		}
 		return bean;
 	}
