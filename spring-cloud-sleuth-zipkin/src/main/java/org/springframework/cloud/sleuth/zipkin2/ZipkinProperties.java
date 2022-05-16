@@ -75,6 +75,11 @@ public class ZipkinProperties {
 
 	private Locator locator = new Locator();
 
+	/**
+	 * Maximum backlog of spans reported vs sent.
+	 */
+	private int queuedMaxSpans = 1000;
+
 	public Locator getLocator() {
 		return this.locator;
 	}
@@ -145,6 +150,14 @@ public class ZipkinProperties {
 
 	public void setEncoder(SpanBytesEncoder encoder) {
 		this.encoder = encoder;
+	}
+
+	public int getQueuedMaxSpans() {
+		return queuedMaxSpans;
+	}
+
+	public void setQueuedMaxSpans(int queuedMaxSpans) {
+		this.queuedMaxSpans = queuedMaxSpans;
 	}
 
 	/** When enabled, spans are gzipped before sent to the zipkin server. */

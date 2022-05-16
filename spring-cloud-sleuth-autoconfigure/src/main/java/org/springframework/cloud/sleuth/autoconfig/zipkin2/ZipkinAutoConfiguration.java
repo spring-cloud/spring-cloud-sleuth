@@ -130,8 +130,8 @@ public class ZipkinAutoConfiguration {
 		CheckResult checkResult = checkResult(sender, 1_000L);
 		logCheckResult(sender, checkResult);
 
-		// historical constraint. Note: AsyncReporter supports memory bounds
-		AsyncReporter<Span> asyncReporter = AsyncReporter.builder(sender).queuedMaxSpans(1000)
+		// Note: AsyncReporter supports memory bounds
+		AsyncReporter<Span> asyncReporter = AsyncReporter.builder(sender).queuedMaxSpans(zipkin.getQueuedMaxSpans())
 				.messageTimeout(zipkin.getMessageTimeout(), TimeUnit.SECONDS).metrics(reporterMetrics)
 				.build(zipkin.getEncoder());
 
