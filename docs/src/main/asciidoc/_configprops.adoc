@@ -110,6 +110,7 @@
 |spring.zipkin.kafka.topic | `zipkin` | Name of the Kafka topic where spans should be sent to Zipkin.
 |spring.zipkin.locator.discovery.enabled | `false` | Enabling of locating the host name via service discovery.
 |spring.zipkin.message-timeout | `1` | Timeout in seconds before pending spans will be sent in batches to Zipkin.
+|spring.zipkin.queued-max-spans | `1000` | Maximum backlog of spans reported vs sent.
 |spring.zipkin.rabbitmq.addresses |  | Addresses of the RabbitMQ brokers used to send spans to Zipkin
 |spring.zipkin.rabbitmq.queue | `zipkin` | Name of the RabbitMQ queue where spans should be sent to Zipkin.
 |spring.zipkin.sender.type |  | Means of sending spans to Zipkin.
