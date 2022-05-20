@@ -16,11 +16,13 @@
 
 package org.springframework.cloud.sleuth.instrument.security;
 
+import java.time.Duration;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import org.awaitility.Awaitility;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -69,8 +71,10 @@ public abstract class SpringSecurityTests {
 
 		then(entity.getStatusCode().is2xxSuccessful()).isTrue();
 		then(entity.getBody()).isEqualTo("authenticated");
+		Awaitility.await().atMost(Duration.ofSeconds(1)).untilAsserted(() -> then(testSpanHandler).isNotEmpty());
 
 		List<Map.Entry<Long, String>> authEvents = getAuthEvents(testSpanHandler.reportedSpans());
+		then(authEvents).isNotEmpty();
 		for (int i = 0; i < authEvents.size(); i += 2) {
 			String setEvent = authEvents.get(i).getValue();
 			then(setEvent).isEqualTo("Authentication set UsernamePasswordAuthenticationToken[USER]");
@@ -85,8 +89,10 @@ public abstract class SpringSecurityTests {
 
 		then(entity.getStatusCode().is2xxSuccessful()).isTrue();
 		then(entity.getBody()).contains("html", "form");
+		Awaitility.await().atMost(Duration.ofSeconds(1)).untilAsserted(() -> then(testSpanHandler).isNotEmpty());
 
 		List<Map.Entry<Long, String>> authEvents = getAuthEvents(testSpanHandler.reportedSpans());
+		then(authEvents).isNotEmpty();
 		for (int i = 0; i < authEvents.size(); i += 2) {
 			String setEvent = authEvents.get(i).getValue();
 			then(setEvent).isEqualTo("Authentication set AnonymousAuthenticationToken[ROLE_ANONYMOUS]");
