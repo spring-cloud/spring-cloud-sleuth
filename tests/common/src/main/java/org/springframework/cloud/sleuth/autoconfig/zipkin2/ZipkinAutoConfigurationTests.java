@@ -18,10 +18,10 @@ package org.springframework.cloud.sleuth.autoconfig.zipkin2;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
@@ -227,71 +227,20 @@ public abstract class ZipkinAutoConfigurationTests {
 	}
 
 	@Test
-	public void checkResult_onTime() {
+	public void checkResult_onTime() throws ExecutionException, InterruptedException {
 		Sender sender = mock(Sender.class);
 		when(sender.check()).thenReturn(CheckResult.OK);
 
-		assertThat(ZipkinAutoConfiguration.checkResult(zipkinExecutor, sender, 200).ok()).isTrue();
+		assertThat(ZipkinAutoConfiguration.checkResult(zipkinExecutor, sender, 200).get().ok()).isTrue();
 	}
 
 	@Test
-	public void checkResult_onTime_notOk() {
+	public void checkResult_onTime_notOk() throws ExecutionException, InterruptedException {
 		Sender sender = mock(Sender.class);
 		RuntimeException exception = new RuntimeException("dead");
 		when(sender.check()).thenReturn(CheckResult.failed(exception));
 
-		assertThat(ZipkinAutoConfiguration.checkResult(zipkinExecutor, sender, 200).error()).isSameAs(exception);
-	}
-
-	/** Bug in {@link Sender} as it shouldn't throw */
-	@Test
-	public void checkResult_thrown() {
-		Sender sender = mock(Sender.class);
-		RuntimeException exception = new RuntimeException("dead");
-		when(sender.check()).thenThrow(exception);
-
-		assertThat(ZipkinAutoConfiguration.checkResult(zipkinExecutor, sender, 200).error()).hasCause(exception);
-	}
-
-	@Test
-	public void checkResult_slow() {
-		assertThat(ZipkinAutoConfiguration.checkResult(zipkinExecutor, new Sender() {
-			@Override
-			public CheckResult check() {
-				try {
-					Thread.sleep(500L);
-				}
-				catch (InterruptedException e) {
-					throw new AssertionError(e);
-				}
-				return CheckResult.OK;
-			}
-
-			@Override
-			public Encoding encoding() {
-				return Encoding.JSON;
-			}
-
-			@Override
-			public int messageMaxBytes() {
-				return 0;
-			}
-
-			@Override
-			public int messageSizeInBytes(List<byte[]> list) {
-				return 0;
-			}
-
-			@Override
-			public Call<Void> sendSpans(List<byte[]> list) {
-				return Call.create(null);
-			}
-
-			@Override
-			public String toString() {
-				return "FakeSender{}";
-			}
-		}, 200).error()).isInstanceOf(TimeoutException.class).hasMessage("Timed out after 200ms");
+		assertThat(ZipkinAutoConfiguration.checkResult(zipkinExecutor, sender, 200).get().error()).isSameAs(exception);
 	}
 
 	@Configuration(proxyBeanMethods = false)

@@ -18,6 +18,8 @@ package org.springframework.cloud.sleuth.zipkin2;
 
 import zipkin2.reporter.Sender;
 
+import org.springframework.http.client.ClientHttpRequestFactory;
+import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.web.client.RestTemplate;
 
 import static zipkin2.codec.SpanBytesEncoder.JSON_V2;
@@ -25,19 +27,22 @@ import static zipkin2.codec.SpanBytesEncoder.PROTO3;
 
 class RestTemplateSenderTest extends AbstractSenderTest {
 
+	public static final int DEFAULT_CHECK_TIMEOUT = 400;
+
 	@Override
 	Sender jsonSender() {
-		return new RestTemplateSender(new RestTemplate(), this.endpoint, null, JSON_V2);
+		return new RestTemplateSender(new RestTemplate(clientHttpRequestFactory()), this.endpoint, null, JSON_V2);
 	}
 
 	@Override
 	Sender jsonSender(String mockedApiPath) {
-		return new RestTemplateSender(new RestTemplate(), this.endpoint, mockedApiPath, JSON_V2);
+		return new RestTemplateSender(new RestTemplate(clientHttpRequestFactory()), this.endpoint, mockedApiPath,
+				JSON_V2);
 	}
 
 	@Override
 	Sender protoSender() {
-		return new RestTemplateSender(new RestTemplate(), this.endpoint, "", PROTO3);
+		return new RestTemplateSender(new RestTemplate(clientHttpRequestFactory()), this.endpoint, "", PROTO3);
 	}
 
 	@Override
@@ -51,6 +56,13 @@ class RestTemplateSenderTest extends AbstractSenderTest {
 			return "RestTemplateSender{" + this.endpoint + "}";
 		}
 		return "RestTemplateSender{" + this.endpoint + mockedApiPath + "}";
+	}
+
+	private ClientHttpRequestFactory clientHttpRequestFactory() {
+		SimpleClientHttpRequestFactory factory = new SimpleClientHttpRequestFactory();
+		factory.setReadTimeout(DEFAULT_CHECK_TIMEOUT);
+		factory.setConnectTimeout(DEFAULT_CHECK_TIMEOUT);
+		return factory;
 	}
 
 }

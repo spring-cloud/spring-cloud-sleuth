@@ -26,22 +26,24 @@ import static zipkin2.codec.SpanBytesEncoder.PROTO3;
 
 class WebClientSenderTests extends AbstractSenderTest {
 
+	public static final int DEFAULT_CHECK_TIMEOUT = 400;
+
 	@Override
 	Sender jsonSender() {
 		return new WebClientSender(WebClient.builder().clientConnector(new ReactorClientHttpConnector()).build(),
-				this.endpoint, null, JSON_V2);
+				this.endpoint, null, JSON_V2, DEFAULT_CHECK_TIMEOUT);
 	}
 
 	@Override
 	Sender jsonSender(String mockedApiPath) {
 		return new WebClientSender(WebClient.builder().clientConnector(new ReactorClientHttpConnector()).build(),
-				this.endpoint, mockedApiPath, JSON_V2);
+				this.endpoint, mockedApiPath, JSON_V2, DEFAULT_CHECK_TIMEOUT);
 	}
 
 	@Override
 	Sender protoSender() {
 		return new WebClientSender(WebClient.builder().clientConnector(new ReactorClientHttpConnector()).build(),
-				this.endpoint, "", PROTO3);
+				this.endpoint, "", PROTO3, DEFAULT_CHECK_TIMEOUT);
 	}
 
 	@Override

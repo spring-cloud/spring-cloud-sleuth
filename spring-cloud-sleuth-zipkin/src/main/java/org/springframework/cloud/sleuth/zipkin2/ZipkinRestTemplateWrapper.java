@@ -42,8 +42,6 @@ public class ZipkinRestTemplateWrapper extends RestTemplate {
 
 	private static final Log log = LogFactory.getLog(ZipkinRestTemplateWrapper.class);
 
-	private static final int DEFAULT_TIMEOUT = 500;
-
 	private final ZipkinProperties zipkinProperties;
 
 	private final ZipkinUrlExtractor extractor;
@@ -51,13 +49,13 @@ public class ZipkinRestTemplateWrapper extends RestTemplate {
 	public ZipkinRestTemplateWrapper(ZipkinProperties zipkinProperties, ZipkinUrlExtractor extractor) {
 		this.zipkinProperties = zipkinProperties;
 		this.extractor = extractor;
-		setRequestFactory(clientHttpRequestFactory());
+		setRequestFactory(clientHttpRequestFactory(zipkinProperties));
 	}
 
-	private ClientHttpRequestFactory clientHttpRequestFactory() {
+	private ClientHttpRequestFactory clientHttpRequestFactory(ZipkinProperties zipkinProperties) {
 		SimpleClientHttpRequestFactory factory = new SimpleClientHttpRequestFactory();
-		factory.setReadTimeout(DEFAULT_TIMEOUT);
-		factory.setConnectTimeout(DEFAULT_TIMEOUT);
+		factory.setReadTimeout(zipkinProperties.getCheckTimeout());
+		factory.setConnectTimeout(zipkinProperties.getCheckTimeout());
 		return factory;
 	}
 

@@ -85,7 +85,7 @@ class ZipkinHttpSenderConfiguration {
 		Sender webClientSender(ZipkinProperties zipkin, ZipkinWebClientBuilderProvider zipkinWebClientBuilderProvider) {
 			WebClient.Builder webClientBuilder = zipkinWebClientBuilderProvider.zipkinWebClientBuilder();
 			return new WebClientSender(webClientBuilder.build(), zipkin.getBaseUrl(), zipkin.getApiPath(),
-					zipkin.getEncoder());
+					zipkin.getEncoder(), zipkin.getCheckTimeout());
 		}
 
 		@Bean

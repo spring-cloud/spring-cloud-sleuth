@@ -16,9 +16,9 @@
 
 package org.springframework.cloud.sleuth.autoconfig.zipkin2;
 
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
@@ -108,25 +108,29 @@ public class ZipkinAutoConfiguration {
 	}
 
 	/** Limits {@link Sender#check()} to {@code deadlineMillis}. */
-	static CheckResult checkResult(ExecutorService zipkinExecutor, Sender sender, long deadlineMillis) {
-		Future<CheckResult> future = zipkinExecutor.submit(sender::check);
-		try {
-			return future.get(deadlineMillis, TimeUnit.MILLISECONDS);
-		}
-		catch (TimeoutException e) {
-			return CheckResult.failed(new TimeoutException("Timed out after " + deadlineMillis + "ms"));
-		}
-		catch (Exception e) {
-			return CheckResult.failed(e);
-		}
+	static CompletableFuture<CheckResult> checkResult(ExecutorService zipkinExecutor, Sender sender,
+			long deadlineMillis) {
+		return CompletableFuture.supplyAsync(sender::check, zipkinExecutor).whenComplete((checkResult, throwable) -> {
+			Throwable exception = throwable instanceof TimeoutException
+					? new TimeoutException("Timed out after " + deadlineMillis + "ms") : throwable;
+			CheckResult result;
+			if (checkResult != null && checkResult.error() != null
+					&& checkResult.error().getCause() instanceof TimeoutException) {
+				exception = new TimeoutException("Timed out after " + deadlineMillis + "ms");
+				result = CheckResult.failed(exception);
+			}
+			else {
+				result = checkResult == null ? CheckResult.failed(exception) : checkResult;
+			}
+			logCheckResult(sender, result);
+		});
 	}
 
 	@Bean(REPORTER_BEAN_NAME)
 	@ConditionalOnMissingBean(name = REPORTER_BEAN_NAME)
 	Reporter<Span> reporter(ReporterMetrics reporterMetrics, ZipkinProperties zipkin,
 			@Qualifier(SENDER_BEAN_NAME) Sender sender) {
-		CheckResult checkResult = checkResult(zipkinExecutor, sender, 1_000L);
-		logCheckResult(sender, checkResult);
+		checkResult(zipkinExecutor, sender, zipkin.getCheckTimeout());
 
 		// Note: AsyncReporter supports memory bounds
 		AsyncReporter<Span> asyncReporter = AsyncReporter.builder(sender).queuedMaxSpans(zipkin.getQueuedMaxSpans())
@@ -152,7 +156,7 @@ public class ZipkinAutoConfiguration {
 		return asyncReporter;
 	}
 
-	private void logCheckResult(Sender sender, CheckResult checkResult) {
+	private static void logCheckResult(Sender sender, CheckResult checkResult) {
 		if (log.isDebugEnabled() && checkResult != null && checkResult.ok()) {
 			log.debug("Check result of the [" + sender.toString() + "] is [" + checkResult + "]");
 		}

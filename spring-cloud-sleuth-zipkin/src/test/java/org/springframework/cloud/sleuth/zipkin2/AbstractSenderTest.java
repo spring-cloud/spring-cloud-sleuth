@@ -17,8 +17,12 @@
 package org.springframework.cloud.sleuth.zipkin2;
 
 import java.io.IOException;
+import java.net.InetAddress;
+import java.net.ServerSocket;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Stream;
+
+import javax.net.ServerSocketFactory;
 
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
@@ -26,6 +30,7 @@ import okhttp3.mockwebserver.RecordedRequest;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import zipkin2.Call;
+import zipkin2.CheckResult;
 import zipkin2.Endpoint;
 import zipkin2.Span;
 import zipkin2.codec.Encoding;
@@ -121,6 +126,62 @@ abstract class AbstractSenderTest {
 	@Test
 	public void toStringContainsOnlySenderTypeAndEndpoint() {
 		assertThat(this.sender).hasToString(expectedToString());
+	}
+
+	@Test
+	public void testWhereServerDown() throws IOException {
+		this.server.shutdown();
+
+		final Sender sender = jsonSender();
+		CheckResult checkResult = sender.check();
+		assertThat(checkResult.ok()).isFalse();
+		assertThat(checkResult.error()).hasMessageContaining("Connection refused");
+	}
+
+	@Test
+	public void testWhereServerSlow() throws IOException {
+		MockWebServer server = new MockWebServer();
+		ServerSocketFactory socketFactory = ServerSocketFactory.getDefault();
+		ServerSocketFactory factory = new ServerSocketFactory() {
+			@Override
+			public ServerSocket createServerSocket(int port) throws IOException {
+				slow();
+				return socketFactory.createServerSocket(port);
+			}
+
+			private void slow() {
+				try {
+					Thread.sleep(2_000);
+				}
+				catch (InterruptedException e) {
+					throw new RuntimeException(e);
+				}
+			}
+
+			@Override
+			public ServerSocket createServerSocket(int port, int backlog) throws IOException {
+				slow();
+				return socketFactory.createServerSocket(port, backlog);
+			}
+
+			@Override
+			public ServerSocket createServerSocket(int port, int backlog, InetAddress ifAddress) throws IOException {
+				slow();
+				return socketFactory.createServerSocket(port, backlog, ifAddress);
+			}
+		};
+		server.setServerSocketFactory(factory);
+		MockResponse mockResponse = new MockResponse();
+		mockResponse.setBodyDelay(1, TimeUnit.SECONDS);
+		server.enqueue(mockResponse);
+		final Sender sender = jsonSender();
+
+		CheckResult checkResult = sender.check();
+
+		assertThat(checkResult.ok()).isFalse();
+		assertThat(checkResult.error()).hasMessageContaining("TimeoutException");
+
+		server.shutdown();
 	}
 
 	Call<Void> send(Span... spans) {

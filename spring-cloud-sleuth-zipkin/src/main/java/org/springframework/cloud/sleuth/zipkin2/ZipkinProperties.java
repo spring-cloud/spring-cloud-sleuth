@@ -56,6 +56,11 @@ public class ZipkinProperties {
 	private boolean enabled = true;
 
 	/**
+	 * Timeout in millis for the check for Zipkin availability.
+	 */
+	private int checkTimeout = 1_000;
+
+	/**
 	 * Timeout in seconds before pending spans will be sent in batches to Zipkin.
 	 */
 	private int messageTimeout = 1;
@@ -126,6 +131,14 @@ public class ZipkinProperties {
 
 	public void setMessageTimeout(int messageTimeout) {
 		this.messageTimeout = messageTimeout;
+	}
+
+	public int getCheckTimeout() {
+		return this.checkTimeout;
+	}
+
+	public void setCheckTimeout(int checkTimeout) {
+		this.checkTimeout = checkTimeout;
 	}
 
 	public Compression getCompression() {

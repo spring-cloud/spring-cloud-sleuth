@@ -17,6 +17,7 @@
 package org.springframework.cloud.sleuth.zipkin2;
 
 import java.net.URI;
+import java.time.Duration;
 
 import zipkin2.Span;
 import zipkin2.codec.BytesEncoder;
@@ -32,13 +33,40 @@ import org.springframework.web.reactive.function.client.WebClient;
  */
 public class WebClientSender extends HttpSender {
 
+	private static final long DEFAULT_CHECK_TIMEOUT = 1_000L;
+
+	/**
+	 * Use
+	 * {@link WebClientSender#WebClientSender(WebClient, String, String, BytesEncoder, long)}.
+	 * @param webClient web client
+	 * @param baseUrl base url
+	 * @param apiPath api path
+	 * @param encoder encoder
+	 * @deprecated use
+	 * {@link WebClientSender#WebClientSender(WebClient, String, String, BytesEncoder, long)}
+	 */
+	@Deprecated
 	public WebClientSender(WebClient webClient, String baseUrl, String apiPath, BytesEncoder<Span> encoder) {
-		super((url, mediaType, bytes) -> post(url, mediaType, bytes, webClient), baseUrl, apiPath, encoder);
+		this(webClient, baseUrl, apiPath, encoder, DEFAULT_CHECK_TIMEOUT);
 	}
 
-	private static void post(String url, MediaType mediaType, byte[] json, WebClient webClient) {
+	/**
+	 * Creates a new instance of {@link WebClientSender}.
+	 * @param webClient web client
+	 * @param baseUrl base url
+	 * @param apiPath api path
+	 * @param encoder encoder
+	 * @param checkTimeout check timeout
+	 */
+	public WebClientSender(WebClient webClient, String baseUrl, String apiPath, BytesEncoder<Span> encoder,
+			long checkTimeout) {
+		super((url, mediaType, bytes) -> post(url, mediaType, bytes, webClient, checkTimeout), baseUrl, apiPath,
+				encoder);
+	}
+
+	private static void post(String url, MediaType mediaType, byte[] json, WebClient webClient, long checkTimeout) {
 		webClient.post().uri(URI.create(url)).accept(mediaType).contentType(mediaType).bodyValue(json).retrieve()
-				.toBodilessEntity().subscribe();
+				.toBodilessEntity().timeout(Duration.ofMillis(checkTimeout)).block();
 	}
 
 	@Override
