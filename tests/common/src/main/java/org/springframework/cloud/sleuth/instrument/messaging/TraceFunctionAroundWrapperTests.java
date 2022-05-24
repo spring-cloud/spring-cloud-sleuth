@@ -47,7 +47,7 @@ public abstract class TraceFunctionAroundWrapperTests {
 	public void test_tracing_with_supplier() {
 		try (ConfigurableApplicationContext context = new SpringApplicationBuilder(configuration(),
 				SampleConfiguration.class).run("--logging.level.org.springframework.cloud.function=DEBUG",
-						"--spring.main.lazy-initialization=true");) {
+						"--spring.main.lazy-initialization=true", "--server.port=0");) {
 			TestSpanHandler spanHandler = context.getBean(TestSpanHandler.class);
 			assertThat(spanHandler.reportedSpans()).isEmpty();
 			FunctionCatalog catalog = context.getBean(FunctionCatalog.class);

@@ -73,6 +73,19 @@ public class TraceValve extends ValveBase {
 
 	@Override
 	public void invoke(Request request, Response response) throws IOException, ServletException {
+		Object attribute = request.getAttribute(Span.class.getName());
+		if (attribute != null) {
+			// this could happen for async dispatch
+			try (CurrentTraceContext.Scope ws = currentTraceContext().maybeScope(((Span) attribute).context())) {
+				Valve next = getNext();
+				if (null == next) {
+					// no next valve
+					return;
+				}
+				next.invoke(request, response);
+				return;
+			}
+		}
 		Exception ex = null;
 		Span handleReceive = httpServerHandler().handleReceive(HttpServletRequestWrapper.create(request.getRequest()));
 		if (log.isDebugEnabled()) {

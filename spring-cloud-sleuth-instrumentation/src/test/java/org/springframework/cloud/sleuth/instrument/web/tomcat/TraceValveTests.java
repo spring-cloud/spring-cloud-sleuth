@@ -17,6 +17,7 @@
 package org.springframework.cloud.sleuth.instrument.web.tomcat;
 
 import java.io.IOException;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.servlet.ServletException;
 
@@ -42,14 +43,21 @@ class TraceValveTests {
 
 	SimpleSpan simpleSpan = new SimpleSpan();
 
+	AtomicInteger startCounter = new AtomicInteger();
+
+	AtomicInteger endCounter = new AtomicInteger();
+
 	HttpServerHandler httpServerHandler = new HttpServerHandler() {
+
 		@Override
 		public SimpleSpan handleReceive(HttpServerRequest request) {
+			startCounter.incrementAndGet();
 			return simpleSpan.start();
 		}
 
 		@Override
 		public void handleSend(HttpServerResponse response, Span span) {
+			endCounter.incrementAndGet();
 			span.end();
 		}
 	};
@@ -75,7 +83,9 @@ class TraceValveTests {
 
 	private void thenSpanIsStartedAndStopped() {
 		then(simpleSpan.started).isTrue();
+		then(startCounter.get()).isEqualTo(1);
 		then(simpleSpan.ended).isTrue();
+		then(endCounter.get()).isEqualTo(1);
 	}
 
 	@Test
@@ -87,6 +97,21 @@ class TraceValveTests {
 			@Override
 			public Valve getNext() {
 				return new MyValve();
+			}
+		}.invoke(request, new Response());
+
+		then(request.getAttribute(TraceContext.class.getName())).isNotNull();
+		thenSpanIsStartedAndStopped();
+	}
+
+	@Test
+	void should_not_generate_a_new_span_when_one_already_present() throws ServletException, IOException {
+		Request request = request();
+
+		new TraceValve(this.httpServerHandler, new SimpleCurrentTraceContext()) {
+			@Override
+			public Valve getNext() {
+				return new TraceValve(httpServerHandler, new SimpleCurrentTraceContext());
 			}
 		}.invoke(request, new Response());
 
