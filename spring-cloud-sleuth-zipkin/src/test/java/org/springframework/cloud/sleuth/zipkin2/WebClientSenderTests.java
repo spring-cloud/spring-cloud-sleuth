@@ -26,7 +26,7 @@ import static zipkin2.codec.SpanBytesEncoder.PROTO3;
 
 class WebClientSenderTests extends AbstractSenderTest {
 
-	public static final int DEFAULT_CHECK_TIMEOUT = 400;
+	public static final int DEFAULT_CHECK_TIMEOUT = 1_000;
 
 	@Override
 	Sender jsonSender() {
