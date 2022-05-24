@@ -89,7 +89,7 @@ class SkipPatternConfiguration {
 			return () -> result;
 		}
 		catch (BeanCreationException e) {
-			log.warn(
+			log.debug(
 					"Most likely, there is an actuator endpoint that indirectly references an instrumented HTTP client. An exception was thrown during bean initialization. Will ignore that exception",
 					e);
 			return () -> consolidateSkipPatterns(patterns);
