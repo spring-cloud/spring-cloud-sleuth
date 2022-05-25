@@ -31,6 +31,7 @@ import javax.sql.CommonDataSource;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import org.springframework.beans.factory.BeanFactory;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.SpanAndScope;
 import org.springframework.cloud.sleuth.Tracer;
@@ -78,39 +79,41 @@ class TraceListenerStrategy<CON, STMT, RS> {
 
 	private final ThreadLocal<ConnectionInfo> currentConnection = new ThreadLocal<>();
 
-	private final Tracer tracer;
-
 	private final List<TraceType> traceTypes;
 
 	private final List<TraceListenerStrategySpanCustomizer<? super CommonDataSource>> customizers;
 
-	TraceListenerStrategy(Tracer tracer, List<TraceType> traceTypes,
+	private final BeanFactory beanFactory;
+
+	private Tracer tracer;
+
+	TraceListenerStrategy(BeanFactory beanFactory, List<TraceType> traceTypes,
 			List<TraceListenerStrategySpanCustomizer<? super CommonDataSource>> customizers) {
-		this.tracer = tracer;
 		this.traceTypes = traceTypes;
 		this.customizers = customizers;
+		this.beanFactory = beanFactory;
 	}
 
 	void beforeGetConnection(CON connectionKey, @Nullable CommonDataSource dataSource, String dataSourceName) {
 		if (log.isTraceEnabled()) {
-			log.trace("Before get connection key [" + connectionKey + "] - current span is [" + tracer.currentSpan()
-					+ "]");
+			log.trace("Before get connection key [" + connectionKey + "] - current span is ["
+					+ getTracer().currentSpan() + "]");
 		}
 		SpanAndScope spanAndScope = null;
 		if (this.traceTypes.contains(TraceType.CONNECTION)) {
 			AssertingSpanBuilder connectionSpanBuilder = AssertingSpanBuilder
-					.of(SleuthJdbcSpan.JDBC_CONNECTION_SPAN, tracer.spanBuilder())
+					.of(SleuthJdbcSpan.JDBC_CONNECTION_SPAN, getTracer().spanBuilder())
 					.name(SleuthJdbcSpan.JDBC_CONNECTION_SPAN.getName());
 			connectionSpanBuilder.remoteServiceName(dataSourceName);
 			connectionSpanBuilder.kind(Span.Kind.CLIENT);
 			this.customizers.stream().filter(customizer -> customizer.isApplicable(dataSource))
 					.forEach(customizer -> customizer.customizeConnectionSpan(dataSource, connectionSpanBuilder));
 			Span connectionSpan = connectionSpanBuilder.start();
-			Tracer.SpanInScope scope = isCurrent(null) ? tracer.withSpan(connectionSpan) : null;
+			Tracer.SpanInScope scope = isCurrent(null) ? getTracer().withSpan(connectionSpan) : null;
 			spanAndScope = new SpanAndScope(connectionSpan, scope);
 			if (log.isTraceEnabled()) {
 				log.trace("Started client span before connection [" + connectionSpan + "] - current span is ["
-						+ tracer.currentSpan() + "]");
+						+ getTracer().currentSpan() + "]");
 			}
 		}
 		ConnectionInfo connectionInfo = new ConnectionInfo(spanAndScope);
@@ -124,7 +127,8 @@ class TraceListenerStrategy<CON, STMT, RS> {
 	void afterGetConnection(CON connectionKey, @Nullable Connection connection, String dataSourceName,
 			@Nullable Throwable t) {
 		if (log.isTraceEnabled()) {
-			log.trace("After get connection [" + connectionKey + "]. Current span is [" + tracer.currentSpan() + "]");
+			log.trace("After get connection [" + connectionKey + "]. Current span is [" + getTracer().currentSpan()
+					+ "]");
 		}
 		ConnectionInfo connectionInfo = this.openConnections.get(connectionKey);
 		SpanAndScope connectionSpan = connectionInfo.span;
@@ -143,12 +147,12 @@ class TraceListenerStrategy<CON, STMT, RS> {
 			if (connectionSpan != null) {
 				if (log.isTraceEnabled()) {
 					log.trace("Closing client span due to exception [" + connectionSpan.getSpan()
-							+ "] - current span is [" + tracer.currentSpan() + "]");
+							+ "] - current span is [" + getTracer().currentSpan() + "]");
 				}
 				connectionSpan.getSpan().error(t);
 				connectionSpan.close();
 				if (log.isTraceEnabled()) {
-					log.trace("Current span [" + tracer.currentSpan() + "]");
+					log.trace("Current span [" + getTracer().currentSpan() + "]");
 				}
 			}
 		}
@@ -163,7 +167,7 @@ class TraceListenerStrategy<CON, STMT, RS> {
 
 	void beforeQuery(CON connectionKey, STMT statementKey) {
 		if (log.isTraceEnabled()) {
-			log.trace("Before query - connection [" + connectionKey + "] and current span [" + tracer.currentSpan()
+			log.trace("Before query - connection [" + connectionKey + "] and current span [" + getTracer().currentSpan()
 					+ "]");
 		}
 		ConnectionInfo connectionInfo = this.openConnections.get(connectionKey);
@@ -176,7 +180,7 @@ class TraceListenerStrategy<CON, STMT, RS> {
 		SpanAndScope spanAndScope = null;
 		if (traceTypes.contains(TraceType.QUERY)) {
 			Span.Builder statementSpanBuilder = AssertingSpanBuilder
-					.of(SleuthJdbcSpan.JDBC_QUERY_SPAN, tracer.spanBuilder())
+					.of(SleuthJdbcSpan.JDBC_QUERY_SPAN, getTracer().spanBuilder())
 					.name(String.format(SleuthJdbcSpan.JDBC_QUERY_SPAN.getName(), "query"));
 			statementSpanBuilder.remoteServiceName(connectionInfo.remoteServiceName);
 			if (connectionInfo.url != null) {
@@ -184,11 +188,11 @@ class TraceListenerStrategy<CON, STMT, RS> {
 			}
 			statementSpanBuilder.kind(Span.Kind.CLIENT);
 			Span statementSpan = statementSpanBuilder.start();
-			Tracer.SpanInScope scope = isCurrent(connectionInfo) ? tracer.withSpan(statementSpan) : null;
+			Tracer.SpanInScope scope = isCurrent(connectionInfo) ? getTracer().withSpan(statementSpan) : null;
 			spanAndScope = new SpanAndScope(statementSpan, scope);
 			if (log.isTraceEnabled()) {
 				log.trace("Started client span before query [" + statementSpan + "] - current span is ["
-						+ tracer.currentSpan() + "]");
+						+ getTracer().currentSpan() + "]");
 			}
 		}
 		StatementInfo statementInfo = new StatementInfo(spanAndScope);
@@ -223,7 +227,7 @@ class TraceListenerStrategy<CON, STMT, RS> {
 			if (log.isTraceEnabled()) {
 				log.trace(
 						"Connection may be closed after statement preparation, but before statement execution. Current span is ["
-								+ tracer.currentSpan() + "]");
+								+ getTracer().currentSpan() + "]");
 			}
 			return;
 		}
@@ -236,12 +240,12 @@ class TraceListenerStrategy<CON, STMT, RS> {
 				statementSpan.getSpan().error(t);
 			}
 			if (log.isTraceEnabled()) {
-				log.trace("Closing statement span [" + statementSpan + "] - current span is [" + tracer.currentSpan()
-						+ "]");
+				log.trace("Closing statement span [" + statementSpan + "] - current span is ["
+						+ getTracer().currentSpan() + "]");
 			}
 			statementSpan.close();
 			if (log.isTraceEnabled()) {
-				log.trace("Current span [" + tracer.currentSpan() + "]");
+				log.trace("Current span [" + getTracer().currentSpan() + "]");
 			}
 		}
 	}
@@ -268,7 +272,7 @@ class TraceListenerStrategy<CON, STMT, RS> {
 			return;
 		}
 		AssertingSpanBuilder resultSetSpanBuilder = AssertingSpanBuilder
-				.of(SleuthJdbcSpan.JDBC_RESULT_SET_SPAN, tracer.spanBuilder())
+				.of(SleuthJdbcSpan.JDBC_RESULT_SET_SPAN, getTracer().spanBuilder())
 				.name(SleuthJdbcSpan.JDBC_RESULT_SET_SPAN.getName());
 		resultSetSpanBuilder.kind(Span.Kind.CLIENT);
 		resultSetSpanBuilder.remoteServiceName(connectionInfo.remoteServiceName);
@@ -276,11 +280,11 @@ class TraceListenerStrategy<CON, STMT, RS> {
 			resultSetSpanBuilder.remoteIpAndPort(connectionInfo.url.getHost(), connectionInfo.url.getPort());
 		}
 		Span resultSetSpan = resultSetSpanBuilder.start();
-		Tracer.SpanInScope scope = isCurrent(connectionInfo) ? tracer.withSpan(resultSetSpan) : null;
+		Tracer.SpanInScope scope = isCurrent(connectionInfo) ? getTracer().withSpan(resultSetSpan) : null;
 		SpanAndScope spanAndScope = new SpanAndScope(resultSetSpan, scope);
 		if (log.isTraceEnabled()) {
 			log.trace("Started client result set span [" + resultSetSpan + "] - current span is ["
-					+ tracer.currentSpan() + "]");
+					+ getTracer().currentSpan() + "]");
 		}
 		connectionInfo.nestedResultSetSpans.put(resultSetKey, spanAndScope);
 		StatementInfo statementInfo = connectionInfo.nestedStatements.get(statementKey);
@@ -308,11 +312,11 @@ class TraceListenerStrategy<CON, STMT, RS> {
 				connectionInfo.nestedResultSetSpans.remove(resultSetKey);
 				if (log.isTraceEnabled()) {
 					log.trace("Closing span after statement close [" + span.getSpan() + "] - current span is ["
-							+ tracer.currentSpan() + "]");
+							+ getTracer().currentSpan() + "]");
 				}
 				span.close();
 				if (log.isTraceEnabled()) {
-					log.trace("Current span [" + tracer.currentSpan() + "]");
+					log.trace("Current span [" + getTracer().currentSpan() + "]");
 				}
 			});
 			statementInfo.nestedResultSetSpans.clear();
@@ -342,11 +346,11 @@ class TraceListenerStrategy<CON, STMT, RS> {
 		}
 		if (log.isTraceEnabled()) {
 			log.trace("Closing client result set span [" + resultSetSpan + "] - current span is ["
-					+ tracer.currentSpan() + "]");
+					+ getTracer().currentSpan() + "]");
 		}
 		resultSetSpan.close();
 		if (log.isTraceEnabled()) {
-			log.trace("Current span [" + tracer.currentSpan() + "]");
+			log.trace("Current span [" + getTracer().currentSpan() + "]");
 		}
 	}
 
@@ -411,7 +415,7 @@ class TraceListenerStrategy<CON, STMT, RS> {
 			}
 		});
 		if (log.isTraceEnabled()) {
-			log.trace("Current span after closing statements [" + tracer.currentSpan() + "]");
+			log.trace("Current span after closing statements [" + getTracer().currentSpan() + "]");
 		}
 		SpanAndScope connectionSpan = connectionInfo.span;
 		if (connectionSpan != null) {
@@ -420,11 +424,11 @@ class TraceListenerStrategy<CON, STMT, RS> {
 			}
 			if (log.isTraceEnabled()) {
 				log.trace("Closing span after connection close [" + connectionSpan.getSpan() + "] - current span is ["
-						+ tracer.currentSpan() + "]");
+						+ getTracer().currentSpan() + "]");
 			}
 			connectionSpan.close();
 			if (log.isTraceEnabled()) {
-				log.trace("Current span [" + tracer.currentSpan() + "]");
+				log.trace("Current span [" + getTracer().currentSpan() + "]");
 			}
 		}
 	}
@@ -469,6 +473,14 @@ class TraceListenerStrategy<CON, STMT, RS> {
 		else {
 			connectionInfo.remoteServiceName = dataSourceName;
 		}
+	}
+
+	private Tracer getTracer() {
+		if (this.tracer == null) {
+			this.tracer = beanFactory.getBean(Tracer.class);
+		}
+
+		return this.tracer;
 	}
 
 	private final class ConnectionInfo {

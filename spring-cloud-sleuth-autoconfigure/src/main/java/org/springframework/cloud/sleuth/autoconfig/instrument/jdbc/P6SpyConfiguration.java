@@ -26,11 +26,11 @@ import com.p6spy.engine.spy.DefaultJdbcEventListenerFactory;
 import com.p6spy.engine.spy.JdbcEventListenerFactory;
 import com.p6spy.engine.spy.P6DataSource;
 
+import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.instrument.jdbc.DataSourceNameResolver;
 import org.springframework.cloud.sleuth.instrument.jdbc.P6SpyContextJdbcEventListenerFactory;
 import org.springframework.cloud.sleuth.instrument.jdbc.P6SpyDataSourceDecorator;
@@ -69,10 +69,10 @@ class P6SpyConfiguration {
 	}
 
 	@Bean
-	TraceJdbcEventListener tracingJdbcEventListener(Tracer tracer, DataSourceNameResolver dataSourceNameResolver,
-			TraceJdbcProperties traceJdbcProperties,
+	TraceJdbcEventListener tracingJdbcEventListener(BeanFactory beanFactory,
+			DataSourceNameResolver dataSourceNameResolver, TraceJdbcProperties traceJdbcProperties,
 			ObjectProvider<List<TraceListenerStrategySpanCustomizer<? super CommonDataSource>>> customizers) {
-		return new TraceJdbcEventListener(tracer, dataSourceNameResolver, traceJdbcProperties.getIncludes(),
+		return new TraceJdbcEventListener(beanFactory, dataSourceNameResolver, traceJdbcProperties.getIncludes(),
 				traceJdbcProperties.getP6spy().getTracing().isIncludeParameterValues(),
 				customizers.getIfAvailable(ArrayList::new));
 	}

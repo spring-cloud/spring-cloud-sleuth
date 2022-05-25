@@ -34,7 +34,7 @@ import net.ttddyy.dsproxy.listener.QueryExecutionListener;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import org.springframework.cloud.sleuth.Tracer;
+import org.springframework.beans.factory.BeanFactory;
 import org.springframework.core.Ordered;
 
 /**
@@ -49,9 +49,9 @@ public class TraceQueryExecutionListener implements QueryExecutionListener, Meth
 
 	private final TraceListenerStrategy<String, Statement, ResultSet> strategy;
 
-	public TraceQueryExecutionListener(Tracer tracer, List<TraceType> traceTypes,
+	public TraceQueryExecutionListener(BeanFactory beanFactory, List<TraceType> traceTypes,
 			List<TraceListenerStrategySpanCustomizer<? super CommonDataSource>> customizers) {
-		this.strategy = new TraceListenerStrategy<>(tracer, traceTypes, customizers);
+		this.strategy = new TraceListenerStrategy<>(beanFactory, traceTypes, customizers);
 	}
 
 	@Override

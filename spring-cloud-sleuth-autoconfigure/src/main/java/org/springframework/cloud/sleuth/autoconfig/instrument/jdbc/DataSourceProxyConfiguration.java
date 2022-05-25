@@ -32,11 +32,11 @@ import net.ttddyy.dsproxy.transform.ParameterTransformer;
 import net.ttddyy.dsproxy.transform.QueryTransformer;
 
 import org.springframework.beans.BeanUtils;
+import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.instrument.jdbc.DataSourceNameResolver;
 import org.springframework.cloud.sleuth.instrument.jdbc.DataSourceProxyBuilderCustomizer;
 import org.springframework.cloud.sleuth.instrument.jdbc.DataSourceProxyConnectionIdManagerProvider;
@@ -100,10 +100,10 @@ class DataSourceProxyConfiguration {
 	}
 
 	@Bean
-	TraceQueryExecutionListener traceQueryExecutionListener(Tracer tracer,
+	TraceQueryExecutionListener traceQueryExecutionListener(BeanFactory beanFactory,
 			TraceJdbcProperties dataSourceDecoratorProperties,
 			ObjectProvider<List<TraceListenerStrategySpanCustomizer<? super CommonDataSource>>> customizers) {
-		return new TraceQueryExecutionListener(tracer, dataSourceDecoratorProperties.getIncludes(),
+		return new TraceQueryExecutionListener(beanFactory, dataSourceDecoratorProperties.getIncludes(),
 				customizers.getIfAvailable(ArrayList::new));
 	}
 
