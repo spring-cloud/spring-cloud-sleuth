@@ -16,20 +16,18 @@
 
 package org.springframework.cloud.sleuth.zipkin2;
 
-import java.net.URI;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.web.reactive.function.client.WebClientRequestException;
-import zipkin2.Span;
-import zipkin2.codec.BytesEncoder;
-import zipkin2.reporter.Sender;
-
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.http.RequestEntity;
 import org.springframework.web.client.RestTemplate;
+import zipkin2.Span;
+import zipkin2.codec.BytesEncoder;
+import zipkin2.reporter.Sender;
+
+import java.net.URI;
 
 /**
  * {@link Sender} that uses {@link RestTemplate} to send spans to Zipkin.
