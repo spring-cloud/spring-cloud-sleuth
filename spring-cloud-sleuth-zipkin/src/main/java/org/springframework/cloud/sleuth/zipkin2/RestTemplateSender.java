@@ -18,6 +18,9 @@ package org.springframework.cloud.sleuth.zipkin2;
 
 import java.net.URI;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.web.reactive.function.client.WebClientRequestException;
 import zipkin2.Span;
 import zipkin2.codec.BytesEncoder;
 import zipkin2.reporter.Sender;
@@ -34,6 +37,7 @@ import org.springframework.web.client.RestTemplate;
  * @since 3.0.0
  */
 public class RestTemplateSender extends HttpSender {
+	private static final Logger logger = LoggerFactory.getLogger(RestTemplateSender.class);
 
 	@Deprecated
 	public RestTemplateSender(RestTemplate restTemplate, String baseUrl, BytesEncoder<Span> encoder) {
@@ -45,10 +49,15 @@ public class RestTemplateSender extends HttpSender {
 	}
 
 	private static void post(String url, MediaType mediaType, byte[] json, RestTemplate restTemplate) {
-		HttpHeaders httpHeaders = new HttpHeaders();
-		httpHeaders.setContentType(mediaType);
-		RequestEntity<byte[]> requestEntity = new RequestEntity<>(json, httpHeaders, HttpMethod.POST, URI.create(url));
-		restTemplate.exchange(requestEntity, String.class);
+		try {
+			HttpHeaders httpHeaders = new HttpHeaders();
+			httpHeaders.setContentType(mediaType);
+			RequestEntity<byte[]> requestEntity = new RequestEntity<>(json, httpHeaders, HttpMethod.POST, URI.create(url));
+			restTemplate.exchange(requestEntity, String.class);
+		} catch(Throwable e) {
+			logger.warn("Unable to send trace data: {}", e.getMessage());
+		}
+
 	}
 
 	@Override
