@@ -18,9 +18,11 @@ package org.springframework.cloud.sleuth.zipkin2;
 
 import java.net.URI;
 import java.time.Duration;
+import java.util.function.Function;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.ResponseEntity;
 import reactor.core.publisher.Mono;
 import zipkin2.Span;
 import zipkin2.codec.BytesEncoder;
@@ -42,39 +44,37 @@ public class WebClientSender extends HttpSender {
 
 	/**
 	 * Use
-	 * {@link WebClientSender#WebClientSender(WebClient, String, String, BytesEncoder, long)}.
+	 * {@link WebClientSender#WebClientSender(WebClient, Function, String, String, BytesEncoder, long)}.
 	 * @param webClient web client
 	 * @param baseUrl base url
 	 * @param apiPath api path
 	 * @param encoder encoder
 	 * @deprecated use
-	 * {@link WebClientSender#WebClientSender(WebClient, String, String, BytesEncoder, long)}
+	 * {@link WebClientSender#WebClientSender(WebClient, Function, String, String, BytesEncoder, long)}
 	 */
 	@Deprecated
 	public WebClientSender(WebClient webClient, String baseUrl, String apiPath, BytesEncoder<Span> encoder) {
-		this(webClient, baseUrl, apiPath, encoder, DEFAULT_CHECK_TIMEOUT);
+		this(webClient, null, baseUrl, apiPath, encoder, DEFAULT_CHECK_TIMEOUT);
 	}
 
 	/**
 	 * Creates a new instance of {@link WebClientSender}.
 	 * @param webClient web client
+	 * @param onErrorResumeFunc function that will be run on onErrorResume. Send in null to get default behavior.
 	 * @param baseUrl base url
 	 * @param apiPath api path
 	 * @param encoder encoder
 	 * @param checkTimeout check timeout
 	 */
-	public WebClientSender(WebClient webClient, String baseUrl, String apiPath, BytesEncoder<Span> encoder,
-			long checkTimeout) {
-		super((url, mediaType, bytes) -> post(url, mediaType, bytes, webClient, checkTimeout), baseUrl, apiPath,
+	public WebClientSender(WebClient webClient, Function<Throwable, Mono<ResponseEntity<Void>>> onErrorResumeFunc, String baseUrl, String apiPath, BytesEncoder<Span> encoder,
+						   long checkTimeout) {
+		super((url, mediaType, bytes) -> post(url, mediaType, bytes, webClient, checkTimeout).onErrorResume((onErrorResumeFunc == null) ? Mono::error : onErrorResumeFunc).block(), baseUrl, apiPath,
 				encoder);
 	}
 
-	private static void post(String url, MediaType mediaType, byte[] json, WebClient webClient, long checkTimeout) {
-		webClient.post().uri(URI.create(url)).accept(mediaType).contentType(mediaType).bodyValue(json).retrieve()
-				.toBodilessEntity().timeout(Duration.ofMillis(checkTimeout)).onErrorResume(error -> {
-					logger.warn("Unable to send trace data: {}", error.getMessage());
-					return Mono.empty();
-				}).block();
+	private static Mono<ResponseEntity<Void>> post(String url, MediaType mediaType, byte[] json, WebClient webClient, long checkTimeout) {
+		return webClient.post().uri(URI.create(url)).accept(mediaType).contentType(mediaType).bodyValue(json).retrieve()
+				.toBodilessEntity().timeout(Duration.ofMillis(checkTimeout));
 	}
 
 	@Override

@@ -134,7 +134,8 @@ abstract class AbstractSenderTest {
 
 		final Sender sender = jsonSender();
 		CheckResult checkResult = sender.check();
-		assertThat(checkResult.ok()).isTrue();
+		assertThat(checkResult.ok()).isFalse();
+		assertThat(checkResult.error()).hasMessageContaining("Connection refused");
 	}
 
 	@Test
@@ -177,7 +178,8 @@ abstract class AbstractSenderTest {
 
 		CheckResult checkResult = sender.check();
 
-		assertThat(checkResult.ok()).isTrue();
+		assertThat(checkResult.ok()).isFalse();
+		assertThat(checkResult.error()).hasMessageContaining("TimeoutException");
 
 		server.shutdown();
 	}

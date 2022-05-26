@@ -47,15 +47,10 @@ public class RestTemplateSender extends HttpSender {
 	}
 
 	private static void post(String url, MediaType mediaType, byte[] json, RestTemplate restTemplate) {
-		try {
-			HttpHeaders httpHeaders = new HttpHeaders();
-			httpHeaders.setContentType(mediaType);
-			RequestEntity<byte[]> requestEntity = new RequestEntity<>(json, httpHeaders, HttpMethod.POST, URI.create(url));
-			restTemplate.exchange(requestEntity, String.class);
-		} catch(Throwable e) {
-			logger.warn("Unable to send trace data: {}", e.getMessage());
-		}
-
+		HttpHeaders httpHeaders = new HttpHeaders();
+		httpHeaders.setContentType(mediaType);
+		RequestEntity<byte[]> requestEntity = new RequestEntity<>(json, httpHeaders, HttpMethod.POST, URI.create(url));
+		restTemplate.exchange(requestEntity, String.class);
 	}
 
 	@Override

@@ -30,19 +30,19 @@ class WebClientSenderTests extends AbstractSenderTest {
 
 	@Override
 	Sender jsonSender() {
-		return new WebClientSender(WebClient.builder().clientConnector(new ReactorClientHttpConnector()).build(),
+		return new WebClientSender(WebClient.builder().clientConnector(new ReactorClientHttpConnector()).build(), null,
 				this.endpoint, null, JSON_V2, DEFAULT_CHECK_TIMEOUT);
 	}
 
 	@Override
 	Sender jsonSender(String mockedApiPath) {
-		return new WebClientSender(WebClient.builder().clientConnector(new ReactorClientHttpConnector()).build(),
+		return new WebClientSender(WebClient.builder().clientConnector(new ReactorClientHttpConnector()).build(), null,
 				this.endpoint, mockedApiPath, JSON_V2, DEFAULT_CHECK_TIMEOUT);
 	}
 
 	@Override
 	Sender protoSender() {
-		return new WebClientSender(WebClient.builder().clientConnector(new ReactorClientHttpConnector()).build(),
+		return new WebClientSender(WebClient.builder().clientConnector(new ReactorClientHttpConnector()).build(), null,
 				this.endpoint, "", PROTO3, DEFAULT_CHECK_TIMEOUT);
 	}
 
