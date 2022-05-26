@@ -19,6 +19,9 @@ package org.springframework.cloud.sleuth.zipkin2;
 import java.net.URI;
 import java.time.Duration;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import reactor.core.publisher.Mono;
 import zipkin2.Span;
 import zipkin2.codec.BytesEncoder;
 import zipkin2.reporter.Sender;
@@ -32,6 +35,8 @@ import org.springframework.web.reactive.function.client.WebClient;
  * @since 3.1.0
  */
 public class WebClientSender extends HttpSender {
+
+	private static final Logger logger = LoggerFactory.getLogger(WebClientSender.class);
 
 	private static final long DEFAULT_CHECK_TIMEOUT = 1_000L;
 
@@ -66,7 +71,10 @@ public class WebClientSender extends HttpSender {
 
 	private static void post(String url, MediaType mediaType, byte[] json, WebClient webClient, long checkTimeout) {
 		webClient.post().uri(URI.create(url)).accept(mediaType).contentType(mediaType).bodyValue(json).retrieve()
-				.toBodilessEntity().timeout(Duration.ofMillis(checkTimeout)).block();
+				.toBodilessEntity().timeout(Duration.ofMillis(checkTimeout)).onErrorResume(error -> {
+					logger.warn("Unable to send trace data: {}", error.getMessage());
+					return Mono.empty();
+				}).block();
 	}
 
 	@Override
