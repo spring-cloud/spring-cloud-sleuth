@@ -32,7 +32,8 @@
 		<main.basedir>${basedir}/..</main.basedir>
 		<configprops.inclusionPattern>spring.sleuth.*|spring.zipkin.*</configprops.inclusionPattern>
 		<upload-docs-zip.phase>deploy</upload-docs-zip.phase>
-
+		<!-- Don't upload docs jar to central / repo.spring.io -->
+		<maven-deploy-plugin-default.phase>none</maven-deploy-plugin-default.phase>
 		<!-- Tag generation script -->
 		<roaster.version>2.22.3.Final</roaster.version>
 		<module.inclusionPattern>.*/spring-cloud-sleuth-instrumentation/.*|.*/spring-cloud-sleuth-brave/.*</module.inclusionPattern>
