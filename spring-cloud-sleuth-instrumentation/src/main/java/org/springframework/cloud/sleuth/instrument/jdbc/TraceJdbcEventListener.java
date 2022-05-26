@@ -28,6 +28,7 @@ import com.p6spy.engine.common.StatementInformation;
 import com.p6spy.engine.event.SimpleJdbcEventListener;
 
 import org.springframework.beans.factory.BeanFactory;
+import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.core.Ordered;
 import org.springframework.util.StringUtils;
 
@@ -49,6 +50,14 @@ public class TraceJdbcEventListener extends SimpleJdbcEventListener implements O
 	private final TraceListenerStrategy<ConnectionInformation, StatementInformation, ResultSetInformation> strategy;
 
 	private final boolean includeParameterValues;
+
+	public TraceJdbcEventListener(Tracer tracer, DataSourceNameResolver dataSourceNameResolver,
+			List<TraceType> traceTypes, boolean includeParameterValues,
+			List<TraceListenerStrategySpanCustomizer<? super CommonDataSource>> customizers) {
+		this.dataSourceNameResolver = dataSourceNameResolver;
+		this.includeParameterValues = includeParameterValues;
+		this.strategy = new TraceListenerStrategy<>(tracer, traceTypes, customizers);
+	}
 
 	public TraceJdbcEventListener(BeanFactory beanFactory, DataSourceNameResolver dataSourceNameResolver,
 			List<TraceType> traceTypes, boolean includeParameterValues,

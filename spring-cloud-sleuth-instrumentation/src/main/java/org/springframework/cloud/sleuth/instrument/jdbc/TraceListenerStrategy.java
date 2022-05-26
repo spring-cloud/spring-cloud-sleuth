@@ -83,9 +83,16 @@ class TraceListenerStrategy<CON, STMT, RS> {
 
 	private final List<TraceListenerStrategySpanCustomizer<? super CommonDataSource>> customizers;
 
-	private final BeanFactory beanFactory;
+	private BeanFactory beanFactory;
 
 	private Tracer tracer;
+
+	TraceListenerStrategy(Tracer tracer, List<TraceType> traceTypes,
+			List<TraceListenerStrategySpanCustomizer<? super CommonDataSource>> customizers) {
+		this.traceTypes = traceTypes;
+		this.customizers = customizers;
+		this.tracer = tracer;
+	}
 
 	TraceListenerStrategy(BeanFactory beanFactory, List<TraceType> traceTypes,
 			List<TraceListenerStrategySpanCustomizer<? super CommonDataSource>> customizers) {
