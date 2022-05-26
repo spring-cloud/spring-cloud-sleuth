@@ -16,20 +16,17 @@
 
 package org.springframework.cloud.sleuth.zipkin2;
 
-import java.net.URI;
-import java.time.Duration;
-import java.util.function.Function;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
 import zipkin2.Span;
 import zipkin2.codec.BytesEncoder;
 import zipkin2.reporter.Sender;
 
-import org.springframework.http.MediaType;
-import org.springframework.web.reactive.function.client.WebClient;
+import java.net.URI;
+import java.time.Duration;
+import java.util.function.Function;
 
 /**
  * {@link Sender} that uses {@link WebClient} to send spans to Zipkin.
@@ -37,9 +34,6 @@ import org.springframework.web.reactive.function.client.WebClient;
  * @since 3.1.0
  */
 public class WebClientSender extends HttpSender {
-
-	private static final Logger logger = LoggerFactory.getLogger(WebClientSender.class);
-
 	private static final long DEFAULT_CHECK_TIMEOUT = 1_000L;
 
 	/**

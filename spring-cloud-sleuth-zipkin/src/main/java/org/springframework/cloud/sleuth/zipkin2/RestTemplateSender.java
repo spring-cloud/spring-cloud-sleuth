@@ -16,8 +16,6 @@
 
 package org.springframework.cloud.sleuth.zipkin2;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
@@ -35,8 +33,6 @@ import java.net.URI;
  * @since 3.0.0
  */
 public class RestTemplateSender extends HttpSender {
-	private static final Logger logger = LoggerFactory.getLogger(RestTemplateSender.class);
-
 	@Deprecated
 	public RestTemplateSender(RestTemplate restTemplate, String baseUrl, BytesEncoder<Span> encoder) {
 		this(restTemplate, baseUrl, "", encoder);
