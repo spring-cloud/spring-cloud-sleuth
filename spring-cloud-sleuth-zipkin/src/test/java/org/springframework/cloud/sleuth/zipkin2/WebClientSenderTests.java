@@ -16,11 +16,17 @@
 
 package org.springframework.cloud.sleuth.zipkin2;
 
+import java.io.IOException;
+
+import org.junit.jupiter.api.Test;
+import reactor.core.publisher.Mono;
+import zipkin2.CheckResult;
 import zipkin2.reporter.Sender;
 
 import org.springframework.http.client.reactive.ReactorClientHttpConnector;
 import org.springframework.web.reactive.function.client.WebClient;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static zipkin2.codec.SpanBytesEncoder.JSON_V2;
 import static zipkin2.codec.SpanBytesEncoder.PROTO3;
 
@@ -57,6 +63,17 @@ class WebClientSenderTests extends AbstractSenderTest {
 			return "WebClientSender{" + this.endpoint + "}";
 		}
 		return "WebClientSender{" + this.endpoint + mockedApiPath + "}";
+	}
+
+	@Test
+	void customFunctionToResumeAfterError() throws IOException {
+		WebClientSender sender = new WebClientSender((response) -> response.onErrorResume((error) -> Mono.empty()),
+				WebClient.builder().clientConnector(new ReactorClientHttpConnector()).build(), this.endpoint, "",
+				PROTO3, DEFAULT_CHECK_TIMEOUT);
+
+		this.server.shutdown();
+		CheckResult result = sender.check();
+		assertThat(result.ok()).isTrue();
 	}
 
 }

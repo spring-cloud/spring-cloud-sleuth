@@ -18,12 +18,15 @@ package org.springframework.cloud.sleuth.zipkin2;
 
 import java.net.URI;
 import java.time.Duration;
+import java.util.function.Function;
 
+import reactor.core.publisher.Mono;
 import zipkin2.Span;
 import zipkin2.codec.BytesEncoder;
 import zipkin2.reporter.Sender;
 
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.reactive.function.client.WebClient;
 
 /**
@@ -47,7 +50,7 @@ public class WebClientSender extends HttpSender {
 	 */
 	@Deprecated
 	public WebClientSender(WebClient webClient, String baseUrl, String apiPath, BytesEncoder<Span> encoder) {
-		this(webClient, baseUrl, apiPath, encoder, DEFAULT_CHECK_TIMEOUT);
+		this(null, webClient, baseUrl, apiPath, encoder, DEFAULT_CHECK_TIMEOUT);
 	}
 
 	/**
@@ -60,13 +63,35 @@ public class WebClientSender extends HttpSender {
 	 */
 	public WebClientSender(WebClient webClient, String baseUrl, String apiPath, BytesEncoder<Span> encoder,
 			long checkTimeout) {
-		super((url, mediaType, bytes) -> post(url, mediaType, bytes, webClient, checkTimeout), baseUrl, apiPath,
-				encoder);
+		super((url, mediaType, bytes) -> post(null, url, mediaType, bytes, webClient, checkTimeout).block(), baseUrl,
+				apiPath, encoder);
 	}
 
-	private static void post(String url, MediaType mediaType, byte[] json, WebClient webClient, long checkTimeout) {
-		webClient.post().uri(URI.create(url)).accept(mediaType).contentType(mediaType).bodyValue(json).retrieve()
-				.toBodilessEntity().timeout(Duration.ofMillis(checkTimeout)).block();
+	/**
+	 * Creates a new instance of {@link WebClientSender}.
+	 * @param webClient web client
+	 * @param wrapperFunction function that will be run on onErrorResume. Send in null to
+	 * get default behavior.
+	 * @param baseUrl base url
+	 * @param apiPath api path
+	 * @param encoder encoder
+	 * @param checkTimeout check timeout
+	 */
+	public WebClientSender(Function<Mono<ResponseEntity<Void>>, Mono<ResponseEntity<Void>>> wrapperFunction,
+			WebClient webClient, String baseUrl, String apiPath, BytesEncoder<Span> encoder, long checkTimeout) {
+		super((url, mediaType, bytes) -> post(wrapperFunction, url, mediaType, bytes, webClient, checkTimeout).block(),
+				baseUrl, apiPath, encoder);
+	}
+
+	private static Mono<ResponseEntity<Void>> post(
+			Function<Mono<ResponseEntity<Void>>, Mono<ResponseEntity<Void>>> wrapperFunction, String url,
+			MediaType mediaType, byte[] json, WebClient webClient, long checkTimeout) {
+		if (wrapperFunction == null) {
+			wrapperFunction = (response) -> response;
+		}
+
+		return wrapperFunction.apply(webClient.post().uri(URI.create(url)).accept(mediaType).contentType(mediaType)
+				.bodyValue(json).retrieve().toBodilessEntity().timeout(Duration.ofMillis(checkTimeout)));
 	}
 
 	@Override
