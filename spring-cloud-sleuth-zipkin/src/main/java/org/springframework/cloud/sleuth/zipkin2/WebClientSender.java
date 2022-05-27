@@ -46,7 +46,7 @@ public class WebClientSender extends HttpSender {
 	 * @param apiPath api path
 	 * @param encoder encoder
 	 * @deprecated use
-	 * {@link WebClientSender#WebClientSender(Function, WebClient, String, String, BytesEncoder, long)}
+	 * {@link WebClientSender#WebClientSender(WebClient, String, String, BytesEncoder, long)}
 	 */
 	@Deprecated
 	public WebClientSender(WebClient webClient, String baseUrl, String apiPath, BytesEncoder<Span> encoder) {
