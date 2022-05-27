@@ -16,16 +16,17 @@
 
 package org.springframework.cloud.sleuth.zipkin2;
 
+import java.net.URI;
+
+import zipkin2.Span;
+import zipkin2.codec.BytesEncoder;
+import zipkin2.reporter.Sender;
+
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.http.RequestEntity;
 import org.springframework.web.client.RestTemplate;
-import zipkin2.Span;
-import zipkin2.codec.BytesEncoder;
-import zipkin2.reporter.Sender;
-
-import java.net.URI;
 
 /**
  * {@link Sender} that uses {@link RestTemplate} to send spans to Zipkin.
@@ -33,6 +34,7 @@ import java.net.URI;
  * @since 3.0.0
  */
 public class RestTemplateSender extends HttpSender {
+
 	@Deprecated
 	public RestTemplateSender(RestTemplate restTemplate, String baseUrl, BytesEncoder<Span> encoder) {
 		this(restTemplate, baseUrl, "", encoder);
