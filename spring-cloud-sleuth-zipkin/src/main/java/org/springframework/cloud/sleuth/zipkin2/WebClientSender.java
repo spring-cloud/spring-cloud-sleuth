@@ -40,7 +40,7 @@ public class WebClientSender extends HttpSender {
 
 	/**
 	 * Use
-	 * {@link WebClientSender#WebClientSender(Function, WebClient, String, String, BytesEncoder, long)}.
+	 * {@link WebClientSender#WebClientSender(WebClient, String, String, BytesEncoder, long)}.
 	 * @param webClient web client
 	 * @param baseUrl base url
 	 * @param apiPath api path
