@@ -28,7 +28,6 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
-import org.assertj.core.api.BDDAssertions;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -50,6 +49,7 @@ import org.springframework.cloud.sleuth.internal.SleuthContextListenerAccessor;
 import org.springframework.cloud.sleuth.test.TestTracingAwareSupplier;
 
 import static java.util.stream.Collectors.toList;
+import static org.assertj.core.api.BDDAssertions.then;
 
 @ExtendWith(MockitoExtension.class)
 public abstract class TraceableExecutorServiceTests implements TestTracingAwareSupplier {
@@ -61,7 +61,7 @@ public abstract class TraceableExecutorServiceTests implements TestTracingAwareS
 
 	ExecutorService executorService = Executors.newFixedThreadPool(3);
 
-	ExecutorService traceManagerableExecutorService;
+	TraceableExecutorService traceManagerableExecutorService;
 
 	SpanVerifyingRunnable spanVerifyingRunnable = new SpanVerifyingRunnable();
 
@@ -93,9 +93,8 @@ public abstract class TraceableExecutorServiceTests implements TestTracingAwareS
 			span.end();
 		}
 
-		BDDAssertions.then(this.spanVerifyingRunnable.traceIds.stream().distinct().collect(toList())).hasSize(1);
-		BDDAssertions.then(this.spanVerifyingRunnable.spanIds.stream().distinct().collect(toList()))
-				.hasSize(TOTAL_THREADS);
+		then(this.spanVerifyingRunnable.traceIds.stream().distinct().collect(toList())).hasSize(1);
+		then(this.spanVerifyingRunnable.spanIds.stream().distinct().collect(toList())).hasSize(TOTAL_THREADS);
 	}
 
 	@Test
@@ -150,7 +149,7 @@ public abstract class TraceableExecutorServiceTests implements TestTracingAwareS
 	private ArgumentMatcher<Collection<? extends Callable<Object>>> withSpanContinuingTraceCallablesOnly() {
 		return argument -> {
 			try {
-				BDDAssertions.then(argument).flatExtracting(Object::getClass)
+				then(argument).flatExtracting(Object::getClass)
 						.containsOnlyElementsOf(Collections.singletonList(TraceCallable.class));
 			}
 			catch (AssertionError e) {
@@ -180,8 +179,21 @@ public abstract class TraceableExecutorServiceTests implements TestTracingAwareS
 				"calculateTax"));
 		// end::completablefuture[]
 
-		BDDAssertions.then(completableFuture.get()).isEqualTo(1_000_000L);
-		BDDAssertions.then(this.tracer.currentSpan()).isNull();
+		then(completableFuture.get()).isEqualTo(1_000_000L);
+		then(this.tracer.currentSpan()).isNull();
+	}
+
+	@Test
+	public void should_remove_entries_from_cache_when_executor_service_shutsdown() throws Exception {
+		then(TraceableExecutorService.CACHE).doesNotContainKey(executorService);
+
+		TraceableExecutorService.wrap(beanFactory, executorService, "foo").shutdown();
+
+		then(TraceableExecutorService.CACHE).doesNotContainKey(executorService);
+
+		TraceableExecutorService.wrap(beanFactory, executorService, "foo").shutdownNow();
+
+		then(TraceableExecutorService.CACHE).doesNotContainKey(executorService);
 	}
 
 	@Test
@@ -194,8 +206,8 @@ public abstract class TraceableExecutorServiceTests implements TestTracingAwareS
 			return 1_000_000L;
 		}, new TraceableExecutorService(beanFactory, executorService, "calculateTax"));
 
-		BDDAssertions.then(completableFuture.get()).isEqualTo(1_000_000L);
-		BDDAssertions.then(this.tracer.currentSpan()).isNull();
+		then(completableFuture.get()).isEqualTo(1_000_000L);
+		then(this.tracer.currentSpan()).isNull();
 	}
 
 	private CompletableFuture<?>[] runnablesExecutedViaTraceManagerableExecutorService() {

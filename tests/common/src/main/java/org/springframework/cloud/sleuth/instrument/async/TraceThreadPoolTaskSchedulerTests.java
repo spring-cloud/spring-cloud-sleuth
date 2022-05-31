@@ -20,6 +20,7 @@ import java.sql.Date;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.RejectedExecutionHandler;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -66,6 +67,7 @@ public abstract class TraceThreadPoolTaskSchedulerTests implements TestTracingAw
 	@AfterEach
 	void clear() {
 		this.delegate.shutdown();
+		this.traceThreadPoolTaskExecutor.shutdown();
 	}
 
 	private BeanFactory beanFactory() {
@@ -81,7 +83,7 @@ public abstract class TraceThreadPoolTaskSchedulerTests implements TestTracingAw
 		Span span = tracerTest().tracing().tracer().nextSpan().name("foo");
 
 		try (Tracer.SpanInScope ws = tracerTest().tracing().tracer().withSpan(span.start())) {
-			this.traceThreadPoolTaskExecutor.initializeExecutor(new ThreadFactory() {
+			ExecutorService executorService = this.traceThreadPoolTaskExecutor.initializeExecutor(new ThreadFactory() {
 				@Override
 				public Thread newThread(Runnable r) {
 					return new Thread(r);
@@ -91,7 +93,9 @@ public abstract class TraceThreadPoolTaskSchedulerTests implements TestTracingAw
 				public void rejectedExecution(Runnable r, ThreadPoolExecutor executor) {
 
 				}
-			}).submit(aRunnable(executed, span)).get(1, TimeUnit.SECONDS);
+			});
+			executorService.submit(aRunnable(executed, span)).get(1, TimeUnit.SECONDS);
+			executorService.shutdown();
 		}
 		finally {
 			span.end();

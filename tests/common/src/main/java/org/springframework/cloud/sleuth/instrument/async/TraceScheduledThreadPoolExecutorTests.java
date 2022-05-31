@@ -64,6 +64,7 @@ public abstract class TraceScheduledThreadPoolExecutorTests implements TestTraci
 	@AfterEach
 	void clear() {
 		this.delegate.shutdown();
+		this.traceThreadPoolTaskExecutor.shutdown();
 	}
 
 	private BeanFactory beanFactory() {
