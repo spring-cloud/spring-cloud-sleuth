@@ -20,6 +20,7 @@ import java.util.Date;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.atomic.AtomicReference;
@@ -258,8 +259,8 @@ class AppConfig {
 		return new RestTemplate();
 	}
 
-	@Bean("taskScheduler")
-	public Executor myScheduler() {
+	@Bean(value = "taskScheduler", destroyMethod = "shutdown")
+	public ExecutorService myScheduler() {
 		return Executors.newSingleThreadExecutor();
 	}
 

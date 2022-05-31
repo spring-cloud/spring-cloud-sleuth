@@ -42,7 +42,7 @@ import org.springframework.cloud.sleuth.internal.ContextUtil;
 // public as most types in this package were documented for use
 public class TraceableExecutorService implements ExecutorService {
 
-	private static final Map<ExecutorService, TraceableExecutorService> CACHE = new ConcurrentHashMap<>();
+	static final Map<ExecutorService, TraceableExecutorService> CACHE = new ConcurrentHashMap<>();
 
 	final ExecutorService delegate;
 
@@ -93,12 +93,22 @@ public class TraceableExecutorService implements ExecutorService {
 
 	@Override
 	public void shutdown() {
-		this.delegate.shutdown();
+		try {
+			this.delegate.shutdown();
+		}
+		finally {
+			CACHE.remove(this.delegate);
+		}
 	}
 
 	@Override
 	public List<Runnable> shutdownNow() {
-		return this.delegate.shutdownNow();
+		try {
+			return this.delegate.shutdownNow();
+		}
+		finally {
+			CACHE.remove(this.delegate);
+		}
 	}
 
 	@Override
