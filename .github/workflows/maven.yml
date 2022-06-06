@@ -33,3 +33,25 @@ jobs:
             ${{ runner.os }}-maven-
       - name: Build with Maven
         run: ./mvnw clean install -B -U -Dhttp.keepAlive=false -Dmaven.wagon.http.pool=false
+
+  test_arm64: 
+     runs-on: ubuntu-latest
+     strategy:
+      matrix:
+        java: ["8"]
+      fail-fast: false
+     steps:
+      - uses: actions/checkout@v2
+      - name: Set up QEMU
+        id: qemu
+        uses: docker/setup-qemu-action@v1
+      - name: Install and Run tests
+        run: |
+               docker run --rm -v ${{ github.workspace }}:/ws:rw --workdir=/ws \
+               arm64v8/ubuntu:20.04 \
+               bash -exc 'apt-get update -y && \
+                apt-get install openjdk-8-jdk -y && \
+                export JAVA_HOME=/usr/lib/jvm/java-8-openjdk-arm64 && \
+                export PATH=$PATH:$JAVA_HOME/bin && \
+                echo $PATH && \
+                ./mvnw clean install -B -U -Dhttp.keepAlive=false -Dmaven.wagon.http.pool=false'
