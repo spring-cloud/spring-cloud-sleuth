@@ -29,6 +29,9 @@ import brave.propagation.TraceContextOrSamplingFlags;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
+import org.springframework.cloud.sleuth.instrument.web.servlet.HttpServletRequestWrapper;
+import org.springframework.mock.web.MockHttpServletRequest;
+
 import static java.util.Collections.singletonMap;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -104,6 +107,25 @@ class W3CBaggagePropagatorTest {
 
 		Map<String, String> baggageEntries = BaggageField.getAllValues(contextWithBaggage);
 		assertThat(baggageEntries).hasSize(1).containsEntry("key", "value2");
+	}
+
+	/**
+	 * We need to use {@link HttpServletRequestWrapper} for the carrier for this test,
+	 * since it is what combines the multiple baggage headers into one.
+	 */
+	@Test
+	void extract_multipleBaggageHeaders() {
+		MockHttpServletRequest mockRequest = new MockHttpServletRequest();
+		mockRequest.addHeader("baggage", "key1=value1;othermetadata");
+		mockRequest.addHeader("baggage", "key2=value2,key3=value3");
+		HttpServletRequestWrapper carrier = (HttpServletRequestWrapper) HttpServletRequestWrapper.create(mockRequest);
+
+		TraceContextOrSamplingFlags contextWithBaggage = propagator.contextWithBaggage(carrier, context(),
+				HttpServletRequestWrapper::header);
+
+		Map<String, String> baggageEntries = BaggageField.getAllValues(contextWithBaggage);
+		assertThat(baggageEntries).hasSize(3).containsEntry("key1", "value1").containsEntry("key2", "value2")
+				.containsEntry("key3", "value3");
 	}
 
 	@Test

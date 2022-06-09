@@ -18,6 +18,9 @@ package org.springframework.cloud.sleuth.instrument.web.servlet;
 
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Enumeration;
+import java.util.LinkedList;
+import java.util.List;
 
 import javax.servlet.RequestDispatcher;
 import javax.servlet.http.HttpServletRequest;
@@ -32,9 +35,15 @@ import org.springframework.lang.Nullable;
  * @since 5.10
  */
 // Public for use in sparkjava or other frameworks that re-use servlet types
-class HttpServletRequestWrapper implements HttpServerRequest {
+public class HttpServletRequestWrapper implements HttpServerRequest {
 
-	/** @since 5.10 */
+	private static final List<String> COMBINABLE_HEADERS = Collections.singletonList("baggage");
+
+	/**
+	 * Wraps the request in a tracing representation.
+	 * @param request http request
+	 * @return wrapped request
+	 */
 	public static HttpServerRequest create(HttpServletRequest request) {
 		return new HttpServletRequestWrapper(request);
 	}
@@ -86,6 +95,14 @@ class HttpServletRequestWrapper implements HttpServerRequest {
 
 	@Override
 	public String header(String name) {
+		if (COMBINABLE_HEADERS.contains(name)) {
+			LinkedList<String> headersList = new LinkedList<>();
+			Enumeration<String> headers = delegate.getHeaders(name);
+			while (headers.hasMoreElements()) {
+				headersList.add(headers.nextElement());
+			}
+			return headersList.size() != 0 ? String.join(",", headersList) : null;
+		}
 		return delegate.getHeader(name);
 	}
 
