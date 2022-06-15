@@ -16,7 +16,7 @@
 
 package org.springframework.cloud.sleuth.instrument.web;
 
-import java.util.concurrent.atomic.AtomicReference;
+import java.util.Optional;
 
 import reactor.core.publisher.Mono;
 
@@ -47,16 +47,15 @@ public class TraceHandlerFunction implements HandlerFunction {
 
 	@Override
 	public Mono<?> handle(ServerRequest serverRequest) {
-		AtomicReference<CurrentTraceContext.Scope> scope = new AtomicReference<>();
-		return Mono.just(scope)
-				.doFirst(() -> serverRequest.attribute(TraceWebFilter.TRACE_REQUEST_ATTR)
-						.ifPresent(span -> scope.set(currentTraceContext().maybeScope(((Span) span).context()))))
-				.flatMap(r -> this.delegate.handle(serverRequest)).doFinally(signalType -> {
-					CurrentTraceContext.Scope spanInScope = scope.get();
-					if (spanInScope != null) {
-						spanInScope.close();
-					}
-				});
+		Optional<Object> spanOptional = serverRequest.attribute(TraceWebFilter.TRACE_REQUEST_ATTR);
+		if (!spanOptional.isPresent()) {
+			return this.delegate.handle(serverRequest);
+		}
+		return Mono.justOrEmpty(spanOptional).cast(Span.class).flatMap((Span span) -> {
+			try (CurrentTraceContext.Scope scope = currentTraceContext().maybeScope(span.context())) {
+				return this.delegate.handle(serverRequest);
+			}
+		});
 	}
 
 	private CurrentTraceContext currentTraceContext() {
