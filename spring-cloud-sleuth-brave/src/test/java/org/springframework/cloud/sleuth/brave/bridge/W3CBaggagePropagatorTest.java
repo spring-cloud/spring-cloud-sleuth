@@ -110,8 +110,8 @@ class W3CBaggagePropagatorTest {
 	}
 
 	/**
-	 * We need to use {@link HttpServletRequestWrapper} for the carrier for this test, since it is what combines the
-	 * multiple baggage headers into one.
+	 * We need to use {@link HttpServletRequestWrapper} for the carrier for this test,
+	 * since it is what combines the multiple baggage headers into one.
 	 */
 	@Test
 	void extract_multipleBaggageHeaders() {
@@ -120,14 +120,11 @@ class W3CBaggagePropagatorTest {
 		mockRequest.addHeader("baggage", "key2=value2,key3=value3");
 		HttpServletRequestWrapper carrier = (HttpServletRequestWrapper) HttpServletRequestWrapper.create(mockRequest);
 
-		TraceContextOrSamplingFlags contextWithBaggage = propagator
-				.contextWithBaggage(carrier, context(), HttpServletRequestWrapper::header);
+		TraceContextOrSamplingFlags contextWithBaggage = propagator.contextWithBaggage(carrier, context(),
+				HttpServletRequestWrapper::header);
 
 		Map<String, String> baggageEntries = BaggageField.getAllValues(contextWithBaggage);
-		assertThat(baggageEntries)
-				.hasSize(3)
-				.containsEntry("key1", "value1")
-				.containsEntry("key2", "value2")
+		assertThat(baggageEntries).hasSize(3).containsEntry("key1", "value1").containsEntry("key2", "value2")
 				.containsEntry("key3", "value3");
 	}
 
