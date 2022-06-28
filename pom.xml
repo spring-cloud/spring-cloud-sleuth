@@ -80,6 +80,7 @@
 		<javax.resource-api.version>1.7.1</javax.resource-api.version>
 		<cglib-nodep.version>3.3.0</cglib-nodep.version>
 		<objenesis.version>3.0.1</objenesis.version>
+		<!-- Deprecated - reached EOL -->
 		<spring-security-oauth2.version>2.2.0.RELEASE</spring-security-oauth2.version>
 
 		<!-- Until we switch it to true in sc-build -->

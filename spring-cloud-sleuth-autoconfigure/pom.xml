@@ -153,6 +153,12 @@
 			<artifactId>spring-security-oauth2-autoconfigure</artifactId>
 			<optional>true</optional>
 		</dependency>
+		<dependency>
+			<groupId>org.springframework.security</groupId>
+			<artifactId>spring-security-oauth2-client</artifactId>
+			<optional>true</optional>
+		</dependency>
+
 
 		<!-- BRAVE -->
 		<dependency>
