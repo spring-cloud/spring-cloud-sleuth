@@ -44,19 +44,6 @@
 		<tag>HEAD</tag>
 	</scm>
 
-	<modules>
-		<module>spring-cloud-sleuth-dependencies</module>
-		<module>spring-cloud-sleuth-api</module>
-		<module>spring-cloud-sleuth-instrumentation</module>
-		<module>spring-cloud-sleuth-brave</module>
-		<module>spring-cloud-sleuth-autoconfigure</module>
-		<module>tests</module>
-		<module>spring-cloud-sleuth-zipkin</module>
-		<module>spring-cloud-starter-sleuth</module>
-		<module>spring-cloud-sleuth-samples</module>
-		<module>docs</module>
-	</modules>
-
 	<properties>
 		<maven.compiler.target>1.8</maven.compiler.target>
 		<maven.compiler.source>1.8</maven.compiler.source>
@@ -75,9 +62,9 @@
 		<spring-cloud-deployer.version>2.5.1</spring-cloud-deployer.version>
 		<brave.version>5.13.9</brave.version>
 		<opentracing.version>0.32.0</opentracing.version>
+		<!-- Deprecated - reached EOL -->
 		<spring-security-boot-autoconfigure.version>2.3.4.RELEASE</spring-security-boot-autoconfigure.version>
 		<spring-security-oauth2.version>2.2.0.RELEASE</spring-security-oauth2.version>
-		<spring-security-version>5.6.0</spring-security-version>
 		<disable.nohttp.checks>false</disable.nohttp.checks>
 		<okhttp.version>4.9.0</okhttp.version>
 		<mockwebserver.version>4.8.0</mockwebserver.version>
@@ -102,6 +89,19 @@
 		<testcontainers.version>1.15.3</testcontainers.version>
 		<build-helper-maven-plugin.version>3.2.0</build-helper-maven-plugin.version>
 	</properties>
+
+	<modules>
+		<module>spring-cloud-sleuth-dependencies</module>
+		<module>spring-cloud-sleuth-api</module>
+		<module>spring-cloud-sleuth-instrumentation</module>
+		<module>spring-cloud-sleuth-brave</module>
+		<module>spring-cloud-sleuth-autoconfigure</module>
+		<module>tests</module>
+		<module>spring-cloud-sleuth-zipkin</module>
+		<module>spring-cloud-starter-sleuth</module>
+		<module>spring-cloud-sleuth-samples</module>
+		<module>docs</module>
+	</modules>
 
 	<build>
 		<pluginManagement>
@@ -269,13 +269,6 @@
 				<version>${spring-cloud-deployer.version}</version>
 				<scope>import</scope>
 				<type>pom</type>
-			</dependency>
-			<dependency>
-				<groupId>org.springframework.security</groupId>
-				<artifactId>spring-security-bom</artifactId>
-				<version>${spring-security-version}</version>
-				<type>pom</type>
-				<scope>import</scope>
 			</dependency>
 			<dependency>
 				<groupId>org.springframework.security.oauth.boot</groupId>
