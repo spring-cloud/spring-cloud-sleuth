@@ -143,13 +143,16 @@ class TraceListenerStrategy<CON, STMT, RS> {
 			parseAndSetServerIpAndPort(connectionInfo, connection, dataSourceName);
 			if (connectionSpan != null) {
 				connectionSpan.getSpan().remoteServiceName(connectionInfo.remoteServiceName);
-				connectionSpan.getSpan().remoteIpAndPort(connectionInfo.url.getHost(), connectionInfo.url.getPort());
+				if (connectionInfo.url != null) {
+					connectionSpan.getSpan().remoteIpAndPort(connectionInfo.url.getHost(),
+							connectionInfo.url.getPort());
+				}
 			}
 		}
 		else if (t != null) {
 			this.openConnections.remove(connectionKey);
 			if (isCurrent(connectionInfo)) {
-				this.currentConnection.set(null);
+				this.currentConnection.remove();
 			}
 			if (connectionSpan != null) {
 				if (log.isTraceEnabled()) {
@@ -408,7 +411,7 @@ class TraceListenerStrategy<CON, STMT, RS> {
 		}
 		ConnectionInfo connectionInfo = this.openConnections.remove(connectionKey);
 		if (isCurrent(connectionInfo)) {
-			this.currentConnection.set(null);
+			this.currentConnection.remove();
 		}
 		if (connectionInfo == null) {
 			// connection is already closed
@@ -498,8 +501,10 @@ class TraceListenerStrategy<CON, STMT, RS> {
 
 		final Map<RS, SpanAndScope> nestedResultSetSpans = new ConcurrentHashMap<>();
 
+		@Nullable
 		URI url;
 
+		@Nullable
 		String remoteServiceName;
 
 		ConnectionInfo(@Nullable SpanAndScope span) {
