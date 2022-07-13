@@ -156,6 +156,50 @@ To block this feature, set `spring.sleuth.web.client.enabled` to `false`.
 IMPORTANT: You have to register `WebClient` as a bean so that the tracing instrumentation gets applied.
 If you create a `WebClient` instance with a `new` keyword, the instrumentation does NOT work.
 
+[[sleuht-http-client-logbook-with-webclient]]
+===== Logbook with WebClient
+
+In order to add support for Logbook with WebClient `org.zalando:logbook-spring-boot-webflux-autoconfigure` you need to add the following configuration. You can read more about this integration in https://github.com/spring-cloud/spring-cloud-sleuth/issues/1690[this issue].
+
+[source,java,indent=0]
+----
+@Configuration
+@Import(LogbookWebFluxAutoConfiguration.class)
+public class LogbookConfiguration {
+
+	@Bean
+	public LogstashLogbackSink logbackSink(final HttpLogFormatter formatter) {
+		return new LogstashLogbackSink(formatter);
+	}
+
+	@Bean
+	public CorrelationId correlationId(final Tracer tracer) {
+		return request -> requireNonNull(requireNonNull(tracer.currentSpan())).context().traceId();
+	}
+
+	@Bean
+	ReactorNettyHttpTracing reactorNettyHttpTracing(final HttpTracing httpTracing) {
+		return ReactorNettyHttpTracing.create(httpTracing);
+	}
+
+	@Bean
+	NettyServerCustomizer nettyServerCustomizer(final Logbook logbook,
+			final ReactorNettyHttpTracing reactorNettyHttpTracing) {
+		return server -> reactorNettyHttpTracing.decorateHttpServer(
+				server.doOnConnection(conn -> conn.addHandlerFirst(new LogbookServerHandler(logbook))));
+	}
+
+	@Bean
+	WebClient webClient(final Logbook logbook, final ReactorNettyHttpTracing reactorNettyHttpTracing) {
+		return WebClient.builder()
+				.clientConnector(new ReactorClientHttpConnector(reactorNettyHttpTracing.decorateHttpClient(HttpClient
+						.create().doOnConnected(conn -> conn.addHandlerLast(new LogbookClientHandler(logbook))))))
+				.build();
+	}
+
+}
+----
+
 [[sleuth-http-client-traverson-integration]]
 ==== Traverson
 
