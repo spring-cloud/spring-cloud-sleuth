@@ -36,6 +36,7 @@ import zipkin2.reporter.ReporterMetrics;
 import zipkin2.reporter.Sender;
 import zipkin2.reporter.metrics.micrometer.MicrometerReporterMetrics;
 
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
@@ -255,14 +256,73 @@ public class ZipkinAutoConfiguration {
 			@Bean
 			@ConditionalOnBean(MeterRegistry.class)
 			@ConditionalOnClass(name = "zipkin2.reporter.metrics.micrometer.MicrometerReporterMetrics")
-			ReporterMetrics sleuthMicrometerReporterMetrics(MeterRegistry meterRegistry) {
-				return MicrometerReporterMetrics.create(meterRegistry);
+			ReporterMetrics sleuthMicrometerReporterMetrics(ObjectProvider<MeterRegistry> meterRegistry) {
+				return new LazyMicrometerReporterMetrics(meterRegistry);
 			}
 
 			@Bean
 			@ConditionalOnMissingClass("zipkin2.reporter.metrics.micrometer.MicrometerReporterMetrics")
 			ReporterMetrics sleuthReporterMetrics() {
 				return new InMemoryReporterMetrics();
+			}
+
+			static class LazyMicrometerReporterMetrics implements ReporterMetrics {
+
+				private final ObjectProvider<MeterRegistry> objectProvider;
+
+				private ReporterMetrics micrometerReporterMetrics;
+
+				LazyMicrometerReporterMetrics(ObjectProvider<MeterRegistry> objectProvider) {
+					this.objectProvider = objectProvider;
+				}
+
+				private ReporterMetrics reporterMetrics() {
+					if (this.micrometerReporterMetrics == null) {
+						this.micrometerReporterMetrics = MicrometerReporterMetrics.create(objectProvider.getObject());
+					}
+					return this.micrometerReporterMetrics;
+				}
+
+				@Override
+				public void incrementMessages() {
+					reporterMetrics().incrementMessages();
+				}
+
+				@Override
+				public void incrementMessagesDropped(Throwable throwable) {
+					reporterMetrics().incrementMessagesDropped(throwable);
+				}
+
+				@Override
+				public void incrementSpans(int i) {
+					reporterMetrics().incrementSpans(i);
+				}
+
+				@Override
+				public void incrementSpanBytes(int i) {
+					reporterMetrics().incrementSpanBytes(i);
+				}
+
+				@Override
+				public void incrementMessageBytes(int i) {
+					reporterMetrics().incrementMessageBytes(i);
+				}
+
+				@Override
+				public void incrementSpansDropped(int i) {
+					reporterMetrics().incrementSpansDropped(i);
+				}
+
+				@Override
+				public void updateQueuedSpans(int i) {
+					reporterMetrics().updateQueuedSpans(i);
+				}
+
+				@Override
+				public void updateQueuedBytes(int i) {
+					reporterMetrics().updateQueuedBytes(i);
+				}
+
 			}
 
 		}
