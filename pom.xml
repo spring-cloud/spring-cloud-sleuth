@@ -55,7 +55,7 @@
 		<spring-cloud-config.version>3.1.4-SNAPSHOT</spring-cloud-config.version>
 		<spring-cloud-circuitbreaker.version>2.1.4-SNAPSHOT</spring-cloud-circuitbreaker.version>
 		<spring-cloud-stream.version>3.2.5-SNAPSHOT</spring-cloud-stream.version>
-		<spring-cloud-function.version>3.2.6-SNAPSHOT</spring-cloud-function.version>
+		<spring-cloud-function.version>3.2.7-SNAPSHOT</spring-cloud-function.version>
 		<spring-cloud-netflix.version>3.1.4-SNAPSHOT</spring-cloud-netflix.version>
 		<spring-cloud-openfeign.version>3.1.4-SNAPSHOT</spring-cloud-openfeign.version>
 		<spring-cloud-task.version>2.4.4-SNAPSHOT</spring-cloud-task.version>
