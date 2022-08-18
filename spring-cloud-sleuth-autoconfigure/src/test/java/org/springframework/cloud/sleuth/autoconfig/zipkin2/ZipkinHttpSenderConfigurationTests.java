@@ -47,7 +47,6 @@ class ZipkinHttpSenderConfigurationTests {
 
 		boolean customizerCalled;
 
-
 		// tag::provider[]
 		@Bean
 		ZipkinRestTemplateProvider myZipkinRestTemplateProvider() {
