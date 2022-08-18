@@ -47,22 +47,30 @@ class ZipkinHttpSenderConfigurationTests {
 
 		boolean customizerCalled;
 
+
+		// tag::provider[]
 		@Bean
 		ZipkinRestTemplateProvider myZipkinRestTemplateProvider() {
 			return MyRestTemplate::new;
 		}
+		// end::provider[]
 
+		// tag::customizer_1[]
 		@Bean
 		ZipkinRestTemplateCustomizer myZipkinRestTemplateCustomizer() {
 			return new ZipkinRestTemplateCustomizer() {
 				@Override
 				public RestTemplate customizeTemplate(RestTemplate restTemplate) {
+					// end::customizer_1[]
 					customizerCalled = true;
 					BDDAssertions.then(restTemplate).isInstanceOf(MyRestTemplate.class);
+					// tag::customizer_2[]
+					// customize the RestTemplate
 					return restTemplate;
 				}
 			};
 		}
+		// end::customizer_2[]
 
 	}
 

@@ -288,21 +288,12 @@ spring.zipkin.sender.type: web
 
 If you're running a non-reactive application we will use a `RestTemplate` based span sender. Otherwise a `WebClient` based span sender will be chosen.
 
-To customize the `RestTemplate` that sends spans to Zipkin via HTTP, you can register the `ZipkinRestTemplateCustomizer` bean.
+To customize the `RestTemplate` that sends spans to Zipkin via HTTP, you can register the `ZipkinRestTemplateCustomizer` bean in your `@Configuration` annotated Spring configuration class.
 
 [source,java,indent=0]
 ----
-@Configuration(proxyBeanMethods = false)
-	class MyConfig {
-	@Bean ZipkinRestTemplateCustomizer myCustomizer() {
-		return new ZipkinRestTemplateCustomizer() {
-			@Override
-			void customize(RestTemplate restTemplate) {
-				// customize the RestTemplate
-			}
-		};
-	}
-}
+include::{autoconfig_path}/src/test/java/org/springframework/cloud/sleuth/autoconfig/zipkin2/ZipkinHttpSenderConfigurationTests.java[tags=customizer_1,indent=0]
+include::{autoconfig_path}/src/test/java/org/springframework/cloud/sleuth/autoconfig/zipkin2/ZipkinHttpSenderConfigurationTests.java[tags=customizer_2,indent=0]
 ----
 
 If, however, you would like to control the full process of creating the `RestTemplate`
@@ -310,10 +301,7 @@ object, you will have to create a bean of `ZipkinRestTemplateProvider` type.
 
 [source,java,indent=0]
 ----
-	@Bean
-	ZipkinRestTemplateProvider myZipkinRestTemplateProvider() {
-		return MyRestTemplate::new;
-	}
+include::{autoconfig_path}/src/test/java/org/springframework/cloud/sleuth/autoconfig/zipkin2/ZipkinHttpSenderConfigurationTests.java[tags=provider,indent=0]
 ----
 
 By default, api path will be set to `api/v2/spans` or `api/v1/spans` depending on the encoder version. If you want to use a custom api path, you can configure it using the following property (empty case, set ""):
