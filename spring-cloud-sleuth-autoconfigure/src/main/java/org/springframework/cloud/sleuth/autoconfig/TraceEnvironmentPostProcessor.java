@@ -44,7 +44,7 @@ class TraceEnvironmentPostProcessor implements EnvironmentPostProcessor {
 		// This doesn't work with all logging systems but it's a useful default so you see
 		// traces in logs without having to configure it.
 		if (Boolean.parseBoolean(environment.getProperty("spring.sleuth.enabled", "true"))) {
-			if (!Boolean
+			if (Boolean
 					.parseBoolean(environment.getProperty("spring.sleuth.default-logging-pattern-enabled", "true"))) {
 				map.put("logging.pattern.level", "%5p [${spring.zipkin.service.name:"
 						+ "${spring.application.name:}},%X{traceId:-},%X{spanId:-}]");
