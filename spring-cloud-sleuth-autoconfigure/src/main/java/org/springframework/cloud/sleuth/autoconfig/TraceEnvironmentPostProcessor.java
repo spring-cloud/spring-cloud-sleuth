@@ -44,8 +44,11 @@ class TraceEnvironmentPostProcessor implements EnvironmentPostProcessor {
 		// This doesn't work with all logging systems but it's a useful default so you see
 		// traces in logs without having to configure it.
 		if (Boolean.parseBoolean(environment.getProperty("spring.sleuth.enabled", "true"))) {
-			map.put("logging.pattern.level",
-					"%5p [${spring.zipkin.service.name:" + "${spring.application.name:}},%X{traceId:-},%X{spanId:-}]");
+			if (!Boolean
+					.parseBoolean(environment.getProperty("spring.sleuth.default-logging-pattern-enabled", "true"))) {
+				map.put("logging.pattern.level", "%5p [${spring.zipkin.service.name:"
+						+ "${spring.application.name:}},%X{traceId:-},%X{spanId:-}]");
+			}
 			String neverRefereshables = environment.getProperty("spring.cloud.refresh.never-refreshable",
 					"com.zaxxer.hikari.HikariDataSource");
 			map.put("spring.cloud.refresh.never-refreshable",
