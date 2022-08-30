@@ -54,4 +54,14 @@ class TraceEnvironmentPostProcessorTests {
 				"com.zaxxer.hikari.HikariDataSource,org.springframework.cloud.sleuth.instrument.jdbc.DataSourceWrapper");
 	}
 
+	@Test
+	void should_not_set_logging_pattern_level_when_config_is_disabled() {
+		this.mockEnvironment.setProperty("spring.sleuth.enabled", "true");
+		this.mockEnvironment.setProperty("spring.sleuth.default-logging-pattern-enabled", "false");
+
+		new TraceEnvironmentPostProcessor().postProcessEnvironment(this.mockEnvironment, null);
+
+		then(this.mockEnvironment.getProperty("logging.pattern.level")).isNullOrEmpty();
+	}
+
 }
