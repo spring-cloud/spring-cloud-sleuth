@@ -65,7 +65,10 @@ class KotlinContextElement implements ThreadContextElement<SpanAndScope> {
 
 	@Override
 	public void restoreThreadContext(CoroutineContext coroutineContext, SpanAndScope spanAndScope) {
-		spanAndScope.close();
+		Tracer.SpanInScope scope = spanAndScope.getScope();
+		if (scope != null) {
+			scope.close();
+		}
 	}
 
 	@Override

@@ -29,6 +29,7 @@ import org.springframework.cloud.sleuth.Span
 import org.springframework.cloud.sleuth.TraceContext
 import org.springframework.cloud.sleuth.Tracer
 import org.springframework.cloud.sleuth.tracer.SimpleCurrentTraceContext
+import org.springframework.cloud.sleuth.tracer.SimpleSpan
 import org.springframework.cloud.sleuth.tracer.SimpleTracer
 import reactor.util.context.Context
 
@@ -45,15 +46,19 @@ internal class AsContextElementKtTests {
 
 		GlobalScope.launch(asContextElement) {
 			spanInGlobalScopeLaunch = coroutineContext.currentSpan()
+			then((spanInGlobalScopeLaunch as SimpleSpan).ended).isFalse()
 		}
 		GlobalScope.async(asContextElement) {
 			spanInGlobalScopeAsync = coroutineContext.currentSpan()
+			then((spanInGlobalScopeAsync as SimpleSpan).ended).isFalse()
 		}.await()
 
 		inScope.close();
 
 		then(spanInGlobalScopeLaunch).isSameAs(nextSpan)
 		then(spanInGlobalScopeAsync).isSameAs(nextSpan)
+		then((spanInGlobalScopeLaunch as SimpleSpan).ended).isFalse()
+		then((spanInGlobalScopeAsync as SimpleSpan).ended).isFalse()
 	}
 
 	@Test
