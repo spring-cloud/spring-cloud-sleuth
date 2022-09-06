@@ -20,12 +20,12 @@
   <parent>
     <groupId>org.springframework.cloud</groupId>
     <artifactId>spring-cloud-dependencies-parent</artifactId>
-    <version>3.1.3</version>
+    <version>3.1.4</version>
     <relativePath></relativePath>
   </parent>
   <groupId>org.springframework.cloud</groupId>
   <artifactId>spring-cloud-sleuth-dependencies</artifactId>
-  <version>3.1.3</version>
+  <version>3.1.4</version>
   <packaging>pom</packaging>
   <name>spring-cloud-sleuth-dependencies</name>
   <description>Spring Cloud Sleuth Dependencies</description>
@@ -95,7 +95,7 @@
     </snapshotRepository>
     <site>
       <id>spring-docs</id>
-      <url>https:/docs.spring.io/spring-cloud-dependencies-parent/docs/3.1.3/reference/html/spring-cloud-sleuth-dependencies/</url>
+      <url>https:/docs.spring.io/spring-cloud-dependencies-parent/docs/3.1.4/reference/html/spring-cloud-sleuth-dependencies/</url>
     </site>
     <downloadUrl>https://github.com/spring-cloud</downloadUrl>
   </distributionManagement>
