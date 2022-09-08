@@ -173,6 +173,11 @@ public class LazyTraceThreadPoolTaskExecutor extends ThreadPoolTaskExecutor {
 	}
 
 	@Override
+	public int getQueueCapacity() {
+		return this.delegate.getQueueCapacity();
+	}
+
+	@Override
 	public void destroy() {
 		this.delegate.destroy();
 		super.destroy();
