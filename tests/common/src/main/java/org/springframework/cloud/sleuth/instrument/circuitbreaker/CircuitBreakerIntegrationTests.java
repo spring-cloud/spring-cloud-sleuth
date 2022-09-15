@@ -18,6 +18,8 @@ package org.springframework.cloud.sleuth.instrument.circuitbreaker;
 
 import java.util.concurrent.atomic.AtomicReference;
 
+import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
+import io.github.resilience4j.timelimiter.TimeLimiterRegistry;
 import org.assertj.core.api.BDDAssertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -116,7 +118,7 @@ public abstract class CircuitBreakerIntegrationTests {
 
 		@Bean
 		Resilience4JCircuitBreakerFactory resilience4JCircuitBreakerFactory() {
-			return new Resilience4JCircuitBreakerFactory();
+			return new Resilience4JCircuitBreakerFactory(CircuitBreakerRegistry.ofDefaults(), TimeLimiterRegistry.ofDefaults(), null);
 		}
 
 	}

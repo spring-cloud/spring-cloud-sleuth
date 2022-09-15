@@ -18,6 +18,8 @@ package org.springframework.cloud.sleuth.instrument.circuitbreaker;
 
 import java.util.concurrent.atomic.AtomicReference;
 
+import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
+import io.github.resilience4j.timelimiter.TimeLimiterRegistry;
 import org.assertj.core.api.BDDAssertions;
 import org.junit.jupiter.api.Test;
 
@@ -38,7 +40,7 @@ public abstract class CircuitBreakerTests implements TestTracingAwareSupplier {
 		try {
 			scopedSpan = tracer.startScopedSpan("start");
 			// when
-			Span span = new Resilience4JCircuitBreakerFactory().create("name")
+			Span span = new Resilience4JCircuitBreakerFactory(CircuitBreakerRegistry.ofDefaults(), TimeLimiterRegistry.ofDefaults(), null).create("name")
 					.run(new TraceSupplier<>(tracerTest().tracing().tracer(), tracer::currentSpan));
 
 			BDDAssertions.then(span).isNotNull();
@@ -59,7 +61,7 @@ public abstract class CircuitBreakerTests implements TestTracingAwareSupplier {
 		try {
 			scopedSpan = tracer.startScopedSpan("start");
 			// when
-			BDDAssertions.thenThrownBy(() -> new Resilience4JCircuitBreakerFactory().create("name")
+			BDDAssertions.thenThrownBy(() -> new Resilience4JCircuitBreakerFactory(CircuitBreakerRegistry.ofDefaults(), TimeLimiterRegistry.ofDefaults(), null).create("name")
 					.run(new TraceSupplier<>(tracerTest().tracing().tracer(), () -> {
 						first.set(tracer.currentSpan());
 						throw new IllegalStateException("boom");
