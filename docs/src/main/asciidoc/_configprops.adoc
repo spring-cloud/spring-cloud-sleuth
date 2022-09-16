@@ -13,6 +13,7 @@
 |spring.sleuth.cassandra.enabled | `+++true+++` | Enable Cassandra instrumentation.
 |spring.sleuth.circuitbreaker.enabled | `+++true+++` | Enable Spring Cloud CircuitBreaker instrumentation.
 |spring.sleuth.config.server.enabled | `+++true+++` | Enable Spring Cloud Config Server instrumentation.
+|spring.sleuth.default-logging-pattern-enabled | `+++true+++` | Override `logging.pattern.level` property to include trace and span ids.
 |spring.sleuth.deployer.enabled | `+++true+++` | Enable Spring Cloud Deployer instrumentation.
 |spring.sleuth.deployer.status-poll-delay | `+++500+++` | Default poll delay to retrieve the deployed application status.
 |spring.sleuth.enabled | `+++true+++` | 
