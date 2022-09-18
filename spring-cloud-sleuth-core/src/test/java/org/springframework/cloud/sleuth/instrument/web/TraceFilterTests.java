@@ -597,7 +597,7 @@ public class TraceFilterTests {
 		filter.doFilter(this.request, this.response, this.filterChain);
 
 		then(new ListOfSpans(this.spanReporter.getSpans()))
-				.hasASpanWithName("http:/")
+				.hasASpanWithName("GET http:/")
 				.hasASpanWithTagEqualTo("http.url", "http://localhost/?foo=bar")
 				.hasASpanWithTagEqualTo("http.host", "localhost")
 				.hasASpanWithTagEqualTo("http.path", "/")
@@ -620,7 +620,7 @@ public class TraceFilterTests {
 
 		then(new ListOfSpans(this.spanReporter.getSpans()))
 				.doesNotHaveASpanWithName("http:/parent/")
-				.hasASpanWithName("http:/")
+				.hasASpanWithName("GET http:/")
 				.hasSize(1)
 				.allSpansAreExportable();
 		then(TestSpanContextHolder.getCurrentSpan()).isNull();

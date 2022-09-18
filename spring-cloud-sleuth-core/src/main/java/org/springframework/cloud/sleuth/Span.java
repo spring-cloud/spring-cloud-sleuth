@@ -144,7 +144,7 @@ public class Span implements SpanContext {
 
 	private final long begin;
 	private long end = 0;
-	private final String name;
+	private String name;
 	private final long traceIdHigh;
 	private final long traceId;
 	private List<Long> parents = new ArrayList<>();
@@ -419,6 +419,10 @@ public class Span implements SpanContext {
 	 */
 	public String getName() {
 		return this.name;
+	}
+
+	public void setName(String name) {
+		this.name = name;
 	}
 
 	/**

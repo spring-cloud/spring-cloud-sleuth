@@ -48,6 +48,8 @@ import org.springframework.web.context.request.async.WebAsyncUtils;
 import org.springframework.web.filter.GenericFilterBean;
 import org.springframework.web.util.UrlPathHelper;
 
+import static org.springframework.web.servlet.HandlerMapping.BEST_MATCHING_PATTERN_ATTRIBUTE;
+
 /**
  * Filter that takes the value of the {@link Span#SPAN_ID_NAME} and
  * {@link Span#TRACE_ID_NAME} header from either request or response and uses them to
@@ -75,6 +77,7 @@ public class TraceFilter extends GenericFilterBean {
 	private static final Log log = LogFactory.getLog(MethodHandles.lookup().lookupClass());
 
 	private static final String HTTP_COMPONENT = "http";
+	private static final String URI_PATTERN = "%s %s:%s";
 
 	/**
 	 * If you register your filter before the {@link TraceFilter} then you will not
@@ -172,6 +175,15 @@ public class TraceFilter extends GenericFilterBean {
 			}
 			throw e;
 		} finally {
+			//fix for path-variable
+			if (spanFromRequest != null) {
+				String requestMethod = request.getMethod() != null ? request.getMethod() : "";
+				final Object requestAttribute = request.getAttribute(BEST_MATCHING_PATTERN_ATTRIBUTE);
+				String domain = requestAttribute != null ? (String) requestAttribute : "/";
+				String spanName = String.format(URI_PATTERN, requestMethod, HTTP_COMPONENT, domain);
+
+				spanFromRequest.setName(spanName);
+			}
 			if (isAsyncStarted(request) || request.isAsyncStarted()) {
 				if (log.isDebugEnabled()) {
 					log.debug("The span " + this.tracer.getCurrentSpan() + " will get detached");
