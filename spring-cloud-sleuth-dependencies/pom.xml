@@ -17,6 +17,7 @@
 		<zipkin.version>2.7.1</zipkin.version>
 		<zipkin-reporter.version>1.1.2</zipkin-reporter.version>
 		<zipkin-reporter2.version>2.5.0</zipkin-reporter2.version>
+		<maven.deploy.skip>false</maven.deploy.skip>
 	</properties>
 	<dependencyManagement>
 		<dependencies>
@@ -193,4 +194,17 @@
 			</pluginRepositories>
 		</profile>
 	</profiles>
+
+	<distributionManagement>
+		<repository>
+			<id>central</id>
+			<name>careem-releases</name>
+			<url>https://artifactory-pro.careem-internal.com/artifactory/libs-release-local</url>
+		</repository>
+		<snapshotRepository>
+			<id>snapshots</id>
+			<name>careem-snapshots</name>
+			<url>https://artifactory-pro.careem-internal.com/artifactory/libs-snapshot-local</url>
+		</snapshotRepository>
+	</distributionManagement>
 </project>

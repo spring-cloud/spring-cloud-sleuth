@@ -16,6 +16,10 @@
 		<relativePath>..</relativePath>
 	</parent>
 
+	<properties>
+		<maven.deploy.skip>true</maven.deploy.skip>
+	</properties>
+
 	<modules>
 		<module>spring-cloud-sleuth-sample</module>
 		<module>spring-cloud-sleuth-sample-test-core</module>

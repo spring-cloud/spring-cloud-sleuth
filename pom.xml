@@ -385,4 +385,17 @@
 		</profile>
 	</profiles>
 
+	<distributionManagement>
+		<repository>
+			<id>central</id>
+			<name>careem-releases</name>
+			<url>https://artifactory-pro.careem-internal.com/artifactory/libs-release-local</url>
+		</repository>
+		<snapshotRepository>
+			<id>snapshots</id>
+			<name>careem-snapshots</name>
+			<url>https://artifactory-pro.careem-internal.com/artifactory/libs-snapshot-local</url>
+		</snapshotRepository>
+	</distributionManagement>
+
 </project>
