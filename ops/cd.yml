@@ -1,0 +1,19 @@
+team: mobility-be-matching
+email: mobility_be_matching@careem.com
+slack: mobility-be-matching-notifications
+project: maven
+agent: pipeline-generator-agent
+source: bitbucket
+branch: master
+
+
+stages:
+  - deploy-to-artifactory
+
+
+jobs:
+  - name: deploy-to-artifactory
+    stage: deploy-to-artifactory
+    profile: qa
+    cmd: make deploy
+    branch: master
