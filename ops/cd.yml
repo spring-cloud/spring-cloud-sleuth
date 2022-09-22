@@ -16,4 +16,4 @@ jobs:
     stage: deploy-to-artifactory
     profile: qa
     cmd: make deploy
-    branch: master
+    branch: MARP-6182-fix-tracing-path-variable-parameters
