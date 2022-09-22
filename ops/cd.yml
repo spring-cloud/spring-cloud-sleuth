@@ -4,7 +4,7 @@ slack: mobility-be-matching-notifications
 project: maven
 agent: pipeline-generator-agent
 source: bitbucket
-branch: master
+branch: MARP-6182-fix-tracing-path-variable-parameters
 
 
 stages:
