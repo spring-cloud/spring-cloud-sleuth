@@ -143,7 +143,7 @@ enum SleuthJdbcSpan implements DocumentedSpan {
 	enum QueryEvents implements EventValue {
 
 		/**
-		 * When the transaction gets commited.
+		 * When the transaction gets committed.
 		 */
 		COMMIT {
 			@Override

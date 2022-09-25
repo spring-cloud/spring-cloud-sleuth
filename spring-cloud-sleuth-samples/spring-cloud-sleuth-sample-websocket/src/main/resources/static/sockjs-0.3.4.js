@@ -1452,7 +1452,7 @@ SockJS = (function () {
 // In theory, ws should require 1 round trip. But in chrome, this is
 // not very stable over SSL. Most likely a ws connection requires a
 // separate SSL connection, in which case 2 round trips are an
-// absolute minumum.
+// absolute minimum.
     WebSocketTransport.roundTrips = 2;
 //         [*] End of lib/trans-websocket.js
 
@@ -1881,7 +1881,7 @@ SockJS = (function () {
     XhrStreamingTransport.roundTrips = 2; // preflight, ajax
 
 // Safari gets confused when a streaming ajax request is started
-// before onload. This causes the load indicator to spin indefinetely.
+// before onload. This causes the load indicator to spin indefinitely.
     XhrStreamingTransport.need_body = true;
 
 
@@ -2082,7 +2082,7 @@ SockJS = (function () {
                     var trans_url = p[2];
                     var base_url = p[3];
                     if (version !== SockJS.version) {
-                        utils.log("Incompatibile SockJS! Main site uses:" +
+                        utils.log("Incompatible SockJS! Main site uses:" +
                             " \"" + version + "\", the iframe:" +
                             " \"" + SockJS.version + "\".");
                     }

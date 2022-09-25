@@ -354,7 +354,7 @@ IMPORTANT: All tags and events must be prefixed with `jdbc.` prefix!
 .Event Values
 |===
 |Name | Description
-|jdbc.commit|When the transaction gets commited.
+|jdbc.commit|When the transaction gets committed.
 |jdbc.rollback|When the transaction gets rolled back.
 |===
 
@@ -378,7 +378,7 @@ IMPORTANT: All tags and events must be prefixed with `jdbc.` prefix!
 .Event Values
 |===
 |Name | Description
-|jdbc.commit|When the transaction gets commited.
+|jdbc.commit|When the transaction gets committed.
 |jdbc.rollback|When the transaction gets rolled back.
 |===
 
