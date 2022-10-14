@@ -22,8 +22,6 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-import javax.annotation.PreDestroy;
-
 import io.micrometer.core.instrument.MeterRegistry;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -103,11 +101,6 @@ public class ZipkinAutoConfiguration {
 
 	private static final Log log = LogFactory.getLog(ZipkinAutoConfiguration.class);
 
-	@PreDestroy
-	void cleanup() {
-		this.zipkinExecutor.shutdown();
-	}
-
 	/** Limits {@link Sender#check()} to {@code deadlineMillis}. */
 	static CompletableFuture<CheckResult> checkResult(ExecutorService zipkinExecutor, Sender sender,
 			long deadlineMillis) {
@@ -124,6 +117,8 @@ public class ZipkinAutoConfiguration {
 				result = checkResult == null ? CheckResult.failed(exception) : checkResult;
 			}
 			logCheckResult(sender, result);
+			
+			zipkinExecutor.shutdown();
 		});
 	}
 
