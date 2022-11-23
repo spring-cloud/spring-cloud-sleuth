@@ -42,10 +42,12 @@ import org.springframework.core.annotation.AnnotationUtils;
 public class DefaultSpanNamer implements SpanNamer {
 
 	private static boolean isDefaultToString(Object delegate, String spanName) {
-		if (delegate instanceof Method) {
-			return delegate.toString().equals(spanName);
+		try {
+			return delegate.getClass().getMethod("toString").getDeclaringClass() == Object.class;
 		}
-		return (delegate.getClass().getName() + "@" + Integer.toHexString(delegate.hashCode())).equals(spanName);
+		catch (NoSuchMethodException e) {
+			throw new RuntimeException(e);
+		}
 	}
 
 	@Override
