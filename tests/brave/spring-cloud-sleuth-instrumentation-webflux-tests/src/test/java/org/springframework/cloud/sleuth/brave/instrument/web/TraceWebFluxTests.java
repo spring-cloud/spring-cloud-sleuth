@@ -16,6 +16,9 @@
 
 package org.springframework.cloud.sleuth.brave.instrument.web;
 
+import java.util.Queue;
+import java.util.concurrent.ConcurrentLinkedQueue;
+
 import brave.Span;
 import brave.Tracer;
 import brave.handler.SpanHandler;
@@ -35,6 +38,8 @@ import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.Ordered;
+import org.springframework.core.annotation.Order;
 import org.springframework.core.env.Environment;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -44,7 +49,9 @@ import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.server.RouterFunction;
 import org.springframework.web.reactive.function.server.RouterFunctions;
 import org.springframework.web.reactive.function.server.ServerResponse;
+import org.springframework.web.server.ServerWebExchange;
 import org.springframework.web.server.WebFilter;
+import org.springframework.web.server.WebFilterChain;
 
 import static org.assertj.core.api.BDDAssertions.then;
 
@@ -62,6 +69,7 @@ public class TraceWebFluxTests {
 						"management.security.enabled=false")
 				.run();
 		TestSpanHandler spans = context.getBean(TestSpanHandler.class);
+		AssertingWebFilter assertingWebFilter = context.getBean(AssertingWebFilter.class);
 		int port = context.getBean(Environment.class).getProperty("local.server.port", Integer.class);
 		Controller2 controller2 = context.getBean(Controller2.class);
 		clean(spans, controller2);
@@ -108,6 +116,8 @@ public class TraceWebFluxTests {
 		// then
 		thenSpanWasReportedWithRemoteIpTags(spans, response);
 
+		thenNoTraceWasLeaked(assertingWebFilter);
+
 		// cleanup
 		context.close();
 	}
@@ -150,6 +160,10 @@ public class TraceWebFluxTests {
 		Awaitility.await().untilAsserted(() -> then(response.statusCode().value()).isEqualTo(500));
 		then(spans).hasSize(1);
 		then(spans.get(0).tags()).hasEntrySatisfying("http.status_code", value -> then(value).isEqualTo("500"));
+	}
+
+	private void thenNoTraceWasLeaked(AssertingWebFilter assertingWebFilter) {
+		then(assertingWebFilter.getSpans()).isEmpty();
 	}
 
 	private void thenNoSpanWasReported(TestSpanHandler spans, ClientResponse response, Controller2 controller2) {
@@ -227,6 +241,37 @@ public class TraceWebFluxTests {
 			};
 		}
 
+		@Bean
+		@Order(Ordered.HIGHEST_PRECEDENCE)
+		AssertingWebFilter traceIdInResponseLastFilter(Tracer tracer) {
+			return new AssertingWebFilter(tracer);
+		}
+
+	}
+
+	static class AssertingWebFilter implements WebFilter {
+
+		Queue<Span> spans = new ConcurrentLinkedQueue<>();
+
+		private final Tracer tracer;
+
+		AssertingWebFilter(Tracer tracer) {
+			this.tracer = tracer;
+		}
+
+		@Override
+		public Mono<Void> filter(ServerWebExchange exchange, WebFilterChain chain) {
+			return chain.filter(exchange).doFinally(__ -> {
+				Span currentSpan = tracer.currentSpan();
+				if (currentSpan != null) {
+					spans.add(currentSpan);
+				}
+			});
+		}
+
+		Queue<Span> getSpans() {
+			return spans;
+		}
 	}
 
 	@RestController
@@ -261,5 +306,4 @@ public class TraceWebFluxTests {
 		}
 
 	}
-
 }

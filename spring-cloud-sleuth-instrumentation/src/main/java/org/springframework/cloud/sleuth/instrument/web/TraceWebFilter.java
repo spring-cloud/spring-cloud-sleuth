@@ -246,6 +246,8 @@ public class TraceWebFilter implements WebFilter, Ordered, ApplicationContextAwa
 
 			final Span span;
 
+			final Tracer tracer;
+
 			final ServerWebExchange exchange;
 
 			final HttpServerHandler handler;
@@ -254,6 +256,7 @@ public class TraceWebFilter implements WebFilter, Ordered, ApplicationContextAwa
 					MonoWebFilterTrace parent) {
 				this.actual = actual;
 				this.span = span;
+				this.tracer = parent.tracer;
 				this.context = ReactorSleuth.wrapContext(context.put(TraceContext.class, span.context()));
 				this.exchange = parent.exchange;
 				this.handler = parent.handler;
@@ -299,6 +302,7 @@ public class TraceWebFilter implements WebFilter, Ordered, ApplicationContextAwa
 				if (log.isDebugEnabled()) {
 					log.debug("Handled send of " + this.span);
 				}
+				tracer.withSpan(null);
 			}
 
 			private void addClassMethodTag(Object handler, Span span) {
