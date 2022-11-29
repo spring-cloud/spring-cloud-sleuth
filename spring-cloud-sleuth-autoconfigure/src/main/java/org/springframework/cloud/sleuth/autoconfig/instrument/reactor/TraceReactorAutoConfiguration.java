@@ -298,6 +298,8 @@ class HookRegisteringBeanFactoryPostProcessor implements BeanFactoryPostProcesso
 			public Object poll() {
 				Object object = envelopeQueue.poll();
 				if (object == null) {
+					// to clear thread-local
+					currentTraceContext.maybeScope(null);
 					return null;
 				}
 				else if (object instanceof Envelope) {
