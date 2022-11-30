@@ -51,12 +51,12 @@
 		<maven.compiler.testSource>1.8</maven.compiler.testSource>
 		<spring-cloud-build.version>3.1.6-SNAPSHOT</spring-cloud-build.version>
 		<spring-cloud-commons.version>3.1.6-SNAPSHOT</spring-cloud-commons.version>
-		<spring-cloud-gateway.version>3.1.4</spring-cloud-gateway.version>
+		<spring-cloud-gateway.version>3.1.5-SNAPSHOT</spring-cloud-gateway.version>
 		<spring-cloud-config.version>3.1.6-SNAPSHOT</spring-cloud-config.version>
 		<spring-cloud-circuitbreaker.version>2.1.6-SNAPSHOT</spring-cloud-circuitbreaker.version>
 		<spring-cloud-stream.version>3.2.7-SNAPSHOT</spring-cloud-stream.version>
 		<spring-cloud-function.version>3.2.9-SNAPSHOT</spring-cloud-function.version>
-		<spring-cloud-netflix.version>3.1.4</spring-cloud-netflix.version>
+		<spring-cloud-netflix.version>3.1.5-SNAPSHOT</spring-cloud-netflix.version>
 		<spring-cloud-openfeign.version>3.1.6-SNAPSHOT</spring-cloud-openfeign.version>
 		<spring-cloud-task.version>2.4.6-SNAPSHOT</spring-cloud-task.version>
 		<spring-cloud-deployer.version>2.5.1</spring-cloud-deployer.version>

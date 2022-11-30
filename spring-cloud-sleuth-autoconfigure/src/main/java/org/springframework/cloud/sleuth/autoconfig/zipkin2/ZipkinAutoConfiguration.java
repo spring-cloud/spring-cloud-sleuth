@@ -117,7 +117,7 @@ public class ZipkinAutoConfiguration {
 				result = checkResult == null ? CheckResult.failed(exception) : checkResult;
 			}
 			logCheckResult(sender, result);
-			
+
 			zipkinExecutor.shutdown();
 		});
 	}

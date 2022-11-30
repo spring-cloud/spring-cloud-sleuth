@@ -272,6 +272,7 @@ public class TraceWebFluxTests {
 		Queue<Span> getSpans() {
 			return spans;
 		}
+
 	}
 
 	@RestController
@@ -306,4 +307,5 @@ public class TraceWebFluxTests {
 		}
 
 	}
+
 }
