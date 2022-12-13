@@ -40,8 +40,9 @@ public abstract class CircuitBreakerTests implements TestTracingAwareSupplier {
 		try {
 			scopedSpan = tracer.startScopedSpan("start");
 			// when
-			Span span = new Resilience4JCircuitBreakerFactory(CircuitBreakerRegistry.ofDefaults(), TimeLimiterRegistry.ofDefaults(), null).create("name")
-					.run(new TraceSupplier<>(tracerTest().tracing().tracer(), tracer::currentSpan));
+			Span span = new Resilience4JCircuitBreakerFactory(CircuitBreakerRegistry.ofDefaults(),
+					TimeLimiterRegistry.ofDefaults(), null).create("name")
+							.run(new TraceSupplier<>(tracerTest().tracing().tracer(), tracer::currentSpan));
 
 			BDDAssertions.then(span).isNotNull();
 			BDDAssertions.then(scopedSpan.context().traceId()).isEqualTo(span.context().traceId());
@@ -61,14 +62,16 @@ public abstract class CircuitBreakerTests implements TestTracingAwareSupplier {
 		try {
 			scopedSpan = tracer.startScopedSpan("start");
 			// when
-			BDDAssertions.thenThrownBy(() -> new Resilience4JCircuitBreakerFactory(CircuitBreakerRegistry.ofDefaults(), TimeLimiterRegistry.ofDefaults(), null).create("name")
-					.run(new TraceSupplier<>(tracerTest().tracing().tracer(), () -> {
-						first.set(tracer.currentSpan());
-						throw new IllegalStateException("boom");
-					}), new TraceFunction<>(tracerTest().tracing().tracer(), throwable -> {
-						second.set(tracer.currentSpan());
-						throw new IllegalStateException("boom2");
-					}))).isInstanceOf(IllegalStateException.class).hasMessageContaining("boom2");
+			BDDAssertions.thenThrownBy(() -> new Resilience4JCircuitBreakerFactory(CircuitBreakerRegistry.ofDefaults(),
+					TimeLimiterRegistry.ofDefaults(), null).create("name")
+							.run(new TraceSupplier<>(tracerTest().tracing().tracer(), () -> {
+								first.set(tracer.currentSpan());
+								throw new IllegalStateException("boom");
+							}), new TraceFunction<>(tracerTest().tracing().tracer(), throwable -> {
+								second.set(tracer.currentSpan());
+								throw new IllegalStateException("boom2");
+							})))
+					.isInstanceOf(IllegalStateException.class).hasMessageContaining("boom2");
 
 			BDDAssertions.then(tracerTest().handler().reportedSpans()).hasSize(2);
 			BDDAssertions.then(first.get()).isNotNull();

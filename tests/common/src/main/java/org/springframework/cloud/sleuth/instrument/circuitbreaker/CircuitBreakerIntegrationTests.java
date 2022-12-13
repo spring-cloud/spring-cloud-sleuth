@@ -118,7 +118,8 @@ public abstract class CircuitBreakerIntegrationTests {
 
 		@Bean
 		Resilience4JCircuitBreakerFactory resilience4JCircuitBreakerFactory() {
-			return new Resilience4JCircuitBreakerFactory(CircuitBreakerRegistry.ofDefaults(), TimeLimiterRegistry.ofDefaults(), null);
+			return new Resilience4JCircuitBreakerFactory(CircuitBreakerRegistry.ofDefaults(),
+					TimeLimiterRegistry.ofDefaults(), null);
 		}
 
 	}
