@@ -76,6 +76,7 @@ public class TracingResponderRSocketProxy extends RSocketProxy {
 
 	@Override
 	public Mono<Void> fireAndForget(Payload payload) {
+		clearThreadLocal();
 		// called on Netty EventLoop
 		// there can't be trace context in thread local here
 		Span handle = consumerSpanBuilder(payload.sliceMetadata(), FrameType.REQUEST_FNF);
@@ -86,8 +87,13 @@ public class TracingResponderRSocketProxy extends RSocketProxy {
 		return ReactorSleuth.tracedMono(this.tracer, handle, () -> super.fireAndForget(newPayload));
 	}
 
+	private void clearThreadLocal() {
+		this.tracer.withSpan(null);
+	}
+
 	@Override
 	public Mono<Payload> requestResponse(Payload payload) {
+		clearThreadLocal();
 		Span handle = consumerSpanBuilder(payload.sliceMetadata(), FrameType.REQUEST_RESPONSE);
 		if (log.isDebugEnabled()) {
 			log.debug("Created consumer span " + handle);
@@ -98,6 +104,7 @@ public class TracingResponderRSocketProxy extends RSocketProxy {
 
 	@Override
 	public Flux<Payload> requestStream(Payload payload) {
+		clearThreadLocal();
 		Span handle = consumerSpanBuilder(payload.sliceMetadata(), FrameType.REQUEST_STREAM);
 		if (log.isDebugEnabled()) {
 			log.debug("Created consumer span " + handle);
@@ -108,6 +115,7 @@ public class TracingResponderRSocketProxy extends RSocketProxy {
 
 	@Override
 	public Flux<Payload> requestChannel(Publisher<Payload> payloads) {
+		clearThreadLocal();
 		return Flux.from(payloads).switchOnFirst((firstSignal, flux) -> {
 			final Payload firstPayload = firstSignal.get();
 			if (firstPayload != null) {

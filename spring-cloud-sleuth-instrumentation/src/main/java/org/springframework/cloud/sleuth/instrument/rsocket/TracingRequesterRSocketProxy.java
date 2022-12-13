@@ -71,13 +71,19 @@ public class TracingRequesterRSocketProxy extends RSocketProxy {
 		this.isZipkinPropagationEnabled = isZipkinPropagationEnabled;
 	}
 
+	private void clearThreadLocal() {
+		this.tracer.withSpan(null);
+	}
+
 	@Override
 	public Mono<Void> fireAndForget(Payload payload) {
+		clearThreadLocal();
 		return setSpan(super::fireAndForget, payload, FrameType.REQUEST_FNF);
 	}
 
 	@Override
 	public Mono<Payload> requestResponse(Payload payload) {
+		clearThreadLocal();
 		return setSpan(super::requestResponse, payload, FrameType.REQUEST_RESPONSE);
 	}
 
@@ -138,11 +144,13 @@ public class TracingRequesterRSocketProxy extends RSocketProxy {
 
 	@Override
 	public Flux<Payload> requestStream(Payload payload) {
+		clearThreadLocal();
 		return Flux.deferContextual(contextView -> setSpan(super::requestStream, payload, contextView));
 	}
 
 	@Override
 	public Flux<Payload> requestChannel(Publisher<Payload> inbound) {
+		clearThreadLocal();
 		return Flux.from(inbound).switchOnFirst((firstSignal, flux) -> {
 			final Payload firstPayload = firstSignal.get();
 			if (firstPayload != null) {
