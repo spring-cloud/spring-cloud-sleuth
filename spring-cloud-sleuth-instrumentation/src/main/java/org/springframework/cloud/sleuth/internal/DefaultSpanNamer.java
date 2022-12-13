@@ -24,15 +24,15 @@ import org.springframework.core.annotation.AnnotationUtils;
 
 /**
  * Default implementation of SpanNamer that tries to get the span name as follows:
- *
+ * <p>
  * * from the @SpanName annotation on the class if one is present.
- *
+ * <p>
  * * from the @SpanName annotation on the method if passed object is of a {@link Method}.
  * type
- *
+ * <p>
  * * from the toString() of the delegate if it's not the default
  * {@link Object#toString()}.
- *
+ * <p>
  * * the default provided value.
  *
  * @author Marcin Grzejszczak
@@ -41,7 +41,7 @@ import org.springframework.core.annotation.AnnotationUtils;
  */
 public class DefaultSpanNamer implements SpanNamer {
 
-	private static boolean isDefaultToString(Object delegate, String spanName) {
+	private static boolean isDefaultToString(Object delegate) {
 		try {
 			return delegate.getClass().getMethod("toString").getDeclaringClass() == Object.class;
 		}
@@ -55,7 +55,7 @@ public class DefaultSpanNamer implements SpanNamer {
 		SpanName annotation = annotation(object);
 		String spanName = annotation != null ? annotation.value() : object.toString();
 		// If there is no overridden toString method we'll put a constant value
-		if (isDefaultToString(object, spanName)) {
+		if (annotation == null && isDefaultToString(object)) {
 			return defaultValue;
 		}
 		return spanName;

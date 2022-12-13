@@ -19,6 +19,8 @@ package org.springframework.cloud.sleuth.internal;
 import org.assertj.core.api.BDDAssertions;
 import org.junit.jupiter.api.Test;
 
+import org.springframework.cloud.sleuth.SpanName;
+
 class DefaultSpanNamerTest {
 
 	@Test
@@ -39,6 +41,12 @@ class DefaultSpanNamerTest {
 		BDDAssertions.then(defaultValue).isEqualTo("mytostring");
 	}
 
+	@Test
+	void nameWithNoToStringAndAnnotation() {
+		String defaultValue = new DefaultSpanNamer().name(new NoToStringOverrideAndAnnotation(), "default value");
+		BDDAssertions.then(defaultValue).isEqualTo("new-name");
+	}
+
 	static class NoToStringOverride {
 
 	}
@@ -53,6 +61,11 @@ class DefaultSpanNamerTest {
 	}
 
 	static class InheritedToString extends WithToStringOverride {
+
+	}
+
+	@SpanName("new-name")
+	static class NoToStringOverrideAndAnnotation {
 
 	}
 
