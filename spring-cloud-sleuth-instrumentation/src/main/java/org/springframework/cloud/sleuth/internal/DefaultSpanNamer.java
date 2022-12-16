@@ -41,13 +41,11 @@ import org.springframework.core.annotation.AnnotationUtils;
  */
 public class DefaultSpanNamer implements SpanNamer {
 
-	private static boolean isDefaultToString(Object delegate) {
-		try {
-			return delegate.getClass().getMethod("toString").getDeclaringClass() == Object.class;
+	private static boolean isDefaultToString(Object delegate, String spanName) {
+		if (delegate instanceof Method) {
+			return delegate.toString().equals(spanName);
 		}
-		catch (NoSuchMethodException e) {
-			throw new RuntimeException(e);
-		}
+		return (delegate.getClass().getName() + "@" + Integer.toHexString(delegate.hashCode())).equals(spanName);
 	}
 
 	@Override
@@ -55,7 +53,7 @@ public class DefaultSpanNamer implements SpanNamer {
 		SpanName annotation = annotation(object);
 		String spanName = annotation != null ? annotation.value() : object.toString();
 		// If there is no overridden toString method we'll put a constant value
-		if (annotation == null && isDefaultToString(object)) {
+		if (isDefaultToString(object, spanName)) {
 			return defaultValue;
 		}
 		return spanName;
