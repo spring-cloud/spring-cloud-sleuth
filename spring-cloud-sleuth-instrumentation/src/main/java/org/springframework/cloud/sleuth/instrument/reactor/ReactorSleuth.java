@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2021 the original author or authors.
+ * Copyright 2013-2023 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,6 +16,9 @@
 
 package org.springframework.cloud.sleuth.instrument.reactor;
 
+import java.util.AbstractQueue;
+import java.util.Iterator;
+import java.util.Queue;
 import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 import java.util.function.Function;
@@ -323,6 +326,9 @@ public abstract class ReactorSleuth {
 					try (CurrentTraceContext.Scope scope = currentTraceContext.maybeScope(traceContext)) {
 						delegate.run();
 					}
+					// extra step to ensure context is cleared when publishOn or similar
+					// operators leaks different context and leaves it uncleared
+					currentTraceContext.maybeScope(null);
 				};
 			}
 			return delegate;
@@ -630,6 +636,125 @@ public abstract class ReactorSleuth {
 			log.debug("No span was found - will create a new one [" + newSpan + "]");
 		}
 		return newSpan;
+	}
+
+	public static Queue<?> traceQueue(ConfigurableApplicationContext springContext, Queue<?> queue) {
+		if (!springContext.isActive()) {
+			return queue;
+		}
+		CurrentTraceContext currentTraceContext = springContext.getBean(CurrentTraceContext.class);
+		@SuppressWarnings("unchecked")
+		Queue envelopeQueue = queue;
+		return new AbstractQueue<Object>() {
+
+			boolean cleanOnNull;
+
+			boolean hasPrevious = false;
+
+			Thread lastReader;
+
+			@Override
+			public int size() {
+				return envelopeQueue.size();
+			}
+
+			@Override
+			public boolean offer(Object o) {
+				TraceContext traceContext = currentTraceContext.context();
+				return envelopeQueue.offer(new Envelope(o, traceContext));
+			}
+
+			@Override
+			public Object poll() {
+				Object object = envelopeQueue.poll();
+				if (object == null) {
+					if (cleanOnNull) {
+						// to clear thread-local if was just restored
+						currentTraceContext.maybeScope(null);
+					}
+					cleanOnNull = true;
+					lastReader = Thread.currentThread();
+					hasPrevious = false;
+					return null;
+				}
+				else if (object instanceof Envelope) {
+					Envelope envelope = (Envelope) object;
+					restoreTheContext(envelope);
+					hasPrevious = true;
+					return envelope.body;
+				}
+				hasPrevious = true;
+				return object;
+			}
+
+			private void restoreTheContext(Envelope envelope) {
+				TraceContext traceContext = envelope.traceContext;
+				if (traceContext != null) {
+					if (!traceContext.equals(currentTraceContext.context())) {
+						if (!hasPrevious || !Thread.currentThread().equals(this.lastReader)) {
+							// means context was restored form the envelope, thus it has
+							// to be cleared
+							cleanOnNull = true;
+							lastReader = Thread.currentThread();
+						}
+						currentTraceContext.maybeScope(traceContext);
+					}
+					else if (!hasPrevious || !Thread.currentThread().equals(this.lastReader)) {
+						// means same context was already available, no need to clean
+						// anything
+						cleanOnNull = false;
+						lastReader = Thread.currentThread();
+					}
+				}
+			}
+
+			@Override
+			public Object peek() {
+				Object peek = queue.peek();
+				if (peek instanceof Envelope) {
+					Envelope envelope = (Envelope) peek;
+					restoreTheContext(envelope);
+					return (envelope).body;
+				}
+				return peek;
+			}
+
+			@Override
+			@SuppressWarnings("unchecked")
+			public Iterator<Object> iterator() {
+				Iterator<?> iterator = queue.iterator();
+				return new Iterator<Object>() {
+					@Override
+					public boolean hasNext() {
+						return iterator.hasNext();
+					}
+
+					@Override
+					public Object next() {
+						Object next = iterator.next();
+						if (next instanceof Envelope) {
+							Envelope envelope = (Envelope) next;
+							restoreTheContext(envelope);
+							return (envelope).body;
+						}
+						return next;
+					}
+				};
+			}
+		};
+	}
+
+	static class Envelope {
+
+		final Object body;
+
+		final TraceContext traceContext;
+
+		Envelope(Object body, TraceContext traceContext) {
+			this.body = body;
+			this.traceContext = traceContext;
+		}
+
 	}
 
 }

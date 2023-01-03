@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2021 the original author or authors.
+ * Copyright 2013-2023 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,9 +18,6 @@ package org.springframework.cloud.sleuth.autoconfig.instrument.reactor;
 
 import java.io.Closeable;
 import java.io.IOException;
-import java.util.AbstractQueue;
-import java.util.Iterator;
-import java.util.Queue;
 import java.util.function.Function;
 
 import org.apache.commons.logging.Log;
@@ -42,8 +39,6 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.cloud.context.scope.refresh.RefreshScope;
 import org.springframework.cloud.context.scope.refresh.RefreshScopeRefreshedEvent;
-import org.springframework.cloud.sleuth.CurrentTraceContext;
-import org.springframework.cloud.sleuth.TraceContext;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.autoconfig.brave.BraveAutoConfiguration;
 import org.springframework.cloud.sleuth.instrument.reactor.ReactorSleuth;
@@ -260,7 +255,7 @@ class HookRegisteringBeanFactoryPostProcessor implements BeanFactoryPostProcesso
 		if (log.isTraceEnabled()) {
 			log.trace("Decorating queues");
 		}
-		Hooks.addQueueWrapper(SLEUTH_TRACE_REACTOR_KEY, queue -> traceQueue(springContext, queue));
+		Hooks.addQueueWrapper(SLEUTH_TRACE_REACTOR_KEY, queue -> ReactorSleuth.traceQueue(springContext, queue));
 	}
 
 	@Override
@@ -272,84 +267,6 @@ class HookRegisteringBeanFactoryPostProcessor implements BeanFactoryPostProcesso
 		Hooks.resetOnLastOperator(SLEUTH_TRACE_REACTOR_KEY);
 		Hooks.removeQueueWrapper(SLEUTH_REACTOR_EXECUTOR_SERVICE_KEY);
 		Schedulers.resetOnScheduleHook(TraceReactorAutoConfiguration.SLEUTH_REACTOR_EXECUTOR_SERVICE_KEY);
-	}
-
-	private static Queue<?> traceQueue(ConfigurableApplicationContext springContext, Queue<?> queue) {
-		if (!springContext.isActive()) {
-			return queue;
-		}
-		CurrentTraceContext currentTraceContext = springContext.getBean(CurrentTraceContext.class);
-		@SuppressWarnings("unchecked")
-		Queue envelopeQueue = queue;
-		return new AbstractQueue<Object>() {
-
-			@Override
-			public int size() {
-				return envelopeQueue.size();
-			}
-
-			@Override
-			public boolean offer(Object o) {
-				TraceContext traceContext = currentTraceContext.context();
-				return envelopeQueue.offer(new Envelope(o, traceContext));
-			}
-
-			@Override
-			public Object poll() {
-				Object object = envelopeQueue.poll();
-				if (object == null) {
-					// to clear thread-local
-					currentTraceContext.maybeScope(null);
-					return null;
-				}
-				else if (object instanceof Envelope) {
-					Envelope envelope = (Envelope) object;
-					restoreTheContext(envelope);
-					return envelope.body;
-				}
-				return object;
-			}
-
-			private void restoreTheContext(Envelope envelope) {
-				if (envelope.traceContext != null) {
-					currentTraceContext.maybeScope(envelope.traceContext);
-				}
-			}
-
-			@Override
-			public Object peek() {
-				Object peek = queue.peek();
-				if (peek instanceof Envelope) {
-					Envelope envelope = (Envelope) peek;
-					restoreTheContext(envelope);
-					return (envelope).body;
-				}
-				return peek;
-			}
-
-			@Override
-			@SuppressWarnings("unchecked")
-			public Iterator<Object> iterator() {
-				Iterator<?> iterator = queue.iterator();
-				return new Iterator<Object>() {
-					@Override
-					public boolean hasNext() {
-						return iterator.hasNext();
-					}
-
-					@Override
-					public Object next() {
-						Object next = iterator.next();
-						if (next instanceof Envelope) {
-							Envelope envelope = (Envelope) next;
-							restoreTheContext(envelope);
-							return (envelope).body;
-						}
-						return next;
-					}
-				};
-			}
-		};
 	}
 
 	@Override
@@ -365,19 +282,6 @@ class HookRegisteringBeanFactoryPostProcessor implements BeanFactoryPostProcesso
 			return;
 		}
 		springContext = (ConfigurableApplicationContext) applicationContext;
-	}
-
-	static class Envelope {
-
-		final Object body;
-
-		final TraceContext traceContext;
-
-		Envelope(Object body, TraceContext traceContext) {
-			this.body = body;
-			this.traceContext = traceContext;
-		}
-
 	}
 
 }
