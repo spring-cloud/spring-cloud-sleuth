@@ -207,4 +207,41 @@ public abstract class QueueWrapperTests {
 		Assertions.assertThat(currentTraceContext().context()).isNull();
 	}
 
+	@Test
+	void checkContextIsNotCleanOnNullCleanedIfContextWasAvailableOnThreadAnotherThreadCase2()
+			throws InterruptedException {
+		springContext.registerBean(CurrentTraceContext.class, this::currentTraceContext);
+		springContext.refresh();
+
+		final Queue queue = traceQueue(this.springContext, Queues.get(128).get());
+
+		TraceContext context;
+		CurrentTraceContext.Scope ws1 = currentTraceContext().newScope(context());
+		context = currentTraceContext().context();
+		queue.offer(1);
+		queue.offer(2);
+
+		Assertions.assertThat(queue.poll()).isEqualTo(1);
+		Assertions.assertThat(currentTraceContext().context()).isNotNull().isEqualTo(context);
+
+		ws1.close();
+		Assertions.assertThat(currentTraceContext().context()).isNull();
+
+		CountDownLatch latch = new CountDownLatch(1);
+		new Thread(() -> {
+			Assertions.assertThat(queue.poll()).isEqualTo(2);
+			Assertions.assertThat(currentTraceContext().context()).isNotNull().isEqualTo(context);
+
+			Assertions.assertThat(queue.poll()).isNull();
+			Assertions.assertThat(currentTraceContext().context()).isNull();
+
+			latch.countDown();
+		}).start();
+
+		Assertions.assertThat(latch.await(10, TimeUnit.SECONDS)).isTrue();
+
+		Assertions.assertThat(queue.poll()).isNull();
+		Assertions.assertThat(currentTraceContext().context()).isNull();
+	}
+
 }
