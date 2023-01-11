@@ -43,7 +43,8 @@ import org.springframework.scheduling.annotation.AsyncConfigurer;
 @ConditionalOnBean(AsyncConfigurer.class)
 @AutoConfigureBefore(TraceAsyncDefaultAutoConfiguration.class)
 @ConditionalOnProperty(value = "spring.sleuth.async.enabled", matchIfMissing = true)
-@AutoConfigureAfter(name = "org.springframework.cloud.sleuth.instrument.scheduling.TraceSchedulingAutoConfiguration",
+@AutoConfigureAfter(
+		name = "org.springframework.cloud.sleuth.autoconfig.instrument.scheduling.TraceSchedulingAutoConfiguration",
 		value = BraveAutoConfiguration.class)
 public class TraceAsyncCustomAutoConfiguration implements BeanPostProcessor {
 
