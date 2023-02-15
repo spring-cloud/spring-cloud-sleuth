@@ -16,6 +16,8 @@
 
 package org.springframework.cloud.sleuth.instrument.rsocket;
 
+import io.netty.buffer.ByteBufAllocator;
+import io.rsocket.metadata.CompositeMetadataCodec;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.function.Function;
@@ -104,16 +106,17 @@ public class TracingRequesterRSocketProxy extends RSocketProxy {
 				log.debug("Extracted result from context or thread local " + span);
 			}
 			final Payload newPayload = PayloadUtils.cleanTracingMetadata(payload, new HashSet<>(propagator.fields()));
-			TraceContext traceContext = span.context();
+			final TraceContext traceContext = span.context();
+			final CompositeByteBuf metadata = (CompositeByteBuf) newPayload.metadata();
 			if (this.isZipkinPropagationEnabled) {
-				injectDefaultZipkinRSocketHeaders(newPayload, traceContext);
+				injectDefaultZipkinRSocketHeaders(metadata, traceContext);
 			}
-			this.propagator.inject(traceContext, (CompositeByteBuf) newPayload.metadata(), this.setter);
+			this.propagator.inject(traceContext, metadata, this.setter);
 			return input.apply(newPayload).doOnError(span::error).doFinally(signalType -> span.end());
 		});
 	}
 
-	private void injectDefaultZipkinRSocketHeaders(Payload newPayload, TraceContext traceContext) {
+	void injectDefaultZipkinRSocketHeaders(CompositeByteBuf metadata, TraceContext traceContext) {
 		TracingMetadataCodec.Flags flags = traceContext.sampled() == null ? TracingMetadataCodec.Flags.UNDECIDED
 				: traceContext.sampled() ? TracingMetadataCodec.Flags.SAMPLE : TracingMetadataCodec.Flags.NOT_SAMPLE;
 		String traceId = traceContext.traceId();
@@ -121,17 +124,24 @@ public class TracingRequesterRSocketProxy extends RSocketProxy {
 		long[] spanId = EncodingUtils.fromString(traceContext.spanId());
 		long[] parentSpanId = EncodingUtils.fromString(traceContext.parentId());
 		boolean isTraceId128Bit = traceIds.length == 2;
+
+		final ByteBufAllocator allocator = metadata.alloc();
 		if (isTraceId128Bit) {
-			TracingMetadataCodec.encode128(newPayload.metadata().alloc(), traceIds[0], traceIds[1], spanId[0],
-					EncodingUtils.fromString(traceContext.parentId())[0], flags);
+			CompositeMetadataCodec.encodeAndAddMetadata(metadata,
+					allocator, WellKnownMimeType.MESSAGE_RSOCKET_TRACING_ZIPKIN,
+					TracingMetadataCodec.encode128(allocator, traceIds[0],
+							traceIds[1], spanId[0],
+							EncodingUtils.fromString(traceContext.parentId())[0], flags));
 		}
 		else {
-			TracingMetadataCodec.encode64(newPayload.metadata().alloc(), traceIds[0], spanId[0], parentSpanId[0],
-					flags);
+			CompositeMetadataCodec.encodeAndAddMetadata(metadata,
+					allocator, WellKnownMimeType.MESSAGE_RSOCKET_TRACING_ZIPKIN,
+					TracingMetadataCodec.encode64(allocator, traceIds[0],
+							spanId[0], parentSpanId[0], flags));
 		}
 	}
 
-	private Span.Builder spanBuilder(ContextView contextView) {
+	Span.Builder spanBuilder(ContextView contextView) {
 		Span.Builder spanBuilder = this.tracer.spanBuilder();
 		if (contextView.hasKey(TraceContext.class)) {
 			spanBuilder = spanBuilder.setParent(contextView.get(TraceContext.class));
