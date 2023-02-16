@@ -16,17 +16,17 @@
 
 package org.springframework.cloud.sleuth.instrument.rsocket;
 
-import io.netty.buffer.ByteBufAllocator;
-import io.rsocket.metadata.CompositeMetadataCodec;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.function.Function;
 
 import io.netty.buffer.ByteBuf;
+import io.netty.buffer.ByteBufAllocator;
 import io.netty.buffer.CompositeByteBuf;
 import io.rsocket.Payload;
 import io.rsocket.RSocket;
 import io.rsocket.frame.FrameType;
+import io.rsocket.metadata.CompositeMetadataCodec;
 import io.rsocket.metadata.RoutingMetadata;
 import io.rsocket.metadata.TracingMetadataCodec;
 import io.rsocket.metadata.WellKnownMimeType;
@@ -127,17 +127,15 @@ public class TracingRequesterRSocketProxy extends RSocketProxy {
 
 		final ByteBufAllocator allocator = metadata.alloc();
 		if (isTraceId128Bit) {
-			CompositeMetadataCodec.encodeAndAddMetadata(metadata,
-					allocator, WellKnownMimeType.MESSAGE_RSOCKET_TRACING_ZIPKIN,
-					TracingMetadataCodec.encode128(allocator, traceIds[0],
-							traceIds[1], spanId[0],
+			CompositeMetadataCodec.encodeAndAddMetadata(metadata, allocator,
+					WellKnownMimeType.MESSAGE_RSOCKET_TRACING_ZIPKIN,
+					TracingMetadataCodec.encode128(allocator, traceIds[0], traceIds[1], spanId[0],
 							EncodingUtils.fromString(traceContext.parentId())[0], flags));
 		}
 		else {
-			CompositeMetadataCodec.encodeAndAddMetadata(metadata,
-					allocator, WellKnownMimeType.MESSAGE_RSOCKET_TRACING_ZIPKIN,
-					TracingMetadataCodec.encode64(allocator, traceIds[0],
-							spanId[0], parentSpanId[0], flags));
+			CompositeMetadataCodec.encodeAndAddMetadata(metadata, allocator,
+					WellKnownMimeType.MESSAGE_RSOCKET_TRACING_ZIPKIN,
+					TracingMetadataCodec.encode64(allocator, traceIds[0], spanId[0], parentSpanId[0], flags));
 		}
 	}
 
