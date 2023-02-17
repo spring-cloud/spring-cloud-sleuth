@@ -16,7 +16,6 @@
 
 package org.springframework.cloud.sleuth.instrument.session;
 
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.Arrays;
@@ -80,11 +79,7 @@ public class TraceSessionRepositoryAspect {
 			if (log.isDebugEnabled()) {
 				log.debug("Found a corresponding method on the trace representation [" + method + "]");
 			}
-			try {
-				return method.invoke(target, pjp.getArgs());
-			} catch(InvocationTargetException ex) {
-				throw ex.getCause();
-			}
+			return ReflectionUtils.invokeMethod(method, target, pjp.getArgs());
 		}
 		if (log.isDebugEnabled()) {
 			log.debug("Method [" + pjp.getSignature().getName()
@@ -103,7 +98,7 @@ public class TraceSessionRepositoryAspect {
 		return callMethodOnWrappedObject(pjp, target);
 	}
 
-	private Method getMethod(ProceedingJoinPoint pjp, Object tracingWrapper) {
+	Method getMethod(ProceedingJoinPoint pjp, Object tracingWrapper) {
 		MethodSignature signature = (MethodSignature) pjp.getSignature();
 		Method method = signature.getMethod();
 		Method foundMethodOnTracingWrapper = ReflectionUtils.findMethod(tracingWrapper.getClass(), method.getName(),
