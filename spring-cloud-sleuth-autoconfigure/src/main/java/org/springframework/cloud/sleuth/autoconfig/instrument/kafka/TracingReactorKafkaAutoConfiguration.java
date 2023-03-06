@@ -43,7 +43,7 @@ import org.springframework.context.annotation.Configuration;
  *
  * @author Anders Clausen
  * @author Flaviu Muresan
- * @ @since 3.1.0
+ * @since 3.1.0
  */
 @Configuration(proxyBeanMethods = false)
 @ConditionalOnClass(KafkaReceiver.class)
@@ -61,8 +61,8 @@ public class TracingReactorKafkaAutoConfiguration {
 	/**
 	 * This will be wrapping KafkaReceiver beans in tracing wrapper. Can still use it
 	 * manually with
-	 * {{@link TracingKafkaReceiver#create(ReactiveKafkaTracingPropagator, ReceiverOptions)}}
-	 * {{@link TracingKafkaReceiver#create(ReactiveKafkaTracingPropagator, ConsumerFactory, ReceiverOptions)}}
+	 * {@link TracingKafkaReceiver#create(ReactiveKafkaTracingPropagator, ReceiverOptions)}
+	 * {@link TracingKafkaReceiver#create(ReactiveKafkaTracingPropagator, ConsumerFactory, ReceiverOptions)}
 	 */
 	@Bean
 	@ConditionalOnClass({ KafkaReceiver.class })
