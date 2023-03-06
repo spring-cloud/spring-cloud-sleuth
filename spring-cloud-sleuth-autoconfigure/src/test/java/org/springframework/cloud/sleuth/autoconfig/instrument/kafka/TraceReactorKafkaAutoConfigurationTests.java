@@ -16,15 +16,22 @@
 
 package org.springframework.cloud.sleuth.autoconfig.instrument.kafka;
 
+import org.apache.kafka.clients.consumer.Consumer;
+import org.apache.kafka.clients.consumer.MockConsumer;
+import org.apache.kafka.clients.consumer.OffsetResetStrategy;
 import org.junit.jupiter.api.Test;
 import reactor.kafka.receiver.KafkaReceiver;
+import reactor.kafka.receiver.ReceiverOptions;
+import reactor.kafka.receiver.internals.ConsumerFactory;
+import reactor.kafka.receiver.internals.DefaultKafkaReceiver;
 
 import org.springframework.boot.autoconfigure.AutoConfigurations;
 import org.springframework.boot.test.context.FilteredClassLoader;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
 import org.springframework.cloud.sleuth.autoconfig.TraceNoOpAutoConfiguration;
-import org.springframework.cloud.sleuth.instrument.kafka.TracingKafkaConsumerFactory;
+import org.springframework.cloud.sleuth.instrument.kafka.TracingKafkaConsumer;
 import org.springframework.cloud.sleuth.instrument.kafka.TracingKafkaProducerFactory;
+import org.springframework.cloud.sleuth.instrument.kafka.TracingKafkaReceiver;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -38,14 +45,30 @@ class TraceReactorKafkaAutoConfigurationTests {
 	@Test
 	void should_not_create_factories_when_reactor_kafka_not_on_classpath() {
 		this.contextRunner.withClassLoader(new FilteredClassLoader(KafkaReceiver.class))
-				.run(context -> assertThat(context).doesNotHaveBean(TracingKafkaProducerFactory.class)
-						.doesNotHaveBean(TracingKafkaConsumerFactory.class));
+				.run(context -> assertThat(context).doesNotHaveBean(TracingKafkaProducerFactory.class));
 	}
 
 	@Test
 	void should_create_factories_when_reactor_kafka_on_classpath() {
-		this.contextRunner.run(context -> assertThat(context).hasSingleBean(TracingKafkaProducerFactory.class)
-				.hasSingleBean(TracingKafkaConsumerFactory.class));
+		this.contextRunner.run(context -> assertThat(context).hasSingleBean(TracingKafkaProducerFactory.class));
+	}
+
+	@Test
+	void should_decorate_kafka_receiver_beans() {
+		this.contextRunner
+				.withBean(KafkaReceiver.class,
+						() -> new DefaultKafkaReceiver<>(new MockConsumerFactory(), ReceiverOptions.create()))
+				.run(context -> assertThat(context).hasSingleBean(TracingKafkaReceiver.class)
+						.doesNotHaveBean(TracingKafkaConsumer.class));
+	}
+
+	public static class MockConsumerFactory extends ConsumerFactory {
+
+		@Override
+		public <K, V> Consumer<K, V> createConsumer(ReceiverOptions<K, V> config) {
+			return new MockConsumer<>(OffsetResetStrategy.NONE);
+		}
+
 	}
 
 }

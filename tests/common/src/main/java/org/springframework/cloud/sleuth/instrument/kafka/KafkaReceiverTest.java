@@ -37,35 +37,46 @@ import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Answers;
-import org.mockito.BDDMockito;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.reactivestreams.Publisher;
 import org.testcontainers.containers.KafkaContainer;
 import org.testcontainers.containers.wait.strategy.Wait;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 import org.testcontainers.utility.DockerImageName;
 import reactor.core.Disposable;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Hooks;
+import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 import reactor.kafka.receiver.KafkaReceiver;
 import reactor.kafka.receiver.ReceiverOptions;
+import reactor.kafka.receiver.ReceiverRecord;
+import reactor.test.StepVerifier;
+import reactor.util.context.ContextView;
 
 import org.springframework.beans.factory.BeanFactory;
+import org.springframework.cloud.sleuth.CurrentTraceContext;
 import org.springframework.cloud.sleuth.Span;
+import org.springframework.cloud.sleuth.TraceContext;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.exporter.FinishedSpan;
+import org.springframework.cloud.sleuth.instrument.reactor.ReactorSleuth;
 import org.springframework.cloud.sleuth.propagation.Propagator;
 import org.springframework.cloud.sleuth.test.TestSpanHandler;
 import org.springframework.cloud.sleuth.test.TestTracingAwareSupplier;
-import org.springframework.core.ParameterizedTypeReference;
-import org.springframework.core.ResolvableType;
+import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
 
 @Testcontainers
 @ExtendWith(MockitoExtension.class)
 @Tag("DockerRequired")
 public abstract class KafkaReceiverTest implements TestTracingAwareSupplier {
+
+	static final String HOOK_KEY = "org.springframework.cloud.sleuth.autoconfig.instrument.reactor.TraceReactorAutoConfiguration.TraceReactorConfiguration";
 
 	protected String testTopic;
 
@@ -75,9 +86,19 @@ public abstract class KafkaReceiverTest implements TestTracingAwareSupplier {
 
 	protected TestSpanHandler spans = tracerTest().handler();
 
+	protected CurrentTraceContext currentTraceContext = tracerTest().tracing().currentTraceContext();
+
+	protected Propagator.Getter<ConsumerRecord<?, ?>> extractor = new TracingKafkaPropagatorGetter();
+
 	private Disposable consumerSubscription;
 
+	private Disposable shareableReceiverDisposable;
+
+	protected Flux<ReceiverRecord<String, String>> shareableReceiver;
+
 	protected final AtomicInteger receivedCounter = new AtomicInteger(0);
+
+	AnnotationConfigApplicationContext springContext = new AnnotationConfigApplicationContext();
 
 	@Mock(answer = Answers.RETURNS_DEEP_STUBS)
 	BeanFactory beanFactory;
@@ -99,10 +120,11 @@ public abstract class KafkaReceiverTest implements TestTracingAwareSupplier {
 
 	@BeforeEach
 	void setup() {
-		BDDMockito.given(this.beanFactory.getBean(Propagator.class)).willReturn(this.propagator);
-		BDDMockito.given(this.beanFactory.getBeanProvider(ResolvableType.forClassWithGenerics(Propagator.Getter.class,
-				ResolvableType.forType(new ParameterizedTypeReference<ConsumerRecord<?, ?>>() {
-				}))).getIfAvailable()).willReturn(new TracingKafkaPropagatorGetter());
+		// We need to enable scope passing to actually see the context downstream
+		Hooks.resetOnEachOperator();
+		Hooks.resetOnLastOperator();
+		Schedulers.resetOnScheduleHooks();
+
 		testTopic = UUID.randomUUID().toString();
 		Map<String, Object> consumerProperties = new HashMap<>();
 		consumerProperties.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, kafkaContainer.getBootstrapServers());
@@ -111,18 +133,35 @@ public abstract class KafkaReceiverTest implements TestTracingAwareSupplier {
 		consumerProperties.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
 		consumerProperties.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
 		ReceiverOptions<String, String> options = ReceiverOptions.create(consumerProperties);
+
 		options = options.withKeyDeserializer(new StringDeserializer()).withValueDeserializer(new StringDeserializer())
 				.subscription(Collections.singletonList(testTopic));
-		KafkaReceiver<String, String> kafkaReceiver = KafkaReceiver.create(new TracingKafkaConsumerFactory(beanFactory),
-				options);
-		this.consumerSubscription = kafkaReceiver.receive().subscribeOn(Schedulers.single())
+
+		KafkaReceiver<String, String> kafkaReceiver = new TracingKafkaReceiver<>(
+				new ReactiveKafkaTracingPropagator(tracer, propagator, extractor), KafkaReceiver.create(options));
+
+		// Create shareable receiver
+		this.shareableReceiver = kafkaReceiver.receive().publish().autoConnect(0,
+				disposable -> this.shareableReceiverDisposable = disposable);
+
+		// Create subscription for previous tests compatibility
+		this.consumerSubscription = shareableReceiver.subscribeOn(Schedulers.single())
 				.subscribe(record -> receivedCounter.incrementAndGet());
+
 		this.receivedCounter.set(0);
 	}
 
 	@AfterEach
 	void destroy() {
+		springContext.close();
+		Hooks.resetOnEachOperator();
+		Hooks.resetOnLastOperator();
+		Schedulers.resetOnScheduleHooks();
+
 		this.consumerSubscription.dispose();
+		if (this.shareableReceiverDisposable != null) {
+			this.shareableReceiverDisposable.dispose();
+		}
 	}
 
 	@Test
@@ -142,6 +181,31 @@ public abstract class KafkaReceiverTest implements TestTracingAwareSupplier {
 		BDDAssertions.then(span.getTags().get("kafka.topic")).isEqualTo(testTopic);
 		BDDAssertions.then(span.getTags().get("kafka.offset")).isEqualTo("0");
 		BDDAssertions.then(span.getTags().get("kafka.partition")).isEqualTo("0");
+	}
+
+	@Test
+	public void should_pass_tracing_context_for_consumers() {
+		springContext.registerBean(Tracer.class, () -> this.tracer);
+		springContext.registerBean(CurrentTraceContext.class, () -> this.currentTraceContext);
+		springContext.refresh();
+
+		Hooks.onEachOperator(HOOK_KEY, ReactorSleuth.onEachOperatorForOnEachInstrumentation(springContext));
+		Hooks.onLastOperator(HOOK_KEY, ReactorSleuth.onLastOperatorForOnEachInstrumentation(springContext));
+
+		KafkaProducer<String, String> kafkaProducer = KafkaTestUtils
+				.buildTestKafkaProducer(kafkaContainer.getBootstrapServers());
+		ProducerRecord<String, String> producerRecord = new ProducerRecord<>(testTopic, "test", "test-with-trace");
+		producerRecord.headers().add("b3", "80f198ee56343ba864fe8b2a57d3eff7-e457b5a2e4d86bd1-1".getBytes());
+		kafkaProducer.send(producerRecord);
+
+		Publisher<ContextView> testFlux = shareableReceiver.flatMap(record -> Mono.deferContextual(Mono::just));
+
+		StepVerifier.create(testFlux).assertNext(contextView -> {
+			TraceContext traceContext = contextView.get(TraceContext.class);
+
+			assertThat(traceContext).returns("80f198ee56343ba864fe8b2a57d3eff7", TraceContext::traceId)
+					.returns("e457b5a2e4d86bd1", TraceContext::parentId);
+		}).thenCancel().verify(Duration.ofSeconds(15));
 	}
 
 	@Override
