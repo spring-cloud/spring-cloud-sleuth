@@ -79,7 +79,12 @@ public class TraceSessionRepositoryAspect {
 			if (log.isDebugEnabled()) {
 				log.debug("Found a corresponding method on the trace representation [" + method + "]");
 			}
-			return ReflectionUtils.invokeMethod(method, target, pjp.getArgs());
+			try {
+				return method.invoke(target, pjp.getArgs());
+			}
+			catch (Exception ex) {
+				ReflectionUtils.handleReflectionException(ex);
+			}
 		}
 		if (log.isDebugEnabled()) {
 			log.debug("Method [" + pjp.getSignature().getName()
