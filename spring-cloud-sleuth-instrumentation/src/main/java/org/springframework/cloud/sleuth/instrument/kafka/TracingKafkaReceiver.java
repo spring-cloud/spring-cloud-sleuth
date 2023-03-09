@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2021 the original author or authors.
+ * Copyright 2013-2023 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -47,12 +47,29 @@ public class TracingKafkaReceiver<K, V> implements KafkaReceiver<K, V> {
 		this.delegate = delegate;
 	}
 
+	/**
+	 * Creates KafkaReceiver that will de decorated by tracing propagator to provide kafka consumer publishing elements
+	 * containing tracing context in their reactor context.
+	 * @param reactiveKafkaTracingPropagator Instance of trace propagation decorator. Should be available in spring application context as a bean.
+	 * @param options Options to pass for underlying {@link KafkaReceiver#create(ReceiverOptions)}
+	 * @param <K> Key of the record
+	 * @param <V> Value of the record
+	 */
 	public static <K, V> KafkaReceiver<K, V> create(ReactiveKafkaTracingPropagator reactiveKafkaTracingPropagator,
 			ReceiverOptions<K, V> options) {
 		return new TracingKafkaReceiver<>(reactiveKafkaTracingPropagator,
-				KafkaReceiver.create(ConsumerFactory.INSTANCE, options));
+				KafkaReceiver.create(options));
 	}
 
+	/**
+	 * Creates KafkaReceiver that will de decorated by tracing propagator to provide kafka consumer publishing elements
+	 * containing tracing context in their reactor context.
+	 * @param reactiveKafkaTracingPropagator Instance of trace propagation decorator. Should be available in spring application context as a bean.
+	 * @param factory Custom factory to provide for underlying {@link KafkaReceiver#create(ConsumerFactory, ReceiverOptions)}
+	 * @param options Options to provide for underlying {@link KafkaReceiver#create(ConsumerFactory, ReceiverOptions)}
+	 * @param <K> Key of the record
+	 * @param <V> Value of the record
+	 */
 	public static <K, V> KafkaReceiver<K, V> create(ReactiveKafkaTracingPropagator reactiveKafkaTracingPropagator,
 			ConsumerFactory factory, ReceiverOptions<K, V> options) {
 		return new TracingKafkaReceiver<>(reactiveKafkaTracingPropagator, KafkaReceiver.create(factory, options));
