@@ -21,7 +21,6 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.cloud.sleuth.instrument.kafka.TracingKafkaConsumerFactory;
 import org.springframework.cloud.sleuth.instrument.kafka.TracingKafkaProducerFactory;
 import org.springframework.context.annotation.Configuration;
 
@@ -32,15 +31,7 @@ import static org.assertj.core.api.BDDAssertions.then;
 public class TracingReactorKafkaAutoConfigurationTest {
 
 	@Autowired
-	TracingKafkaConsumerFactory kafkaConsumerFactory;
-
-	@Autowired
 	TracingKafkaProducerFactory kafkaProducerFactory;
-
-	@Test
-	public void should_register_consumer_factory() {
-		then(this.kafkaConsumerFactory).isNotNull();
-	}
 
 	@Test
 	public void should_register_producer_factory() {

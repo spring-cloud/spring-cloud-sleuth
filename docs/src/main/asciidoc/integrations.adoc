@@ -14,17 +14,33 @@ We decorate the Kafka clients (`KafkaProducer` and `KafkaConsumer`) to create a 
 
 IMPORTANT: You have to register the `Producer` or `Consumer` as beans in order for Sleuth's auto-configuration to decorate them. When you then inject the beans, the expected type must be `Producer` or `Consumer` (and NOT e.g. `KafkaProducer`).
 
-We also provide `TracingKafkaProducerFactory` and `TracingKafkaConsumerFactory` to be used with the https://projectreactor.io/docs/kafka/release/reference/[Reactor Kafka] clients (`KafkaSender` and `KafkaReceiver`, respectively). See an example in the snippet below:
+For use with project reactor we decorate `KafkaReceiver<K,V>` with `TracingKafkaReceiver<K,V>` for every bean of that type declared. This will create separate publisher for each element received with its own tracing context propagated. When used with reactor instrumentation you will have access to the context of spans.
+
+If there's no parent context, it will create just child span with new trace-id.
 
 [source,java,indent=0]
 ----
 @Bean
-KafkaReceiver<String, String> reactiveKafkaReceiver(TracingKafkaConsumerFactory tracingKafkaConsumerFactory, KafkaReceiverOptions kafkaReceiverOptions) {
-    return KafkaReceiver.create(tracingKafkaConsumerFactory, kafkaReceiverOptions);
+KafkaReceiver<K, V> reactiveKafkaReceiver(ReceiverOptions<K,V> options) {
+    return KafkaReceiver.create(options);
 }
 ----
 
-Additionally, we decorate any https://docs.spring.io/spring-kafka/docs/current/reference/html/[Spring Kafka] `ProducerFactory` and `ConsumerFactory` available in the context. However, this is disabled if Brave instrumentation is on the classpath.
+Later you can simply start receiving your elements to process the context.
+
+[source,java,indent=0]
+----
+@Bean
+DisposableBean exampleRunningConsumer(KafkaReceiver<String, String> receiver){
+    reactor.core.Disposable disposable = receiver.receive()
+        //If you need to read context you can for example use deferContextual
+        .flatMap(record -> Mono.deferContextual(context -> Mono.just(record)))
+        .doOnNext(record -> log.info("I will be coorelated to the child span created with parent context from kafka record"))
+        .subscribe(record -> record.receiverOffset().acknowledge());
+
+    return disposable::dispose;
+}
+----
 
 [[sleuth-async-integration]]
 == Asynchronous Communication

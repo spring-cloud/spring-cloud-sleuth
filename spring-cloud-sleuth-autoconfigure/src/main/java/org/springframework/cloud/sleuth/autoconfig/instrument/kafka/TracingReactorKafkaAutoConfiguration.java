@@ -16,9 +16,13 @@
 
 package org.springframework.cloud.sleuth.autoconfig.instrument.kafka;
 
+import org.apache.kafka.clients.consumer.ConsumerRecord;
 import reactor.kafka.receiver.KafkaReceiver;
+import reactor.kafka.receiver.ReceiverOptions;
+import reactor.kafka.receiver.internals.ConsumerFactory;
 
 import org.springframework.beans.factory.BeanFactory;
+import org.springframework.beans.factory.config.BeanPostProcessor;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
@@ -26,8 +30,10 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.autoconfig.brave.BraveAutoConfiguration;
-import org.springframework.cloud.sleuth.instrument.kafka.TracingKafkaConsumerFactory;
+import org.springframework.cloud.sleuth.instrument.kafka.ReactiveKafkaTracingPropagator;
 import org.springframework.cloud.sleuth.instrument.kafka.TracingKafkaProducerFactory;
+import org.springframework.cloud.sleuth.instrument.kafka.TracingKafkaReceiver;
+import org.springframework.cloud.sleuth.propagation.Propagator;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -47,15 +53,28 @@ import org.springframework.context.annotation.Configuration;
 public class TracingReactorKafkaAutoConfiguration {
 
 	@Bean
-	@ConditionalOnMissingBean
-	TracingKafkaProducerFactory tracingKafkaProducerFactory(BeanFactory beanFactory) {
-		return new TracingKafkaProducerFactory(beanFactory);
+	ReactiveKafkaTracingPropagator reactiveKafkaTracingPropagator(Tracer tracer, Propagator propagator,
+			Propagator.Getter<ConsumerRecord<?, ?>> extractor) {
+		return new ReactiveKafkaTracingPropagator(tracer, propagator, extractor);
+	}
+
+	/**
+	 * This will be wrapping KafkaReceiver beans in tracing wrapper. Can still use it
+	 * manually with
+	 * {@link TracingKafkaReceiver#create(ReactiveKafkaTracingPropagator, ReceiverOptions)}
+	 * {@link TracingKafkaReceiver#create(ReactiveKafkaTracingPropagator, ConsumerFactory, ReceiverOptions)}
+	 */
+	@Bean
+	@ConditionalOnClass({ KafkaReceiver.class })
+	static BeanPostProcessor tracingKafkaReceiverBeanPostProcessor(
+			ReactiveKafkaTracingPropagator reactiveKafkaTracingPropagator) {
+		return new TracingKafkaReceiverBeanPostProcessor(reactiveKafkaTracingPropagator);
 	}
 
 	@Bean
 	@ConditionalOnMissingBean
-	TracingKafkaConsumerFactory tracingKafkaConsumerFactory(BeanFactory beanFactory) {
-		return new TracingKafkaConsumerFactory(beanFactory);
+	TracingKafkaProducerFactory tracingKafkaProducerFactory(BeanFactory beanFactory) {
+		return new TracingKafkaProducerFactory(beanFactory);
 	}
 
 }
