@@ -72,4 +72,11 @@ public class TraceRunnable implements Runnable {
 		}
 	}
 
+	/**
+	 * @return delegate {@link Runnable}
+	 */
+	public Runnable getDelegate() {
+		return delegate;
+	}
+
 }

@@ -75,4 +75,11 @@ public class TraceCallable<V> implements Callable<V> {
 		}
 	}
 
+	/**
+	 * @return delegate {@link Callable}
+	 */
+	public Callable<V> getDelegate() {
+		return delegate;
+	}
+
 }
