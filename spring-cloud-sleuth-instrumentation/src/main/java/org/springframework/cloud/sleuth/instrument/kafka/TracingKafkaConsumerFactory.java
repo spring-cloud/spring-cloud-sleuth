@@ -34,6 +34,7 @@ import org.springframework.beans.factory.BeanFactory;
  * @deprecated Please use {@link TracingKafkaReceiver} that leverages
  * {@link ReactiveKafkaTracingPropagator}
  */
+@Deprecated
 public class TracingKafkaConsumerFactory extends ConsumerFactory {
 
 	private final BeanFactory beanFactory;
