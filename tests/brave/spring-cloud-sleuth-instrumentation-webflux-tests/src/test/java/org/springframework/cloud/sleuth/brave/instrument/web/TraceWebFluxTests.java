@@ -70,6 +70,7 @@ public class TraceWebFluxTests {
 				.run();
 		TestSpanHandler spans = context.getBean(TestSpanHandler.class);
 		AssertingWebFilter assertingWebFilter = context.getBean(AssertingWebFilter.class);
+		InnerAssertingWebFilter innerAssertingWebFilter = context.getBean(InnerAssertingWebFilter.class);
 		int port = context.getBean(Environment.class).getProperty("local.server.port", Integer.class);
 		Controller2 controller2 = context.getBean(Controller2.class);
 		clean(spans, controller2);
@@ -78,6 +79,7 @@ public class TraceWebFluxTests {
 		ClientResponse response = whenRequestIsSent(port, "/api/c2/10");
 		// then
 		thenSpanWasReportedWithTags(spans, response);
+		thenTraceWasAvailableInDoAfter(innerAssertingWebFilter, spans.spans().get(0).id());
 		// then #2002
 		then(response.headers().header("mytraceid")).isNotEmpty();
 		clean(spans, controller2);
@@ -86,35 +88,41 @@ public class TraceWebFluxTests {
 		response = whenRequestIsSent(port, "/api/fn/20");
 		// then
 		thenFunctionalSpanWasReportedWithTags(spans, response);
+		thenTraceWasAvailableInDoAfter(innerAssertingWebFilter, spans.spans().get(0).id());
 		spans.clear();
 
 		// when
 		response = whenRequestIsSent(port, "/missing-endpoint");
 		// then
 		thenSpanWith404StatusCodeWasReported(spans, response);
+		thenTraceWasAvailableInDoAfter(innerAssertingWebFilter, spans.spans().get(0).id());
 		spans.clear();
 
 		// when
 		response = whenRequestIsSent(port, "/exception");
 		// then
 		thenSpanWithExceptionWasReported(spans, response);
+		thenTraceWasAvailableInDoAfter(innerAssertingWebFilter, spans.spans().get(0).id());
 		spans.clear();
 
 		// when
 		ClientResponse nonSampledResponse = whenNonSampledRequestIsSent(port);
 		// then
 		thenNoSpanWasReported(spans, nonSampledResponse, controller2);
+		thenSomeTraceWasAvailableInDoAfter(innerAssertingWebFilter);
 		spans.clear();
 
 		// when
 		ClientResponse skippedPatternResponse = whenRequestIsSentToSkippedPattern(port);
 		// then
 		thenNoSpanWasReported(spans, skippedPatternResponse, controller2);
+		thenSomeTraceWasAvailableInDoAfter(innerAssertingWebFilter);
 
 		// when (issue #1683)
 		response = whenRequestWithXForwardedForIsSent(port, "/api/fn/20");
 		// then
 		thenSpanWasReportedWithRemoteIpTags(spans, response);
+		thenTraceWasAvailableInDoAfter(innerAssertingWebFilter, spans.spans().get(0).id());
 
 		thenNoTraceWasLeaked(assertingWebFilter);
 
@@ -164,6 +172,17 @@ public class TraceWebFluxTests {
 
 	private void thenNoTraceWasLeaked(AssertingWebFilter assertingWebFilter) {
 		then(assertingWebFilter.getSpans()).isEmpty();
+	}
+
+
+	private void thenSomeTraceWasAvailableInDoAfter(InnerAssertingWebFilter assertingWebFilter) {
+		then(assertingWebFilter.getSpans()).hasSize(1);
+		assertingWebFilter.getSpans().clear();
+	}
+
+	private void thenTraceWasAvailableInDoAfter(InnerAssertingWebFilter assertingWebFilter, String spanId) {
+		then(assertingWebFilter.getSpans()).hasSize(1).first().matches(s -> s.context().traceIdString().equals(spanId));
+		assertingWebFilter.getSpans().clear();
 	}
 
 	private void thenNoSpanWasReported(TestSpanHandler spans, ClientResponse response, Controller2 controller2) {
@@ -247,6 +266,38 @@ public class TraceWebFluxTests {
 			return new AssertingWebFilter(tracer);
 		}
 
+
+		@Bean
+		@Order(Ordered.LOWEST_PRECEDENCE)
+		WebFilter innerFilterDoAfterTerminate(Tracer tracer) {
+			return new InnerAssertingWebFilter(tracer);
+		}
+
+	}
+
+	static class InnerAssertingWebFilter implements WebFilter {
+		final Queue<Span> spans  = new ConcurrentLinkedQueue<>();
+
+		private final Tracer tracer;
+
+		InnerAssertingWebFilter(Tracer tracer) {
+			this.tracer = tracer;
+		}
+
+		@Override
+		public Mono<Void> filter(ServerWebExchange exchange, WebFilterChain webFilterChain) {
+			return webFilterChain.filter(exchange)
+					.doAfterTerminate(() -> {
+						Span currentSpan = tracer.currentSpan();
+						if (currentSpan != null) {
+							spans.add(currentSpan);
+						}
+					});
+		}
+
+		Queue<Span> getSpans() {
+			return spans;
+		}
 	}
 
 	static class AssertingWebFilter implements WebFilter {
