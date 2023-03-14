@@ -274,14 +274,16 @@ public class TraceWebFilter implements WebFilter, Ordered, ApplicationContextAwa
 
 			@Override
 			public void onError(Throwable t) {
-				terminateSpan(t);
-				this.actual.onError(t);
+				try (Tracer.SpanInScope ignored = terminateSpan(t)) {
+					this.actual.onError(t);
+				}
 			}
 
 			@Override
 			public void onComplete() {
-				terminateSpan(null);
-				this.actual.onComplete();
+				try (Tracer.SpanInScope ignored = terminateSpan(null)) {
+					this.actual.onComplete();
+				}
 			}
 
 			@Override
@@ -289,7 +291,7 @@ public class TraceWebFilter implements WebFilter, Ordered, ApplicationContextAwa
 				return this.context;
 			}
 
-			private void terminateSpan(@Nullable Throwable t) {
+			private Tracer.SpanInScope terminateSpan(@Nullable Throwable t) {
 				Object attribute = this.exchange.getAttribute(HandlerMapping.BEST_MATCHING_HANDLER_ATTRIBUTE);
 				addClassMethodTag(attribute, this.span);
 				addClassNameTag(attribute, this.span);
@@ -302,7 +304,7 @@ public class TraceWebFilter implements WebFilter, Ordered, ApplicationContextAwa
 				if (log.isDebugEnabled()) {
 					log.debug("Handled send of " + this.span);
 				}
-				tracer.withSpan(null);
+				return tracer.withSpan(null);
 			}
 
 			private void addClassMethodTag(Object handler, Span span) {
