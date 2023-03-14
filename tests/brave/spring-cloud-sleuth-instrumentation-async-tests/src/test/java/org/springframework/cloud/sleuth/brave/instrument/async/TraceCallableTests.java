@@ -16,8 +16,16 @@
 
 package org.springframework.cloud.sleuth.brave.instrument.async;
 
+import java.util.concurrent.Callable;
+
+import org.junit.jupiter.api.Test;
+
 import org.springframework.cloud.sleuth.brave.BraveTestTracing;
+import org.springframework.cloud.sleuth.instrument.async.TraceCallable;
+import org.springframework.cloud.sleuth.internal.DefaultSpanNamer;
 import org.springframework.cloud.sleuth.test.TestTracingAware;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 public class TraceCallableTests extends org.springframework.cloud.sleuth.instrument.async.TraceCallableTests {
 
@@ -29,6 +37,16 @@ public class TraceCallableTests extends org.springframework.cloud.sleuth.instrum
 			this.testTracing = new BraveTestTracing();
 		}
 		return this.testTracing;
+	}
+
+	@Test
+	public void should_provide_delegate() {
+		Callable<String> delegate = () -> "test";
+
+		TraceCallable<String> traceCallable = new TraceCallable<>(tracerTest().tracing().tracer(),
+				new DefaultSpanNamer(), delegate);
+
+		assertThat(traceCallable.getDelegate()).isEqualTo(delegate);
 	}
 
 }

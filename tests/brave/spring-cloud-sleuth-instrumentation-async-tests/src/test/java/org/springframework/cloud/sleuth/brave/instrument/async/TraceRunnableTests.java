@@ -17,10 +17,15 @@
 package org.springframework.cloud.sleuth.brave.instrument.async;
 
 import org.assertj.core.api.BDDAssertions;
+import org.junit.jupiter.api.Test;
 
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.brave.BraveTestTracing;
+import org.springframework.cloud.sleuth.instrument.async.TraceRunnable;
+import org.springframework.cloud.sleuth.internal.DefaultSpanNamer;
 import org.springframework.cloud.sleuth.test.TestTracingAware;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 public class TraceRunnableTests extends org.springframework.cloud.sleuth.instrument.async.TraceRunnableTests {
 
@@ -37,6 +42,17 @@ public class TraceRunnableTests extends org.springframework.cloud.sleuth.instrum
 	@Override
 	protected void assertThatThereIsNoParentId(Span secondSpan) {
 		BDDAssertions.then(secondSpan.context().parentId()).as("saved span as remnant of first span").isNull();
+	}
+
+	@Test
+	public void should_provide_delegate() {
+		Runnable delegate = () -> {
+		};
+
+		TraceRunnable traceRunnable = new TraceRunnable(tracerTest().tracing().tracer(), new DefaultSpanNamer(),
+				delegate);
+
+		assertThat(traceRunnable.getDelegate()).isEqualTo(delegate);
 	}
 
 }
