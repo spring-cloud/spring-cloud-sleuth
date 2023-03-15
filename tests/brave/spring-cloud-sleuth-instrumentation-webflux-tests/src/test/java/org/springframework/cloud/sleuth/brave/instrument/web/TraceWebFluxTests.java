@@ -174,7 +174,6 @@ public class TraceWebFluxTests {
 		then(assertingWebFilter.getSpans()).isEmpty();
 	}
 
-
 	private void thenSomeTraceWasAvailableInDoAfter(InnerAssertingWebFilter assertingWebFilter) {
 		then(assertingWebFilter.getSpans()).hasSize(1);
 		assertingWebFilter.getSpans().clear();
@@ -266,7 +265,6 @@ public class TraceWebFluxTests {
 			return new AssertingWebFilter(tracer);
 		}
 
-
 		@Bean
 		@Order(Ordered.LOWEST_PRECEDENCE)
 		WebFilter innerFilterDoAfterTerminate(Tracer tracer) {
@@ -276,7 +274,8 @@ public class TraceWebFluxTests {
 	}
 
 	static class InnerAssertingWebFilter implements WebFilter {
-		final Queue<Span> spans  = new ConcurrentLinkedQueue<>();
+
+		final Queue<Span> spans = new ConcurrentLinkedQueue<>();
 
 		private final Tracer tracer;
 
@@ -286,18 +285,18 @@ public class TraceWebFluxTests {
 
 		@Override
 		public Mono<Void> filter(ServerWebExchange exchange, WebFilterChain webFilterChain) {
-			return webFilterChain.filter(exchange)
-					.doAfterTerminate(() -> {
-						Span currentSpan = tracer.currentSpan();
-						if (currentSpan != null) {
-							spans.add(currentSpan);
-						}
-					});
+			return webFilterChain.filter(exchange).doAfterTerminate(() -> {
+				Span currentSpan = tracer.currentSpan();
+				if (currentSpan != null) {
+					spans.add(currentSpan);
+				}
+			});
 		}
 
 		Queue<Span> getSpans() {
 			return spans;
 		}
+
 	}
 
 	static class AssertingWebFilter implements WebFilter {
