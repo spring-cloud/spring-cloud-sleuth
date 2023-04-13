@@ -94,6 +94,13 @@ public interface CurrentTraceContext {
 	 */
 	interface Scope extends Closeable {
 
+		/**
+		 * Noop instance.
+		 */
+		Scope NOOP = () -> {
+
+		};
+
 		@Override
 		void close();
 
