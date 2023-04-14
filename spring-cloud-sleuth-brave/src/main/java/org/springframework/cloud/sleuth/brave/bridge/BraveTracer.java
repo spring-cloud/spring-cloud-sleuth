@@ -16,6 +16,8 @@
 
 package org.springframework.cloud.sleuth.brave.bridge;
 
+import java.io.Closeable;
+import java.io.IOException;
 import java.util.Map;
 
 import brave.propagation.TraceContextOrSamplingFlags;
@@ -27,7 +29,6 @@ import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.SpanCustomizer;
 import org.springframework.cloud.sleuth.TraceContext;
 import org.springframework.cloud.sleuth.Tracer;
-import org.springframework.cloud.sleuth.docs.AssertingSpan;
 
 /**
  * Brave implementation of a {@link Tracer}.
@@ -70,8 +71,11 @@ public class BraveTracer implements Tracer {
 
 	@Override
 	public SpanInScope withSpan(Span span) {
-		return new BraveSpanInScope(
-				tracer.withSpanInScope(span == null ? null : ((BraveSpan) AssertingSpan.unwrap(span)).delegate));
+		if (span == null) {
+			currentTraceContext.maybeScope(null);
+			return SpanInScope.NOOP;
+		}
+		return new BraveSpanInScope(currentTraceContext.maybeScope(span.context()));
 	}
 
 	@Override
@@ -142,15 +146,20 @@ public class BraveTracer implements Tracer {
 
 class BraveSpanInScope implements Tracer.SpanInScope {
 
-	final brave.Tracer.SpanInScope delegate;
+	final Closeable delegate;
 
-	BraveSpanInScope(brave.Tracer.SpanInScope delegate) {
+	BraveSpanInScope(Closeable delegate) {
 		this.delegate = delegate;
 	}
 
 	@Override
 	public void close() {
-		this.delegate.close();
+		try {
+			this.delegate.close();
+		}
+		catch (IOException e) {
+			throw new RuntimeException(e);
+		}
 	}
 
 }

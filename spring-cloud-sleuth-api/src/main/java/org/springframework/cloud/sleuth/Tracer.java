@@ -170,6 +170,13 @@ public interface Tracer extends BaggageManager {
 	 */
 	interface SpanInScope extends Closeable {
 
+		/**
+		 * Noop instance.
+		 */
+		SpanInScope NOOP = () -> {
+
+		};
+
 		@Override
 		void close();
 

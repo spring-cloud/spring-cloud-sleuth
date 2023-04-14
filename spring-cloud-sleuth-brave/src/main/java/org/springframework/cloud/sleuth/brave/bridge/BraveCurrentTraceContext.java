@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2021 the original author or authors.
+ * Copyright 2013-2023 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,16 +20,14 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 
+import brave.propagation.ThreadLocalCurrentTraceContext;
+
 import org.springframework.cloud.sleuth.CurrentTraceContext;
 import org.springframework.cloud.sleuth.TraceContext;
 
-/**
- * Brave implementation of a {@link CurrentTraceContext}.
- *
- * @author Marcin Grzejszczak
- * @since 3.0.0
- */
 public class BraveCurrentTraceContext implements CurrentTraceContext {
+
+	final ThreadLocal<Scope> scopes = new ThreadLocal<>();
 
 	final brave.propagation.CurrentTraceContext delegate;
 
@@ -40,20 +38,36 @@ public class BraveCurrentTraceContext implements CurrentTraceContext {
 	@Override
 	public TraceContext context() {
 		brave.propagation.TraceContext context = this.delegate.get();
+		return context == null ? null : new BraveTraceContext(context);
+	}
+
+	@Override
+	public CurrentTraceContext.Scope newScope(TraceContext context) {
 		if (context == null) {
-			return null;
+			clearScopes();
+			return Scope.NOOP;
 		}
-		return new BraveTraceContext(context);
+		return new RevertingScope(this, new BraveScope(this.delegate.newScope(BraveTraceContext.toBrave(context))));
 	}
 
 	@Override
-	public Scope newScope(TraceContext context) {
-		return new BraveScope(this.delegate.newScope(BraveTraceContext.toBrave(context)));
+	public CurrentTraceContext.Scope maybeScope(TraceContext context) {
+		if (context == null) {
+			clearScopes();
+			return Scope.NOOP;
+		}
+		return new RevertingScope(this, new BraveScope(this.delegate.maybeScope(BraveTraceContext.toBrave(context))));
 	}
 
-	@Override
-	public Scope maybeScope(TraceContext context) {
-		return new BraveScope(this.delegate.maybeScope(BraveTraceContext.toBrave(context)));
+	private void clearScopes() {
+		Scope current = this.scopes.get();
+		while (current != null) {
+			current.close();
+			current = this.scopes.get();
+		}
+		if (this.delegate instanceof ThreadLocalCurrentTraceContext) {
+			((ThreadLocalCurrentTraceContext) this.delegate).clear();
+		}
 	}
 
 	@Override
@@ -82,6 +96,29 @@ public class BraveCurrentTraceContext implements CurrentTraceContext {
 
 	static CurrentTraceContext fromBrave(brave.propagation.CurrentTraceContext context) {
 		return new BraveCurrentTraceContext(context);
+	}
+
+}
+
+class RevertingScope implements CurrentTraceContext.Scope {
+
+	private final BraveCurrentTraceContext currentTraceContext;
+
+	private final CurrentTraceContext.Scope previous;
+
+	private final CurrentTraceContext.Scope current;
+
+	RevertingScope(BraveCurrentTraceContext currentTraceContext, CurrentTraceContext.Scope current) {
+		this.currentTraceContext = currentTraceContext;
+		this.previous = this.currentTraceContext.scopes.get();
+		this.current = current;
+		this.currentTraceContext.scopes.set(this);
+	}
+
+	@Override
+	public void close() {
+		this.current.close();
+		this.currentTraceContext.scopes.set(this.previous);
 	}
 
 }
