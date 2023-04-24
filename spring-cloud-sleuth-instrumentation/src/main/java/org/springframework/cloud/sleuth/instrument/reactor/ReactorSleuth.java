@@ -19,6 +19,7 @@ package org.springframework.cloud.sleuth.instrument.reactor;
 import java.util.AbstractQueue;
 import java.util.Iterator;
 import java.util.Queue;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 import java.util.function.Function;
@@ -63,6 +64,8 @@ import static org.springframework.cloud.sleuth.instrument.reactor.ReactorHooksHe
 public abstract class ReactorSleuth {
 
 	private static final Log log = LogFactory.getLog(ReactorSleuth.class);
+
+	private static final String PENDING_SPAN_KEY = "sleuth.pending-span";
 
 	private ReactorSleuth() {
 	}
@@ -605,6 +608,47 @@ public abstract class ReactorSleuth {
 	 */
 	public static Context wrapContext(Context context) {
 		return contextWrappingFunction.apply(context);
+	}
+
+	/**
+	 * Retreives the {@link TraceContext} from the current context.
+	 * @param context Reactor context
+	 * @return {@link TraceContext} or {@code null} if none present
+	 */
+	@SuppressWarnings("unchecked")
+	public static TraceContext getParentTraceContext(Context context, TraceContext fallback) {
+		AtomicReference<Span> pendingSpanRef = getPendingSpan(context);
+		if (pendingSpanRef == null || pendingSpanRef.get() == null) {
+			return fallback;
+		}
+		return pendingSpanRef.get().context();
+	}
+
+	/**
+	 * Retreives the pending span from the current context.
+	 * @param context Reactor context
+	 * @return {@code AtomicReference} to span or {@code null} if none present
+	 * @see ReactorSleuth#putPendingSpan(Context, AtomicReference)
+	 */
+	@SuppressWarnings("unchecked")
+	public static AtomicReference<Span> getPendingSpan(ContextView context) {
+		Object objectSpan = context.getOrDefault(ReactorSleuth.PENDING_SPAN_KEY, null);
+		if ((objectSpan instanceof AtomicReference)) {
+			return ((AtomicReference<Span>) objectSpan);
+		}
+		return null;
+	}
+
+	/**
+	 * Mutates the {@link Context} to include a mutable reference to a span. Can be used
+	 * when you need to mutate the parent operator context with a span created by a child
+	 * operator.
+	 * @param context Reactor context
+	 * @param span atomic reference of a span
+	 * @return mutated context
+	 */
+	public static Context putPendingSpan(Context context, AtomicReference<Span> span) {
+		return context.put(PENDING_SPAN_KEY, span);
 	}
 
 	/**

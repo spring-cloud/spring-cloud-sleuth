@@ -16,10 +16,13 @@
 
 package org.springframework.cloud.sleuth.instrument.web.client;
 
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.BiConsumer;
 
 import io.netty.bootstrap.Bootstrap;
 import org.assertj.core.api.Assertions;
+import org.awaitility.Awaitility;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -32,7 +35,6 @@ import reactor.core.scheduler.Schedulers;
 import reactor.netty.Connection;
 
 import org.springframework.cloud.sleuth.TraceContext;
-import org.springframework.cloud.sleuth.instrument.web.client.HttpClientBeanPostProcessor.PendingSpan;
 import org.springframework.cloud.sleuth.instrument.web.client.HttpClientBeanPostProcessor.TracingMapConnect;
 
 @ExtendWith(MockitoExtension.class)
@@ -58,35 +60,51 @@ public abstract class HttpClientBeanPostProcessorTest {
 	@Test
 	void mapConnect_should_setup_reactor_context_currentTraceContext() {
 		TracingMapConnect tracingMapConnect = new TracingMapConnect(() -> traceContext);
+		AtomicBoolean assertionPassed = new AtomicBoolean();
 
 		Mono<Connection> original = Mono.just(connection)
 				.handle(new BiConsumer<Connection, SynchronousSink<Connection>>() {
 					@Override
 					public void accept(Connection t, SynchronousSink<Connection> ctx) {
-						Assertions.assertThat(ctx.currentContext().get(TraceContext.class)).isSameAs(traceContext);
-						Assertions.assertThat(ctx.currentContext().get(PendingSpan.class)).isNotNull();
+						try {
+							Assertions.assertThat(ctx.currentContext().get(TraceContext.class)).isSameAs(traceContext);
+							Assertions.assertThat((Object) ctx.currentContext().get("sleuth.pending-span")).isNotNull();
+							assertionPassed.set(true);
+						}
+						catch (AssertionError ae) {
+						}
 					}
 				});
 
 		// Wrap and run the assertions
 		tracingMapConnect.apply(original).log().subscribe();
+
+		Awaitility.await().atMost(1, TimeUnit.SECONDS).untilTrue(assertionPassed);
 	}
 
 	@Test
 	void mapConnect_should_setup_reactor_context_no_currentTraceContext() {
 		TracingMapConnect tracingMapConnect = new TracingMapConnect(() -> null);
+		AtomicBoolean assertionPassed = new AtomicBoolean();
 
 		Mono<Connection> original = Mono.just(connection)
 				.handle(new BiConsumer<Connection, SynchronousSink<Connection>>() {
 					@Override
 					public void accept(Connection t, SynchronousSink<Connection> ctx) {
-						Assertions.assertThat(ctx.currentContext().getOrEmpty(TraceContext.class)).isEmpty();
-						Assertions.assertThat(ctx.currentContext().get(PendingSpan.class)).isNotNull();
+						try {
+							Assertions.assertThat(ctx.currentContext().getOrEmpty(TraceContext.class)).isEmpty();
+							Assertions.assertThat((Object) ctx.currentContext().get("sleuth.pending-span")).isNotNull();
+							assertionPassed.set(true);
+						}
+						catch (AssertionError ae) {
+						}
 					}
 				});
 
 		// Wrap and run the assertions
 		tracingMapConnect.apply(original).log().subscribe();
+
+		Awaitility.await().atMost(1, TimeUnit.SECONDS).untilTrue(assertionPassed);
 	}
 
 }

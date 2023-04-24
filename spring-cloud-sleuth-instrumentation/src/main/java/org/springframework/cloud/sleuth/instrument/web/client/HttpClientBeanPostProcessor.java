@@ -115,7 +115,7 @@ public class HttpClientBeanPostProcessor implements BeanPostProcessor {
 					// Read in this processor and also in ScopePassingSpanSubscriber
 					context = ReactorSleuth.wrapContext(context.put(TraceContext.class, invocationContext));
 				}
-				return context.put(PendingSpan.class, pendingSpan);
+				return ReactorSleuth.putPendingSpan(context, pendingSpan);
 			}).doOnCancel(() -> {
 				// Check to see if Subscription.cancel() happened before another signal,
 				// like onComplete() completed the span (clearing the reference).
@@ -153,7 +153,7 @@ public class HttpClientBeanPostProcessor implements BeanPostProcessor {
 
 		@Override
 		public void accept(HttpClientRequest req, Connection connection) {
-			PendingSpan pendingSpan = req.currentContextView().getOrDefault(PendingSpan.class, null);
+			AtomicReference<Span> pendingSpan = ReactorSleuth.getPendingSpan(req.currentContextView());
 			if (pendingSpan == null) {
 				return; // Somehow TracingMapConnect was not invoked.. skip out
 			}
@@ -240,7 +240,7 @@ public class HttpClientBeanPostProcessor implements BeanPostProcessor {
 		}
 
 		void handle(Context context, @Nullable HttpClientResponse resp, @Nullable Throwable error) {
-			PendingSpan pendingSpan = context.getOrDefault(PendingSpan.class, null);
+			AtomicReference<Span> pendingSpan = ReactorSleuth.getPendingSpan(context);
 			if (pendingSpan == null) {
 				return; // Somehow TracingMapConnect was not invoked.. skip out
 			}
