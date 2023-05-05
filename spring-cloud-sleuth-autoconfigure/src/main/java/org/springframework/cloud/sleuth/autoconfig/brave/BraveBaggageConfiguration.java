@@ -198,13 +198,14 @@ class BraveBaggageConfiguration {
 	@ConditionalOnProperty(value = "spring.sleuth.baggage.correlation-enabled", matchIfMissing = true)
 	ScopeDecorator correlationScopeDecorator(@Qualifier(WHITELISTED_MDC_KEYS) List<String> whiteListedMDCKeys,
 			SleuthBaggageProperties sleuthBaggageProperties,
+			CorrelationScopeDecorator.Builder correlationScopeDecoratorBuilder,
 			@Nullable List<CorrelationScopeCustomizer> correlationScopeCustomizers) {
 
 		Set<String> correlationFields = redirectOldPropertyToNew(WHITELISTED_MDC_KEYS, whiteListedMDCKeys,
 				"spring.sleuth.baggage.correlation-fields", sleuthBaggageProperties.getCorrelationFields());
 
 		// Add fields from properties
-		CorrelationScopeDecorator.Builder builder = MDCScopeDecorator.newBuilder();
+		CorrelationScopeDecorator.Builder builder = correlationScopeDecoratorBuilder;
 		for (String field : correlationFields) {
 			builder.add(SingleCorrelationField.newBuilder(BaggageField.create(field)).build());
 		}
