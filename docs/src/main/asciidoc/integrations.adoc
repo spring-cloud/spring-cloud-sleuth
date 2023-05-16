@@ -289,17 +289,6 @@ To change the order of tracing filter registration, please set the
 To disable the filter that logs uncaught exceptions you can disable the
 `spring.sleuth.web.exception-throwing-filter-enabled` property.
 
-[[sleuth-http-server-handler-interceptor-integration]]
-=== HandlerInterceptor
-
-This feature is available for all tracer implementations.
-
-Since we want the span names to be precise, we use a `TraceHandlerInterceptor` that either wraps an existing `HandlerInterceptor` or is added directly to the list of existing `HandlerInterceptors`.
-The `TraceHandlerInterceptor` adds a special request attribute to the given `HttpServletRequest`.
-If the the `TracingFilter` does not see this attribute, it creates a "`fallback`" span, which is an additional span created on the server side so that the trace is presented properly in the UI.
-If that happens, there is probably missing instrumentation.
-In that case, please file an issue in Spring Cloud Sleuth.
-
 [[sleuth-http-server-async-integration]]
 === Async Servlet support
 
