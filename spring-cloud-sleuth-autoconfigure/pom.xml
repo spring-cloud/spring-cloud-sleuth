@@ -338,6 +338,11 @@
 			<artifactId>reactor-kafka</artifactId>
 			<optional>true</optional>
 		</dependency>
+		<dependency>
+			<groupId>io.projectreactor.netty</groupId>
+			<artifactId>reactor-netty-http-brave</artifactId>
+			<optional>true</optional>
+		</dependency>
 		<!-- GRPC Optional Dependencies -->
 		<dependency>
 			<groupId>io.github.lognet</groupId>
