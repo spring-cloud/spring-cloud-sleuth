@@ -100,7 +100,6 @@ class ReuseTraceIdTest {
 			exceptions.forEach(Exception::printStackTrace);
 			fail();
 		}
-		// printHistory();
 	}
 
 	private void testLoop() {
@@ -130,30 +129,26 @@ class ReuseTraceIdTest {
 					.header("Content-Type", "application/json").build();
 
 			Call call = client.newCall(request);
-			Response clientResponse = call.execute();
-
-			int status = clientResponse.code();
-			if (status != 200) {
-				throw new RuntimeException("Request failed with status " + status);
-			}
-
-			String responseTraceId = clientResponse.headers().get("X-DOX-TraceId");
-
-			if (!traceId.equals(responseTraceId)) {
-				System.out.println("error for traceId= " + traceId);
-				boolean previous = traceIds.contains(responseTraceId);
-				if (previous) {
-					previousTraceIds.add(responseTraceId);
-					System.out.println("recieved for " + traceId + " a previous trace id " + responseTraceId);
-					// printHistory(List.of(traceId, responseTraceId));
-					// System.exit(1);
+			try (Response clientResponse = call.execute()) {
+				int status = clientResponse.code();
+				if (status != 200) {
+					throw new RuntimeException("Request failed with status " + status);
 				}
-				else {
-					System.out.println("recieved an unknown trace id: " + responseTraceId);
-				}
-				failedTraceIds.put(traceId, previous);
-			}
 
+				String responseTraceId = clientResponse.headers().get("X-DOX-TraceId");
+				if (!traceId.equals(responseTraceId)) {
+					System.out.println("error for traceId= " + traceId);
+					boolean previous = traceIds.contains(responseTraceId);
+					if (previous) {
+						previousTraceIds.add(responseTraceId);
+						System.out.println("received for " + traceId + " a previous trace id " + responseTraceId);
+					}
+					else {
+						System.out.println("received an unknown trace id: " + responseTraceId);
+					}
+					failedTraceIds.put(traceId, previous);
+				}
+			}
 		}
 		catch (Exception ex) {
 			ex.printStackTrace();
@@ -163,18 +158,6 @@ class ReuseTraceIdTest {
 			span.finish();
 		}
 	}
-
-	// private void printHistory() {
-	// printHistory(new ArrayList<>(traceIds));
-	// }
-	//
-	// private void printHistory(List<String> traceIds) {
-	// for (String tid : traceIds) {
-	// System.out.println("history for " + tid + ":");
-	// List<TraceEvent> history = TraceEvent.getHistory(tid);
-	// System.out.println(TraceEvent.asString(history));
-	// }
-	// }
 
 	@Configuration(proxyBeanMethods = false)
 	@EnableAutoConfiguration

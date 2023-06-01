@@ -21,6 +21,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import brave.propagation.TraceContext;
 import reactor.util.context.ContextView;
 
+import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.brave.bridge.BraveTraceContext;
 import org.springframework.cloud.sleuth.instrument.reactor.ReactorSleuth;
 
@@ -31,9 +32,9 @@ final class TracingHandlerUtil {
 	}
 
 	static TraceContext traceContext(ContextView ctxView) {
-		AtomicReference<org.springframework.cloud.sleuth.Span> pendingSpan = ReactorSleuth.getPendingSpan(ctxView);
+		AtomicReference<Span> pendingSpan = ReactorSleuth.getPendingSpan(ctxView);
 		if (pendingSpan != null) {
-			org.springframework.cloud.sleuth.Span span = pendingSpan.get();
+			Span span = pendingSpan.get();
 			if (span != null) {
 				return BraveTraceContext.toBrave(span.context());
 			}

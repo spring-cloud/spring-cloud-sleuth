@@ -28,38 +28,43 @@ import org.springframework.cloud.sleuth.autoconfig.brave.BraveAutoConfiguration;
 import static org.assertj.core.api.Assertions.assertThat;
 
 class BraveReactorNettyAutoConfigurationTests {
+
 	@Test
 	void should_not_auto_configure_brave_reactor_netty_by_default() {
 		new ApplicationContextRunner()
 				.withConfiguration(
 						AutoConfigurations.of(BraveAutoConfiguration.class, BraveReactorNettyAutoConfiguration.class))
-				.run(context -> assertThat(context).doesNotHaveBean(NettyServerCustomizer.class).doesNotHaveBean(HttpClientCustomizer.class));
+				.run(context -> assertThat(context).doesNotHaveBean(NettyServerCustomizer.class)
+						.doesNotHaveBean(HttpClientCustomizer.class));
 	}
+
 	@Test
 	void should_not_auto_configure_brave_reactor_netty_when_no_http_tracing_on_classpath() {
-		new ApplicationContextRunner()
-				.withPropertyValues("spring.sleuth.reactor.netty.debug.enabled=true")
+		new ApplicationContextRunner().withPropertyValues("spring.sleuth.reactor.netty.debug.enabled=true")
 				.withClassLoader(new FilteredClassLoader("brave.http.HttpTracing"))
 				.withConfiguration(
 						AutoConfigurations.of(BraveAutoConfiguration.class, BraveReactorNettyAutoConfiguration.class))
-				.run(context -> assertThat(context).doesNotHaveBean(NettyServerCustomizer.class).doesNotHaveBean(HttpClientCustomizer.class));
+				.run(context -> assertThat(context).doesNotHaveBean(NettyServerCustomizer.class)
+						.doesNotHaveBean(HttpClientCustomizer.class));
 	}
+
 	@Test
 	void should_not_auto_configure_brave_reactor_netty_when_no_reactor_netty_brave_on_classpath() {
-		new ApplicationContextRunner()
-				.withPropertyValues("spring.sleuth.reactor.netty.debug.enabled=true")
+		new ApplicationContextRunner().withPropertyValues("spring.sleuth.reactor.netty.debug.enabled=true")
 				.withClassLoader(new FilteredClassLoader("reactor.netty.http.brave.ReactorNettyHttpTracing"))
 				.withConfiguration(
 						AutoConfigurations.of(BraveAutoConfiguration.class, BraveReactorNettyAutoConfiguration.class))
-				.run(context -> assertThat(context).doesNotHaveBean(NettyServerCustomizer.class).doesNotHaveBean(HttpClientCustomizer.class));
+				.run(context -> assertThat(context).doesNotHaveBean(NettyServerCustomizer.class)
+						.doesNotHaveBean(HttpClientCustomizer.class));
 	}
 
 	@Test
 	void should_auto_configure_brave_reactor_netty_when_property_set() {
-		new ApplicationContextRunner()
-				.withPropertyValues("spring.sleuth.reactor.netty.debug.enabled=true")
+		new ApplicationContextRunner().withPropertyValues("spring.sleuth.reactor.netty.debug.enabled=true")
 				.withConfiguration(
 						AutoConfigurations.of(BraveAutoConfiguration.class, BraveReactorNettyAutoConfiguration.class))
-				.run(context -> assertThat(context).hasSingleBean(NettyServerCustomizer.class).hasSingleBean(HttpClientCustomizer.class));
+				.run(context -> assertThat(context).hasSingleBean(NettyServerCustomizer.class)
+						.hasSingleBean(HttpClientCustomizer.class));
 	}
+
 }
