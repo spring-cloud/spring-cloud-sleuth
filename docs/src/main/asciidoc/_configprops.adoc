@@ -67,6 +67,7 @@
 |spring.sleuth.reactor.decorate-on-each | `+++true+++` | When true decorates on each operator, will be less performing, but logging will always contain the tracing entries in each operator. When false decorates on last operator, will be more performing, but logging might not always contain the tracing entries. @deprecated use explicit value via {@link SleuthReactorProperties#instrumentationType}
 |spring.sleuth.reactor.enabled | `+++true+++` | When true enables instrumentation for reactor.
 |spring.sleuth.reactor.instrumentation-type |  | 
+|spring.sleuth.reactor.netty.debug.enabled | `+++false+++` | WARNING: Use with caution, can lead to serious performance issues. Enable additional instrumentation for Reactor Netty.
 |spring.sleuth.redis.enabled | `+++true+++` | Enable span information propagation when using Redis.
 |spring.sleuth.redis.legacy.enabled | `+++false+++` | Enable legacy tracing of Redis that works only via Brave.
 |spring.sleuth.redis.remote-service-name | `+++redis+++` | Service name for the remote Redis endpoint.
