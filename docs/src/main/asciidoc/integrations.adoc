@@ -160,6 +160,54 @@ In the following snippet, you can see an example of how to set up such a custom 
 include::{common_tests_path}/src/main/java/org/springframework/cloud/sleuth/instrument/web/client/MultipleAsyncRestTemplateTests.java[tags=custom_async_rest_template,indent=0]
 ----
 
+[[sleuth-async-troubleshooting]]
+==== Troubleshooting Async Configuration Issues
+
+Sine Sleuth uses a Bean Post Processor (BPP) to modify executors the `Executor` type that you provided will be modified and the return type will be the trace version of that executor. That can lead to exceptions simillar to this
+
+```
+12:12:49.606 [main] DEBUG org.springframework.context.annotation.AnnotationConfigApplicationContext - Closing org.springframework.context.annotation.AnnotationConfigApplicationContext@2401f4c3, started on Wed Jan 19 12:12:49 GMT 2022
+Exception in thread "main" org.springframework.beans.factory.BeanNotOfRequiredTypeException: Bean named 'exampleConfigurer' is expected to be of type 'com.example.demo.Gh29151Application$Example' but was actually of type 'org.springframework.cloud.sleuth.instrument.async.LazyTraceAsyncCustomizer'
+```
+
+If you see such exceptions you must
+
+* disable sleuth async
+* manually instrument the executors using their trace representations
+
+Example
+
+[source,properties,indent=0]
+----
+spring.sleuth.async.enabled=false
+----
+
+and configuration example
+
+[source,java,indent=0]
+----
+@Configuration
+@EnableAsync
+public class AsyncConfiguration implements AsyncConfigurer {
+
+	private final BeanFactory beanFactory;
+
+	public AsyncConfiguration(BeanFactory beanFactory) {
+		this.beanFactory = beanFactory;
+	}
+
+	@Override
+    @Bean("AsyncTaskExecutor")
+    public Executor getAsyncExecutor() {
+        ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
+        executor.initialize();
+        return new LazyTraceThreadPoolTaskExecutor(beanFactory, executor);
+    }
+}
+----
+
+You can read more about this in this https://github.com/spring-cloud/spring-cloud-sleuth/issues/2100[issue].
+
 [[sleuth-http-client-webclient-integration]]
 ==== `WebClient`
 
