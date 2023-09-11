@@ -18,7 +18,7 @@ jobs:
         java: ["8", "11"]
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
       - name: Setup java
         uses: actions/setup-java@v3
         with:
@@ -41,7 +41,7 @@ jobs:
         java: ["8"]
       fail-fast: false
      steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
       - name: Set up QEMU
         id: qemu
         uses: docker/setup-qemu-action@v2
