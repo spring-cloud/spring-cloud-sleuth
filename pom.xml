@@ -67,7 +67,7 @@
 		<spring-security-oauth2.version>2.2.0.RELEASE</spring-security-oauth2.version>
 		<disable.nohttp.checks>false</disable.nohttp.checks>
 		<okhttp.version>4.9.0</okhttp.version>
-		<mockwebserver.version>4.8.0</mockwebserver.version>
+		<mockwebserver.version>4.8.1</mockwebserver.version>
 		<guava.version>20.0</guava.version>
 		<javax.resource-api.version>1.7.1</javax.resource-api.version>
 		<cglib-nodep.version>3.3.0</cglib-nodep.version>
