@@ -459,6 +459,8 @@ For a reactive `Consumer<Flux<Message<?>>>` remember to manually close the span 
 }
 ----
 
+For Sleuth to work with a reactive `Supplier` (e.g. `Supplier<Flux<Message<String>>>`) you must fall back to Spring Integration based instrumentation by setting `spring.sleuth.integration.enabled` to `true`.
+
 You can disable Spring Cloud Stream integration by setting the value of `spring.sleuth.function.enabled` to `false`.
 
 If you want to fully control the life cycle of spans within the reactive messaging context of Spring Cloud Stream
