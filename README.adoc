@@ -98,7 +98,7 @@ Please visit the https://docs.spring.io/spring-cloud-sleuth/docs/[documentation 
 
 == Building
 
-:jdkversion: 17
+:jdkversion: 1.8
 
 === Basic Compile and Test
 
