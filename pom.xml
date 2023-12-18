@@ -21,7 +21,7 @@
 	<modelVersion>4.0.0</modelVersion>
 
 	<artifactId>spring-cloud-sleuth</artifactId>
-	<version>3.1.10-SNAPSHOT</version>
+	<version>3.1.11-SNAPSHOT</version>
 	<packaging>pom</packaging>
 	<name>Spring Cloud Sleuth</name>
 	<description>Spring Cloud Sleuth</description>
@@ -29,7 +29,7 @@
 	<parent>
 		<groupId>org.springframework.cloud</groupId>
 		<artifactId>spring-cloud-build</artifactId>
-		<version>3.1.9-SNAPSHOT</version>
+		<version>3.1.10-SNAPSHOT</version>
 		<relativePath/>
 		<!-- lookup parent from repository -->
 	</parent>
@@ -49,16 +49,16 @@
 		<maven.compiler.source>1.8</maven.compiler.source>
 		<maven.compiler.testTarget>1.8</maven.compiler.testTarget>
 		<maven.compiler.testSource>1.8</maven.compiler.testSource>
-		<spring-cloud-build.version>3.1.9-SNAPSHOT</spring-cloud-build.version>
-		<spring-cloud-commons.version>3.1.8-SNAPSHOT</spring-cloud-commons.version>
-		<spring-cloud-gateway.version>3.1.9-SNAPSHOT</spring-cloud-gateway.version>
-		<spring-cloud-config.version>3.1.9-SNAPSHOT</spring-cloud-config.version>
-		<spring-cloud-circuitbreaker.version>2.1.8-SNAPSHOT</spring-cloud-circuitbreaker.version>
-		<spring-cloud-stream.version>3.2.10-SNAPSHOT</spring-cloud-stream.version>
-		<spring-cloud-function.version>3.2.12-SNAPSHOT</spring-cloud-function.version>
-		<spring-cloud-netflix.version>3.1.8-SNAPSHOT</spring-cloud-netflix.version>
-		<spring-cloud-openfeign.version>3.1.9-SNAPSHOT</spring-cloud-openfeign.version>
-		<spring-cloud-task.version>2.4.7-SNAPSHOT</spring-cloud-task.version>
+		<spring-cloud-build.version>3.1.10-SNAPSHOT</spring-cloud-build.version>
+		<spring-cloud-commons.version>3.1.9-SNAPSHOT</spring-cloud-commons.version>
+		<spring-cloud-gateway.version>3.1.9</spring-cloud-gateway.version>
+		<spring-cloud-config.version>3.1.10-SNAPSHOT</spring-cloud-config.version>
+		<spring-cloud-circuitbreaker.version>2.1.9-SNAPSHOT</spring-cloud-circuitbreaker.version>
+		<spring-cloud-stream.version>3.2.11-SNAPSHOT</spring-cloud-stream.version>
+		<spring-cloud-function.version>3.2.13-SNAPSHOT</spring-cloud-function.version>
+		<spring-cloud-netflix.version>3.1.9-SNAPSHOT</spring-cloud-netflix.version>
+		<spring-cloud-openfeign.version>3.1.10-SNAPSHOT</spring-cloud-openfeign.version>
+		<spring-cloud-task.version>2.4.6</spring-cloud-task.version>
 		<spring-cloud-deployer.version>2.5.1</spring-cloud-deployer.version>
 		<brave.version>5.13.9</brave.version>
 		<opentracing.version>0.32.0</opentracing.version>
