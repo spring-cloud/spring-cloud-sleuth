@@ -77,9 +77,8 @@ public class BraveHttpConfiguration {
 	@Bean
 	@ConditionalOnMissingBean
 	// NOTE: stable bean name as might be used outside sleuth
-	HttpTracing httpTracing(Tracing tracing, @Nullable SkipPatternProvider provider,
-			@Nullable brave.http.HttpClientParser clientParser, @Nullable brave.http.HttpServerParser serverParser,
-			BeanFactory beanFactory, @Nullable List<HttpTracingCustomizer> httpTracingCustomizers) {
+	HttpTracing httpTracing(Tracing tracing, @Nullable SkipPatternProvider provider, BeanFactory beanFactory,
+			@Nullable List<HttpTracingCustomizer> httpTracingCustomizers) {
 		HttpTracing.Builder builder = httpTracingBuilder(tracing, provider, beanFactory);
 		brave.http.HttpRequestParser httpClientRequestParser = httpRequestParser(beanFactory,
 				HttpClientRequestParser.NAME);
@@ -98,9 +97,6 @@ public class BraveHttpConfiguration {
 				builder.clientResponseParser(httpClientResponseParser);
 			}
 		}
-		else if (clientParser != null) { // consider deprecated last
-			builder.clientParser(clientParser);
-		}
 
 		if (httpServerRequestParser != null || httpServerResponseParser != null) {
 			if (httpServerRequestParser != null) {
@@ -109,9 +105,6 @@ public class BraveHttpConfiguration {
 			if (httpServerResponseParser != null) {
 				builder.serverResponseParser(httpServerResponseParser);
 			}
-		}
-		else if (serverParser != null) { // consider deprecated last
-			builder.serverParser(serverParser);
 		}
 
 		if (httpTracingCustomizers != null) {

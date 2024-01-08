@@ -414,6 +414,7 @@
 			<artifactId>zipkin</artifactId>
 			<optional>true</optional>
 		</dependency>
+		<!-- Needed for ZipkinRestTemplateSenderConfiguration: BytesMessageEncoder  -->
 		<dependency>
 			<groupId>io.zipkin.reporter2</groupId>
 			<artifactId>zipkin-reporter</artifactId>

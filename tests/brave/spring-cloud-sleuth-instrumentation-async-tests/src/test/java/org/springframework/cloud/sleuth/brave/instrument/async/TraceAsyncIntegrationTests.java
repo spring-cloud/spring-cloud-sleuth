@@ -24,8 +24,8 @@ import brave.handler.SpanHandler;
 import brave.propagation.CurrentTraceContext;
 import brave.propagation.TraceContext;
 import brave.test.IntegrationTestSpanHandler;
-import org.junit.ClassRule;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -48,7 +48,7 @@ public class TraceAsyncIntegrationTests {
 
 	private static final Logger log = LoggerFactory.getLogger(TraceAsyncIntegrationTests.class);
 
-	@ClassRule
+	@RegisterExtension
 	public static IntegrationTestSpanHandler spans = new IntegrationTestSpanHandler();
 
 	TraceContext context = TraceContext.newBuilder().traceId(1).spanId(2).sampled(true).build();

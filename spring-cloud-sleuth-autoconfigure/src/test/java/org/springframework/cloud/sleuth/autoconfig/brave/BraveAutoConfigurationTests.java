@@ -16,7 +16,7 @@
 
 package org.springframework.cloud.sleuth.autoconfig.brave;
 
-import java.util.List;
+import java.util.Map;
 
 import brave.Tracing;
 import brave.baggage.BaggageField;
@@ -95,8 +95,7 @@ public class BraveAutoConfigurationTests {
 	void should_use_baggageBean() {
 		this.contextRunner.withUserConfiguration(WithBaggageBeans.class, Baggage.class).run((context -> {
 			final Baggage bean = context.getBean(Baggage.class);
-			BDDAssertions.then(bean.fields).containsOnly(BaggageField.create("country-code"),
-					BaggageField.create("x-vcap-request-id"));
+			BDDAssertions.then(bean.fields).containsEntry("country-code", "x-vcap-request-id");
 		}));
 	}
 
@@ -105,7 +104,7 @@ public class BraveAutoConfigurationTests {
 		this.contextRunner.withPropertyValues("spring.sleuth.baggage.local-fields=bp")
 				.withUserConfiguration(Baggage.class).run((context -> {
 					final Baggage bean = context.getBean(Baggage.class);
-					BDDAssertions.then(bean.fields).containsExactly(BaggageField.create("bp"));
+					BDDAssertions.then(bean.fields).containsKey("bp");
 				}));
 	}
 
@@ -114,8 +113,7 @@ public class BraveAutoConfigurationTests {
 		this.contextRunner.withPropertyValues("spring.sleuth.baggage.local-fields=bp")
 				.withUserConfiguration(WithBaggageBeans.class, Baggage.class).run((context -> {
 					final Baggage bean = context.getBean(Baggage.class);
-					BDDAssertions.then(bean.fields).containsOnly(BaggageField.create("country-code"),
-							BaggageField.create("x-vcap-request-id"), BaggageField.create("bp"));
+					BDDAssertions.then(bean.fields).containsOnlyKeys("country-code", "x-vcap-request-id", "bp");
 				}));
 	}
 
@@ -131,7 +129,7 @@ public class BraveAutoConfigurationTests {
 	@Configuration(proxyBeanMethods = false)
 	static class Baggage {
 
-		List<BaggageField> fields;
+		Map<String, String> fields;
 
 		@Autowired
 		Baggage(Tracing tracing) {
@@ -139,7 +137,7 @@ public class BraveAutoConfigurationTests {
 			// TraceContextOrSamplingFlags.EMPTY
 			TraceContextOrSamplingFlags emptyExtraction = tracing.propagation().extractor((c, k) -> null)
 					.extract(Boolean.TRUE);
-			fields = BaggageField.getAll(emptyExtraction);
+			fields = BaggageField.getAllValues(emptyExtraction);
 		}
 
 	}

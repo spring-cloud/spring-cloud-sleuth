@@ -20,7 +20,6 @@ import java.util.List;
 
 import brave.Span;
 import brave.internal.collect.Lists;
-import brave.internal.propagation.StringPropagationAdapter;
 import brave.propagation.B3Propagation;
 import brave.propagation.Propagation;
 import brave.propagation.TraceContext;
@@ -52,8 +51,8 @@ public class MergedFactory extends Propagation.Factory implements Propagation<St
 	}
 
 	@Override
-	public <K> Propagation<K> create(KeyFactory<K> keyFactory) {
-		return StringPropagationAdapter.create(this, keyFactory);
+	public Propagation<String> get() {
+		return this;
 	}
 
 }
