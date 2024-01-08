@@ -60,8 +60,6 @@
 		<spring-cloud-openfeign.version>3.1.10-SNAPSHOT</spring-cloud-openfeign.version>
 		<spring-cloud-task.version>2.4.6</spring-cloud-task.version>
 		<spring-cloud-deployer.version>2.5.1</spring-cloud-deployer.version>
-		<brave.version>5.13.9</brave.version>
-		<opentracing.version>0.32.0</opentracing.version>
 		<!-- Deprecated - reached EOL -->
 		<spring-security-boot-autoconfigure.version>2.3.4.RELEASE</spring-security-boot-autoconfigure.version>
 		<spring-security-oauth2.version>2.2.0.RELEASE</spring-security-oauth2.version>

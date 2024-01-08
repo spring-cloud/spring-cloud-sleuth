@@ -19,7 +19,6 @@ package org.springframework.cloud.sleuth.autoconfig.brave.baggage;
 import java.util.Collections;
 import java.util.List;
 
-import brave.internal.propagation.StringPropagationAdapter;
 import brave.propagation.Propagation;
 import brave.propagation.TraceContext;
 import brave.propagation.TraceContextOrSamplingFlags;
@@ -94,8 +93,8 @@ public class CustomPropagationFactoryTests {
 			}
 
 			@Override
-			public <K> Propagation<K> create(KeyFactory<K> keyFactory) {
-				return StringPropagationAdapter.create(this, keyFactory);
+			public Propagation<String> get() {
+				return this;
 			}
 
 		}

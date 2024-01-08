@@ -82,11 +82,13 @@
 		</dependency>
 		<dependency>
 			<groupId>io.zipkin.reporter2</groupId>
-			<artifactId>zipkin-reporter</artifactId>
+			<artifactId>zipkin-reporter-brave</artifactId>
 		</dependency>
+		<!-- Needed for ZipkinRestTemplateSenderConfiguration: BytesMessageEncoder  -->
 		<dependency>
 			<groupId>io.zipkin.reporter2</groupId>
-			<artifactId>zipkin-reporter-brave</artifactId>
+			<artifactId>zipkin-reporter</artifactId>
+			<optional>true</optional>
 		</dependency>
 		<dependency>
 			<groupId>io.zipkin.reporter2</groupId>

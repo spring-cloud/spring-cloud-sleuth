@@ -23,7 +23,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import brave.internal.propagation.StringPropagationAdapter;
 import brave.propagation.B3Propagation;
 import brave.propagation.Propagation;
 import brave.propagation.TraceContext;
@@ -129,8 +128,8 @@ class CompositePropagationFactory extends Propagation.Factory implements Propaga
 	}
 
 	@Override
-	public <K> Propagation<K> create(KeyFactory<K> keyFactory) {
-		return StringPropagationAdapter.create(this, keyFactory);
+	public Propagation<String> get() {
+		return this;
 	}
 
 	@Override
@@ -177,8 +176,8 @@ class CompositePropagationFactory extends Propagation.Factory implements Propaga
 		}
 
 		@Override
-		public <K> Propagation<K> create(KeyFactory<K> keyFactory) {
-			return propagationFactory().create(keyFactory);
+		public Propagation<String> get() {
+			return new LazyPropagation(this);
 		}
 
 		@Override
@@ -189,11 +188,6 @@ class CompositePropagationFactory extends Propagation.Factory implements Propaga
 		@Override
 		public boolean requires128BitTraceId() {
 			return propagationFactory().requires128BitTraceId();
-		}
-
-		@Override
-		public Propagation<String> get() {
-			return new LazyPropagation(this);
 		}
 
 		@Override
@@ -260,8 +254,8 @@ class CompositePropagationFactory extends Propagation.Factory implements Propaga
 		}
 
 		@Override
-		public <K> Propagation<K> create(KeyFactory<K> keyFactory) {
-			return StringPropagationAdapter.create(this, keyFactory);
+		public Propagation<String> get() {
+			return this;
 		}
 
 	}

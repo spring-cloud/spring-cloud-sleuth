@@ -334,12 +334,6 @@ class BraveBaggageConfiguration {
 			return delegate.decorate(context);
 		}
 
-		@Override
-		public <K> Propagation<K> create(Propagation.KeyFactory<K> keyFactory) {
-			Propagation<K> propagation = delegate.create(keyFactory);
-			return delegateWithoutB3Baggage(factoryFromSupplier, propagation);
-		}
-
 		private <K> Propagation<K> delegateWithoutB3Baggage(Propagation.Factory factoryFromSupplier,
 				Propagation<K> propagation) {
 			return new Propagation<K>() {
