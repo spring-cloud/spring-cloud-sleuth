@@ -23,3 +23,4 @@
 :tests_path: {core_path}/tests
 :common_tests_path: {tests_path}/common
 :brave_tests_path: {tests_path}/brave
+:github-raw: https://raw.githubusercontent.com/spring-cloud/spring-cloud-sleuth/main
