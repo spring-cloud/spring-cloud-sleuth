@@ -59,19 +59,18 @@
 		<spring-cloud-netflix.version>3.1.9-SNAPSHOT</spring-cloud-netflix.version>
 		<spring-cloud-openfeign.version>3.1.10-SNAPSHOT</spring-cloud-openfeign.version>
 		<spring-cloud-task.version>2.4.6</spring-cloud-task.version>
-		<spring-cloud-deployer.version>2.5.1</spring-cloud-deployer.version>
+		<spring-cloud-deployer.version>2.5.2</spring-cloud-deployer.version>
 		<!-- Deprecated - reached EOL -->
 		<spring-security-boot-autoconfigure.version>2.3.4.RELEASE</spring-security-boot-autoconfigure.version>
 		<spring-security-oauth2.version>2.2.0.RELEASE</spring-security-oauth2.version>
 		<disable.nohttp.checks>false</disable.nohttp.checks>
-		<okhttp.version>4.8.1</okhttp.version>
+		<okhttp.version>4.12.0</okhttp.version>
 		<mockwebserver.version>4.8.1</mockwebserver.version>
-		<guava.version>20.0</guava.version>
-		<javax.resource-api.version>1.7.1</javax.resource-api.version>
+		<guava.version>33.0.0-jre</guava.version>
 		<cglib-nodep.version>3.3.0</cglib-nodep.version>
-		<objenesis.version>3.0.1</objenesis.version>
+		<objenesis.version>3.3</objenesis.version>
 		<p6spy.version>3.9.1</p6spy.version>
-		<datasource-proxy.version>1.7</datasource-proxy.version>
+		<datasource-proxy.version>1.10</datasource-proxy.version>
 		<tomcat-jdbc.version>10.0.27</tomcat-jdbc.version>
 		<commons-dbcp2.version>2.8.0</commons-dbcp2.version>
 		<kotlin.version>1.6.21</kotlin.version>
