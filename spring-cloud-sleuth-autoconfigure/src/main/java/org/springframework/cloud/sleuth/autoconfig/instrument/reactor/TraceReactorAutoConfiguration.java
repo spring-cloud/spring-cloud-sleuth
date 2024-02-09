@@ -149,6 +149,7 @@ class HooksRefresher implements ApplicationListener<RefreshScopeRefreshedEvent> 
 				Schedulers.onScheduleHook(TraceReactorAutoConfiguration.SLEUTH_REACTOR_EXECUTOR_SERVICE_KEY,
 						ReactorSleuth.scopePassingOnScheduleHook(this.context));
 			}
+			break;
 		case DECORATE_ON_EACH:
 			if (log.isTraceEnabled()) {
 				log.trace("Decorating onEach operator instrumentation");
