@@ -28,6 +28,7 @@ import org.apache.commons.logging.LogFactory;
 import zipkin2.CheckResult;
 import zipkin2.Span;
 import zipkin2.reporter.AsyncReporter;
+import zipkin2.reporter.ClosedSenderException;
 import zipkin2.reporter.InMemoryReporterMetrics;
 import zipkin2.reporter.Reporter;
 import zipkin2.reporter.ReporterMetrics;
@@ -142,6 +143,9 @@ public class ZipkinAutoConfiguration {
 					Thread.sleep(TimeUnit.SECONDS.toMillis(zipkin.getMessageTimeout()) + 500);
 					log.debug("Flushing done - closing the reporter");
 					asyncReporter.close();
+				}
+				catch (ClosedSenderException ex) {
+					log.debug("Sender already closed", ex);
 				}
 				catch (Exception e) {
 					throw new IllegalStateException(e);
