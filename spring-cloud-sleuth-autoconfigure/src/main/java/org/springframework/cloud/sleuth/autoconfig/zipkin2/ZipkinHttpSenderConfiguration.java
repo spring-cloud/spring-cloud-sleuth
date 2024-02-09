@@ -16,8 +16,6 @@
 
 package org.springframework.cloud.sleuth.autoconfig.zipkin2;
 
-import java.net.URI;
-
 import zipkin2.reporter.Sender;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,6 +28,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.cloud.client.loadbalancer.LoadBalancerClient;
+import org.springframework.cloud.client.loadbalancer.reactive.LoadBalancedExchangeFilterFunction;
 import org.springframework.cloud.sleuth.zipkin2.CachingZipkinUrlExtractor;
 import org.springframework.cloud.sleuth.zipkin2.LoadBalancerClientZipkinLoadBalancer;
 import org.springframework.cloud.sleuth.zipkin2.RestTemplateSender;
@@ -45,6 +44,7 @@ import org.springframework.cloud.sleuth.zipkin2.ZipkinWebClientBuilderProvider;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Conditional;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.lang.Nullable;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.reactive.function.client.WebClient;
 
@@ -84,17 +84,19 @@ class ZipkinHttpSenderConfiguration {
 	static class ZipkinReactiveConfiguration {
 
 		@Bean(ZipkinAutoConfiguration.SENDER_BEAN_NAME)
-		Sender webClientSender(ZipkinProperties zipkin, ZipkinWebClientBuilderProvider zipkinWebClientBuilderProvider,
-				ZipkinUrlExtractor zipkinUrlExtractor) {
+		Sender webClientSender(ZipkinProperties zipkin, ZipkinWebClientBuilderProvider zipkinWebClientBuilderProvider) {
 			WebClient.Builder webClientBuilder = zipkinWebClientBuilderProvider.zipkinWebClientBuilder();
-			URI uri = zipkinUrlExtractor.zipkinUrl(zipkin);
-			return new WebClientSender(webClientBuilder.build(), uri.toString(), zipkin.getApiPath(),
+			return new WebClientSender(webClientBuilder.build(), zipkin.getBaseUrl(), zipkin.getApiPath(),
 					zipkin.getEncoder(), zipkin.getCheckTimeout());
 		}
 
 		@Bean
 		@ConditionalOnMissingBean
-		ZipkinWebClientBuilderProvider defaultZipkinWebClientProvider() {
+		ZipkinWebClientBuilderProvider defaultZipkinWebClientProvider(
+				final @Nullable LoadBalancedExchangeFilterFunction filterFunction) {
+			if (filterFunction != null) {
+				return () -> WebClient.builder().filter(filterFunction);
+			}
 			return WebClient::builder;
 		}
 
