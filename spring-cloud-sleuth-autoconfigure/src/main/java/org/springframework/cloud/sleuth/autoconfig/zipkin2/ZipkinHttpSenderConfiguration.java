@@ -16,6 +16,8 @@
 
 package org.springframework.cloud.sleuth.autoconfig.zipkin2;
 
+import java.net.URI;
+
 import zipkin2.reporter.Sender;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -82,9 +84,11 @@ class ZipkinHttpSenderConfiguration {
 	static class ZipkinReactiveConfiguration {
 
 		@Bean(ZipkinAutoConfiguration.SENDER_BEAN_NAME)
-		Sender webClientSender(ZipkinProperties zipkin, ZipkinWebClientBuilderProvider zipkinWebClientBuilderProvider) {
+		Sender webClientSender(ZipkinProperties zipkin, ZipkinWebClientBuilderProvider zipkinWebClientBuilderProvider,
+				ZipkinUrlExtractor zipkinUrlExtractor) {
 			WebClient.Builder webClientBuilder = zipkinWebClientBuilderProvider.zipkinWebClientBuilder();
-			return new WebClientSender(webClientBuilder.build(), zipkin.getBaseUrl(), zipkin.getApiPath(),
+			URI uri = zipkinUrlExtractor.zipkinUrl(zipkin);
+			return new WebClientSender(webClientBuilder.build(), uri.toString(), zipkin.getApiPath(),
 					zipkin.getEncoder(), zipkin.getCheckTimeout());
 		}
 
@@ -92,6 +96,11 @@ class ZipkinHttpSenderConfiguration {
 		@ConditionalOnMissingBean
 		ZipkinWebClientBuilderProvider defaultZipkinWebClientProvider() {
 			return WebClient::builder;
+		}
+
+		@Bean
+		ZipkinUrlExtractor defaultZipkinUrlExtractor(final ZipkinLoadBalancer zipkinLoadBalancer) {
+			return new CachingZipkinUrlExtractor(zipkinLoadBalancer);
 		}
 
 	}

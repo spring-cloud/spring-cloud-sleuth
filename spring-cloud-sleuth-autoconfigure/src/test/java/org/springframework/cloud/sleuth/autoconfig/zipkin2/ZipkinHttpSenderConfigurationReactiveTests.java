@@ -49,7 +49,7 @@ class ZipkinHttpSenderConfigurationReactiveTests {
 		springApplication.setWebApplicationType(WebApplicationType.REACTIVE);
 
 		try (ConfigurableApplicationContext context = springApplication.run("--spring.sleuth.noop.enabled=true",
-				"--server.port=0")) {
+				"--server.port=0", "--spring.zipkin.base-url=http://cloudUrl")) {
 			then(context.getBean(Sender.class)).isInstanceOf(WebClientSender.class);
 		}
 	}
