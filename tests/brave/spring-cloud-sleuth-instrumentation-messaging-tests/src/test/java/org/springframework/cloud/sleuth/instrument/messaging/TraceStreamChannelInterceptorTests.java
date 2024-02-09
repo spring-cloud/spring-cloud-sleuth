@@ -47,7 +47,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 @SpringBootTest(classes = TraceStreamChannelInterceptorTests.App.class,
 		properties = { "spring.cloud.stream.source=testSupplier", "spring.sleuth.integration.enabled=true" })
 @DirtiesContext
-public class TraceStreamChannelInterceptorTests {
+class TraceStreamChannelInterceptorTests {
 
 	@Autowired
 	private OutputDestination channel;
@@ -64,10 +64,11 @@ public class TraceStreamChannelInterceptorTests {
 	@AfterEach
 	public void close() {
 		this.spans.clear();
+		this.tracing.close();
 	}
 
 	@Test
-	public void testSpanPropagationViaBridge() {
+	void testSpanPropagationViaBridge() {
 		Span span = this.tracing.tracer().nextSpan().name("http:testSendMessage").start();
 		String expectedSpanId = span.context().spanIdString();
 

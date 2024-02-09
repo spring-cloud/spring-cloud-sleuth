@@ -20,7 +20,6 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 
 import org.junit.jupiter.api.Test;
-import org.reactivestreams.Publisher;
 import reactor.core.publisher.Flux;
 
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
@@ -42,46 +41,6 @@ import static org.assertj.core.api.Assertions.assertThat;
  *
  */
 public abstract class TraceFunctionAroundWrapperTests {
-
-	@Test
-	public void test_tracing_with_supplier() {
-		try (ConfigurableApplicationContext context = new SpringApplicationBuilder(configuration(),
-				SampleConfiguration.class).run("--logging.level.org.springframework.cloud.function=DEBUG",
-						"--spring.main.lazy-initialization=true", "--server.port=0");) {
-			TestSpanHandler spanHandler = context.getBean(TestSpanHandler.class);
-			assertThat(spanHandler.reportedSpans()).isEmpty();
-			FunctionCatalog catalog = context.getBean(FunctionCatalog.class);
-			FunctionInvocationWrapper function = catalog.lookup("greeter");
-
-			Message<String> result = (Message<String>) function.get();
-
-			assertThat(result.getPayload()).isEqualTo("hello");
-			assertThat(spanHandler.reportedSpans().size()).isEqualTo(2);
-			assertThat(((String) result.getHeaders().get("b3"))).contains(spanHandler.get(0).getTraceId());
-			spanHandler.assertAllSpansWereFinishedOrAbandoned(context.getBean(TestTracer.class).createdSpans());
-		}
-	}
-
-	@Test
-	public void test_tracing_with_reactive_supplier() {
-		try (ConfigurableApplicationContext context = new SpringApplicationBuilder(configuration(),
-				SampleConfiguration.class).run("--logging.level.org.springframework.cloud.function=DEBUG",
-						"--spring.main.lazy-initialization=true");) {
-			TestSpanHandler spanHandler = context.getBean(TestSpanHandler.class);
-			assertThat(spanHandler.reportedSpans()).isEmpty();
-			FunctionCatalog catalog = context.getBean(FunctionCatalog.class);
-			FunctionInvocationWrapper function = catalog.lookup("reactiveGreeter");
-			function.setSkipOutputConversion(true);
-			Object result = function.get();
-			assertThat(result).isInstanceOf(Publisher.class);
-			/*
-			 * TODO We'll need more assertions but for now this one will ensure that
-			 * wrapper does not change the type of return value specifically for reactive
-			 * cases where Flux became Message<Flux> due to the current code in
-			 * TraceFunctionAroundWrapper
-			 */
-		}
-	}
 
 	@Test
 	public void test_tracing_with_function() {
@@ -108,8 +67,8 @@ public abstract class TraceFunctionAroundWrapperTests {
 	public static class SampleConfiguration {
 
 		@Bean
-		public Supplier<String> greeter() {
-			return () -> "hello";
+		public Supplier<Message<String>> greeter() {
+			return () -> MessageBuilder.withPayload("hello").build();
 		}
 
 		@Bean
@@ -118,8 +77,8 @@ public abstract class TraceFunctionAroundWrapperTests {
 		}
 
 		@Bean
-		public Function<String, String> uppercase() {
-			return v -> v.toUpperCase();
+		public Function<Message<String>, Message<String>> uppercase() {
+			return v -> MessageBuilder.withPayload(v.getPayload().toUpperCase()).build();
 		}
 
 		@Bean

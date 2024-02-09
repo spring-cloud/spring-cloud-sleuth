@@ -45,7 +45,9 @@ import org.springframework.kafka.config.StreamsBuilderFactoryBean;
 @ConditionalOnMessagingEnabled
 @ConditionalOnBean(Tracing.class)
 @ConditionalOnProperty(value = "spring.sleuth.messaging.kafka.streams.enabled", matchIfMissing = true)
-@ConditionalOnClass({ KafkaStreams.class, KafkaTracing.class, StreamsBuilderFactoryBean.class })
+// FixedKeyProcessorSupplier to align with Brave-Kafka instrumentation
+@ConditionalOnClass(value = { KafkaStreams.class, KafkaTracing.class, StreamsBuilderFactoryBean.class },
+		name = "org.apache.kafka.streams.processor.api.FixedKeyProcessorSupplier")
 class BraveKafkaStreamsAutoConfiguration {
 
 	protected BraveKafkaStreamsAutoConfiguration() {

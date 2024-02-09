@@ -47,7 +47,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 @SpringBootTest(classes = TraceContextPropagationChannelInterceptorTests.App.class,
 		properties = "spring.sleuth.integration.enabled=true")
 @DirtiesContext
-public class TraceContextPropagationChannelInterceptorTests {
+class TraceContextPropagationChannelInterceptorTests {
 
 	@Autowired
 	@Qualifier("channel")
@@ -62,6 +62,7 @@ public class TraceContextPropagationChannelInterceptorTests {
 	@AfterEach
 	public void close() {
 		this.spans.clear();
+		this.tracing.close();
 	}
 
 	@Test

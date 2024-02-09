@@ -76,6 +76,7 @@
 		<commons-dbcp2.version>2.8.0</commons-dbcp2.version>
 		<kotlin.version>1.6.21</kotlin.version>
 		<wiremock.version>2.35.1</wiremock.version>
+		<kafka-streams.version>3.6.1</kafka-streams.version>
 
 		<!-- Until we switch it to true in sc-build -->
 		<javadoc.failOnError>true</javadoc.failOnError>

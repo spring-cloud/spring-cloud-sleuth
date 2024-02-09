@@ -29,7 +29,7 @@ import static org.springframework.boot.test.context.SpringBootTest.WebEnvironmen
 
 @SpringBootTest(webEnvironment = RANDOM_PORT)
 @ContextConfiguration(classes = WebClientDiscoveryExceptionTests.Config.class)
-public class WebClientDiscoveryExceptionTests extends
+class WebClientDiscoveryExceptionTests extends
 		org.springframework.cloud.sleuth.instrument.web.client.discoveryexception.WebClientDiscoveryExceptionTests {
 
 	@Configuration(proxyBeanMethods = false)
