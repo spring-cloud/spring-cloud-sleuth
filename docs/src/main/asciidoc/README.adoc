@@ -1,7 +1,6 @@
-:jdkversion: 1.8
+= Spring Cloud Sleuth is no longer actively maintained.  
 
-image::https://github.com/spring-cloud/spring-cloud-sleuth/workflows/Build/badge.svg?style=svg["Build",link="https://github.com/spring-cloud/spring-cloud-sleuth/actions"]
-image::https://badges.gitter.im/spring-cloud/spring-cloud-sleuth.svg[Gitter,link="https://gitter.im/spring-cloud/spring-cloud-sleuth?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge"]
+=== See the https://github.com/spring-cloud/spring-cloud-release/wiki/Spring-Cloud-2022.0-Release-Notes#202200-m1[release notes] and https://spring.io/blog/2022/10/12/observability-with-spring-boot-3[blog post] for more information and next steps.
 
 == Spring Cloud Sleuth
 
